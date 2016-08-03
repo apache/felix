@@ -36,15 +36,15 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.apache.felix.scr.impl.helper.ConfigAdminTracker;
-import org.apache.felix.scr.impl.manager.ComponentActivator;
-import org.apache.felix.scr.impl.manager.ComponentHolder;
-import org.apache.felix.scr.impl.manager.RegionConfigurationSupport;
-import org.apache.felix.scr.impl.manager.ScrConfiguration;
 import org.apache.felix.scr.impl.helper.SimpleLogger;
 import org.apache.felix.scr.impl.manager.AbstractComponentManager;
+import org.apache.felix.scr.impl.manager.ComponentActivator;
+import org.apache.felix.scr.impl.manager.ComponentHolder;
 import org.apache.felix.scr.impl.manager.DependencyManager;
 import org.apache.felix.scr.impl.manager.ExtendedServiceEvent;
 import org.apache.felix.scr.impl.manager.ExtendedServiceListener;
+import org.apache.felix.scr.impl.manager.RegionConfigurationSupport;
+import org.apache.felix.scr.impl.manager.ScrConfiguration;
 import org.apache.felix.scr.impl.metadata.ComponentMetadata;
 import org.apache.felix.scr.impl.parser.KXml2SAXParser;
 import org.apache.felix.scr.impl.xml.XmlHandler;
@@ -67,7 +67,7 @@ import org.osgi.util.tracker.ServiceTracker;
  */
 public class BundleComponentActivator implements ComponentActivator
 {
-	
+
     // global component registration
     private final ComponentRegistry m_componentRegistry;
 
@@ -87,12 +87,12 @@ public class BundleComponentActivator implements ComponentActivator
     private final ComponentActorThread m_componentActor;
 
     // true as long as the dispose method is not called
-    private final AtomicBoolean m_active = new AtomicBoolean(true);
-    private final CountDownLatch m_closeLatch = new CountDownLatch(1);
+    private final AtomicBoolean m_active = new AtomicBoolean( true );
+    private final CountDownLatch m_closeLatch = new CountDownLatch( 1 );
 
     // the configuration
     private final ScrConfiguration m_configuration;
-    
+
     private final ConfigAdminTracker configAdminTracker;
 
     private final Map<String, ListenerInfo> listenerMap = new HashMap<String, ListenerInfo>();
@@ -109,84 +109,77 @@ public class BundleComponentActivator implements ComponentActivator
             ExtendedServiceEvent extEvent = null;
             ExtendedServiceEvent endMatchEvent = null;
             Map<Filter, List<ExtendedServiceListener<ExtendedServiceEvent>>> filterMap;
-            synchronized (this)
+            synchronized ( this )
             {
                 filterMap = this.filterMap;
             }
-            for (Map.Entry<Filter, List<ExtendedServiceListener<ExtendedServiceEvent>>> entry : filterMap.entrySet())
+            for ( Map.Entry<Filter, List<ExtendedServiceListener<ExtendedServiceEvent>>> entry : filterMap.entrySet() )
             {
                 Filter filter = entry.getKey();
-                if (filter == null || filter.match(ref))
+                if ( filter == null || filter.match( ref ) )
                 {
-                    if (extEvent == null)
+                    if ( extEvent == null )
                     {
-                        extEvent = new ExtendedServiceEvent(event);
+                        extEvent = new ExtendedServiceEvent( event );
                     }
-                    for (ExtendedServiceListener<ExtendedServiceEvent> forwardTo : entry.getValue())
+                    for ( ExtendedServiceListener<ExtendedServiceEvent> forwardTo : entry.getValue() )
                     {
-                        forwardTo.serviceChanged(extEvent);
+                        forwardTo.serviceChanged( extEvent );
                     }
                 }
-                else if (event.getType() == ServiceEvent.MODIFIED)
+                else if ( event.getType() == ServiceEvent.MODIFIED )
                 {
-                    if (endMatchEvent == null)
+                    if ( endMatchEvent == null )
                     {
-                        endMatchEvent = new ExtendedServiceEvent(
-                            ServiceEvent.MODIFIED_ENDMATCH, ref);
+                        endMatchEvent = new ExtendedServiceEvent( ServiceEvent.MODIFIED_ENDMATCH, ref );
                     }
-                    for (ExtendedServiceListener<ExtendedServiceEvent> forwardTo : entry.getValue())
+                    for ( ExtendedServiceListener<ExtendedServiceEvent> forwardTo : entry.getValue() )
                     {
-                        forwardTo.serviceChanged(endMatchEvent);
+                        forwardTo.serviceChanged( endMatchEvent );
                     }
                 }
             }
-            if (extEvent != null)
+            if ( extEvent != null )
             {
                 extEvent.activateManagers();
             }
-            if (endMatchEvent != null)
+            if ( endMatchEvent != null )
             {
                 endMatchEvent.activateManagers();
             }
         }
 
-        public synchronized void add(Filter filter,
-            ExtendedServiceListener<ExtendedServiceEvent> listener)
+        public synchronized void add(Filter filter, ExtendedServiceListener<ExtendedServiceEvent> listener)
         {
-            filterMap = new HashMap<Filter, List<ExtendedServiceListener<ExtendedServiceEvent>>>(
-                filterMap);
-            List<ExtendedServiceListener<ExtendedServiceEvent>> listeners = filterMap.get(filter);
-            if (listeners == null)
+            filterMap = new HashMap<Filter, List<ExtendedServiceListener<ExtendedServiceEvent>>>( filterMap );
+            List<ExtendedServiceListener<ExtendedServiceEvent>> listeners = filterMap.get( filter );
+            if ( listeners == null )
             {
-                listeners = Collections.<ExtendedServiceListener<ExtendedServiceEvent>> singletonList(listener);
+                listeners = Collections.<ExtendedServiceListener<ExtendedServiceEvent>> singletonList( listener );
             }
             else
             {
-                listeners = new ArrayList<ExtendedServiceListener<ExtendedServiceEvent>>(
-                    listeners);
-                listeners.add(listener);
+                listeners = new ArrayList<ExtendedServiceListener<ExtendedServiceEvent>>( listeners );
+                listeners.add( listener );
             }
-            filterMap.put(filter, listeners);
+            filterMap.put( filter, listeners );
         }
 
-        public synchronized boolean remove(Filter filter,
-            ExtendedServiceListener<ExtendedServiceEvent> listener)
+        public synchronized boolean remove(Filter filter, ExtendedServiceListener<ExtendedServiceEvent> listener)
         {
-            List<ExtendedServiceListener<ExtendedServiceEvent>> listeners = filterMap.get(filter);
-            if (listeners != null)
+            List<ExtendedServiceListener<ExtendedServiceEvent>> listeners = filterMap.get( filter );
+            if ( listeners != null )
             {
-                filterMap = new HashMap<Filter, List<ExtendedServiceListener<ExtendedServiceEvent>>>(
-                    filterMap);
-                listeners = new ArrayList<ExtendedServiceListener<ExtendedServiceEvent>>(
-                    listeners);
-                listeners.remove(listener);
-                if (listeners.isEmpty())
+                filterMap = new HashMap<Filter, List<ExtendedServiceListener<ExtendedServiceEvent>>>( filterMap );
+                listeners = new ArrayList<ExtendedServiceListener<ExtendedServiceEvent>>( listeners );
+                listeners.remove( listener );
+                if ( listeners.isEmpty() )
                 {
-                    filterMap.remove(filter);
+                    filterMap.remove( filter );
                 }
                 else
                 {
-                    filterMap.put(filter, listeners);
+                    filterMap.put( filter, listeners );
                 }
             }
             return filterMap.isEmpty();
@@ -197,41 +190,41 @@ public class BundleComponentActivator implements ComponentActivator
         ExtendedServiceListener<ExtendedServiceEvent> listener)
     {
         ListenerInfo listenerInfo;
-        synchronized (listenerMap)
+        synchronized ( listenerMap )
         {
-            log(LogService.LOG_DEBUG, "classNameFilter: " + classNameFilter
-                + " event filter: " + eventFilter, null, null, null);
-            listenerInfo = listenerMap.get(classNameFilter);
-            if (listenerInfo == null)
+            log( LogService.LOG_DEBUG, "classNameFilter: " + classNameFilter + " event filter: " + eventFilter, null,
+                null, null );
+            listenerInfo = listenerMap.get( classNameFilter );
+            if ( listenerInfo == null )
             {
                 listenerInfo = new ListenerInfo();
-                listenerMap.put(classNameFilter, listenerInfo);
+                listenerMap.put( classNameFilter, listenerInfo );
                 try
                 {
-                    m_context.addServiceListener(listenerInfo, classNameFilter);
+                    m_context.addServiceListener( listenerInfo, classNameFilter );
                 }
-                catch (InvalidSyntaxException e)
+                catch ( InvalidSyntaxException e )
                 {
                     throw (IllegalArgumentException) new IllegalArgumentException(
-                        "invalid class name filter").initCause(e);
+                        "invalid class name filter" ).initCause( e );
                 }
             }
         }
-        listenerInfo.add(eventFilter, listener);
+        listenerInfo.add( eventFilter, listener );
     }
 
     public void removeServiceListener(String className, Filter filter,
         ExtendedServiceListener<ExtendedServiceEvent> listener)
     {
-        synchronized (listenerMap)
+        synchronized ( listenerMap )
         {
-            ListenerInfo listenerInfo = listenerMap.get(className);
-            if (listenerInfo != null)
+            ListenerInfo listenerInfo = listenerMap.get( className );
+            if ( listenerInfo != null )
             {
-                if (listenerInfo.remove(filter, listener))
+                if ( listenerInfo.remove( filter, listener ) )
                 {
-                    listenerMap.remove(className);
-                    m_context.removeServiceListener(listenerInfo);
+                    listenerMap.remove( className );
+                    m_context.removeServiceListener( listenerInfo );
                 }
             }
         }
@@ -258,32 +251,29 @@ public class BundleComponentActivator implements ComponentActivator
         m_bundle = context.getBundle();
 
         // have the LogService handy (if available)
-        m_logService = new ServiceTracker<LogService, LogService>(context,
-            Activator.LOGSERVICE_CLASS, null);
+        m_logService = new ServiceTracker<LogService, LogService>( context, Activator.LOGSERVICE_CLASS, null );
         m_logService.open();
         m_configuration = configuration;
 
-        log(LogService.LOG_DEBUG, "BundleComponentActivator : Bundle [{0}] active",
-            new Object[] { m_bundle.getBundleId() }, null, null, null);
+        log( LogService.LOG_DEBUG, "BundleComponentActivator : Bundle [{0}] active",
+            new Object[] { m_bundle.getBundleId() }, null, null, null );
 
         // Get the Metadata-Location value from the manifest
-        String descriptorLocations = (String) m_bundle.getHeaders().get(
-            "Service-Component");
-        if (descriptorLocations == null)
+        String descriptorLocations = (String) m_bundle.getHeaders().get( "Service-Component" );
+        if ( descriptorLocations == null )
         {
-            throw new ComponentException(
-                "Service-Component entry not found in the manifest");
+            throw new ComponentException( "Service-Component entry not found in the manifest" );
         }
 
-        initialize(descriptorLocations);
+        initialize( descriptorLocations );
         ConfigAdminTracker tracker = null;
-        for (ComponentHolder<?> holder: m_holders) 
+        for ( ComponentHolder<?> holder : m_holders )
         {
-        	if (!holder.getComponentMetadata().isConfigurationIgnored())
-        	{
-        		tracker = new ConfigAdminTracker(this);
-        		break;
-        	}
+            if ( !holder.getComponentMetadata().isConfigurationIgnored() )
+            {
+                tracker = new ConfigAdminTracker( this );
+                break;
+            }
         }
         configAdminTracker = tracker;
     }
@@ -299,32 +289,30 @@ public class BundleComponentActivator implements ComponentActivator
      */
     protected void initialize(String descriptorLocations)
     {
-        log(LogService.LOG_DEBUG,
-            "BundleComponentActivator : Bundle [{0}] descriptor locations {1}",
-            new Object[] { m_bundle.getBundleId(), descriptorLocations }, null, null,
-            null);
+        log( LogService.LOG_DEBUG, "BundleComponentActivator : Bundle [{0}] descriptor locations {1}",
+            new Object[] { m_bundle.getBundleId(), descriptorLocations }, null, null, null );
 
         // 112.4.1: The value of the the header is a comma separated list of XML entries within the Bundle
-        StringTokenizer st = new StringTokenizer(descriptorLocations, ", ");
+        StringTokenizer st = new StringTokenizer( descriptorLocations, ", " );
 
-        while (st.hasMoreTokens())
+        while ( st.hasMoreTokens() )
         {
             String descriptorLocation = st.nextToken();
 
-            URL[] descriptorURLs = findDescriptors(m_bundle, descriptorLocation);
-            if (descriptorURLs.length == 0)
+            URL[] descriptorURLs = findDescriptors( m_bundle, descriptorLocation );
+            if ( descriptorURLs.length == 0 )
             {
                 // 112.4.1 If an XML document specified by the header cannot be located in the bundle and its attached
                 // fragments, SCR must log an error message with the Log Service, if present, and continue.
-                log(LogService.LOG_ERROR, "Component descriptor entry ''{0}'' not found",
-                    new Object[] { descriptorLocation }, null, null, null);
+                log( LogService.LOG_ERROR, "Component descriptor entry ''{0}'' not found",
+                    new Object[] { descriptorLocation }, null, null, null );
                 continue;
             }
 
             // load from the descriptors
-            for (URL descriptorURL : descriptorURLs)
+            for ( URL descriptorURL : descriptorURLs )
             {
-                loadDescriptor(descriptorURL);
+                loadDescriptor( descriptorURL );
             }
         }
     }
@@ -336,27 +324,23 @@ public class BundleComponentActivator implements ComponentActivator
     void initialEnable()
     {
         //enable all the enabled components
-        for (ComponentHolder<?> componentHolder : m_holders)
+        for ( ComponentHolder<?> componentHolder : m_holders )
         {
-            log(LogService.LOG_DEBUG,
-                "BundleComponentActivator : Bundle [{0}] May enable component holder {1}",
-                new Object[] { m_bundle.getBundleId(),
-                        componentHolder.getComponentMetadata().getName() }, null, null,
-                null);
+            log( LogService.LOG_DEBUG, "BundleComponentActivator : Bundle [{0}] May enable component holder {1}",
+                new Object[] { m_bundle.getBundleId(), componentHolder.getComponentMetadata().getName() }, null, null,
+                null );
 
-            if (componentHolder.getComponentMetadata().isEnabled())
+            if ( componentHolder.getComponentMetadata().isEnabled() )
             {
-                log(LogService.LOG_DEBUG,
-                    "BundleComponentActivator : Bundle [{0}] Enabling component holder {1}",
-                    new Object[] { m_bundle.getBundleId(),
-                            componentHolder.getComponentMetadata().getName() }, null,
-                    null, null);
+                log( LogService.LOG_DEBUG, "BundleComponentActivator : Bundle [{0}] Enabling component holder {1}",
+                    new Object[] { m_bundle.getBundleId(), componentHolder.getComponentMetadata().getName() }, null,
+                    null, null );
 
                 try
                 {
-                    componentHolder.enableComponents(false);
+                    componentHolder.enableComponents( false );
                 }
-                catch (Throwable t)
+                catch ( Throwable t )
                 {
                     // caught on unhandled RuntimeException or Error
                     // (e.g. ClassDefNotFoundError)
@@ -364,26 +348,24 @@ public class BundleComponentActivator implements ComponentActivator
                     // make sure the component is properly disabled, just in case
                     try
                     {
-                        componentHolder.disableComponents(false);
+                        componentHolder.disableComponents( false );
                     }
-                    catch (Throwable ignore)
+                    catch ( Throwable ignore )
                     {
                     }
 
-                    log(LogService.LOG_ERROR,
+                    log( LogService.LOG_ERROR,
                         "BundleComponentActivator : Bundle [{0}] Unexpected failure enabling component holder {1}",
-                        new Object[] { m_bundle.getBundleId(),
-                                componentHolder.getComponentMetadata().getName() }, null,
-                        null, t);
+                        new Object[] { m_bundle.getBundleId(), componentHolder.getComponentMetadata().getName() }, null,
+                        null, t );
                 }
             }
             else
             {
-                log(LogService.LOG_DEBUG,
+                log( LogService.LOG_DEBUG,
                     "BundleComponentActivator : Bundle [{0}] Will not enable component holder {1}",
-                    new Object[] { m_bundle.getBundleId(),
-                            componentHolder.getComponentMetadata().getName() }, null,
-                    null, null);
+                    new Object[] { m_bundle.getBundleId(), componentHolder.getComponentMetadata().getName() }, null,
+                    null, null );
             }
         }
     }
@@ -397,20 +379,19 @@ public class BundleComponentActivator implements ComponentActivator
      */
     static URL[] findDescriptors(final Bundle bundle, final String descriptorLocation)
     {
-        if (bundle == null || descriptorLocation == null
-            || descriptorLocation.trim().length() == 0)
+        if ( bundle == null || descriptorLocation == null || descriptorLocation.trim().length() == 0 )
         {
             return new URL[0];
         }
 
         // split pattern and path
-        final int lios = descriptorLocation.lastIndexOf("/");
+        final int lios = descriptorLocation.lastIndexOf( "/" );
         final String path;
         final String filePattern;
-        if (lios > 0)
+        if ( lios > 0 )
         {
-            path = descriptorLocation.substring(0, lios);
-            filePattern = descriptorLocation.substring(lios + 1);
+            path = descriptorLocation.substring( 0, lios );
+            filePattern = descriptorLocation.substring( lios + 1 );
         }
         else
         {
@@ -419,19 +400,19 @@ public class BundleComponentActivator implements ComponentActivator
         }
 
         // find the entries
-        final Enumeration<URL> entries = bundle.findEntries(path, filePattern, false);
-        if (entries == null || !entries.hasMoreElements())
+        final Enumeration<URL> entries = bundle.findEntries( path, filePattern, false );
+        if ( entries == null || !entries.hasMoreElements() )
         {
             return new URL[0];
         }
 
         // create the result list
         List<URL> urls = new ArrayList<URL>();
-        while (entries.hasMoreElements())
+        while ( entries.hasMoreElements() )
         {
-            urls.add(entries.nextElement());
+            urls.add( entries.nextElement() );
         }
-        return urls.toArray(new URL[urls.size()]);
+        return urls.toArray( new URL[urls.size()] );
     }
 
     private void loadDescriptor(final URL descriptorURL)
@@ -444,129 +425,121 @@ public class BundleComponentActivator implements ComponentActivator
         {
             stream = descriptorURL.openStream();
 
-            BufferedReader in = new BufferedReader(new InputStreamReader(stream, "UTF-8"));
-            XmlHandler handler = new XmlHandler(m_bundle, this,
-                getConfiguration().isFactoryEnabled(), getConfiguration().keepInstances());
+            BufferedReader in = new BufferedReader( new InputStreamReader( stream, "UTF-8" ) );
+            XmlHandler handler = new XmlHandler( m_bundle, this, getConfiguration().isFactoryEnabled(),
+                getConfiguration().keepInstances() );
             KXml2SAXParser parser;
 
-            parser = new KXml2SAXParser(in);
+            parser = new KXml2SAXParser( in );
 
-            parser.parseXML(handler);
+            parser.parseXML( handler );
 
             // 112.4.2 Component descriptors may contain a single, root component element
             // or one or more component elements embedded in a larger document
-            for (Object o : handler.getComponentMetadataList())
+            for ( Object o : handler.getComponentMetadataList() )
             {
                 ComponentMetadata metadata = (ComponentMetadata) o;
                 ComponentRegistryKey key = null;
                 try
                 {
                     // check and reserve the component name (if not null)
-                    if (metadata.getName() != null)
+                    if ( metadata.getName() != null )
                     {
-                        key = m_componentRegistry.checkComponentName(m_bundle,
-                            metadata.getName());
+                        key = m_componentRegistry.checkComponentName( m_bundle, metadata.getName() );
                     }
 
                     // validate the component metadata
-                    metadata.validate(this);
+                    metadata.validate( this );
 
                     // Request creation of the component manager
-                    ComponentHolder<?> holder = m_componentRegistry.createComponentHolder(
-                        this, metadata);
+                    ComponentHolder<?> holder = m_componentRegistry.createComponentHolder( this, metadata );
 
                     // register the component after validation
-                    m_componentRegistry.registerComponentHolder(key, holder);
-                    m_holders.add(holder);
+                    m_componentRegistry.registerComponentHolder( key, holder );
+                    m_holders.add( holder );
 
-                    log(LogService.LOG_DEBUG,
+                    log( LogService.LOG_DEBUG,
                         "BundleComponentActivator : Bundle [{0}] ComponentHolder created for {1}",
-                        new Object[] { m_bundle.getBundleId(), metadata.getName() },
-                        null, null, null);
+                        new Object[] { m_bundle.getBundleId(), metadata.getName() }, null, null, null );
 
                 }
-                catch (Throwable t)
+                catch ( Throwable t )
                 {
                     // There is a problem with this particular component, we'll log the error
                     // and proceed to the next one
-                    log(LogService.LOG_ERROR, "Cannot register Component", metadata,
-                        null, t);
+                    log( LogService.LOG_ERROR, "Cannot register Component", metadata, null, t );
 
                     // make sure the name is not reserved any more
-                    if (key != null)
+                    if ( key != null )
                     {
-                        m_componentRegistry.unregisterComponentHolder(key);
+                        m_componentRegistry.unregisterComponentHolder( key );
                     }
                 }
             }
         }
-        catch (IOException ex)
+        catch ( IOException ex )
         {
             // 112.4.1 If an XML document specified by the header cannot be located in the bundle and its attached
             // fragments, SCR must log an error message with the Log Service, if present, and continue.
 
-            log(LogService.LOG_ERROR, "Problem reading descriptor entry ''{0}''",
-                new Object[] { descriptorLocation }, null, null, ex);
+            log( LogService.LOG_ERROR, "Problem reading descriptor entry ''{0}''", new Object[] { descriptorLocation },
+                null, null, ex );
         }
-        catch (Exception ex)
+        catch ( Exception ex )
         {
-            log(LogService.LOG_ERROR, "General problem with descriptor entry ''{0}''",
-                new Object[] { descriptorLocation }, null, null, ex);
+            log( LogService.LOG_ERROR, "General problem with descriptor entry ''{0}''",
+                new Object[] { descriptorLocation }, null, null, ex );
         }
         finally
         {
-            if (stream != null)
+            if ( stream != null )
             {
                 try
                 {
                     stream.close();
                 }
-                catch (IOException ignore)
+                catch ( IOException ignore )
                 {
                 }
             }
         }
     }
-    
+
     /**
     * Dispose of this component activator instance and all the component
     * managers.
     */
     void dispose(int reason)
     {
-        if (m_active.compareAndSet(true, false))
+        if ( m_active.compareAndSet( true, false ) )
         {
-            log(LogService.LOG_DEBUG,
-                "BundleComponentActivator : Bundle [{0}] will destroy {1} instances",
-                new Object[] { m_bundle.getBundleId(), m_holders.size() }, null, null,
-                null);
+            log( LogService.LOG_DEBUG, "BundleComponentActivator : Bundle [{0}] will destroy {1} instances",
+                new Object[] { m_bundle.getBundleId(), m_holders.size() }, null, null, null );
 
-            for (ComponentHolder<?> holder : m_holders)
+            for ( ComponentHolder<?> holder : m_holders )
             {
                 try
                 {
-                    holder.disposeComponents(reason);
+                    holder.disposeComponents( reason );
                 }
-                catch (Exception e)
+                catch ( Exception e )
                 {
-                    log(LogService.LOG_ERROR,
-                        "BundleComponentActivator : Exception invalidating",
-                        holder.getComponentMetadata(), null, e);
+                    log( LogService.LOG_ERROR, "BundleComponentActivator : Exception invalidating",
+                        holder.getComponentMetadata(), null, e );
                 }
                 finally
                 {
-                    m_componentRegistry.unregisterComponentHolder(m_bundle,
-                        holder.getComponentMetadata().getName());
+                    m_componentRegistry.unregisterComponentHolder( m_bundle, holder.getComponentMetadata().getName() );
                 }
 
             }
-            if (configAdminTracker != null)
+            if ( configAdminTracker != null )
             {
-            	configAdminTracker.dispose();
+                configAdminTracker.dispose();
             }
-            
-            log(LogService.LOG_DEBUG, "BundleComponentActivator : Bundle [{0}] STOPPED",
-                new Object[] { m_bundle.getBundleId() }, null, null, null);
+
+            log( LogService.LOG_DEBUG, "BundleComponentActivator : Bundle [{0}] STOPPED",
+                new Object[] { m_bundle.getBundleId() }, null, null, null );
 
             m_logService.close();
             m_closeLatch.countDown();
@@ -575,9 +548,9 @@ public class BundleComponentActivator implements ComponentActivator
         {
             try
             {
-                m_closeLatch.await(m_configuration.lockTimeout(), TimeUnit.MILLISECONDS);
+                m_closeLatch.await( m_configuration.lockTimeout(), TimeUnit.MILLISECONDS );
             }
-            catch (InterruptedException e)
+            catch ( InterruptedException e )
             {
                 //ignore interruption during concurrent shutdown.
             }
@@ -623,19 +596,17 @@ public class BundleComponentActivator implements ComponentActivator
      */
     public void enableComponent(final String name)
     {
-        final List<ComponentHolder<?>> holder = getSelectedComponents(name);
-        for (ComponentHolder<?> aHolder : holder)
+        final List<ComponentHolder<?>> holder = getSelectedComponents( name );
+        for ( ComponentHolder<?> aHolder : holder )
         {
             try
             {
-                log(LogService.LOG_DEBUG, "Enabling Component",
-                    aHolder.getComponentMetadata(), null, null);
-                aHolder.enableComponents(true);
+                log( LogService.LOG_DEBUG, "Enabling Component", aHolder.getComponentMetadata(), null, null );
+                aHolder.enableComponents( true );
             }
-            catch (Throwable t)
+            catch ( Throwable t )
             {
-                log(LogService.LOG_ERROR, "Cannot enable component",
-                    aHolder.getComponentMetadata(), null, t);
+                log( LogService.LOG_ERROR, "Cannot enable component", aHolder.getComponentMetadata(), null, t );
             }
         }
     }
@@ -651,19 +622,17 @@ public class BundleComponentActivator implements ComponentActivator
      */
     public void disableComponent(final String name)
     {
-        final List<ComponentHolder<?>> holder = getSelectedComponents(name);
-        for (ComponentHolder<?> aHolder : holder)
+        final List<ComponentHolder<?>> holder = getSelectedComponents( name );
+        for ( ComponentHolder<?> aHolder : holder )
         {
             try
             {
-                log(LogService.LOG_DEBUG, "Disabling Component",
-                    aHolder.getComponentMetadata(), null, null);
-                aHolder.disableComponents(true);
+                log( LogService.LOG_DEBUG, "Disabling Component", aHolder.getComponentMetadata(), null, null );
+                aHolder.disableComponents( true );
             }
-            catch (Throwable t)
+            catch ( Throwable t )
             {
-                log(LogService.LOG_ERROR, "Cannot disable component",
-                    aHolder.getComponentMetadata(), null, t);
+                log( LogService.LOG_ERROR, "Cannot disable component", aHolder.getComponentMetadata(), null, t );
             }
         }
     }
@@ -686,16 +655,15 @@ public class BundleComponentActivator implements ComponentActivator
     private List<ComponentHolder<?>> getSelectedComponents(String name)
     {
         // if all components are selected
-        if (name == null)
+        if ( name == null )
         {
             return m_holders;
         }
 
-        ComponentHolder<?> componentHolder = m_componentRegistry.getComponentHolder(
-            m_bundle, name);
-        if (componentHolder != null)
+        ComponentHolder<?> componentHolder = m_componentRegistry.getComponentHolder( m_bundle, name );
+        if ( componentHolder != null )
         {
-            return Collections.<ComponentHolder<?>> singletonList(componentHolder);
+            return Collections.<ComponentHolder<?>> singletonList( componentHolder );
         }
 
         // if the component is not known
@@ -706,12 +674,12 @@ public class BundleComponentActivator implements ComponentActivator
 
     public long registerComponentId(AbstractComponentManager<?> componentManager)
     {
-        return m_componentRegistry.registerComponentId(componentManager);
+        return m_componentRegistry.registerComponentId( componentManager );
     }
 
     public void unregisterComponentId(AbstractComponentManager<?> componentManager)
     {
-        m_componentRegistry.unregisterComponentId(componentManager.getId());
+        m_componentRegistry.unregisterComponentId( componentManager.getId() );
     }
 
     //---------- Asynchronous Component Handling ------------------------------
@@ -725,37 +693,34 @@ public class BundleComponentActivator implements ComponentActivator
      */
     public void schedule(Runnable task)
     {
-        if (isActive())
+        if ( isActive() )
         {
             ComponentActorThread cat = m_componentActor;
-            if (cat != null)
+            if ( cat != null )
             {
-                cat.schedule(task);
+                cat.schedule( task );
             }
             else
             {
-                log(LogService.LOG_DEBUG,
-                    "Component Actor Thread not running, calling synchronously", null,
-                    null, null);
+                log( LogService.LOG_DEBUG, "Component Actor Thread not running, calling synchronously", null, null,
+                    null );
                 try
                 {
-                    synchronized (this)
+                    synchronized ( this )
                     {
                         task.run();
                     }
                 }
-                catch (Throwable t)
+                catch ( Throwable t )
                 {
-                    log(LogService.LOG_WARNING, "Unexpected problem executing task",
-                        null, null, t);
+                    log( LogService.LOG_WARNING, "Unexpected problem executing task", null, null, t );
                 }
             }
         }
         else
         {
-            log(LogService.LOG_WARNING,
-                "BundleComponentActivator is not active; not scheduling {0}",
-                new Object[] { task }, null, null, null);
+            log( LogService.LOG_WARNING, "BundleComponentActivator is not active; not scheduling {0}",
+                new Object[] { task }, null, null, null );
         }
     }
 
@@ -780,13 +745,13 @@ public class BundleComponentActivator implements ComponentActivator
      * @param componentId
      * @param ex An optional <code>Throwable</code> whose stack trace is written,
      */
-    public void log(int level, String pattern, Object[] arguments,
-        ComponentMetadata metadata, Long componentId, Throwable ex)
+    public void log(int level, String pattern, Object[] arguments, ComponentMetadata metadata, Long componentId,
+        Throwable ex)
     {
-        if (isLogEnabled(level))
+        if ( isLogEnabled( level ) )
         {
-            final String message = MessageFormat.format(pattern, arguments);
-            log(level, message, metadata, componentId, ex);
+            final String message = MessageFormat.format( pattern, arguments );
+            log( level, message, metadata, componentId, ex );
         }
     }
 
@@ -800,18 +765,16 @@ public class BundleComponentActivator implements ComponentActivator
      * @param componentId
      * @param ex An optional <code>Throwable</code> whose stack trace is written,
      */
-    public void log(int level, String message, ComponentMetadata metadata,
-        Long componentId, Throwable ex)
+    public void log(int level, String message, ComponentMetadata metadata, Long componentId, Throwable ex)
     {
-        if (isLogEnabled(level))
+        if ( isLogEnabled( level ) )
         {
             // prepend the metadata name to the message
-            if (metadata != null)
+            if ( metadata != null )
             {
-                if (componentId != null)
+                if ( componentId != null )
                 {
-                    message = "[" + metadata.getName() + "(" + componentId + ")] "
-                        + message;
+                    message = "[" + metadata.getName() + "(" + componentId + ")] " + message;
                 }
                 else
                 {
@@ -820,59 +783,60 @@ public class BundleComponentActivator implements ComponentActivator
             }
 
             ServiceTracker<LogService, LogService> logService = m_logService;
-            if (logService != null)
+            if ( logService != null )
             {
                 LogService logger = logService.getService();
-                if (logger == null)
+                if ( logger == null )
                 {
-                    m_logger.log(level, message, ex);
+                    m_logger.log( level, message, ex );
                 }
                 else
                 {
-                    logger.log(level, message, ex);
+                    logger.log( level, message, ex );
                 }
             }
             else
             {
                 // BCA has been disposed off, bundle context is probably invalid. Try to log something.
-                m_logger.log(level, message, ex);
+                m_logger.log( level, message, ex );
             }
         }
     }
-    
+
     public <T> boolean enterCreate(ServiceReference<T> serviceReference)
     {
-        return m_componentRegistry.enterCreate(serviceReference);
+        return m_componentRegistry.enterCreate( serviceReference );
     }
-    
+
     public <T> void leaveCreate(ServiceReference<T> serviceReference)
     {
-        m_componentRegistry.leaveCreate(serviceReference);
+        m_componentRegistry.leaveCreate( serviceReference );
     }
 
     public <T> void missingServicePresent(ServiceReference<T> serviceReference)
     {
-        m_componentRegistry.missingServicePresent(serviceReference, m_componentActor);
+        m_componentRegistry.missingServicePresent( serviceReference, m_componentActor );
     }
 
     public <S, T> void registerMissingDependency(DependencyManager<S, T> dependencyManager,
         ServiceReference<T> serviceReference, int trackingCount)
     {
-        m_componentRegistry.registerMissingDependency(dependencyManager,
-            serviceReference, trackingCount);
+        m_componentRegistry.registerMissingDependency( dependencyManager, serviceReference, trackingCount );
     }
 
-    public RegionConfigurationSupport setRegionConfigurationSupport(ServiceReference<ConfigurationAdmin> reference) {
-        RegionConfigurationSupport rcs = m_componentRegistry.registerRegionConfigurationSupport(reference);
-        for (ComponentHolder<?> holder: m_holders)
+    public RegionConfigurationSupport setRegionConfigurationSupport(ServiceReference<ConfigurationAdmin> reference)
+    {
+        RegionConfigurationSupport rcs = m_componentRegistry.registerRegionConfigurationSupport( reference );
+        for ( ComponentHolder<?> holder : m_holders )
         {
-            rcs.configureComponentHolder(holder);
+            rcs.configureComponentHolder( holder );
         }
         return rcs;
     }
 
-    public void unsetRegionConfigurationSupport(RegionConfigurationSupport rcs) {
-        m_componentRegistry.unregisterRegionConfigurationSupport(rcs);
-		// TODO anything needed?
-	}
+    public void unsetRegionConfigurationSupport(RegionConfigurationSupport rcs)
+    {
+        m_componentRegistry.unregisterRegionConfigurationSupport( rcs );
+        // TODO anything needed?
+    }
 }
