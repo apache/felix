@@ -23,8 +23,9 @@ import java.text.MessageFormat;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 
 import org.apache.felix.scr.impl.config.ScrConfigurationImpl;
 import org.apache.felix.scr.impl.helper.SimpleLogger;
@@ -250,39 +251,67 @@ public class Activator extends AbstractExtender implements SimpleLogger
     {
 
         private final Bundle bundle;
-        private final CountDownLatch started;
+        private final Lock stateLock = new ReentrantLock();
 
         public ScrExtension(Bundle bundle)
         {
             this.bundle = bundle;
-            this.started = new CountDownLatch( 1 );
         }
 
         public void start()
         {
+            boolean acquired = false;
             try
             {
+                try
+                {
+                    acquired = stateLock.tryLock( m_configuration.stopTimeout(), TimeUnit.MILLISECONDS );
+
+                }
+                catch ( InterruptedException e )
+                {
+                    Thread.currentThread().interrupt();
+                    log( LogService.LOG_WARNING, m_bundle,
+                        "The wait for bundle {0}/{1} being destroyed before starting has been interrupted.",
+                        new Object[] { bundle.getSymbolicName(), bundle.getBundleId() }, e );
+                }
                 loadComponents( ScrExtension.this.bundle );
             }
             finally
             {
-                started.countDown();
+                if ( acquired )
+                {
+                    stateLock.unlock();
+                }
             }
         }
 
         public void destroy()
         {
+            boolean acquired = false;
             try
             {
-                this.started.await( m_configuration.stopTimeout(), TimeUnit.MILLISECONDS );
+                try
+                {
+                    acquired = stateLock.tryLock( m_configuration.stopTimeout(), TimeUnit.MILLISECONDS );
+
+                }
+                catch ( InterruptedException e )
+                {
+                    Thread.currentThread().interrupt();
+                    log( LogService.LOG_WARNING, m_bundle,
+                        "The wait for bundle {0}/{1} being started before destruction has been interrupted.",
+                        new Object[] { bundle.getSymbolicName(), bundle.getBundleId() }, e );
+                }
+                disposeComponents( bundle );
             }
-            catch ( InterruptedException e )
+            finally
             {
-                log( LogService.LOG_WARNING, m_bundle,
-                    "The wait for bundle {0}/{1} being started before destruction has been interrupted.",
-                    new Object[] { bundle.getSymbolicName(), bundle.getBundleId() }, e );
+                if ( acquired )
+                {
+                    stateLock.unlock();
+                }
             }
-            disposeComponents( this.bundle );
         }
     }
 
@@ -408,7 +437,7 @@ public class Activator extends AbstractExtender implements SimpleLogger
      */
     private void disposeComponents(Bundle bundle)
     {
-        final Object ga;
+        final BundleComponentActivator ga;
         synchronized ( m_componentBundles )
         {
             ga = m_componentBundles.remove( bundle.getBundleId() );
@@ -420,7 +449,7 @@ public class Activator extends AbstractExtender implements SimpleLogger
             {
                 int reason = isStopping()? ComponentConstants.DEACTIVATION_REASON_DISPOSED
                     : ComponentConstants.DEACTIVATION_REASON_BUNDLE_STOPPED;
-                ( (BundleComponentActivator) ga ).dispose( reason );
+                ga.dispose( reason );
             }
             catch ( Exception e )
             {

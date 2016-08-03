@@ -553,6 +553,7 @@ public class BundleComponentActivator implements ComponentActivator
             catch ( InterruptedException e )
             {
                 //ignore interruption during concurrent shutdown.
+                Thread.currentThread().interrupt();
             }
         }
 
