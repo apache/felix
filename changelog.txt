@@ -1,3 +1,11 @@
+Changes from 2.0.4 to 2.0.6
+---------------------------
+** Bug
+    * [FELIX-5315] Unexpected release of ConfigurationAdmin service in RegionConfigurationSupport
+    * [FELIX-5316] Updating from SCR 2.0.2 to SCR 2.0.4 leads to null pointers
+    * [FELIX-5318] SCR causes startup to wait when bundle uninstall itself in activator
+
+
 Changes from 2.0.2 to 2.0.4
 ---------------------------
 ** Improvement
