@@ -320,6 +320,10 @@ public class ConvertingImpl implements Converting, InternalConverting {
         }
         if (cls.equals(boolean.class)) {
             return false;
+        } else if (cls.equals(long.class) ) {
+            return 0L;
+        } else if (cls.equals(double.class) ) {
+            return 0.0;
         } else {
             return 0;
         }
