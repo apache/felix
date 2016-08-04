@@ -287,13 +287,24 @@ public class ConvertingImpl implements Converting, InternalConverting {
             new InvocationHandler() {
                 @Override
                 public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
-                    String propName = getAccessorPropertyName(method);
+                    String propName = getInterfacePropertyName(method);
                     if (propName == null)
                         return null;
 
                     Class<?> targetType = method.getReturnType();
 
-                    return converter.convert(m.get(propName)).to(targetType);
+                    Object val = m.get(propName);
+
+                    // If no value is available take the default if specified
+                    if (val == null) {
+                        if (targetCls.isAnnotation()) {
+                            val = method.getDefaultValue();
+                        }
+
+                        if (val == null && args != null && args.length == 1)
+                            val = args[0];
+                    }
+                    return converter.convert(val).to(targetType);
                 }
             });
     }
@@ -425,10 +436,25 @@ public class ConvertingImpl implements Converting, InternalConverting {
 
         Map result = new HashMap();
         for (Method md : obj.getClass().getDeclaredMethods()) {
-            handleMethod(obj, md, invokedMethods, result);
+            handleBeanMethod(obj, md, invokedMethods, result);
         }
         for (Method md : obj.getClass().getMethods()) {
-            handleMethod(obj, md, invokedMethods, result);
+            handleBeanMethod(obj, md, invokedMethods, result);
+        }
+
+        return result;
+    }
+
+    @SuppressWarnings("rawtypes")
+    private static Map createMapFromInterface(Object obj) {
+        Set<String> invokedMethods = new HashSet<>();
+
+        Map result = new HashMap();
+        for (Method md : obj.getClass().getDeclaredMethods()) {
+            handleInterfaceMethod(obj, md, invokedMethods, result);
+        }
+        for (Method md : obj.getClass().getMethods()) {
+            handleInterfaceMethod(obj, md, invokedMethods, result);
         }
 
         return result;
@@ -482,8 +508,21 @@ public class ConvertingImpl implements Converting, InternalConverting {
         return propName.toString();
     }
 
+    private static String getInterfacePropertyName(Method md) {
+        if (md.getReturnType().equals(Void.class))
+            return null; // not an accessor
+
+        if (md.getParameterTypes().length > 1)
+            return null; // not an accessor
+
+        if (Object.class.equals(md.getDeclaringClass()))
+            return null; // do not use any methods on the Object class as a accessor
+
+        return md.getName().replace('_', '.'); // TODO support all the escaping mechanisms.
+    }
+
     @SuppressWarnings({ "rawtypes", "unchecked" })
-    private static void handleMethod(Object obj, Method md, Set<String> invokedMethods, Map res) {
+    private static void handleBeanMethod(Object obj, Method md, Set<String> invokedMethods, Map res) {
         String mn = md.getName();
         if (invokedMethods.contains(mn))
             return; // method with this name already invoked
@@ -499,11 +538,30 @@ public class ConvertingImpl implements Converting, InternalConverting {
         }
     }
 
+    @SuppressWarnings({ "rawtypes", "unchecked" })
+    private static void handleInterfaceMethod(Object obj, Method md, Set<String> invokedMethods, Map res) {
+        String mn = md.getName();
+        if (invokedMethods.contains(mn))
+            return; // method with this name already invoked
+
+        String propName = getInterfacePropertyName(md);
+        if (propName == null)
+            return;
+
+        try {
+            res.put(propName.toString(), md.invoke(obj));
+            invokedMethods.add(mn);
+        } catch (Exception e) {
+        }
+    }
+
     private static Map<?,?> mapView(Object obj) {
         if (obj instanceof Map)
             return (Map<?,?>) obj;
         else if (obj instanceof Dictionary)
             return null; // TODO
+        else if (obj.getClass().getInterfaces().length > 0)
+            return createMapFromInterface(obj);
         else
             return createMapFromBeanAccessors(obj);
     }

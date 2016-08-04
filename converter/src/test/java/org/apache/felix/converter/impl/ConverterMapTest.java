@@ -42,7 +42,7 @@ public class ConverterMapTest {
 
     @Before
     public void setUp() {
-        converter = new ConverterImpl();
+        converter = new ConverterService();
     }
 
     @After
@@ -117,52 +117,34 @@ public class ConverterMapTest {
 
     @Test
     public void testInterfaceToMap() {
-        Object obj = new Object();
         TestInterface impl = new TestInterface() {
             @Override
-            public String getFoo() {
+            public String foo() {
                 return "Chocolate!";
             }
 
             @Override
-            public int getBar() {
+            public int bar() {
                 return 76543;
             }
 
-            @SuppressWarnings("unused")
-            public long getL() {
-                return 1L;
+            @Override
+            public int bar(String def) {
+                return 0;
             }
 
-            @SuppressWarnings("unused")
-            public boolean isSomething() {
+            @Override
+            public Boolean za_za() {
                 return true;
-            }
-
-            @SuppressWarnings("unused")
-            public Object getBlah() {
-                return obj;
-            }
-
-            @SuppressWarnings("unused")
-            private byte getByte() {
-                return (byte) 12;
-            }
-
-            @SuppressWarnings("unused")
-            public String getAlt(int arg) {
-                return "some value";
             }
         };
 
         @SuppressWarnings("rawtypes")
         Map m = converter.convert(impl).to(Map.class);
-        assertEquals(5, m.size());
+        assertEquals(3, m.size());
         assertEquals("Chocolate!", m.get("foo"));
         assertEquals(76543, (int) m.get("bar"));
-        assertEquals(1L, (long) m.get("l"));
-        assertTrue((boolean) m.get("something"));
-        assertSame(obj, m.get("blah"));
+        assertEquals(true, (boolean) m.get("za.za"));
     }
 
     @SuppressWarnings({ "unchecked", "rawtypes" })
@@ -172,10 +154,12 @@ public class ConverterMapTest {
         m.put("foo", 12345);
         m.put("bar", "999");
         m.put("alt", "someval");
+        m.put("za.za", true);
 
         TestInterface ti = converter.convert(m).to(TestInterface.class);
-        assertEquals("12345", ti.getFoo());
-        assertEquals(999, ti.getBar());
+        assertEquals("12345", ti.foo());
+        assertEquals(999, ti.bar());
+        assertEquals(Boolean.TRUE, ti.za_za());
     }
 
     @SuppressWarnings("rawtypes")
@@ -184,8 +168,36 @@ public class ConverterMapTest {
         Map m = new HashMap<>();
 
         TestInterface ti = converter.convert(m).to(TestInterface.class);
-        assertNull(ti.getFoo());
-        assertEquals(0, ti.getBar());
+        assertNull(ti.foo());
+        assertEquals(999, ti.bar("999"));
+        assertNull(ti.za_za());
+    }
+
+    @SuppressWarnings({ "unchecked", "rawtypes" })
+    @Test
+    public void testMapToAnnotation1() {
+        Map m = new HashMap<>();
+        m.put("foo", 12345);
+        m.put("bar", "999");
+        m.put("alt", "someval");
+        m.put("za.za", true);
+
+        TestAnnotation ta = converter.convert(m).to(TestAnnotation.class);
+        assertEquals("12345", ta.foo());
+        assertEquals(999, ta.bar());
+        assertTrue(ta.za_za());
+    }
+
+    @SuppressWarnings({ "unchecked", "rawtypes" })
+    @Test
+    public void testMapToAnnotationDefaults() {
+        Map m = new HashMap<>();
+        m.put("alt", "someval");
+
+        TestAnnotation ta = converter.convert(m).to(TestAnnotation.class);
+        assertEquals("fooo!", ta.foo());
+        assertEquals(42, ta.bar());
+        assertFalse(ta.za_za());
     }
 
     @SuppressWarnings({ "rawtypes", "unchecked" })
@@ -200,7 +212,15 @@ public class ConverterMapTest {
     }
 
     interface TestInterface {
-        String getFoo();
-        int getBar();
+        String foo();
+        int bar();
+        int bar(String def);
+        Boolean za_za();
+    }
+
+    @interface TestAnnotation {
+        String foo() default "fooo!";
+        int bar() default 42;
+        boolean za_za();
     }
 }
