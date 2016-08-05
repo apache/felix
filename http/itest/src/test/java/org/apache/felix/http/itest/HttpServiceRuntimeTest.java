@@ -1367,6 +1367,53 @@ public class HttpServiceRuntimeTest extends BaseIntegrationTest
         assertTrue(endpoint[0].endsWith(":8080/"));
     }
 
+    /**
+     * Test for FELIX-5319
+     * @throws Exception
+     */
+    @Test
+    public void testCombinedServletAndResourceRegistration() throws Exception
+    {
+        // register single component as Servlet and Resource
+        final String servletPath = "/hello/sayHello";
+        final String servletName = "Hello World";
+        final String rsrcPattern = "/hello/static/*";
+        final String rsrcPrefix = "/static";
+
+        CountDownLatch initLatch = new CountDownLatch(1);
+        List<Object> propertyEntries = Arrays.<Object>asList(
+                HTTP_WHITEBOARD_SERVLET_PATTERN, servletPath,
+                HTTP_WHITEBOARD_SERVLET_NAME, servletName,
+                HTTP_WHITEBOARD_RESOURCE_PATTERN, rsrcPattern,
+                HTTP_WHITEBOARD_RESOURCE_PREFIX, rsrcPrefix);
+
+        Dictionary<String, ?> properties = createDictionary(propertyEntries.toArray());
+
+        registrations.add(m_context.registerService(Servlet.class.getName(), new TestServlet(initLatch, null), properties));
+        awaitServiceRegistration(initLatch);
+
+        HttpServiceRuntime serviceRuntime = (HttpServiceRuntime) getService(HttpServiceRuntime.class.getName());
+        assertNotNull("HttpServiceRuntime unavailable", serviceRuntime);
+
+        RuntimeDTO runtimeDTO = serviceRuntime.getRuntimeDTO();
+
+        assertEquals(0, runtimeDTO.failedServletDTOs.length);
+        assertEquals(0, runtimeDTO.failedResourceDTOs.length);
+
+        // check servlet registration
+        ServletContextDTO contextDTO = assertDefaultContext(runtimeDTO);
+        assertEquals(1, contextDTO.servletDTOs.length);
+        assertEquals(servletName, contextDTO.servletDTOs[0].name);
+        assertEquals(1, contextDTO.servletDTOs[0].patterns.length);
+        assertEquals(servletPath, contextDTO.servletDTOs[0].patterns[0]);
+
+        // check resource registration
+        assertEquals(1, contextDTO.resourceDTOs.length);
+        assertEquals(1, contextDTO.resourceDTOs[0].patterns.length);
+        assertEquals(rsrcPattern, contextDTO.resourceDTOs[0].patterns[0]);
+        assertEquals(rsrcPrefix, contextDTO.resourceDTOs[0].prefix);
+    }
+
     private ServletContextDTO assertDefaultContext(RuntimeDTO runtimeDTO)
     {
         assertTrue(1 < runtimeDTO.servletContextDTOs.length);
