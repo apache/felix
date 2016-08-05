@@ -39,12 +39,19 @@ public final class ResourceInfo extends WhiteboardServiceInfo<Object>
 
     private final ServletInfo servletInfo;
 
+    private static final class ResourceServletInfo extends ServletInfo {
+
+        public ResourceServletInfo(ResourceInfo resource) {
+            super(resource);
+        }
+    };
+
     public ResourceInfo(final ServiceReference<Object> ref)
     {
         super(ref);
         this.patterns = getStringArrayProperty(ref, HttpWhiteboardConstants.HTTP_WHITEBOARD_RESOURCE_PATTERN);
         this.prefix = getStringProperty(ref, HttpWhiteboardConstants.HTTP_WHITEBOARD_RESOURCE_PREFIX);
-        this.servletInfo = new ServletInfo(this);
+        this.servletInfo = new ResourceServletInfo(this);
     }
 
     @Override

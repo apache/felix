@@ -82,12 +82,17 @@ public abstract class AbstractInfo<T> implements Comparable<AbstractInfo<T>>
     {
         if (this.ranking == other.ranking)
         {
+            if ( this.serviceId == other.serviceId )
+            {
+                return this.getClass().getName().compareTo(other.getClass().getName());
+            }
             // Service id's can be negative. Negative id's follow the reverse natural ordering of integers.
             int reverseOrder = ( this.serviceId >= 0 && other.serviceId >= 0 ) ? 1 : -1;
             return reverseOrder * new Long(this.serviceId).compareTo(other.serviceId);
         }
 
-        return new Integer(other.ranking).compareTo(this.ranking);
+        int result = new Integer(other.ranking).compareTo(this.ranking);
+        return result;
     }
 
     protected boolean isEmpty(final String value)
