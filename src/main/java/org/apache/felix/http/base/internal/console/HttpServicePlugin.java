@@ -1068,11 +1068,11 @@ public class HttpServicePlugin extends HttpServlet
 
             pw.print("Path : ");
             pw.println(getContextPath(ctxDto.contextPath));
-            final ServiceReference<?> ref = this.getServiceReference(ctxDto.serviceId);
-            if ( ref != null )
+            final ServiceReference<?> ref2 = this.getServiceReference(ctxDto.serviceId);
+            if ( ref2 != null )
             {
                 int ranking = 0;
-                final Object obj = ref.getProperty(Constants.SERVICE_RANKING);
+                final Object obj = ref2.getProperty(Constants.SERVICE_RANKING);
                 if ( obj instanceof Integer)
                 {
                     ranking = (Integer)obj;
