@@ -413,6 +413,17 @@ public class HttpServicePlugin extends HttpServlet
         pw.println("<th class=\"header\">${Value)}</th>");
         pw.println("</tr></thead>");
         odd = printRow(pw, odd, "${Path}", getContextPath(dto.contextPath));
+        final ServiceReference<?> ref = this.getServiceReference(dto.serviceId);
+        if ( ref != null )
+        {
+            int ranking = 0;
+            final Object obj = ref.getProperty(Constants.SERVICE_RANKING);
+            if ( obj instanceof Integer)
+            {
+                ranking = (Integer)obj;
+            }
+            odd = printRow(pw, odd, "${ranking}", String.valueOf(ranking));
+        }
         odd = printRow(pw, odd, "${service.id}", String.valueOf(dto.serviceId));
         pw.println("</table>");
 
@@ -1057,6 +1068,18 @@ public class HttpServicePlugin extends HttpServlet
 
             pw.print("Path : ");
             pw.println(getContextPath(ctxDto.contextPath));
+            final ServiceReference<?> ref = this.getServiceReference(ctxDto.serviceId);
+            if ( ref != null )
+            {
+                int ranking = 0;
+                final Object obj = ref.getProperty(Constants.SERVICE_RANKING);
+                if ( obj instanceof Integer)
+                {
+                    ranking = (Integer)obj;
+                }
+                pw.print("Ranking : ");
+                pw.println(String.valueOf(ranking));
+            }
             pw.print("service.id : ");
             pw.println(String.valueOf(ctxDto.serviceId));
             pw.println();
