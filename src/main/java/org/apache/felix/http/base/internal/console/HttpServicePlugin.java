@@ -357,6 +357,7 @@ public class HttpServicePlugin extends HttpServlet
             odd = printRow(pw, odd, prop.getKey(), getValueAsString(prop.getValue()));
         }
         pw.println("</table>");
+        pw.println("<br/>");
     }
 
     private boolean printRow(final PrintWriter pw, final boolean odd, final String...columns)
@@ -399,6 +400,21 @@ public class HttpServicePlugin extends HttpServlet
         return path;
     }
 
+    private boolean printServiceRankingRow(final PrintWriter pw, final long serviceId, final boolean odd)
+    {
+        int ranking = 0;
+        final ServiceReference<?> ref = this.getServiceReference(serviceId);
+        if ( ref != null )
+        {
+            final Object obj = ref.getProperty(Constants.SERVICE_RANKING);
+            if ( obj instanceof Integer)
+            {
+                ranking = (Integer)obj;
+            }
+        }
+        return printRow(pw, odd, "${ranking}", String.valueOf(ranking));
+    }
+
     private void printContextDetails(final PrintWriter pw, final ServletContextDTO dto)
     {
         pw.print("<p class=\"statline ui-state-highlight\">${Servlet Context} '");
@@ -413,18 +429,8 @@ public class HttpServicePlugin extends HttpServlet
         pw.println("<th class=\"header\">${Value)}</th>");
         pw.println("</tr></thead>");
         odd = printRow(pw, odd, "${Path}", getContextPath(dto.contextPath));
-        final ServiceReference<?> ref = this.getServiceReference(dto.serviceId);
-        if ( ref != null )
-        {
-            int ranking = 0;
-            final Object obj = ref.getProperty(Constants.SERVICE_RANKING);
-            if ( obj instanceof Integer)
-            {
-                ranking = (Integer)obj;
-            }
-            odd = printRow(pw, odd, "${ranking}", String.valueOf(ranking));
-        }
         odd = printRow(pw, odd, "${service.id}", String.valueOf(dto.serviceId));
+        odd = printServiceRankingRow(pw, dto.serviceId, odd);
         pw.println("</table>");
 
         printServletDetails(pw, dto);
@@ -432,6 +438,8 @@ public class HttpServicePlugin extends HttpServlet
         printResourceDetails(pw, dto);
         printErrorPageDetails(pw, dto);
         printListenerDetails(pw, dto);
+
+        pw.println("<br/>");
     }
 
     private void printFailedContextDetails(final PrintWriter pw, final FailedServletContextDTO dto)
@@ -451,6 +459,20 @@ public class HttpServicePlugin extends HttpServlet
         odd = printRow(pw, odd, "${reason}", getErrorText(dto.failureReason));
         odd = printRow(pw, odd, "${service.id}", String.valueOf(dto.serviceId));
         pw.println("</table>");
+    }
+
+    private void appendServiceRanking(final StringBuilder sb, final ServiceReference<?> ref)
+    {
+        int ranking = 0;
+        if ( ref != null )
+        {
+            final Object obj = ref.getProperty(Constants.SERVICE_RANKING);
+            if ( obj instanceof Integer)
+            {
+                ranking = (Integer)obj;
+            }
+        }
+        sb.append("${ranking} : ").append(String.valueOf(ranking)).append("\n");
     }
 
     private void printFilterDetails(final PrintWriter pw, final ServletContextDTO dto)
@@ -473,21 +495,12 @@ public class HttpServicePlugin extends HttpServlet
         boolean odd = true;
         for (final FilterDTO filter : dto.filterDTOs)
         {
-            final StringBuilder sb = new StringBuilder();
             final ServiceReference<?> ref = this.getServiceReference(filter.serviceId);
-            if ( ref != null )
-            {
-                int ranking = 0;
-                final Object obj = ref.getProperty(Constants.SERVICE_RANKING);
-                if ( obj instanceof Integer)
-                {
-                    ranking = (Integer)obj;
-                }
-                sb.append("${ranking} : ").append(String.valueOf(ranking)).append("\n");
-            }
+            final StringBuilder sb = new StringBuilder();
+            sb.append("${service.id} : ").append(String.valueOf(filter.serviceId)).append("\n");
+            appendServiceRanking(sb, ref);
             sb.append("${async} : ").append(String.valueOf(filter.asyncSupported)).append("\n");
             sb.append("${dispatcher} : ").append(getValueAsString(filter.dispatcher)).append("\n");
-            sb.append("${service.id} : ").append(String.valueOf(filter.serviceId)).append("\n");
             if ( ref != null )
             {
                 sb.append("${bundle} : ");
@@ -551,19 +564,10 @@ public class HttpServicePlugin extends HttpServlet
             final StringBuilder sb = new StringBuilder();
             sb.append("${reason} : ").append(getErrorText(filter.failureReason)).append("\n");
             final ServiceReference<?> ref = this.getServiceReference(filter.serviceId);
-            if ( ref != null )
-            {
-                int ranking = 0;
-                final Object obj = ref.getProperty(Constants.SERVICE_RANKING);
-                if ( obj instanceof Integer)
-                {
-                    ranking = (Integer)obj;
-                }
-                sb.append("${ranking} : ").append(String.valueOf(ranking)).append("\n");
-            }
+            sb.append("${service.id} : ").append(String.valueOf(filter.serviceId)).append("\n");
+            appendServiceRanking(sb, ref);
             sb.append("${async} : ").append(String.valueOf(filter.asyncSupported)).append("\n");
             sb.append("${dispatcher} : ").append(getValueAsString(filter.dispatcher)).append("\n");
-            sb.append("${service.id} : ").append(String.valueOf(filter.serviceId)).append("\n");
             if ( ref != null )
             {
                 sb.append("${bundle} : ");
@@ -634,18 +638,9 @@ public class HttpServicePlugin extends HttpServlet
         {
             final StringBuilder sb = new StringBuilder();
             final ServiceReference<?> ref = this.getServiceReference(servlet.serviceId);
-            if ( ref != null )
-            {
-                int ranking = 0;
-                final Object obj = ref.getProperty(Constants.SERVICE_RANKING);
-                if ( obj instanceof Integer)
-                {
-                    ranking = (Integer)obj;
-                }
-                sb.append("${ranking} : ").append(String.valueOf(ranking)).append("\n");
-            }
-            sb.append("${async} : ").append(String.valueOf(servlet.asyncSupported)).append("\n");
             sb.append("${service.id} : ").append(String.valueOf(servlet.serviceId)).append("\n");
+            appendServiceRanking(sb, ref);
+            sb.append("${async} : ").append(String.valueOf(servlet.asyncSupported)).append("\n");
             if ( ref != null )
             {
                 sb.append("${bundle} : ");
@@ -687,18 +682,9 @@ public class HttpServicePlugin extends HttpServlet
             final StringBuilder sb = new StringBuilder();
             sb.append("${reason} : ").append(getErrorText(servlet.failureReason)).append("\n");
             final ServiceReference<?> ref = this.getServiceReference(servlet.serviceId);
-            if ( ref != null )
-            {
-                int ranking = 0;
-                final Object obj = ref.getProperty(Constants.SERVICE_RANKING);
-                if ( obj instanceof Integer)
-                {
-                    ranking = (Integer)obj;
-                }
-                sb.append("${ranking} : ").append(String.valueOf(ranking)).append("\n");
-            }
-            sb.append("${async} : ").append(String.valueOf(servlet.asyncSupported)).append("\n");
             sb.append("${service.id} : ").append(String.valueOf(servlet.serviceId)).append("\n");
+            appendServiceRanking(sb, ref);
+            sb.append("${async} : ").append(String.valueOf(servlet.asyncSupported)).append("\n");
             if ( ref != null )
             {
                 sb.append("${bundle} : ");
@@ -741,17 +727,8 @@ public class HttpServicePlugin extends HttpServlet
         {
             final StringBuilder sb = new StringBuilder();
             final ServiceReference<?> ref = this.getServiceReference(rsrc.serviceId);
-            if ( ref != null )
-            {
-                int ranking = 0;
-                final Object obj = ref.getProperty(Constants.SERVICE_RANKING);
-                if ( obj instanceof Integer)
-                {
-                    ranking = (Integer)obj;
-                }
-                sb.append("${ranking} : ").append(String.valueOf(ranking)).append("\n");
-            }
             sb.append("${service.id} : ").append(String.valueOf(rsrc.serviceId)).append("\n");
+            appendServiceRanking(sb, ref);
             if ( ref != null )
             {
                 sb.append("${bundle} : ");
@@ -793,17 +770,8 @@ public class HttpServicePlugin extends HttpServlet
             final StringBuilder sb = new StringBuilder();
             sb.append("${reason} : ").append(getErrorText(rsrc.failureReason)).append("\n");
             final ServiceReference<?> ref = this.getServiceReference(rsrc.serviceId);
-            if ( ref != null )
-            {
-                int ranking = 0;
-                final Object obj = ref.getProperty(Constants.SERVICE_RANKING);
-                if ( obj instanceof Integer)
-                {
-                    ranking = (Integer)obj;
-                }
-                sb.append("${ranking} : ").append(String.valueOf(ranking)).append("\n");
-            }
             sb.append("${service.id} : ").append(String.valueOf(rsrc.serviceId)).append("\n");
+            appendServiceRanking(sb, ref);
             if ( ref != null )
             {
                 sb.append("${bundle} : ");
@@ -846,18 +814,9 @@ public class HttpServicePlugin extends HttpServlet
         {
             final StringBuilder sb = new StringBuilder();
             final ServiceReference<?> ref = this.getServiceReference(ep.serviceId);
-            if ( ref != null )
-            {
-                int ranking = 0;
-                final Object obj = ref.getProperty(Constants.SERVICE_RANKING);
-                if ( obj instanceof Integer)
-                {
-                    ranking = (Integer)obj;
-                }
-                sb.append("${ranking} : ").append(String.valueOf(ranking)).append("\n");
-            }
-            sb.append("${async} : ").append(String.valueOf(ep.asyncSupported)).append("\n");
             sb.append("${service.id} : ").append(String.valueOf(ep.serviceId)).append("\n");
+            appendServiceRanking(sb, ref);
+            sb.append("${async} : ").append(String.valueOf(ep.asyncSupported)).append("\n");
             if ( ref != null )
             {
                 sb.append("${bundle} : ");
@@ -903,18 +862,9 @@ public class HttpServicePlugin extends HttpServlet
             final StringBuilder sb = new StringBuilder();
             sb.append("${reason} : ").append(getErrorText(ep.failureReason)).append("\n");
             final ServiceReference<?> ref = this.getServiceReference(ep.serviceId);
-            if ( ref != null )
-            {
-                int ranking = 0;
-                final Object obj = ref.getProperty(Constants.SERVICE_RANKING);
-                if ( obj instanceof Integer)
-                {
-                    ranking = (Integer)obj;
-                }
-                sb.append("${ranking} : ").append(String.valueOf(ranking)).append("\n");
-            }
-            sb.append("${async} : ").append(String.valueOf(ep.asyncSupported)).append("\n");
             sb.append("${service.id} : ").append(String.valueOf(ep.serviceId)).append("\n");
+            appendServiceRanking(sb, ref);
+            sb.append("${async} : ").append(String.valueOf(ep.asyncSupported)).append("\n");
             if ( ref != null )
             {
                 sb.append("${bundle} : ");
@@ -960,17 +910,8 @@ public class HttpServicePlugin extends HttpServlet
         {
             final StringBuilder sb = new StringBuilder();
             final ServiceReference<?> ref = this.getServiceReference(ep.serviceId);
-            if ( ref != null )
-            {
-                int ranking = 0;
-                final Object obj = ref.getProperty(Constants.SERVICE_RANKING);
-                if ( obj instanceof Integer)
-                {
-                    ranking = (Integer)obj;
-                }
-                sb.append("${ranking} : ").append(String.valueOf(ranking)).append("\n");
-            }
             sb.append("${service.id} : ").append(String.valueOf(ep.serviceId)).append("\n");
+            appendServiceRanking(sb, ref);
             if ( ref != null )
             {
                 sb.append("${bundle} : ");
@@ -1010,17 +951,8 @@ public class HttpServicePlugin extends HttpServlet
             final StringBuilder sb = new StringBuilder();
             sb.append("${reason} : ").append(getErrorText(ep.failureReason)).append("\n");
             final ServiceReference<?> ref = this.getServiceReference(ep.serviceId);
-            if ( ref != null )
-            {
-                int ranking = 0;
-                final Object obj = ref.getProperty(Constants.SERVICE_RANKING);
-                if ( obj instanceof Integer)
-                {
-                    ranking = (Integer)obj;
-                }
-                sb.append("${ranking} : ").append(String.valueOf(ranking)).append("\n");
-            }
             sb.append("${service.id} : ").append(String.valueOf(ep.serviceId)).append("\n");
+            appendServiceRanking(sb, ref);
             if ( ref != null )
             {
                 sb.append("${bundle} : ");
@@ -1038,6 +970,23 @@ public class HttpServicePlugin extends HttpServlet
             odd = printRow(pw, odd, tsb.toString(), sb.toString());
         }
         pw.println("</table>");
+    }
+
+    private void printServiceIdAndRanking(final PrintWriter pw, final ServiceReference<?> ref, final long serviceId)
+    {
+        pw.print("service.id : ");
+        pw.println(String.valueOf(serviceId));
+        int ranking = 0;
+        if ( ref != null )
+        {
+            final Object obj = ref.getProperty(Constants.SERVICE_RANKING);
+            if ( obj instanceof Integer)
+            {
+                ranking = (Integer)obj;
+            }
+        }
+        pw.print("Ranking : ");
+        pw.println(String.valueOf(ranking));
     }
 
     /**
@@ -1068,20 +1017,7 @@ public class HttpServicePlugin extends HttpServlet
 
             pw.print("Path : ");
             pw.println(getContextPath(ctxDto.contextPath));
-            final ServiceReference<?> ref2 = this.getServiceReference(ctxDto.serviceId);
-            if ( ref2 != null )
-            {
-                int ranking = 0;
-                final Object obj = ref2.getProperty(Constants.SERVICE_RANKING);
-                if ( obj instanceof Integer)
-                {
-                    ranking = (Integer)obj;
-                }
-                pw.print("Ranking : ");
-                pw.println(String.valueOf(ranking));
-            }
-            pw.print("service.id : ");
-            pw.println(String.valueOf(ctxDto.serviceId));
+            printServiceIdAndRanking(pw, this.getServiceReference(ctxDto.serviceId), ctxDto.serviceId);
             pw.println();
             if ( ctxDto.servletDTOs.length > 0 )
             {
@@ -1093,22 +1029,9 @@ public class HttpServicePlugin extends HttpServlet
                     pw.print("Name : ");
                     pw.println(servlet.name);
                     final ServiceReference<?> ref = this.getServiceReference(servlet.serviceId);
-                    if ( ref != null )
-                    {
-                        int ranking = 0;
-                        final Object obj = ref.getProperty(Constants.SERVICE_RANKING);
-                        if ( obj instanceof Integer)
-                        {
-                            ranking = (Integer)obj;
-                        }
-                        pw.print("Ranking : ");
-                        pw.println(String.valueOf(ranking));
-                    }
+                    printServiceIdAndRanking(pw, ref, servlet.serviceId);
                     pw.print("async : ");
                     pw.println(String.valueOf(servlet.asyncSupported));
-                    pw.print("service.id : ");
-                    pw.println(String.valueOf(servlet.serviceId));
-                    pw.println();
                     if ( ref != null )
                     {
                         pw.print("Bundle : ");
@@ -1117,6 +1040,7 @@ public class HttpServicePlugin extends HttpServlet
                         pw.print(String.valueOf(ref.getBundle().getBundleId()));
                         pw.println(">");
                     }
+                    pw.println();
                 }
                 pw.println();
             }
@@ -1140,23 +1064,11 @@ public class HttpServicePlugin extends HttpServlet
                     pw.print("Name : ");
                     pw.println(filter.name);
                     final ServiceReference<?> ref = this.getServiceReference(filter.serviceId);
-                    if ( ref != null )
-                    {
-                        int ranking = 0;
-                        final Object obj = ref.getProperty(Constants.SERVICE_RANKING);
-                        if ( obj instanceof Integer)
-                        {
-                            ranking = (Integer)obj;
-                        }
-                        pw.print("Ranking : ");
-                        pw.println(String.valueOf(ranking));
-                    }
+                    printServiceIdAndRanking(pw, ref, filter.serviceId);
                     pw.print("async : ");
                     pw.println(String.valueOf(filter.asyncSupported));
                     pw.print("dispatcher : ");
                     pw.println(getValueAsString(filter.dispatcher));
-                    pw.print("service.id : ");
-                    pw.println(String.valueOf(filter.serviceId));
                     if ( ref != null )
                     {
                         pw.print("Bundle : ");
@@ -1179,20 +1091,7 @@ public class HttpServicePlugin extends HttpServlet
                     pw.print("Prefix : ");
                     pw.println(rsrc.prefix);
                     final ServiceReference<?> ref = this.getServiceReference(rsrc.serviceId);
-                    if ( ref != null )
-                    {
-                        int ranking = 0;
-                        final Object obj = ref.getProperty(Constants.SERVICE_RANKING);
-                        if ( obj instanceof Integer)
-                        {
-                            ranking = (Integer)obj;
-                        }
-                        pw.print("Ranking : ");
-                        pw.println(String.valueOf(ranking));
-                    }
-                    pw.print("service.id : ");
-                    pw.println(String.valueOf(rsrc.serviceId));
-                    pw.println();
+                    printServiceIdAndRanking(pw, ref, rsrc.serviceId);
                     if ( ref != null )
                     {
                         pw.print("Bundle : ");
@@ -1201,6 +1100,7 @@ public class HttpServicePlugin extends HttpServlet
                         pw.print(String.valueOf(ref.getBundle().getBundleId()));
                         pw.println(">");
                     }
+                    pw.println();
                 }
                 pw.println();
 
@@ -1224,21 +1124,9 @@ public class HttpServicePlugin extends HttpServlet
                     pw.print("Name : ");
                     pw.println(ep.name);
                     final ServiceReference<?> ref = this.getServiceReference(ep.serviceId);
-                    if ( ref != null )
-                    {
-                        int ranking = 0;
-                        final Object obj = ref.getProperty(Constants.SERVICE_RANKING);
-                        if ( obj instanceof Integer)
-                        {
-                            ranking = (Integer)obj;
-                        }
-                        pw.print("Ranking : ");
-                        pw.println(String.valueOf(ranking));
-                    }
+                    printServiceIdAndRanking(pw, ref, ep.serviceId);
                     pw.print("async : ");
                     pw.println(String.valueOf(ep.asyncSupported));
-                    pw.print("service.id : ");
-                    pw.println(String.valueOf(ep.serviceId));
                     if ( ref != null )
                     {
                         pw.print("Bundle : ");
@@ -1260,19 +1148,7 @@ public class HttpServicePlugin extends HttpServlet
                     pw.print("Types : ");
                     pw.println(getValueAsString(ep.types));
                     final ServiceReference<?> ref = this.getServiceReference(ep.serviceId);
-                    if ( ref != null )
-                    {
-                        int ranking = 0;
-                        final Object obj = ref.getProperty(Constants.SERVICE_RANKING);
-                        if ( obj instanceof Integer)
-                        {
-                            ranking = (Integer)obj;
-                        }
-                        pw.print("Ranking : ");
-                        pw.println(String.valueOf(ranking));
-                    }
-                    pw.print("service.id : ");
-                    pw.println(String.valueOf(ep.serviceId));
+                    printServiceIdAndRanking(pw, ref, ep.serviceId);
                     if ( ref != null )
                     {
                         pw.print("Bundle : ");
@@ -1300,8 +1176,7 @@ public class HttpServicePlugin extends HttpServlet
                 pw.println(getErrorText(ctxDto.failureReason));
                 pw.print("Path : ");
                 pw.println(getContextPath(ctxDto.contextPath));
-                pw.print("service.id : ");
-                pw.println(String.valueOf(ctxDto.serviceId));
+                printServiceIdAndRanking(pw, this.getServiceReference(ctxDto.serviceId), ctxDto.serviceId);
                 pw.println();
             }
         }
@@ -1317,22 +1192,9 @@ public class HttpServicePlugin extends HttpServlet
                 pw.print("Name : ");
                 pw.println(servlet.name);
                 final ServiceReference<?> ref = this.getServiceReference(servlet.serviceId);
-                if ( ref != null )
-                {
-                    int ranking = 0;
-                    final Object obj = ref.getProperty(Constants.SERVICE_RANKING);
-                    if ( obj instanceof Integer)
-                    {
-                        ranking = (Integer)obj;
-                    }
-                    pw.print("Ranking : ");
-                    pw.println(String.valueOf(ranking));
-                }
+                printServiceIdAndRanking(pw, ref, servlet.serviceId);
                 pw.print("async : ");
                 pw.println(String.valueOf(servlet.asyncSupported));
-                pw.print("service.id : ");
-                pw.println(String.valueOf(servlet.serviceId));
-                pw.println();
                 if ( ref != null )
                 {
                     pw.print("Bundle : ");
@@ -1341,6 +1203,7 @@ public class HttpServicePlugin extends HttpServlet
                     pw.print(String.valueOf(ref.getBundle().getBundleId()));
                     pw.println(">");
                 }
+                pw.println();
             }
             pw.println();
         }
@@ -1366,23 +1229,11 @@ public class HttpServicePlugin extends HttpServlet
                 pw.print("Name : ");
                 pw.println(filter.name);
                 final ServiceReference<?> ref = this.getServiceReference(filter.serviceId);
-                if ( ref != null )
-                {
-                    int ranking = 0;
-                    final Object obj = ref.getProperty(Constants.SERVICE_RANKING);
-                    if ( obj instanceof Integer)
-                    {
-                        ranking = (Integer)obj;
-                    }
-                    pw.print("Ranking : ");
-                    pw.println(String.valueOf(ranking));
-                }
+                printServiceIdAndRanking(pw, ref, filter.serviceId);
                 pw.print("async : ");
                 pw.println(String.valueOf(filter.asyncSupported));
                 pw.print("dispatcher : ");
                 pw.println(getValueAsString(filter.dispatcher));
-                pw.print("service.id : ");
-                pw.println(String.valueOf(filter.serviceId));
                 if ( ref != null )
                 {
                     pw.print("Bundle : ");
@@ -1407,20 +1258,7 @@ public class HttpServicePlugin extends HttpServlet
                 pw.print("Prefix : ");
                 pw.println(rsrc.prefix);
                 final ServiceReference<?> ref = this.getServiceReference(rsrc.serviceId);
-                if ( ref != null )
-                {
-                    int ranking = 0;
-                    final Object obj = ref.getProperty(Constants.SERVICE_RANKING);
-                    if ( obj instanceof Integer)
-                    {
-                        ranking = (Integer)obj;
-                    }
-                    pw.print("Ranking : ");
-                    pw.println(String.valueOf(ranking));
-                }
-                pw.print("service.id : ");
-                pw.println(String.valueOf(rsrc.serviceId));
-                pw.println();
+                printServiceIdAndRanking(pw, ref, rsrc.serviceId);
                 if ( ref != null )
                 {
                     pw.print("Bundle : ");
@@ -1429,6 +1267,7 @@ public class HttpServicePlugin extends HttpServlet
                     pw.print(String.valueOf(ref.getBundle().getBundleId()));
                     pw.println(">");
                 }
+                pw.println();
             }
             pw.println();
 
@@ -1454,21 +1293,9 @@ public class HttpServicePlugin extends HttpServlet
                 pw.print("Name : ");
                 pw.println(ep.name);
                 final ServiceReference<?> ref = this.getServiceReference(ep.serviceId);
-                if ( ref != null )
-                {
-                    int ranking = 0;
-                    final Object obj = ref.getProperty(Constants.SERVICE_RANKING);
-                    if ( obj instanceof Integer)
-                    {
-                        ranking = (Integer)obj;
-                    }
-                    pw.print("Ranking : ");
-                    pw.println(String.valueOf(ranking));
-                }
+                printServiceIdAndRanking(pw, ref, ep.serviceId);
                 pw.print("async : ");
                 pw.println(String.valueOf(ep.asyncSupported));
-                pw.print("service.id : ");
-                pw.println(String.valueOf(ep.serviceId));
                 if ( ref != null )
                 {
                     pw.print("Bundle : ");
@@ -1492,19 +1319,7 @@ public class HttpServicePlugin extends HttpServlet
                 pw.print("Reason : ");
                 pw.println(getErrorText(ep.failureReason));
                 final ServiceReference<?> ref = this.getServiceReference(ep.serviceId);
-                if ( ref != null )
-                {
-                    int ranking = 0;
-                    final Object obj = ref.getProperty(Constants.SERVICE_RANKING);
-                    if ( obj instanceof Integer)
-                    {
-                        ranking = (Integer)obj;
-                    }
-                    pw.print("Ranking : ");
-                    pw.println(String.valueOf(ranking));
-                }
-                pw.print("service.id : ");
-                pw.println(String.valueOf(ep.serviceId));
+                printServiceIdAndRanking(pw, ref, ep.serviceId);
                 if ( ref != null )
                 {
                     pw.print("Bundle : ");
