@@ -203,7 +203,7 @@ public class FieldUtil {
 
                 try {
                     Map<Object, Dictionary<?, ?>> map = (Map) f.get(target);
-                    if (add) {
+                    if (add || update) {
                         map.put(event.getEvent(), event.getProperties());
                     } else {
                         map.remove(event.getEvent());
