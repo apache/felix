@@ -28,9 +28,11 @@ import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 import java.util.regex.Matcher;
@@ -382,6 +384,30 @@ public class ConverterServiceTest {
     public void testDefaultValue() {
         long l = converter.convert(null).defaultValue("12").to(Long.class);
         assertEquals(12L, l);
+    }
+
+    @Test
+    public void testDTO2Map() {
+        MyDTO dto = new MyDTO();
+        dto.ping = "lalala";
+        dto.pong = Long.MIN_VALUE;
+
+        @SuppressWarnings("rawtypes")
+        Map m = converter.convert(dto).to(Map.class);
+        assertEquals(2, m.size());
+        assertEquals("lalala", m.get("ping"));
+        assertEquals(Long.MIN_VALUE, m.get("pong"));
+    }
+
+    @Test
+    public void testMap2DTO() {
+        Map<String, Object> m = new HashMap<>();
+        m.put("ping", "abc xyz");
+        m.put("pong", 42L);
+
+        MyDTO dto = converter.convert(m).to(MyDTO.class);
+        assertEquals("abc xyz", dto.ping);
+        assertEquals(42L, dto.pong);
     }
 
     static class MyClass2 {

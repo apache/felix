@@ -18,8 +18,10 @@ package org.apache.felix.converter.impl;
 
 import java.lang.reflect.Array;
 import java.lang.reflect.Constructor;
+import java.lang.reflect.Field;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Proxy;
 import java.lang.reflect.Type;
@@ -39,6 +41,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 
+import org.osgi.dto.DTO;
 import org.osgi.service.converter.ConversionException;
 import org.osgi.service.converter.Converter;
 import org.osgi.service.converter.Converting;
@@ -129,6 +132,8 @@ public class ConvertingImpl implements Converting, InternalConverting {
             return convertToArray(targetCls);
         } else if (Collection.class.isAssignableFrom(targetCls)) {
             return convertToCollection(targetCls, typeArguments);
+        } else if (DTO.class.isAssignableFrom(targetCls)) {
+            return convertToDTO(targetCls);
         } else if (isMapType(targetCls)) {
             return convertToMapType(targetCls, typeArguments);
         }
@@ -213,6 +218,27 @@ public class ConvertingImpl implements Converting, InternalConverting {
         }
 
         return (T) instance;
+    }
+
+    @SuppressWarnings({ "rawtypes", "unchecked" })
+    private <T> T convertToDTO(Class<T> targetCls) {
+        Map m = mapView(object);
+
+        try {
+            T dto = targetCls.newInstance();
+
+            for (Map.Entry entry : (Set<Map.Entry>) m.entrySet()) {
+                try {
+                    Field f = targetCls.getField(entry.getKey().toString());
+                    f.set(dto, entry.getValue());
+                } catch (NoSuchFieldException e) {
+                }
+            }
+
+            return dto;
+        } catch (Exception e) {
+            throw new ConversionException("Cannot create DTO " + targetCls, e);
+        }
     }
 
     @SuppressWarnings({ "rawtypes", "unchecked" })
@@ -449,6 +475,22 @@ public class ConvertingImpl implements Converting, InternalConverting {
         return result;
     }
 
+    @SuppressWarnings({ "rawtypes", "unchecked" })
+    private static Map createMapFromDTO(Object obj) {
+        Map result = new HashMap();
+
+        for (Field f : obj.getClass().getFields()) {
+            if (Modifier.isStatic(f.getModifiers()))
+                continue;
+
+            try {
+                result.put(f.getName(), f.get(obj)); // TODO handle escaping
+            } catch (Exception e) {
+            }
+        }
+        return result;
+    }
+
     @SuppressWarnings("rawtypes")
     private static Map createMapFromInterface(Object obj) {
         Set<String> invokedMethods = new HashSet<>();
@@ -527,6 +569,9 @@ public class ConvertingImpl implements Converting, InternalConverting {
 
     @SuppressWarnings({ "rawtypes", "unchecked" })
     private static void handleBeanMethod(Object obj, Method md, Set<String> invokedMethods, Map res) {
+        if (Modifier.isStatic(md.getModifiers()))
+            return;
+
         String mn = md.getName();
         if (invokedMethods.contains(mn))
             return; // method with this name already invoked
@@ -544,6 +589,9 @@ public class ConvertingImpl implements Converting, InternalConverting {
 
     @SuppressWarnings({ "rawtypes", "unchecked" })
     private static void handleInterfaceMethod(Object obj, Method md, Set<String> invokedMethods, Map res) {
+        if (Modifier.isStatic(md.getModifiers()))
+            return;
+
         String mn = md.getName();
         if (invokedMethods.contains(mn))
             return; // method with this name already invoked
@@ -564,6 +612,8 @@ public class ConvertingImpl implements Converting, InternalConverting {
             return (Map<?,?>) obj;
         else if (obj instanceof Dictionary)
             return null; // TODO
+        else if (obj instanceof DTO)
+            return createMapFromDTO(obj);
         else if (obj.getClass().getInterfaces().length > 0)
             return createMapFromInterface(obj);
         else
