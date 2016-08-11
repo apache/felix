@@ -1,3 +1,9 @@
+Changes from 1.4.6 to 1.4.8
+---------------------------
+** Improvement
+    * [FELIX-5323] -  EventAdmin should export version 1.3.1 of org.osgi.service.event
+
+
 Changes from 1.4.4 to 1.4.6
 ---------------------------
 ** Bug
