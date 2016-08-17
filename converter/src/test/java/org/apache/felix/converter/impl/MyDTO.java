@@ -19,7 +19,13 @@ package org.apache.felix.converter.impl;
 import org.osgi.dto.DTO;
 
 public class MyDTO extends DTO {
+    public enum Count { ONE, TWO, THREE }
+
+    public Count count;
+
     public String ping;
 
     public long pong;
+
+    public MyEmbeddedDTO embedded;
 }

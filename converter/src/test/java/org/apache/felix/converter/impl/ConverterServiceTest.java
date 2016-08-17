@@ -40,6 +40,8 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import org.apache.felix.converter.impl.MyDTO.Count;
+import org.apache.felix.converter.impl.MyEmbeddedDTO.Alpha;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -50,6 +52,7 @@ import org.osgi.service.converter.TypeReference;
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNotSame;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertSame;
@@ -388,15 +391,29 @@ public class ConverterServiceTest {
 
     @Test
     public void testDTO2Map() {
+        MyEmbeddedDTO embedded = new MyEmbeddedDTO();
+        embedded.marco = "hohoho";
+        embedded.polo = Long.MAX_VALUE;
+        embedded.alpha = Alpha.A;
+        
         MyDTO dto = new MyDTO();
         dto.ping = "lalala";
         dto.pong = Long.MIN_VALUE;
+        dto.count = Count.ONE;
+        dto.embedded = embedded;
 
         @SuppressWarnings("rawtypes")
         Map m = converter.convert(dto).to(Map.class);
-        assertEquals(2, m.size());
+        assertEquals(4, m.size());
         assertEquals("lalala", m.get("ping"));
         assertEquals(Long.MIN_VALUE, m.get("pong"));
+        assertEquals(Count.ONE, m.get("count"));
+        assertNotNull(m.get("embedded"));
+        @SuppressWarnings("rawtypes")
+        Map e = (Map)m.get("embedded");
+        assertEquals("hohoho", e.get("marco"));
+        assertEquals(Long.MAX_VALUE, e.get("polo"));
+        assertEquals(Alpha.A, e.get("alpha"));
     }
 
     @Test
@@ -404,10 +421,21 @@ public class ConverterServiceTest {
         Map<String, Object> m = new HashMap<>();
         m.put("ping", "abc xyz");
         m.put("pong", 42L);
+        m.put("count", Count.ONE);
+        Map<String, Object> e = new HashMap<>();
+        e.put("marco", "ichi ni san");
+        e.put("polo", 64L);
+        e.put("alpha", Alpha.A);
+        m.put("embedded", e);
 
         MyDTO dto = converter.convert(m).to(MyDTO.class);
         assertEquals("abc xyz", dto.ping);
         assertEquals(42L, dto.pong);
+        assertEquals(Count.ONE, dto.count);
+        assertNotNull(dto.embedded);
+        assertEquals(dto.embedded.marco, "ichi ni san");
+        assertEquals(dto.embedded.polo, 64L);
+        assertEquals(dto.embedded.alpha, Alpha.A);
     }
 
     static class MyClass2 {

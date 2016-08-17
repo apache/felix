@@ -222,7 +222,7 @@ public class ConvertingImpl implements Converting, InternalConverting {
 
     @SuppressWarnings({ "rawtypes", "unchecked" })
     private <T> T convertToDTO(Class<T> targetCls) {
-        Map m = mapView(object);
+        Map m = mapView(object, converter);
 
         try {
             T dto = targetCls.newInstance();
@@ -230,7 +230,11 @@ public class ConvertingImpl implements Converting, InternalConverting {
             for (Map.Entry entry : (Set<Map.Entry>) m.entrySet()) {
                 try {
                     Field f = targetCls.getField(entry.getKey().toString());
-                    f.set(dto, entry.getValue());
+                    Object fVal = entry.getValue();
+                    if(DTO.class.isAssignableFrom( f.getType()))
+                        fVal = converter.convert(fVal).to(f.getType());
+                    // TODO convert other embedded objects that require conversion
+                    f.set(dto, fVal);
                 } catch (NoSuchFieldException e) {
                 }
             }
@@ -243,7 +247,7 @@ public class ConvertingImpl implements Converting, InternalConverting {
 
     @SuppressWarnings({ "rawtypes", "unchecked" })
     private Map convertToMap(Class<?> targetCls, Type[] typeArguments) {
-        Map m = mapView(object);
+        Map m = mapView(object, converter);
         if (m == null)
             return null;
         Class<?> targetKeyType = null, targetValueType = null;
@@ -287,7 +291,7 @@ public class ConvertingImpl implements Converting, InternalConverting {
 
     private Object createJavaBean(Class<?> targetCls) {
         @SuppressWarnings("rawtypes")
-        Map m = mapView(object);
+        Map m = mapView(object, converter);
         try {
             Object res = targetCls.getConstructor().newInstance();
             for (Method setter : getSetters(targetCls)) {
@@ -308,7 +312,7 @@ public class ConvertingImpl implements Converting, InternalConverting {
 
     @SuppressWarnings("rawtypes")
     private Object createProxy(Class<?> targetCls) {
-        Map m = mapView(object);
+        Map m = mapView(object, converter);
         return Proxy.newProxyInstance(targetCls.getClassLoader(), new Class[] {targetCls},
             new InvocationHandler() {
                 @Override
@@ -476,7 +480,7 @@ public class ConvertingImpl implements Converting, InternalConverting {
     }
 
     @SuppressWarnings({ "rawtypes", "unchecked" })
-    private static Map createMapFromDTO(Object obj) {
+    private static Map createMapFromDTO(Object obj, Converter converter) {
         Map result = new HashMap();
 
         for (Field f : obj.getClass().getFields()) {
@@ -484,7 +488,11 @@ public class ConvertingImpl implements Converting, InternalConverting {
                 continue;
 
             try {
-                result.put(f.getName(), f.get(obj)); // TODO handle escaping
+                Object fVal = f.get(obj);
+                if(fVal instanceof DTO)
+                    fVal = converter.convert(fVal).to(Map.class);
+                // TODO test for other embedded types that need conversion
+                result.put(f.getName(), fVal);
             } catch (Exception e) {
             }
         }
@@ -607,20 +615,20 @@ public class ConvertingImpl implements Converting, InternalConverting {
         }
     }
 
-    private static Map<?,?> mapView(Object obj) {
+    private static Map<?,?> mapView(Object obj, Converter converter) {
         if (obj instanceof Map)
             return (Map<?,?>) obj;
         else if (obj instanceof Dictionary)
             return null; // TODO
         else if (obj instanceof DTO)
-            return createMapFromDTO(obj);
+            return createMapFromDTO(obj, converter);
         else if (obj.getClass().getInterfaces().length > 0)
             return createMapFromInterface(obj);
         else
             return createMapFromBeanAccessors(obj);
     }
 
-    private boolean isWriteableJavaBean(Class<?> cls) {
+    private static boolean isWriteableJavaBean(Class<?> cls) {
         boolean hasNoArgCtor = false;
         for (Constructor<?> ctor : cls.getConstructors()) {
             if (ctor.getParameterTypes().length == 0)
@@ -632,7 +640,7 @@ public class ConvertingImpl implements Converting, InternalConverting {
         return getSetters(cls).size() > 0;
     }
 
-    private Set<Method> getSetters(Class<?> cls) {
+    private static Set<Method> getSetters(Class<?> cls) {
         Set<Method> setters = new HashSet<>();
         while (!Object.class.equals(cls)) {
             Set<Method> methods = new HashSet<>();
