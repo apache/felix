@@ -28,6 +28,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 
+import org.osgi.dto.DTO;
 import org.osgi.service.converter.ConversionException;
 import org.osgi.service.converter.Converter;
 import org.osgi.service.converter.Encoding;
@@ -84,6 +85,8 @@ public class JsonEncodingImpl implements Encoding {
             return encodeMap((Map) obj);
         } else if (obj instanceof Collection) {
             return encodeCollection((Collection) obj);
+        } else if (obj instanceof DTO) {
+            return encodeMap(converter.convert(obj).to(Map.class));
         } else if (obj.getClass().isArray()) {
             return encodeCollection(asCollection(obj));
         } else if (obj instanceof Number) {

@@ -20,6 +20,10 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.apache.felix.converter.impl.ConverterImpl;
+import org.apache.felix.converter.impl.MyDTO;
+import org.apache.felix.converter.impl.MyDTO.Count;
+import org.apache.felix.converter.impl.MyEmbeddedDTO;
+import org.apache.felix.converter.impl.MyEmbeddedDTO.Alpha;
 import org.apache.sling.commons.json.JSONException;
 import org.apache.sling.commons.json.JSONObject;
 import org.junit.After;
@@ -92,6 +96,36 @@ public class JsonCodecTest {
         assertEquals("<fofofo>", jo1.getString("f"));
 
         // TODO convert back into a Map<String, Foo> via TypeReference
+    }
+
+    @Test
+    public void testDTO() {
+        MyDTO dto = new MyDTO();
+        dto.count = Count.ONE;
+        dto.ping = "'";
+        dto.pong = Long.MIN_VALUE;
+
+        MyEmbeddedDTO embedded = new MyEmbeddedDTO();
+        embedded.alpha = Alpha.B;
+        embedded.marco = "jo !";
+        embedded.polo = 327;
+        dto.embedded = embedded;
+
+        JsonCodecImpl jsonCodec = new JsonCodecImpl();
+        String json = jsonCodec.encode(dto).toString();
+        assertEquals(
+            "{\"ping\":\"'\",\"count\":\"ONE\",\"pong\":-9223372036854775808,"
+            + "\"embedded\":{\"polo\":327,\"alpha\":\"B\",\"marco\":\"jo !\"}}",
+            json);
+
+        MyDTO dto2 = jsonCodec.decode(MyDTO.class).from(json);
+        assertEquals(Count.ONE, dto2.count);
+        assertEquals("'", dto2.ping);
+        assertEquals(Long.MIN_VALUE, dto2.pong);
+        MyEmbeddedDTO embedded2 = dto2.embedded;
+        assertEquals(Alpha.B, embedded2.alpha);
+        assertEquals("jo !", embedded2.marco);
+        assertEquals(327, embedded2.polo);
     }
 
     static class Foo {

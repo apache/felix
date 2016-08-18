@@ -230,11 +230,8 @@ public class ConvertingImpl implements Converting, InternalConverting {
             for (Map.Entry entry : (Set<Map.Entry>) m.entrySet()) {
                 try {
                     Field f = targetCls.getField(entry.getKey().toString());
-                    Object fVal = entry.getValue();
-                    if(DTO.class.isAssignableFrom( f.getType()))
-                        fVal = converter.convert(fVal).to(f.getType());
-                    // TODO convert other embedded objects that require conversion
-                    f.set(dto, fVal);
+                    Object val = entry.getValue();
+                    f.set(dto, converter.convert(val).to(f.getType()));
                 } catch (NoSuchFieldException e) {
                 }
             }
