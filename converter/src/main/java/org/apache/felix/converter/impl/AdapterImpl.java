@@ -17,21 +17,29 @@
 package org.apache.felix.converter.impl;
 
 import java.lang.reflect.Type;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.Iterator;
+import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.osgi.service.converter.Adapter;
 import org.osgi.service.converter.ConversionException;
+import org.osgi.service.converter.ConvertFunction;
 import org.osgi.service.converter.Converter;
 import org.osgi.service.converter.Converting;
-import org.osgi.service.converter.FunctionThrowsException;
 import org.osgi.service.converter.Rule;
+import org.osgi.service.converter.SimpleConvertFunction;
 import org.osgi.service.converter.TypeReference;
 
 public class AdapterImpl implements Adapter, InternalConverter {
     private final InternalConverter delegate;
-    private final Map<TypePair, FunctionThrowsException<Object, Object>> classRules =
+    private final Map<TypePair, ConvertFunction<Object, Object>> classRules =
             new ConcurrentHashMap<>();
 
     AdapterImpl(InternalConverter converter) {
@@ -50,42 +58,46 @@ public class AdapterImpl implements Adapter, InternalConverter {
         return new AdapterImpl(this);
     }
 
-    @SuppressWarnings("unchecked")
     @Override
+    @SuppressWarnings("unchecked")
     public <F, T> Adapter rule(Class<F> fromCls, Class<T> toCls,
-            FunctionThrowsException<F, T> toFun, FunctionThrowsException<T, F> fromFun) {
+            SimpleConvertFunction<F, T> toFun, SimpleConvertFunction<T, F> fromFun) {
         if (fromCls.equals(toCls))
             throw new IllegalArgumentException();
 
-        classRules.put(new TypePair(fromCls, toCls), (FunctionThrowsException<Object, Object>) toFun);
-        classRules.put(new TypePair(toCls, fromCls), (FunctionThrowsException<Object, Object>) fromFun);
+        classRules.put(new TypePair(fromCls, toCls), (ConvertFunction<Object, Object>) toFun);
+        classRules.put(new TypePair(toCls, fromCls), (ConvertFunction<Object, Object>) fromFun);
         return this;
     }
 
     @Override
     public <F, T> Adapter rule(TypeReference<F> fromRef, TypeReference<T> toRef,
-            FunctionThrowsException<F, T> toFun, FunctionThrowsException<T, F> fromFun) {
+            SimpleConvertFunction<F, T> toFun, SimpleConvertFunction<T, F> fromFun) {
         // TODO Auto-generated method stub
         return null;
     }
 
     @Override
     public <F, T> Adapter rule(Type fromType, Type toType,
-            FunctionThrowsException<F, T> toFun, FunctionThrowsException<T, F> fromFun) {
+            SimpleConvertFunction<F, T> toFun, SimpleConvertFunction<T, F> fromFun) {
         // TODO Auto-generated method stub
         return null;
     }
 
     @Override
-    public <F, T> Adapter rule(FunctionThrowsException<F, T> toFun, FunctionThrowsException<T, F> fromFun) {
-        // TODO Auto-generated method stub
-        return null;
-    }
-
-    @Override
+    @SuppressWarnings("unchecked")
     public <F, T> Adapter rule(Rule<F, T> rule) {
-        // TODO Auto-generated method stub
-        return null;
+        ConvertFunction<F, T> toFun = rule.getToFunction();
+        if (toFun != null)
+            classRules.put(new TypePair(rule.getFromClass(), rule.getToClass()),
+                (ConvertFunction<Object, Object>) toFun);
+
+
+        ConvertFunction<T, F> fromFun = rule.getFromFunction();
+        if (fromFun != null)
+            classRules.put(new TypePair(rule.getToClass(), rule.getFromClass()),
+                (ConvertFunction<Object, Object>) fromFun);
+        return this;
     }
 
     private class ConvertingWrapper implements InternalConverting {
@@ -128,11 +140,33 @@ public class AdapterImpl implements Adapter, InternalConverter {
         @Override
         public Object to(Type type) {
             if (object != null) {
-                FunctionThrowsException<Object, Object> f = classRules.get(
-                    new TypePair(object.getClass(), Util.primitiveToBoxed(type)));
-                if (f != null) {
+                Set<Type> fromTypes = assignableTypes(object.getClass());
+                Set<Type> toTypes = assignableTypes(type);
+
+                List<ConvertFunction<Object, Object>> converters = new ArrayList<>();
+                for (Type fromType : fromTypes) {
+                    for (Type toType : toTypes) {
+                        // TODO what exactly do we use as order here?
+                        converters.add(classRules.get(new TypePair(fromType, Util.primitiveToBoxed(toType))));
+                    }
+                }
+                for (Type fromType : fromTypes) {
+                    converters.add(classRules.get(new TypePair(fromType, Object.class)));
+                }
+                for (Type toType : toTypes) {
+                    converters.add(classRules.get(new TypePair(Object.class, Util.primitiveToBoxed(toType))));
+                }
+
+                for (Iterator<ConvertFunction<Object, Object>> it = converters.iterator(); it.hasNext(); ) {
+                    ConvertFunction<Object, Object> func = it.next();
+                    it.remove();
+                    if (func == null)
+                        continue;
+
                     try {
-                        return f.apply(object);
+                        Object res = func.convert(object, type);
+                        if (res != ConvertFunction.CANNOT_CONVERT)
+                            return res;
                     } catch (Exception ex) {
                         if (hasDefault)
                             return defaultValue;
@@ -149,6 +183,21 @@ public class AdapterImpl implements Adapter, InternalConverter {
         public String toString() {
             return to(String.class);
         }
+    }
+
+    private static Set<Type> assignableTypes(Type mostSpecialized) {
+        if (!(mostSpecialized instanceof Class))
+            return Collections.singleton(mostSpecialized);
+
+        Class<?> curClass = (Class<?>) mostSpecialized;
+        Set<Type> lookupTypes = new LinkedHashSet<>(); // Iteration order matters!
+        while((curClass != null) && (!(Object.class.equals(curClass)))) {
+            lookupTypes.add(curClass);
+            lookupTypes.addAll(Arrays.asList(curClass.getInterfaces()));
+            curClass = curClass.getSuperclass();
+        }
+        lookupTypes.add(Object.class); // Object is the superclass of any type
+        return lookupTypes;
     }
 
     static class TypePair {

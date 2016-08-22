@@ -16,6 +16,14 @@
  */
 package org.apache.felix.converter.impl;
 
+import java.lang.reflect.Type;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -23,7 +31,9 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.osgi.service.converter.Adapter;
+import org.osgi.service.converter.ConvertFunction;
 import org.osgi.service.converter.Converter;
+import org.osgi.service.converter.Rule;
 
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
@@ -55,5 +65,60 @@ public class AdapterTest {
                 converter.convert("A,B").to(String[].class));
         assertArrayEquals(new String [] {"A","B"},
                 ca.convert("A,B").to(String[].class));
+    }
+
+    @Test @SuppressWarnings("rawtypes")
+    public void testWildcardAdapter() {
+        ConvertFunction<List, Object> foo = new ConvertFunction<List, Object>() {
+            @Override
+            public Object convert(List t, Type type) throws Exception {
+                if (type instanceof Class) {
+                    if (Number.class.isAssignableFrom((Class<?>) type))
+                        return converter.convert(t.size()).to(type);
+                }
+                return ConvertFunction.CANNOT_CONVERT;
+            }
+        };
+
+        Rule<List, Object> r = new Rule<>(List.class, Object.class, foo);
+        Rule<Object, Object> allCatch = new Rule<>(Object.class, Object.class,
+                (v,t) -> v.toString());
+
+        Adapter ca = converter.getAdapter();
+        ca.rule(r);
+        ca.rule(allCatch);
+
+        assertEquals(3L, (long) ca.convert(Arrays.asList("a", "b", "c")).to(Long.class));
+        assertEquals(3, (long) ca.convert(Arrays.asList("a", "b", "c")).to(Integer.class));
+        assertEquals("[a, b, c]", ca.convert(Arrays.asList("a", "b", "c")).to(String.class));
+    }
+
+    @Test @SuppressWarnings("rawtypes")
+    public void testWildcardAdapter2() {
+        Map<Object, Object> snooped = new HashMap<>();
+        Rule<Object, ArrayList> r = new Rule<>(Object.class, ArrayList.class,
+                (v,t) -> null,
+                (v,t) -> "arraylist");
+        Rule<Object, List> r2 = new Rule<>(Object.class, List.class,
+                (v,t) -> null,
+                (v,t) -> "list");
+        Rule<Object, Object> allCatch = new Rule<>(Object.class, Object.class,
+                (v,t) -> {snooped.put(v,t); return ConvertFunction.CANNOT_CONVERT;}, null);
+
+        Adapter ca = converter.getAdapter();
+        ca.rule(r);
+        ca.rule(r2);
+        ca.rule(allCatch);
+
+        assertEquals("Precondition", 0, snooped.size());
+        assertEquals("arraylist", ca.convert(
+                new ArrayList<String>(Arrays.asList("a", "b", "c"))).to(String.class));
+        assertEquals("Precondition", 0, snooped.size());
+        assertEquals("list",ca.convert(
+                new LinkedList<String>(Arrays.asList("a", "b", "c"))).to(String.class));
+        assertEquals("Precondition", 0, snooped.size());
+        assertEquals("a", ca.convert(
+                new HashSet<String>(Arrays.asList("a", "b", "c"))).to(String.class));
+        assertEquals(String.class, snooped.get(new HashSet<String>(Arrays.asList("a", "b", "c"))));
     }
 }

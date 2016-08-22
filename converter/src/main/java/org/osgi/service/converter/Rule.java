@@ -25,26 +25,71 @@ package org.osgi.service.converter;
  * @Immutable
  */
 public class Rule<F, T> {
-	private final FunctionThrowsException<F,T>	toFun;
-	private final FunctionThrowsException<T,F>	fromFun;
+    private final Class<F> fromClass;
+    private final Class<T> toClass;
+	private final ConvertFunction<T,F>	fromFun;
+    private final ConvertFunction<F,T>  toFun;
 
-	/**
-	 * Specify the functions to do the conversions in both directions.
-	 *
-	 * @param to The function that performs the conversion.
-	 * @param from The function that performs the reverse conversion.
-	 */
-	public Rule(FunctionThrowsException<F,T> to, FunctionThrowsException<T,F> from) {
+    /**
+     * Create a bidirectional rule.
+     * @param fromCls The class from which to convert. If {@link Object} is specified then this
+     * functions as a wildcard for generic conversions.
+     * @param toCls The class to which to convert. If {@link Object} is specified then this
+     * functions as a wildcard for generic conversions.
+     * @param to The conversion function for this rule.
+     * @param from The reverse conversion for this rule.
+     */
+	public Rule(Class<F> fromCls, Class<T> toCls, ConvertFunction<F,T> to, ConvertFunction<T,F> from) {
+	    if (fromCls.equals(toCls)) {
+	        if (fromCls.equals(Object.class)) {
+	            if (from != null) {
+	                throw new IllegalStateException("Can only register one catchall converter");
+	            }
+	        } else {
+	            throw new IllegalStateException("Cannot register a convert to itself");
+	        }
+	    }
+
+	    fromClass = fromCls;
+	    toClass = toCls;
 		toFun = to;
 		fromFun = from;
 	}
+
+    /**
+     * Create a single-direction rule.
+     * @param fromCls The class from which to convert. If {@link Object} is specified then this
+     * functions as a wildcard for generic conversions.
+     * @param toCls The class to which to convert. If {@link Object} is specified then this
+     * functions as a wildcard for generic conversions.
+     * @param to The conversion function for this rule.
+     */
+    public Rule(Class<F> fromCls, Class<T> toCls, ConvertFunction<F,T> to) {
+        this(fromCls, toCls, to, null);
+    }
+
+    /**
+	 * Accessor for the class to convert from.
+	 * @return The class to convert from.
+	 */
+	public Class<F> getFromClass() {
+        return fromClass;
+    }
+
+	/**
+	 * Accessor for the class to convert to.
+	 * @return The class to convert to.
+	 */
+    public Class<T> getToClass() {
+        return toClass;
+    }
 
 	/**
 	 * Obtain the conversion function.
 	 *
 	 * @return The conversion function.
 	 */
-	public FunctionThrowsException<F,T> getToFunction() {
+	public ConvertFunction<F,T> getToFunction() {
 		return toFun;
 	}
 
@@ -53,7 +98,7 @@ public class Rule<F, T> {
 	 *
 	 * @return The reverse conversion function.
 	 */
-	public FunctionThrowsException<T,F> getFromFunction() {
+	public ConvertFunction<T,F> getFromFunction() {
 		return fromFun;
 	}
 }
