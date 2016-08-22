@@ -395,7 +395,7 @@ public class ConverterServiceTest {
         embedded.marco = "hohoho";
         embedded.polo = Long.MAX_VALUE;
         embedded.alpha = Alpha.A;
-        
+
         MyDTO dto = new MyDTO();
         dto.ping = "lalala";
         dto.pong = Long.MIN_VALUE;
@@ -414,6 +414,28 @@ public class ConverterServiceTest {
         assertEquals("hohoho", e.get("marco"));
         assertEquals(Long.MAX_VALUE, e.get("polo"));
         assertEquals(Alpha.A, e.get("alpha"));
+    }
+
+    @Test @SuppressWarnings({ "rawtypes", "unchecked" })
+    public void testDTOFieldShadowing() {
+        MySubDTO dto = new MySubDTO();
+        dto.ping = "test";
+        dto.count = Count.THREE;
+
+        Map m = converter.convert(dto).to(new TypeReference<Map<String,String>>() {});
+
+        Map<String, String> expected = new HashMap<>();
+        expected.put("ping", "test");
+        expected.put("count", "THREE");
+        expected.put("pong", "0");
+        expected.put("embedded", null);
+        assertEquals(expected, new HashMap<String, String>(m));
+
+        MySubDTO dto2 = converter.convert(m).to(MySubDTO.class);
+        assertEquals("test", dto2.ping);
+        assertEquals(Count.THREE, dto2.count);
+        assertEquals(0L, dto2.pong);
+        assertNull(dto2.embedded);
     }
 
     @Test

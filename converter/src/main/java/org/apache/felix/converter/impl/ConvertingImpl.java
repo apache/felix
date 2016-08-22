@@ -476,22 +476,16 @@ public class ConvertingImpl implements Converting, InternalConverting {
         return result;
     }
 
-    @SuppressWarnings({ "rawtypes", "unchecked" })
+    @SuppressWarnings("rawtypes")
     private static Map createMapFromDTO(Object obj, Converter converter) {
+        Set<String> handledFields = new HashSet<>();
+
         Map result = new HashMap();
-
+        for (Field f : obj.getClass().getDeclaredFields()) {
+            handleField(obj, f, handledFields, result, converter);
+        }
         for (Field f : obj.getClass().getFields()) {
-            if (Modifier.isStatic(f.getModifiers()))
-                continue;
-
-            try {
-                Object fVal = f.get(obj);
-                if(fVal instanceof DTO)
-                    fVal = converter.convert(fVal).to(Map.class);
-                // TODO test for other embedded types that need conversion
-                result.put(f.getName(), fVal);
-            } catch (Exception e) {
-            }
+            handleField(obj, f, handledFields, result, converter);
         }
         return result;
     }
@@ -570,6 +564,26 @@ public class ConvertingImpl implements Converting, InternalConverting {
             return null; // do not use any methods on the Object class as a accessor
 
         return md.getName().replace('_', '.'); // TODO support all the escaping mechanisms.
+    }
+
+    @SuppressWarnings({ "rawtypes", "unchecked" })
+    private static void handleField(Object obj, Field field, Set<String> handledFields, Map result, Converter converter) {
+        if (Modifier.isStatic(field.getModifiers()))
+            return;
+
+        String fn = field.getName();
+        if (handledFields.contains(fn))
+            return; // Field with this name was already handled
+
+        try {
+            Object fVal = field.get(obj);
+            if(fVal instanceof DTO)
+                fVal = converter.convert(fVal).to(Map.class);
+            // TODO test for other embedded types that need conversion
+            result.put(field.getName(), fVal);
+            handledFields.add(fn);
+        } catch (Exception e) {
+        }
     }
 
     @SuppressWarnings({ "rawtypes", "unchecked" })
