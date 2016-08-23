@@ -45,23 +45,30 @@ public class SslFilter implements Filter
     private static final String DEFAULT_SSL_HEADER = HDR_X_FORWARDED_SSL;
     private static final String DEFAULT_SSL_VALUE = "on";
     private static final String DEFAULT_CERT_HEADER = HDR_X_FORWARDED_SSL_CERTIFICATE;
+    private static final boolean DEFAULT_REWRITE_ABSOLUTE_URLS = false;
 
     private static final String PROP_SSL_HEADER = "ssl-forward.header";
     private static final String PROP_SSL_VALUE = "ssl-forward.value";
     private static final String PROP_SSL_CERT_KEY = "ssl-forward-cert.header";
+    private static final String PROP_REWRITE_ABSOLUTE_URLS = "rewrite.absolute.urls";
 
     private volatile ConfigHolder config;
 
     SslFilter()
     {
-        this.config = new ConfigHolder(DEFAULT_SSL_HEADER, DEFAULT_SSL_VALUE, DEFAULT_CERT_HEADER);
+        this.config = new ConfigHolder(DEFAULT_SSL_HEADER,
+                DEFAULT_SSL_VALUE,
+                DEFAULT_CERT_HEADER,
+                DEFAULT_REWRITE_ABSOLUTE_URLS);
     }
 
+    @Override
     public void destroy()
     {
         // No explicit destroy needed...
     }
 
+    @Override
     public void doFilter(ServletRequest req, ServletResponse res, FilterChain chain) throws IOException, ServletException
     {
         final ConfigHolder cfg = this.config;
@@ -97,6 +104,7 @@ public class SslFilter implements Filter
         }
     }
 
+    @Override
     public void init(FilterConfig config)
     {
         // make sure there is some configuration
@@ -107,18 +115,40 @@ public class SslFilter implements Filter
         String certHeader = DEFAULT_CERT_HEADER;
         String sslHeader = DEFAULT_SSL_HEADER;
         String sslValue = DEFAULT_SSL_VALUE;
+        boolean rewriteUrls = DEFAULT_REWRITE_ABSOLUTE_URLS;
 
         if (properties != null)
         {
             certHeader = getOptionalString(properties, PROP_SSL_CERT_KEY);
             sslHeader = getMandatoryString(properties, PROP_SSL_HEADER);
             sslValue = getMandatoryString(properties, PROP_SSL_VALUE);
+            rewriteUrls = getOptionalBoolean(properties, PROP_REWRITE_ABSOLUTE_URLS, rewriteUrls);
         }
 
-        this.config = new ConfigHolder(sslHeader, sslValue, certHeader);
+        this.config = new ConfigHolder(sslHeader, sslValue, certHeader, rewriteUrls);
 
         SystemLogger.log(LogService.LOG_INFO, "SSL filter (re)configured with: " + "SSL forward header = '" + sslHeader + "'; SSL forward value = '" + sslValue + "'; SSL certificate header = '"
             + certHeader + "'.");
+    }
+
+    private boolean getOptionalBoolean(Dictionary properties,
+            String key,
+            boolean defaultValue) throws ConfigurationException
+    {
+        Object raw = properties.get(key);
+        if (raw == null)
+        {
+            return defaultValue;
+        }
+        if ( raw instanceof Boolean )
+        {
+            return (Boolean)raw;
+        }
+        if (!(raw instanceof String))
+        {
+            throw new ConfigurationException(key, "invalid value");
+        }
+        return Boolean.valueOf((String)raw);
     }
 
     private String getOptionalString(Dictionary properties, String key) throws ConfigurationException
@@ -150,12 +180,15 @@ public class SslFilter implements Filter
         final String certHeader;
         final String sslHeader;
         final String sslValue;
+        final boolean rewriteAbsoluteUrls;
 
-        public ConfigHolder(String sslHeader, String sslValue, String certHeader)
+        public ConfigHolder(String sslHeader, String sslValue, String certHeader,
+                boolean rewriteAbsoluteUrls)
         {
             this.sslHeader = sslHeader;
             this.sslValue = sslValue;
             this.certHeader = certHeader;
+            this.rewriteAbsoluteUrls = rewriteAbsoluteUrls;
         }
     }
 }

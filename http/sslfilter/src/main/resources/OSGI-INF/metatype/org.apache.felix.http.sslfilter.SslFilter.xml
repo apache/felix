@@ -7,6 +7,8 @@
         	type="String" default="on" required="true" />
         <AD id="ssl-forward-cert.header" name="%ssl-forward-cert.header.name" description="%ssl-forward-cert.header.description"
         	type="String" default="X-Forwarded-SSL-Certificate" required="false"/>
+        <AD id="rewrite.absolute.urls" name="%rewrite.absolute.urls.name" description="%rewrite.absolute.urls.description"
+            type="Boolean" default="false" required="false"/>
     </OCD>
     <Designate pid="org.apache.felix.http.sslfilter.SslFilter">
         <Object ocdref="org.apache.felix.http.sslfilter.SslFilter"/>
