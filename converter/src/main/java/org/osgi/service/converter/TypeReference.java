@@ -18,6 +18,8 @@ package org.osgi.service.converter;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 
+import org.osgi.annotation.versioning.ConsumerType;
+
 /**
  * An object does not carry any runtime information about its generic type.
  * However sometimes it is necessary to specify a generic type, that is the
@@ -32,9 +34,10 @@ import java.lang.reflect.Type;
  * </pre>
  *
  * @param <T> The target type for the conversion.
- * @author $Id: 8c84f9cc11f7d5b063de7b03664db7a3703f2e8f $
+ * @author $Id$
  * @Immutable
  */
+@ConsumerType
 public class TypeReference<T> {
 	/**
 	 * A {@link TypeReference} cannot be directly instantiated. To use it, it

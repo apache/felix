@@ -18,25 +18,29 @@ package org.osgi.service.converter;
 import java.lang.reflect.Type;
 
 /**
- * An functional interface with a single convert method that is passed
- * the object to convert. This interface implements the
- * {@link ConvertFunction} interface via a default method and can be used
- * in cases where the target type does not need to be passed to the
- * {@link #convert} method, for example in Lambda expressions.
+ * An functional interface with a single convert method that is passed the
+ * object to convert. This interface implements the {@link ConvertFunction}
+ * interface via a default method and can be used in cases where the target type
+ * does not need to be passed to the {@link #convert} method, for example in
+ * Lambda expressions.
+ * 
  * @param <F> Type parameter for the source object.
  * @param <T> Type parameter for the converted object.
+ * @author $Id$
  */
 @FunctionalInterface
-public interface SimpleConvertFunction<F, T> extends ConvertFunction<F, T> {
-    default T convert(F t, Type type) throws Exception {
-        return convert(t);
-    }
+public interface SimpleConvertFunction<F, T> extends ConvertFunction<F,T> {
+	@Override
+	default T convert(F obj, Type type) throws Exception {
+		return convert(obj);
+	}
 
-    /**
-     * Convert the object into the target type.
-     * @param obj The object to be converted.
-     * @return The converted object or {@link #CANNOT_CONVERT} to indicate
-     * that this converter cannot handle the conversion.
-     */
-    T convert(F t) throws Exception;
+	/**
+	 * Convert the object into the target type.
+	 * 
+	 * @param obj The object to be converted.
+	 * @return The converted object or {@link #CANNOT_CONVERT} to indicate that
+	 *         this converter cannot handle the conversion.
+	 */
+	T convert(F obj) throws Exception;
 }

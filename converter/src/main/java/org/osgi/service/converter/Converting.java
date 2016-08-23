@@ -24,7 +24,7 @@ import org.osgi.annotation.versioning.ProviderType;
  * converted to. A {@link Converting} instance can be obtained via the
  * {@link Converter} service by starting a conversion for a specific object.
  *
- * @author $Id: eaaf163d42227ed96ccdf70620f33a27c7de6b8f $
+ * @author $Id$
  * @ThreadSafe
  */
 @ProviderType

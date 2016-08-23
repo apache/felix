@@ -24,7 +24,7 @@ import org.osgi.annotation.versioning.ProviderType;
 /**
  * Interface to specify the target of the encoding operation.
  *
- * @author $Id: 244b81b5e2276d97ac90d3e157ebaa613b424d05 $
+ * @author $Id$
  * @ThreadSafe
  */
 @ProviderType

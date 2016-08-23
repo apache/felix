@@ -24,7 +24,7 @@ import org.osgi.annotation.versioning.ProviderType;
  * Interface to specify the source of the decoding operation
  *
  * @param <T> The target type for the decoding operation.
- * @author $Id: 19d4ee85851deff4e067be88c7f93076b3db340b $
+ * @author $Id$
  * @ThreadSafe
  */
 @ProviderType

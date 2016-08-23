@@ -26,7 +26,7 @@ import org.osgi.annotation.versioning.ProviderType;
  * encode/decode only a single format. To support multiple encoding formats
  * register multiple services.
  * 
- * @author $Id: 66e40c74252c1c5c72db50e784d1efb7ab5863c3 $
+ * @author $Id$
  * @ThreadSafe
  */
 @ProviderType

@@ -58,11 +58,15 @@ public interface Adapter extends Converter {
 	 * @param fromFun the function to perform the reverse conversion.
 	 * @return The current adapter, can be used to chain invocations.
 	 */
-	<F, T> Adapter rule(Class<F> fromCls, Class<T> toCls, SimpleConvertFunction<F, T> toFun,
-	        SimpleConvertFunction<T, F> fromFun);
+	<F, T> Adapter rule(Class<F> fromCls, Class<T> toCls,
+			SimpleConvertFunction<F,T> toFun,
+			SimpleConvertFunction<T,F> fromFun);
 
-    <F, T> Adapter rule(TypeReference<F> fromRef, TypeReference<T> toRef, SimpleConvertFunction<F, T> toFun,
-            SimpleConvertFunction<T, F> fromFun);
+	<F, T> Adapter rule(TypeReference<F> fromRef, TypeReference<T> toRef,
+			SimpleConvertFunction<F,T> toFun,
+			SimpleConvertFunction<T,F> fromFun);
 
-    <F, T> Adapter rule(Type fromType, Type toType, SimpleConvertFunction<F, T> toFun, SimpleConvertFunction<T, F> fromFun);
+	<F, T> Adapter rule(Type fromType, Type toType,
+			SimpleConvertFunction<F,T> toFun,
+			SimpleConvertFunction<T,F> fromFun);
 }
