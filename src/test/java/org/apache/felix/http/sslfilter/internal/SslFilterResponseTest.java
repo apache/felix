@@ -19,6 +19,7 @@
 package org.apache.felix.http.sslfilter.internal;
 
 import static junit.framework.Assert.assertEquals;
+import static org.apache.felix.http.sslfilter.internal.SslFilterConstants.HDR_X_FORWARDED_PROTO;
 import static org.apache.felix.http.sslfilter.internal.SslFilterConstants.HTTP;
 import static org.apache.felix.http.sslfilter.internal.SslFilterConstants.HTTPS;
 import static org.mockito.Mockito.mock;
@@ -26,7 +27,6 @@ import static org.mockito.Mockito.when;
 
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.net.URI;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -37,17 +37,16 @@ import javax.servlet.ServletOutputStream;
 import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+
 import org.apache.felix.http.sslfilter.internal.SslFilter.ConfigHolder;
 import org.junit.Test;
-
-import static org.apache.felix.http.sslfilter.internal.SslFilterConstants.HDR_X_FORWARDED_PROTO;
 
 public class SslFilterResponseTest
 {
     private static final String BACKEND_SERVER = "backend.server";
     private static final String OTHER_SERVER = "other.server";
 
-    private static final String PATH = "http://localhost:8080/";
+    private static final String PATH = "http://" + BACKEND_SERVER + "/foo";
 
     private static final String DEFAULT_HTTP_PORT = "80";
     private static final String ALT_HTTP_PORT = "8080";
@@ -61,8 +60,8 @@ public class SslFilterResponseTest
     {
         TestHttpServletResponse resp = createServletResponse();
         HttpServletRequest req = createServletRequest(BACKEND_SERVER, PATH);
-        ConfigHolder cfg = new ConfigHolder(HDR_X_FORWARDED_PROTO, "https", null);
-        
+        ConfigHolder cfg = new ConfigHolder(HDR_X_FORWARDED_PROTO, "https", null, false);
+
         SslFilterResponse sresp = new SslFilterResponse(resp, req, cfg);
 
         sresp.setHeader(LOCATION, null);
@@ -77,12 +76,24 @@ public class SslFilterResponseTest
 
         TestHttpServletResponse resp = createServletResponse();
         HttpServletRequest req = createServletRequest(BACKEND_SERVER, PATH);
-        ConfigHolder cfg = new ConfigHolder(HDR_X_FORWARDED_PROTO, "https", null);
-        
+        ConfigHolder cfg = new ConfigHolder(HDR_X_FORWARDED_PROTO, "https", null, false);
+
         SslFilterResponse sresp = new SslFilterResponse(resp, req, cfg);
 
         location = HTTPS + "://" + BACKEND_SERVER + "/foo";
         expected = location;
+
+        sresp.setHeader(LOCATION, location);
+
+        assertEquals(expected, resp.getHeader(LOCATION));
+
+        req = createServletRequest(BACKEND_SERVER, PATH);
+        cfg = new ConfigHolder(HDR_X_FORWARDED_PROTO, "https", null, true);
+
+        sresp = new SslFilterResponse(resp, req, cfg);
+
+        location = HTTP + "://" + BACKEND_SERVER + "/foo";
+        expected = HTTPS + "://" + BACKEND_SERVER + "/foo";
 
         sresp.setHeader(LOCATION, location);
 
@@ -97,9 +108,20 @@ public class SslFilterResponseTest
         TestHttpServletResponse resp = createServletResponse();
         HttpServletRequest req = createServletRequest(BACKEND_SERVER, PATH);
 
-        ConfigHolder cfg = new ConfigHolder(HDR_X_FORWARDED_PROTO, "https", null);
-        
+        ConfigHolder cfg = new ConfigHolder(HDR_X_FORWARDED_PROTO, "https", null, false);
+
         SslFilterResponse sresp = new SslFilterResponse(resp, req, cfg);
+
+        location = HTTP + "://" + BACKEND_SERVER + "/foo";
+        expected = location;
+
+        sresp.setHeader(LOCATION, location);
+
+        assertEquals(expected, resp.getHeader(LOCATION));
+
+        cfg = new ConfigHolder(HDR_X_FORWARDED_PROTO, "https", null, true);
+
+        sresp = new SslFilterResponse(resp, req, cfg);
 
         location = HTTP + "://" + BACKEND_SERVER + "/foo";
         expected = HTTPS + "://" + BACKEND_SERVER + "/foo";
@@ -109,27 +131,6 @@ public class SslFilterResponseTest
         assertEquals(expected, resp.getHeader(LOCATION));
     }
 
-
-    @Test
-    public void testSetHttpLocationHeaderToOriginalRequestURIWithFragment() throws Exception
-    {
-        String location, expected;
-
-        TestHttpServletResponse resp = createServletResponse();
-        HttpServletRequest req = createServletRequest(BACKEND_SERVER, PATH);
-        ConfigHolder cfg = new ConfigHolder(HDR_X_FORWARDED_PROTO, "https", null);
-        
-        SslFilterResponse sresp = new SslFilterResponse(resp, req, cfg);
-
-        location = HTTP + "://" + BACKEND_SERVER + "/foo#abc";
-        expected = HTTPS + "://" + BACKEND_SERVER + "/foo#abc";
-
-        sresp.setHeader(LOCATION, location);
-
-        assertEquals(expected, resp.getHeader(LOCATION));
-    }
-
-
     @Test
     public void testSetHttpLocationHeaderToOriginalRequestWithExplicitPort() throws Exception
     {
@@ -137,9 +138,22 @@ public class SslFilterResponseTest
 
         TestHttpServletResponse resp = createServletResponse();
         HttpServletRequest req = createServletRequest(BACKEND_SERVER, PATH);
-        ConfigHolder cfg = new ConfigHolder(HDR_X_FORWARDED_PROTO, "https", null);
-        
+        ConfigHolder cfg = new ConfigHolder(HDR_X_FORWARDED_PROTO, "https", null, false);
+
         SslFilterResponse sresp = new SslFilterResponse(resp, req, cfg);
+
+        location = HTTP + "://" + BACKEND_SERVER + ":" + DEFAULT_HTTP_PORT + "/foo";
+        expected = HTTP + "://" + BACKEND_SERVER + ":" + DEFAULT_HTTP_PORT + "/foo";
+
+        sresp.setHeader(LOCATION, location);
+
+        assertEquals(expected, resp.getHeader(LOCATION));
+
+        resp = createServletResponse();
+        req = createServletRequest(BACKEND_SERVER, PATH);
+        cfg = new ConfigHolder(HDR_X_FORWARDED_PROTO, "https", null, true);
+
+        sresp = new SslFilterResponse(resp, req, cfg);
 
         location = HTTP + "://" + BACKEND_SERVER + ":" + DEFAULT_HTTP_PORT + "/foo";
         expected = HTTPS + "://" + BACKEND_SERVER + "/foo";
@@ -156,9 +170,22 @@ public class SslFilterResponseTest
 
         TestHttpServletResponse resp = createServletResponse();
         HttpServletRequest req = createServletRequest(BACKEND_SERVER, DEFAULT_HTTP_PORT, HTTPS, ALT_HTTPS_PORT, PATH);
-        ConfigHolder cfg = new ConfigHolder(HDR_X_FORWARDED_PROTO, "https", null);
-        
+        ConfigHolder cfg = new ConfigHolder(HDR_X_FORWARDED_PROTO, "https", null, false);
+
         SslFilterResponse sresp = new SslFilterResponse(resp, req, cfg);
+
+        location = HTTP + "://" + BACKEND_SERVER + "/foo";
+        expected = HTTP + "://" + BACKEND_SERVER + "/foo";
+
+        sresp.setHeader(LOCATION, location);
+
+        assertEquals(expected, resp.getHeader(LOCATION));
+
+        resp = createServletResponse();
+        req = createServletRequest(BACKEND_SERVER, DEFAULT_HTTP_PORT, HTTPS, ALT_HTTPS_PORT, PATH);
+        cfg = new ConfigHolder(HDR_X_FORWARDED_PROTO, "https", null, true);
+
+        sresp = new SslFilterResponse(resp, req, cfg);
 
         location = HTTP + "://" + BACKEND_SERVER + "/foo";
         expected = HTTPS + "://" + BACKEND_SERVER + ":" + ALT_HTTPS_PORT + "/foo";
@@ -175,9 +202,22 @@ public class SslFilterResponseTest
 
         TestHttpServletResponse resp = createServletResponse();
         HttpServletRequest req = createServletRequest(BACKEND_SERVER, PATH);
-        ConfigHolder cfg = new ConfigHolder(HDR_X_FORWARDED_PROTO, "https", null);
-        
+        ConfigHolder cfg = new ConfigHolder(HDR_X_FORWARDED_PROTO, "https", null, false);
+
         SslFilterResponse sresp = new SslFilterResponse(resp, req, cfg);
+
+        location = HTTP + "://" + BACKEND_SERVER + ":" + ALT_HTTP_PORT + "/foo";
+        expected = location;
+
+        sresp.setHeader(LOCATION, location);
+
+        assertEquals(expected, resp.getHeader(LOCATION));
+
+        resp = createServletResponse();
+        req = createServletRequest(BACKEND_SERVER, PATH);
+        cfg = new ConfigHolder(HDR_X_FORWARDED_PROTO, "https", null, true);
+
+        sresp = new SslFilterResponse(resp, req, cfg);
 
         location = HTTP + "://" + BACKEND_SERVER + ":" + ALT_HTTP_PORT + "/foo";
         expected = location;
@@ -192,8 +232,8 @@ public class SslFilterResponseTest
     {
         TestHttpServletResponse resp = createServletResponse();
         HttpServletRequest req = createServletRequest(BACKEND_SERVER, PATH);
-        ConfigHolder cfg = new ConfigHolder(HDR_X_FORWARDED_PROTO, "https", null);
-        
+        ConfigHolder cfg = new ConfigHolder(HDR_X_FORWARDED_PROTO, "https", null, false);
+
         SslFilterResponse sresp = new SslFilterResponse(resp, req,cfg);
 
         String location = HTTP + "://" + OTHER_SERVER + "/foo";
@@ -202,39 +242,125 @@ public class SslFilterResponseTest
         sresp.setHeader(LOCATION, location);
 
         assertEquals(expected, resp.getHeader(LOCATION));
+
+        resp = createServletResponse();
+        req = createServletRequest(BACKEND_SERVER, PATH);
+        cfg = new ConfigHolder(HDR_X_FORWARDED_PROTO, "https", null, true);
+
+        sresp = new SslFilterResponse(resp, req,cfg);
+
+        location = HTTP + "://" + OTHER_SERVER + "/foo";
+        expected = location;
+
+        sresp.setHeader(LOCATION, location);
+
+        assertEquals(expected, resp.getHeader(LOCATION));
+    }
+
+    @Test
+    public void testFragment() throws Exception
+    {
+        test("/foo#abc");
     }
 
     @Test
     public void testQueryString() throws Exception
     {
-        TestHttpServletResponse response = createServletResponse();
-        HttpServletRequest req = createServletRequest(BACKEND_SERVER, PATH);
-        ConfigHolder cfg = new ConfigHolder(HDR_X_FORWARDED_PROTO, "https", null);
-        
-        SslFilterResponse sresp = new SslFilterResponse(response, req, cfg);
-
         final String queryString = "?resource=%2Fen.html%3FpbOpen%3Dtrue&$$login$$=%24%24login%24%24&j_reason=errors.login.account.not.found";
-        final String setUrl = "http://" + BACKEND_SERVER + "/" + queryString;
-        final URI u = new URI(setUrl);
-        final String expectedUrl = "https://" + BACKEND_SERVER + "/" + queryString;
-        sresp.setHeader(SslFilterConstants.HDR_LOCATION, setUrl);
-
-        assertEquals(expectedUrl, sresp.getHeader(SslFilterConstants.HDR_LOCATION));
+        test("/" + queryString);
     }
 
     @Test
     public void testPathEncoding() throws Exception
     {
+        test("/apps/test/content/%E4%B8%83%E6%9C%88%E5%8F%B7.redirect");
+    }
+
+
+    private void test(final String path) throws Exception
+    {
         TestHttpServletResponse response = createServletResponse();
         HttpServletRequest req = createServletRequest(BACKEND_SERVER, PATH);
-        ConfigHolder cfg = new ConfigHolder(HDR_X_FORWARDED_PROTO, "https", null);
-        
+
+        // test - don't rewrite absolute urls / absolute http url / sendRedirect
+        // expected: no rewrite
+        ConfigHolder cfg = new ConfigHolder(HDR_X_FORWARDED_PROTO, "https", null, false);
         SslFilterResponse sresp = new SslFilterResponse(response, req, cfg);
 
-        final String setUrl = "http://" + BACKEND_SERVER + "/apps/test/content/%E4%B8%83%E6%9C%88%E5%8F%B7.redirect";
-        sresp.setHeader(SslFilterConstants.HDR_LOCATION, setUrl);
+        sresp.sendRedirect("http://" + BACKEND_SERVER + path);
+        assertEquals("http://" + BACKEND_SERVER + path, sresp.getHeader(SslFilterConstants.HDR_LOCATION));
 
-        assertEquals("https://" + BACKEND_SERVER + "/apps/test/content/%E4%B8%83%E6%9C%88%E5%8F%B7.redirect", sresp.getHeader(SslFilterConstants.HDR_LOCATION));
+        // test - don't rewrite absolute urls / absolute http url / setHeader
+        // expected: no rewrite
+        cfg = new ConfigHolder(HDR_X_FORWARDED_PROTO, "https", null, false);
+        sresp = new SslFilterResponse(response, req, cfg);
+
+        sresp.setHeader(SslFilterConstants.HDR_LOCATION, "http://" + BACKEND_SERVER + path);
+        assertEquals("http://" + BACKEND_SERVER + path, sresp.getHeader(SslFilterConstants.HDR_LOCATION));
+
+        // test - don't rewrite absolute urls / absolute https url / sendRedirect
+        // expected: no rewrite
+        cfg = new ConfigHolder(HDR_X_FORWARDED_PROTO, "https", null, false);
+        sresp = new SslFilterResponse(response, req, cfg);
+
+        sresp.sendRedirect("https://" + BACKEND_SERVER + path);
+        assertEquals("https://" + BACKEND_SERVER + path, sresp.getHeader(SslFilterConstants.HDR_LOCATION));
+
+        // test - don't rewrite absolute urls / absolute https url / setHeader
+        // expected: no rewrite
+        cfg = new ConfigHolder(HDR_X_FORWARDED_PROTO, "https", null, false);
+        sresp = new SslFilterResponse(response, req, cfg);
+
+        sresp.setHeader(SslFilterConstants.HDR_LOCATION, "https://" + BACKEND_SERVER + path);
+        assertEquals("https://" + BACKEND_SERVER + path, sresp.getHeader(SslFilterConstants.HDR_LOCATION));
+
+        // test - rewrite absolute urls / absolute http url / sendRedirect
+        // expected: rewrite
+        cfg = new ConfigHolder(HDR_X_FORWARDED_PROTO, "https", null, true);
+        sresp = new SslFilterResponse(response, req, cfg);
+
+        sresp.sendRedirect("http://" + BACKEND_SERVER + path);
+        assertEquals("https://" + BACKEND_SERVER + path, sresp.getHeader(SslFilterConstants.HDR_LOCATION));
+
+        // test - rewrite absolute urls / absolute http url / setHeader
+        // expected: rewrite
+        cfg = new ConfigHolder(HDR_X_FORWARDED_PROTO, "https", null, true);
+        sresp = new SslFilterResponse(response, req, cfg);
+
+        sresp.setHeader(SslFilterConstants.HDR_LOCATION, "http://" + BACKEND_SERVER + path);
+        assertEquals("https://" + BACKEND_SERVER + path, sresp.getHeader(SslFilterConstants.HDR_LOCATION));
+
+        // test - rewrite absolute urls / absolute https url / sendRedirect
+        // expected: no rewrite
+        cfg = new ConfigHolder(HDR_X_FORWARDED_PROTO, "https", null, true);
+        sresp = new SslFilterResponse(response, req, cfg);
+
+        sresp.sendRedirect("https://" + BACKEND_SERVER + path);
+        assertEquals("https://" + BACKEND_SERVER + path, sresp.getHeader(SslFilterConstants.HDR_LOCATION));
+
+        // test - rewrite absolute urls / absolute https url / setHeader
+        // expected: no rewrite
+        cfg = new ConfigHolder(HDR_X_FORWARDED_PROTO, "https", null, true);
+        sresp = new SslFilterResponse(response, req, cfg);
+
+        sresp.setHeader(SslFilterConstants.HDR_LOCATION, "https://" + BACKEND_SERVER + path);
+        assertEquals("https://" + BACKEND_SERVER + path, sresp.getHeader(SslFilterConstants.HDR_LOCATION));
+
+        // test - don't rewrite absolute urls / relative path / setHeader
+        // expected: rewrite
+        cfg = new ConfigHolder(HDR_X_FORWARDED_PROTO, "https", null, false);
+        sresp = new SslFilterResponse(response, req, cfg);
+
+        sresp.sendRedirect(path);
+        assertEquals("https://" + BACKEND_SERVER + path, sresp.getHeader(SslFilterConstants.HDR_LOCATION));
+
+        // test - rewrite absolute urls / relative path / sendRedirect
+        // expected: rewrite
+        cfg = new ConfigHolder(HDR_X_FORWARDED_PROTO, "https", null, true);
+        sresp = new SslFilterResponse(response, req, cfg);
+
+        sresp.setHeader(SslFilterConstants.HDR_LOCATION, path);
+        assertEquals("https://" + BACKEND_SERVER + path, sresp.getHeader(SslFilterConstants.HDR_LOCATION));
     }
 
     private HttpServletRequest createServletRequest(String serverName, String requestURL)
@@ -358,6 +484,7 @@ public class SslFilterResponseTest
             committed = true;
         }
 
+        @SuppressWarnings("deprecation")
         @Override
         public void setStatus(int sc, String sm)
         {
@@ -393,7 +520,7 @@ public class SslFilterResponseTest
         @Override
         public void sendRedirect(String location) throws IOException
         {
-            throw new UnsupportedOperationException();
+            this.setHeader(SslFilterConstants.HDR_LOCATION, location);
         }
 
         @Override
@@ -432,6 +559,7 @@ public class SslFilterResponseTest
             return headers.get(name);
         }
 
+        @SuppressWarnings("deprecation")
         @Override
         public String encodeUrl(String url)
         {
@@ -444,6 +572,7 @@ public class SslFilterResponseTest
             throw new UnsupportedOperationException();
         }
 
+        @SuppressWarnings("deprecation")
         @Override
         public String encodeRedirectUrl(String url)
         {

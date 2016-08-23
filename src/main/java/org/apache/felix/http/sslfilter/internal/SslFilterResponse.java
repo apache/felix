@@ -51,6 +51,8 @@ class SslFilterResponse extends HttpServletResponseWrapper
     private final String clientProto;
     private final int clientPort;
 
+    private final boolean rewriteAbsoluteUrls;
+
     public SslFilterResponse(HttpServletResponse response, HttpServletRequest request, ConfigHolder config) throws MalformedURLException
     {
         super(response);
@@ -62,7 +64,7 @@ class SslFilterResponse extends HttpServletResponseWrapper
         this.serverPort = request.getServerPort();
 
         String value = request.getHeader(config.sslHeader);
-        
+
         if ((HDR_X_FORWARDED_PROTO.equalsIgnoreCase(config.sslHeader) && HTTP.equalsIgnoreCase(value)) ||
                 (HDR_X_FORWARDED_SSL.equalsIgnoreCase(config.sslHeader) && !config.sslValue.equalsIgnoreCase(value)))
         {
@@ -96,6 +98,7 @@ class SslFilterResponse extends HttpServletResponseWrapper
         }
 
         this.clientPort = port;
+        this.rewriteAbsoluteUrls = config.rewriteAbsoluteUrls;
     }
 
     @Override
@@ -149,7 +152,7 @@ class SslFilterResponse extends HttpServletResponseWrapper
 
     private String rewriteUrlIfNeeded(String value) throws URISyntaxException
     {
-        if (value == null)
+        if (value == null || (!this.rewriteAbsoluteUrls && value.contains("://")) )
         {
             return null;
         }

@@ -112,7 +112,7 @@ public class SslFilterJettyTest
         assertEquals(302, conn.getResponseCode());
 
         String location = conn.getHeaderField(HDR_LOCATION);
-        assertTrue(location, location.startsWith(HTTPS));
+        assertTrue(location, location.startsWith(HTTP));
     }
 
     @Test
