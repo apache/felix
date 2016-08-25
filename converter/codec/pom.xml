@@ -65,38 +65,23 @@
                 </executions>
                 <configuration>
                     <instructions>
-                        <Bundle-Activator>org.apache.felix.converter.impl.Activator</Bundle-Activator>
-                        <Private-Package>org.apache.felix.converter.*,org.yaml.snakeyaml.*</Private-Package>
-                        <Export-Package>org.osgi.service.converter, org.osgi.service.converter.util</Export-Package>
+                        <Bundle-Activator>org.apache.felix.codec.impl.Activator</Bundle-Activator>
+                        <Private-Package>org.apache.felix.codec.*,org.yaml.snakeyaml.*</Private-Package>
+                        <Export-Package>org.osgi.service.codec</Export-Package>
                         <Import-Package>*</Import-Package>
                     </instructions>
                 </configuration>
             </plugin>
-            <plugin>
-                <groupId>org.apache.rat</groupId>
-                <artifactId>apache-rat-plugin</artifactId>
-                <executions>
-                    <execution>
-                        <phase>verify</phase>
-                        <goals>
-                            <goal>check</goal>
-                        </goals>
-                    </execution>
-                </executions>
-                <configuration>
-                    <includes>
-                        <include>src/**</include>
-                    </includes>
-                    <excludes>
-                        <exclude>src/main/resources/META-INF/services/org.osgi.service.converter.Converter</exclude>
-                    </excludes>
-                </configuration>
-            </plugin>
-            
         </plugins>
     </build>
 
     <dependencies>
+        <dependency>
+            <groupId>org.apache.felix</groupId>
+            <artifactId>org.apache.felix.converter</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+    
         <dependency>
             <groupId>org.osgi</groupId>
             <artifactId>osgi.annotation</artifactId>
