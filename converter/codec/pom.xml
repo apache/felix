@@ -26,15 +26,15 @@
         <relativePath>../pom/pom.xml</relativePath>
     </parent>
 
-    <name>Apache Felix Converter Service</name>
-    <artifactId>org.apache.felix.converter</artifactId>
+    <name>Apache Felix Codec Services</name>
+    <artifactId>org.apache.felix.codec</artifactId>
     <version>0.1-SNAPSHOT</version>
     <packaging>jar</packaging>
 
     <scm>
-        <connection>scm:svn:http://svn.apache.org/repos/asf/felix/trunk/converter/converter</connection>
-        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/felix/trunk/converter/converter</developerConnection>
-        <url>http://svn.apache.org/viewvc/felix/trunk/converter/converter/</url>
+        <connection>scm:svn:http://svn.apache.org/repos/asf/felix/trunk/converter/codec</connection>
+        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/felix/trunk/converter/codec</developerConnection>
+        <url>http://svn.apache.org/viewvc/felix/trunk/converter/codec/</url>
     </scm>
 
     <properties>
