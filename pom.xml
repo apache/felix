@@ -66,7 +66,7 @@
                 <configuration>
                     <instructions>
                         <Bundle-Activator>org.apache.felix.converter.impl.Activator</Bundle-Activator>
-                        <Private-Package>org.apache.felix.converter.*,org.yaml.snakeyaml.*</Private-Package>
+                        <Private-Package>org.apache.felix.converter.*</Private-Package>
                         <Export-Package>org.osgi.service.converter, org.osgi.service.converter.util</Export-Package>
                         <Import-Package>*</Import-Package>
                     </instructions>
@@ -109,12 +109,6 @@
             <artifactId>osgi.core</artifactId>
             <version>6.0.0</version>
             <scope>provided</scope>
-        </dependency>
-        
-        <dependency>
-            <groupId>org.yaml</groupId>
-            <artifactId>snakeyaml</artifactId>
-            <version>1.17</version>
         </dependency>
         
         <dependency>
