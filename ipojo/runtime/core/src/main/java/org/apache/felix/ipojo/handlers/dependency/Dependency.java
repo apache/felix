@@ -416,19 +416,19 @@ public class Dependency extends DependencyModel implements FieldInterceptor, Met
         return new RuntimeException(message);
     }
 
-    private Object createNullableObject() {
+    private void createNullableObject() {
         // To load the proxy we use the POJO class loader. Indeed, this classloader imports iPOJO (so can access to Nullable) and has
         // access to the service specification.
         if ( ! getSpecification().isInterface()) {
             getHandler().getLogger().log(Log.INFO, "Cannot create the nullable object for " + getSpecification()
                     .getName() + " - the specification is not an interface");
-            return null;
+            return;
         }
 
         try {
             ClassLoader cl = new NullableClassLoader(
                     getHandler().getInstanceManager().getClazz().getClassLoader(),
-                    getSpecification().getClassLoader());
+                    findClassLoadersFromSpecification(getSpecification()));
 
             m_nullable =
                     Proxy.newProxyInstance(cl, new Class[]{
@@ -441,8 +441,28 @@ public class Dependency extends DependencyModel implements FieldInterceptor, Met
         } catch (Throwable e) { // Catch any other exception that can occurs
             throw new IllegalStateException("Cannot create the Nullable object, an unexpected error occurs", e);
         }
+    }
 
-        return m_nullable;
+    private List<ClassLoader> findClassLoadersFromSpecification(Class clazz) {
+        ArrayList<ClassLoader> classLoaders = new ArrayList<ClassLoader>();
+        ClassLoader specificationCL = clazz.getClassLoader();
+        classLoaders.add(specificationCL);
+        // use Class.getMethods() to go thru the full hierarchy of classes of the specification
+        for (Method method : clazz.getMethods()) {
+            for (Class<?> parameterType : method.getParameterTypes()) {
+                ClassLoader parameterCL = parameterType.getClassLoader();
+                if (parameterCL != null && !classLoaders.contains(parameterCL)) {
+                    classLoaders.add(parameterCL);
+                }
+            }
+            if (!Void.TYPE.equals(method.getReturnType())) {
+                ClassLoader returnCL = method.getReturnType().getClassLoader();
+                if (returnCL != null && !classLoaders.contains(returnCL)) {
+                    classLoaders.add(returnCL);
+                }
+            }
+        }
+        return classLoaders;
     }
 
     /**
@@ -1038,42 +1058,49 @@ public class Dependency extends DependencyModel implements FieldInterceptor, Met
         /**
          * Component classloader.
          */
-        private ClassLoader m_component;
+        private ClassLoader       m_component;
         /**
-         * Specification classloader.
+         * Specification classloaders.
          */
-        private ClassLoader m_specification;
+        private List<ClassLoader> m_classLoadersFromSpecification;
 
         /**
          * Creates a NullableClassLoader.
-         *
-         * @param cmp  the component class loader.
-         * @param spec the specification class loader.
+         *  @param cmp  the component class loader.
+         * @param classLoadersFromSpecification the specification class loader plus the ones referenced by parameters and return types.
          */
-        public NullableClassLoader(ClassLoader cmp, ClassLoader spec) {
+        public NullableClassLoader(ClassLoader cmp, List<ClassLoader> classLoadersFromSpecification) {
             m_component = cmp;
-            m_specification = spec;
+            m_classLoadersFromSpecification = classLoadersFromSpecification;
         }
 
         /**
          * Loads the given class.
          * This method uses the classloader of the component class
-         * and (if not found) the specification classloader.
+         * and (if not found) the specification classloaders.
+         * Throws the last {@link ClassNotFoundException} caught while trying
+         * to load the class from the specifiation classloaders
          *
          * @param name the class name
          * @return the class object
-         * @throws ClassNotFoundException if the class is not found by the two classloaders.
+         * @throws ClassNotFoundException if the class is not found by the classloaders.
          * @see java.lang.ClassLoader#loadClass(java.lang.String)
          */
         public Class loadClass(String name) throws ClassNotFoundException {
             try {
                 return m_component.loadClass(name);
             } catch (ClassNotFoundException e) {
-                return m_specification.loadClass(name);
+                ClassNotFoundException lastCaught = null;
+                for (ClassLoader classLoader : m_classLoadersFromSpecification) {
+                    try {
+                        return classLoader.loadClass(name);
+                    } catch (ClassNotFoundException cnfe) {
+                        lastCaught = cnfe;
+                    }
+                }
+                throw lastCaught;
             }
         }
-
-
     }
 
     /**
