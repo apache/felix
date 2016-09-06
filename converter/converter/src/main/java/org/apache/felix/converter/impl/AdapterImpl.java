@@ -65,8 +65,11 @@ public class AdapterImpl implements Adapter, InternalConverter {
         if (fromCls.equals(toCls))
             throw new IllegalArgumentException();
 
-        classRules.put(new TypePair(fromCls, toCls), (ConvertFunction<Object, Object>) toFun);
-        classRules.put(new TypePair(toCls, fromCls), (ConvertFunction<Object, Object>) fromFun);
+        if (toFun != null)
+            classRules.put(new TypePair(fromCls, toCls), (ConvertFunction<Object, Object>) toFun);
+
+        if (fromFun != null)
+            classRules.put(new TypePair(toCls, fromCls), (ConvertFunction<Object, Object>) fromFun);
         return this;
     }
 

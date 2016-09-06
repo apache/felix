@@ -67,6 +67,41 @@ public class AdapterTest {
                 ca.convert("A,B").to(String[].class));
     }
 
+    static String convertToString(char[] a) {
+        StringBuilder sb = new StringBuilder();
+        for (char c : a) {
+            sb.append(c);
+        }
+        return sb.toString();
+    }
+
+    @Test
+    public void testSecondLevelAdapter() {
+        Adapter ca = converter.getAdapter();
+
+        ca.rule(char[].class, String.class, AdapterTest::convertToString, null);
+        ca.rule(new Rule<String, Number>(String.class, Number.class, new ConvertFunction<String, Number>() {
+            @Override
+            public Number convert(String obj, Type targetType) throws Exception {
+                if (Integer.class.equals(targetType))
+                    return Integer.valueOf(-1);
+                else if (Long.class.equals(targetType))
+                    return Long.valueOf(-1);
+                return null;
+            }
+        }));
+
+        assertEquals("hi", ca.convert(new char[] {'h', 'i'}).to(String.class));
+        assertEquals(Integer.valueOf(-1), ca.convert("Hello").to(Integer.class));
+        assertEquals(Long.valueOf(-1), ca.convert("Hello").to(Long.class));
+
+        Adapter ca2 = ca.getAdapter();
+        // Shadow the Integer variant but keep Long going to the Number variant.
+        ca2.rule(String.class, Integer.class, v -> v.length(), null);
+        assertEquals(5, ca2.convert("Hello").to(Integer.class));
+        assertEquals(Long.valueOf(-1), ca2.convert("Hello").to(Long.class));
+    }
+
     @Test @SuppressWarnings("rawtypes")
     public void testWildcardAdapter() {
         ConvertFunction<List, Object> foo = new ConvertFunction<List, Object>() {
