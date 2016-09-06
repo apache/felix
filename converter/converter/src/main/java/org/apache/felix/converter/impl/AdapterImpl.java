@@ -31,6 +31,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import org.osgi.service.converter.Adapter;
 import org.osgi.service.converter.ConversionException;
 import org.osgi.service.converter.ConvertFunction;
+import org.osgi.service.converter.ConvertResult;
 import org.osgi.service.converter.Converter;
 import org.osgi.service.converter.Converting;
 import org.osgi.service.converter.Rule;
@@ -167,9 +168,9 @@ public class AdapterImpl implements Adapter, InternalConverter {
                         continue;
 
                     try {
-                        Object res = func.convert(object, type);
-                        if (res != ConvertFunction.CANNOT_CONVERT)
-                            return res;
+                        ConvertResult<?> res = func.convert(object, type);
+                        if (res.getStatus() == ConvertResult.Status.CONVERTED)
+                            return res.getResult();
                     } catch (Exception ex) {
                         if (hasDefault)
                             return defaultValue;
