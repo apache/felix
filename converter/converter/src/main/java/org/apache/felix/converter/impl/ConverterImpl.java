@@ -20,7 +20,7 @@ import org.osgi.service.converter.Adapter;
 
 public class ConverterImpl implements InternalConverter {
     @Override
-    public Adapter getAdapter() {
+    public Adapter newAdapter() {
         return new AdapterImpl(this);
     }
 

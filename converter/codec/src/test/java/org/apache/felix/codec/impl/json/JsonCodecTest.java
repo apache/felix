@@ -82,7 +82,7 @@ public class JsonCodecTest {
         Map<String, Object> m = new HashMap<>();
         m.put("submap", m1);
 
-        Adapter ca = converter.getAdapter();
+        Adapter ca = converter.newAdapter();
         ca.rule(Foo.class, String.class, Foo::tsFun, v -> Foo.fsFun(v));
 
         JsonCodecImpl jsonCodec = new JsonCodecImpl();

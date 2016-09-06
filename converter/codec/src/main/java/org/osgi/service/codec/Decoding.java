@@ -32,7 +32,7 @@ public interface Decoding<T> {
 	/**
 	 * Use an input stream as the source of the decoding operation. As encoding
 	 * UTF-8 is used.
-	 * 
+	 *
 	 * @param in The stream to use.
 	 * @return the decoded object.
 	 */
@@ -40,7 +40,7 @@ public interface Decoding<T> {
 
 	/**
 	 * Use an input stream as the source of the decoding operation.
-	 * 
+	 *
 	 * @param in The stream to use.
 	 * @param charset The character set to use.
 	 * @return the decoded object.
@@ -49,7 +49,7 @@ public interface Decoding<T> {
 
 	/**
 	 * Use a Readable as the source of the decoding operation.
-	 * 
+	 *
 	 * @param in The readable to use.
 	 * @return the decoded object.
 	 */
@@ -57,7 +57,7 @@ public interface Decoding<T> {
 
 	/**
 	 * Use a Char Sequence as the source of the decoding operation.
-	 * 
+	 *
 	 * @param in The char sequence to use.
 	 * @return the decoded object.
 	 */

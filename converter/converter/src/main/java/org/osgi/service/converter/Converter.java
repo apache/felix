@@ -21,7 +21,7 @@ import org.osgi.annotation.versioning.ProviderType;
  * The Converter service is used to start a conversion. The service is obtained
  * from the service registry. The conversion is then completed via the
  * Converting interface that has methods to specify the target type.
- * 
+ *
  * @author $Id$
  * @ThreadSafe
  */
@@ -29,18 +29,30 @@ import org.osgi.annotation.versioning.ProviderType;
 public interface Converter {
 	/**
 	 * Start a conversion for the given object.
-	 * 
+	 *
 	 * @param obj The object that should be converted.
 	 * @return A {@link Converting} object to complete the conversion.
 	 */
 	Converting convert(Object obj);
 
 	/**
-	 * Obtain an adapter to this converter. The adapter behaves just like the
-	 * converter except for the exception rules registered with is. For more
+	 * Discuss: Create a copy of the provided object. This is the same as
+	 *   {@code converter.convert(obj).to(obj.getClass());}
+	 * @param obj The object to copy
+	 * @return The copied object
+	 */
+	default <T> T copy(T obj) {
+	    return obj;
+	}
+
+	/**
+	 * Obtain a new adapter to this converter. The adapter behaves just like the
+	 * converter except for the exception rules registered with is. It is also
+	 * possible to obtain a new Adapter for an existing adapter. This allows for
+	 * adding an additional layer of rules over an existing adapter. For more
 	 * details see the {@link Adapter} interface.
-	 * 
+	 *
 	 * @return An adapter to this converter.
 	 */
-	Adapter getAdapter();
+	Adapter newAdapter();
 }

@@ -33,7 +33,7 @@ public class ConverterService implements Converter {
     private final Adapter adapter;
 
     public ConverterService() {
-        Adapter a = new ConverterImpl().getAdapter();
+        Adapter a = new ConverterImpl().newAdapter();
         a.rule(Byte.class, String.class, v -> v.toString(), Byte::parseByte); // TODO test
         a.rule(Character.class, Boolean.class, v -> v.charValue() != 0,
                 v -> v.booleanValue() ? (char) 1 : (char) 0);
@@ -63,7 +63,7 @@ public class ConverterService implements Converter {
     }
 
     @Override
-    public Adapter getAdapter() {
-        return adapter.getAdapter();
+    public Adapter newAdapter() {
+        return adapter.newAdapter();
     }
 }
