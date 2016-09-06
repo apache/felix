@@ -53,7 +53,7 @@ public class AdapterTest {
 
     @Test
     public void testStringArrayToStringAdapter() {
-        Adapter ca = converter.getAdapter();
+        Adapter ca = converter.newAdapter();
         ca.rule(String[].class, String.class,
                 v -> Stream.of(v).collect(Collectors.joining(",")),
                 v -> v.split(","));
@@ -77,7 +77,7 @@ public class AdapterTest {
 
     @Test
     public void testSecondLevelAdapter() {
-        Adapter ca = converter.getAdapter();
+        Adapter ca = converter.newAdapter();
 
         ca.rule(char[].class, String.class, AdapterTest::convertToString, null);
         ca.rule(new Rule<String, Number>(String.class, Number.class, new ConvertFunction<String, Number>() {
@@ -95,10 +95,10 @@ public class AdapterTest {
         assertEquals(Integer.valueOf(-1), ca.convert("Hello").to(Integer.class));
         assertEquals(Long.valueOf(-1), ca.convert("Hello").to(Long.class));
 
-        Adapter ca2 = ca.getAdapter();
+        Adapter ca2 = ca.newAdapter();
         // Shadow the Integer variant but keep Long going to the Number variant.
         ca2.rule(String.class, Integer.class, v -> v.length(), null);
-        assertEquals(5, ca2.convert("Hello").to(Integer.class));
+        assertEquals(5, (int) ca2.convert("Hello").to(Integer.class));
         assertEquals(Long.valueOf(-1), ca2.convert("Hello").to(Long.class));
     }
 
@@ -119,7 +119,7 @@ public class AdapterTest {
         Rule<Object, Object> allCatch = new Rule<>(Object.class, Object.class,
                 (v,t) -> v.toString());
 
-        Adapter ca = converter.getAdapter();
+        Adapter ca = converter.newAdapter();
         ca.rule(r);
         ca.rule(allCatch);
 
@@ -140,7 +140,7 @@ public class AdapterTest {
         Rule<Object, Object> allCatch = new Rule<>(Object.class, Object.class,
                 (v,t) -> {snooped.put(v,t); return ConvertFunction.CANNOT_CONVERT;}, null);
 
-        Adapter ca = converter.getAdapter();
+        Adapter ca = converter.newAdapter();
         ca.rule(r);
         ca.rule(r2);
         ca.rule(allCatch);

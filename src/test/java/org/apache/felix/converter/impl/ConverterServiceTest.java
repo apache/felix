@@ -299,7 +299,7 @@ public class ConverterServiceTest {
 
     @Test
     public void testCustomStringArrayConverstion() {
-        Adapter adapter = converter.getAdapter();
+        Adapter adapter = converter.newAdapter();
         adapter.rule(String[].class, String.class,
                 v -> Stream.of(v).collect(Collectors.joining(",")),
                 v -> v.split(","));

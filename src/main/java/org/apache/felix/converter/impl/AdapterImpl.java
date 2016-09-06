@@ -54,7 +54,7 @@ public class AdapterImpl implements Adapter, InternalConverter {
     }
 
     @Override
-    public Adapter getAdapter() {
+    public Adapter newAdapter() {
         return new AdapterImpl(this);
     }
 
