@@ -594,6 +594,12 @@ public class DMCommand {
     		System.out.println("The following bundle(s) are missing: ");
     		printMissingDependencies(missingBundleDependencies);
     	}
+    	
+    	List<MissingDependency> missingCustomDependencies = graph.getMissingCustomDependencies();
+    	if(!missingCustomDependencies.isEmpty()) {
+    		System.out.println("The following custom dependency(ies) are missing: ");
+    		printMissingCustomDependencies(missingCustomDependencies);
+    	}
     }
 
 	private void printCircularDependencies(List<CircularDependency> circularDependencies) {
@@ -606,9 +612,15 @@ public class DMCommand {
 		}
 	}
 
-	private void printMissingDependencies(List<MissingDependency> missingConfigDependencies) {
-		for(MissingDependency m : missingConfigDependencies) {
+	private void printMissingDependencies(List<MissingDependency> missingDependencies) {
+		for(MissingDependency m : missingDependencies) {
 			System.out.println(" * " + m.getName() + " for bundle " + m.getBundleName());
+		}
+	}
+	
+	private void printMissingCustomDependencies(List<MissingDependency> missingDependencies) {
+		for(MissingDependency m : missingDependencies) {
+			System.out.println(" * " + m.getName() + "(" + m.getType() + ")" + " for bundle " + m.getBundleName());
 		}
 	}
 
