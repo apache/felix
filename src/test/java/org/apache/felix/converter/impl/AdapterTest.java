@@ -32,6 +32,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.osgi.service.converter.Adapter;
 import org.osgi.service.converter.ConvertFunction;
+import org.osgi.service.converter.ConvertResult;
 import org.osgi.service.converter.Converter;
 import org.osgi.service.converter.Rule;
 
@@ -82,11 +83,11 @@ public class AdapterTest {
         ca.rule(char[].class, String.class, AdapterTest::convertToString, null);
         ca.rule(new Rule<String, Number>(String.class, Number.class, new ConvertFunction<String, Number>() {
             @Override
-            public Number convert(String obj, Type targetType) throws Exception {
+            public ConvertResult<Number> convert(String obj, Type targetType) throws Exception {
                 if (Integer.class.equals(targetType))
-                    return Integer.valueOf(-1);
+                    return new ConvertResult<Number>(Integer.valueOf(-1));
                 else if (Long.class.equals(targetType))
-                    return Long.valueOf(-1);
+                    return new ConvertResult<Number>(Long.valueOf(-1));
                 return null;
             }
         }));
@@ -102,22 +103,41 @@ public class AdapterTest {
         assertEquals(Long.valueOf(-1), ca2.convert("Hello").to(Long.class));
     }
 
+    @Test
+    public void testCannotHandleSpecific() {
+        Adapter ca = converter.newAdapter();
+
+        ca.rule(new Rule<Integer, Long>(Integer.class, Long.class, new ConvertFunction<Integer,Long>() {
+            @Override
+            public ConvertResult<Long> convert(Integer obj, Type targetType) throws Exception {
+                if (obj.intValue() != 1)
+                    return new ConvertResult<Long>(new Long(-obj.intValue()));
+                return ConvertResult.cannotConvert();
+            }
+        }));
+
+        assertEquals(Long.valueOf(-2), ca.convert(Integer.valueOf(2)).to(Long.class));
+
+        // This is the exception that the rule cannot handle
+        assertEquals(Long.valueOf(1), ca.convert(Integer.valueOf(1)).to(Long.class));
+    }
+
     @Test @SuppressWarnings("rawtypes")
     public void testWildcardAdapter() {
         ConvertFunction<List, Object> foo = new ConvertFunction<List, Object>() {
             @Override
-            public Object convert(List t, Type type) throws Exception {
+            public ConvertResult<Object> convert(List t, Type type) throws Exception {
                 if (type instanceof Class) {
                     if (Number.class.isAssignableFrom((Class<?>) type))
-                        return converter.convert(t.size()).to(type);
+                        return new ConvertResult<Object>(converter.convert(t.size()).to(type));
                 }
-                return ConvertFunction.CANNOT_CONVERT;
+                return ConvertResult.cannotConvert();
             }
         };
 
         Rule<List, Object> r = new Rule<>(List.class, Object.class, foo);
         Rule<Object, Object> allCatch = new Rule<>(Object.class, Object.class,
-                (v,t) -> v.toString());
+                (v,t) -> new ConvertResult<Object>(v.toString()));
 
         Adapter ca = converter.newAdapter();
         ca.rule(r);
@@ -132,13 +152,13 @@ public class AdapterTest {
     public void testWildcardAdapter2() {
         Map<Object, Object> snooped = new HashMap<>();
         Rule<Object, ArrayList> r = new Rule<>(Object.class, ArrayList.class,
-                (v,t) -> null,
-                (v,t) -> "arraylist");
+                (v,t) -> new ConvertResult<ArrayList>(null),
+                (v,t) -> new ConvertResult<Object>("arraylist"));
         Rule<Object, List> r2 = new Rule<>(Object.class, List.class,
-                (v,t) -> null,
-                (v,t) -> "list");
+                (v,t) -> new ConvertResult<List>(null),
+                (v,t) -> new ConvertResult<Object>("list"));
         Rule<Object, Object> allCatch = new Rule<>(Object.class, Object.class,
-                (v,t) -> {snooped.put(v,t); return ConvertFunction.CANNOT_CONVERT;}, null);
+                (v,t) -> {snooped.put(v,t); return ConvertResult.cannotConvert();}, null);
 
         Adapter ca = converter.newAdapter();
         ca.rule(r);

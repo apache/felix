@@ -23,7 +23,7 @@ import java.lang.reflect.Type;
  * interface via a default method and can be used in cases where the target type
  * does not need to be passed to the {@link #convert} method, for example in
  * Lambda expressions.
- * 
+ *
  * @param <F> Type parameter for the source object.
  * @param <T> Type parameter for the converted object.
  * @author $Id$
@@ -31,16 +31,15 @@ import java.lang.reflect.Type;
 @FunctionalInterface
 public interface SimpleConvertFunction<F, T> extends ConvertFunction<F,T> {
 	@Override
-	default T convert(F obj, Type type) throws Exception {
-		return convert(obj);
+	default ConvertResult<T> convert(F obj, Type type) throws Exception {
+		return new ConvertResult<T>(convert(obj));
 	}
 
 	/**
 	 * Convert the object into the target type.
-	 * 
+	 *
 	 * @param obj The object to be converted.
-	 * @return The converted object or {@link #CANNOT_CONVERT} to indicate that
-	 *         this converter cannot handle the conversion.
+	 * @return The converted object.
 	 */
 	T convert(F obj) throws Exception;
 }
