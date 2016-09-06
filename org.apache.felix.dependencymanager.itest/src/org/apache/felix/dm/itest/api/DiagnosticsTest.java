@@ -24,8 +24,11 @@ import java.util.Properties;
 import org.apache.felix.dm.Component;
 import org.apache.felix.dm.ComponentDeclaration;
 import org.apache.felix.dm.ConfigurationDependency;
+import org.apache.felix.dm.Dependency;
 import org.apache.felix.dm.DependencyManager;
 import org.apache.felix.dm.ServiceDependency;
+import org.apache.felix.dm.context.AbstractDependency;
+import org.apache.felix.dm.context.DependencyContext;
 import org.apache.felix.dm.diagnostics.CircularDependency;
 import org.apache.felix.dm.diagnostics.DependencyGraph;
 import org.apache.felix.dm.diagnostics.DependencyGraph.ComponentState;
@@ -112,7 +115,6 @@ public class DiagnosticsTest extends TestBase {
 		assertTrue(graph.getMissingDependencies("configuration").isEmpty());
 		assertTrue(graph.getMissingDependencies("bundle").isEmpty());
 		assertTrue(graph.getMissingDependencies("resource").isEmpty());
-		
 	}
 	
 	public void testConfigurationDependencyMissing() throws Exception {
@@ -417,6 +419,42 @@ public class DiagnosticsTest extends TestBase {
 
 	}
 	
+	public void testMissingCustomDependencies() {
+		
+		DependencyManager dm = getDM();
+		
+		Component component0 = dm.createComponent()
+				.setImplementation(C0.class)
+				.add(dm.createServiceDependency()
+						.setService(S1.class)
+						.setRequired(true))
+				.add(dm.createServiceDependency()
+						.setService(S2.class)
+						.setRequired(true));
+		
+
+		Component component1 = dm.createComponent()
+				.setImplementation(S1Impl1.class)
+				.setInterface(S1.class.getName(), null)
+				.add(ToggleDependency.create());
+		
+		m_dm.add(component0);
+		m_dm.add(component1);
+		
+		DependencyGraph graph = DependencyGraph.getGraph(ComponentState.UNREGISTERED,DependencyState.REQUIRED_UNAVAILABLE);
+		
+		List<MissingDependency> missingCustomDependencies = graph.getMissingCustomDependencies();
+		assertEquals(1, missingCustomDependencies.size());
+		
+		MissingDependency missingCustomeDependency = missingCustomDependencies.get(0);
+		assertTrue(missingCustomeDependency.getType().equals("toggle"));
+		assertTrue(missingCustomeDependency.getName().equals("false"));
+		
+		List<MissingDependency> missingDependencies = graph.getMissingDependencies("service");
+		assertEquals(1, missingDependencies.size());
+	}
+	
+	
 	static interface S1 {}
 	static interface S2 {}
 	static interface S3 {}
@@ -460,6 +498,49 @@ public class DiagnosticsTest extends TestBase {
 	}
 	static class S8Impl1 implements S8 {
 		public S8Impl1() {}
+	}
+	
+	static class CA {
+		public CA(){}
+	}
+	
+	static interface ToggleDependency extends Dependency {
+		static ToggleDependency create() {
+			return new ToggleDependencyImpl();
+		}
+		
+	}
+	
+	static class ToggleDependencyImpl extends AbstractDependency<ToggleDependencyImpl> implements ToggleDependency {
+		
+		public ToggleDependencyImpl() {
+			setRequired(true);
+		}
+		
+		public ToggleDependencyImpl(ToggleDependencyImpl prototype) {
+			super(prototype);
+		}
+
+		@Override
+		public Class<?> getAutoConfigType() {
+			return null;
+		}
+
+		@Override
+		public DependencyContext createCopy() {
+			return new ToggleDependencyImpl(this);
+		}
+
+		@Override
+		public String getSimpleName() {
+	        return "" + isAvailable();
+		}
+
+		@Override
+		public String getType() {
+	        return "toggle";
+		}
+		
 	}
 
 }

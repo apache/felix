@@ -25,6 +25,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Properties;
 import java.util.Stack;
+import java.util.stream.Collectors;
 
 import org.apache.felix.dm.Component;
 import org.apache.felix.dm.ComponentDeclaration;
@@ -60,6 +61,9 @@ public class DependencyGraph {
 	};
 	
 	private static final String SERVICE = "service";
+	private static final String CONFIGURATION = "configuration";
+	private static final String BUNDLE = "bundle";
+	private static final String RESOURCE = "resource";
 
 	private Map<ComponentDeclaration, DependencyGraphNode> m_componentToNode = new HashMap<>();
 	private Map<ComponentDependencyDeclaration, DependencyGraphNode> m_dependencyToNode = new HashMap<>();
@@ -354,8 +358,25 @@ public class DependencyGraph {
 		}
 		return result;
 	}
-    
-    private String getSimpleName(String name) {
+
+	/**
+	 * Returns all custom missing dependencies. Custom dependencies are not 'out of the box' dependencies (service, resource, 
+	 * bundle, configuration).
+	 * 
+	 * @return The missing dependencies which are not 'out of the box dependencies'.
+	 */
+	public List<MissingDependency> getMissingCustomDependencies() {
+		
+		List<MissingDependency> missingDependencies = getMissingDependencies(null);
+		return missingDependencies.stream().filter(m -> !isOutOfTheBoxDependencyType(m.getType())).collect(Collectors.toList());
+		
+	}
+	
+    private boolean isOutOfTheBoxDependencyType(String type) {
+    	return SERVICE.equals(type) || CONFIGURATION.equals(type) || BUNDLE.equals(type) || RESOURCE.equals(type);
+	}
+
+	private String getSimpleName(String name) {
         int cuttOff = name.indexOf("(");
         if (cuttOff != -1) {
             return name.substring(0, cuttOff).trim();
