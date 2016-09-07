@@ -52,7 +52,7 @@ public interface Converter {
 	 * adding an additional layer of rules over an existing adapter. For more
 	 * details see the {@link Adapter} interface.
 	 *
-	 * @return An adapter to this converter.
+	 * @return A new adapter to this converter.
 	 */
 	Adapter newAdapter();
 }

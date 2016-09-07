@@ -116,11 +116,7 @@ public class ConvertingImpl implements Converting, InternalConverting {
 
         Class<?> targetCls = Util.primitiveToBoxed(cls);
 
-        if (!Map.class.isAssignableFrom(targetCls) &&
-                !Collection.class.isAssignableFrom(targetCls) &&
-                !targetCls.isArray()) {
-            // For maps and collections we always want copies returned
-            if (targetCls.isAssignableFrom(object.getClass()))
+        if (!isCopyRequiredType(targetCls) && targetCls.isAssignableFrom(object.getClass())) {
                 return object;
         }
 
@@ -228,11 +224,16 @@ public class ConvertingImpl implements Converting, InternalConverting {
             T dto = targetCls.newInstance();
 
             for (Map.Entry entry : (Set<Map.Entry>) m.entrySet()) {
+                Field f = null;
                 try {
-                    Field f = targetCls.getField(entry.getKey().toString());
+                    f = targetCls.getDeclaredField(entry.getKey().toString());
+                } catch (NoSuchFieldException e) {
+                    f = targetCls.getField(entry.getKey().toString());
+                }
+
+                if (f != null) {
                     Object val = entry.getValue();
                     f.set(dto, converter.convert(val).to(f.getType()));
-                } catch (NoSuchFieldException e) {
                 }
             }
 
@@ -267,8 +268,17 @@ public class ConvertingImpl implements Converting, InternalConverting {
             if (targetKeyType != null)
                 key = converter.convert(key).to(targetKeyType);
             Object value = entry.getValue();
-            if (targetValueType != null)
-                value = converter.convert(value).to(targetValueType);
+            if (value != null) {
+                if (targetValueType != null) {
+                    value = converter.convert(value).to(targetValueType);
+                } else {
+                    Class<?> cls = value.getClass();
+                    if (isCopyRequiredType(cls)) {
+                        cls = getConstructableType(cls);
+                    }
+                    value = converter.convert(value).to(cls);
+                }
+            }
             instance.put(key, value);
         }
 
@@ -358,7 +368,9 @@ public class ConvertingImpl implements Converting, InternalConverting {
 
     private boolean isMapType(Class<?> targetCls) {
         // All interface types that are not Collections are treated as maps
-        if (targetCls.isInterface())
+        if (Map.class.isAssignableFrom(targetCls))
+            return true;
+        else if (targetCls.isInterface())
             return true;
         else if (isWriteableJavaBean(targetCls))
             return true;
@@ -514,9 +526,37 @@ public class ConvertingImpl implements Converting, InternalConverting {
                 Constructor<?> ctor2 = targetCls.getConstructor();
                 return ctor2.newInstance();
             } catch (Exception e2) {
-                e2.printStackTrace();
+                // ignore
             }
         }
+        return null;
+    }
+
+    private static Class<?> getConstructableType(Class<?> targetCls) {
+        if (targetCls.isArray())
+            return targetCls;
+
+        Class<?> cls = targetCls;
+        do {
+            try {
+                cls.getConstructor(int.class);
+                return cls; // If no exception the constructor is there
+            } catch (NoSuchMethodException e) {
+                try {
+                    cls.getConstructor();
+                    return cls; // If no exception the constructor is there
+                } catch (NoSuchMethodException e1) {
+                }
+            }
+            for (Class<?> intf : cls.getInterfaces()) {
+                Class<?> impl = interfaceImplementations.get(intf);
+                if (impl != null)
+                    return impl;
+            }
+
+            cls = cls.getSuperclass();
+        } while (!Object.class.equals(cls));
+
         return null;
     }
 
@@ -637,6 +677,14 @@ public class ConvertingImpl implements Converting, InternalConverting {
             return createMapFromInterface(obj);
         else
             return createMapFromBeanAccessors(obj);
+    }
+
+    private static boolean isCopyRequiredType(Class<?> cls) {
+        return Map.class.isAssignableFrom(cls) ||
+                Collection.class.isAssignableFrom(cls) ||
+                DTO.class.isAssignableFrom(cls) ||
+                // isJavaBean
+                cls.isArray();
     }
 
     private static boolean isWriteableJavaBean(Class<?> cls) {
