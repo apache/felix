@@ -29,6 +29,9 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.List;
@@ -458,6 +461,68 @@ public class ConverterServiceTest {
         assertEquals(dto.embedded.marco, "ichi ni san");
         assertEquals(dto.embedded.polo, 64L);
         assertEquals(dto.embedded.alpha, Alpha.A);
+    }
+
+    @Test @SuppressWarnings({ "rawtypes", "unchecked" })
+    public void testDTOWithGenerics() {
+        MyDTO2 dto = new MyDTO2();
+        dto.longList = Arrays.asList(999L, 1000L);
+        dto.dtoMap = new LinkedHashMap<>();
+
+        MyDTO3 subDTO1 = new MyDTO3();
+        subDTO1.charSet = new HashSet<>(Arrays.asList('f', 'o', 'o'));
+        dto.dtoMap.put("zzz", subDTO1);
+
+        MyDTO3 subDTO2 = new MyDTO3();
+        subDTO2.charSet = new HashSet<>(Arrays.asList('b', 'a', 'r'));
+        dto.dtoMap.put("aaa", subDTO2);
+
+        Map m = converter.convert(dto).to(Map.class);
+        assertEquals(2, m.size());
+
+        assertEquals(Arrays.asList(999L, 1000L), m.get("longList"));
+        Map nestedMap = (Map) m.get("dtoMap");
+
+        // Check iteration order is preserved by iterating
+        int i=0;
+        for (Iterator<Map.Entry> it = nestedMap.entrySet().iterator(); it.hasNext(); i++) {
+            Map.Entry entry = it.next();
+            switch (i) {
+            case 0:
+                assertEquals("zzz", entry.getKey());
+                MyDTO3 dto1 = (MyDTO3) entry.getValue();
+                assertNotSame("Should have created a copy", subDTO1, dto1);
+                assertEquals(new HashSet<Character>(Arrays.asList('f', 'o')), dto1.charSet);
+                break;
+            case 1:
+                assertEquals("aaa", entry.getKey());
+                MyDTO3 dto2 = (MyDTO3) entry.getValue();
+                assertNotSame("Should have created a copy", subDTO2, dto2);
+                assertEquals(new HashSet<Character>(Arrays.asList('b', 'a', 'r')), dto2.charSet);
+                break;
+            default:
+                fail("Unexpected number of elements on map");
+            }
+        }
+
+        // TODO convert back
+    }
+
+    @Test @SuppressWarnings("rawtypes")
+    public void testCopyMap() {
+        Map m = new HashMap();
+        Map m2 = converter.convert(m).to(Map.class);
+        assertEquals(m, m2);
+        assertNotSame(m, m2);
+    }
+
+    @Test @SuppressWarnings({ "rawtypes", "unchecked" })
+    public void testCopyMap2() {
+        Map m = new HashMap();
+        m.put("key", Arrays.asList("a", "b", "c"));
+        Map m2 = converter.convert(m).to(Map.class);
+        assertEquals(m, m2);
+        assertNotSame(m, m2);
     }
 
     static class MyClass2 {
