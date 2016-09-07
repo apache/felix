@@ -24,7 +24,20 @@ public class ConvertResult<T> {
     /**
      * The status of the conversion result.
      */
-    public enum Status { CONVERTED, CANNOT_CONVERT };
+	public enum Status {
+		/**
+		 * Status to indicate that the value was converted and the result
+		 * contains the converted value.
+		 */
+		CONVERTED,
+
+		/**
+		 * Status to indicate that the value cannot be handled by the
+		 * {@link ConvertFunction} and should be handled by another handler if
+		 * available.
+		 */
+		CANNOT_CONVERT
+	}
 
     private final Status status;
     private final T result;
@@ -55,10 +68,20 @@ public class ConvertResult<T> {
         result = res;
     }
 
+	/**
+	 * Accessor for the conversion result.
+	 *
+	 * @return The conversion result.
+	 */
     public T getResult() {
         return result;
     }
 
+	/**
+	 * Accessor for the conversion status.
+	 *
+	 * @return The conversion status.
+	 */
     public Status getStatus() {
         return status;
     }
