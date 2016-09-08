@@ -39,6 +39,6 @@
 
     <modules>
         <module>converter</module>
-        <module>codec</module>
+        <module>serializer</module>
     </modules>
 </project>
