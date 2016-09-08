@@ -16,6 +16,15 @@
  */
 package org.apache.felix.converter.impl;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.time.OffsetDateTime;
+import java.time.OffsetTime;
+import java.time.ZonedDateTime;
+import java.util.UUID;
+import java.util.regex.Pattern;
+
 import org.osgi.service.converter.Adapter;
 
 public class ConverterImpl implements InternalConverter {
@@ -27,5 +36,28 @@ public class ConverterImpl implements InternalConverter {
     @Override
     public InternalConverting convert(Object obj) {
         return new ConvertingImpl(this, obj);
+    }
+
+    public void addStandardRules(Adapter a) {
+        a.rule(Byte.class, String.class, v -> v.toString(), Byte::parseByte); // TODO test
+        a.rule(Character.class, Boolean.class, v -> v.charValue() != 0,
+                v -> v.booleanValue() ? (char) 1 : (char) 0);
+        a.rule(Character.class, String.class, v -> v.toString(),
+                v -> v.length() > 0 ? v.charAt(0) : 0);
+        a.rule(Class.class, String.class, Class::toString,
+                v -> getClass().getClassLoader().loadClass(v));
+        a.rule(Double.class, String.class, v -> v.toString(), Double::parseDouble); // TODO test
+        a.rule(Float.class, String.class, v -> v.toString(), Float::parseFloat); // TODO test
+        a.rule(Integer.class, String.class, v -> v.toString(), Integer::parseInt);
+        a.rule(LocalDateTime.class, String.class, LocalDateTime::toString, LocalDateTime::parse);
+        a.rule(LocalDate.class, String.class, LocalDate::toString, LocalDate::parse);
+        a.rule(LocalTime.class, String.class, LocalTime::toString, LocalTime::parse);
+        a.rule(Long.class, String.class, v -> v.toString(), Long::parseLong); // TODO test
+        a.rule(OffsetDateTime.class, String.class, OffsetDateTime::toString, OffsetDateTime::parse);
+        a.rule(OffsetTime.class, String.class, OffsetTime::toString, OffsetTime::parse);
+        a.rule(Pattern.class, String.class, Pattern::toString, Pattern::compile);
+        a.rule(Short.class, String.class, v -> v.toString(), Short::parseShort); // TODO test
+        a.rule(UUID.class, String.class, UUID::toString, UUID::fromString);
+        a.rule(ZonedDateTime.class, String.class, ZonedDateTime::toString, ZonedDateTime::parse);
     }
 }
