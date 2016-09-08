@@ -14,48 +14,48 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.felix.codec.impl.yaml;
+package org.apache.felix.serializer.impl.yaml;
 
 import java.lang.reflect.Type;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-import org.osgi.service.codec.Codec;
-import org.osgi.service.codec.Decoding;
-import org.osgi.service.codec.Encoding;
 import org.osgi.service.converter.StandardConverter;
 import org.osgi.service.converter.Converter;
 import org.osgi.service.converter.TypeReference;
+import org.osgi.service.serializer.Serializer;
+import org.osgi.service.serializer.Deserializing;
+import org.osgi.service.serializer.Serializing;
 
-public class YamlCodecImpl implements Codec {
+public class YamlCodecImpl implements Serializer {
     private Map<String, Object> configuration = new ConcurrentHashMap<>();
     private Converter converter = new StandardConverter();
 
     @Override
-    public Codec with(Converter c) {
+    public Serializer with(Converter c) {
         converter = c;
         return this;
     }
 
     @Override
-    public <T> Decoding<T> decode(Class<T> cls) {
+    public <T> Deserializing<T> deserialize(Class<T> cls) {
         return new YamlDecodingImpl<T>(converter, cls);
     }
 
     @Override
-    public <T> Decoding<T> decode(TypeReference<T> ref) {
+    public <T> Deserializing<T> deserialize(TypeReference<T> ref) {
         // TODO Auto-generated method stub
         return null;
     }
 
     @Override
-    public Decoding<?> decode(Type type) {
+    public Deserializing<?> deserialize(Type type) {
         // TODO Auto-generated method stub
         return null;
     }
 
     @Override
-    public Encoding encode(Object obj) {
+    public Serializing serialize(Object obj) {
         return new YamlEncodingImpl(converter, configuration, obj);
     }
 }

@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.osgi.service.codec;
+package org.osgi.service.serializer;
 
 import java.lang.reflect.Type;
 
@@ -32,35 +32,35 @@ import org.osgi.service.converter.TypeReference;
  * @ThreadSafe
  */
 @ProviderType
-public interface Codec {
+public interface Serializer {
 	/**
 	 * Start specifying a decode operation.
 	 *
 	 * @param <T> The type to decode to.
 	 * @param cls The class to decode to.
-	 * @return A {@link Decoding} object to specify the source for the decode
+	 * @return A {@link Deserializing} object to specify the source for the decode
 	 *         operation.
 	 */
-	<T> Decoding<T> decode(Class<T> cls);
+	<T> Deserializing<T> deserialize(Class<T> cls);
 
 	/**
 	 * Start specifying a decode operation.
 	 *
 	 * @param <T> The type to decode to.
 	 * @param ref A type reference for the target type.
-	 * @return A {@link Decoding} object to specify the source for the decode
+	 * @return A {@link Deserializing} object to specify the source for the decode
 	 *         operation.
 	 */
-	<T> Decoding<T> decode(TypeReference<T> ref);
+	<T> Deserializing<T> deserialize(TypeReference<T> ref);
 
 	/**
 	 * Start specifying a decode operation.
 	 *
 	 * @param type The type to convert to.
-	 * @return A {@link Decoding} object to specify the source for the decode
+	 * @return A {@link Deserializing} object to specify the source for the decode
 	 *         operation.
 	 */
-	Decoding< ? > decode(Type type);
+	Deserializing< ? > deserialize(Type type);
 
 	/**
 	 * Start specifying an encode operation.
@@ -69,7 +69,7 @@ public interface Codec {
 	 * @return an Encoding object to specify the target for the decode
 	 *         operation.
 	 */
-	Encoding encode(Object obj);
+	Serializing serialize(Object obj);
 
 	/**
 	 * Specify the converter to be used by the code, if an alternative, adapted,
@@ -78,5 +78,5 @@ public interface Codec {
 	 * @param converter The converter to use.
 	 * @return A codec that uses the converter as specified.
 	 */
-	Codec with(Converter converter);
+	Serializer with(Converter converter);
 }

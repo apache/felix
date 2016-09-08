@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.felix.codec.impl.json;
+package org.apache.felix.serializer.serializer.json;
 
 import java.io.IOException;
 import java.io.InputStream;

@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.osgi.service.codec;
+package org.osgi.service.serializer;
 
 import java.io.IOException;
 import java.io.OutputStream;
@@ -28,7 +28,7 @@ import org.osgi.annotation.versioning.ProviderType;
  * @ThreadSafe
  */
 @ProviderType
-public interface Encoding {
+public interface Serializing {
 	/**
 	 * Specify that keys with a {@code null} value must not appear in the
 	 * result. If not specified {@code null} values will be included in the
@@ -36,7 +36,7 @@ public interface Encoding {
 	 * 
 	 * @return This Encoding object to allow further invocations on it.
 	 */
-	Encoding ignoreNull();
+	Serializing ignoreNull();
 
 	/**
 	 * Specify that the encoded output should be formatted to look 'pretty',
@@ -45,7 +45,7 @@ public interface Encoding {
 	 *
 	 * @return This Encoding object to allow further invocations on it.
 	 */
-	Encoding pretty();
+	Serializing pretty();
 
 	/**
 	 * Use an output stream as the target of the encoding operation. UTF-8 will

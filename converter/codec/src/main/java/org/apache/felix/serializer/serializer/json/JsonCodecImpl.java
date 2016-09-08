@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.felix.codec.impl.json;
+package org.apache.felix.serializer.serializer.json;
 
 import java.io.IOException;
 import java.io.OutputStream;
@@ -24,32 +24,32 @@ import java.nio.charset.StandardCharsets;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-import org.osgi.service.codec.Codec;
-import org.osgi.service.codec.Decoding;
-import org.osgi.service.codec.Encoding;
 import org.osgi.service.converter.StandardConverter;
 import org.osgi.service.converter.Converter;
 import org.osgi.service.converter.TypeReference;
+import org.osgi.service.serializer.Serializer;
+import org.osgi.service.serializer.Deserializing;
+import org.osgi.service.serializer.Serializing;
 
-public class JsonCodecImpl implements Codec {
+public class JsonCodecImpl implements Serializer {
     private Map<String, Object> configuration = new ConcurrentHashMap<>();
     private ThreadLocal<Boolean> threadLocal = new ThreadLocal<>();
     private Converter converter = new StandardConverter();
 
     @Override
-    public Codec with(Converter c) {
+    public Serializer with(Converter c) {
         converter = c;
         return this;
     }
 
     @Override
-    public <T> Decoding<T> decode(Class<T> cls) {
+    public <T> Deserializing<T> deserialize(Class<T> cls) {
         return new JsonDecodingImpl<T>(converter, cls);
     }
 
     @Override
-    public Encoding encode(Object obj) {
-        Encoding encoding = new JsonEncodingImpl(converter, configuration, obj);
+    public Serializing serialize(Object obj) {
+        Serializing encoding = new JsonEncodingImpl(converter, configuration, obj);
 
         if (pretty()) {
             Boolean top = threadLocal.get();
@@ -67,12 +67,12 @@ public class JsonCodecImpl implements Codec {
         return Boolean.TRUE.equals(Boolean.parseBoolean((String) configuration.get("pretty")));
     }
 
-    private class EncodingWrapper implements Encoding {
-        private final Encoding delegate;
+    private class EncodingWrapper implements Serializing {
+        private final Serializing delegate;
         private String prefix;
         private String postfix;
 
-        EncodingWrapper(String pre, Encoding encoding, String post) {
+        EncodingWrapper(String pre, Serializing encoding, String post) {
             prefix = pre;
             delegate = encoding;
             postfix = post;
@@ -97,13 +97,13 @@ public class JsonCodecImpl implements Codec {
         }
 
         @Override
-        public Encoding ignoreNull() {
+        public Serializing ignoreNull() {
             // TODO Auto-generated method stub
             return null;
         }
 
         @Override
-        public Encoding pretty() {
+        public Serializing pretty() {
             // TODO Auto-generated method stub
             return null;
         }
@@ -122,13 +122,13 @@ public class JsonCodecImpl implements Codec {
     }
 
     @Override
-    public <T> Decoding<T> decode(TypeReference<T> ref) {
+    public <T> Deserializing<T> deserialize(TypeReference<T> ref) {
         // TODO Auto-generated method stub
         return null;
     }
 
     @Override
-    public Decoding<?> decode(Type type) {
+    public Deserializing<?> deserialize(Type type) {
         // TODO Auto-generated method stub
         return null;
     }

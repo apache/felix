@@ -14,13 +14,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.felix.codec.impl.json;
+package org.apache.felix.serializer.impl.json;
 
 import java.util.HashMap;
 import java.util.Map;
 
-import org.apache.felix.codec.impl.json.MyDTO.Count;
-import org.apache.felix.codec.impl.json.MyEmbeddedDTO.Alpha;
+import org.apache.felix.serializer.impl.json.MyDTO.Count;
+import org.apache.felix.serializer.impl.json.MyEmbeddedDTO.Alpha;
+import org.apache.felix.serializer.serializer.json.JsonCodecImpl;
 import org.apache.sling.commons.json.JSONException;
 import org.apache.sling.commons.json.JSONObject;
 import org.junit.After;
@@ -57,7 +58,7 @@ public class JsonCodecTest {
         m.put(true, m1);
 
         JsonCodecImpl jsonCodec = new JsonCodecImpl();
-        String json = jsonCodec.encode(m).toString();
+        String json = jsonCodec.serialize(m).toString();
 
         JSONObject jo = new JSONObject(json);
         assertEquals(11, jo.getInt("1"));
@@ -67,7 +68,7 @@ public class JsonCodecTest {
         assertTrue(jo2.isNull("y"));
 
         @SuppressWarnings("rawtypes")
-        Map m2 = jsonCodec.decode(Map.class).from(json);
+        Map m2 = jsonCodec.deserialize(Map.class).from(json);
         // m2 is not exactly equal to m, as the keys are all strings now, this is unavoidable with JSON
         assertEquals(m.size(), m2.size());
         assertEquals(m.get(1), m2.get("1"));
@@ -86,7 +87,7 @@ public class JsonCodecTest {
         ca.rule(Foo.class, String.class, Foo::tsFun, v -> Foo.fsFun(v));
 
         JsonCodecImpl jsonCodec = new JsonCodecImpl();
-        String json = jsonCodec.with(ca).encode(m).toString();
+        String json = jsonCodec.with(ca).serialize(m).toString();
 
         JSONObject jo = new JSONObject(json);
         assertEquals(1, jo.length());
@@ -110,13 +111,13 @@ public class JsonCodecTest {
         dto.embedded = embedded;
 
         JsonCodecImpl jsonCodec = new JsonCodecImpl();
-        String json = jsonCodec.encode(dto).toString();
+        String json = jsonCodec.serialize(dto).toString();
         assertEquals(
             "{\"ping\":\"'\",\"count\":\"ONE\",\"pong\":-9223372036854775808,"
             + "\"embedded\":{\"polo\":327,\"alpha\":\"B\",\"marco\":\"jo !\"}}",
             json);
 
-        MyDTO dto2 = jsonCodec.decode(MyDTO.class).from(json);
+        MyDTO dto2 = jsonCodec.deserialize(MyDTO.class).from(json);
         assertEquals(Count.ONE, dto2.count);
         assertEquals("'", dto2.ping);
         assertEquals(Long.MIN_VALUE, dto2.pong);

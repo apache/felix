@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.osgi.service.codec;
+package org.osgi.service.serializer;
 
 import java.io.InputStream;
 import java.nio.charset.Charset;
@@ -28,7 +28,7 @@ import org.osgi.annotation.versioning.ProviderType;
  * @ThreadSafe
  */
 @ProviderType
-public interface Decoding<T> {
+public interface Deserializing<T> {
 	/**
 	 * Use an input stream as the source of the decoding operation. As encoding
 	 * UTF-8 is used.

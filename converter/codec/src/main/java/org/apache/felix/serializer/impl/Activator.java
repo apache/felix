@@ -14,16 +14,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.felix.codec.impl;
+package org.apache.felix.serializer.impl;
 
 import java.util.Dictionary;
 import java.util.Hashtable;
 
-import org.apache.felix.codec.impl.json.JsonCodecImpl;
-import org.apache.felix.codec.impl.yaml.YamlCodecImpl;
+import org.apache.felix.serializer.impl.yaml.YamlCodecImpl;
+import org.apache.felix.serializer.serializer.json.JsonCodecImpl;
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
-import org.osgi.service.codec.Codec;
+import org.osgi.service.serializer.Serializer;
 
 public class Activator implements BundleActivator {
     @Override
@@ -32,13 +32,13 @@ public class Activator implements BundleActivator {
         jsonProps.put("osgi.codec.mimetype", new String[] {
                 "application/json", "application/x-javascript", "text/javascript",
                 "text/x-javascript", "text/x-json" });
-        context.registerService(Codec.class, new JsonCodecImpl(), jsonProps);
+        context.registerService(Serializer.class, new JsonCodecImpl(), jsonProps);
 
         Dictionary<String, Object> yamlProps = new Hashtable<>();
         yamlProps.put("osgi.codec.mimetype", new String[] {
                 "text/yaml", "text/x-yaml", "application/yaml",
                 "application/x-yaml" });
-        context.registerService(Codec.class, new YamlCodecImpl(), yamlProps);
+        context.registerService(Serializer.class, new YamlCodecImpl(), yamlProps);
     }
 
     @Override

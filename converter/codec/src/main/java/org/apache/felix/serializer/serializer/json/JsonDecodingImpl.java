@@ -14,27 +14,38 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.felix.codec.impl.yaml;
+package org.apache.felix.serializer.serializer.json;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
+import java.util.Map;
 import java.util.Scanner;
 
 import org.apache.felix.converter.impl.Util;
-import org.osgi.service.codec.Decoding;
 import org.osgi.service.converter.ConversionException;
 import org.osgi.service.converter.Converter;
-import org.yaml.snakeyaml.Yaml;
+import org.osgi.service.serializer.Deserializing;
 
-public class YamlDecodingImpl<T> implements Decoding<T> {
-    private final Converter converter;
+public class JsonDecodingImpl<T> implements Deserializing<T> {
     private final Class<T> clazz;
+    private final Converter converter;
 
-    public YamlDecodingImpl(Converter c, Class<T> cls) {
+    public JsonDecodingImpl(Converter c, Class<T> cls) {
         converter = c;
         clazz = cls;
+    }
+
+    @Override
+    @SuppressWarnings("unchecked")
+    public T from(CharSequence in) {
+        JsonParser jp = new JsonParser(in);
+        Map<?,?> m = jp.getParsed();
+        if (m.getClass().isAssignableFrom(clazz))
+            return (T) m;
+
+        return converter.convert(m).to(clazz);
     }
 
     @Override
@@ -59,17 +70,5 @@ public class YamlDecodingImpl<T> implements Decoding<T> {
             s.useDelimiter("\\Z");
             return from(s.next());
         }
-    }
-
-    @Override
-    @SuppressWarnings("unchecked")
-    public T from(CharSequence in) {
-        Yaml yaml = new Yaml();
-        Object res = yaml.load(in.toString());
-
-        if (res.getClass().isAssignableFrom(clazz))
-            return (T) res;
-
-        return converter.convert(res).to(clazz);
     }
 }

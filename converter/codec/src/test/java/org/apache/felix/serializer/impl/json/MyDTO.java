@@ -14,16 +14,19 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.felix.codec.impl.json;
+package org.apache.felix.serializer.impl.json;
 
 import org.osgi.dto.DTO;
 
-public class MyEmbeddedDTO extends DTO {
-    public enum Alpha { A, B, C }
+public class MyDTO extends DTO {
+    public enum Count { ONE, TWO, THREE }
 
-    public Alpha alpha;
+    public Count count;
 
-    public String marco;
+    public String ping;
 
-    public long polo;
+    public long pong;
+
+    public MyEmbeddedDTO embedded;
 }
+

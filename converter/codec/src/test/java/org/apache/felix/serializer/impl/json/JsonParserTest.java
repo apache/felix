@@ -14,11 +14,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.felix.codec.impl.json;
+package org.apache.felix.serializer.impl.json;
 
 import java.util.Arrays;
 import java.util.Map;
 
+import org.apache.felix.serializer.serializer.json.JsonParser;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
