@@ -31,11 +31,10 @@ import java.util.concurrent.ConcurrentHashMap;
 import org.osgi.service.converter.Adapter;
 import org.osgi.service.converter.ConversionException;
 import org.osgi.service.converter.ConvertFunction;
-import org.osgi.service.converter.ConvertResult;
 import org.osgi.service.converter.Converter;
 import org.osgi.service.converter.Converting;
+import org.osgi.service.converter.FunctionThrowsException;
 import org.osgi.service.converter.Rule;
-import org.osgi.service.converter.SimpleConvertFunction;
 import org.osgi.service.converter.TypeReference;
 
 public class AdapterImpl implements Adapter, InternalConverter {
@@ -62,28 +61,32 @@ public class AdapterImpl implements Adapter, InternalConverter {
     @Override
     @SuppressWarnings("unchecked")
     public <F, T> Adapter rule(Class<F> fromCls, Class<T> toCls,
-            SimpleConvertFunction<F, T> toFun, SimpleConvertFunction<T, F> fromFun) {
+            FunctionThrowsException<F, T> toFun, FunctionThrowsException<T, F> fromFun) {
         if (fromCls.equals(toCls))
             throw new IllegalArgumentException();
 
-        if (toFun != null)
-            classRules.put(new TypePair(fromCls, toCls), (ConvertFunction<Object, Object>) toFun);
+        if (toFun != null) {
+            ConvertFunction<F, T> f = new ConvertFunctionImpl<>(toFun);
+            classRules.put(new TypePair(fromCls, toCls), (ConvertFunction<Object, Object>) f);
+        }
 
-        if (fromFun != null)
-            classRules.put(new TypePair(toCls, fromCls), (ConvertFunction<Object, Object>) fromFun);
+        if (fromFun != null) {
+            ConvertFunction<T, F> f = new ConvertFunctionImpl<>(fromFun);
+            classRules.put(new TypePair(toCls, fromCls), (ConvertFunction<Object, Object>) f);
+        }
         return this;
     }
 
     @Override
     public <F, T> Adapter rule(TypeReference<F> fromRef, TypeReference<T> toRef,
-            SimpleConvertFunction<F, T> toFun, SimpleConvertFunction<T, F> fromFun) {
+            FunctionThrowsException<F, T> toFun, FunctionThrowsException<T, F> fromFun) {
         // TODO Auto-generated method stub
         return null;
     }
 
     @Override
     public <F, T> Adapter rule(Type fromType, Type toType,
-            SimpleConvertFunction<F, T> toFun, SimpleConvertFunction<T, F> fromFun) {
+            FunctionThrowsException<F, T> toFun, FunctionThrowsException<T, F> fromFun) {
         // TODO Auto-generated method stub
         return null;
     }
@@ -168,9 +171,10 @@ public class AdapterImpl implements Adapter, InternalConverter {
                         continue;
 
                     try {
-                        ConvertResult<?> res = func.convert(object, type);
-                        if (res.getStatus() == ConvertResult.Status.CONVERTED)
-                            return res.getResult();
+                        Object res = func.convert(object, type);
+                        if (res != null) {
+                            return res;
+                        }
                     } catch (Exception ex) {
                         if (hasDefault)
                             return defaultValue;
@@ -228,6 +232,19 @@ public class AdapterImpl implements Adapter, InternalConverter {
             TypePair o = (TypePair) obj;
             return Objects.equals(from, o.from) &&
                     Objects.equals(to, o.to);
+        }
+    }
+
+    static class ConvertFunctionImpl<F, T> implements ConvertFunction<F, T> {
+        private final FunctionThrowsException<F, T> function;
+
+        public ConvertFunctionImpl(FunctionThrowsException<F, T> function) {
+            this.function = function;
+        }
+
+        @Override
+        public T convert(F obj, Type targetType) throws Exception {
+            return function.apply(obj);
         }
     }
 }
