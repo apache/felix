@@ -36,16 +36,6 @@ public interface Converter {
 	Converting convert(Object obj);
 
 	/**
-	 * Discuss: Create a copy of the provided object. This is the same as
-	 *   {@code converter.convert(obj).to(obj.getClass());}
-	 * @param obj The object to copy
-	 * @return The copied object
-	 */
-	default <T> T copy(T obj) {
-	    return obj;
-	}
-
-	/**
 	 * Obtain a new adapter to this converter. The adapter behaves just like the
 	 * converter except for the exception rules registered with is. It is also
 	 * possible to obtain a new Adapter for an existing adapter. This allows for

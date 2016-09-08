@@ -32,7 +32,6 @@ import org.junit.Before;
 import org.junit.Test;
 import org.osgi.service.converter.Adapter;
 import org.osgi.service.converter.ConvertFunction;
-import org.osgi.service.converter.ConvertResult;
 import org.osgi.service.converter.Converter;
 import org.osgi.service.converter.Rule;
 
@@ -83,11 +82,11 @@ public class AdapterTest {
         ca.rule(char[].class, String.class, AdapterTest::convertToString, null);
         ca.rule(new Rule<String, Number>(String.class, Number.class, new ConvertFunction<String, Number>() {
             @Override
-            public ConvertResult<Number> convert(String obj, Type targetType) throws Exception {
+            public Number convert(String obj, Type targetType) throws Exception {
                 if (Integer.class.equals(targetType))
-                    return new ConvertResult<Number>(Integer.valueOf(-1));
+                    return Integer.valueOf(-1);
                 else if (Long.class.equals(targetType))
-                    return new ConvertResult<Number>(Long.valueOf(-1));
+                    return Long.valueOf(-1);
                 return null;
             }
         }));
@@ -109,10 +108,10 @@ public class AdapterTest {
 
         ca.rule(new Rule<Integer, Long>(Integer.class, Long.class, new ConvertFunction<Integer,Long>() {
             @Override
-            public ConvertResult<Long> convert(Integer obj, Type targetType) throws Exception {
+            public Long convert(Integer obj, Type targetType) throws Exception {
                 if (obj.intValue() != 1)
-                    return new ConvertResult<Long>(new Long(-obj.intValue()));
-                return ConvertResult.cannotConvert();
+                    return new Long(-obj.intValue());
+                return null;
             }
         }));
 
@@ -126,18 +125,18 @@ public class AdapterTest {
     public void testWildcardAdapter() {
         ConvertFunction<List, Object> foo = new ConvertFunction<List, Object>() {
             @Override
-            public ConvertResult<Object> convert(List t, Type type) throws Exception {
+            public Object convert(List t, Type type) throws Exception {
                 if (type instanceof Class) {
                     if (Number.class.isAssignableFrom((Class<?>) type))
-                        return new ConvertResult<Object>(converter.convert(t.size()).to(type));
+                        return converter.convert(t.size()).to(type);
                 }
-                return ConvertResult.cannotConvert();
+                return null;
             }
         };
 
         Rule<List, Object> r = new Rule<>(List.class, Object.class, foo);
         Rule<Object, Object> allCatch = new Rule<>(Object.class, Object.class,
-                (v,t) -> new ConvertResult<Object>(v.toString()));
+                (v,t) -> v.toString());
 
         Adapter ca = converter.newAdapter();
         ca.rule(r);
@@ -152,13 +151,13 @@ public class AdapterTest {
     public void testWildcardAdapter2() {
         Map<Object, Object> snooped = new HashMap<>();
         Rule<Object, ArrayList> r = new Rule<>(Object.class, ArrayList.class,
-                (v,t) -> new ConvertResult<ArrayList>(null),
-                (v,t) -> new ConvertResult<Object>("arraylist"));
+                (v,t) -> null,
+                (v,t) -> "arraylist");
         Rule<Object, List> r2 = new Rule<>(Object.class, List.class,
-                (v,t) -> new ConvertResult<List>(null),
-                (v,t) -> new ConvertResult<Object>("list"));
+                (v,t) -> null,
+                (v,t) -> "list");
         Rule<Object, Object> allCatch = new Rule<>(Object.class, Object.class,
-                (v,t) -> {snooped.put(v,t); return ConvertResult.cannotConvert();}, null);
+                (v,t) -> {snooped.put(v,t); return null;}, null);
 
         Adapter ca = converter.newAdapter();
         ca.rule(r);
