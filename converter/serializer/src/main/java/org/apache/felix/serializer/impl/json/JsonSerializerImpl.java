@@ -31,7 +31,7 @@ import org.osgi.service.serializer.Serializer;
 import org.osgi.service.serializer.Deserializing;
 import org.osgi.service.serializer.Serializing;
 
-public class JsonCodecImpl implements Serializer {
+public class JsonSerializerImpl implements Serializer {
     private Map<String, Object> configuration = new ConcurrentHashMap<>();
     private ThreadLocal<Boolean> threadLocal = new ThreadLocal<>();
     private Converter converter = new StandardConverter();
@@ -44,12 +44,12 @@ public class JsonCodecImpl implements Serializer {
 
     @Override
     public <T> Deserializing<T> deserialize(Class<T> cls) {
-        return new JsonDecodingImpl<T>(converter, cls);
+        return new JsonDeserializingImpl<T>(converter, cls);
     }
 
     @Override
     public Serializing serialize(Object obj) {
-        Serializing encoding = new JsonEncodingImpl(converter, configuration, obj);
+        Serializing encoding = new JsonSerializingImpl(converter, configuration, obj);
 
         if (pretty()) {
             Boolean top = threadLocal.get();

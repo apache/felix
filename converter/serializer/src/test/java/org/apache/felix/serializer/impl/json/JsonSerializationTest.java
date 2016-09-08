@@ -21,7 +21,7 @@ import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
-import org.apache.felix.serializer.impl.json.JsonCodecImpl;
+import org.apache.felix.serializer.impl.json.JsonSerializerImpl;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
@@ -48,9 +48,9 @@ public class JsonSerializationTest {
                 + "\"noKey\":null,"
                 + "\"simpleArray\":[1,2,3],"
                 + "\"simpleObject\":{\"a\":1,\"b\":\"hello\"}}";
-        assertEquals(expected, new JsonCodecImpl().serialize(m).toString());
+        assertEquals(expected, new JsonSerializerImpl().serialize(m).toString());
 
-        Map<String, Object> dm = new JsonCodecImpl().deserialize(Map.class).from(expected);
+        Map<String, Object> dm = new JsonSerializerImpl().deserialize(Map.class).from(expected);
         Map<String, Object> expected2 = new LinkedHashMap<>();
         expected2.put("sKey", "a string");
         expected2.put("iKey", 42L);
@@ -76,6 +76,6 @@ public class JsonSerializationTest {
         String expected = "{\"list\":[{\"x\":\"y\"},{\"x\":\"b\"}],"
                 + "\"embedded\":"
                 + "{\"yes\":true,\"no\":{\"maybe\":false}}}";
-        assertEquals(expected, new JsonCodecImpl().serialize(cm).toString());
+        assertEquals(expected, new JsonSerializerImpl().serialize(cm).toString());
     }
 }

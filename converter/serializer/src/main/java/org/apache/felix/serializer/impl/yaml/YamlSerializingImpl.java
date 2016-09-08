@@ -32,13 +32,13 @@ import org.osgi.service.converter.ConversionException;
 import org.osgi.service.converter.Converter;
 import org.osgi.service.serializer.Serializing;
 
-public class YamlEncodingImpl implements Serializing {
+public class YamlSerializingImpl implements Serializing {
     private final Converter converter;
     private final Map<String, Object> configuration;
     private final Object object;
     private final int indentation = 2;
 
-    public YamlEncodingImpl(Converter c, Map<String, Object> cfg, Object obj) {
+    public YamlSerializingImpl(Converter c, Map<String, Object> cfg, Object obj) {
         converter = c;
         configuration = cfg;
         object = obj;

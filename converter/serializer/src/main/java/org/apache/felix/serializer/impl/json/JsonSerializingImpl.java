@@ -33,13 +33,13 @@ import org.osgi.service.converter.ConversionException;
 import org.osgi.service.converter.Converter;
 import org.osgi.service.serializer.Serializing;
 
-public class JsonEncodingImpl implements Serializing {
+public class JsonSerializingImpl implements Serializing {
     private final Converter converter;
     private final Map<String, Object> configuration;
     private final Object object;
     private final boolean ignoreNull;
 
-    JsonEncodingImpl(Converter c, Map<String, Object> cfg, Object obj) {
+    JsonSerializingImpl(Converter c, Map<String, Object> cfg, Object obj) {
         converter = c;
         configuration = cfg;
         ignoreNull = Boolean.TRUE.equals(Boolean.parseBoolean((String) configuration.get("ignoreNull")));

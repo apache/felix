@@ -21,7 +21,7 @@ import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
-import org.apache.felix.serializer.impl.yaml.YamlCodecImpl;
+import org.apache.felix.serializer.impl.yaml.YamlSerializerImpl;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
@@ -53,9 +53,9 @@ public class YamlSerializationTest {
                 "simpleObject: \n" +
                 "  a: 1\n" +
                 "  b: 'hello'";
-        assertEquals(expected, new YamlCodecImpl().serialize(m).toString().trim());
+        assertEquals(expected, new YamlSerializerImpl().serialize(m).toString().trim());
 
-        Map<String, Object> dm = new YamlCodecImpl().deserialize(Map.class).from(expected);
+        Map<String, Object> dm = new YamlSerializerImpl().deserialize(Map.class).from(expected);
         Map<String, Object> expected2 = new LinkedHashMap<>();
         expected2.put("sKey", "a string");
         expected2.put("iKey", 42);
@@ -91,6 +91,6 @@ public class YamlSerializationTest {
                 "  yes: true\n" +
                 "  no: \n" +
                 "    maybe: false";
-        assertEquals(expected, new YamlCodecImpl().serialize(cm).toString().trim());
+        assertEquals(expected, new YamlSerializerImpl().serialize(cm).toString().trim());
     }
 }

@@ -19,7 +19,7 @@ package org.apache.felix.serializer.impl.json;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.apache.felix.serializer.impl.json.JsonCodecImpl;
+import org.apache.felix.serializer.impl.json.JsonSerializerImpl;
 import org.apache.felix.serializer.impl.json.MyDTO.Count;
 import org.apache.felix.serializer.impl.json.MyEmbeddedDTO.Alpha;
 import org.apache.sling.commons.json.JSONException;
@@ -34,7 +34,7 @@ import org.osgi.service.converter.Converter;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
-public class JsonCodecTest {
+public class JsonSerializerTest {
     private Converter converter;
 
     @Before
@@ -57,7 +57,7 @@ public class JsonCodecTest {
         m.put("ab", "cd");
         m.put(true, m1);
 
-        JsonCodecImpl jsonCodec = new JsonCodecImpl();
+        JsonSerializerImpl jsonCodec = new JsonSerializerImpl();
         String json = jsonCodec.serialize(m).toString();
 
         JSONObject jo = new JSONObject(json);
@@ -86,7 +86,7 @@ public class JsonCodecTest {
         Adapter ca = converter.newAdapter();
         ca.rule(Foo.class, String.class, Foo::tsFun, v -> Foo.fsFun(v));
 
-        JsonCodecImpl jsonCodec = new JsonCodecImpl();
+        JsonSerializerImpl jsonCodec = new JsonSerializerImpl();
         String json = jsonCodec.with(ca).serialize(m).toString();
 
         JSONObject jo = new JSONObject(json);
@@ -110,7 +110,7 @@ public class JsonCodecTest {
         embedded.polo = 327;
         dto.embedded = embedded;
 
-        JsonCodecImpl jsonCodec = new JsonCodecImpl();
+        JsonSerializerImpl jsonCodec = new JsonSerializerImpl();
         String json = jsonCodec.serialize(dto).toString();
         assertEquals(
             "{\"ping\":\"'\",\"count\":\"ONE\",\"pong\":-9223372036854775808,"

@@ -27,7 +27,7 @@ import org.osgi.service.serializer.Serializer;
 import org.osgi.service.serializer.Deserializing;
 import org.osgi.service.serializer.Serializing;
 
-public class YamlCodecImpl implements Serializer {
+public class YamlSerializerImpl implements Serializer {
     private Map<String, Object> configuration = new ConcurrentHashMap<>();
     private Converter converter = new StandardConverter();
 
@@ -39,7 +39,7 @@ public class YamlCodecImpl implements Serializer {
 
     @Override
     public <T> Deserializing<T> deserialize(Class<T> cls) {
-        return new YamlDecodingImpl<T>(converter, cls);
+        return new YamlDeserializingImpl<T>(converter, cls);
     }
 
     @Override
@@ -56,6 +56,6 @@ public class YamlCodecImpl implements Serializer {
 
     @Override
     public Serializing serialize(Object obj) {
-        return new YamlEncodingImpl(converter, configuration, obj);
+        return new YamlSerializingImpl(converter, configuration, obj);
     }
 }
