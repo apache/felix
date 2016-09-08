@@ -20,6 +20,7 @@ package org.apache.felix.dm.impl;
 
 import java.util.Arrays;
 import java.util.Dictionary;
+import java.util.Hashtable;
 import java.util.Objects;
 import java.util.Properties;
 import java.util.stream.Stream;
@@ -54,6 +55,7 @@ public class ConfigurationDependencyImpl extends AbstractDependency<Configuratio
 	private final Logger m_logger;
 	private final BundleContext m_context;
 	private volatile boolean m_needsInstance = true;
+	private volatile boolean m_optional;
 
     public ConfigurationDependencyImpl() {
         this(null, null);
@@ -76,6 +78,13 @@ public class ConfigurationDependencyImpl extends AbstractDependency<Configuratio
         m_configType = prototype.m_configType;
 	}
 		
+	@Override
+	public ConfigurationDependencyImpl setRequired(boolean required) {
+			m_optional = ! required;
+			super.setRequired(true); // always required
+			return this;
+	}
+	
     @Override
     public Class<?> getAutoConfigType() {
         return null; // we don't support auto config mode.
@@ -269,9 +278,15 @@ public class ConfigurationDependencyImpl extends AbstractDependency<Configuratio
             return;
         }        
 
+    	if (settings == null && m_optional) {
+    		// Provide a default empty configuration
+    		settings = new Hashtable<>();
+    		settings.put(Constants.SERVICE_PID, m_pid);
+    	}
+
         if (oldSettings == null && settings == null) {
             // CM has started but our configuration is not still present in the CM database.
-            return;
+        	return;        		
         }
 
         // If this is initial settings, or a configuration update, we handle it synchronously.

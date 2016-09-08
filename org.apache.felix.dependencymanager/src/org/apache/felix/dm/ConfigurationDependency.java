@@ -26,10 +26,12 @@ import aQute.bnd.annotation.ProviderType;
 
 /**
  * Configuration dependency that can track the availability of a (valid) configuration. To use
- * it, specify a PID for the configuration. The dependency is always required, because if it is
- * not, it does not make sense to use the dependency manager. In that scenario, simply register
- * your component as a <code>ManagedService(Factory)</code> and handle everything yourself. Also,
- * only managed services are supported, not factories. If you need support for factories, then
+ * it, specify a PID for the configuration. The dependency is required by default. If you define
+ * an optional configuration dependency, the updated callback will be invoked with an empty Dictionary,
+ * or with a type-safe configuration (which in this case can provide some default methods that you can
+ * use to inialize your component).
+ * <p>
+ * Also, only managed services are supported, not factories. If you need support for factories, then
  * you can use 
  * {@link DependencyManager#createFactoryConfigurationAdapterService(String, String, boolean)}.
  * There are a couple of things you need to be aware of when implementing the 
@@ -41,9 +43,6 @@ import aQute.bnd.annotation.ProviderType;
  * and implicitly assume you keep working with your old configuration.</li>
  * <li>This method will be called before all required dependencies are available. Make sure you
  * do not depend on these to parse your settings.</li>
- * <li>unlike all other DM dependency callbacks, the update method is called from the CM configuration
- * update thread, and is not serialized with the internal queue maintained by the DM component.
- * So, take care to concurrent calls between updated callback and your other lifecycle callbacks.
  * <li>When the configuration is lost, updated callback is invoked with a null dictionary parameter,
  * and then the component stop lifecycle callback is invoked.
  * <li>When the DM component is stopped, then updated(null) is not invoked.
@@ -240,4 +239,13 @@ public interface ConfigurationDependency extends Dependency, ComponentDependency
      * Adds a MetaData regarding a given configuration property.
      */
 	ConfigurationDependency add(PropertyMetaData properties);
+	
+    /**
+     * Sets the required flag which determines if this configuration dependency is required or not.
+     * A configuration dependency is required by default.
+     * 
+     * @param required the required flag
+     * @return this service dependency
+     */
+	ConfigurationDependency setRequired(boolean required);
 }
