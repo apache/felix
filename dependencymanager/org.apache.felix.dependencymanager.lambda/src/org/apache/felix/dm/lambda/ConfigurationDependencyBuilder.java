@@ -31,9 +31,12 @@ import org.apache.felix.dm.lambda.callbacks.InstanceCbConfiguration;
 import org.apache.felix.dm.lambda.callbacks.InstanceCbConfigurationComponent;
 import org.apache.felix.dm.lambda.callbacks.InstanceCbDictionary;
 import org.apache.felix.dm.lambda.callbacks.InstanceCbDictionaryComponent;
+import org.osgi.annotation.versioning.ProviderType;
 
 /**
  * Builds a Dependency Manager Configuration Dependency.
+ * (configuration dependencies are required by default).
+ * 
  * Two families of callbacks are supported: <p>
  * 
  * <ul> 
@@ -147,7 +150,31 @@ import org.apache.felix.dm.lambda.callbacks.InstanceCbDictionaryComponent;
  * 
  * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
+@ProviderType
 public interface ConfigurationDependencyBuilder extends DependencyBuilder<ConfigurationDependency> { 
+    /**
+     * Sets the required flag which determines if this configuration dependency is required or not.
+     * A configuration dependency is required by default.
+     * 
+     * @param required the required flag
+     * @return this service dependency
+     */
+	ConfigurationDependencyBuilder required(boolean required);
+
+    /**
+     * Sets the dependency as required. A configuration dependency is required by default.
+     * 
+     * @return this service dependency
+     */
+	ConfigurationDependencyBuilder required();
+
+    /**
+     * Sets the dependency as optional. A configuration dependency is required by default.
+     * 
+     * @return this service dependency
+     */
+	ConfigurationDependencyBuilder optional();
+
     /**
      * Sets the pid for this configuration dependency.
      * 

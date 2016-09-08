@@ -40,6 +40,7 @@ import org.apache.felix.dm.lambda.callbacks.InstanceCbDictionaryComponent;
 public class ConfigurationDependencyBuilderImpl implements ConfigurationDependencyBuilder {
     private String m_pid;
     private boolean m_propagate;
+    private boolean m_required = true;
     private final Component m_component;
     private String m_updateMethodName = "updated";
     private Object m_updateCallbackInstance;
@@ -73,6 +74,24 @@ public class ConfigurationDependencyBuilderImpl implements ConfigurationDependen
     @Override
     public ConfigurationDependencyBuilder propagate(boolean propagate) {
         m_propagate = propagate;
+        return this;
+    }
+
+    @Override
+    public ConfigurationDependencyBuilder required(boolean required) {
+        m_required = required;
+        return this;
+    }
+    
+    @Override
+    public ConfigurationDependencyBuilder required() {
+        m_required = true;
+        return this;
+    }
+
+    @Override
+    public ConfigurationDependencyBuilder optional() {
+        m_required = false;
         return this;
     }
 
@@ -175,6 +194,7 @@ public class ConfigurationDependencyBuilderImpl implements ConfigurationDependen
         Objects.nonNull(m_pid);
         dep.setPid(pid);
         dep.setPropagate(m_propagate);
+        dep.setRequired(m_required);
         if (m_updateMethodName != null) {
             dep.setCallback(m_updateCallbackInstance, m_updateMethodName, m_configType);
         } else if (m_refs.size() > 0) {
