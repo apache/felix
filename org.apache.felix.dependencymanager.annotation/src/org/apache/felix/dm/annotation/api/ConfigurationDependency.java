@@ -29,7 +29,7 @@ import java.util.Map;
 
 /**
  * Annotates a method for injecting a Configuration Dependency. A configuration dependency 
- * is always required, and allows you to depend on the availability of a valid configuration 
+ * is required by default, and allows you to depend on the availability of a valid configuration 
  * for your component. This dependency requires the OSGi Configuration Admin Service.
  * 
  * The annotation can be applied on a callback method which accepts the following parameters:
@@ -62,7 +62,7 @@ import java.util.Map;
  *     String ipAddress();
  *
  *     &#64;AD(description = "Enter the printer address port number.")
- *     int portNumber();
+ *     default int portNumber() { return 8080; }
  * }
  * </pre>
  * </blockquote>
@@ -219,6 +219,15 @@ public @interface ConfigurationDependency
      *  @return the dependency name used to configure the dependency dynamically from init callback
      */
     String name() default "";
+    
+    /**
+     * Sets the required flag which determines if this configuration dependency is required or not.
+     * A configuration dependency is required by default.
+     * 
+     * @param required the required flag
+     * @return this service dependency
+     */
+	boolean required() default true;
     
    /**
      * The label used to display the tab name (or section) where the properties are displayed. Example: "Printer Service".

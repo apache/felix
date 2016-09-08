@@ -143,10 +143,11 @@ public class DependencyBuilder
         String pid = m_metaData.getString(Params.pid);
         boolean propagate = "true".equals(m_metaData.getString(Params.propagate, "false"));
         String callback = m_metaData.getString(Params.updated, "updated");
-        return createConfigurationDependency(dm, b, pid, callback, confProxyType, propagate);
+        boolean required = "true".equals(m_metaData.getString(Params.required, "true"));
+        return createConfigurationDependency(dm, b, pid, callback, confProxyType, propagate, required);
     }
 
-    private Dependency createConfigurationDependency(DependencyManager dm, Bundle b, String pid, String callback, String confProxyType, boolean propagate) 
+    private Dependency createConfigurationDependency(DependencyManager dm, Bundle b, String pid, String callback, String confProxyType, boolean propagate, boolean required) 
         throws ClassNotFoundException
     {
         if (pid == null)
@@ -166,6 +167,7 @@ public class DependencyBuilder
             cd.setCallback(callback);            
         }
         cd.setPropagate(propagate);
+        cd.setRequired(required);
         return cd;
     }
 
