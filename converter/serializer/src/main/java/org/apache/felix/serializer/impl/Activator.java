@@ -19,8 +19,8 @@ package org.apache.felix.serializer.impl;
 import java.util.Dictionary;
 import java.util.Hashtable;
 
+import org.apache.felix.serializer.impl.json.JsonCodecImpl;
 import org.apache.felix.serializer.impl.yaml.YamlCodecImpl;
-import org.apache.felix.serializer.serializer.json.JsonCodecImpl;
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
 import org.osgi.service.serializer.Serializer;

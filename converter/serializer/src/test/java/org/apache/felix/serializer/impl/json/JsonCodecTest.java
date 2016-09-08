@@ -19,9 +19,9 @@ package org.apache.felix.serializer.impl.json;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.apache.felix.serializer.impl.json.JsonCodecImpl;
 import org.apache.felix.serializer.impl.json.MyDTO.Count;
 import org.apache.felix.serializer.impl.json.MyEmbeddedDTO.Alpha;
-import org.apache.felix.serializer.serializer.json.JsonCodecImpl;
 import org.apache.sling.commons.json.JSONException;
 import org.apache.sling.commons.json.JSONObject;
 import org.junit.After;

@@ -19,7 +19,7 @@ package org.apache.felix.serializer.impl.json;
 import java.util.Arrays;
 import java.util.Map;
 
-import org.apache.felix.serializer.serializer.json.JsonParser;
+import org.apache.felix.serializer.impl.json.JsonParser;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;

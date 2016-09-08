@@ -21,7 +21,7 @@ import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
-import org.apache.felix.serializer.serializer.json.JsonCodecImpl;
+import org.apache.felix.serializer.impl.json.JsonCodecImpl;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
