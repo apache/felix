@@ -16,11 +16,12 @@
 #
 javac.source:          1.8
 javac.target:          1.8
-Bundle-Version: 1.0.1
+Bundle-Version: 1.1.0
 -buildpath: \
 	org.apache.felix.dependencymanager;version=latest,\
 	osgi.core;version=6.0,\
-	osgi.cmpn;version=6.0
+	osgi.cmpn;version=6.0,\
+	osgi.annotation;version=6.0.1	
 Export-Package: \
 	org.apache.felix.dm.lambda,\
 	org.apache.felix.dm.lambda.callbacks
