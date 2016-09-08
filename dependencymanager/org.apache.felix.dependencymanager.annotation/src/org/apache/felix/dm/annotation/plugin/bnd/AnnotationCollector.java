@@ -710,6 +710,9 @@ public class AnnotationCollector extends ClassDataCollector
 
         // propagate attribute
         writer.putString(annotation, EntryParam.propagate, null);
+        
+        // required flag (true by default)
+        writer.putString(annotation, EntryParam.required, Boolean.TRUE.toString());
 
         // Property Meta Types
         parseMetaTypes(annotation, pid, false);
