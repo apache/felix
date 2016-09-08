@@ -27,14 +27,14 @@ import java.util.concurrent.ConcurrentHashMap;
 import org.osgi.service.codec.Codec;
 import org.osgi.service.codec.Decoding;
 import org.osgi.service.codec.Encoding;
+import org.osgi.service.converter.StandardConverter;
 import org.osgi.service.converter.Converter;
 import org.osgi.service.converter.TypeReference;
-import org.osgi.service.converter.util.ConverterFactory;
 
 public class JsonCodecImpl implements Codec {
     private Map<String, Object> configuration = new ConcurrentHashMap<>();
     private ThreadLocal<Boolean> threadLocal = new ThreadLocal<>();
-    private Converter converter = ConverterFactory.standardConverter();
+    private Converter converter = new StandardConverter();
 
     @Override
     public Codec with(Converter c) {

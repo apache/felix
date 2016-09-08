@@ -27,8 +27,8 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.osgi.service.converter.Adapter;
+import org.osgi.service.converter.StandardConverter;
 import org.osgi.service.converter.Converter;
-import org.osgi.service.converter.util.ConverterFactory;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -38,7 +38,7 @@ public class JsonCodecTest {
 
     @Before
     public void setUp() {
-        converter = ConverterFactory.standardConverter();
+        converter = new StandardConverter();
     }
 
     @After
