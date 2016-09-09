@@ -18,7 +18,11 @@
  */
 package org.apache.felix.scr.annotations;
 
-import java.lang.annotation.*;
+import java.lang.annotation.Documented;
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
 
 /**
  * The <code>Activate</code> annotation defines the method which is used
@@ -26,10 +30,13 @@ import java.lang.annotation.*;
  * Please note that this annotation only marks the method name which is
  * put into the configuration. The DS implementation will still use its
  * search strategy to find the method based on the name.
+ *
+ * @deprecated Use the OSGi annotations from org.osgi.service.component.annotations.*
  */
 @Target( { ElementType.METHOD })
 @Retention(RetentionPolicy.CLASS)
 @Documented
+@Deprecated
 public @interface Activate {
 
 }

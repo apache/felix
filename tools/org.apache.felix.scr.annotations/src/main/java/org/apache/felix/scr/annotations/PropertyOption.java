@@ -26,10 +26,12 @@ import java.lang.annotation.Target;
 
 /**
  * Defines a {@link Property} option.
+ * @deprecated Use the OSGi annotations from org.osgi.service.component.annotations.*
  */
 @Target(ElementType.ANNOTATION_TYPE)
 @Retention(RetentionPolicy.CLASS)
 @Documented
+@Deprecated
 public @interface PropertyOption {
 
     /**

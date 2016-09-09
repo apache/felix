@@ -35,9 +35,11 @@ import java.lang.annotation.Target;
  * fully qualified name of the class containing the <code>Component</code>
  * annotation.
  * </p>
+ * @deprecated Use the OSGi annotations from org.osgi.service.component.annotations.*
  */
 @Target(ElementType.TYPE)
 @Retention(RetentionPolicy.CLASS)
+@Deprecated
 public @interface Component {
 
     /**

@@ -21,7 +21,9 @@ package org.apache.felix.scr.annotations;
 /**
  * Placeholder class for default value of annotation properties with
  * "auto detect" capabilities.
+ * @deprecated Use the OSGi annotations from org.osgi.service.component.annotations.*
  */
+@Deprecated
 public final class AutoDetect {
 
     private AutoDetect() {

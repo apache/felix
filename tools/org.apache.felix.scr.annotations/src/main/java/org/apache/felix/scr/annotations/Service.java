@@ -18,7 +18,11 @@
  */
 package org.apache.felix.scr.annotations;
 
-import java.lang.annotation.*;
+import java.lang.annotation.Documented;
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
 
 /**
  * The <code>Service</code> annotation defines whether and which service
@@ -28,10 +32,14 @@ import java.lang.annotation.*;
  * elements of the component declaration. See section 112.4.6, Service Elements,
  * in the OSGi Service Platform Service Compendium Specification for more
  * information.
+ *
+ *
+ * @deprecated Use the OSGi annotations from org.osgi.service.component.annotations.*
  */
 @Target(ElementType.TYPE)
 @Retention(RetentionPolicy.CLASS)
 @Documented
+@Deprecated
 public @interface Service {
 
     /**
