@@ -19,6 +19,7 @@
 /**
  * The scr goal of the maven-scr-plugin looks for the annotations defined in the package when building component descriptors.
  * The annotations are not interpreted in runtime.
+ * @deprecated Use the OSGi annotations from org.osgi.service.component.annotations.*
  */
 package org.apache.felix.scr.annotations;
 

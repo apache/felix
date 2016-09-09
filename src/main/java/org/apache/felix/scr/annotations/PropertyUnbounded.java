@@ -21,7 +21,9 @@ package org.apache.felix.scr.annotations;
 /**
  * Options for {@link Property#unbounded()} property.
  * @since 1.4
+ * @deprecated Use the OSGi annotations from org.osgi.service.component.annotations.*
  */
+@Deprecated
 public enum PropertyUnbounded {
 
     /** Property is not unbounded. This is the default. */

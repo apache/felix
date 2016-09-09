@@ -20,7 +20,9 @@ package org.apache.felix.scr.annotations;
 
 /**
  * Options for {@link Component#policy()} property.
+ * @deprecated Use the OSGi annotations from org.osgi.service.component.annotations.*
  */
+@Deprecated
 public enum ConfigurationPolicy {
 
     /**

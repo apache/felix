@@ -35,10 +35,12 @@ import java.lang.annotation.Target;
  * This tag is used to declare &lt;property&gt; elements of the component
  * declaration. See section 112.4.5, Properties and Property Elements, in the
  * OSGi Service Platform Service Compendium Specification for more information.
+ * @deprecated Use the OSGi annotations from org.osgi.service.component.annotations.*
  */
 @Target( { ElementType.TYPE, ElementType.FIELD })
 @Retention(RetentionPolicy.CLASS)
 @Documented
+@Deprecated
 public @interface Property {
 
     /**
