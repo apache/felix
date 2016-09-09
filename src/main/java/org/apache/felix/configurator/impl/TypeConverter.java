@@ -25,18 +25,13 @@ import java.util.List;
 
 import org.osgi.framework.Bundle;
 import org.osgi.service.converter.Converter;
+import org.osgi.service.converter.StandardConverter;
 import org.osgi.service.converter.TypeReference;
 
 public class TypeConverter {
 
-    private static volatile Converter converter;
-
-    public static void setConverter(final Converter c) {
-        converter = c;
-    }
-
     public static Converter getConverter() {
-        return converter;
+        return new StandardConverter();
     }
 
     private final List<File> allFiles = new ArrayList<File>();
