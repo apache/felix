@@ -59,14 +59,14 @@ public interface Adapter extends Converter {
 	 * @return The current adapter, can be used to chain invocations.
 	 */
 	<F, T> Adapter rule(Class<F> fromCls, Class<T> toCls,
-	        FunctionThrowsException<F,T> toFun,
-	        FunctionThrowsException<T,F> fromFun);
+	        Function<F,T> toFun,
+	        Function<T,F> fromFun);
 
 	<F, T> Adapter rule(TypeReference<F> fromRef, TypeReference<T> toRef,
-	        FunctionThrowsException<F,T> toFun,
-	        FunctionThrowsException<T,F> fromFun);
+	        Function<F,T> toFun,
+	        Function<T,F> fromFun);
 
 	<F, T> Adapter rule(Type fromType, Type toType,
-	        FunctionThrowsException<F,T> toFun,
-	        FunctionThrowsException<T,F> fromFun);
+	        Function<F,T> toFun,
+	        Function<T,F> fromFun);
 }
