@@ -33,7 +33,7 @@ import org.osgi.service.converter.ConversionException;
 import org.osgi.service.converter.ConvertFunction;
 import org.osgi.service.converter.Converter;
 import org.osgi.service.converter.Converting;
-import org.osgi.service.converter.FunctionThrowsException;
+import org.osgi.service.converter.Function;
 import org.osgi.service.converter.Rule;
 import org.osgi.service.converter.TypeReference;
 
@@ -61,7 +61,7 @@ public class AdapterImpl implements Adapter, InternalConverter {
     @Override
     @SuppressWarnings("unchecked")
     public <F, T> Adapter rule(Class<F> fromCls, Class<T> toCls,
-            FunctionThrowsException<F, T> toFun, FunctionThrowsException<T, F> fromFun) {
+            Function<F, T> toFun, Function<T, F> fromFun) {
         if (fromCls.equals(toCls))
             throw new IllegalArgumentException();
 
@@ -79,14 +79,14 @@ public class AdapterImpl implements Adapter, InternalConverter {
 
     @Override
     public <F, T> Adapter rule(TypeReference<F> fromRef, TypeReference<T> toRef,
-            FunctionThrowsException<F, T> toFun, FunctionThrowsException<T, F> fromFun) {
+            Function<F, T> toFun, Function<T, F> fromFun) {
         // TODO Auto-generated method stub
         return null;
     }
 
     @Override
     public <F, T> Adapter rule(Type fromType, Type toType,
-            FunctionThrowsException<F, T> toFun, FunctionThrowsException<T, F> fromFun) {
+            Function<F, T> toFun, Function<T, F> fromFun) {
         // TODO Auto-generated method stub
         return null;
     }
@@ -236,9 +236,9 @@ public class AdapterImpl implements Adapter, InternalConverter {
     }
 
     static class ConvertFunctionImpl<F, T> implements ConvertFunction<F, T> {
-        private final FunctionThrowsException<F, T> function;
+        private final Function<F, T> function;
 
-        public ConvertFunctionImpl(FunctionThrowsException<F, T> function) {
+        public ConvertFunctionImpl(Function<F, T> function) {
             this.function = function;
         }
 

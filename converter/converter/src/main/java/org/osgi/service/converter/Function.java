@@ -33,7 +33,7 @@ import org.osgi.annotation.versioning.ConsumerType;
  */
 @ConsumerType
 @FunctionalInterface
-public interface FunctionThrowsException<T, R> {
+public interface Function<T, R> {
     /**
      * Applies this function to the specified argument.
      *
