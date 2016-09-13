@@ -29,7 +29,7 @@ import org.apache.felix.http.base.internal.dispatch.Dispatcher;
  * The dispatcher servlet is registered in the container.
  *
  */
-public final class DispatcherServlet extends HttpServlet
+public class DispatcherServlet extends HttpServlet
 {
     private final Dispatcher controller;
 
