@@ -70,7 +70,7 @@ public final class Dispatcher
     public void dispatch(final HttpServletRequest req, final HttpServletResponse res) throws ServletException, IOException
     {
         final WhiteboardManager mgr = this.whiteboardManager;
-        if ( mgr != null )
+        if ( mgr == null )
         {
             // not active, always return 404
             res.sendError(404);
