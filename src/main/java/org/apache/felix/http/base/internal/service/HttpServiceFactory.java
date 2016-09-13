@@ -18,6 +18,7 @@ package org.apache.felix.http.base.internal.service;
 
 import java.util.Hashtable;
 
+import javax.annotation.Nonnull;
 import javax.servlet.ServletContext;
 import javax.servlet.http.HttpSessionAttributeListener;
 import javax.servlet.http.HttpSessionListener;
@@ -99,8 +100,18 @@ public final class HttpServiceFactory
         this.sessionAttributeListenerManager = new HttpSessionAttributeListenerManager(bundleContext);
     }
 
-    public void start(final ServletContext context)
+    public void start(final ServletContext context,
+            @Nonnull final Hashtable<String, Object> props)
     {
+        this.httpServiceProps.clear();
+        this.httpServiceProps.putAll(props);
+
+        if ( this.httpServiceProps.get(HttpServiceRuntimeConstants.HTTP_SERVICE_ENDPOINT) != null )
+        {
+            this.httpServiceProps.put(OBSOLETE_REG_PROPERTY_ENDPOINTS,
+                    this.httpServiceProps.get(HttpServiceRuntimeConstants.HTTP_SERVICE_ENDPOINT));
+        }
+
         this.context = context;
         this.contextAttributeListenerManager.open();
         this.requestListenerManager.open();
@@ -133,6 +144,8 @@ public final class HttpServiceFactory
         this.requestAttributeListenerManager.close();
         this.sessionListenerManager.close();
         this.sessionAttributeListenerManager.close();
+
+        this.httpServiceProps.clear();
     }
 
     @Override
@@ -191,23 +204,6 @@ public final class HttpServiceFactory
     public long getHttpServiceServiceId()
     {
         return (Long) this.httpServiceReg.getReference().getProperty(Constants.SERVICE_ID);
-    }
-
-    public void setProperties(final Hashtable<String, Object> props)
-    {
-        this.httpServiceProps.clear();
-        this.httpServiceProps.putAll(props);
-
-        if ( this.httpServiceProps.get(HttpServiceRuntimeConstants.HTTP_SERVICE_ENDPOINT) != null )
-        {
-            this.httpServiceProps.put(OBSOLETE_REG_PROPERTY_ENDPOINTS,
-                    this.httpServiceProps.get(HttpServiceRuntimeConstants.HTTP_SERVICE_ENDPOINT));
-        }
-
-        if (this.httpServiceReg != null)
-        {
-            this.httpServiceReg.setProperties(this.httpServiceProps);
-        }
     }
 
     private boolean getBoolean(final String property)

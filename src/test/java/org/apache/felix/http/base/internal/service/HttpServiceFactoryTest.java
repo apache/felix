@@ -18,6 +18,8 @@
  */
 package org.apache.felix.http.base.internal.service;
 
+import java.util.Hashtable;
+
 import javax.servlet.ServletContext;
 
 import org.apache.felix.http.base.internal.registry.HandlerRegistry;
@@ -48,7 +50,7 @@ public class HttpServiceFactoryTest {
                 hsf.getService(Mockito.mock(Bundle.class), null));
 
         ServletContext sctx = Mockito.mock(ServletContext.class);
-        hsf.start(sctx);
+        hsf.start(sctx, new Hashtable<String, Object>());
         HttpService svc = hsf.getService(Mockito.mock(Bundle.class), null);
         Assert.assertNotNull(svc);
 

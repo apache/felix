@@ -69,16 +69,20 @@ public final class Dispatcher
      */
     public void dispatch(final HttpServletRequest req, final HttpServletResponse res) throws ServletException, IOException
     {
+        final WhiteboardManager mgr = this.whiteboardManager;
+        if ( mgr != null )
+        {
+            // not active, always return 404
+            res.sendError(404);
+            return;
+        }
+
         // check for invalidating session(s) first
         final HttpSession session = req.getSession(false);
         if ( session != null )
         {
             final Set<Long> ids = HttpSessionWrapper.getExpiredSessionContextIds(session);
-            final WhiteboardManager mgr = this.whiteboardManager;
-            if ( mgr != null )
-            {
-                this.whiteboardManager.sessionDestroyed(session, ids);
-            }
+            this.whiteboardManager.sessionDestroyed(session, ids);
         }
 
         // get full decoded path for dispatching
