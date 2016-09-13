@@ -176,7 +176,7 @@ public final class JettyService extends AbstractLifeCycle.AbstractLifeCycleListe
         }
     }
 
-    private void publishServiceProperties()
+    private Hashtable<String, Object> getServiceProperties()
     {
         Hashtable<String, Object> props = new Hashtable<String, Object>();
         // Add some important configuration properties...
@@ -184,7 +184,7 @@ public final class JettyService extends AbstractLifeCycle.AbstractLifeCycleListe
         addEndpointProperties(props, null);
 
         // propagate the new service properties to the actual HTTP service...
-        this.controller.setProperties(props);
+        return props;
     }
 
     public void updated(Dictionary props)
@@ -219,13 +219,13 @@ public final class JettyService extends AbstractLifeCycle.AbstractLifeCycleListe
                 this.connectorTracker.close();
                 this.connectorTracker = null;
             }
-            
+
             if (this.loadBalancerCustomizerTracker != null)
             {
                 this.loadBalancerCustomizerTracker.close();
                 this.loadBalancerCustomizerTracker = null;
-            } 
-            
+            }
+
             try
             {
                 this.server.stop();
@@ -284,13 +284,13 @@ public final class JettyService extends AbstractLifeCycle.AbstractLifeCycleListe
             this.server.setHandler(this.parent);
             this.server.start();
 
-            if (this.config.isProxyLoadBalancerConnection()) 
+            if (this.config.isProxyLoadBalancerConnection())
             {
                 customizerWrapper = new CustomizerWrapper();
                 this.loadBalancerCustomizerTracker = new LoadBalancerCustomizerFactoryTracker(this.context, customizerWrapper);
                 this.loadBalancerCustomizerTracker.open();
             }
-            
+
             final StringBuilder message = new StringBuilder("Started Jetty ").append(version).append(" at port(s)");
             if (this.config.isUseHttp() && initializeHttp())
             {
@@ -304,7 +304,7 @@ public final class JettyService extends AbstractLifeCycle.AbstractLifeCycleListe
 
             this.connectorTracker = new ConnectorFactoryTracker(this.context, this.server);
             this.connectorTracker.open();
-            
+
             if (this.server.getConnectors() != null && this.server.getConnectors().length > 0)
             {
                 message.append(" on context path ").append(this.config.getContextPath());
@@ -325,10 +325,11 @@ public final class JettyService extends AbstractLifeCycle.AbstractLifeCycleListe
                 message.append("]");
 
                 SystemLogger.info(message.toString());
-                publishServiceProperties();
+                this.controller.register(context.getServletContext(), getServiceProperties());
             }
             else
             {
+                this.controller.unregister();
                 this.stopJetty();
                 SystemLogger.error("Jetty stopped (no connectors available)", null);
             }
@@ -369,7 +370,7 @@ public final class JettyService extends AbstractLifeCycle.AbstractLifeCycleListe
 
         configureConnector(connector, this.config.getHttpPort());
 
-        if (this.config.isProxyLoadBalancerConnection()) 
+        if (this.config.isProxyLoadBalancerConnection())
         {
             connFactory.getHttpConfiguration().addCustomizer(customizerWrapper);
         }
@@ -395,11 +396,11 @@ public final class JettyService extends AbstractLifeCycle.AbstractLifeCycleListe
         HttpConfiguration httpConfiguration = connFactory.getHttpConfiguration();
         httpConfiguration.addCustomizer(new SecureRequestCustomizer());
 
-        if (this.config.isProxyLoadBalancerConnection()) 
+        if (this.config.isProxyLoadBalancerConnection())
         {
             httpConfiguration.addCustomizer(customizerWrapper);
         }
-        
+
         configureConnector(connector, this.config.getHttpsPort());
         return startConnector(connector);
     }
