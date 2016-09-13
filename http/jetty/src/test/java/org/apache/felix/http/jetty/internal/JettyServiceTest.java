@@ -110,7 +110,7 @@ public class JettyServiceTest
                 Matchers.any(Dictionary.class))).thenReturn(reg);
 
         httpServiceController = new HttpServiceController(mockBundleContext);
-        dispatcherServlet = new DispatcherServlet(httpServiceController);
+        dispatcherServlet = new DispatcherServlet(httpServiceController.getDispatcher());
         jettyService = new JettyService(mockBundleContext, dispatcherServlet, mockEventDispatcher, httpServiceController);
 
         jettyService.start();

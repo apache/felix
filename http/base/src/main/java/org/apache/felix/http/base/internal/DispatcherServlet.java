@@ -18,46 +18,30 @@ package org.apache.felix.http.base.internal;
 
 import java.io.IOException;
 
-import javax.servlet.ServletConfig;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.apache.felix.http.base.internal.dispatch.Dispatcher;
+
 /**
  * The dispatcher servlet is registered in the container.
  *
- * When {@link #init(ServletConfig)} is called, the Http services are registered
- * and started, when {@link #destroy()} is called the services are stopped
- * and unregistered.
  */
 public final class DispatcherServlet extends HttpServlet
 {
-    private final HttpServiceController controller;
+    private final Dispatcher controller;
 
-    public DispatcherServlet(final HttpServiceController controller)
+    public DispatcherServlet(final Dispatcher controller)
     {
         this.controller = controller;
-    }
-
-    @Override
-    public void init(final ServletConfig config) throws ServletException
-    {
-        super.init(config);
-        this.controller.register(getServletContext());
-    }
-
-    @Override
-    public void destroy()
-    {
-        this.controller.unregister();
-        super.destroy();
     }
 
     @Override
     protected void service(final HttpServletRequest req, final HttpServletResponse res)
             throws ServletException, IOException
     {
-        this.controller.getDispatcher().dispatch(req, res);
+        this.controller.dispatch(req, res);
     }
 }

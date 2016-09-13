@@ -138,8 +138,11 @@ public final class WhiteboardManager
      * Start the whiteboard manager
      * @param containerContext The servlet context
      */
-    public void start(final ServletContext containerContext)
+    public void start(final ServletContext containerContext, @Nonnull final Dictionary<String, Object> httpServiceProps)
     {
+        // runtime service gets the same props for now
+        this.serviceRuntime.setAllAttributes(httpServiceProps);
+
         this.serviceRuntime.setAttribute(HttpServiceRuntimeConstants.HTTP_SERVICE_ID,
                 Collections.singletonList(this.httpServiceFactory.getHttpServiceServiceId()));
         this.runtimeServiceReg = this.httpBundleContext.registerService(HttpServiceRuntime.class,
@@ -238,19 +241,6 @@ public final class WhiteboardManager
             this.runtimeServiceReg = null;
         }
         this.webContext = null;
-    }
-
-    public void setProperties(final Hashtable<String, Object> props)
-    {
-        // runtime service gets the same props for now
-        this.serviceRuntime.setAllAttributes(props);
-
-        if (this.runtimeServiceReg != null)
-        {
-            this.serviceRuntime.setAttribute(HttpServiceRuntimeConstants.HTTP_SERVICE_ID,
-                    Collections.singletonList(this.httpServiceFactory.getHttpServiceServiceId()));
-            this.runtimeServiceReg.setProperties(this.serviceRuntime.getAttributes());
-        }
     }
 
     public void sessionDestroyed(@Nonnull final HttpSession session, final Set<Long> contextIds)

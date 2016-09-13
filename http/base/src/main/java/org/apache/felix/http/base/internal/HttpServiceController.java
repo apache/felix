@@ -51,7 +51,7 @@ public final class HttpServiceController
         this.whiteboardManager = new WhiteboardManager(bundleContext, this.httpServiceFactory, this.registry);
     }
 
-    Dispatcher getDispatcher()
+    public Dispatcher getDispatcher()
     {
         return this.dispatcher;
     }
@@ -99,22 +99,16 @@ public final class HttpServiceController
         };
     }
 
-    public void setProperties(final Hashtable<String, Object> props)
-    {
-        this.httpServiceFactory.setProperties(props);
-        this.whiteboardManager.setProperties(props);
-    }
-
     /**
      * Start the http and http whiteboard service in the provided context.
      * @param containerContext The container context.
      */
-    public void register(@Nonnull final ServletContext containerContext)
+    public void register(@Nonnull final ServletContext containerContext, @Nonnull final Hashtable<String, Object> props)
     {
         this.registry.init();
 
-        this.httpServiceFactory.start(containerContext);
-        this.whiteboardManager.start(containerContext);
+        this.httpServiceFactory.start(containerContext, props);
+        this.whiteboardManager.start(containerContext, props);
 
         this.dispatcher.setWhiteboardManager(this.whiteboardManager);
     }
