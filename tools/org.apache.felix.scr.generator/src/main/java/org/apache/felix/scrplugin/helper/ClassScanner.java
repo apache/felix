@@ -139,14 +139,14 @@ public class ClassScanner {
             }
             log.debug("Scanning class " + src.getClassName());
 
+            final Class<?> annotatedClass;
             try {
                 // load the class
-                final Class<?> annotatedClass = project.getClassLoader().loadClass(src.getClassName());
-
-                this.process(annotatedClass, src, result);
-            } catch (final ClassNotFoundException cnfe) {
-                throw new SCRDescriptorException("Unable to load compiled class: " + src.getClassName(), src.getFile().toString(), cnfe);
+            	annotatedClass = project.getClassLoader().loadClass(src.getClassName());
+            } catch (final Throwable t) { // e.g. NoClassDefFoundError or ClassNotFoundException, see FELIX-5328
+            	throw new SCRDescriptorException("Unable to load compiled class: " + src.getClassName(), src.getFile().toString(), t);
             }
+            this.process(annotatedClass, src, result);
         }
         return result;
     }
