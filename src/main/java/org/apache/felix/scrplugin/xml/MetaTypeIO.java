@@ -19,8 +19,9 @@
 package org.apache.felix.scrplugin.xml;
 
 import java.io.File;
-import java.io.FileWriter;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.OutputStreamWriter;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -192,7 +193,7 @@ public class MetaTypeIO {
                         final String baseName = useFile.getName().substring(0, lastDot);
                         final File propsFile = new File(useFile.getParentFile(), baseName + ".properties");
                         try {
-                            metatypeProps.store(new FileWriter(propsFile), null);
+                            metatypeProps.store(new OutputStreamWriter(new FileOutputStream(propsFile), "UTF-8"), null);
                         } catch (IOException e) {
                             throw new SCRDescriptorException("Unable to get metatype.properties", propsFile.getAbsolutePath());
                         }
