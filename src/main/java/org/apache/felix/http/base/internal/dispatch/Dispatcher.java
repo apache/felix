@@ -82,7 +82,7 @@ public final class Dispatcher
         if ( session != null )
         {
             final Set<Long> ids = HttpSessionWrapper.getExpiredSessionContextIds(session);
-            this.whiteboardManager.sessionDestroyed(session, ids);
+            mgr.sessionDestroyed(session, ids);
         }
 
         // get full decoded path for dispatching
