@@ -144,8 +144,12 @@ public class ClassScanner {
                 final Class<?> annotatedClass = project.getClassLoader().loadClass(src.getClassName());
 
                 this.process(annotatedClass, src, result);
-            } catch (final ClassNotFoundException cnfe) {
-                throw new SCRDescriptorException("Unable to load compiled class: " + src.getClassName(), src.getFile().toString(), cnfe);
+            } catch ( final SCRDescriptorFailureException e ) {
+                throw e;
+            } catch ( final SCRDescriptorException e ) {
+                throw e;
+            } catch (final Throwable t) { // e.g. NoClassDefFoundError or ClassNotFoundException, see FELIX-5328
+                throw new SCRDescriptorException("Unable to load compiled class: " + src.getClassName(), src.getFile().toString(), t);
             }
         }
         return result;
