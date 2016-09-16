@@ -228,7 +228,11 @@ public class ConvertingImpl implements Converting, InternalConverting {
                 try {
                     f = targetCls.getDeclaredField(entry.getKey().toString());
                 } catch (NoSuchFieldException e) {
-                    f = targetCls.getField(entry.getKey().toString());
+                    try {
+                        f = targetCls.getField(entry.getKey().toString());
+                    } catch (NoSuchFieldException e1) {
+                        // There is not field with this name
+                    }
                 }
 
                 if (f != null) {
@@ -546,6 +550,7 @@ public class ConvertingImpl implements Converting, InternalConverting {
                     cls.getConstructor();
                     return cls; // If no exception the constructor is there
                 } catch (NoSuchMethodException e1) {
+                    // There is no constructor with this name
                 }
             }
             for (Class<?> intf : cls.getInterfaces()) {
