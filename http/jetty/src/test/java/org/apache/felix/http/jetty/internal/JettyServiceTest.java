@@ -42,8 +42,6 @@ import javax.servlet.ServletException;
 import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
 
-import org.apache.felix.http.base.internal.DispatcherServlet;
-import org.apache.felix.http.base.internal.EventDispatcher;
 import org.apache.felix.http.base.internal.HttpServiceController;
 import org.apache.felix.http.jetty.internal.JettyService.Deployment;
 import org.eclipse.jetty.servlet.FilterHolder;
@@ -71,10 +69,6 @@ public class JettyServiceTest
 
     private BundleContext mockBundleContext;
 
-    private DispatcherServlet dispatcherServlet;
-
-    private EventDispatcher mockEventDispatcher;
-
     private HttpServiceController httpServiceController;
 
     private Bundle mockBundle;
@@ -84,7 +78,6 @@ public class JettyServiceTest
     {
         //Setup Mocks
         mockBundleContext = mock(BundleContext.class);
-        mockEventDispatcher = mock(EventDispatcher.class);
         mockBundle = mock(Bundle.class);
 
         //Setup Behaviors
@@ -110,8 +103,7 @@ public class JettyServiceTest
                 Matchers.any(Dictionary.class))).thenReturn(reg);
 
         httpServiceController = new HttpServiceController(mockBundleContext);
-        dispatcherServlet = new DispatcherServlet(httpServiceController.getDispatcher());
-        jettyService = new JettyService(mockBundleContext, dispatcherServlet, mockEventDispatcher, httpServiceController);
+        jettyService = new JettyService(mockBundleContext, httpServiceController);
 
         jettyService.start();
     }

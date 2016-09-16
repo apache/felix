@@ -20,40 +20,33 @@ package org.apache.felix.http.jetty.internal;
 
 import java.util.Dictionary;
 
-import org.apache.felix.http.base.internal.AbstractHttpActivator;
+import org.apache.felix.http.base.internal.HttpServiceController;
 import org.osgi.framework.BundleContext;
 
-public class JettyServiceStarter extends AbstractHttpActivator
+public class JettyServiceStarter
 {
 
-	private final BundleContext context;
+	private final HttpServiceController controller;
 	private final Dictionary<String, ?> props;
-    private JettyService jetty;
+    private final JettyService jetty;
 
     JettyServiceStarter(BundleContext context, Dictionary<String, ?> properties)
+    throws Exception
     {
-    	this.context = context;
+    	this.controller = new HttpServiceController(context);
 		this.props = properties;
-    }
-    
-    public void start() throws Exception
-    {
-		super.setBundleContext(context);
-		super.doStart();
-		jetty = new JettyService(context, getDispatcherServlet(), getEventDispatcher(),
-				getHttpServiceController(), props);
-		jetty.start();
+        this.jetty = new JettyService(context, this.controller, props);
+        this.jetty.start();
     }
 
     public void stop() throws Exception
     {
-    	jetty.stop();
-    	super.doStop();
+    	this.jetty.stop();
+    	this.controller.stop();
     }
 
     public void updated(Dictionary<String, ?> properties) throws Exception
     {
-    	jetty.updated(properties);
+    	this.jetty.updated(properties);
     }
-
 }

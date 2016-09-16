@@ -110,14 +110,12 @@ public final class JettyService extends AbstractLifeCycle.AbstractLifeCycleListe
     private boolean registerManagedService = true;
 
     public JettyService(final BundleContext context,
-            final DispatcherServlet dispatcher,
-            final EventDispatcher eventDispatcher,
             final HttpServiceController controller)
     {
         this.context = context;
         this.config = new JettyConfig(this.context);
-        this.dispatcher = dispatcher;
-        this.eventDispatcher = eventDispatcher;
+        this.dispatcher = controller.getDispatcherServlet();
+        this.eventDispatcher = controller.getEventDispatcher();
         this.controller = controller;
         this.deployments = new LinkedHashMap<String, Deployment>();
         this.executor = Executors.newSingleThreadExecutor(new ThreadFactory()
@@ -133,12 +131,10 @@ public final class JettyService extends AbstractLifeCycle.AbstractLifeCycleListe
     }
 
     public JettyService(final BundleContext context,
-            final DispatcherServlet dispatcher,
-            final EventDispatcher eventDispatcher,
             final HttpServiceController controller,
             final Dictionary<String,?> props)
     {
-    	this(context, dispatcher, eventDispatcher, controller);
+    	this(context, controller);
     	this.config.update(props);
     	this.registerManagedService = false;
     }
