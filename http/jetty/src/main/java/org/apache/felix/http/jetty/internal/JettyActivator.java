@@ -25,6 +25,7 @@ import org.osgi.framework.Bundle;
 import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceFactory;
 import org.osgi.framework.ServiceRegistration;
+import org.osgi.service.cm.ManagedServiceFactory;
 
 public final class JettyActivator extends AbstractHttpActivator
 {
@@ -32,6 +33,7 @@ public final class JettyActivator extends AbstractHttpActivator
 
     private ServiceRegistration<?> metatypeReg;
     private ServiceRegistration<LoadBalancerCustomizerFactory> loadBalancerCustomizerFactoryReg;
+    private ServiceRegistration<?> configServiceFactoryReg;
 
     @Override
     protected void doStart() throws Exception
@@ -83,6 +85,11 @@ public final class JettyActivator extends AbstractHttpActivator
                         // nothing to do
                     }
                 }, propertiesCustomizer);
+        
+        Dictionary<String, Object> factoryProps = new Hashtable<String, Object>();
+        factoryProps.put(Constants.SERVICE_PID, JettyService.PID);
+        this.configServiceFactoryReg = this.getBundleContext().registerService(
+        		ManagedServiceFactory.class.getName(), new JettyManagedServiceFactory(this.getBundleContext()), factoryProps);
     }
 
     @Override
@@ -98,6 +105,11 @@ public final class JettyActivator extends AbstractHttpActivator
         {
             loadBalancerCustomizerFactoryReg.unregister();
             loadBalancerCustomizerFactoryReg = null;
+        }
+        if ( configServiceFactoryReg != null )
+        {
+            configServiceFactoryReg.unregister();
+            configServiceFactoryReg = null;
         }
 
         super.doStop();

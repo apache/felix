@@ -315,6 +315,12 @@ class ConfigMetaTypeProvider implements MetaTypeProvider
                 -1,
                 bundle.getBundleContext().getProperty(JettyConfig.FELIX_JETTY_SERVLET_SESSION_MAX_AGE)));
 
+        adList.add(new AttributeDefinitionImpl(JettyConfig.FELIX_HTTP_SERVICE_NAME,
+                "HTTP Service Name",
+                "HTTP Service Name used in service filter to target specific HTTP instance. Default is null.",
+                null,
+                bundle.getBundleContext().getProperty(JettyConfig.FELIX_HTTP_SERVICE_NAME)));
+
         return new ObjectClassDefinition()
         {
 

@@ -32,6 +32,11 @@ public abstract class AbstractActivator
         return this.context;
     }
 
+    protected final void setBundleContext(BundleContext context)
+    {
+        this.context = context;
+    }
+
     public final void start(BundleContext context)
         throws Exception
     {
