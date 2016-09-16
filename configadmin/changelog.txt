@@ -1,3 +1,14 @@
+Changes in 1.9.0
+----------------
+** Improvement
+    * [FELIX-5288] - Implement RFC 227 (R7 Update)
+    * [FELIX-5289] - PID Handling of Factory Configurations
+    * [FELIX-5290] - Locking Configuration Records
+    * [FELIX-5291] - Improving Configuration Updates
+    * [FELIX-5292] - Capabilities
+    * [FELIX-5293] - Improved ConfigurationPlugin Support
+
+
 Changes from 1.8.8 to 1.8.10
 ----------------------------
 

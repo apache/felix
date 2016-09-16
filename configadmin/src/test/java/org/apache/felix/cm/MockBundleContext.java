@@ -30,7 +30,9 @@ import org.osgi.framework.BundleContext;
 import org.osgi.framework.BundleListener;
 import org.osgi.framework.Filter;
 import org.osgi.framework.FrameworkListener;
+import org.osgi.framework.ServiceFactory;
 import org.osgi.framework.ServiceListener;
+import org.osgi.framework.ServiceObjects;
 import org.osgi.framework.ServiceReference;
 import org.osgi.framework.ServiceRegistration;
 
@@ -318,6 +320,19 @@ public class MockBundleContext implements BundleContext
 
 
     public Bundle getBundle( String location )
+    {
+        return null;
+    }
+
+
+    public <S> ServiceRegistration<S> registerService(Class<S> clazz, ServiceFactory<S> factory,
+            Dictionary<String, ?> properties)
+    {
+        return null;
+    }
+
+
+    public <S> ServiceObjects<S> getServiceObjects(ServiceReference<S> reference)
     {
         return null;
     }

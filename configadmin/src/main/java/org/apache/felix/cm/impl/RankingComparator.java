@@ -95,16 +95,16 @@ public abstract class RankingComparator implements Comparator<ServiceReference<?
             final long id1 = this.getLong( obj1, Constants.SERVICE_ID );
             final long id2 = this.getLong( obj2, Constants.SERVICE_ID );
 
+            if ( id1 == id2 )
+            {
+                return 0;
+            }
+
             final int rank1 = this.getInteger( obj1, ConfigurationPlugin.CM_RANKING );
             final int rank2 = this.getInteger( obj2, ConfigurationPlugin.CM_RANKING );
 
             if ( rank1 == rank2 )
             {
-                if ( id1 == id2 )
-                {
-                    return 0;
-                }
-
                 return ( id1 > id2 ) ? -1 : 1;
             }
 

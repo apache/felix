@@ -22,7 +22,13 @@ package org.apache.felix.cm.impl;
 import java.io.IOException;
 import java.util.Dictionary;
 
+import org.osgi.framework.Constants;
+import org.osgi.framework.ServiceReference;
 import org.osgi.service.cm.Configuration;
+import org.osgi.service.cm.ConfigurationAdmin;
+import org.osgi.service.cm.ConfigurationPermission;
+import org.osgi.service.cm.LockedConfigurationException;
+import org.osgi.service.cm.ManagedService;
 import org.osgi.service.log.LogService;
 
 
@@ -49,6 +55,7 @@ public class ConfigurationAdapter implements Configuration
     /**
      * @see org.apache.felix.cm.impl.ConfigurationImpl#getPid()
      */
+    @Override
     public String getPid()
     {
         checkDeleted();
@@ -59,6 +66,7 @@ public class ConfigurationAdapter implements Configuration
     /**
      * @see org.apache.felix.cm.impl.ConfigurationImpl#getFactoryPid()
      */
+    @Override
     public String getFactoryPid()
     {
         checkDeleted();
@@ -69,6 +77,7 @@ public class ConfigurationAdapter implements Configuration
     /**
      * @see org.apache.felix.cm.impl.ConfigurationImpl#getBundleLocation()
      */
+    @Override
     public String getBundleLocation()
     {
         // CM 1.4 / 104.13.2.4
@@ -86,6 +95,7 @@ public class ConfigurationAdapter implements Configuration
      * @param bundleLocation
      * @see org.apache.felix.cm.impl.ConfigurationImpl#setStaticBundleLocation(String)
      */
+    @Override
     public void setBundleLocation( String bundleLocation )
     {
         delegatee.getConfigurationManager().log( LogService.LOG_DEBUG, "setBundleLocation(bundleLocation={0})",
@@ -106,6 +116,7 @@ public class ConfigurationAdapter implements Configuration
      * @throws IOException
      * @see org.apache.felix.cm.impl.ConfigurationImpl#update()
      */
+    @Override
     public void update() throws IOException
     {
         delegatee.getConfigurationManager().log( LogService.LOG_DEBUG, "update()", ( Throwable ) null );
@@ -121,18 +132,21 @@ public class ConfigurationAdapter implements Configuration
      * @throws IOException
      * @see org.apache.felix.cm.impl.ConfigurationImpl#update(java.util.Dictionary)
      */
-    public void update( Dictionary properties ) throws IOException
+    @Override
+    public void update( Dictionary<String, ?> properties ) throws IOException
     {
         delegatee.getConfigurationManager().log( LogService.LOG_DEBUG, "update(properties={0})", new Object[]
             { properties } );
 
         checkActive();
         checkDeleted();
+        checkLocked();
         delegatee.update( properties );
     }
 
 
-    public Dictionary getProperties()
+    @Override
+    public Dictionary<String, Object> getProperties()
     {
         delegatee.getConfigurationManager().log( LogService.LOG_DEBUG, "getProperties()", ( Throwable ) null );
 
@@ -144,6 +158,7 @@ public class ConfigurationAdapter implements Configuration
     }
 
 
+    @Override
     public long getChangeCount()
     {
         delegatee.getConfigurationManager().log( LogService.LOG_DEBUG, "getChangeCount()", ( Throwable ) null );
@@ -158,6 +173,7 @@ public class ConfigurationAdapter implements Configuration
      * @throws IOException
      * @see org.apache.felix.cm.impl.ConfigurationImpl#delete()
      */
+    @Override
     public void delete() throws IOException
     {
         delegatee.getConfigurationManager().log( LogService.LOG_DEBUG, "delete()", ( Throwable ) null );
@@ -169,8 +185,78 @@ public class ConfigurationAdapter implements Configuration
 
 
     /**
+     * @see org.osgi.service.cm.Configuration#setProperties(java.util.Dictionary)
+     */
+    @SuppressWarnings("unchecked")
+    @Override
+    public boolean setProperties(final Dictionary<String, ?> properties) throws IOException
+    {
+        delegatee.getConfigurationManager().log( LogService.LOG_DEBUG, "setProperties(properties={0})", new Object[]
+                { properties } );
+
+        checkActive();
+        checkDeleted();
+        checkLocked();
+
+        if ( ConfigurationImpl.equals((Dictionary<String, Object>)properties, delegatee.getProperties(false)) )
+        {
+            // nothing to do
+            return false;
+        }
+        delegatee.update( properties );
+        return true;
+    }
+
+
+    /**
+     * @see org.osgi.service.cm.Configuration#setLocked(boolean)
+     */
+    @Override
+    public void setLocked(boolean flag) throws IOException
+    {
+        delegatee.getConfigurationManager().log( LogService.LOG_DEBUG, "setLocked({0})",
+                new Object[] { flag } );
+
+        checkDeleted();
+        final String bundleLocation = delegatee.getBundleLocation();
+        this.configurationAdmin.checkPermission(this.delegatee.getConfigurationManager(),
+                ( bundleLocation == null ) ? "*" : bundleLocation,
+                        ConfigurationPermission.LOCK,
+                        true);
+        delegatee.setLocked( flag );
+    }
+
+
+    /**
+     * @see org.osgi.service.cm.Configuration#getModifiedProperties(org.osgi.framework.ServiceReference)
+     */
+    @Override
+    public Dictionary<String, Object> getModifiedProperties(ServiceReference<ManagedService> sr) {
+        final Dictionary<String, Object> props = this.getProperties();
+
+        this.delegatee.getConfigurationManager().callPlugins(props, sr,
+                (String)props.get(Constants.SERVICE_PID),
+                (String)props.get(ConfigurationAdmin.SERVICE_FACTORYPID));
+
+        return props;
+    }
+
+
+    /**
+     * @see org.osgi.service.cm.Configuration#isLocked()
+     */
+    @Override
+    public boolean isLocked()
+    {
+        checkDeleted();
+        return delegatee.isLocked();
+    }
+
+
+    /**
      * @see org.apache.felix.cm.impl.ConfigurationImpl#hashCode()
      */
+    @Override
     public int hashCode()
     {
         return delegatee.hashCode();
@@ -181,6 +267,7 @@ public class ConfigurationAdapter implements Configuration
      * @param obj
      * @see org.apache.felix.cm.impl.ConfigurationImpl#equals(java.lang.Object)
      */
+    @Override
     public boolean equals( Object obj )
     {
         return delegatee.equals( obj );
@@ -190,6 +277,7 @@ public class ConfigurationAdapter implements Configuration
     /**
      * @see org.apache.felix.cm.impl.ConfigurationImpl#toString()
      */
+    @Override
     public String toString()
     {
         return delegatee.toString();
@@ -223,6 +311,19 @@ public class ConfigurationAdapter implements Configuration
         if ( delegatee.isDeleted() )
         {
             throw new IllegalStateException( "Configuration " + delegatee.getPid() + " deleted" );
+        }
+    }
+
+    /**
+     * Checks whether this configuration object is locked.
+     *
+     * @throws LockedConfigurationException If this configuration object is locked.
+     */
+    private void checkLocked() throws IOException
+    {
+        if ( delegatee.isLocked() )
+        {
+            throw new LockedConfigurationException( "Configuration " + delegatee.getPid() + " is locked" );
         }
     }
 }
