@@ -214,6 +214,7 @@ public class ConfigurationManagerTest extends TestCase
 
         SynchronousConfigurationListener syncListener1 = new SynchronousConfigurationListener()
         {
+            @Override
             public void configurationEvent(ConfigurationEvent event)
             {
                 result.add("L1");
@@ -221,6 +222,7 @@ public class ConfigurationManagerTest extends TestCase
         };
         SynchronousConfigurationListener syncListener2 = new SynchronousConfigurationListener()
         {
+            @Override
             public void configurationEvent(ConfigurationEvent event)
             {
                 result.add("L2");
@@ -228,6 +230,7 @@ public class ConfigurationManagerTest extends TestCase
         };
         SynchronousConfigurationListener syncListener3 = new SynchronousConfigurationListener()
         {
+            @Override
             public void configurationEvent(ConfigurationEvent event)
             {
                 result.add("L3");
@@ -272,7 +275,7 @@ public class ConfigurationManagerTest extends TestCase
         utField.setAccessible( true );
         utField.set( configMgr, new UpdateThread( configMgr, null, "Test updater" ));
 
-        Dictionary<String, String> props = new Hashtable<String, String>();
+        Dictionary<String, Object> props = new Hashtable<String, Object>();
         props.put( Constants.SERVICE_PID, "org.acme.testpid" );
         ConfigurationImpl config = new ConfigurationImpl( configMgr, new MockPersistenceManager(), props );
         configMgr.updated( config, true );

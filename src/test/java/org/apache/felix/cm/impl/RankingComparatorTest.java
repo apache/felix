@@ -222,36 +222,42 @@ public class RankingComparatorTest extends TestCase
         }
 
 
+        @Override
         public Object getProperty( String key )
         {
             return props.get( key );
         }
 
 
+        @Override
         public String[] getPropertyKeys()
         {
             return props.keySet().toArray( new String[props.size()] );
         }
 
 
+        @Override
         public Bundle getBundle()
         {
             return null;
         }
 
 
+        @Override
         public Bundle[] getUsingBundles()
         {
             return null;
         }
 
 
+        @Override
         public boolean isAssignableTo( Bundle bundle, String className )
         {
             return false;
         }
 
 
+        @Override
         public int compareTo( Object reference )
         {
             return 0;
