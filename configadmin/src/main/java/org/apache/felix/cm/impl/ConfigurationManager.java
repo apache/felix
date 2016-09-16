@@ -197,6 +197,7 @@ public class ConfigurationManager implements BundleActivator, BundleListener
     // flag indicating whether the manager is considered alive
     private volatile boolean isActive;
 
+    @Override
     public void start( BundleContext bundleContext )
     {
         // track the log service using a ServiceTracker
@@ -278,7 +279,7 @@ public class ConfigurationManager implements BundleActivator, BundleListener
         ConfigurationAdminFactory caf = new ConfigurationAdminFactory( this );
         Hashtable props = new Hashtable();
         props.put( Constants.SERVICE_PID, "org.apache.felix.cm.ConfigurationAdmin" );
-        props.put( Constants.SERVICE_DESCRIPTION, "Configuration Admin Service Specification 1.5 Implementation" );
+        props.put( Constants.SERVICE_DESCRIPTION, "Configuration Admin Service Specification 1.6 Implementation" );
         props.put( Constants.SERVICE_VENDOR, "Apache Software Foundation" );
         configurationAdminRegistration = bundleContext.registerService( ConfigurationAdmin.class.getName(), caf, props );
 
@@ -293,6 +294,7 @@ public class ConfigurationManager implements BundleActivator, BundleListener
     }
 
 
+    @Override
     public void stop( BundleContext bundleContext )
     {
 
@@ -786,6 +788,7 @@ public class ConfigurationManager implements BundleActivator, BundleListener
 
     // ---------- BundleListener -----------------------------------------------
 
+    @Override
     public void bundleChanged( BundleEvent event )
     {
         if ( event.getType() == BundleEvent.UNINSTALLED && handleBundleEvents )
@@ -1399,6 +1402,7 @@ public class ConfigurationManager implements BundleActivator, BundleListener
         }
 
 
+        @Override
         public void run()
         {
             for ( String pid : this.pids )
@@ -1484,6 +1488,7 @@ public class ConfigurationManager implements BundleActivator, BundleListener
         }
 
 
+        @Override
         public void run()
         {
             for ( String factoryPid : this.factoryPids )
@@ -1724,6 +1729,7 @@ public class ConfigurationManager implements BundleActivator, BundleListener
         }
 
 
+        @Override
         public void run()
         {
             log( LogService.LOG_DEBUG, "Updating configuration {0} to revision #{1}", new Object[]
@@ -1813,6 +1819,7 @@ public class ConfigurationManager implements BundleActivator, BundleListener
         }
 
 
+        @Override
         public void run()
         {
             List<ServiceReference<?>> srList = this.getHelper().getServices( getTargetedServicePid() );
@@ -1886,6 +1893,7 @@ public class ConfigurationManager implements BundleActivator, BundleListener
         }
 
 
+        @Override
         public void run()
         {
             List<ServiceReference<?>> srList = this.getHelper().getServices( getTargetedServicePid() );
@@ -2016,6 +2024,7 @@ public class ConfigurationManager implements BundleActivator, BundleListener
         }
 
 
+        @Override
         public void run()
         {
             for ( int i = 0; i < listeners.length; i++ )

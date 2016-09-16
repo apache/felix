@@ -32,7 +32,7 @@
 
     <name>Apache Felix Configuration Admin Service</name>
     <description>
-        Implementation of the OSGi Configuration Admin Service Specification 1.5
+        Implementation of the OSGi Configuration Admin Service Specification 1.6
     </description>
 
     <scm>
@@ -97,14 +97,6 @@
             <scope>provided</scope>
         </dependency>
         
-        <!-- BND export annotations -->        
-        <dependency>
-            <groupId>biz.aQute</groupId>
-            <artifactId>bndlib</artifactId>
-            <version>1.50.0</version>
-            <scope>provided</scope>
-        </dependency>
-
         <!-- Integration Testing with Pax Exam -->
         <dependency>
             <groupId>junit</groupId>
