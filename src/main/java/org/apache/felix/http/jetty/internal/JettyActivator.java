@@ -60,7 +60,7 @@ public final class JettyActivator extends AbstractHttpActivator
                         // nothing to do
                     }
                 }, properties);
-        this.jetty = new JettyService(getBundleContext(), getDispatcherServlet(), getEventDispatcher(), getHttpServiceController());
+        this.jetty = new JettyService(getBundleContext(), getHttpServiceController());
         this.jetty.start();
 
         final Dictionary<String, Object> propertiesCustomizer = new Hashtable<String, Object>();
@@ -85,7 +85,7 @@ public final class JettyActivator extends AbstractHttpActivator
                         // nothing to do
                     }
                 }, propertiesCustomizer);
-        
+
         Dictionary<String, Object> factoryProps = new Hashtable<String, Object>();
         factoryProps.put(Constants.SERVICE_PID, JettyService.PID);
         this.configServiceFactoryReg = this.getBundleContext().registerService(

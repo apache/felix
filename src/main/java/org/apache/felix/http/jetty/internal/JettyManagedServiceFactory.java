@@ -53,7 +53,6 @@ public class JettyManagedServiceFactory implements ManagedServiceFactory
 			{
 				jetty = new JettyServiceStarter(context, properties);
 				services.put(pid, jetty);
-				jetty.start();
 			}
 			else
 			{
