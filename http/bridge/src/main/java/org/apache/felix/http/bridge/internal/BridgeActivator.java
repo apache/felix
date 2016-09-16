@@ -79,7 +79,7 @@ public final class BridgeActivator extends AbstractHttpActivator
         getBundleContext().registerService(HttpServlet.class.getName(), servlet, props);
 
         // Http Session event dispatcher
-        final EventDispatcher dispatcher = getEventDispatcher();
+        final EventDispatcher dispatcher = getHttpServiceController(). getEventDispatcher();
         dispatcher.setActive(true);
         props = new Hashtable<String, Object>();
         props.put(MARKER_PROP, dispatcher.getClass().getName());
