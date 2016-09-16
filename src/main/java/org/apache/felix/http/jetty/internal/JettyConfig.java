@@ -162,6 +162,10 @@ public final class JettyConfig
     /**  Felix specific property to configure session max age */
     public static final String FELIX_JETTY_SERVLET_SESSION_MAX_AGE = "org.eclipse.jetty.servlet.MaxAge";
 
+    /** Felix specific property to set HTTP instance name. */
+    public static final String FELIX_HTTP_SERVICE_NAME = "org.apache.felix.http.name";
+
+
     private static String validateContextPath(String ctxPath)
     {
         // undefined, empty, or root context path
@@ -404,7 +408,7 @@ public final class JettyConfig
         boolean useHttps = getBooleanProperty(FELIX_HTTPS_ENABLE, getBooleanProperty(OSCAR_HTTPS_ENABLE, false));
         return useHttps && getHttpsPort() > 0;
     }
-
+    
     public boolean isProxyLoadBalancerConnection()
     {
         return getBooleanProperty(FELIX_PROXY_LOAD_BALANCER_CONNECTION_ENABLE, false);
@@ -412,6 +416,11 @@ public final class JettyConfig
 
     public boolean isRenegotiationAllowed() {
         return getBooleanProperty(FELIX_JETTY_RENEGOTIATION_ALLOWED, false);
+    }
+
+    public String getHttpServiceName()
+    {
+    	return (String) getProperty(FELIX_HTTP_SERVICE_NAME);
     }
 
     public void reset()
@@ -425,6 +434,10 @@ public final class JettyConfig
         props.put(HTTPS_PORT, Integer.toString(getHttpsPort()));
         props.put(FELIX_HTTP_ENABLE, Boolean.toString(isUseHttp()));
         props.put(FELIX_HTTPS_ENABLE, Boolean.toString(isUseHttps()));
+        if (getHttpServiceName() != null)
+        {
+			props.put(FELIX_HTTP_SERVICE_NAME, getHttpServiceName());
+        }
     }
 
     /**

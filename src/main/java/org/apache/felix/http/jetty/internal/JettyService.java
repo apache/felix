@@ -107,6 +107,7 @@ public final class JettyService extends AbstractLifeCycle.AbstractLifeCycleListe
     private ServiceTracker loadBalancerCustomizerTracker;
     private CustomizerWrapper customizerWrapper;
     private EventAdmin eventAdmin;
+    private boolean registerManagedService = true;
 
     public JettyService(final BundleContext context,
             final DispatcherServlet dispatcher,
@@ -131,14 +132,27 @@ public final class JettyService extends AbstractLifeCycle.AbstractLifeCycleListe
         });
     }
 
+    public JettyService(final BundleContext context,
+            final DispatcherServlet dispatcher,
+            final EventDispatcher eventDispatcher,
+            final HttpServiceController controller,
+            final Dictionary<String,?> props)
+    {
+    	this(context, dispatcher, eventDispatcher, controller);
+    	this.config.update(props);
+    	this.registerManagedService = false;
+    }
+
     public void start() throws Exception
     {
         // FELIX-4422: start Jetty synchronously...
         startJetty();
 
-        Dictionary<String, Object> props = new Hashtable<String, Object>();
-        props.put(Constants.SERVICE_PID, PID);
-        this.configServiceReg = this.context.registerService("org.osgi.service.cm.ManagedService", new JettyManagedService(this), props);
+        if (this.registerManagedService) {
+			Dictionary<String, Object> props = new Hashtable<String, Object>();
+			props.put(Constants.SERVICE_PID, PID);
+			this.configServiceReg = this.context.registerService("org.osgi.service.cm.ManagedService", new JettyManagedService(this), props);
+        }
 
         this.eventAdmintTracker = new ServiceTracker(this.context, EventAdmin.class.getName(), this);
         this.eventAdmintTracker.open();
