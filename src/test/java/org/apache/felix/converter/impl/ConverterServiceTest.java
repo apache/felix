@@ -508,6 +508,14 @@ public class ConverterServiceTest {
         // TODO convert back
     }
 
+    @Test
+    public void testMapToDTOWithSurplusMapFiels() {
+        Map<String, String> m = new HashMap<>();
+        m.put("foo", "bar");
+        MyDTO3 dtoDoesNotMap = converter.convert(m).to(MyDTO3.class);
+        assertNull(dtoDoesNotMap.charSet);
+    }
+
     @Test @SuppressWarnings("rawtypes")
     public void testCopyMap() {
         Map m = new HashMap();
