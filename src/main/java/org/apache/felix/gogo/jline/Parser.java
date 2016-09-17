@@ -30,7 +30,7 @@ import org.jline.reader.ParsedLine;
 
 public class Parser implements org.jline.reader.Parser {
 
-    public ParsedLine parse(String line, int cursor) throws org.jline.reader.SyntaxError {
+    public ParsedLine parse(String line, int cursor, ParseContext context) throws org.jline.reader.SyntaxError {
         try {
             return doParse(line, cursor);
         } catch (EOFError e) {

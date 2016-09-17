@@ -129,7 +129,11 @@ public class Activator implements BundleActivator, SingleServiceListener {
 
     private void doStartShell(CommandProcessor processor, Shell shell) {
         String errorMessage = "gogo: unable to create console";
-        try (Terminal terminal = TerminalBuilder.terminal();
+        try (Terminal terminal = TerminalBuilder.builder()
+                .system(true)
+                .nativeSignals(true)
+                .signalHandler(Terminal.SignalHandler.SIG_IGN)
+                .build();
              CommandSession session = processor.createSession(terminal.input(), terminal.output(), terminal.output())) {
             session.put(Shell.VAR_TERMINAL, terminal);
             try {
