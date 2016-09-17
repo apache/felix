@@ -41,6 +41,8 @@ public class Main {
                 .type(System.getenv("TERM"))
                 .system(true)
                 .streams(sin, sout)
+                .nativeSignals(true)
+                .signalHandler(Terminal.SignalHandler.SIG_IGN)
                 .build()) {
             ThreadIOImpl tio = new ThreadIOImpl();
             tio.start();
