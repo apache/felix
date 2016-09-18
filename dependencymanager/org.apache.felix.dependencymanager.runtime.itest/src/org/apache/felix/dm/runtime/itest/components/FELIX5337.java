@@ -90,8 +90,7 @@ public class FELIX5337 implements FrameworkListener {
 	 */
 	@ServiceDependency(filter = "(objectClass=*)")
 	void bindService(Object service) {
-		m_services++; // thread safe, in DM, service callbacks are always thread
-						// safe.
+		m_services++; // thread safe, in DM, service callbacks are always thread safe.
 	}
 
 	@Start
@@ -120,9 +119,18 @@ public class FELIX5337 implements FrameworkListener {
 	public void frameworkEvent(FrameworkEvent event) {
 		switch (event.getType()) {
 		case FrameworkEvent.STARTED:
-			// Make sure all services found using DM api matches the number of services found using annotations.
-			Assert.assertEquals(m_services, m_servicesAPI);
-			m_sequencer.step(2);
+		    // some services may be registered asynchronously. so, wait 2 seconds to be sure all services are registered (it's dirty, but how to avoid this ?)
+		    new Thread(() -> {
+		        try
+                {
+                    Thread.sleep(2000);
+                } catch (InterruptedException e)
+                {
+                }
+		        // Make sure all services found using DM api matches the number of services found using annotations.
+		        Assert.assertEquals(m_services, m_servicesAPI);
+		        m_sequencer.step(2);
+		    }).start();
 			break;
 		}
 	}
