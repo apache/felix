@@ -33,6 +33,7 @@ import aQute.bnd.osgi.Clazz;
 import aQute.bnd.osgi.EmbeddedResource;
 import aQute.bnd.osgi.Resource;
 import aQute.bnd.osgi.Clazz.QUERY;
+import aQute.bnd.osgi.Descriptors.TypeRef;
 
 /**
  * This helper parses all classes which contain DM annotations, and generates the corresponding component descriptors.
@@ -103,9 +104,28 @@ public class DescriptorGenerator
             
         for (Clazz c : expanded)
         {
-            // Let's parse all annotations from that class !
             AnnotationCollector reader = new AnnotationCollector(m_logger, metaType);
+            reader.baseClass(true);
+            m_logger.debug("scanning class %s", c.getClassName());
             c.parseClassFileWithCollector(reader);
+
+            // parse inherited annotations.
+            while (reader.getSuperClass() != null) {
+            	Clazz superClazz = m_analyzer.findClass(reader.getSuperClass());
+            	if (superClazz == null) {
+            		m_logger.error("Can't find super class %s from %s", reader.getSuperClass(), c.getClassName());
+            		break;
+            	}
+            	if (isObject(reader.getSuperClass()) || isScalaObject(reader.getSuperClass())) {
+            		/* don't scan java.lang.Object or scala object ! */
+            		break;
+            	}
+
+            	m_logger.debug("scanning super class %s for class %s", reader.getSuperClass(), c.getClassName());
+            	reader.baseClass(false);
+            	superClazz.parseClassFileWithCollector(reader);				
+            }
+
             if (reader.finish())
             {
                 // And store the generated component descriptors in our resource list.
@@ -127,7 +147,7 @@ public class DescriptorGenerator
         return annotationsFound;
     }
 
-    /**
+	/**
      * Returns the path of the descriptor.
      * @return the path of the generated descriptors.
      */
@@ -179,6 +199,20 @@ public class DescriptorGenerator
     {
         return m_exportService;
     }    
+    
+    /**
+     * Tests if a given type is java.lang.Object
+     */
+    private boolean isObject(TypeRef typeRef) {
+    	return (typeRef.isJava());
+	}
+    
+    /**
+     * Tests if a given type is scala object.
+     */
+    private boolean isScalaObject(TypeRef typeRef) {
+    	return (typeRef.getBinary().equals("scala/ScalaObject"));
+    }
 
     /**
      * Creates a bnd resource that contains the generated dm descriptor.

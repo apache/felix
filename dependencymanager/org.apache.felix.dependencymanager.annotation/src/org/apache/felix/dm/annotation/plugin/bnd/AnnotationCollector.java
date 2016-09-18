@@ -24,7 +24,9 @@ import java.util.Arrays;
 import java.util.Dictionary;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
+import java.util.function.Supplier;
 
 import org.apache.felix.dm.annotation.api.AdapterService;
 import org.apache.felix.dm.annotation.api.AspectService;
@@ -91,14 +93,13 @@ public class AnnotationCollector extends ClassDataCollector
     private final static String A_UNREGISTERED = Unregistered.class.getName();
 
     private Logger m_logger;
-    private String m_className;
     private String[] m_interfaces;
     private boolean m_isField;
     private String m_field;
     private String m_method;
     private String m_descriptor;
-    private Set<String> m_dependencyNames = new HashSet<String>();
-    private List<EntryWriter> m_writers = new ArrayList<EntryWriter>();
+    private final Set<String> m_dependencyNames = new HashSet<String>();
+    private final List<EntryWriter> m_writers = new ArrayList<EntryWriter>();
     private MetaType m_metaType;
     private String m_startMethod;
     private String m_stopMethod;
@@ -107,14 +108,34 @@ public class AnnotationCollector extends ClassDataCollector
     private String m_compositionMethod;
     private String m_starter;
     private String m_stopper;
-    private Set<String> m_importService = new HashSet<String>();
-    private Set<String> m_exportService = new HashSet<String>();
+    private final Set<String> m_importService = new HashSet<String>();
+    private final Set<String> m_exportService = new HashSet<String>();
     private String m_bundleContextField;
     private String m_dependencyManagerField;
     private String m_componentField;
     private String m_registeredMethod;
     private String m_unregisteredMethod;
+	private TypeRef	m_superClass;
+	private boolean m_baseClass = true;
+	
+	/**
+	 * Name of the class annotated with @Component (or other kind of components, like aspect, adapters).
+	 */
+    private String m_componentClassName;
     
+    /*
+     * Name of class currently being parsed (the component class name at first, then the inherited classes).
+     * See DescriptorGenerator class, which first calls parseClassFileWithCollector method with the component class, then it calls 
+     * again the parseClassFileWithCollector method with all inherited component super classes. 
+     */
+    private String m_currentClassName;
+	
+    /**
+	 * Contains all bind methods annotated with a dependency.
+	 * Each entry has the format: "methodName/method signature".
+	 */
+	private final Set<String> m_bindMethods = new HashSet<>(); 
+
     /**
      * When more than one @Property annotation are declared on a component type (outside of the @Component annotation), then a @Repeatable 
      * annotation is used as the container for the @Property annotations. When such annotation is found, it is stored in this attribute, which 
@@ -143,6 +164,14 @@ public class AnnotationCollector extends ClassDataCollector
         m_logger = reporter;
         m_metaType = metaType;
     }
+    
+    /**
+     * Indicates that we are parsing a superclass of a given component class.
+     */
+    public void baseClass(boolean baseClass) {
+        m_logger.debug("baseClass:%b", baseClass);
+    	m_baseClass = baseClass;
+    }
 
     /**
      * Parses the name of the class.
@@ -152,8 +181,12 @@ public class AnnotationCollector extends ClassDataCollector
     @Override
     public void classBegin(int access, TypeRef name)
     {
-        m_className = name.getFQN();
-        m_logger.debug("class name: %s", m_className);
+    	if (m_baseClass) 
+    	{
+    		m_componentClassName = name.getFQN();
+            m_logger.debug("Parsing class: %s", m_componentClassName);
+    	}
+        m_currentClassName = name.getFQN();
     }
 
     /**
@@ -162,17 +195,20 @@ public class AnnotationCollector extends ClassDataCollector
     @Override
     public void implementsInterfaces(TypeRef[] interfaces)
     {
-        List<String> result = new ArrayList<String>();
-        for (int i = 0; i < interfaces.length; i++)
-        {
-            if (!interfaces[i].getBinary().equals("scala/ScalaObject"))
-            {
-                result.add(interfaces[i].getFQN());
-            }
-        }
+    	if (m_baseClass)
+    	{
+    		List<String> result = new ArrayList<String>();
+    		for (int i = 0; i < interfaces.length; i++)
+    		{
+    			if (!interfaces[i].getBinary().equals("scala/ScalaObject"))
+    			{
+    				result.add(interfaces[i].getFQN());
+    			}
+    		}
          
-        m_interfaces = result.toArray(new String[result.size()]);
-        m_logger.debug("implements: %s", Arrays.toString(m_interfaces));
+    		m_interfaces = result.toArray(new String[result.size()]);
+    		m_logger.debug("implements: %s", Arrays.toString(m_interfaces));
+    	}
     }
 
     /**
@@ -199,6 +235,15 @@ public class AnnotationCollector extends ClassDataCollector
         m_descriptor = field.getDescriptor().toString();
     }
 
+	@Override
+	public void extendsClass(TypeRef name) {
+		m_superClass = name;
+	}
+	
+	public TypeRef getSuperClass() {
+		return m_superClass; 
+	}
+
     /** 
      * An annotation has been parsed. Always invoked AFTER the "method"/"field"/"classBegin" callbacks. 
      */
@@ -206,91 +251,110 @@ public class AnnotationCollector extends ClassDataCollector
     public void annotation(Annotation annotation)
     {
         m_logger.debug("Parsing annotation: %s", annotation.getName());
-
-        if (annotation.getName().getFQN().equals(A_COMPONENT))
+        
+        // if we are parsing a superclass of a given component, then ignore any component annotations.        
+        String name = annotation.getName().getFQN();
+        if (! m_baseClass) { 
+            String simpleName = name.indexOf(".") != -1 ? name.substring(name.lastIndexOf(".")+1) : name;
+            Optional<EntryType> type = m_componentTypes.stream().filter(writer -> writer.name().equals(simpleName)).findFirst();
+            if (type.isPresent()) {
+                m_logger.debug("Ignoring annotation %s from super class %s of component class %s", name, m_currentClassName, m_componentClassName);
+                return;
+            }
+        }
+        
+        if (name.equals(A_COMPONENT))
         {
             parseComponentAnnotation(annotation);
         }
-        else if (annotation.getName().getFQN().equals(A_ASPECT_SERVICE))
+        else if (name.equals(A_ASPECT_SERVICE))
         {
             parseAspectService(annotation);
         }
-        else if (annotation.getName().getFQN().equals(A_ADAPTER_SERVICE))
+        else if (name.equals(A_ADAPTER_SERVICE))
         {
             parseAdapterService(annotation);
         }
-        else if (annotation.getName().getFQN().equals(A_BUNDLE_ADAPTER_SERVICE))
+        else if (name.equals(A_BUNDLE_ADAPTER_SERVICE))
         {
             parseBundleAdapterService(annotation);
         }
-        else if (annotation.getName().getFQN().equals(A_RESOURCE_ADAPTER_SERVICE))
+        else if (name.equals(A_RESOURCE_ADAPTER_SERVICE))
         {
             parseResourceAdapterService(annotation);
         }
-        else if (annotation.getName().getFQN().equals(A_FACTORYCONFIG_ADAPTER_SERVICE))
+        else if (name.equals(A_FACTORYCONFIG_ADAPTER_SERVICE))
         {
             parseFactoryConfigurationAdapterService(annotation);
         }
-        else if (annotation.getName().getFQN().equals(A_INIT))
+        else if (name.equals(A_INIT))
         {
+            checkAlreadyDeclaredSingleAnnot(() -> m_initMethod, "@Init");
             m_initMethod = m_method;
         } 
-        else if (annotation.getName().getFQN().equals(A_START))
+        else if (name.equals(A_START))
         {
+            checkAlreadyDeclaredSingleAnnot(() -> m_startMethod, "@Start");
             m_startMethod = m_method;
         } 
-        else if (annotation.getName().getFQN().equals(A_REGISTERED))
+        else if (name.equals(A_REGISTERED))
         {
+            checkAlreadyDeclaredSingleAnnot(() -> m_registeredMethod, "@Registered");
             m_registeredMethod = m_method;
         }
-        else if (annotation.getName().getFQN().equals(A_STOP))
+        else if (name.equals(A_STOP))
         {
+            checkAlreadyDeclaredSingleAnnot(() -> m_stopMethod, "@Stop");
             m_stopMethod = m_method;
         }
-        else if (annotation.getName().getFQN().equals(A_UNREGISTERED))
+        else if (name.equals(A_UNREGISTERED))
         {
+            checkAlreadyDeclaredSingleAnnot(() -> m_unregisteredMethod, "@Unregistered");
             m_unregisteredMethod = m_method;
         }
-        else if (annotation.getName().getFQN().equals(A_DESTROY))
+        else if (name.equals(A_DESTROY))
         {
+            checkAlreadyDeclaredSingleAnnot(() -> m_destroyMethod, "@Destroy");
             m_destroyMethod = m_method;
         }
-        else if (annotation.getName().getFQN().equals(A_COMPOSITION))
+        else if (name.equals(A_COMPOSITION))
         {
+            checkAlreadyDeclaredSingleAnnot(() -> m_compositionMethod, "@Composition");
             Patterns.parseMethod(m_method, m_descriptor, Patterns.COMPOSITION);
             m_compositionMethod = m_method;
-        } else if (annotation.getName().getFQN().equals(A_LIFCLE_CTRL)) 
+        } 
+        else if (name.equals(A_LIFCLE_CTRL)) 
         {
             parseLifecycleAnnotation(annotation);
         }
-        else if (annotation.getName().getFQN().equals(A_SERVICE_DEP))
+        else if (name.equals(A_SERVICE_DEP))
         {
             parseServiceDependencyAnnotation(annotation);
         }
-        else if (annotation.getName().getFQN().equals(A_CONFIGURATION_DEPENDENCY))
+        else if (name.equals(A_CONFIGURATION_DEPENDENCY))
         {
             parseConfigurationDependencyAnnotation(annotation);
         }
-        else if (annotation.getName().getFQN().equals(A_BUNDLE_DEPENDENCY))
+        else if (name.equals(A_BUNDLE_DEPENDENCY))
         {
             parseBundleDependencyAnnotation(annotation);
         }
-        else if (annotation.getName().getFQN().equals(A_RESOURCE_DEPENDENCY))
+        else if (name.equals(A_RESOURCE_DEPENDENCY))
         {
             parseRersourceDependencyAnnotation(annotation);
         } 
-        else if (annotation.getName().getFQN().equals(A_INJECT))
+        else if (name.equals(A_INJECT))
         {
             parseInject(annotation);
         } 
-        else if (annotation.getName().getFQN().equals(A_REPEATABLE_PROPERTY))
+        else if (name.equals(A_REPEATABLE_PROPERTY))
         {
             parseRepeatableProperties(annotation);
         } 
         else if (annotation.getName().getFQN().equals(A_PROPERTY))
         {
         	m_singleProperty = annotation;
-        } 
+        }       
     }
 
     /**
@@ -299,21 +363,37 @@ public class AnnotationCollector extends ClassDataCollector
      */
     public boolean finish()
     {
-        if (m_writers.size() == 0)
-        {
-            m_logger.info("No components found for class " + m_className);
+        m_logger.info("finish %s", m_componentClassName);           
+
+        // check if we have a component (or adapter) annotation.                
+        Optional<EntryWriter> componentWriter = m_writers.stream()
+            .filter(writer -> m_componentTypes.indexOf(writer.getEntryType()) != -1)
+            .findFirst();
+        
+        if (! componentWriter.isPresent() || m_writers.size() == 0) {
+            m_logger.info("No components found for class " + m_componentClassName);
             return false;
         }
+        
+        finishComponentAnnotation(componentWriter.get());
+                        
+        // log all meta data for component annotations, dependencies, etc ...
+        StringBuilder sb = new StringBuilder();
+        sb.append("Parsed annotation for class ");
+        sb.append(m_componentClassName);
+        for (int i = m_writers.size() - 1; i >= 0; i--)
+        {
+            sb.append("\n\t").append(m_writers.get(i).toString());
+        }
+        m_logger.info(sb.toString());
+        return true;
+    }
+    
+    private void finishComponentAnnotation(EntryWriter componentWriter) {
+        // Register previously parsed Init/Start/Stop/Destroy/Composition annotations
+        addCommonServiceParams(componentWriter);
 
-        // We must have at least a valid component annotation type (component, aspect, or adapters)
-        
-        EntryWriter componentWriter = m_writers.stream()
-            .filter(writer -> m_componentTypes.indexOf(writer.getEntryType()) != -1)
-            .findFirst()
-            .orElseThrow(() -> new IllegalStateException(": the class " + m_className + " must be annotated with either one of the following types: " + m_componentTypes));                   
-        
-        // Add any repeated @Property annotations to the component (or to the aspect, or adapter).
-                
+        // Add any repeated @Property annotations to the component (or to the aspect, or adapter).                
         if (m_repeatableProperty != null)
         {
             Object[] properties = m_repeatableProperty.get("value");
@@ -329,30 +409,26 @@ public class AnnotationCollector extends ClassDataCollector
         if (m_singleProperty != null) {
             parseProperty(m_singleProperty, componentWriter);
         }
-        
-        StringBuilder sb = new StringBuilder();
-        sb.append("Parsed annotation for class ");
-        sb.append(m_className);
-        for (int i = m_writers.size() - 1; i >= 0; i--)
-        {
-            sb.append("\n\t").append(m_writers.get(i).toString());
-        }
-        m_logger.info(sb.toString());
-        return true;
     }
 
     /**
      * Writes the generated component descriptor in the given print writer.
-     * The first line must be the service (@Service or AspectService).
+     * The first line must be the component descriptor (@Component or AspectService, etc ..).
      * @param pw the writer where the component descriptor will be written.
      */
     public void writeTo(PrintWriter pw)
     {
-        // The last element our our m_writers list contains either the Service, or the AspectService descriptor.
-        for (int i = m_writers.size() - 1; i >= 0; i--)
-        {
-            pw.println(m_writers.get(i).toString());
-        }
+        // write first the component descriptor (@Component, @AspectService, ...)
+        EntryWriter componentWriter = m_writers.stream()
+            .filter(writer -> m_componentTypes.indexOf(writer.getEntryType()) != -1)
+            .findFirst()
+            .orElseThrow(() -> new IllegalStateException("Component type not found while scanning class " + m_componentClassName));
+        pw.println(componentWriter);
+            
+        // and write other component descriptors (dependencies, and other annotations)
+        m_writers.stream()
+            .filter(writer -> m_componentTypes.indexOf(writer.getEntryType()) == -1)
+            .forEach(dependency -> pw.println(dependency.toString()));        
     }
         
     /**
@@ -384,16 +460,25 @@ public class AnnotationCollector extends ClassDataCollector
         m_repeatableProperty = repeatedProperties;
     }
     
+    /**
+     * Checks double declaration of an annotation, which normally must be declared only one time. 
+     * @param field the field supplier (if not null, means the annotation is already declared)
+     * @param annot the annotation name.
+     * @throws IllegalStateException if annotation is already declared.
+     */
+    private void checkAlreadyDeclaredSingleAnnot(Supplier<Object> field, String annot) {
+        if (field.get() != null) {
+            throw new IllegalStateException("detected multiple " + annot + " annotation from class " + m_currentClassName + " (on from child classes)");
+        }
+    }
+    
     private void parseComponentAnnotation(Annotation annotation)
     {
         EntryWriter writer = new EntryWriter(EntryType.Component);
         m_writers.add(writer);
 
-        // Register previously parsed annotations common to services (Init/Start/...)
-        addCommonServiceParams(writer);
-
         // impl attribute
-        writer.put(EntryParam.impl, m_className);
+        writer.put(EntryParam.impl, m_componentClassName);
 
         // properties attribute
         parseProperties(annotation, writer);
@@ -484,7 +569,7 @@ public class AnnotationCollector extends ClassDataCollector
             if (m_starter == null)
             {
                 throw new IllegalArgumentException("Can't use a @LifecycleController annotation for stopping a service without declaring a " +
-                                                   "@LifecycleController that starts the component in class " + m_className);
+                                                   "@LifecycleController that starts the component in class " + m_currentClassName);
             }
         }   
 
@@ -505,6 +590,17 @@ public class AnnotationCollector extends ClassDataCollector
     }
 
     /**
+     * Check if a dependency is already declared in another same bindMethod (or class field) on another child class.
+     */
+    private void checkDependencyAlreadyDeclaredInChild(Annotation annotation, String methodOrField, boolean method) {
+        if (! m_baseClass && m_bindMethods.contains(methodOrField + "/" + m_descriptor)) {
+            throw new IllegalStateException("Annotation " + annotation.getName().getShortName()
+                + " declared on " + m_currentClassName + "." + methodOrField + (method ? " method" : " field") + " is already declared in child classe(s)");
+        }
+        m_bindMethods.add(methodOrField + "/" + m_descriptor);
+    }
+    
+    /**
      * Parses a ServiceDependency Annotation.
      * @param annotation the ServiceDependency Annotation.
      */
@@ -519,10 +615,13 @@ public class AnnotationCollector extends ClassDataCollector
         {
             if (m_isField)
             {
+                checkDependencyAlreadyDeclaredInChild(annotation, m_field, false);
                 service = Patterns.parseClass(m_descriptor, Patterns.CLASS, 1);
             }
             else
             {
+                // if we are parsing some inherited classes, detect if the bind method is already declared in child classes
+                checkDependencyAlreadyDeclaredInChild(annotation, m_method, true);                
             	// parse "bind(Component, ServiceReference, Service)" signature
             	service = Patterns.parseClass(m_descriptor, Patterns.BIND_CLASS1, 3, false);            		
             	
@@ -597,7 +696,7 @@ public class AnnotationCollector extends ClassDataCollector
         Long t = (Long) annotation.get(EntryParam.timeout.toString());
         if (t != null && t.longValue() < -1)
         {
-            throw new IllegalArgumentException("Invalid timeout value " + t + " in ServiceDependency annotation from class " + m_className);
+            throw new IllegalArgumentException("Invalid timeout value " + t + " in ServiceDependency annotation from class " + m_currentClassName);
         }
         
         // required attribute (not valid if parsing a temporal service dependency)
@@ -648,6 +747,8 @@ public class AnnotationCollector extends ClassDataCollector
      */
     private void parseConfigurationDependencyAnnotation(Annotation annotation)
     {
+        checkDependencyAlreadyDeclaredInChild(annotation, m_method, true);
+
         EntryWriter writer = new EntryWriter(EntryType.ConfigurationDependency);
         m_writers.add(writer);
 
@@ -699,7 +800,7 @@ public class AnnotationCollector extends ClassDataCollector
             }
             else 
             {
-                pid = m_className;
+                pid = m_componentClassName;
             }
         }
 
@@ -730,9 +831,6 @@ public class AnnotationCollector extends ClassDataCollector
         EntryWriter writer = new EntryWriter(EntryType.AspectService);
         m_writers.add(writer);
 
-        // Register previously parsed Init/Start/Stop/Destroy/Composition annotations
-        addCommonServiceParams(writer);
-
         // Parse service filter
         String filter = annotation.get(EntryParam.filter.toString());
         if (filter != null)
@@ -746,7 +844,7 @@ public class AnnotationCollector extends ClassDataCollector
         writer.put(EntryParam.ranking, ranking.toString());
 
         // Generate Aspect Implementation
-        writer.put(EntryParam.impl, m_className);
+        writer.put(EntryParam.impl, m_componentClassName);
 
         // Parse Aspect properties.
         parseProperties(annotation, writer);
@@ -761,13 +859,13 @@ public class AnnotationCollector extends ClassDataCollector
             if (m_interfaces == null)
             {
                 throw new IllegalStateException("Invalid AspectService annotation: " +
-                    "the service attribute has not been set and the class " + m_className
+                    "the service attribute has not been set and the class " + m_componentClassName
                     + " does not implement any interfaces");
             }
             if (m_interfaces.length != 1)
             {
                 throw new IllegalStateException("Invalid AspectService annotation: " +
-                    "the service attribute has not been set and the class " + m_className
+                    "the service attribute has not been set and the class " + m_componentClassName
                     + " implements more than one interface");
             }
 
@@ -793,7 +891,7 @@ public class AnnotationCollector extends ClassDataCollector
         // "field" and "added/changed/removed/swap" attributes can't be mixed
         if (field != null && (added != null || changed != null || removed != null || swap != null))
         {
-            throw new IllegalStateException("Annotation " + annotation + "can't applied on " + m_className
+            throw new IllegalStateException("Annotation " + annotation + "can't applied on " + m_componentClassName
                     + " can't mix \"field\" attribute with \"added/changed/removed\" attributes");
         }
                 
@@ -816,11 +914,8 @@ public class AnnotationCollector extends ClassDataCollector
         EntryWriter writer = new EntryWriter(EntryType.AdapterService);
         m_writers.add(writer);
 
-        // Register previously parsed Init/Start/Stop/Destroy/Composition annotations
-        addCommonServiceParams(writer);
-
         // Generate Adapter Implementation
-        writer.put(EntryParam.impl, m_className);
+        writer.put(EntryParam.impl, m_componentClassName);
 
         // Parse adaptee filter
         String adapteeFilter = annotation.get(EntryParam.adapteeFilter.toString());
@@ -862,11 +957,8 @@ public class AnnotationCollector extends ClassDataCollector
         EntryWriter writer = new EntryWriter(EntryType.BundleAdapterService);
         m_writers.add(writer);
 
-        // Register previously parsed Init/Start/Stop/Destroy/Composition annotations
-        addCommonServiceParams(writer);
-
         // Generate Adapter Implementation
-        writer.put(EntryParam.impl, m_className);
+        writer.put(EntryParam.impl, m_componentClassName);
 
         // Parse bundle filter
         String filter = annotation.get(EntryParam.filter.toString());
@@ -905,11 +997,8 @@ public class AnnotationCollector extends ClassDataCollector
         EntryWriter writer = new EntryWriter(EntryType.ResourceAdapterService);
         m_writers.add(writer);
 
-        // Register previously parsed Init/Start/Stop/Destroy/Composition annotations
-        addCommonServiceParams(writer);
-
         // Generate Adapter Implementation
-        writer.put(EntryParam.impl, m_className);
+        writer.put(EntryParam.impl, m_componentClassName);
 
         // Parse resource filter
         String filter = annotation.get(EntryParam.filter.toString());
@@ -944,11 +1033,8 @@ public class AnnotationCollector extends ClassDataCollector
         EntryWriter writer = new EntryWriter(EntryType.FactoryConfigurationAdapterService);
         m_writers.add(writer);
 
-        // Register previously parsed Init/Start/Stop/Destroy/Composition annotations
-        addCommonServiceParams(writer);
-
         // Generate Adapter Implementation
-        writer.put(EntryParam.impl, m_className);
+        writer.put(EntryParam.impl, m_componentClassName);
 
         // factory pid attribute (can be specified using the factoryPid attribute, or using the factoryPidClass attribute)
         String factoryPidClass = parseClassAttrValue(annotation.get(EntryParam.factoryPidClass.toString()));
@@ -964,7 +1050,7 @@ public class AnnotationCollector extends ClassDataCollector
         
         factoryPid = get(annotation, EntryParam.factoryPid.toString(), factoryPidClass);
         if (factoryPid == null) {
-            factoryPid = configType != null ? configType : m_className;
+            factoryPid = configType != null ? configType : m_componentClassName;
         }
         
         writer.put(EntryParam.factoryPid, factoryPid);
@@ -993,6 +1079,8 @@ public class AnnotationCollector extends ClassDataCollector
 
     private void parseBundleDependencyAnnotation(Annotation annotation)
     {
+        checkDependencyAlreadyDeclaredInChild(annotation, m_method, true);
+
         EntryWriter writer = new EntryWriter(EntryType.BundleDependency);
         m_writers.add(writer);
 
@@ -1014,6 +1102,8 @@ public class AnnotationCollector extends ClassDataCollector
 
     private void parseRersourceDependencyAnnotation(Annotation annotation)
     {
+        checkDependencyAlreadyDeclaredInChild(annotation, ! m_isField ? m_method : m_field, ! m_isField);
+
         EntryWriter writer = new EntryWriter(EntryType.ResourceDependency);
         m_writers.add(writer);
 
@@ -1050,7 +1140,7 @@ public class AnnotationCollector extends ClassDataCollector
         {
             if(! m_dependencyNames.add(name))
             {
-                throw new IllegalArgumentException("Duplicate dependency name " + name + " in Dependency " + annotation + " from class " + m_className);
+                throw new IllegalArgumentException("Duplicate dependency name " + name + " in Dependency " + annotation + " from class " + m_currentClassName);
             }
             writer.put(EntryParam.name, name);
         }
@@ -1063,13 +1153,13 @@ public class AnnotationCollector extends ClassDataCollector
         {
             if (m_starter != null) {
                 throw new IllegalStateException("Lifecycle annotation already defined on field " + 
-                                                m_starter + " in class " + m_className);
+                                                m_starter + " in class (or super class of) " + m_componentClassName);
             }
             m_starter = m_field;
         } else {
             if (m_stopper != null) {
                 throw new IllegalStateException("Lifecycle annotation already defined on field " + 
-                                                m_stopper + " in class " + m_className);
+                                                m_stopper + " in class (or super class of) " + m_componentClassName);
             }
             m_stopper = m_field;
         }
@@ -1114,7 +1204,7 @@ public class AnnotationCollector extends ClassDataCollector
                 {
                     throw new IllegalArgumentException("invalid option labels/values specified for property "
                         + id +
-                        " in PropertyMetadata annotation from class " + m_className);
+                        " in PropertyMetadata annotation from class " + m_currentClassName);
                 }
 
                 if (optionValues != null)
@@ -1131,7 +1221,7 @@ public class AnnotationCollector extends ClassDataCollector
             m_metaType.add(ocd);
             MetaType.Designate designate = new MetaType.Designate(pid, factory);
             m_metaType.add(designate);
-            m_logger.info("Parsed MetaType Properties from class " + m_className);
+            m_logger.info("Parsed MetaType Properties from class " + m_componentClassName);
         }
     }
 
@@ -1198,7 +1288,7 @@ public class AnnotationCollector extends ClassDataCollector
             {
                 // Theorically impossible
                 throw new IllegalArgumentException("Invalid Property type " + type
-                    + " from annotation " + property + " in class " + m_className);
+                    + " from annotation " + property + " in class " + m_componentClassName);
             }
 
             Object[] values;
@@ -1248,7 +1338,7 @@ public class AnnotationCollector extends ClassDataCollector
             else
             {
                 throw new IllegalArgumentException(
-                    "Missing Property value from annotation " + property + " in class " + m_className);
+                    "Missing Property value from annotation " + property + " in class " + m_componentClassName);
             }
 
             if (properties.length() > 0) {
@@ -1257,7 +1347,7 @@ public class AnnotationCollector extends ClassDataCollector
         }
         catch (JSONException e)
         {
-            throw new IllegalArgumentException("Unexpected exception while parsing Property from class " + m_className, e);
+            throw new IllegalArgumentException("Unexpected exception while parsing Property from class " + m_componentClassName, e);
         }
     }
 
@@ -1279,7 +1369,7 @@ public class AnnotationCollector extends ClassDataCollector
                 try {
                     Long.valueOf(value.toString());
                 } catch (NumberFormatException e) {
-                    throw new IllegalArgumentException("Property \"" + name + "\" in class " + m_className
+                    throw new IllegalArgumentException("Property \"" + name + "\" in class " + m_componentClassName
                         + " does not contain a valid Long value (" + value.toString() + ")");
                 }
             }
@@ -1288,7 +1378,7 @@ public class AnnotationCollector extends ClassDataCollector
                 try {
                     Double.valueOf(value.toString());
                 } catch (NumberFormatException e) {
-                    throw new IllegalArgumentException("Property \"" + name + "\" in class " + m_className
+                    throw new IllegalArgumentException("Property \"" + name + "\" in class " + m_componentClassName
                         + " does not contain a valid Double value (" + value.toString() + ")");
                 }
             }
@@ -1297,7 +1387,7 @@ public class AnnotationCollector extends ClassDataCollector
                 try {
                     Float.valueOf(value.toString());
                 } catch (NumberFormatException e) {
-                    throw new IllegalArgumentException("Property \"" + name + "\" in class " + m_className
+                    throw new IllegalArgumentException("Property \"" + name + "\" in class " + m_componentClassName
                         + " does not contain a valid Float value (" + value.toString() + ")");
                 }
             }
@@ -1306,7 +1396,7 @@ public class AnnotationCollector extends ClassDataCollector
                 try {
                     Integer.valueOf(value.toString());
                 } catch (NumberFormatException e) {
-                    throw new IllegalArgumentException("Property \"" + name + "\" in class " + m_className
+                    throw new IllegalArgumentException("Property \"" + name + "\" in class " + m_componentClassName
                         + " does not contain a valid Integer value (" + value.toString() + ")");
                 }
             }
@@ -1315,7 +1405,7 @@ public class AnnotationCollector extends ClassDataCollector
                 try {
                     Byte.valueOf(value.toString());
                 } catch (NumberFormatException e) {
-                    throw new IllegalArgumentException("Property \"" + name + "\" in class " + m_className
+                    throw new IllegalArgumentException("Property \"" + name + "\" in class " + m_componentClassName
                         + " does not contain a valid Byte value (" + value.toString() + ")");
                 }
             }
@@ -1333,7 +1423,7 @@ public class AnnotationCollector extends ClassDataCollector
                     if (values[i].toString().length() != 1)
                     {
                         throw new IllegalArgumentException("Property \"" + name + "\" in class "
-                            + m_className + " does not contain a valid Character value (" + values[i] + ")");
+                            + m_componentClassName + " does not contain a valid Character value (" + values[i] + ")");
                     }
                     try
                     {
@@ -1342,7 +1432,7 @@ public class AnnotationCollector extends ClassDataCollector
                     catch (NumberFormatException e2)
                     {
                         throw new IllegalArgumentException("Property \"" + name + "\" in class "
-                            + m_className + " does not contain a valid Character value (" + values[i].toString()
+                            + m_componentClassName + " does not contain a valid Character value (" + values[i].toString()
                             + ")");
                     }
                 }
@@ -1350,7 +1440,7 @@ public class AnnotationCollector extends ClassDataCollector
         } else if (type.equals(Boolean.class)) {
             for (Object value : values) {
                 if (! value.toString().equalsIgnoreCase("false") && ! value.toString().equalsIgnoreCase("true")) {
-                    throw new IllegalArgumentException("Property \"" + name + "\" in class " + m_className
+                    throw new IllegalArgumentException("Property \"" + name + "\" in class " + m_componentClassName
                         + " does not contain a valid Boolean value (" + value.toString() + ")");
                 }
             }
@@ -1359,7 +1449,7 @@ public class AnnotationCollector extends ClassDataCollector
                 try {
                     Short.valueOf(value.toString());
                 } catch (NumberFormatException e) {
-                    throw new IllegalArgumentException("Property \"" + name + "\" in class " + m_className
+                    throw new IllegalArgumentException("Property \"" + name + "\" in class " + m_componentClassName
                         + " does not contain a valid Short value (" + value.toString() + ")");
                 }
             }
@@ -1408,20 +1498,29 @@ public class AnnotationCollector extends ClassDataCollector
     {      
         if (Patterns.BUNDLE_CONTEXT.matcher(m_descriptor).matches())
         {
+            if (m_bundleContextField != null) {
+                throw new IllegalStateException("detected multiple @Inject annotation from class " + m_currentClassName + " (on from child classes)");
+            }
             m_bundleContextField = m_field;
         }
         else if (Patterns.DEPENDENCY_MANAGER.matcher(m_descriptor).matches())
         {
+            if (m_dependencyManagerField != null) {
+                throw new IllegalStateException("detected multiple @Inject annotation from class " + m_currentClassName + " (on from child classes)");
+            }
             m_dependencyManagerField = m_field;
         }
         else if (Patterns.COMPONENT.matcher(m_descriptor).matches())
         {
+            if (m_componentField != null) {
+                throw new IllegalStateException("detected multiple @Inject annotation from class " + m_currentClassName + " (on from child classes)");
+            }
             m_componentField = m_field;
         }
         else
         {
             throw new IllegalArgumentException("@Inject annotation can't be applied on the field \"" + m_field
-                                               + "\" in class " + m_className);
+                                               + "\" in class " + m_currentClassName);
         }
     }
     
@@ -1434,14 +1533,14 @@ public class AnnotationCollector extends ClassDataCollector
         if (m_registeredMethod != null)
         {
             throw new IllegalStateException("@Registered annotation can't be used on a Component " +
-                                            " which does not provide a service (class=" + m_className + ")");
+                                            " which does not provide a service (class=" + m_currentClassName + ")");
 
         }
         
         if (m_unregisteredMethod != null)
         {
             throw new IllegalStateException("@Unregistered annotation can't be used on a Component " +
-                                            " which does not provide a service (class=" + m_className + ")");
+                                            " which does not provide a service (class=" + m_currentClassName + ")");
 
         }
     }
