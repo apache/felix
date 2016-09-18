@@ -18,8 +18,6 @@
  */
 package org.apache.felix.dm.annotation.plugin.bnd;
 
-import java.io.PrintWriter;
-import java.io.StringWriter;
 import java.util.Map;
 import java.util.Set;
 
@@ -115,7 +113,7 @@ public class AnnotationPlugin implements AnalyzerPlugin, Plugin {
         }
 
         catch (Throwable t) {
-            m_logger.error(parse(t));
+            m_logger.error("error: " + t.toString(), t);
         }
 
         finally {
@@ -164,17 +162,5 @@ public class AnnotationPlugin implements AnalyzerPlugin, Plugin {
             StringBuilder sb = new StringBuilder(requireCapability).append(",").append(DM_RUNTIME_CAPABILITY);
             analyzer.setProperty(REQUIRE_CAPABILITY, sb.toString());
         }
-    }
-
-    /**
-     * Parse an exception into a string.
-     * @param e The exception to parse
-     * @return the parsed exception
-     */
-    private static String parse(Throwable e) {
-        StringWriter buffer = new StringWriter();
-        PrintWriter pw = new PrintWriter(buffer);
-        e.printStackTrace(pw);
-        return (buffer.toString());
     }
 }
