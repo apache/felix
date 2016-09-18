@@ -20,9 +20,14 @@ package org.apache.felix.http.jetty.internal;
 
 import java.util.Dictionary;
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Hashtable;
 import java.util.Map;
+import java.util.Set;
 
 import org.osgi.framework.BundleContext;
+import org.osgi.framework.Constants;
+import org.osgi.framework.ServiceRegistration;
 import org.osgi.service.cm.ConfigurationException;
 import org.osgi.service.cm.ManagedServiceFactory;
 
@@ -30,10 +35,27 @@ public class JettyManagedServiceFactory implements ManagedServiceFactory
 {
 	private final Map<String, JettyServiceStarter> services = new HashMap<>();
 	private final BundleContext context;
+	private ServiceRegistration<?> serviceReg;
 
 	JettyManagedServiceFactory(BundleContext context)
 	{
 		this.context = context;
+		
+		Dictionary<String, Object> props = new Hashtable<String, Object>();
+        props.put(Constants.SERVICE_PID, JettyService.PID);
+        this.serviceReg = context.registerService(ManagedServiceFactory.class.getName(), this, props);
+	}
+	
+	public synchronized void stop()
+	{
+		this.serviceReg.unregister();
+		this.serviceReg = null;
+
+		Set<String> pids = new HashSet<>(services.keySet());
+		for (String pid : pids)
+		{
+			deleted(pid);
+		}
 	}
 
 	@Override
@@ -43,7 +65,7 @@ public class JettyManagedServiceFactory implements ManagedServiceFactory
 	}
 
 	@Override
-	public void updated(String pid, Dictionary<String, ?> properties) throws ConfigurationException
+	public synchronized void updated(String pid, Dictionary<String, ?> properties) throws ConfigurationException
 	{
 		JettyServiceStarter jetty = services.get(pid);
 
@@ -66,7 +88,7 @@ public class JettyManagedServiceFactory implements ManagedServiceFactory
 	}
 
 	@Override
-	public void deleted(String pid)
+	public synchronized void deleted(String pid)
 	{
 		JettyServiceStarter jetty = services.remove(pid);
 

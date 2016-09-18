@@ -33,7 +33,7 @@ public final class JettyActivator extends AbstractHttpActivator
 
     private ServiceRegistration<?> metatypeReg;
     private ServiceRegistration<LoadBalancerCustomizerFactory> loadBalancerCustomizerFactoryReg;
-    private ServiceRegistration<?> configServiceFactoryReg;
+    private JettyManagedServiceFactory jettyServiceFactory;
 
     @Override
     protected void doStart() throws Exception
@@ -86,10 +86,7 @@ public final class JettyActivator extends AbstractHttpActivator
                     }
                 }, propertiesCustomizer);
 
-        Dictionary<String, Object> factoryProps = new Hashtable<String, Object>();
-        factoryProps.put(Constants.SERVICE_PID, JettyService.PID);
-        this.configServiceFactoryReg = this.getBundleContext().registerService(
-        		ManagedServiceFactory.class.getName(), new JettyManagedServiceFactory(this.getBundleContext()), factoryProps);
+        this.jettyServiceFactory = new JettyManagedServiceFactory(this.getBundleContext());
     }
 
     @Override
@@ -106,10 +103,10 @@ public final class JettyActivator extends AbstractHttpActivator
             loadBalancerCustomizerFactoryReg.unregister();
             loadBalancerCustomizerFactoryReg = null;
         }
-        if ( configServiceFactoryReg != null )
+        if ( jettyServiceFactory != null )
         {
-            configServiceFactoryReg.unregister();
-            configServiceFactoryReg = null;
+            jettyServiceFactory.stop();
+            jettyServiceFactory = null;
         }
 
         super.doStop();
