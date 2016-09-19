@@ -27,7 +27,7 @@
     <packaging>bundle</packaging>
     <name>Apache Felix Declarative Services</name>
     <description>
-        Implementation of the Declarative Services specification 1.3
+        Implementation of the Declarative Services specification 1.4
     </description>
     <artifactId>org.apache.felix.scr</artifactId>
     <version>2.0.7-SNAPSHOT</version>
@@ -70,7 +70,7 @@
         <bundle.file.name>
             ${bundle.build.name}/${project.build.finalName}.jar
         </bundle.file.name>
-        <felix.ca.version>1.8.0</felix.ca.version>
+        <felix.ca.version>1.8.11-SNAPSHOT</felix.ca.version>
     </properties>
     
     
@@ -89,7 +89,33 @@
         </dependency>
         <dependency>
             <groupId>org.osgi</groupId>
-            <artifactId>osgi.cmpn</artifactId>
+            <artifactId>org.osgi.service.component</artifactId>
+            <version>1.3.0</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.felix</groupId>
+            <artifactId>org.apache.felix.configadmin</artifactId>
+            <version>${felix.ca.version}</version>
+            <scope>provided</scope>
+        </dependency>
+<!-- 
+        <dependency>
+            <groupId>org.osgi</groupId>
+            <artifactId>org.osgi.service.cm</artifactId>
+            <version>1.5.0</version>
+            <scope>provided</scope>
+        </dependency>
+ -->
+        <dependency>
+            <groupId>org.osgi</groupId>
+            <artifactId>org.osgi.namespace.extender</artifactId>
+            <version>1.0.1</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.osgi</groupId>
+            <artifactId>osgi.promise</artifactId>
             <version>6.0.0</version>
             <scope>provided</scope>
         </dependency>
@@ -182,12 +208,6 @@
             <groupId>ch.qos.logback</groupId>
             <artifactId>logback-classic</artifactId>
             <version>0.9.29</version>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.felix</groupId>
-            <artifactId>org.apache.felix.configadmin</artifactId>
-            <version>1.8.0</version>
             <scope>test</scope>
         </dependency>
         <dependency>
@@ -388,14 +408,6 @@
                     <scope>test</scope>
                 </dependency>
             </dependencies>
-        </profile>
-        <profile>
-            <!--  use to test with R4 ca, without change count, targetetPids, location changed event -->
-            <!--  remember you need to specify all profiles using this, e.g. -PcaR4,felix -->
-            <id>caR4</id>
-            <properties>
-                <felix.ca.version>1.0.10</felix.ca.version>
-            </properties>
         </profile>
     </profiles>
         
