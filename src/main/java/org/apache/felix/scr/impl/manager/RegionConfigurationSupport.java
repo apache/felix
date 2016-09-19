@@ -142,8 +142,9 @@ public abstract class RegionConfigurationSupport implements ConfigurationListene
                             if ( checkBundleLocation( config, bundleContext.getBundle() ) )
                             {
                                 long changeCount = config.getChangeCount();
+                                // TODO - service reference
                                 created |= holder.configurationUpdated( new TargetedPID( config.getPid() ),
-                                    new TargetedPID( config.getFactoryPid() ), config.getProperties(), changeCount );
+                                    new TargetedPID( config.getFactoryPid() ), config.getModifiedProperties(null), changeCount );
                             }
                         }
                         if ( !created )
@@ -163,8 +164,9 @@ public abstract class RegionConfigurationSupport implements ConfigurationListene
                             if ( singleton != null && checkBundleLocation( singleton, bundleContext.getBundle() ) )
                             {
                                 long changeCount = singleton.getChangeCount();
+                                // TODO service reference
                                 holder.configurationUpdated( new TargetedPID( singleton.getPid() ), null,
-                                    singleton.getProperties(), changeCount );
+                                    singleton.getModifiedProperties(null), changeCount );
                             }
                             else
                             {
@@ -446,7 +448,8 @@ public abstract class RegionConfigurationSupport implements ConfigurationListene
                 if ( configs != null && configs.length > 0 )
                 {
                     Configuration config = configs[0];
-                    return new ConfigurationInfo( config.getProperties(), config.getBundleLocation(),
+                    // TODO - service reference
+                    return new ConfigurationInfo( config.getModifiedProperties(null), config.getBundleLocation(),
                         config.getChangeCount() );
                 }
             }
