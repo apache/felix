@@ -26,31 +26,41 @@ import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceReference;
 import org.osgi.util.tracker.ServiceTracker;
 
-public class MBeanServerTracker extends ServiceTracker
+public class MBeanServerTracker extends ServiceTracker<MBeanServer, MBeanContainer>
 {
 
     private final Server server;
 
     public MBeanServerTracker(final BundleContext context, final Server server)
     {
-        super(context, MBeanServer.class.getName(), null);
+        super(context, MBeanServer.class, null);
         this.server = server;
     }
 
     @Override
-    public Object addingService(ServiceReference reference)
+    public MBeanContainer addingService(ServiceReference<MBeanServer> reference)
     {
         MBeanServer server = (MBeanServer) super.addingService(reference);
-        MBeanContainer mBeanContainer = new MBeanContainer(server);
-        this.server.addEventListener(mBeanContainer);
-        return mBeanContainer;
+        if ( server != null )
+        {
+            MBeanContainer mBeanContainer = new MBeanContainer(server);
+            this.server.addEventListener(mBeanContainer);
+            return mBeanContainer;
+        }
+        else
+        {
+            super.removedService(reference, null);
+        }
+        return null;
     }
 
     @Override
-    public void removedService(ServiceReference reference, Object service)
+    public void removedService(ServiceReference<MBeanServer> reference, MBeanContainer service)
     {
-        MBeanContainer mBeanContainer = (MBeanContainer) service;
-        this.server.removeEventListener(mBeanContainer);
-        super.removedService(reference, mBeanContainer.getMBeanServer());
+        if ( service != null )
+        {
+            this.server.removeEventListener(service);
+            super.removedService(reference, service);
+        }
     }
 }

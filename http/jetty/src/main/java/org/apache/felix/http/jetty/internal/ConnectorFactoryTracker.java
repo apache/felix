@@ -26,13 +26,13 @@ import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceReference;
 import org.osgi.util.tracker.ServiceTracker;
 
-public class ConnectorFactoryTracker extends ServiceTracker
+public class ConnectorFactoryTracker extends ServiceTracker<ConnectorFactory, Connector>
 {
     private final Server server;
 
     public ConnectorFactoryTracker(final BundleContext context, final Server server)
     {
-        super(context, ConnectorFactory.class.getName(), null);
+        super(context, ConnectorFactory.class, null);
         this.server = server;
     }
 
@@ -48,7 +48,7 @@ public class ConnectorFactoryTracker extends ServiceTracker
     }
 
     @Override
-    public Object addingService(ServiceReference reference)
+    public Connector addingService(ServiceReference<ConnectorFactory> reference)
     {
         ConnectorFactory factory = (ConnectorFactory) super.addingService(reference);
         Connector connector = factory.createConnector(server);
@@ -68,9 +68,9 @@ public class ConnectorFactoryTracker extends ServiceTracker
     }
 
     @Override
-    public void removedService(ServiceReference reference, Object service)
+    public void removedService(ServiceReference<ConnectorFactory> reference, Connector service)
     {
-        Connector connector = (Connector) service;
+        Connector connector = service;
         if (connector.isStarted())
         {
             try

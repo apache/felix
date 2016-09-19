@@ -39,8 +39,6 @@ import javax.servlet.ServletContext;
 import javax.servlet.SessionCookieConfig;
 import javax.servlet.SessionTrackingMode;
 
-import org.apache.felix.http.base.internal.DispatcherServlet;
-import org.apache.felix.http.base.internal.EventDispatcher;
 import org.apache.felix.http.base.internal.HttpServiceController;
 import org.apache.felix.http.base.internal.logger.SystemLogger;
 import org.eclipse.jetty.http.HttpVersion;
@@ -77,7 +75,7 @@ import org.osgi.util.tracker.BundleTrackerCustomizer;
 import org.osgi.util.tracker.ServiceTracker;
 import org.osgi.util.tracker.ServiceTrackerCustomizer;
 
-public final class JettyService extends AbstractLifeCycle.AbstractLifeCycleListener implements BundleTrackerCustomizer, ServiceTrackerCustomizer
+public final class JettyService extends AbstractLifeCycle.AbstractLifeCycleListener
 {
     /** PID for configuration of the HTTP service. */
     public static final String PID = "org.apache.felix.http";
@@ -91,22 +89,20 @@ public final class JettyService extends AbstractLifeCycle.AbstractLifeCycleListe
 
     private final JettyConfig config;
     private final BundleContext context;
-    private final DispatcherServlet dispatcher;
     private final HttpServiceController controller;
     private final Map<String, Deployment> deployments;
     private final ExecutorService executor;
 
-    private ServiceRegistration<?> configServiceReg;
-    private Server server;
-    private ContextHandlerCollection parent;
-    private EventDispatcher eventDispatcher;
-    private MBeanServerTracker mbeanServerTracker;
-    private BundleTracker bundleTracker;
-    private ServiceTracker eventAdmintTracker;
-    private ServiceTracker connectorTracker;
-    private ServiceTracker loadBalancerCustomizerTracker;
-    private CustomizerWrapper customizerWrapper;
-    private EventAdmin eventAdmin;
+    private volatile ServiceRegistration<?> configServiceReg;
+    private volatile Server server;
+    private volatile ContextHandlerCollection parent;
+    private volatile MBeanServerTracker mbeanServerTracker;
+    private volatile BundleTracker<Deployment> bundleTracker;
+    private volatile ServiceTracker<EventAdmin, EventAdmin> eventAdmintTracker;
+    private volatile ConnectorFactoryTracker connectorTracker;
+    private volatile LoadBalancerCustomizerFactoryTracker loadBalancerCustomizerTracker;
+    private volatile CustomizerWrapper customizerWrapper;
+    private volatile EventAdmin eventAdmin;
     private boolean registerManagedService = true;
 
     public JettyService(final BundleContext context,
@@ -114,8 +110,6 @@ public final class JettyService extends AbstractLifeCycle.AbstractLifeCycleListe
     {
         this.context = context;
         this.config = new JettyConfig(this.context);
-        this.dispatcher = controller.getDispatcherServlet();
-        this.eventDispatcher = controller.getEventDispatcher();
         this.controller = controller;
         this.deployments = new LinkedHashMap<String, Deployment>();
         this.executor = Executors.newSingleThreadExecutor(new ThreadFactory()
@@ -145,15 +139,86 @@ public final class JettyService extends AbstractLifeCycle.AbstractLifeCycleListe
         startJetty();
 
         if (this.registerManagedService) {
-			Dictionary<String, Object> props = new Hashtable<String, Object>();
+			final Dictionary<String, Object> props = new Hashtable<String, Object>();
 			props.put(Constants.SERVICE_PID, PID);
-			this.configServiceReg = this.context.registerService("org.osgi.service.cm.ManagedService", new JettyManagedService(this), props);
+			this.configServiceReg = this.context.registerService("org.osgi.service.cm.ManagedService",
+			        new JettyManagedService(this), props);
         }
 
-        this.eventAdmintTracker = new ServiceTracker(this.context, EventAdmin.class.getName(), this);
+        this.eventAdmintTracker = new ServiceTracker<EventAdmin, EventAdmin>(this.context, EventAdmin.class,
+                new ServiceTrackerCustomizer<EventAdmin, EventAdmin>()
+        {
+            @Override
+            public EventAdmin addingService(final ServiceReference<EventAdmin> reference)
+            {
+                EventAdmin service = context.getService(reference);
+                modifiedService(reference, service);
+                return service;
+            }
+
+            @Override
+            public void modifiedService(final ServiceReference<EventAdmin> reference, final EventAdmin service)
+            {
+                eventAdmin = service;
+            }
+
+            @Override
+            public void removedService(final ServiceReference<EventAdmin> reference, final EventAdmin service)
+            {
+                context.ungetService(reference);
+                eventAdmin = null;
+            }
+        });
         this.eventAdmintTracker.open();
 
-        this.bundleTracker = new BundleTracker(this.context, Bundle.ACTIVE | Bundle.STARTING, this);
+        this.bundleTracker = new BundleTracker<Deployment>(this.context, Bundle.ACTIVE | Bundle.STARTING,
+                new BundleTrackerCustomizer<Deployment>() {
+
+            @Override
+            public Deployment addingBundle(Bundle bundle, BundleEvent event)
+            {
+                return detectWebAppBundle(bundle);
+            }
+
+            @Override
+            public void modifiedBundle(Bundle bundle, BundleEvent event, Deployment object)
+            {
+                detectWebAppBundle(bundle);
+            }
+
+            private Deployment detectWebAppBundle(Bundle bundle)
+            {
+                if (bundle.getState() == Bundle.ACTIVE || (bundle.getState() == Bundle.STARTING && "Lazy".equals(bundle.getHeaders().get(HEADER_ACTIVATION_POLICY))))
+                {
+
+                    String contextPath = bundle.getHeaders().get(HEADER_WEB_CONTEXT_PATH);
+                    if (contextPath != null)
+                    {
+                        return startWebAppBundle(bundle, contextPath);
+                    }
+                }
+                return null;
+            }
+
+            @Override
+            public void removedBundle(Bundle bundle, BundleEvent event, Deployment object)
+            {
+                String contextPath = bundle.getHeaders().get(HEADER_WEB_CONTEXT_PATH);
+                if (contextPath == null)
+                {
+                    return;
+                }
+
+                Deployment deployment = deployments.remove(contextPath);
+                if (deployment != null && deployment.getContext() != null)
+                {
+                    // remove registration, since bundle is already stopping
+                    deployment.setRegistration(null);
+                    undeploy(deployment, deployment.getContext());
+                }
+            }
+
+                });
         this.bundleTracker.open();
     }
 
@@ -197,7 +262,7 @@ public final class JettyService extends AbstractLifeCycle.AbstractLifeCycleListe
         return props;
     }
 
-    public void updated(Dictionary props)
+    public void updated(final Dictionary<String, ?> props)
     {
         if (this.config.update(props))
         {
@@ -223,7 +288,7 @@ public final class JettyService extends AbstractLifeCycle.AbstractLifeCycleListe
     {
         if (this.server != null)
         {
-            this.eventDispatcher.setActive(false);
+            this.controller.getEventDispatcher().setActive(false);
             if (this.connectorTracker != null)
             {
                 this.connectorTracker.close();
@@ -276,10 +341,10 @@ public final class JettyService extends AbstractLifeCycle.AbstractLifeCycleListe
             ServletContextHandler context = new ServletContextHandler(this.parent, this.config.getContextPath(), ServletContextHandler.SESSIONS);
 
             configureSessionManager(context);
-            this.eventDispatcher.setActive(true);
-            context.addEventListener(eventDispatcher);
-            context.getSessionHandler().addEventListener(eventDispatcher);
-            final ServletHolder holder = new ServletHolder(this.dispatcher);
+            this.controller.getEventDispatcher().setActive(true);
+            context.addEventListener(controller.getEventDispatcher());
+            context.getSessionHandler().addEventListener(controller.getEventDispatcher());
+            final ServletHolder holder = new ServletHolder(this.controller.getDispatcherServlet());
             holder.setAsyncSupported(true);
             context.addServlet(holder, "/*");
             context.setMaxFormContentSize(this.config.getMaxFormSize());
@@ -328,6 +393,7 @@ public final class JettyService extends AbstractLifeCycle.AbstractLifeCycleListe
                 }
                 Connector connector = this.server.getConnectors()[0];
                 if (connector instanceof ServerConnector) {
+                    @SuppressWarnings("resource")
                     ServerConnector serverConnector = (ServerConnector) connector;
                     message.append("acceptors=").append(serverConnector.getAcceptors()).append(",");
                     message.append("selectors=").append(serverConnector.getSelectorManager().getSelectorCount());
@@ -353,8 +419,8 @@ public final class JettyService extends AbstractLifeCycle.AbstractLifeCycleListe
     private String fixJettyVersion()
     {
         // FELIX-4311: report the real version of Jetty...
-        Dictionary headers = this.context.getBundle().getHeaders();
-        String version = (String) headers.get("X-Jetty-Version");
+        Dictionary<String, String> headers = this.context.getBundle().getHeaders();
+        String version = headers.get("X-Jetty-Version");
         if (version != null)
         {
             System.setProperty("jetty.version", version);
@@ -754,7 +820,7 @@ public final class JettyService extends AbstractLifeCycle.AbstractLifeCycleListe
                     props.put(WEB_SYMBOLIC_NAME, webAppBundle.getSymbolicName());
                     props.put(WEB_VERSION, webAppBundle.getVersion());
                     props.put(WEB_CONTEXT_PATH, deployment.getContextPath());
-                    deployment.setRegistration(webAppBundle.getBundleContext().registerService(ServletContext.class.getName(), context.getServletContext(), props));
+                    deployment.setRegistration(webAppBundle.getBundleContext().registerService(ServletContext.class, context.getServletContext(), props));
 
                     postEvent(WebEvent.DEPLOYED(webAppBundle, extenderBundle));
                 }
@@ -791,7 +857,7 @@ public final class JettyService extends AbstractLifeCycle.AbstractLifeCycleListe
 
                     context.getServletContext().removeAttribute(OSGI_BUNDLE_CONTEXT);
 
-                    ServiceRegistration registration = deployment.getRegistration();
+                    ServiceRegistration<ServletContext> registration = deployment.getRegistration();
                     if (registration != null)
                     {
                         registration.unregister();
@@ -810,71 +876,6 @@ public final class JettyService extends AbstractLifeCycle.AbstractLifeCycleListe
                 }
             }
         });
-    }
-
-    @Override
-    public Object addingBundle(Bundle bundle, BundleEvent event)
-    {
-        return detectWebAppBundle(bundle);
-    }
-
-    @Override
-    public void modifiedBundle(Bundle bundle, BundleEvent event, Object object)
-    {
-        detectWebAppBundle(bundle);
-    }
-
-    private Object detectWebAppBundle(Bundle bundle)
-    {
-        if (bundle.getState() == Bundle.ACTIVE || (bundle.getState() == Bundle.STARTING && "Lazy".equals(bundle.getHeaders().get(HEADER_ACTIVATION_POLICY))))
-        {
-
-            String contextPath = bundle.getHeaders().get(HEADER_WEB_CONTEXT_PATH);
-            if (contextPath != null)
-            {
-                return startWebAppBundle(bundle, contextPath);
-            }
-        }
-        return null;
-    }
-
-    @Override
-    public void removedBundle(Bundle bundle, BundleEvent event, Object object)
-    {
-        String contextPath = bundle.getHeaders().get(HEADER_WEB_CONTEXT_PATH);
-        if (contextPath == null)
-        {
-            return;
-        }
-
-        Deployment deployment = this.deployments.remove(contextPath);
-        if (deployment != null && deployment.getContext() != null)
-        {
-            // remove registration, since bundle is already stopping
-            deployment.setRegistration(null);
-            undeploy(deployment, deployment.getContext());
-        }
-    }
-
-    @Override
-    public Object addingService(ServiceReference reference)
-    {
-        Object service = this.context.getService(reference);
-        modifiedService(reference, service);
-        return service;
-    }
-
-    @Override
-    public void modifiedService(ServiceReference reference, Object service)
-    {
-        this.eventAdmin = (EventAdmin) service;
-    }
-
-    @Override
-    public void removedService(ServiceReference reference, Object service)
-    {
-        this.context.ungetService(reference);
-        this.eventAdmin = null;
     }
 
     private void postEvent(Event event)
@@ -919,7 +920,7 @@ public final class JettyService extends AbstractLifeCycle.AbstractLifeCycleListe
         private String contextPath;
         private Bundle bundle;
         private WebAppBundleContext context;
-        private ServiceRegistration registration;
+        private ServiceRegistration<ServletContext> registration;
 
         public Deployment(String contextPath, Bundle bundle)
         {
@@ -947,12 +948,12 @@ public final class JettyService extends AbstractLifeCycle.AbstractLifeCycleListe
             this.context = context;
         }
 
-        public ServiceRegistration getRegistration()
+        public ServiceRegistration<ServletContext> getRegistration()
         {
             return this.registration;
         }
 
-        public void setRegistration(ServiceRegistration registration)
+        public void setRegistration(ServiceRegistration<ServletContext> registration)
         {
             this.registration = registration;
         }

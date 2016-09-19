@@ -16,17 +16,17 @@
  */
 package org.apache.felix.http.jetty.internal;
 
-import org.eclipse.jetty.util.URIUtil;
-import org.eclipse.jetty.util.resource.Resource;
-import org.eclipse.jetty.util.resource.URLResource;
-import org.eclipse.jetty.webapp.WebAppContext;
-import org.osgi.framework.Bundle;
-
 import java.io.File;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Enumeration;
+
+import org.eclipse.jetty.util.URIUtil;
+import org.eclipse.jetty.util.resource.Resource;
+import org.eclipse.jetty.util.resource.URLResource;
+import org.eclipse.jetty.webapp.WebAppContext;
+import org.osgi.framework.Bundle;
 
 class WebAppBundleContext extends WebAppContext
 {
@@ -70,13 +70,12 @@ class WebAppBundleContext extends WebAppContext
             }
 
             @Override
-            @SuppressWarnings({ "unchecked" })
             protected Enumeration<URL> findResources(String name) throws IOException
             {
                 // Don't try to load resources from the bundle when it is not active
                 if (bundle.getState() == Bundle.ACTIVE)
                 {
-                    Enumeration<URL> urls = (Enumeration<URL>) bundle.getResources(name);
+                    Enumeration<URL> urls = bundle.getResources(name);
                     if (urls != null)
                     {
                         return urls;
