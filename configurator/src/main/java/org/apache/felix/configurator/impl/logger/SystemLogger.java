@@ -29,8 +29,7 @@ public final class SystemLogger {
     }
 
     public static void debug(final String message) {
-        LOGGER.log(LogService.LOG_INFO, message);
-// TODO        LOGGER.log(LogService.LOG_DEBUG, message);
+        LOGGER.log(LogService.LOG_DEBUG, message);
     }
 
     public static void debug(final String message, final Throwable cause) {
