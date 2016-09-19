@@ -36,12 +36,12 @@ public class JettyManagedService implements ServiceFactory<ManagedService>
     }
 
     @Override
-    public ManagedService getService(Bundle bundle, ServiceRegistration registration)
+    public ManagedService getService(Bundle bundle, ServiceRegistration<ManagedService> registration)
     {
         return new ManagedService()
         {
             @Override
-            public void updated(Dictionary properties)
+            public void updated(Dictionary<String, ?> properties)
             {
                 jettyService.updated(properties);
             }
@@ -49,7 +49,7 @@ public class JettyManagedService implements ServiceFactory<ManagedService>
     }
 
     @Override
-    public void ungetService(Bundle bundle, ServiceRegistration registration, ManagedService service)
+    public void ungetService(Bundle bundle, ServiceRegistration<ManagedService> registration, ManagedService service)
     {
         // just have the reference dropped, nothing to cleanup
     }

@@ -25,6 +25,7 @@ import java.util.Hashtable;
 import java.util.Map;
 import java.util.Set;
 
+import org.apache.felix.http.base.internal.logger.SystemLogger;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceRegistration;
@@ -35,24 +36,23 @@ public class JettyManagedServiceFactory implements ManagedServiceFactory
 {
 	private final Map<String, JettyServiceStarter> services = new HashMap<>();
 	private final BundleContext context;
-	private ServiceRegistration<?> serviceReg;
+	private final ServiceRegistration<?> serviceReg;
 
-	JettyManagedServiceFactory(BundleContext context)
+	JettyManagedServiceFactory(final BundleContext context)
 	{
 		this.context = context;
-		
-		Dictionary<String, Object> props = new Hashtable<String, Object>();
+
+		final Dictionary<String, Object> props = new Hashtable<String, Object>();
         props.put(Constants.SERVICE_PID, JettyService.PID);
         this.serviceReg = context.registerService(ManagedServiceFactory.class.getName(), this, props);
 	}
-	
+
 	public synchronized void stop()
 	{
 		this.serviceReg.unregister();
-		this.serviceReg = null;
 
 		Set<String> pids = new HashSet<>(services.keySet());
-		for (String pid : pids)
+		for (final String pid : pids)
 		{
 			deleted(pid);
 		}
@@ -65,7 +65,7 @@ public class JettyManagedServiceFactory implements ManagedServiceFactory
 	}
 
 	@Override
-	public synchronized void updated(String pid, Dictionary<String, ?> properties) throws ConfigurationException
+	public synchronized void updated(final String pid, final Dictionary<String, ?> properties) throws ConfigurationException
 	{
 		JettyServiceStarter jetty = services.get(pid);
 
@@ -81,9 +81,9 @@ public class JettyManagedServiceFactory implements ManagedServiceFactory
 				jetty.updated(properties);
 			}
 		}
-		catch (Exception e)
+		catch (final Exception e)
 		{
-			throw new ConfigurationException(null, "Failed to start Http Jetty pid=" + pid, e);
+            SystemLogger.error("Failed to start Http Jetty pid=" + pid, e);
 		}
 	}
 
@@ -100,7 +100,7 @@ public class JettyManagedServiceFactory implements ManagedServiceFactory
 			}
 			catch (Exception e)
 			{
-				throw new RuntimeException("Faiiled to stop Http Jetty pid=" + pid, e);
+			    SystemLogger.error("Faiiled to stop Http Jetty pid=" + pid, e);
 			}
 		}
 

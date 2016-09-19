@@ -27,15 +27,13 @@ public class JettyServiceStarter
 {
 
 	private final HttpServiceController controller;
-	private final Dictionary<String, ?> props;
     private final JettyService jetty;
 
-    JettyServiceStarter(BundleContext context, Dictionary<String, ?> properties)
+    public JettyServiceStarter(final BundleContext context, final Dictionary<String, ?> properties)
     throws Exception
     {
     	this.controller = new HttpServiceController(context);
-		this.props = properties;
-        this.jetty = new JettyService(context, this.controller, props);
+        this.jetty = new JettyService(context, this.controller, properties);
         this.jetty.start();
     }
 
@@ -45,7 +43,7 @@ public class JettyServiceStarter
     	this.controller.stop();
     }
 
-    public void updated(Dictionary<String, ?> properties) throws Exception
+    public void updated(final Dictionary<String, ?> properties) throws Exception
     {
     	this.jetty.updated(properties);
     }

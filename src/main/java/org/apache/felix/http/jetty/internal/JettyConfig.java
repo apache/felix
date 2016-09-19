@@ -25,7 +25,6 @@ import java.util.Dictionary;
 import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Properties;
 
 import org.apache.felix.http.base.internal.logger.SystemLogger;
 import org.osgi.framework.BundleContext;
@@ -137,13 +136,13 @@ public final class JettyConfig
 
     /** Felix specific property to control whether to enable Proxy/Load Balancer Connection */
     public static final String FELIX_PROXY_LOAD_BALANCER_CONNECTION_ENABLE = "org.apache.felix.proxy.load.balancer.connection.enable";
-    
+
     /** Felix specific property to configure the session cookie httpOnly flag */
     public static final String FELIX_JETTY_SESSION_COOKIE_HTTP_ONLY = "org.apache.felix.https.jetty.session.cookie.httpOnly";
-    
+
     /** Felix specific property to configure the session cookie secure flag */
     public static final String FELIX_JETTY_SESSION_COOKIE_SECURE = "org.apache.felix.https.jetty.session.cookie.secure";
-    
+
     /** Felix specific property to configure session id path parameter*/
     public static final String FELIX_JETTY_SERVLET_SESSION_ID_PATH_PARAMETER_NAME = "org.eclipse.jetty.servlet.SessionIdPathParameterName";
 
@@ -197,9 +196,9 @@ public final class JettyConfig
      * This map is indexed by String objects (the property names) and
      * the values are just objects as provided by the configuration.
      */
-    private volatile Dictionary config;
+    private volatile Dictionary<String, ?> config;
 
-    public JettyConfig(BundleContext context)
+    public JettyConfig(final BundleContext context)
     {
         this.context = context;
         reset();
@@ -408,7 +407,7 @@ public final class JettyConfig
         boolean useHttps = getBooleanProperty(FELIX_HTTPS_ENABLE, getBooleanProperty(OSCAR_HTTPS_ENABLE, false));
         return useHttps && getHttpsPort() > 0;
     }
-    
+
     public boolean isProxyLoadBalancerConnection()
     {
         return getBooleanProperty(FELIX_PROXY_LOAD_BALANCER_CONNECTION_ENABLE, false);
@@ -446,15 +445,15 @@ public final class JettyConfig
      * @param props the dictionary with the new configuration values, can be <code>null</code> to reset this configuration to its defaults.
      * @return <code>true</code> if the configuration was updated due to a changed value, or <code>false</code> if no change was found.
      */
-    public boolean update(Dictionary props)
+    public boolean update(Dictionary<String, ?> props)
     {
         if (props == null)
         {
-            props = new Properties();
+            props = new Hashtable<>();
         }
 
         // FELIX-4312 Check whether there's something changed in our configuration...
-        Dictionary currentConfig = this.config;
+        Dictionary<String, ?> currentConfig = this.config;
         if (currentConfig == null || !props.equals(currentConfig))
         {
             this.config = props;
@@ -579,9 +578,9 @@ public final class JettyConfig
         return port;
     }
 
-    private Object getProperty(String name)
+    private Object getProperty(final String name)
     {
-        Dictionary conf = this.config;
+        Dictionary<String, ?> conf = this.config;
         Object value = (conf != null) ? conf.get(name) : null;
         if (value == null)
         {
