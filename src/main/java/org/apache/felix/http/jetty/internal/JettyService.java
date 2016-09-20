@@ -344,7 +344,7 @@ public final class JettyService extends AbstractLifeCycle.AbstractLifeCycleListe
             this.controller.getEventDispatcher().setActive(true);
             context.addEventListener(controller.getEventDispatcher());
             context.getSessionHandler().addEventListener(controller.getEventDispatcher());
-            final ServletHolder holder = new ServletHolder(this.controller.getDispatcherServlet());
+            final ServletHolder holder = new ServletHolder(this.controller.createDispatcherServlet());
             holder.setAsyncSupported(true);
             context.addServlet(holder, "/*");
             context.setMaxFormContentSize(this.config.getMaxFormSize());
