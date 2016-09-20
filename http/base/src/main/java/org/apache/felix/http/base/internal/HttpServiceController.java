@@ -27,6 +27,7 @@ import javax.servlet.http.HttpSessionIdListener;
 import javax.servlet.http.HttpSessionListener;
 
 import org.apache.felix.http.base.internal.dispatch.Dispatcher;
+import org.apache.felix.http.base.internal.dispatch.DispatcherServlet;
 import org.apache.felix.http.base.internal.handler.HttpSessionWrapper;
 import org.apache.felix.http.base.internal.registry.HandlerRegistry;
 import org.apache.felix.http.base.internal.service.HttpServiceFactory;
