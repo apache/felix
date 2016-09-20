@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.felix.http.base.internal;
+package org.apache.felix.http.base.internal.dispatch;
 
 import java.io.IOException;
 
@@ -23,7 +23,7 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import org.apache.felix.http.base.internal.dispatch.Dispatcher;
+import org.apache.felix.http.base.internal.HttpServiceController;
 
 /**
  * The dispatcher servlet is registered in the container.
