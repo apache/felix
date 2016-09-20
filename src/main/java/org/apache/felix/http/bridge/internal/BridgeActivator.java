@@ -18,15 +18,18 @@
  */
 package org.apache.felix.http.bridge.internal;
 
+import java.io.IOException;
 import java.util.EventListener;
 import java.util.Hashtable;
 
+import javax.servlet.Servlet;
 import javax.servlet.ServletConfig;
 import javax.servlet.ServletException;
+import javax.servlet.ServletRequest;
+import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServlet;
 
 import org.apache.felix.http.base.internal.AbstractHttpActivator;
-import org.apache.felix.http.base.internal.DispatcherServlet;
 import org.apache.felix.http.base.internal.EventDispatcher;
 import org.apache.felix.http.base.internal.logger.SystemLogger;
 import org.osgi.framework.Constants;
@@ -54,13 +57,16 @@ public final class BridgeActivator extends AbstractHttpActivator
                     getBundleContext().getProperty(FELIX_HTTP_SERVICE_ENDPOINTS));
         }
 
-        final Object servlet = new DispatcherServlet(this.getHttpServiceController().getDispatcher())
+        final Servlet dispatcherServlet = this.getHttpServiceController().createDispatcherServlet();
+        final Object servlet = new HttpServlet()
         {
+            private static final long serialVersionUID = -5229577898597483605L;
 
             @Override
             public void destroy()
             {
                 getHttpServiceController().unregister();
+                dispatcherServlet.destroy();
                 super.destroy();
             }
 
@@ -68,10 +74,17 @@ public final class BridgeActivator extends AbstractHttpActivator
             public void init(final ServletConfig config) throws ServletException
             {
                 super.init(config);
+                dispatcherServlet.init(config);
                 getHttpServiceController().register(config.getServletContext(), serviceRegProps);
             }
+
+            @Override
+            public void service(ServletRequest req, ServletResponse res) throws ServletException, IOException {
+                dispatcherServlet.service(req, res);
+            }
         };
-        // dispatcher servlet
+
+        // register dispatcher servlet
         Hashtable<String, Object> props = new Hashtable<String, Object>();
         props.put(MARKER_PROP, servlet.getClass().getName());
         props.put(Constants.SERVICE_DESCRIPTION, "Apache Felix Http Dispatcher for bridged request handling");
