@@ -27,10 +27,14 @@ import org.apache.felix.http.base.internal.dispatch.Dispatcher;
 
 /**
  * The dispatcher servlet is registered in the container.
- *
+ * It is dispatching requests to the http implementation.
+ * It does not start the http service, this needs to be done
+ * through the {@link HttpServiceController}.
  */
 public class DispatcherServlet extends HttpServlet
 {
+    private static final long serialVersionUID = -7692620012572476116L;
+
     private final Dispatcher controller;
 
     public DispatcherServlet(final Dispatcher controller)

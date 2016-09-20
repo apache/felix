@@ -19,6 +19,7 @@ package org.apache.felix.http.base.internal;
 import java.util.Hashtable;
 
 import javax.annotation.Nonnull;
+import javax.servlet.Servlet;
 import javax.servlet.ServletContext;
 import javax.servlet.http.HttpSessionAttributeListener;
 import javax.servlet.http.HttpSessionEvent;
@@ -37,30 +38,17 @@ public final class HttpServiceController
     private final BundleContext bundleContext;
     private final HandlerRegistry registry;
     private final Dispatcher dispatcher;
-    private final DispatcherServlet dispatcherServlet;
     private final EventDispatcher eventDispatcher;
     private final HttpServiceFactory httpServiceFactory;
     private final WhiteboardManager whiteboardManager;
 
     private volatile HttpSessionListener httpSessionListener;
 
-
-    public DispatcherServlet getDispatcherServlet()
-    {
-        return this.dispatcherServlet;
-    }
-
-    public EventDispatcher getEventDispatcher()
-    {
-        return this.eventDispatcher;
-    }
-
     public HttpServiceController(final BundleContext bundleContext)
     {
         this.bundleContext = bundleContext;
         this.registry = new HandlerRegistry();
         this.dispatcher = new Dispatcher(this.registry);
-        this.dispatcherServlet = new DispatcherServlet(this.dispatcher);
         this.eventDispatcher = new EventDispatcher(this);
         this.httpServiceFactory = new HttpServiceFactory(this.bundleContext, this.registry);
         this.whiteboardManager = new WhiteboardManager(bundleContext, this.httpServiceFactory, this.registry);
@@ -69,12 +57,20 @@ public final class HttpServiceController
     public void stop()
     {
         this.unregister();
-        this.dispatcherServlet.destroy();
     }
 
-    public Dispatcher getDispatcher()
+    /**
+     * Create a new dispatcher servlet
+     * @return The dispatcher servlet.
+     */
+    public @Nonnull Servlet createDispatcherServlet()
     {
-        return this.dispatcher;
+        return new DispatcherServlet(this.dispatcher);
+    }
+
+    public EventDispatcher getEventDispatcher()
+    {
+        return this.eventDispatcher;
     }
 
     HttpSessionListener getSessionListener()
