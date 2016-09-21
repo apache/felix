@@ -33,7 +33,7 @@ import org.osgi.service.converter.Converter;
 import org.osgi.service.serializer.Serializing;
 
 public class YamlSerializingImpl implements Serializing {
-    private final Converter converter;
+    private volatile Converter converter;
     private final Map<String, Object> configuration;
     private final Object object;
     private final int indentation = 2;
@@ -143,13 +143,17 @@ public class YamlSerializingImpl implements Serializing {
 
     @Override
     public Serializing pretty() {
-        // TODO Auto-generated method stub
-        return null;
+        return this;
     }
 
     @Override
     public Serializing ignoreNull() {
-        // TODO Auto-generated method stub
-        return null;
+        return this;
+    }
+
+    @Override
+    public Serializing with(Converter c) {
+        converter = c;
+        return this;
     }
 }

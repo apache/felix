@@ -19,7 +19,6 @@ package org.apache.felix.serializer.impl.json;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.apache.felix.serializer.impl.json.JsonSerializerImpl;
 import org.apache.felix.serializer.impl.json.MyDTO.Count;
 import org.apache.felix.serializer.impl.json.MyEmbeddedDTO.Alpha;
 import org.apache.sling.commons.json.JSONException;
@@ -28,8 +27,8 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.osgi.service.converter.Adapter;
-import org.osgi.service.converter.StandardConverter;
 import org.osgi.service.converter.Converter;
+import org.osgi.service.converter.StandardConverter;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -87,7 +86,7 @@ public class JsonSerializerTest {
         ca.rule(Foo.class, String.class, Foo::tsFun, v -> Foo.fsFun(v));
 
         JsonSerializerImpl jsonCodec = new JsonSerializerImpl();
-        String json = jsonCodec.with(ca).serialize(m).toString();
+        String json = jsonCodec.serialize(m).with(ca).toString();
 
         JSONObject jo = new JSONObject(json);
         assertEquals(1, jo.length());

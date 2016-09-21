@@ -30,7 +30,7 @@ import org.osgi.service.serializer.Deserializing;
 
 public class JsonDeserializingImpl<T> implements Deserializing<T> {
     private final Class<T> clazz;
-    private final Converter converter;
+    private volatile Converter converter;
 
     public JsonDeserializingImpl(Converter c, Class<T> cls) {
         converter = c;
@@ -70,5 +70,11 @@ public class JsonDeserializingImpl<T> implements Deserializing<T> {
             s.useDelimiter("\\Z");
             return from(s.next());
         }
+    }
+
+    @Override
+    public Deserializing<T> with(Converter c) {
+        converter = c;
+        return this;
     }
 }

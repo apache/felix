@@ -29,7 +29,7 @@ import org.osgi.service.serializer.Deserializing;
 import org.yaml.snakeyaml.Yaml;
 
 public class YamlDeserializingImpl<T> implements Deserializing<T> {
-    private final Converter converter;
+    private volatile Converter converter;
     private final Class<T> clazz;
 
     public YamlDeserializingImpl(Converter c, Class<T> cls) {
@@ -71,5 +71,11 @@ public class YamlDeserializingImpl<T> implements Deserializing<T> {
             return (T) res;
 
         return converter.convert(res).to(clazz);
+    }
+
+    @Override
+    public Deserializing<T> with(Converter c) {
+        converter = c;
+        return this;
     }
 }

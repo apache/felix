@@ -18,7 +18,6 @@ package org.osgi.service.serializer;
 import java.lang.reflect.Type;
 
 import org.osgi.annotation.versioning.ProviderType;
-import org.osgi.service.converter.Converter;
 import org.osgi.service.converter.TypeReference;
 
 /**
@@ -70,13 +69,4 @@ public interface Serializer {
 	 *         operation.
 	 */
 	Serializing serialize(Object obj);
-
-	/**
-	 * Specify the converter to be used by the code, if an alternative, adapted,
-	 * converter is to be used.
-	 *
-	 * @param converter The converter to use.
-	 * @return A codec that uses the converter as specified.
-	 */
-	Serializer with(Converter converter);
 }

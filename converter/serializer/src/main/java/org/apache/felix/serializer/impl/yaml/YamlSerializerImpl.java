@@ -20,22 +20,16 @@ import java.lang.reflect.Type;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-import org.osgi.service.converter.StandardConverter;
 import org.osgi.service.converter.Converter;
+import org.osgi.service.converter.StandardConverter;
 import org.osgi.service.converter.TypeReference;
-import org.osgi.service.serializer.Serializer;
 import org.osgi.service.serializer.Deserializing;
+import org.osgi.service.serializer.Serializer;
 import org.osgi.service.serializer.Serializing;
 
 public class YamlSerializerImpl implements Serializer {
-    private Map<String, Object> configuration = new ConcurrentHashMap<>();
-    private Converter converter = new StandardConverter();
-
-    @Override
-    public Serializer with(Converter c) {
-        converter = c;
-        return this;
-    }
+    private final Map<String, Object> configuration = new ConcurrentHashMap<>();
+    private final Converter converter = new StandardConverter();
 
     @Override
     public <T> Deserializing<T> deserialize(Class<T> cls) {

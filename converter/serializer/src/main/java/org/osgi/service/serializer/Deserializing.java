@@ -19,6 +19,7 @@ import java.io.InputStream;
 import java.nio.charset.Charset;
 
 import org.osgi.annotation.versioning.ProviderType;
+import org.osgi.service.converter.Converter;
 
 /**
  * Interface to specify the source of the decoding operation
@@ -62,4 +63,13 @@ public interface Deserializing<T> {
 	 * @return the decoded object.
 	 */
 	T from(CharSequence in);
+
+    /**
+     * Specify the converter to be used by the code, if an alternative, adapted,
+     * converter is to be used.
+     *
+     * @param converter The converter to use.
+     * @return A codec that uses the converter as specified.
+     */
+	Deserializing<T> with(Converter converter);
 }

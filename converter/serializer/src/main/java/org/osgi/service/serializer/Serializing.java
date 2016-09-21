@@ -20,6 +20,7 @@ import java.io.OutputStream;
 import java.nio.charset.Charset;
 
 import org.osgi.annotation.versioning.ProviderType;
+import org.osgi.service.converter.Converter;
 
 /**
  * Interface to specify the target of the encoding operation.
@@ -33,7 +34,7 @@ public interface Serializing {
 	 * Specify that keys with a {@code null} value must not appear in the
 	 * result. If not specified {@code null} values will be included in the
 	 * result.
-	 * 
+	 *
 	 * @return This Encoding object to allow further invocations on it.
 	 */
 	Serializing ignoreNull();
@@ -46,6 +47,16 @@ public interface Serializing {
 	 * @return This Encoding object to allow further invocations on it.
 	 */
 	Serializing pretty();
+
+    /**
+     * Specify the converter to be used by the code, if an alternative, adapted,
+     * converter is to be used.
+     *
+     * @param converter The converter to use.
+     * @return A codec that uses the converter as specified.
+     */
+    Serializing with(Converter converter);
+
 
 	/**
 	 * Use an output stream as the target of the encoding operation. UTF-8 will
