@@ -69,7 +69,19 @@ public interface Deserializing<T> {
      * converter is to be used.
      *
      * @param converter The converter to use.
-     * @return A codec that uses the converter as specified.
+     * @return This Deserializing object to allow further invocations on it.
      */
 	Deserializing<T> with(Converter converter);
+
+	/**
+	 * Provide contextual information to complete the de-serializing operation.
+	 * The contexts that can be handled are serializer-specific.
+	 *
+	 * @param obj The context to use while deserializing.
+     * @return This Deserializing object to allow further invocations on it.
+	 */
+	default Deserializing<T> withContext(Object obj) {
+	    // Default or simple deserializers do not need additional context
+	    return this;
+	}
 }

@@ -35,7 +35,7 @@ public interface Serializing {
 	 * result. If not specified {@code null} values will be included in the
 	 * result.
 	 *
-	 * @return This Encoding object to allow further invocations on it.
+	 * @return This Serializing object to allow further invocations on it.
 	 */
 	Serializing ignoreNull();
 
@@ -44,19 +44,9 @@ public interface Serializing {
 	 * which may make it easier for humans to read. If not specified, the
 	 * encoded output should be formatted to be compact, so save space.
 	 *
-	 * @return This Encoding object to allow further invocations on it.
+	 * @return This Serializing object to allow further invocations on it.
 	 */
 	Serializing pretty();
-
-    /**
-     * Specify the converter to be used by the code, if an alternative, adapted,
-     * converter is to be used.
-     *
-     * @param converter The converter to use.
-     * @return A codec that uses the converter as specified.
-     */
-    Serializing with(Converter converter);
-
 
 	/**
 	 * Use an output stream as the target of the encoding operation. UTF-8 will
@@ -94,4 +84,25 @@ public interface Serializing {
 	 */
 	@Override
 	String toString();
+
+	/**
+     * Specify the converter to be used by the code, if an alternative, adapted,
+     * converter is to be used.
+     *
+     * @param converter The converter to use.
+     * @return This Serializing object to allow further invocations on it.
+     */
+    Serializing with(Converter converter);
+
+    /**
+     * Provide contextual information to complete the serializing operation.
+     * The contexts that can be handled are serializer-specific.
+     *
+     * @param obj The context to use while serializing.
+     * @return This Serializing object to allow further invocations on it.
+     */
+    default Serializing withContext(Object obj) {
+        // Default or simple serializers do not need additional context
+        return this;
+    }
 }
