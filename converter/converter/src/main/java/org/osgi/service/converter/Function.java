@@ -20,14 +20,12 @@ import org.osgi.annotation.versioning.ConsumerType;
 
 /**
  * A function that accepts a single argument and produces a result.
- *
  * <p>
  * This is a functional interface and can be used as the assignment target for a
  * lambda expression or method reference.
  *
  * @param <T> The type of the function input.
  * @param <R> The type of the function output.
- *
  * @ThreadSafe
  * @author $Id: 3d17c97c7dc36185681b98caed5ee10bdeb2cd93 $
  */

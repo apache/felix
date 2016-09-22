@@ -25,7 +25,7 @@ public class ConversionException extends RuntimeException {
 
 	/**
 	 * Create a Conversion Exception with a message.
-	 * 
+	 *
 	 * @param message The message for this exception.
 	 */
 	public ConversionException(String message) {
@@ -34,7 +34,7 @@ public class ConversionException extends RuntimeException {
 
 	/**
 	 * Create a Conversion Exception with a message and a nested cause.
-	 * 
+	 *
 	 * @param message The message for this exception.
 	 * @param cause The causing exception.
 	 */

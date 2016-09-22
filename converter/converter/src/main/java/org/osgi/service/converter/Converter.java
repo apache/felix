@@ -27,19 +27,19 @@ import org.osgi.annotation.versioning.ProviderType;
  */
 @ProviderType
 public interface Converter {
-	/**
-	 * Start a conversion for the given object.
-	 *
-	 * @param obj The object that should be converted.
-	 * @return A {@link Converting} object to complete the conversion.
-	 */
-	Converting convert(Object obj);
+    /**
+     * Start a conversion for the given object.
+     *
+     * @param obj The object that should be converted.
+     * @return A {@link Converting} object to complete the conversion.
+     */
+    Converting convert(Object obj);
 
-	/**
-	 * Obtain a builder to create a modified converter based on this converter.
+    /**
+     * Obtain a builder to create a modified converter based on this converter.
      * For more details see the {@link ConverterBuilder} interface.
-	 *
-	 * @return A new Converter Builder.
-	 */
-	ConverterBuilder newConverterBuilder();
+     *
+     * @return A new Converter Builder.
+     */
+    ConverterBuilder newConverterBuilder();
 }
