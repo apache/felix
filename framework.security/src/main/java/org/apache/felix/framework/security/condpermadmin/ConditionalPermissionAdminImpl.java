@@ -51,6 +51,7 @@ import java.util.Map.Entry;
 
 import org.apache.felix.framework.BundleProtectionDomain;
 import org.apache.felix.framework.BundleRevisionImpl;
+import org.apache.felix.framework.FakeBundle;
 import org.apache.felix.framework.security.permissionadmin.PermissionAdminImpl;
 import org.apache.felix.framework.security.util.Conditions;
 import org.apache.felix.framework.security.util.LocalPermissions;
@@ -307,176 +308,6 @@ public final class ConditionalPermissionAdminImpl implements
         }
     }
 
-    private static class FakeBundle implements Bundle
-    {
-        private final Map m_certs;
-
-        public FakeBundle(Map certs)
-        {
-            m_certs = Collections.unmodifiableMap(certs);
-        }
-
-        public Enumeration findEntries(String arg0, String arg1, boolean arg2)
-        {
-            return null;
-        }
-
-        public BundleContext getBundleContext()
-        {
-            return null;
-        }
-
-        public long getBundleId()
-        {
-            return -1;
-        }
-
-        public URL getEntry(String arg0)
-        {
-            return null;
-        }
-
-        public Enumeration getEntryPaths(String arg0)
-        {
-            return null;
-        }
-
-        public Dictionary getHeaders()
-        {
-            return new Hashtable();
-        }
-
-        public Dictionary getHeaders(String arg0)
-        {
-            return new Hashtable();
-        }
-
-        public long getLastModified()
-        {
-            return 0;
-        }
-
-        public String getLocation()
-        {
-            return "";
-        }
-
-        public ServiceReference[] getRegisteredServices()
-        {
-            return null;
-        }
-
-        public URL getResource(String arg0)
-        {
-            return null;
-        }
-
-        public Enumeration getResources(String arg0) throws IOException
-        {
-            return null;
-        }
-
-        public ServiceReference[] getServicesInUse()
-        {
-            return null;
-        }
-
-        public Map getSignerCertificates(int arg0)
-        {
-            return m_certs;
-        }
-
-        public int getState()
-        {
-            return Bundle.UNINSTALLED;
-        }
-
-        public String getSymbolicName()
-        {
-            return null;
-        }
-
-        public Version getVersion()
-        {
-            return Version.emptyVersion;
-        }
-
-        public boolean hasPermission(Object arg0)
-        {
-            return false;
-        }
-
-        public Class loadClass(String arg0) throws ClassNotFoundException
-        {
-            return null;
-        }
-
-        public void start() throws BundleException
-        {
-            throw new IllegalStateException();
-        }
-
-        public void start(int arg0) throws BundleException
-        {
-            throw new IllegalStateException();
-        }
-
-        public void stop() throws BundleException
-        {
-            throw new IllegalStateException();
-        }
-
-        public void stop(int arg0) throws BundleException
-        {
-            throw new IllegalStateException();
-        }
-
-        public void uninstall() throws BundleException
-        {
-            throw new IllegalStateException();
-        }
-
-        public void update() throws BundleException
-        {
-            throw new IllegalStateException();
-        }
-
-        public void update(InputStream arg0) throws BundleException
-        {
-            throw new IllegalStateException();
-        }
-
-        public boolean equals(Object o)
-        {
-            return this == o;
-        }
-
-        public int hashCode()
-        {
-            return System.identityHashCode(this);
-        }
-
-		public int compareTo(Bundle o) {
-			// TODO Auto-generated method stub
-			return 0;
-		}
-
-		public Object adapt(Class arg0) {
-			// TODO Auto-generated method stub
-			return null;
-		}
-
-		public File getDataFile(String arg0) {
-			// TODO Auto-generated method stub
-			return null;
-		}
-
-        public int compareTo(Object t)
-        {
-            throw new UnsupportedOperationException("Not supported yet.");
-        }
-    }
-
     private static class FakeCert extends X509Certificate
     {
         private final Principal m_principal;
@@ -668,7 +499,7 @@ public final class ConditionalPermissionAdminImpl implements
                 certList.add(new FakeCert(certs[j]));
             }
         }
-        final Bundle fake = new FakeBundle(certificates);
+        final FakeBundle fake = new FakeBundle(certificates);
         ProtectionDomain domain = new ProtectionDomain(null, null)
         {
             public boolean implies(Permission permission)
