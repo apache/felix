@@ -31,10 +31,12 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLConnection;
 import java.net.URLStreamHandler;
+import java.security.AccessController;
 import java.security.CodeSource;
 import java.security.Permission;
 import java.security.PermissionCollection;
 import java.security.Permissions;
+import java.security.PrivilegedAction;
 import java.security.ProtectionDomain;
 import java.security.cert.Certificate;
 import java.util.ArrayList;
@@ -332,12 +334,39 @@ public class BundleProtectionDomain extends ProtectionDomain
             };
         }
 
+        private static boolean getUseCachedURL(final BundleRevisionImpl revision)
+        {
+            String property;
+
+            if (System.getSecurityManager() != null)
+            {
+                property = (String) AccessController.doPrivileged(new PrivilegedAction<String>(){
+                    @Override
+                    public String run()
+                    {
+                        return getUseCachedURLProperty(revision);
+                    }
+                });
+            }
+            else
+            {
+                property =  getUseCachedURLProperty(revision);
+            }
+
+            return Boolean.parseBoolean(property);
+        }
+
+        private static String getUseCachedURLProperty(BundleRevisionImpl revision)
+        {
+            return revision.getBundle().getFramework().getProperty(FelixConstants.USE_CACHEDURLS_PROPS);
+        }
+
         private static URL create(BundleRevisionImpl revision) throws MalformedURLException
         {
             RevisionAsJarURL handler = new RevisionAsJarURL(revision);
 
-            boolean useCachedUrlForCodeSource = Boolean.parseBoolean(
-                    revision.getBundle().getFramework().getProperty(FelixConstants.USE_CACHEDURLS_PROPS));
+            boolean useCachedUrlForCodeSource = getUseCachedURL(revision);
+
             if (useCachedUrlForCodeSource)
             {
                 String location = "jar:" + revision.getEntry("/") + "!/";
