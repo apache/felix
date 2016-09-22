@@ -27,14 +27,14 @@
   <packaging>bundle</packaging>
   <name>Apache Felix Security Provider</name>
   <artifactId>org.apache.felix.framework.security</artifactId>
-  <version>2.5.0-SNAPSHOT</version>
+  <version>2.6.0</version>
   <description>
     This bundle provides an implementation of the OSGi security for Apache Felix.
   </description>
     <scm>
-      <connection>scm:svn:http://svn.apache.org/repos/asf/felix/trunk/framework.security</connection>
-      <developerConnection>scm:svn:https://svn.apache.org/repos/asf/felix/trunk/framework.security</developerConnection>
-      <url>http://svn.apache.org/repos/asf/felix/framework.security</url>
+      <connection>scm:svn:http://svn.apache.org/repos/asf/felix/releases/org.apache.felix.framework.security-2.6.0</connection>
+      <developerConnection>scm:svn:https://svn.apache.org/repos/asf/felix/releases/org.apache.felix.framework.security-2.6.0</developerConnection>
+      <url>scm:svn:https://svn.apache.org/repos/asf/felix/releases/org.apache.felix.framework.security-2.6.0</url>
     </scm>
   <dependencies>
      <dependency>
@@ -76,6 +76,13 @@
           <excludeDependencies>
             org.apache.felix.framework
           </excludeDependencies>
+        </configuration>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-javadoc-plugin</artifactId>
+        <configuration>
+          <failOnError>false</failOnError>
         </configuration>
       </plugin>
     </plugins>
