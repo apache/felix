@@ -27,7 +27,7 @@
   <packaging>bundle</packaging>
   <name>Apache Felix Framework</name>
   <artifactId>org.apache.felix.framework</artifactId>
-  <version>5.7.0-SNAPSHOT</version>
+  <version>5.5.0-SNAPSHOT</version>
   <properties>
     <dollar>$</dollar>
     <felix.java.version>6</felix.java.version>
@@ -127,7 +127,7 @@
     <dependency>
        <groupId>org.apache.felix</groupId>
        <artifactId>org.apache.felix.resolver</artifactId>
-       <version>1.11.0-SNAPSHOT</version>
+       <version>1.10.0</version>
        <scope>provided</scope>
     </dependency>
     <dependency>
