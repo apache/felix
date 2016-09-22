@@ -29,12 +29,12 @@
   <description>
     Provide OSGi resolver service.
   </description>
-  <version>1.9.0-SNAPSHOT</version>
+  <version>1.10.0</version>
   <artifactId>org.apache.felix.resolver</artifactId>
   <scm>
-     <connection>scm:svn:http://svn.apache.org/repos/asf/felix/trunk/resolver</connection>
-     <developerConnection>scm:svn:https://svn.apache.org/repos/asf/felix/trunk/resolver</developerConnection>
-     <url>http://svn.apache.org/repos/asf/felix/resolver</url>
+     <connection>scm:svn:http://svn.apache.org/repos/asf/felix/releases/org.apache.felix.resolver-1.10.0</connection>
+     <developerConnection>scm:svn:https://svn.apache.org/repos/asf/felix/releases/org.apache.felix.resolver-1.10.0</developerConnection>
+     <url>scm:svn:https://svn.apache.org/repos/asf/felix/releases/org.apache.felix.resolver-1.10.0</url>
   </scm>
   <dependencies>
     <dependency>
