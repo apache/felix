@@ -17,7 +17,7 @@ package org.osgi.service.converter;
 
 /**
  * A rule is a data entity can hold all the information needed to specify a
- * custom conversion for use by an {@link Adapter}.
+ * custom conversion for use by the {@link ConverterBuilder}.
  *
  * @param <F> The type to convert from.
  * @param <T> The type to convert to.

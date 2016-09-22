@@ -30,10 +30,14 @@ public interface ConvertFunction<F, T> {
 	/**
 	 * Convert the object into the target type.
 	 *
-	 * @param obj The object to be converted. This object will never be {@code null} as the convert function will not be invoked for null values.
+	 * @param obj The object to be converted. This object will never be
+	 *            {@code null} as the convert function will not be invoked for
+	 *            null values.
 	 * @param targetType The target type.
-	 * @return The conversion result or {@code null} to indicate that the convert function cannot handle this conversion. In this case the next matching rule or adapter will be given a
-	 * opportunity to convert.
+	 * @return The conversion result or {@code null} to indicate that the
+	 *         convert function cannot handle this conversion. In this case the
+	 *         next matching rule or adapter will be given a opportunity to
+	 *         convert.
 	 */
 	T convert(F obj, Type targetType) throws Exception;
 }

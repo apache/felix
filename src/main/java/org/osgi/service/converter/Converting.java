@@ -32,7 +32,7 @@ public interface Converting {
 	/**
 	 * The default value to use when the object cannot be converted or in case
 	 * of conversion from a {@code null} value.
-	 * 
+	 *
 	 * @param defVal The default value.
 	 * @return The current {@code Converting} object so that additional calls
 	 *         can be chained.
@@ -74,7 +74,7 @@ public interface Converting {
 
 	/**
 	 * Same as {@code to(String.class)}.
-	 * 
+	 *
 	 * @return The converted object.
 	 */
 	@Override
