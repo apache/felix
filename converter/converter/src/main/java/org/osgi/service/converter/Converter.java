@@ -36,13 +36,10 @@ public interface Converter {
 	Converting convert(Object obj);
 
 	/**
-	 * Obtain a new adapter to this converter. The adapter behaves just like the
-	 * converter except for the exception rules registered with is. It is also
-	 * possible to obtain a new Adapter for an existing adapter. This allows for
-	 * adding an additional layer of rules over an existing adapter. For more
-	 * details see the {@link Adapter} interface.
+	 * Obtain a builder to create a modified converter based on this converter.
+     * For more details see the {@link ConverterBuilder} interface.
 	 *
-	 * @return A new adapter to this converter.
+	 * @return A new Converter Builder.
 	 */
-	Adapter newAdapter();
+	ConverterBuilder newConverterBuilder();
 }

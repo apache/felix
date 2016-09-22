@@ -26,7 +26,6 @@ import org.apache.sling.commons.json.JSONObject;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-import org.osgi.service.converter.Adapter;
 import org.osgi.service.converter.Converter;
 import org.osgi.service.converter.StandardConverter;
 
@@ -82,8 +81,8 @@ public class JsonSerializerTest {
         Map<String, Object> m = new HashMap<>();
         m.put("submap", m1);
 
-        Adapter ca = converter.newAdapter();
-        ca.rule(Foo.class, String.class, Foo::tsFun, v -> Foo.fsFun(v));
+        Converter ca = converter.newConverterBuilder().
+                rule(Foo.class, String.class, Foo::tsFun, v -> Foo.fsFun(v)).build();
 
         JsonSerializerImpl jsonCodec = new JsonSerializerImpl();
         String json = jsonCodec.serialize(m).with(ca).toString();

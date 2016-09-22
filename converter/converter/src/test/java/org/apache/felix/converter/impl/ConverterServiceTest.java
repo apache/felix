@@ -48,8 +48,10 @@ import org.apache.felix.converter.impl.MyEmbeddedDTO.Alpha;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-import org.osgi.service.converter.Adapter;
 import org.osgi.service.converter.ConversionException;
+import org.osgi.service.converter.Converter;
+import org.osgi.service.converter.ConverterBuilder;
+import org.osgi.service.converter.StandardConverter;
 import org.osgi.service.converter.TypeReference;
 
 import static org.junit.Assert.assertArrayEquals;
@@ -63,11 +65,11 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 public class ConverterServiceTest {
-    private ConverterService converter;
+    private Converter converter;
 
     @Before
     public void setUp() {
-        converter = new ConverterService();
+        converter = new StandardConverter();
     }
 
     @After
@@ -302,23 +304,23 @@ public class ConverterServiceTest {
 
     @Test
     public void testCustomStringArrayConverstion() {
-        Adapter adapter = converter.newAdapter();
-        adapter.rule(String[].class, String.class,
+        ConverterBuilder cb = converter.newConverterBuilder();
+        cb.rule(String[].class, String.class,
                 v -> Stream.of(v).collect(Collectors.joining(",")),
                 v -> v.split(","));
+        Converter adapted = cb.build();
 
         String[] sa = {"A", "B"};
-        assertEquals("A,B", adapter.convert(sa).to(String.class));
-        assertArrayEquals(sa, adapter.convert("A,B").to(String[].class));
+        assertEquals("A,B", adapted.convert(sa).to(String.class));
+        assertArrayEquals(sa, adapted.convert("A,B").to(String[].class));
     }
 
     @Test
     public void testUUIDConversion() {
-        ConverterService cs = new ConverterService();
         UUID uuid = UUID.randomUUID();
-        String s = cs.convert(uuid).to(String.class);
+        String s = converter.convert(uuid).to(String.class);
         assertTrue("UUID should be something", s.length() > 0);
-        UUID uuid2 = cs.convert(s).to(UUID.class);
+        UUID uuid2 = converter.convert(s).to(UUID.class);
         assertEquals(uuid, uuid2);
     }
 

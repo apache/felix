@@ -25,20 +25,15 @@ import java.time.ZonedDateTime;
 import java.util.UUID;
 import java.util.regex.Pattern;
 
-import org.osgi.service.converter.Adapter;
+import org.osgi.service.converter.ConverterBuilder;
 
 public class ConverterImpl implements InternalConverter {
-    @Override
-    public Adapter newAdapter() {
-        return new AdapterImpl(this);
-    }
-
     @Override
     public InternalConverting convert(Object obj) {
         return new ConvertingImpl(this, obj);
     }
 
-    public void addStandardRules(Adapter a) {
+    public void addStandardRules(ConverterBuilder a) {
         a.rule(Byte.class, String.class, v -> v.toString(), Byte::parseByte); // TODO test
         a.rule(Character.class, Boolean.class, v -> v.charValue() != 0,
                 v -> v.booleanValue() ? (char) 1 : (char) 0);
@@ -59,5 +54,10 @@ public class ConverterImpl implements InternalConverter {
         a.rule(Short.class, String.class, v -> v.toString(), Short::parseShort); // TODO test
         a.rule(UUID.class, String.class, UUID::toString, UUID::fromString);
         a.rule(ZonedDateTime.class, String.class, ZonedDateTime::toString, ZonedDateTime::parse);
+    }
+
+    @Override
+    public ConverterBuilderImpl newConverterBuilder() {
+        return new ConverterBuilderImpl(this);
     }
 }

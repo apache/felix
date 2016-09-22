@@ -65,7 +65,6 @@
                 </executions>
                 <configuration>
                     <instructions>
-                        <Bundle-Activator>org.apache.felix.converter.impl.Activator</Bundle-Activator>
                         <Private-Package>org.apache.felix.converter.*</Private-Package>
                         <Export-Package>org.osgi.service.converter</Export-Package>
                         <Import-Package>org.osgi.service.converter, *</Import-Package>
