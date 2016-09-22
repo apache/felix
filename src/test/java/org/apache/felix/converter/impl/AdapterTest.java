@@ -30,9 +30,9 @@ import java.util.stream.Stream;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-import org.osgi.service.converter.Adapter;
 import org.osgi.service.converter.ConvertFunction;
 import org.osgi.service.converter.Converter;
+import org.osgi.service.converter.ConverterBuilder;
 import org.osgi.service.converter.Rule;
 
 import static org.junit.Assert.assertArrayEquals;
@@ -53,10 +53,10 @@ public class AdapterTest {
 
     @Test
     public void testStringArrayToStringAdapter() {
-        Adapter ca = converter.newAdapter();
-        ca.rule(String[].class, String.class,
+        ConverterBuilder cb = converter.newConverterBuilder();
+        Converter ca = cb.rule(String[].class, String.class,
                 v -> Stream.of(v).collect(Collectors.joining(",")),
-                v -> v.split(","));
+                v -> v.split(",")).build();
 
         assertEquals("A", converter.convert(new String[] {"A", "B"}).to(String.class));
         assertEquals("A,B", ca.convert(new String[] {"A", "B"}).to(String.class));
@@ -77,10 +77,10 @@ public class AdapterTest {
 
     @Test
     public void testSecondLevelAdapter() {
-        Adapter ca = converter.newAdapter();
+        ConverterBuilder cb = converter.newConverterBuilder();
 
-        ca.rule(char[].class, String.class, AdapterTest::convertToString, null);
-        ca.rule(new Rule<String, Number>(String.class, Number.class, new ConvertFunction<String, Number>() {
+        cb.rule(char[].class, String.class, AdapterTest::convertToString, null);
+        cb.rule(new Rule<String, Number>(String.class, Number.class, new ConvertFunction<String, Number>() {
             @Override
             public Number convert(String obj, Type targetType) throws Exception {
                 if (Integer.class.equals(targetType))
@@ -90,30 +90,29 @@ public class AdapterTest {
                 return null;
             }
         }));
+        Converter ca = cb.build();
 
         assertEquals("hi", ca.convert(new char[] {'h', 'i'}).to(String.class));
         assertEquals(Integer.valueOf(-1), ca.convert("Hello").to(Integer.class));
         assertEquals(Long.valueOf(-1), ca.convert("Hello").to(Long.class));
 
-        Adapter ca2 = ca.newAdapter();
         // Shadow the Integer variant but keep Long going to the Number variant.
-        ca2.rule(String.class, Integer.class, v -> v.length(), null);
+        Converter ca2 = ca.newConverterBuilder().rule(String.class, Integer.class, v -> v.length(), null).build();
         assertEquals(5, (int) ca2.convert("Hello").to(Integer.class));
         assertEquals(Long.valueOf(-1), ca2.convert("Hello").to(Long.class));
     }
 
     @Test
     public void testCannotHandleSpecific() {
-        Adapter ca = converter.newAdapter();
-
-        ca.rule(new Rule<Integer, Long>(Integer.class, Long.class, new ConvertFunction<Integer,Long>() {
+        Converter ca = converter.newConverterBuilder().rule(
+                new Rule<Integer, Long>(Integer.class, Long.class, new ConvertFunction<Integer,Long>() {
             @Override
             public Long convert(Integer obj, Type targetType) throws Exception {
                 if (obj.intValue() != 1)
                     return new Long(-obj.intValue());
                 return null;
             }
-        }));
+        })).build();
 
         assertEquals(Long.valueOf(-2), ca.convert(Integer.valueOf(2)).to(Long.class));
 
@@ -138,9 +137,10 @@ public class AdapterTest {
         Rule<Object, Object> allCatch = new Rule<>(Object.class, Object.class,
                 (v,t) -> v.toString());
 
-        Adapter ca = converter.newAdapter();
-        ca.rule(r);
-        ca.rule(allCatch);
+        ConverterBuilder cb = converter.newConverterBuilder();
+        cb.rule(r);
+        cb.rule(allCatch);
+        Converter ca = cb.build();
 
         assertEquals(3L, (long) ca.convert(Arrays.asList("a", "b", "c")).to(Long.class));
         assertEquals(3, (long) ca.convert(Arrays.asList("a", "b", "c")).to(Integer.class));
@@ -159,10 +159,11 @@ public class AdapterTest {
         Rule<Object, Object> allCatch = new Rule<>(Object.class, Object.class,
                 (v,t) -> {snooped.put(v,t); return null;}, null);
 
-        Adapter ca = converter.newAdapter();
-        ca.rule(r);
-        ca.rule(r2);
-        ca.rule(allCatch);
+        ConverterBuilder cb = converter.newConverterBuilder();
+        cb.rule(r);
+        cb.rule(r2);
+        cb.rule(allCatch);
+        Converter ca = cb.build();
 
         assertEquals("Precondition", 0, snooped.size());
         assertEquals("arraylist", ca.convert(

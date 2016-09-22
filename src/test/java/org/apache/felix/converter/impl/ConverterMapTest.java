@@ -27,6 +27,7 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.osgi.service.converter.Converter;
+import org.osgi.service.converter.StandardConverter;
 import org.osgi.service.converter.TypeReference;
 
 import static org.junit.Assert.assertArrayEquals;
@@ -42,7 +43,7 @@ public class ConverterMapTest {
 
     @Before
     public void setUp() {
-        converter = new ConverterService();
+        converter = new StandardConverter();
     }
 
     @After

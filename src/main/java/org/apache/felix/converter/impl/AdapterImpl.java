@@ -28,22 +28,25 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
-import org.osgi.service.converter.Adapter;
 import org.osgi.service.converter.ConversionException;
 import org.osgi.service.converter.ConvertFunction;
 import org.osgi.service.converter.Converter;
+import org.osgi.service.converter.ConverterBuilder;
 import org.osgi.service.converter.Converting;
 import org.osgi.service.converter.Function;
 import org.osgi.service.converter.Rule;
 import org.osgi.service.converter.TypeReference;
 
-public class AdapterImpl implements Adapter, InternalConverter {
+public class AdapterImpl implements InternalConverter {
     private final InternalConverter delegate;
     private final Map<TypePair, ConvertFunction<Object, Object>> classRules =
             new ConcurrentHashMap<>();
 
-    AdapterImpl(InternalConverter converter) {
+    AdapterImpl(InternalConverter converter, List<Rule<?,?>> rules) {
         this.delegate = converter;
+        for (Rule<?,?> r : rules) {
+            rule(r);
+        }
     }
 
     @Override
@@ -54,13 +57,13 @@ public class AdapterImpl implements Adapter, InternalConverter {
     }
 
     @Override
-    public Adapter newAdapter() {
-        return new AdapterImpl(this);
+    public ConverterBuilder newConverterBuilder() {
+        return new ConverterBuilderImpl(this);
     }
 
-    @Override
+    /*
     @SuppressWarnings("unchecked")
-    public <F, T> Adapter rule(Class<F> fromCls, Class<T> toCls,
+    public <F, T> AdapterImpl rule(Class<F> fromCls, Class<T> toCls,
             Function<F, T> toFun, Function<T, F> fromFun) {
         if (fromCls.equals(toCls))
             throw new IllegalArgumentException();
@@ -77,23 +80,21 @@ public class AdapterImpl implements Adapter, InternalConverter {
         return this;
     }
 
-    @Override
-    public <F, T> Adapter rule(TypeReference<F> fromRef, TypeReference<T> toRef,
+    public <F, T> AdapterImpl rule(TypeReference<F> fromRef, TypeReference<T> toRef,
             Function<F, T> toFun, Function<T, F> fromFun) {
         // TODO Auto-generated method stub
         return null;
     }
 
-    @Override
-    public <F, T> Adapter rule(Type fromType, Type toType,
+    public <F, T> AdapterImpl rule(Type fromType, Type toType,
             Function<F, T> toFun, Function<T, F> fromFun) {
         // TODO Auto-generated method stub
         return null;
     }
+    */
 
-    @Override
     @SuppressWarnings("unchecked")
-    public <F, T> Adapter rule(Rule<F, T> rule) {
+    private <F, T> AdapterImpl rule(Rule<F, T> rule) {
         ConvertFunction<F, T> toFun = rule.getToFunction();
         if (toFun != null)
             classRules.put(new TypePair(rule.getFromClass(), rule.getToClass()),

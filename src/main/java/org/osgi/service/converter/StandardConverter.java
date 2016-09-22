@@ -16,25 +16,27 @@
  */
 package org.osgi.service.converter;
 
+import org.apache.felix.converter.impl.ConverterBuilderImpl;
 import org.apache.felix.converter.impl.ConverterImpl;
+import org.apache.felix.converter.impl.InternalConverter;
 
 public class StandardConverter implements Converter {
-    private final Adapter adapter;
+    private final InternalConverter converter;
 
     public StandardConverter() {
         ConverterImpl impl = new ConverterImpl();
-        Adapter a = impl.newAdapter();
-        impl.addStandardRules(a);
-        adapter = a;
+        ConverterBuilderImpl cb = impl.newConverterBuilder();
+        impl.addStandardRules(cb);
+        converter = cb.build();
     }
 
     @Override
     public Converting convert(Object obj) {
-        return adapter.convert(obj);
+        return converter.convert(obj);
     }
 
     @Override
-    public Adapter newAdapter() {
-        return adapter.newAdapter();
+    public ConverterBuilder newConverterBuilder() {
+        return converter.newConverterBuilder();
     }
 }
