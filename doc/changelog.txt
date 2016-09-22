@@ -1,3 +1,10 @@
+1.10.0
+------
+
+** Bug
+    * [FELIX-5131] - UnsupportedOperationException when embedding felix in WebSphere
+    * [FELIX-5166] - WrappedResource does not handle namespace correctly
+
 1.8.0
 -----
 
