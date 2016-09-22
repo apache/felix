@@ -1,3 +1,17 @@
+Changes from 5.4.0 to 5.6.0
+---------------------------
+
+** Improvement
+    * Update to latest resolver 1.10.0
+
+** Bug
+    * [FELIX-4871] - The felix framework logger can't be used with reflection anymore
+    * [FELIX-5204] - IllegalStateException when using custom URL handlers for bundles
+
+** Test
+    * [FELIX-5084] - Add a mock based test for BundleTracker
+    * [FELIX-5085] - Add a mock based test for ServiceTracker
+
 Changes from 5.2.0 to 5.4.0
 ---------------------------
 

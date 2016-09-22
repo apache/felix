@@ -1,4 +1,23 @@
-Changes from 1.6.6 to 2.0.0
+
+Changes from 2.0.4 to 2.0.6
+---------------------------
+
+** Improvement
+    * [FELIX-4764] - Add support to GZIP based compact index files
+
+Changes from 2.0.2 to 2.0.4
+---------------------------
+
+** Bug
+    * [FELIX-3097] - LocalRepository is not updated when bundles are
+    * [FELIX-4571] - NullPointerException when using Repository impl with Aries subsystem impl
+    * [FELIX-4616] - BundleRepository ResourceComparator violates comparison contract
+    * [FELIX-4640] - missing (&(osgi.ee=JavaSE)(version=1.8)) when embedding in org.apache.felix.framework
+
+** Improvement
+    * [FELIX-4812] - BundleRepository can be quite CPU intensive when starting a lot of bundles
+
+Changes from 1.6.6 to 2.0.2
 ---------------------------
 
 ** New Feature
