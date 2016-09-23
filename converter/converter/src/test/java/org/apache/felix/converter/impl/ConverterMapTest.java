@@ -18,7 +18,9 @@ package org.apache.felix.converter.impl;
 
 import java.math.BigInteger;
 import java.net.URL;
+import java.text.SimpleDateFormat;
 import java.util.Collections;
+import java.util.Date;
 import java.util.Dictionary;
 import java.util.HashMap;
 import java.util.Map;
@@ -27,6 +29,7 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.osgi.service.converter.Converter;
+import org.osgi.service.converter.ConverterBuilder;
 import org.osgi.service.converter.StandardConverter;
 import org.osgi.service.converter.TypeReference;
 
@@ -82,11 +85,29 @@ public class ConverterMapTest {
 
         @SuppressWarnings("rawtypes")
         Map m = converter.convert(mb).to(Map.class);
-        assertEquals(4, m.size());
+        assertEquals(5, m.size());
         assertEquals("You", m.get("me"));
         assertTrue((boolean) m.get("f"));
         assertFalse((boolean) m.get("enabled"));
         assertArrayEquals(new int [] {3,2,1}, (int[]) m.get("numbers"));
+    }
+
+    @Test
+    public void testJavaBeanToMapCustom() {
+        SimpleDateFormat sdf = new SimpleDateFormat("yyMMddHHmmssZ");
+        Date d = new Date();
+        String expectedDate = sdf.format(d);
+
+        MyBean mb = new MyBean();
+        mb.setStartDate(d);
+        mb.setEnabled(true);
+
+        ConverterBuilder cb = new StandardConverter().newConverterBuilder();
+        cb.rule(Date.class, String.class, v -> sdf.format(v), v -> sdf.parse(v));
+        Converter ca = cb.build();
+        Map<String, String> m = ca.convert(mb).to(new TypeReference<Map<String, String>>(){});
+        assertEquals("true", m.get("enabled"));
+        assertEquals(expectedDate, m.get("startDate"));
     }
 
     @Test

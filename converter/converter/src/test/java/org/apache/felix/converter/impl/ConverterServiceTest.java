@@ -19,6 +19,7 @@ package org.apache.felix.converter.impl;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.net.URL;
+import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -27,7 +28,10 @@ import java.time.OffsetTime;
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Calendar;
 import java.util.Collections;
+import java.util.Date;
+import java.util.GregorianCalendar;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -126,12 +130,14 @@ public class ConverterServiceTest {
     }
 
     enum TestEnum { FOO, BAR, BLAH, FALSE, X};
+    enum TestEnum2 { BLAH };
     @Test
     public void testEnums() {
-        assertEquals(TestEnum.BLAH, converter.convert("BLAH").to(TestEnum.class));
-        assertEquals(TestEnum.X, converter.convert('X').to(TestEnum.class));
-        assertEquals(TestEnum.FALSE, converter.convert(false).to(TestEnum.class));
-        assertEquals(TestEnum.BAR, converter.convert(1).to(TestEnum.class));
+        assertSame(TestEnum.BLAH, converter.convert("BLAH").to(TestEnum.class));
+        assertSame(TestEnum.X, converter.convert('X').to(TestEnum.class));
+        assertSame(TestEnum.FALSE, converter.convert(false).to(TestEnum.class));
+        assertSame(TestEnum.BAR, converter.convert(1).to(TestEnum.class));
+        assertSame(TestEnum.BLAH, converter.convert(TestEnum2.BLAH).to(TestEnum.class));
         assertNull(converter.convert(null).to(TestEnum.class));
         assertNull(converter.convert(Collections.emptySet()).to(TestEnum.class));
     }
@@ -386,6 +392,29 @@ public class ConverterServiceTest {
         assertTrue(s.length() > 0);
         ZonedDateTime zdt2 = converter.convert(s).to(ZonedDateTime.class);
         assertEquals(zdt, zdt2);
+    }
+
+    @Test
+    public void testCalendarDate() {
+        Calendar cal = new GregorianCalendar(2017, 1, 13);
+        Date d = cal.getTime();
+
+        // TODO these rules need to go to the Standard Converter.
+        Converter c = converter.newConverterBuilder().
+            rule(Date.class, String.class, v -> v.toInstant().toString(), v -> Date.from(Instant.parse(v))).
+            rule(Calendar.class, String.class, v -> v.getTime().toInstant().toString(),
+                    v -> {
+                        Calendar cc = Calendar.getInstance();
+                        cc.setTime(Date.from(Instant.parse(v)));
+                        return cc;
+                        }).
+            build();
+
+        String s = c.convert(d).toString();
+        assertEquals(d, c.convert(s).to(Date.class));
+
+        String s2 = c.convert(cal).toString();
+        assertEquals(cal, c.convert(s2).to(Calendar.class));
     }
 
     @Test

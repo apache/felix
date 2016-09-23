@@ -16,11 +16,14 @@
  */
 package org.apache.felix.converter.impl;
 
+import java.util.Date;
+
 public class MyBean {
     String me;
     boolean enabled;
     Boolean f;
     int[] numbers;
+    Date startDate;
 
     public String get() {
         return "Not a bean accessor because no camel casing";
@@ -57,5 +60,11 @@ public class MyBean {
     }
     public void setNumbers(int[] numbers) {
         this.numbers = numbers;
+    }
+    public Date getStartDate() {
+        return startDate;
+    }
+    public void setStartDate(Date date) {
+        this.startDate = date;
     }
 }
