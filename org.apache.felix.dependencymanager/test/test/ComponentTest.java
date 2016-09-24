@@ -130,17 +130,17 @@ public class ComponentTest {
             }
             void destroy() {
                 System.out.println("destroy");
-                e.step(9);
+                e.step(7);
             }
         });
         e.step(1);
         c.start();
-        e.step(5);
+        e.step(3);
         d2.add(new EventImpl());
-        e.step(7);
+        e.step(5);
         d.remove(new EventImpl());
         c.stop();
-        e.step(10);
+        e.step(8);
     }
     
 	@Test
