@@ -526,7 +526,7 @@ public class URLHandlersStreamHandlerProxy extends URLStreamHandler
             // case it can -- hence, we catch the NPE and do the work
             // ourselvs. The only difference is that we check whether the
             // URL.getFile() is null or not.
-            StringBuffer answer = new StringBuffer();
+            StringBuilder answer = new StringBuilder();
             answer.append(url.getProtocol());
             answer.append(':');
             String authority = url.getAuthority();
@@ -572,14 +572,14 @@ public class URLHandlersStreamHandlerProxy extends URLStreamHandler
         {
             // Get the framework instance associated with call stack.
             Object framework = URLHandlers.getFrameworkFromContext();
-         
+
             if (framework == null)
             {
                 return m_builtIn;
             }
 
 
-            Object service = null;
+            Object service;
             if (framework instanceof Felix)
             {
                 service = ((Felix) framework).getStreamHandlerService(m_protocol);
@@ -612,7 +612,7 @@ public class URLHandlersStreamHandlerProxy extends URLStreamHandler
         {
             // In case that we are inside tomcat - the problem is that the webapp classloader
             // creates a new url to load a class. This gets us to this method. Now, if we
-            // trigger a classload while executing tomcat is creating a new url and we end-up with
+            // trigger a classload while executing, tomcat is creating a new url and we end-up with
             // a loop which is cut short after two iterations (because of a circularclassload).
             // We catch this exception (and all others) and just return the built-in handler
             // (if we have any) as this way we at least eventually get started (this just means
@@ -624,28 +624,20 @@ public class URLHandlersStreamHandlerProxy extends URLStreamHandler
     public Object invoke(Object obj, Method method, Object[] params)
         throws Throwable
     {
-        try
+        Class[] types = method.getParameterTypes();
+        if (m_service == null)
         {
-
-            Class[] types = method.getParameterTypes();
-            if (m_service == null)
-            {
-                return m_action.invoke(m_action.getMethod(this.getClass(), method.getName(), types), this, params);
-            }
-            if ("parseURL".equals(method.getName()))
-            {
-                types[0] = m_service.getClass().getClassLoader().loadClass(
-                    URLStreamHandlerSetter.class.getName());
-                params[0] = Proxy.newProxyInstance(
-                    m_service.getClass().getClassLoader(), new Class[]{types[0]},
-                    (URLHandlersStreamHandlerProxy) params[0]);
-            }
-            return m_action.invokeDirect(m_action.getDeclaredMethod(m_service.getClass(),
-                method.getName(), types), m_service, params);
+            return m_action.invoke(m_action.getMethod(this.getClass(), method.getName(), types), this, params);
         }
-        catch (Exception ex)
+        if ("parseURL".equals(method.getName()))
         {
-            throw ex;
+            types[0] = m_service.getClass().getClassLoader().loadClass(
+                URLStreamHandlerSetter.class.getName());
+            params[0] = Proxy.newProxyInstance(
+                m_service.getClass().getClassLoader(), new Class[]{types[0]},
+                (URLHandlersStreamHandlerProxy) params[0]);
         }
+        return m_action.invokeDirect(m_action.getDeclaredMethod(m_service.getClass(),
+            method.getName(), types), m_service, params);
     }
 }
