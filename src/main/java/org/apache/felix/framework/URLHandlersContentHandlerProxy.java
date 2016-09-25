@@ -22,11 +22,11 @@ import java.io.IOException;
 import java.net.ContentHandler;
 import java.net.ContentHandlerFactory;
 import java.net.URLConnection;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.StringTokenizer;
+import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.felix.framework.util.SecureAction;
+import static org.apache.felix.framework.util.Util.putIfAbsentAndReturn;
 
 /**
  * <p>
@@ -57,7 +57,7 @@ class URLHandlersContentHandlerProxy extends ContentHandler
     private static final String CONTENT_HANDLER_PACKAGE_PROP = "java.content.handler.pkgs";
     private static final String DEFAULT_CONTENT_HANDLER_PACKAGE = "sun.net.www.content|com.ibm.oti.net.www.content|gnu.java.net.content|org.apache.harmony.luni.internal.net.www.content|COM.newmonics.www.content";
 
-    private static final Map m_builtIn = new HashMap();
+    private static final ConcurrentHashMap<String, ContentHandler> m_builtIn = new ConcurrentHashMap<String, ContentHandler>();
     private static final String m_pkgs;
 
     static
@@ -141,19 +141,19 @@ class URLHandlersContentHandlerProxy extends ContentHandler
 
     private ContentHandler getBuiltIn()
     {
-        synchronized (m_builtIn)
+        ContentHandler result = m_builtIn.get(m_mimeType);
+
+        if (result == null)
         {
-            if (m_builtIn.containsKey(m_mimeType))
-            {
-                return (ContentHandler) m_builtIn.get(m_mimeType);
-            }
+            return result;
         }
+
         if (m_factory != null)
         {
-            ContentHandler result = m_factory.createContentHandler(m_mimeType);
+            result = m_factory.createContentHandler(m_mimeType);
             if (result != null)
             {
-                return addToCache(m_mimeType, result);
+                return putIfAbsentAndReturn(m_builtIn, m_mimeType, result);
             }
         }
         // Check for built-in handlers for the mime type.
@@ -172,7 +172,7 @@ class URLHandlersContentHandlerProxy extends ContentHandler
                 Class handler = m_action.forName(className, null);
                 if (handler != null)
                 {
-                    return addToCache(m_mimeType,
+                    return putIfAbsentAndReturn(m_builtIn, m_mimeType,
                         (ContentHandler) handler.newInstance());
                 }
             }
@@ -183,16 +183,6 @@ class URLHandlersContentHandlerProxy extends ContentHandler
                 // case other than ignore it.
             }
         }
-        return addToCache(m_mimeType, null);
-    }
-
-    private synchronized ContentHandler addToCache(String mimeType, ContentHandler handler)
-    {
-        if (!m_builtIn.containsKey(mimeType))
-        {
-            m_builtIn.put(mimeType, handler);
-            return handler;
-        }
-        return (ContentHandler) m_builtIn.get(mimeType);
+        return null;
     }
 }

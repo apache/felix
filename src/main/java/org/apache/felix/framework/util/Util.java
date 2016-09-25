@@ -33,6 +33,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Properties;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.felix.framework.Logger;
 import org.osgi.framework.Bundle;
@@ -830,5 +831,11 @@ public class Util
         builder.append(lsbStr);
         builder.insert(23, '-');
         return builder.toString();
+    }
+
+    public static <K,V> V putIfAbsentAndReturn(ConcurrentHashMap<K,V> map, K key, V value)
+    {
+        V result = map.putIfAbsent(key, value);
+        return result != null ? result : value;
     }
 }

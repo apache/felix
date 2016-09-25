@@ -1,4 +1,4 @@
-/* 
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -44,7 +44,7 @@ class URLHandlersBundleStreamHandler extends URLStreamHandler
         m_action = action;
     }
 
-    protected synchronized URLConnection openConnection(URL url) throws IOException
+    protected URLConnection openConnection(URL url) throws IOException
     {
         if (!"felix".equals(url.getAuthority()))
         {
@@ -54,9 +54,9 @@ class URLHandlersBundleStreamHandler extends URLStreamHandler
         {
             return new URLHandlersBundleURLConnection(url, m_framework);
         }
-        
+
         Object framework = URLHandlers.getFrameworkFromContext();
-        
+
         if (framework != null)
         {
             if (framework instanceof Felix)
@@ -67,8 +67,8 @@ class URLHandlersBundleStreamHandler extends URLStreamHandler
             {
                 Class targetClass = framework.getClass().getClassLoader().loadClass(
                     URLHandlersBundleURLConnection.class.getName());
-                
-                Constructor constructor = m_action.getConstructor(targetClass, 
+
+                Constructor constructor = m_action.getConstructor(targetClass,
                         new Class[]{URL.class, framework.getClass().getClassLoader().loadClass(
                                 Felix.class.getName())});
                 m_action.setAccesssible(constructor);
@@ -82,7 +82,7 @@ class URLHandlersBundleStreamHandler extends URLStreamHandler
         throw new IOException("No framework context found");
     }
 
-    protected void parseURL(URL u, String spec, int start, int limit) 
+    protected void parseURL(URL u, String spec, int start, int limit)
     {
         super.parseURL(u, spec, start, limit);
 
@@ -92,31 +92,31 @@ class URLHandlersBundleStreamHandler extends URLStreamHandler
         }
     }
 
-    protected String toExternalForm(URL u) 
+    protected String toExternalForm(URL u)
     {
-        StringBuffer result = new StringBuffer();
+        StringBuilder result = new StringBuilder();
         result.append(u.getProtocol());
         result.append("://");
         result.append(u.getHost());
         result.append(':');
         result.append(u.getPort());
-        if (u.getPath() != null) 
+        if (u.getPath() != null)
         {
             result.append(u.getPath());
         }
-        if (u.getQuery() != null) 
+        if (u.getQuery() != null)
         {
             result.append('?');
             result.append(u.getQuery());
         }
-        if (u.getRef() != null) 
+        if (u.getRef() != null)
         {
             result.append("#");
             result.append(u.getRef());
         }
         return result.toString();
     }
-    
+
     protected java.net.InetAddress getHostAddress(URL u)
     {
         return null;
