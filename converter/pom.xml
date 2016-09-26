@@ -40,5 +40,6 @@
     <modules>
         <module>converter</module>
         <module>serializer</module>
+        <module>schematizer</module>
     </modules>
 </project>
