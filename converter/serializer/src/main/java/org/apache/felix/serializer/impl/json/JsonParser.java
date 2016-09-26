@@ -130,8 +130,12 @@ public class JsonParser {
         if (!(jsonObject.startsWith("{") && jsonObject.endsWith("}")))
             throw new IllegalArgumentException("Malformatted JSON object: " + jsonObject);
 
-        jsonObject = jsonObject.substring(1, jsonObject.length() - 1);
         Map<String, Object> values = new HashMap<>();
+
+        jsonObject = jsonObject.substring(1, jsonObject.length() - 1).trim();
+        if (jsonObject.length() == 0)
+            return values;
+
         for (String element : parseKeyValueListRaw(jsonObject)) {
             Pair<String, Object> pair = parseKeyValue(element);
             values.put(pair.key, pair.value);

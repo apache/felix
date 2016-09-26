@@ -21,7 +21,6 @@ import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
-import org.apache.felix.serializer.impl.json.JsonSerializerImpl;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
@@ -77,5 +76,14 @@ public class JsonSerializationTest {
                 + "\"embedded\":"
                 + "{\"yes\":true,\"no\":{\"maybe\":false}}}";
         assertEquals(expected, new JsonSerializerImpl().serialize(cm).toString());
+    }
+
+    @Test
+    public void testEmptyMapSerialization() {
+        Map<?,?> m = new LinkedHashMap<>();
+        String expected = "{}";
+        assertEquals(expected, new JsonSerializerImpl().serialize(m).toString());
+        Map<?,?> m2 = new JsonSerializerImpl().deserialize(Map.class).from(expected);
+        assertEquals(m, m2);
     }
 }
