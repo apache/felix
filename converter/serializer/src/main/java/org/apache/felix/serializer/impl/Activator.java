@@ -29,13 +29,13 @@ public class Activator implements BundleActivator {
     @Override
     public void start(BundleContext context) throws Exception {
         Dictionary<String, Object> jsonProps = new Hashtable<>();
-        jsonProps.put("osgi.codec.mimetype", new String[] {
+        jsonProps.put("mimetype", new String[] {
                 "application/json", "application/x-javascript", "text/javascript",
                 "text/x-javascript", "text/x-json" });
         context.registerService(Serializer.class, new JsonSerializerImpl(), jsonProps);
 
         Dictionary<String, Object> yamlProps = new Hashtable<>();
-        yamlProps.put("osgi.codec.mimetype", new String[] {
+        yamlProps.put("mimetype", new String[] {
                 "text/yaml", "text/x-yaml", "application/yaml",
                 "application/x-yaml" });
         context.registerService(Serializer.class, new YamlSerializerImpl(), yamlProps);
