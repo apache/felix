@@ -26,7 +26,7 @@
         <relativePath>../pom/pom.xml</relativePath>
     </parent>
 
-    <name>Apache Felix Converter Service</name>
+    <name>Apache Felix Converter</name>
     <artifactId>org.apache.felix.converter</artifactId>
     <version>0.1-SNAPSHOT</version>
     <packaging>jar</packaging>
@@ -82,14 +82,6 @@
                         </goals>
                     </execution>
                 </executions>
-                <configuration>
-                    <includes>
-                        <include>src/**</include>
-                    </includes>
-                    <excludes>
-                        <exclude>src/main/resources/META-INF/services/org.osgi.service.converter.Converter</exclude>
-                    </excludes>
-                </configuration>
             </plugin>
             
         </plugins>
