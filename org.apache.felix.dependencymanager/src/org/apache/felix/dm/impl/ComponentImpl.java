@@ -913,9 +913,9 @@ public class ComponentImpl implements Component, ComponentContext, ComponentDecl
      * Runs the state machine, to see if a change event has to trigger some component state transition.
      */
     private void handleChange() {
-        if (isHandlingChange()) {
-            return;
-        }
+        // if (isHandlingChange()) {
+        //     return;
+        // }
         m_logger.debug("handleChanged");
     	handlingChange(true);
         try {
