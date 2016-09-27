@@ -34,13 +34,13 @@ public class Procedural {
 
     static final String[] functions = {"each", "if", "not", "throw", "try", "until", "while", "break", "continue"};
 
-    public void _main(CommandSession session, Object[] argv) throws Throwable {
+    public Object _main(CommandSession session, Object[] argv) throws Throwable {
         if (argv == null || argv.length < 1) {
             throw new IllegalArgumentException();
         }
         Process process = Process.current();
         try {
-            run(session, process, argv);
+            return run(session, process, argv);
         } catch (OptionException e) {
             process.err().println(e.getMessage());
             process.error(2);
@@ -51,6 +51,7 @@ public class Procedural {
             process.error(1);
             throw e.getCause();
         }
+        return null;
     }
 
     protected static class OptionException extends Exception {
