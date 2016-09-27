@@ -526,7 +526,18 @@ public class ConverterServiceTest {
             }
         }
 
-        // TODO convert back
+        System.out.println(m);
+
+        // convert back
+        MyDTO2 dto2 = converter.convert(m).to(MyDTO2.class);
+        assertEquals(dto.longList, dto2.longList);
+
+        // Cannot simply do dto.equals() as the DTOs don't implement that
+        assertEquals(dto.dtoMap.size(), dto2.dtoMap.size());
+        MyDTO3 dto2SubZZZ = dto2.dtoMap.get("zzz");
+        assertEquals(dto2SubZZZ.charSet, new HashSet<Character>(Arrays.asList('f', 'o')));
+        MyDTO3 dto2SubAAA = dto2.dtoMap.get("aaa");
+        assertEquals(dto2SubAAA.charSet, new HashSet<Character>(Arrays.asList('b', 'a', 'r')));
     }
 
     @Test
