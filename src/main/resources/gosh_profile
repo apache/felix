@@ -87,7 +87,6 @@ try {
       $candidates
   }
 
-  setopt pad-prompts
   setopt group
 
   complete -c gogo:complete -e
@@ -280,7 +279,20 @@ try {
   complete -c gogo:wc -a '__files'
 
   # print welcome message
-  cat ($0 resolve motd)
+  __resolve_uri = {
+    uri = $1
+    path = $2
+    if { "$uri" startsWith "jar:" } /* then */ {
+      idx = ("$uri" indexOf "!")
+      p1 = ("$uri" substring 0 $idx)
+      p2 = "!"
+      p3 = (new java.net.URI ("$uri" substring %(idx+1))) resolve $path
+      "$p1$p2$p3"
+    } /* else */ {
+      $uri resolve $path
+    }
+  }
+  cat (__resolve_uri $0 motd)
 } {
     echo "$0: ERROR: $exception"
 }
