@@ -28,6 +28,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.osgi.service.converter.Converter;
 import org.osgi.service.converter.StandardConverter;
+import org.osgi.service.converter.TypeReference;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -78,7 +79,7 @@ public class JsonSerializerTest {
     public void testCodecWithAdapter() throws JSONException {
         Map<String, Foo> m1 = new HashMap<>();
         m1.put("f", new Foo("fofofo"));
-        Map<String, Object> m = new HashMap<>();
+        Map<String, Map<String,Foo>> m = new HashMap<>();
         m.put("submap", m1);
 
         Converter ca = converter.newConverterBuilder().
@@ -92,7 +93,10 @@ public class JsonSerializerTest {
         JSONObject jo1 = jo.getJSONObject("submap");
         assertEquals("<fofofo>", jo1.getString("f"));
 
-        // TODO convert back into a Map<String, Foo> via TypeReference
+        // And convert back
+        Map<String,Map<String,Foo>> m2 = jsonCodec.deserialize(new TypeReference<Map<String,Map<String,Foo>>>(){}).
+                with(ca).from(json);
+        assertEquals(m, m2);
     }
 
     @Test
@@ -138,6 +142,22 @@ public class JsonSerializerTest {
 
         public static Foo fsFun(String s) {
             return new Foo(s.substring(1, s.length() - 1));
+        }
+
+        @Override
+        public int hashCode() {
+            return val.hashCode();
+        }
+
+        @Override
+        public boolean equals(Object obj) {
+            if (obj == this)
+                return true;
+            if (!(obj instanceof Foo))
+                return false;
+
+            Foo f = (Foo) obj;
+            return f.val.equals(val);
         }
     }
 }

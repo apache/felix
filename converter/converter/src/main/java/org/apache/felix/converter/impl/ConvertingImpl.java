@@ -252,11 +252,10 @@ public class ConvertingImpl implements Converting, InternalConverting {
         Map m = mapView(object, converter);
         if (m == null)
             return null;
-        Class<?> targetKeyType = null, targetValueType = null;
-        if (typeArguments != null && typeArguments.length > 1 &&
-                typeArguments[0] instanceof Class && typeArguments[1] instanceof Class) {
-            targetKeyType = (Class<?>) typeArguments[0];
-            targetValueType = (Class<?>) typeArguments[1];
+        Type targetKeyType = null, targetValueType = null;
+        if (typeArguments != null && typeArguments.length > 1) {
+            targetKeyType = typeArguments[0];
+            targetValueType = typeArguments[1];
         }
 
         Class<?> ctrCls = interfaceImplementations.get(targetCls);

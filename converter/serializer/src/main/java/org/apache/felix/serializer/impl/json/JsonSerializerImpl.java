@@ -103,7 +103,6 @@ public class JsonSerializerImpl implements Serializer {
         @Override
         public void to(OutputStream out, Charset charset) {
             // TODO Auto-generated method stub
-
         }
 
         @Override
@@ -121,13 +120,11 @@ public class JsonSerializerImpl implements Serializer {
 
     @Override
     public <T> Deserializing<T> deserialize(TypeReference<T> ref) {
-        // TODO Auto-generated method stub
-        return null;
+        return new JsonDeserializingImpl<T>(converter, ref.getType());
     }
 
-    @Override
+    @Override @SuppressWarnings("rawtypes")
     public Deserializing<?> deserialize(Type type) {
-        // TODO Auto-generated method stub
-        return null;
+        return new JsonDeserializingImpl(converter, type);
     }
 }

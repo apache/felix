@@ -18,6 +18,7 @@ package org.apache.felix.serializer.impl.json;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.lang.reflect.Type;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.util.Map;
@@ -29,10 +30,10 @@ import org.osgi.service.converter.Converter;
 import org.osgi.service.serializer.Deserializing;
 
 public class JsonDeserializingImpl<T> implements Deserializing<T> {
-    private final Class<T> clazz;
+    private final Type clazz;
     private volatile Converter converter;
 
-    public JsonDeserializingImpl(Converter c, Class<T> cls) {
+    public JsonDeserializingImpl(Converter c, Type cls) {
         converter = c;
         clazz = cls;
     }
@@ -42,10 +43,11 @@ public class JsonDeserializingImpl<T> implements Deserializing<T> {
     public T from(CharSequence in) {
         JsonParser jp = new JsonParser(in);
         Map<?,?> m = jp.getParsed();
-        if (m.getClass().isAssignableFrom(clazz))
-            return (T) m;
+        if (clazz instanceof Class)
+            if (m.getClass().isAssignableFrom((Class<?>) clazz))
+                return (T) m;
 
-        return converter.convert(m).to(clazz);
+        return (T) converter.convert(m).to(clazz);
     }
 
     @Override
