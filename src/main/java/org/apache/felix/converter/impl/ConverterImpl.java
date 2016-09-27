@@ -16,12 +16,15 @@
  */
 package org.apache.felix.converter.impl;
 
+import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.OffsetDateTime;
 import java.time.OffsetTime;
 import java.time.ZonedDateTime;
+import java.util.Calendar;
+import java.util.Date;
 import java.util.UUID;
 import java.util.regex.Pattern;
 
@@ -33,27 +36,35 @@ public class ConverterImpl implements InternalConverter {
         return new ConvertingImpl(this, obj);
     }
 
-    public void addStandardRules(ConverterBuilder a) {
-        a.rule(Byte.class, String.class, v -> v.toString(), Byte::parseByte); // TODO test
-        a.rule(Character.class, Boolean.class, v -> v.charValue() != 0,
+    public void addStandardRules(ConverterBuilder cb) {
+        cb.rule(Byte.class, String.class, v -> v.toString(), Byte::parseByte);
+        cb.rule(Calendar.class, String.class, v -> v.getTime().toInstant().toString(),
+                v -> {
+                    Calendar cc = Calendar.getInstance();
+                    cc.setTime(Date.from(Instant.parse(v)));
+                    return cc;
+                });
+        cb.rule(Character.class, Boolean.class, v -> v.charValue() != 0,
                 v -> v.booleanValue() ? (char) 1 : (char) 0);
-        a.rule(Character.class, String.class, v -> v.toString(),
+        cb.rule(Character.class, String.class, v -> v.toString(),
                 v -> v.length() > 0 ? v.charAt(0) : 0);
-        a.rule(Class.class, String.class, Class::toString,
+        cb.rule(Class.class, String.class, Class::toString,
                 v -> getClass().getClassLoader().loadClass(v));
-        a.rule(Double.class, String.class, v -> v.toString(), Double::parseDouble); // TODO test
-        a.rule(Float.class, String.class, v -> v.toString(), Float::parseFloat); // TODO test
-        a.rule(Integer.class, String.class, v -> v.toString(), Integer::parseInt);
-        a.rule(LocalDateTime.class, String.class, LocalDateTime::toString, LocalDateTime::parse);
-        a.rule(LocalDate.class, String.class, LocalDate::toString, LocalDate::parse);
-        a.rule(LocalTime.class, String.class, LocalTime::toString, LocalTime::parse);
-        a.rule(Long.class, String.class, v -> v.toString(), Long::parseLong); // TODO test
-        a.rule(OffsetDateTime.class, String.class, OffsetDateTime::toString, OffsetDateTime::parse);
-        a.rule(OffsetTime.class, String.class, OffsetTime::toString, OffsetTime::parse);
-        a.rule(Pattern.class, String.class, Pattern::toString, Pattern::compile);
-        a.rule(Short.class, String.class, v -> v.toString(), Short::parseShort); // TODO test
-        a.rule(UUID.class, String.class, UUID::toString, UUID::fromString);
-        a.rule(ZonedDateTime.class, String.class, ZonedDateTime::toString, ZonedDateTime::parse);
+        cb.rule(Date.class, String.class, v -> v.toInstant().toString(),
+                v -> Date.from(Instant.parse(v)));
+        cb.rule(Double.class, String.class, v -> v.toString(), Double::parseDouble);
+        cb.rule(Float.class, String.class, v -> v.toString(), Float::parseFloat);
+        cb.rule(Integer.class, String.class, v -> v.toString(), Integer::parseInt);
+        cb.rule(LocalDateTime.class, String.class, LocalDateTime::toString, LocalDateTime::parse);
+        cb.rule(LocalDate.class, String.class, LocalDate::toString, LocalDate::parse);
+        cb.rule(LocalTime.class, String.class, LocalTime::toString, LocalTime::parse);
+        cb.rule(Long.class, String.class, v -> v.toString(), Long::parseLong);
+        cb.rule(OffsetDateTime.class, String.class, OffsetDateTime::toString, OffsetDateTime::parse);
+        cb.rule(OffsetTime.class, String.class, OffsetTime::toString, OffsetTime::parse);
+        cb.rule(Pattern.class, String.class, Pattern::toString, Pattern::compile);
+        cb.rule(Short.class, String.class, v -> v.toString(), Short::parseShort);
+        cb.rule(UUID.class, String.class, UUID::toString, UUID::fromString);
+        cb.rule(ZonedDateTime.class, String.class, ZonedDateTime::toString, ZonedDateTime::parse);
     }
 
     @Override

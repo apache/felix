@@ -19,7 +19,6 @@ package org.apache.felix.converter.impl;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.net.URL;
-import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -399,16 +398,7 @@ public class ConverterServiceTest {
         Calendar cal = new GregorianCalendar(2017, 1, 13);
         Date d = cal.getTime();
 
-        // TODO these rules need to go to the Standard Converter.
-        Converter c = converter.newConverterBuilder().
-            rule(Date.class, String.class, v -> v.toInstant().toString(), v -> Date.from(Instant.parse(v))).
-            rule(Calendar.class, String.class, v -> v.getTime().toInstant().toString(),
-                    v -> {
-                        Calendar cc = Calendar.getInstance();
-                        cc.setTime(Date.from(Instant.parse(v)));
-                        return cc;
-                        }).
-            build();
+        Converter c = new StandardConverter();
 
         String s = c.convert(d).toString();
         assertEquals(d, c.convert(s).to(Date.class));
