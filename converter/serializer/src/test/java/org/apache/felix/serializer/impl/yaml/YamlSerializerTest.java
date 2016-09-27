@@ -24,6 +24,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.osgi.service.converter.Converter;
 import org.osgi.service.converter.StandardConverter;
+import org.osgi.service.converter.TypeReference;
 
 import static org.junit.Assert.assertEquals;
 
@@ -41,7 +42,7 @@ public class YamlSerializerTest {
     }
 
     @Test
-    public void testJSONCodec() throws Exception {
+    public void testYAMLCodec() throws Exception {
         Map<Object, Object> m1 = new HashMap<>();
         m1.put("x", true);
         m1.put("y", null);
@@ -61,11 +62,65 @@ public class YamlSerializerTest {
 
         @SuppressWarnings("rawtypes")
         Map m2 = yamlCodec.deserialize(Map.class).from(yaml);
-        // m2 is not exactly equal to m, as the keys are all strings now, this is unavoidable with JSON
+        // m2 is not exactly equal to m, as the keys are all strings now, this is unavoidable with YAML
         assertEquals(m.size(), m2.size());
         assertEquals(converter.convert(m.get(1)).to(int.class),
                 converter.convert(m2.get(1)).to(int.class));
         assertEquals(m.get("ab"), m2.get("ab"));
         assertEquals(m.get(true), m2.get(true));
+    }
+
+    @Test
+    public void testCodecWithAdapter() {
+        Map<String, Foo> m1 = new HashMap<>();
+        m1.put("f", new Foo("fofofo"));
+        Map<String, Map<String,Foo>> m = new HashMap<>();
+        m.put("submap", m1);
+
+        Converter ca = converter.newConverterBuilder().
+                rule(Foo.class, String.class, Foo::tsFun, v -> Foo.fsFun(v)).build();
+
+        YamlSerializerImpl yamlCodec = new YamlSerializerImpl();
+        String yaml = yamlCodec.serialize(m).with(ca).toString();
+
+        assertEquals("submap: \n" +
+                "  f: '<fofofo>'", yaml);
+
+        // And convert back
+        Map<String,Map<String,Foo>> m2 = yamlCodec.deserialize(new TypeReference<Map<String,Map<String,Foo>>>(){}).
+                with(ca).from(yaml);
+        assertEquals(m, m2);
+    }
+
+    static class Foo {
+        private final String val;
+
+        public Foo(String s) {
+            val = s;
+        }
+
+        public String tsFun() {
+            return "<" + val + ">";
+        }
+
+        public static Foo fsFun(String s) {
+            return new Foo(s.substring(1, s.length() - 1));
+        }
+
+        @Override
+        public int hashCode() {
+            return val.hashCode();
+        }
+
+        @Override
+        public boolean equals(Object obj) {
+            if (obj == this)
+                return true;
+            if (!(obj instanceof Foo))
+                return false;
+
+            Foo f = (Foo) obj;
+            return f.val.equals(val);
+        }
     }
 }

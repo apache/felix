@@ -30,12 +30,12 @@ import org.osgi.service.converter.Converter;
 import org.osgi.service.serializer.Deserializing;
 
 public class JsonDeserializingImpl<T> implements Deserializing<T> {
-    private final Type clazz;
+    private final Type type;
     private volatile Converter converter;
 
-    public JsonDeserializingImpl(Converter c, Type cls) {
+    public JsonDeserializingImpl(Converter c, Type t) {
         converter = c;
-        clazz = cls;
+        type = t;
     }
 
     @Override
@@ -43,11 +43,11 @@ public class JsonDeserializingImpl<T> implements Deserializing<T> {
     public T from(CharSequence in) {
         JsonParser jp = new JsonParser(in);
         Map<?,?> m = jp.getParsed();
-        if (clazz instanceof Class)
-            if (m.getClass().isAssignableFrom((Class<?>) clazz))
+        if (type instanceof Class)
+            if (m.getClass().isAssignableFrom((Class<?>) type))
                 return (T) m;
 
-        return (T) converter.convert(m).to(clazz);
+        return (T) converter.convert(m).to(type);
     }
 
     @Override

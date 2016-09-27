@@ -38,14 +38,12 @@ public class YamlSerializerImpl implements Serializer {
 
     @Override
     public <T> Deserializing<T> deserialize(TypeReference<T> ref) {
-        // TODO Auto-generated method stub
-        return null;
+        return new YamlDeserializingImpl<T>(converter, ref.getType());
     }
 
-    @Override
+    @Override @SuppressWarnings("rawtypes")
     public Deserializing<?> deserialize(Type type) {
-        // TODO Auto-generated method stub
-        return null;
+        return new YamlDeserializingImpl(converter, type);
     }
 
     @Override

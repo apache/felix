@@ -18,6 +18,7 @@ package org.apache.felix.serializer.impl.yaml;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.lang.reflect.Type;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.util.Scanner;
@@ -30,11 +31,11 @@ import org.yaml.snakeyaml.Yaml;
 
 public class YamlDeserializingImpl<T> implements Deserializing<T> {
     private volatile Converter converter;
-    private final Class<T> clazz;
+    private final Type type;
 
-    YamlDeserializingImpl(Converter c, Class<T> cls) {
+    YamlDeserializingImpl(Converter c, Type cls) {
         converter = c;
-        clazz = cls;
+        type = cls;
     }
 
     @Override
@@ -67,10 +68,11 @@ public class YamlDeserializingImpl<T> implements Deserializing<T> {
         Yaml yaml = new Yaml();
         Object res = yaml.load(in.toString());
 
-        if (res.getClass().isAssignableFrom(clazz))
-            return (T) res;
+        if (type instanceof Class)
+            if (res.getClass().isAssignableFrom((Class<?>) type))
+                return (T) res;
 
-        return converter.convert(res).to(clazz);
+        return (T) converter.convert(res).to(type);
     }
 
     @Override
