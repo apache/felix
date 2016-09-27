@@ -526,8 +526,6 @@ public class ConverterServiceTest {
             }
         }
 
-        System.out.println(m);
-
         // convert back
         MyDTO2 dto2 = converter.convert(m).to(MyDTO2.class);
         assertEquals(dto.longList, dto2.longList);

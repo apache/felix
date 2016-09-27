@@ -32,7 +32,7 @@ public class YamlDeserializingImpl<T> implements Deserializing<T> {
     private volatile Converter converter;
     private final Class<T> clazz;
 
-    public YamlDeserializingImpl(Converter c, Class<T> cls) {
+    YamlDeserializingImpl(Converter c, Class<T> cls) {
         converter = c;
         clazz = cls;
     }

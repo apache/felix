@@ -75,7 +75,7 @@ public class YamlSerializingImpl implements Serializing {
     }
 
     private String encode(Object obj) {
-        return encode(obj, 0);
+        return encode(obj, 0).trim();
     }
 
     @SuppressWarnings("rawtypes")
