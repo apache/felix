@@ -61,38 +61,6 @@ public class AdapterImpl implements InternalConverter {
         return new ConverterBuilderImpl(this);
     }
 
-    /*
-    @SuppressWarnings("unchecked")
-    public <F, T> AdapterImpl rule(Class<F> fromCls, Class<T> toCls,
-            Function<F, T> toFun, Function<T, F> fromFun) {
-        if (fromCls.equals(toCls))
-            throw new IllegalArgumentException();
-
-        if (toFun != null) {
-            ConvertFunction<F, T> f = new ConvertFunctionImpl<>(toFun);
-            classRules.put(new TypePair(fromCls, toCls), (ConvertFunction<Object, Object>) f);
-        }
-
-        if (fromFun != null) {
-            ConvertFunction<T, F> f = new ConvertFunctionImpl<>(fromFun);
-            classRules.put(new TypePair(toCls, fromCls), (ConvertFunction<Object, Object>) f);
-        }
-        return this;
-    }
-
-    public <F, T> AdapterImpl rule(TypeReference<F> fromRef, TypeReference<T> toRef,
-            Function<F, T> toFun, Function<T, F> fromFun) {
-        // TODO Auto-generated method stub
-        return null;
-    }
-
-    public <F, T> AdapterImpl rule(Type fromType, Type toType,
-            Function<F, T> toFun, Function<T, F> fromFun) {
-        // TODO Auto-generated method stub
-        return null;
-    }
-    */
-
     @SuppressWarnings("unchecked")
     private <F, T> AdapterImpl rule(Rule<F, T> rule) {
         ConvertFunction<F, T> toFun = rule.getToFunction();

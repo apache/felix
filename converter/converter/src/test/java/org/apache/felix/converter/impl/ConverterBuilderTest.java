@@ -38,7 +38,7 @@ import org.osgi.service.converter.Rule;
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 
-public class AdapterTest {
+public class ConverterBuilderTest {
     private Converter converter;
 
     @Before
@@ -79,7 +79,7 @@ public class AdapterTest {
     public void testSecondLevelAdapter() {
         ConverterBuilder cb = converter.newConverterBuilder();
 
-        cb.rule(char[].class, String.class, AdapterTest::convertToString, null);
+        cb.rule(char[].class, String.class, ConverterBuilderTest::convertToString, null);
         cb.rule(new Rule<String, Number>(String.class, Number.class, new ConvertFunction<String, Number>() {
             @Override
             public Number convert(String obj, Type targetType) throws Exception {
