@@ -28,13 +28,13 @@
 
     <name>Apache Felix Http Base</name>
     <artifactId>org.apache.felix.http.base</artifactId>
-    <version>3.0.14</version>
+    <version>3.0.15-SNAPSHOT</version>
     <packaging>jar</packaging>
 
     <scm>
-        <connection>scm:svn:http://svn.apache.org/repos/asf/felix/releases/org.apache.felix.http.base-3.0.14</connection>
-        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/felix/releases/org.apache.felix.http.base-3.0.14</developerConnection>
-        <url>http://svn.apache.org/viewvc/felix/releases/org.apache.felix.http.base-3.0.14</url>
+        <connection>scm:svn:http://svn.apache.org/repos/asf/felix/trunk/http/base</connection>
+        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/felix/trunk/http/base</developerConnection>
+        <url>http://svn.apache.org/viewvc/felix/trunk/http/base/</url>
     </scm>
 
     <build>
