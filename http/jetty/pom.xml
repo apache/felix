@@ -39,7 +39,7 @@
     
     <properties>
         <felix.java.version>8</felix.java.version>
-        <jetty.version>9.3.9.v20160517</jetty.version>
+        <jetty.version>9.3.12.v20160915</jetty.version>
     </properties>
 
     <build>
