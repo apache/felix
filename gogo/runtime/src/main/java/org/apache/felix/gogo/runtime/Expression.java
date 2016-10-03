@@ -36,7 +36,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Stack;
-import java.util.stream.Collectors;
 
 /**
  * Enhanced to provide assignment operators and variables from a map, comparison operators, string operations and more.
@@ -336,9 +335,10 @@ public class Expression {
         }
 
         public BigDecimal eval(Map<String, Object> variables, List<Object> parameters) {
-            List<BigDecimal> numericParameters = parameters.stream()
-                    .map(o -> toBigDecimal(variables, o))
-                    .collect(Collectors.toList());
+            List<BigDecimal> numericParameters = new ArrayList<>();
+            for (Object o : parameters) {
+                numericParameters.add(toBigDecimal(variables, o));
+            }
             return eval(numericParameters);
         }
 
@@ -1145,7 +1145,7 @@ public class Expression {
      * @return The result of the expression.
      */
     public Object eval() {
-        return eval(new HashMap<>());
+        return eval(new HashMap<String, Object>());
     }
 
     /**

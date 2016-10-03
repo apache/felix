@@ -249,7 +249,7 @@ public class CommandProcessorImpl implements CommandProcessor
         Map<Object, Integer> cmdMap = commands.get(key);
         if (cmdMap == null)
         {
-            commands.putIfAbsent(key, new LinkedHashMap<>());
+            commands.putIfAbsent(key, new LinkedHashMap<Object, Integer>());
             cmdMap = commands.get(key);
         }
         cmdMap.put(target, ranking);
