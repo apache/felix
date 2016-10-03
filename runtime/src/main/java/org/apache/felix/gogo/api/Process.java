@@ -26,9 +26,10 @@ import org.apache.felix.gogo.runtime.Pipe;
 public interface Process
 {
 
-    static Process current()
-    {
-        return Pipe.getCurrentPipe();
+    class Utils {
+        public static Process current() {
+            return Pipe.getCurrentPipe();
+        }
     }
 
     InputStream in();

@@ -340,8 +340,8 @@ public class Pipe implements Callable<Result>, Process
                 }
                 else if ((m = Pattern.compile("<<-?").matcher(t)).matches())
                 {
-                    Token hereDoc = tokens.get(++i);
-                    boolean stripLeadingTabs = t.charAt(t.length() - 1) == '-';
+                    final Token hereDoc = tokens.get(++i);
+                    final boolean stripLeadingTabs = t.charAt(t.length() - 1) == '-';
                     InputStream doc = new InputStream()
                     {
                         final byte[] bytes = hereDoc.toString().getBytes();

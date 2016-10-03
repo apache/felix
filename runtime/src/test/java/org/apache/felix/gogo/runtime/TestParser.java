@@ -468,7 +468,7 @@ public class TestParser extends AbstractParserTest
 
     public boolean istty(CommandSession session, int fd)
     {
-        return Process.current().isTty(fd);
+        return Process.Utils.current().isTty(fd);
     }
 
     void each(CommandSession session, Collection<Object> list, Function closure)

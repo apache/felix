@@ -49,7 +49,6 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
-import java.util.stream.Collectors;
 
 import org.apache.felix.gogo.api.Job;
 import org.apache.felix.gogo.api.Job.Status;
@@ -498,13 +497,13 @@ public class CommandSessionImpl implements CommandSession, Converter
     {
         synchronized (jobs)
         {
-            return Collections.unmodifiableList(jobs);
+            return Collections.<Job>unmodifiableList(jobs);
         }
     }
 
     public static JobImpl currentJob()
     {
-        return (JobImpl) Job.current();
+        return (JobImpl) Job.Utils.current();
     }
 
     @Override
@@ -515,10 +514,12 @@ public class CommandSessionImpl implements CommandSession, Converter
         {
             jobs = new ArrayList<>(this.jobs);
         }
-        return jobs.stream()
-                    .filter(j -> j.parent == null && j.status() == Status.Foreground)
-                    .findFirst()
-                    .orElse(null);
+        for (JobImpl j : jobs) {
+            if (j.parent == null && j.status() == Status.Foreground) {
+                return j;
+            }
+        }
+        return null;
     }
 
     @Override
@@ -740,7 +741,13 @@ public class CommandSessionImpl implements CommandSession, Converter
                     foreground();
                     break;
             }
-            future = executor.submit(this::call);
+            future = executor.submit(new Callable<Void>() {
+                @Override
+                public Void call() throws Exception {
+                    JobImpl.this.call();
+                    return null;
+                }
+            });
             while (this.status == Status.Foreground)
             {
                 JobImpl.this.wait();
@@ -750,7 +757,7 @@ public class CommandSessionImpl implements CommandSession, Converter
 
         public List<Process> processes()
         {
-            return Collections.unmodifiableList(pipes);
+            return Collections.<Process>unmodifiableList(pipes);
         }
 
         @Override
@@ -767,7 +774,7 @@ public class CommandSessionImpl implements CommandSession, Converter
             {
                 thread.setName("job controller " + id);
 
-                List<Callable<Result>> wrapped = pipes.stream().collect(Collectors.toList());
+                List<Callable<Result>> wrapped = new ArrayList<Callable<Result>>(pipes);
                 List<Future<Result>> results = executor.invokeAll(wrapped);
 
                 // Get pipe exceptions

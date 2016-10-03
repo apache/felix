@@ -18,12 +18,7 @@
  */
 package org.apache.felix.gogo.runtime;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.LinkedHashMap;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.regex.Pattern;
 
 
@@ -187,7 +182,12 @@ public class Parser
     }
 
     public List<Statement> statements() {
-        Collections.sort(statements, (o1, o2) -> Integer.compare(o1.start, o2.start));
+        Collections.sort(statements, new Comparator<Statement>() {
+                    @Override
+                    public int compare(Statement o1, Statement o2) {
+                        return Integer.compare(o1.start, o2.start);
+                    }
+                });
         return Collections.unmodifiableList(statements);
     }
 

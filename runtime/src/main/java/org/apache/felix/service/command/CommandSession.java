@@ -126,9 +126,11 @@ public interface CommandSession extends AutoCloseable
      * Return the current session.
      * Available inside from a command call.
      */
-    static CommandSession current() {
-        Job j = Job.current();
-        return j != null ? j.session() : null;
+    class Utils {
+        public static CommandSession current() {
+            Job j = Job.Utils.current();
+            return j != null ? j.session() : null;
+        }
     }
 
 }
