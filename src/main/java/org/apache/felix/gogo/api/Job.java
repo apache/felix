@@ -25,18 +25,18 @@ import org.apache.felix.service.command.CommandSession;
 public interface Job
 {
 
-    /**
-     * Get the job running in the current thread or null.
-     */
-    static Job current()
-    {
-        Process p = Process.current();
-        Job j = p != null ? p.job() : null;
-        while (j != null && j.parent() != null)
-        {
-            j = j.parent();
+    class Utils {
+        /**
+         * Get the job running in the current thread or null.
+         */
+        public static Job current() {
+            Process p = Process.Utils.current();
+            Job j = p != null ? p.job() : null;
+            while (j != null && j.parent() != null) {
+                j = j.parent();
+            }
+            return j;
         }
-        return j;
     }
 
     enum Status

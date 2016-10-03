@@ -36,11 +36,11 @@ public class ReflectiveTest {
 
     @Test
     public void testArrayInvocation() throws Exception {
-        assertEquals(new Object[] { 1, "ab" }, invoke("test1", Arrays.asList(1, "ab")));
-        assertEquals(new String[] { "1", "ab" }, invoke("test2", Arrays.asList(1, "ab")));
+        assertEquals(new Object[] { 1, "ab" }, invoke("test1", Arrays.<Object>asList(1, "ab")));
+        assertEquals(new String[] { "1", "ab" }, invoke("test2", Arrays.<Object>asList(1, "ab")));
 
         assertEquals(new Object[] { Arrays.asList(1, 2), "ab" }, invoke("test1", Arrays.asList(Arrays.asList(1, 2), "ab")));
-        assertEquals(new Object[] { new Object[] { 1, 2 }, "ab" }, invoke("test1", Arrays.asList(new Object[] { 1, 2 }, "ab")));
+        assertEquals(new Object[] { new Object[] { 1, 2 }, "ab" }, invoke("test1", Arrays.<Object>asList(new Object[] { 1, 2 }, "ab")));
     }
 
     static class Target {
