@@ -4961,6 +4961,8 @@ public class Felix extends BundleImpl implements Framework
             m_cache.release();
             m_cache = null;
 
+            m_resolver.stop();
+
             // Set the framework state to resolved.
             acquireBundleLock(Felix.this, Bundle.STOPPING);
             try

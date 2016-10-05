@@ -31,11 +31,19 @@ import java.util.Map.Entry;
 import java.util.NoSuchElementException;
 import java.util.Set;
 import java.util.StringTokenizer;
+import java.util.concurrent.Executor;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.ThreadFactory;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.felix.framework.capabilityset.CapabilitySet;
 import org.apache.felix.framework.capabilityset.SimpleFilter;
 import org.apache.felix.framework.resolver.CandidateComparator;
 import org.apache.felix.framework.resolver.ResolveException;
+import org.apache.felix.framework.util.FelixConstants;
 import org.apache.felix.framework.util.ShrinkableCollection;
 import org.apache.felix.framework.util.Util;
 import org.apache.felix.framework.util.manifestparser.NativeLibrary;
@@ -70,6 +78,7 @@ class StatefulResolver
     private final Logger m_logger;
     private final Felix m_felix;
     private final ServiceRegistry m_registry;
+    private final Executor m_executor;
     private final ResolverImpl m_resolver;
     private boolean m_isResolving = false;
 
@@ -93,7 +102,8 @@ class StatefulResolver
         m_felix = felix;
         m_registry = registry;
         m_logger = m_felix.getLogger();
-        m_resolver = new ResolverImpl(m_logger);
+        m_executor = getExecutor();
+        m_resolver = new ResolverImpl(m_logger, m_executor);
 
         m_revisions = new HashSet<BundleRevision>();
         m_fragments = new HashSet<BundleRevision>();
@@ -119,12 +129,65 @@ class StatefulResolver
         m_capSets.put(BundleRevision.HOST_NAMESPACE,  new CapabilitySet(indices, true));
     }
 
+    private Executor getExecutor()
+    {
+        String str = m_felix.getProperty(FelixConstants.RESOLVER_PARALLELISM);
+        int parallelism = Runtime.getRuntime().availableProcessors();
+        if (str != null)
+        {
+            try
+            {
+                parallelism = Integer.parseInt(str);
+            }
+            catch (NumberFormatException e)
+            {
+                // Ignore
+            }
+        }
+        if (parallelism <= 1)
+        {
+            return new Executor()
+            {
+                public void execute(Runnable command)
+                {
+                    command.run();
+                }
+            };
+        }
+        else
+        {
+            ThreadPoolExecutor executor = new ThreadPoolExecutor(
+                    parallelism, parallelism,
+                    60, TimeUnit.SECONDS,
+                    new LinkedBlockingQueue<Runnable>(),
+                    new ThreadFactory()
+                    {
+                        final AtomicInteger counter = new AtomicInteger();
+                        @Override
+                        public Thread newThread(Runnable r)
+                        {
+                            return new Thread(r, "FelixResolver-" + counter.incrementAndGet());
+                        }
+                    });
+            executor.allowCoreThreadTimeOut(true);
+            return executor;
+        }
+    }
+
     void start()
     {
         m_registry.registerService(m_felix,
                 new String[] { Resolver.class.getName() },
-                m_resolver,
+                new ResolverImpl(m_logger, 1),
                 null);
+    }
+
+    void stop()
+    {
+        if (m_executor instanceof ExecutorService)
+        {
+            ((ExecutorService) m_executor).shutdownNow();
+        }
     }
 
     synchronized void addRevision(BundleRevision br)
