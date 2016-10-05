@@ -54,6 +54,7 @@ public interface FelixConstants extends org.osgi.framework.Constants
     String NATIVE_OS_NAME_ALIAS_PREFIX = "felix.native.osname.alias";
     String NATIVE_PROC_NAME_ALIAS_PREFIX = "felix.native.processor.alias";
     String USE_CACHEDURLS_PROPS = "felix.bundlecodesource.usecachedurls";
+    String RESOLVER_PARALLELISM = "felix.resolver.parallelism";
 
     // Missing OSGi constant for resolution directive.
     String RESOLUTION_DYNAMIC = "dynamic";
