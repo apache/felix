@@ -111,7 +111,7 @@ class MetatypeInventoryPrinter implements InventoryPrinter
         {
             for (String pid : pids)
             {
-                ocd(pw, info.getObjectClassDefinition(pid, null));
+                ocd(pw, info.getObjectClassDefinition(pid, null), pid);
             }
         }
 
@@ -120,16 +120,16 @@ class MetatypeInventoryPrinter implements InventoryPrinter
         {
             for (String factoryPid : factoryPids)
             {
-                ocd(pw, info.getObjectClassDefinition(factoryPid, null));
+                ocd(pw, info.getObjectClassDefinition(factoryPid, null), factoryPid);
             }
         }
 
         pw.endGroup();
     }
 
-    private static final void ocd(final Printer pw, final ObjectClassDefinition ocd)
+    private static final void ocd(final Printer pw, final ObjectClassDefinition ocd, String id)
     {
-        pw.group(ocd.getID());
+        pw.group(id);
         pw.keyValue("name", ocd.getName());
         pw.keyValue("description", ocd.getDescription());
 
