@@ -70,4 +70,11 @@ public class ParserTest extends TestCase
         assertEquals("2", paths[2].getDirective("1"));
     }
 
+    public void testQuotes() throws Exception {
+        Clause[] paths = Parser.parseHeader("geronimo-jms_2.0_spec;url=\"wrap:mvn:org.apache.geronimo.specs/geronimo-jms_2.0_spec/1.0-alpha-2$overwrite=merge&amp;Export-Package=javax.jms;uses:=javax.transaction.xa;version=1.1,javax.jms;uses:=javax.transaction.xa;version=2.0\"");
+        assertEquals(1, paths.length);
+        assertEquals("geronimo-jms_2.0_spec", paths[0].getName());
+        assertEquals("wrap:mvn:org.apache.geronimo.specs/geronimo-jms_2.0_spec/1.0-alpha-2$overwrite=merge&amp;Export-Package=javax.jms;uses:=javax.transaction.xa;version=1.1,javax.jms;uses:=javax.transaction.xa;version=2.0", paths[0].getAttribute("url"));
+    }
+
 }
