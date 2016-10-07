@@ -121,7 +121,7 @@ public class Posix {
         if (argv == null || argv.length < 1) {
             throw new IllegalArgumentException();
         }
-        Process process = Process.current();
+        Process process = Process.Utils.current();
         try {
             run(session, process, argv);
         } catch (IllegalArgumentException e) {
@@ -1582,7 +1582,7 @@ public class Posix {
                 match |= nb > 0;
             }
         }
-        Process.current().error(match ? 0 : 1);
+        Process.Utils.current().error(match ? 0 : 1);
     }
 
     protected void sleep(CommandSession session, Process process, String[] argv) throws Exception {
