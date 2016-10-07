@@ -28,6 +28,12 @@ import org.apache.felix.gogo.api.JobListener;
 
 public interface CommandSession extends AutoCloseable
 {
+
+    /*
+     * Variable name to disable glob (filename) expansion
+     */
+    String OPTION_NO_GLOB = "gogo.option.noglob";
+
     Path currentDir();
 
     void currentDir(Path path);

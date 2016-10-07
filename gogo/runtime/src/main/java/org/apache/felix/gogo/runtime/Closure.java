@@ -689,7 +689,19 @@ public class Closure implements Function, Evaluate
 
     @Override
     public Path currentDir() {
-        return session().currentDir();
+        return isSet(CommandSession.OPTION_NO_GLOB, false) ? null : session().currentDir();
+    }
+
+    protected boolean isSet(String name, boolean def) {
+        Object v = session.get(name);
+        if (v instanceof Boolean) {
+            return (Boolean) v;
+        } else if (v != null) {
+            String s = v.toString();
+            return s.isEmpty() || s.equalsIgnoreCase("on")
+                    || s.equalsIgnoreCase("1") || s.equalsIgnoreCase("true");
+        }
+        return def;
     }
 
     @Override

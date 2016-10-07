@@ -718,7 +718,17 @@ public class CommandSessionImpl implements CommandSession, Converter
             return parent;
         }
 
-        @Override
+        /**
+         * Start the job.
+         * If the job is started in foreground,
+         * waits for the job to finish or to be
+         * suspended or moved to background.
+         *
+         * @param status the desired job status
+         * @return <code>null</code> if the job
+         *   has been suspended or moved to background,
+         *
+         */
         public synchronized Result start(Status status) throws InterruptedException
         {
             if (status == Status.Created || status == Status.Done)
