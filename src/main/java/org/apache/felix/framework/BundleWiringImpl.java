@@ -681,7 +681,7 @@ public class BundleWiringImpl implements BundleWiring
     @Override
     public ClassLoader getClassLoader()
     {
-        if (m_isDisposed)
+        if (m_isDisposed || Util.isFragment(m_revision))
         {
             return null;
         }
