@@ -38,7 +38,7 @@ public class Procedural {
         if (argv == null || argv.length < 1) {
             throw new IllegalArgumentException();
         }
-        Process process = Process.current();
+        Process process = Process.Utils.current();
         try {
             return run(session, process, argv);
         } catch (OptionException e) {
