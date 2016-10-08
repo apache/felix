@@ -29,7 +29,7 @@
 
     <artifactId>org.apache.felix.prefs</artifactId>
     <packaging>bundle</packaging>
-    <version>1.0.7-SNAPSHOT</version>
+    <version>1.0.7</version>
 
     <name>Apache Felix Preferences Service</name>
     <description>
@@ -81,6 +81,9 @@
                         <Bundle-Activator>
                             org.apache.felix.prefs.impl.PreferencesManager
                         </Bundle-Activator>
+                        <Provide-Capability>
+                          osgi.service;objectClass:List&lt;String&gt;=&quot;org.osgi.service.prefs.PreferencesService&quot;
+                        </Provide-Capability>
                     </instructions>
                 </configuration>
             </plugin>
