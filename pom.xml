@@ -81,6 +81,10 @@
                         <Bundle-Activator>
                             org.apache.felix.prefs.impl.PreferencesManager
                         </Bundle-Activator>
+                        <Provide-Capability>
+                            osgi.service;objectClass:List&lt;String&gt;="org.osgi.service.prefs.PreferencesService";
+                            uses:="org.osgi.service.prefs"
+                        </Provide-Capability>                    
                     </instructions>
                 </configuration>
             </plugin>
