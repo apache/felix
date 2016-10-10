@@ -19,25 +19,28 @@ package org.osgi.converter;
 import org.osgi.annotation.versioning.ConsumerType;
 
 /**
- * A function that accepts a single argument and produces a result.
- * <p>
- * This is a functional interface and can be used as the assignment target for a
- * lambda expression or method reference.
+ * An functional interface with a single convert method that is passed the
+ * object to be converted.
  *
- * @param <F> The type of the function input.
- * @param <T> The type of the function output.
+ * @param <F> Type parameter for the source object.
+ * @param <T> Type parameter for the converted object.
  * @ThreadSafe
- * @author $Id: 3d17c97c7dc36185681b98caed5ee10bdeb2cd93 $
+ * @author $Id$
  */
 @ConsumerType
 @FunctionalInterface
 public interface Function<F, T> {
 	/**
-	 * Applies this function to the specified argument.
+	 * /** Convert the object into the target type.
 	 *
-	 * @param t The input to this function.
-	 * @return The output of this function.
-	 * @throws Exception An exception thrown by the method.
+	 * @param obj The object to be converted. This object will never be
+	 *            {@code null} as the convert function will not be invoked for
+	 *            null values.
+	 * @return The conversion result or {@code null} to indicate that the
+	 *         convert function cannot handle this conversion. In this case the
+	 *         next matching rule or adapter will be given a opportunity to
+	 *         convert.
+	 * @throws Exception
 	 */
-	T convert(F t) throws Exception;
+	T convert(F obj) throws Exception;
 }
