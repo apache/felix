@@ -24,14 +24,14 @@ import org.osgi.annotation.versioning.ConsumerType;
  * This is a functional interface and can be used as the assignment target for a
  * lambda expression or method reference.
  *
- * @param <T> The type of the function input.
- * @param <R> The type of the function output.
+ * @param <F> The type of the function input.
+ * @param <T> The type of the function output.
  * @ThreadSafe
  * @author $Id: 3d17c97c7dc36185681b98caed5ee10bdeb2cd93 $
  */
 @ConsumerType
 @FunctionalInterface
-public interface Function<T, R> {
+public interface Function<F, T> {
 	/**
 	 * Applies this function to the specified argument.
 	 *
@@ -39,5 +39,5 @@ public interface Function<T, R> {
 	 * @return The output of this function.
 	 * @throws Exception An exception thrown by the method.
 	 */
-	R apply(T t) throws Exception;
+	T convert(F t) throws Exception;
 }
