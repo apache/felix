@@ -29,15 +29,17 @@ import org.osgi.annotation.versioning.ProviderType;
  */
 @ProviderType
 public interface Converting {
-    /**
-     * Convert the source object based on rules for the class being passed in.
-     * This method can be used to disambiguate objects that would match multiple
-     * conversion rules.
-     * @param type The type or class to be used as the source type for the conversion
-     * @return The current {@code Converting} object so that additional calls
-     *         can be chained.
-     */
-    Converting as(Class<?> type);
+	/**
+	 * Convert the source object based on rules for the class being passed in.
+	 * This method can be used to disambiguate objects that would match multiple
+	 * conversion rules.
+	 *
+	 * @param type The type or class to be used as the source type for the
+	 *            conversion
+	 * @return The current {@code Converting} object so that additional calls
+	 *         can be chained.
+	 */
+	Converting as(Class< ? > type);
 
 	/**
 	 * The default value to use when the object cannot be converted or in case
