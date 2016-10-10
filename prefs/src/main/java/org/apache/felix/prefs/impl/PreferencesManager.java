@@ -32,7 +32,6 @@ import org.osgi.framework.BundleEvent;
 import org.osgi.framework.BundleListener;
 import org.osgi.framework.ServiceFactory;
 import org.osgi.framework.ServiceRegistration;
-import org.osgi.service.log.LogService;
 import org.osgi.service.prefs.BackingStoreException;
 import org.osgi.service.prefs.PreferencesService;
 import org.osgi.util.tracker.ServiceTracker;
@@ -58,9 +57,6 @@ public class PreferencesManager
 
     /** The backing store service tracker. */
     protected ServiceTracker<BackingStore, BackingStore> storeTracker;
-
-    /** The service tracker for the log service. */
-    protected ServiceTracker logTracker;
 
     /** The default store which is used if no service can be found. */
     protected BackingStore defaultStore;
@@ -96,10 +92,6 @@ public class PreferencesManager
     public void start(final BundleContext context) throws Exception {
         this.context = context;
 
-        // track the log service using a ServiceTracker
-        this.logTracker = new ServiceTracker(context, LogService.class.getName(), null);
-        this.logTracker.open();
-
         // create the tracker for our backing store
         this.storeTracker = new ServiceTracker<BackingStore, BackingStore>(context, BackingStore.class, null);
         this.storeTracker.open();
@@ -131,11 +123,6 @@ public class PreferencesManager
         }
         this.defaultStore = null;
 
-        // stop tracking log service
-        if (this.logTracker != null) {
-            this.logTracker.close();
-            this.logTracker = null;
-        }
 
         this.context = null;
     }
@@ -192,14 +179,6 @@ public class PreferencesManager
             catch (final BackingStoreException ignore) {
                 // we ignore this
             }
-        }
-    }
-
-    protected void log(final int level, final String message, final Throwable t) {
-        final LogService log = (LogService) this.logTracker.getService();
-        if (log != null) {
-            log.log(level, message, t);
-            return;
         }
     }
 
