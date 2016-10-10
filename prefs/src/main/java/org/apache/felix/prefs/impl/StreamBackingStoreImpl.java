@@ -18,10 +18,18 @@
  */
 package org.apache.felix.prefs.impl;
 
-import java.io.*;
-import java.util.*;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.io.OutputStream;
+import java.util.Collection;
+import java.util.Iterator;
+import java.util.Map;
 
-import org.apache.felix.prefs.*;
+import org.apache.felix.prefs.BackingStore;
+import org.apache.felix.prefs.PreferencesDescription;
+import org.apache.felix.prefs.PreferencesImpl;
 import org.osgi.framework.BundleContext;
 import org.osgi.service.prefs.BackingStoreException;
 
@@ -119,7 +127,7 @@ public abstract class StreamBackingStoreImpl implements BackingStore {
     throws IOException {
         this.writePreferences(prefs, os);
         final ObjectOutputStream oos = new ObjectOutputStream(os);
-        final Collection children = prefs.getChildren();
+        final Collection<PreferencesImpl> children = prefs.getChildren();
         oos.writeInt(children.size());
         oos.flush();
         final Iterator i = children.iterator();
