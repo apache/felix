@@ -19,7 +19,12 @@
 package org.apache.felix.prefs;
 
 import java.io.UnsupportedEncodingException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.Map;
+import java.util.Set;
 
 import org.apache.commons.codec.binary.Base64;
 import org.osgi.service.prefs.BackingStoreException;
@@ -38,7 +43,7 @@ import org.osgi.service.prefs.Preferences;
 public class PreferencesImpl implements Preferences {
 
     /** The properties. */
-    protected final Map properties = new HashMap();
+    protected final Map<String, String> properties = new HashMap<String, String>();
 
     /** Has this node been removed? */
     protected boolean valid = true;
@@ -47,7 +52,7 @@ public class PreferencesImpl implements Preferences {
     protected final PreferencesImpl parent;
 
     /** The child nodes. */
-    protected final Map children = new HashMap();
+    protected final Map<String, PreferencesImpl> children = new HashMap<String, PreferencesImpl>();
 
     /** The name of the properties. */
     protected final String name;
@@ -115,14 +120,14 @@ public class PreferencesImpl implements Preferences {
      * Return all children or an empty collection.
      * @return A collection containing the children.
      */
-    public Collection getChildren() {
+    public Collection<PreferencesImpl> getChildren() {
         return this.children.values();
     }
 
     /**
      * Return the properties set.
      */
-    public Map getProperties() {
+    public Map<String, String> getProperties() {
         return this.properties;
     }
 
@@ -183,7 +188,7 @@ public class PreferencesImpl implements Preferences {
      */
     public synchronized String get(String key, String def) {
         this.checkValidity();
-        String value = (String) this.properties.get(key);
+        String value = this.properties.get(key);
         if ( value == null ) {
             value = def;
         }
@@ -207,9 +212,9 @@ public class PreferencesImpl implements Preferences {
     public synchronized void clear() throws BackingStoreException {
         this.checkValidity();
 
-        final Iterator i = this.properties.keySet().iterator();
+        final Iterator<String> i = this.properties.keySet().iterator();
         while ( i.hasNext() ) {
-            final String key = (String)i.next();
+            final String key = i.next();
             this.changeSet.propertyRemoved(key);
         }
         this.properties.clear();
@@ -364,8 +369,8 @@ public class PreferencesImpl implements Preferences {
      */
     public synchronized String[] keys() throws BackingStoreException {
         this.sync();
-        final Set keys = this.properties.keySet();
-        return (String[])keys.toArray(new String[keys.size()]);
+        final Set<String> keys = this.properties.keySet();
+        return keys.toArray(new String[keys.size()]);
     }
 
     /**
@@ -373,8 +378,8 @@ public class PreferencesImpl implements Preferences {
      */
     public synchronized String[] childrenNames() throws BackingStoreException {
         this.sync();
-        final Set names = this.children.keySet();
-        return (String[])names.toArray(new String[names.size()]);
+        final Set<String> names = this.children.keySet();
+        return names.toArray(new String[names.size()]);
     }
 
     /**
@@ -456,7 +461,7 @@ public class PreferencesImpl implements Preferences {
                 path = path.substring(0, pos);
             }
             boolean save = false;
-            PreferencesImpl child = (PreferencesImpl) this.children.get(path);
+            PreferencesImpl child = this.children.get(path);
             if ( child == null ) {
                 if ( !create ) {
                     return null;
@@ -530,16 +535,16 @@ public class PreferencesImpl implements Preferences {
      */
     protected void safelyRemoveNode() {
         if ( this.valid ) {
-            Collection c = null;
+            Collection<PreferencesImpl> c = null;
             synchronized ( this ) {
                 this.valid = false;
                 this.properties.clear();
-                c = new ArrayList(this.children.values());
+                c = new ArrayList<PreferencesImpl>(this.children.values());
                 this.children.clear();
             }
-            final Iterator i = c.iterator();
+            final Iterator<PreferencesImpl> i = c.iterator();
             while ( i.hasNext() ) {
-                final PreferencesImpl child = (PreferencesImpl) i.next();
+                final PreferencesImpl child = i.next();
                 child.safelyRemoveNode();
             }
         }
@@ -594,23 +599,23 @@ public class PreferencesImpl implements Preferences {
      * @param impl
      */
     public void update(PreferencesImpl impl) {
-        final Iterator i = impl.properties.entrySet().iterator();
+        final Iterator<Map.Entry<String, String>> i = impl.properties.entrySet().iterator();
         while ( i.hasNext() ) {
-            final Map.Entry entry = (Map.Entry)i.next();
+            final Map.Entry<String, String> entry = i.next();
             if ( !this.properties.containsKey(entry.getKey()) ) {
                 this.properties.put(entry.getKey(), entry.getValue());
             }
         }
-        final Iterator cI = impl.children.entrySet().iterator();
+        final Iterator<Map.Entry<String, PreferencesImpl>> cI = impl.children.entrySet().iterator();
         while ( cI.hasNext() ) {
-            final Map.Entry entry = (Map.Entry)cI.next();
+            final Map.Entry<String, PreferencesImpl> entry = cI.next();
             final String name = entry.getKey().toString();
-            final PreferencesImpl child = (PreferencesImpl)entry.getValue();
+            final PreferencesImpl child = entry.getValue();
             if ( !this.children.containsKey(name) ) {
                 // create node
                 this.node(name);
             }
-            ((PreferencesImpl)this.children.get(name)).update(child);
+            this.children.get(name).update(child);
         }
     }
 
@@ -622,7 +627,7 @@ public class PreferencesImpl implements Preferences {
         final ChangeSet changeSet = prefs.getChangeSet();
         if ( changeSet.hasChanges ) {
             this.changeSet.importChanges(prefs.changeSet);
-            Iterator i;
+            Iterator<String> i;
             // remove properties
             i = changeSet.removedProperties.iterator();
             while ( i.hasNext() ) {
@@ -631,20 +636,20 @@ public class PreferencesImpl implements Preferences {
             // set/update properties
             i = changeSet.changedProperties.iterator();
             while ( i.hasNext() ) {
-                final String key = (String)i.next();
+                final String key = i.next();
                 this.properties.put(key, prefs.properties.get(key));
             }
             // remove children
             i = changeSet.removedChildren.iterator();
             while ( i.hasNext() ) {
-                final String name = (String)i.next();
+                final String name = i.next();
                 this.children.remove(name);
             }
             // added childs are processed in the next loop
         }
-        final Iterator cI = prefs.getChildren().iterator();
+        final Iterator<PreferencesImpl> cI = prefs.getChildren().iterator();
         while ( cI.hasNext() ) {
-            final PreferencesImpl current = (PreferencesImpl)cI.next();
+            final PreferencesImpl current = cI.next();
             final PreferencesImpl child = this.getOrCreateNode(current.name());
             child.applyChanges(current);
         }

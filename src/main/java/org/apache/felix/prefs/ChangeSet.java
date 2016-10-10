@@ -18,7 +18,10 @@
  */
 package org.apache.felix.prefs;
 
-import java.util.*;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.Set;
 
 /**
  * This class keeps track of the changes to a preferences node.
@@ -29,16 +32,16 @@ public class ChangeSet {
     protected boolean hasChanges = false;
 
     /** A set of changed/added properties. */
-    protected final Set changedProperties = new HashSet();
+    protected final Set<String> changedProperties = new HashSet<String>();
 
     /** A set of removed properties. */
-    protected final Set removedProperties = new HashSet();
+    protected final Set<String> removedProperties = new HashSet<String>();
 
     /** A set of added children. */
-    protected final Set addedChildren = new HashSet();
+    protected final Set<String> addedChildren = new HashSet<String>();
 
     /** A set of removed children. */
-    protected final Set removedChildren = new HashSet();
+    protected final Set<String> removedChildren = new HashSet<String>();
 
     /**
      * Do we have changes?
@@ -117,7 +120,7 @@ public class ChangeSet {
      * Return a collection with the changed property names.
      * @return A collection.
      */
-    public Collection getChangedProperties() {
+    public Collection<String> getChangedProperties() {
         return Collections.unmodifiableCollection(this.changedProperties);
     }
 
@@ -125,7 +128,7 @@ public class ChangeSet {
      * Return a collection with the removed property names.
      * @return A collection.
      */
-    public Collection getRemovedProperties() {
+    public Collection<String> getRemovedProperties() {
         return Collections.unmodifiableCollection(this.removedProperties);
     }
 
@@ -133,7 +136,7 @@ public class ChangeSet {
      * Return a collection with the added children names.
      * @return A collection.
      */
-    public Collection getAddedChildren() {
+    public Collection<String> getAddedChildren() {
         return Collections.unmodifiableCollection(this.addedChildren);
     }
 
@@ -141,7 +144,7 @@ public class ChangeSet {
      * Return a collection with the removed children names.
      * @return A collection.
      */
-    public Collection getRemovedChildren() {
+    public Collection<String> getRemovedChildren() {
         return Collections.unmodifiableCollection(this.removedChildren);
     }
 }

@@ -18,10 +18,20 @@
  */
 package org.apache.felix.prefs.impl;
 
-import java.util.*;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.Map;
 
-import org.apache.felix.prefs.*;
-import org.osgi.framework.*;
+import org.apache.felix.prefs.BackingStore;
+import org.apache.felix.prefs.BackingStoreManager;
+import org.apache.felix.prefs.PreferencesImpl;
+import org.osgi.framework.Bundle;
+import org.osgi.framework.BundleActivator;
+import org.osgi.framework.BundleContext;
+import org.osgi.framework.BundleEvent;
+import org.osgi.framework.BundleListener;
+import org.osgi.framework.ServiceFactory;
+import org.osgi.framework.ServiceRegistration;
 import org.osgi.service.log.LogService;
 import org.osgi.service.prefs.BackingStoreException;
 import org.osgi.service.prefs.PreferencesService;
@@ -34,20 +44,20 @@ import org.osgi.util.tracker.ServiceTracker;
 public class PreferencesManager
     implements BundleActivator,
     BundleListener,
-    ServiceFactory,
+    ServiceFactory<PreferencesService>,
     BackingStoreManager {
 
     /**
      * The map of already created services. For each client bundle
      * a new service is created.
      */
-    protected final Map services = new HashMap();
+    protected final Map<Long, PreferencesServiceImpl> services = new HashMap<Long, PreferencesServiceImpl>();
 
     /** The bundle context. */
     protected BundleContext context;
 
     /** The backing store service tracker. */
-    protected ServiceTracker storeTracker;
+    protected ServiceTracker<BackingStore, BackingStore> storeTracker;
 
     /** The service tracker for the log service. */
     protected ServiceTracker logTracker;
@@ -91,7 +101,7 @@ public class PreferencesManager
         this.logTracker.open();
 
         // create the tracker for our backing store
-        this.storeTracker = new ServiceTracker(context, BackingStore.class.getName(), null);
+        this.storeTracker = new ServiceTracker<BackingStore, BackingStore>(context, BackingStore.class, null);
         this.storeTracker.open();
 
         // register this activator as a bundle lister
@@ -107,9 +117,9 @@ public class PreferencesManager
     public void stop(final BundleContext context) throws Exception {
         // if we get stopped, we should save all in memory representations
         synchronized (this.services) {
-            final Iterator i = this.services.values().iterator();
+            final Iterator<PreferencesServiceImpl> i = this.services.values().iterator();
             while (i.hasNext()) {
-                final PreferencesServiceImpl service = (PreferencesServiceImpl) i.next();
+                final PreferencesServiceImpl service = i.next();
                 this.save(service);
             }
             this.services.clear();
@@ -133,13 +143,14 @@ public class PreferencesManager
     /**
      * @see org.osgi.framework.ServiceFactory#getService(org.osgi.framework.Bundle, org.osgi.framework.ServiceRegistration)
      */
-    public Object getService(final Bundle bundle, final ServiceRegistration reg) {
+    public PreferencesService getService(final Bundle bundle,
+            final ServiceRegistration<PreferencesService> reg) {
         final Long bundleId = new Long(bundle.getBundleId());
 
         synchronized (this.services) {
             PreferencesServiceImpl service;
             // do we already have created a service for this bundle?
-            service = (PreferencesServiceImpl) this.services.get(bundleId);
+            service = this.services.get(bundleId);
 
             if (service == null) {
                 // create a new service instance
@@ -153,11 +164,13 @@ public class PreferencesManager
     /**
      * @see org.osgi.framework.ServiceFactory#ungetService(org.osgi.framework.Bundle, org.osgi.framework.ServiceRegistration, java.lang.Object)
      */
-    public void ungetService(final Bundle bundle, final ServiceRegistration reg, final Object s) {
+    public void ungetService(final Bundle bundle,
+            final ServiceRegistration<PreferencesService> reg,
+            final PreferencesService s) {
         final Long bundleId = new Long(bundle.getBundleId());
         // we save all the preferences
         synchronized (this.services) {
-            final PreferencesServiceImpl service = (PreferencesServiceImpl) this.services.get(bundleId);
+            final PreferencesServiceImpl service = this.services.get(bundleId);
             if (service != null) {
                 this.save(service);
             }
@@ -170,9 +183,9 @@ public class PreferencesManager
      * @param service
      */
     protected void save(final PreferencesServiceImpl service) {
-        final Iterator i = service.getAllPreferences().iterator();
+        final Iterator<PreferencesImpl> i = service.getAllPreferences().iterator();
         while (i.hasNext()) {
-            final PreferencesImpl prefs = (PreferencesImpl) i.next();
+            final PreferencesImpl prefs = i.next();
             try {
                 this.getStore().store(prefs);
             }
@@ -195,13 +208,13 @@ public class PreferencesManager
      */
     public BackingStore getStore() throws BackingStoreException {
         BackingStore service = null;
-        ServiceTracker storeTracker = this.storeTracker;
+        ServiceTracker<BackingStore, BackingStore> storeTracker = this.storeTracker;
 
         // Only possible if we're not stopped already...
         if (storeTracker != null) {
 	        // has the service changed?
 	        int currentCount = storeTracker.getTrackingCount();
-	        service = (BackingStore) storeTracker.getService();
+	        service = storeTracker.getService();
 	        if (service != null && this.storeTrackingCount < currentCount) {
 	            this.storeTrackingCount = currentCount;
 	            this.cleanupStore(service);

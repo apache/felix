@@ -40,7 +40,7 @@ public class PreferencesServiceImpl implements PreferencesService {
     protected PreferencesImpl systemTree;
 
     /** This is the map containing the user preferences trees. */
-    protected final Map trees = new HashMap();
+    protected final Map<String, PreferencesImpl> trees = new HashMap<String, PreferencesImpl>();
 
     /** The service id for the bundle this service belongs to. */
     protected final Long bundleId;
@@ -88,7 +88,7 @@ public class PreferencesServiceImpl implements PreferencesService {
      * @see org.osgi.service.prefs.PreferencesService#getUserPreferences(java.lang.String)
      */
     public synchronized Preferences getUserPreferences(String name) {
-        PreferencesImpl result = (PreferencesImpl) this.trees.get(name);
+        PreferencesImpl result = this.trees.get(name);
         // if the tree does not exist yet, create it
         if (result == null || !result.isValid()) {
             result = new PreferencesImpl(new PreferencesDescription(this.bundleId, name), this.storeManager);
@@ -108,12 +108,12 @@ public class PreferencesServiceImpl implements PreferencesService {
      */
     public synchronized String[] getUsers() {
         // TODO - we have to sync with the store
-        final Set userKeys = this.trees.keySet();
-        return (String[])userKeys.toArray(new String[userKeys.size()]);
+        final Set <String> userKeys = this.trees.keySet();
+        return userKeys.toArray(new String[userKeys.size()]);
     }
 
-    protected List getAllPreferences() {
-        final List list = new ArrayList();
+    protected List<PreferencesImpl> getAllPreferences() {
+        final List<PreferencesImpl> list = new ArrayList<PreferencesImpl>();
         if ( this.systemTree != null ) {
             list.add(this.systemTree);
         }
