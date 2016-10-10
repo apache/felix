@@ -222,7 +222,7 @@ public class AdapterImpl implements InternalConverter {
 
         @Override
         public T convert(F obj, Type targetType) throws Exception {
-            return function.apply(obj);
+            return function.convert(obj);
         }
     }
 }
