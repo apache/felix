@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package org.osgi.service.converter;
+package org.osgi.converter;
 
 import org.osgi.annotation.versioning.ConsumerType;
 
@@ -32,12 +32,12 @@ import org.osgi.annotation.versioning.ConsumerType;
 @ConsumerType
 @FunctionalInterface
 public interface Function<T, R> {
-    /**
-     * Applies this function to the specified argument.
-     *
-     * @param t The input to this function.
-     * @return The output of this function.
-     * @throws Exception An exception thrown by the method.
-     */
-    R apply(T t) throws Exception;
+	/**
+	 * Applies this function to the specified argument.
+	 *
+	 * @param t The input to this function.
+	 * @return The output of this function.
+	 * @throws Exception An exception thrown by the method.
+	 */
+	R apply(T t) throws Exception;
 }

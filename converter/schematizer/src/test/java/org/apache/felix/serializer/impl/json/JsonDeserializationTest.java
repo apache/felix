@@ -16,6 +16,9 @@
  */
 package org.apache.felix.serializer.impl.json;
 
+import java.util.ArrayList;
+import java.util.Optional;
+
 import org.apache.felix.schematizer.Schema;
 import org.apache.felix.schematizer.impl.SchematizerImpl;
 import org.apache.felix.serializer.impl.json.MyDTO.Count;
@@ -23,15 +26,12 @@ import org.apache.felix.serializer.impl.json.MyEmbeddedDTO.Alpha;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-import org.osgi.service.converter.Converter;
-import org.osgi.service.converter.StandardConverter;
-import org.osgi.service.converter.TypeReference;
+import org.osgi.converter.Converter;
+import org.osgi.converter.StandardConverter;
+import org.osgi.converter.TypeReference;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
-
-import java.util.ArrayList;
-import java.util.Optional;
 
 public class JsonDeserializationTest {
     private Converter converter;
@@ -70,6 +70,7 @@ public class JsonDeserializationTest {
         assertTrue(opt.isPresent());
 
         Schema s = opt.get();
+
         MyDTO result = new JsonSerializerImpl()
                 .deserialize(MyDTO.class)
                 .with(converter)
@@ -106,7 +107,8 @@ public class JsonDeserializationTest {
         assertTrue(opt.isPresent());
 
         Schema s = opt.get();
-        MyDTO2<MyEmbeddedDTO2<String>> result = new JsonSerializerImpl()
+        MyDTO2<MyEmbeddedDTO2<String>> result =
+                new JsonSerializerImpl()
                 .deserialize(new TypeReference<MyDTO2<MyEmbeddedDTO2<String>>>(){})
                 .with(converter)
                 .withContext(s)

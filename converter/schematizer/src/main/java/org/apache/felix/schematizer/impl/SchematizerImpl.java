@@ -27,9 +27,9 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.Set;
-import java.util.Map.Entry;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -38,8 +38,8 @@ import org.apache.felix.schematizer.Node.CollectionType;
 import org.apache.felix.schematizer.Schema;
 import org.apache.felix.schematizer.Schematizer;
 import org.apache.felix.schematizer.TypeRule;
+import org.osgi.converter.TypeReference;
 import org.osgi.dto.DTO;
-import org.osgi.service.converter.TypeReference;
 
 public class SchematizerImpl implements Schematizer {
 
@@ -122,8 +122,8 @@ public class SchematizerImpl implements Schematizer {
      * Schematize any node, without knowing in advance its type.
      */
     private static SchemaImpl internalSchematize(
-            String name, 
-            String contextPath, 
+            String name,
+            String contextPath,
             Map<String, Object> rules,
             boolean isCollection,
             SchematizerImpl schematizer)  {
@@ -149,16 +149,16 @@ public class SchematizerImpl implements Schematizer {
 
         if (DTO.class.isAssignableFrom(cls)) {
             Class<? extends DTO> targetCls = (Class<DTO>)cls;
-            return schematizeDTO(name, targetCls, ref, contextPath, rules, isCollection, schematizer);            
+            return schematizeDTO(name, targetCls, ref, contextPath, rules, isCollection, schematizer);
         }
 
         return schematizeObject( name, cls, contextPath, rules, isCollection, schematizer);
     }
 
     private static SchemaImpl schematizeDTO(
-            String name, 
-            Class<? extends DTO> targetCls, 
-            TypeReference<? extends DTO> ref, 
+            String name,
+            Class<? extends DTO> targetCls,
+            TypeReference<? extends DTO> ref,
             String contextPath,
             Map<String, Object> rules,
             boolean isCollection,
@@ -179,7 +179,7 @@ public class SchematizerImpl implements Schematizer {
     }
 
     private static SchemaImpl schematizeObject(
-            String name, 
+            String name,
             Class<?> targetCls,
             String contextPath,
             Map<String, Object> rules,
@@ -199,9 +199,9 @@ public class SchematizerImpl implements Schematizer {
     private static final Comparator<Entry<String, NodeImpl>> byPath = (e1, e2) -> e1.getValue().absolutePath().compareTo(e2.getValue().absolutePath());
     private static Map<String, NodeImpl> createMapFromDTO(
             String name,
-            Class<?> targetCls, 
-            TypeReference<? extends DTO> ref, 
-            String contextPath, 
+            Class<?> targetCls,
+            TypeReference<? extends DTO> ref,
+            String contextPath,
             Map<String, Object> typeRules,
             SchematizerImpl schematizer) {
         Set<String> handledFields = new HashSet<>();
@@ -220,11 +220,11 @@ public class SchematizerImpl implements Schematizer {
     @SuppressWarnings( { "rawtypes", "unchecked" } )
     private static void handleField(
             String name,
-            Field field, 
-            Set<String> handledFields, 
-            Map<String, NodeImpl> result, 
-            Class<?> targetCls, 
-            TypeReference<?> ref, 
+            Field field,
+            Set<String> handledFields,
+            Map<String, NodeImpl> result,
+            Class<?> targetCls,
+            TypeReference<?> ref,
             String contextPath,
             Map<String, Object> rules,
             SchematizerImpl schematizer) {
@@ -239,7 +239,7 @@ public class SchematizerImpl implements Schematizer {
             String path = contextPath + "/" + fieldName;
             NodeImpl node;
             if (rules.containsKey(path)) {
-                // The actual field. Since the type for this node is provided as a rule, we 
+                // The actual field. Since the type for this node is provided as a rule, we
                 // only need it to test whether or not it is a collection.
                 Class<?> actualFieldType = field.getType();
                 boolean isCollection = Collection.class.isAssignableFrom(actualFieldType);
@@ -250,8 +250,8 @@ public class SchematizerImpl implements Schematizer {
                 TypeReference fieldRef = typeReferenceOf(rules.get(path));
                 if (isCollection)
                     node = new CollectionNode(
-                            field.getName(), 
-                            fieldRef, 
+                            field.getName(),
+                            fieldRef,
                             path,
                             (Class)actualFieldType);
                 else if (fieldRef != null )
@@ -278,8 +278,8 @@ public class SchematizerImpl implements Schematizer {
                     else
                         collectionType = Object.class;
                     node = new CollectionNode(
-                            field.getName(), 
-                            collectionType, 
+                            field.getName(),
+                            collectionType,
                             path,
                             (Class)fieldClass);
 
@@ -305,7 +305,7 @@ public class SchematizerImpl implements Schematizer {
                         newSchematizer.rule(path, path, fieldClass);
                     SchemaImpl embedded = newSchematizer.schematize(path, path);
                     node = new NodeImpl(
-                            field.getName(), 
+                            field.getName(),
                             fieldClass,
                             false,
                             path);
@@ -318,9 +318,9 @@ public class SchematizerImpl implements Schematizer {
                     node.add(childNodes);
                 } else {
                     node = new NodeImpl(
-                            field.getName(), 
-                            fieldClass, 
-                            false, 
+                            field.getName(),
+                            fieldClass,
+                            false,
                             path);
                 }
             }

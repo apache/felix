@@ -31,22 +31,21 @@ import org.apache.felix.schematizer.Schematizer;
 import org.apache.felix.schematizer.TypeRule;
 import org.apache.felix.schematizer.impl.SchematizerImpl;
 import org.apache.felix.serializer.impl.json.JsonSerializerImpl;
-import org.osgi.service.converter.Converter;
-import org.osgi.service.converter.StandardConverter;
-import org.osgi.service.converter.TypeReference;
-import org.osgi.service.serializer.Serializer;
+import org.osgi.converter.Converter;
+import org.osgi.converter.StandardConverter;
+import org.osgi.converter.TypeReference;
 
 public class DTOSerializer<C extends CommandDTO<?>>
 {
     private static final int MARKER_LENGTH = 10;
 
     private final Converter converter = new StandardConverter();
-    private final Serializer serializer = new JsonSerializerImpl();
+    private final JsonSerializerImpl serializer = new JsonSerializerImpl();
     private final List<TypeRule<?>> rules;
     private final Map<String, Schema> schemas = new HashMap<>();
     private final Class<?> entityType;
 
-    public DTOSerializer( 
+    public DTOSerializer(
             List<TypeRule<?>> aRulesList,
             Class<?> anEntityType )
     {

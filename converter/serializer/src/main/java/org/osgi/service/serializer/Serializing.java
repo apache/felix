@@ -20,7 +20,7 @@ import java.io.OutputStream;
 import java.nio.charset.Charset;
 
 import org.osgi.annotation.versioning.ProviderType;
-import org.osgi.service.converter.Converter;
+import org.osgi.converter.Converter;
 
 /**
  * Interface to specify the target of the encoding operation.
@@ -30,62 +30,62 @@ import org.osgi.service.converter.Converter;
  */
 @ProviderType
 public interface Serializing {
-	/**
-	 * Specify that keys with a {@code null} value must not appear in the
-	 * result. If not specified {@code null} values will be included in the
-	 * result.
-	 *
-	 * @return This Serializing object to allow further invocations on it.
-	 */
-	Serializing ignoreNull();
+    /**
+     * Specify that keys with a {@code null} value must not appear in the
+     * result. If not specified {@code null} values will be included in the
+     * result.
+     *
+     * @return This Serializing object to allow further invocations on it.
+     */
+    Serializing ignoreNull();
 
-	/**
-	 * Specify that the encoded output should be formatted to look 'pretty',
-	 * which may make it easier for humans to read. If not specified, the
-	 * encoded output should be formatted to be compact, so save space.
-	 *
-	 * @return This Serializing object to allow further invocations on it.
-	 */
-	Serializing pretty();
+    /**
+     * Specify that the encoded output should be formatted to look 'pretty',
+     * which may make it easier for humans to read. If not specified, the
+     * encoded output should be formatted to be compact, so save space.
+     *
+     * @return This Serializing object to allow further invocations on it.
+     */
+    Serializing pretty();
 
-	/**
-	 * Use an output stream as the target of the encoding operation. UTF-8 will
-	 * be used if applicable, the character set may not apply to binary
-	 * encodings.
-	 *
-	 * @param out The output stream to use.
-	 * @throws IOException If an I/O error occurred.
-	 */
-	void to(OutputStream out) throws IOException;
+    /**
+     * Use an output stream as the target of the encoding operation. UTF-8 will
+     * be used if applicable, the character set may not apply to binary
+     * encodings.
+     *
+     * @param out The output stream to use.
+     * @throws IOException If an I/O error occurred.
+     */
+    void to(OutputStream out) throws IOException;
 
-	/**
-	 * Use an output stream as the target of the encoding operation.
-	 *
-	 * @param out The output stream to use.
-	 * @param charset The character set to use, if applicable, the character set
-	 *            may not apply to binary encodings.
-	 * @throws IOException If an I/O error occurred.
-	 */
-	void to(OutputStream out, Charset charset) throws IOException;
+    /**
+     * Use an output stream as the target of the encoding operation.
+     *
+     * @param out The output stream to use.
+     * @param charset The character set to use, if applicable, the character set
+     *            may not apply to binary encodings.
+     * @throws IOException If an I/O error occurred.
+     */
+    void to(OutputStream out, Charset charset) throws IOException;
 
-	/**
-	 * Encode the object and append the result to an appendable.
-	 *
-	 * @param out The appendable object to use.
-	 * @return The appendable object provided in, which allows further appends
-	 *         to it be done in a fluent programming style.
-	 */
-	Appendable to(Appendable out);
+    /**
+     * Encode the object and append the result to an appendable.
+     *
+     * @param out The appendable object to use.
+     * @return The appendable object provided in, which allows further appends
+     *         to it be done in a fluent programming style.
+     */
+    Appendable to(Appendable out);
 
-	/**
-	 * Encode the object and return the result as a string.
-	 *
-	 * @return The encoded object.
-	 */
-	@Override
-	String toString();
+    /**
+     * Encode the object and return the result as a string.
+     *
+     * @return The encoded object.
+     */
+    @Override
+    String toString();
 
-	/**
+    /**
      * Specify the converter to be used by the code, if an alternative, adapted,
      * converter is to be used.
      *
@@ -93,16 +93,4 @@ public interface Serializing {
      * @return This Serializing object to allow further invocations on it.
      */
     Serializing with(Converter converter);
-
-    /**
-     * Provide contextual information to complete the serializing operation.
-     * The contexts that can be handled are serializer-specific.
-     *
-     * @param obj The context to use while serializing.
-     * @return This Serializing object to allow further invocations on it.
-     */
-    default Serializing withContext(Object obj) {
-        // Default or simple serializers do not need additional context
-        return this;
-    }
 }

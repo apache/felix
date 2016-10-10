@@ -19,8 +19,8 @@ package org.apache.felix.schematizer;
 import java.util.Map;
 import java.util.Optional;
 
+import org.osgi.converter.TypeReference;
 import org.osgi.dto.DTO;
-import org.osgi.service.converter.TypeReference;
 
 public class StandardSchematizer implements Schematizer {
     private final Schematizer schematizer;

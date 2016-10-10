@@ -51,11 +51,11 @@ import org.apache.felix.converter.impl.MyEmbeddedDTO.Alpha;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-import org.osgi.service.converter.ConversionException;
-import org.osgi.service.converter.Converter;
-import org.osgi.service.converter.ConverterBuilder;
-import org.osgi.service.converter.StandardConverter;
-import org.osgi.service.converter.TypeReference;
+import org.osgi.converter.ConversionException;
+import org.osgi.converter.Converter;
+import org.osgi.converter.ConverterBuilder;
+import org.osgi.converter.StandardConverter;
+import org.osgi.converter.TypeReference;
 
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;

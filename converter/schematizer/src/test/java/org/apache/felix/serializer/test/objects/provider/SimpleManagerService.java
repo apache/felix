@@ -27,7 +27,7 @@ import org.apache.felix.serializer.test.objects.SimpleTop;
 import org.apache.felix.serializer.test.prevayler.AggregateTypeReference;
 import org.apache.felix.serializer.test.prevayler.MockPrevaylerBackedRepository;
 import org.apache.felix.serializer.test.prevayler.Repository;
-import org.osgi.service.converter.TypeReference;
+import org.osgi.converter.TypeReference;
 
 public class SimpleManagerService
 	implements SimpleManager
@@ -49,7 +49,7 @@ public class SimpleManagerService
 
 	@Override
 	public void add( SimpleTop top ) {
-        repository.put( top.getId(), (SimpleTopEntity)top ); 
+        repository.put( top.getId(), (SimpleTopEntity)top );
 	}
 
 	@Override
@@ -69,12 +69,12 @@ public class SimpleManagerService
 
 	@Override
 	public void delete(String key) {
-        repository.remove(key); 
+        repository.remove(key);
 	}
 
 	@Override
 	public void clear() {
-        repository.clear(); 
+        repository.clear();
 	}
 
     @SuppressWarnings( { "unchecked", "rawtypes" } )

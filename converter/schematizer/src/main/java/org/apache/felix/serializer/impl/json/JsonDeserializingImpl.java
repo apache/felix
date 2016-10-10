@@ -32,10 +32,10 @@ import java.util.Scanner;
 import org.apache.felix.schematizer.Node;
 import org.apache.felix.schematizer.Schema;
 import org.apache.felix.schematizer.impl.Util;
+import org.osgi.converter.ConversionException;
+import org.osgi.converter.Converter;
+import org.osgi.converter.TypeReference;
 import org.osgi.dto.DTO;
-import org.osgi.service.converter.ConversionException;
-import org.osgi.service.converter.Converter;
-import org.osgi.service.converter.TypeReference;
 import org.osgi.service.serializer.Deserializing;
 
 public class JsonDeserializingImpl<T> implements Deserializing<T> {
@@ -49,14 +49,13 @@ public class JsonDeserializingImpl<T> implements Deserializing<T> {
     }
 
     @Override
-    public Deserializing<T> with(Converter c)
+    public JsonDeserializingImpl<T> with(Converter c)
     {
         converter = c;
         return this;
     }
 
-    @Override
-    public Deserializing<T> withContext(Object obj)
+    public JsonDeserializingImpl<T> withContext(Object obj)
     {
         if(obj instanceof Schema)
             schema = (Schema)obj;
@@ -124,10 +123,10 @@ public class JsonDeserializingImpl<T> implements Deserializing<T> {
         }
 
         if (cls == null)
-            return (T)handleInvalid();
+            return handleInvalid();
 
         if (!DTO.class.isAssignableFrom(cls))
-            return (T)handleInvalid();
+            return handleInvalid();
 
         Class<? extends DTO> targetCls = (Class)cls;
 
@@ -170,7 +169,7 @@ public class JsonDeserializingImpl<T> implements Deserializing<T> {
                                     else if (DTO.class.isAssignableFrom(Util.rawClassOf(type)))
                                         c.add(convertToDTO((Class)Util.rawClassOf(type), (Map)o, schema, path + "/"));
                                     else
-                                        c.add(converter.convert(c).to(type));                                
+                                        c.add(converter.convert(c).to(type));
                                 }
                                 obj = c;
                             } else {
@@ -180,11 +179,11 @@ public class JsonDeserializingImpl<T> implements Deserializing<T> {
                                 else if (DTO.class.isAssignableFrom(Util.rawClassOf(type)))
                                     obj = convertToDTO((Class)Util.rawClassOf(type), (Map)val, schema, path + "/");
                                 else
-                                    obj = converter.convert(val).to(type);                                
+                                    obj = converter.convert(val).to(type);
                             }
                         }
 
-                        f.set(dto, obj);                        
+                        f.set(dto, obj);
                     }
                 } catch (NoSuchFieldException e) {
                 }
@@ -224,7 +223,7 @@ public class JsonDeserializingImpl<T> implements Deserializing<T> {
         {
             if (DTO.class.isAssignableFrom(targetCls ))
                 return convertCollectionItemToDTO(obj, targetCls, schema, path);
-            
+
             U newItem = targetCls.newInstance();
             return newItem;
         }

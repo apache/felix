@@ -19,7 +19,7 @@ import java.io.InputStream;
 import java.nio.charset.Charset;
 
 import org.osgi.annotation.versioning.ProviderType;
-import org.osgi.service.converter.Converter;
+import org.osgi.converter.Converter;
 
 /**
  * Interface to specify the source of the decoding operation
@@ -64,24 +64,12 @@ public interface Deserializing<T> {
 	 */
 	T from(CharSequence in);
 
-    /**
-     * Specify the converter to be used by the code, if an alternative, adapted,
-     * converter is to be used.
-     *
-     * @param converter The converter to use.
-     * @return This Deserializing object to allow further invocations on it.
-     */
-	Deserializing<T> with(Converter converter);
-
 	/**
-	 * Provide contextual information to complete the de-serializing operation.
-	 * The contexts that can be handled are serializer-specific.
+	 * Specify the converter to be used by the code, if an alternative, adapted,
+	 * converter is to be used.
 	 *
-	 * @param obj The context to use while deserializing.
-     * @return This Deserializing object to allow further invocations on it.
+	 * @param converter The converter to use.
+	 * @return This Deserializing object to allow further invocations on it.
 	 */
-	default Deserializing<T> withContext(Object obj) {
-	    // Default or simple deserializers do not need additional context
-	    return this;
-	}
+	Deserializing<T> with(Converter converter);
 }

@@ -28,9 +28,9 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 
+import org.osgi.converter.ConversionException;
+import org.osgi.converter.Converter;
 import org.osgi.dto.DTO;
-import org.osgi.service.converter.ConversionException;
-import org.osgi.service.converter.Converter;
 import org.osgi.service.serializer.Serializing;
 
 public class JsonSerializingImpl implements Serializing {

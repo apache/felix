@@ -28,14 +28,14 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
-import org.osgi.service.converter.ConversionException;
-import org.osgi.service.converter.ConvertFunction;
-import org.osgi.service.converter.Converter;
-import org.osgi.service.converter.ConverterBuilder;
-import org.osgi.service.converter.Converting;
-import org.osgi.service.converter.Function;
-import org.osgi.service.converter.Rule;
-import org.osgi.service.converter.TypeReference;
+import org.osgi.converter.ConversionException;
+import org.osgi.converter.ConvertFunction;
+import org.osgi.converter.Converter;
+import org.osgi.converter.ConverterBuilder;
+import org.osgi.converter.Converting;
+import org.osgi.converter.Function;
+import org.osgi.converter.Rule;
+import org.osgi.converter.TypeReference;
 
 public class AdapterImpl implements InternalConverter {
     private final InternalConverter delegate;

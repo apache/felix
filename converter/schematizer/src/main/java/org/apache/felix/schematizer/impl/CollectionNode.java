@@ -18,7 +18,7 @@ package org.apache.felix.schematizer.impl;
 import java.lang.reflect.Type;
 import java.util.Collection;
 
-import org.osgi.service.converter.TypeReference;
+import org.osgi.converter.TypeReference;
 
 public class CollectionNode
         extends NodeImpl

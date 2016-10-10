@@ -24,9 +24,9 @@ import java.nio.charset.StandardCharsets;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-import org.osgi.service.converter.Converter;
-import org.osgi.service.converter.StandardConverter;
-import org.osgi.service.converter.TypeReference;
+import org.osgi.converter.Converter;
+import org.osgi.converter.StandardConverter;
+import org.osgi.converter.TypeReference;
 import org.osgi.service.serializer.Deserializing;
 import org.osgi.service.serializer.Serializer;
 import org.osgi.service.serializer.Serializing;

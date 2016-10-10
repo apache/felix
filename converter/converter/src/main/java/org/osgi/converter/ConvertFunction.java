@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.osgi.service.converter;
+package org.osgi.converter;
 
 import java.lang.reflect.Type;
 
@@ -38,6 +38,7 @@ public interface ConvertFunction<F, T> {
 	 *         convert function cannot handle this conversion. In this case the
 	 *         next matching rule or adapter will be given a opportunity to
 	 *         convert.
+	 * @throws Exception
 	 */
 	T convert(F obj, Type targetType) throws Exception;
 }

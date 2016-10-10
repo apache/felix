@@ -15,7 +15,7 @@
  */
 package org.apache.felix.schematizer;
 
-import org.osgi.service.converter.TypeReference;
+import org.osgi.converter.TypeReference;
 
 public class TypeRule<T> {
 	private final String           			path;

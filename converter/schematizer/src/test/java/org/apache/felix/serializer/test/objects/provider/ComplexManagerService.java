@@ -28,7 +28,7 @@ import org.apache.felix.serializer.test.objects.ComplexTop;
 import org.apache.felix.serializer.test.prevayler.AggregateTypeReference;
 import org.apache.felix.serializer.test.prevayler.MockPrevaylerBackedRepository;
 import org.apache.felix.serializer.test.prevayler.Repository;
-import org.osgi.service.converter.TypeReference;
+import org.osgi.converter.TypeReference;
 
 public class ComplexManagerService
 	implements ComplexManager
@@ -64,7 +64,7 @@ public class ComplexManagerService
     @Override
 	public List<ComplexTop> list()
 	{
-	    return repository.list().stream().map(e -> (ComplexTopEntity)e).collect(Collectors.toList());
+	    return repository.list().stream().map(e -> e).collect(Collectors.toList());
 	}
 
 	@Override
@@ -74,12 +74,12 @@ public class ComplexManagerService
 
     @Override
 	public void delete(String key) {
-        repository.remove(key); 
+        repository.remove(key);
 	}
 
 	@Override
 	public void clear() {
-	    repository.clear(); 
+	    repository.clear();
 	}
 
     @SuppressWarnings( { "unchecked", "rawtypes" } )
