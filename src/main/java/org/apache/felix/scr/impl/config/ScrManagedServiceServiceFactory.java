@@ -58,7 +58,7 @@ public class ScrManagedServiceServiceFactory implements ServiceFactory<ScrManage
             // assume MetaType Service API not available
             logger
                 .log(
-                    LogService.LOG_ERROR,
+                    LogService.LOG_INFO,
                     "Cannot create MetaType providing ManagedService; not providing Metatype information but just accepting configuration",
                     null );
         }
