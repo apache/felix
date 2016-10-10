@@ -187,6 +187,9 @@ public class PreferencesImpl implements Preferences {
      * @see org.osgi.service.prefs.Preferences#get(java.lang.String, java.lang.String)
      */
     public synchronized String get(String key, String def) {
+    	if ( key == null ) {
+    		throw new NullPointerException();
+    	}
         this.checkValidity();
         String value = this.properties.get(key);
         if ( value == null ) {
@@ -356,7 +359,31 @@ public class PreferencesImpl implements Preferences {
         String value = this.get(key, null);
         if ( value != null ) {
             try {
-                result = Base64.decodeBase64(value.getBytes("utf-8"));
+            	final byte[] bytes = value.getBytes("utf-8");
+        		// check for invalid characters
+        		boolean valid = bytes.length * 6 % 8 == 0;
+        		if ( valid ) {
+	        		for(int i=0; i<bytes.length-1; i++) {
+	        			final byte b = bytes[i];
+	        			if ( b >= 'a' && b <= 'z') {
+	        				continue;
+	        			}
+	        			if ( b >= 'A' && b <= 'Z') {
+	        				continue;
+	        			}
+	        			if ( b >= '0' && b <= '9') {
+	        				continue;
+	        			}
+	        			if ( b == '+' || b == '/') {
+	        				continue;
+	        			}
+	        			valid = false;
+	        			break;
+	        		}
+        		}
+        		if ( valid ) {
+        			result = Base64.decodeBase64(value.getBytes("utf-8"));
+            	}
             } catch (UnsupportedEncodingException ignore) {
                 // utf-8 is always available
             }
@@ -368,7 +395,9 @@ public class PreferencesImpl implements Preferences {
      * @see org.osgi.service.prefs.Preferences#keys()
      */
     public synchronized String[] keys() throws BackingStoreException {
-        this.sync();
+        if ( !this.changeSet.hasChanges ) {
+            this.storeManager.getStore().update(this);
+        }
         final Set<String> keys = this.properties.keySet();
         return keys.toArray(new String[keys.size()]);
     }
@@ -377,7 +406,9 @@ public class PreferencesImpl implements Preferences {
      * @see org.osgi.service.prefs.Preferences#childrenNames()
      */
     public synchronized String[] childrenNames() throws BackingStoreException {
-        this.sync();
+        if ( !this.changeSet.hasChanges ) {
+            this.storeManager.getStore().update(this);
+        }
         final Set<String> names = this.children.keySet();
         return names.toArray(new String[names.size()]);
     }
@@ -447,6 +478,9 @@ public class PreferencesImpl implements Preferences {
     protected PreferencesImpl getNode(String path, boolean saveNewlyCreatedNode, boolean create) {
         if ( path.startsWith("/") ) {
             throw new IllegalArgumentException("Path must not contained consecutive slashes");
+        }
+        if ( path.endsWith("/") ) {
+            throw new IllegalArgumentException("Path must not contained trailing slashes");
         }
         if ( path.length() == 0 ) {
             return this;
