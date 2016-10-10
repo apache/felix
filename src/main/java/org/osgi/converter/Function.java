@@ -31,7 +31,7 @@ import org.osgi.annotation.versioning.ConsumerType;
 @FunctionalInterface
 public interface Function<F, T> {
 	/**
-	 * /** Convert the object into the target type.
+	 * Convert the object into the target type.
 	 *
 	 * @param obj The object to be converted. This object will never be
 	 *            {@code null} as the convert function will not be invoked for
