@@ -16,7 +16,7 @@
  */
 package org.apache.felix.converter.impl;
 
-import org.osgi.service.converter.Converter;
+import org.osgi.converter.Converter;
 
 public interface InternalConverter extends Converter {
     public InternalConverting convert(Object obj);

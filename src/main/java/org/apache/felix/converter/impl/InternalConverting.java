@@ -16,8 +16,8 @@
  */
 package org.apache.felix.converter.impl;
 
-import org.osgi.service.converter.Converter;
-import org.osgi.service.converter.Converting;
+import org.osgi.converter.Converter;
+import org.osgi.converter.Converting;
 
 public interface InternalConverting extends Converting {
     public void setConverter(Converter c);

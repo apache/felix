@@ -1,6 +1,6 @@
 /*
  * Copyright (c) OSGi Alliance (2016). All Rights Reserved.
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -24,15 +24,15 @@
  * <p>
  * Example import for consumers using the API in this package:
  * <p>
- * {@code  Import-Package: org.osgi.service.converter; version="[1.0,2.0)"}
+ * {@code  Import-Package: org.osgi.converter; version="[1.0,2.0)"}
  * <p>
  * Example import for providers implementing the API in this package:
  * <p>
- * {@code  Import-Package: org.osgi.service.converter; version="[1.0,1.1)"}
- * 
- * @author $Id$
+ * {@code  Import-Package: org.osgi.converter; version="[1.0,1.1)"}
+ *
+ * @author $Id: 1b82a2a1db1431c5e4398f368662b5b6fb5f8547 $
  */
 @Version("1.0")
-package org.osgi.service.converter;
+package org.osgi.converter;
 
 import org.osgi.annotation.versioning.Version;
