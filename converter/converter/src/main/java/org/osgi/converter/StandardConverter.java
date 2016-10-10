@@ -20,6 +20,12 @@ import org.apache.felix.converter.impl.ConverterBuilderImpl;
 import org.apache.felix.converter.impl.ConverterImpl;
 import org.apache.felix.converter.impl.InternalConverter;
 
+/**
+ * The standard converter.
+ *
+ * @author $Id$
+ * @ThreadSafe
+ */
 public class StandardConverter implements Converter {
     private final InternalConverter converter;
 

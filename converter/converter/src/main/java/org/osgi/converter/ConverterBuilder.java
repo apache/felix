@@ -17,6 +17,8 @@ package org.osgi.converter;
 
 import java.lang.reflect.Type;
 
+import org.osgi.annotation.versioning.ProviderType;
+
 /**
  * A builder to create a new converter with modified behaviour based on an
  * existing converter. The modified behaviour is specified by providing rules
@@ -24,6 +26,7 @@ import java.lang.reflect.Type;
  *
  * @author $Id$
  */
+@ProviderType
 public interface ConverterBuilder {
 	/**
 	 * Build the specified converter. Each time this method is called a new

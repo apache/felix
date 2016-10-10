@@ -17,6 +17,8 @@ package org.osgi.converter;
 
 import java.lang.reflect.Type;
 
+import org.osgi.annotation.versioning.ConsumerType;
+
 /**
  * An functional interface with a single convert method that is passed the
  * original object and the target type.
@@ -25,6 +27,7 @@ import java.lang.reflect.Type;
  * @param <T> Type parameter for the converted object.
  * @author $Id$
  */
+@ConsumerType
 @FunctionalInterface
 public interface ConvertFunction<F, T> {
 	/**
