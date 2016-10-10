@@ -80,11 +80,19 @@ public class AdapterImpl implements InternalConverter {
         private final InternalConverting del;
         private final Object object;
         private volatile Object defaultValue;
+        private volatile Class<?> treatAsClass;
         private volatile boolean hasDefault;
 
         ConvertingWrapper(Object obj, InternalConverting c) {
             object = obj;
             del = c;
+        }
+
+        @Override
+        public Converting as(Class<?> cls) {
+            treatAsClass = cls;
+            del.as(cls);
+            return this;
         }
 
         @Override
@@ -116,6 +124,7 @@ public class AdapterImpl implements InternalConverter {
         @Override
         public Object to(Type type) {
             if (object != null) {
+                // TODO use treatAsClass
                 Set<Type> fromTypes = assignableTypes(object.getClass());
                 Set<Type> toTypes = assignableTypes(type);
 

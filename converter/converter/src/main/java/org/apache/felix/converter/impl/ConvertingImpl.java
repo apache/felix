@@ -60,12 +60,19 @@ public class ConvertingImpl implements Converting, InternalConverting {
 
     private volatile Converter converter;
     private volatile Object object;
+    private volatile Class<?> treatAsClass;
     private volatile Object defaultValue;
     private volatile boolean hasDefault;
 
     ConvertingImpl(Converter c, Object obj) {
         converter = c;
         object = obj;
+    }
+
+    @Override
+    public Converting as(Class<?> type) {
+        treatAsClass = type;
+        return this;
     }
 
     @Override
@@ -115,8 +122,9 @@ public class ConvertingImpl implements Converting, InternalConverting {
             return handleNull(cls);
 
         Class<?> targetCls = Util.primitiveToBoxed(cls);
+        Class<?> sourceCls = treatAsClass != null ? treatAsClass : object.getClass();
 
-        if (!isCopyRequiredType(targetCls) && targetCls.isAssignableFrom(object.getClass())) {
+        if (!isCopyRequiredType(targetCls) && targetCls.isAssignableFrom(sourceCls)) {
                 return object;
         }
 
@@ -129,13 +137,13 @@ public class ConvertingImpl implements Converting, InternalConverting {
         } else if (Collection.class.isAssignableFrom(targetCls)) {
             return convertToCollection(targetCls, typeArguments);
         } else if (DTO.class.isAssignableFrom(targetCls)) {
-            return convertToDTO(targetCls);
+            return convertToDTO(sourceCls, targetCls);
         } else if (isMapType(targetCls)) {
-            return convertToMapType(targetCls, typeArguments);
+            return convertToMapType(sourceCls, targetCls, typeArguments);
         }
 
         // At this point we know that the target is a 'singular' type: not a map, collection or array
-        if (object instanceof Collection) {
+        if (Collection.class.isAssignableFrom(sourceCls)) {
             return convertCollectionToSingleValue(cls);
         } else if ((object = asBoxedArray(object)) instanceof Object[]) {
             return convertArrayToSingleValue(cls);
@@ -217,8 +225,8 @@ public class ConvertingImpl implements Converting, InternalConverting {
     }
 
     @SuppressWarnings({ "rawtypes", "unchecked" })
-    private <T> T convertToDTO(Class<T> targetCls) {
-        Map m = mapView(object, converter);
+    private <T> T convertToDTO(Class<?> sourceCls, Class<T> targetCls) {
+        Map m = mapView(object, sourceCls, converter);
 
         try {
             T dto = targetCls.newInstance();
@@ -248,8 +256,8 @@ public class ConvertingImpl implements Converting, InternalConverting {
     }
 
     @SuppressWarnings({ "rawtypes", "unchecked" })
-    private Map convertToMap(Class<?> targetCls, Type[] typeArguments) {
-        Map m = mapView(object, converter);
+    private Map convertToMap(Class<?> sourceCls, Class<?> targetCls, Type[] typeArguments) {
+        Map m = mapView(object, sourceCls, converter);
         if (m == null)
             return null;
         Type targetKeyType = null, targetValueType = null;
@@ -289,19 +297,19 @@ public class ConvertingImpl implements Converting, InternalConverting {
     }
 
     @SuppressWarnings({ "unchecked", "rawtypes" })
-    private Object convertToMapType(Class<?> targetCls, Type[] typeArguments) {
+    private Object convertToMapType(Class<?> sourceCls, Class<?> targetCls, Type[] typeArguments) {
         if (Map.class.isAssignableFrom(targetCls))
-            return convertToMap(targetCls, typeArguments);
+            return convertToMap(sourceCls, targetCls, typeArguments);
         else if (Dictionary.class.isAssignableFrom(targetCls))
-            return new Hashtable(convertToMap(Map.class, typeArguments));
+            return new Hashtable(convertToMap(sourceCls, Map.class, typeArguments));
         else if (targetCls.isInterface())
-            return createProxy(targetCls);
-        return createJavaBean(targetCls);
+            return createProxy(sourceCls, targetCls);
+        return createJavaBean(sourceCls, targetCls);
     }
 
-    private Object createJavaBean(Class<?> targetCls) {
+    private Object createJavaBean(Class<?> sourceCls, Class<?> targetCls) {
         @SuppressWarnings("rawtypes")
-        Map m = mapView(object, converter);
+        Map m = mapView(object, sourceCls, converter);
         try {
             Object res = targetCls.getConstructor().newInstance();
             for (Method setter : getSetters(targetCls)) {
@@ -321,8 +329,8 @@ public class ConvertingImpl implements Converting, InternalConverting {
     }
 
     @SuppressWarnings("rawtypes")
-    private Object createProxy(Class<?> targetCls) {
-        Map m = mapView(object, converter);
+    private Object createProxy(Class<?> sourceCls, Class<?> targetCls) {
+        Map m = mapView(object, sourceCls, converter);
         return Proxy.newProxyInstance(targetCls.getClassLoader(), new Class[] {targetCls},
             new InvocationHandler() {
                 @Override
@@ -477,14 +485,14 @@ public class ConvertingImpl implements Converting, InternalConverting {
     }
 
     @SuppressWarnings("rawtypes")
-    private static Map createMapFromBeanAccessors(Object obj) {
+    private static Map createMapFromBeanAccessors(Object obj, Class<?> sourceCls) {
         Set<String> invokedMethods = new HashSet<>();
 
         Map result = new HashMap();
-        for (Method md : obj.getClass().getDeclaredMethods()) {
+        for (Method md : sourceCls.getDeclaredMethods()) {
             handleBeanMethod(obj, md, invokedMethods, result);
         }
-        for (Method md : obj.getClass().getMethods()) {
+        for (Method md : sourceCls.getMethods()) {
             handleBeanMethod(obj, md, invokedMethods, result);
         }
 
@@ -670,17 +678,20 @@ public class ConvertingImpl implements Converting, InternalConverting {
         }
     }
 
-    private static Map<?,?> mapView(Object obj, Converter converter) {
-        if (obj instanceof Map)
+    private static Map<?,?> mapView(Object obj, Class<?> sourceCls, Converter converter) {
+        if (Map.class.isAssignableFrom(sourceCls))
             return (Map<?,?>) obj;
-        else if (obj instanceof Dictionary)
+        else if (Dictionary.class.isAssignableFrom(sourceCls))
             return null; // TODO
         else if (obj instanceof DTO)
+            // TODO inspect if its a DTO, rather than instanceof
             return createMapFromDTO(obj, converter);
-        else if (obj.getClass().getInterfaces().length > 0)
-            return createMapFromInterface(obj);
-        else
-            return createMapFromBeanAccessors(obj);
+        else {
+            Map<?,?> m = createMapFromBeanAccessors(obj, sourceCls);
+            if (m.size() > 0)
+                return m;
+        }
+        return createMapFromInterface(obj);// TODO, sourceCls);
     }
 
     private static boolean isCopyRequiredType(Class<?> cls) {
