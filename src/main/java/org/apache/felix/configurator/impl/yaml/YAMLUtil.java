@@ -38,7 +38,7 @@ import org.apache.felix.configurator.impl.model.Config;
 import org.apache.felix.configurator.impl.model.ConfigPolicy;
 import org.apache.felix.configurator.impl.model.ConfigurationFile;
 import org.osgi.framework.Bundle;
-import org.osgi.service.converter.TypeReference;
+import org.osgi.converter.TypeReference;
 import org.yaml.snakeyaml.DumperOptions;
 import org.yaml.snakeyaml.Yaml;
 import org.yaml.snakeyaml.error.YAMLException;
