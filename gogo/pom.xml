@@ -29,12 +29,12 @@
     <name>Apache Felix Gogo</name>
     <description>Apache Felix Gogo Subproject</description>
     <artifactId>gogo-reactor</artifactId>
-    <version>1.0.0</version>
+    <version>1.0.1-SNAPSHOT</version>
 
     <scm>
-         <connection>scm:svn:http://svn.apache.org/repos/asf/felix/releases/1.0.0</connection>
-         <developerConnection>scm:svn:https://svn.apache.org/repos/asf/felix/releases/1.0.0</developerConnection>
-         <url>scm:svn:https://svn.apache.org/repos/asf/felix/releases/1.0.0</url>
+         <connection>scm:svn:http://svn.apache.org/repos/asf/felix/trunk/gogo</connection>
+         <developerConnection>scm:svn:https://svn.apache.org/repos/asf/felix/trunk/gogo</developerConnection>
+         <url>http://svn.apache.org/repos/asf/felix/gogo</url>
     </scm>
 
     <modules>
