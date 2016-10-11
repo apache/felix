@@ -16,19 +16,16 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.felix.gogo.api;
+package org.apache.felix.service.command;
 
-import org.apache.felix.gogo.api.Job.Status;
-
-/**
- * Listener for command executions.
- *
- * Such listeners must be registered in the OSGi registry and will be called
- * by the CommandProcessor when a command line is executed in a given session.
- */
-public interface JobListener
+public interface Result
 {
 
-    void jobChanged(Job job, Status previous, Status current);
+    boolean isSuccess();
 
+    Object result();
+
+    Exception exception();
+
+    int error();
 }
