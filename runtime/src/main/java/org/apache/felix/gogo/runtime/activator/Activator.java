@@ -25,10 +25,10 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
-import org.apache.felix.gogo.api.CommandSessionListener;
 import org.apache.felix.gogo.runtime.CommandProcessorImpl;
 import org.apache.felix.gogo.runtime.CommandProxy;
 import org.apache.felix.gogo.runtime.threadio.ThreadIOImpl;
+import org.apache.felix.service.command.CommandSessionListener;
 import org.apache.felix.service.command.CommandProcessor;
 import org.apache.felix.service.command.Converter;
 import org.apache.felix.service.threadio.ThreadIO;
@@ -85,39 +85,39 @@ public class Activator implements BundleActivator
         commandTracker = trackOSGiCommands(context);
         commandTracker.open();
 
-        converterTracker = new ServiceTracker(context, Converter.class.getName(), null)
+        converterTracker = new ServiceTracker<Converter, Converter>(context, Converter.class, null)
         {
             @Override
-            public Object addingService(ServiceReference reference)
+            public Converter addingService(ServiceReference<Converter> reference)
             {
-                Converter converter = (Converter) super.addingService(reference);
+                Converter converter = super.addingService(reference);
                 processor.addConverter(converter);
                 return converter;
             }
 
             @Override
-            public void removedService(ServiceReference reference, Object service)
+            public void removedService(ServiceReference<Converter> reference, Converter service)
             {
-                processor.removeConverter((Converter) service);
+                processor.removeConverter(service);
                 super.removedService(reference, service);
             }
         };
         converterTracker.open();
 
-        listenerTracker = new ServiceTracker(context, CommandSessionListener.class.getName(), null)
+        listenerTracker = new ServiceTracker<CommandSessionListener, CommandSessionListener>(context, CommandSessionListener.class.getName(), null)
         {
             @Override
-            public Object addingService(ServiceReference reference)
+            public CommandSessionListener addingService(ServiceReference<CommandSessionListener> reference)
             {
-                CommandSessionListener listener = (CommandSessionListener) super.addingService(reference);
+                CommandSessionListener listener = super.addingService(reference);
                 processor.addListener(listener);
                 return listener;
             }
 
             @Override
-            public void removedService(ServiceReference reference, Object service)
+            public void removedService(ServiceReference<CommandSessionListener> reference, CommandSessionListener service)
             {
-                processor.removeListener((CommandSessionListener) service);
+                processor.removeListener(service);
                 super.removedService(reference, service);
             }
         };
@@ -141,13 +141,13 @@ public class Activator implements BundleActivator
         Filter filter = context.createFilter(String.format("(&(%s=*)(%s=*))",
             CommandProcessor.COMMAND_SCOPE, CommandProcessor.COMMAND_FUNCTION));
 
-        return new ServiceTracker(context, filter, null)
+        return new ServiceTracker<Object, List<Object>>(context, filter, null)
         {
-            private final ConcurrentMap<ServiceReference, Map<String, CommandProxy>> proxies
+            private final ConcurrentMap<ServiceReference<Object>, Map<String, CommandProxy>> proxies
                     = new ConcurrentHashMap<>();
 
             @Override
-            public Object addingService(ServiceReference reference)
+            public List<Object> addingService(ServiceReference<Object> reference)
             {
                 Object scope = reference.getProperty(CommandProcessor.COMMAND_SCOPE);
                 Object function = reference.getProperty(CommandProcessor.COMMAND_FUNCTION);
@@ -193,7 +193,7 @@ public class Activator implements BundleActivator
             }
 
             @Override
-            public void removedService(ServiceReference reference, Object service)
+            public void removedService(ServiceReference<Object> reference, List<Object> service)
             {
                 Object scope = reference.getProperty(CommandProcessor.COMMAND_SCOPE);
                 Object function = reference.getProperty(CommandProcessor.COMMAND_FUNCTION);

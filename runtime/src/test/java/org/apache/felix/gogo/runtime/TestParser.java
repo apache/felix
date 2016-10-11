@@ -27,7 +27,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.regex.Pattern;
 
-import org.apache.felix.gogo.api.Process;
+import org.apache.felix.service.command.Process;
 import org.apache.felix.gogo.runtime.Parser.Pipeline;
 import org.apache.felix.gogo.runtime.Parser.Program;
 import org.apache.felix.gogo.runtime.Parser.Sequence;

@@ -16,16 +16,41 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.felix.gogo.api;
+package org.apache.felix.service.command;
 
-public interface Result
+import java.io.InputStream;
+import java.io.PrintStream;
+
+import org.apache.felix.gogo.runtime.Pipe;
+
+public interface Process
 {
 
-    boolean isSuccess();
+    class Utils {
+        public static Process current() {
+            return Pipe.getCurrentPipe();
+        }
+    }
 
-    Object result();
+    InputStream in();
 
-    Exception exception();
+    PrintStream out();
 
-    int error();
+    PrintStream err();
+
+    /**
+     * Get the job controlling this process
+     */
+    Job job();
+
+    /**
+     * Check if the given descriptor for the currently running pipe is the terminal or not.
+     */
+    boolean isTty(int fd);
+
+    /**
+     * Set the error code for the currently running pipe.
+     */
+    void error(int error);
+
 }

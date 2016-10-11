@@ -50,10 +50,10 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 
-import org.apache.felix.gogo.api.Job;
-import org.apache.felix.gogo.api.Job.Status;
-import org.apache.felix.gogo.api.JobListener;
-import org.apache.felix.gogo.api.Process;
+import org.apache.felix.service.command.Job;
+import org.apache.felix.service.command.Job.Status;
+import org.apache.felix.service.command.JobListener;
+import org.apache.felix.service.command.Process;
 import org.apache.felix.gogo.runtime.Pipe.Result;
 import org.apache.felix.service.command.CommandProcessor;
 import org.apache.felix.service.command.CommandSession;

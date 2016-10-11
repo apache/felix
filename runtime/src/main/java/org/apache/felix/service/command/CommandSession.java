@@ -23,9 +23,6 @@ import java.io.PrintStream;
 import java.nio.file.Path;
 import java.util.List;
 
-import org.apache.felix.gogo.api.Job;
-import org.apache.felix.gogo.api.JobListener;
-
 public interface CommandSession extends AutoCloseable
 {
 

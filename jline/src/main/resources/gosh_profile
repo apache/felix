@@ -30,7 +30,7 @@ try {
   addcommand context ${.context}
 
   # add methods on System object as commands
-  #addcommand system (((${.context} getClass) getClassLoader) loadClass java.lang.System)
+  addcommand system (((${.context} getClass) getClassLoader) loadClass java.lang.System)
 
   # alias to print full stack trace
   e = { $exception printStackTrace }
@@ -292,7 +292,9 @@ try {
       $uri resolve $path
     }
   }
-  cat (__resolve_uri $0 motd)
+
+  # print welcome message, unless we're explicitly told not to...
+  if { $.gosh_quiet } { } { cat ($0 resolve motd) }
 } {
     echo "$0: ERROR: $exception"
 }

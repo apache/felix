@@ -532,7 +532,7 @@ public class TestTokenizer
     private BundleContext createMockContext() throws ClassNotFoundException
     {
         Bundle systemBundle = mock(Bundle.class);
-        when(systemBundle.loadClass(eq("java.lang.System"))).thenReturn(System.class);
+        when(systemBundle.loadClass(eq("java.lang.System"))).thenReturn((Class) System.class);
 
         BundleContext bc = mock(BundleContext.class);
         when(bc.getBundles()).thenReturn(new Bundle[] { systemBundle });
