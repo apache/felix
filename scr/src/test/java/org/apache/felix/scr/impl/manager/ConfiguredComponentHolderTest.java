@@ -223,8 +223,8 @@ public class ConfiguredComponentHolderTest extends TestCase
             return m_configuration != null;
         }
 
-
-        public void reconfigure( Map<String, Object> configuration, boolean configurationDeleted )
+        @Override
+        public void reconfigure( Map<String, Object> configuration, boolean configurationDeleted, TargetedPID factoryPid)
         {
             this.m_configuration = configuration;
         }

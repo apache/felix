@@ -30,6 +30,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import org.apache.felix.scr.impl.helper.ComponentMethod;
 import org.apache.felix.scr.impl.helper.ComponentMethods;
 import org.apache.felix.scr.impl.helper.MethodResult;
+import org.apache.felix.scr.impl.metadata.TargetedPID;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceFactory;
@@ -597,11 +598,10 @@ public class SingleComponentManager<S> extends AbstractComponentManager<S> imple
      *                      the Configuration Admin Service or <code>null</code> if there is
      *                      no configuration or if the configuration has just been deleted.
      * @param configurationDeleted TODO
-     * @param changeCount Change count for the configuration
-     * @param targetedPID TargetedPID for the configuration
+     * @param factoryPid TODO
      */
     @Override
-    public void reconfigure( Map<String, Object> configuration, boolean configurationDeleted )
+    public void reconfigure( Map<String, Object> configuration, boolean configurationDeleted, TargetedPID factoryPid)
     {
         // store the properties
         m_configurationProperties = configuration;
