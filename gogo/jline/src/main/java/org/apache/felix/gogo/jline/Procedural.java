@@ -25,7 +25,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 
-import org.apache.felix.gogo.api.Process;
+import org.apache.felix.service.command.Process;
 import org.apache.felix.service.command.CommandSession;
 import org.apache.felix.service.command.Function;
 import org.jline.builtins.Options;

@@ -33,7 +33,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
-import org.apache.felix.gogo.api.Job.Status;
+import org.apache.felix.service.command.Job.Status;
 import org.apache.felix.gogo.runtime.Parser.Array;
 import org.apache.felix.gogo.runtime.Parser.Executable;
 import org.apache.felix.gogo.runtime.Parser.Operator;

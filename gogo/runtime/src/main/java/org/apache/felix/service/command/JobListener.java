@@ -16,41 +16,17 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.felix.gogo.api;
+package org.apache.felix.service.command;
 
-import java.io.InputStream;
-import java.io.PrintStream;
-
-import org.apache.felix.gogo.runtime.Pipe;
-
-public interface Process
+/**
+ * Listener for command executions.
+ *
+ * Such listeners must be registered in the OSGi registry and will be called
+ * by the CommandProcessor when a command line is executed in a given session.
+ */
+public interface JobListener
 {
 
-    class Utils {
-        public static Process current() {
-            return Pipe.getCurrentPipe();
-        }
-    }
-
-    InputStream in();
-
-    PrintStream out();
-
-    PrintStream err();
-
-    /**
-     * Get the job controlling this process
-     */
-    Job job();
-
-    /**
-     * Check if the given descriptor for the currently running pipe is the terminal or not.
-     */
-    boolean isTty(int fd);
-
-    /**
-     * Set the error code for the currently running pipe.
-     */
-    void error(int error);
+    void jobChanged(Job job, Job.Status previous, Job.Status current);
 
 }

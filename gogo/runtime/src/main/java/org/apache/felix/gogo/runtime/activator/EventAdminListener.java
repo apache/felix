@@ -18,10 +18,11 @@
  */
 package org.apache.felix.gogo.runtime.activator;
 
-import java.util.Properties;
+import java.util.HashMap;
+import java.util.Map;
 
-import org.apache.felix.gogo.api.CommandSessionListener;
 import org.apache.felix.service.command.CommandSession;
+import org.apache.felix.service.command.CommandSessionListener;
 import org.osgi.framework.BundleContext;
 import org.osgi.service.event.Event;
 import org.osgi.service.event.EventAdmin;
@@ -29,21 +30,21 @@ import org.osgi.util.tracker.ServiceTracker;
 
 public class EventAdminListener implements CommandSessionListener
 {
-    private ServiceTracker tracker;
+    private ServiceTracker<EventAdmin, EventAdmin> tracker;
 
     public EventAdminListener(BundleContext bundleContext)
     {
-        tracker = new ServiceTracker(bundleContext, EventAdmin.class.getName(), null);
+        tracker = new ServiceTracker<>(bundleContext, EventAdmin.class, null);
         tracker.open();
     }
 
     public void beforeExecute(CommandSession session, CharSequence command)
     {
-        EventAdmin admin = (EventAdmin) tracker.getService();
+        EventAdmin admin = tracker.getService();
         if (admin != null)
         {
-            Properties props = new Properties();
-            props.setProperty("command", command.toString());
+            Map<String, Object> props = new HashMap<>();
+            props.put("command", command.toString());
             Event event = new Event("org/apache/felix/service/command/EXECUTING", props);
             admin.postEvent(event);
         }

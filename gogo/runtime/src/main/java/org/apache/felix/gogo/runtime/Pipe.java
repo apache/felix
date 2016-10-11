@@ -47,9 +47,9 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import org.apache.felix.gogo.api.Job;
-import org.apache.felix.gogo.api.Job.Status;
-import org.apache.felix.gogo.api.Process;
+import org.apache.felix.service.command.Job;
+import org.apache.felix.service.command.Job.Status;
+import org.apache.felix.service.command.Process;
 import org.apache.felix.gogo.runtime.CommandSessionImpl.JobImpl;
 import org.apache.felix.gogo.runtime.Parser.Statement;
 import org.apache.felix.gogo.runtime.Pipe.Result;
@@ -60,7 +60,7 @@ public class Pipe implements Callable<Result>, Process
 {
     private static final ThreadLocal<Pipe> CURRENT = new ThreadLocal<>();
 
-    public static class Result implements org.apache.felix.gogo.api.Result {
+    public static class Result implements org.apache.felix.service.command.Result {
         public final Object result;
         public final Exception exception;
         public final int error;

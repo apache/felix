@@ -16,9 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.felix.gogo.api;
-
-import org.apache.felix.service.command.CommandSession;
+package org.apache.felix.service.command;
 
 /**
  * Listener for command executions.

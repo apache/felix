@@ -32,12 +32,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.CopyOnWriteArraySet;
 
-import org.apache.felix.gogo.api.CommandSessionListener;
-import org.apache.felix.service.command.CommandProcessor;
-import org.apache.felix.service.command.CommandSession;
-import org.apache.felix.service.command.Converter;
-import org.apache.felix.service.command.Descriptor;
-import org.apache.felix.service.command.Function;
+import org.apache.felix.service.command.*;
 import org.apache.felix.service.threadio.ThreadIO;
 
 public class CommandProcessorImpl implements CommandProcessor

@@ -20,14 +20,14 @@
     <parent>
         <groupId>org.apache.felix</groupId>
         <artifactId>gogo-parent</artifactId>
-        <version>0.6.0</version>
+        <version>1.0.0-SNAPSHOT</version>
         <relativePath>../gogo-parent/pom.xml</relativePath>
     </parent>
     <modelVersion>4.0.0</modelVersion>
     <packaging>bundle</packaging>
     <name>Apache Felix Gogo Runtime</name>
     <artifactId>org.apache.felix.gogo.runtime</artifactId>
-    <version>0.17.0-SNAPSHOT</version>
+    <version>1.0.0-SNAPSHOT</version>
     <properties>
         <!-- Skip because of NPE -->
         <animal.sniffer.skip>true</animal.sniffer.skip>
@@ -37,13 +37,13 @@
         <dependency>
             <groupId>org.osgi</groupId>
             <artifactId>org.osgi.core</artifactId>
-            <version>4.0.0</version>
+            <version>4.3.1</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>org.osgi</groupId>
             <artifactId>org.osgi.compendium</artifactId>
-            <version>4.0.0</version>
+            <version>4.3.1</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
@@ -57,19 +57,17 @@
             <plugin>
                 <groupId>org.apache.felix</groupId>
                 <artifactId>maven-bundle-plugin</artifactId>
-                <version>3.0.0</version>
                 <extensions>true</extensions>
                 <configuration>
                     <instructions>
-                        <Export-Service>
-                            org.apache.felix.service.threadio.ThreadIO,
-                            org.apache.felix.service.command.CommandProcessor
-                        </Export-Service>
+                        <Provide-Capability>
+                            osgi.service; effective:=active; objectClass="org.apache.felix.service.threadio.ThreadIO",
+                            osgi.service; effective:=active; objectClass="org.apache.felix.service.command.CommandProcessor"
+                        </Provide-Capability>
                         <Export-Package>
-                            org.apache.felix.service.command;
-                            org.apache.felix.service.threadio; version=${project.version}; status="provisional"; mandatory:="status",
+                            org.apache.felix.service.command; version=1.0.0,
+                            org.apache.felix.service.threadio; version=1.0.0,
                             org.apache.felix.gogo.runtime*; version=${project.version},
-                            org.apache.felix.gogo.api; version=${project.version}
                         </Export-Package>
                         <Import-Package>
                             org.osgi.service.event*; resolution:=optional,
@@ -85,13 +83,6 @@
                         <_versionpolicy>[$(version;==;$(@)),$(version;+;$(@)))</_versionpolicy>
                         <_removeheaders>Private-Package,Ignore-Package,Include-Resource</_removeheaders>
                     </instructions>
-                </configuration>
-            </plugin>
-            <plugin>
-                <artifactId>maven-compiler-plugin</artifactId>
-                <configuration>
-                    <source>1.7</source>
-                    <target>1.7</target>
                 </configuration>
             </plugin>
         </plugins>

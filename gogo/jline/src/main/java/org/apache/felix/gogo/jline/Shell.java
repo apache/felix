@@ -19,7 +19,6 @@
 package org.apache.felix.gogo.jline;
 
 import java.io.File;
-import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Reader;
@@ -29,6 +28,7 @@ import java.net.URI;
 import java.net.URL;
 import java.net.URLConnection;
 import java.nio.CharBuffer;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -42,8 +42,8 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import org.apache.felix.gogo.runtime.Closure;
 import org.apache.felix.gogo.runtime.CommandProxy;
 import org.apache.felix.gogo.runtime.CommandSessionImpl;
-import org.apache.felix.gogo.api.Job;
-import org.apache.felix.gogo.api.Job.Status;
+import org.apache.felix.service.command.Job;
+import org.apache.felix.service.command.Job.Status;
 import org.apache.felix.gogo.runtime.Reflective;
 import org.apache.felix.service.command.CommandProcessor;
 import org.apache.felix.service.command.CommandSession;
@@ -60,7 +60,6 @@ import org.jline.reader.LineReaderBuilder;
 import org.jline.reader.ParsedLine;
 import org.jline.reader.UserInterruptException;
 import org.jline.reader.impl.LineReaderImpl;
-import org.jline.reader.impl.history.history.FileHistory;
 import org.jline.terminal.Terminal;
 import org.jline.terminal.Terminal.Signal;
 import org.jline.terminal.Terminal.SignalHandler;
@@ -260,6 +259,7 @@ public class Shell {
         newSession.put("#COLUMNS", (Function) (s, arguments) -> terminal.getWidth());
         newSession.put("#LINES", (Function) (s, arguments) -> terminal.getHeight());
         newSession.put("#PWD", (Function) (s, arguments) -> s.currentDir().toString());
+        newSession.put(LineReader.HISTORY_FILE, Paths.get(System.getProperty("user.home"), ".gogo.history"));
 
         LineReader reader;
         if (args.isEmpty() && interactive) {
@@ -292,7 +292,6 @@ public class Shell {
                     .variables(((CommandSessionImpl) newSession).getVariables())
                     .completer(new org.jline.builtins.Completers.Completer(completionEnvironment))
                     .highlighter(new Highlighter(session))
-                    .history(new FileHistory(new File(System.getProperty("user.home"), ".gogo.history")))
                     .parser(new Parser())
                     .expander(new Expander(newSession))
                     .build();
@@ -418,11 +417,7 @@ public class Shell {
                 } catch (UserInterruptException e) {
                     // continue;
                 } catch (EndOfFileException e) {
-                    try {
-                        reader.getHistory().flush();
-                    } catch (IOException e1) {
-                        e.addSuppressed(e1);
-                    }
+                    reader.getHistory().save();
                     break;
                 }
             }

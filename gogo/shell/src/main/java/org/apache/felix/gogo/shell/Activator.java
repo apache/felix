@@ -18,6 +18,9 @@
  */
 package org.apache.felix.gogo.shell;
 
+import java.io.FileDescriptor;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.util.Arrays;
 import java.util.Dictionary;
 import java.util.HashSet;
@@ -191,7 +194,10 @@ public class Activator implements BundleActivator
 
         public void run()
         {
-            session = processor.createSession(System.in, System.out, System.err);
+
+            session = processor.createSession(new FileInputStream(FileDescriptor.in),
+                                              new FileOutputStream(FileDescriptor.out),
+                                              new FileOutputStream(FileDescriptor.err));
             try
             {
                 // wait for gosh command to be registered

@@ -16,11 +16,9 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.felix.gogo.api;
+package org.apache.felix.service.command;
 
 import java.util.List;
-
-import org.apache.felix.service.command.CommandSession;
 
 public interface Job
 {
