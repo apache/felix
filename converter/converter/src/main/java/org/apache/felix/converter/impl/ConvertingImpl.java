@@ -136,7 +136,7 @@ public class ConvertingImpl implements Converting, InternalConverting {
             return convertToArray(targetCls);
         } else if (Collection.class.isAssignableFrom(targetCls)) {
             return convertToCollection(targetCls, typeArguments);
-        } else if (DTO.class.isAssignableFrom(targetCls)) {
+        } else if (isDTOType(targetCls)) {
             return convertToDTO(sourceCls, targetCls);
         } else if (isMapType(targetCls)) {
             return convertToMapType(sourceCls, targetCls, typeArguments);
@@ -375,6 +375,29 @@ public class ConvertingImpl implements Converting, InternalConverting {
         } else {
             return 0;
         }
+    }
+
+    private boolean isDTOType(Class<?> targetCls) {
+        try {
+            targetCls.getDeclaredConstructor();
+        } catch (NoSuchMethodException | SecurityException e) {
+            // No zero-arg constructor, not a DTO
+            return false;
+        }
+
+        if (targetCls.getDeclaredMethods().length > 0)
+            return false;
+
+
+        for (Method m : targetCls.getMethods()) {
+            try {
+                Object.class.getMethod(m.getName(), m.getParameterTypes());
+            } catch (NoSuchMethodException | SecurityException e) {
+                // This method is not defined by Object.class
+                return false;
+            }
+        }
+        return true;
     }
 
     private boolean isMapType(Class<?> targetCls) {

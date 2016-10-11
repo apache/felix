@@ -124,8 +124,7 @@ public class AdapterImpl implements InternalConverter {
         @Override
         public Object to(Type type) {
             if (object != null) {
-                // TODO use treatAsClass
-                Set<Type> fromTypes = assignableTypes(object.getClass());
+                Set<Type> fromTypes = assignableTypes(treatAsClass != null ? treatAsClass : object.getClass());
                 Set<Type> toTypes = assignableTypes(type);
 
                 List<ConvertFunction<Object, Object>> converters = new ArrayList<>();

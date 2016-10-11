@@ -67,7 +67,7 @@ import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
-public class ConverterServiceTest {
+public class ConverterTest {
     private Converter converter;
 
     @Before
@@ -563,6 +563,36 @@ public class ConverterServiceTest {
         assertNotSame(m, m2);
     }
 
+    @Test
+    public void testConversionPriority() {
+        MyBean mb = new MyBean();
+        mb.intfVal = 17;
+        mb.beanVal = "Hello";
+
+        assertEquals(Collections.singletonMap("value", "Hello"),
+                converter.convert(mb).to(Map.class));
+    }
+
+    @Test
+    public void testConvertAs1() {
+        MyBean mb = new MyBean();
+        mb.intfVal = 17;
+        mb.beanVal = "Hello";
+
+        assertEquals(17,
+                converter.convert(mb).as(MyIntf.class).to(Map.class).get("value"));
+    }
+
+    @Test
+    public void testConvertAs2() {
+        MyBean mb = new MyBean();
+        mb.intfVal = 17;
+        mb.beanVal = "Hello";
+
+        assertEquals(Collections.singletonMap("value", "Hello"),
+                converter.convert(mb).as(MyBean.class).to(Map.class));
+    }
+
     static class MyClass2 {
         private final String value;
         public MyClass2(String v) {
@@ -572,6 +602,24 @@ public class ConverterServiceTest {
         @Override
         public String toString() {
             return value;
+        }
+    }
+
+    static interface MyIntf {
+        int value();
+    }
+
+    static class MyBean implements MyIntf {
+        int intfVal;
+        String beanVal;
+
+        @Override
+        public int value() {
+            return intfVal;
+        }
+
+        public String getValue() {
+            return beanVal;
         }
     }
 }
