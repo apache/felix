@@ -37,6 +37,7 @@ import org.osgi.converter.Rule;
 
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
 
 public class ConverterBuilderTest {
     private Converter converter;
@@ -175,5 +176,46 @@ public class ConverterBuilderTest {
         assertEquals("a", ca.convert(
                 new HashSet<String>(Arrays.asList("a", "b", "c"))).to(String.class));
         assertEquals(String.class, snooped.get(new HashSet<String>(Arrays.asList("a", "b", "c"))));
+    }
+
+    @Test
+    public void testConvertAs() {
+        ConverterBuilder cb = converter.newConverterBuilder();
+        cb.rule(new Rule<>(MyIntf.class, MyCustomDTO.class,
+                (i, t) -> { MyCustomDTO dto = new MyCustomDTO(); dto.field = "" + i.value(); return dto; }));
+        cb.rule(new Rule<>(MyBean.class, MyCustomDTO.class,
+                (b, t) -> { MyCustomDTO dto = new MyCustomDTO(); dto.field = b.getValue(); return dto; }));
+        Converter cc = cb.build();
+
+        MyBean mb = new MyBean();
+        mb.intfVal = 17;
+        mb.beanVal = "Hello";
+
+        assertNull(converter.convert(mb).to(MyCustomDTO.class).field);
+        assertNull(converter.convert(mb).as(MyIntf.class).to(MyCustomDTO.class).field);
+        assertEquals("Hello", cc.convert(mb).to(MyCustomDTO.class).field);
+        assertEquals("17", cc.convert(mb).as(MyIntf.class).to(MyCustomDTO.class).field);
+    }
+
+    static interface MyIntf {
+        int value();
+    }
+
+    static class MyBean implements MyIntf {
+        int intfVal;
+        String beanVal;
+
+        @Override
+        public int value() {
+            return intfVal;
+        }
+
+        public String getValue() {
+            return beanVal;
+        }
+    }
+
+    static class MyCustomDTO {
+        public String field;
     }
 }
