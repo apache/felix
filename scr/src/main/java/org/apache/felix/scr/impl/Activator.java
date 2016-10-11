@@ -228,22 +228,9 @@ public class Activator extends AbstractExtender implements SimpleLogger
 
     //---------- Component Management -----------------------------------------
 
-    private volatile boolean gogoMissing = true;
-
     @Override
     protected Extension doCreateExtension(final Bundle bundle) throws Exception
     {
-        if ( gogoMissing )
-        {
-            try
-            {
-                bundle.loadClass( "org.apache.felix.service.command.Descriptor" );
-                gogoMissing = false;
-            }
-            catch ( Throwable e )
-            {
-            }
-        }
         return new ScrExtension( bundle );
     }
 
