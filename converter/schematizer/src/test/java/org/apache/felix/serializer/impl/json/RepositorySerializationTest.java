@@ -16,8 +16,6 @@
  */
 package org.apache.felix.serializer.impl.json;
 
-import static org.junit.Assert.*;
-
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -45,11 +43,16 @@ import org.apache.felix.serializer.test.objects.provider.SimpleTopEntity;
 import org.apache.felix.serializer.test.prevayler.Repository;
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 
 /**
  * General class for testing any type of RepositoryStore.
- * 
+ *
  * @author David Leangen
  */
 public class RepositorySerializationTest
@@ -111,6 +114,9 @@ public class RepositorySerializationTest
 	}
 
     @Test
+    @Ignore("davidb: I've @Ignore-d this test as the DTO used breaks the DTO "
+            + "contract which says that DTOs cannot contain any methods. As these "
+            + "entities contain some methods they are not recognized as DTOs")
     public void shouldPutAndRemoveComplexEntityFromStore() {
         complexManager.clear();
         assertTrue( complexManager.list().isEmpty() );
@@ -151,6 +157,9 @@ public class RepositorySerializationTest
     }
 
     @Test
+    @Ignore("davidb: I've @Ignore-d this test as the DTO used breaks the DTO "
+            + "contract which says that DTOs cannot contain any methods. As these "
+            + "entities contain some methods they are not recognized as DTOs")
     public void shouldPutAllToStore() {
         complexManager.clear();
         assertTrue( complexManager.list().isEmpty() );
