@@ -320,7 +320,7 @@ public abstract class ConfigurableComponentHolder<S> implements ComponentHolder<
         for ( Map.Entry<AbstractComponentManager<S>,Map<String, Object>> entry: scms.entrySet())
         {
             if ( reconfigure ) {
-                entry.getKey().reconfigure( entry.getValue(), true);
+                entry.getKey().reconfigure( entry.getValue(), true, factoryPid);
             } else {
                 entry.getKey().dispose(ComponentConstants.DEACTIVATION_REASON_CONFIGURATION_DELETED);
             }
@@ -423,7 +423,7 @@ public abstract class ConfigurableComponentHolder<S> implements ComponentHolder<
         for ( Map.Entry<AbstractComponentManager<S>,Map<String, Object>> entry: scms.entrySet())
         {
             // configure the component
-            entry.getKey().reconfigure(entry.getValue(), false);
+            entry.getKey().reconfigure(entry.getValue(), false, factoryPid);
             log(LogService.LOG_DEBUG,
                 "ImmediateComponentHolder Finished configuring the dependency managers for component for pid {0} ",
                 new Object[] { pid }, null);
@@ -637,14 +637,14 @@ public abstract class ConfigurableComponentHolder<S> implements ComponentHolder<
                     {
                         m_singleComponent = createComponentManager(false);
                         cms.add( m_singleComponent );
-                        m_singleComponent.reconfigure(mergeProperties( null ), false);
+                        m_singleComponent.reconfigure(mergeProperties( null ), false, null);
                     }
                     if ( m_factoryPidIndex != null)
                     {
                         for (String pid: m_factoryConfigurations.keySet()) {
                             AbstractComponentManager<S> scm = createComponentManager(true);
                             m_components.put(pid, scm);
-                            scm.reconfigure( mergeProperties( pid ), false);
+                            scm.reconfigure( mergeProperties( pid ), false, new TargetedPID(pid));
                             cms.add( scm );
                         }
                     }

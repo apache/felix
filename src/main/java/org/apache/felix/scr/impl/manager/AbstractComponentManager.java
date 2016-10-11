@@ -46,6 +46,7 @@ import org.apache.felix.scr.impl.helper.SimpleLogger;
 import org.apache.felix.scr.impl.metadata.ComponentMetadata;
 import org.apache.felix.scr.impl.metadata.ReferenceMetadata;
 import org.apache.felix.scr.impl.metadata.ServiceMetadata;
+import org.apache.felix.scr.impl.metadata.TargetedPID;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceException;
@@ -1414,7 +1415,7 @@ public abstract class AbstractComponentManager<S> implements SimpleLogger, Compo
 
     abstract void preDeregister();
 
-    public abstract void reconfigure(Map<String, Object> configuration, boolean configurationDeleted);
+    public abstract void reconfigure(Map<String, Object> configuration, boolean configurationDeleted, TargetedPID factoryPid);
 
     public abstract void getComponentManagers(List<AbstractComponentManager<S>> cms);
 

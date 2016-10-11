@@ -123,7 +123,7 @@ public class ComponentFactoryImpl<S> extends AbstractComponentManager<S> impleme
 
         cm.setFactoryProperties( dictionary );
         //configure the properties
-        cm.reconfigure( m_configuration, false );
+        cm.reconfigure( m_configuration, false, null );
         // enable
         cm.enableInternal();
 
@@ -397,7 +397,11 @@ public class ComponentFactoryImpl<S> extends AbstractComponentManager<S> impleme
 
 
 	@Override
-	public void reconfigure(Map<String, Object> configuration, boolean configurationDeleted) {
+	public void reconfigure(Map<String, Object> configuration, boolean configurationDeleted, TargetedPID factoryPid) {
+	    if ( factoryPid != null ) {
+	        // ignore factory configuration changes for component factories.
+	        return;
+	    }
 		m_configuration = configuration;
 		List<SingleComponentManager<S>> cms;
 		synchronized (m_componentInstances)
@@ -406,7 +410,7 @@ public class ComponentFactoryImpl<S> extends AbstractComponentManager<S> impleme
         }
 		for (SingleComponentManager<S> cm: cms)
 		{
-		    cm.reconfigure( configuration, configurationDeleted);
+		    cm.reconfigure( configuration, configurationDeleted, factoryPid);
 		}
 	}
 
