@@ -1,3 +1,13 @@
+Changes from 1.23.0 to 1.22.0
+-----------------------------
+** Improvement
+    * [FELIX-5373] - Improve failure message when enabling metatype and using no or private properties only
+** Bug
+    * [FELIX-5304] - SERVICE_PID property should not be created
+    * [FELIX-5328] - NoClassDefFound not wrapped in the ClassScanner
+    * [FELIX-5345] - Incorrect encoding in metatype props file
+
+
 Changes from 1.22.0 to 1.21.0
 -----------------------------
 ** Bug
