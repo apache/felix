@@ -289,6 +289,8 @@ public final class JettyService extends AbstractLifeCycle.AbstractLifeCycleListe
         if (this.server != null)
         {
             this.controller.getEventDispatcher().setActive(false);
+            this.controller.unregister();
+
             if (this.connectorTracker != null)
             {
                 this.connectorTracker.close();
