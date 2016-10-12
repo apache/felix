@@ -29,7 +29,7 @@
 
     <artifactId>org.apache.felix.prefs</artifactId>
     <packaging>bundle</packaging>
-    <version>1.0.7-SNAPSHOT</version>
+    <version>1.1.0</version>
 
     <name>Apache Felix Preferences Service</name>
     <description>
@@ -113,4 +113,10 @@
             <artifactId>mockito-all</artifactId>
         </dependency>
     </dependencies>
+
+  <scm>
+    <connection>scm:svn:http://svn.apache.org/repos/asf/felix/releases/org.apache.felix.prefs-1.1.0</connection>
+    <developerConnection>scm:svn:https://svn.apache.org/repos/asf/felix/releases/org.apache.felix.prefs-1.1.0</developerConnection>
+    <url>http://svn.apache.org/viewvc/felix/releases/?root=Apache-SVN/org.apache.felix.prefs-1.1.0</url>
+  </scm>
 </project>
