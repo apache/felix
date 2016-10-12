@@ -407,7 +407,6 @@ public final class JettyService extends AbstractLifeCycle.AbstractLifeCycleListe
             }
             else
             {
-                this.controller.unregister();
                 this.stopJetty();
                 SystemLogger.error("Jetty stopped (no connectors available)", null);
             }
