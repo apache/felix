@@ -28,7 +28,7 @@ import java.util.Date;
 import java.util.UUID;
 import java.util.regex.Pattern;
 
-import org.osgi.converter.ConverterBuilder;
+import org.osgi.util.converter.ConverterBuilder;
 
 public class ConverterImpl implements InternalConverter {
     @Override

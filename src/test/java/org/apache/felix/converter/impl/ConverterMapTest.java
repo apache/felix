@@ -28,10 +28,10 @@ import java.util.Map;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-import org.osgi.converter.Converter;
-import org.osgi.converter.ConverterBuilder;
-import org.osgi.converter.StandardConverter;
-import org.osgi.converter.TypeReference;
+import org.osgi.util.converter.Converter;
+import org.osgi.util.converter.ConverterBuilder;
+import org.osgi.util.converter.StandardConverter;
+import org.osgi.util.converter.TypeReference;
 
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
