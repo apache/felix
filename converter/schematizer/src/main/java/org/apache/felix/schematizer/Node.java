@@ -25,7 +25,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 
-import org.osgi.converter.TypeReference;
+import org.osgi.util.converter.TypeReference;
 
 public interface Node {
 

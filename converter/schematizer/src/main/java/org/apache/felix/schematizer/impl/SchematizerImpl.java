@@ -38,8 +38,8 @@ import org.apache.felix.schematizer.Node.CollectionType;
 import org.apache.felix.schematizer.Schema;
 import org.apache.felix.schematizer.Schematizer;
 import org.apache.felix.schematizer.TypeRule;
-import org.osgi.converter.TypeReference;
 import org.osgi.dto.DTO;
+import org.osgi.util.converter.TypeReference;
 
 public class SchematizerImpl implements Schematizer {
 

@@ -24,12 +24,12 @@ import java.nio.charset.StandardCharsets;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-import org.osgi.converter.Converter;
-import org.osgi.converter.StandardConverter;
-import org.osgi.converter.TypeReference;
 import org.osgi.service.serializer.Deserializing;
 import org.osgi.service.serializer.Serializer;
 import org.osgi.service.serializer.Serializing;
+import org.osgi.util.converter.Converter;
+import org.osgi.util.converter.StandardConverter;
+import org.osgi.util.converter.TypeReference;
 
 public class JsonSerializerImpl implements Serializer {
     private final Map<String, Object> configuration = new ConcurrentHashMap<>();

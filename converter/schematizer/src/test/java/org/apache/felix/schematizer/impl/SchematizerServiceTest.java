@@ -24,9 +24,9 @@ import org.apache.felix.schematizer.Schema;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-import org.osgi.converter.Converter;
-import org.osgi.converter.StandardConverter;
-import org.osgi.converter.TypeReference;
+import org.osgi.util.converter.Converter;
+import org.osgi.util.converter.StandardConverter;
+import org.osgi.util.converter.TypeReference;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;

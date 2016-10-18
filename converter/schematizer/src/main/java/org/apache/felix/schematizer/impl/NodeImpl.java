@@ -23,7 +23,7 @@ import java.util.Optional;
 import java.util.function.Function;
 
 import org.apache.felix.schematizer.Node;
-import org.osgi.converter.TypeReference;
+import org.osgi.util.converter.TypeReference;
 
 public class NodeImpl implements Node {
 

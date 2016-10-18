@@ -27,7 +27,7 @@ import org.apache.felix.serializer.test.objects.SimpleTop;
 import org.apache.felix.serializer.test.prevayler.AggregateTypeReference;
 import org.apache.felix.serializer.test.prevayler.MockPrevaylerBackedRepository;
 import org.apache.felix.serializer.test.prevayler.Repository;
-import org.osgi.converter.TypeReference;
+import org.osgi.util.converter.TypeReference;
 
 public class SimpleManagerService
 	implements SimpleManager

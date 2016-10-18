@@ -28,10 +28,10 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 
-import org.osgi.converter.ConversionException;
-import org.osgi.converter.Converter;
 import org.osgi.dto.DTO;
 import org.osgi.service.serializer.Serializing;
+import org.osgi.util.converter.ConversionException;
+import org.osgi.util.converter.Converter;
 
 public class JsonSerializingImpl implements Serializing {
     private volatile Converter converter;

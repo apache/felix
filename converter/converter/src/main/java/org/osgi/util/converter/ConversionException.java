@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.osgi.converter;
+package org.osgi.util.converter;
 
 /**
  * This Runtime Exception is thrown when an object is requested to be converted

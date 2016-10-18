@@ -24,9 +24,9 @@ import java.nio.charset.StandardCharsets;
 import java.util.Scanner;
 
 import org.apache.felix.converter.impl.Util;
-import org.osgi.converter.ConversionException;
-import org.osgi.converter.Converter;
 import org.osgi.service.serializer.Deserializing;
+import org.osgi.util.converter.ConversionException;
+import org.osgi.util.converter.Converter;
 import org.yaml.snakeyaml.Yaml;
 
 public class YamlDeserializingImpl<T> implements Deserializing<T> {

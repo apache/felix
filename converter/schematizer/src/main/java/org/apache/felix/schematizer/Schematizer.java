@@ -19,8 +19,8 @@ import java.util.Map;
 import java.util.Optional;
 
 import org.osgi.annotation.versioning.ProviderType;
-import org.osgi.converter.TypeReference;
 import org.osgi.dto.DTO;
+import org.osgi.util.converter.TypeReference;
 
 @ProviderType
 public interface Schematizer {

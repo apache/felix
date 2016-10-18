@@ -18,8 +18,8 @@ package org.apache.felix.serializer.test.objects.provider;
 
 import java.util.Collection;
 
-import org.osgi.converter.Converter;
-import org.osgi.converter.StandardConverter;
+import org.osgi.util.converter.Converter;
+import org.osgi.util.converter.StandardConverter;
 
 public class ObjectFactory
 {

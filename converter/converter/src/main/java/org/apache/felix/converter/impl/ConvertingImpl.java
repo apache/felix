@@ -41,11 +41,11 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 
-import org.osgi.converter.ConversionException;
-import org.osgi.converter.Converter;
-import org.osgi.converter.Converting;
-import org.osgi.converter.TypeReference;
 import org.osgi.dto.DTO;
+import org.osgi.util.converter.ConversionException;
+import org.osgi.util.converter.Converter;
+import org.osgi.util.converter.Converting;
+import org.osgi.util.converter.TypeReference;
 
 public class ConvertingImpl implements Converting, InternalConverting {
     private static final Map<Class<?>, Class<?>> interfaceImplementations;

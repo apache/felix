@@ -25,7 +25,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.osgi.converter.TypeReference;
+import org.osgi.util.converter.TypeReference;
 
 public class Util {
     private static final Map<Class<?>, Class<?>> boxedClasses;

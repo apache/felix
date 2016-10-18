@@ -25,9 +25,9 @@ import java.util.Map;
 import java.util.Scanner;
 
 import org.apache.felix.converter.impl.Util;
-import org.osgi.converter.ConversionException;
-import org.osgi.converter.Converter;
 import org.osgi.service.serializer.Deserializing;
+import org.osgi.util.converter.ConversionException;
+import org.osgi.util.converter.Converter;
 
 public class JsonDeserializingImpl<T> implements Deserializing<T> {
     private final Type type;

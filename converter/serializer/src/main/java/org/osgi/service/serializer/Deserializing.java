@@ -19,7 +19,7 @@ import java.io.InputStream;
 import java.nio.charset.Charset;
 
 import org.osgi.annotation.versioning.ProviderType;
-import org.osgi.converter.Converter;
+import org.osgi.util.converter.Converter;
 
 /**
  * Interface to specify the source of the decoding operation

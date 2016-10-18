@@ -30,10 +30,10 @@ import java.util.stream.Stream;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-import org.osgi.converter.ConvertFunction;
-import org.osgi.converter.Converter;
-import org.osgi.converter.ConverterBuilder;
-import org.osgi.converter.Rule;
+import org.osgi.util.converter.ConvertFunction;
+import org.osgi.util.converter.Converter;
+import org.osgi.util.converter.ConverterBuilder;
+import org.osgi.util.converter.Rule;
 
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
