@@ -52,7 +52,7 @@ public interface Converting {
 	Converting defaultValue(Object defVal);
 
 	/**
-	 * Specify the type to view the conversion target as. Can be used to force
+	 * Specify the target type to view the conversion target as. Can be used to force
 	 * the converter to treat the target, specified in the {@link #to(Class)} method
 	 * to be viewed as the type specified here.
 	 * If specified, the class specified by the {@link #to(Class)} method will need to be
