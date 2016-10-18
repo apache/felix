@@ -82,8 +82,8 @@ public class ConfigurationAdapter implements Configuration
     {
         // CM 1.4 / 104.13.2.4
         final String bundleLocation = delegatee.getBundleLocation();
-        delegatee.getConfigurationManager().log( LogService.LOG_DEBUG, "getBundleLocation() ==> {0}", new Object[]
-            { bundleLocation } );
+        //delegatee.getConfigurationManager().log( LogService.LOG_DEBUG, "getBundleLocation() ==> {0}", new Object[]
+        //    { bundleLocation } );
         checkActive();
         configurationAdmin.checkPermission( delegatee.getConfigurationManager(), ( bundleLocation == null ) ? "*" : bundleLocation, true );
         checkDeleted();
@@ -148,7 +148,7 @@ public class ConfigurationAdapter implements Configuration
     @Override
     public Dictionary<String, Object> getProperties()
     {
-        delegatee.getConfigurationManager().log( LogService.LOG_DEBUG, "getProperties()", ( Throwable ) null );
+        //delegatee.getConfigurationManager().log( LogService.LOG_DEBUG, "getProperties()", ( Throwable ) null );
 
         checkDeleted();
 
@@ -161,7 +161,7 @@ public class ConfigurationAdapter implements Configuration
     @Override
     public long getChangeCount()
     {
-        delegatee.getConfigurationManager().log( LogService.LOG_DEBUG, "getChangeCount()", ( Throwable ) null );
+        //delegatee.getConfigurationManager().log( LogService.LOG_DEBUG, "getChangeCount()", ( Throwable ) null );
 
         checkDeleted();
 
