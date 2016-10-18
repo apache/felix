@@ -25,7 +25,7 @@ import org.osgi.annotation.versioning.ProviderType;
  * {@link Converter} service by starting a conversion for a specific object.
  *
  * @author $Id$
- * @ThreadSafe
+ * @NotThreadSafe
  */
 @ProviderType
 public interface Converting {
