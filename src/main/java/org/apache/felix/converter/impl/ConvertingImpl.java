@@ -126,25 +126,25 @@ public class ConvertingImpl implements Converting, InternalConverting {
         targetActualClass = Util.primitiveToBoxed(cls);
         if (targetViewClass == null)
             targetViewClass = targetActualClass;
-        Class<?> targetCls = targetViewClass != null ? targetViewClass : targetActualClass;
+        // Class<?> targetCls = targetViewClass != null ? targetViewClass : targetActualClass;
         Class<?> sourceCls = treatAsClass != null ? treatAsClass : object.getClass();
 
-        if (!isCopyRequiredType(targetCls) && targetCls.isAssignableFrom(sourceCls)) {
+        if (!isCopyRequiredType(targetViewClass) && targetViewClass.isAssignableFrom(sourceCls)) {
                 return object;
         }
 
-        Object res = trySpecialCases(targetCls);
+        Object res = trySpecialCases();
         if (res != null)
             return res;
 
-        if (targetCls.isArray()) {
-            return convertToArray(targetCls);
-        } else if (Collection.class.isAssignableFrom(targetCls)) {
-            return convertToCollection(targetCls, typeArguments);
-        } else if (isDTOType(targetCls)) {
+        if (targetViewClass.isArray()) {
+            return convertToArray();
+        } else if (Collection.class.isAssignableFrom(targetViewClass)) {
+            return convertToCollection(typeArguments); // TODO typeArguments can be stored in member too
+        } else if (isDTOType()) {
             return convertToDTO(sourceCls);
-        } else if (isMapType(targetCls)) {
-            return convertToMapType(sourceCls, targetCls, typeArguments);
+        } else if (isMapType()) {
+            return convertToMapType(sourceCls, typeArguments);
         }
 
         // At this point we know that the target is a 'singular' type: not a map, collection or array
@@ -159,7 +159,7 @@ public class ConvertingImpl implements Converting, InternalConverting {
             return res2;
         } else {
             if (defaultValue != null)
-                return converter.convert(defaultValue).to(targetCls);
+                return converter.convert(defaultValue).as(treatAsClass).target(targetViewClass).to(targetActualClass);
             else
                 return null;
         }
@@ -193,14 +193,14 @@ public class ConvertingImpl implements Converting, InternalConverting {
     }
 
     @SuppressWarnings("unchecked")
-    private <T> T convertToArray(Class<?> targetClass) {
+    private <T> T convertToArray() {
         Collection<?> collectionView = collectionView(object);
         Iterator<?> itertor = collectionView.iterator();
         try {
-            Object array = Array.newInstance(targetClass.getComponentType(), collectionView.size());
+            Object array = Array.newInstance(targetViewClass.getComponentType(), collectionView.size());
             for (int i=0; i<collectionView.size() && itertor.hasNext(); i++) {
                 Object next = itertor.next();
-                Object converted = converter.convert(next).to(targetClass.getComponentType());
+                Object converted = converter.convert(next).to(targetViewClass.getComponentType());
                 Array.set(array, i, converted);
             }
             return (T) array;
@@ -210,16 +210,19 @@ public class ConvertingImpl implements Converting, InternalConverting {
     }
 
     @SuppressWarnings({ "unchecked", "rawtypes" })
-    private <T> T convertToCollection(Class<?> targetCls, Type[] typeArguments) {
+    private <T> T convertToCollection(Type[] typeArguments) {
         Collection<?> cv = collectionView(object);
         Class<?> targetElementType = null;
         if (typeArguments != null && typeArguments.length > 0 && typeArguments[0] instanceof Class) {
             targetElementType = (Class<?>) typeArguments[0];
         }
 
-        Class<?> ctrCls = interfaceImplementations.get(targetCls);
+        Class<?> ctrCls = interfaceImplementations.get(targetViewClass);
+        Class<?>targetCls;
         if (ctrCls != null)
             targetCls = ctrCls;
+        else
+            targetCls = targetViewClass;
 
         Collection instance = (Collection) createMapOrCollection(targetCls, cv.size());
         if (instance == null)
@@ -307,14 +310,14 @@ public class ConvertingImpl implements Converting, InternalConverting {
         return instance;
     }
 
-    private Object convertToMapType(Class<?> sourceCls, Class<?> targetCls, Type[] typeArguments) {
-        if (Map.class.isAssignableFrom(targetCls))
+    private Object convertToMapType(Class<?> sourceCls, Type[] typeArguments) {
+        if (Map.class.isAssignableFrom(targetViewClass))
             return convertToMap(sourceCls, typeArguments);
-        else if (Dictionary.class.isAssignableFrom(targetCls))
+        else if (Dictionary.class.isAssignableFrom(targetViewClass))
             return null; // TODO new Hashtable(convertToMap(sourceCls, Map.class, typeArguments));
-        else if (targetCls.isInterface())
-            return createProxy(sourceCls, targetCls);
-        return createJavaBean(sourceCls, targetCls);
+        else if (targetViewClass.isInterface())
+            return createProxy(sourceCls, targetViewClass);
+        return createJavaBean(sourceCls, targetViewClass);
     }
 
     private Object createJavaBean(Class<?> sourceCls, Class<?> targetCls) {
@@ -387,19 +390,19 @@ public class ConvertingImpl implements Converting, InternalConverting {
         }
     }
 
-    private boolean isDTOType(Class<?> targetCls) {
+    private boolean isDTOType() {
         try {
-            targetCls.getDeclaredConstructor();
+            targetViewClass.getDeclaredConstructor();
         } catch (NoSuchMethodException | SecurityException e) {
             // No zero-arg constructor, not a DTO
             return false;
         }
 
-        if (targetCls.getDeclaredMethods().length > 0)
+        if (targetViewClass.getDeclaredMethods().length > 0)
             return false;
 
 
-        for (Method m : targetCls.getMethods()) {
+        for (Method m : targetViewClass.getMethods()) {
             try {
                 Object.class.getMethod(m.getName(), m.getParameterTypes());
             } catch (NoSuchMethodException | SecurityException e) {
@@ -410,51 +413,51 @@ public class ConvertingImpl implements Converting, InternalConverting {
         return true;
     }
 
-    private boolean isMapType(Class<?> targetCls) {
+    private boolean isMapType() {
         // All interface types that are not Collections are treated as maps
-        if (Map.class.isAssignableFrom(targetCls))
+        if (Map.class.isAssignableFrom(targetViewClass))
             return true;
-        else if (targetCls.isInterface())
+        else if (targetViewClass.isInterface())
             return true;
-        else if (isWriteableJavaBean(targetCls))
+        else if (isWriteableJavaBean(targetViewClass))
             return true;
         else
-            return Dictionary.class.isAssignableFrom(targetCls);
+            return Dictionary.class.isAssignableFrom(targetViewClass);
     }
 
-    private Object trySpecialCases(Class<?> targetCls) {
+    private Object trySpecialCases() {
         // TODO some of these can probably be implemented as an adapter
 
-        if (Boolean.class.equals(targetCls)) {
+        if (Boolean.class.equals(targetViewClass)) {
             if (object instanceof Number) {
                 return ((Number) object).longValue() != 0;
             } else if (object instanceof Collection && ((Collection<?>) object).size() == 0) {
                 // TODO What about arrays?
                 return Boolean.FALSE;
             }
-        } else if (Character.class.equals(targetCls)) {
+        } else if (Character.class.equals(targetViewClass)) {
             if (object instanceof Number) {
                 return Character.valueOf((char) ((Number) object).intValue());
             }
-        } else if (Number.class.isAssignableFrom(targetCls)) {
+        } else if (Number.class.isAssignableFrom(targetViewClass)) {
             if (object instanceof Boolean) {
                 return ((Boolean) object).booleanValue() ? 1 : 0;
             }
-        } else if (Class.class.equals(targetCls)) {
+        } else if (Class.class.equals(targetViewClass)) {
             if (object instanceof Collection && ((Collection<?>) object).size() == 0) {
                 return null;
             }
-        } else if (Enum.class.isAssignableFrom(targetCls)) {
+        } else if (Enum.class.isAssignableFrom(targetViewClass)) {
             if (object instanceof Boolean) {
                 try {
-                    Method m = targetCls.getMethod("valueOf", String.class);
+                    Method m = targetViewClass.getMethod("valueOf", String.class);
                     return m.invoke(null, object.toString().toUpperCase());
                 } catch (Exception e) {
                     throw new RuntimeException(e);
                 }
             } else if (object instanceof Number) {
                 try {
-                    Method m = targetCls.getMethod("values");
+                    Method m = targetViewClass.getMethod("values");
                     Object[] values = (Object[]) m.invoke(null);
                     return values[((Number) object).intValue()];
                 } catch (Exception e) {
