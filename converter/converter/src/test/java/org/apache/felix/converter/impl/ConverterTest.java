@@ -484,6 +484,13 @@ public class ConverterTest {
         assertEquals(dto.embedded.alpha, Alpha.A);
     }
 
+    @Test
+    public void testMap2DTOView() {
+        Map<String, Object> src = Collections.singletonMap("pong", 42);
+        MyDTOWithMethods dto = converter.convert(src).target(MyDTO.class).to(MyDTOWithMethods.class);
+        assertEquals(42, dto.pong);
+    }
+
     @Test @SuppressWarnings({ "rawtypes", "unchecked" })
     public void testDTOWithGenerics() {
         MyDTO2 dto = new MyDTO2();

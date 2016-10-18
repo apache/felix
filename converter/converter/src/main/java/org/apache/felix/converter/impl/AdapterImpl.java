@@ -168,6 +168,12 @@ public class AdapterImpl implements InternalConverter {
         public String toString() {
             return to(String.class);
         }
+
+        @Override
+        public Converting target(Class<?> cls) {
+            del.target(cls);
+            return this;
+        }
     }
 
     private static Set<Type> assignableTypes(Type mostSpecialized) {
