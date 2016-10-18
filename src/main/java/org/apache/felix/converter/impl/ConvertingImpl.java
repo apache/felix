@@ -62,8 +62,10 @@ public class ConvertingImpl implements Converting, InternalConverting {
     private volatile Class<?> treatAsClass;
     private volatile Object defaultValue;
     private volatile boolean hasDefault;
+    private volatile Class<?> sourceClass;
     private volatile Class<?> targetActualClass;
     private volatile Class<?> targetViewClass;
+    private volatile Type[] typeArguments;
 
     ConvertingImpl(Converter c, Object obj) {
         converter = c;
@@ -106,7 +108,6 @@ public class ConvertingImpl implements Converting, InternalConverting {
     @Override
     public Object to(Type type) {
         Class<?> cls = null;
-        Type[] typeArguments = null;
         if (type instanceof Class) {
             cls = (Class<?>) type;
         } else if (type instanceof ParameterizedType) {
@@ -122,14 +123,13 @@ public class ConvertingImpl implements Converting, InternalConverting {
         if (object == null)
             return handleNull(cls);
 
-        // TODO convert targetCls and sourceCls into members
         targetActualClass = Util.primitiveToBoxed(cls);
         if (targetViewClass == null)
             targetViewClass = targetActualClass;
-        // Class<?> targetCls = targetViewClass != null ? targetViewClass : targetActualClass;
-        Class<?> sourceCls = treatAsClass != null ? treatAsClass : object.getClass();
 
-        if (!isCopyRequiredType(targetViewClass) && targetViewClass.isAssignableFrom(sourceCls)) {
+        sourceClass = treatAsClass != null ? treatAsClass : object.getClass();
+
+        if (!isCopyRequiredType(targetViewClass) && targetViewClass.isAssignableFrom(sourceClass)) {
                 return object;
         }
 
@@ -140,15 +140,15 @@ public class ConvertingImpl implements Converting, InternalConverting {
         if (targetViewClass.isArray()) {
             return convertToArray();
         } else if (Collection.class.isAssignableFrom(targetViewClass)) {
-            return convertToCollection(typeArguments); // TODO typeArguments can be stored in member too
+            return convertToCollection();
         } else if (isDTOType()) {
-            return convertToDTO(sourceCls);
+            return convertToDTO();
         } else if (isMapType()) {
-            return convertToMapType(sourceCls, typeArguments);
+            return convertToMapType();
         }
 
         // At this point we know that the target is a 'singular' type: not a map, collection or array
-        if (Collection.class.isAssignableFrom(sourceCls)) {
+        if (Collection.class.isAssignableFrom(sourceClass)) {
             return convertCollectionToSingleValue(cls);
         } else if ((object = asBoxedArray(object)) instanceof Object[]) {
             return convertArrayToSingleValue(cls);
@@ -210,7 +210,7 @@ public class ConvertingImpl implements Converting, InternalConverting {
     }
 
     @SuppressWarnings({ "unchecked", "rawtypes" })
-    private <T> T convertToCollection(Type[] typeArguments) {
+    private <T> T convertToCollection() {
         Collection<?> cv = collectionView(object);
         Class<?> targetElementType = null;
         if (typeArguments != null && typeArguments.length > 0 && typeArguments[0] instanceof Class) {
@@ -239,8 +239,8 @@ public class ConvertingImpl implements Converting, InternalConverting {
     }
 
     @SuppressWarnings({ "rawtypes", "unchecked" })
-    private <T> T convertToDTO(Class<?> sourceCls) {
-        Map m = mapView(object, sourceCls, converter);
+    private <T> T convertToDTO() {
+        Map m = mapView(object, sourceClass, converter);
 
         try {
             T dto = (T) targetActualClass.newInstance();
@@ -270,8 +270,8 @@ public class ConvertingImpl implements Converting, InternalConverting {
     }
 
     @SuppressWarnings({ "rawtypes", "unchecked" })
-    private Map convertToMap(Class<?> sourceCls, Type[] typeArguments) {
-        Map m = mapView(object, sourceCls, converter);
+    private Map convertToMap() {
+        Map m = mapView(object, sourceClass, converter);
         if (m == null)
             return null;
         Type targetKeyType = null, targetValueType = null;
@@ -310,14 +310,14 @@ public class ConvertingImpl implements Converting, InternalConverting {
         return instance;
     }
 
-    private Object convertToMapType(Class<?> sourceCls, Type[] typeArguments) {
+    private Object convertToMapType() {
         if (Map.class.isAssignableFrom(targetViewClass))
-            return convertToMap(sourceCls, typeArguments);
+            return convertToMap();
         else if (Dictionary.class.isAssignableFrom(targetViewClass))
             return null; // TODO new Hashtable(convertToMap(sourceCls, Map.class, typeArguments));
         else if (targetViewClass.isInterface())
-            return createProxy(sourceCls, targetViewClass);
-        return createJavaBean(sourceCls, targetViewClass);
+            return createProxy(sourceClass, targetViewClass);
+        return createJavaBean(sourceClass, targetViewClass);
     }
 
     private Object createJavaBean(Class<?> sourceCls, Class<?> targetCls) {
@@ -564,10 +564,6 @@ public class ConvertingImpl implements Converting, InternalConverting {
         return result;
     }
 
-    private Object createMapOrCollection(int initialSize) {
-        return createMapOrCollection(targetActualClass, initialSize);
-    }
-
     private static Object createMapOrCollection(Class<?> cls, int initialSize) {
         try {
             Constructor<?> ctor = cls.getConstructor(int.class);
@@ -731,7 +727,7 @@ public class ConvertingImpl implements Converting, InternalConverting {
             if (m.size() > 0)
                 return m;
         }
-        return createMapFromInterface(obj);// TODO, sourceCls);
+        return createMapFromInterface(obj);
     }
 
     private static boolean isCopyRequiredType(Class<?> cls) {
