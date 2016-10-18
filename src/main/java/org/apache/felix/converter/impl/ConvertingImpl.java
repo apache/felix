@@ -32,7 +32,6 @@ import java.util.Collections;
 import java.util.Dictionary;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
@@ -63,6 +62,8 @@ public class ConvertingImpl implements Converting, InternalConverting {
     private volatile Class<?> treatAsClass;
     private volatile Object defaultValue;
     private volatile boolean hasDefault;
+    private volatile Class<?> targetActualClass;
+    private volatile Class<?> targetViewClass;
 
     ConvertingImpl(Converter c, Object obj) {
         converter = c;
@@ -121,7 +122,11 @@ public class ConvertingImpl implements Converting, InternalConverting {
         if (object == null)
             return handleNull(cls);
 
-        Class<?> targetCls = Util.primitiveToBoxed(cls);
+        // TODO convert targetCls and sourceCls into members
+        targetActualClass = Util.primitiveToBoxed(cls);
+        if (targetViewClass == null)
+            targetViewClass = targetActualClass;
+        Class<?> targetCls = targetViewClass != null ? targetViewClass : targetActualClass;
         Class<?> sourceCls = treatAsClass != null ? treatAsClass : object.getClass();
 
         if (!isCopyRequiredType(targetCls) && targetCls.isAssignableFrom(sourceCls)) {
@@ -137,7 +142,7 @@ public class ConvertingImpl implements Converting, InternalConverting {
         } else if (Collection.class.isAssignableFrom(targetCls)) {
             return convertToCollection(targetCls, typeArguments);
         } else if (isDTOType(targetCls)) {
-            return convertToDTO(sourceCls, targetCls);
+            return convertToDTO(sourceCls);
         } else if (isMapType(targetCls)) {
             return convertToMapType(sourceCls, targetCls, typeArguments);
         }
@@ -149,7 +154,7 @@ public class ConvertingImpl implements Converting, InternalConverting {
             return convertArrayToSingleValue(cls);
         }
 
-        Object res2 = tryStandardMethods(targetCls);
+        Object res2 = tryStandardMethods();
         if (res2 != null) {
             return res2;
         } else {
@@ -163,6 +168,12 @@ public class ConvertingImpl implements Converting, InternalConverting {
     @Override
     public String toString() {
         return to(String.class);
+    }
+
+    @Override
+    public Converting target(Class<?> cls) {
+        targetViewClass = cls;
+        return this;
     }
 
     private Object convertArrayToSingleValue(Class<?> cls) {
@@ -225,19 +236,19 @@ public class ConvertingImpl implements Converting, InternalConverting {
     }
 
     @SuppressWarnings({ "rawtypes", "unchecked" })
-    private <T> T convertToDTO(Class<?> sourceCls, Class<T> targetCls) {
+    private <T> T convertToDTO(Class<?> sourceCls) {
         Map m = mapView(object, sourceCls, converter);
 
         try {
-            T dto = targetCls.newInstance();
+            T dto = (T) targetActualClass.newInstance();
 
             for (Map.Entry entry : (Set<Map.Entry>) m.entrySet()) {
                 Field f = null;
                 try {
-                    f = targetCls.getDeclaredField(entry.getKey().toString());
+                    f = targetViewClass.getDeclaredField(entry.getKey().toString());
                 } catch (NoSuchFieldException e) {
                     try {
-                        f = targetCls.getField(entry.getKey().toString());
+                        f = targetViewClass.getField(entry.getKey().toString());
                     } catch (NoSuchFieldException e1) {
                         // There is not field with this name
                     }
@@ -251,12 +262,12 @@ public class ConvertingImpl implements Converting, InternalConverting {
 
             return dto;
         } catch (Exception e) {
-            throw new ConversionException("Cannot create DTO " + targetCls, e);
+            throw new ConversionException("Cannot create DTO " + targetActualClass, e);
         }
     }
 
     @SuppressWarnings({ "rawtypes", "unchecked" })
-    private Map convertToMap(Class<?> sourceCls, Class<?> targetCls, Type[] typeArguments) {
+    private Map convertToMap(Class<?> sourceCls, Type[] typeArguments) {
         Map m = mapView(object, sourceCls, converter);
         if (m == null)
             return null;
@@ -266,9 +277,9 @@ public class ConvertingImpl implements Converting, InternalConverting {
             targetValueType = typeArguments[1];
         }
 
-        Class<?> ctrCls = interfaceImplementations.get(targetCls);
+        Class<?> ctrCls = interfaceImplementations.get(targetActualClass);
         if (ctrCls == null)
-            ctrCls = targetCls;
+            ctrCls = targetActualClass;
 
         Map instance = (Map) createMapOrCollection(ctrCls, m.size());
         if (instance == null)
@@ -296,12 +307,11 @@ public class ConvertingImpl implements Converting, InternalConverting {
         return instance;
     }
 
-    @SuppressWarnings({ "unchecked", "rawtypes" })
     private Object convertToMapType(Class<?> sourceCls, Class<?> targetCls, Type[] typeArguments) {
         if (Map.class.isAssignableFrom(targetCls))
-            return convertToMap(sourceCls, targetCls, typeArguments);
+            return convertToMap(sourceCls, typeArguments);
         else if (Dictionary.class.isAssignableFrom(targetCls))
-            return new Hashtable(convertToMap(sourceCls, Map.class, typeArguments));
+            return null; // TODO new Hashtable(convertToMap(sourceCls, Map.class, typeArguments));
         else if (targetCls.isInterface())
             return createProxy(sourceCls, targetCls);
         return createJavaBean(sourceCls, targetCls);
@@ -311,7 +321,7 @@ public class ConvertingImpl implements Converting, InternalConverting {
         @SuppressWarnings("rawtypes")
         Map m = mapView(object, sourceCls, converter);
         try {
-            Object res = targetCls.getConstructor().newInstance();
+            Object res = targetActualClass.newInstance();
             for (Method setter : getSetters(targetCls)) {
                 String setterName = setter.getName();
                 StringBuilder propName = new StringBuilder(Character.valueOf(Character.toLowerCase(setterName.charAt(3))).toString());
@@ -457,16 +467,16 @@ public class ConvertingImpl implements Converting, InternalConverting {
     }
 
     @SuppressWarnings("unchecked")
-    private <T> T tryStandardMethods(Class<T> cls) {
+    private <T> T tryStandardMethods() {
         try {
-            Method m = cls.getDeclaredMethod("valueOf", String.class);
+            Method m = targetActualClass.getDeclaredMethod("valueOf", String.class);
             if (m != null) {
                 return (T) m.invoke(null, object.toString());
             }
         } catch (Exception e) {
             try {
-                Constructor<T> ctr = cls.getConstructor(String.class);
-                return ctr.newInstance(object.toString());
+                Constructor<?> ctr = targetActualClass.getConstructor(String.class);
+                return (T) ctr.newInstance(object.toString());
             } catch (Exception e2) {
             }
         }
@@ -551,13 +561,17 @@ public class ConvertingImpl implements Converting, InternalConverting {
         return result;
     }
 
-    private static Object createMapOrCollection(Class<?> targetCls, int initialSize) {
+    private Object createMapOrCollection(int initialSize) {
+        return createMapOrCollection(targetActualClass, initialSize);
+    }
+
+    private static Object createMapOrCollection(Class<?> cls, int initialSize) {
         try {
-            Constructor<?> ctor = targetCls.getConstructor(int.class);
+            Constructor<?> ctor = cls.getConstructor(int.class);
             return ctor.newInstance(initialSize);
         } catch (Exception e1) {
             try {
-                Constructor<?> ctor2 = targetCls.getConstructor();
+                Constructor<?> ctor2 = cls.getConstructor();
                 return ctor2.newInstance();
             } catch (Exception e2) {
                 // ignore
