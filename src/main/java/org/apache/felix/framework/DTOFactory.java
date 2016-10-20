@@ -365,7 +365,7 @@ public class DTOFactory
         dto.properties = convertAttrsToDTO(framework.getConfig());
 
         dto.bundles = new ArrayList<BundleDTO>();
-        for (Bundle b : framework.getBundleContext().getBundles())
+        for (Bundle b : framework._getBundleContext().getBundles())
         {
             dto.bundles.add(DTOFactory.createDTO(b, BundleDTO.class));
         }
@@ -375,7 +375,7 @@ public class DTOFactory
         ServiceReference<?>[] refs = null;
         try
         {
-            refs = framework.getBundleContext().getAllServiceReferences(null, null);
+            refs = framework._getBundleContext().getAllServiceReferences(null, null);
         }
         catch (InvalidSyntaxException e)
         {
