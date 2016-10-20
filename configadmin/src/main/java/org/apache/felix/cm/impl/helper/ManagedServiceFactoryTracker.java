@@ -90,7 +90,7 @@ public class ManagedServiceFactoryTracker extends BaseTracker<ManagedServiceFact
             {
                 Dictionary props = getProperties( properties, reference, configPid.toString(),
                     factoryPid.toString() );
-                updated( service, configPid.toString(), props );
+                updated( reference, service, configPid.toString(), props );
                 configs.record( configPid, factoryPid, revision );
             }
             catch ( Throwable t )
@@ -117,7 +117,7 @@ public class ManagedServiceFactoryTracker extends BaseTracker<ManagedServiceFact
             {
                 try
                 {
-                    deleted( service, configPid.toString() );
+                    deleted( reference, service, configPid.toString() );
                     configs.record( configPid, factoryPid, -1 );
                 }
                 catch ( Throwable t )
@@ -133,7 +133,7 @@ public class ManagedServiceFactoryTracker extends BaseTracker<ManagedServiceFact
     }
 
 
-    private void updated( final ManagedServiceFactory service, final String pid, final Dictionary properties )
+    private void updated( final ServiceReference<ManagedServiceFactory> reference, final ManagedServiceFactory service, final String pid, final Dictionary properties )
         throws ConfigurationException
     {
         if ( System.getSecurityManager() != null )
@@ -147,7 +147,7 @@ public class ManagedServiceFactoryTracker extends BaseTracker<ManagedServiceFact
                         service.updated( pid, properties );
                         return null;
                     }
-                }, getAccessControlContext( service ) );
+                }, getAccessControlContext( reference.getBundle() ) );
             }
             catch ( PrivilegedActionException e )
             {
@@ -161,7 +161,7 @@ public class ManagedServiceFactoryTracker extends BaseTracker<ManagedServiceFact
     }
 
 
-    private void deleted( final ManagedServiceFactory service, final String pid )
+    private void deleted( final ServiceReference<ManagedServiceFactory> reference, final ManagedServiceFactory service, final String pid )
     {
         if ( System.getSecurityManager() != null )
         {
@@ -172,7 +172,7 @@ public class ManagedServiceFactoryTracker extends BaseTracker<ManagedServiceFact
                     service.deleted( pid );
                     return null;
                 }
-            }, getAccessControlContext( service ) );
+            }, getAccessControlContext( reference.getBundle() ) );
         }
         else
         {
