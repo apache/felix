@@ -16,21 +16,12 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.felix.framework.util;
+package org.apache.felix.framework;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.Hashtable;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 import junit.framework.TestCase;
 
-import org.apache.felix.framework.Logger;
-import org.apache.felix.framework.ServiceRegistry;
 import org.easymock.EasyMock;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
@@ -39,7 +30,6 @@ import org.osgi.framework.ServiceEvent;
 import org.osgi.framework.ServiceListener;
 import org.osgi.framework.ServiceReference;
 import org.osgi.framework.hooks.service.EventHook;
-import org.osgi.framework.launch.Framework;
 
 public class EventDispatcherTest extends TestCase
 {
@@ -136,11 +126,7 @@ public class EventDispatcherTest extends TestCase
 
         assertEquals("Precondition failed", 0, fired.size());
 
-        Framework framework = EasyMock.createNiceMock(Framework.class);
-        EasyMock.replay(new Object[]
-            {
-                framework
-            });
+        Felix framework = new Felix(new HashMap());
 
         ed.fireServiceEvent(event, null, framework);
         assertEquals(1, fired.size());

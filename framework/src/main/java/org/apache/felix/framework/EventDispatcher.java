@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.felix.framework.util;
+package org.apache.felix.framework;
 
 import java.security.AccessController;
 import java.security.PrivilegedAction;
@@ -33,8 +33,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 
-import org.apache.felix.framework.Logger;
-import org.apache.felix.framework.ServiceRegistry;
+import org.apache.felix.framework.util.*;
 import org.osgi.framework.AllServiceListener;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
@@ -470,7 +469,7 @@ public class EventDispatcher
         fireEventAsynchronously(this, Request.FRAMEWORK_EVENT, listeners, event);
     }
 
-    public void fireBundleEvent(BundleEvent event, Framework felix)
+    public void fireBundleEvent(BundleEvent event, Felix felix)
     {
         // Take a snapshot of the listener array.
         Map<BundleContext, List<ListenerInfo>> listeners = null;
@@ -530,7 +529,7 @@ public class EventDispatcher
     }
 
     public void fireServiceEvent(
-        final ServiceEvent event, final Dictionary oldProps, final Framework felix)
+        final ServiceEvent event, final Dictionary oldProps, final Felix felix)
     {
         // Take a snapshot of the listener array.
         Map<BundleContext, List<ListenerInfo>> listeners = null;
@@ -549,7 +548,7 @@ public class EventDispatcher
 
 // TODO: OSGi R4.3 - This is ugly and inefficient.
     private Map<BundleContext, List<ListenerInfo>> filterListenersUsingHooks(
-        ServiceEvent event, Framework felix, Map<BundleContext, List<ListenerInfo>> listeners)
+        ServiceEvent event, Felix felix, Map<BundleContext, List<ListenerInfo>> listeners)
     {
         Set<ServiceReference<org.osgi.framework.hooks.service.EventHook>> ehs =
             m_registry.getHookRegistry().getHooks(org.osgi.framework.hooks.service.EventHook.class);
@@ -602,7 +601,7 @@ public class EventDispatcher
 
                 // Keep a copy of the System Bundle Listeners, as they might be removed by the hooks, but we
                 // actually need to keep them in the end.
-                if (bc == felix.getBundleContext())
+                if (bc == felix._getBundleContext())
                     systemBundleListeners = new ArrayList<ListenerInfo>(entry.getValue());
             }
             shrinkableMap =
@@ -661,7 +660,7 @@ public class EventDispatcher
             // Put the system bundle listeners back, because they really need to be called
             // regardless whether they were removed by the hooks or not.
             if (systemBundleListeners != null)
-                newMap.put(felix.getBundleContext(), systemBundleListeners);
+                newMap.put(felix._getBundleContext(), systemBundleListeners);
 
             listeners = newMap;
         }
@@ -670,7 +669,7 @@ public class EventDispatcher
     }
 
     private <T> Set<BundleContext> createWhitelistFromHooks(
-        EventObject event, Framework felix,
+        EventObject event, Felix felix,
         Map<BundleContext, List<ListenerInfo>> listeners1,
         Map<BundleContext, List<ListenerInfo>> listeners2,
         Class<T> hookClass)
@@ -681,7 +680,7 @@ public class EventDispatcher
         if (!hooks.isEmpty())
         {
             boolean systemBundleListener = false;
-            BundleContext systemBundleContext = felix.getBundleContext();
+            BundleContext systemBundleContext = felix._getBundleContext();
 
             whitelist = new HashSet<BundleContext>();
             for (Entry<BundleContext, List<ListenerInfo>> entry : listeners1.entrySet())
