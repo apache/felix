@@ -20,6 +20,9 @@ package org.apache.felix.cm.impl.helper;
 
 
 import java.security.AccessControlContext;
+import java.security.AccessController;
+import java.security.DomainCombiner;
+import java.security.Permission;
 import java.security.ProtectionDomain;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -30,6 +33,7 @@ import java.util.List;
 import org.apache.felix.cm.impl.CaseInsensitiveDictionary;
 import org.apache.felix.cm.impl.ConfigurationManager;
 import org.apache.felix.cm.impl.RankingComparator;
+import org.osgi.framework.Bundle;
 import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceReference;
 import org.osgi.service.cm.ConfigurationException;
@@ -286,9 +290,41 @@ public abstract class BaseTracker<S> extends ServiceTracker<S, ConfigurationMap<
     }
 
 
-    protected AccessControlContext getAccessControlContext( final Object ref )
+    AccessControlContext getAccessControlContext( final Bundle bundle )
     {
-        return new AccessControlContext( new ProtectionDomain[]
-            { ref.getClass().getProtectionDomain() } );
+        return new AccessControlContext(AccessController.getContext(), new CMDomainCombiner(bundle));
     }
+
+    private static class CMDomainCombiner implements DomainCombiner {
+        private final Bundle bundle;
+
+        CMDomainCombiner(Bundle bundle) {
+            this.bundle = bundle;
+        }
+
+        public ProtectionDomain[] combine(ProtectionDomain[] arg0,
+                                          ProtectionDomain[] arg1) {
+            return new ProtectionDomain[] { new CMProtectionDomain(bundle) };
+        }
+
+    }
+
+    private static class CMProtectionDomain extends ProtectionDomain {
+
+        private final Bundle bundle;
+
+        CMProtectionDomain(Bundle bundle) {
+            super(null, null);
+            this.bundle = bundle;
+        }
+
+        public boolean implies(Permission permission) {
+            try {
+                return bundle.hasPermission(permission);
+            } catch (IllegalStateException e) {
+                return false;
+            }
+        }
+    }
+
 }

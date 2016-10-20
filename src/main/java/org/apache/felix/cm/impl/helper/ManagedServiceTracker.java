@@ -149,7 +149,7 @@ public class ManagedServiceTracker extends BaseTracker<ManagedService>
         {
             try
             {
-                updated( srv, properties );
+                updated( service, srv, properties );
                 configs.record( configPid, null, revision );
             }
             catch ( Throwable t )
@@ -164,7 +164,7 @@ public class ManagedServiceTracker extends BaseTracker<ManagedService>
     }
 
 
-    private void updated( final ManagedService service, final Dictionary properties ) throws ConfigurationException
+    private void updated( final ServiceReference<ManagedService> reference, final ManagedService service, final Dictionary properties) throws ConfigurationException
     {
         if ( System.getSecurityManager() != null )
         {
@@ -177,7 +177,7 @@ public class ManagedServiceTracker extends BaseTracker<ManagedService>
                         service.updated( properties );
                         return null;
                     }
-                }, getAccessControlContext( service ) );
+                }, getAccessControlContext( reference.getBundle() ) );
             }
             catch ( PrivilegedActionException e )
             {
