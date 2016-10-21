@@ -314,7 +314,7 @@ public class DTOFactory
 
     private static ServiceReferenceDTO[] createServiceReferenceDTOArray(Bundle bundle)
     {
-        BundleContext ctx = bundle.getBundleContext();
+        BundleContext ctx = ((BundleImpl) bundle)._getBundleContext();
         if (ctx == null)
             return null;
 

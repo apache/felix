@@ -3126,7 +3126,7 @@ public class Felix extends BundleImpl implements Framework
                         try
                         {
                             m_secureAction.invokeBundleFindHook(
-                                fh, origin.getBundleContext(), bundles);
+                                fh, ((BundleImpl) origin)._getBundleContext(), bundles);
                         }
                         catch (Throwable th)
                         {
