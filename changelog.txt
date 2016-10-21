@@ -9,6 +9,18 @@ Changes in 1.9.0
     * [FELIX-5293] - Improved ConfigurationPlugin Support
 
 
+Changes from 1.8.10 to 1.8.12
+-----------------------------
+
+** Improvement
+    * [FELIX-5380] - Reduce quite useless log verbosity
+    * [FELIX-5366] - Additional Unit Tests for ConfigurationHandler
+
+** Bug
+    * [FELIX-5368] - ConfigurationManager ignores NotCachablePersistenceManager marker interface
+    * [FELIX-5385] - ConfigAdmin uses wrong security when calling ManagedServices
+
+
 Changes from 1.8.8 to 1.8.10
 ----------------------------
 
