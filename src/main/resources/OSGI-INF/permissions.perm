@@ -47,4 +47,4 @@
 (org.osgi.framework.ServicePermission "org.apache.felix.cm.PersistenceManager" "register")
 
 # -> BaseTracker.getAccessControlContext
-(java.lang.RuntimePermission "getProtectionDomain")
+(java.security.SecurityPermission "createAccessControlContext")

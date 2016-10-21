@@ -28,10 +28,11 @@ import java.util.HashSet;
 import java.util.Hashtable;
 import java.util.Map;
 import java.util.Set;
-
 import org.apache.felix.cm.MockBundleContext;
 import org.apache.felix.cm.MockLogService;
+import org.apache.felix.cm.MockNotCachablePersistenceManager;
 import org.apache.felix.cm.MockPersistenceManager;
+import org.apache.felix.cm.PersistenceManager;
 import org.mockito.Mockito;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.Constants;
@@ -41,9 +42,7 @@ import org.osgi.service.cm.ConfigurationEvent;
 import org.osgi.service.cm.SynchronousConfigurationListener;
 import org.osgi.service.log.LogService;
 import org.osgi.util.tracker.ServiceTracker;
-
 import junit.framework.TestCase;
-
 
 public class ConfigurationManagerTest extends TestCase
 {
@@ -73,6 +72,84 @@ public class ConfigurationManagerTest extends TestCase
         super.tearDown();
     }
 
+    public void test_listConfigurations_cached() throws Exception
+    {
+        String pid = "testDefaultPersistenceManager";
+        ConfigurationManager configMgr = new ConfigurationManager();
+        setServiceTrackerField( configMgr, "persistenceManagerTracker" );
+        
+        Field field = configMgr.getClass().getDeclaredField( "persistenceManagers" );
+        field.setAccessible( true );
+        CachingPersistenceManagerProxy[] persistenceManagers = new CachingPersistenceManagerProxy [1];
+        PersistenceManager pm =new MockPersistenceManager(); 
+        Dictionary dictionary = new Hashtable();
+        dictionary.put( "property1", "value1" );
+        dictionary.put( Constants.SERVICE_PID, pid );
+        pm.store( pid, dictionary );
+
+        persistenceManagers[0] = new CachingPersistenceManagerProxy(pm);
+        field.set(configMgr, persistenceManagers);
+        
+        ConfigurationImpl[] conf = configMgr.listConfigurations(new ConfigurationAdminImpl(configMgr, null), null);
+        
+        assertEquals(1, conf.length);
+        assertEquals(2, conf[0].getProperties(true).size());
+        
+        Field configurations = configMgr.getClass().getDeclaredField( "configurations" );
+        configurations.setAccessible( true );
+        HashMap<String, ConfigurationImpl> configurationsMap = new HashMap<String, ConfigurationImpl>();
+        configurationsMap.put(pid, conf[0]);
+        configurations.set(configMgr, configurationsMap);
+        
+        dictionary = new Hashtable();
+        dictionary.put( "property1", "value2" );
+        pid = "testDefaultPersistenceManager";
+        dictionary.put( Constants.SERVICE_PID, pid );
+        pm.store( pid, dictionary );
+ 
+        conf = configMgr.listConfigurations(new ConfigurationAdminImpl(configMgr, null), null);
+        assertEquals(1, conf.length);
+        assertEquals(2, conf[0].getProperties(true).size());
+    }    
+    
+    public void test_listConfigurations_notcached() throws Exception
+    {
+        String pid = "testDefaultPersistenceManager";         
+        ConfigurationManager configMgr = new ConfigurationManager();
+        setServiceTrackerField( configMgr, "persistenceManagerTracker" );
+        
+        Field field = configMgr.getClass().getDeclaredField( "persistenceManagers" );
+        field.setAccessible( true );
+        CachingPersistenceManagerProxy[] persistenceManagers = new CachingPersistenceManagerProxy[1];
+        PersistenceManager pm =new MockNotCachablePersistenceManager(); 
+        Dictionary dictionary = new Hashtable();
+        dictionary.put( "property1", "value1" );
+        dictionary.put( Constants.SERVICE_PID, pid );
+        pm.store( pid, dictionary );
+
+        persistenceManagers[0] = new CachingPersistenceManagerProxy(pm);
+        field.set(configMgr, persistenceManagers);
+        
+        ConfigurationImpl[] conf = configMgr.listConfigurations(new ConfigurationAdminImpl(configMgr, null), null);
+        
+        assertEquals(1, conf.length);
+        assertEquals(2, conf[0].getProperties(true).size());
+        
+        Field configurations = configMgr.getClass().getDeclaredField( "configurations" );
+        configurations.setAccessible( true );
+        HashMap<String, ConfigurationImpl> configurationsMap = new HashMap<String, ConfigurationImpl>();
+        configurationsMap.put(pid, conf[0]);
+        configurations.set(configMgr, configurationsMap);
+        
+        dictionary = new Hashtable();
+        pid = "testDefaultPersistenceManager";
+        dictionary.put( Constants.SERVICE_PID, pid );
+        pm.store( pid, dictionary );
+ 
+        conf = configMgr.listConfigurations(new ConfigurationAdminImpl(configMgr, null), null);
+        assertEquals(1, conf.length);
+        assertEquals(1, conf[0].getProperties(true).size());
+    }
 
     public void testLogNoLogService()
     {
@@ -214,6 +291,7 @@ public class ConfigurationManagerTest extends TestCase
 
         SynchronousConfigurationListener syncListener1 = new SynchronousConfigurationListener()
         {
+            @Override
             public void configurationEvent(ConfigurationEvent event)
             {
                 result.add("L1");
@@ -221,6 +299,7 @@ public class ConfigurationManagerTest extends TestCase
         };
         SynchronousConfigurationListener syncListener2 = new SynchronousConfigurationListener()
         {
+            @Override
             public void configurationEvent(ConfigurationEvent event)
             {
                 result.add("L2");
@@ -228,6 +307,7 @@ public class ConfigurationManagerTest extends TestCase
         };
         SynchronousConfigurationListener syncListener3 = new SynchronousConfigurationListener()
         {
+            @Override
             public void configurationEvent(ConfigurationEvent event)
             {
                 result.add("L3");
@@ -272,7 +352,7 @@ public class ConfigurationManagerTest extends TestCase
         utField.setAccessible( true );
         utField.set( configMgr, new UpdateThread( configMgr, null, "Test updater" ));
 
-        Dictionary<String, String> props = new Hashtable<String, String>();
+        Dictionary<String, Object> props = new Hashtable<String, Object>();
         props.put( Constants.SERVICE_PID, "org.acme.testpid" );
         ConfigurationImpl config = new ConfigurationImpl( configMgr, new MockPersistenceManager(), props );
         configMgr.updated( config, true );

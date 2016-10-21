@@ -70,6 +70,7 @@ public class ConfigurationAdminImpl implements ConfigurationAdmin
     /* (non-Javadoc)
      * @see org.osgi.service.cm.ConfigurationAdmin#createFactoryConfiguration(java.lang.String)
      */
+    @Override
     public Configuration createFactoryConfiguration( String factoryPid ) throws IOException
     {
         final ConfigurationManager configurationManager = getConfigurationManager();
@@ -87,6 +88,7 @@ public class ConfigurationAdminImpl implements ConfigurationAdmin
     /* (non-Javadoc)
      * @see org.osgi.service.cm.ConfigurationAdmin#createFactoryConfiguration(java.lang.String, java.lang.String)
      */
+    @Override
     public Configuration createFactoryConfiguration( String factoryPid, String location ) throws IOException
     {
         final ConfigurationManager configurationManager = getConfigurationManager();
@@ -106,6 +108,7 @@ public class ConfigurationAdminImpl implements ConfigurationAdmin
     /* (non-Javadoc)
      * @see org.osgi.service.cm.ConfigurationAdmin#getConfiguration(java.lang.String)
      */
+    @Override
     public Configuration getConfiguration( String pid ) throws IOException
     {
         final ConfigurationManager configurationManager = getConfigurationManager();
@@ -147,6 +150,7 @@ public class ConfigurationAdminImpl implements ConfigurationAdmin
     /* (non-Javadoc)
      * @see org.osgi.service.cm.ConfigurationAdmin#getConfiguration(java.lang.String, java.lang.String)
      */
+    @Override
     public Configuration getConfiguration( String pid, String location ) throws IOException
     {
         final ConfigurationManager configurationManager = getConfigurationManager();
@@ -175,6 +179,7 @@ public class ConfigurationAdminImpl implements ConfigurationAdmin
     /* (non-Javadoc)
      * @see org.osgi.service.cm.ConfigurationAdmin#listConfigurations(java.lang.String)
      */
+    @Override
     public Configuration[] listConfigurations( String filter ) throws IOException, InvalidSyntaxException
     {
         final ConfigurationManager configurationManager = getConfigurationManager();
@@ -239,6 +244,25 @@ public class ConfigurationAdminImpl implements ConfigurationAdmin
      */
     void checkPermission( final ConfigurationManager configurationManager, String name, boolean checkOwn )
     {
+        checkPermission(configurationManager, name, ConfigurationPermission.CONFIGURE, checkOwn);
+    }
+
+    /**
+     * Checks whether the current access control context (call stack) has
+     * the given permission for the given bundle location and throws a
+     * <code>SecurityException</code> if this is not the case.
+     *
+     * @param name The bundle location to check for permission. If this
+     *      is <code>null</code> permission is always granted.
+     * @param action The action to check.
+     * @param checkOwn If {@code false} permission is alwas granted if
+     *      {@code name} is the same the using bundle's location.
+     *
+     * @throws SecurityException if the access control context does not
+     *      have the appropriate permission
+     */
+    void checkPermission( final ConfigurationManager configurationManager, String name, String action, boolean checkOwn )
+    {
         // the caller's permission must be checked
         final SecurityManager sm = System.getSecurityManager();
         if ( sm != null )
@@ -248,45 +272,45 @@ public class ConfigurationAdminImpl implements ConfigurationAdmin
             {
                 try
                 {
-                    sm.checkPermission( new ConfigurationPermission( name, ConfigurationPermission.CONFIGURE ) );
+                    sm.checkPermission( new ConfigurationPermission( name, action ) );
 
                     configurationManager.log( LogService.LOG_DEBUG,
-                        "Explicit Permission; grant CONFIGURE permission on configuration bound to {0} to bundle {1}",
+                        "Explicit Permission; grant {0} permission on configuration bound to {1} to bundle {2}",
                         new Object[]
-                            { name, getBundle().getLocation() } );
+                            { action, name, getBundle().getLocation() } );
                 }
                 catch ( SecurityException se )
                 {
                     configurationManager
                         .log(
                             LogService.LOG_DEBUG,
-                            "No Permission; denied CONFIGURE permission on configuration bound to {0} to bundle {1}; reason: {2}",
+                            "No Permission; denied {0} permission on configuration bound to {1} to bundle {2}; reason: {3}",
                             new Object[]
-                                { name, getBundle().getLocation(), se.getMessage() } );
+                                { action, name, getBundle().getLocation(), se.getMessage() } );
                     throw se;
                 }
             }
             else if ( configurationManager.isLogEnabled( LogService.LOG_DEBUG ) )
             {
                 configurationManager.log( LogService.LOG_DEBUG,
-                    "Implicit Permission; grant CONFIGURE permission on configuration bound to {0} to bundle {1}",
+                    "Implicit Permission; grant {0} permission on configuration bound to {1} to bundle {2}",
                     new Object[]
-                        { name, getBundle().getLocation() } );
+                        { action, name, getBundle().getLocation() } );
 
             }
         }
         else if ( configurationManager.isLogEnabled( LogService.LOG_DEBUG ) )
         {
             configurationManager.log( LogService.LOG_DEBUG,
-                "No SecurityManager installed; grant CONFIGURE permission on configuration bound to {0} to bundle {1}",
+                "No SecurityManager installed; grant {0} permission on configuration bound to {1} to bundle {2}",
                 new Object[]
-                    { name, getBundle().getLocation() } );
+                    { action, name, getBundle().getLocation() } );
         }
     }
 
 
     /**
-     * Returns the {@link ConfigurationManager} backing this configuraiton
+     * Returns the {@link ConfigurationManager} backing this configuration
      * admin instance or throws {@code IllegalStateException} if already
      * disposed off.
      *

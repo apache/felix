@@ -67,6 +67,10 @@ class CachingPersistenceManagerProxy implements PersistenceManager
         this.pm = pm;
         this.cache = new Hashtable<String, CaseInsensitiveDictionary>();
     }
+    
+    public boolean isNotCachablePersistenceManager() {
+        return pm instanceof NotCachablePersistenceManager;
+    }
 
 
     /**
