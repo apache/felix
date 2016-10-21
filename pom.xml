@@ -27,7 +27,7 @@
   <packaging>pom</packaging>
   <name>Apache Felix Main Distribution</name>
   <artifactId>org.apache.felix.main.distribution</artifactId>
-  <version>5.6.1</version>
+  <version>5.7.0-SNAPSHOT</version>
   <properties>
     <dollar>$</dollar>
     <framework.version>5.6.1</framework.version>
@@ -37,9 +37,9 @@
     <obr.version>2.0.8</obr.version>
   </properties>
     <scm>
-      <connection>scm:svn:http://svn.apache.org/repos/asf/felix/releases/org.apache.felix.main.distribution-5.6.1</connection>
-      <developerConnection>scm:svn:https://svn.apache.org/repos/asf/felix/releases/org.apache.felix.main.distribution-5.6.1</developerConnection>
-      <url>scm:svn:https://svn.apache.org/repos/asf/felix/releases/org.apache.felix.main.distribution-5.6.1</url>
+      <connection>scm:svn:http://svn.apache.org/repos/asf/felix/trunk/main.distribution</connection>
+      <developerConnection>scm:svn:https://svn.apache.org/repos/asf/felix/trunk/main.distribution</developerConnection>
+      <url>http://svn.apache.org/repos/asf/felix/main.distribution</url>
     </scm>
   <build>
     <plugins>
