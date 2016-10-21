@@ -30,7 +30,6 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.NoSuchElementException;
 import java.util.Set;
-import java.util.StringTokenizer;
 import java.util.concurrent.Executor;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -92,10 +91,6 @@ class StatefulResolver
     private final Map<String, List<BundleRevision>> m_singletons;
     // Selected singleton bundle revisions.
     private final Set<BundleRevision> m_selectedSingletons;
-    // Execution environment.
-    private final String m_fwkExecEnvStr;
-    // Parsed framework environments
-    private final Set<String> m_fwkExecEnvSet;
 
     StatefulResolver(Felix felix, ServiceRegistry registry)
     {
@@ -110,11 +105,6 @@ class StatefulResolver
         m_capSets = new HashMap<String, CapabilitySet>();
         m_singletons = new HashMap<String, List<BundleRevision>>();
         m_selectedSingletons = new HashSet<BundleRevision>();
-
-        String fwkExecEnvStr =
-            (String) m_felix.getConfig().get(Constants.FRAMEWORK_EXECUTIONENVIRONMENT);
-        m_fwkExecEnvStr = (fwkExecEnvStr != null) ? fwkExecEnvStr.trim() : null;
-        m_fwkExecEnvSet = parseExecutionEnvironments(fwkExecEnvStr);
 
         List<String> indices = new ArrayList<String>();
         indices.add(BundleRevision.BUNDLE_NAMESPACE);
@@ -1036,10 +1026,8 @@ class StatefulResolver
 
                 if (Util.isFragment(revision))
                 {
-                    for (Iterator<Wire> itWires = wires.iterator();
-                        itWires.hasNext(); )
+                    for (Wire w : wires)
                     {
-                        Wire w = itWires.next();
                         List<BundleRevision> fragments = hosts.get(w.getProvider());
                         if (fragments == null)
                         {
@@ -1715,27 +1703,6 @@ class StatefulResolver
         return wirings;
     }
 
-    /**
-     * Updates the framework wide execution environment string and a cached Set of
-     * execution environment tokens from the comma delimited list specified by the
-     * system variable 'org.osgi.framework.executionenvironment'.
-     * @param fwkExecEnvStr Comma delimited string of provided execution environments
-     * @return the parsed set of execution environments
-    **/
-    private static Set<String> parseExecutionEnvironments(String fwkExecEnvStr)
-    {
-        Set<String> newSet = new HashSet<String>();
-        if (fwkExecEnvStr != null)
-        {
-            StringTokenizer tokens = new StringTokenizer(fwkExecEnvStr, ",");
-            while (tokens.hasMoreTokens())
-            {
-                newSet.add(tokens.nextToken().trim());
-            }
-        }
-        return newSet;
-    }
-
     private static void addToSingletonMap(
         Map<String, List<BundleRevision>> singletons, BundleRevision br)
     {
@@ -1786,7 +1753,7 @@ class StatefulResolver
                 {
                     return new Iterator<ResolverHook>()
                     {
-                        private Iterator<Map.Entry<ServiceReference<ResolverHookFactory>, ResolverHook>> it =
+                        private final Iterator<Map.Entry<ServiceReference<ResolverHookFactory>, ResolverHook>> it =
                             m_resolveHookMap.entrySet().iterator();
                         private Entry<ServiceReference<ResolverHookFactory>, ResolverHook> next = null;
 
