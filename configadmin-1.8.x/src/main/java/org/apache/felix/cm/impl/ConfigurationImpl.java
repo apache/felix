@@ -362,7 +362,7 @@ public class ConfigurationImpl extends ConfigurationBase
     }
 
 
-    /* (non-Javadoc)
+    /**
      * @see org.osgi.service.cm.Configuration#update(java.util.Dictionary)
      */
     public void update( Dictionary properties ) throws IOException
@@ -397,6 +397,7 @@ public class ConfigurationImpl extends ConfigurationBase
 
     //---------- Object overwrites --------------------------------------------
 
+    @Override
     public boolean equals( Object obj )
     {
         if ( obj == this )
@@ -413,12 +414,14 @@ public class ConfigurationImpl extends ConfigurationBase
     }
 
 
+    @Override
     public int hashCode()
     {
         return getPidString().hashCode();
     }
 
 
+    @Override
     public String toString()
     {
         return "Configuration PID=" + getPidString() + ", factoryPID=" + factoryPID + ", bundleLocation=" + getBundleLocation();
@@ -494,6 +497,7 @@ public class ConfigurationImpl extends ConfigurationBase
     }
 
 
+    @Override
     void store() throws IOException
     {
         // we don't need a deep copy, since we are not modifying

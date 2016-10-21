@@ -49,6 +49,7 @@ public class ConfigurationAdapter implements Configuration
     /**
      * @see org.apache.felix.cm.impl.ConfigurationImpl#getPid()
      */
+    @Override
     public String getPid()
     {
         checkDeleted();
@@ -59,6 +60,7 @@ public class ConfigurationAdapter implements Configuration
     /**
      * @see org.apache.felix.cm.impl.ConfigurationImpl#getFactoryPid()
      */
+    @Override
     public String getFactoryPid()
     {
         checkDeleted();
@@ -69,12 +71,13 @@ public class ConfigurationAdapter implements Configuration
     /**
      * @see org.apache.felix.cm.impl.ConfigurationImpl#getBundleLocation()
      */
+    @Override
     public String getBundleLocation()
     {
         // CM 1.4 / 104.13.2.4
         final String bundleLocation = delegatee.getBundleLocation();
-        delegatee.getConfigurationManager().log( LogService.LOG_DEBUG, "getBundleLocation() ==> {0}", new Object[]
-            { bundleLocation } );
+        //delegatee.getConfigurationManager().log( LogService.LOG_DEBUG, "getBundleLocation() ==> {0}", new Object[]
+        //    { bundleLocation } );
         checkActive();
         configurationAdmin.checkPermission( delegatee.getConfigurationManager(), ( bundleLocation == null ) ? "*" : bundleLocation, true );
         checkDeleted();
@@ -86,6 +89,7 @@ public class ConfigurationAdapter implements Configuration
      * @param bundleLocation
      * @see org.apache.felix.cm.impl.ConfigurationImpl#setStaticBundleLocation(String)
      */
+    @Override
     public void setBundleLocation( String bundleLocation )
     {
         delegatee.getConfigurationManager().log( LogService.LOG_DEBUG, "setBundleLocation(bundleLocation={0})",
@@ -106,6 +110,7 @@ public class ConfigurationAdapter implements Configuration
      * @throws IOException
      * @see org.apache.felix.cm.impl.ConfigurationImpl#update()
      */
+    @Override
     public void update() throws IOException
     {
         delegatee.getConfigurationManager().log( LogService.LOG_DEBUG, "update()", ( Throwable ) null );
@@ -134,7 +139,7 @@ public class ConfigurationAdapter implements Configuration
 
     public Dictionary getProperties()
     {
-        delegatee.getConfigurationManager().log( LogService.LOG_DEBUG, "getProperties()", ( Throwable ) null );
+        //delegatee.getConfigurationManager().log( LogService.LOG_DEBUG, "getProperties()", ( Throwable ) null );
 
         checkDeleted();
 
@@ -144,9 +149,10 @@ public class ConfigurationAdapter implements Configuration
     }
 
 
+    @Override
     public long getChangeCount()
     {
-        delegatee.getConfigurationManager().log( LogService.LOG_DEBUG, "getChangeCount()", ( Throwable ) null );
+        //delegatee.getConfigurationManager().log( LogService.LOG_DEBUG, "getChangeCount()", ( Throwable ) null );
 
         checkDeleted();
 
@@ -158,6 +164,7 @@ public class ConfigurationAdapter implements Configuration
      * @throws IOException
      * @see org.apache.felix.cm.impl.ConfigurationImpl#delete()
      */
+    @Override
     public void delete() throws IOException
     {
         delegatee.getConfigurationManager().log( LogService.LOG_DEBUG, "delete()", ( Throwable ) null );
@@ -171,6 +178,7 @@ public class ConfigurationAdapter implements Configuration
     /**
      * @see org.apache.felix.cm.impl.ConfigurationImpl#hashCode()
      */
+    @Override
     public int hashCode()
     {
         return delegatee.hashCode();
@@ -181,6 +189,7 @@ public class ConfigurationAdapter implements Configuration
      * @param obj
      * @see org.apache.felix.cm.impl.ConfigurationImpl#equals(java.lang.Object)
      */
+    @Override
     public boolean equals( Object obj )
     {
         return delegatee.equals( obj );
@@ -190,6 +199,7 @@ public class ConfigurationAdapter implements Configuration
     /**
      * @see org.apache.felix.cm.impl.ConfigurationImpl#toString()
      */
+    @Override
     public String toString()
     {
         return delegatee.toString();
