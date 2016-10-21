@@ -683,7 +683,11 @@ public class ConfigurationManager implements BundleActivator, BundleListener
                 }
 
                 // ensure the service.pid and returned a cached config if available
-                ConfigurationImpl cfg = getCachedConfiguration( pid );
+                ConfigurationImpl cfg = null;
+                if (! (pmList[i].isNotCachablePersistenceManager())) 
+                {
+                    cfg = getCachedConfiguration( pid );
+                }
                 if ( cfg == null )
                 {
                     cfg = new ConfigurationImpl( this, pmList[i], config );
