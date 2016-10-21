@@ -172,14 +172,6 @@ class StatefulResolver
                 null);
     }
 
-    void stop()
-    {
-        if (m_executor instanceof ExecutorService)
-        {
-            ((ExecutorService) m_executor).shutdownNow();
-        }
-    }
-
     synchronized void addRevision(BundleRevision br)
     {
         // Always attempt to remove the revision, since
