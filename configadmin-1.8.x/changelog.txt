@@ -1,0 +1,229 @@
+Changes from 1.8.8 to 1.8.10
+----------------------------
+
+** Improvement
+    * [FELIX-5088] - CaseSensitiveDictionary should implement equals()
+
+** Bug
+    * [FELIX-5301] - ConfigurationPlugin support is not spec compliant
+
+
+Changes from 1.8.6 to 1.8.8
+---------------------------
+
+** Improvement
+    * [FELIX-4917] - FilePersistenceManager doesn't support comments
+
+** Bug
+    * [FELIX-4962] - Configadmin leaks caller's security context downstream
+    * [FELIX-4945] - Escaped folder names makes ConfigAdmin incompatible and factory configs not always work
+
+
+Changes from 1.8.4 to 1.8.6
+---------------------------
+
+** Improvement
+    * [FELIX-4844] - Store configuration data in a diff-tool friendly way
+    * [FELIX-4884] - Avoid unnecessary array creation if listConfigurations does not find anything
+
+
+Changes from 1.8.2 to 1.8.4
+---------------------------
+
+** Bug
+    * [FELIX-4846] - Wrong exception type in list operation
+    * [FELIX-4851] - ConfigAdmin only forwards ConfigurationEvents to ConfigurationListeners which are provided by bundles that are in state ACTIVE
+    * [FELIX-4855] - ConfigAdmin does not update ManagedServiceFactory on framework restart
+
+
+Changes from 1.8.0 to 1.8.2
+----------------------------
+
+** Bug
+    * [FELIX-4302] - Config Admin can create illegal names on windows
+    * [FELIX-4360] - Ensure ordered property values in configurations
+    * [FELIX-4362] - Security ConfigAdmin permissions are inherited on the stack
+    * [FELIX-4385] - NPE in Configuration Admin Service when deleting configuration
+    * [FELIX-4408] - CaseInsensitiveDictionary is platform/locale dependant
+    * [FELIX-4566] - Consistency in PersistenceManager and Cache is not guaranteed
+
+** Improvement
+    * [FELIX-4316] - Packages imported dynamically should also be imported statically with an optional flag
+    * [FELIX-4811] - Optimize ConfigurationManager#listConfigurations
+
+
+Changes from 1.6.0 to 1.8.0
+----------------------------
+
+** Bug
+    * [FELIX-3360] - Bundle location is statically set for dynamically bound bundles
+    * [FELIX-3762] - NPE in UpdateConfiguration#run
+    * [FELIX-3820] - Possible NPE in ConfigAdmin after shutting down when accessed by bad behaving bundles
+    * [FELIX-3823] - ConfigAdmin should explicitely unregister services
+    * [FELIX-4165] - FilePersistenceManager fails to rename configuration file
+    * [FELIX-4197] - [CM] Always check permission on Configuration.get/setBundleLocation
+    * [FELIX-4238] - Unnecessary re-initialization of PersistenceManagers in configadmin
+
+** Improvement
+    * [FELIX-4039] - Add Permissions file in ConfigAdmin bundle 
+
+** Task
+    * [FELIX-3808] - Upgrade ConfigAdmin to pax-exam 2
+
+
+Changes from 1.4.0 to 1.6.0
+----------------------------
+
+** Bug
+    * [FELIX-3532] - Source artifact is not being generated
+    * [FELIX-3596] - Config Admin should track SynchronousConfigurationListeners
+    * [FELIX-3721] - Configuration not always provided upon initial service registration
+
+** Improvement
+    * [FELIX-3577] - Refactor helpers and service trackers
+    * [FELIX-3622] - ConfigurationManager.listConfigurations may not always properly log the configuration PID
+
+** Task
+    * [FELIX-3479] - [Config Admin 1.5] Implement Configuration.getChangeCount()
+    * [FELIX-3480] - [Config Admin 1.5] Implement support for SynchronousConfigurationListener
+    * [FELIX-3481] - [Config Admin 1.5] Implement support for Targeted PIDs
+    * [FELIX-3483] - [Config Admin 1.5] Export cm API at version 1.5
+    * [FELIX-3554] - Prevent same configuration to be delivered multiple times
+    * [FELIX-3562] - Use OSGi Configuration Admin 1.5 API classes
+    * [FELIX-3578] - ConfigAdmin Maven build does not have Maven convention *-sources.jar artifacts
+
+
+Changes from 1.2.8 to 1.4.0
+----------------------------
+
+** Bug
+    * [FELIX-2766] - Calling update() on a newly created factory configuration causes FileNotFoundException
+    * [FELIX-2771] - Configuration Admin does not work on Foundation 1.2 and Mika
+    * [FELIX-2813] - NPE in UpdateThread when updating a configuration right after ConfigurationAdmin service starts
+    * [FELIX-2847] - NPE in ConfigurationManager.java:1003 (static String toString( ServiceReference ref ))
+    * [FELIX-2885] - The config admin bundle does not indicate its provided and required services dependencies
+    * [FELIX-2888] - if you create a factory configuration and anybody takes a peek before you've had a chance to update, your pudding is trapped forever
+    * [FELIX-3046] - Empty array configuration value is read as null after restart
+    * [FELIX-3175] - RankingComparator results in wrong results
+    * [FELIX-3227] - ManagedService.update must be called with null if configuration exists but is not visilbe
+    * [FELIX-3228] - Configuration.getBundleLocation to generous
+    * [FELIX-3229] - ConfigurationAdmin.getConfiguration(String, String) and .createConfiguration(String) to generous
+    * [FELIX-3230] - ConfiguartionAdapter.setBundleLocation checks configuration permission incorrectly
+    * [FELIX-3231] - Disable update counter
+    * [FELIX-3233] - ConfigurationManager.canReceive may throw NullPointerException
+    * [FELIX-3390] - Intermittent NPE in ConfigurationManager
+
+** Improvement
+    * [FELIX-3180] - Provide MessageFormat based logging method
+    * [FELIX-3327] - Gracefully handle Configuration access after Configuration Admin Service has terminated
+
+** Task
+    * [FELIX-3176] - Implement Configuration Admin 1.4 changes
+    * [FELIX-3177] - Remove temporary inclusion of OSGi classes
+    * [FELIX-3200] - Track PID changes of ManagedService[Factory] services
+    * [FELIX-3301] - Enforce only using Java 1.3 API use
+
+** Wish
+    * [FELIX-1747] - Use Remote Resources Plugin to generate the legal files
+
+
+Changes from 1.2.4 to 1.2.8
+---------------------------
+
+** Bug
+    * [FELIX-1545] - Configurations may still be delivered more than once (or not at all)
+    * [FELIX-1727] - Properties with leading dots not allowed
+    * [FELIX-2179] - junit does not need to be a compile scope dependency of configadmin
+    * [FELIX-2557] - ConfigurationEvent delivery not building the listener list correctly
+
+** Improvement
+    * [FELIX-1907] - Improve documentation on PersistenceManager API
+    * [FELIX-2552] - Add caching PersistenceManager proxy
+    * [FELIX-2554] - Improve unit test setup to allow for easier use of integration tests from within IDEs
+
+** Task
+    * [FELIX-1543] - Remove org.osgi.service.cm from configadmin project as soon as R4.2 compendium library is available from the Maven Repository
+    * [FELIX-2559] - Adapt Configuration Admin LICENSE and NOTICE files
+
+
+Changes from 1.2.0 to 1.2.4
+---------------------------
+
+** Bug
+    * [FELIX-1535] - Permission is checked against the using bundle instead of the access control context (call stack)
+    * [FELIX-1542] - Configuration may be supplied twice in certain situations
+
+** Improvement
+    * [FELIX-1541] - Include latest CM 1.3 (Compendium R 4.2) package export
+
+
+Changes from 1.0.10 to 1.2.0
+----------------------------
+
+** Bug
+    * [FELIX-979] - Config Admin throwing NPE
+    * [FELIX-1146] - ConfigAdmin can deliver updates to a managed service factory more than once
+    * [FELIX-1165] - When restarting a bundle, the config admin reports "Configuration ... has already been delivered", and the bundle receives no configuration.
+    * [FELIX-1477] - ConfigAdmin implementation is not thread-safe
+    * [FELIX-1479] - Security errors accessing configurations in the file system
+    * [FELIX-1484] - Dynamically bound configuration must be reset to null after target bundle is uninstalled.
+    * [FELIX-1486] - Multiple PIDs must be supported
+    * [FELIX-1488] - Configuration binding is broken
+    * [FELIX-1489] - New Configurations must still be delivered to ManagedService
+    * [FELIX-1508] - Configuration.update() must not send CM_UPDATED event
+
+** Improvement
+    * [FELIX-1219] - ConfigAdmin package version has been bumped
+    * [FELIX-1507] - Prevent update failure in case of multiple updates/deletes
+
+** New Feature
+    * [FELIX-1231] - Support multi-value service.pid service properties
+    * [FELIX-1234] - Configuration Plugins should be called for all configuration instances of factory targets
+
+
+Changes from 1.0.8 to 1.0.10
+----------------------------
+
+** Bug
+    * [FELIX-889] - Arrays of primitives not supported by Configuration Admin
+    * [FELIX-890] - Configuration.getProperty returns a Dictionary which is not entirely private
+
+** Improvement
+    * [FELIX-903] - Add functionality to limit log output in the absence of a LogService
+
+
+Changes from 1.0.4 to 1.0.8
+---------------------------
+
+** Bug
+    * [FELIX-740] - ConfigurationManager throws NPE when bundle that registered service is uninstalled
+    * [FELIX-880] - ServiceReference of ConfigurationEvent is null
+    * [FELIX-881] - Stopping the Configuration Admin bundle causes a NullPointerException
+
+** Improvement
+    * [FELIX-665] - Configuration Admin OBR description
+    * [FELIX-865] - OBR: Do not declare ManagedService[Factory], ConfigurationListener and PersistenceManager as required services
+    * [FELIX-879] - Use Collection interface internally instead of Vector, also be lenient and accept any Colleciton value and do not require Vector
+
+
+Changes from 1.0.1 to 1.0.4
+---------------------------
+
+** Bug
+    * [FELIX-611] - ConfigurationAdmin.listConfigurations returns empty configurations
+    * [FELIX-612] - ConfigurationAdmin.createFactoryConfiguration should not persist Configuration
+
+** Improvement
+    * [FELIX-605] - Include ServiceTracker as private package
+
+
+Changes from 1.0.0 to 1.0.1
+---------------------------
+
+** Bug
+    * [FELIX-516] - ManagedService[Factory] may be updated twice with the same Configuration
+    * [FELIX-522] - Configuration Admin allows configuration keys with illegal characters
+
+
+Initial Release 1.0.0
+---------------------
