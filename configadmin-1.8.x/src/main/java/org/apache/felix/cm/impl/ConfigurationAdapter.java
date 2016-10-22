@@ -126,7 +126,8 @@ public class ConfigurationAdapter implements Configuration
      * @throws IOException
      * @see org.apache.felix.cm.impl.ConfigurationImpl#update(java.util.Dictionary)
      */
-    public void update( Dictionary properties ) throws IOException
+    @Override
+    public void update( Dictionary<String, ?> properties ) throws IOException
     {
         delegatee.getConfigurationManager().log( LogService.LOG_DEBUG, "update(properties={0})", new Object[]
             { properties } );
@@ -137,7 +138,8 @@ public class ConfigurationAdapter implements Configuration
     }
 
 
-    public Dictionary getProperties()
+    @Override
+    public Dictionary<String, Object> getProperties()
     {
         //delegatee.getConfigurationManager().log( LogService.LOG_DEBUG, "getProperties()", ( Throwable ) null );
 
