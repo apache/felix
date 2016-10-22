@@ -18,6 +18,7 @@
  */
 package org.apache.felix.cm;
 
+import aQute.bnd.annotation.ConsumerType;
 
 /**
  * <code>NotCachablePersistenceManager</code> is a marker interface which
@@ -33,6 +34,7 @@ package org.apache.felix.cm;
  *
  * @since 1.1
  */
+@ConsumerType
 public interface NotCachablePersistenceManager extends PersistenceManager
 {
 }

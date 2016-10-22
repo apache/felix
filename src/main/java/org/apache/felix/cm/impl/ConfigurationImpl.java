@@ -142,7 +142,7 @@ public class ConfigurationImpl extends ConfigurationBase
 
 
     ConfigurationImpl( ConfigurationManager configurationManager, PersistenceManager persistenceManager,
-        Dictionary properties )
+        Dictionary<String, Object> properties )
     {
         super( configurationManager, persistenceManager, ( String ) properties.remove( Constants.SERVICE_PID ) );
 
@@ -315,7 +315,7 @@ public class ConfigurationImpl extends ConfigurationBase
      *            <code>true</code> if a deep copy is to be returned.
      * @return the configuration properties
      */
-    public Dictionary getProperties( boolean deepCopy )
+    public Dictionary<String, Object> getProperties( boolean deepCopy )
     {
         // no properties yet
         if ( properties == null )
@@ -343,7 +343,7 @@ public class ConfigurationImpl extends ConfigurationBase
             // read configuration from persistence (again)
             if ( localPersistenceManager.exists( getPidString() ) )
             {
-                Dictionary properties = localPersistenceManager.load( getPidString() );
+                Dictionary<String, Object> properties = localPersistenceManager.load( getPidString() );
 
                 // ensure serviceReference pid
                 String servicePid = ( String ) properties.get( Constants.SERVICE_PID );
@@ -365,7 +365,7 @@ public class ConfigurationImpl extends ConfigurationBase
     /**
      * @see org.osgi.service.cm.Configuration#update(java.util.Dictionary)
      */
-    public void update( Dictionary properties ) throws IOException
+    public void update( Dictionary<String, ?> properties ) throws IOException
     {
         PersistenceManager localPersistenceManager = getPersistenceManager();
         if ( localPersistenceManager != null )
@@ -459,7 +459,7 @@ public class ConfigurationImpl extends ConfigurationBase
      */
     private void storeNewConfiguration() throws IOException
     {
-        Dictionary props = new Hashtable();
+        Dictionary<String, Object> props = new Hashtable<String, Object>();
         setAutoProperties( props, true );
         props.put( CONFIGURATION_NEW, Boolean.TRUE );
         getPersistenceManager().store( getPidString(), props );
@@ -503,12 +503,12 @@ public class ConfigurationImpl extends ConfigurationBase
         // we don't need a deep copy, since we are not modifying
         // any value in the dictionary itself. we are just adding
         // properties to it, which are required for storing
-        Dictionary props = getProperties( false );
+        Dictionary<String, Object> props = getProperties( false );
 
         // if this is a new configuration, we just use an empty Dictionary
         if ( props == null )
         {
-            props = new Hashtable();
+            props = new Hashtable<String, Object>();
 
             // add automatic properties including the bundle location (if
             // statically bound)
@@ -559,7 +559,7 @@ public class ConfigurationImpl extends ConfigurationBase
     }
 
 
-    private void configureFromPersistence( Dictionary properties )
+    private void configureFromPersistence( Dictionary<String, Object> properties )
     {
         // if the this is not an empty/new configuration, accept the properties
         // otherwise just set the properties field to null
@@ -573,7 +573,7 @@ public class ConfigurationImpl extends ConfigurationBase
         }
     }
 
-    private void configure( final Dictionary properties )
+    private void configure( final Dictionary<String, Object> properties )
     {
         final CaseInsensitiveDictionary newProperties;
         if ( properties == null )
@@ -604,7 +604,7 @@ public class ConfigurationImpl extends ConfigurationBase
     }
 
 
-    void setAutoProperties( Dictionary properties, boolean withBundleLocation )
+    void setAutoProperties( Dictionary<String, Object> properties, boolean withBundleLocation )
     {
         // set pid and factory pid in the properties
         replaceProperty( properties, Constants.SERVICE_PID, getPidString() );
@@ -622,7 +622,7 @@ public class ConfigurationImpl extends ConfigurationBase
     }
 
 
-    static void setAutoProperties( Dictionary properties, String pid, String factoryPid )
+    static void setAutoProperties( Dictionary<String, Object> properties, String pid, String factoryPid )
     {
         replaceProperty( properties, Constants.SERVICE_PID, pid );
         replaceProperty( properties, ConfigurationAdmin.SERVICE_FACTORYPID, factoryPid );

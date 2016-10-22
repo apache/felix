@@ -23,6 +23,8 @@ import java.io.IOException;
 import java.util.Dictionary;
 import java.util.Enumeration;
 
+import aQute.bnd.annotation.ConsumerType;
+
 
 /**
  * The <code>PersistenceManager</code> interface defines the API to be
@@ -48,6 +50,7 @@ import java.util.Enumeration;
  * used. If no pesistence manager service has been registered, the platfrom
  * file system based implementation is used.
  */
+@ConsumerType
 public interface PersistenceManager
 {
 
