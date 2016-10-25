@@ -677,6 +677,10 @@ public class OsgiManager extends GenericServlet
             locale = configuredLocale;
         if (locale == null)
             locale = request.getLocale();
+        // this should never happen as request.getLocale()
+        // must return a locale (and not null). But just as a sanity check.
+        if (locale == null)
+            locale = Locale.ENGLISH;
 
         return locale;
     }
