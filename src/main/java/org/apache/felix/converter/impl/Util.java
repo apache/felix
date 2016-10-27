@@ -16,15 +16,12 @@
  */
 package org.apache.felix.converter.impl;
 
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
 import java.lang.reflect.Type;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
-public class Util {
+class Util {
     private static final Map<Class<?>, Class<?>> boxedClasses;
     static {
         Map<Class<?>, Class<?>> m = new HashMap<>();
@@ -40,6 +37,8 @@ public class Util {
         boxedClasses = Collections.unmodifiableMap(m);
     }
 
+    private Util() {} // prevent instantiation
+
     static Type primitiveToBoxed(Type type) {
         if (type instanceof Class)
             return primitiveToBoxed((Class<?>) type);
@@ -53,30 +52,5 @@ public class Util {
             return boxed;
         else
             return cls;
-    }
-
-    public static byte [] readStream(InputStream is) throws IOException {
-        try {
-            ByteArrayOutputStream baos = new ByteArrayOutputStream();
-            byte[] bytes = new byte[8192];
-
-            int length = 0;
-            int offset = 0;
-
-            while ((length = is.read(bytes, offset, bytes.length - offset)) != -1) {
-                offset += length;
-
-                if (offset == bytes.length) {
-                    baos.write(bytes, 0, bytes.length);
-                    offset = 0;
-                }
-            }
-            if (offset != 0) {
-                baos.write(bytes, 0, offset);
-            }
-            return baos.toByteArray();
-        } finally {
-            is.close();
-        }
     }
 }
