@@ -18,6 +18,7 @@ package org.osgi.util.converter;
 import java.lang.reflect.Type;
 
 import org.osgi.annotation.versioning.ProviderType;
+import org.osgi.util.function.Function;
 
 /**
  * A builder to create a new converter with modified behaviour based on an
