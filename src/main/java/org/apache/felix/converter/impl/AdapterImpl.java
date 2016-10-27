@@ -33,9 +33,9 @@ import org.osgi.util.converter.ConvertFunction;
 import org.osgi.util.converter.Converter;
 import org.osgi.util.converter.ConverterBuilder;
 import org.osgi.util.converter.Converting;
-import org.osgi.util.converter.Function;
 import org.osgi.util.converter.Rule;
 import org.osgi.util.converter.TypeReference;
+import org.osgi.util.function.Function;
 
 public class AdapterImpl implements InternalConverter {
     private final InternalConverter delegate;
@@ -233,7 +233,7 @@ public class AdapterImpl implements InternalConverter {
 
         @Override
         public T convert(F obj, Type targetType) throws Exception {
-            return function.convert(obj);
+            return function.apply(obj);
         }
     }
 }

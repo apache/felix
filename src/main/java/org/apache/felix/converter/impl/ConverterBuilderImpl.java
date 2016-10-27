@@ -22,9 +22,9 @@ import java.util.List;
 
 import org.apache.felix.converter.impl.AdapterImpl.ConvertFunctionImpl;
 import org.osgi.util.converter.ConverterBuilder;
-import org.osgi.util.converter.Function;
 import org.osgi.util.converter.Rule;
 import org.osgi.util.converter.TypeReference;
+import org.osgi.util.function.Function;
 
 public class ConverterBuilderImpl implements ConverterBuilder {
     private final InternalConverter adapter;
