@@ -26,7 +26,7 @@ import java.util.Stack;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import org.apache.felix.converter.impl.Util;
+import org.apache.felix.serializer.impl.Util;
 
 /**
  * A very small JSON parser.

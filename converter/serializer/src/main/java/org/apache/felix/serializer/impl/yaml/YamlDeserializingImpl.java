@@ -23,7 +23,7 @@ import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.util.Scanner;
 
-import org.apache.felix.converter.impl.Util;
+import org.apache.felix.serializer.impl.Util;
 import org.osgi.service.serializer.Deserializing;
 import org.osgi.util.converter.ConversionException;
 import org.osgi.util.converter.Converter;
