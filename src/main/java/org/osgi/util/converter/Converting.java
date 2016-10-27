@@ -42,6 +42,14 @@ public interface Converting {
 	Converting as(Class< ? > type);
 
 	/**
+	 * Always return a fully populated copy of the object, however if the object
+	 * is an immutable built-in scalar such as String or Long, then a copy is not
+	 * needed. By default a wrapped object is returned by the converter if possible.
+	 * @return
+	 */
+	Converting copy();
+
+	/**
 	 * The default value to use when the object cannot be converted or in case
 	 * of conversion from a {@code null} value.
 	 *

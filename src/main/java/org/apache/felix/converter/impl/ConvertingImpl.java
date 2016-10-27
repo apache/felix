@@ -79,6 +79,12 @@ public class ConvertingImpl implements Converting, InternalConverting {
     }
 
     @Override
+    public Converting copy() {
+        // TODO Implement this
+        return null;
+    }
+
+    @Override
     public Converting defaultValue(Object defVal) {
         defaultValue = defVal;
         hasDefault = true;
