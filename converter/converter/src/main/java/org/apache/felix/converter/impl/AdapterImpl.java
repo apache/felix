@@ -96,6 +96,12 @@ public class AdapterImpl implements InternalConverter {
         }
 
         @Override
+        public Converting copy() {
+            del.copy();
+            return this;
+        }
+
+        @Override
         public Converting defaultValue(Object defVal) {
             del.defaultValue(defVal);
             defaultValue = defVal;
