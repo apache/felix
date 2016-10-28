@@ -36,6 +36,8 @@ public interface ConvertFunction<F, T> {
 	 * @param obj The object to be converted. This object will never be
 	 *            {@code null} as the convert function will not be invoked for
 	 *            null values.
+	 * @param key If the object was part of a map-like structure, the associated
+	 *            key is provided. Otherwise {@code null}.
 	 * @param targetType The target type.
 	 * @return The conversion result or {@code null} to indicate that the
 	 *         convert function cannot handle this conversion. In this case the
@@ -43,5 +45,5 @@ public interface ConvertFunction<F, T> {
 	 *         convert.
 	 * @throws Exception
 	 */
-	T convert(F obj, Type targetType) throws Exception;
+	T convert(F obj, Object key, Type targetType) throws Exception;
 }

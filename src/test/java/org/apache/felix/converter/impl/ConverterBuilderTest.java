@@ -19,6 +19,7 @@ package org.apache.felix.converter.impl;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Dictionary;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
@@ -34,6 +35,7 @@ import org.osgi.util.converter.ConvertFunction;
 import org.osgi.util.converter.Converter;
 import org.osgi.util.converter.ConverterBuilder;
 import org.osgi.util.converter.Rule;
+import org.osgi.util.converter.TypeReference;
 
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
@@ -83,7 +85,7 @@ public class ConverterBuilderTest {
         cb.rule(char[].class, String.class, ConverterBuilderTest::convertToString, null);
         cb.rule(new Rule<String, Number>(String.class, Number.class, new ConvertFunction<String, Number>() {
             @Override
-            public Number convert(String obj, Type targetType) throws Exception {
+            public Number convert(String obj, Object key, Type targetType) throws Exception {
                 if (Integer.class.equals(targetType))
                     return Integer.valueOf(-1);
                 else if (Long.class.equals(targetType))
@@ -108,7 +110,7 @@ public class ConverterBuilderTest {
         Converter ca = converter.newConverterBuilder().rule(
                 new Rule<Integer, Long>(Integer.class, Long.class, new ConvertFunction<Integer,Long>() {
             @Override
-            public Long convert(Integer obj, Type targetType) throws Exception {
+            public Long convert(Integer obj, Object key, Type targetType) throws Exception {
                 if (obj.intValue() != 1)
                     return new Long(-obj.intValue());
                 return null;
@@ -125,7 +127,7 @@ public class ConverterBuilderTest {
     public void testWildcardAdapter() {
         ConvertFunction<List, Object> foo = new ConvertFunction<List, Object>() {
             @Override
-            public Object convert(List t, Type type) throws Exception {
+            public Object convert(List t, Object key, Type type) throws Exception {
                 if (type instanceof Class) {
                     if (Number.class.isAssignableFrom((Class<?>) type))
                         return converter.convert(t.size()).to(type);
@@ -136,7 +138,7 @@ public class ConverterBuilderTest {
 
         Rule<List, Object> r = new Rule<>(List.class, Object.class, foo);
         Rule<Object, Object> allCatch = new Rule<>(Object.class, Object.class,
-                (v,t) -> v.toString());
+                (v,k,t) -> v.toString());
 
         ConverterBuilder cb = converter.newConverterBuilder();
         cb.rule(r);
@@ -152,13 +154,13 @@ public class ConverterBuilderTest {
     public void testWildcardAdapter2() {
         Map<Object, Object> snooped = new HashMap<>();
         Rule<Object, ArrayList> r = new Rule<>(Object.class, ArrayList.class,
-                (v,t) -> null,
-                (v,t) -> "arraylist");
+                (v,k,t) -> null,
+                (v,k,t) -> "arraylist");
         Rule<Object, List> r2 = new Rule<>(Object.class, List.class,
-                (v,t) -> null,
-                (v,t) -> "list");
+                (v,k,t) -> null,
+                (v,k,t) -> "list");
         Rule<Object, Object> allCatch = new Rule<>(Object.class, Object.class,
-                (v,t) -> {snooped.put(v,t); return null;}, null);
+                (v,k,t) -> {snooped.put(v,t); return null;}, null);
 
         ConverterBuilder cb = converter.newConverterBuilder();
         cb.rule(r);
@@ -182,9 +184,9 @@ public class ConverterBuilderTest {
     public void testConvertAs() {
         ConverterBuilder cb = converter.newConverterBuilder();
         cb.rule(new Rule<>(MyIntf.class, MyCustomDTO.class,
-                (i, t) -> { MyCustomDTO dto = new MyCustomDTO(); dto.field = "" + i.value(); return dto; }));
+                (i, k, t) -> { MyCustomDTO dto = new MyCustomDTO(); dto.field = "" + i.value(); return dto; }));
         cb.rule(new Rule<>(MyBean.class, MyCustomDTO.class,
-                (b, t) -> { MyCustomDTO dto = new MyCustomDTO(); dto.field = b.getValue(); return dto; }));
+                (b, k, t) -> { MyCustomDTO dto = new MyCustomDTO(); dto.field = b.getValue(); return dto; }));
         Converter cc = cb.build();
 
         MyBean mb = new MyBean();
@@ -192,9 +194,51 @@ public class ConverterBuilderTest {
         mb.beanVal = "Hello";
 
         assertNull(converter.convert(mb).to(MyCustomDTO.class).field);
-        assertNull(converter.convert(mb).as(MyIntf.class).to(MyCustomDTO.class).field);
+        assertNull(converter.convert(mb).sourceType(MyIntf.class).to(MyCustomDTO.class).field);
         assertEquals("Hello", cc.convert(mb).to(MyCustomDTO.class).field);
-        assertEquals("17", cc.convert(mb).as(MyIntf.class).to(MyCustomDTO.class).field);
+        assertEquals("17", cc.convert(mb).sourceType(MyIntf.class).to(MyCustomDTO.class).field);
+    }
+
+    @Test
+    public void testConvertWithKeys() {
+        ConverterBuilder cb = converter.newConverterBuilder();
+        ConvertFunction<Number, String> ntc = new ConvertFunction<Number, String>() {
+            @Override
+            public String convert(Number obj, Object key, Type targetType) throws Exception {
+                if ("cost".equals(key))
+                    return "$" + obj + ".00";
+                else
+                    return "" + obj;
+            }
+        };
+        ConvertFunction<String, Number> ctn = new ConvertFunction<String, Number>() {
+            @Override
+            public Number convert(String obj, Object key, Type targetType) throws Exception {
+                if ("cost".equals(key)) {
+                    int dotIdx = obj.indexOf('.');
+                    obj = obj.substring(1, dotIdx); // eat off dollar sign and decimals
+                }
+                return Integer.parseInt(obj);
+            }
+        };
+        cb.rule(new Rule<Number, String>(Number.class, String.class, ntc, ctn));
+        Converter c = cb.build();
+
+        Map<String, Integer> m = new HashMap<>();
+        m.put("amount", 7);
+        m.put("cost", 100);
+
+        // Convert to Dictionary<String,String>
+        Dictionary<String,String> d = c.convert(m).to(new TypeReference<Dictionary<String, String>>(){});
+        assertEquals(2, d.size());
+        assertEquals("7", d.get("amount"));
+        assertEquals("$100.00", d.get("cost"));
+
+        // Convert back to HashMap<String,Integer>
+        HashMap<String, Integer> hm = c.convert(d).to(new TypeReference<HashMap<String, Integer>>() {});
+        assertEquals(2, hm.size());
+        assertEquals(7, (int) hm.get("amount"));
+        assertEquals(100, (int) hm.get("cost"));
     }
 
     static interface MyIntf {

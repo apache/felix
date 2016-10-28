@@ -32,6 +32,7 @@ import java.util.Collections;
 import java.util.Dictionary;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
@@ -57,7 +58,7 @@ public class ConvertingImpl implements Converting, InternalConverting {
         interfaceImplementations = Collections.unmodifiableMap(m);
     }
 
-    private volatile Converter converter;
+    private volatile InternalConverter converter;
     private volatile Object object;
     private volatile Class<?> treatAsClass;
     private volatile Object defaultValue;
@@ -67,13 +68,13 @@ public class ConvertingImpl implements Converting, InternalConverting {
     private volatile Class<?> targetViewClass;
     private volatile Type[] typeArguments;
 
-    ConvertingImpl(Converter c, Object obj) {
+    ConvertingImpl(InternalConverter c, Object obj) {
         converter = c;
         object = obj;
     }
 
     @Override
-    public Converting as(Class<?> type) {
+    public Converting sourceType(Class<?> type) {
         treatAsClass = type;
         return this;
     }
@@ -93,8 +94,18 @@ public class ConvertingImpl implements Converting, InternalConverting {
     }
 
     @Override
+    public InternalConverting key(Object k) {
+        // This is only for adapters, so we don't need to do anything here
+        return this;
+    }
+
+    @Override
     public void setConverter(Converter c) {
-        converter = c;
+        if (c instanceof InternalConverter)
+            converter = (InternalConverter) c;
+        else
+            throw new IllegalStateException("Incorrect converter used. Should implement " +
+                InternalConverter.class + " but was " + c);
     }
 
     @SuppressWarnings("unchecked")
@@ -165,19 +176,14 @@ public class ConvertingImpl implements Converting, InternalConverting {
             return res2;
         } else {
             if (defaultValue != null)
-                return converter.convert(defaultValue).as(treatAsClass).target(targetViewClass).to(targetActualClass);
+                return converter.convert(defaultValue).sourceType(treatAsClass).targetType(targetViewClass).to(targetActualClass);
             else
                 return null;
         }
     }
 
     @Override
-    public String toString() {
-        return to(String.class);
-    }
-
-    @Override
-    public Converting target(Class<?> cls) {
+    public Converting targetType(Class<?> cls) {
         targetViewClass = cls;
         return this;
     }
@@ -297,17 +303,17 @@ public class ConvertingImpl implements Converting, InternalConverting {
         for (Map.Entry entry : (Set<Entry>) m.entrySet()) {
             Object key = entry.getKey();
             if (targetKeyType != null)
-                key = converter.convert(key).to(targetKeyType);
+                key = converter.convert(key).key(key).to(targetKeyType);
             Object value = entry.getValue();
             if (value != null) {
                 if (targetValueType != null) {
-                    value = converter.convert(value).to(targetValueType);
+                    value = converter.convert(value).key(key).to(targetValueType);
                 } else {
                     Class<?> cls = value.getClass();
                     if (isCopyRequiredType(cls)) {
                         cls = getConstructableType(cls);
                     }
-                    value = converter.convert(value).to(cls);
+                    value = converter.convert(value).key(key).to(cls);
                 }
             }
             instance.put(key, value);
@@ -316,11 +322,27 @@ public class ConvertingImpl implements Converting, InternalConverting {
         return instance;
     }
 
+    @SuppressWarnings({ "unchecked", "rawtypes" })
     private Object convertToMapType() {
         if (Map.class.isAssignableFrom(targetViewClass))
             return convertToMap();
         else if (Dictionary.class.isAssignableFrom(targetViewClass))
-            return null; // TODO new Hashtable(convertToMap(sourceCls, Map.class, typeArguments));
+            return new Hashtable((Map) converter.convert(object).to(new ParameterizedType() {
+                @Override
+                public Type getRawType() {
+                    return HashMap.class;
+                }
+
+                @Override
+                public Type getOwnerType() {
+                    return null;
+                }
+
+                @Override
+                public Type[] getActualTypeArguments() {
+                    return typeArguments;
+                }
+            }));
         else if (targetViewClass.isInterface())
             return createProxy(sourceClass, targetViewClass);
         return createJavaBean(sourceClass, targetViewClass);
