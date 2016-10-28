@@ -82,6 +82,7 @@ public class AdapterImpl implements InternalConverter {
         private volatile Object defaultValue;
         private volatile Class<?> treatAsClass;
         private volatile boolean hasDefault;
+        private volatile Object key;
 
         ConvertingWrapper(Object obj, InternalConverting c) {
             object = obj;
@@ -89,9 +90,9 @@ public class AdapterImpl implements InternalConverter {
         }
 
         @Override
-        public Converting as(Class<?> cls) {
+        public Converting sourceType(Class<?> cls) {
             treatAsClass = cls;
-            del.as(cls);
+            del.sourceType(cls);
             return this;
         }
 
@@ -106,6 +107,12 @@ public class AdapterImpl implements InternalConverter {
             del.defaultValue(defVal);
             defaultValue = defVal;
             hasDefault = true;
+            return this;
+        }
+
+        @Override
+        public InternalConverting key(Object k) {
+            key = k;
             return this;
         }
 
@@ -154,7 +161,7 @@ public class AdapterImpl implements InternalConverter {
                         continue;
 
                     try {
-                        Object res = func.convert(object, type);
+                        Object res = func.convert(object, key, type);
                         if (res != null) {
                             return res;
                         }
@@ -176,8 +183,8 @@ public class AdapterImpl implements InternalConverter {
         }
 
         @Override
-        public Converting target(Class<?> cls) {
-            del.target(cls);
+        public Converting targetType(Class<?> cls) {
+            del.targetType(cls);
             return this;
         }
     }
@@ -232,7 +239,7 @@ public class AdapterImpl implements InternalConverter {
         }
 
         @Override
-        public T convert(F obj, Type targetType) throws Exception {
+        public T convert(F obj, Object key, Type targetType) throws Exception {
             return function.apply(obj);
         }
     }

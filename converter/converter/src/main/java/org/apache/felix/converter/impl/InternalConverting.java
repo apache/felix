@@ -20,5 +20,7 @@ import org.osgi.util.converter.Converter;
 import org.osgi.util.converter.Converting;
 
 public interface InternalConverting extends Converting {
-    public void setConverter(Converter c);
+    void setConverter(Converter c);
+
+    InternalConverting key(Object key);
 }
