@@ -155,7 +155,6 @@ class Candidates
         return m_delta;
     }
 
-    @SuppressWarnings("ThrowableResultOfMethodCallIgnored")
     public void populate(Collection<Resource> resources)
     {
         ResolveContext rc = m_session.getContext();
@@ -253,19 +252,6 @@ class Candidates
         return !PackageNamespace.RESOLUTION_DYNAMIC.equals(res);
     }
 
-    private boolean isMandatory(ResolveContext rc, Requirement requirement) {
-        // The requirement is optional
-        if (Util.isOptional(requirement)) {
-            return false;
-        }
-        // This is a fragment that is already resolved and there is no unresolved hosts to attach it to
-        Resource resource = requirement.getResource();
-        if (Util.isFragment(resource) && rc.getWirings().containsKey(resource)) {
-            return false;
-        }
-        return true;
-    }
-
     private void populateSubstitutables()
     {
         for (Map.Entry<Resource, PopulateResult> populated : m_populateResultCache.fast())
@@ -280,6 +266,7 @@ class Candidates
     private void populateSubstitutables(Resource resource)
     {
         // Collect the package names exported
+        @SuppressWarnings("serial")
         OpenHashMap<String, List<Capability>> exportNames = new OpenHashMap<String, List<Capability>>() {
             @Override
             protected List<Capability> compute(String s) {
@@ -740,7 +727,7 @@ class Candidates
     public CandidateSelector clearMultipleCardinalityCandidates(Requirement req, Collection<Capability> caps)
     {
         // this is a special case where we need to completely replace the CandidateSelector
-    	// this method should never be called from normal Candidates permutations
+        // this method should never be called from normal Candidates permutations
         CandidateSelector candidates = m_candidateMap.get(req);
         List<Capability> remaining = new ArrayList<Capability>(candidates.getRemainingCandidates());
         remaining.removeAll(caps);

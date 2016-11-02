@@ -19,6 +19,7 @@
 package org.apache.felix.resolver.util;
 
 public class OpenHashMapSet<K, V> extends OpenHashMap<K, CopyOnWriteSet<V>> {
+    private static final long serialVersionUID = 1L;
 
     public OpenHashMapSet() {
         super();
@@ -28,6 +29,7 @@ public class OpenHashMapSet<K, V> extends OpenHashMap<K, CopyOnWriteSet<V>> {
         super(initialCapacity);
     }
 
+    @SuppressWarnings("unchecked")
     public OpenHashMapSet<K, V> deepClone() {
         OpenHashMapSet<K, V> copy = (OpenHashMapSet<K, V>) super.clone();
         Object[] values = copy.value;

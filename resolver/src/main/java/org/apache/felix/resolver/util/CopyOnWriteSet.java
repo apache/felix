@@ -19,13 +19,11 @@
 package org.apache.felix.resolver.util;
 
 import java.lang.reflect.Array;
-import java.util.AbstractSet;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.Set;
 
-@SuppressWarnings("NullableProblems")
 public class CopyOnWriteSet<E> implements Set<E>, Cloneable {
 
     Object[] data;
@@ -116,6 +114,7 @@ public class CopyOnWriteSet<E> implements Set<E>, Cloneable {
             return false;
         }
         Object[] o1 = data;
+        @SuppressWarnings("rawtypes")
         Object[] o2 = ((CopyOnWriteSet) o).data;
         if (o1 == o2) {
             return true;

@@ -375,7 +375,7 @@ public class ResolverImpl implements Resolver
         return doResolve(session);
     }
 
-    private Map doResolve(ResolveSession session) throws ResolutionException {
+    private Map<Resource, List<Wire>> doResolve(ResolveSession session) throws ResolutionException {
         Map<Resource, List<Wire>> wireMap = new HashMap<Resource, List<Wire>>();
 
         boolean retry;
@@ -1689,6 +1689,7 @@ public class ResolverImpl implements Resolver
         List<Capability> caps = (wiring != null)
                 ? wiring.getResourceCapabilities(null)
                 : resource.getCapabilities(null);
+        @SuppressWarnings("serial")
         OpenHashMap<String, Set<Capability>> pkgs = new OpenHashMap<String, Set<Capability>>(caps.size()) {
             public Set<Capability> compute(String pkgName) {
                 return new HashSet<Capability>();
@@ -1967,6 +1968,7 @@ public class ResolverImpl implements Resolver
         return wireMap;
     }
 
+    @SuppressWarnings("unused")
     private static void dumpResourcePkgMap(
         ResolveContext rc, Map<Resource, Packages> resourcePkgMap)
     {
@@ -2025,6 +2027,7 @@ public class ResolverImpl implements Resolver
         public final OpenHashMap<String, ArrayMap<Capability, UsedBlames>> m_usedPkgs;
         public final OpenHashMap<Capability, Set<Capability>> m_sources;
 
+        @SuppressWarnings("serial")
         public Packages(Resource resource)
         {
             int nbCaps = resource.getCapabilities(null).size();

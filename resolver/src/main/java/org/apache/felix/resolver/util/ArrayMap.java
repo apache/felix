@@ -20,7 +20,6 @@ package org.apache.felix.resolver.util;
 
 import java.util.*;
 
-@SuppressWarnings("NullableProblems")
 public class ArrayMap<K, V> extends AbstractMap<K, V> {
 
     private Object[] table;
@@ -133,25 +132,26 @@ public class ArrayMap<K, V> extends AbstractMap<K, V> {
             @Override
             public Iterator<Entry<K, V>> iterator() {
                 return new Iterator<Entry<K, V>>() {
-                    FastEntry entry = new FastEntry();
+                    FastEntry<K, V> entry = new FastEntry<K, V>();
                     int index = 0;
 
                     public boolean hasNext() {
                         return index < size;
                     }
 
-                    public FastEntry next() {
+                    @SuppressWarnings("unchecked")
+                    public FastEntry<K, V> next() {
                         if (index >= size) {
                             throw new NoSuchElementException();
                         }
                         int i = index << 1;
-                        entry.key = table[i];
-                        entry.value = table[i + 1];
+                        entry.key = (K) table[i];
+                        entry.value = (V) table[i + 1];
                         index++;
                         return entry;
                     }
-	
-	                public void remove() {
+
+                    public void remove() {
                         throw new UnsupportedOperationException();
                     }
                 };
