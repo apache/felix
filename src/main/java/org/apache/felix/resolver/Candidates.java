@@ -939,7 +939,12 @@ class Candidates
                 CandidateSelector cands = m_candidateMap.get(origReq);
                 if (cands != null)
                 {
-                    m_candidateMap.put(r, cands.copy());
+                    if (cands instanceof ShadowList)
+                    {
+                        m_candidateMap.put(r, ShadowList.deepCopy((ShadowList) cands));
+                    } else {
+                        m_candidateMap.put(r, cands.copy());
+                    }
                     for (Capability cand : cands.getRemainingCandidates())
                     {
                         Set<Requirement> dependents = m_dependentMap.get(cand);

@@ -23,6 +23,7 @@ import java.util.Collection;
 import java.util.List;
 
 import org.apache.felix.resolver.test.util.IdentityCapability;
+import org.osgi.framework.Version;
 import org.osgi.framework.namespace.IdentityNamespace;
 import org.osgi.resource.Capability;
 import org.osgi.resource.Requirement;
@@ -38,12 +39,12 @@ public class ResourceImpl implements Resource
         m_reqs = new ArrayList<Requirement>();
     }
     public ResourceImpl(String name) {
-        this(name, IdentityNamespace.TYPE_BUNDLE);
+        this(name, IdentityNamespace.TYPE_BUNDLE, Version.emptyVersion);
     }
-    public ResourceImpl(String name, String type)
+    public ResourceImpl(String name, String type, Version v)
     {
         m_caps = new ArrayList<Capability>();
-        m_caps.add(0, new IdentityCapability(this, name, type));
+        m_caps.add(0, new IdentityCapability(this, name, type, v));
         m_reqs = new ArrayList<Requirement>();
     }
 

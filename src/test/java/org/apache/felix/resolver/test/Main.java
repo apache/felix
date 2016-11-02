@@ -35,6 +35,7 @@ import org.apache.felix.resolver.test.util.PackageCapability;
 import org.apache.felix.resolver.test.util.PackageRequirement;
 import org.apache.felix.resolver.test.util.ResolveContextImpl;
 import org.apache.felix.resolver.test.util.ResourceImpl;
+import org.osgi.framework.Version;
 import org.osgi.framework.namespace.BundleNamespace;
 import org.osgi.framework.namespace.HostNamespace;
 import org.osgi.framework.namespace.IdentityNamespace;
@@ -430,12 +431,12 @@ public class Main
         a1_hostCap.addAttribute(HostNamespace.HOST_NAMESPACE, "A");
         a1.addCapability(a1_hostCap);
 
-        ResourceImpl f1 = new ResourceImpl("F1", IdentityNamespace.TYPE_FRAGMENT);
+        ResourceImpl f1 = new ResourceImpl("F1", IdentityNamespace.TYPE_FRAGMENT, Version.emptyVersion);
         GenericRequirement f1_hostReq = new GenericRequirement(f1, HostNamespace.HOST_NAMESPACE);
         f1_hostReq.addDirective(Namespace.REQUIREMENT_FILTER_DIRECTIVE, "(" + HostNamespace.HOST_NAMESPACE + "=A)");
         f1.addRequirement(f1_hostReq);
 
-        ResourceImpl f2 = new ResourceImpl("F2", IdentityNamespace.TYPE_FRAGMENT);
+        ResourceImpl f2 = new ResourceImpl("F2", IdentityNamespace.TYPE_FRAGMENT, Version.emptyVersion);
         GenericRequirement f2_hostReq = new GenericRequirement(f2, HostNamespace.HOST_NAMESPACE);
         f2_hostReq.addDirective(Namespace.REQUIREMENT_FILTER_DIRECTIVE, "(" + HostNamespace.HOST_NAMESPACE + "=A)");
         f2.addRequirement(f2_hostReq);
