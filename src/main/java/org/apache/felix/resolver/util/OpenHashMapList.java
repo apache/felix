@@ -21,6 +21,7 @@ package org.apache.felix.resolver.util;
 import org.osgi.resource.Requirement;
 
 public class OpenHashMapList extends OpenHashMap<Requirement, CandidateSelector> {
+    private static final long serialVersionUID = 0L;
 
     public OpenHashMapList() {
         super();
