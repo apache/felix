@@ -46,6 +46,7 @@ import org.apache.felix.resolver.test.util.ResourceImpl;
 import org.junit.Test;
 import org.mockito.Mockito;
 import org.osgi.framework.Constants;
+import org.osgi.framework.Version;
 import org.osgi.framework.namespace.BundleNamespace;
 import org.osgi.framework.namespace.HostNamespace;
 import org.osgi.framework.namespace.IdentityNamespace;
@@ -445,7 +446,7 @@ public class ResolverTest
         ResourceImpl a1 = new ResourceImpl("A");
         Capability a1_hostCap = addCap(a1, HostNamespace.HOST_NAMESPACE, "A");
 
-        ResourceImpl f1 = new ResourceImpl("F1", IdentityNamespace.TYPE_FRAGMENT);
+        ResourceImpl f1 = new ResourceImpl("F1", IdentityNamespace.TYPE_FRAGMENT, Version.emptyVersion);
         Requirement f1_hostReq = addReq(f1, HostNamespace.HOST_NAMESPACE, "A");
         Capability f1_pkgCap = addCap(f1, PackageNamespace.PACKAGE_NAMESPACE, "org.foo.a");
 
@@ -499,7 +500,7 @@ public class ResolverTest
         ResourceImpl a1 = new ResourceImpl("A");
         Capability a1_hostCap = addCap(a1, HostNamespace.HOST_NAMESPACE, "A");
 
-        ResourceImpl f1 = new ResourceImpl("F1", IdentityNamespace.TYPE_FRAGMENT);
+        ResourceImpl f1 = new ResourceImpl("F1", IdentityNamespace.TYPE_FRAGMENT, Version.emptyVersion);
         Requirement f1_hostReq = addReq(f1, HostNamespace.HOST_NAMESPACE, "A");
         Capability f1_pkgCap = addCap(f1, PackageNamespace.PACKAGE_NAMESPACE, "org.foo.a");
 
@@ -603,7 +604,7 @@ public class ResolverTest
         ResourceImpl a1 = new ResourceImpl("A");
         Capability a1_hostCap = addCap(a1, HostNamespace.HOST_NAMESPACE, "A");
 
-        ResourceImpl f1 = new ResourceImpl("F1", IdentityNamespace.TYPE_FRAGMENT);
+        ResourceImpl f1 = new ResourceImpl("F1", IdentityNamespace.TYPE_FRAGMENT, Version.emptyVersion);
         Requirement f1_hostReq = addReq(f1, HostNamespace.HOST_NAMESPACE, "A");
         Capability f1_pkgCap = addCap(f1, PackageNamespace.PACKAGE_NAMESPACE, "org.foo.a");
 
@@ -625,6 +626,63 @@ public class ResolverTest
         // should be wired to A through the fragment capability
         assertEquals(a1, wiresB.get(0).getProvider());
         assertEquals(f1_pkgCap, wiresB.get(0).getCapability());
+    }
+
+    @Test
+    public void testScenario14() throws Exception
+    {
+        ResolverImpl resolver = new ResolverImpl(new Logger(Logger.LOG_DEBUG), 1);
+
+        Map<Resource, Wiring> wirings = new HashMap<Resource, Wiring>();
+        Map<Requirement, List<Capability>> candMap = new HashMap<Requirement, List<Capability>>();
+
+        ResourceImpl a1 = new ResourceImpl("A", IdentityNamespace.TYPE_BUNDLE, Version.parseVersion("1.0.0"));
+        Capability a1_hostCap = addCap(a1, HostNamespace.HOST_NAMESPACE, "A");
+        Capability a1_pkgCap = addCap(a1, PackageNamespace.PACKAGE_NAMESPACE, "a");
+        Requirement a1_pkgReq = addReq(a1, PackageNamespace.PACKAGE_NAMESPACE, "a.impl");
+
+        ResourceImpl a2 = new ResourceImpl("A", IdentityNamespace.TYPE_BUNDLE, Version.parseVersion("2.0.0"));
+        Capability a2_hostCap = addCap(a2, HostNamespace.HOST_NAMESPACE, "A");
+        Capability a2_pkgCap = addCap(a2, PackageNamespace.PACKAGE_NAMESPACE, "a");
+        Requirement a2_pkgReq = addReq(a2, PackageNamespace.PACKAGE_NAMESPACE, "a.impl");
+
+        ResourceImpl a3 = new ResourceImpl("A", IdentityNamespace.TYPE_BUNDLE, Version.parseVersion("3.0.0"));
+        Capability a3_hostCap = addCap(a3, HostNamespace.HOST_NAMESPACE, "A");
+        Capability a3_pkgCap = addCap(a3, PackageNamespace.PACKAGE_NAMESPACE, "a");
+        Requirement a3_pkgReq = addReq(a3, PackageNamespace.PACKAGE_NAMESPACE, "a.impl");
+
+        ResourceImpl f1 = new ResourceImpl("F1", IdentityNamespace.TYPE_FRAGMENT, Version.emptyVersion);
+        Requirement f1_hostReq = addReq(f1, HostNamespace.HOST_NAMESPACE, "A");
+        Capability f1_pkgCap = addCap(f1, PackageNamespace.PACKAGE_NAMESPACE, "a.impl");
+        Requirement f1_pkgReq = addReq(f1, PackageNamespace.PACKAGE_NAMESPACE, "a");
+
+        ResourceImpl b1 = new ResourceImpl("B");
+        Requirement b_pkgReq1 = addReq(b1, PackageNamespace.PACKAGE_NAMESPACE, "a");
+
+        candMap.put(a1_pkgReq, Collections.singletonList(f1_pkgCap));
+        candMap.put(a2_pkgReq, Collections.singletonList(f1_pkgCap));
+        candMap.put(a3_pkgReq, Collections.singletonList(f1_pkgCap));
+        candMap.put(b_pkgReq1, Arrays.asList(a3_pkgCap, a2_pkgCap, a1_pkgCap));
+        candMap.put(f1_pkgReq, Arrays.asList(a3_pkgCap, a2_pkgCap, a1_pkgCap));
+        candMap.put(f1_hostReq, Arrays.asList(a3_hostCap, a2_hostCap, a1_hostCap));
+
+
+        ResolveContextImpl rci = new ResolveContextImpl(wirings, candMap, Arrays.<Resource> asList(b1, a1, a2, a3), Collections.<Resource> emptyList());
+
+        Map<Resource, List<Wire>> wireMap = resolver.resolve(rci);
+
+        // all bundles should be resolved
+        assertEquals(5, wireMap.size());
+        List<Wire> wiresB = wireMap.get(b1);
+        assertNotNull(wiresB);
+        assertEquals(1, wiresB.size());
+        assertEquals(a3, wiresB.get(0).getProvider());
+        assertEquals(a3_pkgCap, wiresB.get(0).getCapability());
+
+        // There should be three hosts
+        List<Wire> wiresF1 = wireMap.get(f1);
+        assertNotNull(wiresF1);
+        assertEquals(3, wiresF1.size());
     }
 
     @Test
@@ -918,12 +976,12 @@ public class ResolverTest
         a1_hostCap.addAttribute(HostNamespace.HOST_NAMESPACE, "A");
         a1.addCapability(a1_hostCap);
 
-        ResourceImpl f1 = new ResourceImpl("F1", IdentityNamespace.TYPE_FRAGMENT);
+        ResourceImpl f1 = new ResourceImpl("F1", IdentityNamespace.TYPE_FRAGMENT, Version.emptyVersion);
         GenericRequirement f1_hostReq = new GenericRequirement(f1, HostNamespace.HOST_NAMESPACE);
         f1_hostReq.addDirective(Namespace.REQUIREMENT_FILTER_DIRECTIVE, "(" + HostNamespace.HOST_NAMESPACE + "=A)");
         f1.addRequirement(f1_hostReq);
 
-        ResourceImpl f2 = new ResourceImpl("F2", IdentityNamespace.TYPE_FRAGMENT);
+        ResourceImpl f2 = new ResourceImpl("F2", IdentityNamespace.TYPE_FRAGMENT, Version.emptyVersion);
         GenericRequirement f2_hostReq = new GenericRequirement(f2, HostNamespace.HOST_NAMESPACE);
         f2_hostReq.addDirective(Namespace.REQUIREMENT_FILTER_DIRECTIVE, "(" + HostNamespace.HOST_NAMESPACE + "=A)");
         f2.addRequirement(f2_hostReq);
@@ -989,7 +1047,7 @@ public class ResolverTest
         ResourceImpl a1 = new ResourceImpl("A");
         Capability a1_hostCap = addCap(a1, HostNamespace.HOST_NAMESPACE, "A");
 
-        ResourceImpl f1 = new ResourceImpl("F1", IdentityNamespace.TYPE_FRAGMENT);
+        ResourceImpl f1 = new ResourceImpl("F1", IdentityNamespace.TYPE_FRAGMENT, Version.emptyVersion);
         Requirement f1_hostReq = addReq(f1, HostNamespace.HOST_NAMESPACE, "A");
         Requirement f1_pkgReq = addReq(f1, PackageNamespace.PACKAGE_NAMESPACE, "org.foo.c");
         Capability f1_pkgCap = addCap(f1, PackageNamespace.PACKAGE_NAMESPACE, "org.foo.a", "org.foo.c");

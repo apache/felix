@@ -26,7 +26,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import org.osgi.resource.Capability;
 
 public class CandidateSelector {
-    private final AtomicBoolean isUnmodifiable;
+    protected final AtomicBoolean isUnmodifiable;
     protected final List<Capability> unmodifiable;
     private int currentIndex = 0;
 
