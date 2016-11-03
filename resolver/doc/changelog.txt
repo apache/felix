@@ -1,3 +1,10 @@
+1.10.1
+------
+
+** Bug
+    * [FELIX-5389] - NullPointerException in Candidates#prepare() method
+    * [FELIX-5390] - remove unused imports from resolver source code.
+
 1.10.0
 ------
 
