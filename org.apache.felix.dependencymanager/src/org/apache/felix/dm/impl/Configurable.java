@@ -397,7 +397,8 @@ public final class Configurable {
                 if (str.startsWith("[") && str.endsWith("]")) {
                     str = str.substring(1, str.length() - 1);
                 }
-                return Arrays.asList(str.split("\\s*,\\s*"));
+                // don't split in case we are parsing an empty [] list, in which case we need to return an empty list.
+                return str.length() == 0 ? Collections.emptyList() : Arrays.asList(str.split("\\s*,\\s*"));
             }
 
             return Arrays.asList(value);
