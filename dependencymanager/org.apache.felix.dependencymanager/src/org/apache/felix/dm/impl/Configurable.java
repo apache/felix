@@ -30,6 +30,7 @@ import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Dictionary;
 import java.util.Enumeration;
 import java.util.HashMap;
@@ -115,7 +116,7 @@ public final class Configurable {
         }
 
         @SuppressWarnings("unchecked")
-        private Object convert(ParameterizedType type, String key, Object value) throws Exception {
+        private Object convertParameterizedType(ParameterizedType type, String key, Object value, boolean useImplicitDefault) throws Exception {
             Class<?> resultType = (Class<?>) type.getRawType();
             if (Class.class.isAssignableFrom(resultType)) {
                 if (value == null) {
@@ -125,6 +126,9 @@ public final class Configurable {
             }
             else if (Collection.class.isAssignableFrom(resultType)) {
                 Collection<?> input = toCollection(key, value);
+                if (input == null && ! useImplicitDefault) {
+                	return null;
+                }
 
                 if (resultType == Collection.class || resultType == List.class) {
                     resultType = ArrayList.class;
@@ -150,6 +154,9 @@ public final class Configurable {
             }
             else if (Map.class.isAssignableFrom(resultType)) {
                 Map<?, ?> input = toMap(key, value);
+                if (input == null && ! useImplicitDefault) {
+                	return null;
+                }
 
                 if (resultType == SortedMap.class) {
                     resultType = TreeMap.class;
@@ -165,8 +172,10 @@ public final class Configurable {
                 Type keyType = type.getActualTypeArguments()[0];
                 Type valueType = type.getActualTypeArguments()[1];
 
-                for (Map.Entry<?, ?> entry : input.entrySet()) {
-                    result.put(convert(keyType, key, entry.getKey(), false /* useImplicitDefault */), convert(valueType, key, entry.getValue(), false /* useImplicitDefault */));
+                if (input != null) {
+                	for (Map.Entry<?, ?> entry : input.entrySet()) {
+                		result.put(convert(keyType, key, entry.getKey(), false /* useImplicitDefault */), convert(valueType, key, entry.getValue(), false /* useImplicitDefault */));
+                	}
                 }
                 return result;
             }
@@ -177,14 +186,14 @@ public final class Configurable {
         @SuppressWarnings({ "unchecked", "rawtypes" })
         private Object convert(Type type, String key, Object value, boolean useImplicitDefault) throws Exception {
             if (type instanceof ParameterizedType) {
-                return convert((ParameterizedType) type, key, value);
+                return convertParameterizedType((ParameterizedType) type, key, value, useImplicitDefault);
             }
             if (type instanceof GenericArrayType) {
-                return convertArray(((GenericArrayType) type).getGenericComponentType(), key, value);
+                return convertArray(((GenericArrayType) type).getGenericComponentType(), key, value, useImplicitDefault);
             }
             Class<?> resultType = (Class<?>) type;
             if (resultType.isArray()) {
-                return convertArray(resultType.getComponentType(), key, value);
+                return convertArray(resultType.getComponentType(), key, value, useImplicitDefault);
             }
             if (resultType.isInstance(value)) {
                 return value;
@@ -272,13 +281,16 @@ public final class Configurable {
             }
             else if (resultType.isInterface()) {
                 Map<?, ?> map = toMap(key, value);
+                if (map == null) {
+                	return useImplicitDefault ? create(resultType, Collections.emptyMap()) : null;
+                }
                 return create(resultType, map);
             }
 
             throw new RuntimeException("Unhandled type: " + type);
         }
 
-        private Object convertArray(Type type, String key, Object value) throws Exception {
+        private Object convertArray(Type type, String key, Object value, boolean useImplicitDefault) throws Exception {
             if (value instanceof String) {
                 String str = (String) value;
                 if (type == Byte.class || type == byte.class) {
@@ -290,6 +302,9 @@ public final class Configurable {
             }
 
             Collection<?> input = toCollection(key, value);
+            if (input == null && useImplicitDefault) {
+            	input = Collections.emptyList();
+            }
             if (input == null) {
                 return null;
             }
@@ -362,7 +377,7 @@ public final class Configurable {
                     result.add(Math.min(result.size(), idx), entry.getValue());
                 }
 
-                return result;
+                return result.size() == 0 ? null : result;
             }
 
             if (value.getClass().isArray()) {
@@ -401,6 +416,9 @@ public final class Configurable {
                     if (key.startsWith(needle)) {
                         result.put(key.substring(needle.length()), entry.getValue());
                     }
+                }
+                if (result.size() == 0) {
+                	return null;
                 }
             }
             else if (value instanceof String) {
