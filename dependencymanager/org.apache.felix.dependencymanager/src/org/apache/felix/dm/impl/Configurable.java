@@ -429,7 +429,9 @@ public final class Configurable {
                 }
                 for (String entry : str.split("\\s*,\\s*")) {
                     String[] pair = entry.split("\\s*\\.\\s*", 2);
-                    result.put(pair[0], pair[1]);
+                    if (pair.length == 2) {
+                    	result.put(pair[0], pair[1]);
+                    }
                 }
             }
 
