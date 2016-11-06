@@ -19,7 +19,10 @@
 package org.apache.felix.dm.itest.api;
 
 import java.io.IOException;
+import java.util.Dictionary;
+import java.util.HashMap;
 import java.util.Hashtable;
+import java.util.Map;
 import java.util.Properties;
 
 import org.apache.felix.dm.itest.util.Ensure;
@@ -36,22 +39,33 @@ public class ConfigurationCreator {
     Configuration m_conf;
     final String m_pid;
     final int m_initStep;
+    final Dictionary<String, Object> m_parameters = new Hashtable<>();
     
     public ConfigurationCreator(Ensure e, String pid, int initStep) {
+        this(e, pid, initStep, new String[] {});
+    }
+
+    public ConfigurationCreator(Ensure e, String pid, int initStep, String ... keyvalues) {
         m_ensure = e;
         m_pid = pid;
         m_initStep = initStep;
+        for (int i = 0; i < keyvalues.length; i ++) {
+            String[] tokens = keyvalues[i].split("=");
+            String k = tokens[0].trim();
+            Object v = tokens[1].trim();
+            m_parameters.put(k, v);
+        }        
     }
 
-    @SuppressWarnings({ "rawtypes", "unchecked" })
 	public void init() {
         try {
         	Assert.assertNotNull(m_ca);
             m_ensure.step(m_initStep);
-            m_conf = m_ca.getConfiguration(m_pid, null);
-            Hashtable props = new Properties();
-            props.put("testkey", "testvalue");
-            m_conf.update(props);
+            m_conf = m_ca.getConfiguration(m_pid, null);            
+            if (m_parameters.size() == 0) {
+                m_parameters.put("testkey", "testvalue");
+            }
+            m_conf.update(m_parameters);
         }
         catch (IOException e) {
             Assert.fail("Could not create configuration: " + e.getMessage());
