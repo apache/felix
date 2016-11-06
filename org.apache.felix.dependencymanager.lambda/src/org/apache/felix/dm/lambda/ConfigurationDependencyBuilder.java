@@ -62,8 +62,18 @@ import org.osgi.annotation.versioning.ProviderType;
  * "mangled" to the following form: <tt>[lower case letter] [any valid character]*</tt>. Method names starting with
  * <tt>get</tt> or <tt>is</tt> (JavaBean convention) are stripped from these prefixes. For example: given a dictionary
  * with the key <tt>"foo"</tt> can be accessed from a configuration-type using the following method names:
- * <tt>foo()</tt>, <tt>getFoo()</tt> and <tt>isFoo()</tt>.
- * </p>
+ * <tt>foo()</tt>, <tt>getFoo()</tt> and <tt>isFoo()</tt>.<p>
+ * If the property contains a dot (which is invalid in java method names), then dots (".") can be converted using the following conventions: 
+ * <ul>
+ * 
+ * <li> if the method name follows the javabean convention and/or kamel casing convention, then each capital letter is assumed to map to a "dot", 
+ * followed by the same letter in lower case. This means only lower case properties are 
+ * supported in this case. Example: getFooBar() or fooBar() will map to "foo.bar" property.
+ * 
+ * <li> else, if the method name follows the standard OSGi metatype specification, then dots  
+ * are encoded as "_"; and "_" is encoded as "__". (see OSGi r6 compendium, chapter 105.9.2).
+ * Example: "foo_BAR()" is mapped to "foo.BAR" property; "foo__BAR_zoo()" is mapped to "foo_BAR.zoo" property.
+ * </ul>
  * <p>
  * The return values supported are: primitive types (or their object wrappers), strings, enums, arrays of
  * primitives/strings, {@link Collection} types, {@link Map} types, {@link Class}es and interfaces. When an interface is
