@@ -59,6 +59,15 @@ import java.util.TreeSet;
  * <tt>get</tt> or <tt>is</tt> (JavaBean convention) are stripped from these prefixes. For example: given a dictionary
  * with the key <tt>"foo"</tt> can be accessed from a configuration-type using the following method names:
  * <tt>foo()</tt>, <tt>getFoo()</tt> and <tt>isFoo()</tt>.
+ *  
+ * If the property name contains some dots, the the following conventions are used: 
+ * <ul> 
+ * <li>camel casing: if a property contains multiple words separated by dots, then you can indicate words boundaries using medial capitalization.
+ * For example, the property "foo.bar" could be accessed with a method name like "fooBar()" or "getFooBar()".  
+ * <li> use underscore to wrap dots: underscore ("_") found in method names are converted to ".", unless they are followed by another underscore.
+ * (in this case, the double "__" is then converted to single underscore ("_").
+ * For Example: foo_bar() will be mapped to "foo.bar" property, and foo__bar() will be mapped to "foo_bar" property.
+ * </ul>
  * </p>
  * <p>
  * The return values supported are: primitive types (or their object wrappers), strings, enums, arrays of
@@ -437,20 +446,118 @@ public final class Configurable {
 
             return result;
         }
-
-        private String getPropertyName(String id) {
-            StringBuilder sb = new StringBuilder(id);
-            if (id.startsWith("get")) {
-                sb.delete(0, 3);
+        
+        private String getPropertyName(String methodName) {
+            // First, derive the property name from the method name, using simple javabean convention.
+            // i.e: fooBar() or getFooBar() will map to "fooBar" property.
+            
+            String javaBeanMethodName = derivePropertyNameUsingJavaBeanConvention(methodName);
+            if (hasValueFor(javaBeanMethodName)) {
+                // there is a value in the actual configuration for the derived property name.
+                return javaBeanMethodName;
             }
-            else if (id.startsWith("is")) {
+            
+            // Derive the property name from the method name, using javabeans and/or camel casing convention,
+            // where each capital letter is assumed to map a "dot".
+            // i.e: fooBar() or getFooBar() will map to "foo.bar" property.
+
+            String camelCasePropertyName = derivePropertyNameUsingCamelCaseConvention(javaBeanMethodName);
+            if (hasValueFor(camelCasePropertyName)) {
+                // there is a value in the actual configuration for the derived property name.
+                return camelCasePropertyName;
+            }
+            
+            // Derive the property name from the method name, using OSGi metatype convention,
+            // where a "_" is mapped to a dot, except if the understcore is followed by another undescore
+            // (in this case, the double "__" is replaced by "_").
+            // i.e: foo_bar() will map to "foo.bar" property and foo__bar() will map to "foo_bar" property.
+            
+            String metaTypePropertyName = derivePropertyNameUsingMetaTypeConvention(methodName);
+            if (hasValueFor(metaTypePropertyName)) {
+                // there is a value in the actual configuration for the derived property name.
+                return metaTypePropertyName;
+            }
+            
+            // No value could be found, return by default a property name derived from javabean convention.
+            return javaBeanMethodName;
+        }
+        
+        private String derivePropertyNameUsingJavaBeanConvention(String methodName) {
+            StringBuilder sb = new StringBuilder(methodName);
+            
+            if (methodName.startsWith("get")) {
+                sb.delete(0, 3);
+            } else if (methodName.startsWith("is")) {
                 sb.delete(0, 2);
             }
+            
             char c = sb.charAt(0);
             if (Character.isUpperCase(c)) {
                 sb.setCharAt(0, Character.toLowerCase(c));
             }
+            
+            return (sb.toString());
+        }
+
+        private String derivePropertyNameUsingCamelCaseConvention(String methodName) {
+            StringBuilder sb = new StringBuilder(methodName);
+            for (int i = 0; i < sb.length(); i++) {
+                char c = sb.charAt(i);
+                if (Character.isUpperCase(c)) {
+                    // camel casing: replace fooBar -> foo.bar
+                    sb.setCharAt(i, Character.toLowerCase(c));
+                    sb.insert(i, ".");
+                }
+            }
+            return sb.toString();            
+        }
+        
+        // see metatype spec, chapter 105.9.2 in osgi r6 cmpn.
+        private String derivePropertyNameUsingMetaTypeConvention(String methodName) {
+            StringBuilder sb = new StringBuilder(methodName);
+            // replace "__" by "_" or "_" by ".": foo_bar -> foo.bar; foo__BAR_zoo -> foo_BAR.zoo
+            for (int i = 0; i < sb.length(); i ++) {
+                if (sb.charAt(i) == '_') {
+                    if (i < (sb.length() - 1) && sb.charAt(i+1) == '_') {
+                        // replace foo__bar -> foo_bar
+                        sb.replace(i, i+2, "_");
+                    } else {
+                        // replace foo_bar -> foo.bar
+                        sb.replace(i, i+1, ".");
+                    }
+                } else if (sb.charAt(i) == '$') {
+                    if (i < (sb.length() - 1) && sb.charAt(i+1) == '$') {
+                        // replace foo__bar -> foo_bar
+                        sb.replace(i, i+2, "$");
+                    } else {
+                        // remove single dollar character.
+                        sb.delete(i, i+1);
+                    }
+                }
+            }
             return sb.toString();
+        }
+        
+        /**
+         * Checks if a property name has a given value. This method takes care about special array values (arr.0, arr.1,...) 
+         * and about map values (map.key1, map.key2, ...).
+         * 
+         * @param property name
+         * @return true if the given property has a value in the actual configuration, false if not.
+         */
+        private boolean hasValueFor(String property)
+        {
+            if (m_config.containsKey(property)) {
+                return true;
+            }
+            String needle = property.concat(".");       
+            for (Map.Entry<?, ?> entry : m_config.entrySet()) {
+                String key = entry.getKey().toString();
+                if (key.startsWith(needle)) {
+                    return true;
+                }
+            }
+            return false;
         }
     }
 
