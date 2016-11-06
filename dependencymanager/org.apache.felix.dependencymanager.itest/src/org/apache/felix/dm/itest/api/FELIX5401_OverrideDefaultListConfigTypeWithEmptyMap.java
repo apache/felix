@@ -36,7 +36,7 @@ import org.osgi.service.cm.ConfigurationAdmin;
  * Example: if the configuration type provides a default map value {foo=bar} for property "map", and if 
  * there is a "map={}" entry in the actual configuration, then the empty map should be returned instead of {foo=bar}.
  */
-public class FELIX5400_OverrideDefaultListConfigTypeWithEmptyMap extends TestBase {
+public class FELIX5401_OverrideDefaultListConfigTypeWithEmptyMap extends TestBase {
     Ensure m_ensure = new Ensure();
     
     public void testDefaulValues() {
