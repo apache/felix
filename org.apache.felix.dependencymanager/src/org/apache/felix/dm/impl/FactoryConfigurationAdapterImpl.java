@@ -135,6 +135,7 @@ public class FactoryConfigurationAdapterImpl extends FilterComponent {
             Dictionary<String, Object> serviceProperties = getServiceProperties(settings);
             newService.setInterface(m_serviceInterfaces, serviceProperties);
             newService.setImplementation(m_serviceImpl);
+            newService.setFactory(m_factory, m_factoryCreateMethod); // if not set, no effect
             newService.setComposition(m_compositionInstance, m_compositionMethod); // if not set, no effect
             newService.setCallbacks(m_callbackObject, m_init, m_start, m_stop, m_destroy); // if not set, no effect
             configureAutoConfigState(newService, m_component);
