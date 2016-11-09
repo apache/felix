@@ -43,6 +43,7 @@ import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.Executor;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.function.BiConsumer;
 
 import org.apache.felix.dm.Component;
 import org.apache.felix.dm.ComponentDeclaration;
@@ -276,6 +277,24 @@ public class ComponentImpl implements Component, ComponentContext, ComponentDecl
      */
 	private boolean m_startCalled;
 	
+    // Used to track what state listener callback we have already called 
+    private int m_stateListener = LISTENER_IDLE;
+
+    // We have not yet called any state listener callbacks
+    private final static int LISTENER_IDLE = 0;
+    
+    // We have already called the "starting" state listener callback.
+    private final static int LISTENER_STARTING = 1;
+
+    // We have already called the "started" state listener callback.
+    private final static int LISTENER_STARTED = 2;
+    
+    // We have already called the "stopping" state listener callback.
+    private final static int LISTENER_STOPPING = 3;
+    
+    // We have already called the "stopped" state listener callback.
+    private final static int LISTENER_STOPPED = 4;
+
     /**
      * Default component declaration implementation.
      */
@@ -577,14 +596,51 @@ public class ComponentImpl implements Component, ComponentContext, ComponentDecl
     }
     
     @Override
-    public Component add(final ComponentStateListener l) {
-        m_listeners.add(l);
+    public Component add(ComponentStateListener listener) {
+		getExecutor().execute(() -> {
+	        m_listeners.add(listener);
+            switch (m_stateListener) {
+            case LISTENER_STARTING:
+                // this new listener missed the starting cb
+                listener.starting(ComponentImpl.this);
+                break;
+            case LISTENER_STARTED:
+                // this new listener missed the starting/started cb
+                listener.starting(ComponentImpl.this);
+                listener.started(ComponentImpl.this);
+                break;
+            case LISTENER_STOPPING:
+                // this new listener missed the starting/started/stopping cb
+                listener.starting(ComponentImpl.this);
+                listener.started(ComponentImpl.this);
+                listener.stopping(ComponentImpl.this);
+                break;
+            case LISTENER_STOPPED:
+                // no need to call missed listener callbacks
+                break;
+            }
+		});
         return this;
     }
 
     @Override
-    public Component remove(ComponentStateListener l) {
-        m_listeners.remove(l);
+    public Component remove(ComponentStateListener listener) {
+		getExecutor().execute(() -> {
+            switch (m_stateListener) {
+            case LISTENER_STARTING:
+                // The listener has been previously called in starting cb;
+                // so we should call the listener started cb, before unregistering it.
+                listener.started(ComponentImpl.this);
+                break;
+
+            case LISTENER_STOPPING: 
+                // The listener has been previously called in stopping cb;
+                // so we should call the listener stopped cb, before unregistering it.
+                listener.stopped(ComponentImpl.this);
+                break;
+            }
+            m_listeners.remove(listener);						
+		});
         return this;
     }
 
@@ -993,18 +1049,20 @@ public class ComponentImpl implements Component, ComponentContext, ComponentDecl
         if (oldState == ComponentState.INSTANTIATED_AND_WAITING_FOR_REQUIRED && newState == ComponentState.TRACKING_OPTIONAL) {
             invokeAutoConfigInstanceBoundDependencies();
             invokeAddRequiredInstanceBoundDependencies();
+            notifyListeners(ComponentStateListener::starting, LISTENER_STARTING);
             invokeStart();
             invokeAddOptionalDependencies();
             registerService();
-            notifyListeners(newState);
+            notifyListeners(newState, ComponentStateListener::started, LISTENER_STARTED);
             return true;
         }
         if (oldState == ComponentState.TRACKING_OPTIONAL && newState == ComponentState.INSTANTIATED_AND_WAITING_FOR_REQUIRED) {
-            unregisterService();
+            notifyListeners(ComponentStateListener::stopping, LISTENER_STOPPING);
+        	unregisterService();
             invokeRemoveOptionalDependencies();
             invokeStop();
             invokeRemoveInstanceBoundDependencies();
-            notifyListeners(newState);
+            notifyListeners(newState, ComponentStateListener::stopped, LISTENER_STOPPED);
             return true;
         }
         if (oldState == ComponentState.INSTANTIATED_AND_WAITING_FOR_REQUIRED && newState == ComponentState.WAITING_FOR_REQUIRED) {
@@ -1512,7 +1570,38 @@ public class ComponentImpl implements Component, ComponentContext, ComponentDecl
 
 	private void notifyListeners(ComponentState state) {
 		for (ComponentStateListener l : m_listeners) {
-			l.changed(this, state);
+			try {
+				l.changed(this, state);
+			} catch (Exception e) {
+                m_logger.log(Logger.LOG_ERROR, "Exception caught while invoking component state listener", e);
+			}
+		}
+	}
+	
+	private void notifyListeners(ComponentState state, BiConsumer<ComponentStateListener, Component> listenerCallback, int stateListener) {
+		m_stateListener = stateListener;
+		for (ComponentStateListener l : m_listeners) {
+			try {
+				l.changed(this, state);
+			} catch (Exception e) {
+                m_logger.log(Logger.LOG_ERROR, "Exception caught while invoking component state listener", e);
+			}
+			try {
+				listenerCallback.accept(l, this);
+			} catch (Exception e) {
+                m_logger.log(Logger.LOG_ERROR, "Exception caught while invoking component state listener", e);
+			}
+		}
+	}
+
+	private void notifyListeners(BiConsumer<ComponentStateListener, Component> listenerCallback, int stateListener) {
+		m_stateListener = stateListener;
+		for (ComponentStateListener l : m_listeners) {
+			try {
+				listenerCallback.accept(l, this);
+			} catch (Exception e) {
+                m_logger.log(Logger.LOG_ERROR, "Exception caught while invoking component state listener", e);
+			}
 		}
 	}
 	
