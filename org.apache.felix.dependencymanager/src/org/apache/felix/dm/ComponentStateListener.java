@@ -21,12 +21,17 @@ package org.apache.felix.dm;
 /**
  * This interface can be used to register a component state listener. Component
  * state listeners are called whenever a component state changes. You get notified
- * when the component is starting, started, stopping and stopped. Each callback
- * includes a reference to the component in question.
+ * when the internal component state is changed, when the component is starting, 
+ * started, stopping and stopped. Each callback includes a reference to the component in question.
  * 
  * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
 public interface ComponentStateListener {
+	/**
+	 * Called on each component state change.
+	 * @param c the component
+	 * @param state the new component state
+	 */
     public void changed(Component c, ComponentState state);
     
     /**
