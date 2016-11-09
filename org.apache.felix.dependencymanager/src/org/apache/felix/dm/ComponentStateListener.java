@@ -28,4 +28,37 @@ package org.apache.felix.dm;
  */
 public interface ComponentStateListener {
     public void changed(Component c, ComponentState state);
+    
+    /**
+     * Called when the component is starting. At this point, the required
+     * dependencies have been injected, but the service has not been registered
+     * yet.
+     * 
+     * @param component the component
+     */
+    public default void starting(Component component) {}
+    
+    /**
+     * Called when the component is started. At this point, the component has been
+     * registered.
+     * 
+     * @param component the component
+     */
+    public default void started(Component component) {}
+    
+    /**
+     * Called when the component is stopping. At this point, the component is still
+     * registered.
+     * 
+     * @param component the component
+     */
+    public default void stopping(Component component) {}
+    
+    /**
+     * Called when the component is stopped. At this point, the component has been
+     * unregistered.
+     * 
+     * @param component the component
+     */
+    public default void stopped(Component component) {}
 }
