@@ -31,43 +31,40 @@ public enum ComponentState {
 	INACTIVE, 
 	
 	/**
-	 * The component is waiting for some required dependencies.
+	 * The component is waiting for some required dependencies defined in the Activator. 
+	 * At this point the component has not yet been called in its init callback.
 	 */
 	WAITING_FOR_REQUIRED, 
 	
 	/**
-	 * The component has all its initial required dependencies available, but is now waiting for some extra required
-	 * dependencies which have been added after the component have been started (like from the component init method for example).
+	 * The component is instantiated and waiting for dynamic required dependencies defined in init callback.
 	 */
 	INSTANTIATED_AND_WAITING_FOR_REQUIRED, 
 	
+    /**
+     * The component is starting. At this point, all required dependencies have been injected (including 
+     * dynamic dependencies added from the init method), but the start callback has not yet been called and 
+     * the service has not been registered yet.
+     */
+    STARTING,
+        
 	/**
-	 * The component is active, and is now tracking available optional dependencies.
+	 * The component is started. At this point, the component:<p>
+	 * <ul>
+	 * <li> has been called in its start callback 
+	 * <li> the optional dependency callbacks have been invoked (if some optional dependencies are available)
+	 * <li> and the service has been registered
+	 * </ul>
 	 */
 	TRACKING_OPTIONAL,
 	
     /**
-     * The component is starting. At this point, the required
-     * dependencies have been injected, but the service has not been registered
-     * yet.
-     */
-    STARTING,
-    
-    /**
-     * The component is started. At this point, the component has been
-     * registered.
-     */
-    STARTED,
-    
-    /**
-     * the component is stopping. At this point, the component is still
-     * registered.
+     * the component is stopping. At this point, the service is still registered.
      */
     STOPPING,
     
     /**
-     * the component is stopped. At this point, the component has been
-     * unregistered.
+     * the component is stopped. At this point, the service has been unregistered.
      */
     STOPPED
 }
