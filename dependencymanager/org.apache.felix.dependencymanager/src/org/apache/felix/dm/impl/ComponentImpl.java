@@ -427,15 +427,11 @@ public class ComponentImpl implements Component, ComponentContext, ComponentDecl
 	            handleChange();
 	        };
             
-            // Now, we have to schedule our stopTask in our component executor. But we have to handle a special case:
-            // if the component bundle is stopping *AND* if the executor is a parallel dispatcher, then we want 
-            // to invoke our stopTask synchronously, in order to make sure that the bundle context is valid while our 
-            // component is being deactivated (if we stop the component asynchronously, the bundle context may be invalidated
-            // before our component is stopped, and we don't want to be in this situation).
+            // Now, we have to schedule our stopTask in our component executor. If the executor is a parallel 
+	        // dispatcher, then try to invoke our stop task synchronously (it does not make sense to try to stop a component asynchronously).
             
-            boolean stopping = m_bundle != null /* null only in tests env */ && m_bundle.getState() == Bundle.STOPPING;
-            if (stopping && executor instanceof DispatchExecutor) {
-            	((DispatchExecutor) executor).execute(stopTask, false /* try to  execute synchronously, not using threadpool */);
+            if (executor instanceof DispatchExecutor) {
+            	((DispatchExecutor) executor).execute(stopTask, false /* try to execute synchronously, not using threadpool */);
             } else {
             	executor.execute(stopTask);
             }
