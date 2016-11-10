@@ -269,19 +269,27 @@ public class Logger implements ServiceListener {
     // --------------- Convenient helper log methods --------------------------------------------
     
     public void err(String format, Object... params) {
-        log(LogService.LOG_ERROR, String.format(format, params));        
+    	if (m_enabledLevel >= LOG_ERROR) {
+    		log(LogService.LOG_ERROR, String.format(format, params));
+    	}
     }
 
     public void err(String format, Throwable err, Object... params) {
-        log(LogService.LOG_ERROR, String.format(format, params), err);        
+    	if (m_enabledLevel >= LOG_ERROR) {
+    		log(LogService.LOG_ERROR, String.format(format, params), err);
+    	}
     }
 
     public void warn(String format, Object... params) {
-        log(LogService.LOG_WARNING, String.format(format, params));        
+    	if (m_enabledLevel >= LOG_WARNING) {
+    		log(LogService.LOG_WARNING, String.format(format, params));   
+    	}
     }
 
     public void warn(String format, Throwable err, Object... params) {
-        log(LogService.LOG_WARNING, String.format(format, params), err);        
+    	if (m_enabledLevel >= LOG_WARNING) {
+    		log(LogService.LOG_WARNING, String.format(format, params), err);       
+    	}
     }
 
     public boolean info() {
@@ -289,11 +297,15 @@ public class Logger implements ServiceListener {
     }
 
     public void info(String format, Object... params) {
-        log(LogService.LOG_INFO, String.format(format, params));        
+    	if (info()) {
+    		log(LogService.LOG_INFO, String.format(format, params));
+    	}
     }
 
     public void info(String format, Throwable err, Object... params) {
-        log(LogService.LOG_INFO, String.format(format, params), err);        
+    	if (info()) {
+    		log(LogService.LOG_INFO, String.format(format, params), err);      
+    	} 
     }
 
     public boolean debug() {
@@ -301,10 +313,14 @@ public class Logger implements ServiceListener {
     }
 
     public void debug(String format, Object... params) {
-        log(LogService.LOG_DEBUG, String.format(format, params));        
+    	if (debug()) {
+    		log(LogService.LOG_DEBUG, String.format(format, params));
+    	}
     }
 
     public void debug(String format, Throwable err, Object... params) {
-        log(LogService.LOG_DEBUG, String.format(format, params), err);        
+    	if (debug()) {
+    		log(LogService.LOG_DEBUG, String.format(format, params), err);
+    	}
     }
 }
