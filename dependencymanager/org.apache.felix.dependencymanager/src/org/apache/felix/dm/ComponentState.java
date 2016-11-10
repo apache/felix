@@ -44,5 +44,30 @@ public enum ComponentState {
 	/**
 	 * The component is active, and is now tracking available optional dependencies.
 	 */
-	TRACKING_OPTIONAL
+	TRACKING_OPTIONAL,
+	
+    /**
+     * The component is starting. At this point, the required
+     * dependencies have been injected, but the service has not been registered
+     * yet.
+     */
+    STARTING,
+    
+    /**
+     * The component is started. At this point, the component has been
+     * registered.
+     */
+    STARTED,
+    
+    /**
+     * the component is stopping. At this point, the component is still
+     * registered.
+     */
+    STOPPING,
+    
+    /**
+     * the component is stopped. At this point, the component has been
+     * unregistered.
+     */
+    STOPPED
 }

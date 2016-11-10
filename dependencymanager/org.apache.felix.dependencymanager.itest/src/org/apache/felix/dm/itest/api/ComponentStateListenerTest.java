@@ -18,15 +18,15 @@
  */
 package org.apache.felix.dm.itest.api;
 
-import org.junit.Assert;
-import org.osgi.framework.ServiceReference;
-import org.osgi.framework.ServiceRegistration;
 import org.apache.felix.dm.Component;
 import org.apache.felix.dm.ComponentState;
 import org.apache.felix.dm.ComponentStateListener;
 import org.apache.felix.dm.DependencyManager;
 import org.apache.felix.dm.itest.util.Ensure;
 import org.apache.felix.dm.itest.util.TestBase;
+import org.junit.Assert;
+import org.osgi.framework.ServiceReference;
+import org.osgi.framework.ServiceRegistration;
 
 /**
  * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
@@ -155,30 +155,27 @@ public class ComponentStateListenerTest extends TestBase {
             m_ensure.step(9);
         }
         
-        public void starting(Component component) {
-            debug();
-            m_ensure.step(3);
-        }
-
-        public void started(Component component) {
-            debug();
-            m_ensure.step(5);
-            ServiceReference reference = m_registration.getReference();
-            Assert.assertNotNull("Service not yet registered.", reference);
-        }
-
-        public void stopping(Component component) {
-            debug();
-            m_ensure.step(6);
-        }
-
-        public void stopped(Component component) {
-            debug();
-            m_ensure.step(8);
-        }
-
 		@Override
-		public void changed(Component c, ComponentState state) {			
+		public void changed(Component c, ComponentState state) {
+            debug();
+			switch (state) {
+			case STARTING:
+	            m_ensure.step(3);
+	            break;
+			case STARTED:
+	            m_ensure.step(5);
+	            ServiceReference reference = m_registration.getReference();
+	            Assert.assertNotNull("Service not yet registered.", reference);
+	            break;
+			case STOPPING:
+	            m_ensure.step(6);
+	            break;
+			case STOPPED:
+	            m_ensure.step(8);
+	            break;
+			default:
+				break;
+			}
 		}
     }
 
@@ -231,110 +228,28 @@ public class ComponentStateListenerTest extends TestBase {
             c.remove(this);
         }
         
-        public void starting(Component component) {
-            debug();
-            m_ensure.step(3);
-        }
-
-        public void started(Component component) {
-            debug();
-            m_ensure.step(5);
-            ServiceReference reference = m_registration.getReference();
-            Assert.assertNotNull("Service not yet registered.", reference);
-        }
-
-        public void stopping(Component component) {
-            debug();
-            m_ensure.step(6);
-        }
-
-        public void stopped(Component component) {
-            debug();
-            m_ensure.step(8);
-        }
-
 		@Override
 		public void changed(Component c, ComponentState state) {
-			// TODO Auto-generated method stub
-			
+            debug();
+			switch (state) {
+			case STARTING:
+	            m_ensure.step(3);
+	            break;
+			case STARTED:
+	            m_ensure.step(5);
+	            ServiceReference reference = m_registration.getReference();
+	            Assert.assertNotNull("Service not yet registered.", reference);
+	            break;
+			case STOPPING:
+	            m_ensure.step(6);
+	            break;
+			case STOPPED:
+	            m_ensure.step(8);
+	            break;
+			default:
+				break;
+			}
 		}
     }
     
-    public void testDynamicComponentStateListingLifeCycle2() {
-        DependencyManager m = getDM();
-        // helper class that ensures certain steps get executed in sequence
-        Ensure e = new Ensure();
-        // create a simple service component
-        Component s = m.createComponent().setInterface(MyInterface.class.getName(), null).setImplementation(new DynamicComponentStateListeningInstance2(e));
-        // add it, and since it has no dependencies, it should be activated immediately
-        m.add(s);
-        // remove it so it gets destroyed
-        m.remove(s);
-        // ensure we executed all steps inside the component instance
-        e.step(10);
-    }
-
-    static class DynamicComponentStateListeningInstance2 implements MyInterface, ComponentStateListener {
-        volatile ServiceRegistration m_registration;
-        private final Ensure m_ensure;
-        
-        public DynamicComponentStateListeningInstance2(Ensure e) {
-            m_ensure = e;
-            m_ensure.step(1);
-        }
-        
-        private void debug() {
-            StackTraceElement[] stackTrace = Thread.currentThread().getStackTrace();
-            System.out.println("AT: " + stackTrace[2].getClassName() + "." + stackTrace[2].getMethodName() + "():" + stackTrace[2].getLineNumber());
-        }
-        
-        public void init(Component c) {
-            debug();
-            m_ensure.step(2);
-        }
-        
-        public void start(Component c) {
-            debug();
-            m_ensure.step(3);
-            c.add(this);
-        }
-        public void stop(Component c) {
-            debug();
-            m_ensure.step(7);
-            c.remove(this);
-        }
-        
-        public void destroy(Component c) {
-            debug();
-            m_ensure.step(9);
-        }
-        
-        public void starting(Component component) {
-            debug();
-            m_ensure.step(4);
-        }
-
-        public void started(Component component) {
-            debug();
-            m_ensure.step(5);
-            ServiceReference reference = m_registration.getReference();
-            Assert.assertNotNull("Service not yet registered.", reference);
-        }
-
-        public void stopping(Component component) {
-            debug();
-            m_ensure.step(6);
-        }
-
-        public void stopped(Component component) {
-            debug();
-            m_ensure.step(8);
-        }
-
-		@Override
-		public void changed(Component c, ComponentState state) {
-			// TODO Auto-generated method stub
-			
-		}
-    }
 }
