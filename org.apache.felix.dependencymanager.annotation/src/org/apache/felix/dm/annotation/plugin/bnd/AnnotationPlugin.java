@@ -68,8 +68,6 @@ public class AnnotationPlugin implements AnalyzerPlugin, Plugin {
      * @throws Exception on any errors.
      */
     public boolean analyzeJar(Analyzer analyzer) throws Exception {
-        m_logger = new BndLogger(m_reporter, analyzer.getBsn());
-
         try {
             init(analyzer);
 
@@ -124,7 +122,7 @@ public class AnnotationPlugin implements AnalyzerPlugin, Plugin {
     }
 
     private void init(Analyzer analyzer) {
-        m_logger.setLevel(parseOption(m_properties, LOGLEVEL, BndLogger.Level.Warn.toString()));
+        m_logger = new BndLogger(m_reporter, analyzer.getBsn(), parseOption(m_properties, LOGLEVEL, null));
         m_buildImportExportService = parseOption(m_properties, BUILD_IMPEXT, false);
         m_addRequireCapability = parseOption(m_properties, ADD_REQUIRE_CAPABILITY, false);
         analyzer.setExceptions(true);
