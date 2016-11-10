@@ -247,7 +247,7 @@ public class ComponentBuilderImpl implements ComponentBuilder<ComponentBuilderIm
     			throw new IllegalArgumentException("arg0 property name not supported"); 
     		}
     		Object value = property.apply(name);
-    		props.put(name, value);
+    		props.put(convertDots(name), value);
     	});
         m_properties = props;
         return this;
@@ -658,5 +658,22 @@ public class ComponentBuilderImpl implements ComponentBuilder<ComponentBuilderIm
         if (m_hasFactory) {
             throw new IllegalStateException("Can't mix factory method name and factory method reference");
         }
+    }
+    
+    private String convertDots(String propertyName) {
+        StringBuilder sb = new StringBuilder(propertyName);
+        // replace "__" by "_" or "_" by ".": foo_bar -> foo.bar; foo__BAR_zoo -> foo_BAR.zoo
+        for (int i = 0; i < sb.length(); i ++) {
+            if (sb.charAt(i) == '_') {
+                if (i < (sb.length() - 1) && sb.charAt(i+1) == '_') {
+                    // replace foo__bar -> foo_bar
+                    sb.replace(i, i+2, "_");
+                } else {
+                    // replace foo_bar -> foo.bar
+                    sb.replace(i, i+1, ".");
+                }
+            }
+        }
+        return sb.toString();
     }
 }
