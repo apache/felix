@@ -59,21 +59,25 @@ public class BndLogger extends Logger {
      * @param logLevel
      * @param bsn
      */
-    public BndLogger(Reporter reporter, String bsn) {
+    public BndLogger(Reporter reporter, String bsn, String level) {
         m_reporter = reporter;
-        File logFilePath = new File(System.getProperty("java.io.tmpdir") + File.separator + "dmplugin"
-            + File.separator + bsn + ".log");
-        new File(logFilePath.getParent()).mkdirs();
+        if (level != null) {
+        	setLevel(level);
+        	File logFilePath = new File(System.getProperty("java.io.tmpdir") + File.separator + "dmplugin"
+        			+ File.separator + bsn + ".log");
+        	new File(logFilePath.getParent()).mkdirs();
 
-        PrintWriter writer = null;
-        try {
-            writer = new PrintWriter(new FileWriter(logFilePath, false));
+			PrintWriter writer = null;
+			try {
+				writer = new PrintWriter(new FileWriter(logFilePath, false));
+			} catch (IOException e) {
+				reporter.exception(e, "Could not create scrplugin log file: %s", logFilePath);
+				writer = null;
+			}
+	        this.logWriter = writer;
+        } else {
+        	this.logWriter = null; // no logging enabled, we'll only report warn/errs to bnd reporter.
         }
-        catch (IOException e) {
-            reporter.exception(e, "Could not create scrplugin log file: %s", logFilePath);
-            writer = null;
-        }
-        this.logWriter = writer;
     }
 
     /**
@@ -82,24 +86,6 @@ public class BndLogger extends Logger {
     public void close() {
         if (logWriter != null) {
             logWriter.close();
-        }
-    }
-
-    /**
-     * Sets the enabled log level.
-     * 
-     * @param level
-     *            the enabled level ("Error", "Warn", "Info", or "Debug")
-     */
-    public void setLevel(String level) {
-        try {
-            level = Character.toUpperCase(level.charAt(0))
-                    + level.substring(1).toLowerCase();
-            this.logEnabled = Level.valueOf(level);
-        } catch (IllegalArgumentException e) {
-            this.logEnabled = Level.Warn;
-            warn("Bnd scrplugin logger initialized with invalid log level: "
-                    + level);
         }
     }
 
@@ -157,6 +143,24 @@ public class BndLogger extends Logger {
     public void error(String content, Throwable err, Object ... args) {
         m_reporter.error(content, args);
         logErr(String.format(content, args), err);
+    }
+
+    /**
+     * Sets the enabled log level.
+     * 
+     * @param level
+     *            the enabled level ("Error", "Warn", "Info", or "Debug")
+     */
+    private void setLevel(String level) {
+        try {
+            level = Character.toUpperCase(level.charAt(0))
+                    + level.substring(1).toLowerCase();
+            this.logEnabled = Level.valueOf(level);
+        } catch (IllegalArgumentException e) {
+            this.logEnabled = Level.Warn;
+            warn("Bnd scrplugin logger initialized with invalid log level: "
+                    + level);
+        }
     }
 
     private void logErr(String msg, Throwable t) {
