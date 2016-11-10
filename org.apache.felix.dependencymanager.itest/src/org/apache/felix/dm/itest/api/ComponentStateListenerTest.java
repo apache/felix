@@ -162,7 +162,7 @@ public class ComponentStateListenerTest extends TestBase {
 			case STARTING:
 	            m_ensure.step(3);
 	            break;
-			case STARTED:
+			case TRACKING_OPTIONAL:
 	            m_ensure.step(5);
 	            ServiceReference reference = m_registration.getReference();
 	            Assert.assertNotNull("Service not yet registered.", reference);
@@ -235,7 +235,7 @@ public class ComponentStateListenerTest extends TestBase {
 			case STARTING:
 	            m_ensure.step(3);
 	            break;
-			case STARTED:
+			case TRACKING_OPTIONAL:
 	            m_ensure.step(5);
 	            ServiceReference reference = m_registration.getReference();
 	            Assert.assertNotNull("Service not yet registered.", reference);

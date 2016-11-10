@@ -20,7 +20,6 @@ package org.apache.felix.dm.impl;
 
 import static org.apache.felix.dm.ComponentState.INACTIVE;
 import static org.apache.felix.dm.ComponentState.INSTANTIATED_AND_WAITING_FOR_REQUIRED;
-import static org.apache.felix.dm.ComponentState.STARTED;
 import static org.apache.felix.dm.ComponentState.STARTING;
 import static org.apache.felix.dm.ComponentState.STOPPED;
 import static org.apache.felix.dm.ComponentState.STOPPING;
@@ -592,15 +591,15 @@ public class ComponentImpl implements Component, ComponentContext, ComponentDecl
                 // this new listener missed the starting cb
                 listener.changed(ComponentImpl.this, STARTING);
                 break;
-            case STARTED:
+            case TRACKING_OPTIONAL:
                 // this new listener missed the starting/started cb
                 listener.changed(ComponentImpl.this, STARTING);
-                listener.changed(ComponentImpl.this, STARTED);
+                listener.changed(ComponentImpl.this, TRACKING_OPTIONAL);
                 break;
             case STOPPING:
                 // this new listener missed the starting/started/stopping cb
                 listener.changed(ComponentImpl.this, STARTING);
-                listener.changed(ComponentImpl.this, STARTED);
+                listener.changed(ComponentImpl.this, TRACKING_OPTIONAL);
                 listener.changed(ComponentImpl.this, STOPPING);
                 break;
             case STOPPED:
@@ -1029,7 +1028,6 @@ public class ComponentImpl implements Component, ComponentContext, ComponentDecl
             invokeAddOptionalDependencies();
             registerService();
             notifyListeners(newState);
-            notifyListeners(STARTED);
             return true;
         }
         if (oldState == ComponentState.TRACKING_OPTIONAL && newState == ComponentState.INSTANTIATED_AND_WAITING_FOR_REQUIRED) {
