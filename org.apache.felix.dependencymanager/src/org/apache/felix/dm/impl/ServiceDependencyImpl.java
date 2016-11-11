@@ -395,12 +395,7 @@ public class ServiceDependencyImpl extends AbstractDependency<ServiceDependency>
                 m_trackedServiceFilter = serviceFilter;
             }
             else {
-            	// Don't include objectclass in the filter, it it is already present.
-            	if (serviceFilter.contains(Constants.OBJECTCLASS)) {
-                    m_trackedServiceFilter = serviceFilter;
-            	} else {
-            		m_trackedServiceFilter = "(&(" + Constants.OBJECTCLASS + "=" + serviceName.getName() + ")" + serviceFilter + ")";
-            	}
+            	m_trackedServiceFilter = "(&(" + Constants.OBJECTCLASS + "=" + serviceName.getName() + ")" + serviceFilter + ")";            			
             }
         }
         else {
