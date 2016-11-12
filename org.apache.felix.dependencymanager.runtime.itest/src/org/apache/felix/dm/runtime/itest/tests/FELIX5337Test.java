@@ -35,6 +35,6 @@ public class FELIX5337Test extends TestBase {
         // remove our sequencer: this will stop S
         sr.unregister();
         // ensure that S is stopped and destroyed
-        e.waitForStep(3, 10000);
+        e.waitForStep(3, 5000);
     }
 }

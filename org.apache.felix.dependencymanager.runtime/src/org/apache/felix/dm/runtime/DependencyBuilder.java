@@ -91,8 +91,8 @@ public class DependencyBuilder
     private Dependency createServiceDependency(Bundle b, DependencyManager dm)
         throws ClassNotFoundException
     {
-        String service = m_metaData.getString(Params.service);
-        Class<?> serviceClass = b.loadClass(service);
+        String service = m_metaData.getString(Params.service, null);
+        Class<?> serviceClass = service != null ? b.loadClass(service) : null;
         String serviceFilter = m_metaData.getString(Params.filter, null);
         String defaultServiceImpl = m_metaData.getString(Params.defaultImpl, null);
         Class<?> defaultServiceImplClass =

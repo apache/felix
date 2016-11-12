@@ -43,9 +43,17 @@ import java.lang.annotation.Target;
 @Target({ElementType.METHOD, ElementType.FIELD})
 public @interface ServiceDependency
 {
+	/**
+	 * Marker interface used to match any service types. When you set the {@link ServiceDependency#service} attribute to this class,
+	 * it means that the dependency will return any services (matching the {@link ServiceDependency#filter()} attribute if it is specified).
+	 */
+	public interface Any { }
+	
     /**
      * The type if the service this dependency is applying on. By default, the method parameter 
-     * (or the class field) is used as the type.
+     * (or the class field) is used as the type. If you want to match all available services, you can set
+     * this attribute to the {@link Any} class. In this case, all services (matching the {@link ServiceDependency#filter()} attribute if it is specified) will
+     * be returned.
      * @return the service dependency
      */
     Class<?> service() default Object.class;
