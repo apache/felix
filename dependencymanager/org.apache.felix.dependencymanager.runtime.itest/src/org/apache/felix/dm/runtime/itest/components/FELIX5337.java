@@ -22,6 +22,7 @@ import org.apache.felix.dm.DependencyManager;
 import org.apache.felix.dm.annotation.api.Component;
 import org.apache.felix.dm.annotation.api.Inject;
 import org.apache.felix.dm.annotation.api.ServiceDependency;
+import org.apache.felix.dm.annotation.api.ServiceDependency.Any;
 import org.apache.felix.dm.annotation.api.Start;
 import org.apache.felix.dm.annotation.api.Stop;
 import org.apache.felix.dm.itest.util.Ensure;
@@ -88,7 +89,7 @@ public class FELIX5337 implements FrameworkListener {
 	/**
 	 * Track all available services using annotation.
 	 */
-	@ServiceDependency(filter = "(objectClass=*)")
+	@ServiceDependency(service=Any.class)
 	void bindService(Object service) {
 		m_services++; // thread safe, in DM, service callbacks are always thread safe.
 	}

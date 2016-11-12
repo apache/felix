@@ -666,6 +666,11 @@ public class AnnotationCollector extends ClassDataCollector
             	}
             }
         }
+        
+        boolean matchAnyService = service != null && service.equals(ServiceDependency.Any.class.getName());
+        if (matchAnyService) {
+        	service = null;
+        }
         writer.put(EntryParam.service, service);
 
         // Store this service in list of imported services.
@@ -682,6 +687,12 @@ public class AnnotationCollector extends ClassDataCollector
         if (filter != null)
         {
             Verifier.verifyFilter(filter, 0);
+            if (matchAnyService) {
+            	filter = "(&(objectClass=*)" + filter + ")";
+            }
+            writer.put(EntryParam.filter, filter);
+        } else if (matchAnyService) {
+        	filter = "(objectClass=*)";
             writer.put(EntryParam.filter, filter);
         }
 
