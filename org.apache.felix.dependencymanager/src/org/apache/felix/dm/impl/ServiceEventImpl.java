@@ -41,9 +41,7 @@ public class ServiceEventImpl extends Event {
 	private final BundleContext m_bundleContext;
 	
     /**
-     * The bundle which has created the service dependency. If not null, will be used to ensure that the bundle is still active before
-     * ungetting the service reference of the dependency. (ungetting a service reference on a bundle which is not
-     * active triggers an exception, and this may degrade performance, especially when doing some benchmarks).
+     * The bundle which has created the service dependency.
      */
 	private final Bundle m_bundle;
 	
@@ -112,12 +110,7 @@ public class ServiceEventImpl extends Event {
     public void close() {
         if (m_bundleContext != null) {
             try {
-                // Optimization: don't call ungetService if the bundle referring to the service is not active. 
-                // This optim is important when doing benchmarks where the referring bundle is being stopped 
-                // while some dependencies are lost concurrently (here we want to avoid having many exception thrown).
-                if (m_bundle == null || m_bundle.getState() == Bundle.ACTIVE) {
-                    m_bundleContext.ungetService(m_reference);
-                }
+            	m_bundleContext.ungetService(m_reference);
             } catch (IllegalStateException e) {}
         }
     }

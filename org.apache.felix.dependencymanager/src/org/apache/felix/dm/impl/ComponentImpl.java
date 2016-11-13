@@ -1161,44 +1161,48 @@ public class ComponentImpl implements Component, ComponentContext, ComponentDecl
      * Then handleEvent calls this method when a dependency service is being removed.
      */
     private void handleRemoved(DependencyContext dc, Event e) {
-        if (! m_isStarted) {
-            return;
-        }
-        // Check if the dependency is still available.
-        Set<Event> dependencyEvents = m_dependencyEvents.get(dc);
-        int size = dependencyEvents.size();
-        if (dependencyEvents.contains(e)) {
-            size--; // the dependency is currently registered and is about to be removed.
-        }
-        dc.setAvailable(size > 0);
+    	try {
+    		if (! m_isStarted) {
+    			return;
+    		}
+    		// Check if the dependency is still available.
+    		Set<Event> dependencyEvents = m_dependencyEvents.get(dc);
+    		int size = dependencyEvents.size();
+    		if (dependencyEvents.contains(e)) {
+    			size--; // the dependency is currently registered and is about to be removed.
+    		}
+    		dc.setAvailable(size > 0);
         
-        // If the dependency is now unavailable, we have to recalculate state change. This will result in invoking the
-        // "removed" callback with the removed dependency (which we have not yet removed from our dependency events list.).
-        // But we don't recalculate the state if the dependency is not started (if not started, it means that it is currently starting,
-        // and the tracker is detecting a removed service).
-        if (size == 0 && dc.isStarted()) {
-            handleChange();
-        }
+    		// If the dependency is now unavailable, we have to recalculate state change. This will result in invoking the
+    		// "removed" callback with the removed dependency (which we have not yet removed from our dependency events list.).
+    		// But we don't recalculate the state if the dependency is not started (if not started, it means that it is currently starting,
+    		// and the tracker is detecting a removed service).
+    		if (size == 0 && dc.isStarted()) {
+    			handleChange();
+    		}
+    		
+    		// Now, really remove the dependency event.
+    		dependencyEvents.remove(e);    
         
-        // Now, really remove the dependency event.
-        dependencyEvents.remove(e);    
-        
-        // Depending on the state, we possible have to invoke the callbacks and update the component instance.        
-        switch (m_state) {
-        case INSTANTIATED_AND_WAITING_FOR_REQUIRED:
-            if (!dc.isInstanceBound()) {
-                if (dc.isRequired()) {
-                    invokeCallbackSafe(dc, EventType.REMOVED, e);
-                }
-                updateInstance(dc, e, false, false);
-            }
-            break;
-        case TRACKING_OPTIONAL:
-            invokeCallbackSafe(dc, EventType.REMOVED, e);
-            updateInstance(dc, e, false, false);
-            break;
-        default:
-        }
+    		// Depending on the state, we possible have to invoke the callbacks and update the component instance.        
+			switch (m_state) {
+			case INSTANTIATED_AND_WAITING_FOR_REQUIRED:
+				if (!dc.isInstanceBound()) {
+					if (dc.isRequired()) {
+						invokeCallbackSafe(dc, EventType.REMOVED, e);
+					}
+					updateInstance(dc, e, false, false);
+				}
+				break;
+			case TRACKING_OPTIONAL:
+				invokeCallbackSafe(dc, EventType.REMOVED, e);
+				updateInstance(dc, e, false, false);
+				break;
+			default:
+			}
+    	} finally {
+    		e.close();
+    	}
     }
     
     private void handleSwapped(DependencyContext dc, Event oldEvent, Event newEvent) {
