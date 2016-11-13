@@ -15,6 +15,8 @@
  */
 package org.osgi.util.converter;
 
+import java.lang.reflect.Type;
+
 /**
  * A rule is a data entity can hold all the information needed to specify a
  * custom conversion for use by the {@link ConverterBuilder}.
@@ -25,10 +27,13 @@ package org.osgi.util.converter;
  * @Immutable
  */
 public class Rule<F, T> {
-    private final Class<F>              fromClass;
-    private final Class<T>              toClass;
-    private final ConvertFunction<T,F>  fromFun;
-    private final ConvertFunction<F,T>  toFun;
+    private final Type              sourceType;
+    private final Type              targetType;
+
+    @SuppressWarnings("rawtypes")
+    private final ConvertFunction  toFun;
+    @SuppressWarnings("rawtypes")
+    private final ConvertFunction  backFun;
 
     /**
      * Create a bidirectional rule.
@@ -40,26 +45,11 @@ public class Rule<F, T> {
      *            specified then this functions as a wildcard for generic
      *            conversions.
      * @param to The conversion function for this rule.
-     * @param from The reverse conversion for this rule.
+     * @param back The reverse conversion for this rule.
      */
     public Rule(Class<F> fromCls, Class<T> toCls, ConvertFunction<F,T> to,
-            ConvertFunction<T,F> from) {
-        if (fromCls.equals(toCls)) {
-            if (fromCls.equals(Object.class)) {
-                if (from != null) {
-                    throw new IllegalStateException(
-                            "Can only register one catchall converter");
-                }
-            } else {
-                throw new IllegalStateException(
-                        "Cannot register a convert to itself");
-            }
-        }
-
-        fromClass = fromCls;
-        toClass = toCls;
-        toFun = to;
-        fromFun = from;
+            ConvertFunction<T,F> back) {
+        this((Type) fromCls, (Type) toCls, to, back);
     }
 
     /**
@@ -77,13 +67,41 @@ public class Rule<F, T> {
         this(fromCls, toCls, to, null);
     }
 
+    public Rule(TypeReference<F> fromType, TypeReference<T> toType, ConvertFunction<F,T> to, ConvertFunction<F,T> back) {
+        this(fromType.getType(), toType.getType(), to, back);
+    }
+
+    public Rule(TypeReference<F> fromType, TypeReference<T> toType, ConvertFunction<F,T> to) {
+        this(fromType.getType(), toType.getType(), to, null);
+    }
+
+    public Rule(Type fromType, Type toType,
+            @SuppressWarnings("rawtypes") ConvertFunction to, @SuppressWarnings("rawtypes") ConvertFunction back) {
+        if (fromType.equals(toType)) {
+            if (fromType.equals(Object.class)) {
+                if (back != null) {
+                    throw new IllegalStateException(
+                            "Can only register one catchall converter");
+                }
+            } else {
+                throw new IllegalStateException(
+                        "Cannot register a converter to itself");
+            }
+        }
+
+        sourceType = fromType;
+        targetType = toType;
+        toFun = to;
+        backFun = back;
+    }
+
     /**
      * Accessor for the class to convert from.
      *
      * @return The class to convert from.
      */
-    public Class<F> getFromClass() {
-        return fromClass;
+    public Type getSourceType() {
+        return sourceType;
     }
 
     /**
@@ -91,8 +109,8 @@ public class Rule<F, T> {
      *
      * @return The class to convert to.
      */
-    public Class<T> getToClass() {
-        return toClass;
+    public Type getTargetType() {
+        return targetType;
     }
 
     /**
@@ -100,6 +118,7 @@ public class Rule<F, T> {
      *
      * @return The conversion function.
      */
+    @SuppressWarnings("unchecked")
     public ConvertFunction<F,T> getToFunction() {
         return toFun;
     }
@@ -109,7 +128,8 @@ public class Rule<F, T> {
      *
      * @return The reverse conversion function.
      */
-    public ConvertFunction<T,F> getFromFunction() {
-        return fromFun;
+    @SuppressWarnings("unchecked")
+    public ConvertFunction<T,F> getBackFunction() {
+        return backFun;
     }
 }

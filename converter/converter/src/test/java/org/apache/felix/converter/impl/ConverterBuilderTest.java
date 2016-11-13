@@ -85,7 +85,7 @@ public class ConverterBuilderTest {
         cb.rule(char[].class, String.class, ConverterBuilderTest::convertToString, null);
         cb.rule(new Rule<String, Number>(String.class, Number.class, new ConvertFunction<String, Number>() {
             @Override
-            public Number convert(String obj, Object key, Type targetType) throws Exception {
+            public Number convert(String obj, Object[] key, Type targetType) throws Exception {
                 if (Integer.class.equals(targetType))
                     return Integer.valueOf(-1);
                 else if (Long.class.equals(targetType))
@@ -110,7 +110,7 @@ public class ConverterBuilderTest {
         Converter ca = converter.newConverterBuilder().rule(
                 new Rule<Integer, Long>(Integer.class, Long.class, new ConvertFunction<Integer,Long>() {
             @Override
-            public Long convert(Integer obj, Object key, Type targetType) throws Exception {
+            public Long convert(Integer obj, Object[] key, Type targetType) throws Exception {
                 if (obj.intValue() != 1)
                     return new Long(-obj.intValue());
                 return null;
@@ -127,7 +127,7 @@ public class ConverterBuilderTest {
     public void testWildcardAdapter() {
         ConvertFunction<List, Object> foo = new ConvertFunction<List, Object>() {
             @Override
-            public Object convert(List t, Object key, Type type) throws Exception {
+            public Object convert(List t, Object[] key, Type type) throws Exception {
                 if (type instanceof Class) {
                     if (Number.class.isAssignableFrom((Class<?>) type))
                         return converter.convert(t.size()).to(type);
@@ -204,8 +204,8 @@ public class ConverterBuilderTest {
         ConverterBuilder cb = converter.newConverterBuilder();
         ConvertFunction<Number, String> ntc = new ConvertFunction<Number, String>() {
             @Override
-            public String convert(Number obj, Object key, Type targetType) throws Exception {
-                if ("cost".equals(key))
+            public String convert(Number obj, Object[] key, Type targetType) throws Exception {
+                if ("cost".equals(key[0]))
                     return "$" + obj + ".00";
                 else
                     return "" + obj;
@@ -213,8 +213,8 @@ public class ConverterBuilderTest {
         };
         ConvertFunction<String, Number> ctn = new ConvertFunction<String, Number>() {
             @Override
-            public Number convert(String obj, Object key, Type targetType) throws Exception {
-                if ("cost".equals(key)) {
+            public Number convert(String obj, Object[] key, Type targetType) throws Exception {
+                if ("cost".equals(key[0])) {
                     int dotIdx = obj.indexOf('.');
                     obj = obj.substring(1, dotIdx); // eat off dollar sign and decimals
                 }
@@ -239,6 +239,63 @@ public class ConverterBuilderTest {
         assertEquals(2, hm.size());
         assertEquals(7, (int) hm.get("amount"));
         assertEquals(100, (int) hm.get("cost"));
+    }
+
+    @SuppressWarnings("rawtypes")
+    @Test
+    public void testConvertWithKeysDeep() {
+        MyDTO6 subsubDTO1 = new MyDTO6();
+        subsubDTO1.chars = Arrays.asList('a', 'b', 'c');
+        MyDTO6 subsubDTO2 = new MyDTO6();
+        subsubDTO2.chars = Arrays.asList('z', 'z', 'z', 'z');
+        MyDTO6 subsubDTO3 = new MyDTO6();
+        subsubDTO3.chars = Arrays.asList('8');
+        MyDTO6 subsubDTO4 = new MyDTO6();
+        subsubDTO4.chars = Arrays.asList(' ');
+        MyDTO5 subDTO1 = new MyDTO5();
+        subDTO1.subsub1 = subsubDTO1;
+        subDTO1.subsub2 = subsubDTO2;
+        MyDTO5 subDTO2 = new MyDTO5();
+        subDTO2.subsub1 = subsubDTO3;
+        subDTO2.subsub2 = subsubDTO4;
+        MyDTO4 dto = new MyDTO4();
+        dto.sub1 = subDTO1;
+        dto.sub2 = subDTO2;
+
+        ConverterBuilder cb = converter.newConverterBuilder();
+        ConvertFunction<MyDTO6, Map> fun = new ConvertFunction<MyDTO6, Map>() {
+            @Override @SuppressWarnings("unchecked")
+            public Map convert(MyDTO6 obj, Object[] keys, Type targetType) throws Exception {
+                StringBuilder sb = new StringBuilder();
+                for (Character c : obj.chars) {
+                    sb.append(c);
+                }
+
+                if ("sub2".equals(keys[0]) && "subsub1".equals(keys[1])) {
+                    sb.append(sb.toString());
+                }
+
+                Map m = new HashMap();
+                m.put("chars", sb.toString());
+                return m;
+            }
+        };
+        cb.rule(new Rule<MyDTO6, Map>(new TypeReference<MyDTO6>() {},
+                new TypeReference<Map>() {}, fun));
+        Converter c = cb.build();
+
+        Map m = c.convert(dto).to(Map.class);
+        assertEquals(2, m.size());
+        Map m1 = (Map) m.get("sub1");
+        Map m2 = (Map) m.get("sub2");
+        Map m11 = (Map) m1.get("subsub1");
+        assertEquals("abc", m11.get("chars"));
+        Map m12 = (Map) m1.get("subsub2");
+        assertEquals("zzzz", m12.get("chars"));
+        Map m21 = (Map) m2.get("subsub1");
+        assertEquals("String should be doubled by special converter rule", "88", m21.get("chars"));
+        Map m22 = (Map) m2.get("subsub2");
+        assertEquals(" ", m22.get("chars"));
     }
 
     static interface MyIntf {

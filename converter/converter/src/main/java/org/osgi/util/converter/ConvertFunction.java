@@ -45,5 +45,5 @@ public interface ConvertFunction<F, T> {
 	 *         convert.
 	 * @throws Exception
 	 */
-	T convert(F obj, Object key, Type targetType) throws Exception;
+	T convert(F obj, Object[] keyPath, Type targetType) throws Exception;
 }

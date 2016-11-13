@@ -65,13 +65,13 @@ public class AdapterImpl implements InternalConverter {
     private <F, T> AdapterImpl rule(Rule<F, T> rule) {
         ConvertFunction<F, T> toFun = rule.getToFunction();
         if (toFun != null)
-            classRules.put(new TypePair(rule.getFromClass(), rule.getToClass()),
+            classRules.put(new TypePair(rule.getSourceType(), rule.getTargetType()),
                 (ConvertFunction<Object, Object>) toFun);
 
 
-        ConvertFunction<T, F> fromFun = rule.getFromFunction();
+        ConvertFunction<T, F> fromFun = rule.getBackFunction();
         if (fromFun != null)
-            classRules.put(new TypePair(rule.getToClass(), rule.getFromClass()),
+            classRules.put(new TypePair(rule.getTargetType(), rule.getSourceType()),
                 (ConvertFunction<Object, Object>) fromFun);
         return this;
     }
@@ -82,7 +82,7 @@ public class AdapterImpl implements InternalConverter {
         private volatile Object defaultValue;
         private volatile Class<?> treatAsClass;
         private volatile boolean hasDefault;
-        private volatile Object key;
+        private volatile List<Object> keys = new ArrayList<>();
 
         ConvertingWrapper(Object obj, InternalConverting c) {
             object = obj;
@@ -111,8 +111,12 @@ public class AdapterImpl implements InternalConverter {
         }
 
         @Override
-        public InternalConverting key(Object k) {
-            key = k;
+        public InternalConverting key(Object ... ks) {
+            for (Object k : ks) {
+                keys.add(k);
+                del.key(k);
+            }
+
             return this;
         }
 
@@ -161,7 +165,7 @@ public class AdapterImpl implements InternalConverter {
                         continue;
 
                     try {
-                        Object res = func.convert(object, key, type);
+                        Object res = func.convert(object, keys.toArray(), type);
                         if (res != null) {
                             return res;
                         }
@@ -239,7 +243,7 @@ public class AdapterImpl implements InternalConverter {
         }
 
         @Override
-        public T convert(F obj, Object key, Type targetType) throws Exception {
+        public T convert(F obj, Object[] keys, Type targetType) throws Exception {
             return function.apply(obj);
         }
     }
