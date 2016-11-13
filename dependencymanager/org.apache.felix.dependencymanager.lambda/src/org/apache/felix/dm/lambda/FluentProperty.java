@@ -33,6 +33,21 @@ import org.apache.felix.dm.lambda.callbacks.SerializableLambda;
  * } 
  * }</pre>
  * 
+ * When a property name contains dots ("."), then since it's not possible to declare a lambda parameter with some dots, you can
+ * encode the dots using some underscores. A single underscore is then converted to a dot, unless is it followed by another
+ * underscore in which case the two consecutive underscores ("__") are converted to a single underscore.
+ * 
+ * For example, assume your component provides a service using the two service.ranking and foo_bar service properties. In this case
+ * you would declare the service properties like this:<p>
+ * 
+ * <pre>{@code
+ * public class Activator extends DependencyManagerActivator {
+ *   public void init(BundleContext ctx, DependencyManager dm) throws Exception {
+ *       component(comp -> comp.impl(MyComponentImpl.class).provides(MyService.class, service_ranking->10, foo__bar -> "gabuzo"));
+ *   }
+ * } 
+ * }</pre>
+ * 
  * <b>Caution: Fluent properties requires the usage of the "-parameter" javac option.</b>
  * 
  * Under eclipse, you can enable this option using:
