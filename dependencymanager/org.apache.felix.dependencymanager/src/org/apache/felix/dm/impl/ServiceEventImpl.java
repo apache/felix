@@ -19,6 +19,7 @@
 package org.apache.felix.dm.impl;
 
 import java.util.Dictionary;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.apache.felix.dm.context.Event;
 import org.osgi.framework.Bundle;
@@ -44,6 +45,11 @@ public class ServiceEventImpl extends Event {
      * The bundle which has created the service dependency.
      */
 	private final Bundle m_bundle;
+	
+	/**
+	 * Protects in case close is called twice.
+	 */
+	private final AtomicBoolean m_closed = new AtomicBoolean(false);
 	
 	public ServiceEventImpl(ServiceReference reference, Object service) {
 	    this(null, null, reference, service);
@@ -108,7 +114,7 @@ public class ServiceEventImpl extends Event {
 
     @Override
     public void close() {
-        if (m_bundleContext != null) {
+        if (m_bundleContext != null && m_closed.compareAndSet(false, true)) {
             try {
             	m_bundleContext.ungetService(m_reference);
             } catch (IllegalStateException e) {}
