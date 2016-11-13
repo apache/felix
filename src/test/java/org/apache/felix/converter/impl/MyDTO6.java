@@ -16,11 +16,8 @@
  */
 package org.apache.felix.converter.impl;
 
-import org.osgi.util.converter.Converter;
-import org.osgi.util.converter.Converting;
+import java.util.Collection;
 
-public interface InternalConverting extends Converting {
-    void setConverter(Converter c);
-
-    InternalConverting key(Object ... keys);
+public class MyDTO6 {
+    public Collection<Character> chars;
 }

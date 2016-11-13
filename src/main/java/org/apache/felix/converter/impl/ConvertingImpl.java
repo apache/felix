@@ -67,6 +67,7 @@ public class ConvertingImpl implements Converting, InternalConverting {
     private volatile Class<?> targetActualClass;
     private volatile Class<?> targetViewClass;
     private volatile Type[] typeArguments;
+    private List<Object> keys = new ArrayList<>();
 
     ConvertingImpl(InternalConverter c, Object obj) {
         converter = c;
@@ -94,8 +95,11 @@ public class ConvertingImpl implements Converting, InternalConverting {
     }
 
     @Override
-    public InternalConverting key(Object k) {
-        // This is only for adapters, so we don't need to do anything here
+    public InternalConverting key(Object ... ks) {
+        for (Object k : ks) {
+            keys.add(k);
+        }
+
         return this;
     }
 
@@ -158,9 +162,9 @@ public class ConvertingImpl implements Converting, InternalConverting {
             return convertToArray();
         } else if (Collection.class.isAssignableFrom(targetViewClass)) {
             return convertToCollection();
-        } else if (isDTOType()) {
+        } else if (targetIsDTOType()) {
             return convertToDTO();
-        } else if (isMapType()) {
+        } else if (targetIsMapType()) {
             return convertToMapType();
         }
 
@@ -301,19 +305,23 @@ public class ConvertingImpl implements Converting, InternalConverting {
             return null;
 
         for (Map.Entry entry : (Set<Entry>) m.entrySet()) {
+            List<Object> ks = new ArrayList<>(keys);
             Object key = entry.getKey();
             if (targetKeyType != null)
-                key = converter.convert(key).key(key).to(targetKeyType);
+                key = converter.convert(key).key(ks.toArray()).to(targetKeyType);
+            ks.add(key);
+            Object[] ka = ks.toArray();
+
             Object value = entry.getValue();
             if (value != null) {
                 if (targetValueType != null) {
-                    value = converter.convert(value).key(key).to(targetValueType);
+                    value = converter.convert(value).key(ka).to(targetValueType);
                 } else {
                     Class<?> cls = value.getClass();
                     if (isCopyRequiredType(cls)) {
                         cls = getConstructableType(cls);
                     }
-                    value = converter.convert(value).key(key).to(cls);
+                    value = converter.convert(value).key(ka).to(cls);
                 }
             }
             instance.put(key, value);
@@ -418,7 +426,7 @@ public class ConvertingImpl implements Converting, InternalConverting {
         }
     }
 
-    private boolean isDTOType() {
+    private boolean targetIsDTOType() {
         try {
             targetViewClass.getDeclaredConstructor();
         } catch (NoSuchMethodException | SecurityException e) {
@@ -441,7 +449,7 @@ public class ConvertingImpl implements Converting, InternalConverting {
         return true;
     }
 
-    private boolean isMapType() {
+    private boolean targetIsMapType() {
         // All interface types that are not Collections are treated as maps
         if (Map.class.isAssignableFrom(targetViewClass))
             return true;
@@ -564,7 +572,7 @@ public class ConvertingImpl implements Converting, InternalConverting {
     }
 
     @SuppressWarnings("rawtypes")
-    private static Map createMapFromDTO(Object obj, Converter converter) {
+    private Map createMapFromDTO(Object obj, InternalConverter converter) {
         Set<String> handledFields = new HashSet<>();
 
         Map result = new HashMap();
@@ -683,7 +691,8 @@ public class ConvertingImpl implements Converting, InternalConverting {
     }
 
     @SuppressWarnings({ "rawtypes", "unchecked" })
-    private static void handleField(Object obj, Field field, Set<String> handledFields, Map result, Converter converter) {
+    private void handleField(Object obj, Field field, Set<String> handledFields, Map result,
+            InternalConverter converter) {
         if (Modifier.isStatic(field.getModifiers()))
             return;
 
@@ -692,10 +701,13 @@ public class ConvertingImpl implements Converting, InternalConverting {
             return; // Field with this name was already handled
 
         try {
+            List<Object> ks = new ArrayList<>(keys);
+            ks.add(field.getName());
+            Object[] ka = ks.toArray();
+
             Object fVal = field.get(obj);
-            if(fVal instanceof DTO)
-                fVal = converter.convert(fVal).to(Map.class);
-            // TODO test for other embedded types that need conversion
+            fVal = converter.convert(fVal).key(ka).to(Map.class);
+
             result.put(field.getName(), fVal);
             handledFields.add(fn);
         } catch (Exception e) {
@@ -742,20 +754,25 @@ public class ConvertingImpl implements Converting, InternalConverting {
         }
     }
 
-    private static Map<?,?> mapView(Object obj, Class<?> sourceCls, Converter converter) {
+    private Map<?,?> mapView(Object obj, Class<?> sourceCls, InternalConverter converter) {
         if (Map.class.isAssignableFrom(sourceCls))
             return (Map<?,?>) obj;
         else if (Dictionary.class.isAssignableFrom(sourceCls))
             return null; // TODO
-        else if (obj instanceof DTO)
-            // TODO inspect if its a DTO, rather than instanceof
+        else if (isDTO(sourceCls))
             return createMapFromDTO(obj, converter);
         else {
-            Map<?,?> m = createMapFromBeanAccessors(obj, sourceCls);
-            if (m.size() > 0)
-                return m;
+            if (treatAsJavaBean()) {
+                Map<?,?> m = createMapFromBeanAccessors(obj, sourceCls);
+                if (m.size() > 0)
+                    return m;
+            }
         }
         return createMapFromInterface(obj);
+    }
+
+    private static boolean treatAsJavaBean() {
+        return false;
     }
 
     private static boolean isCopyRequiredType(Class<?> cls) {
@@ -764,6 +781,45 @@ public class ConvertingImpl implements Converting, InternalConverting {
                 DTO.class.isAssignableFrom(cls) ||
                 // isJavaBean
                 cls.isArray();
+    }
+
+    private static boolean isDTO(Class<?> cls) {
+        if (cls.getDeclaredMethods().length > 0) {
+            // should not have any methods
+            return false;
+        }
+
+        for (Method m : cls.getMethods()) {
+            if (m.getDeclaringClass().equals(Object.class))
+                continue;
+
+            return false;
+        }
+
+        for (Field f : cls.getDeclaredFields()) {
+            int modifiers = f.getModifiers();
+            if (Modifier.isStatic(modifiers)) {
+                // ignore static fields
+                continue;
+            }
+
+            if (!Modifier.isPublic(modifiers)) {
+                return false;
+            }
+        }
+
+        for (Field f : cls.getFields()) {
+            int modifiers = f.getModifiers();
+            if (Modifier.isStatic(modifiers)) {
+                // ignore static fields
+                continue;
+            }
+
+            if (!Modifier.isPublic(modifiers)) {
+                return false;
+            }
+        }
+        return true;
     }
 
     private static boolean isWriteableJavaBean(Class<?> cls) {
