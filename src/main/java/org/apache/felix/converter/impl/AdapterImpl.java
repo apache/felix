@@ -83,6 +83,7 @@ public class AdapterImpl implements InternalConverter {
         private volatile Class<?> treatAsClass;
         private volatile boolean hasDefault;
         private volatile List<Object> keys = new ArrayList<>();
+        private volatile Object root;
 
         ConvertingWrapper(Object obj, InternalConverting c) {
             object = obj;
@@ -117,6 +118,14 @@ public class AdapterImpl implements InternalConverter {
                 del.key(k);
             }
 
+            return this;
+        }
+
+        @Override
+        public InternalConverting root(Object rootObject) {
+            if (root == null)
+                root = rootObject;
+            del.root(rootObject);
             return this;
         }
 
@@ -165,7 +174,7 @@ public class AdapterImpl implements InternalConverter {
                         continue;
 
                     try {
-                        Object res = func.convert(object, keys.toArray(), type);
+                        Object res = func.convert(object, type, root, keys.toArray());
                         if (res != null) {
                             return res;
                         }
@@ -243,7 +252,7 @@ public class AdapterImpl implements InternalConverter {
         }
 
         @Override
-        public T convert(F obj, Object[] keys, Type targetType) throws Exception {
+        public T convert(F obj, Type targetType, Object root, Object[] keys) throws Exception {
             return function.apply(obj);
         }
     }

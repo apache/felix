@@ -68,6 +68,7 @@ public class ConvertingImpl implements Converting, InternalConverting {
     private volatile Class<?> targetViewClass;
     private volatile Type[] typeArguments;
     private List<Object> keys = new ArrayList<>();
+    private volatile Object root;
 
     ConvertingImpl(InternalConverter c, Object obj) {
         converter = c;
@@ -100,6 +101,13 @@ public class ConvertingImpl implements Converting, InternalConverting {
             keys.add(k);
         }
 
+        return this;
+    }
+
+    @Override
+    public InternalConverting root(Object rootObject) {
+        if (root == null)
+            root = rootObject;
         return this;
     }
 
@@ -162,9 +170,9 @@ public class ConvertingImpl implements Converting, InternalConverting {
             return convertToArray();
         } else if (Collection.class.isAssignableFrom(targetViewClass)) {
             return convertToCollection();
-        } else if (targetIsDTOType()) {
+        } else if (isDTOType(targetViewClass)) {
             return convertToDTO();
-        } else if (targetIsMapType()) {
+        } else if (isMapType(targetViewClass)) {
             return convertToMapType();
         }
 
@@ -426,39 +434,66 @@ public class ConvertingImpl implements Converting, InternalConverting {
         }
     }
 
-    private boolean targetIsDTOType() {
+    private static boolean isDTOType(Class<?> cls) {
         try {
-            targetViewClass.getDeclaredConstructor();
+            cls.getDeclaredConstructor();
         } catch (NoSuchMethodException | SecurityException e) {
             // No zero-arg constructor, not a DTO
             return false;
         }
 
-        if (targetViewClass.getDeclaredMethods().length > 0)
+        if (cls.getDeclaredMethods().length > 0) {
+            // should not have any methods
             return false;
+        }
 
-
-        for (Method m : targetViewClass.getMethods()) {
+        for (Method m : cls.getMethods()) {
             try {
                 Object.class.getMethod(m.getName(), m.getParameterTypes());
-            } catch (NoSuchMethodException | SecurityException e) {
-                // This method is not defined by Object.class
+            } catch (NoSuchMethodException snme) {
+                // Not a method defined by Object.class (or override of such method)
+                return false;
+            }
+        }
+
+        for (Field f : cls.getDeclaredFields()) {
+            int modifiers = f.getModifiers();
+            if (Modifier.isStatic(modifiers)) {
+                // ignore static fields
+                continue;
+            }
+
+            if (!Modifier.isPublic(modifiers)) {
+                return false;
+            }
+        }
+
+        for (Field f : cls.getFields()) {
+            int modifiers = f.getModifiers();
+            if (Modifier.isStatic(modifiers)) {
+                // ignore static fields
+                continue;
+            }
+
+            if (!Modifier.isPublic(modifiers)) {
                 return false;
             }
         }
         return true;
     }
 
-    private boolean targetIsMapType() {
+    private static boolean isMapType(Class<?> cls) {
         // All interface types that are not Collections are treated as maps
-        if (Map.class.isAssignableFrom(targetViewClass))
+        if (Map.class.isAssignableFrom(cls))
             return true;
-        else if (targetViewClass.isInterface())
+        else if (cls.isInterface() && !Collection.class.isAssignableFrom(cls))
             return true;
-        else if (isWriteableJavaBean(targetViewClass))
+        else if (isDTOType(cls))
+            return true;
+        else if (isWriteableJavaBean(cls))
             return true;
         else
-            return Dictionary.class.isAssignableFrom(targetViewClass);
+            return Dictionary.class.isAssignableFrom(cls);
     }
 
     private Object trySpecialCases() {
@@ -706,7 +741,9 @@ public class ConvertingImpl implements Converting, InternalConverting {
             Object[] ka = ks.toArray();
 
             Object fVal = field.get(obj);
-            fVal = converter.convert(fVal).key(ka).to(Map.class);
+            if (isMapType(field.getType())) {
+                fVal = converter.convert(fVal).key(ka).to(Map.class);
+            }
 
             result.put(field.getName(), fVal);
             handledFields.add(fn);
@@ -759,7 +796,7 @@ public class ConvertingImpl implements Converting, InternalConverting {
             return (Map<?,?>) obj;
         else if (Dictionary.class.isAssignableFrom(sourceCls))
             return null; // TODO
-        else if (isDTO(sourceCls))
+        else if (isDTOType(sourceCls))
             return createMapFromDTO(obj, converter);
         else {
             if (treatAsJavaBean()) {
@@ -781,45 +818,6 @@ public class ConvertingImpl implements Converting, InternalConverting {
                 DTO.class.isAssignableFrom(cls) ||
                 // isJavaBean
                 cls.isArray();
-    }
-
-    private static boolean isDTO(Class<?> cls) {
-        if (cls.getDeclaredMethods().length > 0) {
-            // should not have any methods
-            return false;
-        }
-
-        for (Method m : cls.getMethods()) {
-            if (m.getDeclaringClass().equals(Object.class))
-                continue;
-
-            return false;
-        }
-
-        for (Field f : cls.getDeclaredFields()) {
-            int modifiers = f.getModifiers();
-            if (Modifier.isStatic(modifiers)) {
-                // ignore static fields
-                continue;
-            }
-
-            if (!Modifier.isPublic(modifiers)) {
-                return false;
-            }
-        }
-
-        for (Field f : cls.getFields()) {
-            int modifiers = f.getModifiers();
-            if (Modifier.isStatic(modifiers)) {
-                // ignore static fields
-                continue;
-            }
-
-            if (!Modifier.isPublic(modifiers)) {
-                return false;
-            }
-        }
-        return true;
     }
 
     private static boolean isWriteableJavaBean(Class<?> cls) {

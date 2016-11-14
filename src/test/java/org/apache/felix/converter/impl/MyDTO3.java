@@ -21,5 +21,5 @@ import java.util.Set;
 import org.osgi.dto.DTO;
 
 public class MyDTO3 extends DTO {
-    Set<Character> charSet;
+    public Set<Character> charSet;
 }
