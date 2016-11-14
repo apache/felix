@@ -23,4 +23,6 @@ public interface InternalConverting extends Converting {
     void setConverter(Converter c);
 
     InternalConverting key(Object ... keys);
+
+    InternalConverting root(Object rootObject);
 }
