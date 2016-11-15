@@ -588,7 +588,7 @@ public class ConverterTest {
         mb.beanVal = "Hello";
 
         assertEquals(17,
-                converter.convert(mb).sourceType(MyIntf.class).to(Map.class).get("value"));
+                converter.convert(mb).source().as(MyIntf.class).to(Map.class).get("value"));
     }
 
     @Test  @Ignore("Fix JavaBean handling")
@@ -598,7 +598,7 @@ public class ConverterTest {
         mb.beanVal = "Hello";
 
         assertEquals(Collections.singletonMap("value", "Hello"),
-                converter.convert(mb).sourceType(MyBean.class).to(Map.class));
+                converter.convert(mb).source().as(MyBean.class).to(Map.class));
     }
 
     static class MyClass2 {

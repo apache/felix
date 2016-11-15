@@ -34,6 +34,7 @@ import org.osgi.util.converter.Converter;
 import org.osgi.util.converter.ConverterBuilder;
 import org.osgi.util.converter.Converting;
 import org.osgi.util.converter.Rule;
+import org.osgi.util.converter.ConvertingTypeSettings;
 import org.osgi.util.converter.TypeReference;
 import org.osgi.util.function.Function;
 
@@ -91,10 +92,21 @@ public class AdapterImpl implements InternalConverter {
         }
 
         @Override
-        public Converting sourceType(Class<?> cls) {
-            treatAsClass = cls;
-            del.sourceType(cls);
-            return this;
+        public ConvertingTypeSettings source() {
+            return new ConvertingTypeSettings() {
+                @Override
+                public Converting asJavaBean() {
+                    // TODO Auto-generated method stub
+                    return ConvertingWrapper.this;
+                }
+
+                @Override
+                public Converting as(Class<?> type) {
+                    treatAsClass = type;
+                    del.source().as(type);
+                    return ConvertingWrapper.this;
+                }
+            };
         }
 
         @Override
