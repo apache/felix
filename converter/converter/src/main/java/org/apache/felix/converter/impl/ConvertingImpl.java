@@ -66,7 +66,7 @@ public class ConvertingImpl implements Converting, InternalConverting {
     private volatile boolean hasDefault;
     private volatile Class<?> sourceClass;
     private volatile Class<?> targetActualClass;
-    private volatile Class<?> targetViewClass;
+    private volatile Class<?> targetAsClass;
     private volatile Type[] typeArguments;
     private List<Object> keys = new ArrayList<>();
     private volatile Object root;
@@ -80,7 +80,6 @@ public class ConvertingImpl implements Converting, InternalConverting {
     @Override
     public ConvertingTypeSettings source() {
         return new ConvertingTypeSettings() {
-
             @Override
             public Converting asJavaBean() {
                 sourceAsJavaBean = true;
@@ -95,11 +94,22 @@ public class ConvertingImpl implements Converting, InternalConverting {
         };
     }
 
-//    @Override
-//    public Converting sourceType(Class<?> type) {
-//        sourceAsClass = type;
-//        return this;
-//    }
+    @Override
+    public ConvertingTypeSettings target() {
+        return new ConvertingTypeSettings() {
+            @Override
+            public Converting asJavaBean() {
+                // TODO not yet implemented
+                return ConvertingImpl.this;
+            }
+
+            @Override
+            public Converting as(Class<?> cls) {
+                targetAsClass = cls;
+                return ConvertingImpl.this;
+            }
+        };
+    }
 
     @Override
     public Converting copy() {
@@ -173,12 +183,12 @@ public class ConvertingImpl implements Converting, InternalConverting {
             return handleNull(cls);
 
         targetActualClass = Util.primitiveToBoxed(cls);
-        if (targetViewClass == null)
-            targetViewClass = targetActualClass;
+        if (targetAsClass == null)
+            targetAsClass = targetActualClass;
 
         sourceClass = sourceAsClass != null ? sourceAsClass : object.getClass();
 
-        if (!isCopyRequiredType(targetViewClass) && targetViewClass.isAssignableFrom(sourceClass)) {
+        if (!isCopyRequiredType(targetAsClass) && targetAsClass.isAssignableFrom(sourceClass)) {
                 return object;
         }
 
@@ -186,13 +196,13 @@ public class ConvertingImpl implements Converting, InternalConverting {
         if (res != null)
             return res;
 
-        if (targetViewClass.isArray()) {
+        if (targetAsClass.isArray()) {
             return convertToArray();
-        } else if (Collection.class.isAssignableFrom(targetViewClass)) {
+        } else if (Collection.class.isAssignableFrom(targetAsClass)) {
             return convertToCollection();
-        } else if (isDTOType(targetViewClass)) {
+        } else if (isDTOType(targetAsClass)) {
             return convertToDTO();
-        } else if (isMapType(targetViewClass)) {
+        } else if (isMapType(targetAsClass)) {
             return convertToMapType();
         }
 
@@ -208,16 +218,10 @@ public class ConvertingImpl implements Converting, InternalConverting {
             return res2;
         } else {
             if (defaultValue != null)
-                return converter.convert(defaultValue).source().as(sourceAsClass).targetType(targetViewClass).to(targetActualClass);
+                return converter.convert(defaultValue).source().as(sourceAsClass).target().as(targetAsClass).to(targetActualClass);
             else
                 return null;
         }
-    }
-
-    @Override
-    public Converting targetType(Class<?> cls) {
-        targetViewClass = cls;
-        return this;
     }
 
     private Object convertArrayToSingleValue(Class<?> cls) {
@@ -241,10 +245,10 @@ public class ConvertingImpl implements Converting, InternalConverting {
         Collection<?> collectionView = collectionView(object);
         Iterator<?> itertor = collectionView.iterator();
         try {
-            Object array = Array.newInstance(targetViewClass.getComponentType(), collectionView.size());
+            Object array = Array.newInstance(targetAsClass.getComponentType(), collectionView.size());
             for (int i=0; i<collectionView.size() && itertor.hasNext(); i++) {
                 Object next = itertor.next();
-                Object converted = converter.convert(next).to(targetViewClass.getComponentType());
+                Object converted = converter.convert(next).to(targetAsClass.getComponentType());
                 Array.set(array, i, converted);
             }
             return (T) array;
@@ -261,12 +265,12 @@ public class ConvertingImpl implements Converting, InternalConverting {
             targetElementType = (Class<?>) typeArguments[0];
         }
 
-        Class<?> ctrCls = interfaceImplementations.get(targetViewClass);
+        Class<?> ctrCls = interfaceImplementations.get(targetAsClass);
         Class<?>targetCls;
         if (ctrCls != null)
             targetCls = ctrCls;
         else
-            targetCls = targetViewClass;
+            targetCls = targetAsClass;
 
         Collection instance = (Collection) createMapOrCollection(targetCls, cv.size());
         if (instance == null)
@@ -292,10 +296,10 @@ public class ConvertingImpl implements Converting, InternalConverting {
             for (Map.Entry entry : (Set<Map.Entry>) m.entrySet()) {
                 Field f = null;
                 try {
-                    f = targetViewClass.getDeclaredField(entry.getKey().toString());
+                    f = targetAsClass.getDeclaredField(entry.getKey().toString());
                 } catch (NoSuchFieldException e) {
                     try {
-                        f = targetViewClass.getField(entry.getKey().toString());
+                        f = targetAsClass.getField(entry.getKey().toString());
                     } catch (NoSuchFieldException e1) {
                         // There is not field with this name
                     }
@@ -360,9 +364,9 @@ public class ConvertingImpl implements Converting, InternalConverting {
 
     @SuppressWarnings({ "unchecked", "rawtypes" })
     private Object convertToMapType() {
-        if (Map.class.isAssignableFrom(targetViewClass))
+        if (Map.class.isAssignableFrom(targetAsClass))
             return convertToMap();
-        else if (Dictionary.class.isAssignableFrom(targetViewClass))
+        else if (Dictionary.class.isAssignableFrom(targetAsClass))
             return new Hashtable((Map) converter.convert(object).to(new ParameterizedType() {
                 @Override
                 public Type getRawType() {
@@ -379,9 +383,9 @@ public class ConvertingImpl implements Converting, InternalConverting {
                     return typeArguments;
                 }
             }));
-        else if (targetViewClass.isInterface())
-            return createProxy(sourceClass, targetViewClass);
-        return createJavaBean(sourceClass, targetViewClass);
+        else if (targetAsClass.isInterface())
+            return createProxy(sourceClass, targetAsClass);
+        return createJavaBean(sourceClass, targetAsClass);
     }
 
     private Object createJavaBean(Class<?> sourceCls, Class<?> targetCls) {
@@ -519,36 +523,36 @@ public class ConvertingImpl implements Converting, InternalConverting {
     private Object trySpecialCases() {
         // TODO some of these can probably be implemented as an adapter
 
-        if (Boolean.class.equals(targetViewClass)) {
+        if (Boolean.class.equals(targetAsClass)) {
             if (object instanceof Number) {
                 return ((Number) object).longValue() != 0;
             } else if (object instanceof Collection && ((Collection<?>) object).size() == 0) {
                 // TODO What about arrays?
                 return Boolean.FALSE;
             }
-        } else if (Character.class.equals(targetViewClass)) {
+        } else if (Character.class.equals(targetAsClass)) {
             if (object instanceof Number) {
                 return Character.valueOf((char) ((Number) object).intValue());
             }
-        } else if (Number.class.isAssignableFrom(targetViewClass)) {
+        } else if (Number.class.isAssignableFrom(targetAsClass)) {
             if (object instanceof Boolean) {
                 return ((Boolean) object).booleanValue() ? 1 : 0;
             }
-        } else if (Class.class.equals(targetViewClass)) {
+        } else if (Class.class.equals(targetAsClass)) {
             if (object instanceof Collection && ((Collection<?>) object).size() == 0) {
                 return null;
             }
-        } else if (Enum.class.isAssignableFrom(targetViewClass)) {
+        } else if (Enum.class.isAssignableFrom(targetAsClass)) {
             if (object instanceof Boolean) {
                 try {
-                    Method m = targetViewClass.getMethod("valueOf", String.class);
+                    Method m = targetAsClass.getMethod("valueOf", String.class);
                     return m.invoke(null, object.toString().toUpperCase());
                 } catch (Exception e) {
                     throw new RuntimeException(e);
                 }
             } else if (object instanceof Number) {
                 try {
-                    Method m = targetViewClass.getMethod("values");
+                    Method m = targetAsClass.getMethod("values");
                     Object[] values = (Object[]) m.invoke(null);
                     return values[((Number) object).intValue()];
                 } catch (Exception e) {

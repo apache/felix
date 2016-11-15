@@ -488,7 +488,7 @@ public class ConverterTest {
     @Test
     public void testMap2DTOView() {
         Map<String, Object> src = Collections.singletonMap("pong", 42);
-        MyDTOWithMethods dto = converter.convert(src).targetType(MyDTO.class).to(MyDTOWithMethods.class);
+        MyDTOWithMethods dto = converter.convert(src).target().as(MyDTO.class).to(MyDTOWithMethods.class);
         assertEquals(42, dto.pong);
     }
 
