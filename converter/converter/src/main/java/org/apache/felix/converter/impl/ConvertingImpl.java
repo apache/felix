@@ -81,7 +81,7 @@ public class ConvertingImpl implements Converting, InternalConverting {
     public ConvertingTypeSettings source() {
         return new ConvertingTypeSettings() {
             @Override
-            public Converting asJavaBean() {
+            public Converting asBean() {
                 sourceAsJavaBean = true;
                 return ConvertingImpl.this;
             }
@@ -98,7 +98,7 @@ public class ConvertingImpl implements Converting, InternalConverting {
     public ConvertingTypeSettings target() {
         return new ConvertingTypeSettings() {
             @Override
-            public Converting asJavaBean() {
+            public Converting asBean() {
                 // TODO not yet implemented
                 return ConvertingImpl.this;
             }
@@ -646,6 +646,14 @@ public class ConvertingImpl implements Converting, InternalConverting {
 
     @SuppressWarnings("rawtypes")
     private static Map createMapFromInterface(Object obj) {
+        Class intf = null;
+        for (Class i : obj.getClass().getInterfaces()) {
+            intf = i;
+            break;
+        }
+        if (intf == null)
+            throw new ConversionException("" + obj);
+
         Set<String> invokedMethods = new HashSet<>();
 
         Map result = new HashMap();
@@ -823,17 +831,13 @@ public class ConvertingImpl implements Converting, InternalConverting {
         else if (isDTOType(sourceCls))
             return createMapFromDTO(obj, converter);
         else {
-            if (treatAsJavaBean()) {
+            if (sourceAsJavaBean) {
                 Map<?,?> m = createMapFromBeanAccessors(obj, sourceCls);
                 if (m.size() > 0)
                     return m;
             }
         }
         return createMapFromInterface(obj);
-    }
-
-    private static boolean treatAsJavaBean() {
-        return false;
     }
 
     private static boolean isCopyRequiredType(Class<?> cls) {

@@ -27,7 +27,6 @@ import java.util.Map;
 
 import org.junit.After;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.osgi.util.converter.Converter;
 import org.osgi.util.converter.ConverterBuilder;
@@ -77,7 +76,7 @@ public class ConverterMapTest {
         assertSame(url, d.get(bi));
     }
 
-    @Test @Ignore("Fix JavaBean handling")
+    @Test
     public void testJavaBeanToMap() {
         MyBean mb = new MyBean();
         mb.setMe("You");
@@ -85,7 +84,7 @@ public class ConverterMapTest {
         mb.setNumbers(new int[] {3,2,1});
 
         @SuppressWarnings("rawtypes")
-        Map m = converter.convert(mb).to(Map.class);
+        Map m = converter.convert(mb).source().asBean().to(Map.class);
         assertEquals(5, m.size());
         assertEquals("You", m.get("me"));
         assertTrue((boolean) m.get("f"));
@@ -93,7 +92,7 @@ public class ConverterMapTest {
         assertArrayEquals(new int [] {3,2,1}, (int[]) m.get("numbers"));
     }
 
-    @Test @Ignore("Fix JavaBean handling")
+    @Test
     public void testJavaBeanToMapCustom() {
         SimpleDateFormat sdf = new SimpleDateFormat("yyMMddHHmmssZ");
         Date d = new Date();
@@ -106,7 +105,7 @@ public class ConverterMapTest {
         ConverterBuilder cb = new StandardConverter().newConverterBuilder();
         cb.rule(Date.class, String.class, v -> sdf.format(v), v -> sdf.parse(v));
         Converter ca = cb.build();
-        Map<String, String> m = ca.convert(mb).to(new TypeReference<Map<String, String>>(){});
+        Map<String, String> m = ca.convert(mb).source().asBean().to(new TypeReference<Map<String, String>>(){});
         assertEquals("true", m.get("enabled"));
         assertEquals(expectedDate, m.get("startDate"));
     }
