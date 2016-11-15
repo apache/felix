@@ -33,8 +33,8 @@ import org.osgi.util.converter.ConvertFunction;
 import org.osgi.util.converter.Converter;
 import org.osgi.util.converter.ConverterBuilder;
 import org.osgi.util.converter.Converting;
-import org.osgi.util.converter.Rule;
 import org.osgi.util.converter.ConvertingTypeSettings;
+import org.osgi.util.converter.Rule;
 import org.osgi.util.converter.TypeReference;
 import org.osgi.util.function.Function;
 
@@ -92,24 +92,6 @@ public class AdapterImpl implements InternalConverter {
         }
 
         @Override
-        public ConvertingTypeSettings source() {
-            return new ConvertingTypeSettings() {
-                @Override
-                public Converting asJavaBean() {
-                    // TODO Auto-generated method stub
-                    return ConvertingWrapper.this;
-                }
-
-                @Override
-                public Converting as(Class<?> type) {
-                    treatAsClass = type;
-                    del.source().as(type);
-                    return ConvertingWrapper.this;
-                }
-            };
-        }
-
-        @Override
         public Converting copy() {
             del.copy();
             return this;
@@ -144,6 +126,40 @@ public class AdapterImpl implements InternalConverter {
         @Override
         public void setConverter(Converter c) {
             del.setConverter(c);
+        }
+
+        @Override
+        public ConvertingTypeSettings source() {
+            return new ConvertingTypeSettings() {
+                @Override
+                public Converting asJavaBean() {
+                    // TODO Auto-generated method stub
+                    return ConvertingWrapper.this;
+                }
+
+                @Override
+                public Converting as(Class<?> type) {
+                    treatAsClass = type;
+                    del.source().as(type);
+                    return ConvertingWrapper.this;
+                }
+            };
+        }
+
+        @Override
+        public ConvertingTypeSettings target() {
+            return new ConvertingTypeSettings() {
+                @Override
+                public Converting asJavaBean() {
+                    return ConvertingWrapper.this;
+                }
+
+                @Override
+                public Converting as(Class<?> cls) {
+                    del.target().as(cls);
+                    return ConvertingWrapper.this;
+                }
+            };
         }
 
         @SuppressWarnings("unchecked")
@@ -205,12 +221,6 @@ public class AdapterImpl implements InternalConverter {
         @Override
         public String toString() {
             return to(String.class);
-        }
-
-        @Override
-        public Converting targetType(Class<?> cls) {
-            del.targetType(cls);
-            return this;
         }
     }
 

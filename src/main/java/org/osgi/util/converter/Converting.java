@@ -29,20 +29,6 @@ import org.osgi.annotation.versioning.ProviderType;
  */
 @ProviderType
 public interface Converting {
-    ConvertingTypeSettings source();
-
-//    /**
-//     * Convert the source object based on rules for the class being passed in.
-//     * This method can be used to disambiguate objects that would match multiple
-//     * conversion rules.
-//     *
-//     * @param type The type or class to be used as the source type for the
-//     *            conversion
-//     * @return The current {@code Converting} object so that additional calls
-//     *         can be chained.
-//     */
-//    Converting sourceType(Class< ? > type);
-
     /**
      * Always return a fully populated copy of the object, however if the object
      * is an immutable built-in scalar such as String or Long, then a copy is
@@ -65,17 +51,16 @@ public interface Converting {
     Converting defaultValue(Object defVal);
 
     /**
-     * Specify the target type to view the conversion target as. Can be used to
-     * force the converter to treat the target, specified in the
-     * {@link #to(Class)} method to be viewed as the type specified here. If
-     * specified, the class specified by the {@link #to(Class)} method will need
-     * to be assignable to this type.
-     *
-     * @param cls The class to view the target type as.
-     * @return The current {@code Converting} object so that additional calls
-     *         can be chained.
+     * Provide additional information on how to treat the source object.
+     * @return A {@link ConvertingTypeSettings} to provide the details.
      */
-    Converting targetType(Class< ? > cls);
+    ConvertingTypeSettings source();
+
+    /**
+     * Provide additional information on how to treat the target type.
+     * @return A {@link ConvertingTypeSettings} to provide the details.
+     */
+    ConvertingTypeSettings target();
 
     /**
      * Specify the target object type for the conversion as a class object.

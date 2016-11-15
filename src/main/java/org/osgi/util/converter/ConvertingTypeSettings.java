@@ -15,7 +15,26 @@
  */
 package org.osgi.util.converter;
 
+/**
+ * Interface that can be used to provide additional information on how to
+ * treat a source or target type.
+ *
+ */
 public interface ConvertingTypeSettings {
-    Converting as(Class<?> type); // change to Type?
+    /**
+     * Treat the object as the specified class. This can be used to disambiguate a type
+     * if it implements multiple interfaces or extends multiple classes.
+     * @param cls The class to treat the object as.
+     * @return The current {@code Converting} object so that additional calls
+     *         can be chained.
+     */
+    Converting as(Class<?> cls);
+
+    /**
+     * Treat the object as a JavaBean. By default objects will not be treated as JavaBeans,
+     * this has to be specified using this method.
+     * @return The current {@code Converting} object so that additional calls
+     *         can be chained.
+     */
     Converting asJavaBean();
 }
