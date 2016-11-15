@@ -45,6 +45,7 @@ import org.osgi.dto.DTO;
 import org.osgi.util.converter.ConversionException;
 import org.osgi.util.converter.Converter;
 import org.osgi.util.converter.Converting;
+import org.osgi.util.converter.ConvertingTypeSettings;
 import org.osgi.util.converter.TypeReference;
 
 public class ConvertingImpl implements Converting, InternalConverting {
@@ -60,7 +61,7 @@ public class ConvertingImpl implements Converting, InternalConverting {
 
     private volatile InternalConverter converter;
     private volatile Object object;
-    private volatile Class<?> treatAsClass;
+    private volatile Class<?> sourceAsClass;
     private volatile Object defaultValue;
     private volatile boolean hasDefault;
     private volatile Class<?> sourceClass;
@@ -69,6 +70,7 @@ public class ConvertingImpl implements Converting, InternalConverting {
     private volatile Type[] typeArguments;
     private List<Object> keys = new ArrayList<>();
     private volatile Object root;
+    private volatile boolean sourceAsJavaBean = false;
 
     ConvertingImpl(InternalConverter c, Object obj) {
         converter = c;
@@ -76,10 +78,28 @@ public class ConvertingImpl implements Converting, InternalConverting {
     }
 
     @Override
-    public Converting sourceType(Class<?> type) {
-        treatAsClass = type;
-        return this;
+    public ConvertingTypeSettings source() {
+        return new ConvertingTypeSettings() {
+
+            @Override
+            public Converting asJavaBean() {
+                sourceAsJavaBean = true;
+                return ConvertingImpl.this;
+            }
+
+            @Override
+            public Converting as(Class<?> type) {
+                sourceAsClass = type;
+                return ConvertingImpl.this;
+            }
+        };
     }
+
+//    @Override
+//    public Converting sourceType(Class<?> type) {
+//        sourceAsClass = type;
+//        return this;
+//    }
 
     @Override
     public Converting copy() {
@@ -156,7 +176,7 @@ public class ConvertingImpl implements Converting, InternalConverting {
         if (targetViewClass == null)
             targetViewClass = targetActualClass;
 
-        sourceClass = treatAsClass != null ? treatAsClass : object.getClass();
+        sourceClass = sourceAsClass != null ? sourceAsClass : object.getClass();
 
         if (!isCopyRequiredType(targetViewClass) && targetViewClass.isAssignableFrom(sourceClass)) {
                 return object;
@@ -188,7 +208,7 @@ public class ConvertingImpl implements Converting, InternalConverting {
             return res2;
         } else {
             if (defaultValue != null)
-                return converter.convert(defaultValue).sourceType(treatAsClass).targetType(targetViewClass).to(targetActualClass);
+                return converter.convert(defaultValue).source().as(sourceAsClass).targetType(targetViewClass).to(targetActualClass);
             else
                 return null;
         }
