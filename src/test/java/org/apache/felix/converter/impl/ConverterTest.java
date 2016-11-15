@@ -50,7 +50,6 @@ import org.apache.felix.converter.impl.MyDTO.Count;
 import org.apache.felix.converter.impl.MyEmbeddedDTO.Alpha;
 import org.junit.After;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.osgi.util.converter.ConversionException;
 import org.osgi.util.converter.Converter;
@@ -571,14 +570,14 @@ public class ConverterTest {
         assertNotSame(m, m2);
     }
 
-    @Test @Ignore("Fix JavaBean handling")
+    @Test
     public void testConversionPriority() {
         MyBean mb = new MyBean();
         mb.intfVal = 17;
         mb.beanVal = "Hello";
 
         assertEquals(Collections.singletonMap("value", "Hello"),
-                converter.convert(mb).to(Map.class));
+                converter.convert(mb).source().asBean().to(Map.class));
     }
 
     @Test
@@ -591,14 +590,14 @@ public class ConverterTest {
                 converter.convert(mb).source().as(MyIntf.class).to(Map.class).get("value"));
     }
 
-    @Test  @Ignore("Fix JavaBean handling")
+    @Test
     public void testConvertAs2() {
         MyBean mb = new MyBean();
         mb.intfVal = 17;
         mb.beanVal = "Hello";
 
         assertEquals(Collections.singletonMap("value", "Hello"),
-                converter.convert(mb).source().as(MyBean.class).to(Map.class));
+                converter.convert(mb).source().asBean().to(Map.class));
     }
 
     static class MyClass2 {

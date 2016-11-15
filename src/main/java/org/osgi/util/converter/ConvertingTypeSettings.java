@@ -36,5 +36,5 @@ public interface ConvertingTypeSettings {
      * @return The current {@code Converting} object so that additional calls
      *         can be chained.
      */
-    Converting asJavaBean();
+    Converting asBean();
 }

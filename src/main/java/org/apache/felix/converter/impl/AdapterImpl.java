@@ -132,8 +132,8 @@ public class AdapterImpl implements InternalConverter {
         public ConvertingTypeSettings source() {
             return new ConvertingTypeSettings() {
                 @Override
-                public Converting asJavaBean() {
-                    // TODO Auto-generated method stub
+                public Converting asBean() {
+                    del.source().asBean();
                     return ConvertingWrapper.this;
                 }
 
@@ -150,7 +150,7 @@ public class AdapterImpl implements InternalConverter {
         public ConvertingTypeSettings target() {
             return new ConvertingTypeSettings() {
                 @Override
-                public Converting asJavaBean() {
+                public Converting asBean() {
                     return ConvertingWrapper.this;
                 }
 
