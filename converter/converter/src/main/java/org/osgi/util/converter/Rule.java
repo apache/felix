@@ -27,109 +27,112 @@ import java.lang.reflect.Type;
  * @Immutable
  */
 public class Rule<F, T> {
-    private final Type              sourceType;
-    private final Type              targetType;
+	private final Type				sourceType;
+	private final Type				targetType;
 
-    @SuppressWarnings("rawtypes")
-    private final ConvertFunction  toFun;
-    @SuppressWarnings("rawtypes")
-    private final ConvertFunction  backFun;
+	@SuppressWarnings("rawtypes")
+	private final ConvertFunction	toFun;
+	@SuppressWarnings("rawtypes")
+	private final ConvertFunction	backFun;
 
-    /**
-     * Create a bidirectional rule.
-     *
-     * @param fromCls The class from which to convert. If {@link Object} is
-     *            specified then this functions as a wildcard for generic
-     *            conversions.
-     * @param toCls The class to which to convert. If {@link Object} is
-     *            specified then this functions as a wildcard for generic
-     *            conversions.
-     * @param to The conversion function for this rule.
-     * @param back The reverse conversion for this rule.
-     */
-    public Rule(Class<F> fromCls, Class<T> toCls, ConvertFunction<F,T> to,
-            ConvertFunction<T,F> back) {
-        this((Type) fromCls, (Type) toCls, to, back);
-    }
+	/**
+	 * Create a bidirectional rule.
+	 *
+	 * @param fromCls The class from which to convert. If {@link Object} is
+	 *            specified then this functions as a wildcard for generic
+	 *            conversions.
+	 * @param toCls The class to which to convert. If {@link Object} is
+	 *            specified then this functions as a wildcard for generic
+	 *            conversions.
+	 * @param to The conversion function for this rule.
+	 * @param back The reverse conversion for this rule.
+	 */
+	public Rule(Class<F> fromCls, Class<T> toCls, ConvertFunction<F,T> to,
+			ConvertFunction<T,F> back) {
+		this((Type) fromCls, (Type) toCls, to, back);
+	}
 
-    /**
-     * Create a single-direction rule.
-     *
-     * @param fromCls The class from which to convert. If {@link Object} is
-     *            specified then this functions as a wildcard for generic
-     *            conversions.
-     * @param toCls The class to which to convert. If {@link Object} is
-     *            specified then this functions as a wildcard for generic
-     *            conversions.
-     * @param to The conversion function for this rule.
-     */
-    public Rule(Class<F> fromCls, Class<T> toCls, ConvertFunction<F,T> to) {
-        this(fromCls, toCls, to, null);
-    }
+	/**
+	 * Create a single-direction rule.
+	 *
+	 * @param fromCls The class from which to convert. If {@link Object} is
+	 *            specified then this functions as a wildcard for generic
+	 *            conversions.
+	 * @param toCls The class to which to convert. If {@link Object} is
+	 *            specified then this functions as a wildcard for generic
+	 *            conversions.
+	 * @param to The conversion function for this rule.
+	 */
+	public Rule(Class<F> fromCls, Class<T> toCls, ConvertFunction<F,T> to) {
+		this(fromCls, toCls, to, null);
+	}
 
-    public Rule(TypeReference<F> fromType, TypeReference<T> toType, ConvertFunction<F,T> to, ConvertFunction<F,T> back) {
-        this(fromType.getType(), toType.getType(), to, back);
-    }
+	public Rule(TypeReference<F> fromType, TypeReference<T> toType,
+			ConvertFunction<F,T> to, ConvertFunction<F,T> back) {
+		this(fromType.getType(), toType.getType(), to, back);
+	}
 
-    public Rule(TypeReference<F> fromType, TypeReference<T> toType, ConvertFunction<F,T> to) {
-        this(fromType.getType(), toType.getType(), to, null);
-    }
+	public Rule(TypeReference<F> fromType, TypeReference<T> toType,
+			ConvertFunction<F,T> to) {
+		this(fromType.getType(), toType.getType(), to, null);
+	}
 
-    public Rule(Type fromType, Type toType,
-            @SuppressWarnings("rawtypes") ConvertFunction to, @SuppressWarnings("rawtypes") ConvertFunction back) {
-        if (fromType.equals(toType)) {
-            if (fromType.equals(Object.class)) {
-                if (back != null) {
-                    throw new IllegalStateException(
-                            "Can only register one catchall converter");
-                }
-            } else {
-                throw new IllegalStateException(
-                        "Cannot register a converter to itself");
-            }
-        }
+	public Rule(Type fromType, Type toType,
+			@SuppressWarnings("rawtypes") ConvertFunction to,
+			@SuppressWarnings("rawtypes") ConvertFunction back) {
+		if (fromType.equals(toType)) {
+			if (fromType.equals(Object.class)) {
+				if (back != null) {
+					throw new IllegalStateException(
+							"Can only register one catchall converter");
+				}
+			} else {
+				throw new IllegalStateException(
+						"Cannot register a converter to itself");
+			}
+		}
 
-        sourceType = fromType;
-        targetType = toType;
-        toFun = to;
-        backFun = back;
-    }
+		sourceType = fromType;
+		targetType = toType;
+		toFun = to;
+		backFun = back;
+	}
 
-    /**
-     * Accessor for the class to convert from.
-     *
-     * @return The class to convert from.
-     */
-    public Type getSourceType() {
-        return sourceType;
-    }
+	/**
+	 * Accessor for the class to convert from.
+	 *
+	 * @return The class to convert from.
+	 */
+	public Type getSourceType() {
+		return sourceType;
+	}
 
-    /**
-     * Accessor for the class to convert to.
-     *
-     * @return The class to convert to.
-     */
-    public Type getTargetType() {
-        return targetType;
-    }
+	/**
+	 * Accessor for the class to convert to.
+	 *
+	 * @return The class to convert to.
+	 */
+	public Type getTargetType() {
+		return targetType;
+	}
 
-    /**
-     * Obtain the conversion function.
-     *
-     * @return The conversion function.
-     */
-    @SuppressWarnings("unchecked")
-    public ConvertFunction<F,T> getToFunction() {
-        return toFun;
-    }
+	/**
+	 * Obtain the conversion function.
+	 *
+	 * @return The conversion function.
+	 */
+	@SuppressWarnings("unchecked")
+	public ConvertFunction<F,T> getToFunction() {
+		return toFun;
+	}
 
-    /**
-     * Obtain the reverse conversion function.
-     *
-     * @return The reverse conversion function.
-     */
-    @SuppressWarnings("unchecked")
-    public ConvertFunction<T,F> getBackFunction() {
-        return backFun;
-    }
+	/**
+	 * Obtain the reverse conversion function.
+	 *
+	 * @return The reverse conversion function.
+	 */
+	@SuppressWarnings("unchecked")
+	public ConvertFunction<T,F> getBackFunction() {
+		return backFun;
+	}
 }

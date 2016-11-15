@@ -37,13 +37,16 @@ public interface ConvertFunction<F, T> {
 	 *            {@code null} as the convert function will not be invoked for
 	 *            null values.
 	 * @param targetType The target type.
-	 * @param key If the object was part of a map-like structure, the associated
-	 *            key is provided. Otherwise {@code null}.
+	 * @param root The root object, if this obj was embedded in a root object.
+	 *            Otherwise {@code null}.
+	 * @param keyPath If the object is embedded in a root object, the path of
+	 *            keys that reach this object. Otherwise {@code null}.
 	 * @return The conversion result or {@code null} to indicate that the
 	 *         convert function cannot handle this conversion. In this case the
 	 *         next matching rule or adapter will be given a opportunity to
 	 *         convert.
 	 * @throws Exception
 	 */
-	T convert(F obj, Type targetType, Object root, Object[] keyPath) throws Exception;
+	T convert(F obj, Type targetType, Object root, Object[] keyPath)
+			throws Exception;
 }
