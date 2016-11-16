@@ -125,10 +125,11 @@
             </Private-Package>
             <!-- The org.osgi.service.repository;resolution:=mandatory seems strange below, but otherwise the maven-bundle-plugin
                  will make that import optional, which we don't want... -->
+            <!-- The version range on org.osgi.service.repository is required as we are a provider of the 1.0.0 API. -->
             <Import-Package>
                 !javax.xml.parsers,
                 !org.xml.sax,
-                org.osgi.service.repository;resolution:=mandatory,
+                org.osgi.service.repository;resolution:=mandatory;version="[1.0,1.1)",
                 org.osgi.service.log;resolution:=optional,
                 org.osgi.service.obr;resolution:=optional,
                 javax.xml.stream;resolution:=optional,
