@@ -308,7 +308,7 @@ public class ConverterTest {
     }
 
     @Test
-    public void testCustomStringArrayConverstion() {
+    public void testCustomStringArrayConversion() {
         ConverterBuilder cb = converter.newConverterBuilder();
         cb.rule(String[].class, String.class,
                 v -> Stream.of(v).collect(Collectors.joining(",")),
@@ -318,6 +318,20 @@ public class ConverterTest {
         String[] sa = {"A", "B"};
         assertEquals("A,B", adapted.convert(sa).to(String.class));
         assertArrayEquals(sa, adapted.convert("A,B").to(String[].class));
+    }
+
+    @Test
+    public void testCustomIntArrayConversion() {
+        ConverterBuilder cb = converter.newConverterBuilder();
+        cb.rule(int[].class, String.class,
+                v -> Arrays.stream(v).mapToObj(Integer::toString).collect(Collectors.joining(",")),
+                v -> Arrays.stream(v.split(",")).mapToInt(Integer::parseInt).toArray());
+        Converter adapted = cb.build();
+
+        int[] ia = {1, 2};
+        assertEquals("1,2", adapted.convert(ia).to(String.class));
+        assertArrayEquals(ia, adapted.convert("1,2").to(int[].class));
+
     }
 
     @Test
