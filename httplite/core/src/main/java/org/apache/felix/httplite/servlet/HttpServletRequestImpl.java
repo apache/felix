@@ -61,6 +61,12 @@ import org.apache.felix.httplite.osgi.ServiceRegistrationResolver;
  **/
 public class HttpServletRequestImpl implements HttpServletRequest
 {
+
+    private static final SimpleDateFormat formatsTemplate[] = {
+            new SimpleDateFormat(HttpConstants.HTTP_DATE_FORMAT, Locale.US),
+            new SimpleDateFormat("EEEEEE, dd-MMM-yy HH:mm:ss zzz", Locale.US),
+            new SimpleDateFormat("EEE MMMM d HH:mm:ss yyyy", Locale.US)
+    };
     /**
      * HTTP Method
      */
@@ -819,16 +825,17 @@ public class HttpServletRequestImpl implements HttpServletRequest
             return -1;
         }
 
-        try
-        {
-            SimpleDateFormat sdf = new SimpleDateFormat(HttpConstants.HTTP_DATE_FORMAT);
-            sdf.setTimeZone(TimeZone.getTimeZone(HttpConstants.HTTP_TIMEZONE));
-            return sdf.parse( headerValue ).getTime();
+        for (int x = 0; x < formatsTemplate.length; x++) {
+        SimpleDateFormat sdf = formatsTemplate[x];
+            try {
+                sdf.setTimeZone(TimeZone.getTimeZone(HttpConstants.HTTP_TIMEZONE));
+                return sdf.parse(headerValue).getTime();
+            } catch (ParseException e) {
+                //
+            }
         }
-        catch ( ParseException e )
-        {
-            throw new IllegalArgumentException( "Unable to convert to date: " + headerValue );
-        }
+        // if none of them work.
+        throw new IllegalArgumentException("Unable to convert to date: " + headerValue);
     }
 
 
