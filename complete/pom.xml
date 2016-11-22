@@ -19,21 +19,19 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
 	<parent>
 	    <groupId>org.apache.felix</groupId>
-	    <artifactId>felix-parent</artifactId>
-	    <version>2.1</version>
-	    <relativePath>../../pom/pom.xml</relativePath>
+	    <artifactId>org.apache.felix.httplite.reactor</artifactId>
+	    <version>0.1.5-SNAPSHOT</version>
  	</parent>
 	<modelVersion>4.0.0</modelVersion>
 	<packaging>bundle</packaging>
 	<name>Apache Felix Lightweight HTTP Service Complete</name>
 	<description>A minimal HTTP Service implementation, complete bundle.</description>
-	<version>0.1.5-SNAPSHOT</version>
 	<artifactId>org.apache.felix.httplite.complete</artifactId>
 	<dependencies>		
 		<dependency>
 			<groupId>org.apache.felix</groupId>
 			<artifactId>org.apache.felix.httplite.core</artifactId>
-			<version>0.1.5-SNAPSHOT</version>
+			<version>${project.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>org.osgi</groupId>
@@ -97,10 +95,5 @@
 			</plugin>
 		</plugins>
 	</build>
-	<scm>
-		<connection>scm:svn:http://svn.apache.org/repos/asf/felix/trunk/httplite/complete</connection>
-		<developerConnection>scm:svn:https://svn.apache.org/repos/asf/felix/trunk/httplite/complete</developerConnection>
-		<url>http://svn.apache.org/repos/asf/felix/trunk/httplite/complete</url>
-	</scm>  
-	<url>http://felix.apache.org/site/apache-felix-lightweight-http-service.html</url>
+
 </project>
