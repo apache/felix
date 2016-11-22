@@ -832,6 +832,8 @@ public class HttpServletRequestImpl implements HttpServletRequest
                 return sdf.parse(headerValue).getTime();
             } catch (ParseException e) {
                 //
+            } catch (NumberFormatException nfe) {
+                //
             }
         }
         // if none of them work.
