@@ -73,4 +73,9 @@
         </bean>
     </service>
 
+    <bean id="myBean" class="p2.Foo"/>
+    <service id="myService" ref="myBean" interface="beanRef.Foo">
+    </service>
+
+
 </blueprint>
