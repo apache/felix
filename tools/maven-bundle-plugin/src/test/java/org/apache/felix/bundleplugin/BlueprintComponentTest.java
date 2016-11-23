@@ -131,9 +131,17 @@ public class BlueprintComponentTest extends AbstractMojoTestCase
         Builder builder = plugin.buildOSGiBundle( project, dependencyGraph, instructions, props, plugin.getClasspath( project, dependencyGraph ) );
 
         Manifest manifest = builder.getJar().getManifest();
-        String expSvc = manifest.getMainAttributes().getValue( Constants.EXPORT_SERVICE );
         String impSvc = manifest.getMainAttributes().getValue( Constants.IMPORT_SERVICE );
-        assertNotNull( expSvc );
+        if ("service".equals(mode)) {
+            String expSvc = manifest.getMainAttributes().getValue( Constants.EXPORT_SERVICE );
+            assertNotNull( expSvc );
+            assertTrue( expSvc.contains("beanRef.Foo;osgi.service.blueprint.compname=myBean") );
+        } else {
+            String prvCap = manifest.getMainAttributes().getValue( Constants.PROVIDE_CAPABILITY );
+            assertNotNull( prvCap );
+            assertTrue( prvCap.contains("osgi.service;effective:=active;objectClass=\"beanRef.Foo\";osgi.service.blueprint.compname=myBean") );
+        }
+
         assertNotNull( impSvc );
 
         String impPkg = manifest.getMainAttributes().getValue( Constants.IMPORT_PACKAGE );
