@@ -104,6 +104,13 @@
                     </xsl:when>
                 </xsl:choose>
             </xsl:for-each>
+            <xsl:if test="not(.//bp:entry[ @key='osgi.service.blueprint.compname'])">
+                <xsl:choose>
+                    <xsl:when test="@ref">
+                        <xsl:value-of select="concat(';osgi.service.blueprint.compname=', @ref)" />
+                    </xsl:when>
+                </xsl:choose>
+            </xsl:if>
             <xsl:text>
             </xsl:text>
         </xsl:for-each>

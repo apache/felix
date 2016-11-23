@@ -134,6 +134,11 @@ public class BlueprintComponentTest extends AbstractMojoTestCase
         String expSvc = manifest.getMainAttributes().getValue( Constants.EXPORT_SERVICE );
         String impSvc = manifest.getMainAttributes().getValue( Constants.IMPORT_SERVICE );
         assertNotNull( expSvc );
+        if(mode.equals("service")){
+            String beanRef = expSvc.substring(expSvc.indexOf("beanRef"));
+            beanRef = beanRef.substring(0, beanRef.indexOf(','));
+            assertEquals(beanRef, "beanRef.Foo;osgi.service.blueprint.compname=myBean");
+        }
         assertNotNull( impSvc );
 
         String impPkg = manifest.getMainAttributes().getValue( Constants.IMPORT_PACKAGE );
