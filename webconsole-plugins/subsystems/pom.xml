@@ -30,7 +30,7 @@
     <packaging>bundle</packaging>
     <version>0.2.0-SNAPSHOT</version>
 
-    <name>Apache Felix Web Console Subsystes Plugin</name>
+    <name>Apache Felix Web Console Subsystems Plugin</name>
     <description>
         This is a plugin for the Apache Felix OSGi web console to integrate with OSGi Subsystems.
     </description>
