@@ -119,9 +119,9 @@ public class HttpServletRequestImpl implements HttpServletRequest
 
 
     /**
-     * @param socket Socket assocated with request
-     * @param serviceRegistrationResolver 
-     * @param logger
+     * @param socket Socket associated with request
+     * @param serviceRegistrationResolver resolver for services. 
+     * @param logger the logger
      */
     public HttpServletRequestImpl( final Socket socket, final ServiceRegistrationResolver serviceRegistrationResolver,
         final Logger logger )
