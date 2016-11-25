@@ -63,17 +63,16 @@ public class HttpServiceImpl implements HttpService, ServiceRegistrationResolver
     private final Bundle m_bundle;
 
     /**
-     * @param server
-     *            Map of <String, String> of configuration properties for the
-     *            HTTP server.
      * @param bundle
      *            Bundle that registered with the service
+     * @param server
+     *            Map of &lt;String, String&gt; of configuration properties for the
+     *            HTTP server.
      * @param logger
      *            instance of Logger
      * @param servletMap Map of servlet instances.
-     * @throws IOException
      */
-    public HttpServiceImpl(final Bundle bundle, final Server server, final Logger logger, Map servletMap) throws IOException
+    public HttpServiceImpl(final Bundle bundle, final Server server, final Logger logger, Map servletMap)
     {
         this.m_bundle = bundle;
         this.m_logger = logger;

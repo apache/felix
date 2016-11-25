@@ -437,7 +437,7 @@ public class HttpServletResponseImpl implements HttpServletResponse
 
     /**
      * Can be 'close' or 'Keep-Alive'.
-     * @param type
+     * @param type the connection type
      */
     public void setConnectionType(final String type)
     {

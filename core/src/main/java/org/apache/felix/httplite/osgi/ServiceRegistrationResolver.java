@@ -50,7 +50,6 @@ public interface ServiceRegistrationResolver
     /**
      * Given a HttpRequest and an output stream, return a HttpServletResponseImpl.
      * 
-     * @param request HttpRequest
      * @param output output stream associated with socket connection.
      * @return A HttpServletResponseImpl instance
      */
