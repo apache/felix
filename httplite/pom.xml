@@ -27,7 +27,7 @@
 
  	<name>Apache Felix Lightweight HTTP Service Reactor</name>
 	<artifactId>org.apache.felix.httplite.reactor</artifactId>
-	<version>0.1.5</version>
+	<version>0.1.6-SNAPSHOT</version>
 	<packaging>pom</packaging>	
 
 	<modules>
@@ -35,9 +35,9 @@
 		<module>complete</module>
 	</modules>
 	<scm>
-		<connection>scm:svn:http://svn.apache.org/repos/asf/felix/releases/org.apache.felix.httplite.reactor-0.1.5</connection>
-		<developerConnection>scm:svn:https://svn.apache.org/repos/asf/felix/releases/org.apache.felix.httplite.reactor-0.1.5</developerConnection>
-		<url>http://svn.apache.org/repos/asf/felix/releases/org.apache.felix.httplite.reactor-0.1.5</url>
+		<connection>scm:svn:http://svn.apache.org/repos/asf/felix/trunk/httplite</connection>
+		<developerConnection>scm:svn:https://svn.apache.org/repos/asf/felix/trunk/httplite</developerConnection>
+		<url>http://svn.apache.org/repos/asf/felix/trunk/httplite</url>
 	</scm>
 	<url>http://felix.apache.org/site/apache-felix-lightweight-http-service.html</url>
 </project>
