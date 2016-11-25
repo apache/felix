@@ -1081,8 +1081,15 @@ public class HttpServletRequestImpl implements HttpServletRequest
 
             if ( nva.length == 2 )
             {
-                //Deprecated method decode() intentionally used for Java 1.3 compatibility.
-                params.put( URLDecoder.decode( nva[0].trim() ), nva[1].trim() );
+		// Also decode value, not just name.
+		boolean mustDecodeValue = nva[1].indexOf('+') >= 0 || nva[1].indexOf('%') >= 0;
+		//Deprecated method decode() intentionally used for Java 1.3 compatibility.
+                //Tomcat only does this if it sees some evidence of encoding.
+                String val = nva[1].trim();
+                if (mustDecodeValue) {
+                    val = URLDecoder.decode(val);
+                }
+                params.put( URLDecoder.decode( nva[0].trim() ), val );
             }
         }
     }
