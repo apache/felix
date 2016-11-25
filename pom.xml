@@ -31,6 +31,13 @@
     </description>
     <version>1.2.0-SNAPSHOT</version>
     <artifactId>org.apache.felix.shell.remote</artifactId>
+
+  <scm>
+      <connection>scm:svn:http://svn.apache.org/repos/asf/felix/trunk/shell.remote</connection>
+      <developerConnection>scm:svn:https://svn.apache.org/repos/asf/felix/trunk/shell.remote</developerConnection>
+      <url>http://svn.apache.org/repos/asf/felix/shell.remote</url>
+  </scm>
+
     <dependencies>
         <dependency>
             <groupId>org.osgi</groupId>
