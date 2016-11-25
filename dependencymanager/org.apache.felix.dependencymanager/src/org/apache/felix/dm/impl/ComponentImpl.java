@@ -1161,15 +1161,12 @@ public class ComponentImpl implements Component, ComponentContext, ComponentDecl
      * Then handleEvent calls this method when a dependency service is being removed.
      */
     private void handleRemoved(DependencyContext dc, Event e) {
-    	Set<Event> dependencyEvents = m_dependencyEvents.get(dc);
     	try {
     		if (! m_isStarted) {
-    			if (dependencyEvents != null) {
-    				dependencyEvents.remove(e);
-    			}
     			return;
     		}
     		// Check if the dependency is still available.
+    		Set<Event> dependencyEvents = m_dependencyEvents.get(dc);
     		int size = dependencyEvents.size();
     		if (dependencyEvents.contains(e)) {
     			size--; // the dependency is currently registered and is about to be removed.
@@ -1352,7 +1349,9 @@ public class ComponentImpl implements Component, ComponentContext, ComponentDecl
     private void unregisterService() {
         if (m_serviceName != null && m_registration != null) {
             try {
-            	m_registration.unregister();
+            	if (m_bundle != null && (m_bundle.getState() == Bundle.STARTING || m_bundle.getState() == Bundle.ACTIVE || m_bundle.getState() == Bundle.STOPPING)) {
+            		m_registration.unregister();
+            	}
             } catch (IllegalStateException e) { /* Should we really log this ? */}
             autoConfigureImplementation(ServiceRegistration.class, NULL_REGISTRATION);
             m_registration = null;
