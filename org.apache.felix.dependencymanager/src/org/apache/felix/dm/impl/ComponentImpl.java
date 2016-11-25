@@ -1009,11 +1009,8 @@ public class ComponentImpl implements Component, ComponentContext, ComponentDecl
             instantiateComponent();
             invokeAutoConfigDependencies();
             invokeAddRequiredDependencies();
-			ComponentState stateBeforeCallingInit = m_state;
             invoke(m_callbackInit); 
-	        if (stateBeforeCallingInit == m_state) {
-	            notifyListeners(newState); // init did not change current state, we can notify about this new state
-	        }
+            notifyListeners(newState);
             return true;
         }
         if (oldState == ComponentState.INSTANTIATED_AND_WAITING_FOR_REQUIRED && newState == ComponentState.TRACKING_OPTIONAL) {
@@ -1031,7 +1028,7 @@ public class ComponentImpl implements Component, ComponentContext, ComponentDecl
         	unregisterService();
             invokeRemoveOptionalDependencies();
             invokeStop();
-            invokeRemoveInstanceBoundDependencies();
+            invokeRemoveRequiredInstanceBoundDependencies();
             notifyListeners(newState);
             notifyListeners(STOPPED);
             return true;
@@ -1116,9 +1113,7 @@ public class ComponentImpl implements Component, ComponentContext, ComponentDecl
             break;
         case INSTANTIATED_AND_WAITING_FOR_REQUIRED:
             if (!dc.isInstanceBound()) {
-                if (dc.isRequired()) {
-                    invokeCallbackSafe(dc, EventType.ADDED, e);
-                }
+            	invokeCallback(dc, EventType.ADDED, e);
                 updateInstance(dc, e, false, true);
             } else {
                 if (dc.isStarted() && dc.isRequired()) {
@@ -1127,7 +1122,7 @@ public class ComponentImpl implements Component, ComponentContext, ComponentDecl
             }
             break;
         case TRACKING_OPTIONAL:
-            invokeCallbackSafe(dc, EventType.ADDED, e);
+            invokeCallback(dc, EventType.ADDED, e);
             updateInstance(dc, e, false, true);
             break;
         default:
@@ -1147,13 +1142,13 @@ public class ComponentImpl implements Component, ComponentContext, ComponentDecl
                 
         switch (m_state) {
         case TRACKING_OPTIONAL:
-            invokeCallbackSafe(dc, EventType.CHANGED, e);
+            invokeCallback(dc, EventType.CHANGED, e);
             updateInstance(dc, e, true, false);
             break;
 
         case INSTANTIATED_AND_WAITING_FOR_REQUIRED:
             if (!dc.isInstanceBound()) {
-                invokeCallbackSafe(dc, EventType.CHANGED, e);
+            	invokeCallback(dc, EventType.CHANGED, e);
                 updateInstance(dc, e, true, false);
             }
             break;
@@ -1162,7 +1157,7 @@ public class ComponentImpl implements Component, ComponentContext, ComponentDecl
         }
     }
     
-    /**
+	/**
      * Then handleEvent calls this method when a dependency service is being removed.
      */
     private void handleRemoved(DependencyContext dc, Event e) {
@@ -1170,7 +1165,6 @@ public class ComponentImpl implements Component, ComponentContext, ComponentDecl
     		if (! m_isStarted) {
     			return;
     		}
-    		
     		// Check if the dependency is still available.
     		Set<Event> dependencyEvents = m_dependencyEvents.get(dc);
     		int size = dependencyEvents.size();
@@ -1193,15 +1187,13 @@ public class ComponentImpl implements Component, ComponentContext, ComponentDecl
     		// Depending on the state, we possible have to invoke the callbacks and update the component instance.        
 			switch (m_state) {
 			case INSTANTIATED_AND_WAITING_FOR_REQUIRED:
-				if (!dc.isInstanceBound()) {
-					if (dc.isRequired()) {
-						invokeCallbackSafe(dc, EventType.REMOVED, e);
-					}
+				if (!dc.isInstanceBound()) { 
+					invokeCallback(dc, EventType.REMOVED, e);
 					updateInstance(dc, e, false, false);
 				}
 				break;
 			case TRACKING_OPTIONAL:
-				invokeCallbackSafe(dc, EventType.REMOVED, e);
+				invokeCallback(dc, EventType.REMOVED, e);
 				updateInstance(dc, e, false, false);
 				break;
 			default:
@@ -1238,7 +1230,7 @@ public class ComponentImpl implements Component, ComponentContext, ComponentDecl
         default:
         }
     }
-    	
+        	
     private boolean allRequiredAvailable() {
         boolean available = true;
         for (DependencyContext d : m_dependencies) {
@@ -1403,7 +1395,7 @@ public class ComponentImpl implements Component, ComponentContext, ComponentDecl
 		for (DependencyContext d : m_dependencies) {
 			if (d.isRequired() && !d.isInstanceBound()) {
 			    for (Event e : m_dependencyEvents.get(d)) {
-			        invokeCallbackSafe(d, EventType.ADDED, e);
+			        invokeCallback(d, EventType.ADDED, e);
 			    }
 			}
 		}
@@ -1429,7 +1421,7 @@ public class ComponentImpl implements Component, ComponentContext, ComponentDecl
 		for (DependencyContext d : m_dependencies) {
 			if (d.isRequired() && d.isInstanceBound()) {
 	             for (Event e : m_dependencyEvents.get(d)) {
-	                 invokeCallbackSafe(d, EventType.ADDED, e);
+	                 invokeCallback(d, EventType.ADDED, e);
 	             }
 			}
 		}
@@ -1439,7 +1431,7 @@ public class ComponentImpl implements Component, ComponentContext, ComponentDecl
         for (DependencyContext d : m_dependencies) {
             if (! d.isRequired()) {
                 for (Event e : m_dependencyEvents.get(d)) {
-                    invokeCallbackSafe(d, EventType.ADDED, e);
+                    invokeCallback(d, EventType.ADDED, e);
                 }
             }
         }
@@ -1449,7 +1441,7 @@ public class ComponentImpl implements Component, ComponentContext, ComponentDecl
 		for (DependencyContext d : m_dependencies) {
 			if (!d.isInstanceBound() && d.isRequired()) {
                 for (Event e : m_dependencyEvents.get(d)) {
-                    invokeCallbackSafe(d, EventType.REMOVED, e);
+                    invokeCallback(d, EventType.REMOVED, e);
                 }
 			}
 		}
@@ -1459,17 +1451,17 @@ public class ComponentImpl implements Component, ComponentContext, ComponentDecl
         for (DependencyContext d : m_dependencies) {
             if (! d.isRequired()) {
                 for (Event e : m_dependencyEvents.get(d)) {
-                    invokeCallbackSafe(d, EventType.REMOVED, e);
+                    invokeCallback(d, EventType.REMOVED, e);
                 }
             }
         }
     }
 
-	private void invokeRemoveInstanceBoundDependencies() {
+	private void invokeRemoveRequiredInstanceBoundDependencies() {
 		for (DependencyContext d : m_dependencies) {
-			if (d.isInstanceBound()) {
+			if (d.isInstanceBound() && d.isRequired()) {
                 for (Event e : m_dependencyEvents.get(d)) {
-                    invokeCallbackSafe(d, EventType.REMOVED, e);
+                    invokeCallback(d, EventType.REMOVED, e);
                 }
 			}
 		}
@@ -1480,10 +1472,12 @@ public class ComponentImpl implements Component, ComponentContext, ComponentDecl
 	 * It also ensures that if the dependency callback is optional, then we only
 	 * invoke the bind method if the component start callback has already been called. 
 	 */
-	private void invokeCallbackSafe(DependencyContext dc, EventType type, Event event) {
+	private void invokeCallback(DependencyContext dc, EventType type, Event event) {
 		if (! dc.isRequired() && ! m_startCalled) {
 			return;
 		}
+		
+		// First, check if the callback has not already been called (see FELIX-4913)
 		if (m_invokeCallbackCache.put(event, event) == null) {
 		    // FELIX-5155: we must not invoke callbacks on our special internal components (adapters/aspects) if the dependency is not the first one, or 
 		    // if the internal component is a Factory Pid Adapter.
