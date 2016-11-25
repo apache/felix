@@ -32,7 +32,7 @@ import org.junit.Assert;
  * test checks if the component removes from its internal datastructure the dependencies
  * which are unbound while the component is being removed.
  */
-public class FELI5428_CleanupDependenciesWhenComponentIsStopped extends TestBase {
+public class FELIX5428_CleanupDependenciesWhenComponentIsStopped extends TestBase {
 
 	final Ensure m_ensure = new Ensure();
 	
