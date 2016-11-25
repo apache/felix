@@ -1162,11 +1162,17 @@ public class ComponentImpl implements Component, ComponentContext, ComponentDecl
      */
     private void handleRemoved(DependencyContext dc, Event e) {
     	try {
+    		Set<Event> dependencyEvents = m_dependencyEvents.get(dc);
     		if (! m_isStarted) {
+    			if (dependencyEvents != null) {
+    				// Cleanup the dependency events, in case the component will be restarted later.
+    				// (else when the component is restarted, the removed dependencies would then be re-injected !)
+    				dependencyEvents.remove(e);
+    			}
     			return;
     		}
+    		
     		// Check if the dependency is still available.
-    		Set<Event> dependencyEvents = m_dependencyEvents.get(dc);
     		int size = dependencyEvents.size();
     		if (dependencyEvents.contains(e)) {
     			size--; // the dependency is currently registered and is about to be removed.
