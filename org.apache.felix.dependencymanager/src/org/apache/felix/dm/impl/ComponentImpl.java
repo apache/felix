@@ -1219,13 +1219,11 @@ public class ComponentImpl implements Component, ComponentContext, ComponentDecl
         case INSTANTIATED_AND_WAITING_FOR_REQUIRED:
             // Only swap *non* instance-bound dependencies
             if (!dc.isInstanceBound()) {
-                if (dc.isRequired()) {
-                    dc.invokeCallback(EventType.SWAPPED, oldEvent, newEvent);
-                }
+            	invokeSwapCallback(dc, oldEvent, newEvent);
             }
             break;
         case TRACKING_OPTIONAL:
-            dc.invokeCallback(EventType.SWAPPED, oldEvent, newEvent);
+        	invokeSwapCallback(dc, oldEvent, newEvent);
             break;
         default:
         }
@@ -1491,6 +1489,17 @@ public class ComponentImpl implements Component, ComponentContext, ComponentDecl
 		    }
 			dc.invokeCallback(type, event);
 		}		
+	}
+	
+	/**
+	 * Invokes a swap callback, except if the dependency is optional and the component is 
+	 * not started (optional dependencies are always injected while the component is started). 
+	 */
+	private void invokeSwapCallback(DependencyContext dc, Event oldEvent, Event newEvent) {
+		if (! dc.isRequired() && ! m_startCalled) {
+			return;
+		}
+        dc.invokeCallback(EventType.SWAPPED, oldEvent, newEvent);
 	}
 	
 	/**
