@@ -75,9 +75,11 @@ public class FELIX5401_OverrideDefaultListConfigTypeWithEmptyMap extends TestBas
     
     public class MyComponent {
         void updated(MyConfig cnf) {
-        	Map<String, String> map = cnf.getMap();
-        	Assert.assertEquals(0, map.size()); // the actual configuration contains "map={}" and default "map={foo=bar}" must not be returned
-        	m_ensure.step(2);
+        	if (cnf != null) {
+        		Map<String, String> map = cnf.getMap();
+        		Assert.assertEquals(0, map.size()); // the actual configuration contains "map={}" and default "map={foo=bar}" must not be returned
+        		m_ensure.step(2);
+        	}
         }
     }
 }
