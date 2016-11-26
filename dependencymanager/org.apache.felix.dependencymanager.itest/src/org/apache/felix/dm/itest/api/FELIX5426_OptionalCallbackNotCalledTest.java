@@ -34,14 +34,21 @@ import org.junit.Assert;
 public class FELIX5426_OptionalCallbackNotCalledTest extends TestBase {
 
 	final Ensure m_ensure = new Ensure();
-	
+	final Ensure.Steps m_bookSteps = new Ensure.Steps(3, 5, 8, 10);
+	final Ensure.Steps m_bookStoreSteps = new Ensure.Steps(2, 4, 6, 7, 9, 11);
+
 	public void testCleanupDependenciesDuringComponentRemove() {
 		DependencyManager m = getDM();
+		
+		Component owner = m.createComponent()
+				.setImplementation(new Owner())
+				.setInterface(Owner.class.getName(), null);
 		
 		BookStore store = new BookStore();
 		Component bookStore = m.createComponent()
 				.setImplementation(store).setInterface(BookStore.class.getName(), null)
-				.add(m.createServiceDependency().setService(Book.class).setCallbacks("added", "removed").setRequired(false));
+				.add(m.createServiceDependency().setService(Book.class).setCallbacks("added", "removed").setRequired(false))
+				.add(m.createServiceDependency().setService(Owner.class).setRequired(true).setCallbacks("added", "removed"));						
 
 		Component book1 = m.createComponent()
 				.setImplementation(new Book()).setInterface(Book.class.getName(), null)
@@ -51,35 +58,67 @@ public class FELIX5426_OptionalCallbackNotCalledTest extends TestBase {
 				.setImplementation(new Book()).setInterface(Book.class.getName(), null)
 				.add(m.createServiceDependency().setService(BookStore.class).setRequired(true));		
 		
+		m.add(owner);
 		m.add(bookStore);
 		m.add(book1);
 		m.add(book2);
 		
-		m.remove(bookStore);		
+		m.remove(owner);		
+		m_ensure.waitForStep(11, 5000);
 		Assert.assertEquals(0, store.getBooksCount());
 	}
 		
+	class Owner {
+		void start() {
+			m_ensure.step(1);
+		}
+	}
+
 	class BookStore {
 		final List<Book> m_books = new ArrayList<>();
 		
-		private void added(Book book) { // injected, optional
+		void added(Owner owner) {
+			System.out.println("BookStore.added(" + owner + ")");
+			m_ensure.steps(m_bookStoreSteps); // step 2
+		}
+		
+		void removed(Owner owner) {
+		}
+
+		void added(Book book) { // injected, optional
 			m_books.add(book);
+			System.out.println("BookStore.added(" + book + ")");
+			m_ensure.steps(m_bookStoreSteps); // steps 4, 6
 		}
 		
-		private void removed(Book book)  {
+		void removed(Book book)  {
 			m_books.remove(book);
+			System.out.println("BookStore.remove(" + book + ")");
+			m_ensure.steps(m_bookStoreSteps); // steps 7, 9
+		}		
+		
+		int getBooksCount() {
+			return m_books.size();
 		}
 		
-		public int getBooksCount() {
-			return m_books.size();
+		void stop() {
+			System.out.println("BookStore.stop");
+			m_ensure.steps(m_bookStoreSteps); // step 11
 		}
 	}
 	
 	class Book {
-		private BookStore m_shop; // injected, required
+		BookStore m_shop; // injected, required
 		
 		public void start() {
 			Assert.assertNotNull(m_shop);
+			System.out.println("Book.start");
+			m_ensure.steps(m_bookSteps); // steps 3, 5
+		}
+		
+		public void stop() {
+			System.out.println("Book.stop");
+			m_ensure.steps(m_bookSteps); // steps 8, 10
 		}
 	}
 
