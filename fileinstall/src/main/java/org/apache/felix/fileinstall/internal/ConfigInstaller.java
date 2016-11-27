@@ -121,62 +121,51 @@ public class ConfigInstaller implements ArtifactInstaller, ConfigurationListener
 
         if (configurationEvent.getType() == ConfigurationEvent.CM_UPDATED)
         {
-            try
-            {
+            try {
                 Configuration config = getConfigurationAdmin().getConfiguration(
-                                            configurationEvent.getPid(),
-                                            configurationEvent.getFactoryPid());
+                        configurationEvent.getPid(),
+                        configurationEvent.getFactoryPid());
                 Dictionary dict = config.getProperties();
-                String fileName = (String) dict.get( DirectoryWatcher.FILENAME );
-                File file = fileName != null ? fromConfigKey(fileName) : null;
-                if( file != null && file.isFile()   ) {
-                    if( fileName.endsWith( ".cfg" ) )
-                    {
-                        org.apache.felix.utils.properties.Properties props = new org.apache.felix.utils.properties.Properties( file, context );
-                        for( Enumeration e  = dict.keys(); e.hasMoreElements(); )
-                        {
-                            String key = e.nextElement().toString();
-                            if( !Constants.SERVICE_PID.equals(key)
-                                    && !ConfigurationAdmin.SERVICE_FACTORYPID.equals(key)
-                                    && !DirectoryWatcher.FILENAME.equals(key) )
-                            {
-                                String val = dict.get( key ).toString();
-                                props.put( key, val );
+                if (dict != null) {
+                    String fileName = (String) dict.get(DirectoryWatcher.FILENAME);
+                    File file = fileName != null ? fromConfigKey(fileName) : null;
+                    if (file != null && file.isFile()) {
+                        if (fileName.endsWith(".cfg")) {
+                            org.apache.felix.utils.properties.Properties props = new org.apache.felix.utils.properties.Properties(file, context);
+                            for (Enumeration e = dict.keys(); e.hasMoreElements(); ) {
+                                String key = e.nextElement().toString();
+                                if (!Constants.SERVICE_PID.equals(key)
+                                        && !ConfigurationAdmin.SERVICE_FACTORYPID.equals(key)
+                                        && !DirectoryWatcher.FILENAME.equals(key)) {
+                                    String val = dict.get(key).toString();
+                                    props.put(key, val);
+                                }
+                            }
+                            props.save();
+                        } else if (fileName.endsWith(".config")) {
+                            OutputStream fos = new FileOutputStream(file);
+                            Properties props = new Properties();
+                            for (Enumeration e = dict.keys(); e.hasMoreElements(); ) {
+                                String key = e.nextElement().toString();
+                                if (!Constants.SERVICE_PID.equals(key)
+                                        && !ConfigurationAdmin.SERVICE_FACTORYPID.equals(key)
+                                        && !DirectoryWatcher.FILENAME.equals(key)) {
+                                    props.put(key, dict.get(key));
+                                }
+                            }
+                            try {
+                                ConfigurationHandler.write(fos, props);
+                            } finally {
+                                fos.close();
                             }
                         }
-                        props.save();
+                        // we're just writing out what's already loaded into ConfigAdmin, so
+                        // update file checksum since lastModified gets updated when writing
+                        fileInstall.updateChecksum(file);
                     }
-                    else if( fileName.endsWith( ".config" ) )
-                    {
-                        OutputStream fos = new FileOutputStream( file );
-                        Properties props = new Properties();
-                        for( Enumeration e  = dict.keys(); e.hasMoreElements(); )
-                        {
-                            String key = e.nextElement().toString();
-                            if( !Constants.SERVICE_PID.equals(key)
-                                    && !ConfigurationAdmin.SERVICE_FACTORYPID.equals(key)
-                                    && !DirectoryWatcher.FILENAME.equals(key) )
-                            {
-                                props.put( key, dict.get( key ) );
-                            }
-                        }
-                        try
-                        {
-                            ConfigurationHandler.write( fos, props );
-                        }
-                        finally
-                        {
-                            fos.close();
-                        }
-                    }
-                    // we're just writing out what's already loaded into ConfigAdmin, so
-                    // update file checksum since lastModified gets updated when writing
-                    fileInstall.updateChecksum(file);
                 }
-            }
-            catch (Exception e)
-            {
-                Util.log( context, Logger.LOG_INFO, "Unable to save configuration", e );
+            } catch(Exception e) {
+                Util.log(context, Logger.LOG_INFO, "Unable to save configuration", e);
             }
         }
     }
