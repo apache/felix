@@ -133,6 +133,17 @@ public class ConfigInstaller implements ArtifactInstaller, ConfigurationListener
                     if( fileName.endsWith( ".cfg" ) )
                     {
                         org.apache.felix.utils.properties.Properties props = new org.apache.felix.utils.properties.Properties( file, context );
+                        // remove "removed" properties from the cfg file
+                        List<String> propertiesToRemove = new ArrayList<String>();
+                        for( String key : props.keySet() )
+                        {
+                            if( dict.get(key) == null
+                                    && !Constants.SERVICE_PID.equals(key)
+                                    && !ConfigurationAdmin.SERVICE_FACTORYPID.equals(key)
+                                    && !DirectoryWatcher.FILENAME.equals(key) ) {
+                                propertiesToRemove.add(key);
+                            }
+                        }
                         for( Enumeration e  = dict.keys(); e.hasMoreElements(); )
                         {
                             String key = e.nextElement().toString();
@@ -143,6 +154,10 @@ public class ConfigInstaller implements ArtifactInstaller, ConfigurationListener
                                 String val = dict.get( key ).toString();
                                 props.put( key, val );
                             }
+                        }
+                        for( String key : propertiesToRemove )
+                        {
+                            props.remove(key);
                         }
                         props.save();
                     }
