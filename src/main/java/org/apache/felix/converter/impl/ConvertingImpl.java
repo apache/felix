@@ -296,10 +296,10 @@ public class ConvertingImpl implements Converting, InternalConverting {
             for (Map.Entry entry : (Set<Map.Entry>) m.entrySet()) {
                 Field f = null;
                 try {
-                    f = targetAsClass.getDeclaredField(entry.getKey().toString());
+                    f = targetAsClass.getDeclaredField(mangleName(entry.getKey().toString()));
                 } catch (NoSuchFieldException e) {
                     try {
-                        f = targetAsClass.getField(entry.getKey().toString());
+                        f = targetAsClass.getField(mangleName(entry.getKey().toString()));
                     } catch (NoSuchFieldException e1) {
                         // There is not field with this name
                     }
@@ -763,13 +763,13 @@ public class ConvertingImpl implements Converting, InternalConverting {
         if (Modifier.isStatic(field.getModifiers()))
             return;
 
-        String fn = field.getName();
+        String fn = unMangleName(field.getName());
         if (handledFields.contains(fn))
             return; // Field with this name was already handled
 
         try {
             List<Object> ks = new ArrayList<>(keys);
-            ks.add(field.getName());
+            ks.add(fn);
             Object[] ka = ks.toArray();
 
             Object fVal = field.get(obj);
@@ -777,10 +777,30 @@ public class ConvertingImpl implements Converting, InternalConverting {
                 fVal = converter.convert(fVal).key(ka).to(Map.class);
             }
 
-            result.put(field.getName(), fVal);
+            result.put(fn, fVal);
             handledFields.add(fn);
         } catch (Exception e) {
         }
+    }
+
+    private String mangleName(String key) {
+        String res = key.replace("_", "__");
+        res = res.replace("$", "$$");
+        res = res.replaceAll("[.]([._])", "_\\$$1");
+        res = res.replace('.', '_');
+        // TODO handle Java keywords
+        return res;
+    }
+
+    private String unMangleName(String key) {
+        String res = key.replaceAll("_\\$", ".");
+        res = res.replace("__", "\f"); // parkl double underscore as formfeed char
+        res = res.replace('_', '.');
+        res = res.replace("$$", "\b"); // park double dollar as backspace char
+        res = res.replace("$", "");
+        res = res.replace('\f', '_');  // convert formfeed char back to single underscore
+        res = res.replace('\b', '$');  // convert backspace char back go dollar
+        return res;
     }
 
     @SuppressWarnings({ "rawtypes", "unchecked" })

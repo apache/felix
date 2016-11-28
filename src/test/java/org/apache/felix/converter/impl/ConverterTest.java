@@ -614,6 +614,35 @@ public class ConverterTest {
                 converter.convert(mb).source().asBean().to(Map.class));
     }
 
+    @Test
+    public void testDTONameMangling() {
+        Map<String,String> m = new HashMap<>();
+        m.put("org.osgi.framework.uuid", "test123");
+        m.put("myProperty143", "true");
+        m.put("my$prop", "42");
+        m.put("dot.prop", "456");
+        m.put(".secret", " ");
+        m.put("another_prop", "lalala");
+        m.put("three_.prop", "hi ha ho");
+        m.put("four._prop", "");
+        m.put("five..prop", "test");
+
+        MyDTO7 dto = converter.convert(m).to(MyDTO7.class);
+        assertEquals("test123", dto.org_osgi_framework_uuid);
+        assertTrue(dto.myProperty143);
+        assertEquals(42, dto.my$$prop);
+        assertEquals(Long.valueOf(456L), dto.dot_prop);
+        assertEquals(' ', dto._secret);
+        assertEquals("lalala", dto.another__prop);
+        assertEquals("hi ha ho", dto.three___prop);
+        assertEquals("", dto.four_$__prop);
+        assertEquals("test", dto.five_$_prop);
+
+        // And convert back
+        Map<String, String> m2 = converter.convert(dto).to(new TypeReference<Map<String,String>>() {});
+        assertEquals(m, m2);
+    }
+
     static class MyClass2 {
         private final String value;
         public MyClass2(String v) {
