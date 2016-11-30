@@ -303,7 +303,7 @@ public class Properties extends AbstractMap<String, String> {
         for (int i = 1; i < valueLines.size(); i++) {
             String val = valueLines.get(i);
             valueLines.set(i, escapeJava(val) /*+ (i < lastLine? "\\": "")*/);
-            while (!val.isEmpty() && Character.isWhitespace(val.charAt(0))) {
+            while (val.length() > 0 && Character.isWhitespace(val.charAt(0))) {
                 val = val.substring(1);
             }
             sb.append(val);
