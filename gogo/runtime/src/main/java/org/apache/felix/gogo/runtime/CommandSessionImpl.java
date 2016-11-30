@@ -560,6 +560,10 @@ public class CommandSessionImpl implements CommandSession, Converter
             {
                 jobs.add(job);
             }
+            else
+            {
+                cur.add(job);
+            }
             return job;
         }
     }
@@ -570,6 +574,7 @@ public class CommandSessionImpl implements CommandSession, Converter
         private final JobImpl parent;
         private final CharSequence command;
         private final List<Pipe> pipes = new ArrayList<>();
+        private final List<Job> children = new ArrayList<>();
         private Status status = Status.Created;
         private Future<?> future;
         private Result result;
@@ -652,9 +657,18 @@ public class CommandSessionImpl implements CommandSession, Converter
         public void interrupt()
         {
             Future future;
+            List<Job> children;
             synchronized (this)
             {
                 future = this.future;
+            }
+            synchronized (this.children)
+            {
+                children = new ArrayList<>(this.children);
+            }
+            for (Job job : children)
+            {
+                job.interrupt();
             }
             if (future != null)
             {
@@ -823,6 +837,13 @@ public class CommandSessionImpl implements CommandSession, Converter
             return null;
         }
 
+        public void add(Job child)
+        {
+            synchronized (children)
+            {
+                children.add(child);
+            }
+        }
     }
 
 }
