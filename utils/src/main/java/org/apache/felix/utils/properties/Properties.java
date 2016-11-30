@@ -27,7 +27,6 @@ import java.io.LineNumberReader;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.io.Reader;
-import java.io.StringReader;
 import java.io.Writer;
 import java.net.URL;
 import java.security.AccessController;
