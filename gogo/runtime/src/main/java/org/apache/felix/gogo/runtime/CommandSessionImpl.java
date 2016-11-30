@@ -537,23 +537,22 @@ public class CommandSessionImpl implements CommandSession, Converter
         {
             int id = 1;
 
-            synchronized (jobs) {
-                boolean found;
-                do
+            boolean found;
+            do
+            {
+                found = false;
+                for (Job job : jobs)
                 {
-                    found = false;
-                    for (Job job : jobs)
+                    if (job.id() == id)
                     {
-                        if (job.id() == id)
-                        {
-                            found = true;
-                            id++;
-                            break;
-                        }
+                        found = true;
+                        id++;
+                        break;
                     }
                 }
-                while (found);
             }
+            while (found);
+
             JobImpl cur = currentJob();
             JobImpl job = new JobImpl(id, cur, command);
             if (cur == null)
