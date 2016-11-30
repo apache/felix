@@ -322,6 +322,47 @@ public class Properties extends AbstractMap<String, String> {
         return put(key, Collections.singletonList(comment), value);
     }
 
+    public boolean update(Map<String, String> props) {
+        Properties properties;
+        if (props instanceof Properties) {
+            properties = (Properties) props;
+        } else {
+            properties = new Properties();
+            for (Map.Entry<? extends String, ? extends String> e : props.entrySet()) {
+                properties.put(e.getKey(), e.getValue());
+            }
+        }
+        return update(properties);
+    }
+
+    public boolean update(Properties properties) {
+        boolean modified = false;
+        // Remove "removed" properties from the cfg file
+        for (String key : new ArrayList<String>(this.keySet())) {
+            if (!properties.containsKey(key)) {
+                this.remove(key);
+                modified = true;
+            }
+        }
+        // Update existing keys
+        for (String key : properties.keySet()) {
+            String v = this.get(key);
+            List<String> comments = properties.getComments(key);
+            List<String> value = properties.getRaw(key);
+            if (v == null) {
+                this.put(key, comments, value);
+                modified = true;
+            } else if (!v.equals(properties.get(key))) {
+                if (comments.isEmpty()) {
+                    comments = this.getComments(key);
+                }
+                this.put(key, comments, value);
+                modified = true;
+            }
+        }
+        return modified;
+    }
+
     public List<String> getRaw(String key) {
         if (layout.containsKey(key)) {
             if (layout.get(key).getValueLines() != null) {

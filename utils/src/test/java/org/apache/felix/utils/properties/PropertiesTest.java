@@ -316,4 +316,28 @@ public class PropertiesTest extends TestCase {
         assertEquals("fruits =                            apple, banana, pear, ", raw.get(0));
     }
 
+    public void testUpdate() throws Exception {
+        Properties p1 = new Properties();
+        p1.put("fruits", Arrays.asList("#", "# List of fruits", "#"), Arrays.asList(
+                "                           apple, banana, pear, ",
+                "                                 cantaloupe, watermelon, ",
+                "                                 kiwi, mango"));
+        p1.put("trees", Arrays.asList("#", "# List of trees", "#"), Arrays.asList(
+                "                           fir, oak, maple"));
+        p1.put("vegetables", Arrays.asList("#", "# List of vegetables", "#"), Arrays.asList(
+                "                           potatoes"
+        ));
+
+        Properties p2 = new Properties();
+        p2.put("fruits", Arrays.asList("#", "# List of good fruits", "#"), Arrays.asList(
+                "                           apple, banana, pear"));
+        p2.put("trees", "fir, oak, maple");
+        p1.update(p2);
+
+        assertEquals(2, p1.size());
+        assertEquals(Arrays.asList("#", "# List of trees", "#"), p1.getComments("trees"));
+        assertEquals("fir, oak, maple", p1.getProperty("trees"));
+        assertEquals(Arrays.asList("#", "# List of good fruits", "#"), p1.getComments("fruits"));
+        assertEquals("apple, banana, pear", p1.getProperty("fruits"));
+    }
 }
