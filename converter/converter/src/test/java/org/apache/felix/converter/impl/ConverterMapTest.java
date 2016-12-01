@@ -84,7 +84,7 @@ public class ConverterMapTest {
         mb.setNumbers(new int[] {3,2,1});
 
         @SuppressWarnings("rawtypes")
-        Map m = converter.convert(mb).source().asBean().to(Map.class);
+        Map m = converter.convert(mb).sourceAsBean().to(Map.class);
         assertEquals(5, m.size());
         assertEquals("You", m.get("me"));
         assertTrue((boolean) m.get("f"));
@@ -105,7 +105,7 @@ public class ConverterMapTest {
         ConverterBuilder cb = new StandardConverter().newConverterBuilder();
         cb.rule(Date.class, String.class, v -> sdf.format(v), v -> sdf.parse(v));
         Converter ca = cb.build();
-        Map<String, String> m = ca.convert(mb).source().asBean().to(new TypeReference<Map<String, String>>(){});
+        Map<String, String> m = ca.convert(mb).sourceAsBean().to(new TypeReference<Map<String, String>>(){});
         assertEquals("true", m.get("enabled"));
         assertEquals(expectedDate, m.get("startDate"));
     }

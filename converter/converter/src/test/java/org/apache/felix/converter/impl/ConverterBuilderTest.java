@@ -194,9 +194,9 @@ public class ConverterBuilderTest {
         mb.beanVal = "Hello";
 
         assertNull(converter.convert(mb).to(MyCustomDTO.class).field);
-        assertNull(converter.convert(mb).source().as(MyIntf.class).to(MyCustomDTO.class).field);
+        assertNull(converter.convert(mb).sourceAs(MyIntf.class).to(MyCustomDTO.class).field);
         assertEquals("Hello", cc.convert(mb).to(MyCustomDTO.class).field);
-        assertEquals("17", cc.convert(mb).source().as(MyIntf.class).to(MyCustomDTO.class).field);
+        assertEquals("17", cc.convert(mb).sourceAs(MyIntf.class).to(MyCustomDTO.class).field);
     }
 
     @Test

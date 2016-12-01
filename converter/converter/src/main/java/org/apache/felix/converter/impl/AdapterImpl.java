@@ -33,7 +33,6 @@ import org.osgi.util.converter.ConvertFunction;
 import org.osgi.util.converter.Converter;
 import org.osgi.util.converter.ConverterBuilder;
 import org.osgi.util.converter.Converting;
-import org.osgi.util.converter.ConvertingTypeSettings;
 import org.osgi.util.converter.Rule;
 import org.osgi.util.converter.TypeReference;
 import org.osgi.util.function.Function;
@@ -129,37 +128,28 @@ public class AdapterImpl implements InternalConverter {
         }
 
         @Override
-        public ConvertingTypeSettings source() {
-            return new ConvertingTypeSettings() {
-                @Override
-                public Converting asBean() {
-                    del.source().asBean();
-                    return ConvertingWrapper.this;
-                }
-
-                @Override
-                public Converting as(Class<?> type) {
-                    treatAsClass = type;
-                    del.source().as(type);
-                    return ConvertingWrapper.this;
-                }
-            };
+        public Converting sourceAsBean() {
+            del.sourceAsBean();
+            return this;
         }
 
         @Override
-        public ConvertingTypeSettings target() {
-            return new ConvertingTypeSettings() {
-                @Override
-                public Converting asBean() {
-                    return ConvertingWrapper.this;
-                }
+        public Converting sourceAs(Class<?> type) {
+            treatAsClass = type;
+            del.sourceAs(type);
+            return this;
+        }
 
-                @Override
-                public Converting as(Class<?> cls) {
-                    del.target().as(cls);
-                    return ConvertingWrapper.this;
-                }
-            };
+        @Override
+        public Converting targetAsBean() {
+            // TODO not yet implemented
+            return this;
+        }
+
+        @Override
+        public Converting targetAs(Class<?> cls) {
+            del.targetAs(cls);
+            return this;
         }
 
         @SuppressWarnings("unchecked")
