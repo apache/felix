@@ -501,7 +501,7 @@ public class ConverterTest {
     @Test
     public void testMap2DTOView() {
         Map<String, Object> src = Collections.singletonMap("pong", 42);
-        MyDTOWithMethods dto = converter.convert(src).target().as(MyDTO.class).to(MyDTOWithMethods.class);
+        MyDTOWithMethods dto = converter.convert(src).targetAs(MyDTO.class).to(MyDTOWithMethods.class);
         assertEquals(42, dto.pong);
     }
 
@@ -591,7 +591,7 @@ public class ConverterTest {
         mb.beanVal = "Hello";
 
         assertEquals(Collections.singletonMap("value", "Hello"),
-                converter.convert(mb).source().asBean().to(Map.class));
+                converter.convert(mb).sourceAsBean().to(Map.class));
     }
 
     @Test
@@ -601,7 +601,7 @@ public class ConverterTest {
         mb.beanVal = "Hello";
 
         assertEquals(17,
-                converter.convert(mb).source().as(MyIntf.class).to(Map.class).get("value"));
+                converter.convert(mb).sourceAs(MyIntf.class).to(Map.class).get("value"));
     }
 
     @Test
@@ -611,7 +611,7 @@ public class ConverterTest {
         mb.beanVal = "Hello";
 
         assertEquals(Collections.singletonMap("value", "Hello"),
-                converter.convert(mb).source().asBean().to(Map.class));
+                converter.convert(mb).sourceAsBean().to(Map.class));
     }
 
     @Test

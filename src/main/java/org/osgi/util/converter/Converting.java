@@ -51,18 +51,44 @@ public interface Converting {
 	Converting defaultValue(Object defVal);
 
 	/**
-	 * Provide additional information on how to treat the source object.
+	 * Treat the source object as the specified class. This can be used to
+	 * disambiguate a type if it implements multiple interfaces or extends
+	 * multiple classes.
 	 *
-	 * @return A {@link ConvertingTypeSettings} to provide the details.
+	 * @param cls The class to treat the object as.
+	 * @return The current {@code Converting} object so that additional calls
+	 *         can be chained.
 	 */
-	ConvertingTypeSettings source();
+	Converting sourceAs(Class< ? > cls);
 
 	/**
-	 * Provide additional information on how to treat the target type.
+	 * Treat the source object as a JavaBean. By default objects will not be
+	 * treated as JavaBeans, this has to be specified using this method.
 	 *
-	 * @return A {@link ConvertingTypeSettings} to provide the details.
+	 * @return The current {@code Converting} object so that additional calls
+	 *         can be chained.
 	 */
-	ConvertingTypeSettings target();
+	Converting sourceAsBean();
+
+	/**
+	 * Treat the target object as the specified class. This can be used to
+	 * disambiguate a type if it implements multiple interfaces or extends
+	 * multiple classes.
+	 *
+	 * @param cls The class to treat the object as.
+	 * @return The current {@code Converting} object so that additional calls
+	 *         can be chained.
+	 */
+	Converting targetAs(Class< ? > cls);
+
+	/**
+	 * Treat the target object as a JavaBean. By default objects will not be
+	 * treated as JavaBeans, this has to be specified using this method.
+	 *
+	 * @return The current {@code Converting} object so that additional calls
+	 *         can be chained.
+	 */
+	Converting targetAsBean();
 
 	/**
 	 * Specify the target object type for the conversion as a class object.
@@ -71,6 +97,15 @@ public interface Converting {
 	 * @return The converted object.
 	 */
 	<T> T to(Class<T> cls);
+
+	/**
+	 * Specify the target object type as a Java Reflection Type object.
+	 *
+	 * @param type A Type object to represent the target type to be converted
+	 *            to.
+	 * @return The converted object.
+	 */
+	Object to(Type type);
 
 	/**
 	 * Specify the target object type as a {@link TypeReference}. If the target
@@ -87,13 +122,4 @@ public interface Converting {
 	 * @return The converted object.
 	 */
 	<T> T to(TypeReference<T> ref);
-
-	/**
-	 * Specify the target object type as a Java Reflection Type object.
-	 *
-	 * @param type A Type object to represent the target type to be converted
-	 *            to.
-	 * @return The converted object.
-	 */
-	Object to(Type type);
 }

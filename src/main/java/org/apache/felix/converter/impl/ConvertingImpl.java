@@ -45,7 +45,6 @@ import org.osgi.dto.DTO;
 import org.osgi.util.converter.ConversionException;
 import org.osgi.util.converter.Converter;
 import org.osgi.util.converter.Converting;
-import org.osgi.util.converter.ConvertingTypeSettings;
 import org.osgi.util.converter.TypeReference;
 
 public class ConvertingImpl implements Converting, InternalConverting {
@@ -78,37 +77,27 @@ public class ConvertingImpl implements Converting, InternalConverting {
     }
 
     @Override
-    public ConvertingTypeSettings source() {
-        return new ConvertingTypeSettings() {
-            @Override
-            public Converting asBean() {
-                sourceAsJavaBean = true;
-                return ConvertingImpl.this;
-            }
-
-            @Override
-            public Converting as(Class<?> type) {
-                sourceAsClass = type;
-                return ConvertingImpl.this;
-            }
-        };
+    public Converting sourceAsBean() {
+        sourceAsJavaBean = true;
+        return this;
     }
 
     @Override
-    public ConvertingTypeSettings target() {
-        return new ConvertingTypeSettings() {
-            @Override
-            public Converting asBean() {
-                // TODO not yet implemented
-                return ConvertingImpl.this;
-            }
+    public Converting sourceAs(Class<?> cls) {
+        sourceAsClass = cls;
+        return this;
+    }
 
-            @Override
-            public Converting as(Class<?> cls) {
-                targetAsClass = cls;
-                return ConvertingImpl.this;
-            }
-        };
+    @Override
+    public Converting targetAsBean() {
+        // TODO not yet implemented
+        return this;
+    }
+
+    @Override
+    public Converting targetAs(Class<?> cls) {
+        targetAsClass = cls;
+        return this;
     }
 
     @Override
@@ -218,7 +207,7 @@ public class ConvertingImpl implements Converting, InternalConverting {
             return res2;
         } else {
             if (defaultValue != null)
-                return converter.convert(defaultValue).source().as(sourceAsClass).target().as(targetAsClass).to(targetActualClass);
+                return converter.convert(defaultValue).sourceAs(sourceAsClass).targetAs(targetAsClass).to(targetActualClass);
             else
                 return null;
         }
