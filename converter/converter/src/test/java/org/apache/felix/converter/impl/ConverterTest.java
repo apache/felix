@@ -16,6 +16,7 @@
  */
 package org.apache.felix.converter.impl;
 
+import java.lang.reflect.Type;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.net.URL;
@@ -139,6 +140,13 @@ public class ConverterTest {
         assertSame(TestEnum.BLAH, converter.convert(TestEnum2.BLAH).to(TestEnum.class));
         assertNull(converter.convert(null).to(TestEnum.class));
         assertNull(converter.convert(Collections.emptySet()).to(TestEnum.class));
+    }
+
+    @Test
+    public void testToReflectType() {
+        Type t = TestEnum.class;
+        TestEnum e = converter.convert("X").to(t);
+        assertEquals(TestEnum.X, e);
     }
 
     @Test

@@ -105,7 +105,7 @@ public interface Converting {
 	 *            to.
 	 * @return The converted object.
 	 */
-	Object to(Type type);
+	<T> T to(Type type);
 
 	/**
 	 * Specify the target object type as a {@link TypeReference}. If the target
