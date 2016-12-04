@@ -371,7 +371,7 @@ public class ComponentImpl implements Component, ComponentContext, ComponentDecl
             for (Dependency d : dependencies) {
                 DependencyContext dc = (DependencyContext) d;
                 if (dc.getComponentContext() != null) {
-                    m_logger.err("%s can't be added to %s (dependency already added to another component).", dc, ComponentImpl.this);
+                    m_logger.err("%s can't be added to %s (dependency already added to component %s).", dc, ComponentImpl.this, dc.getComponentContext());
                     continue;
                 }
                 m_dependencyEvents.put(dc, new ConcurrentSkipListSet<Event>());
