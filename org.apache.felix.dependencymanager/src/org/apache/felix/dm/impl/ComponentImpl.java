@@ -548,8 +548,9 @@ public class ComponentImpl implements Component, ComponentContext, ComponentDecl
             catch (InvocationTargetException e) {
                 // the method itself threw an exception, log that
                 m_logger.log(Logger.LOG_ERROR, "Invocation of '" + methodName + "' failed.", e.getCause());
+                callbackFound |= true; // we have found the callback and we don't want to log a "callback not found" error
             }
-            catch (Throwable e) {
+            catch (Throwable e) { // IllegalArgumentException (wrong params passed to the method), or IllegalAccessException (method can't be accessed)
                 m_logger.log(Logger.LOG_ERROR, "Could not invoke '" + methodName + "'.", e);
             }
         }
