@@ -118,19 +118,21 @@ public class Pipe implements Callable<Result>, Process
     final Statement statement;
     final Channel[] streams;
     final boolean[] toclose;
+    final boolean endOfPipe;
     int error;
 
     InputStream in;
     PrintStream out;
     PrintStream err;
 
-    public Pipe(Closure closure, JobImpl job, Statement statement, Channel[] streams, boolean[] toclose)
+    public Pipe(Closure closure, JobImpl job, Statement statement, Channel[] streams, boolean[] toclose, boolean endOfPipe)
     {
         this.closure = closure;
         this.job = job;
         this.statement = statement;
         this.streams = streams;
         this.toclose = toclose;
+        this.endOfPipe = endOfPipe;
     }
 
     public String toString()
@@ -238,8 +240,6 @@ public class Pipe implements Callable<Result>, Process
         // This value may be modified by redirections and the redirected error stream
         // will be effective just before actually running the command.
         WritableByteChannel errChannel = (WritableByteChannel) streams[2];
-
-        boolean endOfPipe = !toclose[1];
 
         ThreadIO threadIo = closure.session().threadIO();
 
@@ -436,14 +436,17 @@ public class Pipe implements Callable<Result>, Process
         }
         catch (Exception e)
         {
-            String msg = "gogo: " + e.getClass().getSimpleName() + ": " + e.getMessage() + "\n";
-            try
+            if (!endOfPipe)
             {
-                errChannel.write(ByteBuffer.wrap(msg.getBytes()));
-            }
-            catch (IOException ioe)
-            {
-                e.addSuppressed(ioe);
+                String msg = "gogo: " + e.getClass().getSimpleName() + ": " + e.getMessage() + "\n";
+                try
+                {
+                    errChannel.write(ByteBuffer.wrap(msg.getBytes()));
+                }
+                catch (IOException ioe)
+                {
+                    e.addSuppressed(ioe);
+                }
             }
             return new Result(e);
         }
