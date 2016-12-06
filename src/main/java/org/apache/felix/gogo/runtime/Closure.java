@@ -237,9 +237,11 @@ public class Closure implements Function, Evaluate
                     Operator op = i < exec.size() - 1 ? (Operator) exec.get(++i) : null;
                     Channel[] nstreams;
                     boolean[] ntoclose;
+                    boolean endOfPipe;
                     if (i == exec.size() - 1) {
                         nstreams = streams;
                         ntoclose = toclose;
+                        endOfPipe = true;
                     } else if (Token.eq("|", op)) {
                         PipedInputStream pis = new PipedInputStream();
                         PipedOutputStream pos = new PipedOutputStream(pis);
@@ -249,6 +251,7 @@ public class Closure implements Function, Evaluate
                         ntoclose[1] = true;
                         streams[0] = Channels.newChannel(pis);
                         toclose[0] = true;
+                        endOfPipe = false;
                     } else if (Token.eq("|&", op)) {
                         PipedInputStream pis = new PipedInputStream();
                         PipedOutputStream pos = new PipedOutputStream(pis);
@@ -258,15 +261,16 @@ public class Closure implements Function, Evaluate
                         ntoclose[1] = ntoclose[2] = true;
                         streams[0] = Channels.newChannel(pis);
                         toclose[0] = true;
+                        endOfPipe = false;
                     } else {
                         throw new IllegalStateException("Unrecognized pipe operator: '" + op + "'");
                     }
-                    Pipe pipe = new Pipe(this, job, ex, nstreams, ntoclose);
+                    Pipe pipe = new Pipe(this, job, ex, nstreams, ntoclose, endOfPipe);
                     job.addPipe(pipe);
                 }
             } else {
                 job = session().createJob(executable);
-                Pipe pipe = new Pipe(this, job, (Statement) executable, streams, toclose);
+                Pipe pipe = new Pipe(this, job, (Statement) executable, streams, toclose, true);
                 job.addPipe(pipe);
             }
 
