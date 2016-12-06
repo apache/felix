@@ -446,13 +446,9 @@ public class CommandSessionImpl implements CommandSession, Converter
                     f.format(COLUMN, name, format(value, Converter.LINE, this));
                 }
             }
-            catch (IllegalAccessException e)
-            {
-                // Ignore
-            }
             catch (Exception e)
             {
-                e.printStackTrace();
+                // Ignore
             }
         }
         if (found)
