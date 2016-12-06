@@ -294,7 +294,7 @@ try {
   }
 
   # print welcome message, unless we're explicitly told not to...
-  if { $.gosh_quiet } { } { cat ($0 resolve motd) }
+  if { $.gosh_quiet } { } { cat (new java.net.URL ($0 toURL) motd) }
 } {
     echo "$0: ERROR: $exception"
 }
