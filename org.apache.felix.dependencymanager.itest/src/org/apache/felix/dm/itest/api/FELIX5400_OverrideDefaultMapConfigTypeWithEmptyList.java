@@ -70,9 +70,11 @@ public class FELIX5400_OverrideDefaultMapConfigTypeWithEmptyList extends TestBas
     
     public class MyComponent {
         void updated(MyConfig cnf) {
-        	List<String> list = cnf.getList();
-        	Assert.assertEquals(0, list.size()); // the actual configuration contains "list=[]" and default "list=[a,b]" must not be returned.
-        	m_ensure.step(2);
+        	if (cnf != null) {
+        		List<String> list = cnf.getList();
+        		Assert.assertEquals(0, list.size()); // the actual configuration contains "list=[]" and default "list=[a,b]" must not be returned.
+        		m_ensure.step(2);
+        	}
         }
     }
 }
