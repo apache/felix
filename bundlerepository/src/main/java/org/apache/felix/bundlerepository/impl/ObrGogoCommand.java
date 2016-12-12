@@ -16,33 +16,28 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.felix.gogo.command;
+package org.apache.felix.bundlerepository.impl;
 
-import java.io.File;
-import java.io.IOException;
-import java.io.PrintStream;
-import java.lang.reflect.Array;
-import java.net.URL;
-import java.util.Comparator;
-import java.util.Iterator;
-import java.util.Map;
-import java.util.TreeMap;
-
-import org.apache.felix.bundlerepository.Capability;
-import org.apache.felix.bundlerepository.Reason;
-import org.apache.felix.bundlerepository.RepositoryAdmin;
-import org.apache.felix.bundlerepository.Requirement;
-import org.apache.felix.bundlerepository.Resolver;
-import org.apache.felix.bundlerepository.Resource;
+import org.apache.felix.bundlerepository.*;
 import org.apache.felix.service.command.Descriptor;
 import org.apache.felix.service.command.Parameter;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.InvalidSyntaxException;
 import org.osgi.framework.Version;
-import org.osgi.util.tracker.ServiceTracker;
 
-public class OBR
+import java.io.*;
+import java.lang.reflect.Array;
+import java.net.URL;
+import java.net.URLConnection;
+import java.util.Comparator;
+import java.util.Iterator;
+import java.util.Map;
+import java.util.TreeMap;
+import java.util.jar.JarEntry;
+import java.util.jar.JarInputStream;
+
+public class ObrGogoCommand
 {
     private static final String REPO_ADD = "add";
     private static final String REPO_REMOVE = "remove";
@@ -52,30 +47,17 @@ public class OBR
     private static final char VERSION_SEPARATOR = '@';
 
     private final BundleContext m_bc;
-    private final ServiceTracker m_tracker;
+    private final RepositoryAdmin m_repositoryAdmin;
 
-    public OBR(BundleContext bc, ServiceTracker tracker)
+    public ObrGogoCommand(BundleContext bc, RepositoryAdmin repositoryAdmin)
     {
         m_bc = bc;
-        m_tracker = tracker;
+        m_repositoryAdmin = repositoryAdmin;
     }
 
     private RepositoryAdmin getRepositoryAdmin()
     {
-        Object svcObj;
-        try
-        {
-            svcObj = m_tracker.getService();
-        }
-        catch (Exception ex)
-        {
-            svcObj = null;
-        }
-        if (svcObj == null)
-        {
-            System.out.println("No repository admin service available");
-        }
-        return (RepositoryAdmin) svcObj;
+        return m_repositoryAdmin;
     }
 
     @Descriptor("manage repositories")
@@ -347,7 +329,7 @@ public class OBR
             if (resolver.resolve())
             {
                 System.out.println("Target resource(s):");
-                System.out.println(Util.getUnderlineString(19));
+                System.out.println(getUnderlineString(19));
                 Resource[] resources = resolver.getAddedResources();
                 for (int resIdx = 0; (resources != null) && (resIdx < resources.length); resIdx++)
                 {
@@ -358,7 +340,7 @@ public class OBR
                 if ((resources != null) && (resources.length > 0))
                 {
                     System.out.println("\nRequired resource(s):");
-                    System.out.println(Util.getUnderlineString(21));
+                    System.out.println(getUnderlineString(21));
                     for (int resIdx = 0; resIdx < resources.length; resIdx++)
                     {
                         System.out.println("   " + resources[resIdx].getPresentationName()
@@ -371,7 +353,7 @@ public class OBR
                     if ((resources != null) && (resources.length > 0))
                     {
                         System.out.println("\nOptional resource(s):");
-                        System.out.println(Util.getUnderlineString(21));
+                        System.out.println(getUnderlineString(21));
                         for (int resIdx = 0; resIdx < resources.length; resIdx++)
                         {
                             System.out.println("   " + resources[resIdx].getPresentationName()
@@ -406,7 +388,7 @@ public class OBR
                 if ((reqs != null) && (reqs.length > 0))
                 {
                     System.out.println("Unsatisfied requirement(s):");
-                    System.out.println(Util.getUnderlineString(27));
+                    System.out.println(getUnderlineString(27));
                     for (int reqIdx = 0; reqIdx < reqs.length; reqIdx++)
                     {
                         System.out.println("   " + reqs[reqIdx].getRequirement().getFilter());
@@ -460,7 +442,7 @@ public class OBR
                 String srcURI = (String) resource.getProperties().get(Resource.SOURCE_URI);
                 if (srcURI != null)
                 {
-                    Util.downloadSource(
+                    downloadSource(
                         System.out, System.err, new URL(srcURI),
                         localDir, extract);
                 }
@@ -511,7 +493,7 @@ public class OBR
                 URL docURL = (URL) resource.getProperties().get("javadoc");
                 if (docURL != null)
                 {
-                    Util.downloadSource(
+                    downloadSource(
                         System.out, System.err, docURL, localDir, extract);
                 }
                 else
@@ -523,7 +505,7 @@ public class OBR
     }
 
     private Resource[] searchRepository(
-        RepositoryAdmin ra, String targetId, String targetVersion)
+            RepositoryAdmin ra, String targetId, String targetVersion)
         throws InvalidSyntaxException
     {
         // Try to see if the targetId is a bundle ID.
@@ -592,9 +574,9 @@ public class OBR
         if (presentationName == null)
             presentationName = resource.getSymbolicName();
 
-        System.out.println(Util.getUnderlineString(presentationName.length()));
+        System.out.println(getUnderlineString(presentationName.length()));
         out.println(presentationName);
-        System.out.println(Util.getUnderlineString(presentationName.length()));
+        System.out.println(getUnderlineString(presentationName.length()));
 
         Map map = resource.getProperties();
         for (Iterator iter = map.entrySet().iterator(); iter.hasNext(); )
@@ -675,5 +657,175 @@ public class OBR
             }
         }
         return sorted;
+    }
+
+    private final static StringBuffer m_sb = new StringBuffer();
+
+    public static String getUnderlineString(int len)
+    {
+        synchronized (m_sb)
+        {
+            m_sb.delete(0, m_sb.length());
+            for (int i = 0; i < len; i++)
+            {
+                m_sb.append('-');
+            }
+            return m_sb.toString();
+        }
+    }
+
+    public static void downloadSource(
+            PrintStream out, PrintStream err,
+            URL srcURL, File localDir, boolean extract)
+    {
+        // Get the file name from the URL.
+        String fileName = (srcURL.getFile().lastIndexOf('/') > 0)
+                ? srcURL.getFile().substring(srcURL.getFile().lastIndexOf('/') + 1)
+                : srcURL.getFile();
+
+        try
+        {
+            out.println("Connecting...");
+
+            if (!localDir.exists())
+            {
+                err.println("Destination directory does not exist.");
+            }
+            File file = new File(localDir, fileName);
+
+            OutputStream os = new FileOutputStream(file);
+            URLConnection conn = srcURL.openConnection();
+            setProxyAuth(conn);
+            int total = conn.getContentLength();
+            InputStream is = conn.getInputStream();
+
+            if (total > 0)
+            {
+                out.println("Downloading " + fileName
+                        + " ( " + total + " bytes ).");
+            }
+            else
+            {
+                out.println("Downloading " + fileName + ".");
+            }
+            byte[] buffer = new byte[4096];
+            for (int len = is.read(buffer); len > 0; len = is.read(buffer))
+            {
+                os.write(buffer, 0, len);
+            }
+
+            os.close();
+            is.close();
+
+            if (extract)
+            {
+                is = new FileInputStream(file);
+                JarInputStream jis = new JarInputStream(is);
+                out.println("Extracting...");
+                unjar(jis, localDir);
+                jis.close();
+                file.delete();
+            }
+        }
+        catch (Exception ex)
+        {
+            err.println(ex);
+        }
+    }
+
+    public static void setProxyAuth(URLConnection conn) throws IOException
+    {
+        // Support for http proxy authentication
+        String auth = System.getProperty("http.proxyAuth");
+        if ((auth != null) && (auth.length() > 0))
+        {
+            if ("http".equals(conn.getURL().getProtocol())
+                    || "https".equals(conn.getURL().getProtocol()))
+            {
+                String base64 = Base64Encoder.base64Encode(auth);
+                conn.setRequestProperty("Proxy-Authorization", "Basic " + base64);
+            }
+        }
+    }
+
+    public static void unjar(JarInputStream jis, File dir)
+            throws IOException
+    {
+        // Reusable buffer.
+        byte[] buffer = new byte[4096];
+
+        // Loop through JAR entries.
+        for (JarEntry je = jis.getNextJarEntry();
+             je != null;
+             je = jis.getNextJarEntry())
+        {
+            if (je.getName().startsWith("/"))
+            {
+                throw new IOException("JAR resource cannot contain absolute paths.");
+            }
+
+            File target = new File(dir, je.getName());
+
+            // Check to see if the JAR entry is a directory.
+            if (je.isDirectory())
+            {
+                if (!target.exists())
+                {
+                    if (!target.mkdirs())
+                    {
+                        throw new IOException("Unable to create target directory: "
+                                + target);
+                    }
+                }
+                // Just continue since directories do not have content to copy.
+                continue;
+            }
+
+            int lastIndex = je.getName().lastIndexOf('/');
+            String name = (lastIndex >= 0) ?
+                    je.getName().substring(lastIndex + 1) : je.getName();
+            String destination = (lastIndex >= 0) ?
+                    je.getName().substring(0, lastIndex) : "";
+
+            // JAR files use '/', so convert it to platform separator.
+            destination = destination.replace('/', File.separatorChar);
+            copy(jis, dir, name, destination, buffer);
+        }
+    }
+
+    public static void copy(
+            InputStream is, File dir, String destName, String destDir, byte[] buffer)
+            throws IOException
+    {
+        if (destDir == null)
+        {
+            destDir = "";
+        }
+
+        // Make sure the target directory exists and
+        // that is actually a directory.
+        File targetDir = new File(dir, destDir);
+        if (!targetDir.exists())
+        {
+            if (!targetDir.mkdirs())
+            {
+                throw new IOException("Unable to create target directory: "
+                        + targetDir);
+            }
+        }
+        else if (!targetDir.isDirectory())
+        {
+            throw new IOException("Target is not a directory: "
+                    + targetDir);
+        }
+
+        BufferedOutputStream bos = new BufferedOutputStream(
+                new FileOutputStream(new File(targetDir, destName)));
+        int count = 0;
+        while ((count = is.read(buffer)) > 0)
+        {
+            bos.write(buffer, 0, count);
+        }
+        bos.close();
     }
 }
