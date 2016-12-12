@@ -38,7 +38,7 @@ try {
   ## disable console auto-formatting of each result
   #  you will then need to explicitly use the 'format' command
   #  to print the result of commands that don't write to stdout.
-  .Gogo.format = false
+  #.Gogo.format = false
 
   ## disable printing the formatted result of a command into pipelines
   #.Format.Pipe = false
