@@ -107,6 +107,20 @@ public class Activator implements BundleActivator
 
         try
         {
+            Hashtable dict = new Hashtable();
+            dict.put("osgi.command.scope", "obr");
+            dict.put("osgi.command.function", new String[] {
+                    "deploy", "info", "javadoc", "list", "repos", "source" });
+            context.registerService(ObrGogoCommand.class.getName(),
+                    new ObrGogoCommand(Activator.context, m_repoAdmin), dict);
+        }
+        catch (Throwable th)
+        {
+            // Ignore
+        }
+
+        try
+        {
 			Hashtable dict = new Hashtable();
 			dict.put(URLConstants.URL_HANDLER_PROTOCOL, "obr");
 			context.registerService(URLStreamHandlerService.class.getName(),

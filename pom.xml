@@ -60,6 +60,12 @@
       <optional>true</optional>
     </dependency>
     <dependency>
+      <groupId>${project.groupId}</groupId>
+      <artifactId>org.apache.felix.gogo.runtime</artifactId>
+      <version>1.0.0</version>
+      <optional>true</optional>
+    </dependency>
+    <dependency>
       <groupId>net.sf.kxml</groupId>
       <artifactId>kxml2</artifactId>
       <version>2.3.0</version>
@@ -132,9 +138,12 @@
                 org.osgi.service.repository;resolution:=mandatory;version="[1.0,1.1)",
                 org.osgi.service.log;resolution:=optional,
                 org.osgi.service.obr;resolution:=optional,
+                org.apache.felix.shell;resolution:=optional,
+                org.apache.felix.service.command;resolution:=optional,
                 javax.xml.stream;resolution:=optional,
-                *</Import-Package>
-            <DynamicImport-Package>org.apache.felix.shell</DynamicImport-Package>
+                *
+            </Import-Package>
+            <DynamicImport-Package>org.apache.felix.shell,org.apache.felix.service.command</DynamicImport-Package>
             <Bundle-Activator>${project.artifactId}.impl.Activator</Bundle-Activator>
             <Bundle-DocURL>http://felix.apache.org/site/apache-felix-osgi-bundle-repository.html</Bundle-DocURL>
             <Bundle-Url>http://felix.apache.org/site/downloads.cgi</Bundle-Url>
