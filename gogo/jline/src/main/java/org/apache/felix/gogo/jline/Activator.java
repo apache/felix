@@ -18,6 +18,8 @@
  */
 package org.apache.felix.gogo.jline;
 
+import java.io.Closeable;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Dictionary;
 import java.util.HashSet;
@@ -25,6 +27,7 @@ import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.apache.felix.gogo.jline.Shell.Context;
 import org.apache.felix.gogo.jline.SingleServiceTracker.SingleServiceListener;
@@ -37,13 +40,15 @@ import org.jline.terminal.Terminal;
 import org.jline.terminal.TerminalBuilder;
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
+import org.osgi.framework.BundleException;
 import org.osgi.framework.ServiceRegistration;
 
 public class Activator implements BundleActivator, SingleServiceListener {
     private final Set<ServiceRegistration<?>> regs = new HashSet<>();
     private BundleContext context;
     private SingleServiceTracker<CommandProcessor> commandProcessorTracker;
-    private Thread thread;
+
+    private Runnable closer;
 
     public Activator() {
     }
@@ -66,7 +71,11 @@ public class Activator implements BundleActivator, SingleServiceListener {
 
     @Override
     public void serviceFound() {
-        startShell(context, commandProcessorTracker.getService());
+        try {
+            closer = startShell(context, commandProcessorTracker.getService());
+        } catch (Exception e) {
+            // Ignore
+        }
     }
 
     @Override
@@ -80,7 +89,7 @@ public class Activator implements BundleActivator, SingleServiceListener {
         serviceFound();
     }
 
-    private void startShell(BundleContext context, CommandProcessor processor) {
+    private Runnable startShell(BundleContext context, CommandProcessor processor) throws Exception {
         Dictionary<String, Object> dict = new Hashtable<>();
         dict.put(CommandProcessor.COMMAND_SCOPE, "gogo");
 
@@ -102,63 +111,81 @@ public class Activator implements BundleActivator, SingleServiceListener {
         dict.put(CommandProcessor.COMMAND_FUNCTION, Shell.functions);
         regs.add(context.registerService(Shell.class.getName(), shell, dict));
 
-        // start shell on a separate thread...
-        thread = new Thread(() -> doStartShell(processor, shell), "Gogo shell");
-        thread.start();
-    }
+        Terminal terminal = TerminalBuilder.builder()
+                .system(true)
+                .nativeSignals(true)
+                .signalHandler(Terminal.SignalHandler.SIG_IGN)
+                .build();
+        CommandSession session = processor.createSession(terminal.input(), terminal.output(), terminal.output());
+        AtomicBoolean closing = new AtomicBoolean();
 
-    private void stopShell() {
-        if (thread != null && thread.isAlive()) {
-            thread.interrupt();
+        Thread thread = new Thread(() -> {
+            String errorMessage = "gogo: unable to create console";
             try {
-                thread.join(5000);
-                if (thread.isAlive()) {
-                    System.err.println("!!! FAILED TO STOP EXECUTOR !!!");
+                session.put(Shell.VAR_TERMINAL, terminal);
+                try {
+                    List<String> args = new ArrayList<>();
+                    args.add("--login");
+                    String argstr = shell.getContext().getProperty("gosh.args");
+                    if (argstr != null) {
+                        Tokenizer tokenizer = new Tokenizer(argstr);
+                        Token token;
+                        while ((token = tokenizer.next()) != null) {
+                            args.add(token.toString());
+                        }
+                    }
+                    shell.gosh(session, args.toArray(new String[args.size()]));
+                } catch (Throwable e) {
+                    Object loc = session.get(".location");
+                    if (null == loc || !loc.toString().contains(":")) {
+                        loc = "gogo";
+                    }
+                    errorMessage = loc.toString();
+                    throw e;
+                }
+            } catch (Throwable e) {
+                if (!closing.get()) {
+                    System.err.println(errorMessage + e.getClass().getSimpleName() + ": " + e.getMessage());
+                    e.printStackTrace();
+                }
+            }
+        }, "Gogo shell");
+        // start shell on a separate thread...
+        thread.start();
+
+        return () -> {
+            closing.set(true);
+            shell.stop();
+            try {
+                terminal.close();
+            } catch (IOException e) {
+                // Ignore
+            }
+            try {
+                long t0 = System.currentTimeMillis();
+                while (thread.isAlive()) {
+                    thread.interrupt();
+                    thread.join(10);
+                    if (System.currentTimeMillis() - t0 > 5000) {
+                        System.err.println("!!! FAILED TO STOP EXECUTOR !!!");
+                        break;
+                    }
                 }
             } catch (InterruptedException e) {
                 // Restore administration...
                 Thread.currentThread().interrupt();
             }
+        };
+    }
+
+    private void stopShell() {
+        if (closer != null) {
+            closer.run();
         }
         while (!regs.isEmpty()) {
             ServiceRegistration<?> reg = regs.iterator().next();
             regs.remove(reg);
             reg.unregister();
-        }
-    }
-
-    private void doStartShell(CommandProcessor processor, Shell shell) {
-        String errorMessage = "gogo: unable to create console";
-        try (Terminal terminal = TerminalBuilder.builder()
-                .system(true)
-                .nativeSignals(true)
-                .signalHandler(Terminal.SignalHandler.SIG_IGN)
-                .build();
-             CommandSession session = processor.createSession(terminal.input(), terminal.output(), terminal.output())) {
-            session.put(Shell.VAR_TERMINAL, terminal);
-            try {
-                List<String> args = new ArrayList<>();
-                args.add("--login");
-                String argstr = shell.getContext().getProperty("gosh.args");
-                if (argstr != null) {
-                    Tokenizer tokenizer = new Tokenizer(argstr);
-                    Token token;
-                    while ((token = tokenizer.next()) != null) {
-                        args.add(token.toString());
-                    }
-                }
-                shell.gosh(session, args.toArray(new String[args.size()]));
-            } catch (Exception e) {
-                Object loc = session.get(".location");
-                if (null == loc || !loc.toString().contains(":")) {
-                    loc = "gogo";
-                }
-                errorMessage = loc.toString();
-                throw e;
-            }
-        } catch (Exception e) {
-            System.err.println(errorMessage + e.getClass().getSimpleName() + ": " + e.getMessage());
-            e.printStackTrace();
         }
     }
 
