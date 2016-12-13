@@ -87,6 +87,8 @@ public class Shell {
     private final Context context;
     private final CommandProcessor processor;
 
+    private AtomicBoolean stopping = new AtomicBoolean();
+
     public Shell(Context context, CommandProcessor processor) {
         this(context, processor, null);
     }
@@ -206,6 +208,10 @@ public class Shell {
             }
         }
         return null;
+    }
+
+    public void stop() {
+        stopping.set(true);
     }
 
     public Object gosh(final CommandSession session, String[] argv) throws Exception {
@@ -369,7 +375,7 @@ public class Shell {
                 String status = current.name().toLowerCase();
                 terminal.writer().write(getStatusLine(job, width, status));
                 terminal.flush();
-                if (reading.get()) {
+                if (reading.get() && !stopping.get()) {
                     ((LineReaderImpl) reader).redrawLine();
                     ((LineReaderImpl) reader).redisplay();
                 }
@@ -389,11 +395,16 @@ public class Shell {
         });
         Object result = null;
         try {
-            while (true) {
+            while (!stopping.get()) {
                 try {
                     reading.set(true);
                     try {
-                        reader.readLine(Shell.getPrompt(session), Shell.getRPrompt(session), null, null);
+                        String prompt = Shell.getPrompt(session);
+                        String rprompt = Shell.getRPrompt(session);
+                        if (stopping.get()) {
+                            break;
+                        }
+                        reader.readLine(prompt, rprompt, null, null);
                     } finally {
                         reading.set(false);
                     }
