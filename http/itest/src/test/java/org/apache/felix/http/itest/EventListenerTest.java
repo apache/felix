@@ -21,11 +21,14 @@ package org.apache.felix.http.itest;
 import static javax.servlet.http.HttpServletResponse.SC_INTERNAL_SERVER_ERROR;
 import static javax.servlet.http.HttpServletResponse.SC_OK;
 import static javax.servlet.http.HttpServletResponse.SC_SERVICE_UNAVAILABLE;
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Dictionary;
 import java.util.Hashtable;
+import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
@@ -33,6 +36,8 @@ import javax.servlet.Servlet;
 import javax.servlet.ServletContextEvent;
 import javax.servlet.ServletContextListener;
 import javax.servlet.ServletException;
+import javax.servlet.ServletRequestEvent;
+import javax.servlet.ServletRequestListener;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
@@ -391,5 +396,115 @@ public class EventListenerTest extends BaseIntegrationTest
             reg.unregister();
         }
         assertTrue(destroyLatch.await(5, TimeUnit.SECONDS));
+    }
+
+    /**
+     * Tests {@link ServletRequestListener}s
+     */
+    @Test
+    public void testServletRequestListener() throws Exception
+    {
+        final List<String> list = new ArrayList<>();
+
+        final ServletRequestListener listener = new ServletRequestListener()
+        {
+
+            @Override
+            public void requestDestroyed(ServletRequestEvent arg0)
+            {
+                list.add("DESTROY");
+            }
+
+            @Override
+            public void requestInitialized(ServletRequestEvent arg0)
+            {
+                list.add("INIT");
+            }
+        };
+
+        // register with default context
+        final ServiceRegistration<ServletRequestListener> reg = m_context.registerService(ServletRequestListener.class, listener, getListenerProps());
+
+        // register test servlet with default context
+        ServiceRegistration<Servlet> regS = m_context.registerService(Servlet.class,
+                new TestServlet()
+                {
+                    @Override
+                    protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException
+                    {
+                        resp.setStatus(SC_OK);
+                        resp.flushBuffer();
+                    }
+                }, getServletProps("/test"));
+
+        try
+        {
+            assertEquals(0, list.size());
+            assertContent(SC_OK, null, createURL("/test"));
+            assertEquals(2, list.size());
+            assertEquals("INIT", list.get(0));
+            assertEquals("DESTROY", list.get(1));
+        }
+        finally
+        {
+            reg.unregister();
+            regS.unregister();
+        }
+    }
+
+    /**
+     * Tests {@link ServletRequestListener}s
+     */
+    @Test
+    public void testServletRequestListenerWithHttpAdmin() throws Exception
+    {
+        final List<String> list = new ArrayList<>();
+
+        final ServletRequestListener listener = new ServletRequestListener()
+        {
+
+            @Override
+            public void requestDestroyed(ServletRequestEvent arg0)
+            {
+                list.add("DESTROY");
+            }
+
+            @Override
+            public void requestInitialized(ServletRequestEvent arg0)
+            {
+                list.add("INIT");
+            }
+        };
+
+        // register with all contexts
+        final Dictionary<String, Object> props = new Hashtable<String, Object>();
+        props.put(HttpWhiteboardConstants.HTTP_WHITEBOARD_LISTENER, "true");
+        props.put(HttpWhiteboardConstants.HTTP_WHITEBOARD_CONTEXT_SELECT, "(" + HttpWhiteboardConstants.HTTP_WHITEBOARD_CONTEXT_NAME + "=*)");
+        final ServiceRegistration<ServletRequestListener> reg = m_context.registerService(ServletRequestListener.class, listener, getListenerProps());
+
+        // register test servlet with http service
+        getHttpService().registerServlet("/test", new TestServlet()
+                {
+                    @Override
+                    protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException
+                    {
+                        resp.setStatus(SC_OK);
+                        resp.flushBuffer();
+                    }
+                }, null, null);
+
+        try
+        {
+            assertEquals(0, list.size());
+            assertContent(SC_OK, null, createURL("/test"));
+// TODO            assertEquals(2, list.size());
+// TODO            assertEquals("INIT", list.get(0));
+// TODO            assertEquals("DESTROY", list.get(1));
+        }
+        finally
+        {
+            reg.unregister();
+            getHttpService().unregister("/test");
+        }
     }
 }
