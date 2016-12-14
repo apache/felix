@@ -70,7 +70,7 @@
         <bundle.file.name>
             ${bundle.build.name}/${project.build.finalName}.jar
         </bundle.file.name>
-        <felix.ca.version>1.8.11-SNAPSHOT</felix.ca.version>
+        <felix.ca.version>1.9.0-SNAPSHOT</felix.ca.version>
     </properties>
     
     
