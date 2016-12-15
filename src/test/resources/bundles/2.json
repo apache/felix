@@ -1,0 +1,12 @@
+{
+  "configurations" : [
+    {
+      "service.pid" : "a",
+      "foo" : "bar2"
+    },
+    {
+      "service.pid" : "b",
+      "x" : "y2"
+    }
+  ]
+}

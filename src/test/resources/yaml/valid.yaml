@@ -1,5 +1,0 @@
-configurations:
-  - a:
-      foo: bar
-  - b:
-      x: y

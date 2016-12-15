@@ -69,8 +69,8 @@ public class ConfiguratorTest {
         final Requirement req = mock(Requirement.class);
         when(rev.getRequirements(Util.NS_OSGI_IMPL)).thenReturn(Collections.singletonList(req));
         final Vector<URL> urls = new Vector<>();
-        urls.add(this.getClass().getResource("/bundles/" + id + ".yaml"));
-        when(b.findEntries("OSGI-INF/configurator", "*.yaml", false)).thenReturn(urls.elements());
+        urls.add(this.getClass().getResource("/bundles/" + id + ".json"));
+        when(b.findEntries("OSGI-INF/configurator", "*.json", false)).thenReturn(urls.elements());
 
         return b;
     }
