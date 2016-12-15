@@ -199,7 +199,7 @@ public class Configurator {
                 }
                 final List<ConfigurationFile> allFiles = new ArrayList<>();
                 for(final Map.Entry<String, String> entry : files.entrySet()) {
-                    final ConfigurationFile file = org.apache.felix.configurator.impl.yaml.YAMLUtil.readYAML(null, entry.getKey(), null, -1, entry.getValue());
+                    final ConfigurationFile file = org.apache.felix.configurator.impl.json.JSONUtil.readJSON(null, entry.getKey(), null, -1, entry.getValue());
                     if ( file != null ) {
                         allFiles.add(file);
                     }
@@ -246,7 +246,7 @@ public class Configurator {
             }
             final Set<String> paths = Util.isConfigurerBundle(bundle);
             if ( paths != null ) {
-                final BundleState config = org.apache.felix.configurator.impl.yaml.YAMLUtil.readConfigurationsFromBundle(bundle, paths);
+                final BundleState config = org.apache.felix.configurator.impl.json.JSONUtil.readConfigurationsFromBundle(bundle, paths);
                 for(final String pid : config.getPids()) {
                     state.addAll(pid, config.getConfigurations(pid));
                 }

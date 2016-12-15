@@ -1,0 +1,12 @@
+{
+  "config" : {
+    "string" : "bar",
+    "boolean" : true,
+    "number": 17,
+    "float": 5.0,
+    "string.array" : ["a", "b"], 
+    "boolean.array" : [true, false],
+    "number.array" : [3,4],
+    "float.array" : [1.0,2.0]
+  }
+}

@@ -24,9 +24,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.osgi.framework.Bundle;
-import org.osgi.converter.Converter;
-import org.osgi.converter.StandardConverter;
-import org.osgi.converter.TypeReference;
+import org.osgi.util.converter.Converter;
+import org.osgi.util.converter.StandardConverter;
+import org.osgi.util.converter.TypeReference;
 
 public class TypeConverter {
 
