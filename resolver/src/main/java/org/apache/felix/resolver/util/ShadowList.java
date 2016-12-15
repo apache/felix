@@ -27,26 +27,19 @@ import org.osgi.service.resolver.ResolveContext;
 
 public class ShadowList extends CandidateSelector
 {
-    public static  ShadowList createShadowList(CandidateSelector original) {
+    public static ShadowList createShadowList(CandidateSelector original) {
         if (original instanceof ShadowList)
         {
             throw new IllegalArgumentException("Cannot create a ShadowList using another ShadowList.");
         }
-        return new ShadowList(original);
+        return new ShadowList(original.unmodifiable, original.unmodifiable, original.isUnmodifiable);
     }
 
     public static ShadowList deepCopy(ShadowList original) {
-        List<Capability> originalCopy = new ArrayList<Capability>(original.m_original);
-        return new ShadowList(original.unmodifiable, originalCopy, original.isUnmodifiable);
+        return new ShadowList(original.unmodifiable, original.m_original, original.isUnmodifiable);
     }
 
     private final List<Capability> m_original;
-
-    private ShadowList(CandidateSelector original)
-    {
-        super(original);
-        m_original = new ArrayList<Capability>(original.getRemainingCandidates());
-    }
 
     private ShadowList(CandidateSelector shadow, List<Capability> original)
     {
@@ -54,9 +47,9 @@ public class ShadowList extends CandidateSelector
         m_original = original;
     }
 
-    public ShadowList(List<Capability> unmodifiable, List<Capability> originalCopy, AtomicBoolean isUnmodifiable) {
+    private ShadowList(List<Capability> unmodifiable, List<Capability> original, AtomicBoolean isUnmodifiable) {
         super(unmodifiable, isUnmodifiable);
-        m_original = originalCopy;
+        m_original = new ArrayList<Capability>(original);
     }
 
     public ShadowList copy() {
