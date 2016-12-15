@@ -834,6 +834,30 @@ class Candidates
         }
 
         // Step 4
+        // First copy candidates for wrapped requirements to the host.
+        for (WrappedResource hostResource : hostResources) {
+            for (Requirement r : hostResource.getRequirements(null))
+            {
+                Requirement origReq = ((WrappedRequirement) r).getDeclaredRequirement();
+                CandidateSelector cands = m_candidateMap.get(origReq);
+                if (cands != null)
+                {
+                    if (cands instanceof ShadowList)
+                    {
+                        m_candidateMap.put(r, ShadowList.deepCopy((ShadowList) cands));
+                    } else {
+                        m_candidateMap.put(r, cands.copy());
+                    }
+                    for (Capability cand : cands.getRemainingCandidates())
+                    {
+                        Set<Requirement> dependents = m_dependentMap.get(cand);
+                        dependents.remove(origReq);
+                        dependents.add(r);
+                    }
+                }
+            }
+        }
+
         for (WrappedResource hostResource : hostResources)
         {
             // Replaces capabilities from fragments with the capabilities
@@ -915,28 +939,6 @@ class Candidates
                                 shadow.replace(origCap, c);
                             }
                         }
-                    }
-                }
-            }
-
-            // Copy candidates for fragment requirements to the host.
-            for (Requirement r : hostResource.getRequirements(null))
-            {
-                Requirement origReq = ((WrappedRequirement) r).getDeclaredRequirement();
-                CandidateSelector cands = m_candidateMap.get(origReq);
-                if (cands != null)
-                {
-                    if (cands instanceof ShadowList)
-                    {
-                        m_candidateMap.put(r, ShadowList.deepCopy((ShadowList) cands));
-                    } else {
-                        m_candidateMap.put(r, cands.copy());
-                    }
-                    for (Capability cand : cands.getRemainingCandidates())
-                    {
-                        Set<Requirement> dependents = m_dependentMap.get(cand);
-                        dependents.remove(origReq);
-                        dependents.add(r);
                     }
                 }
             }
