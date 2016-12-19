@@ -22,12 +22,10 @@ import org.osgi.framework.ServiceReference;
 
 /**
  * A Configuration Event.
- *
  * <p>
  * {@code ConfigurationEvent} objects are delivered to all registered
  * {@code ConfigurationListener} service objects. ConfigurationEvents must be
  * delivered in chronological order with respect to each listener.
- *
  * <p>
  * A type code is used to identify the type of event. The following event types
  * are defined:
@@ -37,7 +35,6 @@ import org.osgi.framework.ServiceReference;
  * <li>{@link #CM_LOCATION_CHANGED}</li>
  * </ul>
  * Additional event types may be defined in the future.
- *
  * <p>
  * Security Considerations. {@code ConfigurationEvent} objects do not provide
  * {@code Configuration} objects, so no sensitive configuration information is

@@ -24,7 +24,6 @@ import org.osgi.framework.ServiceReference;
 /**
  * A service interface for processing configuration dictionary before the
  * update.
- *
  * <p>
  * A bundle registers a {@code ConfigurationPlugin} object in order to process
  * configuration updates before they reach the Managed Service or Managed
@@ -34,11 +33,9 @@ import org.osgi.framework.ServiceReference;
  * {@code updated} method. The Configuration Plugin service thus has the
  * opportunity to view and modify the properties before they are passed to the
  * Managed Service or Managed Service Factory.
- *
  * <p>
  * Configuration Plugin (plugin) services have full read/write access to all
  * configuration information that passes through them.
- *
  * <p>
  * The {@code Integer} {@code service.cmRanking} registration property may be
  * specified. Not specifying this registration property, or setting it to
@@ -48,18 +45,15 @@ import org.osgi.framework.ServiceReference;
  * higher ranked ones. In the event of more than one plugin having the same
  * value of {@code service.cmRanking}, then the Configuration Admin service
  * arbitrarily chooses the order in which they are called.
- *
  * <p>
  * By convention, plugins with {@code service.cmRanking < 0} or
  * {@code service.cmRanking > 1000} should not make modifications to the
  * properties.
- *
  * <p>
  * The Configuration Admin service has the right to hide properties from
  * plugins, or to ignore some or all the changes that they make. This might be
  * done for security reasons. Any such behavior is entirely implementation
  * defined.
- *
  * <p>
  * A plugin may optionally specify a {@code cm.target} registration property
  * whose value is the PID of the Managed Service or Managed Service Factory

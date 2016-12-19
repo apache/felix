@@ -16,16 +16,15 @@
 
 package org.osgi.service.cm;
 
-import java.io.IOException;
-
 /**
  * An {@code Exception} class to inform the client of a {@code Configuration}
  * about the locked state of a configuration object.
  *
- * @author $Id$
+ * @author $Id: LockedConfigurationException.java 1750478 2016-06-28 11:34:40Z
+ *         cziegeler $
  * @since 1.6
  */
-public class LockedConfigurationException extends IOException {
+public class ReadOnlyConfigurationException extends RuntimeException {
     static final long       serialVersionUID    = 1898442024230518832L;
 
     /**
@@ -33,7 +32,7 @@ public class LockedConfigurationException extends IOException {
 	 *
 	 * @param reason reason for failure
 	 */
-	public LockedConfigurationException(String reason) {
+	public ReadOnlyConfigurationException(String reason) {
 		super(reason);
 	}
 }

@@ -21,7 +21,6 @@ import org.osgi.annotation.versioning.ConsumerType;
 /**
  * Listener for Configuration Events. When a {@code ConfigurationEvent} is
  * fired, it is asynchronously delivered to all {@code ConfigurationListener}s.
- *
  * <p>
  * {@code ConfigurationListener} objects are registered with the Framework
  * service registry and are notified with a {@code ConfigurationEvent} object
@@ -31,7 +30,6 @@ import org.osgi.annotation.versioning.ConsumerType;
  * {@code ConfigurationEvent} object to determine its type, the pid of the
  * {@code Configuration} object with which it is associated, and the
  * Configuration Admin service that fired the event.
- *
  * <p>
  * Security Considerations. Bundles wishing to monitor configuration events will
  * require {@code ServicePermission[ConfigurationListener,REGISTER]} to register

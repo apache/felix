@@ -20,6 +20,7 @@ package org.apache.felix.cm.impl;
 
 
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.Dictionary;
 import java.util.Enumeration;
 import java.util.Hashtable;
@@ -703,6 +704,20 @@ public class ConfigurationImpl extends ConfigurationBase
                     {
                         return false;
                     }
+                    // arrays are compared using Arrays.equals
+                    if ( val1.getClass().isArray() )
+                    {
+                        if ( !val2.getClass().isArray() )
+                        {
+                            return false;
+                        }
+                        final Object[] a1 = convertToObjectArray(val1);
+                        final Object[] a2 = convertToObjectArray(val2);
+                        if ( ! Arrays.equals(a1, a2) )
+                        {
+                            return false;
+                        }
+                    }
                     if ( !val1.equals(val2) )
                     {
                         return false;
@@ -712,6 +727,91 @@ public class ConfigurationImpl extends ConfigurationBase
         }
 
         return true;
+    }
+
+    /**
+     * Convert the object to an array
+     * @param value The array
+     * @return an object array
+     */
+    private static Object[] convertToObjectArray(final Object value)
+    {
+        final Object[] values;
+        if (value instanceof long[])
+        {
+            final long[] a = (long[])value;
+            values = new Object[a.length];
+            for(int i=0;i<a.length;i++)
+            {
+                values[i] = a[i];
+            }
+        }
+        else if (value instanceof int[]) {
+            final int[] a = (int[])value;
+            values = new Object[a.length];
+            for(int i=0;i<a.length;i++)
+            {
+                values[i] = a[i];
+            }
+        } else if (value instanceof double[])
+        {
+            final double[] a = (double[])value;
+            values = new Object[a.length];
+            for(int i=0;i<a.length;i++)
+            {
+                values[i] = a[i];
+            }
+        }
+        else if (value instanceof byte[])
+        {
+            final byte[] a = (byte[])value;
+            values = new Object[a.length];
+            for(int i=0;i<a.length;i++)
+            {
+                values[i] = a[i];
+            }
+        }
+        else if (value instanceof float[])
+        {
+            final float[] a = (float[])value;
+            values = new Object[a.length];
+            for(int i=0;i<a.length;i++)
+            {
+                values[i] = a[i];
+            }
+        }
+        else if (value instanceof short[])
+        {
+            final short[] a = (short[])value;
+            values = new Object[a.length];
+            for(int i=0;i<a.length;i++)
+            {
+                values[i] = a[i];
+            }
+        }
+        else if (value instanceof boolean[])
+        {
+            final boolean[] a = (boolean[])value;
+            values = new Object[a.length];
+            for(int i=0;i<a.length;i++)
+            {
+                values[i] = a[i];
+            }
+        }
+        else if (value instanceof char[])
+        {
+            final char[] a = (char[])value;
+            values = new Object[a.length];
+            for(int i=0;i<a.length;i++)
+            {
+                values[i] = a[i];
+            }
+        }
+        else
+        {
+            values = (Object[]) value;
+        }
+        return values;
     }
 
     static boolean isAutoProp(final String name)
