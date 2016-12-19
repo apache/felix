@@ -59,12 +59,12 @@ public final class ConfigurationPermission extends BasicPermission {
 	public final static String		TARGET				= "target";
 
     /**
-     * Provides permission to lock a configurations.
-     * The action string {@value #LOCK}.
+     * Provides permission to set or remove an attribute on the configuration.
+     * The action string {@value #ATTRIBUTE}.
      *
      * @since 1.6
      */
-    public final static String      LOCK              = "lock";
+    public final static String      ATTRIBUTE              = "attribute";
 
     private final static int		ACTION_CONFIGURE	= 0x00000001;
 	private final static int		ACTION_TARGET		= 0x00000002;

@@ -18,6 +18,7 @@ package org.osgi.service.cm;
 
 import java.io.IOException;
 import java.util.Dictionary;
+import java.util.EnumSet;
 
 import org.osgi.annotation.versioning.ProviderType;
 import org.osgi.framework.Filter;
@@ -25,12 +26,10 @@ import org.osgi.framework.ServiceReference;
 
 /**
  * The configuration information for a {@code ManagedService} or
- * {@code ManagedServiceFactory} object.
- *
- * The Configuration Admin service uses this interface to represent the
- * configuration information for a {@code ManagedService} or for a service
- * instance of a {@code ManagedServiceFactory}.
- *
+ * {@code ManagedServiceFactory} object. The Configuration Admin service uses
+ * this interface to represent the configuration information for a
+ * {@code ManagedService} or for a service instance of a
+ * {@code ManagedServiceFactory}.
  * <p>
  * A {@code Configuration} object contains a configuration dictionary and allows
  * the properties to be updated via this object. Bundles wishing to receive
@@ -38,7 +37,6 @@ import org.osgi.framework.ServiceReference;
  * {@code ManagedService} or {@code ManagedServiceFactory}. Only administrative
  * bundles, and bundles wishing to update their own configurations need to use
  * this class.
- *
  * <p>
  * The properties handled in this configuration have case insensitive
  * {@code String} objects as keys. However, case must be preserved from the last
@@ -49,20 +47,16 @@ import org.osgi.framework.ServiceReference;
  * location of the target bundle that registered a Managed Service or a Managed
  * Service Factory. However, if the location starts with {@code ?} then the
  * location indicates multiple delivery. In such a case the configuration must
- * be delivered to all targets.
- *
- * If security is on, the Configuration Permission can be used to restrict the
- * targets that receive updates. The Configuration Admin must only update a
- * target when the configuration location matches the location of the target's
- * bundle or the target bundle has a Configuration Permission with the action
- * {@link ConfigurationPermission#TARGET} and a name that matches the
- * configuration location. The name in the permission may contain wildcards (
- * {@code '*'}) to match the location using the same substring matching rules as
- * {@link Filter}.
- *
- * Bundles can always create, manipulate, and be updated from configurations
- * that have a location that matches their bundle location.
- *
+ * be delivered to all targets. If security is on, the Configuration Permission
+ * can be used to restrict the targets that receive updates. The Configuration
+ * Admin must only update a target when the configuration location matches the
+ * location of the target's bundle or the target bundle has a Configuration
+ * Permission with the action {@link ConfigurationPermission#TARGET} and a name
+ * that matches the configuration location. The name in the permission may
+ * contain wildcards ( {@code '*'}) to match the location using the same
+ * substring matching rules as {@link Filter}. Bundles can always create,
+ * manipulate, and be updated from configurations that have a location that
+ * matches their bundle location.
  * <p>
  * If a configuration's location is {@code null}, it is not yet bound to a
  * location. It will become bound to the location of the first bundle that
@@ -78,6 +72,16 @@ import org.osgi.framework.ServiceReference;
  */
 @ProviderType
 public interface Configuration {
+	/**
+	 * Configuration Attributes.
+	 */
+	enum ConfigurationAttribute {
+		/**
+		 * Mark the configuration as readonly.
+		 */
+		READ_ONLY
+	}
+
 	/**
 	 * Get the PID for this {@code Configuration} object.
 	 *
@@ -129,7 +133,7 @@ public interface Configuration {
      *         {@link #getBundleLocation()} method.
      * @throws IllegalStateException If this configuration has been deleted.
      */
-    public Dictionary<String, Object> getModifiedProperties(ServiceReference<ManagedService> reference);
+    public Dictionary<String, Object> getProcessedProperties(ServiceReference<ManagedService> reference);
 
     /**
 	 * Update the properties of this {@code Configuration} object.
@@ -153,7 +157,7 @@ public interface Configuration {
 	 * {@link ConfigurationEvent#CM_UPDATED} event.
 	 *
 	 * @param properties the new set of properties for this configuration
-	 * @throws LockedConfigurationException if the configuration is locked
+	 * @throws ReadOnlyConfigurationException if the configuration is locked
 	 * @throws IOException if update cannot be made persistent
 	 * @throws IllegalArgumentException if the {@code Dictionary} object
 	 *         contains invalid configuration types or contains case variants of
@@ -176,7 +180,7 @@ public interface Configuration {
 	 * Also notifies all Configuration Listeners with a
 	 * {@link ConfigurationEvent#CM_DELETED} event.
 	 *
-     * @throws LockedConfigurationException if the configuration is locked
+     * @throws ReadOnlyConfigurationException if the configuration is locked
 	 * @throws IOException If delete fails.
 	 * @throws IllegalStateException If this configuration has been deleted.
 	 */
@@ -210,41 +214,29 @@ public interface Configuration {
 	 */
 	public void update() throws IOException;
 
-    /**
-     * Update the properties of this {@code Configuration} object if the
-     * provided properties are different than the currently stored set
-     *
-     * If the properties are the same, no operation is performed, otherwise it
-     * stores the properties in persistent storage after adding or overwriting
-     * the following properties:
-     * <ul>
-     * <li>"service.pid" : is set to be the PID of this configuration.</li>
-     * <li>"service.factoryPid" : if this is a factory configuration it is set
-     * to the factory PID else it is not set.</li>
-     * </ul>
-     * These system properties are all of type {@code String}.
-     *
-     * <p>
-     * If the corresponding Managed Service/Managed Service Factory is
-     * registered, its updated method must be called asynchronously. Else, this
-     * callback is delayed until aforementioned registration occurs.
-     *
-     * <p>
-     * Also notifies all Configuration Listeners with a
-     * {@link ConfigurationEvent#CM_UPDATED} event.
-     *
-     * @param properties the new set of properties for this configuration
-     * @return Returns {@code true} if the configuration was updated.
-     *
-     * @throws LockedConfigurationException If the configuration is locked
-     * @throws IOException if update cannot be made persistent
-     * @throws IllegalArgumentException if the {@code Dictionary} object
-     *         contains invalid configuration types or contains case variants of
-     *         the same key name.
-     * @throws IllegalStateException If this configuration has been deleted.
-     * @since 1.6
-     */
-    public boolean setProperties(Dictionary<String, ?> properties) throws IOException;
+	/**
+	 * Update the properties of this {@code Configuration} object if the
+	 * provided properties are different than the currently stored set
+	 * Properties are compared as follows.
+	 * <ul>
+	 * <li>scalars are compared using equals()
+	 * <li>arrays are compared using Arrays.equals()
+	 * <li>Collections are compared using equals()
+	 * </ul>
+	 * If the properties compare the same, no operation is performed, otherwise
+	 * the behaviour is identical to the update(Dictionary) method.
+	 * 
+	 * @param properties the new set of properties for this configuration
+	 * @throws ReadOnlyConfigurationException If the configuration is locked
+	 * @throws IOException if update cannot be made persistent
+	 * @throws IllegalArgumentException if the {@code Dictionary} object
+	 *             contains invalid configuration types or contains case
+	 *             variants of the same key name.
+	 * @throws IllegalStateException If this configuration has been deleted.
+	 * @since 1.6
+	 */
+	public void updateIfDifferent(Dictionary<String, ? > properties)
+			throws IOException;
 
     /**
 	 * Bind this {@code Configuration} object to the specified location.
@@ -317,24 +309,37 @@ public interface Configuration {
 	 */
 	public long getChangeCount();
 
-    /**
-     * Locks or unlocks the configuration.
-     * @param flag If {@code true} the configuration is locked,
-     *             if {@code false} the configuration is unlocked.
-     * @throws IOException If the new lock state cannot be persisted.
-     * @throws IllegalStateException If this configuration has been deleted.
-     * @since 1.6
-     */
-    public void setLocked(boolean flag) throws IOException;
+	/**
+	 * Add attributes to the configuration. Currently the only supported
+	 * attribute is {@link ConfigurationAttribute#READ_ONLY}.
+	 * 
+	 * @param attrs The attributes to add.
+	 * @throws IOException If the new state cannot be persisted.
+	 * @throws IllegalStateException If this configuration has been deleted.
+	 * @since 1.6
+	 */
+	public void addAttributes(ConfigurationAttribute... attrs)
+			throws IOException;
 
-    /**
-     * Check if the configuration is currently locked.
-     * @return {@code true} if the configuration is locked, {
-     *         {@code false} otherwise.
-     * @throws IllegalStateException If this configuration has been deleted.
-     * @since 1.6
-     */
-    public boolean isLocked();
+	/**
+	 * Get the attributes of this configuration.
+	 * 
+	 * @return The set of attributes.
+	 * @throws IllegalStateException If this configuration has been deleted.
+	 * @since 1.6
+	 */
+	public EnumSet<ConfigurationAttribute> getAttributes();
+
+	/**
+	 * Remove attributes from this configuration.
+	 * 
+	 * @param attrs The attributes to remove.
+	 * @throws IOException If the new state cannot be persisted.
+	 * @throws IllegalStateException If this configuration has been deleted.
+	 * @since 1.6
+	 */
+	public void removeAttributes(ConfigurationAttribute... attrs)
+			throws IOException;
 
     /**
 	 * Equality is defined to have equal PIDs

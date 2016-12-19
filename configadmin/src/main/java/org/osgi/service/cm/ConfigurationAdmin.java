@@ -25,36 +25,30 @@ import org.osgi.framework.InvalidSyntaxException;
 
 /**
  * Service for administering configuration data.
- *
  * <p>
  * The main purpose of this interface is to store bundle configuration data
  * persistently. This information is represented in {@code Configuration}
  * objects. The actual configuration data is a {@code Dictionary} of properties
  * inside a {@code Configuration} object.
- *
  * <p>
  * There are two principally different ways to manage configurations. First
  * there is the concept of a Managed Service, where configuration data is
  * uniquely associated with an object registered with the service registry.
- *
  * <p>
  * Next, there is the concept of a factory where the Configuration Admin service
  * will maintain 0 or more {@code Configuration} objects for a Managed Service
  * Factory that is registered with the Framework.
- *
  * <p>
  * The first concept is intended for configuration data about "things/services"
  * whose existence is defined externally, e.g. a specific printer. Factories are
  * intended for "things/services" that can be created any number of times, e.g.
  * a configuration for a DHCP server for different networks.
- *
  * <p>
  * Bundles that require configuration should register a Managed Service or a
  * Managed Service Factory in the service registry. A registration property
  * named {@code service.pid} (persistent identifier or PID) must be used to
  * identify this Managed Service or Managed Service Factory to the Configuration
  * Admin service.
- *
  * <p>
  * When the ConfigurationAdmin detects the registration of a Managed Service, it
  * checks its persistent storage for a configuration object whose
@@ -63,7 +57,6 @@ import org.osgi.framework.InvalidSyntaxException;
  * {@link ManagedService#updated(Dictionary)} method with the new properties.
  * The implementation of a Configuration Admin service must run these call-backs
  * asynchronously to allow proper synchronization.
- *
  * <p>
  * When the Configuration Admin service detects a Managed Service Factory
  * registration, it checks its storage for configuration objects whose
@@ -73,14 +66,12 @@ import org.osgi.framework.InvalidSyntaxException;
  * the new properties. The calls to the {@code updated} method of a
  * {@code ManagedServiceFactory} must be executed sequentially and not overlap
  * in time.
- *
  * <p>
  * In general, bundles having permission to use the Configuration Admin service
  * can only access and modify their own configuration information. Accessing or
  * modifying the configuration of other bundles requires
  * {@code ConfigurationPermission[location,CONFIGURE]}, where location is the
  * configuration location.
- *
  * <p>
  * {@code Configuration} objects can be <i>bound</i> to a specified bundle
  * location or to a region (configuration location starts with {@code ?}). If a
@@ -89,11 +80,9 @@ import org.osgi.framework.InvalidSyntaxException;
  * service must detect if the bundle corresponding to the location is
  * uninstalled. If this occurs, the {@code Configuration} object must be
  * unbound, that is its location field is set back to {@code null}.
- *
  * <p>
  * If target's bundle location matches the configuration location it is always
  * updated.
- *
  * <p>
  * If the configuration location starts with {@code ?}, that is, the location is
  * a region, then the configuration must be delivered to all targets registered
@@ -103,12 +92,10 @@ import org.osgi.framework.InvalidSyntaxException;
  * security must be verified using the
  * {@link org.osgi.framework.Bundle#hasPermission(Object)} method on the target
  * bundle.
- *
  * <p>
  * If a target cannot be updated because the location does not match or it has
  * no permission and security is active then the Configuration Admin service
  * must not do the normal callback.
- *
  * <p>
  * The method descriptions of this class refer to a concept of "the calling
  * bundle". This is a loose way of referring to the bundle which obtained the

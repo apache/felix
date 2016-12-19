@@ -21,14 +21,15 @@ package org.apache.felix.cm.impl;
 
 import java.io.IOException;
 import java.util.Dictionary;
+import java.util.EnumSet;
 
 import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceReference;
 import org.osgi.service.cm.Configuration;
 import org.osgi.service.cm.ConfigurationAdmin;
 import org.osgi.service.cm.ConfigurationPermission;
-import org.osgi.service.cm.LockedConfigurationException;
 import org.osgi.service.cm.ManagedService;
+import org.osgi.service.cm.ReadOnlyConfigurationException;
 import org.osgi.service.log.LogService;
 
 
@@ -185,11 +186,11 @@ public class ConfigurationAdapter implements Configuration
 
 
     /**
-     * @see org.osgi.service.cm.Configuration#setProperties(java.util.Dictionary)
+     * @see org.osgi.service.cm.Configuration#updateIfDifferent(java.util.Dictionary)
      */
     @SuppressWarnings("unchecked")
     @Override
-    public boolean setProperties(final Dictionary<String, ?> properties) throws IOException
+    public void updateIfDifferent(final Dictionary<String, ?> properties) throws IOException
     {
         delegatee.getConfigurationManager().log( LogService.LOG_DEBUG, "setProperties(properties={0})", new Object[]
                 { properties } );
@@ -198,40 +199,92 @@ public class ConfigurationAdapter implements Configuration
         checkDeleted();
         checkLocked();
 
-        if ( ConfigurationImpl.equals((Dictionary<String, Object>)properties, delegatee.getProperties(false)) )
+        if ( !ConfigurationImpl.equals((Dictionary<String, Object>)properties, delegatee.getProperties(false)) )
         {
-            // nothing to do
-            return false;
+            delegatee.update( properties );
         }
-        delegatee.update( properties );
-        return true;
     }
 
 
     /**
-     * @see org.osgi.service.cm.Configuration#setLocked(boolean)
+     * @see org.osgi.service.cm.Configuration#addAttributes(org.osgi.service.cm.Configuration.ConfigurationAttribute[])
      */
     @Override
-    public void setLocked(boolean flag) throws IOException
+    public void addAttributes(final ConfigurationAttribute... attrs) throws IOException
     {
-        delegatee.getConfigurationManager().log( LogService.LOG_DEBUG, "setLocked({0})",
-                new Object[] { flag } );
-
         checkDeleted();
         final String bundleLocation = delegatee.getBundleLocation();
         this.configurationAdmin.checkPermission(this.delegatee.getConfigurationManager(),
                 ( bundleLocation == null ) ? "*" : bundleLocation,
-                        ConfigurationPermission.LOCK,
+                        ConfigurationPermission.ATTRIBUTE,
                         true);
-        delegatee.setLocked( flag );
+
+        delegatee.getConfigurationManager().log( LogService.LOG_DEBUG, "addAttributes({0})", attrs );
+
+        if ( attrs != null )
+        {
+
+            for(ConfigurationAttribute ca : attrs)
+            {
+                // locked is the only attribute at the moment
+                if ( ca == ConfigurationAttribute.READ_ONLY ) {
+
+                    delegatee.setLocked( true );
+                }
+            }
+        }
     }
 
 
     /**
-     * @see org.osgi.service.cm.Configuration#getModifiedProperties(org.osgi.framework.ServiceReference)
+     * @see org.osgi.service.cm.Configuration#getAttributes()
      */
     @Override
-    public Dictionary<String, Object> getModifiedProperties(ServiceReference<ManagedService> sr) {
+    public EnumSet<ConfigurationAttribute> getAttributes()
+    {
+        checkDeleted();
+        if ( delegatee.isLocked() )
+        {
+            return EnumSet.of(ConfigurationAttribute.READ_ONLY);
+        }
+        return EnumSet.noneOf(ConfigurationAttribute.class);
+    }
+
+
+    /**
+     * @see org.osgi.service.cm.Configuration#removeAttributes(org.osgi.service.cm.Configuration.ConfigurationAttribute[])
+     */
+    @Override
+    public void removeAttributes(final ConfigurationAttribute... attrs) throws IOException
+    {
+        checkDeleted();
+        final String bundleLocation = delegatee.getBundleLocation();
+        this.configurationAdmin.checkPermission(this.delegatee.getConfigurationManager(),
+                ( bundleLocation == null ) ? "*" : bundleLocation,
+                        ConfigurationPermission.ATTRIBUTE,
+                        true);
+
+        delegatee.getConfigurationManager().log( LogService.LOG_DEBUG, "removeAttributes({0})", attrs );
+
+        if ( attrs != null )
+        {
+            for(ConfigurationAttribute ca : attrs)
+            {
+                // locked is the only attribute at the moment
+                if ( ca == ConfigurationAttribute.READ_ONLY ) {
+
+                    delegatee.setLocked( false );
+                }
+            }
+        }
+    }
+
+    /**
+     * @see org.osgi.service.cm.Configuration#getProcessedProperties(ServiceReference)
+     */
+    @Override
+    public Dictionary<String, Object> getProcessedProperties(ServiceReference<ManagedService> sr)
+    {
         final Dictionary<String, Object> props = this.getProperties();
 
         this.delegatee.getConfigurationManager().callPlugins(props, sr,
@@ -240,18 +293,6 @@ public class ConfigurationAdapter implements Configuration
 
         return props;
     }
-
-
-    /**
-     * @see org.osgi.service.cm.Configuration#isLocked()
-     */
-    @Override
-    public boolean isLocked()
-    {
-        checkDeleted();
-        return delegatee.isLocked();
-    }
-
 
     /**
      * @see org.apache.felix.cm.impl.ConfigurationImpl#hashCode()
@@ -317,13 +358,13 @@ public class ConfigurationAdapter implements Configuration
     /**
      * Checks whether this configuration object is locked.
      *
-     * @throws LockedConfigurationException If this configuration object is locked.
+     * @throws ReadOnlyConfigurationException If this configuration object is locked.
      */
     private void checkLocked() throws IOException
     {
         if ( delegatee.isLocked() )
         {
-            throw new LockedConfigurationException( "Configuration " + delegatee.getPid() + " is locked" );
+            throw new ReadOnlyConfigurationException( "Configuration " + delegatee.getPid() + " is read-only" );
         }
     }
 }

@@ -21,14 +21,11 @@ import java.util.Dictionary;
 import org.osgi.annotation.versioning.ConsumerType;
 
 /**
- * Manage multiple service instances.
- *
- * Bundles registering this interface are giving the Configuration Admin service
- * the ability to create and configure a number of instances of a service that
- * the implementing bundle can provide. For example, a bundle implementing a
- * DHCP server could be instantiated multiple times for different interfaces
- * using a factory.
- *
+ * Manage multiple service instances. Bundles registering this interface are
+ * giving the Configuration Admin service the ability to create and configure a
+ * number of instances of a service that the implementing bundle can provide.
+ * For example, a bundle implementing a DHCP server could be instantiated
+ * multiple times for different interfaces using a factory.
  * <p>
  * Each of these <i>service instances </i> is represented, in the persistent
  * storage of the Configuration Admin service, by a factory
@@ -39,7 +36,6 @@ import org.osgi.annotation.versioning.ConsumerType;
  * create a new factory instance based on these configuration properties. When
  * called with a PID that it has seen before, it should update that existing
  * service instance with the new configuration information.
- *
  * <p>
  * In general it is expected that the implementation of this interface will
  * maintain a data structure that maps PIDs to the factory instances that it has
@@ -48,7 +44,6 @@ import org.osgi.annotation.versioning.ConsumerType;
  * object with the service registry, its PID should match the PID of the
  * corresponding {@code Configuration} object (but it should <b>not </b> be
  * registered as a Managed Service!).
- *
  * <p>
  * An example that demonstrates the use of a factory. It will create serial
  * ports under command of the Configuration Admin service.
@@ -91,7 +86,6 @@ import org.osgi.annotation.versioning.ConsumerType;
  *     }
  *     ...
  *   }
- *
  * </pre>
  *
  * @author $Id$

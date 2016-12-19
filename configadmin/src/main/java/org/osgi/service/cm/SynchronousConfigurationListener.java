@@ -22,7 +22,6 @@ import org.osgi.annotation.versioning.ConsumerType;
  * Synchronous Listener for Configuration Events. When a
  * {@code ConfigurationEvent} is fired, it is synchronously delivered to all
  * {@code SynchronousConfigurationListener}s.
- *
  * <p>
  * {@code SynchronousConfigurationListener} objects are registered with the
  * Framework service registry and are synchronously notified with a
@@ -32,7 +31,6 @@ import org.osgi.annotation.versioning.ConsumerType;
  * {@code ConfigurationEvent} object to determine its type, the PID of the
  * {@code Configuration} object with which it is associated, and the
  * Configuration Admin service that fired the event.
- *
  * <p>
  * Security Considerations. Bundles wishing to synchronously monitor
  * configuration events will require

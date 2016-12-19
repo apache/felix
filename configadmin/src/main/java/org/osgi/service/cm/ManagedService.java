@@ -23,25 +23,21 @@ import org.osgi.annotation.versioning.ConsumerType;
 /**
  * A service that can receive configuration data from a Configuration Admin
  * service.
- *
  * <p>
  * A Managed Service is a service that needs configuration data. Such an object
  * should be registered with the Framework registry with the {@code service.pid}
  * property set to some unique identifier called a PID.
- *
  * <p>
  * If the Configuration Admin service has a {@code Configuration} object
  * corresponding to this PID, it will callback the {@code updated()} method of
  * the {@code ManagedService} object, passing the properties of that
  * {@code Configuration} object.
- *
  * <p>
  * If it has no such {@code Configuration} object, then it calls back with a
  * {@code null} properties argument. Registering a Managed Service will always
  * result in a callback to the {@code updated()} method provided the
  * Configuration Admin service is, or becomes active. This callback must always
  * be done asynchronously.
- *
  * <p>
  * Else, every time that either of the {@code updated()} methods is called on
  * that {@code Configuration} object, the {@code ManagedService.updated()}
@@ -49,7 +45,6 @@ import org.osgi.annotation.versioning.ConsumerType;
  * called on that {@code Configuration} object, {@code ManagedService.updated()}
  * is called with a {@code null} for the properties parameter. All these
  * callbacks must be done asynchronously.
- *
  * <p>
  * The following example shows the code of a serial port that will create a port
  * depending on configuration information.
@@ -93,15 +88,12 @@ import org.osgi.annotation.versioning.ConsumerType;
  *     }
  *     ...
  *   }
- *
  * </pre>
- *
  * <p>
  * As a convention, it is recommended that when a Managed Service is updated, it
  * should copy all the properties it does not recognize into the service
  * registration properties. This will allow the Configuration Admin service to
  * set properties on services which can then be used by other applications.
- *
  * <p>
  * Normally, a single Managed Service for a given PID is given the configuration
  * dictionary, this is the configuration that is bound to the location of the
