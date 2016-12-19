@@ -21,6 +21,7 @@ package org.apache.felix.webconsole.internal.configuration;
 
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.Dictionary;
 import java.util.Enumeration;
@@ -688,19 +689,22 @@ class ConfigAdminSupport
 
         if (value != null)
         {
-            // if set convert to string
-            if (value instanceof String[]) {
-                String[] valueArray = (String[])value;
+            // convert array to string
+            if (value.getClass().isArray())
+            {
                 StringBuffer valueString = new StringBuffer();
-                for (int i = 0; i < valueArray.length; i++) {
-                    if (i > 0) {
+                for (int i = 0; i < Array.getLength(value); i++)
+                {
+                    if (i > 0)
+                    {
                         valueString.append(",");
                     }
-                    valueString.append(valueArray[i]);
+                    valueString.append(Array.get(value, i));
                 }
                 return valueString.toString();
             }
-            else {
+            else
+            {
                 return value.toString();
             }
         }
