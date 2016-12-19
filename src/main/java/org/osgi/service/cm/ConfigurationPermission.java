@@ -36,9 +36,10 @@ import org.osgi.framework.Filter;
 /**
  * Indicates a bundle's authority to configure bundles or be updated by
  * Configuration Admin.
- *
+ * 
  * @ThreadSafe
- * @author $Id$
+ * @author $Id: ConfigurationPermission.java 1750478 2016-06-28 11:34:40Z
+ *         cziegeler $
  * @since 1.2
  */
 
@@ -68,7 +69,8 @@ public final class ConfigurationPermission extends BasicPermission {
 
     private final static int		ACTION_CONFIGURE	= 0x00000001;
 	private final static int		ACTION_TARGET		= 0x00000002;
-	private final static int		ACTION_ALL			= ACTION_CONFIGURE | ACTION_TARGET;
+	private final static int		ACTION_ATTRIBUTE    = 0x00000004;
+	private final static int		ACTION_ALL			= ACTION_CONFIGURE | ACTION_TARGET | ACTION_ATTRIBUTE;
 	final static int				ACTION_NONE			= 0;
 
 	/**
@@ -180,10 +182,23 @@ public final class ConfigurationPermission extends BasicPermission {
 					matchlen = 9;
 					mask |= ACTION_CONFIGURE;
 
-				} else {
-					// parse error
-					throw new IllegalArgumentException("invalid actions: " + actions);
-				}
+    			} else
+	    			if (i >= 8 && (a[i - 8] == 'a' || a[i - 8] == 'A')
+		    				&& (a[i - 7] == 't' || a[i - 7] == 'T')
+			    			&& (a[i - 6] == 't' || a[i - 6] == 'T')
+				    		&& (a[i - 5] == 'r' || a[i - 5] == 'R')
+					    	&& (a[i - 4] == 'i' || a[i - 4] == 'I')
+						    && (a[i - 3] == 'b' || a[i - 3] == 'B')
+						    && (a[i - 2] == 'u' || a[i - 2] == 'U')
+    						&& (a[i - 1] == 't' || a[i - 1] == 'T')
+	     					&& (a[i] == 'e' || a[i] == 'E')) {
+		    			matchlen = 9;
+			    		mask |= ACTION_ATTRIBUTE;
+				    } else {
+					   // parse error
+    					throw new IllegalArgumentException("invalid actions: " + actions);
+	    			}
+	    		
 
 			// make sure we didn't just match the tail of a word
 			// like "ackbarftarget". Also, skip to the comma.
@@ -425,6 +440,13 @@ public final class ConfigurationPermission extends BasicPermission {
 				if (comma)
 					sb.append(',');
 				sb.append(TARGET);
+				comma = true;
+			}
+
+			if ((mask & ACTION_ATTRIBUTE) == ACTION_ATTRIBUTE) {
+				if (comma)
+					sb.append(',');
+				sb.append(ATTRIBUTE);
 			}
 
 			actions = result = sb.toString();
