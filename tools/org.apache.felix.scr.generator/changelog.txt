@@ -1,3 +1,10 @@
+Changes from 1.16.0 to 1.15.0
+---------------------------
+** Bug
+    * [FELIX-5451] - Input/Output streams not properly closed in org.apache.felix.scr.generator
+    * [FELIX-5452] - SCR bnd plugin fails when embedding jars with optional/excluded dependencies
+
+
 Changes from 1.15.0 to 1.14.0
 -----------------------------
 ** Improvement
