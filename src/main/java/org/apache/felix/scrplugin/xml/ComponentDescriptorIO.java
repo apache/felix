@@ -19,6 +19,7 @@
 package org.apache.felix.scrplugin.xml;
 
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
@@ -186,32 +187,39 @@ public class ComponentDescriptorIO {
             final Log logger) throws SAXException, IOException, TransformerException {
         logger.info("Writing " + components.size() + " Service Component Descriptors to "
                 + descriptorFile);
-        final ContentHandler contentHandler = IOUtils.getSerializer(descriptorFile);
-        // detect namespace to use
-        final String namespace = module.getOptions().getSpecVersion().getNamespaceUrl();
-
-        contentHandler.startDocument();
-        contentHandler.startPrefixMapping(PREFIX, namespace);
-
-        IOUtils.newline(contentHandler);
-        // wrapper element to generate well formed xml if 0 or more than 1 component
-        int startIndent = 0;
-        if ( components.size() != 1 ) {
-            contentHandler.startElement("", ComponentDescriptorIO.COMPONENTS, ComponentDescriptorIO.COMPONENTS, new AttributesImpl());
+        
+        FileOutputStream fos = new FileOutputStream(descriptorFile);
+        try {
+            final ContentHandler contentHandler = IOUtils.getSerializer(fos);
+            // detect namespace to use
+            final String namespace = module.getOptions().getSpecVersion().getNamespaceUrl();
+    
+            contentHandler.startDocument();
+            contentHandler.startPrefixMapping(PREFIX, namespace);
+    
             IOUtils.newline(contentHandler);
-            startIndent = 1;
+            // wrapper element to generate well formed xml if 0 or more than 1 component
+            int startIndent = 0;
+            if ( components.size() != 1 ) {
+                contentHandler.startElement("", ComponentDescriptorIO.COMPONENTS, ComponentDescriptorIO.COMPONENTS, new AttributesImpl());
+                IOUtils.newline(contentHandler);
+                startIndent = 1;
+            }
+            for (final ComponentContainer component : components) {
+                generateXML(namespace, module, component, contentHandler, startIndent);
+            }
+    
+            // end wrapper element
+            if ( components.size() != 1 ) {
+                contentHandler.endElement("", ComponentDescriptorIO.COMPONENTS, ComponentDescriptorIO.COMPONENTS);
+                IOUtils.newline(contentHandler);
+            }
+            contentHandler.endPrefixMapping(PREFIX);
+            contentHandler.endDocument();
         }
-        for (final ComponentContainer component : components) {
-            generateXML(namespace, module, component, contentHandler, startIndent);
+        finally {
+            fos.close();
         }
-
-        // end wrapper element
-        if ( components.size() != 1 ) {
-            contentHandler.endElement("", ComponentDescriptorIO.COMPONENTS, ComponentDescriptorIO.COMPONENTS);
-            IOUtils.newline(contentHandler);
-        }
-        contentHandler.endPrefixMapping(PREFIX);
-        contentHandler.endDocument();
     }
 
     /**

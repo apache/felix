@@ -21,6 +21,7 @@ package org.apache.felix.scrplugin;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.Collections;
 import java.util.UUID;
 
@@ -72,7 +73,15 @@ public class SCRDescriptorGeneratorTest {
     }
 
     private void unpackSource(String resource, File dest) throws IOException {
-        IOUtils.copy(getClass().getResourceAsStream(resource), new FileOutputStream(dest));
+        InputStream is = getClass().getResourceAsStream(resource);
+        FileOutputStream fos = new FileOutputStream(dest);
+        try {
+            IOUtils.copy(is, fos);
+        }
+        finally {
+            fos.close();
+            is.close();
+        }
     }
 
     /**
