@@ -148,7 +148,11 @@ public class ClassScanner {
                 throw e;
             } catch ( final SCRDescriptorException e ) {
                 throw e;
-            } catch (final Throwable t) { // e.g. NoClassDefFoundError or ClassNotFoundException, see FELIX-5328
+            } catch ( final ClassNotFoundException e ) {
+                log.warn("ClassNotFoundException: " + e.getMessage());
+            } catch ( final NoClassDefFoundError e ) {
+                log.warn("NoClassDefFoundError: " + e.getMessage());
+            } catch (final Throwable t) {
                 throw new SCRDescriptorException("Unable to load compiled class: " + src.getClassName(), src.getFile().toString(), t);
             }
         }
