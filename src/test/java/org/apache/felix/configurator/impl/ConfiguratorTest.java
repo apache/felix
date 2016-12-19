@@ -94,10 +94,10 @@ public class ConfiguratorTest {
 
         final Dictionary<String, Object> props1 = new Hashtable<>();
         props1.put("foo", "bar");
-        verify(c1).setProperties(props1);
+        verify(c1).updateIfDifferent(props1);
         final Dictionary<String, Object> props2 = new Hashtable<>();
         props2.put("x", "y");
-        verify(c2).setProperties(props2);
+        verify(c2).updateIfDifferent(props2);
 
         configurator.processRemoveBundle(1);
         configurator.process();
@@ -143,12 +143,12 @@ public class ConfiguratorTest {
         configurator.process();
 
         InOrder inorder = inOrder(c1, c2);
-        inorder.verify(c1).setProperties(props1);
-        inorder.verify(c2).setProperties(props2);
-        inorder.verify(c1).setProperties(props3);
-        inorder.verify(c2).setProperties(props4);
-        inorder.verify(c1).setProperties(props1);
-        inorder.verify(c2).setProperties(props2);
+        inorder.verify(c1).updateIfDifferent(props1);
+        inorder.verify(c2).updateIfDifferent(props2);
+        inorder.verify(c1).updateIfDifferent(props3);
+        inorder.verify(c2).updateIfDifferent(props4);
+        inorder.verify(c1).updateIfDifferent(props1);
+        inorder.verify(c2).updateIfDifferent(props2);
         inorder.verify(c1).delete();
         inorder.verify(c2).delete();
         inorder.verifyNoMoreInteractions();
