@@ -18,10 +18,9 @@
  */
 package org.apache.felix.scrplugin.xml;
 
-import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.io.Writer;
 import java.util.Properties;
@@ -63,9 +62,9 @@ public class IOUtils {
     /**
      * Get a serializer to write XML to a file.
      */
-    public static ContentHandler getSerializer(final File file)
+    public static ContentHandler getSerializer(final OutputStream outputStream)
     throws TransformerException, IOException {
-        final Writer writer = new OutputStreamWriter(new FileOutputStream(file), "UTF-8");
+        final Writer writer = new OutputStreamWriter(outputStream, "UTF-8");
 
         final TransformerHandler transformerHandler = FACTORY.newTransformerHandler();
         final Transformer transformer = transformerHandler.getTransformer();

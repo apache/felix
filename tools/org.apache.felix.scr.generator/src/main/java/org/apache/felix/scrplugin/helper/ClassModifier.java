@@ -62,8 +62,14 @@ public abstract class ClassModifier {
         final String fileName = outputDirectory + File.separatorChar +  className.replace('.', File.separatorChar) + ".class";
         final ClassNode cn = new ClassNode();
         try {
-            final ClassReader reader = new ClassReader(new FileInputStream(fileName));
-            reader.accept(cn, 0);
+            final FileInputStream fis = new FileInputStream(fileName);
+            try {
+                final ClassReader reader = new ClassReader(fis);
+                reader.accept(cn, 0);
+            }
+            finally {
+                fis.close();
+            }
 
             // For target Java7 and above use: ClassWriter.COMPUTE_MAXS  | ClassWriter.COMPUTE_FRAMES
             final int mask = (cn.version > 50 ? ClassWriter.COMPUTE_MAXS  | ClassWriter.COMPUTE_FRAMES : 0);
@@ -108,8 +114,12 @@ public abstract class ClassModifier {
             }
 
             final FileOutputStream fos = new FileOutputStream(fileName);
-            fos.write(writer.toByteArray());
-            fos.close();
+            try {
+                fos.write(writer.toByteArray());
+            }
+            finally {
+                fos.close();
+            }
         } catch (final Exception e) {
             throw new SCRDescriptorException("Unable to add methods to " + className, typeName, e);
         }

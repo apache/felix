@@ -192,8 +192,15 @@ public class MetaTypeIO {
                         final String baseName = useFile.getName().substring(0, lastDot);
                         final File propsFile = new File(useFile.getParentFile(), baseName + ".properties");
                         try {
-                            metatypeProps.store(new FileOutputStream(propsFile), null);
-                        } catch (IOException e) {
+                            final FileOutputStream fos = new FileOutputStream(propsFile);
+                            try {
+                                metatypeProps.store(fos, null);
+                            }
+                            finally {
+                                fos.close();
+                            }
+                        }
+                        catch (IOException e) {
                             throw new SCRDescriptorException("Unable to get metatype.properties", propsFile.getAbsolutePath());
                         }
                         fileNames.add(parentDir.getName() + '/' + mtDir.getName() + '/' + propsFile.getName());
@@ -253,29 +260,35 @@ public class MetaTypeIO {
         final String namespace = detectMetatypeVersion(metaData);
 
         try {
-            final ContentHandler contentHandler = IOUtils.getSerializer(file);
-
-            contentHandler.startDocument();
-            contentHandler.startPrefixMapping(PREFIX, namespace);
-
-            final AttributesImpl ai = new AttributesImpl();
-            IOUtils.addAttribute(ai, "localization", localization);
-
-            contentHandler.startElement(namespace, METADATA_ELEMENT, METADATA_ELEMENT_QNAME, ai);
-            IOUtils.newline(contentHandler);
-
-            for(final ComponentContainer comp : components) {
-                if ( comp.getMetatypeContainer() != null ) {
-                    generateOCDXML(comp.getMetatypeContainer(), contentHandler);
-                    generateDesignateXML(comp.getMetatypeContainer(), contentHandler);
+            FileOutputStream fos = new FileOutputStream(file);
+            try {
+                final ContentHandler contentHandler = IOUtils.getSerializer(fos);
+    
+                contentHandler.startDocument();
+                contentHandler.startPrefixMapping(PREFIX, namespace);
+    
+                final AttributesImpl ai = new AttributesImpl();
+                IOUtils.addAttribute(ai, "localization", localization);
+    
+                contentHandler.startElement(namespace, METADATA_ELEMENT, METADATA_ELEMENT_QNAME, ai);
+                IOUtils.newline(contentHandler);
+    
+                for(final ComponentContainer comp : components) {
+                    if ( comp.getMetatypeContainer() != null ) {
+                        generateOCDXML(comp.getMetatypeContainer(), contentHandler);
+                        generateDesignateXML(comp.getMetatypeContainer(), contentHandler);
+                    }
                 }
+    
+                // end wrapper element
+                contentHandler.endElement(namespace, METADATA_ELEMENT, METADATA_ELEMENT_QNAME);
+                IOUtils.newline(contentHandler);
+                contentHandler.endPrefixMapping(PREFIX);
+                contentHandler.endDocument();
             }
-
-            // end wrapper element
-            contentHandler.endElement(namespace, METADATA_ELEMENT, METADATA_ELEMENT_QNAME);
-            IOUtils.newline(contentHandler);
-            contentHandler.endPrefixMapping(PREFIX);
-            contentHandler.endDocument();
+            finally {
+                fos.close();
+            }
         } catch (final IOException e) {
             throw new SCRDescriptorException("Unable to generate xml", file.toString(), e);
         } catch (final TransformerException e) {
