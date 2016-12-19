@@ -136,6 +136,7 @@ public class AnnotationTest extends TestCase
         values.put("lon", "12345678");
         values.put("shor", 3l);
         values.put("string", 3);
+        values.put("array", new String[]{"foo", "bar"});
         return values;
     }
 
@@ -172,6 +173,7 @@ public class AnnotationTest extends TestCase
         long lon() default Long.MIN_VALUE;
         short shor() default -8;
         String string() default "default";
+        String[] array() default {};
     }
     
     public void testA2AllValues() throws Exception
@@ -193,6 +195,29 @@ public class AnnotationTest extends TestCase
         assertEquals(12345678l,  a.lon());
         assertEquals((short)3, a.shor());
         assertEquals("3", a.string());
+        assertArrayEquals(new String[]{"foo", "bar"}, a.array());
+    }
+
+    public void testA2DefaultValues() throws Exception
+    {
+        Map<String, Object> values = Collections.emptyMap();
+
+        Object o = Annotations.toObject( A2.class, values, mockBundle(), false);
+        assertTrue("expected an A2", o instanceof A2);
+
+        A2 a = (A2) o;
+        assertEquals(true, a.bool());
+        assertEquals((byte)5, a.byt());
+        assertEquals('a', a.cha());
+        assertEquals(Integer.class, a.clas());
+        assertEquals(E1.b, a.e1());
+        assertEquals(-2.0, a.doubl());
+        assertEquals(-4f, a.floa());
+        assertEquals(-5, a.integer());
+        assertEquals(Long.MIN_VALUE,  a.lon());
+        assertEquals((short)-8, a.shor());
+        assertEquals("default", a.string());
+        assertArrayEquals(new String[0], a.array());
     }
     
     public @interface A1Arrays {

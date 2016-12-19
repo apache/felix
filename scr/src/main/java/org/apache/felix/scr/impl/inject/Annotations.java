@@ -56,6 +56,13 @@ public class Annotations
                 complexFields.put(key, method);
                 continue;
             }
+
+            if ( raw == null && method.getDefaultValue() != null )
+            {
+                m.put( name, method.getDefaultValue());
+                continue;
+            }
+
             try
             {
                 if (returnType.isArray())
