@@ -409,7 +409,7 @@ public class Configurator {
             }
 
             if ( update ) {
-                configuration.setProperties(cfg.getProperties());
+                configuration.updateIfDifferent(cfg.getProperties());
                 cfg.setState(ConfigState.INSTALLED);
                 configList.setChangeCount(configuration.getChangeCount());
                 configList.setLastInstalled(cfg);
