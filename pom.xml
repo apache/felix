@@ -29,7 +29,7 @@
     <groupId>org.apache.felix</groupId>
     <artifactId>org.apache.felix.scr.ant</artifactId>
 
-    <version>1.16.1-SNAPSHOT</version>
+    <version>1.17.0</version>
     <packaging>jar</packaging>
 
     <name>SCR Ant Task</name>
@@ -39,9 +39,9 @@
     </description>
 
     <scm>
-        <connection>scm:svn:http://svn.apache.org/repos/asf/felix/trunk/tools/org.apache.felix.scr.ant</connection>
-        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/felix/trunk/tools/org.apache.felix.scr.ant</developerConnection>
-        <url>http://svn.apache.org/repos/asf/felix/tools/org.apache.felix.scr.ant</url>
+        <connection>scm:svn:http://svn.apache.org/repos/asf/felix/releases/org.apache.felix.scr.ant-1.17.0</connection>
+        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/felix/releases/org.apache.felix.scr.ant-1.17.0</developerConnection>
+        <url>scm:svn:https://svn.apache.org/repos/asf/felix/releases/org.apache.felix.scr.ant-1.17.0</url>
     </scm>
 
     <properties>
