@@ -29,7 +29,7 @@
     <groupId>org.apache.felix</groupId>
     <artifactId>org.apache.felix.scr.generator</artifactId>
 
-    <version>1.15.1-SNAPSHOT</version>
+    <version>1.16.0</version>
     <packaging>jar</packaging>
 
     <name>Descriptor Generator Implementation</name>
@@ -39,9 +39,9 @@
     </description>
 
     <scm>
-        <connection>scm:svn:http://svn.apache.org/repos/asf/felix/trunk/tools/org.apache.felix.scr.generator</connection>
-        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/felix/trunk/tools/org.apache.felix.scr.generator</developerConnection>
-        <url>http://svn.apache.org/repos/asf/felix/tools/org.apache.felix.scr.generator</url>
+        <connection>scm:svn:http://svn.apache.org/repos/asf/felix/releases/org.apache.felix.scr.generator-1.16.0</connection>
+        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/felix/releases/org.apache.felix.scr.generator-1.16.0</developerConnection>
+        <url>scm:svn:https://svn.apache.org/repos/asf/felix/releases/org.apache.felix.scr.generator-1.16.0</url>
     </scm>
 
     <properties>
