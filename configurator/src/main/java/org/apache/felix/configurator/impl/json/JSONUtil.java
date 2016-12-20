@@ -19,7 +19,10 @@
 package org.apache.felix.configurator.impl.json;
 
 import java.io.IOException;
+import java.io.Reader;
 import java.io.StringReader;
+import java.io.StringWriter;
+import java.io.Writer;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -235,7 +238,17 @@ public class JSONUtil {
      * @param contents The contents
      * @return The parsed JSON object or {@code null} on failure,
      */
-    public static JsonObject parseJSON(final String name, final String contents) {
+    public static JsonObject parseJSON(final String name, String contents) {
+        // minify JSON first (remove comments)
+        try (final Reader in = new StringReader(contents);
+             final Writer out = new StringWriter()) {
+            final JSMin min = new JSMin(in, out);
+            min.jsmin();
+            contents = out.toString();
+        } catch ( final IOException ioe) {
+            SystemLogger.error("Invalid JSON from " + name);
+            return null;
+        }
         try (final JsonReader reader = Json.createReader(new StringReader(contents)) ) {
             final JsonStructure obj = reader.read();
             if ( obj != null && obj.getValueType() == ValueType.OBJECT ) {
