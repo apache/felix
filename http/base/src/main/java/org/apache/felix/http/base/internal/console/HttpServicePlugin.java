@@ -602,7 +602,7 @@ public class HttpServicePlugin extends HttpServlet
         {
             try
             {
-                final ServiceReference<?>[] ref = this.context.getServiceReferences((String)null, "(" + Constants.SERVICE_ID + "=" + String.valueOf(serviceId));
+                final ServiceReference<?>[] ref = this.context.getServiceReferences((String)null, "(" + Constants.SERVICE_ID + "=" + String.valueOf(serviceId) + ")");
                 if ( ref != null && ref.length > 0 )
                 {
                     return ref[0];
