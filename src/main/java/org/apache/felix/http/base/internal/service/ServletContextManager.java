@@ -20,9 +20,6 @@ import java.util.Map;
 import java.util.WeakHashMap;
 
 import javax.servlet.ServletContext;
-import javax.servlet.ServletContextAttributeListener;
-import javax.servlet.ServletRequestAttributeListener;
-import javax.servlet.ServletRequestListener;
 
 import org.apache.felix.http.base.internal.context.ExtServletContext;
 import org.apache.felix.http.base.internal.registry.PerContextHandlerRegistry;
@@ -33,27 +30,18 @@ public final class ServletContextManager
 {
     private final Bundle bundle;
     private final ServletContext context;
-    private final ServletContextAttributeListener attributeListener;
     private final Map<HttpContext, ExtServletContext> contextMap;
     private final boolean sharedAttributes;
-    private final ServletRequestListener servletRequestListener;
-    private final ServletRequestAttributeListener servletRequestAttributeListener;
     private final PerContextHandlerRegistry handlerRegistry;
 
     public ServletContextManager(
             final Bundle bundle,
             final ServletContext context,
-            final ServletContextAttributeListener attributeListener,
             final boolean sharedAttributes,
-            final ServletRequestListener servletRequestListener,
-            final ServletRequestAttributeListener servletRequestAttributeListener,
             final PerContextHandlerRegistry registry)
     {
         this.bundle = bundle;
         this.context = context;
-        this.attributeListener = attributeListener;
-        this.servletRequestAttributeListener = servletRequestAttributeListener;
-        this.servletRequestListener = servletRequestListener;
         // FELIX-4424 : avoid classloader leakage through HttpContext, for now this is sufficient,
         // the real fix should be to remove ExtServletContext's when the usage count of HttpContext
         // drops to zero.
@@ -81,12 +69,7 @@ public final class ServletContextManager
         ExtServletContext context = new ServletContextImpl(this.bundle,
                 this.context,
                 httpContext,
-                this.attributeListener,
                 this.sharedAttributes,
-                null,
-                null,
-                servletRequestListener,
-                servletRequestAttributeListener,
                 handlerRegistry);
         this.contextMap.put(httpContext, context);
         return context;

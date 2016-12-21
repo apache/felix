@@ -18,8 +18,6 @@
  */
 package org.apache.felix.http.base.internal;
 
-import javax.servlet.http.HttpSessionAttributeListener;
-import javax.servlet.http.HttpSessionBindingEvent;
 import javax.servlet.http.HttpSessionEvent;
 import javax.servlet.http.HttpSessionIdListener;
 import javax.servlet.http.HttpSessionListener;
@@ -27,14 +25,14 @@ import javax.servlet.http.HttpSessionListener;
 /**
  * The <code>EventDispatcher</code> dispatches events sent from the servlet
  * container (embedded Jetty or container in which the framework is running
- * in bridged mode) to any {@link HttpSessionAttributeListener} or
+ * in bridged mode) to any {@link HttpSessionListener} or
  * {@link HttpSessionListener} services.
  *
  * TODO - only HttpSessionIdListener and HttpSessionListener should be
  *        required; HttpSessionListener only for getting notified of
  *        terminated session.
  */
-public class EventDispatcher implements HttpSessionAttributeListener, HttpSessionListener, HttpSessionIdListener
+public class EventDispatcher implements HttpSessionListener, HttpSessionIdListener
 {
     private volatile boolean active = false;
 
@@ -65,33 +63,6 @@ public class EventDispatcher implements HttpSessionAttributeListener, HttpSessio
         if ( this.active )
         {
             controller.getSessionListener().sessionDestroyed(se);
-        }
-    }
-
-    @Override
-    public void attributeAdded(final HttpSessionBindingEvent se)
-    {
-        if ( this.active )
-        {
-            controller.getSessionAttributeListener().attributeAdded(se);
-        }
-    }
-
-    @Override
-    public void attributeRemoved(final HttpSessionBindingEvent se)
-    {
-        if ( this.active )
-        {
-            controller.getSessionAttributeListener().attributeRemoved(se);
-        }
-    }
-
-    @Override
-    public void attributeReplaced(final HttpSessionBindingEvent se)
-    {
-        if ( this.active )
-        {
-            controller.getSessionAttributeListener().attributeReplaced(se);
         }
     }
 

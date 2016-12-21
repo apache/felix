@@ -52,14 +52,18 @@ public class ListenerInfo extends WhiteboardServiceInfo<EventListener>
         ALLOWED_INTERFACES.add(ServletRequestListener.class.getName());
     }
 
-    private final String enabled;
+    private final boolean enabled;
 
     private final String[] types;
 
+    /**
+     * Constructor for http whiteboard
+     * @param ref The service reference
+     */
     public ListenerInfo(final ServiceReference<EventListener> ref)
     {
         super(ref);
-        this.enabled = this.getStringProperty(ref, HttpWhiteboardConstants.HTTP_WHITEBOARD_LISTENER);
+        this.enabled = "true".equalsIgnoreCase(this.getStringProperty(ref, HttpWhiteboardConstants.HTTP_WHITEBOARD_LISTENER));
         final String[] objectClass = (String[])ref.getProperty(Constants.OBJECTCLASS);
         final Set<String> names = new HashSet<String>();
         for(final String name : objectClass)
@@ -72,10 +76,34 @@ public class ListenerInfo extends WhiteboardServiceInfo<EventListener>
         this.types = names.toArray(new String[names.size()]);
     }
 
+    /**
+     * Constructor for Apache Felix proprietary listener support
+     * @param ref The service reference
+     * @param marker Just a marker parameter to distinguish from other constructor
+     */
+    public ListenerInfo(final ServiceReference<EventListener> ref, final boolean marker)
+    {
+        super(ref);
+        this.enabled = true;
+        final String[] objectClass = (String[])ref.getProperty(Constants.OBJECTCLASS);
+        final Set<String> names = new HashSet<String>();
+        for(final String name : objectClass)
+        {
+            if ( ALLOWED_INTERFACES.contains(name) )
+            {
+                names.add(name);
+            }
+        }
+        // remove interfaces not supported by Felix whiteboard
+        names.remove(HttpSessionIdListener.class.getName());
+        names.remove(ServletContextListener.class.getName());
+        this.types = names.toArray(new String[names.size()]);
+    }
+
     @Override
     public boolean isValid()
     {
-        return super.isValid() && "true".equalsIgnoreCase(this.enabled);
+        return super.isValid() && this.enabled;
     }
 
     public String[] getListenerTypes()
