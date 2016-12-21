@@ -22,18 +22,19 @@ import org.apache.felix.scr.impl.manager.ComponentContextImpl;
 import org.apache.felix.scr.impl.manager.RefPair;
 import org.osgi.framework.BundleContext;
 
-
-
-
 /**
- * Component method to be invoked on service (un)binding.
+ * Component method to be invoked on service (un)binding or updating
  */
 public interface ReferenceMethod
 {
-    MethodResult invoke( final Object componentInstance,
-                         final ComponentContextImpl<?> componentContext,
-                         final RefPair<?, ?> refPair,
-                         final MethodResult methodCallFailureResult, SimpleLogger logger );
+    MethodResult invoke( Object componentInstance,
+                         ComponentContextImpl<?> componentContext,
+                         RefPair<?, ?> refPair,
+                         MethodResult methodCallFailureResult,
+                         SimpleLogger logger );
 
-    <S, T> boolean getServiceObject( ComponentContextImpl<S> key, RefPair<S, T> refPair, BundleContext context, SimpleLogger logger );
+    <S, T> boolean getServiceObject( ComponentContextImpl<S> key,
+            RefPair<S, T> refPair,
+            BundleContext context,
+            SimpleLogger logger );
 }

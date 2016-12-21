@@ -18,12 +18,16 @@
  */
 package org.apache.felix.scr.impl.helper;
 
-
-
 /**
- * Callback for initializing the reference
+ * Callback for initializing the reference (field references)
  */
 public interface InitReferenceMethod
 {
-    boolean init( final Object componentInstance, final SimpleLogger logger );
+    /**
+     * Initialize the reference. This is usually setting the value of a field.
+     * @param componentInstance The component instance
+     * @param logger The logger
+     * @return {@code true} if initialization succeeded
+     */
+    boolean init( Object componentInstance, SimpleLogger logger );
 }

@@ -119,7 +119,7 @@ public class ComponentContextImpl<S> implements ExtComponentContext {
     public final Dictionary<String, Object> getProperties()
     {
         // 112.12.3.5 The Dictionary is read-only and cannot be modified
-        return new ReadOnlyDictionary<String, Object>( m_componentManager.getProperties() );
+        return new ReadOnlyDictionary( m_componentManager.getProperties() );
     }
 
 

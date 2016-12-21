@@ -18,19 +18,26 @@
  */
 package org.apache.felix.scr.impl.helper;
 
-
 /**
- * @version $Rev$ $Date$
+ * {@code ReferenceMethods} holds pointers to methods for a single reference.
+ * <ul>
+ *   <li>The bind method
+ *   <li>The unbind method
+ *   <li>The updated method
+ *   <li>The init method (optional, only used for field references)
+ * </ul>
  */
 public interface ReferenceMethods
 {
-
+    /** Never returns {@code null}. */
     ReferenceMethod getBind();
 
+    /** Never returns {@code null}. */
     ReferenceMethod getUnbind();
 
+    /** Never returns {@code null}. */
     ReferenceMethod getUpdated();
 
-    /** Optional. */
+    /** This is optional and might return {@code null} */
     InitReferenceMethod getInit();
 }

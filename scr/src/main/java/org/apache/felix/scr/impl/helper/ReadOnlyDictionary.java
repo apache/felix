@@ -18,7 +18,6 @@
  */
 package org.apache.felix.scr.impl.helper;
 
-
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Dictionary;
@@ -29,17 +28,16 @@ import java.util.Set;
 
 import org.osgi.framework.ServiceReference;
 
-
 /**
  * The <code>ReadOnlyDictionary</code> is both a <code>Dictionary</code> and
  * a <code>Map</code> whose modification methods (like {@link #put(Object, Object)},
  * {@link #remove(Object)}, etc.) throw an {@link UnsupportedOperationException}.
  */
-public class ReadOnlyDictionary<S, T> extends Dictionary<S, T>
-    implements Map<S, T>, Comparable<ReadOnlyDictionary<S, T>>
+public class ReadOnlyDictionary extends Dictionary<String, Object>
+    implements Map<String, Object>, Comparable<ReadOnlyDictionary>
 {
 
-    private final Hashtable<S, T> m_delegate;
+    private final Hashtable<String, Object> m_delegate;
 
     private final ServiceReference<?> m_serviceReference;
 
@@ -47,16 +45,16 @@ public class ReadOnlyDictionary<S, T> extends Dictionary<S, T>
      * Creates a wrapper for the given delegate dictionary providing read
      * only access to the data.
      */
-    public ReadOnlyDictionary( final Map<S, T> delegate )
+    public ReadOnlyDictionary( final Map<String, Object> delegate )
     {
         if ( delegate instanceof Hashtable )
         {
-            this.m_delegate = ( Hashtable<S, T> ) delegate;
+            this.m_delegate = ( Hashtable<String, Object> ) delegate;
         }
         else
         {
-            this.m_delegate = new Hashtable<S, T>();
-            for ( Map.Entry<S, T> entry: delegate.entrySet() )
+            this.m_delegate = new Hashtable<String, Object>();
+            for ( Map.Entry<String, Object> entry: delegate.entrySet() )
             {
                 this.m_delegate.put( entry.getKey(), entry.getValue() );
             }
@@ -64,14 +62,13 @@ public class ReadOnlyDictionary<S, T> extends Dictionary<S, T>
         m_serviceReference = null;
     }
 
-
     /**
      * Creates a wrapper for the given service reference providing read only
      * access to the reference properties.
      */
     public ReadOnlyDictionary( final ServiceReference<?> serviceReference )
     {
-        Hashtable properties = new Hashtable();
+        Hashtable<String, Object> properties = new Hashtable<String, Object>();
         final String[] keys = serviceReference.getPropertyKeys();
         if ( keys != null )
         {
@@ -89,13 +86,13 @@ public class ReadOnlyDictionary<S, T> extends Dictionary<S, T>
     //---------- Dictionary API
 
     @Override
-    public Enumeration<T> elements()
+    public Enumeration<Object> elements()
     {
         return m_delegate.elements();
     }
 
     @Override
-    public T get( final Object key )
+    public Object get( final Object key )
     {
         return m_delegate.get( key );
     }
@@ -109,7 +106,7 @@ public class ReadOnlyDictionary<S, T> extends Dictionary<S, T>
 
 
     @Override
-    public Enumeration<S> keys()
+    public Enumeration<String> keys()
     {
         return m_delegate.keys();
     }
@@ -120,7 +117,7 @@ public class ReadOnlyDictionary<S, T> extends Dictionary<S, T>
      * instance is read-only and cannot modify and properties.
      */
     @Override
-    public T put( final S key, final T value )
+    public Object put( final String key, final Object value )
     {
         throw new UnsupportedOperationException();
     }
@@ -131,7 +128,7 @@ public class ReadOnlyDictionary<S, T> extends Dictionary<S, T>
      * instance is read-only and cannot modify and properties.
      */
     @Override
-    public T remove( final Object key )
+    public Object remove( final Object key )
     {
         throw new UnsupportedOperationException();
     }
@@ -171,31 +168,31 @@ public class ReadOnlyDictionary<S, T> extends Dictionary<S, T>
     }
 
 
-    public Set<Entry<S, T>> entrySet()
+    public Set<Entry<String, Object>> entrySet()
     {
         return Collections.unmodifiableSet( m_delegate.entrySet() );
     }
 
 
-    public Set<S> keySet()
+    public Set<String> keySet()
     {
         return Collections.unmodifiableSet( m_delegate.keySet() );
     }
 
 
-    public void putAll( Map<? extends S, ? extends T> m )
+    public void putAll( Map<? extends String, ? extends Object> m )
     {
         throw new UnsupportedOperationException();
     }
 
 
-    public Collection<T> values()
+    public Collection<Object> values()
     {
         return Collections.unmodifiableCollection( m_delegate.values() );
     }
 
 
-    public int compareTo(final ReadOnlyDictionary<S, T> o)
+    public int compareTo(final ReadOnlyDictionary o)
     {
         if ( m_serviceReference == null )
         {

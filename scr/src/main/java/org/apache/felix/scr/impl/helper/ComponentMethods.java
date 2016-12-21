@@ -16,8 +16,6 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-
-
 package org.apache.felix.scr.impl.helper;
 
 import org.apache.felix.scr.impl.metadata.ComponentMetadata;
