@@ -36,7 +36,6 @@ import javax.servlet.RequestDispatcher;
 import javax.servlet.Servlet;
 import javax.servlet.ServletContext;
 import javax.servlet.ServletContextAttributeEvent;
-import javax.servlet.ServletContextAttributeListener;
 import javax.servlet.ServletException;
 import javax.servlet.ServletRegistration;
 import javax.servlet.ServletRequestAttributeListener;
@@ -69,33 +68,18 @@ public class ServletContextImpl implements ExtServletContext
     private final ServletContext context;
     private final HttpContext httpContext;
     private final Map<String, Object> attributes;
-    private final ServletContextAttributeListener attributeListener;
-    private final HttpSessionAttributeListener httpSessionAttributeListener;
-    private final HttpSessionListener httpSessionListener;
-    private final ServletRequestListener servletRequestListener;
-    private final ServletRequestAttributeListener servletRequestAttributeListener;
     private final PerContextHandlerRegistry handlerRegistry;
 
     public ServletContextImpl(final Bundle bundle,
             final ServletContext context,
             final HttpContext httpContext,
-            final ServletContextAttributeListener attributeListener,
             final boolean sharedAttributes,
-            final HttpSessionAttributeListener httpSessionAttributeListener,
-            final HttpSessionListener httpSessionListener,
-            final ServletRequestListener servletRequestListener,
-            final ServletRequestAttributeListener servletRequestAttributeListener,
             final PerContextHandlerRegistry registry)
     {
         this.bundle = bundle;
         this.context = context;
         this.httpContext = httpContext;
-        this.attributeListener = attributeListener;
         this.attributes = sharedAttributes ? null : new ConcurrentHashMap<String, Object>();
-        this.httpSessionAttributeListener = httpSessionAttributeListener;
-        this.httpSessionListener = httpSessionListener;
-        this.servletRequestAttributeListener = servletRequestAttributeListener;
-        this.servletRequestListener = servletRequestListener;
         this.handlerRegistry = registry;
     }
 
@@ -394,25 +378,25 @@ public class ServletContextImpl implements ExtServletContext
     @Override
     public HttpSessionListener getHttpSessionListener()
     {
-        return this.httpSessionListener;
+        return this.handlerRegistry.getEventListenerRegistry();
     }
 
     @Override
     public HttpSessionAttributeListener getHttpSessionAttributeListener()
     {
-        return this.httpSessionAttributeListener;
+        return this.handlerRegistry.getEventListenerRegistry();
     }
 
     @Override
     public ServletRequestListener getServletRequestListener()
     {
-        return this.servletRequestListener;
+        return this.handlerRegistry.getEventListenerRegistry();
     }
 
     @Override
     public ServletRequestAttributeListener getServletRequestAttributeListener()
     {
-        return this.servletRequestAttributeListener;
+        return this.handlerRegistry.getEventListenerRegistry();
     }
 
     @Override
@@ -455,7 +439,7 @@ public class ServletContextImpl implements ExtServletContext
 
         if (oldValue != null)
         {
-            this.attributeListener.attributeRemoved(new ServletContextAttributeEvent(this, name, oldValue));
+            this.handlerRegistry.getEventListenerRegistry().attributeRemoved(new ServletContextAttributeEvent(this, name, oldValue));
         }
     }
 
@@ -481,11 +465,11 @@ public class ServletContextImpl implements ExtServletContext
 
             if (oldValue == null)
             {
-                this.attributeListener.attributeAdded(new ServletContextAttributeEvent(this, name, value));
+                this.handlerRegistry.getEventListenerRegistry().attributeAdded(new ServletContextAttributeEvent(this, name, value));
             }
             else
             {
-                this.attributeListener.attributeReplaced(new ServletContextAttributeEvent(this, name, oldValue));
+                this.handlerRegistry.getEventListenerRegistry().attributeReplaced(new ServletContextAttributeEvent(this, name, oldValue));
             }
         }
     }

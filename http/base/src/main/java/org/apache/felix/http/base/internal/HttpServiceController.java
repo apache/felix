@@ -21,7 +21,6 @@ import java.util.Hashtable;
 import javax.annotation.Nonnull;
 import javax.servlet.Servlet;
 import javax.servlet.ServletContext;
-import javax.servlet.http.HttpSessionAttributeListener;
 import javax.servlet.http.HttpSessionEvent;
 import javax.servlet.http.HttpSessionIdListener;
 import javax.servlet.http.HttpSessionListener;
@@ -84,26 +83,17 @@ public final class HttpServiceController
 
                 @Override
                 public void sessionDestroyed(final HttpSessionEvent se) {
-                    httpServiceFactory.getSessionListener().sessionDestroyed(se);
+                    registry.getRegistry(HttpServiceFactory.HTTP_SERVICE_CONTEXT_SERVICE_ID).getEventListenerRegistry().sessionDestroyed(se);
                     whiteboardManager.sessionDestroyed(se.getSession(), HttpSessionWrapper.getSessionContextIds(se.getSession()));
                 }
 
                 @Override
                 public void sessionCreated(final HttpSessionEvent se) {
-                    httpServiceFactory.getSessionListener().sessionCreated(se);
+                    registry.getRegistry(HttpServiceFactory.HTTP_SERVICE_CONTEXT_SERVICE_ID).getEventListenerRegistry().sessionCreated(se);
                 }
             };
         }
         return httpSessionListener;
-    }
-
-    /**
-     * TODO : we should try to remove this, it's only needed for
-     *        the proprietary support of the Felix implementation
-     */
-    HttpSessionAttributeListener getSessionAttributeListener()
-    {
-        return httpServiceFactory.getSessionAttributeListener();
     }
 
     HttpSessionIdListener getSessionIdListener()

@@ -423,7 +423,9 @@ public class EventListenerTest extends BaseIntegrationTest
         };
 
         // register with default context
-        final ServiceRegistration<ServletRequestListener> reg = m_context.registerService(ServletRequestListener.class, listener, getListenerProps());
+        final ServiceRegistration<ServletRequestListener> reg1 = m_context.registerService(ServletRequestListener.class, listener, getListenerProps());
+        // register proprietary listener
+        final ServiceRegistration<ServletRequestListener> reg2 = m_context.registerService(ServletRequestListener.class, listener, null);
 
         // register test servlet with default context
         ServiceRegistration<Servlet> regS = m_context.registerService(Servlet.class,
@@ -447,7 +449,8 @@ public class EventListenerTest extends BaseIntegrationTest
         }
         finally
         {
-            reg.unregister();
+            reg1.unregister();
+            reg2.unregister();
             regS.unregister();
         }
     }
@@ -480,7 +483,9 @@ public class EventListenerTest extends BaseIntegrationTest
         final Dictionary<String, Object> props = new Hashtable<String, Object>();
         props.put(HttpWhiteboardConstants.HTTP_WHITEBOARD_LISTENER, "true");
         props.put(HttpWhiteboardConstants.HTTP_WHITEBOARD_CONTEXT_SELECT, "(" + HttpWhiteboardConstants.HTTP_WHITEBOARD_CONTEXT_NAME + "=*)");
-        final ServiceRegistration<ServletRequestListener> reg = m_context.registerService(ServletRequestListener.class, listener, getListenerProps());
+        final ServiceRegistration<ServletRequestListener> reg = m_context.registerService(ServletRequestListener.class, listener, props);
+        // register proprietary listener
+        final ServiceRegistration<ServletRequestListener> reg2 = m_context.registerService(ServletRequestListener.class, listener, null);
 
         // register test servlet with http service
         getHttpService().registerServlet("/test", new TestServlet()
@@ -497,13 +502,16 @@ public class EventListenerTest extends BaseIntegrationTest
         {
             assertEquals(0, list.size());
             assertContent(SC_OK, null, createURL("/test"));
-// TODO            assertEquals(2, list.size());
-// TODO            assertEquals("INIT", list.get(0));
-// TODO            assertEquals("DESTROY", list.get(1));
+            assertEquals(4, list.size());
+            assertEquals("INIT", list.get(0));
+            assertEquals("INIT", list.get(1));
+            assertEquals("DESTROY", list.get(2));
+            assertEquals("DESTROY", list.get(3));
         }
         finally
         {
             reg.unregister();
+            reg2.unregister();
             getHttpService().unregister("/test");
         }
     }

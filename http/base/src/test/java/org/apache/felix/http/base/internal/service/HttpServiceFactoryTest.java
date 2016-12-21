@@ -44,7 +44,9 @@ public class HttpServiceFactoryTest {
                 return FrameworkUtil.createFilter((String) invocation.getArguments()[0]);
             }
         });
-        HttpServiceFactory hsf = new HttpServiceFactory(bc, new HandlerRegistry());
+        final HandlerRegistry reg = new HandlerRegistry();
+        reg.init();
+        HttpServiceFactory hsf = new HttpServiceFactory(bc, reg);
 
         Assert.assertNull("Not yet active",
                 hsf.getService(Mockito.mock(Bundle.class), null));

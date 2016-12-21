@@ -27,10 +27,7 @@ import java.util.Set;
 import javax.servlet.Filter;
 import javax.servlet.Servlet;
 import javax.servlet.ServletContext;
-import javax.servlet.ServletContextAttributeListener;
 import javax.servlet.ServletException;
-import javax.servlet.ServletRequestAttributeListener;
-import javax.servlet.ServletRequestListener;
 
 import org.apache.felix.http.api.ExtHttpService;
 import org.apache.felix.http.base.internal.context.ExtServletContext;
@@ -60,10 +57,7 @@ public final class PerBundleHttpServiceImpl implements ExtHttpService
     public PerBundleHttpServiceImpl(final Bundle bundle,
             final SharedHttpServiceImpl sharedHttpService,
             final ServletContext context,
-            final ServletContextAttributeListener servletAttributeListener,
-            final boolean sharedContextAttributes,
-            final ServletRequestListener reqListener,
-            final ServletRequestAttributeListener reqAttrListener)
+            final boolean sharedContextAttributes)
     {
         if (bundle == null)
         {
@@ -75,12 +69,9 @@ public final class PerBundleHttpServiceImpl implements ExtHttpService
         }
 
         this.bundle = bundle;
-        this.contextManager = new ServletContextManager(this.bundle, 
-        		context, 
-        		servletAttributeListener, 
-        		sharedContextAttributes, 
-        		reqListener, 
-        		reqAttrListener,
+        this.contextManager = new ServletContextManager(this.bundle,
+        		context,
+        		sharedContextAttributes,
         		sharedHttpService.getHandlerRegistry().getRegistry(HttpServiceFactory.HTTP_SERVICE_CONTEXT_SERVICE_ID));
         this.sharedHttpService = sharedHttpService;
     }

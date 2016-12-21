@@ -16,6 +16,8 @@
  */
 package org.apache.felix.http.base.internal.context;
 
+import static org.mockito.Mockito.when;
+
 import java.io.InputStream;
 import java.net.URL;
 import java.util.Arrays;
@@ -43,6 +45,12 @@ import javax.servlet.descriptor.JspConfigDescriptor;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.apache.felix.http.base.internal.handler.ListenerHandler;
+import org.apache.felix.http.base.internal.registry.EventListenerRegistry;
+import org.apache.felix.http.base.internal.registry.HandlerRegistry;
+import org.apache.felix.http.base.internal.registry.PerContextHandlerRegistry;
+import org.apache.felix.http.base.internal.runtime.ListenerInfo;
+import org.apache.felix.http.base.internal.service.HttpServiceFactory;
 import org.apache.felix.http.base.internal.service.ServletContextImpl;
 import org.junit.Assert;
 import org.junit.Before;
@@ -126,7 +134,7 @@ public class ServletContextImplTest
     private class MockServletContext implements ServletContext
     {
 
-        private Dictionary attributes = new Hashtable();
+        private Dictionary<String, Object> attributes = new Hashtable<String, Object>();
 
         @Override
         public FilterRegistration.Dynamic addFilter(String name, Class<? extends Filter> type)
@@ -214,7 +222,7 @@ public class ServletContextImplTest
         }
 
         @Override
-        public Enumeration getAttributeNames()
+        public Enumeration<String> getAttributeNames()
         {
             return attributes.keys();
         }
@@ -340,7 +348,7 @@ public class ServletContextImplTest
         }
 
         @Override
-        public Set getResourcePaths(String path)
+        public Set<String> getResourcePaths(String path)
         {
             return null;
         }
@@ -351,6 +359,7 @@ public class ServletContextImplTest
             return null;
         }
 
+        @Deprecated
         @Override
         public Servlet getServlet(String name)
         {
@@ -363,6 +372,8 @@ public class ServletContextImplTest
             return null;
         }
 
+        @SuppressWarnings("deprecation")
+        @Deprecated
         @Override
         public Enumeration getServletNames()
         {
@@ -381,6 +392,8 @@ public class ServletContextImplTest
             return null;
         }
 
+        @SuppressWarnings("deprecation")
+        @Deprecated
         @Override
         public Enumeration getServlets()
         {
@@ -393,6 +406,8 @@ public class ServletContextImplTest
             return null;
         }
 
+        @SuppressWarnings("deprecation")
+        @Deprecated
         @Override
         public void log(Exception exception, String msg)
         {
@@ -443,6 +458,7 @@ public class ServletContextImplTest
     private HttpContext httpContext;
     private AttributeListener listener;
     private ServletContextImpl context;
+    private PerContextHandlerRegistry contextRegistry;
 
     @Before
     public void setUp()
@@ -451,8 +467,20 @@ public class ServletContextImplTest
         ServletContext globalContext = new MockServletContext();
         this.httpContext = Mockito.mock(HttpContext.class);
         this.listener = new AttributeListener();
-        this.context = new ServletContextImpl(this.bundle, globalContext, this.httpContext, this.listener, false,
-                null, null, null, null, null);
+        final HandlerRegistry reg = new HandlerRegistry();
+        reg.init();
+        contextRegistry = reg.getRegistry(HttpServiceFactory.HTTP_SERVICE_CONTEXT_SERVICE_ID);
+        final EventListenerRegistry eventReg = contextRegistry.getEventListenerRegistry();
+        final ListenerInfo info = Mockito.mock(ListenerInfo.class);
+        when(info.getListenerTypes()).thenReturn(new String[] {ServletContextAttributeListener.class.getName()});
+        when(info.isListenerType(ServletContextAttributeListener.class.getName())).thenReturn(true);
+        final ListenerHandler handler = Mockito.mock(ListenerHandler.class);
+        when(handler.getListenerInfo()).thenReturn(info);
+        when(handler.getContextServiceId()).thenReturn(HttpServiceFactory.HTTP_SERVICE_CONTEXT_SERVICE_ID);
+        when(handler.getListener()).thenReturn(listener);
+        when(handler.init()).thenReturn(-1);
+        eventReg.addListeners(handler);
+        this.context = new ServletContextImpl(this.bundle, globalContext, this.httpContext, false, contextRegistry);
     }
 
     @Test
@@ -484,7 +512,7 @@ public class ServletContextImplTest
     @Test
     public void testGetAttributeNames()
     {
-        Enumeration e = this.context.getAttributeNames();
+        Enumeration<String> e = this.context.getAttributeNames();
         Assert.assertNotNull(e);
         Assert.assertFalse(e.hasMoreElements());
 
@@ -506,7 +534,7 @@ public class ServletContextImplTest
     @Test
     public void testGetInitParameterNames()
     {
-        Enumeration e = this.context.getInitParameterNames();
+        Enumeration<String> e = this.context.getInitParameterNames();
         Assert.assertNotNull(e);
         Assert.assertFalse(e.hasMoreElements());
     }
@@ -553,7 +581,7 @@ public class ServletContextImplTest
         HashSet<String> paths = new HashSet<String>(Arrays.asList("/some/path/1", "/some/path/2"));
         Mockito.when(this.bundle.getEntryPaths("some/path")).thenReturn(Collections.enumeration(paths));
 
-        Set set = this.context.getResourcePaths("/some/path");
+        Set<String> set = this.context.getResourcePaths("/some/path");
         Assert.assertNotNull(set);
         Assert.assertEquals(2, set.size());
         Assert.assertTrue(set.contains("/some/path/1"));
@@ -569,7 +597,7 @@ public class ServletContextImplTest
     @Test
     public void testGetServletNames()
     {
-        Enumeration e = this.context.getServletNames();
+        Enumeration<String> e = this.context.getServletNames();
         Assert.assertNotNull(e);
         Assert.assertFalse(e.hasMoreElements());
     }
@@ -577,7 +605,7 @@ public class ServletContextImplTest
     @Test
     public void testGetServlets()
     {
-        Enumeration e = this.context.getServlets();
+        Enumeration<Servlet> e = this.context.getServlets();
         Assert.assertNotNull(e);
         Assert.assertFalse(e.hasMoreElements());
     }
@@ -586,10 +614,10 @@ public class ServletContextImplTest
     public void testGetSharedAttribute()
     {
         ServletContext globalContext = new MockServletContext();
-        ServletContext ctx1 = new ServletContextImpl(bundle, globalContext, httpContext, listener, true,
-                null, null, null, null, null);
-        ServletContext ctx2 = new ServletContextImpl(bundle, globalContext, httpContext, listener, true,
-                null, null, null, null, null);
+        ServletContext ctx1 = new ServletContextImpl(bundle, globalContext, httpContext, true,
+                contextRegistry);
+        ServletContext ctx2 = new ServletContextImpl(bundle, globalContext, httpContext, true,
+                contextRegistry);
 
         Assert.assertNull(ctx1.getAttribute("key1"));
         Assert.assertNull(ctx2.getAttribute("key1"));
@@ -697,12 +725,12 @@ public class ServletContextImplTest
     public void testGetSharedAttributeNames()
     {
         ServletContext globalContext = new MockServletContext();
-        ServletContext ctx1 = new ServletContextImpl(bundle, globalContext, httpContext, listener, true,
-                null, null, null, null, null);
-        ServletContext ctx2 = new ServletContextImpl(bundle, globalContext, httpContext, listener, true,
-                null, null, null, null, null);
+        ServletContext ctx1 = new ServletContextImpl(bundle, globalContext, httpContext, true,
+                contextRegistry);
+        ServletContext ctx2 = new ServletContextImpl(bundle, globalContext, httpContext, true,
+                contextRegistry);
 
-        Enumeration e = ctx1.getAttributeNames();
+        Enumeration<String> e = ctx1.getAttributeNames();
         Assert.assertNotNull(e);
         Assert.assertFalse(e.hasMoreElements());
         e = ctx2.getAttributeNames();
@@ -735,10 +763,10 @@ public class ServletContextImplTest
     public void testGetUnsharedAttribute()
     {
         ServletContext globalContext = new MockServletContext();
-        ServletContext ctx1 = new ServletContextImpl(bundle, globalContext, httpContext, listener, false,
-                null, null, null, null, null);
-        ServletContext ctx2 = new ServletContextImpl(bundle, globalContext, httpContext, listener, false,
-                null, null, null, null, null);
+        ServletContext ctx1 = new ServletContextImpl(bundle, globalContext, httpContext, false,
+                contextRegistry);
+        ServletContext ctx2 = new ServletContextImpl(bundle, globalContext, httpContext, false,
+                contextRegistry);
 
         Assert.assertNull(ctx1.getAttribute("key1"));
         Assert.assertNull(ctx2.getAttribute("key1"));
@@ -783,12 +811,12 @@ public class ServletContextImplTest
     public void testGetUnsharedAttributeNames()
     {
         ServletContext globalContext = new MockServletContext();
-        ServletContext ctx1 = new ServletContextImpl(bundle, globalContext, httpContext, listener, false,
-                null, null, null, null, null);
-        ServletContext ctx2 = new ServletContextImpl(bundle, globalContext, httpContext, listener, false,
-                null, null, null, null, null);
+        ServletContext ctx1 = new ServletContextImpl(bundle, globalContext, httpContext, false,
+                contextRegistry);
+        ServletContext ctx2 = new ServletContextImpl(bundle, globalContext, httpContext, false,
+                contextRegistry);
 
-        Enumeration e = ctx1.getAttributeNames();
+        Enumeration<String> e = ctx1.getAttributeNames();
         Assert.assertNotNull(e);
         Assert.assertFalse(e.hasMoreElements());
         e = ctx2.getAttributeNames();
