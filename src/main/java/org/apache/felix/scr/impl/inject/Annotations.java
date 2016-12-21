@@ -37,11 +37,11 @@ import org.osgi.service.component.ComponentException;
 
 public class Annotations
 {
-    
+
     static public <T> T toObject(Class<T> clazz, Map<String, Object> props, Bundle b, boolean supportsInterfaces )
-    {     
+    {
         Map<String, Object> m = new HashMap<String, Object>();
-        
+
         Method[] methods = clazz.getMethods();
         Map<String, Method> complexFields = new HashMap<String, Method>();
         for ( Method method: methods )
@@ -54,12 +54,6 @@ public class Annotations
             if ( returnType.isInterface() || returnType.isAnnotation())
             {
                 complexFields.put(key, method);
-                continue;
-            }
-
-            if ( raw == null && method.getDefaultValue() != null )
-            {
-                m.put( name, method.getDefaultValue());
                 continue;
             }
 
@@ -87,7 +81,7 @@ public class Annotations
             m.put( name, cooked );
         }
         if (!complexFields.isEmpty())
-        { 
+        {
             if (supportsInterfaces )
             {
                 Map<String, List<Map<String, Object>>> nested = extractSubMaps(complexFields.keySet(), props);
@@ -130,12 +124,12 @@ public class Annotations
                 }
             }
         }
-        
+
         InvocationHandler h = new Handler(m);
         return (T) Proxy.newProxyInstance(clazz.getClassLoader(), new Class<?>[] { clazz }, h);
     }
-    
-    private static Map<String, List<Map<String, Object>>> extractSubMaps(Collection<String> keys, Map<String, Object> map) 
+
+    private static Map<String, List<Map<String, Object>>> extractSubMaps(Collection<String> keys, Map<String, Object> map)
     {
         Map<String, List<Map<String, Object>>> result = new HashMap<String, List<Map<String, Object>>>();
         //Form a regexp to recognize all the keys as prefixes in the map keys.
@@ -165,7 +159,7 @@ public class Annotations
                 //make sure there is room for the possible new submap
                 for (int i = subMapsForKey.size(); i <= index; i++)
                 {
-                    subMapsForKey.add(new HashMap<String, Object>());                    
+                    subMapsForKey.add(new HashMap<String, Object>());
                 }
                 Map<String, Object> subMap = subMapsForKey.get(index);
                 subMap.put(subkey, entry.getValue());
@@ -212,9 +206,9 @@ public class Annotations
         return result;
 
     }
-    
+
     private static final Pattern p = Pattern.compile("(\\$\\$)|(\\$)|(__)|(_)");
-    
+
     static String fixup(String name)
     {
         Matcher m = p.matcher(name);
@@ -226,17 +220,17 @@ public class Annotations
             if (m.group(2) != null) replacement = "";
             if (m.group(3) != null) replacement = "_";
             if (m.group(4) != null) replacement = ".";
-            
+
             m.appendReplacement(b, replacement);
         }
         m.appendTail(b);
         return b.toString();
     }
 
-    private final static class Handler implements InvocationHandler 
+    private final static class Handler implements InvocationHandler
     {
         private final Map<String, Object> values;
-       
+
         public Handler(Map<String, Object> values)
         {
             this.values = values;
@@ -251,18 +245,18 @@ public class Annotations
             }
             return value;
         }
-        
+
     }
-    
-    private final static class Invalid 
+
+    private final static class Invalid
     {
         private final String message;
-        
+
         public Invalid(ComponentException e)
         {
             this.message = e.getMessage();
         }
-        
+
         public Invalid(String message)
         {
             this.message = message;
