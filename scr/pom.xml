@@ -20,7 +20,7 @@
     <parent>
         <groupId>org.apache.felix</groupId>
         <artifactId>felix-parent</artifactId>
-        <version>3</version>
+        <version>4</version>
         <relativePath />
     </parent>
     <modelVersion>4.0.0</modelVersion>
@@ -70,6 +70,7 @@
         <bundle.file.name>
             ${bundle.build.name}/${project.build.finalName}.jar
         </bundle.file.name>
+        <felix.java.version>6</felix.java.version>
         <felix.ca.version>1.9.0-SNAPSHOT</felix.ca.version>
     </properties>
     
