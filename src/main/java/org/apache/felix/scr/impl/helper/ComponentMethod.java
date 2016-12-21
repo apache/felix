@@ -22,8 +22,10 @@ import org.osgi.service.component.ComponentContext;
 
 public interface ComponentMethod {
 
-    MethodResult invoke(final Object componentInstance,
-                        final ComponentContext componentContext, final int reason,
-                        final MethodResult methodCallFailureResult, SimpleLogger logger );
+    MethodResult invoke(Object componentInstance,
+                        ComponentContext componentContext,
+                        int reason,
+                        MethodResult methodCallFailureResult,
+                        SimpleLogger logger );
 
 }

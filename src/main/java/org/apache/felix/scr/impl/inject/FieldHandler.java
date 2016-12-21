@@ -469,8 +469,8 @@ public class FieldHandler
             case serviceType : obj = refPair.getServiceObject(key); break;
             case serviceReference : obj = refPair.getRef(); break;
             case serviceObjects : obj = key.getComponentServiceObjectsHelper().getServiceObjects(refPair.getRef()); break;
-            case map : obj = new ReadOnlyDictionary<String, Object>( refPair.getRef() ); break;
-            case tuple : final Object tupleKey = new ReadOnlyDictionary<String, Object>( refPair.getRef() );
+            case map : obj = new ReadOnlyDictionary( refPair.getRef() ); break;
+            case tuple : final Object tupleKey = new ReadOnlyDictionary( refPair.getRef() );
                          final Object tupleValue = refPair.getServiceObject(key);
                          obj = new MapEntryImpl(tupleKey, tupleValue, refPair.getRef());
                          break;
