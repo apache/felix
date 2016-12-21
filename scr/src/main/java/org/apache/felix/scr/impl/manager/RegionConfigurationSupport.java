@@ -40,8 +40,10 @@ import org.osgi.framework.ServiceRegistration;
 import org.osgi.service.cm.Configuration;
 import org.osgi.service.cm.ConfigurationAdmin;
 import org.osgi.service.cm.ConfigurationEvent;
+import org.osgi.service.cm.ConfigurationException;
 import org.osgi.service.cm.ConfigurationListener;
 import org.osgi.service.cm.ConfigurationPermission;
+import org.osgi.service.cm.ManagedService;
 import org.osgi.service.log.LogService;
 
 public abstract class RegionConfigurationSupport implements ConfigurationListener
@@ -142,9 +144,9 @@ public abstract class RegionConfigurationSupport implements ConfigurationListene
                             if ( checkBundleLocation( config, bundleContext.getBundle() ) )
                             {
                                 long changeCount = config.getChangeCount();
-                                // TODO - service reference
+                                ServiceReference<ManagedService> ref = getManagedServiceReference(bundleContext);
                                 created |= holder.configurationUpdated( new TargetedPID( config.getPid() ),
-                                    new TargetedPID( config.getFactoryPid() ), config.getProcessedProperties(null), changeCount );
+                                    new TargetedPID( config.getFactoryPid() ), config.getProcessedProperties(ref), changeCount );
                             }
                         }
                         if ( !created )
@@ -164,9 +166,9 @@ public abstract class RegionConfigurationSupport implements ConfigurationListene
                             if ( singleton != null && checkBundleLocation( singleton, bundleContext.getBundle() ) )
                             {
                                 long changeCount = singleton.getChangeCount();
-                                // TODO service reference
+                                ServiceReference<ManagedService> ref = getManagedServiceReference(bundleContext);
                                 holder.configurationUpdated( new TargetedPID( singleton.getPid() ), null,
-                                    singleton.getProcessedProperties(null), changeCount );
+                                    singleton.getProcessedProperties(ref), changeCount );
                             }
                             else
                             {
@@ -448,8 +450,8 @@ public abstract class RegionConfigurationSupport implements ConfigurationListene
                 if ( configs != null && configs.length > 0 )
                 {
                     Configuration config = configs[0];
-                    // TODO - service reference
-                    return new ConfigurationInfo( config.getProcessedProperties(null), config.getBundleLocation(),
+                    ServiceReference<ManagedService> ref = getManagedServiceReference(bundleContext);
+                    return new ConfigurationInfo( config.getProcessedProperties(ref), config.getBundleLocation(),
                         config.getChangeCount() );
                 }
             }
@@ -474,6 +476,26 @@ public abstract class RegionConfigurationSupport implements ConfigurationListene
             logger.log( LogService.LOG_WARNING, "Bundle in unexpected state", ise );
         }
         return null;
+    }
+
+    private ServiceReference<ManagedService> getManagedServiceReference(BundleContext bundleContext)
+    {
+        try {
+            Collection<ServiceReference<ManagedService>> refs = bundleContext.getServiceReferences(ManagedService.class,
+                    "(&(service.bundleid=" + String.valueOf(bundleContext.getBundle().getBundleId()) + ")(!(service.pid=*)))");
+            if ( !refs.isEmpty() ) {
+                return refs.iterator().next();
+            }
+        } catch (InvalidSyntaxException e) {
+            // this should never happen,
+        }
+        return bundleContext.registerService(ManagedService.class, new ManagedService() {
+
+            public void updated(Dictionary<String, ?> properties) throws ConfigurationException {
+                // nothing to do
+
+            }
+        }, null).getReference();
     }
 
     private String filter(String rawPid)
