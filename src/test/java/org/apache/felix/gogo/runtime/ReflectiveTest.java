@@ -22,13 +22,11 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.List;
+import java.util.*;
 
 import org.apache.felix.service.command.CommandProcessor;
 import org.apache.felix.service.command.CommandSession;
+import org.apache.felix.service.command.Converter;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -41,6 +39,25 @@ public class ReflectiveTest {
 
         assertEquals(new Object[] { Arrays.asList(1, 2), "ab" }, invoke("test1", Arrays.asList(Arrays.asList(1, 2), "ab")));
         assertEquals(new Object[] { new Object[] { 1, 2 }, "ab" }, invoke("test1", Arrays.<Object>asList(new Object[] { 1, 2 }, "ab")));
+    }
+
+    @Test
+    public void testAddConverter() throws Exception {
+        InputStream in = new ByteArrayInputStream(new byte[0]);
+        OutputStream out = new ByteArrayOutputStream();
+        CommandProcessorImpl processor = new CommandProcessorImpl(null);
+        Converter conv = new Converter() {
+            @Override
+            public Object convert(Class<?> desiredType, Object in) throws Exception {
+                return null;
+            }
+            @Override
+            public CharSequence format(Object target, int level, Converter escape) throws Exception {
+                return null;
+            }
+        };
+        Reflective.invoke(new CommandSessionImpl(processor, in, out, out), processor, "addConverter",
+                Collections.<Object>singletonList(conv));
     }
 
     static class Target {

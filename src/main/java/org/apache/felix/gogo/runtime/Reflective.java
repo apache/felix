@@ -251,14 +251,22 @@ public final class Reflective
             return -1;
         }
 
-        int[] convert = { 0 };
-
+        int res;
+        res = docoerce(session, target, m, types, out, in);
         // Check if the command takes a session
-        if ((types.length > 0) && types[0].isInterface()
-            && types[0].isAssignableFrom(session.getClass()))
+        if (res < 0 && (types.length > 0) && types[0].isInterface()
+                    && types[0].isAssignableFrom(session.getClass()))
         {
             in.add(0, session);
+            res = docoerce(session, target, m, types, out, in);
         }
+        return res;
+    }
+
+    private static int docoerce(CommandSession session, Object target, Method m,
+                              Class<?> types[], Object out[], List<Object> in)
+    {
+        int[] convert = { 0 };
 
         int i = 0;
         while (i < out.length)
