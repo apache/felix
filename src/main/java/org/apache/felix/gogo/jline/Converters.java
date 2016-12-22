@@ -19,22 +19,16 @@
 package org.apache.felix.gogo.jline;
 
 import java.io.IOException;
-import java.io.InputStream;
-import java.lang.reflect.InvocationHandler;
-import java.lang.reflect.Method;
-import java.lang.reflect.Proxy;
-import java.util.Arrays;
 import java.util.Formatter;
 
 import org.apache.felix.service.command.Converter;
-import org.apache.felix.service.command.Function;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.InvalidSyntaxException;
 import org.osgi.framework.ServiceReference;
 import org.osgi.service.startlevel.StartLevel;
 
-public class Converters implements Converter {
+public class Converters extends BaseConverters {
     private final BundleContext context;
 
     public Converters(BundleContext context) {
@@ -133,32 +127,7 @@ public class Converters implements Converter {
             return convertServiceReference(in);
         }
 
-        if (desiredType == Class.class) {
-            try {
-                return Class.forName(in.toString());
-            } catch (ClassNotFoundException e) {
-                return null;
-            }
-        }
-
-        if (desiredType.isAssignableFrom(String.class) && in instanceof InputStream) {
-            return read(((InputStream) in));
-        }
-
-        if (in instanceof Function && desiredType.isInterface()
-                && desiredType.getDeclaredMethods().length == 1) {
-            return Proxy.newProxyInstance(desiredType.getClassLoader(),
-                    new Class[]{desiredType}, new InvocationHandler() {
-                        Function command = ((Function) in);
-
-                        public Object invoke(Object proxy, Method method, Object[] args)
-                                throws Throwable {
-                            return command.execute(null, Arrays.asList(args));
-                        }
-                    });
-        }
-
-        return null;
+        return super.convert(desiredType, in);
     }
 
     private Object convertServiceReference(Object in) throws InvalidSyntaxException {
@@ -204,9 +173,6 @@ public class Converters implements Converter {
 
     public CharSequence format(Object target, int level, Converter converter)
             throws IOException {
-        if (level == INSPECT && target instanceof InputStream) {
-            return read(((InputStream) target));
-        }
         if (level == LINE && target instanceof Bundle) {
             return print((Bundle) target);
         }
@@ -219,25 +185,7 @@ public class Converters implements Converter {
         if (level == PART && target instanceof ServiceReference) {
             return getShortNames((String[]) ((ServiceReference) target).getProperty("objectclass"));
         }
-        return null;
-    }
-
-    private CharSequence read(InputStream in) throws IOException {
-        int c;
-        StringBuffer sb = new StringBuffer();
-        while ((c = in.read()) > 0) {
-            if (c >= 32 && c <= 0x7F || c == '\n' || c == '\r') {
-                sb.append((char) c);
-            } else {
-                String s = Integer.toHexString(c).toUpperCase();
-                sb.append("\\");
-                if (s.length() < 1) {
-                    sb.append(0);
-                }
-                sb.append(s);
-            }
-        }
-        return sb;
+        return super.format(target, level, converter);
     }
 
 }
