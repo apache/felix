@@ -53,6 +53,7 @@ public class Main {
                 processor.addCommand("gogo", processor, "addCommand");
                 processor.addCommand("gogo", processor, "removeCommand");
                 processor.addCommand("gogo", processor, "eval");
+                processor.addConverter(new BaseConverters());
                 register(processor, new Builtin(), Builtin.functions);
                 register(processor, new Procedural(), Procedural.functions);
                 register(processor, new Posix(processor), Posix.functions);
