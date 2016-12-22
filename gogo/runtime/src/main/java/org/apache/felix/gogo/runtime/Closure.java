@@ -629,6 +629,10 @@ public class Closure implements Function, Evaluate
                 {
                     Collections.addAll(olist, (Object[]) oval);
                 }
+                else if (oval instanceof ArgList)
+                {
+                    olist.addAll((ArgList) oval);
+                }
                 else
                 {
                     olist.add(oval);

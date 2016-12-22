@@ -26,6 +26,7 @@ import java.io.StringWriter;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Arrays;
 
 import org.junit.Test;
 
@@ -165,6 +166,27 @@ public class TestParser4 extends AbstractParserTest
 
         assertEquals("bar\nbaz\n", c.execute("cat <<foo\nbar\nbaz\nfoo\n| tac"));
         assertEquals("bar\nbaz\n", c.execute("cat <<-foo\n\tbar\n\tbaz\n\tfoo\n| tac"));
+    }
+
+    @Test
+    public void testArrays() throws Exception
+    {
+        Context c = new Context();
+        c.addCommand("echo", this);
+        c.addCommand("tac", this);
+        c.addCommand("cat", this);
+
+        c.execute("a = [ 1 2 3 ]");
+        c.execute("b = [ a b c ]");
+        c.execute("c = [ ${a[@]} ${b[@]} ]");
+        assertEquals(Arrays.asList(1L, 2L, 3L), c.get("a"));
+        assertEquals(Arrays.asList("a", "b", "c"), c.get("b"));
+        assertEquals(Arrays.asList(1L, 2L, 3L, "a", "b", "c"), c.get("c"));
+
+        c.execute("d = [ \"foo\" ${b[@]} ]");
+        assertEquals(Arrays.asList("foo", "a", "b", "c"), c.get("d"));
+        c.execute("d = [ \"foo\" $b ]");
+        assertEquals(Arrays.asList("foo", Arrays.asList("a", "b", "c")), c.get("d"));
     }
 
     public void echo(String msg)
