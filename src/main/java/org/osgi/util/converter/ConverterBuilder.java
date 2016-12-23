@@ -27,7 +27,7 @@ import org.osgi.util.function.Function;
  *
  * @author $Id$
  */
-@ProviderType
+@ProviderType @Deprecated
 public interface ConverterBuilder {
 	/**
 	 * Build the specified converter. Each time this method is called a new
