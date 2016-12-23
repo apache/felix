@@ -37,7 +37,7 @@ import org.osgi.annotation.versioning.ConsumerType;
  * @author $Id$
  * @Immutable
  */
-@ConsumerType
+@ConsumerType @Deprecated
 public class TypeReference<T> {
 	/**
 	 * A {@link TypeReference} cannot be directly instantiated. To use it, it

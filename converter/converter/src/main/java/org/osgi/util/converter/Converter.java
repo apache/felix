@@ -25,7 +25,7 @@ import org.osgi.annotation.versioning.ProviderType;
  * @author $Id$
  * @ThreadSafe
  */
-@ProviderType
+@ProviderType @Deprecated
 public interface Converter {
 	/**
 	 * Start a conversion for the given object.

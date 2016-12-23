@@ -27,7 +27,7 @@ import org.osgi.annotation.versioning.ProviderType;
  * @author $Id$
  * @NotThreadSafe
  */
-@ProviderType
+@ProviderType @Deprecated
 public interface Converting {
 	/**
 	 * Always return a fully populated copy of the object, however if the object

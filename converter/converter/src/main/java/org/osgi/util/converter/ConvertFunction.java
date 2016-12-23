@@ -27,7 +27,7 @@ import org.osgi.annotation.versioning.ConsumerType;
  * @param <T> Type parameter for the converted object.
  * @author $Id$
  */
-@ConsumerType
+@ConsumerType @Deprecated
 @FunctionalInterface
 public interface ConvertFunction<F, T> {
 	/**

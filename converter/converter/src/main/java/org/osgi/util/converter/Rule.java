@@ -26,6 +26,7 @@ import java.lang.reflect.Type;
  * @author $Id: 7f624253be48fc23d8a793b38673305dbfd5ff9a $
  * @Immutable
  */
+@Deprecated
 public class Rule<F, T> {
 	private final Type				sourceType;
 	private final Type				targetType;
