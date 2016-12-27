@@ -115,6 +115,9 @@ public class MultiPropertyFilterIndex implements FilterIndex, ServiceTrackerCust
 			if (propertyConfig.startsWith("!")) {
 				property.setNegate(true);
 				key = propertyConfig.substring(1);
+			} else if (propertyConfig.startsWith("#")) {
+				property.setPermute(false);
+				key = propertyConfig.substring(1);
 			} else {
 				key = propertyConfig;
 			}
@@ -154,48 +157,53 @@ public class MultiPropertyFilterIndex implements FilterIndex, ServiceTrackerCust
 		return filter;
     }
     
-    protected List<String> createKeys(ServiceReference reference) {
-    	List<String> results = new ArrayList<>();
-    	List<List<String>> sets = new ArrayList<>();   	
-    	String[] keys = reference.getPropertyKeys();
-    	Arrays.sort(keys, String.CASE_INSENSITIVE_ORDER);
-    	for (int i = 0; i < keys.length; i++) {
-    		List<String> set = new ArrayList<>();
-    		String key = keys[i].toLowerCase();
+	protected List<String> createKeys(ServiceReference reference) {
+		List<String> results = new ArrayList<>();
+		List<List<String>> sets = new ArrayList<>();
+		String[] keys = reference.getPropertyKeys();
+		Arrays.sort(keys, String.CASE_INSENSITIVE_ORDER);
+		for (int i = 0; i < keys.length; i++) {
+			List<String> set = new ArrayList<>();
+			String key = keys[i].toLowerCase();
     		if (m_configProperties.containsKey(key)) {
-	    		Object valueObject = reference.getProperty(key);
-	    		if (valueObject instanceof String[]) {
-	    			set.addAll(getPermutations(key, (String[]) valueObject));
-	    		} else {
-	    			set.add(toKey(key, valueObject));
-	    		}
-	    		sets.add(set);
+				Object valueObject = reference.getProperty(key);
+				if (valueObject instanceof String[]) {
+					String[] values = (String[]) valueObject;
+					if (m_configProperties.get(key).isPermute()) {
+						set.addAll(getPermutations(key, values));
+					} else {
+						set.addAll(getSingleValues(key, values)); 
+					}
+				} else {
+					set.add(toKey(key, valueObject));
+				}
+				sets.add(set);
     		}
-    	}
-    	
-    	List<List<String>> reversedSets = new ArrayList<>();
-    	int size = sets.size();
-    	for (int i = size - 1; i > -1; i--) {
-    		reversedSets.add(sets.get(i));
-    	}
-    	List<List<String>> products = carthesianProduct(0, reversedSets);
-    	// convert sets into strings
-    	for (int i = 0; i < products.size(); i++) {
-    		List<String> set = products.get(i);
-    		StringBuilder b = new StringBuilder();
-    		for (int j = 0; j < set.size(); j++) {
-    			String item = set.get(j);
-    			b.append(item);
-    			if (j < set.size() - 1) {
-    				b.append(";");
-    			}
-    		}
-    		results.add(b.toString());
-    	}
-    	
-    	return results;
-    }
-    
+		}
+
+		List<List<String>> reversedSets = new ArrayList<>();
+		int size = sets.size();
+		for (int i = size - 1; i > -1; i--) {
+			reversedSets.add(sets.get(i));
+		}
+		List<List<String>> products = carthesianProduct(0, reversedSets);
+		// convert sets into strings
+		for (int i = 0; i < products.size(); i++) {
+			List<String> set = products.get(i);
+			StringBuilder b = new StringBuilder();
+			for (int j = 0; j < set.size(); j++) {
+				String item = set.get(j);
+				b.append(item);
+				if (j < set.size() - 1) {
+					b.append(";");
+				}
+			}
+			results.add(b.toString());
+		}
+
+		return results;
+	}
+	   
     /**
      * Note that we calculate the carthesian product for multi value properties. Use filters on these sparingly since memory
      * consumption can get really high when multiple properties have a lot of values.
@@ -244,6 +252,15 @@ public class MultiPropertyFilterIndex implements FilterIndex, ServiceTrackerCust
 		}
 		return results;
     }
+    
+	private Collection<? extends String> getSingleValues(String key, String[] values) {
+		List<String> results = new ArrayList<>();
+		Arrays.sort(values, String.CASE_INSENSITIVE_ORDER);
+		for (int v = 0; v < values.length; v++) {
+			results.add(toKey(key, values[v]));
+		}
+		return results;
+	}
     
     protected String toKey(String key, List<String> values) {
     	StringBuilder builder = new StringBuilder();

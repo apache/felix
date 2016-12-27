@@ -26,6 +26,7 @@ import java.util.TreeSet;
 
 public class Property {
 	boolean m_negate;
+	boolean m_permute = true;
 	boolean m_valid = true;
 	String m_key;
 	String m_value;
@@ -44,6 +45,10 @@ public class Property {
 
 	public void setNegate(boolean negate) {
 		this.m_negate = negate;
+	}
+	
+	public void setPermute(boolean permute) {
+		this.m_permute = permute;
 	}
 	
 	public void setKey(String key) {
@@ -66,6 +71,10 @@ public class Property {
 	
 	public boolean isNegate() {
 		return m_negate;
+	}
+	
+	public boolean isPermute() {
+		return m_permute;
 	}
 	
 	public String getKey() {
