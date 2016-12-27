@@ -29,7 +29,7 @@
     <groupId>org.apache.felix</groupId>
     <artifactId>org.apache.felix.scr.bnd</artifactId>
 
-    <version>1.7.2</version>
+    <version>1.7.3-SNAPSHOT</version>
     <packaging>jar</packaging>
 
     <name>Bnd SCR Plugin</name>
@@ -40,9 +40,9 @@
 	</description>
 
     <scm>
-        <connection>scm:svn:http://svn.apache.org/repos/asf/felix/releases/org.apache.felix.scr.bnd-1.7.2</connection>
-        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/felix/releases/org.apache.felix.scr.bnd-1.7.2</developerConnection>
-        <url>scm:svn:https://svn.apache.org/repos/asf/felix/releases/org.apache.felix.scr.bnd-1.7.2</url>
+        <connection>scm:svn:http://svn.apache.org/repos/asf/felix/trunk/tools/org.apache.felix.scr.bnd</connection>
+        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/felix/trunk/tools/org.apache.felix.scr.bnd</developerConnection>
+        <url>http://svn.apache.org/repos/asf/felix/tools/org.apache.felix.scr.bnd</url>
     </scm>
 
     <properties>
