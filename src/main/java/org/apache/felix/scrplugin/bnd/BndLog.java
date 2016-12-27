@@ -33,7 +33,7 @@ import aQute.service.reporter.Reporter;
 
 /**
  * Scrplugin Log implementation, which redirects log to both bnd "Reporter" and
- * to /tmp/scrplugin/<BundleSymbolicName>.log
+ * to /tmp/scrplugin/&lt;BundleSymbolicName&gt;.log
  */
 public class BndLog implements Log {
 	/**
