@@ -304,7 +304,9 @@ public class SCRDescriptorBndPlugin implements AnalyzerPlugin, Plugin {
 			path.add(j.getSource().toURI().toURL());
 		}
 		// always add the target url (containing all compiled classes) because it it not necessarily part of the analyzer classpath
-		path.add(a.getTarget().getSource().toURI().toURL());
+		if (a.getTarget() != null && a.getTarget().getSource() != null) {
+		    path.add(a.getTarget().getSource().toURI().toURL());
+		}
 		log.info("Using classpath: " + path);
 		return path.toArray(new URL[path.size()]);
 	}
