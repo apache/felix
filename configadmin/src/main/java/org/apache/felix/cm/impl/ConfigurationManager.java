@@ -684,12 +684,15 @@ public class ConfigurationManager implements BundleActivator, BundleListener
 
                 // ensure the service.pid and returned a cached config if available
                 ConfigurationImpl cfg = null;
-                if (! (pmList[i].isNotCachablePersistenceManager())) 
+                if (! (pmList[i].isNotCachablePersistenceManager()))
                 {
                     cfg = getCachedConfiguration( pid );
-                }
-                if ( cfg == null )
-                {
+                    if (cfg == null) {
+                        cfg = new ConfigurationImpl(this, pmList[i], config);
+                        // add the to configurations cache if it wasn't in the cache
+                        cacheConfiguration(cfg);
+                    }
+                } else {
                     cfg = new ConfigurationImpl( this, pmList[i], config );
                 }
 
@@ -848,7 +851,7 @@ public class ConfigurationManager implements BundleActivator, BundleListener
                     }
                 }
 
-                pm = ( CachingPersistenceManagerProxy[] ) pmList.toArray( new CachingPersistenceManagerProxy[pmList.size()] );
+                pm = (CachingPersistenceManagerProxy[] ) pmList.toArray( new CachingPersistenceManagerProxy[pmList.size()] );
             }
 
             pmtCount = currentPmtCount;
