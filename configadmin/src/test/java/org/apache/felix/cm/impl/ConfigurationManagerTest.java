@@ -34,6 +34,9 @@ import org.apache.felix.cm.MockLogService;
 import org.apache.felix.cm.MockNotCachablePersistenceManager;
 import org.apache.felix.cm.MockPersistenceManager;
 import org.apache.felix.cm.PersistenceManager;
+import org.apache.felix.cm.impl.persistence.CachingPersistenceManagerProxy;
+import org.apache.felix.cm.impl.persistence.ExtPersistenceManager;
+import org.apache.felix.cm.impl.persistence.PersistenceManagerProxy;
 import org.mockito.Mockito;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.Constants;
@@ -120,14 +123,14 @@ public class ConfigurationManagerTest extends TestCase
 
         Field field = configMgr.getClass().getDeclaredField( "persistenceManagers" );
         field.setAccessible( true );
-        CachingPersistenceManagerProxy[] persistenceManagers = new CachingPersistenceManagerProxy[1];
-        PersistenceManager pm =new MockNotCachablePersistenceManager();
+        ExtPersistenceManager[] persistenceManagers = new ExtPersistenceManager[1];
+        PersistenceManager pm = new MockNotCachablePersistenceManager();
         Dictionary dictionary = new Hashtable();
         dictionary.put( "property1", "value1" );
         dictionary.put( Constants.SERVICE_PID, pid );
         pm.store( pid, dictionary );
 
-        persistenceManagers[0] = new CachingPersistenceManagerProxy(pm);
+        persistenceManagers[0] = new PersistenceManagerProxy(pm);
         field.set(configMgr, persistenceManagers);
 
         ConfigurationImpl[] conf = configMgr.listConfigurations(new ConfigurationAdminImpl(configMgr, null), null);

@@ -23,8 +23,8 @@ import java.io.IOException;
 import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Dictionary;
-import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Hashtable;
 import java.util.Iterator;
@@ -32,12 +32,16 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Random;
 
+import org.apache.felix.cm.NotCachablePersistenceManager;
 import org.apache.felix.cm.PersistenceManager;
 import org.apache.felix.cm.impl.helper.BaseTracker;
 import org.apache.felix.cm.impl.helper.ConfigurationMap;
 import org.apache.felix.cm.impl.helper.ManagedServiceFactoryTracker;
 import org.apache.felix.cm.impl.helper.ManagedServiceTracker;
 import org.apache.felix.cm.impl.helper.TargetedPID;
+import org.apache.felix.cm.impl.persistence.CachingPersistenceManagerProxy;
+import org.apache.felix.cm.impl.persistence.ExtPersistenceManager;
+import org.apache.felix.cm.impl.persistence.PersistenceManagerProxy;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.BundleEvent;
@@ -57,7 +61,7 @@ import org.osgi.util.tracker.ServiceTracker;
 
 
 /**
- * The <code>ConfigurationManager</code> is the central class in this
+ * The {@code ConfigurationManager} is the central class in this
  * implementation of the Configuration Admin Service Specification. As such it
  * has the following tasks:
  * <ul>
@@ -104,7 +108,7 @@ public class ConfigurationManager implements BundleListener
     private ManagedServiceFactoryTracker managedServiceFactoryTracker;
 
     // PersistenceManager services
-    private ServiceTracker persistenceManagerTracker;
+    private ServiceTracker<PersistenceManager, PersistenceManager> persistenceManagerTracker;
 
     // the thread used to schedule tasks required to run asynchronously
     private UpdateThread updateThread;
@@ -118,7 +122,7 @@ public class ConfigurationManager implements BundleListener
      * {@link #persistenceManagerMap}, which is ordered according to the
      * {@link RankingComparator}.
      */
-    private CachingPersistenceManagerProxy[] persistenceManagers;
+    private ExtPersistenceManager[] persistenceManagers;
 
     // the persistenceManagerTracker.getTrackingCount when the
     // persistenceManagers were last got
@@ -546,16 +550,14 @@ public class ConfigurationManager implements BundleListener
         Log.logger.log( LogService.LOG_DEBUG, "Listing configurations matching {0}", new Object[]
             { filterString } );
 
-        List configList = new ArrayList();
+        List<ConfigurationImpl> configList = new ArrayList<ConfigurationImpl>();
 
-        CachingPersistenceManagerProxy[] pmList = getPersistenceManagers();
+        ExtPersistenceManager[] pmList = getPersistenceManagers();
         for ( int i = 0; i < pmList.length; i++ )
         {
-            Enumeration configs = pmList[i].getDictionaries( filter );
-            while ( configs.hasMoreElements() )
+            Collection<Dictionary> configs = pmList[i].getDictionaries(filter );
+            for(final Dictionary config : configs)
             {
-                final Dictionary config = ( Dictionary ) configs.nextElement();
-
                 // ignore non-Configuration dictionaries
                 final String pid = ( String ) config.get( Constants.SERVICE_PID );
                 if ( pid == null )
@@ -578,7 +580,7 @@ public class ConfigurationManager implements BundleListener
 
                 // ensure the service.pid and returned a cached config if available
                 ConfigurationImpl cfg = null;
-                if (! (pmList[i].isNotCachablePersistenceManager()))
+                if ( pmList[i] instanceof CachingPersistenceManagerProxy)
                 {
                     cfg = getCachedConfiguration( pid );
                     if (cfg == null) {
@@ -609,7 +611,7 @@ public class ConfigurationManager implements BundleListener
         {
             return null;
         }
-        return ( ConfigurationImpl[] ) configList.toArray( new ConfigurationImpl[configList
+        return configList.toArray( new ConfigurationImpl[configList
             .size()] );
     }
 
@@ -713,39 +715,46 @@ public class ConfigurationManager implements BundleListener
 
     // ---------- internal -----------------------------------------------------
 
-    private CachingPersistenceManagerProxy[] getPersistenceManagers()
+    private ExtPersistenceManager[] getPersistenceManagers()
     {
         int currentPmtCount = persistenceManagerTracker.getTrackingCount();
         if ( persistenceManagers == null || currentPmtCount > pmtCount )
         {
 
-            List pmList = new ArrayList();
-            CachingPersistenceManagerProxy[] pm;
+            ExtPersistenceManager[] pm;
 
-            ServiceReference<?>[] refs = persistenceManagerTracker.getServiceReferences();
+            ServiceReference<PersistenceManager>[] refs = persistenceManagerTracker.getServiceReferences();
             if ( refs == null || refs.length == 0 )
             {
-                pm = new CachingPersistenceManagerProxy[0];
+                pm = new ExtPersistenceManager[0];
             }
             else
             {
+                List<ExtPersistenceManager> pmList = new ArrayList<ExtPersistenceManager>();
                 // sort the references according to the cmRanking property
                 if ( refs.length > 1 )
                 {
                     Arrays.sort( refs, RankingComparator.SRV_RANKING );
                 }
 
-                // create the service array from the sorted set of referenecs
+                // create the service array from the sorted set of references
                 for ( int i = 0; i < refs.length; i++ )
                 {
-                    Object service = persistenceManagerTracker.getService( refs[i] );
+                    PersistenceManager service = persistenceManagerTracker.getService( refs[i] );
                     if ( service != null )
                     {
-                        pmList.add( new CachingPersistenceManagerProxy( ( PersistenceManager ) service ) );
+                        if ( service instanceof NotCachablePersistenceManager )
+                        {
+                            pmList.add( new PersistenceManagerProxy( service ) );
+                        }
+                        else
+                        {
+                            pmList.add( new CachingPersistenceManagerProxy( service ) );
+                        }
                     }
                 }
 
-                pm = (CachingPersistenceManagerProxy[] ) pmList.toArray( new CachingPersistenceManagerProxy[pmList.size()] );
+                pm = pmList.toArray( new ExtPersistenceManager[pmList.size()] );
             }
 
             pmtCount = currentPmtCount;
@@ -756,9 +765,9 @@ public class ConfigurationManager implements BundleListener
     }
 
 
-    private ServiceReference getServiceReference()
+    private ServiceReference<ConfigurationAdmin> getServiceReference()
     {
-        ServiceRegistration reg = configurationAdminRegistration;
+        ServiceRegistration<ConfigurationAdmin> reg = configurationAdminRegistration;
         if (reg != null) {
             return reg.getReference();
         }
@@ -771,14 +780,14 @@ public class ConfigurationManager implements BundleListener
         {
             try
             {
-                ServiceReference[] refs = context.getServiceReferences( ConfigurationAdmin.class.getName(), null );
-                if ( refs != null )
+                Collection<ServiceReference<ConfigurationAdmin>> refs = context.getServiceReferences( ConfigurationAdmin.class, null );
+                if ( refs != null && !refs.isEmpty())
                 {
-                    for ( int i = 0; i < refs.length; i++ )
+                    for(final ServiceReference<ConfigurationAdmin> ref : refs)
                     {
-                        if ( refs[i].getBundle().getBundleId() == context.getBundle().getBundleId() )
+                        if ( ref.getBundle().getBundleId() == context.getBundle().getBundleId() )
                         {
-                            return refs[i];
+                            return ref;
                         }
                     }
                 }

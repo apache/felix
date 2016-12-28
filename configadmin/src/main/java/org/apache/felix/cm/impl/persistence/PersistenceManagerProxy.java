@@ -16,75 +16,59 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.felix.cm.impl;
-
+package org.apache.felix.cm.impl.persistence;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.Dictionary;
 import java.util.Enumeration;
-import java.util.Hashtable;
-import java.util.Vector;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
-import org.apache.felix.cm.NotCachablePersistenceManager;
 import org.apache.felix.cm.PersistenceManager;
+import org.apache.felix.cm.impl.CaseInsensitiveDictionary;
+import org.apache.felix.cm.impl.SimpleFilter;
 import org.osgi.framework.Constants;
 
-
 /**
- * The <code>CachingPersistenceManagerProxy</code> adds a caching layer to the
- * underlying actual {@link PersistenceManager} implementation. All API calls
- * are also (or primarily) routed through a local cache of dictionaries indexed
- * by the <code>service.pid</code>.
+ * The <code>PersistenceManagerProxy</code> proxies a persistence
+ * manager and adds a read/write lock.
  */
-class CachingPersistenceManagerProxy implements PersistenceManager
+public class PersistenceManagerProxy implements ExtPersistenceManager
 {
     /** the actual PersistenceManager */
     private final PersistenceManager pm;
-
-    /** cached dictionaries */
-    private final Hashtable<String, CaseInsensitiveDictionary> cache;
 
     /** protecting lock */
     private final ReadWriteLock globalLock = new ReentrantReadWriteLock();
 
     /**
-     * Indicates whether the getDictionaries method has already been called
-     * and the cache is complete with respect to the contents of the underlying
-     * persistence manager.
-     */
-    private boolean fullyLoaded;
-
-
-    /**
-     * Creates a new caching layer for the given actual {@link PersistenceManager}.
+     * Creates a new proxy for the given actual {@link PersistenceManager}.
      * @param pm The actual {@link PersistenceManager}
      */
-    public CachingPersistenceManagerProxy( final PersistenceManager pm )
+    public PersistenceManagerProxy( final PersistenceManager pm )
     {
         this.pm = pm;
-        this.cache = new Hashtable<String, CaseInsensitiveDictionary>();
     }
-    
-    public boolean isNotCachablePersistenceManager() {
-        return pm instanceof NotCachablePersistenceManager;
-    }
-
 
     /**
      * Remove the configuration with the given PID. This implementation removes
      * the entry from the cache before calling the underlying persistence
      * manager.
      */
+    @Override
     public void delete( String pid ) throws IOException
     {
         Lock lock = globalLock.writeLock();
         try
         {
             lock.lock();
-            cache.remove( pid );
             pm.delete(pid);
         }
         finally
@@ -99,13 +83,14 @@ class CachingPersistenceManagerProxy implements PersistenceManager
      * the existence in the cache. If not in the cache the underlying
      * persistence manager is asked.
      */
+    @Override
     public boolean exists( String pid )
     {
         Lock lock = globalLock.readLock();
         try
         {
             lock.lock();
-            return cache.containsKey( pid ) || ( !fullyLoaded && pm.exists( pid ) );
+            return pm.exists( pid );
         }
         finally
         {
@@ -124,64 +109,35 @@ class CachingPersistenceManagerProxy implements PersistenceManager
      * That is modifying the contents of a dictionary returned from this method
      * has no influence on the dictionaries stored in the cache.
      */
+    @Override
     public Enumeration getDictionaries() throws IOException
     {
-        return getDictionaries( null );
+        return Collections.enumeration(getDictionaries( null ));
     }
 
-    public Enumeration getDictionaries( SimpleFilter filter ) throws IOException
+    @Override
+    public Collection<Dictionary> getDictionaries( final SimpleFilter filter ) throws IOException
     {
         Lock lock = globalLock.readLock();
         try
         {
+            final Set<String> pids = new HashSet<String>();
+            final List<Dictionary> result = new ArrayList<Dictionary>();
+
             lock.lock();
-            boolean fullyLoaded = this.fullyLoaded;
-            if ( pm instanceof NotCachablePersistenceManager )
+            Enumeration fromPm = pm.getDictionaries();
+            while ( fromPm.hasMoreElements() )
             {
-                fullyLoaded = false;
-            }
-            // if not fully loaded, call back to the underlying persistence
-            // manager and cach all dictionaries whose service.pid is set
-            if ( !fullyLoaded )
-            {
-                lock.unlock();
-                lock = globalLock.writeLock();
-                lock.lock();
-                if ( !fullyLoaded )
+                Dictionary next = (Dictionary) fromPm.nextElement();
+                String pid = (String) next.get( Constants.SERVICE_PID );
+                if ( pid != null && !pids.contains(pid) && ( filter == null || filter.matches( next ) ) )
                 {
-                    Enumeration fromPm = pm.getDictionaries();
-                    while ( fromPm.hasMoreElements() )
-                    {
-                        Dictionary next = (Dictionary) fromPm.nextElement();
-                        String pid = (String) next.get( Constants.SERVICE_PID );
-                        if ( pid != null )
-                        {
-                            cache.put( pid, copy( next ) );
-                        }
-                        else
-                        {
-                            pid = (String) next.get( Factory.FACTORY_PID );
-                            if ( pid != null )
-                            {
-                                pid = Factory.factoryPidToIdentifier( pid );
-                                cache.put( pid, copy( next ) );
-                            }
-                        }
-                    }
-                    this.fullyLoaded = true;
+                    pids.add(pid);
+                    result.add(  new CaseInsensitiveDictionary( next ) );
                 }
             }
 
-            // Deep copy the configuration to avoid any threading issue
-            Vector<Dictionary> configs = new Vector<Dictionary>();
-            for (Dictionary d : cache.values())
-            {
-                if ( d.get( Constants.SERVICE_PID ) != null && ( filter == null || filter.matches( d ) ) )
-                {
-                    configs.add( copy( d ) );
-                }
-            }
-            return configs.elements();
+            return result;
         }
         finally
         {
@@ -200,26 +156,19 @@ class CachingPersistenceManagerProxy implements PersistenceManager
      * That is modifying the contents of a dictionary returned from this method
      * has no influence on the dictionaries stored in the cache.
      */
+    @Override
     public Dictionary load( String pid ) throws IOException
     {
         Lock lock = globalLock.readLock();
         try
         {
             lock.lock();
-            Dictionary loaded = cache.get( pid );
-            if ( loaded == null && !fullyLoaded )
+            Dictionary loaded = pm.load( pid );
+            if ( loaded != null )
             {
-                lock.unlock();
-                lock = globalLock.writeLock();
-                lock.lock();
-                loaded = cache.get( pid );
-                if ( loaded == null )
-                {
-                    loaded = pm.load( pid );
-                    cache.put( pid, copy( loaded ) );
-                }
+                return new CaseInsensitiveDictionary( loaded );
             }
-            return copy( loaded );
+            return null;
         }
         finally
         {
@@ -237,6 +186,7 @@ class CachingPersistenceManagerProxy implements PersistenceManager
      * is subsequent modification to the given dictionary has no influence on
      * the cached data.
      */
+    @Override
     public void store( String pid, Dictionary properties ) throws IOException
     {
         Lock lock = globalLock.writeLock();
@@ -244,22 +194,10 @@ class CachingPersistenceManagerProxy implements PersistenceManager
         {
             lock.lock();
             pm.store( pid, properties );
-            cache.put( pid, copy( properties ) );
         }
         finally
         {
             lock.unlock();
         }
-    }
-
-
-    /**
-     * Creates and returns a copy of the given dictionary. This method simply
-     * copies all entries from the source dictionary to the newly created
-     * target.
-     */
-    CaseInsensitiveDictionary copy( final Dictionary source )
-    {
-        return new CaseInsensitiveDictionary( source );
     }
 }
