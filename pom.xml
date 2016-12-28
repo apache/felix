@@ -158,7 +158,7 @@
             <plugin>
                 <groupId>org.apache.felix</groupId>
                 <artifactId>maven-bundle-plugin</artifactId>
-                <version>3.0.1</version>
+                <version>3.2.0</version>
                 <extensions>true</extensions>
                 <configuration>
                     <instructions>
@@ -171,7 +171,7 @@
                             http://felix.apache.org/site/apache-felix-config-admin.html
                         </Bundle-DocURL>
                         <Bundle-Activator>
-                            org.apache.felix.cm.impl.ConfigurationManager
+                            org.apache.felix.cm.impl.Activator
                         </Bundle-Activator>
                         <Export-Package>
                             <!-- just list, version from package-info classes -->
@@ -197,12 +197,17 @@
                         <Require-Capability><![CDATA[
                             osgi.service;filter:="(objectClass=org.osgi.service.log.LogService)";effective:=active;resolution:=optional
                         ]]></Require-Capability>
-                        <Embed-Dependency>
-                            org.osgi.core;inline=org/osgi/util/tracker/ServiceTracker*|org/osgi/util/tracker/AbstractTracked.class
-                        </Embed-Dependency>
                     </instructions>
                 </configuration>
-            </plugin>
+                   <executions>
+                        <execution>
+                            <id>baseline</id>
+                            <goals>
+                                <goal>baseline</goal>
+                            </goals>
+                        </execution>
+                    </executions>
+              </plugin>
             <!--
                 Exclude Integration tests in (default) unit tests and
                 conversely enable integration tests for integration testing
@@ -275,24 +280,4 @@
             </build>
         </profile>
     </profiles>
-    
-    <!-- repositories for Pax Exam and BND tool -->
-    <repositories>
-        <repository>
-            <id>ops4j</id>
-            <name>ops4j</name>
-            <url>http://repository.ops4j.org/maven2</url>
-            <snapshots>
-                <enabled>false</enabled>
-            </snapshots>
-        </repository>
-        <repository>
-            <id>aqute</id>
-            <name>aqute</name>
-            <url>http://www.aqute.biz/repo</url>
-            <snapshots>
-                <enabled>false</enabled>
-            </snapshots>
-        </repository>
-    </repositories>
 </project>

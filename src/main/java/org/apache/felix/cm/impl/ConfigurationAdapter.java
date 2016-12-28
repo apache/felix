@@ -99,7 +99,7 @@ public class ConfigurationAdapter implements Configuration
     @Override
     public void setBundleLocation( String bundleLocation )
     {
-        delegatee.getConfigurationManager().log( LogService.LOG_DEBUG, "setBundleLocation(bundleLocation={0})",
+        Log.logger.log( LogService.LOG_DEBUG, "setBundleLocation(bundleLocation={0})",
             new Object[]
                 { bundleLocation } );
 
@@ -120,7 +120,7 @@ public class ConfigurationAdapter implements Configuration
     @Override
     public void update() throws IOException
     {
-        delegatee.getConfigurationManager().log( LogService.LOG_DEBUG, "update()", ( Throwable ) null );
+        Log.logger.log( LogService.LOG_DEBUG, "update()", ( Throwable ) null );
 
         checkActive();
         checkDeleted();
@@ -136,7 +136,7 @@ public class ConfigurationAdapter implements Configuration
     @Override
     public void update( Dictionary<String, ?> properties ) throws IOException
     {
-        delegatee.getConfigurationManager().log( LogService.LOG_DEBUG, "update(properties={0})", new Object[]
+        Log.logger.log( LogService.LOG_DEBUG, "update(properties={0})", new Object[]
             { properties } );
 
         checkActive();
@@ -177,7 +177,7 @@ public class ConfigurationAdapter implements Configuration
     @Override
     public void delete() throws IOException
     {
-        delegatee.getConfigurationManager().log( LogService.LOG_DEBUG, "delete()", ( Throwable ) null );
+        Log.logger.log( LogService.LOG_DEBUG, "delete()", ( Throwable ) null );
 
         checkActive();
         checkDeleted();
@@ -192,7 +192,7 @@ public class ConfigurationAdapter implements Configuration
     @Override
     public void updateIfDifferent(final Dictionary<String, ?> properties) throws IOException
     {
-        delegatee.getConfigurationManager().log( LogService.LOG_DEBUG, "setProperties(properties={0})", new Object[]
+        Log.logger.log( LogService.LOG_DEBUG, "setProperties(properties={0})", new Object[]
                 { properties } );
 
         checkActive();
@@ -219,7 +219,7 @@ public class ConfigurationAdapter implements Configuration
                         ConfigurationPermission.ATTRIBUTE,
                         true);
 
-        delegatee.getConfigurationManager().log( LogService.LOG_DEBUG, "addAttributes({0})", attrs );
+        Log.logger.log( LogService.LOG_DEBUG, "addAttributes({0})", attrs );
 
         if ( attrs != null )
         {
@@ -264,7 +264,7 @@ public class ConfigurationAdapter implements Configuration
                         ConfigurationPermission.ATTRIBUTE,
                         true);
 
-        delegatee.getConfigurationManager().log( LogService.LOG_DEBUG, "removeAttributes({0})", attrs );
+        Log.logger.log( LogService.LOG_DEBUG, "removeAttributes({0})", attrs );
 
         if ( attrs != null )
         {

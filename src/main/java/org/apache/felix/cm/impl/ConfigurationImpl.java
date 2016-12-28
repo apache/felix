@@ -147,7 +147,7 @@ public class ConfigurationImpl extends ConfigurationBase
     private volatile boolean locked;
 
 
-    ConfigurationImpl( ConfigurationManager configurationManager, PersistenceManager persistenceManager,
+    public ConfigurationImpl( ConfigurationManager configurationManager, PersistenceManager persistenceManager,
         Dictionary<String, Object> properties )
     {
         super( configurationManager, persistenceManager, ( String ) properties.remove( Constants.SERVICE_PID ) );
@@ -301,7 +301,7 @@ public class ConfigurationImpl extends ConfigurationBase
     {
         if ( this.getBundleLocation() == null )
         {
-            getConfigurationManager().log( LogService.LOG_DEBUG, "Dynamically binding config {0} to {1}", new Object[]
+            Log.logger.log( LogService.LOG_DEBUG, "Dynamically binding config {0} to {1}", new Object[]
                 { getPidString(), bundleLocation } );
             setDynamicBundleLocation( bundleLocation, true );
         }
@@ -378,7 +378,7 @@ public class ConfigurationImpl extends ConfigurationBase
         {
             CaseInsensitiveDictionary newProperties = new CaseInsensitiveDictionary( properties );
 
-            getConfigurationManager().log( LogService.LOG_DEBUG, "Updating config {0} with {1}", new Object[]
+            Log.logger.log( LogService.LOG_DEBUG, "Updating config {0} with {1}", new Object[]
                 { getPidString(), newProperties } );
 
             setAutoProperties( newProperties, true );
@@ -494,7 +494,7 @@ public class ConfigurationImpl extends ConfigurationBase
                 }
                 catch ( IOException ioe )
                 {
-                    getConfigurationManager().log( LogService.LOG_ERROR,
+                    Log.logger.log( LogService.LOG_ERROR,
                         "Failure storing factory {0} with new configuration {1}", new Object[]
                             { factoryPid, getPidString(), ioe } );
                 }

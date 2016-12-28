@@ -34,10 +34,6 @@ import org.osgi.service.log.LogService;
 public class UpdateThread implements Runnable
 {
 
-    // the configuration manager on whose behalf this thread is started
-    // (this is mainly used for logging)
-    private final ConfigurationManager configurationManager;
-
     // the thread group into which the worker thread will be placed
     private final ThreadGroup workerThreadGroup;
 
@@ -53,9 +49,8 @@ public class UpdateThread implements Runnable
     // the access control context
     private final AccessControlContext acc;
 
-    public UpdateThread( final ConfigurationManager configurationManager, final ThreadGroup tg, final String name )
+    public UpdateThread( final ThreadGroup tg, final String name )
     {
-        this.configurationManager = configurationManager;
         this.workerThreadGroup = tg;
         this.workerBaseName = name;
         this.acc = AccessController.getContext();
@@ -69,6 +64,7 @@ public class UpdateThread implements Runnable
     // happening and keeps on waiting for the next Runnable. If the Runnable
     // taken from the queue is this thread instance itself, the thread
     // terminates.
+    @Override
     public void run()
     {
         for ( ;; )
@@ -103,14 +99,14 @@ public class UpdateThread implements Runnable
                 // set the thread name indicating the current task
                 Thread.currentThread().setName( workerBaseName + " (" + task + ")" );
 
-                configurationManager.log( LogService.LOG_DEBUG, "Running task {0}", new Object[]
+                Log.logger.log( LogService.LOG_DEBUG, "Running task {0}", new Object[]
                     { task } );
 
                 run0(task);
             }
             catch ( Throwable t )
             {
-                configurationManager.log( LogService.LOG_ERROR, "Unexpected problem executing task", t );
+                Log.logger.log( LogService.LOG_ERROR, "Unexpected problem executing task", t );
             }
             finally
             {
@@ -125,6 +121,7 @@ public class UpdateThread implements Runnable
             try {
                 AccessController.doPrivileged(
                     new PrivilegedExceptionAction<Void>() {
+                        @Override
                         public Void run() throws Exception {
                             task.run();
                             return null;
@@ -194,7 +191,7 @@ public class UpdateThread implements Runnable
 
             if ( workerThread.isAlive() )
             {
-                this.configurationManager.log( LogService.LOG_ERROR,
+                Log.logger.log( LogService.LOG_ERROR,
                     "Worker thread {0} did not terminate within 5 seconds; trying to kill", new Object[]
                         { workerBaseName } );
                 workerThread.stop();
@@ -208,7 +205,7 @@ public class UpdateThread implements Runnable
     {
         synchronized ( updateTasks )
         {
-            configurationManager.log( LogService.LOG_DEBUG, "Scheduling task {0}", new Object[]
+            Log.logger.log( LogService.LOG_DEBUG, "Scheduling task {0}", new Object[]
                 { update } );
 
             // append to the task queue
