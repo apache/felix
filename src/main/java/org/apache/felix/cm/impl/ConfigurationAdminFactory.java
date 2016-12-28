@@ -1,4 +1,4 @@
-/* 
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -22,6 +22,7 @@ package org.apache.felix.cm.impl;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.ServiceFactory;
 import org.osgi.framework.ServiceRegistration;
+import org.osgi.service.cm.ConfigurationAdmin;
 
 
 /**
@@ -30,7 +31,7 @@ import org.osgi.framework.ServiceRegistration;
  * create the real <code>ConfiguratAdmin</code> instances returend to client
  * bundles. Each bundle gets a separate instance.
  */
-class ConfigurationAdminFactory implements ServiceFactory
+class ConfigurationAdminFactory implements ServiceFactory<ConfigurationAdmin>
 {
 
     // The configuration manager to which the configuration admin instances
@@ -48,7 +49,8 @@ class ConfigurationAdminFactory implements ServiceFactory
      * Returns a new instance of the {@link ConfigurationAdminImpl} class for
      * the given bundle.
      */
-    public Object getService( Bundle bundle, ServiceRegistration registration )
+    @Override
+    public ConfigurationAdmin getService( Bundle bundle, ServiceRegistration<ConfigurationAdmin> registration )
     {
         return new ConfigurationAdminImpl( configurationManager, bundle );
     }
@@ -58,7 +60,8 @@ class ConfigurationAdminFactory implements ServiceFactory
      * Disposes off the given {@link ConfigurationAdminImpl} instance as the
      * given bundle has no use of it any more.
      */
-    public void ungetService( Bundle bundle, ServiceRegistration registration, Object service )
+    @Override
+    public void ungetService( Bundle bundle, ServiceRegistration<ConfigurationAdmin> registration, ConfigurationAdmin service )
     {
         ( ( ConfigurationAdminImpl ) service ).dispose();
     }

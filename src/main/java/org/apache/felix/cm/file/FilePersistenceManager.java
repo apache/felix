@@ -454,6 +454,7 @@ public class FilePersistenceManager implements PersistenceManager
      * @return an enumeration of configuration data returned as instances of
      *      the <code>Dictionary</code> class.
      */
+    @SuppressWarnings("rawtypes")
     @Override
     public Enumeration getDictionaries()
     {
@@ -482,7 +483,7 @@ public class FilePersistenceManager implements PersistenceManager
 
     private void _privilegedDelete( final String pid )
     {
-        AccessController.doPrivileged( new PrivilegedAction()
+        AccessController.doPrivileged( new PrivilegedAction<Object>()
         {
             @Override
             public Object run()
@@ -525,10 +526,10 @@ public class FilePersistenceManager implements PersistenceManager
 
     private boolean _privilegedExists( final String pid )
     {
-        final Object result = AccessController.doPrivileged( new PrivilegedAction()
+        final Object result = AccessController.doPrivileged( new PrivilegedAction<Boolean>()
         {
             @Override
-            public Object run()
+            public Boolean run()
             {
                 // FELIX-2771: Boolean.valueOf(boolean) is not in Foundation
                 return _exists( pid ) ? Boolean.TRUE : Boolean.FALSE;
@@ -557,6 +558,7 @@ public class FilePersistenceManager implements PersistenceManager
      *      may be empty if the file contains no configuration information
      *      or is not properly formatted.
      */
+    @SuppressWarnings("rawtypes")
     @Override
     public Dictionary load( String pid ) throws IOException
     {
@@ -571,20 +573,21 @@ public class FilePersistenceManager implements PersistenceManager
     }
 
 
+    @SuppressWarnings("rawtypes")
     private Dictionary _privilegedLoad( final File cfgFile ) throws IOException
     {
         try
         {
-            Object result = AccessController.doPrivileged( new PrivilegedExceptionAction()
+            Dictionary result = AccessController.doPrivileged( new PrivilegedExceptionAction<Dictionary>()
             {
                 @Override
-                public Object run() throws IOException
+                public Dictionary run() throws IOException
                 {
                     return _load( cfgFile );
                 }
             } );
 
-            return ( Dictionary ) result;
+            return result;
         }
         catch ( PrivilegedActionException pae )
         {
@@ -606,6 +609,7 @@ public class FilePersistenceManager implements PersistenceManager
      * @throws IOException
      *             If an error occurrs reading the configuration file.
      */
+    @SuppressWarnings("rawtypes")
     Dictionary _load( File cfgFile ) throws IOException
     {
         // this method is not part of the API of this class but is made
@@ -654,6 +658,7 @@ public class FilePersistenceManager implements PersistenceManager
      *
      * @throws IOException If an error occurrs writing the configuration data.
      */
+    @SuppressWarnings("rawtypes")
     @Override
     public void store( final String pid, final Dictionary props ) throws IOException
     {
@@ -668,11 +673,12 @@ public class FilePersistenceManager implements PersistenceManager
     }
 
 
+    @SuppressWarnings("rawtypes")
     private void _privilegedStore( final String pid, final Dictionary props ) throws IOException
     {
         try
         {
-            AccessController.doPrivileged( new PrivilegedExceptionAction()
+            AccessController.doPrivileged( new PrivilegedExceptionAction<Object>()
             {
                 @Override
                 public Object run() throws IOException
@@ -690,6 +696,7 @@ public class FilePersistenceManager implements PersistenceManager
     }
 
 
+    @SuppressWarnings("rawtypes")
     private void _store( final String pid, final Dictionary props ) throws IOException
     {
         OutputStream out = null;
@@ -786,9 +793,10 @@ public class FilePersistenceManager implements PersistenceManager
      * This enumeration loads configuration lazily with a look ahead of one
      * dictionary.
      */
+    @SuppressWarnings("rawtypes")
     class DictionaryEnumeration implements Enumeration
     {
-        private Stack dirStack;
+        private Stack<File> dirStack;
         private File[] fileList;
         private int idx;
         private Dictionary next;
@@ -796,7 +804,7 @@ public class FilePersistenceManager implements PersistenceManager
 
         DictionaryEnumeration()
         {
-            dirStack = new Stack();
+            dirStack = new Stack<File>();
             fileList = null;
             idx = 0;
 
@@ -839,15 +847,15 @@ public class FilePersistenceManager implements PersistenceManager
 
         protected Dictionary _privilegedSeek()
         {
-            Object result = AccessController.doPrivileged( new PrivilegedAction()
+            Dictionary result = AccessController.doPrivileged( new PrivilegedAction<Dictionary>()
             {
                 @Override
-                public Object run()
+                public Dictionary run()
                 {
                     return _seek();
                 }
             } );
-            return ( Dictionary ) result;
+            return result;
         }
 
 
@@ -857,7 +865,7 @@ public class FilePersistenceManager implements PersistenceManager
             {
                 if ( fileList == null || idx >= fileList.length )
                 {
-                    File dir = ( File ) dirStack.pop();
+                    File dir = dirStack.pop();
                     fileList = dir.listFiles();
                     idx = 0;
                 }
