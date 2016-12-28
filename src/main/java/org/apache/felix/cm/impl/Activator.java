@@ -39,6 +39,7 @@ import org.osgi.service.log.LogService;
  *  <li>Sets up the logger {@link Log}.
  *  <li>A {@link FilePersistenceManager} instance is registered as a default
  * {@link PersistenceManager}.
+ *  <li>Creates and sets up the {@link ConfigurationManager}.
  * </ul>
  * <p>
  * The default {@link FilePersistenceManager} is configured with a configuration

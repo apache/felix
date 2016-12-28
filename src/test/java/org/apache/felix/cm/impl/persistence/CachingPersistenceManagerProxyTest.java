@@ -16,18 +16,15 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.felix.cm.impl;
+package org.apache.felix.cm.impl.persistence;
 
-import java.util.Collections;
+import java.util.Collection;
 import java.util.Dictionary;
-import java.util.Enumeration;
 import java.util.Hashtable;
-import java.util.List;
 
-import org.apache.felix.cm.MockNotCachablePersistenceManager;
 import org.apache.felix.cm.MockPersistenceManager;
 import org.apache.felix.cm.PersistenceManager;
-
+import org.apache.felix.cm.impl.SimpleFilter;
 import org.osgi.framework.Constants;
 
 import junit.framework.TestCase;
@@ -55,8 +52,7 @@ public class CachingPersistenceManagerProxyTest extends TestCase
         dictionary.put( Constants.SERVICE_PID, pid );
         pm.store( pid, dictionary );
 
-        Enumeration dictionaries = cpm.getDictionaries( filter );
-        List list = Collections.list( dictionaries );
+        Collection<Dictionary> list = cpm.getDictionaries( filter );
         assertEquals(1, list.size());
 
         dictionary = new Hashtable();
@@ -65,37 +61,7 @@ public class CachingPersistenceManagerProxyTest extends TestCase
         dictionary.put( Constants.SERVICE_PID, pid );
         pm.store( pid, dictionary );
 
-        dictionaries = cpm.getDictionaries( filter );
-        list = Collections.list( dictionaries );
+        list = cpm.getDictionaries( filter );
         assertEquals(1, list.size());
     }
-
-    @SuppressWarnings({ "rawtypes", "unchecked" })
-    public void test_caching_is_avoided() throws Exception {
-        String pid = "testDefaultPersistenceManager";
-        SimpleFilter filter = SimpleFilter.parse("(&(service.pid=" + pid + ")(property1=value1))");
-
-        PersistenceManager pm = new MockNotCachablePersistenceManager();
-        CachingPersistenceManagerProxy cpm = new CachingPersistenceManagerProxy( pm );
-
-        Dictionary dictionary = new Hashtable();
-        dictionary.put( "property1", "value1" );
-        dictionary.put( Constants.SERVICE_PID, pid );
-        pm.store( pid, dictionary );
-
-        Enumeration dictionaries = cpm.getDictionaries( filter );
-        List list = Collections.list( dictionaries );
-        assertEquals(1, list.size());
-
-        dictionary = new Hashtable();
-        dictionary.put( "property1", "value2" );
-        pid = "testDefaultPersistenceManager";
-        dictionary.put( Constants.SERVICE_PID, pid );
-        pm.store( pid, dictionary );
-
-        dictionaries = cpm.getDictionaries( filter );
-        list = Collections.list( dictionaries );
-        assertEquals(0, list.size());
-    }
-
 }
