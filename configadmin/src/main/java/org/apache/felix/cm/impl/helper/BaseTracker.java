@@ -32,6 +32,7 @@ import java.util.List;
 
 import org.apache.felix.cm.impl.CaseInsensitiveDictionary;
 import org.apache.felix.cm.impl.ConfigurationManager;
+import org.apache.felix.cm.impl.Log;
 import org.apache.felix.cm.impl.RankingComparator;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.Constants;
@@ -66,10 +67,11 @@ public abstract class BaseTracker<S> extends ServiceTracker<S, ConfigurationMap<
     }
 
 
+    @Override
     public ConfigurationMap<?> addingService( ServiceReference<S> reference )
     {
-        this.cm.log( LogService.LOG_DEBUG, "Registering service {0}", new String[]
-            { ConfigurationManager.toString( reference ) } );
+        Log.logger.log( LogService.LOG_DEBUG, "Registering service {0}", new Object[]
+            { reference } );
 
         final String[] pids = getServicePid( reference );
         final ConfigurationMap<?> configurations = createConfigurationMap( pids );
@@ -81,8 +83,8 @@ public abstract class BaseTracker<S> extends ServiceTracker<S, ConfigurationMap<
     @Override
     public void modifiedService( ServiceReference<S> reference, ConfigurationMap<?> service )
     {
-        this.cm.log( LogService.LOG_DEBUG, "Modified service {0}", new String[]
-            { ConfigurationManager.toString( reference ) } );
+        Log.logger.log( LogService.LOG_DEBUG, "Modified service {0}", new Object[]
+            { reference} );
 
         String[] pids = getServicePid( reference );
         if ( service.isDifferentPids( pids ) )
@@ -97,8 +99,8 @@ public abstract class BaseTracker<S> extends ServiceTracker<S, ConfigurationMap<
     public void removedService( ServiceReference<S> reference, ConfigurationMap<?> service )
     {
         // just log
-        this.cm.log( LogService.LOG_DEBUG, "Unregistering service {0}", new String[]
-            { ConfigurationManager.toString( reference ) } );
+        Log.logger.log( LogService.LOG_DEBUG, "Unregistering service {0}", new Object[]
+            { reference } );
     }
 
 
@@ -228,22 +230,22 @@ public abstract class BaseTracker<S> extends ServiceTracker<S, ConfigurationMap<
             final ConfigurationException ce = ( ConfigurationException ) error;
             if ( ce.getProperty() != null )
             {
-                this.cm.log( LogService.LOG_ERROR,
+                Log.logger.log( LogService.LOG_ERROR,
                     "{0}: Updating property {1} of configuration {2} caused a problem: {3}", new Object[]
-                        { ConfigurationManager.toString( target ), ce.getProperty(), pid, ce.getReason(), ce } );
+                        { target , ce.getProperty(), pid, ce.getReason(), ce } );
             }
             else
             {
-                this.cm.log( LogService.LOG_ERROR, "{0}: Updating configuration {1} caused a problem: {2}",
+                Log.logger.log( LogService.LOG_ERROR, "{0}: Updating configuration {1} caused a problem: {2}",
                     new Object[]
-                        { ConfigurationManager.toString( target ), pid, ce.getReason(), ce } );
+                        { target, pid, ce.getReason(), ce } );
             }
         }
         else
         {
             {
-                this.cm.log( LogService.LOG_ERROR, "{0}: Unexpected problem updating configuration {1}", new Object[]
-                    { ConfigurationManager.toString( target ), pid, error } );
+                Log.logger.log( LogService.LOG_ERROR, "{0}: Unexpected problem updating configuration {1}", new Object[]
+                    { target, pid, error } );
             }
 
         }
@@ -302,6 +304,7 @@ public abstract class BaseTracker<S> extends ServiceTracker<S, ConfigurationMap<
             this.bundle = bundle;
         }
 
+        @Override
         public ProtectionDomain[] combine(ProtectionDomain[] arg0,
                                           ProtectionDomain[] arg1) {
             return new ProtectionDomain[] { new CMProtectionDomain(bundle) };
@@ -318,6 +321,7 @@ public abstract class BaseTracker<S> extends ServiceTracker<S, ConfigurationMap<
             this.bundle = bundle;
         }
 
+        @Override
         public boolean implies(Permission permission) {
             try {
                 return bundle.hasPermission(permission);

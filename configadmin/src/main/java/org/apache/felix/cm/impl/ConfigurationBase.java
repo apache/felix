@@ -21,6 +21,7 @@ package org.apache.felix.cm.impl;
 
 import java.io.IOException;
 import java.util.Dictionary;
+
 import org.apache.felix.cm.PersistenceManager;
 import org.apache.felix.cm.impl.helper.TargetedPID;
 import org.osgi.service.log.LogService;
@@ -99,7 +100,7 @@ abstract class ConfigurationBase
         }
         catch ( IOException ioe )
         {
-            configurationManager.log( LogService.LOG_ERROR, "Persisting ID {0} failed", new Object[]
+            Log.logger.log( LogService.LOG_ERROR, "Persisting ID {0} failed", new Object[]
                 { getBaseId(), ioe } );
         }
     }

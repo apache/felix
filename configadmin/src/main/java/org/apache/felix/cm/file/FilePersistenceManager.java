@@ -33,9 +33,7 @@ import java.security.PrivilegedExceptionAction;
 import java.util.BitSet;
 import java.util.Dictionary;
 import java.util.Enumeration;
-import java.util.HashSet;
 import java.util.NoSuchElementException;
-import java.util.Set;
 import java.util.Stack;
 import java.util.StringTokenizer;
 
@@ -178,7 +176,7 @@ public class FilePersistenceManager implements PersistenceManager
         final String osName = System.getProperty( "os.name" );
         isWin = osName != null && osName.startsWith( "Windows" );
     }
-    
+
     private static boolean equalsNameWithPrefixPlusOneDigit( String name, String prefix) {
         if ( name.length() != prefix.length() + 1 ) {
             return false;
@@ -383,7 +381,7 @@ public class FilePersistenceManager implements PersistenceManager
         // check whether we exhausted
         if ( first < pid.length() )
         {
-            StringBuffer buf = new StringBuffer( pid.substring( 0, first ) );
+            StringBuilder buf = new StringBuilder( pid.substring( 0, first ) );
 
             for ( int i = first; i < pid.length(); i++ )
             {
@@ -405,7 +403,7 @@ public class FilePersistenceManager implements PersistenceManager
         if ( isWin )
         {
             final StringTokenizer segments = new StringTokenizer( pid, File.separator, true );
-            final StringBuffer pidBuffer = new StringBuffer( pid.length() );
+            final StringBuilder pidBuffer = new StringBuilder( pid.length() );
             while ( segments.hasMoreTokens() )
             {
                 final String segment = segments.nextToken();
@@ -426,7 +424,7 @@ public class FilePersistenceManager implements PersistenceManager
     }
 
 
-    private void appendEncoded( StringBuffer buf, final char c )
+    private void appendEncoded( StringBuilder buf, final char c )
     {
         String val = "000" + Integer.toHexString( c );
         buf.append( '%' );
@@ -456,6 +454,7 @@ public class FilePersistenceManager implements PersistenceManager
      * @return an enumeration of configuration data returned as instances of
      *      the <code>Dictionary</code> class.
      */
+    @Override
     public Enumeration getDictionaries()
     {
         return new DictionaryEnumeration();
@@ -467,6 +466,7 @@ public class FilePersistenceManager implements PersistenceManager
      *
      * @param pid The identifier of the configuration file to delete.
      */
+    @Override
     public void delete( final String pid )
     {
         if ( System.getSecurityManager() != null )
@@ -484,6 +484,7 @@ public class FilePersistenceManager implements PersistenceManager
     {
         AccessController.doPrivileged( new PrivilegedAction()
         {
+            @Override
             public Object run()
             {
                 _delete( pid );
@@ -510,6 +511,7 @@ public class FilePersistenceManager implements PersistenceManager
      *
      * @return <code>true</code> if the file exists
      */
+    @Override
     public boolean exists( final String pid )
     {
         if ( System.getSecurityManager() != null )
@@ -525,6 +527,7 @@ public class FilePersistenceManager implements PersistenceManager
     {
         final Object result = AccessController.doPrivileged( new PrivilegedAction()
         {
+            @Override
             public Object run()
             {
                 // FELIX-2771: Boolean.valueOf(boolean) is not in Foundation
@@ -554,6 +557,7 @@ public class FilePersistenceManager implements PersistenceManager
      *      may be empty if the file contains no configuration information
      *      or is not properly formatted.
      */
+    @Override
     public Dictionary load( String pid ) throws IOException
     {
         final File cfgFile = getFile( pid );
@@ -573,6 +577,7 @@ public class FilePersistenceManager implements PersistenceManager
         {
             Object result = AccessController.doPrivileged( new PrivilegedExceptionAction()
             {
+                @Override
                 public Object run() throws IOException
                 {
                     return _load( cfgFile );
@@ -649,6 +654,7 @@ public class FilePersistenceManager implements PersistenceManager
      *
      * @throws IOException If an error occurrs writing the configuration data.
      */
+    @Override
     public void store( final String pid, final Dictionary props ) throws IOException
     {
         if ( System.getSecurityManager() != null )
@@ -668,6 +674,7 @@ public class FilePersistenceManager implements PersistenceManager
         {
             AccessController.doPrivileged( new PrivilegedExceptionAction()
             {
+                @Override
                 public Object run() throws IOException
                 {
                     _store( pid, props );
@@ -798,12 +805,14 @@ public class FilePersistenceManager implements PersistenceManager
         }
 
 
+        @Override
         public boolean hasMoreElements()
         {
             return next != null;
         }
 
 
+        @Override
         public Object nextElement()
         {
             if ( next == null )
@@ -832,6 +841,7 @@ public class FilePersistenceManager implements PersistenceManager
         {
             Object result = AccessController.doPrivileged( new PrivilegedAction()
             {
+                @Override
                 public Object run()
                 {
                     return _seek();

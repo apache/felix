@@ -75,7 +75,7 @@ public class ConfigurationAdminImpl implements ConfigurationAdmin
     {
         final ConfigurationManager configurationManager = getConfigurationManager();
 
-        configurationManager.log( LogService.LOG_DEBUG, "createFactoryConfiguration(factoryPid={0})", new Object[]
+        Log.logger.log( LogService.LOG_DEBUG, "createFactoryConfiguration(factoryPid={0})", new Object[]
             { factoryPid } );
 
         // FELIX-3360: new factory configuration with implicit binding is dynamic
@@ -93,7 +93,7 @@ public class ConfigurationAdminImpl implements ConfigurationAdmin
     {
         final ConfigurationManager configurationManager = getConfigurationManager();
 
-        configurationManager.log( LogService.LOG_DEBUG, "createFactoryConfiguration(factoryPid={0}, location={1})",
+        Log.logger.log( LogService.LOG_DEBUG, "createFactoryConfiguration(factoryPid={0}, location={1})",
             new Object[]
                 { factoryPid, location } );
 
@@ -113,7 +113,7 @@ public class ConfigurationAdminImpl implements ConfigurationAdmin
     {
         final ConfigurationManager configurationManager = getConfigurationManager();
 
-        configurationManager.log( LogService.LOG_DEBUG, "getConfiguration(pid={0})", new Object[]
+        Log.logger.log( LogService.LOG_DEBUG, "getConfiguration(pid={0})", new Object[]
             { pid } );
 
         ConfigurationImpl config = configurationManager.getConfiguration( pid );
@@ -128,7 +128,7 @@ public class ConfigurationAdminImpl implements ConfigurationAdmin
         {
             if ( config.getBundleLocation() == null )
             {
-                configurationManager.log( LogService.LOG_DEBUG, "Binding configuration {0} (isNew: {1}) to bundle {2}",
+                Log.logger.log( LogService.LOG_DEBUG, "Binding configuration {0} (isNew: {1}) to bundle {2}",
                     new Object[]
                         { config.getPid(), config.isNew() ? Boolean.TRUE : Boolean.FALSE,
                             this.getBundle().getLocation() } );
@@ -155,7 +155,7 @@ public class ConfigurationAdminImpl implements ConfigurationAdmin
     {
         final ConfigurationManager configurationManager = getConfigurationManager();
 
-        configurationManager.log( LogService.LOG_DEBUG, "getConfiguration(pid={0}, location={1})", new Object[]
+        Log.logger.log( LogService.LOG_DEBUG, "getConfiguration(pid={0}, location={1})", new Object[]
             { pid, location } );
 
         // CM 1.4 / 104.13.2.3
@@ -184,7 +184,7 @@ public class ConfigurationAdminImpl implements ConfigurationAdmin
     {
         final ConfigurationManager configurationManager = getConfigurationManager();
 
-        configurationManager.log( LogService.LOG_DEBUG, "listConfigurations(filter={0})", new Object[]
+        Log.logger.log( LogService.LOG_DEBUG, "listConfigurations(filter={0})", new Object[]
             { filter } );
 
         ConfigurationImpl ci[] = configurationManager.listConfigurations( this, filter );
@@ -274,14 +274,14 @@ public class ConfigurationAdminImpl implements ConfigurationAdmin
                 {
                     sm.checkPermission( new ConfigurationPermission( name, action ) );
 
-                    configurationManager.log( LogService.LOG_DEBUG,
+                    Log.logger.log( LogService.LOG_DEBUG,
                         "Explicit Permission; grant {0} permission on configuration bound to {1} to bundle {2}",
                         new Object[]
                             { action, name, getBundle().getLocation() } );
                 }
                 catch ( SecurityException se )
                 {
-                    configurationManager
+                    Log.logger
                         .log(
                             LogService.LOG_DEBUG,
                             "No Permission; denied {0} permission on configuration bound to {1} to bundle {2}; reason: {3}",
@@ -290,18 +290,18 @@ public class ConfigurationAdminImpl implements ConfigurationAdmin
                     throw se;
                 }
             }
-            else if ( configurationManager.isLogEnabled( LogService.LOG_DEBUG ) )
+            else if ( Log.logger.isLogEnabled( LogService.LOG_DEBUG ) )
             {
-                configurationManager.log( LogService.LOG_DEBUG,
+                Log.logger.log( LogService.LOG_DEBUG,
                     "Implicit Permission; grant {0} permission on configuration bound to {1} to bundle {2}",
                     new Object[]
                         { action, name, getBundle().getLocation() } );
 
             }
         }
-        else if ( configurationManager.isLogEnabled( LogService.LOG_DEBUG ) )
+        else if ( Log.logger.isLogEnabled( LogService.LOG_DEBUG ) )
         {
-            configurationManager.log( LogService.LOG_DEBUG,
+            Log.logger.log( LogService.LOG_DEBUG,
                 "No SecurityManager installed; grant {0} permission on configuration bound to {1} to bundle {2}",
                 new Object[]
                     { action, name, getBundle().getLocation() } );
@@ -337,7 +337,7 @@ public class ConfigurationAdminImpl implements ConfigurationAdmin
     {
         final ConfigurationManager configurationManager = getConfigurationManager();
 
-        configurationManager.log( LogService.LOG_DEBUG, "getFactoryConfiguration(factoryPid={0}, alias={1}, location={2})", new Object[]
+        Log.logger.log( LogService.LOG_DEBUG, "getFactoryConfiguration(factoryPid={0}, alias={1}, location={2})", new Object[]
             { factoryPid, alias, location } );
 
         final String pid = factoryPid + '#' + alias;
@@ -367,7 +367,7 @@ public class ConfigurationAdminImpl implements ConfigurationAdmin
     public Configuration getFactoryConfiguration(String factoryPid, String alias) throws IOException {
         final ConfigurationManager configurationManager = getConfigurationManager();
 
-        configurationManager.log( LogService.LOG_DEBUG, "getFactoryConfiguration(factoryPid={0}, alias={1})", new Object[]
+        Log.logger.log( LogService.LOG_DEBUG, "getFactoryConfiguration(factoryPid={0}, alias={1})", new Object[]
             { factoryPid, alias } );
 
         final String pid = factoryPid + '#' + alias;
@@ -384,7 +384,7 @@ public class ConfigurationAdminImpl implements ConfigurationAdmin
         {
             if ( config.getBundleLocation() == null )
             {
-                configurationManager.log( LogService.LOG_DEBUG, "Binding configuration {0} (isNew: {1}) to bundle {2}",
+                Log.logger.log( LogService.LOG_DEBUG, "Binding configuration {0} (isNew: {1}) to bundle {2}",
                     new Object[]
                         { config.getPid(), config.isNew() ? Boolean.TRUE : Boolean.FALSE,
                             this.getBundle().getLocation() } );

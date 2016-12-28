@@ -50,128 +50,150 @@ public class MockBundle implements Bundle
     }
 
 
+    @Override
     public Enumeration findEntries( String arg0, String arg1, boolean arg2 )
     {
         return null;
     }
 
 
+    @Override
     public BundleContext getBundleContext()
     {
         return context;
     }
 
 
+    @Override
     public long getBundleId()
     {
         return 0;
     }
 
 
+    @Override
     public URL getEntry( String arg0 )
     {
         return null;
     }
 
 
+    @Override
     public Enumeration getEntryPaths( String arg0 )
     {
         return null;
     }
 
 
+    @Override
     public Dictionary getHeaders()
     {
         return null;
     }
 
 
+    @Override
     public Dictionary getHeaders( String arg0 )
     {
         return null;
     }
 
 
+    @Override
     public long getLastModified()
     {
         return 0;
     }
 
 
+    @Override
     public String getLocation()
     {
         return location;
     }
 
 
+    @Override
     public ServiceReference[] getRegisteredServices()
     {
         return null;
     }
 
 
+    @Override
     public URL getResource( String arg0 )
     {
         return null;
     }
 
 
+    @Override
     public Enumeration getResources( String arg0 )
     {
         return null;
     }
 
 
+    @Override
     public ServiceReference[] getServicesInUse()
     {
         return null;
     }
 
 
+    @Override
     public int getState()
     {
         return 0;
     }
 
 
+    @Override
     public String getSymbolicName()
     {
         return null;
     }
 
 
+    @Override
     public boolean hasPermission( Object arg0 )
     {
         return false;
     }
 
 
+    @Override
     public Class loadClass( String arg0 ) throws ClassNotFoundException
     {
         throw new ClassNotFoundException( arg0 );
     }
 
 
+    @Override
     public void start()
     {
     }
 
 
+    @Override
     public void stop()
     {
     }
 
 
+    @Override
     public void uninstall()
     {
     }
 
 
+    @Override
     public void update()
     {
     }
 
 
+    @Override
     public void update( InputStream arg0 ) throws BundleException
     {
         if ( arg0 != null )
@@ -188,16 +210,19 @@ public class MockBundle implements Bundle
     }
 
 
+    @Override
     public void start( int options )
     {
     }
 
 
+    @Override
     public void stop( int options )
     {
     }
 
 
+    @Override
     public int compareTo( Bundle o )
     {
         return 0;
@@ -206,26 +231,30 @@ public class MockBundle implements Bundle
 
     // Framework 1.5 additions
 
+    @Override
     public Map<X509Certificate, List<X509Certificate>> getSignerCertificates( int signersType )
     {
         throw new AbstractMethodError( "Not supported on Framework API 1.4; added in Framework API 1.5" );
     }
 
 
+    @Override
     public Version getVersion()
     {
-        throw new AbstractMethodError( "Not supported on Framework API 1.4; added in Framework API 1.5" );
+        return Version.emptyVersion;
     }
 
 
     // Framework 1.6 additions
 
+    @Override
     public <A> A adapt( Class<A> type )
     {
         throw new AbstractMethodError( "Not supported on Framework API 1.4; added in Framework API 1.6" );
     }
 
 
+    @Override
     public File getDataFile( String filename )
     {
         throw new AbstractMethodError( "Not supported on Framework API 1.4; added in Framework API 1.6" );

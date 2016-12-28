@@ -510,7 +510,7 @@ public class ConfigurationHandler
 
     private String readQuoted( PushbackReader pr ) throws IOException
     {
-        StringBuffer buf = new StringBuffer();
+        StringBuilder buf = new StringBuilder();
         for ( ;; )
         {
             int c = read( pr );

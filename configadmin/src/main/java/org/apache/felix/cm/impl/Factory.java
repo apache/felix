@@ -33,7 +33,7 @@ import org.apache.felix.cm.impl.helper.TargetedPID;
  * The <code>Factory</code> class is used to manage mappings between factory
  * PIDs the configuration PID belonging to it.
  */
-class Factory extends ConfigurationBase
+public class Factory extends ConfigurationBase
 {
 
     public static final String FACTORY_PID = "factory.pid";
@@ -58,7 +58,7 @@ class Factory extends ConfigurationBase
     }
 
 
-    static String factoryPidToIdentifier( String factoryPid )
+    public static String factoryPidToIdentifier( String factoryPid )
     {
         return factoryPid + ".factory";
     }
@@ -117,6 +117,7 @@ class Factory extends ConfigurationBase
     }
 
 
+    @Override
     void store() throws IOException
     {
         Hashtable props = new Hashtable();
