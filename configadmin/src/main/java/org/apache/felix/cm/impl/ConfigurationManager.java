@@ -92,10 +92,10 @@ public class ConfigurationManager implements BundleListener
     private volatile ServiceRegistration<ConfigurationAdmin> configurationAdminRegistration;
 
     // the ConfigurationEvent listeners
-    private ServiceTracker configurationListenerTracker;
+    private ServiceTracker<ConfigurationListener, ConfigurationListener> configurationListenerTracker;
 
     // the synchronous ConfigurationEvent listeners
-    private ServiceTracker syncConfigurationListenerTracker;
+    private ServiceTracker<SynchronousConfigurationListener, SynchronousConfigurationListener> syncConfigurationListenerTracker;
 
     // service tracker for managed services
     private ManagedServiceTracker managedServiceTracker;
@@ -157,10 +157,10 @@ public class ConfigurationManager implements BundleListener
         this.dynamicBindings = dynBin;
 
         // configurationlistener support
-        configurationListenerTracker = new ServiceTracker( bundleContext, ConfigurationListener.class.getName(), null );
+        configurationListenerTracker = new ServiceTracker<ConfigurationListener, ConfigurationListener>( bundleContext, ConfigurationListener.class, null );
         configurationListenerTracker.open();
-        syncConfigurationListenerTracker = new ServiceTracker( bundleContext,
-            SynchronousConfigurationListener.class.getName(), null );
+        syncConfigurationListenerTracker = new ServiceTracker<SynchronousConfigurationListener, SynchronousConfigurationListener>( bundleContext,
+            SynchronousConfigurationListener.class, null );
         syncConfigurationListenerTracker.open();
 
         // initialize the asynchonous updater thread
@@ -184,10 +184,10 @@ public class ConfigurationManager implements BundleListener
 
         // create and register configuration admin - start after PM tracker ...
         ConfigurationAdminFactory caf = new ConfigurationAdminFactory( this );
-        Hashtable props = new Hashtable();
+        Dictionary<String, Object> props = new Hashtable<String, Object>();
         props.put( Constants.SERVICE_PID, "org.apache.felix.cm.ConfigurationAdmin" );
         props.put( Constants.SERVICE_DESCRIPTION, "Configuration Admin Service Specification 1.6 Implementation" );
-        props.put( Constants.SERVICE_VENDOR, "Apache Software Foundation" );
+        props.put( Constants.SERVICE_VENDOR, "The Apache Software Foundation" );
         configurationAdminRegistration = bundleContext.registerService( ConfigurationAdmin.class, caf, props );
 
         // start handling ManagedService[Factory] services
@@ -228,7 +228,7 @@ public class ConfigurationManager implements BundleListener
         // clearing the field before actually unregistering the service
         // prevents IllegalStateException in getServiceReference() if
         // the field is not null but the service already unregistered
-        final ServiceRegistration caReg = configurationAdminRegistration;
+        final ServiceRegistration<ConfigurationAdmin> caReg = configurationAdminRegistration;
         configurationAdminRegistration = null;
         if ( caReg != null )
         {

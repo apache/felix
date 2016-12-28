@@ -97,6 +97,7 @@ public class Activator implements BundleActivator
         // start configuration manager implementation
         this.manager = new ConfigurationManager();
         final ServiceReference<ConfigurationAdmin> ref = this.manager.start(dynamicBindings, bundleContext);
+
         // update log
         Log.logger.set(ref);
     }

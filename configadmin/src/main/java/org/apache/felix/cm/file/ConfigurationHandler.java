@@ -102,8 +102,8 @@ public class ConfigurationHandler
     protected static final String INDENT = "  ";
     protected static final String COLLECTION_LINE_BREAK = " \\\r\n";
 
-    protected static final Map code2Type;
-    protected static final Map type2Code;
+    protected static final Map<Integer, Class<?>> code2Type;
+    protected static final Map<Class<?>, Integer> type2Code;
 
     // set of valid characters for "symblic-name"
     private static final BitSet NAME_CHARS;
@@ -111,7 +111,7 @@ public class ConfigurationHandler
 
     static
     {
-        type2Code = new HashMap();
+        type2Code = new HashMap<Class<?>, Integer>();
 
         // simple (exclusive String whose type code is not written)
         type2Code.put( Integer.class, new Integer( TOKEN_SIMPLE_INTEGER ) );
@@ -136,10 +136,9 @@ public class ConfigurationHandler
         // reverse map to map type codes to classes, string class mapping
         // to be added manually, as the string type code is not written and
         // hence not included in the type2Code map
-        code2Type = new HashMap();
-        for ( Iterator ti = type2Code.entrySet().iterator(); ti.hasNext(); )
+        code2Type = new HashMap<Integer, Class<?>>();
+        for(final Map.Entry<Class<?>, Integer> entry : type2Code.entrySet())
         {
-            Map.Entry entry = ( Map.Entry ) ti.next();
             code2Type.put( entry.getValue(), entry.getKey() );
         }
         code2Type.put( new Integer( TOKEN_SIMPLE_STRING ), String.class );
@@ -192,16 +191,17 @@ public class ConfigurationHandler
      * given <code>OutputStream</code>.
      * <p>
      * This method writes at the current location in the stream and does not
-     * close the outputstream.
+     * close the output stream.
      *
      * @param out
-     *            The <code>OutputStream</code> to write the configurtion data
+     *            The <code>OutputStream</code> to write the configuration data
      *            to.
      * @param properties
      *            The <code>Dictionary</code> to write.
      * @throws IOException
-     *             If an error occurrs writing to the output stream.
+     *             If an error occurs writing to the output stream.
      */
+    @SuppressWarnings("rawtypes")
     public static void write( OutputStream out, Dictionary properties ) throws IOException
     {
         BufferedWriter bw = new BufferedWriter( new OutputStreamWriter( out, ENCODING ) );
@@ -230,6 +230,7 @@ public class ConfigurationHandler
      * @return An <code>Enumeration</code> that provides the keys of
      *         properties in an ordered manner.
      */
+    @SuppressWarnings("rawtypes")
     private static Enumeration orderedKeys(Dictionary properties) {
         String[] keyArray = new String[properties.size()];
         int i = 0;
@@ -247,7 +248,7 @@ public class ConfigurationHandler
      * Reads configuration data from the given <code>InputStream</code> and
      * returns a new <code>Dictionary</code> object containing the data.
      * <p>
-     * This method reads from the current location in the stream upto the end of
+     * This method reads from the current location in the stream up to the end of
      * the stream but does not close the stream at the end.
      *
      * @param ins
@@ -257,9 +258,10 @@ public class ConfigurationHandler
      *         data. This object may be empty if the stream contains no
      *         configuration data.
      * @throws IOException
-     *             If an error occurrs reading from the stream. This exception
+     *             If an error occurs reading from the stream. This exception
      *             is also thrown if a syntax error is encountered.
      */
+    @SuppressWarnings("rawtypes")
     public static Dictionary read( InputStream ins ) throws IOException
     {
         return new ConfigurationHandler().readInternal( ins );
@@ -280,7 +282,7 @@ public class ConfigurationHandler
     private int pos;
 
 
-    private Dictionary readInternal( InputStream ins ) throws IOException
+    private Dictionary<String, ?> readInternal( InputStream ins ) throws IOException
     {
         BufferedReader br = new BufferedReader( new InputStreamReader( ins, ENCODING ) );
         PushbackReader pr = new PushbackReader( br, 1 );
@@ -290,7 +292,7 @@ public class ConfigurationHandler
         line = 0;
         pos = 0;
 
-        Hashtable configuration = new Hashtable();
+        Dictionary<String, Object> configuration = new Hashtable<String, Object>();
         token = 0;
         while ( nextToken( pr, true ) == TOKEN_NAME )
         {
@@ -361,7 +363,7 @@ public class ConfigurationHandler
 
     private Object readArray( int typeCode, PushbackReader pr ) throws IOException
     {
-        List list = new ArrayList();
+        List<Object> list = new ArrayList<Object>();
         for ( ;; )
         {
             int c = ignorablePageBreakAndWhiteSpace( pr );
@@ -383,7 +385,7 @@ public class ConfigurationHandler
 
             if ( c == TOKEN_ARR_CLOS )
             {
-                Class type = ( Class ) code2Type.get( new Integer( typeCode ) );
+                Class<?> type = code2Type.get( new Integer( typeCode ) );
                 Object array = Array.newInstance( type, list.size() );
                 for ( int i = 0; i < list.size(); i++ )
                 {
@@ -403,9 +405,9 @@ public class ConfigurationHandler
     }
 
 
-    private Collection readCollection( int typeCode, PushbackReader pr ) throws IOException
+    private Collection<Object> readCollection( int typeCode, PushbackReader pr ) throws IOException
     {
-        Collection collection = new ArrayList();
+        Collection<Object> collection = new ArrayList<Object>();
         for ( ;; )
         {
             int c = ignorablePageBreakAndWhiteSpace( pr );
@@ -704,14 +706,14 @@ public class ConfigurationHandler
 
     private static void writeValue( Writer out, Object value ) throws IOException
     {
-        Class clazz = value.getClass();
+        Class<?> clazz = value.getClass();
         if ( clazz.isArray() )
         {
             writeArray( out, value );
         }
         else if ( value instanceof Collection )
         {
-            writeCollection( out, ( Collection ) value );
+            writeCollection( out, ( Collection<?> ) value );
         }
         else
         {
@@ -736,7 +738,7 @@ public class ConfigurationHandler
     }
 
 
-    private static void writeCollection( Writer out, Collection collection ) throws IOException
+    private static void writeCollection( Writer out, Collection<?> collection ) throws IOException
     {
         if ( collection.isEmpty() )
         {
@@ -746,7 +748,7 @@ public class ConfigurationHandler
         }
         else
         {
-            Iterator ci = collection.iterator();
+            Iterator<?> ci = collection.iterator();
             Object firstElement = ci.next();
 
             writeType( out, firstElement.getClass() );
@@ -772,9 +774,9 @@ public class ConfigurationHandler
     }
 
 
-    private static void writeType( Writer out, Class valueType ) throws IOException
+    private static void writeType( Writer out, Class<?> valueType ) throws IOException
     {
-        Integer code = ( Integer ) type2Code.get( valueType );
+        Integer code = type2Code.get( valueType );
         if ( code != null )
         {
             out.write( ( char ) code.intValue() );
