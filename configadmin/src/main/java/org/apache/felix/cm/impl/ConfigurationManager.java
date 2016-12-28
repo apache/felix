@@ -33,7 +33,6 @@ import java.util.List;
 import java.util.Random;
 
 import org.apache.felix.cm.PersistenceManager;
-import org.apache.felix.cm.file.FilePersistenceManager;
 import org.apache.felix.cm.impl.helper.BaseTracker;
 import org.apache.felix.cm.impl.helper.ConfigurationMap;
 import org.apache.felix.cm.impl.helper.ManagedServiceFactoryTracker;
@@ -75,39 +74,19 @@ import org.osgi.util.tracker.ServiceTracker;
  * configuration persistence layers.
  * <li>A {@link ConfigurationAdminFactory} instance is registered as the
  * <code>ConfigurationAdmin</code> service.
- * <li>A {@link FilePersistenceManager} instance is registered as a default
- * {@link PersistenceManager}.
  * <li>Last but not least this instance manages all tasks laid out in the
  * specification such as maintaining configuration, taking care of configuration
  * events, etc.
  * </ul>
- * <p>
- * The default {@link FilePersistenceManager} is configured with a configuration
- * location taken from the <code>felix.cm.dir</code> framework property. If
- * this property is not set the <code>config</code> directory in the current
- * working directory as specified in the <code>user.dir</code> system property
- * is used.
  */
 public class ConfigurationManager implements BundleListener
 {
-
-    /**
-     * The name of the bundle context property defining the location for the
-     * configuration files (value is "felix.cm.dir").
-     *
-     * @see #start(BundleContext)
-     */
-    public static final String CM_CONFIG_DIR = "felix.cm.dir";
-
     // random number generator to create configuration PIDs for factory
     // configurations
     private static Random numberGenerator;
 
     // the BundleContext of the Configuration Admin Service bundle
     BundleContext bundleContext;
-
-    // the service registration of the default file persistence manager
-    private volatile ServiceRegistration filepmRegistration;
 
     // the service registration of the configuration admin
     private volatile ServiceRegistration<ConfigurationAdmin> configurationAdminRegistration;
@@ -171,10 +150,11 @@ public class ConfigurationManager implements BundleListener
     // flag indicating whether the manager is considered alive
     private volatile boolean isActive;
 
-    public ServiceReference<ConfigurationAdmin> start( BundleContext bundleContext )
+    public ServiceReference<ConfigurationAdmin> start( final DynamicBindings dynBin, BundleContext bundleContext )
     {
         // set up some fields
         this.bundleContext = bundleContext;
+        this.dynamicBindings = dynBin;
 
         // configurationlistener support
         configurationListenerTracker = new ServiceTracker( bundleContext, ConfigurationListener.class.getName(), null );
@@ -188,30 +168,6 @@ public class ConfigurationManager implements BundleListener
         tg.setDaemon( true );
         this.updateThread = new UpdateThread( tg, "CM Configuration Updater" );
         this.eventThread = new UpdateThread( tg, "CM Event Dispatcher" );
-
-        // set up the location (might throw IllegalArgumentException)
-        try
-        {
-            FilePersistenceManager fpm = new FilePersistenceManager( bundleContext, bundleContext
-                .getProperty( CM_CONFIG_DIR ) );
-            Hashtable props = new Hashtable();
-            props.put( Constants.SERVICE_PID, fpm.getClass().getName() );
-            props.put( Constants.SERVICE_DESCRIPTION, "Platform Filesystem Persistence Manager" );
-            props.put( Constants.SERVICE_VENDOR, "Apache Software Foundation" );
-            props.put( Constants.SERVICE_RANKING, new Integer( Integer.MIN_VALUE ) );
-            filepmRegistration = bundleContext.registerService( PersistenceManager.class.getName(), fpm, props );
-
-            // setup dynamic configuration bindings
-            dynamicBindings = new DynamicBindings( bundleContext, fpm );
-        }
-        catch ( IOException ioe )
-        {
-            Log.logger.log( LogService.LOG_ERROR, "Failure setting up dynamic configuration bindings", ioe );
-        }
-        catch ( IllegalArgumentException iae )
-        {
-            Log.logger.log( LogService.LOG_ERROR, "Cannot create the FilePersistenceManager", iae );
-        }
 
         // register as bundle and service listener
         handleBundleEvents = true;
@@ -285,14 +241,6 @@ public class ConfigurationManager implements BundleListener
 
         // don't care for PersistenceManagers any more
         persistenceManagerTracker.close();
-
-        // shutdown the file persistence manager
-        final ServiceRegistration filePmReg = filepmRegistration;
-        filepmRegistration = null;
-        if ( filePmReg != null )
-        {
-            filePmReg.unregister();
-        }
 
         // stop listening for events
         bundleContext.removeBundleListener( this );
