@@ -37,6 +37,9 @@
         <module>bundlerepository</module>
         <module>bundlerepository.osgi-ct</module>
         <module>configadmin</module>
+        <module>configurator</module>
+        <module>converter</module>
+        <module>coordinator</module>
         <module>deploymentadmin</module>
         <module>eventadmin</module>
         <module>examples</module>
