@@ -484,19 +484,21 @@ public class ConfigurationImpl extends ConfigurationBase
         if ( factoryPid != null )
         {
             Factory factory = getConfigurationManager().getOrCreateFactory( factoryPid );
-            if ( factory.addPID( getPidString() ) )
-            {
-                // only write back if the pid was not already registered
-                // with the factory
-                try
+            synchronized (factory) {
+                if ( factory.addPID( getPidString() ) )
                 {
-                    factory.store();
-                }
-                catch ( IOException ioe )
-                {
-                    Log.logger.log( LogService.LOG_ERROR,
-                        "Failure storing factory {0} with new configuration {1}", new Object[]
-                            { factoryPid, getPidString(), ioe } );
+                    // only write back if the pid was not already registered
+                    // with the factory
+                    try
+                    {
+                        factory.store();
+                    }
+                    catch ( IOException ioe )
+                    {
+                        Log.logger.log( LogService.LOG_ERROR,
+                            "Failure storing factory {0} with new configuration {1}", new Object[]
+                                { factoryPid, getPidString(), ioe } );
+                    }
                 }
             }
         }
