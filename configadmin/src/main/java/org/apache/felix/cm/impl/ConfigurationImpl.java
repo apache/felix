@@ -720,7 +720,7 @@ public class ConfigurationImpl extends ConfigurationBase
                             return false;
                         }
                     }
-                    if ( !val1.equals(val2) )
+                    else if ( !val1.equals(val2) )
                     {
                         return false;
                     }

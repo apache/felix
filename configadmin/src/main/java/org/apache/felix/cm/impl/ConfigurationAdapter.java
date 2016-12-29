@@ -192,7 +192,7 @@ public class ConfigurationAdapter implements Configuration
     @Override
     public void updateIfDifferent(final Dictionary<String, ?> properties) throws IOException
     {
-        Log.logger.log( LogService.LOG_DEBUG, "setProperties(properties={0})", new Object[]
+        Log.logger.log( LogService.LOG_DEBUG, "updateIfDifferent(properties={0})", new Object[]
                 { properties } );
 
         checkActive();
