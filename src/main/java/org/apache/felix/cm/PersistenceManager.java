@@ -33,7 +33,7 @@ import org.osgi.annotation.versioning.ConsumerType;
  * different locations.
  * <p>
  * The Apache Felix Configuration Admin Service bundles provides an
- * implementation of this interface using the platform filesystem to store
+ * implementation of this interface using the platform file system to store
  * configuration data.
  * <p>
  * Implementations of this interface must support loading and storing
@@ -47,7 +47,7 @@ import org.osgi.annotation.versioning.ConsumerType;
  * default platform file system based implementation to load configuration data.
  * To store new configuration data, the persistence manager service with the
  * highest rank value - the <code>service.ranking</code> service property - is
- * used. If no pesistence manager service has been registered, the platfrom
+ * used. If no persistence manager service has been registered, the platform
  * file system based implementation is used.
  */
 @ConsumerType
@@ -77,7 +77,7 @@ public interface PersistenceManager
      * @return The dictionary for the identifier. This must not be
      *      <code>null</code> but may be empty.
      *
-     * @throws IOException If an error occurrs loading the dictionary. An
+     * @throws IOException If an error occurs loading the dictionary. An
      *      <code>IOException</code> must also be thrown if no dictionary
      *      exists for the given identifier.
      */
@@ -102,7 +102,7 @@ public interface PersistenceManager
      *
      * @return A possibly empty Enumeration of all dictionaries.
      *
-     * @throws IOException If an error occurrs getting the dictionaries.
+     * @throws IOException If an error occurs getting the dictionaries.
      */
     Enumeration getDictionaries() throws IOException;
 
@@ -118,7 +118,7 @@ public interface PersistenceManager
      * @param pid The identifier of the dictionary.
      * @param properties The <code>Dictionary</code> to store.
      *
-     * @throws IOException If an error occurrs storing the dictionary. If this
+     * @throws IOException If an error occurs storing the dictionary. If this
      *      exception is thrown, it is expected, that
      *      {@link #exists(String) exists(pid} returns <code>false</code>.
      */
@@ -129,9 +129,9 @@ public interface PersistenceManager
      * Removes the <code>Dictionary</code> for the given <code>pid</code>. If
      * such a dictionary does not exist, this method has no effect.
      *
-     * @param pid The identifier of the dictionary to delet.
+     * @param pid The identifier of the dictionary to delete.
      *
-     * @throws IOException If an error occurrs deleting the dictionary. This
+     * @throws IOException If an error occurs deleting the dictionary. This
      *      exception must not be thrown if no dictionary with the given
      *      identifier exists.
      */
