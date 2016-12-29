@@ -29,7 +29,7 @@ public class Activator implements BundleActivator {
     @Override
     public void start(BundleContext context) throws Exception {
         Dictionary<String, Object> jsonProps = new Hashtable<>();
-        jsonProps.put("osgi.codec.mimetype", new String[] {
+        jsonProps.put("mimetype", new String[] {
                 "application/json", "application/x-javascript", "text/javascript",
                 "text/x-javascript", "text/x-json" });
         jsonProps.put("provider", "felix");
