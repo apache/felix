@@ -59,6 +59,7 @@ public class Log
     private static final int CM_LOG_LEVEL_DEFAULT = 2;
 
     // the ServiceTracker to emit log services (see log(int, String, Throwable))
+    @SuppressWarnings("rawtypes")
     private volatile ServiceTracker logTracker;
 
     // the maximum log level when no LogService is available
@@ -70,6 +71,7 @@ public class Log
      * Start the tracker for the logger and set the log level according to the configuration.
      * @param bundleContext The bundle context
      */
+    @SuppressWarnings({ "unchecked", "rawtypes" })
     public void start( final BundleContext bundleContext)
     {
         // track the log service using a ServiceTracker
@@ -139,6 +141,7 @@ public class Log
      */
     public void log( final int level, final String format, final Object[] args )
     {
+        @SuppressWarnings("rawtypes")
         final ServiceTracker tracker = this.logTracker;
         final Object log = tracker == null ? null : tracker.getService();
         if ( log != null || isLogEnabled( level ) )
@@ -152,7 +155,7 @@ public class Log
                 {
                     if ( args[i] instanceof ServiceReference )
                     {
-                        args[i] = toString((ServiceReference)args[i]);
+                        args[i] = toString((ServiceReference<?>)args[i]);
                     }
                 }
                 if ( args[args.length - 1] instanceof Throwable )
@@ -175,6 +178,7 @@ public class Log
     public void log( final int level, final String message, final Throwable t )
     {
         // log using the LogService if available
+        @SuppressWarnings("rawtypes")
         final ServiceTracker tracker = this.logTracker;
         final Object log = tracker == null ? null : tracker.getService();
         if ( log != null )

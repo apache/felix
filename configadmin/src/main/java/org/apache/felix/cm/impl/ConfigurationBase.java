@@ -106,7 +106,7 @@ abstract class ConfigurationBase
     }
 
 
-    static protected void replaceProperty( Dictionary properties, String key, String value )
+    static protected void replaceProperty( Dictionary<String, Object> properties, String key, String value )
     {
         if ( value == null )
         {

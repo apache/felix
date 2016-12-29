@@ -55,6 +55,8 @@ import org.osgi.service.cm.ConfigurationEvent;
 import org.osgi.service.cm.ConfigurationListener;
 import org.osgi.service.cm.ConfigurationPermission;
 import org.osgi.service.cm.ConfigurationPlugin;
+import org.osgi.service.cm.ManagedService;
+import org.osgi.service.cm.ManagedServiceFactory;
 import org.osgi.service.cm.SynchronousConfigurationListener;
 import org.osgi.service.log.LogService;
 import org.osgi.util.tracker.ServiceTracker;
@@ -179,7 +181,7 @@ public class ConfigurationManager implements BundleListener
 
         // get all persistence managers to begin with
         pmtCount = 1; // make sure to get the persistence managers at least once
-        persistenceManagerTracker = new ServiceTracker( bundleContext, PersistenceManager.class.getName(), null );
+        persistenceManagerTracker = new ServiceTracker<PersistenceManager, PersistenceManager>( bundleContext, PersistenceManager.class.getName(), null );
         persistenceManagerTracker.open();
 
         // consider alive now (before clients use Configuration Admin
@@ -1008,7 +1010,7 @@ public class ConfigurationManager implements BundleListener
      * configurations) or the PID of the configuration (for non-factory
      * configurations).
      *
-     * @param props The configuraiton properties run through the registered
+     * @param props The configuration properties run through the registered
      *          ConfigurationPlugin services. This must not be
      *          <code>null</code>.
      * @param sr The service reference of the managed service (factory) which
@@ -1019,7 +1021,7 @@ public class ConfigurationManager implements BundleListener
      *          properties are to be augmented. This is non-<code>null</code>
      *          only for a factory configuration.
      */
-    public void callPlugins( final Dictionary props, final ServiceReference sr, final String configPid,
+    public void callPlugins( final Dictionary<String, Object> props, final ServiceReference<?> sr, final String configPid,
         final String factoryPid )
     {
         ServiceReference<?>[] plugins = null;
@@ -1200,12 +1202,12 @@ public class ConfigurationManager implements BundleListener
     {
         private final String[] pids;
 
-        private final ServiceReference sr;
+        private final ServiceReference<ManagedService> sr;
 
         private final ConfigurationMap<?> configs;
 
 
-        ManagedServiceUpdate( String[] pids, ServiceReference sr, ConfigurationMap<?> configs )
+        ManagedServiceUpdate( String[] pids, ServiceReference<ManagedService> sr, ConfigurationMap<?> configs )
         {
             this.pids = pids;
             this.sr = sr;
@@ -1242,7 +1244,7 @@ public class ConfigurationManager implements BundleListener
         {
             // check configuration
             final TargetedPID configPid;
-            final Dictionary properties;
+            final Dictionary<String, Object> properties;
             final long revision;
             if ( config != null )
             {
@@ -1286,12 +1288,12 @@ public class ConfigurationManager implements BundleListener
     {
         private final String[] factoryPids;
 
-        private final ServiceReference sr;
+        private final ServiceReference<ManagedServiceFactory> sr;
 
         private final ConfigurationMap<?> configs;
 
 
-        ManagedServiceFactoryUpdate( String[] factoryPids, ServiceReference sr, final ConfigurationMap<?> configs )
+        ManagedServiceFactoryUpdate( String[] factoryPids, ServiceReference<ManagedServiceFactory> sr, final ConfigurationMap<?> configs )
         {
             this.factoryPids = factoryPids;
             this.sr = sr;
@@ -1312,9 +1314,9 @@ public class ConfigurationManager implements BundleListener
                     for ( Factory factory : factories )
                     {
                         synchronized (factory) {
-                            for ( Iterator pi = factory.getPIDs().iterator(); pi.hasNext(); )
+                            for ( Iterator<String> pi = factory.getPIDs().iterator(); pi.hasNext(); )
                             {
-                                final String pid = ( String ) pi.next();
+                                final String pid = pi.next();
                                 ConfigurationImpl cfg;
                                 try
                                 {
@@ -1384,7 +1386,7 @@ public class ConfigurationManager implements BundleListener
 
         private void provide(final String factoryPid, final ConfigurationImpl config) {
 
-            final Dictionary rawProperties;
+            final Dictionary<String, Object> rawProperties;
             final long revision;
             synchronized ( config )
             {
@@ -1495,7 +1497,7 @@ public class ConfigurationManager implements BundleListener
                     if ( rc != null )
                     {
                         final TargetedPID configPid;
-                        final Dictionary properties;
+                        final Dictionary<String, Object> properties;
                         final long revision;
                         synchronized ( rc )
                         {
