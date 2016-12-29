@@ -217,7 +217,7 @@ public class ConfigurationAdapter implements Configuration
         this.configurationAdmin.checkPermission(this.delegatee.getConfigurationManager(),
                 ( bundleLocation == null ) ? "*" : bundleLocation,
                         ConfigurationPermission.ATTRIBUTE,
-                        true);
+                        false);
 
         Log.logger.log( LogService.LOG_DEBUG, "addAttributes({0})", attrs );
 
@@ -262,7 +262,7 @@ public class ConfigurationAdapter implements Configuration
         this.configurationAdmin.checkPermission(this.delegatee.getConfigurationManager(),
                 ( bundleLocation == null ) ? "*" : bundleLocation,
                         ConfigurationPermission.ATTRIBUTE,
-                        true);
+                        false);
 
         Log.logger.log( LogService.LOG_DEBUG, "removeAttributes({0})", attrs );
 

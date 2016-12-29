@@ -236,7 +236,7 @@ public class ConfigurationAdminImpl implements ConfigurationAdmin
      *
      * @param name The bundle location to check for permission. If this
      *      is <code>null</code> permission is always granted.
-     * @param checkOwn If {@code false} permission is alwas granted if
+     * @param checkOwn If {@code false} permission is always granted if
      *      {@code name} is the same the using bundle's location.
      *
      * @throws SecurityException if the access control context does not
@@ -255,8 +255,8 @@ public class ConfigurationAdminImpl implements ConfigurationAdmin
      * @param name The bundle location to check for permission. If this
      *      is <code>null</code> permission is always granted.
      * @param action The action to check.
-     * @param checkOwn If {@code false} permission is alwas granted if
-     *      {@code name} is the same the using bundle's location.
+     * @param checkOwn If {@code false} permission is always granted if
+     *      {@code name} is the same as the using bundle's location.
      *
      * @throws SecurityException if the access control context does not
      *      have the appropriate permission
