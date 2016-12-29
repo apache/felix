@@ -98,7 +98,15 @@ public class JsonParser {
             throw new IllegalArgumentException("Malformatted JSON key-value pair: " + jsonKeyValue);
         }
 
-        return new Pair<>(matcher.group(1), parseValue(matcher.group(2)));
+        try
+        {
+            return new Pair<>(matcher.group(1), parseValue(matcher.group(2)));
+        }
+        catch ( Exception e ) {
+            // The matcher throws as exeption when there is an empty value, when it should just return null;
+            // TODO: find a better solution to solve this problem.
+            return null;
+        }
     }
 
     private static Object parseValue(String jsonValue) {
