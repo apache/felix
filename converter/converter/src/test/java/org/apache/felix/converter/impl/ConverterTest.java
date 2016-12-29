@@ -52,6 +52,7 @@ import org.apache.felix.converter.impl.MyEmbeddedDTO.Alpha;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.osgi.dto.DTO;
 import org.osgi.util.converter.ConversionException;
 import org.osgi.util.converter.Converter;
 import org.osgi.util.converter.ConverterBuilder;
@@ -603,7 +604,7 @@ public class ConverterTest {
     }
 
     @Test
-    public void testConvertAs1() {
+    public void testConvertAsInterface() {
         MyBean mb = new MyBean();
         mb.intfVal = 17;
         mb.beanVal = "Hello";
@@ -613,13 +614,21 @@ public class ConverterTest {
     }
 
     @Test
-    public void testConvertAs2() {
+    public void testConvertAsBean() {
         MyBean mb = new MyBean();
         mb.intfVal = 17;
         mb.beanVal = "Hello";
 
         assertEquals(Collections.singletonMap("value", "Hello"),
                 converter.convert(mb).sourceAsBean().to(Map.class));
+    }
+
+    @Test
+    public void testConvertAsDTO() {
+        MyClass3 mc3 = new MyClass3(17);
+
+        assertEquals(17,
+                converter.convert(mc3).sourceAs(DTO.class).to(Map.class).get("value"));
     }
 
     @Test
@@ -678,6 +687,19 @@ public class ConverterTest {
 
         public String getValue() {
             return beanVal;
+        }
+    }
+
+    static class MyClass3 {
+        public int value;
+        public String string = "String";
+
+        public MyClass3( int value ) {
+            this.value = value;
+        }
+
+        public int value() {
+            return value;
         }
     }
 }
