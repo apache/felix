@@ -474,7 +474,7 @@ public class ConfigurationManager implements BundleListener
      *
      * @param pid The PID for which to return the configuration
      * @return The configuration or <code>null</code> if non exists
-     * @throws IOException If an error occurrs reading from a persistence
+     * @throws IOException If an error occurs reading from a persistence
      *      manager.
      */
     ConfigurationImpl getConfiguration( String pid ) throws IOException
