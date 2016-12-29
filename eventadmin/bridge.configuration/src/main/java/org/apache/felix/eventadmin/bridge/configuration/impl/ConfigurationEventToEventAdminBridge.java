@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.felix.eventadmin.bridge.configuration;
+package org.apache.felix.eventadmin.bridge.configuration.impl;
 
 import java.util.Arrays;
 import java.util.Dictionary;
@@ -44,17 +44,18 @@ public class ConfigurationEventToEventAdminBridge implements
     {
         m_context = context;
 
-        m_context.registerService(ConfigurationListener.class.getName(), this,
+        m_context.registerService(ConfigurationListener.class, this,
             null);
     }
 
+    @Override
     public void configurationEvent(final ConfigurationEvent event)
     {
-        final ServiceReference ref = m_context.getServiceReference(EventAdmin.class.getName());
+        final ServiceReference<EventAdmin> ref = m_context.getServiceReference(EventAdmin.class);
 
         if (null != ref)
         {
-            final EventAdmin eventAdmin = (EventAdmin) m_context.getService(ref);
+            final EventAdmin eventAdmin = m_context.getService(ref);
 
             if (null != eventAdmin)
             {
@@ -77,7 +78,7 @@ public class ConfigurationEventToEventAdminBridge implements
                             return;
                     }
 
-                    final Hashtable properties = new Hashtable();
+                    final Dictionary<String, Object> properties = new Hashtable<String, Object>();
 
                     if (null != event.getFactoryPid())
                     {
@@ -86,7 +87,7 @@ public class ConfigurationEventToEventAdminBridge implements
 
                     properties.put("cm.pid", event.getPid());
 
-                    final ServiceReference eventRef = event.getReference();
+                    final ServiceReference<ConfigurationAdmin> eventRef = event.getReference();
 
                     if (null == eventRef)
                     {
@@ -115,7 +116,7 @@ public class ConfigurationEventToEventAdminBridge implements
                     properties.put(EventConstants.SERVICE_PID, eventRef.getProperty(
                         EventConstants.SERVICE_PID));
 
-                    eventAdmin.postEvent(new Event(topic, (Dictionary)properties));
+                    eventAdmin.postEvent(new Event(topic, properties));
                 }
                 finally
                 {
