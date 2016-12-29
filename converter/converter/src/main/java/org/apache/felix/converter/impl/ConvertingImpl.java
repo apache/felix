@@ -458,9 +458,6 @@ public class ConvertingImpl implements Converting, InternalConverting {
     }
 
     private static boolean isDTOType(Class<?> cls) {
-        if (DTO.class.equals(cls))
-            return true;
-
         try {
             cls.getDeclaredConstructor();
         } catch (NoSuchMethodException | SecurityException e) {
