@@ -448,9 +448,6 @@ public class ConvertingImpl implements Converting, InternalConverting {
     }
 
     private static boolean isDTOType(Class<?> cls) {
-        if (DTO.class.equals(cls))
-            return true;
-
         try {
             cls.getDeclaredConstructor();
         } catch (NoSuchMethodException | SecurityException e) {
@@ -840,7 +837,7 @@ public class ConvertingImpl implements Converting, InternalConverting {
             return (Map<?,?>) obj;
         else if (Dictionary.class.isAssignableFrom(sourceCls))
             return null; // TODO
-        else if (isDTOType(sourceCls))
+        else if (isDTOType(sourceCls) || DTO.class.equals(sourceCls))
             return createMapFromDTO(obj, converter);
         else {
             if (sourceAsJavaBean) {
