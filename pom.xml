@@ -69,6 +69,7 @@
                         <Provide-Capability>
                             osgi.implementation;osgi.implementation="osgi.configurator";version:Version="1.0"
                         </Provide-Capability>
+                        <Embed-Dependency>geronimo-json_1.0_spec,johnzon-core</Embed-Dependency>
                     </instructions>
                 </configuration>
             </plugin>
