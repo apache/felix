@@ -30,6 +30,7 @@ import java.util.concurrent.Executor;
 import java.util.concurrent.FutureTask;
 import java.util.concurrent.TimeUnit;
 
+import org.apache.felix.dm.DependencyManager;
 import org.osgi.service.cm.ConfigurationException;
 
 /**
@@ -40,15 +41,14 @@ import org.osgi.service.cm.ConfigurationException;
 public class InvocationUtil {
     private static final Map<Key, Method> m_methodCache;
     static {
-        int size = 2048;
-        // TODO enable this again
-//        try {
-//            String value = System.getProperty(DependencyManager.METHOD_CACHE_SIZE);
-//            if (value != null) {
-//                size = Integer.parseInt(value);
-//            }
-//        }
-//        catch (Exception e) {}
+        int size = 4096;
+        try {
+            String value = System.getProperty(DependencyManager.METHOD_CACHE_SIZE);
+            if (value != null) {
+                size = Integer.parseInt(value);
+            }
+        }
+        catch (Exception e) {}
         m_methodCache = new LRUMap(Math.max(size, 64));
     }
     
