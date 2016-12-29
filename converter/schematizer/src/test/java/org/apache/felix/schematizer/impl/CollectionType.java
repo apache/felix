@@ -16,19 +16,13 @@
  */
 package org.apache.felix.schematizer.impl;
 
-import java.util.List;
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
 
-import org.osgi.dto.DTO;
-
-public class MyDTO3<T> extends DTO {
-    public enum Count { ONE, TWO, THREE }
-
-    public Count count;
-
-    public String ping;
-
-    public long pong;
-
-    public List<T> embedded;
+@Retention(RetentionPolicy.RUNTIME)
+@Target(ElementType.FIELD)
+public @interface CollectionType {
+    Class<?> value() default Object.class;
 }
-

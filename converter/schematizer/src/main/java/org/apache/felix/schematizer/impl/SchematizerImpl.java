@@ -16,16 +16,21 @@
  */
 package org.apache.felix.schematizer.impl;
 
+import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
+import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Optional;
@@ -39,12 +44,14 @@ import org.apache.felix.schematizer.Schema;
 import org.apache.felix.schematizer.Schematizer;
 import org.apache.felix.schematizer.TypeRule;
 import org.osgi.dto.DTO;
+import org.osgi.util.converter.StandardConverter;
 import org.osgi.util.converter.TypeReference;
 
 public class SchematizerImpl implements Schematizer {
 
     private final Map<String, SchemaImpl> schemas = new HashMap<>();
     private volatile Map<String, Map<String, Object>> typeRules = new HashMap<>();
+    private final List<ClassLoader> classloaders = new ArrayList<>();
 
     @Override
     public Optional<Schema> get(String name) {
@@ -61,9 +68,11 @@ public class SchematizerImpl implements Schematizer {
         try {
             // TODO: some validation of the Map here would be good
             SchemaImpl schema = new SchemaImpl(name);
-            Node.DTO rootDTO = map.get("/");
+            Object rootMap = map.get("/");
+            Node.DTO rootDTO = new StandardConverter().convert(rootMap).to(Node.DTO.class);
             Map<String, NodeImpl> allNodes = new HashMap<>();
-            NodeImpl root = new NodeImpl(rootDTO, "", instantiator, allNodes);
+            NodeImpl root = new NodeImpl(rootDTO, "", new Instantiator(classloaders), allNodes);
+            associateChildNodes(root);
             schema.add(root);
             schema.add(allNodes);
             return Optional.of(schema);
@@ -105,6 +114,13 @@ public class SchematizerImpl implements Schematizer {
             typeRules.put(name, new HashMap<>());
 
         return typeRules.get(name);
+    }
+
+    @Override
+    public Schematizer usingLookup( ClassLoader classloader ) {
+        if (classloader != null)
+            classloaders.add(classloader);
+        return this;
     }
 
     /**
@@ -172,8 +188,8 @@ public class SchematizerImpl implements Schematizer {
             rootNode = new NodeImpl(contextPath, targetCls, false, contextPath + "/");
         schema.add(rootNode);
         Map<String, NodeImpl> m = createMapFromDTO(name, targetCls, ref, contextPath, rules, schematizer);
-        m.values().stream().forEach(n -> n.parent(rootNode));
         m.values().stream().filter(v -> v.absolutePath().equals(rootNode.absolutePath() + v.name())).forEach(v -> rootNode.add(v));
+        associateChildNodes( rootNode );
         schema.add(m);
         return schema;
     }
@@ -189,10 +205,6 @@ public class SchematizerImpl implements Schematizer {
         SchemaImpl schema = new SchemaImpl(name);
         NodeImpl node = new NodeImpl(contextPath, targetCls, isCollection, contextPath + "/");
         schema.add(node);
-//        Map<String, NodeImpl> m = createMapFromDTO(name, targetCls, ref, contextPath, rules, schematizer);
-//        m.values().stream().forEach(n -> n.parent(node));
-//        m.values().stream().filter(v -> v.absolutePath().equals(node.absolutePath() + v.name())).forEach(v -> node.add(v));
-//        schema.add(m);
         return schema;
     }
 
@@ -261,9 +273,7 @@ public class SchematizerImpl implements Schematizer {
                 Map<String, NodeImpl> allNodes = embedded.toMapInternal();
                 allNodes.remove(path + "/");
                 result.putAll(allNodes);
-                Map<String, NodeImpl> childNodes = new HashMap<>();
-                allNodes.keySet().stream()
-                    .forEach( k -> {String k2 = k.replace(path, ""); childNodes.put(k2, allNodes.get(k));} );
+                Map<String, NodeImpl> childNodes = extractChildren(path, allNodes);
                 node.add(childNodes);
             } else {
                 Type fieldType = field.getType();
@@ -275,8 +285,10 @@ public class SchematizerImpl implements Schematizer {
                     Class<?> collectionType;
                     if (collectionTypeAnnotation != null)
                         collectionType = collectionTypeAnnotation.value();
+                    else if (hasCollectionTypeAnnotation(field))
+                        collectionType = collectionTypeOf(field);
                     else
-                        collectionType = Object.class;
+                        collectionType = Object.class;                        
                     node = new CollectionNode(
                             field.getName(),
                             collectionType,
@@ -292,9 +304,7 @@ public class SchematizerImpl implements Schematizer {
                         Map<String, NodeImpl> allNodes = embedded.toMapInternal();
                         allNodes.remove(path + "/");
                         result.putAll(allNodes);
-                        Map<String, NodeImpl> childNodes = new HashMap<>();
-                        allNodes.keySet().stream()
-                            .forEach( k -> {String k2 = k.replace(path, ""); childNodes.put(k2, allNodes.get(k));} );
+                        Map<String, NodeImpl> childNodes = extractChildren(path, allNodes);
                         node.add(childNodes);
                     }
                 }
@@ -312,9 +322,7 @@ public class SchematizerImpl implements Schematizer {
                     Map<String, NodeImpl> allNodes = embedded.toMapInternal();
                     allNodes.remove(path + "/");
                     result.putAll(allNodes);
-                    Map<String, NodeImpl> childNodes = new HashMap<>();
-                    allNodes.keySet().stream()
-                        .forEach( k -> {String k2 = k.replace(path, ""); childNodes.put(k2, allNodes.get(k));} );
+                    Map<String, NodeImpl> childNodes = extractChildren(path, allNodes);
                     node.add(childNodes);
                 } else {
                     node = new NodeImpl(
@@ -332,6 +340,17 @@ public class SchematizerImpl implements Schematizer {
             // TODO print warning??
             return;
         }
+    }
+
+    private static Map<String, NodeImpl> extractChildren( String path, Map<String, NodeImpl> allNodes ) {
+        final Map<String, NodeImpl> children = new HashMap<>();
+        for (String key : allNodes.keySet()) {
+            String newKey = key.replace(path, "");
+            if (!newKey.substring(1).contains("/"))
+                children.put( newKey, allNodes.get(key));
+        }
+
+        return children;
     }
 
     private static SchemaImpl handleInvalid() {
@@ -362,19 +381,78 @@ public class SchematizerImpl implements Schematizer {
         return typeRef;
     }
 
-    /**
-     * In an OSGi environment, this is too naive, and will quickly break down.
-     * Consider it more as a placeholder for now.
-     */
-    private static final Instantiator instantiator = new Instantiator();
     public static class Instantiator implements Function<String, Type> {
+        private final List<ClassLoader> classloaders = new ArrayList<>();
+
+        public Instantiator(List<ClassLoader> aClassLoadersList) {
+            classloaders.addAll( aClassLoadersList );
+        }
+
         @Override
         public Type apply(String className) {
-            try {
-                return Class.forName(className);
-            } catch ( ClassNotFoundException e ) {
-                return Object.class;
+            for (ClassLoader cl : classloaders) {
+                try {
+                    return cl.loadClass(className);
+                } catch (ClassNotFoundException e) {
+                    // Try next
+                }
             }
+
+            // Could not find the class. Try "this" ClassLoader
+            try {
+                return getClass().getClassLoader().loadClass(className);
+            } catch (ClassNotFoundException e) {
+                // Too bad
+            }
+
+            // Nothing to do. Return Object.class as the fallback
+            return Object.class;
+        }
+    }
+
+    static private void associateChildNodes(NodeImpl rootNode) {
+        for (NodeImpl child: rootNode.childrenInternal().values()) {
+            child.parent(rootNode);
+            String fieldName = child.name();
+            Class<?> parentClass = rawClassOf(rootNode.type());
+            try {
+                Field field = parentClass.getField(fieldName);
+                child.field(field);
+            } catch ( NoSuchFieldException e ) {
+                e.printStackTrace();
+            }            
+
+            associateChildNodes(child);
+        }
+    }
+
+    static private boolean hasCollectionTypeAnnotation(Field field) {
+        if (field == null)
+            return false;
+
+        Annotation[] annotations = field.getAnnotations();
+        if (annotations.length == 0)
+            return false;
+
+        return Arrays.stream(annotations)
+            .map(a -> a.annotationType().getName())
+            .anyMatch(a -> "CollectionType".equals(a.substring(a.lastIndexOf(".") + 1) ));
+    }
+
+    static private Class<?> collectionTypeOf(Field field) {
+        Annotation[] annotations = field.getAnnotations();
+
+        Annotation annotation = Arrays.stream(annotations)
+            .filter(a -> "CollectionType".equals(a.annotationType().getName().substring(a.annotationType().getName().lastIndexOf(".") + 1) ))
+            .findFirst()
+            .get();
+
+        try {
+            Method m = annotation.annotationType().getMethod("value");
+            Class<?> value = (Class<?>)m.invoke(annotation, (Object[])null);
+            return value;            
+        } catch ( Exception e ) {
+            return null;
         }
     }
 }

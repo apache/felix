@@ -19,6 +19,7 @@ import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
+import java.lang.reflect.Field;
 import java.lang.reflect.Type;
 import java.util.Collection;
 import java.util.HashMap;
@@ -39,6 +40,7 @@ public interface Node {
         public String name;
         public String path;
         public String type;
+        public String collectionType;
         public boolean isCollection;
         public Map<String, Node.DTO> children = new HashMap<>();
     }
@@ -49,6 +51,7 @@ public interface Node {
      */
     String absolutePath();
     Type type();
+    Field field();
     Optional<TypeReference<?>> typeReference();
     boolean isCollection();
     Map<String, Node> children();

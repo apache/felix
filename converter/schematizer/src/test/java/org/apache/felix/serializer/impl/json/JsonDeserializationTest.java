@@ -20,25 +20,24 @@ import java.util.ArrayList;
 import java.util.Optional;
 
 import org.apache.felix.schematizer.Schema;
+import org.apache.felix.schematizer.SchematizingConverter;
 import org.apache.felix.schematizer.impl.SchematizerImpl;
 import org.apache.felix.serializer.impl.json.MyDTO.Count;
 import org.apache.felix.serializer.impl.json.MyEmbeddedDTO.Alpha;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-import org.osgi.util.converter.Converter;
-import org.osgi.util.converter.StandardConverter;
 import org.osgi.util.converter.TypeReference;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 public class JsonDeserializationTest {
-    private Converter converter;
+    private SchematizingConverter converter;
 
     @Before
     public void setUp() {
-        converter = new StandardConverter();
+        converter = new SchematizingConverter();
     }
 
     @After
@@ -59,8 +58,6 @@ public class JsonDeserializationTest {
         dto.count = Count.TWO;
         dto.embedded = embedded;
 
-        String serialized = new JsonSerializerImpl().serialize(dto).toString();
-
         // TODO
         Optional<Schema> opt = new SchematizerImpl()
             .rule("MyDTO", new TypeReference<MyDTO>(){})
@@ -71,10 +68,10 @@ public class JsonDeserializationTest {
 
         Schema s = opt.get();
 
+        String serialized = new JsonSerializerImpl().serialize(dto).with(converter.withSchema(s)).toString();
         MyDTO result = new JsonSerializerImpl()
                 .deserialize(MyDTO.class)
-                .with(converter)
-                .withContext(s)
+                .with(converter.withSchema(s))
                 .from(serialized);
 
         assertEquals(dto.ping, result.ping);
@@ -110,8 +107,7 @@ public class JsonDeserializationTest {
         MyDTO2<MyEmbeddedDTO2<String>> result =
                 new JsonSerializerImpl()
                 .deserialize(new TypeReference<MyDTO2<MyEmbeddedDTO2<String>>>(){})
-                .with(converter)
-                .withContext(s)
+                .with(converter.withSchema(s))
                 .from(serialized);
 
         assertEquals(dto.ping, result.ping);

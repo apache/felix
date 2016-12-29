@@ -86,7 +86,7 @@ public class JsonSerializingImpl implements Serializing {
         } else if (obj instanceof Collection) {
             return encodeCollection((Collection) obj);
         } else if (obj instanceof DTO) {
-            return encodeMap(converter.convert(obj).to(Map.class));
+            return encodeMap(converter.convert(obj).sourceAsDTO().to(Map.class));
         } else if (obj.getClass().isArray()) {
             return encodeCollection(asCollection(obj));
         } else if (obj instanceof Number) {

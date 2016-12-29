@@ -15,6 +15,7 @@
  */
 package org.apache.felix.schematizer.impl;
 
+import java.lang.reflect.Field;
 import java.lang.reflect.Type;
 import java.util.Collection;
 import java.util.HashMap;
@@ -34,6 +35,7 @@ public class NodeImpl implements Node {
 
     private NodeImpl parent;
     private HashMap<String, NodeImpl> children = new HashMap<>();
+    private Field field;
 
     public NodeImpl(
             String aName,
@@ -57,16 +59,25 @@ public class NodeImpl implements Node {
         absolutePath = anAbsolutePath;
     }
 
+    @SuppressWarnings( { "unchecked", "rawtypes" } )
     public NodeImpl(Node.DTO dto, String contextPath, Function<String, Type> f, Map<String, NodeImpl> nodes) {
         name = dto.name;
         type = f.apply(dto.type);
         isCollection = dto.isCollection;
         absolutePath = contextPath + dto.path;
-        dto.children.values().stream().forEach( c -> {
-                NodeImpl node = new NodeImpl(c, contextPath, f, nodes);
-                children.put("/" + c.name, node);
-                nodes.put(c.path, node);
-            });
+        for (Node.DTO child : dto.children.values()) {
+            NodeImpl node;
+            if (child.isCollection)
+                try {
+                    node = new CollectionNode(child, contextPath, f, nodes, (Class)getClass().getClassLoader().loadClass(child.collectionType));
+                } catch ( ClassNotFoundException e ) {
+                    node = new CollectionNode(child, contextPath, f, nodes, (Class)Collection.class);
+                }
+            else
+                node = new NodeImpl(child, contextPath, f, nodes);
+            children.put("/" + child.name, node);
+            nodes.put(child.path, node);        
+        }
     }
 
     @Override
@@ -96,6 +107,15 @@ public class NodeImpl implements Node {
     @Override
     public String absolutePath() {
         return absolutePath;
+    }
+
+    @Override
+    public Field field() {
+        return field;
+    }
+
+    public void field(Field aField) {
+        field = aField;
     }
 
     @SuppressWarnings( { "unchecked", "rawtypes" } )

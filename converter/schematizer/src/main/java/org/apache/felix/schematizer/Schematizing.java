@@ -14,21 +14,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.felix.schematizer.impl;
+package org.apache.felix.schematizer;
 
-import java.util.List;
+import org.osgi.util.converter.Converter;
 
-import org.osgi.dto.DTO;
-
-public class MyDTO3<T> extends DTO {
-    public enum Count { ONE, TWO, THREE }
-
-    public Count count;
-
-    public String ping;
-
-    public long pong;
-
-    public List<T> embedded;
+public interface Schematizing {
+    Converter asDTO();
+    boolean isDTOType();
+    Converter withSchema(Schema s);
+    Schema getSchema();
 }
-

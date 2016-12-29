@@ -17,7 +17,10 @@ package org.apache.felix.schematizer.impl;
 
 import java.lang.reflect.Type;
 import java.util.Collection;
+import java.util.Map;
+import java.util.function.Function;
 
+import org.apache.felix.schematizer.Node;
 import org.osgi.util.converter.TypeReference;
 
 public class CollectionNode
@@ -43,8 +46,25 @@ public class CollectionNode
         collectionType = aCollectionType;
     }
 
+    public CollectionNode(
+            Node.DTO dto, 
+            String contextPath, 
+            Function<String, Type> f, 
+            Map<String, NodeImpl> nodes,
+            Class<? extends Collection<?>> aCollectionType ) {
+        super(dto, contextPath, f, nodes);
+        collectionType = aCollectionType;
+    }
+
     @Override
     public Class<? extends Collection<?>> collectionType() {
         return collectionType;
+    }
+
+    @Override
+    public DTO toDTO() {
+        DTO dto = super.toDTO();
+        dto.collectionType = collectionType.getName();
+        return dto;
     }
 }

@@ -20,7 +20,7 @@ import java.util.List;
 
 import org.osgi.dto.DTO;
 
-public class MyDTO3<T> extends DTO {
+public class MyDTO4 extends DTO {
     public enum Count { ONE, TWO, THREE }
 
     public Count count;
@@ -29,6 +29,7 @@ public class MyDTO3<T> extends DTO {
 
     public long pong;
 
-    public List<T> embedded;
+    @org.apache.felix.schematizer.impl.CollectionType(MyEmbeddedDTO.class)
+    public List<MyEmbeddedDTO> embedded;
 }
 
