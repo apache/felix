@@ -41,7 +41,7 @@ public class Factory extends ConfigurationBase
     public static final String FACTORY_PID_LIST = "factory.pidList";
 
     // the set of configuration PIDs belonging to this factory
-    private final Set pids = new HashSet();;
+    private final Set<String> pids = new HashSet<String>();
 
 
     static boolean exists( PersistenceManager persistenceManager, String factoryPid )
@@ -53,7 +53,8 @@ public class Factory extends ConfigurationBase
     static Factory load( ConfigurationManager configurationManager, PersistenceManager persistenceManager,
         String factoryPid ) throws IOException
     {
-        Dictionary dict = persistenceManager.load( factoryPidToIdentifier( factoryPid ) );
+        @SuppressWarnings("unchecked")
+        Dictionary<String, Object> dict = persistenceManager.load( factoryPidToIdentifier( factoryPid ) );
         return new Factory( configurationManager, persistenceManager, factoryPid, dict );
     }
 
@@ -71,7 +72,7 @@ public class Factory extends ConfigurationBase
 
 
     Factory( ConfigurationManager configurationManager, PersistenceManager persistenceManager, String factoryPid,
-        Dictionary props )
+        Dictionary<String, Object> props )
     {
         super( configurationManager, persistenceManager, factoryPid );
 
@@ -99,9 +100,9 @@ public class Factory extends ConfigurationBase
     }
 
 
-    Set getPIDs()
+    Set<String> getPIDs()
     {
-        return new HashSet( pids );
+        return new HashSet<String>( pids );
     }
 
 
@@ -120,7 +121,7 @@ public class Factory extends ConfigurationBase
     @Override
     void store() throws IOException
     {
-        Hashtable props = new Hashtable();
+        Dictionary<String, Object> props = new Hashtable<String, Object>();
 
         if ( !pids.isEmpty() )
         {

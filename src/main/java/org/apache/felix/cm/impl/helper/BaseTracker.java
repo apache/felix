@@ -214,10 +214,10 @@ public abstract class BaseTracker<S> extends ServiceTracker<S, ConfigurationMap<
     }
 
 
-    protected final Dictionary getProperties( Dictionary<String, ?> rawProperties, ServiceReference service,
+    protected final Dictionary<String, Object> getProperties( Dictionary<String, ?> rawProperties, ServiceReference<?> service,
         String configPid, String factoryPid )
     {
-        Dictionary props = new CaseInsensitiveDictionary( rawProperties );
+        Dictionary<String, Object> props = new CaseInsensitiveDictionary( rawProperties );
         this.cm.callPlugins( props, service, configPid, factoryPid );
         return props;
     }
