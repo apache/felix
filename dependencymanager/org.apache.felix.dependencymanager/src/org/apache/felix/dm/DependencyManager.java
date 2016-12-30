@@ -81,7 +81,7 @@ public class DependencyManager {
     /**
      * Default value for the SCHEDULE_TIMEOUT parameter, in millis.
      */
-    public static volatile long SCHEDUME_TIMEOUT_VAL = 30000;
+    public static volatile long SCHEDULE_TIMEOUT_VAL = 30000;
 
     private final BundleContext m_context;
     private final Logger m_logger;
@@ -119,7 +119,7 @@ public class DependencyManager {
 	            String scheduleTimeout = bundleContext.getProperty(SCHEDULE_TIMEOUT);
 	            if (scheduleTimeout != null) {
 	            	try {
-	            		SCHEDUME_TIMEOUT_VAL = Long.valueOf(scheduleTimeout);
+	            		SCHEDULE_TIMEOUT_VAL = Long.valueOf(scheduleTimeout);
 	            	} catch (NumberFormatException e) {	            		
 	            	}
 	            }	            

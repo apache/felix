@@ -425,12 +425,19 @@ public class ComponentImpl implements Component, ComponentContext, ComponentDecl
 	@Override
 	public void stop() {           
 	    if (m_active.compareAndSet(true, false)) {
-            // Now, we have to schedule our stopTask in our component executor. If the executor is a parallel 
-	        // dispatcher, then try to invoke our stop task synchronously (it does not make sense to try to stop a component asynchronously).
-            schedule(true /* synchronously */, () -> {
+	    	Runnable task = () -> {
 	            m_isStarted = false;
 	            handleChange();
-	        });
+	    	};
+	    	
+    		Executor exec = getExecutor();
+    		if (exec instanceof DispatchExecutor) {
+                // Now, we have to schedule our stopTask in our component executor. If the executor is a parallel 
+    	        // dispatcher, then try to invoke our stop task synchronously (it does not make sense to try to stop a component asynchronously).
+    			((DispatchExecutor) exec).execute(task, false);
+    		} else {
+    			exec.execute(task);
+    		}
 	    }
 	}
 
@@ -1690,12 +1697,12 @@ public class ComponentImpl implements Component, ComponentContext, ComponentDecl
     			exec.execute(future);
     		}
     		try {
-				future.get(DependencyManager.SCHEDUME_TIMEOUT_VAL, TimeUnit.MILLISECONDS);
+				future.get(DependencyManager.SCHEDULE_TIMEOUT_VAL, TimeUnit.MILLISECONDS);
 			} catch (InterruptedException | ExecutionException | TimeoutException e) {
-				m_logger.warn("task could not be scheduled timely in component %s (exception:%s)", this, e.toString());
+				m_logger.warn("task could not be scheduled timely in component %s (exception: %s)", this, e.toString());
 			}
     	} else {
     		getExecutor().execute(task);
     	}
-    }
+    }    
 }
