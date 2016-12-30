@@ -26,12 +26,12 @@ import org.junit.Assert;
 /**
  * Verifies the following scenario:
  * 
- * - DM concurrent mode is use (a threadpool is used to activate components)
+ * - DM concurrent mode is used (a threadpool is used to activate components)
  * - A depends on M
  * - M depends on X
  * - A, M, X are started concurrently
- * - X is removed. at this point, M should be called in M.unbind(X) while X is still active, 
- *   and A should be called in A.unbind(M) while M is still active
+ * - X is removed. at this point, A should be called in A.unbind(M) while M is still active
+ *   and M should be called in M.unbind(X) while X is still active, 
  */
 public class FELIX5471_SynchronousUnbindTest extends ServiceRaceTest {
 	
