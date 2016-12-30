@@ -1682,7 +1682,13 @@ public class ComponentImpl implements Component, ComponentContext, ComponentDecl
     private void schedule(boolean synchronously, Runnable task) {
     	if (synchronously) {
     		FutureTask<Void> future = new FutureTask<Void>(task, null);
-    		getExecutor().execute(future);
+    		Executor exec = getExecutor();
+    		if (exec instanceof DispatchExecutor) {
+    			// try to invoke the future from the current thread, not using the threadpool.
+    			((DispatchExecutor) exec).execute(future, false);
+    		} else {
+    			exec.execute(future);
+    		}
     		try {
 				future.get(DependencyManager.SCHEDUME_TIMEOUT_VAL, TimeUnit.MILLISECONDS);
 			} catch (InterruptedException | ExecutionException | TimeoutException e) {
