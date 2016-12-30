@@ -70,6 +70,19 @@ public class DependencyManager {
     public static final String SERVICEREGISTRY_CACHE_INDICES = "org.apache.felix.dependencymanager.filterindex";
     public static final String METHOD_CACHE_SIZE = "org.apache.felix.dependencymanager.methodcache";
     
+    /**
+     * Max time we can wait for execution of some tasks which must be handled synchronously through the internal component
+     * executor (which can be a threadpool).
+     * Typically, this timeout is used when a component is stopped or if a dependency is being unbound from a given
+     * component.
+     */
+    public static final String SCHEDULE_TIMEOUT = "org.apache.felix.dependencymanager.scheduletimeout";
+    
+    /**
+     * Default value for the SCHEDULE_TIMEOUT parameter, in millis.
+     */
+    public static volatile long SCHEDUME_TIMEOUT_VAL = 30000;
+
     private final BundleContext m_context;
     private final Logger m_logger;
     private final ConcurrentHashMap<Component, Component> m_components = new ConcurrentHashMap<>();
@@ -102,6 +115,14 @@ public class DependencyManager {
 	            		}
 	            	}
 	            }
+	            
+	            String scheduleTimeout = bundleContext.getProperty(SCHEDULE_TIMEOUT);
+	            if (scheduleTimeout != null) {
+	            	try {
+	            		SCHEDUME_TIMEOUT_VAL = Long.valueOf(scheduleTimeout);
+	            	} catch (NumberFormatException e) {	            		
+	            	}
+	            }	            
 	        }
         }
         catch (BundleException e) {
