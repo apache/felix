@@ -59,11 +59,6 @@ public class InvocationUtil {
     public interface ConfigurationHandler {
         public void handle() throws Exception;
     }
-
-    /**
-     * Max time to wait until a configuration update callback has returned.
-     */
-    private final static int UPDATED_MAXWAIT = 30000; // max time to wait until a CM update has completed
     
     /**
      * Invokes a callback method on an instance. The code will search for a callback method with
@@ -239,7 +234,7 @@ public class InvocationUtil {
         queue.execute(ft);
                 
         try {
-            Exception err = ft.get(UPDATED_MAXWAIT, TimeUnit.MILLISECONDS);
+            Exception err = ft.get(DependencyManager.SCHEDUME_TIMEOUT_VAL, TimeUnit.MILLISECONDS);
             if (err != null) {
                 throw err;
             }

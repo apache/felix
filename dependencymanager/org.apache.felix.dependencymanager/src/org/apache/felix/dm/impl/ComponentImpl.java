@@ -43,7 +43,11 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentSkipListSet;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executor;
+import java.util.concurrent.FutureTask;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 
@@ -279,9 +283,11 @@ public class ComponentImpl implements Component, ComponentContext, ComponentDecl
      */
 	private boolean m_startCalled;
 	
-    // Used to track the last state we delivered to any state listeners. 
+    /**
+     * Used to track the last state we delivered to any state listeners. 
+     */
     private ComponentState m_lastStateDeliveredToListeners = ComponentState.INACTIVE;
-
+    
     /**
      * Default component declaration implementation.
      */
@@ -419,22 +425,12 @@ public class ComponentImpl implements Component, ComponentContext, ComponentDecl
 	@Override
 	public void stop() {           
 	    if (m_active.compareAndSet(true, false)) {
-	        Executor executor = getExecutor();
-
-	        // First, declare the task that will stop our component in our executor.
-	        final Runnable stopTask = () -> {
-	            m_isStarted = false;
-	            handleChange();
-	        };
-            
             // Now, we have to schedule our stopTask in our component executor. If the executor is a parallel 
 	        // dispatcher, then try to invoke our stop task synchronously (it does not make sense to try to stop a component asynchronously).
-            
-            if (executor instanceof DispatchExecutor) {
-            	((DispatchExecutor) executor).execute(stopTask, false /* try to execute synchronously, not using threadpool */);
-            } else {
-            	executor.execute(stopTask);
-            }
+            schedule(true /* synchronously */, () -> {
+	            m_isStarted = false;
+	            handleChange();
+	        });
 	    }
 	}
 
@@ -460,8 +456,12 @@ public class ComponentImpl implements Component, ComponentContext, ComponentDecl
     public void handleEvent(final DependencyContext dc, final EventType type, final Event... event) {
         // since this method can be invoked by anyone from any thread, we need to
         // pass on the event to a runnable that we execute using the component's
-        // executor
-        getExecutor().execute(() -> {
+        // executor. There is one corner case: if this is a REMOVE event, we must try to stay synchronous
+		// because if the remove event corresponds to a service being unregistered, then we must try to stop 
+		// our component depending on the lost service before the lost service is actually stopped.		
+		boolean synchronously = (type == EventType.REMOVED);
+		
+		schedule(synchronously, () -> {
                 try {
                     switch (type) {
                     case ADDED:
@@ -1677,5 +1677,19 @@ public class ComponentImpl implements Component, ComponentContext, ComponentDecl
             }
             result.append(")");
         }
+    }
+    
+    private void schedule(boolean synchronously, Runnable task) {
+    	if (synchronously) {
+    		FutureTask<Void> future = new FutureTask<Void>(task, null);
+    		getExecutor().execute(future);
+    		try {
+				future.get(DependencyManager.SCHEDUME_TIMEOUT_VAL, TimeUnit.MILLISECONDS);
+			} catch (InterruptedException | ExecutionException | TimeoutException e) {
+				m_logger.warn("task could not be scheduled timely in component %s (exception:%s)", this, e.toString());
+			}
+    	} else {
+    		getExecutor().execute(task);
+    	}
     }
 }
