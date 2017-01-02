@@ -41,7 +41,7 @@ public class FELIX5471_SynchronousUnbindTest extends ServiceRaceTest {
         setParallel(); // Configure DM to use a threadpool
     }
     
-    public void synchronousUnbind() {
+    public void testSynchronousUnbind() {
     	DependencyManager dm = getDM();
     	
 		Component a = dm.createComponent()

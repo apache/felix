@@ -35,7 +35,7 @@ public class FELIX5471_CyclicDependencyTest extends TestBase {
 
 	volatile Ensure m_ensure;
 
-	public void cyclicDependencyTest() throws InterruptedException {
+	public void testCyclicDependency() throws InterruptedException {
 		DependencyManager m = getDM();
 		ExecutorService tpool = Executors.newFixedThreadPool(2);
 		try {
