@@ -43,11 +43,7 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentSkipListSet;
 import java.util.concurrent.CopyOnWriteArrayList;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executor;
-import java.util.concurrent.FutureTask;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 
@@ -425,19 +421,10 @@ public class ComponentImpl implements Component, ComponentContext, ComponentDecl
 	@Override
 	public void stop() {           
 	    if (m_active.compareAndSet(true, false)) {
-	    	Runnable task = () -> {
-	            m_isStarted = false;
+	    	schedule(true /* try execute synchronously if using a tpool */, () -> { 
+	    		m_isStarted = false;
 	            handleChange();
-	    	};
-	    	
-    		Executor exec = getExecutor();
-    		if (exec instanceof DispatchExecutor) {
-                // Now, we have to schedule our stopTask in our component executor. If the executor is a parallel 
-    	        // dispatcher, then try to invoke our stop task synchronously (it does not make sense to try to stop a component asynchronously).
-    			((DispatchExecutor) exec).execute(task, false);
-    		} else {
-    			exec.execute(task);
-    		}
+	    	});
 	    }
 	}
 
@@ -463,33 +450,36 @@ public class ComponentImpl implements Component, ComponentContext, ComponentDecl
     public void handleEvent(final DependencyContext dc, final EventType type, final Event... event) {
         // since this method can be invoked by anyone from any thread, we need to
         // pass on the event to a runnable that we execute using the component's
-        // executor. There is one corner case: if this is a REMOVE event, we must try to stay synchronous
-		// because if the remove event corresponds to a service being unregistered, then we must try to stop 
-		// our component depending on the lost service before the lost service is actually stopped.		
-		boolean synchronously = (type == EventType.REMOVED);
+        // executor. There is one corner case: if this is a REMOVE event, and if we are using a threadpool,
+		// then make a best effort to try invoking the component unbind callback synchronously (to make 
+		// sure the unbound service is not stopped at the time we call unbind on our component
+		// which depends on the removing service).
+		// This is just a best effort, and the removed event will be handled asynchronosly if our 
+		// queue is currently being run by another thread, or by the threadpool.
 		
-		schedule(synchronously, () -> {
-                try {
-                    switch (type) {
-                    case ADDED:
-                        handleAdded(dc, event[0]);
-                        break;
-                    case CHANGED:
-                        handleChanged(dc, event[0]);
-                        break;
-                    case REMOVED:
-                        handleRemoved(dc, event[0]);
-                        break;
-                    case SWAPPED:
-                        handleSwapped(dc, event[0], event[1]);
-                        break;
-                    }
-                } finally {
-                	// Clear cache of component callbacks invocation, except if we are currently called from handleChange().
-                	// (See FELIX-4913).
-                    clearInvokeCallbackCache();
-                }
-            });        
+		boolean synchronously = (type == EventType.REMOVED);
+		schedule(synchronously, () ->  {
+			try {
+				switch (type) {
+				case ADDED:
+					handleAdded(dc, event[0]);
+					break;
+				case CHANGED:
+					handleChanged(dc, event[0]);
+					break;
+				case REMOVED:
+					handleRemoved(dc, event[0]);
+					break;
+				case SWAPPED:
+					handleSwapped(dc, event[0], event[1]);
+					break;
+				}
+			} finally {
+				// Clear cache of component callbacks invocation, except if we are currently called from handleChange().
+				// (See FELIX-4913).
+				clearInvokeCallbackCache();
+			}
+		});
 	}
 
     @Override
@@ -1686,23 +1676,25 @@ public class ComponentImpl implements Component, ComponentContext, ComponentDecl
         }
     }
     
-    private void schedule(boolean synchronously, Runnable task) {
-    	if (synchronously) {
-    		FutureTask<Void> future = new FutureTask<Void>(task, null);
-    		Executor exec = getExecutor();
+    /**
+     * Executes a task using our queue. The task is executed synchronously in case the queue is 
+     * not being run by another thread, or by the threadpool.
+     * 
+     * @param trySynchronous try to execute the task synchronously (best effort).
+     * @param task the task to execute.
+     */
+    private void schedule(boolean trySynchronous, Runnable task) {
+		Executor exec = getExecutor();
+		if (trySynchronous) {
     		if (exec instanceof DispatchExecutor) {
-    			// try to invoke the future from the current thread, not using the threadpool.
-    			((DispatchExecutor) exec).execute(future, false);
-    		} else {
-    			exec.execute(future);
+    			// Try to execute the task from the current thread if the threadpool is not currently running our queue.
+    			((DispatchExecutor) exec).execute(task, false);
+    			return;
     		}
-    		try {
-				future.get(DependencyManager.SCHEDULE_TIMEOUT_VAL, TimeUnit.MILLISECONDS);
-			} catch (InterruptedException | ExecutionException | TimeoutException e) {
-				m_logger.warn("task could not be scheduled timely in component %s (exception: %s)", this, e.toString());
-			}
-    	} else {
-    		getExecutor().execute(task);
-    	}
-    }    
+		}
+		// If we are using a serial queue (no threadpool), then the queue executes the task synchronously 
+		// if no other master thread is running the queue.
+		// If the are using a threadpool, then the task is always executed asynchronously, in the threadpool.
+		exec.execute(task);
+    }
 }

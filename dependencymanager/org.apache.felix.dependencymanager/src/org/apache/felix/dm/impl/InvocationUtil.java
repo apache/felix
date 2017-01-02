@@ -234,7 +234,7 @@ public class InvocationUtil {
         queue.execute(ft);
                 
         try {
-            Exception err = ft.get(DependencyManager.SCHEDULE_TIMEOUT_VAL, TimeUnit.MILLISECONDS);
+            Exception err = ft.get();
             if (err != null) {
                 throw err;
             }
