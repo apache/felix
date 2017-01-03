@@ -122,7 +122,10 @@ public class JsonParser {
         case 'N':
             return null;
         default:
-            return Long.parseLong(jsonValue);
+            if (jsonValue.contains("."))
+                return Double.parseDouble(jsonValue);
+            else
+                return Long.parseLong(jsonValue);
         }
     }
 

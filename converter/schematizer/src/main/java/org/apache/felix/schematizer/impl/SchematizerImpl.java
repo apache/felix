@@ -41,6 +41,7 @@ import org.apache.felix.schematizer.Schema;
 import org.apache.felix.schematizer.Schematizer;
 import org.apache.felix.schematizer.TypeRule;
 import org.osgi.dto.DTO;
+import org.osgi.util.converter.StandardConverter;
 import org.osgi.util.converter.TypeReference;
 
 public class SchematizerImpl implements Schematizer {
@@ -64,9 +65,10 @@ public class SchematizerImpl implements Schematizer {
         try {
             // TODO: some validation of the Map here would be good
             SchemaImpl schema = new SchemaImpl(name);
-            Node.DTO rootDTO = map.get("/");
+            Object rootMap = map.get("/");
+            Node.DTO rootDTO = new StandardConverter().convert( rootMap ).to( Node.DTO.class );
             Map<String, NodeImpl> allNodes = new HashMap<>();
-            NodeImpl root = new NodeImpl(rootDTO, "", instantiator, allNodes);
+            NodeImpl root = new NodeImpl(rootDTO, "", new Instantiator(classloaders), allNodes);
             schema.add(root);
             schema.add(allNodes);
             return Optional.of(schema);
@@ -271,9 +273,7 @@ public class SchematizerImpl implements Schematizer {
                 Map<String, NodeImpl> allNodes = embedded.toMapInternal();
                 allNodes.remove(path + "/");
                 result.putAll(allNodes);
-                Map<String, NodeImpl> childNodes = new HashMap<>();
-                allNodes.keySet().stream()
-                    .forEach( k -> {String k2 = k.replace(path, ""); childNodes.put(k2, allNodes.get(k));} );
+                Map<String, NodeImpl> childNodes = extractChildren(path, allNodes);
                 node.add(childNodes);
             } else {
                 Type fieldType = field.getType();
@@ -302,9 +302,7 @@ public class SchematizerImpl implements Schematizer {
                         Map<String, NodeImpl> allNodes = embedded.toMapInternal();
                         allNodes.remove(path + "/");
                         result.putAll(allNodes);
-                        Map<String, NodeImpl> childNodes = new HashMap<>();
-                        allNodes.keySet().stream()
-                            .forEach( k -> {String k2 = k.replace(path, ""); childNodes.put(k2, allNodes.get(k));} );
+                        Map<String, NodeImpl> childNodes = extractChildren(path, allNodes);
                         node.add(childNodes);
                     }
                 }
@@ -322,9 +320,7 @@ public class SchematizerImpl implements Schematizer {
                     Map<String, NodeImpl> allNodes = embedded.toMapInternal();
                     allNodes.remove(path + "/");
                     result.putAll(allNodes);
-                    Map<String, NodeImpl> childNodes = new HashMap<>();
-                    allNodes.keySet().stream()
-                        .forEach( k -> {String k2 = k.replace(path, ""); childNodes.put(k2, allNodes.get(k));} );
+                    Map<String, NodeImpl> childNodes = extractChildren(path, allNodes);
                     node.add(childNodes);
                 } else {
                     node = new NodeImpl(
@@ -342,6 +338,17 @@ public class SchematizerImpl implements Schematizer {
             // TODO print warning??
             return;
         }
+    }
+
+    private static Map<String, NodeImpl> extractChildren( String path, Map<String, NodeImpl> allNodes ) {
+        final Map<String, NodeImpl> children = new HashMap<>();
+        for (String key : allNodes.keySet()) {
+            String newKey = key.replace(path, "");
+            if (!newKey.substring(1).contains("/"))
+                children.put( newKey, allNodes.get(key));
+        }
+
+        return children;
     }
 
     private static SchemaImpl handleInvalid() {
@@ -372,19 +379,32 @@ public class SchematizerImpl implements Schematizer {
         return typeRef;
     }
 
-    /**
-     * In an OSGi environment, this is too naive, and will quickly break down.
-     * Consider it more as a placeholder for now.
-     */
-    private static final Instantiator instantiator = new Instantiator();
     public static class Instantiator implements Function<String, Type> {
+        private final List<ClassLoader> classloaders = new ArrayList<>();
+
+        public Instantiator(List<ClassLoader> aClassLoadersList) {
+            classloaders.addAll( aClassLoadersList );
+        }
+
         @Override
         public Type apply(String className) {
-            try {
-                return Class.forName(className);
-            } catch ( ClassNotFoundException e ) {
-                return Object.class;
+            for (ClassLoader cl : classloaders) {
+                try {
+                    return cl.loadClass(className);
+                } catch (ClassNotFoundException e) {
+                    // Try next
+                }
             }
+
+            // Could not find the class. Try "this" ClassLoader
+            try {
+                return getClass().getClassLoader().loadClass(className);
+            } catch (ClassNotFoundException e) {
+                // Too bad
+            }
+
+            // Nothing to do. Return Object.class as the fallback
+            return Object.class;
         }
     }
 }

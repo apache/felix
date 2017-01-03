@@ -28,6 +28,7 @@ public class SchematizingConverterImpl implements Schematizing, Converter {
 
     private final Converter converter;
     private Schema schema;
+    private boolean asDTO = false;
 
     public SchematizingConverterImpl(Converter c)
     {
@@ -42,6 +43,17 @@ public class SchematizingConverterImpl implements Schematizing, Converter {
     @Override
     public ConverterBuilder newConverterBuilder() {
         return new SchematizingConverterBuilderImpl();
+    }
+
+    @Override
+    public Converter asDTO() {
+        asDTO = true;
+        return converter;
+    }
+
+    @Override
+    public boolean isDTOType() {
+        return asDTO;
     }
 
     public Converter withSchema(Schema s) {

@@ -19,6 +19,8 @@ package org.apache.felix.schematizer;
 import org.osgi.util.converter.Converter;
 
 public interface Schematizing {
+    Converter asDTO();
+    boolean isDTOType();
     Converter withSchema(Schema s);
     Schema getSchema();
 }

@@ -43,6 +43,17 @@ public class SchematizingConverter implements Schematizing, Converter {
         return converter.newConverterBuilder();
     }
 
+    @Override
+    public Converter asDTO() {
+        converter.asDTO();
+        return converter;
+    }
+
+    @Override
+    public boolean isDTOType() {
+        return converter.isDTOType();
+    }
+
     public Converter withSchema(Schema s) {
         return converter.withSchema(s);
     }
