@@ -144,7 +144,9 @@ public class JsonParser {
     private static List<String> parseKeyValueListRaw(String jsonKeyValueList) {
         if (jsonKeyValueList.trim().isEmpty())
             return Collections.emptyList();
-        jsonKeyValueList = jsonKeyValueList + ","; // append comma to simplify parsing
+        // Append comma to simplify parsing, if there is not already a trailing comma
+        if (!jsonKeyValueList.endsWith(","))
+                jsonKeyValueList = jsonKeyValueList + ",";
         List<String> elements = new ArrayList<>();
 
         int i=0;
