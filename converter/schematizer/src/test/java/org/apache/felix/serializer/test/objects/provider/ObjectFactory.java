@@ -18,6 +18,7 @@ package org.apache.felix.serializer.test.objects.provider;
 
 import java.util.Collection;
 
+import org.osgi.dto.DTO;
 import org.osgi.util.converter.Converter;
 import org.osgi.util.converter.StandardConverter;
 
@@ -30,7 +31,7 @@ public class ObjectFactory
         final ComplexTopEntity top = new ComplexTopEntity();
         top.id = anId;
         top.value = aValue;
-        top.embeddedValue = cnv.convert( aMiddle ).to( ComplexMiddleEntity.class );
+        top.embeddedValue = cnv.convert( aMiddle ).sourceAs(DTO.class).to( ComplexMiddleEntity.class );
         return top;
     }
 

@@ -31,6 +31,8 @@ import java.util.Scanner;
 
 import org.apache.felix.schematizer.Node;
 import org.apache.felix.schematizer.Schema;
+import org.apache.felix.schematizer.Schematizing;
+import org.apache.felix.schematizer.SchematizingConverter;
 import org.apache.felix.schematizer.impl.Util;
 import org.osgi.dto.DTO;
 import org.osgi.service.serializer.Deserializing;
@@ -52,13 +54,8 @@ public class JsonDeserializingImpl<T> implements Deserializing<T> {
     public JsonDeserializingImpl<T> with(Converter c)
     {
         converter = c;
-        return this;
-    }
-
-    public JsonDeserializingImpl<T> withContext(Object obj)
-    {
-        if(obj instanceof Schema)
-            schema = (Schema)obj;
+        if(converter instanceof Schematizing)
+            schema = ((Schematizing)converter).getSchema();
         return this;
     }
 
@@ -144,6 +141,8 @@ public class JsonDeserializingImpl<T> implements Deserializing<T> {
                 try {
                     Field f = targetCls.getField(entry.getKey().toString());
                     Object val = entry.getValue();
+                    if (val == null)
+                        continue;
                     String path = contextPath + f.getName();
                     Optional<Node> opt = schema.nodeAtPath(path);
                     if (opt.isPresent()) {

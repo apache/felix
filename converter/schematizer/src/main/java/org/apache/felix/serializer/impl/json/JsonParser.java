@@ -132,6 +132,10 @@ public class JsonParser {
             throw new IllegalArgumentException("Malformatted JSON object: " + jsonObject);
 
         jsonObject = jsonObject.substring(1, jsonObject.length() - 1);
+
+        if (jsonObject.isEmpty())
+            return null;
+
         Map<String, Object> values = new HashMap<>();
         for (String element : parseKeyValueListRaw(jsonObject)) {
             Pair<String, Object> pair = parseKeyValue(element);
