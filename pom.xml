@@ -28,13 +28,13 @@
 
     <name>Apache Felix Http Jetty</name>
     <artifactId>org.apache.felix.http.jetty</artifactId>
-    <version>3.4.2</version>
+    <version>3.4.3-SNAPSHOT</version>
     <packaging>jar</packaging>
     
     <scm>
-        <connection>scm:svn:http://svn.apache.org/repos/asf/felix/releases/org.apache.felix.http.jetty-3.4.2</connection>
-        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/felix/releases/org.apache.felix.http.jetty-3.4.2</developerConnection>
-        <url>http://svn.apache.org/viewvc/felix/releases/org.apache.felix.http.jetty-3.4.2</url>
+        <connection>scm:svn:http://svn.apache.org/repos/asf/felix/trunk/http/jetty</connection>
+        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/felix/trunk/http/jetty</developerConnection>
+        <url>http://svn.apache.org/viewvc/felix/trunk/http/jetty/</url>
     </scm>
     
     <properties>
