@@ -189,7 +189,7 @@ public class ConvertingImpl implements Converting, InternalConverting {
             return convertToArray();
         } else if (Collection.class.isAssignableFrom(targetAsClass)) {
             return convertToCollection();
-        } else if (isDTOType(targetAsClass) || (DTO.class.equals(sourceClass) && DTO.class.isAssignableFrom(targetActualClass))) {
+        } else if (isDTOType(targetAsClass) || ((DTO.class.equals(sourceClass) || DTO.class.equals(targetAsClass)) && DTO.class.isAssignableFrom(targetActualClass))) {
             return convertToDTO();
         } else if (isMapType(targetAsClass)) {
             return convertToMapType();
@@ -279,16 +279,19 @@ public class ConvertingImpl implements Converting, InternalConverting {
     private <T> T convertToDTO() {
         Map m = mapView(object, sourceClass, converter);
 
+        Class<?> cls = targetAsClass;
+        if (DTO.class.equals(targetAsClass))
+            cls = targetActualClass;
         try {
             T dto = (T) targetActualClass.newInstance();
 
             for (Map.Entry entry : (Set<Map.Entry>) m.entrySet()) {
                 Field f = null;
                 try {
-                    f = targetAsClass.getDeclaredField(mangleName(entry.getKey().toString()));
+                    f = cls.getDeclaredField(mangleName(entry.getKey().toString()));
                 } catch (NoSuchFieldException e) {
                     try {
-                        f = targetAsClass.getField(mangleName(entry.getKey().toString()));
+                        f = cls.getField(mangleName(entry.getKey().toString()));
                     } catch (NoSuchFieldException e1) {
                         // There is not field with this name
                     }
