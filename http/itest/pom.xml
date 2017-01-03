@@ -25,9 +25,9 @@
 	<packaging>jar</packaging>
 
 	<scm>
-		<connection>scm:svn:http://svn.apache.org/repos/asf/felix/trunk/http/sslfilter</connection>
-		<developerConnection>scm:svn:https://svn.apache.org/repos/asf/felix/trunk/http/sslfilter</developerConnection>
-		<url>http://svn.apache.org/viewvc/felix/trunk/http/sslfilter/</url>
+		<connection>scm:svn:http://svn.apache.org/repos/asf/felix/trunk/http/itest</connection>
+		<developerConnection>scm:svn:https://svn.apache.org/repos/asf/felix/trunk/http/itest</developerConnection>
+		<url>http://svn.apache.org/viewvc/felix/trunk/http/itest/</url>
 	</scm>
 
 	<properties>
