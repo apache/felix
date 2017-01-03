@@ -35,7 +35,8 @@ import org.apache.felix.serializer.impl.Util;
  * <ul>
  * <li>Object names are represented as a {@link String}.
  * <li>String values are represented as a {@link String}.
- * <li>Numeric values are represented as a {@link Long} (TODO support floats).
+ * <li>Numeric values without a decimal separator are represented as a {@link Long}.
+ * <li>Numeric values with a decimal separator are represented as a {@link Double}.
  * <li>Boolean values are represented as a {@link Boolean}.
  * <li>Nested JSON objects are parsed into a {@link java.util.Map Map&lt;String, Object&gt;}.
  * <li>JSON lists are parsed into a {@link java.util.List} which may contain any of the above values.
@@ -122,6 +123,9 @@ public class JsonParser {
         case 'N':
             return null;
         default:
+            if (jsonValue.contains(".")) {
+                return Double.parseDouble(jsonValue);
+            }
             return Long.parseLong(jsonValue);
         }
     }

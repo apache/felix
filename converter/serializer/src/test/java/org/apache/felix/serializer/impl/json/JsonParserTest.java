@@ -19,7 +19,6 @@ package org.apache.felix.serializer.impl.json;
 import java.util.Arrays;
 import java.util.Map;
 
-import org.apache.felix.serializer.impl.json.JsonParser;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
@@ -39,10 +38,10 @@ public class JsonParserTest {
     @Test
     @SuppressWarnings("unchecked")
     public void testJsonComplex() {
-        String json = "{\"a\": [1,2,3,4,5], \"b\": {\"x\": 12, \"y\": 42, \"z\": {\"test test\": \"hello hello\"}}}";
+        String json = "{\"a\": [1,2,3,4,5], \"b\": {\"x\": 12, \"y\": 42, \"z\": {\"test test\": \"hello hello\"}}, \"ddd\": 12.34}";
         JsonParser jp = new JsonParser(json);
         Map<String, Object> m = jp.getParsed();
-        assertEquals(2, m.size());
+        assertEquals(3, m.size());
         assertEquals(Arrays.asList(1L, 2L, 3L, 4L, 5L), m.get("a"));
         Map<String, Object> mb = (Map<String, Object>) m.get("b");
         assertEquals(3, mb.size());
@@ -51,6 +50,7 @@ public class JsonParserTest {
         Map<String, Object> mz = (Map<String, Object>) mb.get("z");
         assertEquals(1, mz.size());
         assertEquals("hello hello", mz.get("test test"));
+        assertEquals(12.34d, ((Double) m.get("ddd")).doubleValue(), 0.0001d);
     }
 
     @Test
