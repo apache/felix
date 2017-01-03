@@ -463,6 +463,33 @@ public class ConverterTest {
         assertEquals(Alpha.A, e.get("alpha"));
     }
 
+    @Test
+    public void testDTO2Map2() {
+        MyEmbeddedDTO embedded = new MyEmbeddedDTO();
+        embedded.marco = "hohoho";
+        embedded.polo = Long.MAX_VALUE;
+        embedded.alpha = Alpha.A;
+
+        MyDTO dto = new MyDTO();
+        dto.ping = "lalala";
+        dto.pong = Long.MIN_VALUE;
+        dto.count = Count.ONE;
+        dto.embedded = embedded;
+
+        @SuppressWarnings("rawtypes")
+        Map m = converter.convert(dto).sourceAs(DTO.class).to(Map.class);
+        assertEquals(4, m.size());
+        assertEquals("lalala", m.get("ping"));
+        assertEquals(Long.MIN_VALUE, m.get("pong"));
+        assertEquals(Count.ONE, m.get("count"));
+        assertNotNull(m.get("embedded"));
+        @SuppressWarnings("rawtypes")
+        Map e = (Map)m.get("embedded");
+        assertEquals("hohoho", e.get("marco"));
+        assertEquals(Long.MAX_VALUE, e.get("polo"));
+        assertEquals(Alpha.A, e.get("alpha"));
+    }
+
     @Test @SuppressWarnings({ "rawtypes", "unchecked" })
     public void testDTOFieldShadowing() {
         MySubDTO dto = new MySubDTO();
