@@ -35,4 +35,6 @@ public interface Schematizer {
      * Shortcut for rule(String name, String path, TypeReference<T> type) when path is "/".
      */
     <T extends DTO>Schematizer rule(String name, TypeReference<T> type);
+
+    Schematizer usingLookup(ClassLoader classLoader);    
 }
