@@ -19,6 +19,7 @@ package org.apache.felix.serializer.impl.json;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -122,10 +123,7 @@ public class JsonParser {
         case 'N':
             return null;
         default:
-            if (jsonValue.contains("."))
-                return Double.parseDouble(jsonValue);
-            else
-                return Long.parseLong(jsonValue);
+            return Long.parseLong(jsonValue);
         }
     }
 
@@ -148,7 +146,11 @@ public class JsonParser {
     }
 
     private static List<String> parseKeyValueListRaw(String jsonKeyValueList) {
-        jsonKeyValueList = jsonKeyValueList + ","; // append comma to simplify parsing
+        if (jsonKeyValueList.trim().isEmpty())
+            return Collections.emptyList();
+        // Append comma to simplify parsing, if there is not already a trailing comma
+        if (!jsonKeyValueList.endsWith(","))
+                jsonKeyValueList = jsonKeyValueList + ",";
         List<String> elements = new ArrayList<>();
 
         int i=0;
