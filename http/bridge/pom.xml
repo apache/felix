@@ -28,13 +28,13 @@
 
     <name>Apache Felix Http Bridge</name>
     <artifactId>org.apache.felix.http.bridge</artifactId>
-    <version>3.0.17-SNAPSHOT</version>
+    <version>3.0.18</version>
     <packaging>jar</packaging>
 
     <scm>
-        <connection>scm:svn:http://svn.apache.org/repos/asf/felix/trunk/http/bridge</connection>
-        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/felix/trunk/http/bridge</developerConnection>
-        <url>http://svn.apache.org/viewvc/felix/trunk/http/bridge/</url>
+        <connection>scm:svn:http://svn.apache.org/repos/asf/felix/releases/org.apache.felix.http.bridge-3.0.18</connection>
+        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/felix/releases/org.apache.felix.http.bridge-3.0.18</developerConnection>
+        <url>http://svn.apache.org/viewvc/felix/releases/org.apache.felix.http.bridge-3.0.18</url>
     </scm>
 
     <build>
