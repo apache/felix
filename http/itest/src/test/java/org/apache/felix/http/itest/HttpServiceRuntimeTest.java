@@ -614,9 +614,10 @@ public class HttpServiceRuntimeTest extends BaseIntegrationTest
         ServletContextDTO defaultContextDTO = runtimeDTO.servletContextDTOs[2];
         long contextServiceId = defaultContextDTO.serviceId;
 
-        assertEquals(1, defaultContextDTO.servletDTOs.length);
-        assertEquals("default servlet", defaultContextDTO.servletDTOs[0].name);
-        assertEquals(contextServiceId, defaultContextDTO.servletDTOs[0].servletContextId);
+        assertEquals(Arrays.toString(defaultContextDTO.servletDTOs), 2, defaultContextDTO.servletDTOs.length);
+        assertServlet(defaultContextDTO.servletDTOs, "default servlet", contextServiceId);
+        assertServlet(defaultContextDTO.servletDTOs, "default error page", contextServiceId);
+
         assertEquals(1, defaultContextDTO.filterDTOs.length);
         assertEquals("default filter", defaultContextDTO.filterDTOs[0].name);
         assertEquals(contextServiceId, defaultContextDTO.filterDTOs[0].servletContextId);
@@ -630,9 +631,10 @@ public class HttpServiceRuntimeTest extends BaseIntegrationTest
         ServletContextDTO testContextDTO = runtimeDTO.servletContextDTOs[1];
         contextServiceId = testContextDTO.serviceId;
 
-        assertEquals(1, testContextDTO.servletDTOs.length);
-        assertEquals("context servlet", testContextDTO.servletDTOs[0].name);
-        assertEquals(contextServiceId, testContextDTO.servletDTOs[0].servletContextId);
+        assertEquals(2, testContextDTO.servletDTOs.length);
+        assertServlet(testContextDTO.servletDTOs, "context servlet", contextServiceId);
+        assertServlet(testContextDTO.servletDTOs, "context error page", contextServiceId);
+
         assertEquals(1, testContextDTO.filterDTOs.length);
         assertEquals("context filter", testContextDTO.filterDTOs[0].name);
         assertEquals(contextServiceId, testContextDTO.filterDTOs[0].servletContextId);
@@ -644,7 +646,22 @@ public class HttpServiceRuntimeTest extends BaseIntegrationTest
         assertEquals(contextServiceId, testContextDTO.listenerDTOs[0].servletContextId);
     }
 
-    @Test
+    private void assertServlet(final ServletDTO[] servletDTOs, 
+    		final String name, 
+    		final long contextServiceId) 
+    {
+    	assertNotNull(servletDTOs);
+    	for(final ServletDTO dto : servletDTOs) 
+    	{
+    		if ( name.equals(dto.name) && contextServiceId == dto.servletContextId )
+    		{
+    			return;
+    		}
+    	}
+    	fail("Servlet with name " + name + " and context id " + contextServiceId + " not found in " + Arrays.toString(servletDTOs));
+	}
+
+	@Test
     public void exceptionInServletInitAppearsAsFailure() throws ServletException, InterruptedException
     {
         Dictionary<String, ?> properties = createDictionary(

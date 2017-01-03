@@ -85,6 +85,12 @@ public final class Dispatcher
             mgr.sessionDestroyed(session, ids);
         }
 
+        // invoke preprocessors
+        if ( !mgr.invokePreprocessors(req, res) )
+        {
+            return;
+        }
+
         // get full decoded path for dispatching
         // we can't use req.getRequestURI() or req.getRequestURL() as these are returning the encoded path
         String path = req.getServletPath();

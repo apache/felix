@@ -16,28 +16,31 @@
  */
 package org.apache.felix.http.base.internal.whiteboard.tracker;
 
-import javax.servlet.Servlet;
-
-import org.apache.felix.http.base.internal.runtime.ServletInfo;
+import org.apache.felix.http.base.internal.runtime.PreprocessorInfo;
 import org.apache.felix.http.base.internal.runtime.WhiteboardServiceInfo;
 import org.apache.felix.http.base.internal.whiteboard.WhiteboardManager;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceReference;
-import org.osgi.service.http.whiteboard.HttpWhiteboardConstants;
+import org.osgi.service.http.whiteboard.Preprocessor;
 
-public final class ServletTracker extends WhiteboardServiceTracker<Servlet>
+public final class PreprocessorTracker extends WhiteboardServiceTracker<Preprocessor>
 {
-    public ServletTracker(final BundleContext context, final WhiteboardManager manager)
+
+   /**
+     * Create a new tracker
+     * @param contextManager The context manager
+     * @param bundleContext The bundle context.
+     * @param filterExpr The filter expression for the services to track
+     */
+    public PreprocessorTracker(final WhiteboardManager contextManager,
+            final BundleContext bundleContext, final String filterExpr)
     {
-        super(manager, context, String.format("(&(objectClass=%s)(|(%s=*)(%s=*)(%s=*)))",
-                Servlet.class.getName(),
-                HttpWhiteboardConstants.HTTP_WHITEBOARD_SERVLET_NAME,
-                HttpWhiteboardConstants.HTTP_WHITEBOARD_SERVLET_PATTERN,
-                HttpWhiteboardConstants.HTTP_WHITEBOARD_SERVLET_ERROR_PAGE));
+        super(contextManager, bundleContext, String.format("(objectClass=%s)",
+                Preprocessor.class.getName()));
     }
 
     @Override
-    protected WhiteboardServiceInfo<Servlet> getServiceInfo(final ServiceReference<Servlet> ref) {
-        return new ServletInfo(ref);
+    protected WhiteboardServiceInfo<Preprocessor> getServiceInfo(final ServiceReference<Preprocessor> ref) {
+        return new PreprocessorInfo(ref);
     }
 }

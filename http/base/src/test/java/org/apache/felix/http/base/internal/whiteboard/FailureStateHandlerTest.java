@@ -51,7 +51,7 @@ public class FailureStateHandlerTest {
         final ServletInfo info = new ServletInfo("test", "/test", Collections.<String, String> emptyMap());
 
         final FailureStateHandler handler = new FailureStateHandler();
-        handler.add(info, DTOConstants.FAILURE_REASON_SHADOWED_BY_OTHER_SERVICE);
+        handler.addFailure(info, DTOConstants.FAILURE_REASON_SHADOWED_BY_OTHER_SERVICE);
 
         final FailedDTOHolder holder = new FailedDTOHolder();
         handler.getRuntimeInfo(holder);
@@ -73,8 +73,8 @@ public class FailureStateHandlerTest {
         final ServletInfo info2 = new ServletInfo("test", "/test", Collections.<String, String> emptyMap());
 
         final FailureStateHandler handler = new FailureStateHandler();
-        handler.add(info1, 1L, DTOConstants.FAILURE_REASON_SHADOWED_BY_OTHER_SERVICE);
-        handler.add(info2, 2L, DTOConstants.FAILURE_REASON_SHADOWED_BY_OTHER_SERVICE);
+        handler.addFailure(info1, 1L, DTOConstants.FAILURE_REASON_SHADOWED_BY_OTHER_SERVICE);
+        handler.addFailure(info2, 2L, DTOConstants.FAILURE_REASON_SHADOWED_BY_OTHER_SERVICE);
 
         final FailedDTOHolder holder = new FailedDTOHolder();
         handler.getRuntimeInfo(holder);
