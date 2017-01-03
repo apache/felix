@@ -21,6 +21,7 @@ import static org.osgi.service.http.runtime.dto.DTOConstants.FAILURE_REASON_SHAD
 import static org.osgi.service.http.runtime.dto.DTOConstants.FAILURE_REASON_UNKNOWN;
 import static org.osgi.service.http.runtime.dto.DTOConstants.FAILURE_REASON_VALIDATION_FAILED;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -31,11 +32,18 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import javax.annotation.Nonnull;
+import javax.servlet.FilterChain;
 import javax.servlet.ServletContext;
 import javax.servlet.ServletContextEvent;
 import javax.servlet.ServletContextListener;
+import javax.servlet.ServletException;
+import javax.servlet.ServletRequest;
+import javax.servlet.ServletResponse;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 import javax.servlet.http.HttpSessionEvent;
 
@@ -45,6 +53,7 @@ import org.apache.felix.http.base.internal.handler.FilterHandler;
 import org.apache.felix.http.base.internal.handler.HttpServiceServletHandler;
 import org.apache.felix.http.base.internal.handler.HttpSessionWrapper;
 import org.apache.felix.http.base.internal.handler.ListenerHandler;
+import org.apache.felix.http.base.internal.handler.PreprocessorHandler;
 import org.apache.felix.http.base.internal.handler.ServletHandler;
 import org.apache.felix.http.base.internal.handler.WhiteboardFilterHandler;
 import org.apache.felix.http.base.internal.handler.WhiteboardListenerHandler;
@@ -55,11 +64,13 @@ import org.apache.felix.http.base.internal.registry.HandlerRegistry;
 import org.apache.felix.http.base.internal.runtime.AbstractInfo;
 import org.apache.felix.http.base.internal.runtime.FilterInfo;
 import org.apache.felix.http.base.internal.runtime.ListenerInfo;
+import org.apache.felix.http.base.internal.runtime.PreprocessorInfo;
 import org.apache.felix.http.base.internal.runtime.ResourceInfo;
 import org.apache.felix.http.base.internal.runtime.ServletContextHelperInfo;
 import org.apache.felix.http.base.internal.runtime.ServletInfo;
 import org.apache.felix.http.base.internal.runtime.WhiteboardServiceInfo;
 import org.apache.felix.http.base.internal.runtime.dto.FailedDTOHolder;
+import org.apache.felix.http.base.internal.runtime.dto.PreprocessorDTOBuilder;
 import org.apache.felix.http.base.internal.runtime.dto.RegistryRuntime;
 import org.apache.felix.http.base.internal.runtime.dto.ServletContextDTOBuilder;
 import org.apache.felix.http.base.internal.service.HttpServiceFactory;
@@ -82,6 +93,7 @@ import org.osgi.service.http.context.ServletContextHelper;
 import org.osgi.service.http.runtime.HttpServiceRuntime;
 import org.osgi.service.http.runtime.HttpServiceRuntimeConstants;
 import org.osgi.service.http.runtime.dto.DTOConstants;
+import org.osgi.service.http.runtime.dto.PreprocessorDTO;
 import org.osgi.service.http.runtime.dto.ServletContextDTO;
 import org.osgi.service.http.whiteboard.HttpWhiteboardConstants;
 import org.osgi.util.tracker.ServiceTracker;
@@ -105,6 +117,8 @@ public final class WhiteboardManager
 
     /** A map with all servlet/filter registrations, mapped by abstract info. */
     private final Map<WhiteboardServiceInfo<?>, List<WhiteboardContextHandler>> servicesMap = new HashMap<WhiteboardServiceInfo<?>, List<WhiteboardContextHandler>>();
+
+    private volatile List<PreprocessorHandler> preprocessorHandlers = Collections.emptyList();
 
     private final HandlerRegistry registry;
 
@@ -154,6 +168,7 @@ public final class WhiteboardManager
 
         final Dictionary<String, Object> props = new Hashtable<String, Object>();
         props.put(HttpWhiteboardConstants.HTTP_WHITEBOARD_CONTEXT_NAME, HttpWhiteboardConstants.HTTP_WHITEBOARD_DEFAULT_CONTEXT_NAME);
+        props.put(HttpWhiteboardConstants.HTTP_SERVICE_CONTEXT_PROPERTY, HttpWhiteboardConstants.HTTP_WHITEBOARD_DEFAULT_CONTEXT_NAME);
         props.put(HttpWhiteboardConstants.HTTP_WHITEBOARD_CONTEXT_PATH, "/");
         props.put(Constants.SERVICE_RANKING, Integer.MIN_VALUE);
 
@@ -224,6 +239,7 @@ public final class WhiteboardManager
 
         this.serviceRuntime.setServiceReference(null);
 
+        this.preprocessorHandlers = Collections.emptyList();
         this.contextMap.clear();
         this.servicesMap.clear();
         this.failureStateHandler.clear();
@@ -291,22 +307,28 @@ public final class WhiteboardManager
         final List<WhiteboardServiceInfo<?>> services = new ArrayList<WhiteboardServiceInfo<?>>();
         for(final Map.Entry<WhiteboardServiceInfo<?>, List<WhiteboardContextHandler>> entry : this.servicesMap.entrySet())
         {
-            if ( entry.getKey().getContextSelectionFilter().match(handler.getContextInfo().getServiceReference()) )
+            final WhiteboardServiceInfo<?> info = entry.getKey();
+
+            if ( info.getContextSelectionFilter().match(handler.getContextInfo().getServiceReference()) )
             {
-                entry.getValue().add(handler);
-                if ( entry.getValue().size() == 1 )
+                final int reason = checkForServletRegistrationInHttpServiceContext(handler, info);
+                if ( reason == -1 )
                 {
-                    this.failureStateHandler.remove(entry.getKey());
-                }
-                if ( entry.getKey() instanceof ListenerInfo && ((ListenerInfo)entry.getKey()).isListenerType(ServletContextListener.class.getName()) )
-                {
-                    // servlet context listeners will be registered directly
-                    this.registerWhiteboardService(handler, entry.getKey());
-                }
-                else
-                {
-                    // registration of other services will be delayed
-                    services.add(entry.getKey());
+                    entry.getValue().add(handler);
+                    if ( entry.getValue().size() == 1 )
+                    {
+                        this.failureStateHandler.remove(info);
+                    }
+                    if ( info instanceof ListenerInfo && ((ListenerInfo)info).isListenerType(ServletContextListener.class.getName()) )
+                    {
+                        // servlet context listeners will be registered directly
+                        this.registerWhiteboardService(handler, info);
+                    }
+                    else
+                    {
+                        // registration of other services will be delayed
+                        services.add(info);
+                    }
                 }
             }
         }
@@ -350,9 +372,7 @@ public final class WhiteboardManager
                 }
                 if ( entry.getValue().isEmpty() )
                 {
-                    final String type = entry.getKey().getClass().getSimpleName().substring(0, entry.getKey().getClass().getSimpleName().length() - 4);
-                    SystemLogger.debug("Ignoring unmatching " + type + " service " + entry.getKey().getServiceReference());
-                    this.failureStateHandler.add(entry.getKey(), FAILURE_REASON_NO_SERVLET_CONTEXT_MATCHING);
+                    this.failureStateHandler.addFailure(entry.getKey(), FAILURE_REASON_NO_SERVLET_CONTEXT_MATCHING);
                 }
             }
         }
@@ -407,16 +427,12 @@ public final class WhiteboardManager
                                 final WhiteboardContextHandler oldHead = handlerList.get(1);
                                 this.deactivate(oldHead);
 
-                                final String type = info.getClass().getSimpleName().substring(0, info.getClass().getSimpleName().length() - 4);
-                                SystemLogger.debug("Ignoring shadowed " + type + " service " + info.getServiceReference());
-                                this.failureStateHandler.add(oldHead.getContextInfo(), FAILURE_REASON_SHADOWED_BY_OTHER_SERVICE);
+                                this.failureStateHandler.addFailure(oldHead.getContextInfo(), FAILURE_REASON_SHADOWED_BY_OTHER_SERVICE);
                             }
                         }
                         else
                         {
-                            final String type = info.getClass().getSimpleName().substring(0, info.getClass().getSimpleName().length() - 4);
-                            SystemLogger.error("Ignoring ungettable " + type + " service " + info.getServiceReference(), null);
-                            this.failureStateHandler.add(handler.getContextInfo(), DTOConstants.FAILURE_REASON_SERVICE_NOT_GETTABLE);
+                            this.failureStateHandler.addFailure(handler.getContextInfo(), DTOConstants.FAILURE_REASON_SERVICE_NOT_GETTABLE);
                         }
                     }
                     else
@@ -425,17 +441,13 @@ public final class WhiteboardManager
                         Collections.sort(handlerList);
                         this.contextMap.put(info.getName(), handlerList);
 
-                        final String type = info.getClass().getSimpleName().substring(0, info.getClass().getSimpleName().length() - 4);
-                        SystemLogger.debug("Ignoring shadowed " + type + " service " + info.getServiceReference());
-                        this.failureStateHandler.add(handler.getContextInfo(), FAILURE_REASON_SHADOWED_BY_OTHER_SERVICE);
+                        this.failureStateHandler.addFailure(handler.getContextInfo(), FAILURE_REASON_SHADOWED_BY_OTHER_SERVICE);
                     }
                 }
             }
             else
             {
-                final String type = info.getClass().getSimpleName().substring(0, info.getClass().getSimpleName().length() - 4);
-                SystemLogger.debug("Ignoring invalid " + type + " service " + info.getServiceReference());
-                this.failureStateHandler.add(info, FAILURE_REASON_VALIDATION_FAILED);
+                this.failureStateHandler.addFailure(info, FAILURE_REASON_VALIDATION_FAILED);
             }
             return true;
         }
@@ -496,9 +508,7 @@ public final class WhiteboardManager
                             {
                                 handlerList.remove(0);
 
-                                final String type = info.getClass().getSimpleName().substring(0, info.getClass().getSimpleName().length() - 4);
-                                SystemLogger.error("Ignoring ungettable " + type + " service " + info.getServiceReference(), null);
-                                this.failureStateHandler.add(newHead.getContextInfo(), DTOConstants.FAILURE_REASON_SERVICE_NOT_GETTABLE);
+                                this.failureStateHandler.addFailure(newHead.getContextInfo(), DTOConstants.FAILURE_REASON_SERVICE_NOT_GETTABLE);
                             }
                         }
                     }
@@ -573,30 +583,53 @@ public final class WhiteboardManager
         {
             if ( info.isValid() )
             {
+                if ( info instanceof PreprocessorInfo )
+                {
+                    final PreprocessorHandler handler = new PreprocessorHandler(this.httpBundleContext,
+                            this.webContext, ((PreprocessorInfo)info));
+                    final int result = handler.init();
+                    if ( result == -1 )
+                    {
+                        synchronized ( this.preprocessorHandlers )
+                        {
+                            final List<PreprocessorHandler> newList = new ArrayList<PreprocessorHandler>(this.preprocessorHandlers);
+                            newList.add(handler);
+                            Collections.sort(newList);
+                            this.preprocessorHandlers = newList;
+                        }
+                    }
+                    else
+                    {
+                        this.failureStateHandler.addFailure(info, FAILURE_REASON_VALIDATION_FAILED);
+                    }
+                    return true;
+                }
                 synchronized ( this.contextMap )
                 {
                     final List<WhiteboardContextHandler> handlerList = this.getMatchingContexts(info);
                     this.servicesMap.put(info, handlerList);
                     if (handlerList.isEmpty())
                     {
-                        final String type = info.getClass().getSimpleName().substring(0, info.getClass().getSimpleName().length() - 4);
-                        SystemLogger.debug("Ignoring unmatched " + type + " service " + info.getServiceReference());
-                        this.failureStateHandler.add(info, FAILURE_REASON_NO_SERVLET_CONTEXT_MATCHING);
+                        this.failureStateHandler.addFailure(info, FAILURE_REASON_NO_SERVLET_CONTEXT_MATCHING);
                     }
                     else
                     {
                         for(final WhiteboardContextHandler h : handlerList)
                         {
-                            this.registerWhiteboardService(h, info);
-                            if ( info instanceof ListenerInfo && ((ListenerInfo)info).isListenerType(ServletContextListener.class.getName()) )
+                            final int result = this.checkForServletRegistrationInHttpServiceContext(h, info);
+                            if ( result == -1)
                             {
-                                final ListenerHandler handler = h.getRegistry().getEventListenerRegistry().getServletContextListener((ListenerInfo)info);
-                                if ( handler != null )
+                                this.registerWhiteboardService(h, info);
+                                if ( info instanceof ListenerInfo && ((ListenerInfo)info).isListenerType(ServletContextListener.class.getName()) )
                                 {
-                                    final ServletContextListener listener = (ServletContextListener)handler.getListener();
-                                    if ( listener != null )
+                                    final ListenerHandler handler = h.getRegistry().getEventListenerRegistry().getServletContextListener((ListenerInfo)info);
+                                    if ( handler != null )
                                     {
-                                        EventListenerRegistry.contextInitialized(handler.getListenerInfo(), listener, new ServletContextEvent(handler.getContext()));
+                                        final ServletContextListener listener = (ServletContextListener)handler.getListener();
+                                        if ( listener != null )
+                                        {
+                                            EventListenerRegistry.contextInitialized(handler.getListenerInfo(), listener, new ServletContextEvent(handler.getContext()));
+                                        }
                                     }
                                 }
                             }
@@ -606,13 +639,34 @@ public final class WhiteboardManager
             }
             else
             {
-                final String type = info.getClass().getSimpleName().substring(0, info.getClass().getSimpleName().length() - 4);
-                SystemLogger.debug("Ignoring invalid " + type + " service " + info.getServiceReference());
-                this.failureStateHandler.add(info, FAILURE_REASON_VALIDATION_FAILED);
+                this.failureStateHandler.addFailure(info, FAILURE_REASON_VALIDATION_FAILED);
             }
             return true;
         }
         return false;
+    }
+
+    /**
+     * Check if a registration for a servlet or resource is tried against the http context
+     * of the http service
+     * @param h The handler
+     * @param info The info
+     * @return {@code -1} if everything is ok, error code otherwise
+     */
+    private int checkForServletRegistrationInHttpServiceContext(final WhiteboardContextHandler h,
+            final WhiteboardServiceInfo<?> info)
+    {
+        if ( info instanceof ServletInfo || info instanceof ResourceInfo )
+        {
+            if ( h.getContextInfo().getServiceId() == HttpServiceFactory.HTTP_SERVICE_CONTEXT_SERVICE_ID )
+            {
+                this.failureStateHandler.addFailure(info, h.getContextInfo().getServiceId(), DTOConstants.FAILURE_REASON_VALIDATION_FAILED);
+
+                return DTOConstants.FAILURE_REASON_VALIDATION_FAILED;
+            }
+        }
+
+        return -1;
     }
 
     /**
@@ -626,6 +680,26 @@ public final class WhiteboardManager
         {
             if ( !failureStateHandler.remove(info) )
             {
+                if ( info instanceof PreprocessorInfo )
+                {
+                    synchronized ( this.preprocessorHandlers )
+                    {
+                        final List<PreprocessorHandler> newList = new ArrayList<PreprocessorHandler>(this.preprocessorHandlers);
+                        final Iterator<PreprocessorHandler> iter = newList.iterator();
+                        while ( iter.hasNext() )
+                        {
+                            final PreprocessorHandler handler = iter.next();
+                            if ( handler.getPreprocessorInfo().compareTo((PreprocessorInfo)info) == 0 )
+                            {
+                                iter.remove();
+                                this.preprocessorHandlers = newList;
+                                return;
+                            }
+                        }
+                        // not found, nothing to do
+                    }
+                    return;
+                }
                 final List<WhiteboardContextHandler> handlerList = this.servicesMap.remove(info);
                 if ( handlerList != null )
                 {
@@ -741,15 +815,12 @@ public final class WhiteboardManager
             }
             if ( failureCode != -1 )
             {
-                final String type = info.getClass().getSimpleName().substring(0,info.getClass().getSimpleName().length() - 4);
-                SystemLogger.debug("Ignoring " + type + " service " + info.getServiceReference());
-                this.failureStateHandler.add(info, handler.getContextInfo().getServiceId(), failureCode);
+                this.failureStateHandler.addFailure(info, handler.getContextInfo().getServiceId(), failureCode);
             }
         }
         catch (final Exception e)
         {
-            this.failureStateHandler.add(info, handler.getContextInfo().getServiceId(), FAILURE_REASON_UNKNOWN);
-            SystemLogger.error("Exception while registering whiteboard service " + info.getServiceReference(), e);
+            this.failureStateHandler.addFailure(info, handler.getContextInfo().getServiceId(), FAILURE_REASON_UNKNOWN, e);
         }
     }
 
@@ -836,17 +907,7 @@ public final class WhiteboardManager
         final FailedDTOHolder failedDTOHolder = new FailedDTOHolder();
 
         final Collection<ServletContextDTO> contextDTOs = new ArrayList<ServletContextDTO>();
-/*
-        // add the context for the http service
-        final ServletContextHelperInfo info = new ServletContextHelperInfo(Integer.MAX_VALUE,
-                HttpServiceFactory.HTTP_SERVICE_CONTEXT_SERVICE_ID,
-                HttpServiceFactory.HTTP_SERVICE_CONTEXT_NAME, "/", null);
-        final ServletContextDTO dto = ServletContextDTOBuilder.build(info, webContext, -1);
-        if ( registry.getRuntimeInfo(dto, failedDTOHolder) )
-        {
-            contextDTOs.add(dto);
-        }
-*/
+
         // get sort list of context handlers
         final List<WhiteboardContextHandler> contextHandlerList = new ArrayList<WhiteboardContextHandler>();
         synchronized ( this.contextMap )
@@ -872,6 +933,51 @@ public final class WhiteboardManager
             }
         }
 
-        return new RegistryRuntime(failedDTOHolder, contextDTOs);
+        final List<PreprocessorDTO> preprocessorDTOs = new ArrayList<PreprocessorDTO>();
+        final List<PreprocessorHandler> localHandlers = this.preprocessorHandlers;
+        for(final PreprocessorHandler handler : localHandlers)
+        {
+            preprocessorDTOs.add(PreprocessorDTOBuilder.build(handler.getPreprocessorInfo(), -1));
+        }
+
+        return new RegistryRuntime(failedDTOHolder, contextDTOs, preprocessorDTOs);
+    }
+
+    /**
+     * Invoke all preprocessors
+     *
+     * @param req The request
+     * @param res The response
+     * @return {@code true} to continue with dispatching, {@code false} to terminate the request.
+     * @throws IOException
+     * @throws ServletException
+     */
+    public boolean invokePreprocessors(final HttpServletRequest req, final HttpServletResponse res)
+    throws ServletException, IOException
+    {
+        final List<PreprocessorHandler> localHandlers = this.preprocessorHandlers;
+        if ( localHandlers.isEmpty() )
+        {
+            return true;
+        }
+        final AtomicBoolean result = new AtomicBoolean(true);
+        final FilterChain chain = new FilterChain() {
+
+            @Override
+            public void doFilter(final ServletRequest request, final ServletResponse response)
+            throws IOException, ServletException {
+                result.set(true);
+            }
+        };
+        for(final PreprocessorHandler handler : localHandlers)
+        {
+            result.set(false);
+            handler.handle(req, res, chain);
+            if ( !result.get() )
+            {
+                break;
+            }
+        }
+        return result.get();
     }
 }

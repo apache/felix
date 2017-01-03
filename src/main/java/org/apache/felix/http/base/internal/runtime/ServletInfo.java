@@ -38,12 +38,6 @@ import org.osgi.service.http.whiteboard.HttpWhiteboardConstants;
 public class ServletInfo extends WhiteboardServiceInfo<Servlet>
 {
     /**
-     * Properties starting with this prefix are passed as servlet init parameters to the
-     * {@code init()} method of the servlet.
-     */
-    private static final String SERVLET_INIT_PREFIX = "servlet.init.";
-
-    /**
      * The name of the servlet.
      */
     private final String name;
@@ -85,7 +79,7 @@ public class ServletInfo extends WhiteboardServiceInfo<Servlet>
         this.errorPage = getStringArrayProperty(ref, HttpWhiteboardConstants.HTTP_WHITEBOARD_SERVLET_ERROR_PAGE);
         this.patterns = getStringArrayProperty(ref, HttpWhiteboardConstants.HTTP_WHITEBOARD_SERVLET_PATTERN);
         this.asyncSupported = getBooleanProperty(ref, HttpWhiteboardConstants.HTTP_WHITEBOARD_SERVLET_ASYNC_SUPPORTED);
-        this.initParams = getInitParams(ref, SERVLET_INIT_PREFIX);
+        this.initParams = getInitParams(ref, HttpWhiteboardConstants.HTTP_WHITEBOARD_SERVLET_INIT_PARAM_PREFIX);
         this.isResource = false;
         this.prefix = null;
     }

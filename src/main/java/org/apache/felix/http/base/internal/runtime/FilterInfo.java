@@ -41,12 +41,6 @@ import org.osgi.service.http.whiteboard.HttpWhiteboardConstants;
 public final class FilterInfo extends WhiteboardServiceInfo<Filter>
 {
     /**
-     * Properties starting with this prefix are passed as filter init parameters to the
-     * {@code init()} method of the filter.
-     */
-    private static final String FILTER_INIT_PREFIX = "filter.init.";
-
-    /**
      * The name of the filter.
      */
     private final String name;
@@ -104,7 +98,7 @@ public final class FilterInfo extends WhiteboardServiceInfo<Filter>
         this.servletNames = getStringArrayProperty(ref, HttpWhiteboardConstants.HTTP_WHITEBOARD_FILTER_SERVLET);
         this.patterns = getStringArrayProperty(ref, HttpWhiteboardConstants.HTTP_WHITEBOARD_FILTER_PATTERN);
         this.regexs = getStringArrayProperty(ref, HttpWhiteboardConstants.HTTP_WHITEBOARD_FILTER_REGEX);
-        this.initParams = getInitParams(ref, FILTER_INIT_PREFIX);
+        this.initParams = getInitParams(ref, HttpWhiteboardConstants.HTTP_WHITEBOARD_FILTER_INIT_PARAM_PREFIX);
         String[] dispatcherNames = getStringArrayProperty(ref, HttpWhiteboardConstants.HTTP_WHITEBOARD_FILTER_DISPATCHER);
         if (dispatcherNames != null && dispatcherNames.length > 0)
         {
