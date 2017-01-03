@@ -39,7 +39,7 @@
     
     <properties>
         <felix.java.version>8</felix.java.version>
-        <jetty.version>9.3.12.v20160915</jetty.version>
+        <jetty.version>9.3.15.v20161220</jetty.version>
     </properties>
 
     <build>
@@ -191,7 +191,7 @@
         <dependency>
             <groupId>org.apache.felix</groupId>
             <artifactId>org.apache.felix.http.base</artifactId>
-            <version>3.0.17-SNAPSHOT</version>
+            <version>3.0.18</version>
         </dependency>
   <!-- Testing -->
         <dependency>
