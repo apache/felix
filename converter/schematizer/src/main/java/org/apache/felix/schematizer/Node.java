@@ -39,6 +39,7 @@ public interface Node {
         public String name;
         public String path;
         public String type;
+        public String collectionType;
         public boolean isCollection;
         public Map<String, Node.DTO> children = new HashMap<>();
     }

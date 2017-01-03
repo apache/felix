@@ -58,4 +58,9 @@ public class StandardSchematizer implements Schematizer {
     public <T extends DTO> Schematizer rule(String name, TypeReference<T> type) {
         return schematizer.rule(name, type);
     }
+
+    @Override
+    public Schematizer usingLookup(ClassLoader classLoader) {
+        return schematizer.usingLookup(classLoader);
+    }
 }

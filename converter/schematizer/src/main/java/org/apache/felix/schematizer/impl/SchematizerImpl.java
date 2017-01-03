@@ -20,12 +20,14 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Optional;
@@ -45,6 +47,7 @@ public class SchematizerImpl implements Schematizer {
 
     private final Map<String, SchemaImpl> schemas = new HashMap<>();
     private volatile Map<String, Map<String, Object>> typeRules = new HashMap<>();
+    private final List<ClassLoader> classloaders = new ArrayList<>();
 
     @Override
     public Optional<Schema> get(String name) {
@@ -105,6 +108,13 @@ public class SchematizerImpl implements Schematizer {
             typeRules.put(name, new HashMap<>());
 
         return typeRules.get(name);
+    }
+
+    @Override
+    public Schematizer usingLookup( ClassLoader classloader ) {
+        if (classloader != null)
+            classloaders.add(classloader);
+        return this;
     }
 
     /**
