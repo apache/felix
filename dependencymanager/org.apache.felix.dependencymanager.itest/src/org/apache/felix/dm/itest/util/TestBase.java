@@ -24,6 +24,7 @@ import java.util.Hashtable;
 import java.util.concurrent.Executor;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.TimeUnit;
 
 import org.junit.Assert;
@@ -53,7 +54,7 @@ public abstract class TestBase extends TestCase implements LogService, Framework
     protected final static int LOG_LEVEL = LogService.LOG_WARNING;
     
     // optional thread pool used by parallel dependency managers
-    private volatile ExecutorService m_threadPool;
+    protected volatile ForkJoinPool m_threadPool;
     
     // flag used to check if the threadpool must be used for a given test.
     protected volatile boolean m_parallel;
@@ -90,7 +91,7 @@ public abstract class TestBase extends TestCase implements LogService, Framework
         m_dm = new DependencyManager(context);
         if (m_parallel) {
             warn("Using threadpool ...");
-            m_threadPool = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
+            m_threadPool = new ForkJoinPool(Runtime.getRuntime().availableProcessors());
             m_componentExecutorFactoryReg = context.registerService(ComponentExecutorFactory.class.getName(), 
                 new ComponentExecutorFactory() {
                     @Override
