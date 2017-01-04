@@ -19,7 +19,6 @@
 package org.apache.felix.scr.impl.metadata;
 
 import org.osgi.framework.Bundle;
-import org.osgi.framework.Constants;
 import org.osgi.framework.Version;
 
 /**
@@ -61,16 +60,12 @@ public class TargetedPID
      * string converted to a Version object is returned. Otherwise the
      * string representation of <code>Version.emptyVersion</code> is
      * returned.
-     * <p>
-     * To remain compatible with pre-R4.2 (Framework API < 1.5) we cannot
-     * use the <code>Bundle.getVersion()</code> method.
      *
      * @param bundle The bundle whose version is to be returned.
      */
     public static String getBundleVersion( final Bundle bundle )
     {
-        Object vHeader = bundle.getHeaders().get( Constants.BUNDLE_VERSION );
-        Version version = ( vHeader == null ) ? Version.emptyVersion : new Version( vHeader.toString() );
+        Version version = bundle.getVersion();
         return version.toString();
     }
 

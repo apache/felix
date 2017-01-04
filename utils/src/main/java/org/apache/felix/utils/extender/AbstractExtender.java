@@ -15,15 +15,6 @@
  */
 package org.apache.felix.utils.extender;
 
-import org.osgi.framework.Bundle;
-import org.osgi.framework.BundleActivator;
-import org.osgi.framework.BundleContext;
-import org.osgi.framework.BundleEvent;
-import org.osgi.framework.Constants;
-import org.osgi.framework.SynchronousBundleListener;
-import org.osgi.util.tracker.BundleTracker;
-import org.osgi.util.tracker.BundleTrackerCustomizer;
-
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Set;
@@ -33,6 +24,15 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.FutureTask;
 import java.util.concurrent.TimeUnit;
+
+import org.osgi.framework.Bundle;
+import org.osgi.framework.BundleActivator;
+import org.osgi.framework.BundleContext;
+import org.osgi.framework.BundleEvent;
+import org.osgi.framework.Constants;
+import org.osgi.framework.SynchronousBundleListener;
+import org.osgi.util.tracker.BundleTracker;
+import org.osgi.util.tracker.BundleTrackerCustomizer;
 
 /**
  * Base class to write bundle extenders.
@@ -223,7 +223,7 @@ public abstract class AbstractExtender implements BundleActivator, BundleTracker
         // For starting bundles, ensure, it's a lazy activation,
         // else we'll wait for the bundle to become ACTIVE
         if (bundle.getState() == Bundle.STARTING) {
-            String activationPolicyHeader = (String) bundle.getHeaders().get(Constants.BUNDLE_ACTIVATIONPOLICY);
+            String activationPolicyHeader = (String) bundle.getHeaders("").get(Constants.BUNDLE_ACTIVATIONPOLICY);
             if (activationPolicyHeader == null || !activationPolicyHeader.startsWith(Constants.ACTIVATION_LAZY)) {
                 // Do not track this bundle yet
                 return;

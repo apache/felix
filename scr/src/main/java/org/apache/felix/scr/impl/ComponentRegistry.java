@@ -478,7 +478,7 @@ public class ComponentRegistry
                 // set to request a bundle to be lazily activated. So in this
                 // simple check we just verify the header is set to assume
                 // the bundle is considered a lazily activated bundle
-                return bundle.getHeaders().get( Constants.BUNDLE_ACTIVATIONPOLICY ) != null;
+                return bundle.getHeaders("").get(Constants.BUNDLE_ACTIVATIONPOLICY) != null;
             }
         }
 
