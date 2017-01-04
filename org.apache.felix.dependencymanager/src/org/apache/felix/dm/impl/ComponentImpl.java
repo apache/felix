@@ -421,7 +421,8 @@ public class ComponentImpl implements Component, ComponentContext, ComponentDecl
 	@Override
 	public void stop() {           
 	    if (m_active.compareAndSet(true, false)) {
-	    	schedule(true /* try execute synchronously if using a tpool */, () -> { 
+	    	// try to be synchronous, even if a threadpool is used (best effort).
+	    	schedule(true /* bypass threadpool if possible */, () -> { 
 	    		m_isStarted = false;
 	            handleChange();
 	    	});
@@ -457,8 +458,8 @@ public class ComponentImpl implements Component, ComponentContext, ComponentDecl
 		// This is just a best effort, and the removed event will be handled asynchronosly if our 
 		// queue is currently being run by another thread, or by the threadpool.
 		
-		boolean synchronously = (type == EventType.REMOVED);
-		schedule(synchronously, () ->  {
+		boolean bypassThreadPoolIfPossible = (type == EventType.REMOVED);
+		schedule(bypassThreadPoolIfPossible, () ->  {
 			try {
 				switch (type) {
 				case ADDED:
@@ -1677,24 +1678,34 @@ public class ComponentImpl implements Component, ComponentContext, ComponentDecl
     }
     
     /**
-     * Executes a task using our queue. The task is executed synchronously in case the queue is 
-     * not being run by another thread, or by the threadpool.
+     * Executes a task using our component queue. The queue associated to this component is by default a "SerialExecutor", or 
+     * a "DispatchExecutor" if a threadpool is used (that is: if a ComponentExecutorFactory has returned an executor this our 
+     * component).
      * 
-     * @param trySynchronous try to execute the task synchronously (best effort).
+     * A SerialExecutor always try to execute the task synchronously, except if another master thread is currently 
+     * running the SerialExecutor queue.
+     * A DispatchExecutor always schedule the task asynchronously in a threadpool, but can optionally try to execute the task synchronously
+     * (the threadpool is bypassed only if the queue is not currently being run by the threadpool).
+     * 
+     * The "bypassThreadPoolIfPossible" argument is only used in case there is a threadpool configured. If no threadpool is used, 
+     * this argument is ignored and the task is run synchronously if the serial queue is not concurrently run from another 
+     * master threads.
+     * 
+     * @param bypassThreadPoolIfPossible This argument is only used if a threadpool is configured for this component. if true, 
+     * it means that if a threadpool is configured, then we attempt to run the task synchronously and not using the threadpool, 
+     * but if the queue is currently run from the threadpool, then the task is scheduled in it. 
+     * false means we always use the threadpool and the task is executed asynchronously.
      * @param task the task to execute.
      */
-    private void schedule(boolean trySynchronous, Runnable task) {
+    private void schedule(boolean bypassThreadPoolIfPossible, Runnable task) {
 		Executor exec = getExecutor();
-		if (trySynchronous) {
-    		if (exec instanceof DispatchExecutor) {
-    			// Try to execute the task from the current thread if the threadpool is not currently running our queue.
-    			((DispatchExecutor) exec).execute(task, false);
-    			return;
-    		}
+		if (exec instanceof DispatchExecutor) {
+			// We are using a threadpool. If byPassThreadPoolIsPossible is true, it means we can try to run the task synchronously from the current
+			// thread. But if our queue is currently run from the threadpool, then the task will be run from it (asynchronously).
+			((DispatchExecutor) exec).execute(task, ! bypassThreadPoolIfPossible);    			
+		} else {
+			// The queue is a serial queue: the task will be run synchronously, except if another master thread is currently running the queue.
+			exec.execute(task);
 		}
-		// If we are using a serial queue (no threadpool), then the queue executes the task synchronously 
-		// if no other master thread is running the queue.
-		// If the are using a threadpool, then the task is always executed asynchronously, in the threadpool.
-		exec.execute(task);
     }
 }
