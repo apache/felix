@@ -1,5 +1,5 @@
 /*
- * Copyright (c) OSGi Alliance (2012, 2015). All Rights Reserved.
+ * Copyright (c) OSGi Alliance (2012, 2016). All Rights Reserved.
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -548,11 +548,10 @@ public final class HttpWhiteboardConstants {
 	 * the Http Context(s) managed by the Http Service, they can select the
 	 * contexts having this property.
 	 * <p>
-	 * Servlets or resources registered using this property for filtering are
-	 * treated as an invalid registration.
+	 * Servlets or resources registered using this property are treated as an
+	 * invalid registration.
 	 * 
 	 * @since 1.1
 	 */
 	public static final String	HTTP_SERVICE_CONTEXT_PROPERTY						= "osgi.http.whiteboard.context.httpservice";
 }
-

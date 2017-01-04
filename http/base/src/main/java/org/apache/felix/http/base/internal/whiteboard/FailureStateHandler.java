@@ -32,6 +32,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import org.apache.felix.http.base.internal.logger.SystemLogger;
 import org.apache.felix.http.base.internal.runtime.AbstractInfo;
 import org.apache.felix.http.base.internal.runtime.dto.FailedDTOHolder;
+import org.osgi.framework.Bundle;
 
 public class FailureStateHandler {
 
@@ -67,13 +68,14 @@ public class FailureStateHandler {
 
     public void addFailure(final AbstractInfo<?> info, final long contextId, final int reason, final Exception ex)
     {
-        final String type = info.getClass().getSimpleName().substring(0, info.getClass().getSimpleName().length() - 4);
+    	final String type = info.getClass().getSimpleName().substring(0, info.getClass().getSimpleName().length() - 4);
         final String serviceInfo;
         if ( info.getServiceReference() == null ) {
-            serviceInfo = "with id " + info.getServiceId();
+            serviceInfo = "with id " + String.valueOf(info.getServiceId());
         } else {
+        	final Bundle bundle = info.getServiceReference().getBundle();
             serviceInfo = String.valueOf(info.getServiceId()) +
-                    " (bundle " + info.getServiceReference().getBundle().getSymbolicName()
+                   " (bundle " + (bundle == null ? "<uninstalled>" : bundle.getSymbolicName())
                     + " reference " + info.getServiceReference() + ")";
         }
         if ( reason == FAILURE_REASON_NO_SERVLET_CONTEXT_MATCHING )

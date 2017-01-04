@@ -1,5 +1,5 @@
 /*
- * Copyright (c) OSGi Alliance (2012, 2014). All Rights Reserved.
+ * Copyright (c) OSGi Alliance (2012, 2016). All Rights Reserved.
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -30,7 +30,7 @@ public class ServletDTO extends BaseServletDTO {
 	 * 
 	 * <p>
 	 * The specified patterns are used to determine whether a request is mapped
-	 * to the servlet. This field is never {@code null}. The array might be empty.
+	 * to the servlet. This array is never empty.
 	 */
 	public String[]				patterns;
 

@@ -78,6 +78,7 @@ import org.apache.felix.http.base.internal.service.HttpServiceRuntimeImpl;
 import org.apache.felix.http.base.internal.service.ResourceServlet;
 import org.apache.felix.http.base.internal.whiteboard.tracker.FilterTracker;
 import org.apache.felix.http.base.internal.whiteboard.tracker.ListenersTracker;
+import org.apache.felix.http.base.internal.whiteboard.tracker.PreprocessorTracker;
 import org.apache.felix.http.base.internal.whiteboard.tracker.ResourceTracker;
 import org.apache.felix.http.base.internal.whiteboard.tracker.ServletContextHelperTracker;
 import org.apache.felix.http.base.internal.whiteboard.tracker.ServletTracker;
@@ -208,6 +209,7 @@ public final class WhiteboardManager
                 }, props);
         addTracker(new FilterTracker(this.httpBundleContext, this));
         addTracker(new ListenersTracker(this.httpBundleContext, this));
+        addTracker(new PreprocessorTracker(this.httpBundleContext, this));
         addTracker(new ResourceTracker(this.httpBundleContext, this));
         addTracker(new ServletContextHelperTracker(this.httpBundleContext, this));
         addTracker(new ServletTracker(this.httpBundleContext, this));
@@ -432,7 +434,7 @@ public final class WhiteboardManager
                         }
                         else
                         {
-                            this.failureStateHandler.addFailure(handler.getContextInfo(), DTOConstants.FAILURE_REASON_SERVICE_NOT_GETTABLE);
+                            this.failureStateHandler.addFailure(info, DTOConstants.FAILURE_REASON_SERVICE_NOT_GETTABLE);
                         }
                     }
                     else
@@ -441,7 +443,7 @@ public final class WhiteboardManager
                         Collections.sort(handlerList);
                         this.contextMap.put(info.getName(), handlerList);
 
-                        this.failureStateHandler.addFailure(handler.getContextInfo(), FAILURE_REASON_SHADOWED_BY_OTHER_SERVICE);
+                        this.failureStateHandler.addFailure(info, FAILURE_REASON_SHADOWED_BY_OTHER_SERVICE);
                     }
                 }
             }
@@ -660,7 +662,7 @@ public final class WhiteboardManager
         {
             if ( h.getContextInfo().getServiceId() == HttpServiceFactory.HTTP_SERVICE_CONTEXT_SERVICE_ID )
             {
-                this.failureStateHandler.addFailure(info, h.getContextInfo().getServiceId(), DTOConstants.FAILURE_REASON_VALIDATION_FAILED);
+                this.failureStateHandler.addFailure(info, HttpServiceFactory.HTTP_SERVICE_CONTEXT_SERVICE_ID, DTOConstants.FAILURE_REASON_VALIDATION_FAILED);
 
                 return DTOConstants.FAILURE_REASON_VALIDATION_FAILED;
             }
@@ -961,11 +963,13 @@ public final class WhiteboardManager
             return true;
         }
         final AtomicBoolean result = new AtomicBoolean(true);
-        final FilterChain chain = new FilterChain() {
+        final FilterChain chain = new FilterChain() 
+        {
 
             @Override
             public void doFilter(final ServletRequest request, final ServletResponse response)
-            throws IOException, ServletException {
+            throws IOException, ServletException 
+            {
                 result.set(true);
             }
         };

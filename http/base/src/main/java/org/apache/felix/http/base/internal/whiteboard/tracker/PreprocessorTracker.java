@@ -28,19 +28,18 @@ public final class PreprocessorTracker extends WhiteboardServiceTracker<Preproce
 
    /**
      * Create a new tracker
-     * @param contextManager The context manager
      * @param bundleContext The bundle context.
-     * @param filterExpr The filter expression for the services to track
+     * @param contextManager The context manager
      */
-    public PreprocessorTracker(final WhiteboardManager contextManager,
-            final BundleContext bundleContext, final String filterExpr)
+    public PreprocessorTracker(final BundleContext bundleContext, final WhiteboardManager contextManager)
     {
-        super(contextManager, bundleContext, String.format("(objectClass=%s)",
-                Preprocessor.class.getName()));
+        super(contextManager, bundleContext, 
+        		String.format("(objectClass=%s)", Preprocessor.class.getName()));
     }
 
     @Override
-    protected WhiteboardServiceInfo<Preprocessor> getServiceInfo(final ServiceReference<Preprocessor> ref) {
+    protected WhiteboardServiceInfo<Preprocessor> getServiceInfo(final ServiceReference<Preprocessor> ref) 
+    {
         return new PreprocessorInfo(ref);
     }
 }
