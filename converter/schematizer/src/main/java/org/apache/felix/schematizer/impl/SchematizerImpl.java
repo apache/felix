@@ -66,9 +66,10 @@ public class SchematizerImpl implements Schematizer {
             // TODO: some validation of the Map here would be good
             SchemaImpl schema = new SchemaImpl(name);
             Object rootMap = map.get("/");
-            Node.DTO rootDTO = new StandardConverter().convert( rootMap ).to( Node.DTO.class );
+            Node.DTO rootDTO = new StandardConverter().convert(rootMap).to(Node.DTO.class);
             Map<String, NodeImpl> allNodes = new HashMap<>();
             NodeImpl root = new NodeImpl(rootDTO, "", new Instantiator(classloaders), allNodes);
+            associateChildNodes(root);
             schema.add(root);
             schema.add(allNodes);
             return Optional.of(schema);
@@ -184,7 +185,7 @@ public class SchematizerImpl implements Schematizer {
             rootNode = new NodeImpl(contextPath, targetCls, false, contextPath + "/");
         schema.add(rootNode);
         Map<String, NodeImpl> m = createMapFromDTO(name, targetCls, ref, contextPath, rules, schematizer);
-        m.values().stream().forEach(n -> n.parent(rootNode));
+        processNodeParentsAndFields(rootNode, m);
         m.values().stream().filter(v -> v.absolutePath().equals(rootNode.absolutePath() + v.name())).forEach(v -> rootNode.add(v));
         schema.add(m);
         return schema;
@@ -201,10 +202,6 @@ public class SchematizerImpl implements Schematizer {
         SchemaImpl schema = new SchemaImpl(name);
         NodeImpl node = new NodeImpl(contextPath, targetCls, isCollection, contextPath + "/");
         schema.add(node);
-//        Map<String, NodeImpl> m = createMapFromDTO(name, targetCls, ref, contextPath, rules, schematizer);
-//        m.values().stream().forEach(n -> n.parent(node));
-//        m.values().stream().filter(v -> v.absolutePath().equals(node.absolutePath() + v.name())).forEach(v -> node.add(v));
-//        schema.add(m);
         return schema;
     }
 
@@ -405,6 +402,38 @@ public class SchematizerImpl implements Schematizer {
 
             // Nothing to do. Return Object.class as the fallback
             return Object.class;
+        }
+    }
+
+    static private void processNodeParentsAndFields(NodeImpl rootNode, Map<String, NodeImpl> map) {
+        for(NodeImpl n : map.values()) {
+            if (n.parent() != null)
+                continue;
+            n.parent(rootNode);
+            String fieldName = n.name();
+            Class<?> parentClass = rawClassOf(rootNode.type());
+            try {
+                Field field = parentClass.getField(fieldName);
+                n.field(field);
+            } catch ( NoSuchFieldException e ) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    static private void associateChildNodes(NodeImpl rootNode) {
+        for (NodeImpl child: rootNode.childrenInternal().values()) {
+            child.parent(rootNode);
+            String fieldName = child.name();
+            Class<?> parentClass = rawClassOf(rootNode.type());
+            try {
+                Field field = parentClass.getField(fieldName);
+                child.field(field);
+            } catch ( NoSuchFieldException e ) {
+                e.printStackTrace();
+            }            
+
+            associateChildNodes(child);
         }
     }
 }

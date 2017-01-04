@@ -15,6 +15,7 @@
  */
 package org.apache.felix.schematizer.impl;
 
+import java.lang.reflect.Field;
 import java.lang.reflect.Type;
 import java.util.Collection;
 import java.util.HashMap;
@@ -34,6 +35,7 @@ public class NodeImpl implements Node {
 
     private NodeImpl parent;
     private HashMap<String, NodeImpl> children = new HashMap<>();
+    private Field field;
 
     public NodeImpl(
             String aName,
@@ -105,6 +107,15 @@ public class NodeImpl implements Node {
     @Override
     public String absolutePath() {
         return absolutePath;
+    }
+
+    @Override
+    public Field field() {
+        return field;
+    }
+
+    public void field(Field aField) {
+        field = aField;
     }
 
     @SuppressWarnings( { "unchecked", "rawtypes" } )
