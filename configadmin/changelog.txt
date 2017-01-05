@@ -1,12 +1,20 @@
 Changes in 1.9.0
 ----------------
 ** Improvement
-    * [FELIX-5288] - Implement RFC 227 (R7 Update)
-    * [FELIX-5289] - PID Handling of Factory Configurations
-    * [FELIX-5290] - Locking Configuration Records
-    * [FELIX-5291] - Improving Configuration Updates
-    * [FELIX-5292] - Capabilities
-    * [FELIX-5293] - Improved ConfigurationPlugin Support
+    * [FELIX-5288] - Implement RFC 227 (OSGi R7 Update)
+    * [FELIX-5289] - Alias PID Handling of Factory Configurations (OSGi R7)
+    * [FELIX-5290] - Locking Configuration Records (OSGi R7)
+    * [FELIX-5291] - Improve Configuration Updates (OSGi R7)
+    * [FELIX-5292] - Capabilities (OSGi R7)
+    * [FELIX-5293] - Improved ConfigurationPlugin Support (OSGi R7)
+    * [FELIX-5468] - Refactor persistence handling
+
+
+Changes from 1.8.12 to 1.8.14
+-----------------------------
+** Bug
+    * [FELIX-5443] - Frequent Changes cause UpdateThread to ConcurrentModificationException
+    * [FELIX-5435] - Service does not get loaded with updated properties that have been modified on file system after felix framework restart
 
 
 Changes from 1.8.10 to 1.8.12
