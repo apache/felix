@@ -45,12 +45,6 @@
         in the test phase and integration tests based on PAX Exam running
         in the integration-test phase.
         
-        Basically the complete project is build using Java 1.3 source and target
-        compatibility (as inherited from the parent pom). The exception are the
-        unit tests in the "integration" packages. These have to be compiled with
-        Java 5 source and target compatibility because the employ annotations
-        and generics.
-        
         For running the integration tests from the console using Maven nothing
         special has to be done as the tests run automatically. To run the tests
         in your IDE, the project has to be built to the "package" phase with
