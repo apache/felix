@@ -1,3 +1,10 @@
+Changes from 1.8.12 to 1.8.14
+-----------------------------
+** Bug
+    * [FELIX-5443] - Frequent Changes cause UpdateThread to ConcurrentModificationException
+    * [FELIX-5435] - Service does not get loaded with updated properties that have been modified on file system after felix framework restart
+
+
 Changes from 1.8.10 to 1.8.12
 -----------------------------
 
