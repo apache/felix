@@ -136,6 +136,52 @@ public class SchematizerServiceTest {
     }
 
     @Test
+    public void testSchematizeDTOWithAnnotatedColletion() {
+        Optional<Schema> opt = schematizer
+                .rule("MyDTO4", new TypeReference<MyDTO4>(){})
+                .get("MyDTO4");
+
+        assertTrue(opt.isPresent());
+        Schema s = opt.get();
+        assertNotNull(s);
+        Node root = s.rootNode();
+        assertNodeEquals("", "/", false, MyDTO4.class, false, root);
+        assertEquals(4, root.children().size());
+        Node pingNode = root.children().get("/ping");
+        assertNodeEquals("ping", "/ping", false, String.class, true, pingNode);
+        Node pongNode = root.children().get("/pong");
+        assertNodeEquals("pong", "/pong", false, Long.class, true, pongNode);
+        Node countNode = root.children().get("/count");
+        assertNodeEquals("count", "/count", false, MyDTO4.Count.class, true, countNode);
+        Node embeddedNode = root.children().get("/embedded");
+        assertEquals(3, embeddedNode.children().size());
+        assertNodeEquals("embedded", "/embedded", true, MyEmbeddedDTO.class, true, embeddedNode);
+        Node marcoNode = embeddedNode.children().get("/marco");
+        assertNodeEquals("marco", "/embedded/marco", false, String.class, true, marcoNode);
+        Node poloNode = embeddedNode.children().get("/polo");
+        assertNodeEquals("polo", "/embedded/polo", false, Long.class, true, poloNode);
+        Node alphaNode = embeddedNode.children().get("/alpha");
+        assertNodeEquals("alpha", "/embedded/alpha", false, MyEmbeddedDTO.Alpha.class, true, alphaNode);
+
+        Node sRoot = s.nodeAtPath("/").get();
+        assertNodeEquals("", "/", false, MyDTO4.class, false, sRoot);
+        Node sPingNode = s.nodeAtPath("/ping").get();
+        assertNodeEquals("ping", "/ping", false, String.class, true, sPingNode);
+        Node sPongNode = s.nodeAtPath("/pong").get();
+        assertNodeEquals("pong", "/pong", false, Long.class, true, sPongNode);
+        Node sCountNode = s.nodeAtPath("/count").get();
+        assertNodeEquals("count", "/count", false, MyDTO4.Count.class, true, sCountNode);
+        Node sEmbeddedNode = s.nodeAtPath("/embedded").get();
+        assertNodeEquals("embedded", "/embedded", true, MyEmbeddedDTO.class, true, sEmbeddedNode);
+        Node sMarcoNode = s.nodeAtPath("/embedded/marco").get();
+        assertNodeEquals("marco", "/embedded/marco", false, String.class, true, sMarcoNode);
+        Node sPoloNode = s.nodeAtPath("/embedded/polo").get();
+        assertNodeEquals("polo", "/embedded/polo", false, Long.class, true, sPoloNode);
+        Node sAlphaNode = s.nodeAtPath("/embedded/alpha").get();
+        assertNodeEquals("alpha", "/embedded/alpha", false, MyEmbeddedDTO.Alpha.class, true, sAlphaNode);
+    }
+
+    @Test
     public void testSchematizeToMap() {
         Optional<Schema> opt = schematizer
                 .rule("MyDTO", new TypeReference<MyDTO>(){})

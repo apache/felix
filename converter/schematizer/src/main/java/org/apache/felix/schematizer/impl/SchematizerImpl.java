@@ -16,11 +16,14 @@
  */
 package org.apache.felix.schematizer.impl;
 
+import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
+import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
@@ -282,8 +285,10 @@ public class SchematizerImpl implements Schematizer {
                     Class<?> collectionType;
                     if (collectionTypeAnnotation != null)
                         collectionType = collectionTypeAnnotation.value();
+                    else if (hasCollectionTypeAnnotation(field))
+                        collectionType = collectionTypeOf(field);
                     else
-                        collectionType = Object.class;
+                        collectionType = Object.class;                        
                     node = new CollectionNode(
                             field.getName(),
                             collectionType,
@@ -434,6 +439,36 @@ public class SchematizerImpl implements Schematizer {
             }            
 
             associateChildNodes(child);
+        }
+    }
+
+    static private boolean hasCollectionTypeAnnotation(Field field) {
+        if (field == null)
+            return false;
+
+        Annotation[] annotations = field.getAnnotations();
+        if (annotations.length == 0)
+            return false;
+
+        return Arrays.stream(annotations)
+            .map(a -> a.annotationType().getName())
+            .anyMatch(a -> "CollectionType".equals(a.substring(a.lastIndexOf(".") + 1) ));
+    }
+
+    static private Class<?> collectionTypeOf(Field field) {
+        Annotation[] annotations = field.getAnnotations();
+
+        Annotation annotation = Arrays.stream(annotations)
+            .filter(a -> "CollectionType".equals(a.annotationType().getName().substring(a.annotationType().getName().lastIndexOf(".") + 1) ))
+            .findFirst()
+            .get();
+
+        try {
+            Method m = annotation.annotationType().getMethod("value");
+            Class<?> value = (Class<?>)m.invoke(annotation, null);
+            return value;            
+        } catch ( Exception e ) {
+            return null;
         }
     }
 }
