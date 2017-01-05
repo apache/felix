@@ -1,3 +1,17 @@
+Changes from 2.0.8 to 2.1.0
+---------------------------
+** Improvement
+    * [FELIX-5458] Improved ConfigurationPlugin Support (OSGi R7)
+
+
+Changes from 2.0.6 to 2.0.8
+---------------------------
+** Improvement
+    * [FELIX-5459] Use Java 6 as minimum version
+    * [FELIX-5374] Reduce severity of log message from SCR when there is no metatype
+    * [FELIX-5474] Do not call no-arg Bundle.getHeaders() method
+
+
 Changes from 2.0.4 to 2.0.6
 ---------------------------
 ** Bug
