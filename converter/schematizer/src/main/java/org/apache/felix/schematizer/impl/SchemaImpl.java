@@ -15,14 +15,21 @@
  */
 package org.apache.felix.schematizer.impl;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
 import org.apache.felix.schematizer.Node;
 import org.apache.felix.schematizer.NodeVisitor;
 import org.apache.felix.schematizer.Schema;
+import org.osgi.util.converter.Converter;
+import org.osgi.util.converter.StandardConverter;
 
 public class SchemaImpl
         implements Schema
@@ -78,5 +85,50 @@ public class SchemaImpl
     @Override
     public void visit(NodeVisitor visitor) {
         nodes.values().stream().forEach(n ->  visitor.apply(n));
+    }
+
+    @Override
+    public Collection<?> valuesAt(String path, Object object) {
+        final Converter converter = new StandardConverter();
+        @SuppressWarnings( "unchecked" )
+        final Map<String, Object> map = (Map<String, Object>)converter.convert( object ).to( Map.class );
+        if (map == null || map.isEmpty())
+            return Collections.emptyList();
+
+        if (path.startsWith("/"))
+            path = path.substring(1);
+        String[] pathParts = path.split("/");
+        if (pathParts.length <= 0)
+            return Collections.emptyList();
+
+        List<String> contexts = Arrays.asList(pathParts);
+        List<Object> values = new ArrayList<>();
+
+        return valuesAt("", map, contexts, 0, values);
+    }
+
+    private Collection<?> valuesAt(String context, Map<String, Object> objectMap, List<String> contexts, int currentIndex, List<Object> values) {
+        List<Object> result = new ArrayList<>();
+        String currentContext = context + contexts.get(currentIndex);
+        Object o = objectMap.get(currentContext);
+        if (o instanceof Map)
+            toString();
+        if (o instanceof List) {
+            @SuppressWarnings( "unchecked" )
+            List<Object> l = (List<Object>)o;
+            if (currentIndex == contexts.size() - 1) {
+                // We are at the end, so just add the collection
+                result.add(l);
+                return result;
+            }
+
+            currentContext = "/" + contexts.get(++currentIndex);
+            for (Object o2 : l)
+                result.addAll(valuesAt(currentContext, o2));
+        } else {
+            result.add( o );
+        }
+
+        return result;
     }
 }

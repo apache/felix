@@ -15,6 +15,7 @@
  */
 package org.apache.felix.schematizer;
 
+import java.util.Collection;
 import java.util.Map;
 import java.util.Optional;
 
@@ -28,4 +29,6 @@ public interface Schema {
      * Recursively visits all nodes in the {@code Schema} for processing.
      */
     void visit(NodeVisitor visitor);
+
+    Collection<?> valuesAt(String path, Object object);
 }
