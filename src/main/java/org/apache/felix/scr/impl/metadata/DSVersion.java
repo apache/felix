@@ -26,8 +26,7 @@ public enum DSVersion
     DS11Felix(2),
     DS12(3),
     DS12Felix(4),
-    DS13(5),
-    DS14(6);
+    DS13(5);
 
     private final int version;
 
@@ -54,10 +53,5 @@ public enum DSVersion
     public boolean isDS13()
     {
         return version >=DS13.version;
-    }
-
-    public boolean isDS14()
-    {
-        return version >=DS14.version;
     }
 }
