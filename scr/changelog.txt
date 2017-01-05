@@ -2,6 +2,7 @@ Changes from 2.0.8 to 2.1.0
 ---------------------------
 ** Improvement
     * [FELIX-5458] Improved ConfigurationPlugin Support (OSGi R7)
+    * [FELIX-5454] Service properties for ComponentFactory (OSGi R7)
 
 
 Changes from 2.0.6 to 2.0.8

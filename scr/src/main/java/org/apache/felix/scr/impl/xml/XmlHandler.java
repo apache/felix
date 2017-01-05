@@ -88,27 +88,6 @@ public class XmlHandler implements KXml2SAXHandler
 
     public static final String DELAYED_KEEP_INSTANCES = "delayedKeepInstances";
 
-    // namespace code for non-DS namespace
-    public static final int DS_VERSION_NONE = -1;
-
-    // namespace code for the DS 1.0 specification
-    public static final int DS_VERSION_1_0 = 0;
-
-    // namespace code for the DS 1.1 specification
-    public static final int DS_VERSION_1_1 = 1;
-
-    // namespace code for the DS 1.1-felix specification
-    public static final int DS_VERSION_1_1_FELIX = 2;
-
-    // namespace code for the DS 1.2 specification
-    public static final int DS_VERSION_1_2 = 3;
-
-    // namespace code for the DS 1.2-felix specification
-    public static final int DS_VERSION_1_2_FELIX = 4;
-
-    // namespace code for the DS 1.3 specification
-    public static final int DS_VERSION_1_3 = 5;
-
     // mapping of namespace URI to namespace code
     private static final Map<String, DSVersion> NAMESPACE_CODE_MAP;
 
@@ -133,6 +112,9 @@ public class XmlHandler implements KXml2SAXHandler
 
     // PropertyMetaData whose value attribute is missing, hence has element data
     private PropertyMetadata m_pendingProperty;
+
+    // PropertyMetaData whose value attribute is missing, hence has element data
+    private PropertyMetadata m_pendingFactoryProperty;
 
     /** Flag for detecting the first element. */
     protected boolean firstElement = true;
@@ -347,7 +329,55 @@ public class XmlHandler implements KXml2SAXHandler
                 // 112.4.5 Properties [...] Elements
                 else if ( localName.equals( "properties" ) )
                 {
-                    readPropertiesEntry( attributes.getAttribute( "entry" ) );
+                    final Properties props = readPropertiesEntry( attributes.getAttribute( "entry" ) );
+                    // create PropertyMetadata for the properties from the file
+                    for ( Map.Entry<Object, Object> pEntry: props.entrySet() )
+                    {
+                        PropertyMetadata prop = new PropertyMetadata();
+                        prop.setName( String.valueOf( pEntry.getKey() ) );
+                        prop.setValue( String.valueOf( pEntry.getValue() ) );
+                        m_currentComponent.addProperty( prop );
+                    }
+
+                }
+                // TODO Section [...] Factory Property Elements
+                else if ( localName.equals( "factoryProperty" ) )
+                {
+                    PropertyMetadata prop = new PropertyMetadata();
+
+                    // name attribute is mandatory
+                    prop.setName( attributes.getAttribute( "name" ) );
+
+                    // type attribute is optional
+                    if ( attributes.getAttribute( "type" ) != null )
+                    {
+                        prop.setType( attributes.getAttribute( "type" ) );
+                    }
+
+                    // 112.4.5: If the value attribute is specified, the body of the element is ignored.
+                    if ( attributes.getAttribute( "value" ) != null )
+                    {
+                        prop.setValue( attributes.getAttribute( "value" ) );
+                        m_currentComponent.addFactoryProperty( prop );
+                    }
+                    else
+                    {
+                        // hold the metadata pending
+                    	m_pendingFactoryProperty = prop;
+                    }
+                }
+                // TODO Section [...] Factory Properties [...] Elements
+                else if ( localName.equals( "factoryProperties" ) )
+                {
+                    final Properties props = readPropertiesEntry( attributes.getAttribute( "entry" ) );
+                    // create PropertyMetadata for the properties from the file
+                    for ( Map.Entry<Object, Object> pEntry: props.entrySet() )
+                    {
+                        PropertyMetadata prop = new PropertyMetadata();
+                        prop.setName( String.valueOf( pEntry.getKey() ) );
+                        prop.setValue( String.valueOf( pEntry.getValue() ) );
+                        m_currentComponent.addFactoryProperty( prop );
+                    }
                 }
                 // 112.4.6 Service Element
                 else if ( localName.equals( "service" ) )
@@ -485,6 +515,13 @@ public class XmlHandler implements KXml2SAXHandler
                 // currently, we just ignore this situation
                 m_pendingProperty = null;
             }
+            else if ( localName.equals( "factoryProperty" ) && m_pendingFactoryProperty != null )
+            {
+                // 112.4.5 body expected to contain property value
+                // if so, the m_pendingFactoryProperty field would be null
+                // currently, we just ignore this situation
+            	m_pendingFactoryProperty = null;
+            }
         }
     }
 
@@ -500,6 +537,12 @@ public class XmlHandler implements KXml2SAXHandler
             m_pendingProperty.setValues( text );
             m_currentComponent.addProperty( m_pendingProperty );
             m_pendingProperty = null;
+        }
+        if ( m_pendingFactoryProperty != null )
+        {
+        	m_pendingFactoryProperty.setValues( text );
+            m_currentComponent.addFactoryProperty( m_pendingFactoryProperty );
+            m_pendingFactoryProperty = null;
         }
     }
 
@@ -543,7 +586,7 @@ public class XmlHandler implements KXml2SAXHandler
      *      entry with the given name exists in the bundle or an error occurrs
      *      reading the properties file.
      */
-    private void readPropertiesEntry( String entryName ) throws ParseException
+    private Properties readPropertiesEntry( String entryName ) throws ParseException
     {
         if ( entryName == null )
         {
@@ -582,13 +625,6 @@ public class XmlHandler implements KXml2SAXHandler
             }
         }
 
-        // create PropertyMetadata for the properties from the file
-        for ( Map.Entry<Object, Object> pEntry: props.entrySet() )
-        {
-            PropertyMetadata prop = new PropertyMetadata();
-            prop.setName( String.valueOf( pEntry.getKey() ) );
-            prop.setValue( String.valueOf( pEntry.getValue() ) );
-            m_currentComponent.addProperty( prop );
-        }
+        return props;
     }
 }

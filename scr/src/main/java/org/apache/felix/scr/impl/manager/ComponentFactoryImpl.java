@@ -27,6 +27,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.felix.scr.component.ExtFactoryComponentInstance;
+import org.apache.felix.scr.impl.BundleComponentActivator;
 import org.apache.felix.scr.impl.helper.ComponentMethods;
 import org.apache.felix.scr.impl.metadata.ComponentMetadata;
 import org.apache.felix.scr.impl.metadata.ReferenceMetadata;
@@ -286,7 +287,7 @@ public class ComponentFactoryImpl<S> extends AbstractComponentManager<S> impleme
 
     public Dictionary<String, Object> getServiceProperties()
     {
-        Dictionary<String, Object> props = new Hashtable<String, Object>();
+        Dictionary<String, Object> props = new Hashtable<String, Object>(getComponentMetadata().getFactoryProperties());
 
         // 112.5.5 The Component Factory service must register with the following properties
         props.put( ComponentConstants.COMPONENT_NAME, getComponentMetadata().getName() );

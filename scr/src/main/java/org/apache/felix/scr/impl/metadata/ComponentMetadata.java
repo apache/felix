@@ -18,7 +18,6 @@
  */
 package org.apache.felix.scr.impl.metadata;
 
-
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -33,9 +32,9 @@ import org.apache.felix.scr.impl.helper.Logger;
 import org.apache.felix.scr.impl.metadata.ServiceMetadata.Scope;
 import org.osgi.service.component.ComponentException;
 
-
 /**
- * This class holds the information associated to a component in the descriptor *  */
+ * This class holds the information associated to a component in the descriptor
+ */
 public class ComponentMetadata
 {
     // Configuration required for component activation (since DS 1.1)
@@ -56,8 +55,7 @@ public class ComponentMetadata
     // marker value indicating duplicate service setting
     private static final ServiceMetadata SERVICE_DUPLICATE = new ServiceMetadata();
 
-    // the namespace code of the namespace declaring this component, this is
-    // one of the XmlHandler.DS_VERSION_* constants
+    // the namespace code of the namespace declaring this component
     private final DSVersion m_dsVersion;
 
     // 112.4.3: A Globally unique component name (required)
@@ -67,51 +65,60 @@ public class ComponentMetadata
     private boolean m_enabled = true;
 
     // 112.4.3: Factory identified. If set to a non empty string, it indicates that the component is a factory component (optional).
-    private String m_factory = null;
+    private String m_factory;
 
     // 112.4.3: Controls whether component configurations must be immediately activated after becoming
     // satisfied or whether activation should be delayed. (optional, default value depends
     // on whether the component has a service element or not).
-    private Boolean m_immediate = null;
+    private Boolean m_immediate;
 
     // 112.4.4 Implementation Element (required)
-    private String m_implementationClassName = null;
+    private String m_implementationClassName;
 
     // 112.5.8 activate can be specified (since DS 1.1)
-    private String m_activate = null;
+    private String m_activate;
 
     // 112.5.8 whether activate has been specified
     private boolean m_activateDeclared = false;
 
     // 112.5.12 deactivate can be specified (since DS 1.1)
-    private String m_deactivate = null;
+    private String m_deactivate;
 
     // 112.5.12 whether deactivate has been specified
     private boolean m_deactivateDeclared = false;
 
     // 112.??.?? modified method (configuration update, since DS 1.1)
-    private String m_modified = null;
+    private String m_modified;
 
     // 112.4.3 configuration-policy (since DS 1.1)
-    private String m_configurationPolicy = null;
+    private String m_configurationPolicy;
 
     // 112.4.4 configuration-pid (since DS 1.2)
     private List<String> m_configurationPid;
 
     // Associated properties (0..*)
-    private Map<String, Object> m_properties = new HashMap<String, Object>();
+    private final Map<String, Object> m_properties = new HashMap<String, Object>();
+
+    // Associated factory properties (0..*)
+    private final Map<String, Object> m_factoryProperties = new HashMap<String, Object>();
 
     // List of Property metadata - used while building the meta data
     // while validating the properties contained in the PropertyMetadata
     // instances are copied to the m_properties Dictionary while this
     // list will be cleared
-    private List<PropertyMetadata> m_propertyMetaData = new ArrayList<PropertyMetadata>();
+    private final List<PropertyMetadata> m_propertyMetaData = new ArrayList<PropertyMetadata>();
+
+    // List of Property metadata - used while building the meta data
+    // while validating the properties contained in the PropertyMetadata
+    // instances are copied to the m_factoryProperties Dictionary while this
+    // list will be cleared
+    private final List<PropertyMetadata> m_factoryPropertyMetaData = new ArrayList<PropertyMetadata>();
 
     // Provided services (0..1)
-    private ServiceMetadata m_service = null;
+    private ServiceMetadata m_service;
 
     // List of service references, (required services 0..*)
-    private List<ReferenceMetadata> m_references = new ArrayList<ReferenceMetadata>();
+    private final List<ReferenceMetadata> m_references = new ArrayList<ReferenceMetadata>();
 
     private boolean m_configurableServiceProperties;
     private boolean m_persistentFactoryComponent;
@@ -132,7 +139,7 @@ public class ComponentMetadata
     }
 
 
-    public ComponentMetadata( DSVersion dsVersion )
+    public ComponentMetadata( final DSVersion dsVersion )
     {
         this.m_dsVersion = dsVersion;
     }
@@ -319,6 +326,24 @@ public class ComponentMetadata
         m_propertyMetaData.add( newProperty );
     }
 
+
+    /**
+     * Used to add a factory property to the instance
+     *
+     * @param newProperty a property metadata object
+     */
+	public void addFactoryProperty( PropertyMetadata newProperty ) 
+	{
+        if ( m_validated )
+        {
+            return;
+        }
+        if ( newProperty == null )
+        {
+            throw new IllegalArgumentException( "Cannot add a null property" );
+        }
+        m_factoryPropertyMetaData.add( newProperty );
+	}
 
     /**
      * Used to set a ServiceMetadata object.
@@ -649,6 +674,17 @@ public class ComponentMetadata
 
 
     /**
+     * Returns the factory properties.
+     *
+     * @return the factory properties as a Dictionary
+     */
+    public Map<String, Object> getFactoryProperties()
+    {
+        return m_factoryProperties;
+    }
+
+    
+    /**
      * Returns the list of property meta data.
      * <b>Note: This method is intended for unit testing only</b>
      *
@@ -660,6 +696,18 @@ public class ComponentMetadata
     }
 
 
+    /**
+     * Returns the list of factory property meta data.
+     * <b>Note: This method is intended for unit testing only</b>
+     *
+     * @return the list of property meta data.
+     */
+    List<PropertyMetadata> getFactoryPropertyMetaData()
+    {
+        return m_factoryPropertyMetaData;
+    }
+
+    
     /**
      * Returns the dependency descriptors
      *
@@ -855,6 +903,22 @@ public class ComponentMetadata
         }
         m_propertyMetaData.clear();
 
+        // Next check if the factory properties are valid (and extract property values)
+        if ( !m_dsVersion.isDS14() && !m_factoryPropertyMetaData.isEmpty() ) 
+        {
+            throw validationFailure( "Use of factory properties requires DS 1.4 or later namespace " );        	
+        }
+        if ( m_dsVersion.isDS14() && isFactory() )
+        {
+        	for ( PropertyMetadata propMeta: m_factoryPropertyMetaData )
+        	{
+        		propMeta.validate( this );
+        		m_factoryProperties.put( propMeta.getName(), propMeta.getValue() );
+        	}
+        }
+        // if this is not a factory, these props are ignored, so nothing else to do
+        m_factoryPropertyMetaData.clear();
+
         // Check that the provided services are valid too
         if ( m_service == SERVICE_DUPLICATE )
         {
@@ -936,13 +1000,12 @@ public class ComponentMetadata
         	throw validationFailure("Only a factory component can be a persistent factory component");
         }
 
-
         m_validated = true;
     }
 
 
     /**
-     * Returns a <code>ComponentException</code> for this compeonent with the
+     * Returns a <code>ComponentException</code> for this component with the
      * given explanation for failure.
      *
      * @param reason The explanation for failing to validate this component.
