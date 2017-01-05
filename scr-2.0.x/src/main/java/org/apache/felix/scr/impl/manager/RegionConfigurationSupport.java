@@ -144,9 +144,8 @@ public abstract class RegionConfigurationSupport implements ConfigurationListene
                             if ( checkBundleLocation( config, bundleContext.getBundle() ) )
                             {
                                 long changeCount = config.getChangeCount();
-                                ServiceReference<ManagedService> ref = getManagedServiceReference(bundleContext);
                                 created |= holder.configurationUpdated( new TargetedPID( config.getPid() ),
-                                    new TargetedPID( config.getFactoryPid() ), config.getProcessedProperties(ref), changeCount );
+                                    new TargetedPID( config.getFactoryPid() ), config.getProperties(), changeCount );
                             }
                         }
                         if ( !created )
@@ -166,9 +165,8 @@ public abstract class RegionConfigurationSupport implements ConfigurationListene
                             if ( singleton != null && checkBundleLocation( singleton, bundleContext.getBundle() ) )
                             {
                                 long changeCount = singleton.getChangeCount();
-                                ServiceReference<ManagedService> ref = getManagedServiceReference(bundleContext);
                                 holder.configurationUpdated( new TargetedPID( singleton.getPid() ), null,
-                                    singleton.getProcessedProperties(ref), changeCount );
+                                    singleton.getProperties(), changeCount );
                             }
                             else
                             {
@@ -450,8 +448,7 @@ public abstract class RegionConfigurationSupport implements ConfigurationListene
                 if ( configs != null && configs.length > 0 )
                 {
                     Configuration config = configs[0];
-                    ServiceReference<ManagedService> ref = getManagedServiceReference(bundleContext);
-                    return new ConfigurationInfo( config.getProcessedProperties(ref), config.getBundleLocation(),
+                    return new ConfigurationInfo( config.getProperties(), config.getBundleLocation(),
                         config.getChangeCount() );
                 }
             }
@@ -476,26 +473,6 @@ public abstract class RegionConfigurationSupport implements ConfigurationListene
             logger.log( LogService.LOG_WARNING, "Bundle in unexpected state", ise );
         }
         return null;
-    }
-
-    private ServiceReference<ManagedService> getManagedServiceReference(BundleContext bundleContext)
-    {
-        try {
-            Collection<ServiceReference<ManagedService>> refs = bundleContext.getServiceReferences(ManagedService.class,
-                    "(&(service.bundleid=" + String.valueOf(bundleContext.getBundle().getBundleId()) + ")(!(service.pid=*)))");
-            if ( !refs.isEmpty() ) {
-                return refs.iterator().next();
-            }
-        } catch (InvalidSyntaxException e) {
-            // this should never happen,
-        }
-        return bundleContext.registerService(ManagedService.class, new ManagedService() {
-
-            public void updated(Dictionary<String, ?> properties) throws ConfigurationException {
-                // nothing to do
-
-            }
-        }, null).getReference();
     }
 
     private String filter(String rawPid)

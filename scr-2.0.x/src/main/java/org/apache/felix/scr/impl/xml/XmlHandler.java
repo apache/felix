@@ -72,9 +72,6 @@ public class XmlHandler implements KXml2SAXHandler
     // Namespace URI of Felix DS extensions 1.0
     public static final String NAMESPACE_URI_1_0_FELIX_EXTENSIONS = "http://felix.apache.org/xmlns/scr/extensions/v1.0.0";
 
-    // Namespace URI of DS 1.4
-    public static final String NAMESPACE_URI_1_4 = "http://www.osgi.org/xmlns/scr/v1.4.0";
-
     //extension features
     public static final String CONFIGURABLE_SERVICE_PROPERTIES = "configurableServiceProperties";
 
@@ -153,7 +150,6 @@ public class XmlHandler implements KXml2SAXHandler
         NAMESPACE_CODE_MAP.put( NAMESPACE_URI_1_2, DSVersion.DS12 );
         NAMESPACE_CODE_MAP.put( NAMESPACE_URI_1_2_FELIX, DSVersion.DS12Felix );
         NAMESPACE_CODE_MAP.put( NAMESPACE_URI_1_3, DSVersion.DS13 );
-        NAMESPACE_CODE_MAP.put( NAMESPACE_URI_1_4, DSVersion.DS14 );
     }
 
 
