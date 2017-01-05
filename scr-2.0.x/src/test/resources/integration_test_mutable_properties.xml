@@ -1,0 +1,131 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+    Licensed to the Apache Software Foundation (ASF) under one
+    or more contributor license agreements.  See the NOTICE file
+    distributed with this work for additional information
+    regarding copyright ownership.  The ASF licenses this file
+    to you under the Apache License, Version 2.0 (the
+    "License"); you may not use this file except in compliance
+    with the License.  You may obtain a copy of the License at
+    
+        http://www.apache.org/licenses/LICENSE-2.0
+    
+    Unless required by applicable law or agreed to in writing,
+    software distributed under the License is distributed on an
+    "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+    KIND, either express or implied.  See the License for the
+    specific language governing permissions and limitations
+    under the License.
+-->
+<components>
+
+    <scr:component name="components.mutable.properties"
+            xmlns:scr="http://felix.apache.org/xmlns/scr/v1.2.0-felix"
+            enabled="true"
+            configuration-policy="optional"
+            activate="activate"
+            modified="modified">
+        <implementation class="org.apache.felix.scr.integration.components.MutatingServiceImpl" />
+        <service>
+            <provide interface="org.apache.felix.scr.integration.components.MutatingService" />
+        </service>
+        <property name="service.pid" value="components.mutable.properties" />
+        <property name="theValue" value="otherValue" />
+        <property name="p1" value="p1" />
+        <property name="p2" value="p2" />
+    </scr:component>
+
+    <scr:component name="components.mutable.properties.return"
+            xmlns:scr="http://felix.apache.org/xmlns/scr/v1.2.0-felix"
+            enabled="true"
+            configuration-policy="optional"
+            activate="activateMutate"
+            modified="modifiedMutate"
+            deactivate="deactivateMutate">
+        <implementation class="org.apache.felix.scr.integration.components.MutatingServiceImpl" />
+        <service>
+            <provide interface="org.apache.felix.scr.integration.components.MutatingService" />
+        </service>
+        <property name="service.pid" value="components.mutable.properties.return" />
+        <property name="theValue" value="otherValue" />
+        <property name="p1" value="p1" />
+        <property name="p2" value="p2" />
+    </scr:component>
+
+    <scr:component name="components.mutable.properties.return.public"
+            xmlns:scr="http://felix.apache.org/xmlns/scr/v1.2.0-felix"
+            enabled="true"
+            configuration-policy="optional"
+            activate="activateMutate"
+            modified="modifiedMutate"
+            deactivate="deactivateMutate">
+        <implementation class="org.apache.felix.scr.integration.components.MutatingServiceImpl" />
+        <service>
+            <provide interface="org.apache.felix.scr.integration.components.MutatingService" />
+        </service>
+        <property name="service.pid" value="components.mutable.properties.return.public" />
+        <property name="theValue" value="otherValue" />
+        <property name="p1" value="p1" />
+        <property name="p2" value="p2" />
+        <property name=".p2" value="p2" />
+    </scr:component>
+
+    <scr:component name="components.mutable.properties.bind"
+                   xmlns:scr="http://felix.apache.org/xmlns/scr/v1.2.0-felix"
+                   enabled="true"
+                   configuration-policy="optional"
+                   activate="activateMutate"
+                   modified="modifiedMutate"
+                   deactivate="deactivateMutate">
+        <implementation class="org.apache.felix.scr.integration.components.MutatingServiceImpl"/>
+        <service>
+            <provide interface="org.apache.felix.scr.integration.components.MutatingService"/>
+        </service>
+        <reference
+                name="simpleService"
+                interface="org.apache.felix.scr.integration.components.SimpleService"
+                cardinality="0..1"
+                policy="dynamic"
+                bind="bindSimpleService"
+                unbind="unbindSimpleService"
+                updated="updateSimpleService"
+                />
+        <property name="service.pid" value="components.mutable.properties.bind"/>
+        <property name="theValue" value="otherValue"/>
+        <property name="p1" value="p1"/>
+        <property name="p2" value="p2"/>
+    </scr:component>
+
+   <scr:component name="components.mutable.properties.return2"
+            xmlns:scr="http://felix.apache.org/xmlns/scr/v1.2.0-felix"
+            enabled="false"
+            configuration-policy="optional"
+            activate="activateMutate"
+            modified="modifiedMutate"
+            deactivate="deactivateMutate">
+        <implementation class="org.apache.felix.scr.integration.components.MutatingServiceImpl" />
+        <service>
+            <provide interface="org.apache.felix.scr.integration.components.MutatingService" />
+        </service>
+    </scr:component>
+
+    <scr:component name="components.mutable.properties.consumer"
+            xmlns:scr="http://www.osgi.org/xmlns/scr/v1.2.0"
+            enabled="true">
+        <implementation class="org.apache.felix.scr.integration.components.MutatingServiceConsumer" />
+        <service>
+            <provide interface="org.apache.felix.scr.integration.components.MutatingServiceConsumer" />
+        </service>
+        <reference
+                name="MutatingService"
+                interface="org.apache.felix.scr.integration.components.MutatingService"
+                cardinality="0..1"
+                policy="dynamic"
+                bind="setMutatingService"
+                unbind="unsetMutatingService"
+                updated="updatedMutatingService"
+                target="(component.name=components.mutable.properties.return2)"
+                />
+    </scr:component>
+
+</components>

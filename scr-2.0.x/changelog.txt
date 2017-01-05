@@ -1,0 +1,491 @@
+Changes from 2.0.4 to 2.0.6
+---------------------------
+** Bug
+    * [FELIX-5315] Unexpected release of ConfigurationAdmin service in RegionConfigurationSupport
+    * [FELIX-5316] Updating from SCR 2.0.2 to SCR 2.0.4 leads to null pointers
+    * [FELIX-5318] SCR causes startup to wait when bundle uninstall itself in activator
+
+
+Changes from 2.0.2 to 2.0.4
+---------------------------
+** Improvement
+    * [FELIX-5257] Improve formatting of command list output
+    * [FELIX-5243] Make the code more reusable
+    * [FELIX-5194] Pay attention if configuration change count doesn't change
+    * [FELIX-5174] Logging involving Configuration should show change count
+    * [FELIX-5129] ScrInfo info should more explicitly indicatte there are no component configurations
+    * [FELIX-4607] Configure with nested annotations/interfaces
+
+** Bug
+    * [FELIX-5300] ServiceComponentRuntime should not throw IllegalStateException
+    * [FELIX-5276] Possible hang when unbind method alters service properties
+    * [FELIX-5270] Configuration race between update and delete
+    * [FELIX-5264] Configuration updates may be missed
+    * [FELIX-5256] Object conversion should pass through unrecognized classes of the same type
+    * [FELIX-5220] Alarmist logging when bundle stops before we've activated it
+    * [FELIX-5213] ComponentContext.getServiceReference returns null though service registered
+    * [FELIX-5202] ServiceComponentRuntimeImpl NPE with subsystems/regions
+    * [FELIX-5186] Alarmist logging on asynchronous service changes
+    * [FELIX-5080] gogo info command left out Implementation-Class
+    * [FELIX-5079] Not enough configuration listeners to deal with regions
+    * [FELIX-5044] (felix-extensions) Service property changes during service registration get ignored
+    * [FELIX-5040] Get system bundle by location, not number, for global extender true
+    * [FELIX-5032] IndexOutOfBoundsException in SCR ComponentTestBase class
+    * [FELIX-4538] Problem with stale references with "triangle" of static references
+    * [FELIX-4417] Circular references detected but not resolved if one of the references in the cycle has optional cardinality
+    * [FELIX-4237] Updating a configuration may deactivate/active component multiple times
+    * [FELIX-1824] Cirular References are not currently explicitly checked and detected
+
+
+Changes from 2.0.0 to 2.0.2
+---------------------------
+** Improvement
+    * [FELIX-5001] scr:list Gogo command should display component configurations
+    * [FELIX-5020] Don't log exception if metatype is not available
+
+** Bug
+    * [FELIX-5028] ServiceFactory for components might return null
+
+
+Changes from 1.8.2 to 2.0.0
+---------------------------
+** Improvement
+    * [FELIX-4949] [RFC-190] Implement prototype_required
+    * [FELIX-4918] Implement searching for event methods according to 112.3.2
+    * [FELIX-4916] Provide service capability
+    * [FELIX-4787] Update DS Implementation to R6
+    * [FELIX-4769  [RFC190/212] Implement ComponentServiceObjects
+    * [FELIX-4634] [RFC212] Implement replace strategy
+    * [FELIX-4633] [RFC212] Implement update strategy
+    * [FELIX-4632] [RFC212] Make properties map passed to event methods comparable
+    * [FELIX-4631] [R6/RFC212] Implement field injection
+    * [FELIX-4537] use a bnd.bnd file for bnd configuration
+    * [FELIX-4507] "persistent" factory components
+    * [FELIX-4506] Control felix optional extensions through xml attributes in component descriptor
+    * [FELIX-4467] Option to use system bundle context for tracking bundles
+    * [FELIX-4412] Add Provide-Capability for declarative services bundle
+    * [FELIX-4406] [R6/rfc190] support 1.3 namespace
+    * [FELIX-4405] [R6rfc190] support prototype scope
+    * [FELIX-4404] [R6/rfc190] implement additional event method signature single Map
+    * [FELIX-4403] [R6/rfc190] implement configuration through annotation instances
+    * [FELIX-4402] [R6/rfc190] implement multiple pid support
+    * [FELIX-4401] [R6/rfc190] Implement runtime/introspection/console based on DTOs
+    * [FELIX-4391] R6/rfc190 Support <refname>.cardinality.minimum configuration property
+
+** Bug
+    * [FELIX-4990] Only first factoy configuration is used
+    * [FELIX-4968] With configuration annotations, coercion exceptions are thrown at the wrong time.
+    * [FELIX-4967] Configuration annotations need to handle char and char[]
+    * [FELIX-4965] Configuration annotations with invalid members handled incorrectly
+    * [FELIX-4964] Reactivate component at most once per service event
+    * [FELIX-4957] [RFC-212] Various issues with field references
+    * [FELIX-4951] [RFC-190] Correct pid handling
+    * [FELIX-4950] [RFC-190] Within a component instance for each reference to the same service the same object needs to be injected
+    * [FELIX-4883] ServiceComponentRuntime.getComponentConfigurationDTOs NullPointerException
+    * [FELIX-4843] ScrInfo impl misses the first provided service
+    * [FELIX-4835] Use bnd 2.3 (via maven-bundle-plugin 2.5.3) to avoid java 8 import problems
+    * [FELIX-4793] Components with an empty configuration are created even if configuration is required or available
+    * [FELIX-4792] Handle Errors on component initialization
+    * [FELIX-4790] SCR MutablePropertiesTest fails when run with framework 4.6.0
+    * [FELIX-4789] SCR Felix4188Test fails when run with framework 4.4.1 or newer
+    * [FELIX-4785] Incompatible SCR API
+    * [FELIX-4768] [RFC190/212] Reference can specify both method and field
+    * [FELIX-4753] Timing issues with bundle context configuration and CM configuration taking effect.
+    * [FELIX-4686] If component is declared with 1.3 NS and ds.factory.enabled = true, validation error occors
+    * [FELIX-4585] SCR will create an additional component instance when ComponentContext.enableComponent is called
+    * [FELIX-4563] target filters in xml reference element are not turned into properties
+    * [FELIX-4536] [R6rfc190] service.pid property aggregates pids from all configurations.
+    * [FELIX-4469] shell command "scr help" does not work without parameter
+    * [FELIX-4447] Regression in ScrShellCommand (NPE caused by falsy regex)
+    * [FELIX-4396] for factory components, configuration changes should affect existing instances
+    * [FELIX-4149] Do not directly support modifying service registration properties
+
+
+Changes from 1.8 to 1.8.2
+---------------------------
+
+** Bug
+    * [FELIX-4309] - SCR leaves some components in DISABLED state
+    * [FELIX-4313] - Bad synchronization in scr where a lock is held while ungetting a service
+    * [FELIX-4322] - [DS] Prevent activation attempts until all dependency managers are set up with trackers
+    * [FELIX-4323] - [DS] ScrService.getComponents may return a null array element
+    * [FELIX-4325] - [DS] Synchronization issue when activating component
+    * [FELIX-4326] - Possible Invalid BundleContext exception when shutting down the extender
+    * [FELIX-4348] - [DS] locateService calls race with component reconfiguration
+    * [FELIX-4349] - Synchronization issue in ComponentRegistry
+    * [FELIX-4350] - Component wrongly activated
+
+** Improvement
+    * [FELIX-4316] - Packages imported dynamically should also be imported statically with an optional flag
+    * [FELIX-4317] - SCR implementation should avoid using bundleContext.getBundle()
+    * [FELIX-4343] - [DS] rationalize log levels
+
+Changes from 1.6.2 to 1.8
+---------------------------
+
+** Bug
+    * [FELIX-3536] (minor additional work) - Consider putting the non-spec ComponentFactory behavior in a separate class
+    * [FELIX-3708] - [DS] use java 5
+    * [FELIX-3729] - [DS] Track dependencies by imitating ServiceTracker and keeping a list of actual service references all the time
+    * [FELIX-3738] - [DS] ComponentInstance.getServices(String refName) is implemented wrong for 0..1 and 1..1 refs
+    * [FELIX-3754] - Services registered from within the activate method may not be bound
+    * [FELIX-3787] - NPE on reference update
+    * [FELIX-3790] - [DS] Services may not be bound if the events arrive during component instantiation.
+    * [FELIX-3825] - [DS] make logging more useful by including component ID when known
+    * [FELIX-3826] - [DS] race in enabling components with factory pid
+    * [FELIX-3862] - [DS] Deadlock when service is removed during activation
+    * [FELIX-3870] - [DS] confusing logic around determining if modified method can be called on config update
+    * [FELIX-3875] - [DS] After configuration changes target filter on optional ref, matching services are not bound
+    * [FELIX-3888] - [DS] Expose the insides of ScrCommand as a service directly and enhance it
+    * [FELIX-3890] - [DS] We might try to unbind a service we couldn't get and didn't bind
+    * [FELIX-3891] - [DS] synchronization around registerService can create deadlocks
+    * [FELIX-3902] - [DS] Single dynamic mandatory reference problem on target filter update
+    * [FELIX-3915] - [DS] Timing hole between ComponentHolder initial config and registration
+    * [FELIX-3952] - [DS] service events can go missing resulting in hang
+    * [FELIX-3967] - [DS] NPE in DependencyManager$AbstractCustomizer.isSatisfied
+    * [FELIX-3971] - [DS] SingleDynamicCustomizer doesn't respond correctly to configuration update events. 
+    * [FELIX-3975] - [DS] Give ParseException cause to move out of the stone age
+    * [FELIX-3991] - [DS] component deactivation may not complete properly with enough threads
+    * [FELIX-4000] - [DS] ConcurrentModificationException in AbstractComponentManager iterating through m_dependencyManagers
+    * [FELIX-4004] - [DS] ConcurrentModificationException in DependencyManager.open(
+    * [FELIX-4006] - [DS] While disposing a component, it's possible to unbind a reference that wasn't bound.
+    * [FELIX-4011] - [DS] code refactoring/simplification
+    * [FELIX-4020] - [DS] A reference being unregistered between checking for references available and actual binding may get bound anyway
+    * [FELIX-4031] - [DS] Respond better to InterruptedException
+    * [FELIX-4055] - [DS] Component instance unset but remains in Active state
+    * [FELIX-4057] - [DS] Use Findbugs, and fix located problems
+    * [FELIX-4069] - [DS] ConcurrentModificationException in ServiceFactoryComponentManager
+    * [FELIX-4070] - [DS] Reduce or eliminate use of States in command pattern
+    * [FELIX-4088] - [DS] NPE from SCR service unregistration
+    * [FELIX-4090] - [DS] ActivateMethod.ACTIVATE_TYPES_DS11 and ACTIVATE_TYPES_DS10 should be static final
+    * [FELIX-4166] - [DS] Removing required dependency before component is created leaves service registered
+    * [FELIX-4171] - [DS] possible DependencyManager NPE during cleanup after failure to activate a component
+    * [FELIX-4188] - [DS] If a bundle is stopped while the SCR extender is being stopped, the callback for the STOPPING event returns before full deactivation
+    * [FELIX-4189] - [DS] DS should not hold any lock while calling bundleContext#getService
+    * [FELIX-4223] - [DS] DependencyManager filter should be set up in enable, not activate, to avoid race conditions
+    * [FELIX-4224] - [DS] Dependency manager can be active but not have m_bindMethods set
+    * [FELIX-4287] - [DS] NPE when calling ComponentInstance.dispose after bundle shut down
+    * [FELIX-4290] - [DS] Issue with factory components with required configuration
+    * [FELIX-4293] - [DS] logic error in handling configuration LOCATION_CHANGED event
+    * [FELIX-4297] - [DS] timing hole in opening a dependency manager
+
+** Task
+    * [FELIX-3584] - [DS] Handle new LOCATION_CHANGED event
+    * [FELIX-3651] - [DS] Properly support configuration location binding and targeted pids
+    * [FELIX-4298] - [DS] Run tests against R5 config admin and require specifying profile for R4
+
+Changes from 1.6.0 to 1.6.2
+---------------------------
+
+** Sub-task
+    * [FELIX-3650] - Don't log a warn message for Configuration Admin LOCATION_CHANGED event
+
+** Bug
+    * [FELIX-2578] - Declarative Services bundle does not start without Configuration Admin API wired
+    * [FELIX-2821] - Component service references not unbound in reverse order (breaks compendium spec 112.5.15)
+    * [FELIX-2823] - Uncaught exception in case of circular service reference
+    * [FELIX-2824] - Components that have a ConfigurationPolicy value of REQUIRE fail to activate
+    * [FELIX-2926] - No log message on missing activate method
+    * [FELIX-2944] - SCR/ spec version 1.1-felix is causing NPE in XmlHandler
+    * [FELIX-2962] - SCR doesn't detect invalid XML
+    * [FELIX-2992] - scr 1.6.1-SNAPSHOT: impossible to build due to obsolete dependencies
+    * [FELIX-3039] - SCR cleans up delayed service components too aggressively
+    * [FELIX-3086] - IllegalArgumentException in PropertyMetadata.setValues()
+    * [FELIX-3087] - Given invalid value, but the property isn't invalid.
+    * [FELIX-3089] - A component without ServicePermissions cannot be registered as a service
+    * [FELIX-3090] - SCR factory components ignore reference target filters
+    * [FELIX-3093] - SCR project does not build on machines with empty M2 repository
+    * [FELIX-3108] - SCR doesn't cope when the DS xml is not encoded using the default platform encoding.
+    * [FELIX-3126] - SCR activates a service component while the containing bundle is stopping.
+    * [FELIX-3288] - NPE when component exposed as a service with servicefactory = true
+    * [FELIX-3307] - NPE in DependencyManager.invokeBindMethod
+    * [FELIX-3317] - Concurrency issue during Component Service registration
+    * [FELIX-3325] - Finding activate/deactivate/modified methods has numerous problems
+    * [FELIX-3409] - with permissions enabled, AbstractComponentManager.verifyDependencyManagers is wrong.
+    * [FELIX-3410] - ImmediateComponentManager should use any non-ignored configuration to try to activate a component.
+    * [FELIX-3456] - Component ignores required static service addition when in Activating state
+    * [FELIX-3533] - Strip out . properties when a lifecycle method returns service properties
+    * [FELIX-3534] - ServiceFactory components don't deal with ConfigurationAdmin updates properly
+    * [FELIX-3535] - Minor DS cleanup fixes
+    * [FELIX-3536] - Consider putting the non-spec ComponentFactory behavior in a separate class
+    * [FELIX-3557] - Tests for DS circular dependency behavior
+    * [FELIX-3559] - [DS] first register immediate components' service, then create the implementation object per spec
+    * [FELIX-3625] - "officially" upgrade scr to ds 1.2 from compendium 4.3
+    * [FELIX-3637] - DS bind concurrency problem
+    * [FELIX-3639] - SCR "need write lock" assertion error
+    * [FELIX-3645] - SCR could not obtain lock in 5000 ms
+    * [FELIX-3646] - AbstractComponent.disposeInternal ignores reason
+    * [FELIX-3647] - Component modification must continue if modify method throws
+    * [FELIX-3648] - A component declared with DS 1.0 or DS 1.1 namespace must fail validation if Reference.updated attribute is declared
+    * [FELIX-3649] - Remove ct.workaround property and support
+    * [FELIX-3657] - [DS] ServiceFactory problems
+    * [FELIX-3658] - [DS] disableing a component that is a dependency of another results in an IllegalStateException
+    * [FELIX-3659] - [DS] Share the method objects among all the dependency managers and component managers for the same class
+    * [FELIX-3675] - [DS] NPE shutting down a component due to service already removed
+    * [FELIX-3676] - [DS] misleading logging on first immediate component getService call
+    * [FELIX-3681] - [DS] Dependencies are not dropped when implemention object is discarded
+    * [FELIX-3697] - [DS] create all the components in a bundle before enabling them
+    * [FELIX-3698] - [DS] code simplification for BundleComponentActivator.getSelectedComponents
+    * [FELIX-3704] - [DS] ds shutdown should wait for ComponentActorThread task queue to complete before finishing
+    * [FELIX-3710] - [DS] don't try to activate for a service event for an optional reference
+    * [FELIX-3717] - [DS] unbind method might not have correct parameters
+    * [FELIX-3718] - [DS] deactivate might not move component state to unsatisfied
+    * [FELIX-3719] - [DS]  disabling a dependency manager should not reset the service count
+    * [FELIX-3723] - ClassCastException on ConfigurationAdmin service creating components 
+    * [FELIX-3724] - [DS] concurrent getService calls may return null
+    * [FELIX-3725] - [DS] hidden dependency on spring junit wrapper from pax exam
+    * [FELIX-3726] - Reference target filters defined as component properties are ignored
+    * [FELIX-3727] - [DS] NPE during shutdown
+    * [FELIX-3744] - set implementation object before modifying service properties
+
+** Improvement
+    * [FELIX-2895] - Allow the use of a property to tell SCR to always discover Service Component files even if there's no wildcard in the name
+    * [FELIX-3016] - Activator log level cannot be changed dynamically through Configuration Admin
+    * [FELIX-3232] - Re-Import SCR Service API
+    * [FELIX-3371] - update scr build to recent pax components
+    * [FELIX-3377] - Allow a component to update its own service properties
+    * [FELIX-3506] - SCR bind/unbind/update methods should be able to return a map of service properties like the activate/deactivate/modified methods.s
+    * [FELIX-3558] - [DS] make it easier to debug tests by cribbing code from ScrService to print out DS state     * [FELIX-3569] - Improve configured method handling for ComponentFactory instances
+    * [FELIX-3662] - [DS] use backport-util-concurrenct instead of concurrent for pre java 5 compatibility
+    * [FELIX-3677] - [DS] in the scr command info operation, show the bound service references
+
+** New Feature
+    * [FELIX-2712] - [SCR] Add Gogo command support
+    * [FELIX-3507] - scr greedy and reluctant policy options from compendium 4.3
+    * [FELIX-3524] - SCR configuration-pid from compendium 4.3
+
+** Task
+    * [FELIX-2539] - Include DEPENDENCIES file in distributables
+    * [FELIX-2553] - Reconsider logging/log levels
+    * [FELIX-2903] - Inline required KXml classes
+    * [FELIX-3158] - Upgrade to Felix parent POM 2.1 and use managed ant plugin version
+    * [FELIX-3527] - Add Java API usage check
+    * [FELIX-3668] - Revert Rev. 1381440 "restore previous behavior when a bind method cannot be found"
+    * [FELIX-3679] - Component names need not be globally unique any more
+    * [FELIX-3747] - Cleanup maven project setup
+
+** Wish
+    * [FELIX-1747] - Use Remote Resources Plugin to generate the legal files
+
+
+Changes from 1.4.0 to 1.6.0
+---------------------------
+
+** Bug
+    * [FELIX-1952] - Factory configured ComponentFactory instances not reconfigured when configuration updated
+    * [FELIX-1997] - Actual configuration might not be reflected in the web console
+    * [FELIX-2006] - If an Error is thrown instantiated a component, the component remains in the Activating state and cannot be managed any longer
+    * [FELIX-2090] - Multiple concurrency issues under heavy "stop/start" load
+    * [FELIX-2091] - AbstractComponentManager.getBundle() may throw NullPointerException
+    * [FELIX-2213] - NPE when modifying properties of lazy (uninstantiated) service
+    * [FELIX-2230] - NPE deactivating service during fw shutdown
+    * [FELIX-2231] - Errors with services in Lazy bundles
+    * [FELIX-2233] - ConfiguredComponentHolder tracks component enablement but not disablement
+    * [FELIX-2288] - Felix SCR API problem/misunderstanding
+    * [FELIX-2289] - Unsynchronized access to map of component instances may block the system
+    * [FELIX-2325] - SCR says that my component is registered twice
+    * [FELIX-2370] - Access to internal data structures for delayed and service factory components not thread safe
+    * [FELIX-2399] - Make ScrService lenient against unexpected configuration data types
+    * [FELIX-2510] - Configuration not provided to components if Configuration Admin is not active while setting up components
+    * [FELIX-2518] - Modified method without arguments not supported
+    * [FELIX-2519] - Declarative Services 1.0 descriptors must fail to validate if 1.1 attributes are declared
+    * [FELIX-2520] - Bind method selection must not expect the component's bundle to import the service interface type
+    * [FELIX-2521] - Method call failures not always handled correctly
+    * [FELIX-2523] - Component must be reactivated even if modified method is declared
+
+** Improvement
+    * [FELIX-2368] - Activate components synchronously
+    * [FELIX-2372] - Improve logging on IllegalStateException getting a service
+    * [FELIX-2526] - Add a property to enable workarounds for CT assumptions
+
+** Sub-task
+    * [FELIX-2534] - Adapt SCR LICENSE and NOTICE files
+
+
+Changes from 1.2.0 to 1.4.0
+---------------------------
+
+** Bug
+    * [FELIX-1841] - SCR invokes bind method twice when dependency service properties are modified
+    * [FELIX-1846] - When updated configuration of component without a previously set target filter, NullPointerException is thrown
+    * [FELIX-1866] - SCR 1.1 restarts components when service properties are changed, even if "modified" attributed is specified
+    * [FELIX-1922] - issue with configuration policy=require and with factory components
+    * [FELIX-1923] - SCR project misses explicit Maven Bundle Plugin version
+    * [FELIX-1926] - Access to internal maps in the ComponentRegistry must be guarded against concurrency issues
+    * [FELIX-1927] - NPE in AbstractComponentManager if no services are provided and a SecurityManager is installed
+    * [FELIX-1942] - Component Factory instances are may reactivate
+    * [FELIX-1943] - Component Factory not deactivated if required reference unregistered
+    * [FELIX-1944] - Reference.getServiceReferences() returns empty array if no services bound
+
+** Improvement
+    * [FELIX-1897] - Add proper Configuration Admin support for SCR configuration
+
+** New Feature
+    * [FELIX-1893] - Add "update" callback support to inform components of modified service properties
+
+** Task
+    * [FELIX-1945] - Increase org.apache.felix.scr package export to 1.4
+
+
+Changes from 1.0.8 to 1.2.0
+---------------------------
+
+** Bug
+    * [FELIX-1162] - Component.getReferences returns null if a component that has references is not enabled.
+    * [FELIX-1166] - SCR does not rebind ConfigurationAdmin service in Sling jcrinstall tests
+    * [FELIX-1173] - Concurrency Issues while containing bundle is stopping
+    * [FELIX-1177] - Components must correctly be disposed off
+    * [FELIX-1178] - Component may remain deactivated after a reference has been unregistered and registered again
+    * [FELIX-1185] - If a static/mandatory reference to a service is unregistered, the component should be deactivated synchronously instead of asynchronously
+    * [FELIX-1195] - NullPointerException in ComponentActivatorTask if component is destroyed
+    * [FELIX-1238] - NPE when invoking "scr list" with no components registered
+    * [FELIX-1252] - NullPointerException in "scr list" command
+    * [FELIX-1413] - Newly registered services must not immediately bound for static references
+    * [FELIX-1414] - Service ranking is only obeyed on first component activation
+    * [FELIX-1416] - Wrong factory configuration behaviour
+    * [FELIX-1436] - Descriptors with duplicate implementation and/or service elements are invalid
+    * [FELIX-1437] - DS 1.1 signatures for activators and bind methods only available for declaration with new namespace
+    * [FELIX-1440] - Abort method (binder, activator) method search on non-accessible suitable methods
+    * [FELIX-1445] - When a component is deactivated due to the deactivation of a service to which it staticly 1..1 references, this component is not reactivated when that service is reregistered.
+    * [FELIX-1503] - Component Factory instances are not let gone after dispose
+    * [FELIX-1504] - ComponentInstance implementation is reused accross reactivations
+    * [FELIX-1658] - Deadlocks caused by component activation and deactivation
+    * [FELIX-1666] - Missing support for DS 1.1 specified lazy activation behavior
+    * [FELIX-1674] - typo in scr and webconsole - "unsatisifed"
+    * [FELIX-1714] - typo in scr command
+    * [FELIX-1733] - Disposed components are not removed from the component registry
+    * [FELIX-1825] - Configurations of delayed components are not deactivated if not used any more
+    * [FELIX-1826] - ComponentException must be thrown if ComponentFactory.newInstance cannot create a component instance
+    * [FELIX-1827] - Check permission before getting or registering services
+    * [FELIX-1830] - Support for DS 1.1 character property type name
+    * [FELIX-1832] - ServiceFactory must not be deactivated if the instances fails to be created
+    * [FELIX-1833] - Stopping the Felix SCR bundle may leave traces behind thus preventing the class loader from being GC-ed
+
+** Improvement
+    * [FELIX-1186] - Defer the construction of a log message
+    * [FELIX-1223] - Replace ManagedService[Factory] by ConfigurationListener based component configuration
+    * [FELIX-1239] - AbstractComponentManager.getServiceReference need not be synchronized
+    * [FELIX-1313] - Declarative Services bundle should not export Configuration Admin package
+    * [FELIX-1314] - Restructure SCR implementation package
+    * [FELIX-1443] - Unify Method lookup
+    * [FELIX-1447] - Remove ComponentMetadata parameter from AbstractComponentManager.log method signature
+    * [FELIX-1530] - Extend the SCR introspection API to reflect the new DS 1.1 features
+    * [FELIX-1686] - Missing activate or deativate methods show up as Error in LogService
+    * [FELIX-1735] - Use system property to provide bundle jar file to integration tests
+    * [FELIX-1823] - Drop support for Framework API 1.3 (R4.0)
+
+** New Feature
+    * [FELIX-924] - No component instance if no Configuration
+    * [FELIX-925] - Extend SCR to allow alternate activate and deactivate method signatures
+    * [FELIX-927] - Allow bind and unbind methods to receive the service properties
+    * [FELIX-928] - Allow use of wildcards in Service-Component header
+    * [FELIX-929] - Making name attributes optional
+    * [FELIX-930] - XML schema namespace change
+    * [FELIX-1232] - Do not use private configuration properties as service properties
+    * [FELIX-1284] - Support for the 'modified' operation (DS in OSGi 4.2 compendium)
+
+** Task
+    * [FELIX-1711] - Remove OSGi library source from SVN and depend on official R4.2 libraries
+
+
+Changes from 1.0.6 to 1.0.8
+---------------------------
+
+** Bug
+    * [FELIX-714] - Needless component reactivation on startup
+    * [FELIX-832] - Bind method not invoked when the unbind method is unspecified after reference is changed
+    * [FELIX-836] - Deadlocks caused by Declarative Services
+    * [FELIX-861] - NullPointerException on stopping bundle managed by SCR
+    * [FELIX-950] - service.ranking property not respected for singular service reference
+    * [FELIX-993] - Reference target filters not handled correctly
+    * [FELIX-1044] - DependencyManager may miss service registrations
+    * [FELIX-1053] - SCR: Bound Service Replacement regression ?
+
+** Improvement
+    * [FELIX-639] - Need more logs from SCR
+    * [FELIX-717] - Fix License Reference for KXml in NOTICE file
+    * [FELIX-923] - Log a better message if the names of components collide
+    * [FELIX-1046] - Upgrade parent pom reference to new parent pom (for repository.a.o deployment)
+
+
+Changes from 1.0.4 to 1.0.6
+---------------------------
+
+** Bug
+    * [FELIX-694] - NullPointerException on shutdown
+    * [FELIX-695] - XML configuration file uses unqualified locals
+    * [FELIX-698] - SCR logs "java.lang.IllegalStateException: Invalid BundleContext" when activating components
+
+** Improvement
+    * [FELIX-668] - SCR OBR description
+
+
+Changes from 1.0.2 to 1.0.4
+---------------------------
+
+** Bug
+    * [FELIX-624] - Wrong classloader is used to detect bind/unbind methods
+    * [FELIX-646] - Reconfiguration of factory components is not possible
+
+
+Changes from 1.0.0 to 1.0.2
+---------------------------
+
+** Bug
+    * [FELIX-490] - Deadlocks may be caused by Declarative Services
+    * [FELIX-539] - Intermittent IllegalArgumentException while using declarative services   
+    * [FELIX-550] - SCR registers service component twice after stopping/starting a bundle
+    * [FELIX-578] - ComponentFactoryImpl.newInstance() must create the component synchronously
+    * [FELIX-579] - NPE in AbstractComponentManager
+    * [FELIX-591] - NPE in AbstractComponentManager
+    * [FELIX-593] - Fix handling of immediate attribute of component factories
+    * [FELIX-599] - Service Registration Lock: Do not release not-owned lock and don't wait so long for the lock
+    * [FELIX-601] - Reactivation of a component after a configuration update should be completely asynchronous
+
+
+Initial Release 1.0.0
+---------------------
+
+** Bug
+    * [FELIX-105] - SCR component/reference/cardinality never used
+    * [FELIX-106] - SCR doesn't support XML documents with namespaces
+    * [FELIX-109] - java.lang.ClassCastException when the component descriptor contains <property> elements
+    * [FELIX-112] - activate() calls do not match with deactivate() calls for a delayed component (immediate="false") and service instances are multiple (although there is no factory)
+    * [FELIX-264] - Update pom to use new bundle plugin
+    * [FELIX-268] - SCR module in the pom.xml
+    * [FELIX-279] - Concurrency Issues when enabling components
+    * [FELIX-337] - Immediate components are registered as delayed
+    * [FELIX-341] - Intermittent exception during Felix shutdown
+    * [FELIX-356] - DependencyManager.bind may bind to null and does not correctly check for success
+    * [FELIX-357] - activation and deactivation may run concurrently
+    * [FELIX-364] - 0..1 dynamic service reference does not bind properly.
+    * [FELIX-366] - Bound Service Replacement incorrect
+    * [FELIX-368] - Service binding odities if (un)bind methods take ServiceReferences
+    * [FELIX-384] - Possible deadlock on framework startlevel change
+    * [FELIX-385] - ReferenceMetadata.setTarget includes the interface name in the target filter
+    * [FELIX-387] - Fix support for reference service target properties
+    * [FELIX-425] - DependencyManager does not correctly handle service counting
+    * [FELIX-464] - Cannot retrieve service to be unbound in unbind method taking ServiceReference
+    * [FELIX-489] - Intermittent deadlock while using declarative services in Tuscany   
+
+** Improvement
+    * [FELIX-128] - Implementing missing ComponentContext methods
+    * [FELIX-131] - Fix method lookup and implement enableComponet/disableComponent
+    * [FELIX-132] - Integrate SCR with Felix
+    * [FELIX-140] - Drop GenericActivator from SCR
+    * [FELIX-243] - Add support for ServiceFactory components
+    * [FELIX-254] - Add support for property values in <property> element body
+    * [FELIX-258] - Support Configuration Admin configuration
+    * [FELIX-259] - Add support for factory components
+    * [FELIX-277] - Improve SCR packaging to make it simpler to deploy and use
+    * [FELIX-373] - Log the unsatisfied dependencies of a component which prevent activation of the component
+    * [FELIX-374] - Register ManagedService on behalf of components to receive Configuration
+    * [FELIX-392] - Better handle unexpected issues when trying to get a activation or binding method by reflection
+
+** New Feature
+    * [FELIX-18] - Implement Declarative Services
+    * [FELIX-110] - completion of the current Felix SCR implementation to take into account components <properties> elements
+    * [FELIX-284] - Add Management API
+
+** Task
+    * [FELIX-144] - Change all headers and remove copyright notices

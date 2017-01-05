@@ -1,0 +1,46 @@
+Bundle-Category: osgi
+Bundle-DocURL: http://felix.apache.org/site/apache-felix-service-component-runtime.html
+Bundle-Activator: org.apache.felix.scr.impl.Activator
+
+Provide-Capability: osgi.extender;\
+                   osgi.extender="osgi.component";\
+                   uses:="org.osgi.service.component";\
+                   version:Version="1.3",\
+                   osgi.service;\
+                   objectClass:List<String>="org.osgi.service.component.runtime.ServiceComponentRuntime";\
+                   uses:="org.osgi.service.component.runtime"
+                   
+
+Export-Package: org.apache.felix.scr.component;version=1.1.0;provide:=true, \
+ org.apache.felix.scr.info;version=1.0.0;provide:=true, \
+ org.osgi.service.component;version=1.3;-split-package:=first;provide:=true, \
+ org.osgi.service.component.runtime;version=1.3;provide:=true, \
+ org.osgi.service.component.runtime.dto;version=1.3;provide:=true, \
+ org.osgi.util.function;version=1.0, \
+ org.osgi.util.promise;version=1.0
+
+Private-Package: org.apache.felix.scr.impl.*, \
+ org.apache.felix.utils.extender
+
+# Configuration Admin is optional and dynamic, but allow eager wiring by importing it
+# LogService is optional but if present the R4.0 version 1.3 is sufficient.
+# Metatype import is optional and dynamic, but allow eager wiring by importing it
+# PackageAdmin is used to find reference types if the component's bundle does not import it.
+#    R4.0 version 1.2 is sufficient.
+# optional import for Gogo annotations 
+# The Felix Shell support is optional 
+Import-Package: \
+ org.osgi.service.cm;version="[1.5,2)";resolution:=optional, \
+ org.osgi.service.log;version="[1.3,2)";resolution:=optional, \
+ org.osgi.service.metatype;version="[1.1,2)";resolution:=optional, \
+ org.osgi.service.packageadmin;version="[1.2,2)";resolution:=optional, \
+ org.osgi.util.function;version="[1.0,2)", \
+ org.apache.felix.service.command;resolution:=optional, \
+ org.apache.felix.shell;provide:=true;resolution:=optional, \
+ *
+
+DynamicImport-Package: \
+ org.osgi.service.cm;version="[1.2,2)", \
+ org.osgi.service.metatype;version="[1.1,2)"
+
+Embed-Dependency: kxml2;inline=org/kxml2/io/KXmlParser.class|org/xmlpull/v1/XmlPull**

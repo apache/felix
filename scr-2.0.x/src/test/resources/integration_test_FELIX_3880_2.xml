@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Licensed to the Apache Software Foundation (ASF) under one or more contributor 
+	license agreements. See the NOTICE file distributed with this work for additional 
+	information regarding copyright ownership. The ASF licenses this file to 
+	you under the Apache License, Version 2.0 (the "License"); you may not use 
+	this file except in compliance with the License. You may obtain a copy of 
+	the License at http://www.apache.org/licenses/LICENSE-2.0 Unless required 
+	by applicable law or agreed to in writing, software distributed under the 
+	License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS 
+	OF ANY KIND, either express or implied. See the License for the specific 
+	language governing permissions and limitations under the License. -->
+<components xmlns:scr="http://www.osgi.org/xmlns/scr/v1.1.0">
+	<scr:component xmlns:scr='http://www.osgi.org/xmlns/scr/v1.1.0'
+		enabled='false' name='org.apache.felix.scr.integration.components.felix3680_2.Main'
+		activate='start' deactivate='stop'>
+		<implementation
+			class='org.apache.felix.scr.integration.components.felix3680_2.Main' />
+		<reference name='a'
+			interface='org.apache.felix.scr.integration.components.felix3680_2.A'
+			cardinality='0..1' bind='bindA' unbind='unbindA' policy='dynamic' />
+		<reference name='logService' interface='org.osgi.service.log.LogService'
+			bind='bindLogService' />
+		<reference name='sCR' interface='org.osgi.service.component.runtime.ServiceComponentRuntime'
+			bind='bindSCR' />
+	</scr:component>
+
+	<scr:component xmlns:scr='http://www.osgi.org/xmlns/scr/v1.1.0'
+		name='org.apache.felix.scr.integration.components.felix3680_2.A' activate='start'>
+		<implementation
+			class='org.apache.felix.scr.integration.components.felix3680_2.A' />
+		<service>
+			<provide interface='org.apache.felix.scr.integration.components.felix3680_2.A' />
+		</service>
+		<reference name='b'
+			interface='org.apache.felix.scr.integration.components.felix3680_2.B'
+			cardinality='0..n' bind='bindB' policy='dynamic' />
+		<reference name='c'
+			interface='org.apache.felix.scr.integration.components.felix3680_2.C'
+			cardinality='0..n' bind='bindC' policy='dynamic' />
+		<reference name='d'
+			interface='org.apache.felix.scr.integration.components.felix3680_2.D'
+			cardinality='0..n' bind='bindD' policy='dynamic' />
+		<reference name='e'
+			interface='org.apache.felix.scr.integration.components.felix3680_2.E'
+			cardinality='0..n' bind='bindE' policy='dynamic' />
+		<reference name='f'
+			interface='org.apache.felix.scr.integration.components.felix3680_2.F'
+			cardinality='0..n' bind='bindF' policy='dynamic' />
+		<reference name='g'
+			interface='org.apache.felix.scr.integration.components.felix3680_2.G'
+			bind='bindG' />
+		<reference name='h'
+			interface='org.apache.felix.scr.integration.components.felix3680_2.H'
+			bind='bindH' />
+		<reference name='i'
+			interface='org.apache.felix.scr.integration.components.felix3680_2.I'
+			bind='bindI' />
+		<reference name='j'
+			interface='org.apache.felix.scr.integration.components.felix3680_2.J'
+			bind='bindJ' />
+		<reference name='k'
+			interface='org.apache.felix.scr.integration.components.felix3680_2.K'
+			bind='bindK' />
+	</scr:component>
+</components>
