@@ -26,6 +26,7 @@ import java.util.Map;
 import org.apache.felix.scr.impl.helper.SimpleLogger;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceReference;
+import org.osgi.service.component.ComponentContext;
 import org.osgi.service.component.ComponentServiceObjects;
 import org.osgi.service.log.LogService;
 import org.osgi.service.packageadmin.ExportedPackage;
@@ -53,6 +54,11 @@ public class ClassUtils
 
     public static final Class<?> COLLECTION_CLASS = Collection.class;
     public static final Class<?> LIST_CLASS = List.class;
+
+    public static final Class<?> COMPONENT_CONTEXT_CLASS = ComponentContext.class;
+    public static final Class<?> BUNDLE_CONTEXT_CLASS = BundleContext.class;
+    public static final Class<?> INTEGER_CLASS = Integer.class;
+
 
     // this bundle's context
     private static BundleContext m_context;
@@ -206,4 +212,16 @@ public class ClassUtils
         // remove the reference to the component context
         m_context = null;
     }
+
+    /**
+     * Returns the name of the package to which the class belongs or an
+     * empty string if the class is in the default package.
+     */
+    public static String getPackageName( Class<?> clazz )
+    {
+        String name = clazz.getName();
+        int dot = name.lastIndexOf( '.' );
+        return ( dot > 0 ) ? name.substring( 0, dot ) : "";
+    }
+
 }

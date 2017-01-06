@@ -25,13 +25,8 @@ import java.util.Map;
 
 import org.apache.felix.scr.impl.helper.ComponentMethod;
 import org.apache.felix.scr.impl.helper.ComponentMethods;
+import org.apache.felix.scr.impl.helper.ConstructorMethod;
 import org.apache.felix.scr.impl.helper.ReferenceMethods;
-import org.apache.felix.scr.impl.inject.ActivateMethod;
-import org.apache.felix.scr.impl.inject.BindMethods;
-import org.apache.felix.scr.impl.inject.DeactivateMethod;
-import org.apache.felix.scr.impl.inject.DuplexReferenceMethods;
-import org.apache.felix.scr.impl.inject.FieldMethods;
-import org.apache.felix.scr.impl.inject.ModifiedMethod;
 import org.apache.felix.scr.impl.metadata.ComponentMetadata;
 import org.apache.felix.scr.impl.metadata.DSVersion;
 import org.apache.felix.scr.impl.metadata.ReferenceMetadata;
@@ -41,9 +36,10 @@ import org.apache.felix.scr.impl.metadata.ReferenceMetadata;
  */
 public class ComponentMethodsImpl implements ComponentMethods
 {
-    private ActivateMethod m_activateMethod;
-    private ModifiedMethod m_modifiedMethod;
-    private DeactivateMethod m_deactivateMethod;
+    private ComponentMethod m_activateMethod;
+    private ComponentMethod m_modifiedMethod;
+    private ComponentMethod m_deactivateMethod;
+    private ConstructorMethod m_constructor;
 
     private final Map<String, ReferenceMethods> bindMethodMap = new HashMap<String, ReferenceMethods>();
 
@@ -56,8 +52,12 @@ public class ComponentMethodsImpl implements ComponentMethods
         DSVersion dsVersion = componentMetadata.getDSVersion();
         boolean configurableServiceProperties = componentMetadata.isConfigurableServiceProperties();
         boolean supportsInterfaces = componentMetadata.isConfigureWithInterfaces();
-        m_activateMethod = new ActivateMethod( componentMetadata.getActivate(), componentMetadata
-                .isActivateDeclared(), implementationObjectClass, dsVersion, configurableServiceProperties, supportsInterfaces );
+        m_activateMethod = new ActivateMethod( componentMetadata.getActivate(), 
+        		componentMetadata.isActivateDeclared(), 
+        		implementationObjectClass, 
+        		dsVersion, 
+        		configurableServiceProperties, 
+        		supportsInterfaces);
         m_deactivateMethod = new DeactivateMethod( componentMetadata.getDeactivate(),
                 componentMetadata.isDeactivateDeclared(), implementationObjectClass, dsVersion, configurableServiceProperties, supportsInterfaces );
 
@@ -83,26 +83,44 @@ public class ComponentMethodsImpl implements ComponentMethods
             }
             bindMethodMap.put( refName, methods );
         }
+        
+        if ( componentMetadata.getActivationFields() != null )
+        {
+        	
+        }
+        else
+        {
+        	m_constructor = ConstructorMethod.DEFAULT;
+        }
     }
 
-    public ComponentMethod getActivateMethod()
+	@Override
+   public ComponentMethod getActivateMethod()
     {
         return m_activateMethod;
     }
 
+	@Override
     public ComponentMethod getDeactivateMethod()
     {
         return m_deactivateMethod;
     }
 
+	@Override
     public ComponentMethod getModifiedMethod()
     {
         return m_modifiedMethod;
     }
 
+	@Override
     public ReferenceMethods getBindMethods(String refName )
     {
         return bindMethodMap.get( refName );
     }
 
+	@Override
+	public ConstructorMethod getConstructor() 
+	{
+		return m_constructor;
+	}
 }

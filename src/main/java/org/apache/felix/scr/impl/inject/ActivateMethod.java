@@ -31,7 +31,6 @@ import org.apache.felix.scr.impl.helper.ComponentMethod;
 import org.apache.felix.scr.impl.helper.MethodResult;
 import org.apache.felix.scr.impl.helper.SimpleLogger;
 import org.apache.felix.scr.impl.metadata.DSVersion;
-import org.osgi.framework.BundleContext;
 import org.osgi.service.component.ComponentContext;
 import org.osgi.service.log.LogService;
 
@@ -39,19 +38,14 @@ import org.osgi.service.log.LogService;
 public class ActivateMethod extends BaseMethod<ActivatorParameter> implements ComponentMethod
 {
 
-    protected static final Class<?> COMPONENT_CONTEXT_CLASS = ComponentContext.class;
-    protected static final Class<?> BUNDLE_CONTEXT_CLASS = BundleContext.class;
-    protected static final Class<?> INTEGER_CLASS = Integer.class;
-
     protected final boolean m_supportsInterfaces;
-
-
+    
     public ActivateMethod( final String methodName,
             final boolean methodRequired,
             final Class<?> componentClass,
             final DSVersion dsVersion,
             final boolean configurableServiceProperties,
-            boolean supportsInterfaces )
+            final boolean supportsInterfaces)
     {
         super( methodName, methodRequired, componentClass, dsVersion, configurableServiceProperties );
         m_supportsInterfaces = supportsInterfaces;
@@ -69,7 +63,7 @@ public class ActivateMethod extends BaseMethod<ActivatorParameter> implements Co
         {
             // find the declared method in this class
             final Method method = getMethod( targetClass, getMethodName(), new Class[]
-                { COMPONENT_CONTEXT_CLASS }, acceptPrivate, acceptPackage, logger );
+                { ClassUtils.COMPONENT_CONTEXT_CLASS }, acceptPrivate, acceptPackage, logger );
             if ( method != null )
             {
                 return method;
@@ -90,7 +84,7 @@ public class ActivateMethod extends BaseMethod<ActivatorParameter> implements Co
                 {
                     Class<?> type = parameterTypes[0];
                     //single parameter method with parameter ComponentContext will already have been found.
-                    if (type == BUNDLE_CONTEXT_CLASS)
+                    if (type == ClassUtils.BUNDLE_CONTEXT_CLASS)
                     {
                         if ( accept( m, acceptPrivate, acceptPackage, returnValue() ) )
                         {
@@ -137,8 +131,8 @@ public class ActivateMethod extends BaseMethod<ActivatorParameter> implements Co
                     boolean accept = true;
                     for (Class<?> type: parameterTypes)
                     {
-                        accept = type == COMPONENT_CONTEXT_CLASS
-                            || type == BUNDLE_CONTEXT_CLASS
+                        accept = type == ClassUtils.COMPONENT_CONTEXT_CLASS
+                            || type == ClassUtils.BUNDLE_CONTEXT_CLASS
                             || type == ClassUtils.MAP_CLASS
                             || ( isDeactivate() && ( type == int.class || type == Integer.class))
                             || ( getDSVersion().isDS13() && isAnnotation(type));
@@ -220,10 +214,10 @@ public class ActivateMethod extends BaseMethod<ActivatorParameter> implements Co
                     final Class<?> t1 = m1.getParameterTypes()[0];
                     final Class<?> t2 = m2.getParameterTypes()[0];
                     //t1, t2 can't be equal
-                    if (t1 == COMPONENT_CONTEXT_CLASS) return -1;
-                    if (t2 == COMPONENT_CONTEXT_CLASS) return 1;
-                    if (t1 == BUNDLE_CONTEXT_CLASS) return -1;
-                    if (t2 == BUNDLE_CONTEXT_CLASS) return 1;
+                    if (t1 == ClassUtils.COMPONENT_CONTEXT_CLASS) return -1;
+                    if (t2 == ClassUtils.COMPONENT_CONTEXT_CLASS) return 1;
+                    if (t1 == ClassUtils.BUNDLE_CONTEXT_CLASS) return -1;
+                    if (t2 == ClassUtils.BUNDLE_CONTEXT_CLASS) return 1;
                     if (isAnnotation(t1)) return isAnnotation(t2)? 0: -1;
                     if (isAnnotation(t2)) return 1;
                     if (t1 == ClassUtils.MAP_CLASS) return -1;
@@ -255,11 +249,11 @@ public class ActivateMethod extends BaseMethod<ActivatorParameter> implements Co
         final Object[] param = new Object[parameterTypes.length];
         for ( int i = 0; i < param.length; i++ )
         {
-            if ( parameterTypes[i] == COMPONENT_CONTEXT_CLASS )
+            if ( parameterTypes[i] == ClassUtils.COMPONENT_CONTEXT_CLASS )
             {
                 param[i] = ap.getComponentContext();
             }
-            else if ( parameterTypes[i] == BUNDLE_CONTEXT_CLASS )
+            else if ( parameterTypes[i] == ClassUtils.BUNDLE_CONTEXT_CLASS )
             {
                 param[i] = ap.getComponentContext().getBundleContext();
             }
@@ -268,7 +262,7 @@ public class ActivateMethod extends BaseMethod<ActivatorParameter> implements Co
                 // note: getProperties() returns a ReadOnlyDictionary which is a Map
                 param[i] = ap.getComponentContext().getProperties();
             }
-            else if ( parameterTypes[i] == INTEGER_CLASS || parameterTypes[i] == Integer.TYPE )
+            else if ( parameterTypes[i] == ClassUtils.INTEGER_CLASS || parameterTypes[i] == Integer.TYPE )
             {
                 param[i] = ap.getReason();
             }
@@ -290,12 +284,22 @@ public class ActivateMethod extends BaseMethod<ActivatorParameter> implements Co
         return "activate";
     }
 
-    public MethodResult invoke(Object componentInstance, ComponentContext componentContext, int reason, MethodResult methodCallFailureResult, SimpleLogger logger) {
+    /**
+     * @see org.apache.felix.scr.impl.helper.ComponentMethod#invoke(java.lang.Object, org.osgi.service.component.ComponentContext, int, org.apache.felix.scr.impl.helper.MethodResult, org.apache.felix.scr.impl.helper.SimpleLogger)
+     */
+    public MethodResult invoke(final Object componentInstance, 
+    		final ComponentContext componentContext, 
+    		final int reason, 
+    		final MethodResult methodCallFailureResult, 
+    		final SimpleLogger logger) {
         return invoke(componentInstance, new ActivatorParameter(componentContext, reason), methodCallFailureResult, logger);
     }
 
     @Override
-    public MethodResult invoke( Object componentInstance, ActivatorParameter rawParameter, final MethodResult methodCallFailureResult, SimpleLogger logger )
+    public MethodResult invoke(final  Object componentInstance, 
+    		final ActivatorParameter rawParameter,
+    		final MethodResult methodCallFailureResult, 
+    		final SimpleLogger logger )
     {
         if (methodExists( logger ))
         {

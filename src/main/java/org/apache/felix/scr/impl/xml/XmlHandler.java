@@ -282,6 +282,14 @@ public class XmlHandler implements KXml2SAXHandler
                     m_currentComponent.setConfigureWithInterfaces("true".equals(attributes.getAttribute(NAMESPACE_URI_1_0_FELIX_EXTENSIONS, CONFIGURE_WITH_INTERFACES)));
                     m_currentComponent.setDelayedKeepInstances(m_globalDelayedKeepInstances || "true".equals(attributes.getAttribute(NAMESPACE_URI_1_0_FELIX_EXTENSIONS, DELAYED_KEEP_INSTANCES)));
 
+                    // activation-fields is optional (since DS 1.4)
+                    String activationFields = attributes.getAttribute( "activation-fields" );
+                    if ( activationFields != null ) 
+                    {
+                    	final String[] fields = activationFields.split(" ");
+                    	m_currentComponent.setActivationFields( fields );
+                    }
+                    
                     // Add this component to the list
                     m_components.add( m_currentComponent );
                 }

@@ -232,9 +232,10 @@ public class SingleComponentManager<S> extends AbstractComponentManager<S> imple
             implementationObjectClass = (Class<S>) bundle.loadClass(
                     getComponentMetadata().getImplementationClassName() )  ;
 
-            // 112.4.4 The class must be public and have a public constructor without arguments so component instances
-            // may be created by the SCR with the newInstance method on Class
-            implementationObject = implementationObjectClass.newInstance();
+            implementationObject = getComponentMethods().getConstructor().newInstance(implementationObjectClass,
+            		componentContext,
+            		this);
+            
         }
         catch ( Throwable t )
         {

@@ -96,6 +96,9 @@ public class ComponentMetadata
     // 112.4.4 configuration-pid (since DS 1.2)
     private List<String> m_configurationPid;
 
+    // activation fields (since DS 1.4)
+    private List<String> m_activationFields;
+    
     // Associated properties (0..*)
     private final Map<String, Object> m_properties = new HashMap<String, Object>();
 
@@ -433,6 +436,15 @@ public class ComponentMetadata
 
 
 
+	public void setActivationFields( final String[] fields ) 
+	{
+		if ( m_validated )
+		{
+			return;
+		}
+		this.m_activationFields = new ArrayList<String>( Arrays.asList( fields ) );
+	}
+
     /////////////////////////////////////////// GETTERS //////////////////////////////////////
 
 	/**
@@ -604,6 +616,18 @@ public class ComponentMetadata
     }
 
 
+    /**
+     * Returns the names of the activation fields
+     *
+     * @return the list of activation fields or {@code null}
+     * @since 2.1.0 (DS 1.4)
+     */
+    public List<String> getActivationFields()
+    {
+        return m_activationFields;
+    }
+
+    
     /**
      * Returns the name of the deactivate method
      *
@@ -975,6 +999,12 @@ public class ComponentMetadata
             }
         }
 
+        // activation fields require DS 1.4
+        if ( m_activationFields != null && !m_dsVersion.isDS14() )
+        {
+            throw validationFailure( "Activation fields require version 1.4 or later");
+        }
+        
         if (m_dsVersion == DSVersion.DS12Felix)
         {
         	m_configurableServiceProperties = true;
