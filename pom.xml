@@ -69,7 +69,7 @@
                         <Provide-Capability>
                             osgi.implementation;osgi.implementation="osgi.configurator";version:Version="1.0"
                         </Provide-Capability>
-                        <Embed-Dependency>geronimo-json_1.0_spec,johnzon-core</Embed-Dependency>
+                        <Embed-Dependency>org.apache.felix.serializer,org.apache.felix.converter</Embed-Dependency>
                     </instructions>
                 </configuration>
             </plugin>
@@ -106,6 +106,12 @@
         </dependency>
         <dependency>
             <groupId>org.apache.felix</groupId>
+            <artifactId>org.apache.felix.serializer</artifactId>
+            <version>0.1-SNAPSHOT</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.felix</groupId>
             <artifactId>org.apache.felix.configadmin</artifactId>
             <version>1.9.0-SNAPSHOT</version>
             <scope>provided</scope>
@@ -120,18 +126,6 @@
             <groupId>org.osgi</groupId>
             <artifactId>org.osgi.service.coordinator</artifactId>
             <version>1.0.2</version>
-            <scope>provided</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.geronimo.specs</groupId>
-            <artifactId>geronimo-json_1.0_spec</artifactId>
-            <version>1.0-alpha-1</version>
-            <scope>provided</scope> 
-        </dependency>
-        <dependency>
-            <groupId>org.apache.johnzon</groupId>
-            <artifactId>johnzon-core</artifactId>
-            <version>0.9.5</version>
             <scope>provided</scope>
         </dependency>
     </dependencies>
