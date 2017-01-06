@@ -20,7 +20,7 @@
   <parent>
     <groupId>org.apache.felix</groupId>
     <artifactId>felix-parent</artifactId>
-    <version>3</version>
+    <version>4</version>
     <relativePath>../pom/pom.xml</relativePath>
   </parent>
   <modelVersion>4.0.0</modelVersion>
@@ -37,6 +37,11 @@
      <url>http://svn.apache.org/repos/asf/felix/resolver</url>
   </scm>
   <dependencies>
+   <dependency>
+      <groupId>org.osgi</groupId>
+      <artifactId>osgi.annotation</artifactId>
+      <version>6.0.1</version>
+    </dependency>
     <dependency>
       <groupId>org.osgi</groupId>
       <artifactId>org.osgi.core</artifactId>

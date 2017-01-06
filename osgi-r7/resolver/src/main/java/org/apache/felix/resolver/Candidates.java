@@ -184,17 +184,15 @@ class Candidates
                 addCandidates(result.candidates);
                 result.candidates = null;
                 result.remaining = null;
-                if ((rc instanceof FelixResolveContext) && !Util.isFragment(resource))
+                Collection<Resource> relatedResources = rc.findRelatedResources(resource);
+                m_session.setRelatedResources(resource, relatedResources);
+                for (Resource relatedResource : relatedResources)
                 {
-                    Collection<Resource> ondemandFragments = ((FelixResolveContext) rc).getOndemandResources(resource);
-                    for (Resource fragment : ondemandFragments)
+                    if (m_session.isValidRelatedResource(relatedResource))
                     {
-                        if (m_session.isValidOnDemandResource(fragment))
-                        {
-                            // This resource is a valid on demand resource;
-                            // populate it now, consider it optional
-                            toPopulate.addFirst(fragment);
-                        }
+                        // This resource is a valid related resource;
+                        // populate it now, consider it optional
+                        toPopulate.addFirst(relatedResource);
                     }
                 }
                 continue;

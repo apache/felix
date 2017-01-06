@@ -51,7 +51,7 @@ public class ResolverImpl implements Resolver
 
     // Note this class is not thread safe.
     // Only use in the context of a single thread.
-    static class ResolveSession
+    static class ResolveSession implements Runnable
     {
         // Holds the resolve context for this session
         private final ResolveContext m_resolveContext;
@@ -60,9 +60,11 @@ public class ResolverImpl implements Resolver
         private final Resource m_dynamicHost;
         private final Requirement m_dynamicReq;
         private final List<Capability> m_dynamicCandidates;
-        // keeps track of valid on demand fragments that we have seen.
+        // keeps track of valid related resources that we have seen.
         // a null value or TRUE indicate it is valid
-        Map<Resource, Boolean> m_validOnDemandResources = new HashMap<Resource, Boolean>(0);
+        private Map<Resource, Boolean> m_validRelatedResources = new HashMap<Resource, Boolean>(0);
+        // keeps track of related resources for each resource
+        private Map<Resource, Collection<Resource>> m_relatedResources = new HashMap<Resource, Collection<Resource>>(0);
         // Holds candidate permutations based on permutating "uses" chains.
         // These permutations are given higher priority.
         private final List<Candidates> m_usesPermutations = new LinkedList<Candidates>();
@@ -86,8 +88,19 @@ public class ResolverImpl implements Resolver
         private final Set<Requirement> m_sub_mutated = new HashSet<Requirement>();
         private final ConcurrentMap<String, List<String>> m_usesCache = new ConcurrentHashMap<String, List<String>>();
         private ResolutionError m_currentError;
+        volatile private CancellationException m_isCancelled = null;
 
-        ResolveSession(ResolveContext resolveContext, Executor executor, Resource dynamicHost, Requirement dynamicReq, List<Capability> dynamicCandidates)
+        static ResolveSession createSession(ResolveContext resolveContext, Executor executor, Resource dynamicHost, Requirement dynamicReq, List<Capability> dynamicCandidates)
+        {
+            ResolveSession session = new ResolveSession(resolveContext, executor, dynamicHost, dynamicReq, dynamicCandidates);
+            // call onCancel first
+            session.getContext().onCancel(session);
+            // now gather the mandatory and optional resources
+            session.initMandatoryAndOptionalResources();
+            return session;
+        }
+
+        private ResolveSession(ResolveContext resolveContext, Executor executor, Resource dynamicHost, Requirement dynamicReq, List<Capability> dynamicCandidates)
         {
             m_resolveContext = resolveContext;
             m_executor = executor;
@@ -98,12 +111,18 @@ public class ResolverImpl implements Resolver
                 m_mandatoryResources = Collections.singletonList(dynamicHost);
                 m_optionalResources = Collections.emptyList();
             } else {
-                // Make copies of arguments in case we want to modify them.
-                m_mandatoryResources = new ArrayList<Resource>(resolveContext.getMandatoryResources());
-                m_optionalResources = new ArrayList<Resource>(resolveContext.getOptionalResources());
+                // Do not call resolve context yet, onCancel must be called first
+                m_mandatoryResources = new ArrayList<Resource>();
+                m_optionalResources = new ArrayList<Resource>();
             }
         }
 
+        private void initMandatoryAndOptionalResources() {
+            if (!isDynamic()) {
+                m_mandatoryResources.addAll(getContext().getMandatoryResources());
+                m_optionalResources.addAll(getContext().getOptionalResources());
+            }
+        }
         Candidates getMultipleCardCandidates()
         {
             return m_multipleCardCandidates;
@@ -279,27 +298,51 @@ public class ResolverImpl implements Resolver
             return m_dynamicCandidates;
         }
 
-        public boolean isValidOnDemandResource(Resource fragment) {
-            Boolean valid = m_validOnDemandResources.get(fragment);
+        public boolean isValidRelatedResource(Resource resource) {
+            Boolean valid = m_validRelatedResources.get(resource);
             if (valid == null)
             {
-                // Mark this resource as a valid on demand resource
-                m_validOnDemandResources.put(fragment, Boolean.TRUE);
+                // Mark this resource as a valid related resource
+                m_validRelatedResources.put(resource, Boolean.TRUE);
                 valid = Boolean.TRUE;
             }
             return valid;
         }
 
-        public boolean invalidateOnDemandResource(Resource faultyResource) {
-            Boolean valid = m_validOnDemandResources.get(faultyResource);
+        public boolean invalidateRelatedResource(Resource faultyResource) {
+            Boolean valid = m_validRelatedResources.get(faultyResource);
             if (valid != null && valid)
             {
-                // This was an ondemand resource.
+                // This was related resource.
                 // Invalidate it and try again.
-                m_validOnDemandResources.put(faultyResource, Boolean.FALSE);
+                m_validRelatedResources.put(faultyResource, Boolean.FALSE);
                 return true;
             }
             return false;
+        }
+
+        public Collection<Resource> getRelatedResources(Resource resource) {
+            Collection<Resource> related =  m_relatedResources.get(resource);
+            return related == null ? Collections.<Resource> emptyList() : related;
+        }
+
+        public void setRelatedResources(Resource resource, Collection<Resource> related) {
+            m_relatedResources.put(resource, related);
+        }
+
+        @Override
+        public void run() {
+            m_isCancelled = new CancellationException();
+        }
+
+        boolean isCancelled() {
+            return m_isCancelled != null;
+        }
+
+        void checkForCancel() throws ResolutionException {
+            if (isCancelled()) {
+                throw new ResolutionException("Resolver operation has been cancelled.", m_isCancelled, null);
+            }
         }
     }
 
@@ -371,13 +414,12 @@ public class ResolverImpl implements Resolver
 
     public Map<Resource, List<Wire>> resolve(ResolveContext rc, Executor executor) throws ResolutionException
     {
-        ResolveSession session = new ResolveSession(rc, executor, null, null, null);
+        ResolveSession session = ResolveSession.createSession(rc, executor, null, null, null);
         return doResolve(session);
     }
 
     private Map<Resource, List<Wire>> doResolve(ResolveSession session) throws ResolutionException {
         Map<Resource, List<Wire>> wireMap = new HashMap<Resource, List<Wire>>();
-
         boolean retry;
         do
         {
@@ -391,6 +433,7 @@ public class ResolverImpl implements Resolver
 
                 Map<Resource, ResolutionError> faultyResources = new HashMap<Resource, ResolutionError>();
                 Candidates allCandidates = findValidCandidates(session, faultyResources);
+                session.checkForCancel();
 
                 // If there is a resolve exception, then determine if an
                 // optionally resolved resource is to blame (typically a fragment).
@@ -402,7 +445,7 @@ public class ResolverImpl implements Resolver
                     retry = (session.getOptionalResources().removeAll(resourceKeys));
                     for (Resource faultyResource : resourceKeys)
                     {
-                        if (session.invalidateOnDemandResource(faultyResource))
+                        if (session.invalidateRelatedResource(faultyResource))
                         {
                             retry = true;
                         }
@@ -430,8 +473,7 @@ public class ResolverImpl implements Resolver
                     }
                     if (session.isDynamic() )
                     {
-                        wireMap = populateDynamicWireMap(session.getContext(),
-                            session.getDynamicHost(), session.getDynamicRequirement(),
+                        wireMap = populateDynamicWireMap(session,
                             wireMap, allCandidates);
                     }
                     else
@@ -442,7 +484,7 @@ public class ResolverImpl implements Resolver
                             {
                                 wireMap =
                                     populateWireMap(
-                                        session.getContext(), allCandidates.getWrappedHost(resource),
+                                        session, allCandidates.getWrappedHost(resource),
                                         wireMap, allCandidates);
                             }
                         }
@@ -549,7 +591,7 @@ public class ResolverImpl implements Resolver
                 }
             }
         }
-        while (session.getCurrentError() != null);
+        while (!session.isCancelled() && session.getCurrentError() != null);
 
         return allCandidates;
     }
@@ -577,6 +619,9 @@ public class ResolverImpl implements Resolver
             rethrow = checkPackageSpaceConsistency(
                     session, entry.getValue(),
                     allCandidates, session.isDynamic(), resourcePkgMap, resultCache);
+            if (session.isCancelled()) {
+                return null;
+            }
             if (rethrow != null)
             {
                 Resource faultyResource = entry.getKey();
@@ -598,43 +643,18 @@ public class ResolverImpl implements Resolver
         return error;
     }
 
-    /**
-     * Resolves a dynamic requirement for the specified host resource using the
-     * specified {@link ResolveContext}. The dynamic requirement may contain
-     * wild cards in its filter for the package name. The matching candidates
-     * are used to resolve the requirement and the resolve context is not asked
-     * to find providers for the dynamic requirement. The host resource is
-     * expected to not be a fragment, to already be resolved and have an
-     * existing wiring provided by the resolve context.
-     * <p>
-     * This operation may resolve additional resources in order to resolve the
-     * dynamic requirement. The returned map will contain entries for each
-     * resource that got resolved in addition to the specified host resource.
-     * The wire list for the host resource will only contain a single wire which
-     * is for the dynamic requirement.
-     *
-     * @param rc the resolve context
-     * @param host the hosting resource
-     * @param dynamicReq the dynamic requirement
-     * @param matches a list of matching capabilities
-     * @return The new resources and wires required to satisfy the specified
-     * dynamic requirement. The returned map is the property of the caller and
-     * can be modified by the caller.
-     * @throws ResolutionException
-     */
-    public Map<Resource, List<Wire>> resolve(
-        ResolveContext rc, Resource host, Requirement dynamicReq,
-        List<Capability> matches)
-        throws ResolutionException
+    public Map<Resource,List<Wire>> resolveDynamic(ResolveContext context,
+            Wiring hostWiring, Requirement dynamicRequirement)
+            throws ResolutionException
     {
+        Resource host = hostWiring.getResource();
+        List<Capability> matches = context.findProviders(dynamicRequirement);
         // We can only create a dynamic import if the following
         // conditions are met:
-        // 1. The specified resource is resolved.
-        // 2. The package in question is not already imported.
-        // 3. The package in question is not accessible via require-bundle.
-        // 4. The package in question is not exported by the resource.
-        // 5. The package in question matches a dynamic import of the resource.
-        if (!matches.isEmpty() && rc.getWirings().containsKey(host))
+        // 1. The package in question is not already imported.
+        // 2. The package in question is not accessible via require-bundle.
+        // 3. The package in question is not exported by the resource.
+        if (!matches.isEmpty())
         {
             // Make sure all matching candidates are packages.
             for (Capability cap : matches)
@@ -645,11 +665,11 @@ public class ResolverImpl implements Resolver
                         "Matching candidate does not provide a package name.");
                 }
             }
-            ResolveSession session = new ResolveSession(rc,  new DumbExecutor(), host, dynamicReq, matches);
+            ResolveSession session = ResolveSession.createSession(context,  new DumbExecutor(), host, dynamicRequirement, matches);
             return doResolve(session);
         }
 
-        return Collections.emptyMap();
+        throw new Candidates.MissingRequirementError(dynamicRequirement).toException();
     }
 
     private static List<WireCandidate> getWireCandidates(ResolveSession session, Candidates allCandidates, Resource resource)
@@ -1551,6 +1571,9 @@ public class ResolverImpl implements Resolver
                     rethrow = checkPackageSpaceConsistency(
                             session, cap.getResource(),
                             allCandidates, false, resourcePkgMap, resultCache);
+                    if (session.isCancelled()) {
+                        return null;
+                    }
                     if (rethrow != null)
                     {
                         // If the lower level check didn't create any permutations,
@@ -1782,11 +1805,11 @@ public class ResolverImpl implements Resolver
     }
 
     private static Map<Resource, List<Wire>> populateWireMap(
-        ResolveContext rc, Resource resource,
+        ResolveSession session, Resource resource,
         Map<Resource, List<Wire>> wireMap, Candidates allCandidates)
     {
         Resource unwrappedResource = getDeclaredResource(resource);
-        if (!rc.getWirings().containsKey(unwrappedResource)
+        if (!session.getContext().getWirings().containsKey(unwrappedResource)
             && !wireMap.containsKey(unwrappedResource))
         {
             wireMap.put(unwrappedResource, Collections.<Wire>emptyList());
@@ -1809,7 +1832,7 @@ public class ResolverImpl implements Resolver
                             || !resource.equals(cand.getResource()))
                         {
                             // Populate wires for the candidate
-                            populateWireMap(rc, cand.getResource(),
+                            populateWireMap(session, cand.getResource(),
                                     wireMap, allCandidates);
 
                             Resource provider;
@@ -1889,7 +1912,7 @@ public class ResolverImpl implements Resolver
                             // Otherwise, if the fragment isn't already resolved and
                             // this is the first time we are seeing it, then create
                             // a wire for the non-payload requirement.
-                            else if (!rc.getWirings().containsKey(fragment)
+                            else if (!session.getContext().getWirings().containsKey(fragment)
                                 && !wireMap.containsKey(fragment))
                             {
                                 Wire wire = createWire(req, allCandidates);
@@ -1903,6 +1926,12 @@ public class ResolverImpl implements Resolver
 
                     // Finally, add the fragment's wire list to the wire map.
                     wireMap.put(fragment, fragmentWires);
+                }
+            }
+            // now make sure any related resources are populated
+            for (Resource related : session.getRelatedResources(unwrappedResource)) {
+                if (allCandidates.isPopulated(related)) {
+                    populateWireMap(session, related, wireMap, allCandidates);
                 }
             }
         }
@@ -1939,31 +1968,31 @@ public class ResolverImpl implements Resolver
     }
 
     private static Map<Resource, List<Wire>> populateDynamicWireMap(
-        ResolveContext rc, Resource resource, Requirement dynReq,
-        Map<Resource, List<Wire>> wireMap, Candidates allCandidates)
+        ResolveSession session, Map<Resource,
+        List<Wire>> wireMap, Candidates allCandidates)
     {
-        wireMap.put(resource, Collections.<Wire>emptyList());
+        wireMap.put(session.getDynamicHost(), Collections.<Wire>emptyList());
 
         List<Wire> packageWires = new ArrayList<Wire>();
 
         // Get the candidates for the current dynamic requirement.
         // Record the dynamic candidate.
-        Capability dynCand = allCandidates.getFirstCandidate(dynReq);
+        Capability dynCand = allCandidates.getFirstCandidate(session.getDynamicRequirement());
 
-        if (!rc.getWirings().containsKey(dynCand.getResource()))
+        if (!session.getContext().getWirings().containsKey(dynCand.getResource()))
         {
-            populateWireMap(rc, dynCand.getResource(),
+            populateWireMap(session, dynCand.getResource(),
                 wireMap, allCandidates);
         }
 
         packageWires.add(
             new WireImpl(
-                resource,
-                dynReq,
+                session.getDynamicHost(),
+                session.getDynamicRequirement(),
                 getDeclaredResource(dynCand.getResource()),
                 getDeclaredCapability(dynCand)));
 
-        wireMap.put(resource, packageWires);
+        wireMap.put(session.getDynamicHost(), packageWires);
 
         return wireMap;
     }

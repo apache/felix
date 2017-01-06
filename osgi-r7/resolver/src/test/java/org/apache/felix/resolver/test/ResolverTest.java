@@ -475,7 +475,7 @@ public class ResolverTest
 
         List<Capability> caps = new ArrayList<Capability>();
         caps.add(f1_pkgCap);
-        Map<Resource, List<Wire>> wireMap = resolver.resolve(rci, b1, b_pkgReq1, caps);
+        Map<Resource, List<Wire>> wireMap = resolver.resolveDynamic(rci, wirings.get(b1), b_pkgReq1);
 
         assertEquals(1, wireMap.size());
         List<Wire> wiresB = wireMap.get(b1);
@@ -526,7 +526,7 @@ public class ResolverTest
         List<Capability> caps = new ArrayList<Capability>();
         caps.add(f1_pkgCap);
         try {
-            resolver.resolve(rci, b1, b_pkgReq1, caps);
+            resolver.resolveDynamic(rci, wirings.get(b1), b_pkgReq1);
             fail("Should fail to dynamic requirement to fragment when host is resolved already.");
         } catch (ResolutionException e) {
             // expected
@@ -537,7 +537,7 @@ public class ResolverTest
         wirings.remove(a1);
         caps.clear();
         caps.add(f1_pkgCap);
-        Map<Resource, List<Wire>> wireMap = resolver.resolve(rci, b1, b_pkgReq1, caps);
+        Map<Resource, List<Wire>> wireMap = resolver.resolveDynamic(rci, wirings.get(b1), b_pkgReq1);
 
         assertEquals(3, wireMap.size());
         List<Wire> wiresB = wireMap.get(b1);
@@ -588,7 +588,7 @@ public class ResolverTest
 
         List<Capability> caps = new ArrayList<Capability>();
         caps.add(c_pkgCap);
-        Map<Resource, List<Wire>> wireMap = resolver.resolve(rci, b1, b_pkgReq1, caps);
+        Map<Resource, List<Wire>> wireMap = resolver.resolveDynamic(rci, wirings.get(b1), b_pkgReq1);
 
         assertEquals(0, wireMap.size());
     }
