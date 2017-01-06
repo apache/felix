@@ -95,12 +95,6 @@ public class ConfigurationManagerTest extends TestCase
         assertEquals(1, conf.length);
         assertEquals(2, conf[0].getProperties(true).size());
         
-        Field configurations = configMgr.getClass().getDeclaredField( "configurations" );
-        configurations.setAccessible( true );
-        HashMap<String, ConfigurationImpl> configurationsMap = new HashMap<String, ConfigurationImpl>();
-        configurationsMap.put(pid, conf[0]);
-        configurations.set(configMgr, configurationsMap);
-        
         dictionary = new Hashtable();
         dictionary.put( "property1", "value2" );
         pid = "testDefaultPersistenceManager";
@@ -110,6 +104,9 @@ public class ConfigurationManagerTest extends TestCase
         conf = configMgr.listConfigurations(new ConfigurationAdminImpl(configMgr, null), null);
         assertEquals(1, conf.length);
         assertEquals(2, conf[0].getProperties(true).size());
+
+        // verify that the property in the configurations cache was used
+        assertEquals("value1", conf[0].getProperties(true).get("property1"));
     }    
     
     public void test_listConfigurations_notcached() throws Exception
@@ -135,20 +132,18 @@ public class ConfigurationManagerTest extends TestCase
         assertEquals(1, conf.length);
         assertEquals(2, conf[0].getProperties(true).size());
         
-        Field configurations = configMgr.getClass().getDeclaredField( "configurations" );
-        configurations.setAccessible( true );
-        HashMap<String, ConfigurationImpl> configurationsMap = new HashMap<String, ConfigurationImpl>();
-        configurationsMap.put(pid, conf[0]);
-        configurations.set(configMgr, configurationsMap);
-        
         dictionary = new Hashtable();
+        dictionary.put("property1", "valueNotCached");
         pid = "testDefaultPersistenceManager";
         dictionary.put( Constants.SERVICE_PID, pid );
         pm.store( pid, dictionary );
  
         conf = configMgr.listConfigurations(new ConfigurationAdminImpl(configMgr, null), null);
         assertEquals(1, conf.length);
-        assertEquals(1, conf[0].getProperties(true).size());
+        assertEquals(2, conf[0].getProperties(true).size());
+
+        // verify that the value returned was not the one from the cache
+        assertEquals("valueNotCached", conf[0].getProperties(true).get("property1"));
     }
 
     public void testLogNoLogService()

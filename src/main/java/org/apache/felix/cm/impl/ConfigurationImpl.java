@@ -21,7 +21,6 @@ package org.apache.felix.cm.impl;
 
 import java.io.IOException;
 import java.util.Dictionary;
-import java.util.Enumeration;
 import java.util.Hashtable;
 
 import org.apache.felix.cm.PersistenceManager;
@@ -97,8 +96,6 @@ public class ConfigurationImpl extends ConfigurationBase
      */
     private static final String CONFIGURATION_NEW = "_felix_.cm.newConfiguration";
 
-    private static final String PROPERTY_LOCKED = ":org.apache.felix.configadmin.locked:";
-
     /**
      * The factory PID of this configuration or <code>null</code> if this
      * is not a factory configuration.
@@ -142,8 +139,6 @@ public class ConfigurationImpl extends ConfigurationBase
      * an instance of this class is created.
      */
     private volatile long revision;
-
-    private volatile boolean locked;
 
 
     ConfigurationImpl( ConfigurationManager configurationManager, PersistenceManager persistenceManager,
@@ -483,19 +478,21 @@ public class ConfigurationImpl extends ConfigurationBase
         if ( factoryPid != null )
         {
             Factory factory = getConfigurationManager().getOrCreateFactory( factoryPid );
-            if ( factory.addPID( getPidString() ) )
-            {
-                // only write back if the pid was not already registered
-                // with the factory
-                try
+            synchronized (factory) {
+                if ( factory.addPID( getPidString() ) )
                 {
-                    factory.store();
-                }
-                catch ( IOException ioe )
-                {
-                    getConfigurationManager().log( LogService.LOG_ERROR,
-                        "Failure storing factory {0} with new configuration {1}", new Object[]
-                            { factoryPid, getPidString(), ioe } );
+                    // only write back if the pid was not already registered
+                    // with the factory
+                    try
+                    {
+                        factory.store();
+                    }
+                    catch ( IOException ioe )
+                    {
+                        getConfigurationManager().log( LogService.LOG_ERROR,
+                            "Failure storing factory {0} with new configuration {1}", new Object[]
+                                { factoryPid, getPidString(), ioe } );
+                    }
                 }
             }
         }
@@ -522,11 +519,6 @@ public class ConfigurationImpl extends ConfigurationBase
         else
         {
             replaceProperty( props, ConfigurationAdmin.SERVICE_BUNDLELOCATION, getStaticBundleLocation() );
-        }
-
-        if ( this.locked )
-        {
-            props.put(PROPERTY_LOCKED, this.locked);
         }
 
         // only store now, if this is not a new configuration
@@ -585,11 +577,6 @@ public class ConfigurationImpl extends ConfigurationBase
 
     private void configure( final Dictionary<String, Object> properties )
     {
-        final Object lockedValue = properties == null ? null : properties.get(PROPERTY_LOCKED);
-        if ( lockedValue != null )
-        {
-            this.locked = true;
-        }
         final CaseInsensitiveDictionary newProperties;
         if ( properties == null )
         {
@@ -645,105 +632,10 @@ public class ConfigurationImpl extends ConfigurationBase
     }
 
 
-    private static final String[] AUTO_PROPS = new String[] {
-            Constants.SERVICE_PID,
-            ConfigurationAdmin.SERVICE_FACTORYPID,
-            ConfigurationAdmin.SERVICE_BUNDLELOCATION,
-            PROPERTY_LOCKED
-    };
-
-    static void clearAutoProperties( Dictionary<String, Object> properties )
+    static void clearAutoProperties( Dictionary properties )
     {
-        for(final String p : AUTO_PROPS)
-        {
-            properties.remove( p );
-        }
-    }
-
-
-    public void setLocked(final boolean flag) throws IOException
-    {
-        this.locked = flag;
-        store();
-    }
-
-    /**
-     * Compare the two properties, ignoring auto properties
-     * @param props1 Set of properties
-     * @param props2 Set of properties
-     * @return {@code true} if the set of properties is equal
-     */
-    static boolean equals( Dictionary<String, Object> props1, Dictionary<String, Object> props2)
-    {
-        final int count1 = getCount(props1);
-        final int count2 = getCount(props2);
-        if ( count1 != count2 )
-        {
-            return false;
-        }
-
-        final Enumeration<String> keys = props1.keys();
-        while ( keys.hasMoreElements() )
-        {
-            final String key = keys.nextElement();
-            if ( !isAutoProp(key) )
-            {
-                final Object val1 = props1.get(key);
-                final Object val2 = props2.get(key);
-                if ( val1 == null )
-                {
-                    if ( val2 != null )
-                    {
-                        return false;
-                    }
-                }
-                else
-                {
-                    if ( val2 == null )
-                    {
-                        return false;
-                    }
-                    if ( !val1.equals(val2) )
-                    {
-                        return false;
-                    }
-                }
-            }
-        }
-
-        return true;
-    }
-
-    static boolean isAutoProp(final String name)
-    {
-        for(final String p : AUTO_PROPS)
-        {
-            if ( p.equals(name) )
-            {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    static int getCount( Dictionary<String, Object> props )
-    {
-        int count = (props == null ? 0 : props.size());
-        if ( props != null )
-        {
-            for(final String p : AUTO_PROPS)
-            {
-                if ( props.get(p) != null )
-                {
-                    count--;
-                }
-            }
-        }
-        return count;
-    }
-
-    public boolean isLocked()
-    {
-        return this.locked;
+        properties.remove( Constants.SERVICE_PID );
+        properties.remove( ConfigurationAdmin.SERVICE_FACTORYPID );
+        properties.remove( ConfigurationAdmin.SERVICE_BUNDLELOCATION );
     }
 }

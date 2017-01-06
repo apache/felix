@@ -17,9 +17,12 @@
  * under the License.
  */
 
-@org.osgi.annotation.versioning.Version("1.1.1")
+@Version("1.1")
+@Export(optional = "provide:=true")
 package org.apache.felix.cm;
 
 
+import aQute.bnd.annotation.Export;
+import aQute.bnd.annotation.Version;
 
 

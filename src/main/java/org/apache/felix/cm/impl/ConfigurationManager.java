@@ -279,7 +279,7 @@ public class ConfigurationManager implements BundleActivator, BundleListener
         ConfigurationAdminFactory caf = new ConfigurationAdminFactory( this );
         Hashtable props = new Hashtable();
         props.put( Constants.SERVICE_PID, "org.apache.felix.cm.ConfigurationAdmin" );
-        props.put( Constants.SERVICE_DESCRIPTION, "Configuration Admin Service Specification 1.6 Implementation" );
+        props.put( Constants.SERVICE_DESCRIPTION, "Configuration Admin Service Specification 1.5 Implementation" );
         props.put( Constants.SERVICE_VENDOR, "Apache Software Foundation" );
         configurationAdminRegistration = bundleContext.registerService( ConfigurationAdmin.class.getName(), caf, props );
 
@@ -683,14 +683,16 @@ public class ConfigurationManager implements BundleActivator, BundleListener
                 }
 
                 // ensure the service.pid and returned a cached config if available
-                ConfigurationImpl cfg = null;
-                if (! (pmList[i].isNotCachablePersistenceManager())) 
-                {
+                ConfigurationImpl cfg;
+                if (!(pmList[i].isNotCachablePersistenceManager())) {
                     cfg = getCachedConfiguration( pid );
-                }
-                if ( cfg == null )
-                {
-                    cfg = new ConfigurationImpl( this, pmList[i], config );
+                    if (cfg == null) {
+                        cfg = new ConfigurationImpl(this, pmList[i], config);
+                        // add the to configurations cache if it wasn't in the cache
+                        cacheConfiguration(cfg);
+                    }
+                } else {
+                    cfg = new ConfigurationImpl(this, pmList[i], config);
                 }
 
                 // FELIX-611: Ignore configuration objects without props
@@ -1504,63 +1506,65 @@ public class ConfigurationManager implements BundleActivator, BundleListener
                     factories = getTargetedFactories( factoryPid, sr );
                     for ( Factory factory : factories )
                     {
-                        for ( Iterator pi = factory.getPIDs().iterator(); pi.hasNext(); )
-                        {
-                            final String pid = ( String ) pi.next();
-                            ConfigurationImpl cfg;
-                            try
+                        synchronized (factory) {
+                            for ( Iterator pi = factory.getPIDs().iterator(); pi.hasNext(); )
                             {
-                                cfg = getConfiguration( pid );
-                            }
-                            catch ( IOException ioe )
-                            {
-                                log( LogService.LOG_ERROR, "Error loading configuration for {0}", new Object[]
-                                    { pid, ioe } );
-                                continue;
-                            }
+                                final String pid = ( String ) pi.next();
+                                ConfigurationImpl cfg;
+                                try
+                                {
+                                    cfg = getConfiguration( pid );
+                                }
+                                catch ( IOException ioe )
+                                {
+                                    log( LogService.LOG_ERROR, "Error loading configuration for {0}", new Object[]
+                                        { pid, ioe } );
+                                    continue;
+                                }
 
-                            // sanity check on the configuration
-                            if ( cfg == null )
-                            {
-                                log( LogService.LOG_ERROR,
-                                    "Configuration {0} referred to by factory {1} does not exist", new Object[]
-                                        { pid, factoryPid } );
-                                factory.removePID( pid );
-                                factory.storeSilently();
-                                continue;
-                            }
-                            else if ( cfg.isNew() )
-                            {
-                                // Configuration has just been created but not yet updated
-                                // we currently just ignore it and have the update mechanism
-                                // provide the configuration to the ManagedServiceFactory
-                                // As of FELIX-612 (not storing new factory configurations)
-                                // this should not happen. We keep this for added stability
-                                // but raise the logging level to error.
-                                log( LogService.LOG_ERROR, "Ignoring new configuration pid={0}", new Object[]
-                                    { pid } );
-                                continue;
-                            }
+                                // sanity check on the configuration
+                                if ( cfg == null )
+                                {
+                                    log( LogService.LOG_ERROR,
+                                        "Configuration {0} referred to by factory {1} does not exist", new Object[]
+                                            { pid, factoryPid } );
+                                    factory.removePID( pid );
+                                    factory.storeSilently();
+                                    continue;
+                                }
+                                else if ( cfg.isNew() )
+                                {
+                                    // Configuration has just been created but not yet updated
+                                    // we currently just ignore it and have the update mechanism
+                                    // provide the configuration to the ManagedServiceFactory
+                                    // As of FELIX-612 (not storing new factory configurations)
+                                    // this should not happen. We keep this for added stability
+                                    // but raise the logging level to error.
+                                    log( LogService.LOG_ERROR, "Ignoring new configuration pid={0}", new Object[]
+                                        { pid } );
+                                    continue;
+                                }
 
-                            /*
-                             * this code would catch targeted factory PIDs;
-                             * since this is not expected any way, we can
-                             * leave this out
-                             */
-                            /*
-                            else if ( !factoryPid.equals( cfg.getFactoryPid() ) )
-                            {
-                                log( LogService.LOG_ERROR,
-                                    "Configuration {0} referred to by factory {1} seems to belong to factory {2}",
-                                    new Object[]
-                                        { pid, factoryPid, cfg.getFactoryPid() } );
-                                factory.removePID( pid );
-                                factory.storeSilently();
-                                continue;
-                            }
-                            */
+                                /*
+                                 * this code would catch targeted factory PIDs;
+                                 * since this is not expected any way, we can
+                                 * leave this out
+                                 */
+                                /*
+                                else if ( !factoryPid.equals( cfg.getFactoryPid() ) )
+                                {
+                                    log( LogService.LOG_ERROR,
+                                        "Configuration {0} referred to by factory {1} seems to belong to factory {2}",
+                                        new Object[]
+                                            { pid, factoryPid, cfg.getFactoryPid() } );
+                                    factory.removePID( pid );
+                                    factory.storeSilently();
+                                    continue;
+                                }
+                                */
 
-                            provide( factoryPid, cfg );
+                                provide( factoryPid, cfg );
+                            }
                         }
                     }
                 }
@@ -1867,8 +1871,10 @@ public class ConfigurationManager implements BundleActivator, BundleListener
                 try
                 {
                     Factory factory = getOrCreateFactory( factoryPid.toString() );
-                    factory.removePID( pid );
-                    factory.store();
+                    synchronized (factory) {
+                        factory.removePID( pid );
+                        factory.store();
+                    }
                 }
                 catch ( IOException ioe )
                 {

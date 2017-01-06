@@ -23,7 +23,7 @@ import java.io.IOException;
 import java.util.Dictionary;
 import java.util.Enumeration;
 
-import org.osgi.annotation.versioning.ConsumerType;
+import aQute.bnd.annotation.ConsumerType;
 
 
 /**
