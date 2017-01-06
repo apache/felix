@@ -192,4 +192,11 @@ public class IterativeResolver implements Resolver {
         }
     }
 
+    @Override
+    public Map<Resource, List<Wire>> resolveDynamic(ResolveContext context, Wiring hostWiring, Requirement dynamicRequirement)
+        throws ResolutionException
+    {
+        return null;
+    }
+
 }

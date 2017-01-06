@@ -1,5 +1,5 @@
 /*
- * Copyright (c) OSGi Alliance (2011, 2012). All Rights Reserved.
+ * Copyright (c) OSGi Alliance (2011, 2013). All Rights Reserved.
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -34,13 +34,13 @@ import org.osgi.resource.Requirement;
  * Resolver implementations may extend this class to provide extra state
  * information about the reason for the resolution failure.
  * 
- * @version $Id: 42e5773e3b7e240673874329e5d9e705d0b698c5 $
+ * @author $Id: 2bcc0ac8ebfaf169dd301493303d23ce613ac8b9 $
  */
 public class ResolutionException extends Exception {
 
 	private static final long				serialVersionUID	= 1L;
 
-	private final Collection<Requirement>	unresolvedRequirements;
+	private final transient Collection<Requirement>	unresolvedRequirements;
 
 	/**
 	 * Create a {@code ResolutionException} with the specified message, cause
@@ -55,7 +55,7 @@ public class ResolutionException extends Exception {
 	public ResolutionException(String message, Throwable cause, Collection<Requirement> unresolvedRequirements) {
 		super(message, cause);
 		if ((unresolvedRequirements == null) || unresolvedRequirements.isEmpty()) {
-			this.unresolvedRequirements = emptyCollection();
+			this.unresolvedRequirements = null;
 		} else {
 			this.unresolvedRequirements = Collections.unmodifiableCollection(new ArrayList<Requirement>(unresolvedRequirements));
 		}
@@ -68,7 +68,7 @@ public class ResolutionException extends Exception {
 	 */
 	public ResolutionException(String message) {
 		super(message);
-		unresolvedRequirements = emptyCollection();
+		unresolvedRequirements = null;
 	}
 
 	/**
@@ -78,10 +78,11 @@ public class ResolutionException extends Exception {
 	 */
 	public ResolutionException(Throwable cause) {
 		super(cause);
-		unresolvedRequirements = emptyCollection();
+		unresolvedRequirements = null;
 	}
 
-	private static <T> Collection<T> emptyCollection() {
+	@SuppressWarnings("unchecked")
+	private static Collection<Requirement> emptyCollection() {
 		return Collections.EMPTY_LIST;
 	}
 
@@ -95,9 +96,9 @@ public class ResolutionException extends Exception {
 	 * 
 	 * @return A collection of the unresolved requirements for this exception.
 	 *         The returned collection may be empty if no unresolved
-	 *         requirements information is provided.
+	 *         requirements information is available.
 	 */
 	public Collection<Requirement> getUnresolvedRequirements() {
-		return unresolvedRequirements;
+		return (unresolvedRequirements != null) ? unresolvedRequirements : emptyCollection();
 	}
 }

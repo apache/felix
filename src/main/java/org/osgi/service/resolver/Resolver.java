@@ -1,5 +1,5 @@
 /*
- * Copyright (c) OSGi Alliance (2006, 2012). All Rights Reserved.
+ * Copyright (c) OSGi Alliance (2006, 2016). All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,17 +22,23 @@ package org.osgi.service.resolver;
 
 import java.util.List;
 import java.util.Map;
+
+import org.osgi.annotation.versioning.ProviderType;
+import org.osgi.framework.namespace.PackageNamespace;
+import org.osgi.resource.Namespace;
+import org.osgi.resource.Requirement;
 import org.osgi.resource.Resource;
 import org.osgi.resource.Wire;
+import org.osgi.resource.Wiring;
 
 /**
  * A resolver service resolves the specified resources in the context supplied
  * by the caller.
  * 
  * @ThreadSafe
- * @noimplement
- * @version $Id: dfb89b8d09af62ecf62321b80d7e2310512f27a1 $
+ * @author $Id: 555f3cd1543e7a2c3492a71d74dcf728668265b6 $
  */
+@ProviderType
 public interface Resolver {
 	/**
 	 * Resolve the specified resolve context and return any new resources and
@@ -69,4 +75,60 @@ public interface Resolver {
 	 * @throws ResolutionException If the resolution cannot be satisfied.
 	 */
 	Map<Resource, List<Wire>> resolve(ResolveContext context) throws ResolutionException;
+
+	/**
+	 * Resolves a given dynamic requirement dynamically for the given host
+	 * wiring using the given resolve context and return any new resources and
+	 * wires to the caller.
+	 * <p>
+	 * The requirement must be a {@link Wiring#getResourceRequirements(String)
+	 * requirement} of the wiring and must use the
+	 * {@link PackageNamespace#PACKAGE_NAMESPACE package} namespace.
+	 * <p>
+	 * The resolve context is not asked for
+	 * {@link ResolveContext#getMandatoryResources() mandatory} resources or for
+	 * {@link ResolveContext#getMandatoryResources() optional} resources. The
+	 * resolve context is asked to
+	 * {@link ResolveContext#findProviders(Requirement) find providers} for the
+	 * given requirement. The matching {@link PackageNamespace#PACKAGE_NAMESPACE
+	 * package} capabilities returned by the resolve context must not have a
+	 * {@link PackageNamespace#PACKAGE_NAMESPACE osgi.wiring.package} attribute
+	 * equal to a {@link PackageNamespace#PACKAGE_NAMESPACE package} capability
+	 * already {@link Wiring#getRequiredResourceWires(String) wired to} by the
+	 * wiring or equal a {@link PackageNamespace#PACKAGE_NAMESPACE package}
+	 * capability {@link Wiring#getResourceCapabilities(String) provided} by the
+	 * wiring. The resolve context may be requested to
+	 * {@link ResolveContext#findProviders(Requirement) find providers} for
+	 * other requirements in order to resolve the resources that provide the
+	 * matching capabilities to the given requirement.
+	 * <p>
+	 * If the requirement {@link Namespace#REQUIREMENT_CARDINALITY_DIRECTIVE
+	 * cardinality} is not {@link Namespace#CARDINALITY_MULTIPLE multiple} then
+	 * no new wire must be created if the
+	 * {@link Wiring#getRequiredResourceWires(String) wires} of the wiring
+	 * already contain a wire that uses the {@link Wire#getRequirement()
+	 * requirement}
+	 * <p>
+	 * This operation may resolve additional resources in order to resolve the
+	 * dynamic requirement. The returned map will contain entries for each
+	 * resource that got resolved in addition to the specified wiring
+	 * {@link Wiring#getResource() resource}. The wire list for the wiring
+	 * resource will only contain one wire which is for the dynamic requirement.
+	 * 
+	 * @param context The resolve context for the resolve operation. Must not be
+	 *            {@code null}.
+	 * @param hostWiring The wiring with the dynamic
+	 *            {@link Wiring#getResourceRequirements(String) requirement}.
+	 *            Must not be {@code null}.
+	 * @param dynamicRequirement The dynamic requirement. Must not be
+	 *            {@code null}.
+	 * @return The new resources and wires required to satisfy the specified
+	 *         dynamic requirement. The returned map is the property of the
+	 *         caller and can be modified by the caller. If no new wires were
+	 *         created then a ResolutionException is thrown.
+	 * @throws ResolutionException if the dynamic requirement cannot be resolved
+	 */
+	public Map<Resource,List<Wire>> resolveDynamic(ResolveContext context,
+			Wiring hostWiring, Requirement dynamicRequirement)
+			throws ResolutionException;
 }
