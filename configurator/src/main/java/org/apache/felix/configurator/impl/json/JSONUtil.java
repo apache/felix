@@ -30,17 +30,8 @@ import java.util.Dictionary;
 import java.util.Enumeration;
 import java.util.Hashtable;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
-
-import javax.json.Json;
-import javax.json.JsonArray;
-import javax.json.JsonNumber;
-import javax.json.JsonObject;
-import javax.json.JsonReader;
-import javax.json.JsonString;
-import javax.json.JsonStructure;
-import javax.json.JsonValue;
-import javax.json.JsonValue.ValueType;
 
 import org.apache.felix.configurator.impl.TypeConverter;
 import org.apache.felix.configurator.impl.Util;
@@ -49,7 +40,9 @@ import org.apache.felix.configurator.impl.model.BundleState;
 import org.apache.felix.configurator.impl.model.Config;
 import org.apache.felix.configurator.impl.model.ConfigPolicy;
 import org.apache.felix.configurator.impl.model.ConfigurationFile;
+import org.apache.felix.serializer.impl.json.JsonSerializerImpl;
 import org.osgi.framework.Bundle;
+import org.osgi.service.serializer.Serializer;
 import org.osgi.util.converter.TypeReference;
 
 public class JSONUtil {
@@ -138,16 +131,16 @@ public class JSONUtil {
             final long bundleId,
             final String contents) {
         final String identifier = (url == null ? name : url.toString());
-        final JsonObject json = parseJSON(name, contents);
+        final Map json = parseJSON(name, contents);
         final List<?> configs = verifyJSON(name, json);
         if ( configs != null ) {
             final List<Config> configurations = new ArrayList<>();
             for(final Object obj : configs) {
-                if ( ! (obj instanceof JsonObject) ) {
+                if ( ! (obj instanceof Map) ) {
                     SystemLogger.error("Ignoring configuration in '" + identifier + "' (not a configuration) : " + obj);
                 } else {
-                    final JsonObject mainMap = (JsonObject)obj;
-                    final Object pid = getValue(mainMap, PROP_PID);
+                    final Map mainMap = (Map)obj;
+                    final Object pid = mainMap.get(PROP_PID);
                     if ( ! (pid instanceof String) ) {
                         SystemLogger.error("Ignoring configuration in '" + identifier + "' (no service.pid) : " + obj);
                     } else {
@@ -157,9 +150,9 @@ public class JSONUtil {
 
                         final Dictionary<String, Object> properties = new Hashtable<>();
                         boolean valid = true;
-                        for(final String mapKey : mainMap.keySet()) {
-                            final Object value = getValue(mainMap, mapKey);
-
+                        for(final Object mapKeyObj : mainMap.keySet()) {
+                            final Object value = mainMap.get(mapKeyObj);
+                            final String mapKey = mapKeyObj.toString();
                             if ( mapKey.equals(PROP_PID) ) {
                                 continue;
                             }
@@ -238,7 +231,7 @@ public class JSONUtil {
      * @param contents The contents
      * @return The parsed JSON object or {@code null} on failure,
      */
-    public static JsonObject parseJSON(final String name, String contents) {
+    public static Map parseJSON(final String name, String contents) {
         // minify JSON first (remove comments)
         try (final Reader in = new StringReader(contents);
              final Writer out = new StringWriter()) {
@@ -249,55 +242,13 @@ public class JSONUtil {
             SystemLogger.error("Invalid JSON from " + name);
             return null;
         }
-        try (final JsonReader reader = Json.createReader(new StringReader(contents)) ) {
-            final JsonStructure obj = reader.read();
-            if ( obj != null && obj.getValueType() == ValueType.OBJECT ) {
-                return (JsonObject)obj;
-            }
+        final Serializer serializer = new JsonSerializerImpl();
+        try (final Reader reader = new StringReader(contents) ) {
+        	return serializer.deserialize(Map.class).from(reader);
+        } catch ( final IOException ioe) {
             SystemLogger.error("Invalid JSON from " + name);
+            return null;        	
         }
-        return null;
-    }
-
-    /**
-     * Get the value of a JSON property
-     * @param root The JSON Object
-     * @param key The key in the JSON Obejct
-     * @return The value or {@code null}
-     */
-    public static Object getValue(final JsonObject root, final String key) {
-        if ( !root.containsKey(key) ) {
-            return null;
-        }
-        final JsonValue value = root.get(key);
-        return getValue(value);
-    }
-
-    public static Object getValue(final JsonValue value) {
-        switch ( value.getValueType() ) {
-            // type NULL -> return null
-            case NULL : return null;
-            // type TRUE or FALSE -> return boolean
-            case FALSE : return false;
-            case TRUE : return true;
-            // type String -> return String
-            case STRING : return ((JsonString)value).getString();
-            // type Number -> return long or double
-            case NUMBER : final JsonNumber num = (JsonNumber)value;
-                          if (num.isIntegral()) {
-                               return num.longValue();
-                          }
-                          return num.doubleValue();
-            // type ARRAY -> return list and call this method for each value
-            case ARRAY : final List<Object> array = new ArrayList<>();
-                         for(final JsonValue x : ((JsonArray)value)) {
-                             array.add(getValue(x));
-                         }
-                         return array;
-            // type OBJECT -> return object
-            case OBJECT : return value;
-        }
-        return null;
     }
 
     /**
@@ -306,11 +257,11 @@ public class JSONUtil {
      * @param root The JSON root object.
      * @return JSON array with configurations or {@code null}
      */
-    public static List<?> verifyJSON(final String name, final JsonObject root) {
+    public static List<?> verifyJSON(final String name, final Map root) {
         if ( root == null ) {
             return null;
         }
-        final Object version = getValue(root, PROP_VERSION);
+        final Object version = root.get(PROP_VERSION);
         if ( version != null ) {
 
             final int v = TypeConverter.getConverter().convert(version).defaultValue(-1).to(Integer.class);
@@ -324,7 +275,7 @@ public class JSONUtil {
                 return null;
             }
         }
-        final Object configs = getValue(root, "configurations");
+        final Object configs =  root.get("configurations");
         if ( configs == null ) {
             // short cut, we just return false as we don't have to process this file
             return null;
