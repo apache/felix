@@ -54,7 +54,7 @@ import org.osgi.service.log.LogService;
  * not all dependencies are present and the created components also persist whether or 
  * not the dependencies are present to allow the component instance to exist.
  */
-public class ComponentFactoryImpl<S> extends AbstractComponentManager<S> implements ComponentFactory, ComponentContainer<S>
+public class ComponentFactoryImpl<S> extends AbstractComponentManager<S> implements ComponentFactory<S>, ComponentContainer<S>
 {
 
     /**
@@ -116,7 +116,7 @@ public class ComponentFactoryImpl<S> extends AbstractComponentManager<S> impleme
     /* (non-Javadoc)
     * @see org.osgi.service.component.ComponentFactory#newInstance(java.util.Dictionary)
     */
-    public ComponentInstance newInstance( Dictionary<String, ?> dictionary )
+    public ComponentInstance<S> newInstance( Dictionary<String, ?> dictionary )
     {
         final SingleComponentManager<S> cm = createComponentManager();
         log( LogService.LOG_DEBUG, "Creating new instance from component factory {0} with configuration {1}",
@@ -128,7 +128,7 @@ public class ComponentFactoryImpl<S> extends AbstractComponentManager<S> impleme
         // enable
         cm.enableInternal();
 
-        ComponentInstance instance;
+        ComponentInstance<S> instance;
         if ( getComponentMetadata().isPersistentFactoryComponent() ) 
         {
             instance = new ModifyComponentInstance<S>(cm);
@@ -152,7 +152,7 @@ public class ComponentFactoryImpl<S> extends AbstractComponentManager<S> impleme
         return instance;
     }
     
-    private static class ModifyComponentInstance<S> implements ExtFactoryComponentInstance
+    private static class ModifyComponentInstance<S> implements ExtFactoryComponentInstance<S>
     {
         private final SingleComponentManager<S> cm;
 
@@ -166,9 +166,9 @@ public class ComponentFactoryImpl<S> extends AbstractComponentManager<S> impleme
             cm.dispose();            
         }
 
-        public Object getInstance()
+        public S getInstance()
         {
-            final ComponentInstance componentInstance = cm.getComponentInstance();
+            final ComponentInstance<S> componentInstance = cm.getComponentInstance();
             return componentInstance == null? null: componentInstance.getInstance();
         }
 

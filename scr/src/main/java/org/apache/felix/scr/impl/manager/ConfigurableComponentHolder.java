@@ -28,12 +28,11 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.apache.felix.scr.impl.helper.ComponentMethods;
 import org.apache.felix.scr.impl.helper.SimpleLogger;
-import org.apache.felix.scr.impl.metadata.ServiceMetadata.Scope;
 import org.apache.felix.scr.impl.metadata.ComponentMetadata;
+import org.apache.felix.scr.impl.metadata.ServiceMetadata.Scope;
 import org.apache.felix.scr.impl.metadata.TargetedPID;
 import org.osgi.framework.Constants;
 import org.osgi.service.component.ComponentConstants;
@@ -753,7 +752,8 @@ public abstract class ConfigurableComponentHolder<S> implements ComponentHolder<
             return false;
         }
 
-        ConfigurableComponentHolder<S> other = (ConfigurableComponentHolder<S>) object;
+        @SuppressWarnings("unchecked")
+		ConfigurableComponentHolder<S> other = (ConfigurableComponentHolder<S>) object;
         return m_activator == other.m_activator
             && getName().equals(other.getName());
     }

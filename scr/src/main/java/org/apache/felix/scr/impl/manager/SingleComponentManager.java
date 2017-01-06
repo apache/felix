@@ -165,7 +165,7 @@ public class SingleComponentManager<S> extends AbstractComponentManager<S> imple
     }
 
 
-    public ComponentInstance getComponentInstance()
+    public ComponentInstance<S> getComponentInstance()
     {
         return m_componentContext == null? null: m_componentContext.getComponentInstance();
     }
