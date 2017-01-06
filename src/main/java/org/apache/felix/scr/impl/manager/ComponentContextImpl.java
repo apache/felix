@@ -44,7 +44,7 @@ public class ComponentContextImpl<S> implements ExtComponentContext {
 
     private final EdgeInfo[] edgeInfos;
 
-    private final ComponentInstance m_componentInstance = new ComponentInstanceImpl<S>(this);
+    private final ComponentInstance<S> m_componentInstance = new ComponentInstanceImpl<S>(this);
 
     private final Bundle m_usingBundle;
     
@@ -180,7 +180,7 @@ public class ComponentContextImpl<S> implements ExtComponentContext {
     }
 
 
-    public ComponentInstance getComponentInstance()
+    public ComponentInstance<S> getComponentInstance()
     {
         return m_componentInstance;
     }
@@ -253,7 +253,7 @@ public class ComponentContextImpl<S> implements ExtComponentContext {
         return null;
     }
 
-    private static class ComponentInstanceImpl<S> implements ComponentInstance
+    private static class ComponentInstanceImpl<S> implements ComponentInstance<S>
     {
         private final ComponentContextImpl<S> m_componentContext;
 
@@ -263,7 +263,7 @@ public class ComponentContextImpl<S> implements ExtComponentContext {
         }
 
 
-        public Object getInstance()
+        public S getInstance()
         {
             return m_componentContext.getImplementationObject(true);
         }

@@ -884,7 +884,8 @@ public abstract class AbstractComponentManager<S> implements SimpleLogger, Compo
             final Dictionary<String, Object> serviceProperties = getServiceProperties();
             try
             {
-                ServiceRegistration<S> serviceRegistration = (ServiceRegistration<S>) bundleContext.registerService(
+                @SuppressWarnings("unchecked")
+				ServiceRegistration<S> serviceRegistration = (ServiceRegistration<S>) bundleContext.registerService(
                     services, getService(), serviceProperties);
                 return serviceRegistration;
             }
@@ -984,7 +985,7 @@ public abstract class AbstractComponentManager<S> implements SimpleLogger, Compo
         }
         m_componentMethods.initComponentMethods(getComponentMetadata(), implementationObjectClass);
 
-        for (DependencyManager dependencyManager : m_dependencyManagers)
+        for (DependencyManager<S, ?> dependencyManager : m_dependencyManagers)
         {
             dependencyManager.initBindingMethods(m_componentMethods.getBindMethods(dependencyManager.getName()));
         }
@@ -1128,7 +1129,8 @@ public abstract class AbstractComponentManager<S> implements SimpleLogger, Compo
             int index = 0;
             for (ReferenceMetadata currentdependency : metadata.getDependencies())
             {
-                DependencyManager<S, ?> depmanager = new DependencyManager(this, currentdependency, index++);
+                @SuppressWarnings({ "unchecked", "rawtypes" })
+				DependencyManager<S, ?> depmanager = new DependencyManager(this, currentdependency, index++);
 
                 depMgrList.add(depmanager);
             }
