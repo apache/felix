@@ -111,8 +111,6 @@ public class SchemaImpl
         List<Object> result = new ArrayList<>();
         String currentContext = context + contexts.get(currentIndex);
         Object o = objectMap.get(currentContext);
-        if (o instanceof Map)
-            toString();
         if (o instanceof List) {
             @SuppressWarnings( "unchecked" )
             List<Object> l = (List<Object>)o;

@@ -83,6 +83,38 @@ public class SchemaTest {
         assertListEquals(Arrays.asList(new String[]{"value1", "value2", "value3"}), s.valuesAt("/embedded/value", dto));
     }
 
+    @Test
+    public void testNullValues() {
+        Optional<Schema> opt = schematizer
+                .rule("MyDTO", new TypeReference<MyDTO3<MyEmbeddedDTO2<String>>>(){})
+                .rule("MyDTO", "/embedded", new TypeReference<MyEmbeddedDTO2<String>>(){})
+                .rule("MyDTO", "/embedded/value", String.class)
+                .get("MyDTO");
+
+        assertTrue(opt.isPresent());
+        Schema s = opt.get();
+        assertNotNull(s);
+
+        MyEmbeddedDTO2<String> embedded1 = new MyEmbeddedDTO2<>();
+        MyEmbeddedDTO2<String> embedded2 = new MyEmbeddedDTO2<>();
+        MyEmbeddedDTO2<String> embedded3 = new MyEmbeddedDTO2<>();
+
+        MyDTO3<MyEmbeddedDTO2<String>> dto = new MyDTO3<>();
+        dto.ping = "lalala";
+        dto.pong = Long.MIN_VALUE;
+        dto.count = Count.ONE;
+        dto.embedded = new ArrayList<>();
+        dto.embedded.add(embedded1);
+        dto.embedded.add(embedded2);
+        dto.embedded.add(embedded3);
+
+        assertEquals("lalala", s.valuesAt("/ping", dto).iterator().next());
+        assertEquals(Long.MIN_VALUE, s.valuesAt("/pong", dto).iterator().next());
+        assertEquals(Count.ONE, s.valuesAt("/count", dto).iterator().next());
+        assertNotNull(s.valuesAt("/embedded", dto));
+        assertListEquals(Arrays.asList(new String[]{null, null, null}), s.valuesAt("/embedded/value", dto));
+    }
+
     @SuppressWarnings( { "rawtypes", "unchecked" } )
     private boolean assertListEquals(List<?> expected, Collection<?> actual) {
         if (expected == null || actual == null)
