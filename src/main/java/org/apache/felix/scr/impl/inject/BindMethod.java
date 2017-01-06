@@ -83,9 +83,9 @@ implements org.apache.felix.scr.impl.helper.ReferenceMethod
      *      trying to find the requested method.
      */
     @Override
-    protected Method doFindMethod( final Class<?> targetClass, 
-    		final boolean acceptPrivate, 
-    		final boolean acceptPackage, 
+    protected Method doFindMethod( final Class<?> targetClass,
+    		final boolean acceptPrivate,
+    		final boolean acceptPackage,
     		final SimpleLogger logger )
         throws SuitableMethodNotAccessibleException, InvocationTargetException
     {
@@ -96,7 +96,7 @@ implements org.apache.felix.scr.impl.helper.ReferenceMethod
         //  4 - Service interface assignment compatible single parameter
         //  5 - DS 1.3+ : Single argument with Map
         //  6 - DS 1.1/DS 1.2 : two parameters, first the type of or assignment compatible with the service, the second Map
-        //  7 - DS 1.3+ : one or more parameters of types ServiceReference, ServiceObjects, interface type, 
+        //  7 - DS 1.3+ : one or more parameters of types ServiceReference, ServiceObjects, interface type,
     	//                or assignment compatible to interface type, in any order.
 
     	// flag indicating a suitable but inaccessible method has been found
@@ -149,7 +149,7 @@ implements org.apache.felix.scr.impl.helper.ReferenceMethod
 	            suitableMethodNotAccessible = true;
 	        }
         }
-        
+
         // for further methods we need the class of the service object
         final Class<?> parameterClass = ClassUtils.getClassFromComponentClassLoader( targetClass, m_referenceClassName, logger );
         if ( parameterClass != null )
@@ -220,9 +220,9 @@ implements org.apache.felix.scr.impl.helper.ReferenceMethod
                 catch ( SuitableMethodNotAccessibleException ex )
                 {
                     suitableMethodNotAccessible = true;
-                }            	
+                }
             }
-            
+
             // signatures taking a map are only supported starting with DS 1.1
             if ( getDSVersion().isDS11() && !getDSVersion().isDS13() )
             {
@@ -669,11 +669,11 @@ implements org.apache.felix.scr.impl.helper.ReferenceMethod
                     break;
 
                 case serviceObjects:
-                    result[i++] = ((ComponentServiceObjectsHelper)bp.getComponentContext().getComponentServiceObjectsHelper()).getServiceObjects(refPair.getRef());
+                    result[i++] = bp.getComponentContext().getComponentServiceObjectsHelper().getServiceObjects(refPair.getRef());
                     break;
 
                 case map:
-                    result[i++] = new ReadOnlyDictionary<String, Object>( refPair.getRef() );
+                    result[i++] = new ReadOnlyDictionary( refPair.getRef() );
                     break;
 
                 case serviceType:
