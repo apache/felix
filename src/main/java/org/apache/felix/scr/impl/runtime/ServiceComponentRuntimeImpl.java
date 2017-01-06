@@ -318,6 +318,8 @@ public class ServiceComponentRuntimeImpl implements ServiceComponentRuntime
 		dto.references = refsToDTO(m.getDependencies());
 		dto.scope = m.getServiceMetadata() == null? null: m.getServiceMetadata().getScope().name();
 		dto.serviceInterfaces = m.getServiceMetadata() == null? EMPTY: m.getServiceMetadata().getProvides();
+		// DS 1.4
+		dto.factoryProperties = m.isFactory() ? m.getFactoryProperties() : null;
 		return dto;
 	}
 
