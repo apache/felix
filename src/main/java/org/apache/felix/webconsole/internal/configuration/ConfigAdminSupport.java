@@ -697,7 +697,7 @@ class ConfigAdminSupport
                 {
                     if (i > 0)
                     {
-                        valueString.append(",");
+                        valueString.append(", ");
                     }
                     valueString.append(Array.get(value, i));
                 }
