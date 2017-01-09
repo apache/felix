@@ -54,7 +54,9 @@ public class ComponentMethodsImpl<T> implements ComponentMethods<T>
         DSVersion dsVersion = componentMetadata.getDSVersion();
         boolean configurableServiceProperties = componentMetadata.isConfigurableServiceProperties();
         boolean supportsInterfaces = componentMetadata.isConfigureWithInterfaces();
-        m_activateMethod = new ActivateMethod( componentMetadata.getActivate(), 
+        
+        m_activateMethod = new ActivateMethod( 
+        		ConstructorMethodImpl.CONSTRUCTOR_MARKER.equals(componentMetadata.getActivate()) ? null : componentMetadata.getActivate(), 
         		componentMetadata.isActivateDeclared(), 
         		implementationObjectClass, 
         		dsVersion, 
