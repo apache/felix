@@ -25,7 +25,7 @@ import org.osgi.service.component.ComponentContext;
  * The name ConstructorMethod has been chosen to avoid a clash with the 
  * existing Constructor class.
  */
-public interface ConstructorMethod {
+public interface ConstructorMethod<T> {
 
 	/**
 	 * Create a new instance
@@ -34,15 +34,15 @@ public interface ConstructorMethod {
 	 * @param logger A logger 
 	 * @return The instance
 	 */
-	<T> T newInstance(Class<T> componentClass,
+    T newInstance(Class<T> componentClass,
     		           ComponentContext componentContext,
                        SimpleLogger logger )
     throws Exception;
     
-    public ConstructorMethod DEFAULT = new ConstructorMethod() {
+    public ConstructorMethod<Object> DEFAULT = new ConstructorMethod<Object>() {
 		
 		@Override
-		public <T> T newInstance(Class<T> componentClass, ComponentContext componentContext, SimpleLogger logger) 
+		public Object newInstance(Class<Object> componentClass, ComponentContext componentContext, SimpleLogger logger) 
 				throws Exception
 		{
             // 112.4.4 The class must be public and have a public constructor without arguments so component instances

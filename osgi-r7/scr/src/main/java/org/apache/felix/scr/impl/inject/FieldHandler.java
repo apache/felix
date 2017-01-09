@@ -136,15 +136,6 @@ public class FieldHandler
         final Class<?> referenceType = ClassUtils.getClassFromComponentClassLoader(
                 this.componentClass, metadata.getInterface(), logger);
 
-        // ignore static fields
-        if ( Modifier.isStatic(f.getModifiers()))
-        {
-            logger.log( LogService.LOG_ERROR, "Field {0} in component {1} must not be static", new Object[]
-                    {metadata.getField(), this.componentClass}, null );
-        	valueType = ParamType.ignore;
-        	return f;
-        }
-
         // unary reference
         if ( !metadata.isMultiple() )
         {
@@ -605,18 +596,24 @@ public class FieldHandler
                     {handler.metadata.getField()}, null );
 
             // resolve the field
-            Field field = null;
-            try
-            {
-                field = FieldUtils.findField( handler.componentClass, handler.metadata.getField(), logger );
-                field = handler.validateField( field, logger );
-            }
-            catch ( final InvocationTargetException ex )
-            {
-                logger.log( LogService.LOG_WARNING, "{0} cannot be found", new Object[]
-                        {handler.metadata.getField()}, ex.getTargetException() );
-                field = null;
-            }
+            final Field field;
+        	final FieldUtils.FieldSearchResult result = FieldUtils.findField( handler.componentClass, handler.metadata.getField(), logger );
+        	if ( result == null ) 
+        	{
+                field = null;            		
+        	}
+        	else 
+        	{
+            	if ( !result.usable ) 
+            	{
+            		handler.valueType = ParamType.ignore;
+            		field = result.field;
+            	}
+            	else
+            	{
+            		field = handler.validateField( result.field, logger );
+            	}
+        	}
 
             handler.setField( field, logger );
         }
@@ -640,7 +637,7 @@ public class FieldHandler
     }
 
     /**
-     * Final state of field couldn't be found or errors occured.
+     * Final state of field couldn't be found or errors occurred.
      */
     private static class NotFound implements State
     {

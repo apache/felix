@@ -23,9 +23,9 @@ import org.apache.felix.scr.impl.metadata.ComponentMetadata;
 /**
  * @version $Rev$ $Date$
  */
-public interface ComponentMethods
+public interface ComponentMethods<T>
 {
-    void initComponentMethods( ComponentMetadata componentMetadata, Class<?> implementationObjectClass );
+    void initComponentMethods( ComponentMetadata componentMetadata, Class<T> implementationObjectClass );
 
     ComponentMethod getActivateMethod();
 
@@ -35,6 +35,6 @@ public interface ComponentMethods
 
     ReferenceMethods getBindMethods(String refName );
 
-	ConstructorMethod getConstructor();
+	ConstructorMethod<T> getConstructor();
 
 }
