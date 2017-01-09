@@ -55,6 +55,9 @@ public class ComponentMetadata
     // marker value indicating duplicate service setting
     private static final ServiceMetadata SERVICE_DUPLICATE = new ServiceMetadata();
 
+	/** If the activate method has this value, a constructor is used instead. */
+	public static final String CONSTRUCTOR_MARKER = "-init-";
+	       
     // the namespace code of the namespace declaring this component
     private final DSVersion m_dsVersion;
 
@@ -1003,6 +1006,34 @@ public class ComponentMetadata
         if ( m_activationFields != null && !m_dsVersion.isDS14() )
         {
             throw validationFailure( "Activation fields require version 1.4 or later");
+        }
+        
+        // constructor injection requires DS 1.4
+        if ( CONSTRUCTOR_MARKER.equals(this.getActivate()) )
+        {
+        	if ( !m_dsVersion.isDS14() )
+        	{
+                throw validationFailure( "Constructor injection requires version 1.4 or later");        		
+        	}
+        	final Set<Integer> parIndexSet = new HashSet<Integer>();
+        	for(final ReferenceMetadata ref : this.m_references) 
+        	{
+        		if ( ref.getParamterIndex() != -1 && !parIndexSet.add(ref.getParamterIndex()) ) 
+        		{
+                    throw validationFailure( "Duplicate reference for argument " + ref.getParamterIndex() + " in constructor" );        	                        
+        		}
+        	}
+        }
+        else
+        {
+        	// no constructor injection, check references for having a parameter index
+        	for(final ReferenceMetadata ref : this.m_references) 
+        	{
+        		if ( ref.getParamterIndex() != -1 )
+        		{
+                    throw validationFailure( "Reference must not use parameter attribute if no constructor injection is used" );        			
+        		}
+        	}
         }
         
         if (m_dsVersion == DSVersion.DS12Felix)

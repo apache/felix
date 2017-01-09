@@ -26,6 +26,7 @@ import java.util.concurrent.TimeUnit;
 import org.apache.felix.scr.component.ExtComponentContext;
 import org.apache.felix.scr.impl.helper.ComponentServiceObjectsHelper;
 import org.apache.felix.scr.impl.helper.ReadOnlyDictionary;
+import org.apache.felix.scr.impl.metadata.ComponentMetadata;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceReference;
@@ -116,6 +117,11 @@ public class ComponentContextImpl<S> implements ExtComponentContext {
         return m_componentManager;
     }
 
+    public ComponentMetadata getComponentMetadata() 
+    {
+    	return m_componentManager.getComponentMetadata();
+    }
+    
     public final Dictionary<String, Object> getProperties()
     {
         // 112.12.3.5 The Dictionary is read-only and cannot be modified

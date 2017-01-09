@@ -134,7 +134,7 @@ public class ReferenceMetadata
     private String m_parameter;
     
     // Parameter index, set based on {@code m_parameter} after validation
-    private int m_parameterIndex;
+    private int m_parameterIndex = -1;
     
     // Flags that store the values passed as strings
     private boolean m_isStatic = true;
@@ -542,7 +542,7 @@ public class ReferenceMetadata
      * This method returns the correct value only of this metadata object has been validated
      * by a call to {@link #validate(ComponentMetadata, Logger)} and the validation has been
      * successful.
-     * @return The parameter index , if no parameter is set this returns {@code 0}
+     * @return The parameter index , if no parameter is set this returns {@code -1}
      */
     public int getParamterIndex() 
     {

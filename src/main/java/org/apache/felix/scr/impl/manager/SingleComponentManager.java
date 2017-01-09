@@ -25,11 +25,13 @@ import java.util.HashMap;
 import java.util.Hashtable;
 import java.util.List;
 import java.util.Map;
+import java.util.TreeMap;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.felix.scr.impl.helper.ComponentMethod;
 import org.apache.felix.scr.impl.helper.ComponentMethods;
 import org.apache.felix.scr.impl.helper.MethodResult;
+import org.apache.felix.scr.impl.metadata.ComponentMetadata;
 import org.apache.felix.scr.impl.metadata.TargetedPID;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.Constants;
@@ -212,7 +214,8 @@ public class SingleComponentManager<S> extends AbstractComponentManager<S> imple
     }
 
 
-    protected S createImplementationObject( Bundle usingBundle, SetImplementationObject<S> setter, ComponentContextImpl<S> componentContext )
+    @SuppressWarnings("unchecked")
+	protected S createImplementationObject( Bundle usingBundle, SetImplementationObject<S> setter, ComponentContextImpl<S> componentContext )
     {
         final Class<S> implementationObjectClass;
         final S implementationObject;
@@ -226,6 +229,65 @@ public class SingleComponentManager<S> extends AbstractComponentManager<S> imple
             log( LogService.LOG_WARNING, "Bundle shut down during instantiation of the implementation object", null);
             return null;
         }
+        
+        ReferenceManager<S, ?> failedDm = null;
+        
+        // bind target services for constructor injection
+        final TreeMap<Integer, DependencyManager<S, ?>> paramMap;
+        if ( ComponentMetadata.CONSTRUCTOR_MARKER.equals(getComponentMetadata().getActivate()))
+        {
+        	paramMap = new TreeMap<Integer, DependencyManager<S,?>>();
+	        for ( DependencyManager<S, ?> dm : getDependencyManagers())
+	        {
+	            if ( failedDm == null )
+	            {
+	            	if ( dm.getParameterIndex() != - 1)
+	            	{
+		                // if a dependency turned unresolved since the validation check,
+		                // creating the instance fails here, so we deactivate and return
+		                // null.
+		                boolean open = dm.open( componentContext, componentContext.getEdgeInfo( dm ) );
+		                if ( !open )
+		                {
+		                    log( LogService.LOG_DEBUG, "Cannot create component instance due to failure to bind reference {0}",
+		                            new Object[] { dm.getName() }, null );
+		
+		                    failedDm = dm;
+		                }
+		                paramMap.put(dm.getParameterIndex(), dm);
+	                }
+	            }
+	        }
+	        if (failedDm != null)
+	        {
+	            // make sure, we keep no bindings. Only close the dm's we opened.
+	            boolean skip = true;
+	            for ( DependencyManager<S, ?> md: getReversedDependencyManagers() )
+	            {
+	                if ( skip )
+	                {
+	                	if ( failedDm == md ) 
+	                	{
+	                		skip = false;
+	                	}
+	                }
+	                else
+	                {
+	                	if ( md.getParameterIndex() != -1 )
+	                	{
+	                		md.close( componentContext, componentContext.getEdgeInfo( md ) );
+	                	}
+	                }
+	                md.deactivate();
+	            }
+	            return null;
+	        }
+        }
+        else
+        {
+        	paramMap = null;
+        }
+        
         try
         {
             // 112.4.4 The class is retrieved with the loadClass method of the component's bundle
@@ -234,6 +296,7 @@ public class SingleComponentManager<S> extends AbstractComponentManager<S> imple
 
             implementationObject = getComponentMethods().getConstructor().newInstance(implementationObjectClass,
             		componentContext,
+            		paramMap,
             		this);
             
         }
@@ -251,29 +314,35 @@ public class SingleComponentManager<S> extends AbstractComponentManager<S> imple
 
         // 4. Bind the target services
 
-        ReferenceManager<S, ?> failedDm = null;
         for ( DependencyManager<S, ?> dm: getDependencyManagers())
         {
             if ( failedDm == null )
             {
-                // if a dependency turned unresolved since the validation check,
-                // creating the instance fails here, so we deactivate and return
-                // null.
-                boolean open = dm.open( componentContext, componentContext.getEdgeInfo( dm ) );
-                if ( !open )
-                {
-                    log( LogService.LOG_DEBUG, "Cannot create component instance due to failure to bind reference {0}",
-                            new Object[] { dm.getName() }, null );
-
-                    failedDm = dm;
-
-                }
+            	if ( dm.getParameterIndex() == - 1)
+            	{
+	                // if a dependency turned unresolved since the validation check,
+	                // creating the instance fails here, so we deactivate and return
+	                // null.
+	                boolean open = dm.open( componentContext, componentContext.getEdgeInfo( dm ) );
+	                if ( !open )
+	                {
+	                    log( LogService.LOG_DEBUG, "Cannot create component instance due to failure to bind reference {0}",
+	                            new Object[] { dm.getName() }, null );
+	
+	                    failedDm = dm;
+	
+	                }
+            	}
             }
             else
             {
-                componentContext.getEdgeInfo( dm ).ignore();
+            	if ( dm.getParameterIndex() == - 1)
+            	{
+            		componentContext.getEdgeInfo( dm ).ignore();
+            	}
             }
         }
+
         if (failedDm != null)
         {
             // make sure, we keep no bindings. Only close the dm's we opened.
@@ -284,7 +353,7 @@ public class SingleComponentManager<S> extends AbstractComponentManager<S> imple
                 {
                     skip = false;
                 }
-                if ( !skip )
+                if ( !skip || md.getParameterIndex() != -1 )
                 {
                     md.close( componentContext, componentContext.getEdgeInfo( md ) );
                 }

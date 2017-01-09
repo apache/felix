@@ -1488,6 +1488,11 @@ public class DependencyManager<S, T> implements ReferenceManager<S, T>
         return m_dependencyMetadata.getName();
     }
 
+    public int getParameterIndex() 
+    {
+    	return m_dependencyMetadata.getParamterIndex();
+    }
+    
     /**
      * Returns <code>true</code> if this dependency manager is satisfied, that
      * is if either the dependency is optional or the number of services

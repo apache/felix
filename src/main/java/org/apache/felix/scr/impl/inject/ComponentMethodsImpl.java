@@ -56,7 +56,7 @@ public class ComponentMethodsImpl<T> implements ComponentMethods<T>
         boolean supportsInterfaces = componentMetadata.isConfigureWithInterfaces();
         
         m_activateMethod = new ActivateMethod( 
-        		ConstructorMethodImpl.CONSTRUCTOR_MARKER.equals(componentMetadata.getActivate()) ? null : componentMetadata.getActivate(), 
+        		ComponentMetadata.CONSTRUCTOR_MARKER.equals(componentMetadata.getActivate()) ? null : componentMetadata.getActivate(), 
         		componentMetadata.isActivateDeclared(), 
         		implementationObjectClass, 
         		dsVersion, 
@@ -88,9 +88,11 @@ public class ComponentMethodsImpl<T> implements ComponentMethods<T>
             bindMethodMap.put( refName, methods );
         }
         
-        if ( componentMetadata.getActivationFields() != null )
+        // special constructor handling with activation fields and/or constructor injection
+        if ( componentMetadata.getActivationFields() != null 
+             || ComponentMetadata.CONSTRUCTOR_MARKER.equals(componentMetadata.getActivate()))
         {
-        	m_constructor = new ConstructorMethodImpl(componentMetadata);
+        	m_constructor = new ConstructorMethodImpl();
         }
         else
         {
@@ -99,7 +101,7 @@ public class ComponentMethodsImpl<T> implements ComponentMethods<T>
     }
 
 	@Override
-   public ComponentMethod getActivateMethod()
+    public ComponentMethod getActivateMethod()
     {
         return m_activateMethod;
     }

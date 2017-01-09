@@ -18,13 +18,16 @@
  */
 package org.apache.felix.scr.impl.inject;
 
+import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
-import java.util.Map;
+import java.util.TreeMap;
 
 import org.apache.felix.scr.impl.helper.ConstructorMethod;
 import org.apache.felix.scr.impl.helper.SimpleLogger;
+import org.apache.felix.scr.impl.manager.ComponentContextImpl;
+import org.apache.felix.scr.impl.manager.DependencyManager;
 import org.apache.felix.scr.impl.metadata.ComponentMetadata;
-import org.osgi.service.component.ComponentContext;
+import org.apache.felix.scr.impl.metadata.ReferenceMetadata;
 import org.osgi.service.log.LogService;
 
 /**
@@ -33,61 +36,48 @@ import org.osgi.service.log.LogService;
  */
 public class ConstructorMethodImpl<T> implements ConstructorMethod<T> 
 {
-	/** If the activate method has this value, a constructor is used instead. */
-	public static final String CONSTRUCTOR_MARKER = "-init-";
-	
-    private enum ParamType {
-        failure,
-        ignore,
-        componentContext,
-        bundleContext,
-        map,
-        annotation
-    }
-
-    private final ComponentMetadata m_metadata;
+    private volatile boolean m_initialized = false;
     
-    private final ParamType[] EMPTY_PARAMS = new ParamType[0];
-    
-    private volatile ParamType[] m_paramTypes;
+    private volatile FieldUtils.ValueType[] m_paramTypes;
     private volatile Field[] m_fields;
     
-	public ConstructorMethodImpl( final ComponentMetadata metadata)
-	{
-		this.m_metadata = metadata;
-
-	}
-	
+    private volatile Constructor<T> m_constructor;
+    private volatile FieldUtils.ValueType[] m_constructorArgTypes;
+    
 	@SuppressWarnings("unchecked")
 	@Override
-	public T newInstance(Class<T> componentClass, ComponentContext componentContext, SimpleLogger logger)
-			throws Exception
+	public <S> T newInstance(Class<T> componentClass, 
+             			 ComponentContextImpl<T> componentContext, 
+                         TreeMap<Integer, DependencyManager<S, ?>> parameterMap,
+			             SimpleLogger logger)
+    throws Exception
 	{
-		if ( m_paramTypes == null ) {
-			if ( m_metadata.getActivationFields() != null )
+		if ( !m_initialized ) {
+			// activation fields
+			if ( componentContext.getComponentMetadata().getActivationFields() != null )
 			{
-				m_paramTypes = new ParamType[m_metadata.getActivationFields().size()];
+				m_paramTypes = new FieldUtils.ValueType[componentContext.getComponentMetadata().getActivationFields().size()];
 				m_fields = new Field[m_paramTypes.length];
 			
 				int index = 0;
-				for(final String fieldName : m_metadata.getActivationFields() ) 
+				for(final String fieldName : componentContext.getComponentMetadata().getActivationFields() ) 
 				{
 					final FieldUtils.FieldSearchResult result = FieldUtils.findField(componentClass, fieldName, logger);
 					if ( result == null )
 					{
-						m_paramTypes[index] = ParamType.failure;
+						m_paramTypes[index] = null;
 						m_fields[index] = null;
 					}
 					else
 					{
 						if ( result.usable )
 						{
-							m_paramTypes[index] = getFieldType(result.field);
+							m_paramTypes[index] = FieldUtils.getValueType(result.field.getType());
 							m_fields[index] = result.field;
 						}
 						else
 						{
-							m_paramTypes[index] = ParamType.ignore;
+							m_paramTypes[index] = FieldUtils.ValueType.ignore;
 							m_fields[index] = null;
 						}
 					}
@@ -96,101 +86,115 @@ public class ConstructorMethodImpl<T> implements ConstructorMethod<T>
 			}
 			else
 			{
-				m_paramTypes = EMPTY_PARAMS;
+				m_paramTypes = FieldUtils.EMPTY_TYPES;
 				m_fields = null;
 			}
+			// constructor injection
+			if ( ComponentMetadata.CONSTRUCTOR_MARKER.equals(componentContext.getComponentMetadata().getActivate() ) ) 
+			{
+				// TODO search constructor
+				m_constructor = null;
+				
+				boolean hasFailure = false;
+				final Class<?>[] argTypes = m_constructor.getParameterTypes();
+				m_constructorArgTypes = new FieldUtils.ValueType[argTypes.length];
+				for(int i=0;i<m_constructorArgTypes.length;i++)
+				{
+					// TODO get reference metadata
+					ReferenceMetadata reference = null;
+					for(final ReferenceMetadata ref : componentContext.getComponentMetadata().getDependencies())
+					{
+						if ( ref.getParamterIndex() == i )
+						{
+							reference = ref;
+							break;
+						}
+					}
+					if ( reference == null )
+					{
+						m_constructorArgTypes[i] = FieldUtils.getValueType(argTypes[i]);
+					}
+					else 
+					{
+						m_constructorArgTypes[i] = FieldUtils.getReferenceValueType(componentClass, null, argTypes[i], null, logger);
+					}
+					if ( m_constructorArgTypes[i] == FieldUtils.ValueType.ignore )
+					{
+						hasFailure = true;
+						break;
+					}
+				}
+				if ( hasFailure )
+				{
+					m_constructor = null;
+				}
+			}
+			
+			// done
+			m_initialized = true;
 		}
 		
-		// if we have fields and one is in state failure we can directly throw
-		for(final ParamType t : m_paramTypes)
+		// if we have fields and one is in state failure (type == null) we can directly throw
+		for(final FieldUtils.ValueType t : m_paramTypes)
 		{
-			if ( t == ParamType.failure )
+			if ( t == null )
 			{
 				throw new InstantiationException("Field not found; Component will fail");
 			}
 		}
 
+		// constructor
 		final T component;
-		if ( CONSTRUCTOR_MARKER.equals(m_metadata.getActivate() ) ) 
+		if ( ComponentMetadata.CONSTRUCTOR_MARKER.equals(componentContext.getComponentMetadata().getActivate() ) ) 
 		{
-		    component = null;
-		    throw new IllegalStateException("Constructor init not implemented yet");
+			if ( m_constructor == null )
+			{
+				throw new InstantiationException("Constructor not found; Component will fail");				
+			}
+			final Object[] args = new Object[m_constructorArgTypes.length];
+			for(int i=0; i<args.length; i++) 
+			{
+				// TODO key pair for reference
+				args[i] = FieldUtils.getValue(m_constructorArgTypes[i], 
+						m_constructor.getParameterTypes()[i], 
+						componentContext, 
+						null);
+			}
+		    component = m_constructor.newInstance(args);
 		}
 		else
 		{
-		    component = (T)ConstructorMethod.DEFAULT.newInstance((Class<Object>)componentClass, componentContext, logger);
+		    component = (T)ConstructorMethod.DEFAULT.newInstance((Class<Object>)componentClass, 
+		    		(ComponentContextImpl<Object>)componentContext, null, logger);
 		}
+		
+		// activation fields
 		for(int i = 0; i<m_paramTypes.length; i++)
 		{
-			setField(componentClass, m_fields[i], m_paramTypes[i], component, componentContext, logger);
+	    	if ( m_paramTypes[i] != FieldUtils.ValueType.ignore )
+	    	{
+		        final Object value = FieldUtils.getValue(m_paramTypes[i], 
+		        		m_fields[i].getType(), 
+		        		(ComponentContextImpl<T>) componentContext, 
+		        		null);
+				this.setField(m_fields[i], component, value, logger);
+	    	}
 		}
 		
 		return component;
 	}
 
-	/**
-     * Get the field parameter type.
-     * @param f The field
-     * @return The parameter type of the field
-     */
-    private ParamType getFieldType( final Field f)
-    {
-        final Class<?> fieldType = f.getType();
-        if ( fieldType == ClassUtils.COMPONENT_CONTEXT_CLASS )
-        {
-        	return ParamType.componentContext;
-        }
-        else if ( fieldType == ClassUtils.BUNDLE_CONTEXT_CLASS )
-        {
-        	return ParamType.bundleContext;
-        }
-        else if ( fieldType == ClassUtils.MAP_CLASS )
-        {
-        	return ParamType.map;
-        }
-        else
-        {
-        	return ParamType.annotation;
-        }
-    }
-    
+   
     /**
      * Set the field, type etc.
      * @param f The field
      * @param logger The logger
      */
-    @SuppressWarnings("unchecked")
-	private void setField( final Class<T> componentClass, 
-    		final Field f, 
-    		final ParamType type,
+	private void setField( final Field f, 
     		final T component,
-    		final ComponentContext componentContext,
+    		final Object value,
     		final SimpleLogger logger )
     {
-    	if ( type == ParamType.ignore )
-    	{
-    		return;
-    	}
-        final Object value;
-        if ( type == ParamType.componentContext )
-        {
-    	    value = componentContext;
-        }
-        else if ( type == ParamType.bundleContext )
-        {
-            value = componentContext.getBundleContext();
-        }
-        else if ( type == ParamType.map )
-        {
-            // note: getProperties() returns a ReadOnlyDictionary which is a Map
-        	value = componentContext.getProperties();
-        }
-        else
-        {
-        	value = Annotations.toObject(f.getType(),
-                (Map<String, Object>) componentContext.getProperties(),
-                componentContext.getBundleContext().getBundle(), m_metadata.isConfigureWithInterfaces());
-        }
         try
         {
             f.set(component, value);
@@ -198,12 +202,13 @@ public class ConstructorMethodImpl<T> implements ConstructorMethod<T>
         catch ( final IllegalArgumentException iae )
         {
             logger.log( LogService.LOG_ERROR, "Field {0} in component {1} can't be set", new Object[]
-                    {f.getName(), componentClass}, iae );
+                    {f.getName(), component.getClass().getName()}, iae );
         }
         catch ( final IllegalAccessException iae )
         {
             logger.log( LogService.LOG_ERROR, "Field {0} in component {1} can't be set", new Object[]
-                    {f.getName(), componentClass}, iae );
+                    {f.getName(), component.getClass().getName()}, iae );
         }
     }
+    
 }
