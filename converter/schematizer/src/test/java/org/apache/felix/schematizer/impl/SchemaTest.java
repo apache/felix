@@ -23,7 +23,7 @@ import java.util.List;
 import java.util.Optional;
 
 import org.apache.felix.schematizer.Schema;
-import org.apache.felix.schematizer.impl.MyDTO3.Count;
+import org.apache.felix.schematizer.impl.MyEmbeddedDTO.Alpha;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -31,9 +31,7 @@ import org.osgi.util.converter.TypeReference;
 
 import junit.framework.AssertionFailedError;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
 public class SchemaTest {
     private SchematizerImpl schematizer;
@@ -70,7 +68,7 @@ public class SchemaTest {
         MyDTO3<MyEmbeddedDTO2<String>> dto = new MyDTO3<>();
         dto.ping = "lalala";
         dto.pong = Long.MIN_VALUE;
-        dto.count = Count.ONE;
+        dto.count = MyDTO3.Count.ONE;
         dto.embedded = new ArrayList<>();
         dto.embedded.add(embedded1);
         dto.embedded.add(embedded2);
@@ -78,9 +76,48 @@ public class SchemaTest {
 
         assertEquals("lalala", s.valuesAt("/ping", dto).iterator().next());
         assertEquals(Long.MIN_VALUE, s.valuesAt("/pong", dto).iterator().next());
-        assertEquals(Count.ONE, s.valuesAt("/count", dto).iterator().next());
+        assertEquals(MyDTO3.Count.ONE, s.valuesAt("/count", dto).iterator().next());
         assertNotNull(s.valuesAt("/embedded", dto));
+        Object embeddedList = s.valuesAt("/embedded", dto).iterator().next();
+        assertNotNull(embeddedList);
+        assertTrue(embeddedList instanceof List);
+        assertFalse(((List<?>)embeddedList).isEmpty());
+        Object embeddedObject = ((List<?>)embeddedList).get(0);
+        assertTrue(embeddedObject instanceof MyEmbeddedDTO2);
         assertListEquals(Arrays.asList(new String[]{"value1", "value2", "value3"}), s.valuesAt("/embedded/value", dto));
+    }
+
+    @Test
+    public void testEmbeddedValues() {
+        Optional<Schema> opt = schematizer
+                .rule("MyDTO", new TypeReference<MyDTO>(){})
+                .rule("MyDTO", "/embedded", new TypeReference<MyEmbeddedDTO>(){})
+                .get("MyDTO");
+
+        assertTrue(opt.isPresent());
+        Schema s = opt.get();
+        assertNotNull(s);
+
+        MyEmbeddedDTO embedded = new MyEmbeddedDTO();
+        embedded.alpha = Alpha.A;
+        embedded.marco = "mmmm";
+        embedded.polo = 66;
+
+        MyDTO dto = new MyDTO();
+        dto.ping = "lalala";
+        dto.pong = Long.MIN_VALUE;
+        dto.count = MyDTO.Count.ONE;
+        dto.embedded = embedded;
+
+        assertEquals("lalala", s.valuesAt("/ping", dto).iterator().next());
+        assertEquals(Long.MIN_VALUE, s.valuesAt("/pong", dto).iterator().next());
+        assertEquals(MyDTO.Count.ONE, s.valuesAt("/count", dto).iterator().next());
+        assertNotNull(s.valuesAt("/embedded", dto));
+        Object embeddedObject = s.valuesAt("/embedded", dto).iterator().next();
+        assertTrue(embeddedObject instanceof MyEmbeddedDTO);
+        assertEquals(Alpha.A, s.valuesAt("/embedded/alpha", dto).iterator().next());
+        assertEquals("mmmm", s.valuesAt("/embedded/marco", dto).iterator().next());
+        assertEquals(66L, s.valuesAt("/embedded/polo", dto).iterator().next());
     }
 
     @Test
@@ -102,7 +139,7 @@ public class SchemaTest {
         MyDTO3<MyEmbeddedDTO2<String>> dto = new MyDTO3<>();
         dto.ping = "lalala";
         dto.pong = Long.MIN_VALUE;
-        dto.count = Count.ONE;
+        dto.count = MyDTO3.Count.ONE;
         dto.embedded = new ArrayList<>();
         dto.embedded.add(embedded1);
         dto.embedded.add(embedded2);
@@ -110,7 +147,7 @@ public class SchemaTest {
 
         assertEquals("lalala", s.valuesAt("/ping", dto).iterator().next());
         assertEquals(Long.MIN_VALUE, s.valuesAt("/pong", dto).iterator().next());
-        assertEquals(Count.ONE, s.valuesAt("/count", dto).iterator().next());
+        assertEquals(MyDTO3.Count.ONE, s.valuesAt("/count", dto).iterator().next());
         assertNotNull(s.valuesAt("/embedded", dto));
         assertListEquals(Arrays.asList(new String[]{null, null, null}), s.valuesAt("/embedded/value", dto));
     }

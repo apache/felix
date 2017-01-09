@@ -24,10 +24,13 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import org.apache.felix.schematizer.Node;
+import org.apache.felix.schematizer.Node.DTO;
 import org.apache.felix.schematizer.NodeVisitor;
 import org.apache.felix.schematizer.Schema;
+import org.apache.felix.schematizer.SchematizingConverter;
 import org.osgi.util.converter.Converter;
 import org.osgi.util.converter.StandardConverter;
 
@@ -102,31 +105,57 @@ public class SchemaImpl
             return Collections.emptyList();
 
         List<String> contexts = Arrays.asList(pathParts);
-        List<Object> values = new ArrayList<>();
 
-        return valuesAt("", map, contexts, 0, values);
+        return valuesAt("", map, contexts, 0);
     }
 
-    private Collection<?> valuesAt(String context, Map<String, Object> objectMap, List<String> contexts, int currentIndex, List<Object> values) {
+    private Collection<?> valuesAt(String context, Map<String, Object> objectMap, List<String> contexts, int currentIndex) {
         List<Object> result = new ArrayList<>();
-        String currentContext = context + contexts.get(currentIndex);
+        String currentContext = contexts.get(currentIndex);
         Object o = objectMap.get(currentContext);
         if (o instanceof List) {
             @SuppressWarnings( "unchecked" )
             List<Object> l = (List<Object>)o;
             if (currentIndex == contexts.size() - 1) {
                 // We are at the end, so just add the collection
-                result.add(l);
+                result.add(convertToType("/" + currentContext, l));
                 return result;
             }
 
             currentContext = "/" + contexts.get(++currentIndex);
             for (Object o2 : l)
                 result.addAll(valuesAt(currentContext, o2));
+        } else if (o instanceof Map){
+            if (currentIndex == contexts.size() - 1) {
+                // We are at the end, so just add the result
+                result.add(convertToType("/" + currentContext, (Map)o));
+                return result;
+            }
+
+            result.addAll( valuesAt( currentContext, (Map)o, contexts, ++currentIndex ) );
         } else {
-            result.add( o );
+            result.add(o);
         }
 
         return result;
+    }
+
+    private Object convertToType( String path, Map map ) {
+        Optional<Node> node = nodeAtPath(path);
+        if (!node.isPresent())
+            return map;
+
+        Object result = new StandardConverter().convert(map).sourceAs(DTO.class).to(node.get().type());
+        return result;
+    }
+
+    private List<?> convertToType( String path, List<?> list ) {
+        Optional<Node> node = nodeAtPath(path);
+        if (!node.isPresent())
+            return list;
+
+        return list.stream()
+                .map( v -> new StandardConverter().convert(v).sourceAs(DTO.class).to(node.get().type()))
+                .collect( Collectors.toList() );
     }
 }
