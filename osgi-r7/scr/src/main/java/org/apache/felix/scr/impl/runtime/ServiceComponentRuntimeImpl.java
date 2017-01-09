@@ -400,7 +400,7 @@ public class ServiceComponentRuntimeImpl implements ServiceComponentRuntime
 			dto.unbind = r.getUnbind();
 			dto.updated = r.getUpdated();
 			// DS 1.4
-			dto.parameter = r.getParamterIndex();
+			dto.parameter = (r.getParamterIndex() == -1 ? 0 : r.getParamterIndex());
 			dto.collectionType = r.getFieldCollectionType();
 			dtos[i++] = dto;
 		}

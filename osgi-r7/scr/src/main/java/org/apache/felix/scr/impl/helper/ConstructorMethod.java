@@ -18,7 +18,10 @@
  */
 package org.apache.felix.scr.impl.helper;
 
-import org.osgi.service.component.ComponentContext;
+import java.util.TreeMap;
+
+import org.apache.felix.scr.impl.manager.ComponentContextImpl;
+import org.apache.felix.scr.impl.manager.DependencyManager;
 
 /**
  * This object describes a constructor for a component.
@@ -34,15 +37,19 @@ public interface ConstructorMethod<T> {
 	 * @param logger A logger 
 	 * @return The instance
 	 */
-    T newInstance(Class<T> componentClass,
-    		           ComponentContext componentContext,
+    <S> T newInstance(Class<T> componentClass,
+    		           ComponentContextImpl<T> componentContext,
+    		           TreeMap<Integer, DependencyManager<S, ?>> parameterMap,
                        SimpleLogger logger )
     throws Exception;
     
     public ConstructorMethod<Object> DEFAULT = new ConstructorMethod<Object>() {
 		
 		@Override
-		public Object newInstance(Class<Object> componentClass, ComponentContext componentContext, SimpleLogger logger) 
+		public <S> Object newInstance(Class<Object> componentClass, 
+				ComponentContextImpl<Object> componentContext, 
+				TreeMap<Integer, DependencyManager<S, ?>> parameterMap,
+				SimpleLogger logger) 
 				throws Exception
 		{
             // 112.4.4 The class must be public and have a public constructor without arguments so component instances
