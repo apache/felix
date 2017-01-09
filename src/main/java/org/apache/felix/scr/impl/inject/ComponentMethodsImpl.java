@@ -33,17 +33,19 @@ import org.apache.felix.scr.impl.metadata.ReferenceMetadata;
 
 /**
  * @version $Rev$ $Date$
+ * @param <T>
  */
-public class ComponentMethodsImpl implements ComponentMethods
+public class ComponentMethodsImpl<T> implements ComponentMethods<T>
 {
     private ComponentMethod m_activateMethod;
     private ComponentMethod m_modifiedMethod;
     private ComponentMethod m_deactivateMethod;
-    private ConstructorMethod m_constructor;
+    private ConstructorMethod<T> m_constructor;
 
     private final Map<String, ReferenceMethods> bindMethodMap = new HashMap<String, ReferenceMethods>();
 
-    public synchronized void initComponentMethods( ComponentMetadata componentMetadata, Class<?> implementationObjectClass )
+    @SuppressWarnings({ "rawtypes", "unchecked" })
+	public synchronized void initComponentMethods( ComponentMetadata componentMetadata, Class<T> implementationObjectClass )
     {
         if (m_activateMethod != null)
         {
@@ -86,11 +88,11 @@ public class ComponentMethodsImpl implements ComponentMethods
         
         if ( componentMetadata.getActivationFields() != null )
         {
-        	
+        	m_constructor = new ConstructorMethodImpl(componentMetadata);
         }
         else
         {
-        	m_constructor = ConstructorMethod.DEFAULT;
+        	m_constructor = (ConstructorMethod<T>) ConstructorMethod.DEFAULT;
         }
     }
 
@@ -119,7 +121,7 @@ public class ComponentMethodsImpl implements ComponentMethods
     }
 
 	@Override
-	public ConstructorMethod getConstructor() 
+	public ConstructorMethod<T> getConstructor() 
 	{
 		return m_constructor;
 	}

@@ -125,7 +125,7 @@ public abstract class AbstractComponentManager<S> implements SimpleLogger, Compo
     // the ID of this component
     private long m_componentId;
 
-    private final ComponentMethods m_componentMethods;
+    private final ComponentMethods<S> m_componentMethods;
 
     // The dependency managers that manage every dependency
     private final List<DependencyManager<S, ?>> m_dependencyManagers;
@@ -854,7 +854,7 @@ public abstract class AbstractComponentManager<S> implements SimpleLogger, Compo
         return this;
     }
 
-    ComponentMethods getComponentMethods()
+    ComponentMethods<S> getComponentMethods()
     {
         return m_componentMethods;
     }
@@ -971,10 +971,10 @@ public abstract class AbstractComponentManager<S> implements SimpleLogger, Compo
             log(LogService.LOG_ERROR, "bundle shut down while trying to load implementation object class", null);
             throw new IllegalStateException("bundle shut down while trying to load implementation object class");
         }
-        Class<?> implementationObjectClass;
+        Class<S> implementationObjectClass;
         try
         {
-            implementationObjectClass = bundle.loadClass(getComponentMetadata().getImplementationClassName());
+            implementationObjectClass = (Class<S>) bundle.loadClass(getComponentMetadata().getImplementationClassName());
         }
         catch (ClassNotFoundException e)
         {

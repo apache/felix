@@ -29,26 +29,37 @@ import org.osgi.service.log.LogService;
 
 public class FieldUtils {
 
+	public static final class FieldSearchResult 
+	{
+		public final Field field;
+		public final boolean usable;
+		
+		public FieldSearchResult(final Field f, final boolean usable)
+		{
+			this.field = f;
+			this.usable = usable;
+		}
+	}
+	
     /**
-     * Finds the field named in the {@link #fieldName} field in the given
-     * <code>targetClass</code>. If the target class has no acceptable method
+     * Finds the field named {@code fieldName} in the given
+     * {@code targetClass}. If the target class has no acceptable field
      * the class hierarchy is traversed until a field is found or the root
      * of the class hierarchy is reached without finding a field.
      *
-     * @return The requested field or <code>null</code> if no acceptable field
+     * @param targetClass The class of the component
+     * @param fieldName The name of the field
+     * @param logger A logger to log errors / problems
+     * @return The requested field or {@code null} if no acceptable field
      *      can be found in the target class or any super class.
-     * @throws InvocationTargetException If an unexpected Throwable is caught
-     *      trying to find the requested field.
-     * @param logger
      */
-    public static Field findField( final Class<?> targetClass,
+    public static FieldSearchResult findField( final Class<?> componentClass,
     		final String fieldName,
     		final SimpleLogger logger )
-    throws InvocationTargetException
     {
-        final ClassLoader targetClasslLoader = targetClass.getClassLoader();
-        final String targetPackage = ClassUtils.getPackageName( targetClass );
-        Class<?> theClass = targetClass;
+        final ClassLoader targetClasslLoader = componentClass.getClassLoader();
+        final String targetPackage = ClassUtils.getPackageName( componentClass );
+        Class<?> theClass = componentClass;
         boolean acceptPrivate = true;
         boolean acceptPackage = true;
         while (true)
@@ -60,21 +71,19 @@ public class FieldUtils {
                     "Locating field " + fieldName + " in class " + theClass.getName(), null );
             }
 
-            try
+            try 
             {
-                final Field field = getField( theClass, fieldName, acceptPrivate, acceptPackage, logger );
-                if ( field != null )
-                {
-                    return field;
-                }
+	            final FieldSearchResult result = getField( componentClass, theClass, fieldName, acceptPrivate, acceptPackage, logger );
+	            if ( result != null )
+	            {
+	                return result;
+	            }
             }
-            catch ( SuitableMethodNotAccessibleException ex )
+            catch ( final InvocationTargetException ex )
             {
-                // log and return null
-                logger.log( LogService.LOG_ERROR,
-                    "findField: Suitable but non-accessible field {0} found in class {1}, subclass of {2}", new Object[]
-                        { fieldName, theClass.getName(), targetClass.getName() }, null );
-                break;
+                logger.log( LogService.LOG_WARNING, "{0} cannot be found in component class {1}", new Object[]
+                        {fieldName, componentClass.getName()}, ex.getTargetException() );
+                return null;
             }
 
             // if we get here, we have no field, so check the super class
@@ -94,48 +103,46 @@ public class FieldUtils {
             acceptPrivate = false;
         }
 
-        // nothing found after all these years ...
+        // nothing found 
+        logger.log( LogService.LOG_WARNING, "{0} cannot be found in component class {1}", new Object[]
+                        {fieldName, componentClass.getName()}, null );
         return null;
     }
 
     /**
-     * Finds the field named in the {@link #fieldName} field in the given
-     * <code>targetClass</code>. If the target class has no acceptable field
+     * Finds the field named {@code fieldName} field in the given
+     * {@code targetClass}. If the target class has no acceptable field
      * the class hierarchy is traversed until a field is found or the root
      * of the class hierarchy is reached without finding a field.
      *
-     *
+     * @param componentClass The class of the component (for logging)
      * @param targetClass The class in which to look for the method
-     * @param acceptPrivate <code>true</code> if private fields should be
+     * @param fieldName The name of the field
+     * @param acceptPrivate {@code true} if private fields should be
      *      considered.
-     * @param acceptPackage <code>true</code> if package private fields should
+     * @param acceptPackage {@code true} if package private fields should
      *      be considered.
-     * @param logger
-     * @return The requested field or <code>null</code> if no acceptable field
-     *      can be found in the target class or any super class.
+     * @param logger For error logging
+     * @return If the field is found a {@code FieldSearchResult} is returned.
+     *         If the field is not found, {@code null} is returned.
      * @throws InvocationTargetException If an unexpected Throwable is caught
      *      trying to find the requested field.
      */
-    private static Field getField( final Class<?> clazz,
+    private static FieldSearchResult getField( final Class<?> componentClass,
+    		final Class<?> targetClass,
     		final String fieldName,
             final boolean acceptPrivate,
             final boolean acceptPackage,
             final SimpleLogger logger )
-    throws SuitableMethodNotAccessibleException, InvocationTargetException
+    throws InvocationTargetException
     {
         try
         {
             // find the declared field in this class
-            final Field field = clazz.getDeclaredField( fieldName );
+            final Field field = targetClass.getDeclaredField( fieldName );
 
             // accept public and protected fields only and ensure accessibility
-            if ( accept( field, acceptPrivate, acceptPackage ) )
-            {
-                return field;
-            }
-
-            // the method would fit the requirements but is not acceptable
-            throw new SuitableMethodNotAccessibleException();
+            return accept( componentClass, field, acceptPrivate, acceptPackage, logger );
         }
         catch ( NoSuchFieldException nsfe )
         {
@@ -144,25 +151,8 @@ public class FieldUtils {
             if ( logger.isLogEnabled( LogService.LOG_DEBUG ) )
             {
                 logger.log( LogService.LOG_DEBUG, "Declared Field {0}.{1} not found", new Object[]
-                    { clazz.getName(), fieldName }, null );
+                    { targetClass.getName(), fieldName }, null );
             }
-        }
-        catch ( NoClassDefFoundError cdfe )
-        {
-            // may be thrown if a method would be found but the signature
-            // contains throws declaration for an exception which cannot
-            // be loaded
-            if ( logger.isLogEnabled( LogService.LOG_WARNING ) )
-            {
-                StringBuffer buf = new StringBuffer();
-                buf.append( "Failure loooking up field " ).append( fieldName );
-                buf.append( " in class class " ).append( clazz.getName() ).append( ". Assuming no such field." );
-                logger.log( LogService.LOG_WARNING, buf.toString(), cdfe );
-            }
-        }
-        catch ( SuitableMethodNotAccessibleException e)
-        {
-            throw e;
         }
         catch ( Throwable throwable )
         {
@@ -176,42 +166,51 @@ public class FieldUtils {
     }
 
     /**
-     * Returns <code>true</code> if the field is acceptable to be returned from the
-     * {@link #getField(Class, String, boolean, boolean, SimpleLogger)} and also
-     * makes the field accessible.
-     * <p>
-     * This method returns <code>true</code> if the field:
+     * This method checks whether the found field is acceptable (= usable)
+     * for the component instance.
+     * It returns a {@code FieldSearchResult} with the usable flag set to
+     * {@code true} if the field is not static and
      * <ul>
-     * <li>Is not static</li>
      * <li>Is public or protected</li>
-     * <li>Is private and <code>acceptPrivate</code> is <code>true</code></li>
-     * <li>Is package private and <code>acceptPackage</code> is <code>true</code></li>
+     * <li>Is private and {@code acceptPrivate} is {@code true}</li>
+     * <li>Is package private and {@code acceptPackage} is {@code true}</li>
      * </ul>
      * <p>
+     * If the field is usable, this method makes the field accessible.
+     * <p>
+     * If the field is not usable, a {@code FieldSearchResult} with the usable 
+     * flag set to {@code false} is returned and an error is logged with
+     * the provided logger.
      *
+     * @param componentClass The class of the component,.
      * @param field The field to check
      * @param acceptPrivate Whether a private field is acceptable
      * @param acceptPackage Whether a package private field is acceptable
-     * @return whether the field is acceptable
+     * @param logger The logger for error logging
+     * @return A field search result, this is never {@code null}
      */
-    private static boolean accept( final Field field,
+    private static FieldSearchResult accept( final Class<?> componentClass,
+    		final Field field,
             final boolean acceptPrivate,
-            final boolean acceptPackage )
+            final boolean acceptPackage,
+            final SimpleLogger logger)
     {
         // check modifiers now
         final int mod = field.getModifiers();
 
-        // no static fields
+        // static fields
         if ( Modifier.isStatic( mod ) )
         {
-            return true;
+            logger.log( LogService.LOG_ERROR, "Field {0} must not be static", new Object[]
+                    { toString(componentClass, field) }, null );
+            return new FieldSearchResult(field, false);
         }
 
         // accept public and protected fields
         if ( Modifier.isPublic( mod ) || Modifier.isProtected( mod ) )
         {
             setAccessible( field );
-            return true;
+            return new FieldSearchResult(field, true);
         }
 
         // accept private if accepted
@@ -220,23 +219,47 @@ public class FieldUtils {
             if ( acceptPrivate )
             {
                 setAccessible( field );
-                return true;
+                return new FieldSearchResult(field, true);
             }
 
-            return false;
-        }
+        } else {
 
-        // accept default (package)
-        if ( acceptPackage )
-        {
-            setAccessible( field );
-            return true;
+        	// accept default (package)
+        	if ( acceptPackage )
+        	{
+        		setAccessible( field );
+        		return new FieldSearchResult(field, true);
+        	}
         }
 
         // else don't accept
-        return false;
+        // the method would fit the requirements but is not acceptable
+        logger.log( LogService.LOG_ERROR,
+                "findField: Suitable but non-accessible field {0}", new Object[]
+                    { toString(componentClass, field) }, null );
+        return new FieldSearchResult(field, false);
     }
 
+    /**
+     * Return a string representation of the field
+     * @param componentClass The component class
+     * @param field The field
+     * @return A string representation of the field
+     */
+    public static String toString(final Class<?> componentClass,
+    		final Field field)
+    {
+    	if ( componentClass.getName().equals(field.getDeclaringClass().getName()) ) 
+    	{
+    		return field.getName() + " in component class " + componentClass.getName();
+    	}
+    	return field.getName() + " in class " + field.getDeclaringClass().getName() + ", subclass of component class " + componentClass.getName();
+    }
+    
+    /**
+     * Make the field accessible
+     * @param field The field
+     */
     private static void setAccessible(final Field field)
     {
         AccessController.doPrivileged( new PrivilegedAction<Object>()

@@ -19,7 +19,6 @@
 package org.apache.felix.scr.impl.inject;
 
 import java.lang.reflect.Field;
-import java.lang.reflect.Modifier;
 import java.util.Map;
 
 import org.apache.felix.scr.impl.helper.ConstructorMethod;
@@ -28,92 +27,168 @@ import org.apache.felix.scr.impl.metadata.ComponentMetadata;
 import org.osgi.service.component.ComponentContext;
 import org.osgi.service.log.LogService;
 
-public class ConstructorMethodImpl implements ConstructorMethod 
+public class ConstructorMethodImpl<T> implements ConstructorMethod<T> 
 {
+    private enum ParamType {
+        failure,
+        ignore,
+        componentContext,
+        bundleContext,
+        map,
+        annotation
+    }
 
-	private final ComponentMetadata m_metadata;
-	
+    private final ComponentMetadata m_metadata;
+    
+    private final ParamType[] EMPTY_PARAMS = new ParamType[0];
+    
+    private volatile ParamType[] m_paramTypes;
+    private volatile Field[] m_fields;
+    
 	public ConstructorMethodImpl( final ComponentMetadata metadata)
 	{
-		m_metadata = metadata;
+		this.m_metadata = metadata;
+
 	}
 	
 	@Override
-	public <T> T newInstance(Class<T> componentClass, ComponentContext componentContext, SimpleLogger logger)
+	public T newInstance(Class<T> componentClass, ComponentContext componentContext, SimpleLogger logger)
 			throws Exception
 	{
-		final T component = ConstructorMethod.DEFAULT.newInstance(componentClass, componentContext, logger);
-		
-		if ( m_metadata.getActivationFields() != null )
-		{
-			for(final String fieldName : m_metadata.getActivationFields() ) 
+		if ( m_paramTypes == null ) {
+			if ( m_metadata.getActivationFields() != null )
 			{
-				Field field = FieldUtils.findField(componentClass, fieldName, logger);
-				if ( field != null )
+				m_paramTypes = new ParamType[m_metadata.getActivationFields().size()];
+				m_fields = new Field[m_paramTypes.length];
+			
+				int index = 0;
+				for(final String fieldName : m_metadata.getActivationFields() ) 
 				{
-					setField(componentClass, field, component, componentContext, logger);
+					final FieldUtils.FieldSearchResult result = FieldUtils.findField(componentClass, fieldName, logger);
+					if ( result == null )
+					{
+						m_paramTypes[index] = ParamType.failure;
+						m_fields[index] = null;
+					}
+					else
+					{
+						if ( result.usable )
+						{
+							m_paramTypes[index] = getFieldType(result.field);
+							m_fields[index] = result.field;
+						}
+						else
+						{
+							m_paramTypes[index] = ParamType.ignore;
+							m_fields[index] = null;
+						}
+					}
+					index++;
 				}
 			}
+			else
+			{
+				m_paramTypes = EMPTY_PARAMS;
+				m_fields = null;
+			}
+		}
+		
+		// if we have fields and one is in state failure we can directly throw
+		for(final ParamType t : m_paramTypes)
+		{
+			if ( t == ParamType.failure )
+			{
+				throw new InstantiationException("Field not found; Component will fail");
+			}
+		}
+
+		@SuppressWarnings("unchecked")
+		final T component = (T)ConstructorMethod.DEFAULT.newInstance((Class<Object>)componentClass, componentContext, logger);
+		
+		for(int i = 0; i<m_paramTypes.length; i++)
+		{
+			setField(componentClass, m_fields[i], m_paramTypes[i], component, componentContext, logger);
 		}
 		
 		return component;
 	}
-	
+
+	/**
+     * Get the field parameter type.
+     * @param f The field
+     * @return The parameter type of the field
+     */
+    private ParamType getFieldType( final Field f)
+    {
+        final Class<?> fieldType = f.getType();
+        if ( fieldType == ClassUtils.COMPONENT_CONTEXT_CLASS )
+        {
+        	return ParamType.componentContext;
+        }
+        else if ( fieldType == ClassUtils.BUNDLE_CONTEXT_CLASS )
+        {
+        	return ParamType.bundleContext;
+        }
+        else if ( fieldType == ClassUtils.MAP_CLASS )
+        {
+        	return ParamType.map;
+        }
+        else
+        {
+        	return ParamType.annotation;
+        }
+    }
+    
     /**
-     * Validate and set the field, type etc.
+     * Set the field, type etc.
      * @param f The field
      * @param logger The logger
      */
-    private <T> void setField( final Class<T> componentClass, 
+    @SuppressWarnings("unchecked")
+	private void setField( final Class<T> componentClass, 
     		final Field f, 
+    		final ParamType type,
     		final T component,
     		final ComponentContext componentContext,
     		final SimpleLogger logger )
     {
-
-        // ignore static fields
-        if ( Modifier.isStatic(f.getModifiers()))
+    	if ( type == ParamType.ignore )
+    	{
+    		return;
+    	}
+        final Object value;
+        if ( type == ParamType.componentContext )
         {
-            logger.log( LogService.LOG_ERROR, "Field {0} in component {1} must not be static", new Object[]
-                    {f.getName(), componentClass}, null );
+    	    value = componentContext;
+        }
+        else if ( type == ParamType.bundleContext )
+        {
+            value = componentContext.getBundleContext();
+        }
+        else if ( type == ParamType.map )
+        {
+            // note: getProperties() returns a ReadOnlyDictionary which is a Map
+        	value = componentContext.getProperties();
         }
         else
         {
-            final Class<?> fieldType = f.getType();
-            final Object value;
-            if ( fieldType == ClassUtils.COMPONENT_CONTEXT_CLASS )
-            {
-        	    value = componentContext;
-            }
-            else if ( fieldType == ClassUtils.BUNDLE_CONTEXT_CLASS )
-            {
-                value = componentContext.getBundleContext();
-            }
-            else if ( fieldType == ClassUtils.MAP_CLASS )
-            {
-                // note: getProperties() returns a ReadOnlyDictionary which is a Map
-            	value = componentContext.getProperties();
-            }
-            else
-            {
-            	value = Annotations.toObject(fieldType,
-                    (Map<String, Object>) componentContext.getProperties(),
-                    componentContext.getBundleContext().getBundle(), m_metadata.isConfigureWithInterfaces());
-            }
-            try
-            {
-                f.set(component, value);
-            }
-            catch ( final IllegalArgumentException iae )
-            {
-                logger.log( LogService.LOG_ERROR, "Field {0} in component {1} can't be set", new Object[]
-                        {f.getName(), componentClass}, iae );
-            }
-            catch ( final IllegalAccessException iae )
-            {
-                logger.log( LogService.LOG_ERROR, "Field {0} in component {1} can't be set", new Object[]
-                        {f.getName(), componentClass}, iae );
-            }
+        	value = Annotations.toObject(f.getType(),
+                (Map<String, Object>) componentContext.getProperties(),
+                componentContext.getBundleContext().getBundle(), m_metadata.isConfigureWithInterfaces());
+        }
+        try
+        {
+            f.set(component, value);
+        }
+        catch ( final IllegalArgumentException iae )
+        {
+            logger.log( LogService.LOG_ERROR, "Field {0} in component {1} can't be set", new Object[]
+                    {f.getName(), componentClass}, iae );
+        }
+        catch ( final IllegalAccessException iae )
+        {
+            logger.log( LogService.LOG_ERROR, "Field {0} in component {1} can't be set", new Object[]
+                    {f.getName(), componentClass}, iae );
         }
     }
 }
