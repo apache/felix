@@ -465,6 +465,13 @@ public class XmlHandler implements KXml2SAXHandler
                     ref.setFieldOption( attributes.getAttribute( "field-option" ) );
                     ref.setFieldCollectionType( attributes.getAttribute( "field-collection-type" ) );
 
+                    // DS 1.4 : references as parameter of the activator (method or constructor)
+                    if ( attributes.getAttribute( "parameter" ) != null)
+                    {
+                        ref.setParameter( attributes.getAttribute( "parameter" ) );
+
+                    }
+
                     m_currentComponent.addDependency( ref );
                 }
 

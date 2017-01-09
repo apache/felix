@@ -92,25 +92,25 @@ public class ReferenceMetadata
     private static final Set<String> FIELD_VALUE_TYPE_VALID;
 
     // Name for the reference (required)
-    private String m_name = null;
+    private String m_name;
 
     // Interface name (required)
-    private String m_interface = null;
+    private String m_interface;
 
     // Cardinality (optional, default="1..1")
-    private String m_cardinality = null;
+    private String m_cardinality;
 
     // Target (optional)
     private String m_target;
 
     // Name of the bind method (optional)
-    private String m_bind = null;
+    private String m_bind;
 
     // Name of the updated method (optional, since DS 1.1-felix)
-    private String m_updated = null;
+    private String m_updated;
 
     // Name of the unbind method (optional)
-    private String m_unbind = null;
+    private String m_unbind;
 
     // Name of the field (optional, since DS 1.3)
     private String m_field;
@@ -122,14 +122,20 @@ public class ReferenceMetadata
     private String m_field_collection_type;
 
     // Policy attribute (optional, default = static)
-    private String m_policy = null;
+    private String m_policy;
 
     // Policy option attribute (optional, default = reluctant)
-    private String m_policy_option = null;
+    private String m_policy_option;
 
     private String m_scopeName;
     private ReferenceScope m_scope = ReferenceScope.bundle;
 
+    // Parameter value (optional, since DS 1.4)
+    private String m_parameter;
+    
+    // Parameter index, set based on {@code m_parameter} after validation
+    private int m_parameterIndex;
+    
     // Flags that store the values passed as strings
     private boolean m_isStatic = true;
     private boolean m_isOptional = false;
@@ -380,6 +386,18 @@ public class ReferenceMetadata
 		this.m_scopeName = scopeName;
 	}
 
+    /**
+     * Setter for the parameter value
+     * DS 1.4
+     * @param attribute value
+     */
+	public void setParameter(String val) {
+        if ( m_validated )
+        {
+            return;
+        }
+		this.m_parameter = val;
+	}
 
     /////////////////////////////////////////////// getters ///////////////////////////////////
 
@@ -519,6 +537,18 @@ public class ReferenceMetadata
         return m_field_collection_type;
     }
 
+    /**
+     * Get the parameter index, if specified.
+     * This method returns the correct value only of this metadata object has been validated
+     * by a call to {@link #validate(ComponentMetadata, Logger)} and the validation has been
+     * successful.
+     * @return The parameter index , if no parameter is set this returns {@code 0}
+     */
+    public int getParamterIndex() 
+    {
+    	return m_parameterIndex;
+    }
+    
     // Getters for boolean values that determine both policy and cardinality
 
     /**
@@ -723,6 +753,32 @@ public class ReferenceMetadata
             }
         }
 
+        if ( m_parameter != null )
+        {
+            // parameter requires DS 1.4
+            if ( !dsVersion.isDS14() )
+            {
+                throw componentMetadata.validationFailure( "Reference parameter requires DS >= 1.4" );
+            }
+            try
+            {
+            	m_parameterIndex = Integer.valueOf(m_parameter);
+            }
+            catch ( final NumberFormatException nfe) 
+            {
+                throw componentMetadata.validationFailure( "Reference parameter is not a number: " + m_parameter );
+            }
+            if ( m_parameterIndex < 0 )
+            {
+                throw componentMetadata.validationFailure( "Reference parameter value must be zero or higher: " + m_parameter );            	
+            }
+            // policy needs to be static
+            if ( !isStatic() ) 
+            {
+                throw componentMetadata.validationFailure( "Reference with parameter value must be static." );            	
+            	
+            }            
+        }
         m_validated = true;
     }
 

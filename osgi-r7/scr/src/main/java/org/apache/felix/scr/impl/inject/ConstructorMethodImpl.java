@@ -27,8 +27,15 @@ import org.apache.felix.scr.impl.metadata.ComponentMetadata;
 import org.osgi.service.component.ComponentContext;
 import org.osgi.service.log.LogService;
 
+/**
+ * This implementation is used to construct a component instance object,
+ * call the constructor and set the activation fields.
+ */
 public class ConstructorMethodImpl<T> implements ConstructorMethod<T> 
 {
+	/** If the activate method has this value, a constructor is used instead. */
+	public static final String CONSTRUCTOR_MARKER = "-init-";
+	
     private enum ParamType {
         failure,
         ignore,
@@ -51,6 +58,7 @@ public class ConstructorMethodImpl<T> implements ConstructorMethod<T>
 
 	}
 	
+	@SuppressWarnings("unchecked")
 	@Override
 	public T newInstance(Class<T> componentClass, ComponentContext componentContext, SimpleLogger logger)
 			throws Exception
@@ -102,9 +110,16 @@ public class ConstructorMethodImpl<T> implements ConstructorMethod<T>
 			}
 		}
 
-		@SuppressWarnings("unchecked")
-		final T component = (T)ConstructorMethod.DEFAULT.newInstance((Class<Object>)componentClass, componentContext, logger);
-		
+		final T component;
+		if ( CONSTRUCTOR_MARKER.equals(m_metadata.getActivate() ) ) 
+		{
+		    component = null;
+		    throw new IllegalStateException("Constructor init not implemented yet");
+		}
+		else
+		{
+		    component = (T)ConstructorMethod.DEFAULT.newInstance((Class<Object>)componentClass, componentContext, logger);
+		}
 		for(int i = 0; i<m_paramTypes.length; i++)
 		{
 			setField(componentClass, m_fields[i], m_paramTypes[i], component, componentContext, logger);
