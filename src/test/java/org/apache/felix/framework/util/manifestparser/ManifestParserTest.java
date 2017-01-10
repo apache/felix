@@ -18,14 +18,14 @@
  */
 package org.apache.felix.framework.util.manifestparser;
 
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
+
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
-import static org.mockito.Mockito.*;
-import junit.framework.TestCase;
 
 import org.apache.felix.framework.util.FelixConstants;
 import org.osgi.framework.BundleException;
@@ -40,11 +40,13 @@ import org.osgi.framework.wiring.BundleCapability;
 import org.osgi.framework.wiring.BundleRequirement;
 import org.osgi.framework.wiring.BundleRevision;
 
+import junit.framework.TestCase;
+
 public class ManifestParserTest extends TestCase
 {
     public void testIdentityCapabilityMinimal() throws BundleException
     {
-        Map<String, String> headers = new HashMap<String, String>();
+        Map<String, Object> headers = new HashMap<String, Object>();
         headers.put(Constants.BUNDLE_MANIFESTVERSION, "2");
         headers.put(Constants.BUNDLE_SYMBOLICNAME, "foo.bar");
         ManifestParser mp = new ManifestParser(null, null, null, headers);
@@ -57,7 +59,7 @@ public class ManifestParserTest extends TestCase
 
     public void testIdentityCapabilityFull() throws BundleException
     {
-        Map<String, String> headers = new HashMap<String, String>();
+        Map<String, Object> headers = new HashMap<String, Object>();
         headers.put(Constants.BUNDLE_MANIFESTVERSION, "2");
         headers.put(Constants.BUNDLE_SYMBOLICNAME, "abc;singleton:=true");
         headers.put(Constants.BUNDLE_VERSION, "1.2.3.something");
@@ -86,7 +88,7 @@ public class ManifestParserTest extends TestCase
     
     @SuppressWarnings("unchecked")
 	public void testNativeCapability() throws BundleException {
-        Map<String, String> headers = new HashMap<String, String>();
+        Map<String, Object> headers = new HashMap<String, Object>();
         headers.put(Constants.BUNDLE_MANIFESTVERSION,  "2");
         headers.put(Constants.BUNDLE_SYMBOLICNAME, FelixConstants.SYSTEM_BUNDLE_SYMBOLICNAME);
         headers.put(Constants.PROVIDE_CAPABILITY, " osgi.native;" +

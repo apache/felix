@@ -35,7 +35,6 @@ import org.apache.felix.framework.util.SecureAction;
 import org.apache.felix.framework.util.Util;
 import org.apache.felix.framework.util.manifestparser.ManifestParser;
 import org.apache.felix.framework.util.manifestparser.NativeLibrary;
-import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleException;
 import org.osgi.framework.Constants;
 import org.osgi.framework.Version;
@@ -53,7 +52,7 @@ public class BundleRevisionImpl implements BundleRevision, Resource
     public final static int LAZY_ACTIVATION = 1;
 
     private final String m_id;
-    private final Map m_headerMap;
+    private final Map<String, Object> m_headerMap;
 
     private final String m_manifestVersion;
     private final boolean m_isExtension;
@@ -96,8 +95,8 @@ public class BundleRevisionImpl implements BundleRevision, Resource
         m_isExtension = false;
         m_isFragment = false;
         m_version = null;
-        m_declaredCaps = Collections.EMPTY_LIST;
-        m_declaredReqs = Collections.EMPTY_LIST;
+        m_declaredCaps = Collections.emptyList();
+        m_declaredReqs = Collections.emptyList();
         m_declaredNativeLibs = null;
         m_declaredActivationPolicy = EAGER_ACTIVATION;
         m_activationExcludes = null;
@@ -105,7 +104,7 @@ public class BundleRevisionImpl implements BundleRevision, Resource
     }
 
     BundleRevisionImpl(
-        BundleImpl bundle, String id, Map headerMap, Content content)
+        BundleImpl bundle, String id, Map<String, Object> headerMap, Content content)
         throws BundleException
     {
         m_bundle = bundle;
@@ -265,7 +264,7 @@ public class BundleRevisionImpl implements BundleRevision, Resource
     // Implementating details.
     //
 
-    public Map getHeaders()
+    public Map<String, Object> getHeaders()
     {
         return m_headerMap;
     }

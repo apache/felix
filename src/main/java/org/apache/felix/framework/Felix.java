@@ -451,7 +451,7 @@ public class Felix extends BundleImpl implements Framework
         return m_logger;
     }
 
-    Map getConfig()
+    Map<String, Object> getConfig()
     {
         return m_configMap;
     }
