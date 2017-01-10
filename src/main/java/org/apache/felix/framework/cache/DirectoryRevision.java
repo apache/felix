@@ -69,7 +69,7 @@ class DirectoryRevision extends BundleArchiveRevision
         }
     }
 
-    public synchronized Map getManifestHeader()
+    public synchronized Map<String, Object> getManifestHeader()
         throws Exception
     {
         // Read the header file from the reference directory.

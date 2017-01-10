@@ -19,7 +19,6 @@
 package org.apache.felix.framework.util.manifestparser;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -52,8 +51,8 @@ public class ManifestParser
     private static final String BUNDLE_LICENSE_HEADER = "Bundle-License"; // No constant defined by OSGi...
 
     private final Logger m_logger;
-    private final Map m_configMap;
-    private final Map m_headerMap;
+    private final Map<String, Object> m_configMap;
+    private final Map<String, Object> m_headerMap;
     private volatile int m_activationPolicy = BundleRevisionImpl.EAGER_ACTIVATION;
     private volatile String m_activationIncludeDir;
     private volatile String m_activationExcludeDir;
@@ -65,7 +64,7 @@ public class ManifestParser
     private volatile List<NativeLibraryClause> m_libraryClauses;
     private volatile boolean m_libraryHeadersOptional = false;
 
-    public ManifestParser(Logger logger, Map configMap, BundleRevision owner, Map headerMap)
+    public ManifestParser(Logger logger, Map<String, Object> configMap, BundleRevision owner, Map<String, Object> headerMap)
         throws BundleException
     {
         m_logger = logger;
@@ -81,7 +80,7 @@ public class ManifestParser
         }
 
         // Create lists to hold capabilities and requirements.
-        List<BundleCapabilityImpl> capList = new ArrayList();
+        List<BundleCapabilityImpl> capList = new ArrayList<BundleCapabilityImpl>();
 
         //
         // Parse bundle version.
@@ -267,7 +266,7 @@ public class ManifestParser
         List<BundleRequirement> nativeCodeReqs = convertNativeCode(owner, m_libraryClauses, m_libraryHeadersOptional);
         
         // Combine all requirements.
-        m_requirements = new ArrayList(
+        m_requirements = new ArrayList<BundleRequirement>(
             hostReqs.size() + importReqs.size() + rbReqs.size()
             + requireReqs.size() + dynamicReqs.size() + breeReqs.size());
         m_requirements.addAll(hostReqs);
@@ -279,7 +278,7 @@ public class ManifestParser
         m_requirements.addAll(nativeCodeReqs);
         
         // Combine all capabilities.
-        m_capabilities = new ArrayList(
+        m_capabilities = new ArrayList<BundleCapability>(
              capList.size() + exportCaps.size() + provideCaps.size());
         m_capabilities.addAll(capList);
         m_capabilities.addAll(exportCaps);
@@ -302,7 +301,7 @@ public class ManifestParser
     {
         // Verify that the values are equals if the package specifies
         // both version and specification-version attributes.
-        Set dupeSet = new HashSet();
+        Set<String> dupeSet = new HashSet<String>();
         for (ParsedHeaderClause clause : clauses)
         {
             // Check for "version" and "specification-version" attributes
@@ -427,7 +426,7 @@ public class ManifestParser
         List<ParsedHeaderClause> clauses, BundleRevision owner)
     {
         // Now convert generic header clauses into requirements.
-        List reqList = new ArrayList();
+        List<BundleRequirement> reqList = new ArrayList<BundleRequirement>();
         for (ParsedHeaderClause clause : clauses)
         {
             for (String path : clause.m_paths)
@@ -570,7 +569,7 @@ public class ManifestParser
         throws BundleException
     {
         // Now convert generic header clauses into requirements.
-        List reqList = new ArrayList();
+        List<BundleRequirement> reqList = new ArrayList<BundleRequirement>();
         for (ParsedHeaderClause clause : clauses)
         {
             try
@@ -716,14 +715,6 @@ public class ManifestParser
         return result;
     }
     
-    private static void addStringArrayToSet(String[] array, Set<String> set)
-    {
-        if(array != null)
-        {
-            set.addAll(Arrays.asList(array));
-        }
-    }
-
     private static List<ParsedHeaderClause> normalizeProvideCapabilityClauses(
         Logger logger, List<ParsedHeaderClause> clauses, String mv)
         throws BundleException
@@ -833,7 +824,7 @@ public class ManifestParser
         List<ParsedHeaderClause> clauses, BundleRevision owner)
         throws BundleException
     {
-        List<BundleCapability> capList = new ArrayList();
+        List<BundleCapability> capList = new ArrayList<BundleCapability>();
         for (ParsedHeaderClause clause : clauses)
         {
             for (String path : clause.m_paths)
@@ -993,7 +984,7 @@ public class ManifestParser
     private static List<BundleCapability> convertExports(
         List<ParsedHeaderClause> clauses, BundleRevision owner)
     {
-        List<BundleCapability> capList = new ArrayList();
+        List<BundleCapability> capList = new ArrayList<BundleCapability>();
         for (ParsedHeaderClause clause : clauses)
         {
             for (String pkgName : clause.m_paths)
@@ -1025,7 +1016,7 @@ public class ManifestParser
         return (manifestVersion == null) ? "1" : manifestVersion;
     }
 
-    private static String getManifestVersion(Map headerMap)
+    private static String getManifestVersion(Map<String, Object> headerMap)
     {
         String manifestVersion = (String) headerMap.get(Constants.BUNDLE_MANIFESTVERSION);
         return (manifestVersion == null) ? null : manifestVersion.trim();
@@ -1153,7 +1144,7 @@ public class ManifestParser
     {
         if ((m_libraryClauses != null) && (m_libraryClauses.size() > 0))
         {
-            List clauseList = new ArrayList();
+            List<NativeLibraryClause> clauseList = new ArrayList<NativeLibraryClause>();
 
             // Search for matching native clauses.
             for (NativeLibraryClause libraryClause : m_libraryClauses)
@@ -1194,8 +1185,8 @@ public class ManifestParser
 
     private int firstSortedClause(List<NativeLibraryClause> clauseList)
     {
-        ArrayList indexList = new ArrayList();
-        ArrayList selection = new ArrayList();
+        ArrayList<String> indexList = new ArrayList<String>();
+        ArrayList<String> selection = new ArrayList<String>();
 
         // Init index list
         for (int i = 0; i < clauseList.size(); i++)
@@ -1233,7 +1224,7 @@ public class ManifestParser
             // Keep only selected clauses with an 'osversion'
             // equal to the max floor of 'osversion' ranges.
             indexList = selection;
-            selection = new ArrayList();
+            selection = new ArrayList<String>();
             for (int i = 0; i < indexList.size(); i++)
             {
                 int index = Integer.parseInt(indexList.get(i).toString());
@@ -1294,12 +1285,12 @@ public class ManifestParser
         List<BundleCapability> exports, List<ParsedHeaderClause> imports)
         throws BundleException
     {
-        List<ParsedHeaderClause> clauseList = new ArrayList();
+        List<ParsedHeaderClause> clauseList = new ArrayList<ParsedHeaderClause>();
 
         // Since all R3 exports imply an import, add a corresponding
         // requirement for each existing export capability. Do not
         // duplicate imports.
-        Map map =  new HashMap();
+        Map<String, String> map =  new HashMap<String, String>();
         // Add existing imports.
         for (int impIdx = 0; impIdx < imports.size(); impIdx++)
         {
@@ -1326,7 +1317,7 @@ public class ManifestParser
                         VersionRange.parse(version.toString()));
                 }
 
-                List<String> paths = new ArrayList();
+                List<String> paths = new ArrayList<String>();
                 paths.add((String)
                     exports.get(i).getAttributes().get(BundleRevision.PACKAGE_NAMESPACE));
                 clauseList.add(
@@ -1371,7 +1362,7 @@ public class ManifestParser
         return exports;
     }
 
-    private static boolean checkExtensionBundle(Map headerMap) throws BundleException
+    private static boolean checkExtensionBundle(Map<String, Object> headerMap) throws BundleException
     {
         Object extension = parseExtensionBundleHeader(
             (String) headerMap.get(Constants.FRAGMENT_HOST));
@@ -1398,7 +1389,7 @@ public class ManifestParser
     }
 
     private static BundleCapabilityImpl parseBundleSymbolicName(
-        BundleRevision owner, Map headerMap)
+        BundleRevision owner, Map<String, Object> headerMap)
         throws BundleException
     {
         List<ParsedHeaderClause> clauses = parseStandardHeader(
@@ -1454,7 +1445,7 @@ public class ManifestParser
     }
 
     private static BundleCapabilityImpl addIdentityCapability(BundleRevision owner,
-        Map headerMap, BundleCapabilityImpl bundleCap)
+        Map<String, Object> headerMap, BundleCapabilityImpl bundleCap)
     {
         Map<String, Object> attrs = new HashMap<String, Object>();
 
@@ -1503,10 +1494,10 @@ public class ManifestParser
     }
 
     private static List<BundleRequirementImpl> parseFragmentHost(
-        Logger logger, BundleRevision owner, Map headerMap)
+        Logger logger, BundleRevision owner, Map<String, Object> headerMap)
         throws BundleException
     {
-        List<BundleRequirementImpl> reqs = new ArrayList();
+        List<BundleRequirementImpl> reqs = new ArrayList<BundleRequirementImpl>();
 
         String mv = getManifestVersion(headerMap);
         if ((mv != null) && mv.equals("2"))
@@ -1755,7 +1746,7 @@ public class ManifestParser
     private static List<BundleRequirementImpl> convertRequires(
         List<ParsedHeaderClause> clauses, BundleRevision owner)
     {
-        List<BundleRequirementImpl> reqList = new ArrayList();
+        List<BundleRequirementImpl> reqList = new ArrayList<BundleRequirementImpl>();
         for (ParsedHeaderClause clause : clauses)
         {
             for (String path : clause.m_paths)
@@ -1835,7 +1826,7 @@ public class ManifestParser
         return result;
     }
 
-    private void parseActivationPolicy(Map headerMap)
+    private void parseActivationPolicy(Map<String, Object> headerMap)
     {
         m_activationPolicy = BundleRevisionImpl.EAGER_ACTIVATION;
 
@@ -2079,7 +2070,7 @@ public class ManifestParser
            value = "";
         }
 
-        List<String> list = new ArrayList();
+        List<String> list = new ArrayList<String>();
 
         int CHAR = 1;
         int DELIMITER = 2;
@@ -2173,7 +2164,7 @@ public class ManifestParser
             return new ArrayList<NativeLibraryClause>(0);
         }
 
-        List<NativeLibraryClause> libList = new ArrayList(libStrs.size());
+        List<NativeLibraryClause> libList = new ArrayList<NativeLibraryClause>(libStrs.size());
 
         for (int i = 0; i < libStrs.size(); i++)
         {
