@@ -1,3 +1,14 @@
+Changes from 4.2.16 to 4.2.18
+-----------------------------
+** Bug
+    * [FELIX-4840] - Asynchronous IO fails in webconsole plugin
+    * [FELIX-5387] - NPE for requests missing 'felix-webconsole-locale' cookie
+
+** Improvement
+    * [FELIX-5445] - Web Console: Properly display non-string property arrays in name hint
+    * [FELIX-5484] - Webconsole configuration factory name hint array rendering
+
+
 Changes from 4.2.14 to 4.2.16
 -----------------------------
 ** Bug
