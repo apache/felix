@@ -7,7 +7,7 @@
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *   http://www.apache.org/licenses/LICENSE-2.0
+ *  http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
@@ -16,16 +16,25 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.felix.scr.impl.helper;
+package org.apache.felix.scr.impl.inject;
 
-import org.osgi.service.component.ComponentContext;
+import org.apache.felix.scr.impl.metadata.ComponentMetadata;
 
-public interface ComponentMethod {
+/**
+ * @version $Rev$ $Date$
+ */
+public interface ComponentMethods<T>
+{
+    void initComponentMethods( ComponentMetadata componentMetadata, Class<T> implementationObjectClass );
 
-    MethodResult invoke(Object componentInstance,
-                        ComponentContext componentContext,
-                        int reason,
-                        MethodResult methodCallFailureResult,
-                        SimpleLogger logger );
+    LifecycleMethod getActivateMethod();
+
+    LifecycleMethod getDeactivateMethod();
+
+    LifecycleMethod getModifiedMethod();
+
+    ReferenceMethods getBindMethods(String refName );
+
+	ConstructorMethod<T> getConstructor();
 
 }

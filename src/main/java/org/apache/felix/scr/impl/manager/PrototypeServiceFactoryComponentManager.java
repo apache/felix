@@ -18,7 +18,7 @@
  */
 package org.apache.felix.scr.impl.manager;
 
-import org.apache.felix.scr.impl.helper.ComponentMethods;
+import org.apache.felix.scr.impl.inject.ComponentMethods;
 import org.osgi.framework.PrototypeServiceFactory;
 
 public class PrototypeServiceFactoryComponentManager<S> extends ServiceFactoryComponentManager<S> implements PrototypeServiceFactory<S>

@@ -523,7 +523,7 @@ public class Activator extends AbstractExtender implements SimpleLogger
                 PrintStream out = ( level == LogService.LOG_ERROR )? System.err: System.out;
 
                 // level as a string
-                StringBuffer buf = new StringBuffer();
+                StringBuilder buf = new StringBuilder();
                 switch (level)
                 {
                     case ( LogService.LOG_DEBUG ):

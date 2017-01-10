@@ -16,10 +16,9 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.felix.scr.impl.helper;
+package org.apache.felix.scr.impl.inject;
 
-import org.apache.felix.scr.impl.manager.ComponentContextImpl;
-import org.apache.felix.scr.impl.manager.RefPair;
+import org.apache.felix.scr.impl.helper.SimpleLogger;
 import org.osgi.framework.BundleContext;
 
 /**
@@ -27,14 +26,43 @@ import org.osgi.framework.BundleContext;
  */
 public interface ReferenceMethod
 {
-    MethodResult invoke( Object componentInstance,
-                         ComponentContextImpl<?> componentContext,
-                         RefPair<?, ?> refPair,
+    /**
+     * Invoke the reference method and bind/unbind/update the reference.
+     *
+     * @param componentInstance The component instance
+     * @param parameters The parameters for the reference.
+     * @param methodCallFailureResult Return result for failure
+     * @param logger Logger
+     * @return The method result
+     */
+	
+	<S, T> MethodResult invoke( Object componentInstance,
+                         BindParameters parameters,
                          MethodResult methodCallFailureResult,
                          SimpleLogger logger );
 
-    <S, T> boolean getServiceObject( ComponentContextImpl<S> key,
-            RefPair<S, T> refPair,
+    <S, T> boolean getServiceObject( BindParameters parameters,
             BundleContext context,
             SimpleLogger logger );
+
+    /**
+     * A NOP implementation.
+     */
+    ReferenceMethod NOPReferenceMethod = new ReferenceMethod() {
+
+		@Override
+		public <S, T> MethodResult invoke(final Object componentInstance, 
+				final BindParameters parameters,
+				final MethodResult methodCallFailureResult, 
+				final SimpleLogger logger) {
+			return MethodResult.VOID;
+		}
+
+		@Override
+		public <S, T> boolean getServiceObject(final BindParameters parameters,
+				final BundleContext context, 
+				final SimpleLogger logger) {
+			return true;
+		}
+    };
 }

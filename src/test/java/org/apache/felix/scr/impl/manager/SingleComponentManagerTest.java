@@ -27,7 +27,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import javax.imageio.spi.ServiceRegistry;
 
-import org.apache.felix.scr.impl.helper.ComponentMethods;
+import org.apache.felix.scr.impl.inject.ComponentMethods;
 import org.apache.felix.scr.impl.inject.ComponentMethodsImpl;
 import org.apache.felix.scr.impl.manager.AbstractComponentManager.State;
 import org.apache.felix.scr.impl.metadata.ComponentMetadata;

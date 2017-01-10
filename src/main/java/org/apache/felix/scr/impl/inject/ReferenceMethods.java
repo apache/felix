@@ -16,10 +16,12 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.felix.scr.impl.helper;
+package org.apache.felix.scr.impl.inject;
 
 /**
  * {@code ReferenceMethods} holds pointers to methods for a single reference.
+ * The methods are used for event (method) injection and field injection.
+ *
  * <ul>
  *   <li>The bind method
  *   <li>The unbind method
@@ -29,15 +31,53 @@ package org.apache.felix.scr.impl.helper;
  */
 public interface ReferenceMethods
 {
-    /** Never returns {@code null}. */
+    /** 
+     * Get the method to bind a service. 
+     * Never returns {@code null}. 
+     */
     ReferenceMethod getBind();
 
-    /** Never returns {@code null}. */
+    /** 
+     * Get the method to unbind a service. 
+     * Never returns {@code null}. 
+     */
     ReferenceMethod getUnbind();
 
-    /** Never returns {@code null}. */
+    /** 
+     * Get the method to update a service. 
+     * Never returns {@code null}. 
+     */
     ReferenceMethod getUpdated();
 
-    /** This is optional and might return {@code null} */
+    /** 
+     * Get an optional method to initialize the component reference handling.
+     * This is optional and might return {@code null} 
+     */
     InitReferenceMethod getInit();
+
+    /**
+     * This is a NOP implementation.
+     */
+    ReferenceMethods NOPReferenceMethod = new ReferenceMethods() {
+
+		@Override
+		public ReferenceMethod getBind() {
+			return ReferenceMethod.NOPReferenceMethod;
+		}
+
+		@Override
+		public ReferenceMethod getUnbind() {
+			return ReferenceMethod.NOPReferenceMethod;
+		}
+
+		@Override
+		public ReferenceMethod getUpdated() {
+			return ReferenceMethod.NOPReferenceMethod;
+		}
+
+		@Override
+		public InitReferenceMethod getInit() {
+			return null;
+		}    	
+    };
 }

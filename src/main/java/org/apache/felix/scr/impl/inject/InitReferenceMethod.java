@@ -18,27 +18,18 @@
  */
 package org.apache.felix.scr.impl.inject;
 
-import org.apache.felix.scr.impl.metadata.DSVersion;
+import org.apache.felix.scr.impl.helper.SimpleLogger;
 
-
-public class DeactivateMethod extends ActivateMethod
+/**
+ * Callback for initializing the reference (field references)
+ */
+public interface InitReferenceMethod
 {
-
-    @Override
-    boolean isDeactivate()
-    {
-        return true;
-    }
-
-    public DeactivateMethod( final String methodName,
-            final boolean methodRequired, final Class<?> componentClass, final DSVersion dsVersion, final boolean configurableServiceProperties, boolean supportsInterfaces )
-    {
-        super( methodName, methodRequired, componentClass, dsVersion, configurableServiceProperties, supportsInterfaces );
-    }
-
-    protected String getMethodNamePrefix()
-    {
-        return "deactivate";
-    }
-
+    /**
+     * Initialize the reference. This is usually setting the value of a field.
+     * @param componentInstance The component instance
+     * @param logger The logger
+     * @return {@code true} if initialization succeeded
+     */
+    boolean init( Object componentInstance, SimpleLogger logger );
 }

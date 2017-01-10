@@ -13,9 +13,9 @@ Provide-Capability: osgi.extender;\
 
 Export-Package: org.apache.felix.scr.component;version=1.1.0;provide:=true, \
  org.apache.felix.scr.info;version=1.0.0;provide:=true, \
- org.osgi.service.component;version=1.3;-split-package:=first;provide:=true, \
- org.osgi.service.component.runtime;version=1.3;provide:=true, \
- org.osgi.service.component.runtime.dto;version=1.3;provide:=true, \
+ org.osgi.service.component;version=1.4;provide:=true, \
+ org.osgi.service.component.runtime;version=1.4;provide:=true, \
+ org.osgi.service.component.runtime.dto;version=1.4;provide:=true, \
  org.osgi.util.function;version=1.0, \
  org.osgi.util.promise;version=1.0
 
@@ -30,7 +30,7 @@ Private-Package: org.apache.felix.scr.impl.*, \
 # optional import for Gogo annotations 
 # The Felix Shell support is optional 
 Import-Package: \
- org.osgi.service.cm;version="[1.5,2)";resolution:=optional, \
+ org.osgi.service.cm;version="[1.6,2)";resolution:=optional, \
  org.osgi.service.log;version="[1.3,2)";resolution:=optional, \
  org.osgi.service.metatype;version="[1.1,2)";resolution:=optional, \
  org.osgi.service.packageadmin;version="[1.2,2)";resolution:=optional, \
@@ -40,7 +40,7 @@ Import-Package: \
  *
 
 DynamicImport-Package: \
- org.osgi.service.cm;version="[1.2,2)", \
+ org.osgi.service.cm;version="[1.6,2)", \
  org.osgi.service.metatype;version="[1.1,2)"
 
 Embed-Dependency: kxml2;inline=org/kxml2/io/KXmlParser.class|org/xmlpull/v1/XmlPull**

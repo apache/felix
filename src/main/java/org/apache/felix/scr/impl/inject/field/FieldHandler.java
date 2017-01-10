@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.felix.scr.impl.inject;
+package org.apache.felix.scr.impl.inject.field;
 
 
 import java.lang.reflect.Field;
@@ -31,10 +31,14 @@ import java.util.TreeMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.CopyOnWriteArraySet;
 
-import org.apache.felix.scr.impl.helper.InitReferenceMethod;
-import org.apache.felix.scr.impl.helper.MethodResult;
-import org.apache.felix.scr.impl.helper.ReferenceMethod;
 import org.apache.felix.scr.impl.helper.SimpleLogger;
+import org.apache.felix.scr.impl.inject.BindParameters;
+import org.apache.felix.scr.impl.inject.ClassUtils;
+import org.apache.felix.scr.impl.inject.InitReferenceMethod;
+import org.apache.felix.scr.impl.inject.MethodResult;
+import org.apache.felix.scr.impl.inject.ReferenceMethod;
+import org.apache.felix.scr.impl.inject.ValueUtils;
+import org.apache.felix.scr.impl.inject.ValueUtils.ValueType;
 import org.apache.felix.scr.impl.manager.ComponentContextImpl;
 import org.apache.felix.scr.impl.manager.RefPair;
 import org.apache.felix.scr.impl.metadata.ReferenceMetadata;
@@ -56,7 +60,7 @@ public class FieldHandler
     private volatile Field field;
 
     /** Value type. */
-    private volatile FieldUtils.ValueType valueType;
+    private volatile ValueType valueType;
 
     /** State handling. */
     private volatile State state;
@@ -97,7 +101,7 @@ public class FieldHandler
     private boolean initField(final Object componentInstance,
             final SimpleLogger logger )
     {
-    	if ( valueType == FieldUtils.ValueType.ignore )
+    	if ( valueType == ValueType.ignore )
     	{
     		return true;
     	}
@@ -122,7 +126,7 @@ public class FieldHandler
                         {
                             logger.log( LogService.LOG_ERROR, "Field {0} in component {1} must not be declared as final", new Object[]
                                     {metadata.getField(), this.componentClass}, null );
-                            valueType = FieldUtils.ValueType.ignore;
+                            valueType = ValueType.ignore;
                             return true;
                         }
                         if ( fieldType != ClassUtils.LIST_CLASS && fieldType != ClassUtils.COLLECTION_CLASS )
@@ -130,7 +134,7 @@ public class FieldHandler
                             logger.log( LogService.LOG_ERROR, "Field {0} in component {1} has unsupported type {2}."+
                                 " It must be one of java.util.Collection or java.util.List.",
                                 new Object[] {metadata.getField(), this.componentClass, fieldType.getName()}, null );
-                            valueType = FieldUtils.ValueType.ignore;
+                            valueType = ValueType.ignore;
                             return true;
                         }
                         if ( fieldType == ClassUtils.LIST_CLASS )
@@ -156,7 +160,7 @@ public class FieldHandler
         }
         catch ( final InvocationTargetException ite)
         {
-            valueType = FieldUtils.ValueType.ignore;
+            valueType = ValueType.ignore;
 
             logger.log( LogService.LOG_ERROR, "Field {0} in component {1} can't be initialized.",
                     new Object[] {metadata.getField(), this.componentClass}, ite );
@@ -208,13 +212,13 @@ public class FieldHandler
             // for a static reference we need a reactivation
             else if ( mType == METHOD_TYPE.UPDATED )
             {
-            	if ( this.valueType == FieldUtils.ValueType.ref_map || this.valueType == FieldUtils.ValueType.ref_tuple )
+            	if ( this.valueType == ValueType.ref_map || this.valueType == ValueType.ref_tuple )
             	{
             		if ( this.metadata.isStatic() )
             		{
             			return MethodResult.REACTIVATE;
             		}
-                    final Object obj = FieldUtils.getValue(valueType, field.getType(), key, refPair);
+                    final Object obj = ValueUtils.getValue(valueType, field.getType(), key, refPair);
                     this.setFieldValue(componentInstance, obj);
                     this.boundValues.put(refPair, obj);
             	}
@@ -222,7 +226,7 @@ public class FieldHandler
             // bind needs always be done
             else
             {
-                final Object obj = FieldUtils.getValue(valueType, field.getType(), key, refPair);
+                final Object obj = ValueUtils.getValue(valueType, field.getType(), key, refPair);
                 this.setFieldValue(componentInstance, obj);
                 this.boundValues.put(refPair, obj);
             }
@@ -234,7 +238,7 @@ public class FieldHandler
             // bind: replace or update the field
             if ( mType == METHOD_TYPE.BIND )
             {
-                final Object obj = FieldUtils.getValue(valueType, field.getType(), key, refPair);
+                final Object obj = ValueUtils.getValue(valueType, field.getType(), key, refPair);
                 this.boundValues.put(refPair, obj);
                 if ( metadata.isReplace() )
                 {
@@ -268,11 +272,11 @@ public class FieldHandler
             // updated needs only be done, if the value type is map or tuple
             else if ( mType == METHOD_TYPE.UPDATED)
             {
-            	if ( this.valueType == FieldUtils.ValueType.ref_map || this.valueType == FieldUtils.ValueType.ref_tuple )
+            	if ( this.valueType == ValueType.ref_map || this.valueType == ValueType.ref_tuple )
             	{
                     if ( !this.metadata.isStatic() )
                     {
-	                    final Object obj = FieldUtils.getValue(valueType, field.getType(), key, refPair);
+	                    final Object obj = ValueUtils.getValue(valueType, field.getType(), key, refPair);
 	                    final Object oldObj = this.boundValues.put(refPair, obj);
 
 	                    if ( metadata.isReplace() )
@@ -379,11 +383,11 @@ public class FieldHandler
         		handler.field = result.field;
             	if ( !result.usable ) 
             	{
-            		handler.valueType = FieldUtils.ValueType.ignore;
+            		handler.valueType = ValueType.ignore;
             	}
             	else
             	{
-            		handler.valueType = FieldUtils.getReferenceValueType( 
+            		handler.valueType = ValueUtils.getReferenceValueType( 
             				handler.componentClass,
             				handler.metadata,
             				result.field.getType(),
@@ -480,23 +484,12 @@ public class FieldHandler
             this.handler = handler;
         }
 
-        public MethodResult invoke(Object componentInstance,
-                                   ComponentContextImpl<?> componentContext,
-                                   RefPair<?, ?> refPair,
-                                   MethodResult methodCallFailureResult,
-                                   SimpleLogger logger) {
-            return invoke(componentInstance,
-                    new BindParameters(componentContext, refPair),
-                    methodCallFailureResult,
-                    logger);
-        }
-
-        public MethodResult invoke(final Object componentInstance,
+        public <S, T> MethodResult invoke(final Object componentInstance,
                 final BindParameters rawParameter,
                 final MethodResult methodCallFailureResult,
                 final SimpleLogger logger)
         {
-            if ( handler.valueType == FieldUtils.ValueType.ignore )
+            if ( handler.valueType == ValueType.ignore )
             {
                 return MethodResult.VOID;
             }
@@ -518,19 +511,19 @@ public class FieldHandler
             return methodCallFailureResult;
         }
 
-        public <S, T> boolean getServiceObject(final ComponentContextImpl<S> key,
-                final RefPair<S, T> refPair,
+        public <S, T> boolean getServiceObject(
+                final BindParameters rawParameter,
                 final BundleContext context,
                 final SimpleLogger logger)
         {
             if ( methodType != METHOD_TYPE.UNBIND )
             {
                 //??? this resolves which we need.... better way?
-                if ( refPair.getServiceObject(key) == null
+                if ( rawParameter.getRefPair().getServiceObject(rawParameter.getComponentContext()) == null
                   && handler.fieldExists( logger )
-                  && (handler.valueType == FieldUtils.ValueType.ref_serviceType || handler.valueType == FieldUtils.ValueType.ref_tuple ) )
+                  && (handler.valueType == ValueType.ref_serviceType || handler.valueType == ValueType.ref_tuple ) )
                 {
-                    return refPair.getServiceObject(key, context, logger);
+                    return rawParameter.getRefPair().getServiceObject(rawParameter.getComponentContext(), context, logger);
                 }
             }
             return true;
@@ -554,7 +547,7 @@ public class FieldHandler
 
     public InitReferenceMethod getInit()
     {
-        if ( valueType == FieldUtils.ValueType.ignore )
+        if ( valueType == ValueType.ignore )
         {
             return null;
         }

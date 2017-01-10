@@ -29,8 +29,8 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
-import org.apache.felix.scr.impl.helper.ComponentMethods;
 import org.apache.felix.scr.impl.helper.SimpleLogger;
+import org.apache.felix.scr.impl.inject.ComponentMethods;
 import org.apache.felix.scr.impl.inject.ComponentMethodsImpl;
 import org.apache.felix.scr.impl.manager.AbstractComponentManager;
 import org.apache.felix.scr.impl.manager.ComponentActivator;
@@ -209,7 +209,7 @@ public class ComponentRegistry
                 Bundle cBundle = existingRegistration.getActivator().getBundleContext().getBundle();
                 ComponentMetadata cMeta = existingRegistration.getComponentMetadata();
 
-                StringBuffer buf = new StringBuffer( message );
+                StringBuilder buf = new StringBuilder( message );
                 buf.append( " by Bundle " ).append( cBundle.getBundleId() );
                 if ( cBundle.getSymbolicName() != null )
                 {
@@ -433,9 +433,9 @@ public class ComponentRegistry
         }
 
         @Override
-        protected ComponentMethods createComponentMethods()
+        protected ComponentMethods<S> createComponentMethods()
         {
-            return new ComponentMethodsImpl();
+            return new ComponentMethodsImpl<S>();
         }
     }
 
@@ -537,7 +537,7 @@ public class ComponentRegistry
         @Override
         public String toString()
         {
-            StringBuffer sb = new StringBuffer();
+        	StringBuilder sb = new StringBuilder();
             for (ServiceReference<?> sr: info)
             {
                 sb.append("ServiceReference: ").append(sr).append("\n");

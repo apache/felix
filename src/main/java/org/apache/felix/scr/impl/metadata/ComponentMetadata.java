@@ -56,7 +56,7 @@ public class ComponentMetadata
     private static final ServiceMetadata SERVICE_DUPLICATE = new ServiceMetadata();
 
 	/** If the activate method has this value, a constructor is used instead. */
-	public static final String CONSTRUCTOR_MARKER = "-init-";
+	private static final String CONSTRUCTOR_MARKER = "-init-";
 	       
     // the namespace code of the namespace declaring this component
     private final DSVersion m_dsVersion;
@@ -618,7 +618,17 @@ public class ComponentMetadata
         return m_activateDeclared;
     }
 
-
+    /**
+     * Returns whether the activate is done through a constructor rather
+     * than a method
+     * @return {@code true} if a constructor is used
+     * @since 2.1.0 (DS 1.4)
+     */
+    public boolean isActivateConstructor()
+    {
+    	return CONSTRUCTOR_MARKER.equals(m_activate);
+    }
+    
     /**
      * Returns the names of the activation fields
      *
@@ -1009,7 +1019,7 @@ public class ComponentMetadata
         }
         
         // constructor injection requires DS 1.4
-        if ( CONSTRUCTOR_MARKER.equals(this.getActivate()) )
+        if ( this.isActivateConstructor() )
         {
         	if ( !m_dsVersion.isDS14() )
         	{

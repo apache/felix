@@ -31,9 +31,10 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 
 import org.apache.felix.scr.impl.helper.Coercions;
-import org.apache.felix.scr.impl.helper.MethodResult;
-import org.apache.felix.scr.impl.helper.ReferenceMethod;
-import org.apache.felix.scr.impl.helper.ReferenceMethods;
+import org.apache.felix.scr.impl.inject.BindParameters;
+import org.apache.felix.scr.impl.inject.MethodResult;
+import org.apache.felix.scr.impl.inject.ReferenceMethod;
+import org.apache.felix.scr.impl.inject.ReferenceMethods;
 import org.apache.felix.scr.impl.metadata.ReferenceMetadata;
 import org.apache.felix.scr.impl.metadata.ReferenceMetadata.ReferenceScope;
 import org.apache.felix.scr.impl.metadata.ServiceMetadata.Scope;
@@ -1525,6 +1526,11 @@ public class DependencyManager<S, T> implements ReferenceManager<S, T>
         return m_customizer.prebind(key);
     }
 
+    public static final class OpenStatus<S, T> {
+        public final AtomicInteger trackingCount = new AtomicInteger();
+        public Collection<RefPair<S, T>> refs;    	
+    }
+    
     /**
      * initializes a dependency. This method binds all of the service
      * occurrences to the instance object
@@ -1533,7 +1539,31 @@ public class DependencyManager<S, T> implements ReferenceManager<S, T>
      * @return true if the dependency is satisfied and at least the minimum
      *      number of services could be bound. Otherwise false is returned.
      */
-    boolean open(ComponentContextImpl<S> componentContext, EdgeInfo edgeInfo)
+    OpenStatus<S, T> open(ComponentContextImpl<S> componentContext, EdgeInfo edgeInfo)
+    {
+        int serviceCount = 0;
+        final OpenStatus<S, T> status = new OpenStatus<S, T>();
+        CountDownLatch openLatch;
+        synchronized (m_tracker.tracked())
+        {
+        	status.refs = m_customizer.getRefs(status.trackingCount);
+            edgeInfo.setOpen(status.trackingCount.get());
+            openLatch = edgeInfo.getOpenLatch();
+        }
+        m_componentManager.log(LogService.LOG_DEBUG, "For dependency {0}, optional: {1}; to bind: {2}",
+            new Object[] { getName(), isOptional(), status.refs }, null);
+        for (RefPair<S, T> refPair : status.refs)
+        {
+            if (!refPair.isDeleted() && !refPair.isFailed())
+            {
+                serviceCount++;
+            }
+        }
+        openLatch.countDown();
+        return (cardinalitySatisfied(serviceCount) ? status : null);
+    }
+    
+    boolean bind(final ComponentContextImpl<S> componentContext, final OpenStatus<S, T> status) 
     {
         if (!invokeInitMethod(componentContext))
         {
@@ -1541,24 +1571,12 @@ public class DependencyManager<S, T> implements ReferenceManager<S, T>
                 new Object[] { getName() }, null);
             return false;
         }
-
         int serviceCount = 0;
-        AtomicInteger trackingCount = new AtomicInteger();
-        Collection<RefPair<S, T>> refs;
-        CountDownLatch openLatch;
-        synchronized (m_tracker.tracked())
-        {
-            refs = m_customizer.getRefs(trackingCount);
-            edgeInfo.setOpen(trackingCount.get());
-            openLatch = edgeInfo.getOpenLatch();
-        }
-        m_componentManager.log(LogService.LOG_DEBUG, "For dependency {0}, optional: {1}; to bind: {2}",
-            new Object[] { getName(), isOptional(), refs }, null);
-        for (RefPair<S, T> refPair : refs)
+        for (RefPair<S, T> refPair : status.refs)
         {
             if (!refPair.isDeleted() && !refPair.isFailed())
             {
-                if (!doInvokeBindMethod(componentContext, refPair, trackingCount.get()))
+                if (!doInvokeBindMethod(componentContext, refPair, status.trackingCount.get()))
                 {
                     m_componentManager.log(LogService.LOG_DEBUG,
                         "For dependency {0}, failed to invoke bind method on object {1}",
@@ -1568,7 +1586,6 @@ public class DependencyManager<S, T> implements ReferenceManager<S, T>
                 serviceCount++;
             }
         }
-        openLatch.countDown();
         return cardinalitySatisfied(serviceCount);
     }
 
@@ -1716,7 +1733,8 @@ public class DependencyManager<S, T> implements ReferenceManager<S, T>
     private boolean doInvokeBindMethod(ComponentContextImpl<S> componentContext, RefPair<S, T> refPair,
         int trackingCount)
     {
-        if (!getServiceObject(componentContext, m_bindMethods.getBind(), refPair))
+    	final ReferenceMethod bindMethod = m_bindMethods.getBind();
+        if (!getServiceObject(componentContext, bindMethod, refPair))
         {
             m_componentManager.log(LogService.LOG_WARNING,
                 "DependencyManager : invokeBindMethod : Service not available from service registry for ServiceReference {0} for reference {1}",
@@ -1724,8 +1742,8 @@ public class DependencyManager<S, T> implements ReferenceManager<S, T>
             return false;
 
         }
-        MethodResult result = m_bindMethods.getBind().invoke(componentContext.getImplementationObject(false),
-            componentContext, refPair, MethodResult.VOID, m_componentManager);
+        MethodResult result = bindMethod.invoke(componentContext.getImplementationObject(false),
+            new BindParameters(componentContext, refPair), MethodResult.VOID, m_componentManager);
         if (result == null)
         {
             return false;
@@ -1771,7 +1789,7 @@ public class DependencyManager<S, T> implements ReferenceManager<S, T>
 
             }
             final MethodResult methodResult = m_bindMethods.getUpdated().invoke(
-                componentContext.getImplementationObject(false), componentContext, refPair, MethodResult.VOID,
+                componentContext.getImplementationObject(false), new BindParameters(componentContext, refPair), MethodResult.VOID,
                 m_componentManager);
             if (methodResult != null)
             {
@@ -1840,7 +1858,7 @@ public class DependencyManager<S, T> implements ReferenceManager<S, T>
 
             }
             MethodResult methodResult = m_bindMethods.getUnbind().invoke(
-                componentContext.getImplementationObject(false), componentContext, refPair, MethodResult.VOID,
+                componentContext.getImplementationObject(false), new BindParameters(componentContext, refPair), MethodResult.VOID,
                 m_componentManager);
             if (methodResult != null)
             {
@@ -2203,7 +2221,7 @@ public class DependencyManager<S, T> implements ReferenceManager<S, T>
         BundleContext bundleContext = m_componentManager.getBundleContext();
         if (bundleContext != null)
         {
-            return bindMethod.getServiceObject(key, refPair, bundleContext, m_componentManager);
+            return bindMethod.getServiceObject(new BindParameters(key, refPair), bundleContext, m_componentManager);
         }
         else
         {

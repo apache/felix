@@ -28,7 +28,7 @@ import java.util.Map;
 
 import org.apache.felix.scr.component.ExtFactoryComponentInstance;
 import org.apache.felix.scr.impl.BundleComponentActivator;
-import org.apache.felix.scr.impl.helper.ComponentMethods;
+import org.apache.felix.scr.impl.inject.ComponentMethods;
 import org.apache.felix.scr.impl.metadata.ComponentMetadata;
 import org.apache.felix.scr.impl.metadata.ReferenceMetadata;
 import org.apache.felix.scr.impl.metadata.TargetedPID;

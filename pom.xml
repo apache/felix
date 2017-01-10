@@ -256,7 +256,7 @@
             <plugin>
                 <groupId>org.apache.felix</groupId>
                 <artifactId>maven-bundle-plugin</artifactId>
-                <version>2.5.3</version>
+                <version>3.2.0</version>
                 <extensions>true</extensions>
                 <configuration>
                     <instructions>
@@ -315,25 +315,6 @@
                     <excludePackageNames>*.impl</excludePackageNames>
                 </configuration>
             </plugin>
-<!-- Disable for now             
-             <plugin>
-                <groupId>org.apache.aries.versioning</groupId>
-                <artifactId>org.apache.aries.versioning.plugin</artifactId>
-                <version>0.1.0</version>
-                <executions>
-                    <execution>
-                        <id>default-verify</id>
-                        <phase>verify</phase>
-                        <goals>
-                            <goal>version-check</goal>
-                        </goals>
-                        <configuration>
-                            <oldArtifact>org.apache.felix:org.apache.felix.scr:1.6.2</oldArtifact>
-                        </configuration>
-                    </execution>
-                </executions>
-            </plugin>
--->
         </plugins>
     </build>
 

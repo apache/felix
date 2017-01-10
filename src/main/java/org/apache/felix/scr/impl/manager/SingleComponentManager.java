@@ -23,15 +23,16 @@ import java.util.ArrayList;
 import java.util.Dictionary;
 import java.util.HashMap;
 import java.util.Hashtable;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.TreeMap;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import org.apache.felix.scr.impl.helper.ComponentMethod;
-import org.apache.felix.scr.impl.helper.ComponentMethods;
-import org.apache.felix.scr.impl.helper.MethodResult;
-import org.apache.felix.scr.impl.metadata.ComponentMetadata;
+import org.apache.felix.scr.impl.inject.LifecycleMethod;
+import org.apache.felix.scr.impl.inject.ComponentMethods;
+import org.apache.felix.scr.impl.inject.ConstructorMethod;
+import org.apache.felix.scr.impl.inject.MethodResult;
+import org.apache.felix.scr.impl.manager.DependencyManager.OpenStatus;
 import org.apache.felix.scr.impl.metadata.TargetedPID;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.Constants;
@@ -218,7 +219,7 @@ public class SingleComponentManager<S> extends AbstractComponentManager<S> imple
 	protected S createImplementationObject( Bundle usingBundle, SetImplementationObject<S> setter, ComponentContextImpl<S> componentContext )
     {
         final Class<S> implementationObjectClass;
-        final S implementationObject;
+        S implementationObject = null;
 
         // 1. Load the component implementation class
         // 2. Create the component instance and component context
@@ -229,136 +230,93 @@ public class SingleComponentManager<S> extends AbstractComponentManager<S> imple
             log( LogService.LOG_WARNING, "Bundle shut down during instantiation of the implementation object", null);
             return null;
         }
+                
+        // bind target services 
+        final List<DependencyManager.OpenStatus<S, ?>> openStatusList = new ArrayList<DependencyManager.OpenStatus<S,?>>();
         
-        ReferenceManager<S, ?> failedDm = null;
-        
-        // bind target services for constructor injection
-        final TreeMap<Integer, DependencyManager<S, ?>> paramMap;
-        if ( ComponentMetadata.CONSTRUCTOR_MARKER.equals(getComponentMetadata().getActivate()))
-        {
-        	paramMap = new TreeMap<Integer, DependencyManager<S,?>>();
-	        for ( DependencyManager<S, ?> dm : getDependencyManagers())
-	        {
-	            if ( failedDm == null )
-	            {
-	            	if ( dm.getReferenceMetadata().getParameterIndex() != null)
-	            	{
-		                // if a dependency turned unresolved since the validation check,
-		                // creating the instance fails here, so we deactivate and return
-		                // null.
-		                boolean open = dm.open( componentContext, componentContext.getEdgeInfo( dm ) );
-		                if ( !open )
-		                {
-		                    log( LogService.LOG_DEBUG, "Cannot create component instance due to failure to bind reference {0}",
-		                            new Object[] { dm.getName() }, null );
-		
-		                    failedDm = dm;
-		                }
-		                paramMap.put(dm.getReferenceMetadata().getParameterIndex(), dm);
-	                }
-	            }
+        final Map<Integer, ConstructorMethod.ReferencePair<S>> paramMap = ( getComponentMetadata().isActivateConstructor() ? new HashMap<Integer, ConstructorMethod.ReferencePair<S>>() : null);
+        boolean failed = false;
+	    for ( DependencyManager<S, ?> dm : getDependencyManagers())
+	    {
+            // if a dependency turned unresolved since the validation check,
+            // creating the instance fails here, so we deactivate and return
+            // null.
+            DependencyManager.OpenStatus<S, ?> open = dm.open( componentContext, componentContext.getEdgeInfo( dm ) );
+            if ( open == null )
+            {
+                log( LogService.LOG_DEBUG, "Cannot create component instance due to failure to bind reference {0}",
+                        new Object[] { dm.getName() }, null );
+
+                failed = true;
+                break;
+            }
+            openStatusList.add(open);
+        	if ( dm.getReferenceMetadata().getParameterIndex() != null)
+        	{
+        		final ConstructorMethod.ReferencePair<S> pair = new ConstructorMethod.ReferencePair<S>();
+        		pair.dependencyManager = dm;
+        		pair.openStatus = open;
+                paramMap.put(dm.getReferenceMetadata().getParameterIndex(), pair);
 	        }
-	        if (failedDm != null)
+	    }
+
+	    if ( !failed )
+	    {
+	        try
 	        {
-	            // make sure, we keep no bindings. Only close the dm's we opened.
-	            boolean skip = true;
-	            for ( DependencyManager<S, ?> md: getReversedDependencyManagers() )
-	            {
-	                if ( skip )
-	                {
-	                	if ( failedDm == md ) 
-	                	{
-	                		skip = false;
-	                	}
-	                }
-	                else
-	                {
-	                	if ( md.getReferenceMetadata().getParameterIndex() != null )
-	                	{
-	                		md.close( componentContext, componentContext.getEdgeInfo( md ) );
-	                	}
-	                }
-	                md.deactivate();
-	            }
+	            // 112.4.4 The class is retrieved with the loadClass method of the component's bundle
+	            implementationObjectClass = (Class<S>) bundle.loadClass(
+	                    getComponentMetadata().getImplementationClassName() )  ;
+	
+	            implementationObject = getComponentMethods().getConstructor().newInstance(implementationObjectClass,
+	            		componentContext,
+	            		paramMap,
+	            		this);
+	            
+	        }
+	        catch ( Throwable t )
+	        {
+	            // failed to instantiate, return null
+	            log( LogService.LOG_ERROR, "Error during instantiation of the implementation object", t );
 	            return null;
 	        }
-        }
-        else
-        {
-        	paramMap = null;
-        }
-        
-        try
-        {
-            // 112.4.4 The class is retrieved with the loadClass method of the component's bundle
-            implementationObjectClass = (Class<S>) bundle.loadClass(
-                    getComponentMetadata().getImplementationClassName() )  ;
-
-            implementationObject = getComponentMethods().getConstructor().newInstance(implementationObjectClass,
-            		componentContext,
-            		paramMap,
-            		this);
-            
-        }
-        catch ( Throwable t )
-        {
-            // failed to instantiate, return null
-            log( LogService.LOG_ERROR, "Error during instantiation of the implementation object", t );
-            return null;
-        }
-
-        componentContext.setImplementationObject(implementationObject);
-
-        // 3. set the implementation object prematurely
-        setter.presetComponentContext( componentContext );
-
-        // 4. Bind the target services
-
-        for ( DependencyManager<S, ?> dm: getDependencyManagers())
-        {
-            if ( failedDm == null )
-            {
-            	if (dm.getReferenceMetadata().getParameterIndex() == null)
-            	{
-	                // if a dependency turned unresolved since the validation check,
-	                // creating the instance fails here, so we deactivate and return
-	                // null.
-	                boolean open = dm.open( componentContext, componentContext.getEdgeInfo( dm ) );
-	                if ( !open )
-	                {
-	                    log( LogService.LOG_DEBUG, "Cannot create component instance due to failure to bind reference {0}",
-	                            new Object[] { dm.getName() }, null );
 	
-	                    failedDm = dm;
+	        componentContext.setImplementationObject(implementationObject);
 	
-	                }
-            	}
-            }
-            else
-            {
-            	if ( dm.getReferenceMetadata().getParameterIndex() == null )
-            	{
-            		componentContext.getEdgeInfo( dm ).ignore();
-            	}
-            }
-        }
+	        // 3. set the implementation object prematurely
+	        setter.presetComponentContext( componentContext );
 
-        if (failedDm != null)
+	        // 4. Bind the target services
+            final Iterator<DependencyManager.OpenStatus<S, ?>> iter = openStatusList.iterator();
+	        for ( DependencyManager<S, ?> dm: getDependencyManagers())
+	        {
+	        	final DependencyManager.OpenStatus<S, ?> open = iter.next();
+		        if ( !dm.bind(componentContext, (OpenStatus) open) )
+		        {
+                    log( LogService.LOG_DEBUG, "Cannot create component instance due to failure to bind reference {0}",
+                            new Object[] { dm.getName() }, null );
+                    failed = true;
+                    break;
+		        }
+	        }
+	    }
+        if (failed)
         {
             // make sure, we keep no bindings. Only close the dm's we opened.
-            boolean skip = true;
+            int skipCount = getReversedDependencyManagers().size() - openStatusList.size();
             for ( DependencyManager<S, ?> md: getReversedDependencyManagers() )
             {
-                if ( skip && failedDm == md )
-                {
-                    skip = false;
-                }
-                if ( !skip || md.getReferenceMetadata().getParameterIndex() != null )
-                {
-                    md.close( componentContext, componentContext.getEdgeInfo( md ) );
-                }
+            	if ( skipCount > 0 )
+            	{
+            		skipCount--;
+            	} 
+            	else 
+            	{
+            		md.close( componentContext, componentContext.getEdgeInfo( md ) );
+            	}
                 md.deactivate();
             }
+
             setter.resetImplementationObject( implementationObject );
             return null;
 
@@ -376,10 +334,13 @@ public class SingleComponentManager<S> extends AbstractComponentManager<S> imple
                 md.close( componentContext, componentContext.getEdgeInfo( md ) );
             }
 
-            // make sure the implementation object is not available
-            setter.resetImplementationObject( implementationObject );
+            if ( implementationObject != null )
+            {
+            	// make sure the implementation object is not available
+            	setter.resetImplementationObject( implementationObject );
+            }
 
-           return null;
+            return null;
         }
         else
         {
@@ -836,7 +797,7 @@ public class SingleComponentManager<S> extends AbstractComponentManager<S> imple
 
     protected MethodResult invokeModifiedMethod()
     {
-        ComponentMethod modifiedMethod = getComponentMethods().getModifiedMethod();
+        LifecycleMethod modifiedMethod = getComponentMethods().getModifiedMethod();
         if ( getInstance() != null )
         {
             return modifiedMethod.invoke( getInstance(), m_componentContext, -1,

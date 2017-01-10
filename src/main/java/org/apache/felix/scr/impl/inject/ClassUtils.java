@@ -18,7 +18,6 @@
  */
 package org.apache.felix.scr.impl.inject;
 
-
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;

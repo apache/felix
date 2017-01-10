@@ -28,7 +28,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.regex.Pattern;
 
-import junit.framework.TestCase;
 import org.objectweb.asm.AnnotationVisitor;
 import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.ClassVisitor;
@@ -42,6 +41,8 @@ import org.objectweb.asm.TypePath;
 import org.objectweb.asm.signature.SignatureReader;
 import org.objectweb.asm.signature.SignatureVisitor;
 
+import junit.framework.TestCase;
+
 /**
  * Ensure that the helper / manager / metadata packages can actually be used
  * without any other packages.
@@ -52,6 +53,9 @@ public class PackageIsolationTest extends TestCase {
         final List<String> packages = Arrays.asList(
                 "org/apache/felix/scr/component",
                 "org/apache/felix/scr/impl/helper",
+                "org/apache/felix/scr/impl/inject",
+                "org/apache/felix/scr/impl/inject/field",
+                "org/apache/felix/scr/impl/inject/methods",
                 "org/apache/felix/scr/impl/manager",
                 "org/apache/felix/scr/impl/metadata");
 
