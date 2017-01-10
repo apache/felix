@@ -151,12 +151,12 @@ public class ReferenceDTO extends DTO {
 	 * reference.
 	 * <p>
 	 * This is declared in the {@code parameter} attribute of the
-	 * {@code reference} element. This must be zero if the component description
-	 * does not declare a parameter number for the reference.
+	 * {@code reference} element. This must be {@code null} if the component
+	 * description does not declare a parameter number for the reference.
 	 * 
 	 * @since 1.4
 	 */
-	public int		parameter;
+	public Integer	parameter;
 
 	/**
 	 * The collection type for the reference.

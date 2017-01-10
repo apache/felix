@@ -20,7 +20,9 @@
 
 package org.apache.felix.scr.impl.inject;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import org.apache.felix.scr.impl.helper.ComponentMethod;
@@ -70,22 +72,25 @@ public class ComponentMethodsImpl<T> implements ComponentMethods<T>
         for ( ReferenceMetadata referenceMetadata: componentMetadata.getDependencies() )
         {
             final String refName = referenceMetadata.getName();
-            final ReferenceMethods methods;
-            if ( referenceMetadata.getField() != null && referenceMetadata.getBind() != null)
+            final List<ReferenceMethods> methods = new ArrayList<ReferenceMethods>();
+            // TODO add methods for constructor injection
+            if ( referenceMetadata.getField() != null )
             {
-                methods = new DuplexReferenceMethods(
-                        new FieldMethods( referenceMetadata, implementationObjectClass, dsVersion, configurableServiceProperties),
-                        new BindMethods( referenceMetadata, implementationObjectClass, dsVersion, configurableServiceProperties));
+                methods.add(new FieldMethods( referenceMetadata, implementationObjectClass, dsVersion, configurableServiceProperties));
             }
-            else if ( referenceMetadata.getField() != null )
+            if ( referenceMetadata.getBind() != null )
             {
-                methods = new FieldMethods( referenceMetadata, implementationObjectClass, dsVersion, configurableServiceProperties);
+            	methods.add(new BindMethods( referenceMetadata, implementationObjectClass, dsVersion, configurableServiceProperties));
+            }
+
+            if ( methods.size() == 1 )
+            {
+            	bindMethodMap.put( refName, methods.get(0) );
             }
             else
             {
-                methods = new BindMethods( referenceMetadata, implementationObjectClass, dsVersion, configurableServiceProperties);
+            	bindMethodMap.put( refName, new DuplexReferenceMethods(methods) );
             }
-            bindMethodMap.put( refName, methods );
         }
         
         // special constructor handling with activation fields and/or constructor injection

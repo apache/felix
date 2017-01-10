@@ -86,31 +86,6 @@ public class FieldHandler
         this.state = NotResolved.INSTANCE;
     }
 
-    /**
-     * Set the field.
-     * If the field is found, the state transitions to resolved, if the field is
-     * {@code null} the state transitions to not found.
-     * @param f The field or {@code null}.
-     * @param logger The logger
-     */
-    private void setField( final Field f, final SimpleLogger logger )
-    {
-        this.field = f;
-
-        if ( f != null )
-        {
-            state = Resolved.INSTANCE;
-            logger.log( LogService.LOG_DEBUG, "Found field: {0}",
-                    new Object[] { field }, null );
-        }
-        else
-        {
-            state = NotFound.INSTANCE;
-            logger.log(LogService.LOG_ERROR, "Field [{0}] not found; Component will fail",
-                new Object[] { this.metadata.getField() }, null);
-        }
-    }
-
     private enum METHOD_TYPE
     {
         BIND,
@@ -390,15 +365,18 @@ public class FieldHandler
                     {handler.metadata.getField()}, null );
 
             // resolve the field
-            final Field field;
-        	final FieldUtils.FieldSearchResult result = FieldUtils.findField( handler.componentClass, handler.metadata.getField(), logger );
+        	final FieldUtils.FieldSearchResult result = FieldUtils.searchField( handler.componentClass, handler.metadata.getField(), logger );
         	if ( result == null ) 
         	{
-                field = null;            		
+        		handler.field = null;         
+        		handler.valueType = null;
+        		handler.state = NotFound.INSTANCE;
+                logger.log(LogService.LOG_ERROR, "Field [{0}] not found; Component will fail",
+                    new Object[] { handler.metadata.getField() }, null);
         	}
         	else 
         	{
-        		field = result.field;
+        		handler.field = result.field;
             	if ( !result.usable ) 
             	{
             		handler.valueType = FieldUtils.ValueType.ignore;
@@ -408,13 +386,14 @@ public class FieldHandler
             		handler.valueType = FieldUtils.getReferenceValueType( 
             				handler.componentClass,
             				handler.metadata,
-            				field.getType(),
-            				field, 
+            				result.field.getType(),
+            				result.field, 
             				logger );
             	}
+                handler.state = Resolved.INSTANCE;
+                logger.log( LogService.LOG_DEBUG, "Found field: {0}",
+                        new Object[] { result.field }, null );
         	}
-
-            handler.setField( field, logger );
         }
 
         public MethodResult invoke( final FieldHandler handler,

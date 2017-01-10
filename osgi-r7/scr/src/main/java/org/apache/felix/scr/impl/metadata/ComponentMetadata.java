@@ -1018,9 +1018,9 @@ public class ComponentMetadata
         	final Set<Integer> parIndexSet = new HashSet<Integer>();
         	for(final ReferenceMetadata ref : this.m_references) 
         	{
-        		if ( ref.getParamterIndex() != -1 && !parIndexSet.add(ref.getParamterIndex()) ) 
+        		if ( ref.getParameterIndex() != null && !parIndexSet.add(ref.getParameterIndex()) ) 
         		{
-                    throw validationFailure( "Duplicate reference for argument " + ref.getParamterIndex() + " in constructor" );        	                        
+                    throw validationFailure( "Duplicate reference for argument " + ref.getParameterIndex() + " in constructor" );        	                        
         		}
         	}
         }
@@ -1029,7 +1029,7 @@ public class ComponentMetadata
         	// no constructor injection, check references for having a parameter index
         	for(final ReferenceMetadata ref : this.m_references) 
         	{
-        		if ( ref.getParamterIndex() != -1 )
+        		if ( ref.getParameterIndex() != null )
         		{
                     throw validationFailure( "Reference must not use parameter attribute if no constructor injection is used" );        			
         		}
