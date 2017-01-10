@@ -20,13 +20,12 @@ package org.apache.felix.scr.impl.inject;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
-import java.util.TreeMap;
+import java.util.Map;
 
-import org.apache.felix.scr.impl.helper.ConstructorMethod;
 import org.apache.felix.scr.impl.helper.SimpleLogger;
+import org.apache.felix.scr.impl.inject.ValueUtils.ValueType;
+import org.apache.felix.scr.impl.inject.field.FieldUtils;
 import org.apache.felix.scr.impl.manager.ComponentContextImpl;
-import org.apache.felix.scr.impl.manager.DependencyManager;
-import org.apache.felix.scr.impl.metadata.ComponentMetadata;
 import org.apache.felix.scr.impl.metadata.ReferenceMetadata;
 import org.osgi.service.log.LogService;
 
@@ -38,17 +37,17 @@ public class ConstructorMethodImpl<T> implements ConstructorMethod<T>
 {
     private volatile boolean m_initialized = false;
     
-    private volatile FieldUtils.ValueType[] m_paramTypes;
+    private volatile ValueType[] m_paramTypes;
     private volatile Field[] m_fields;
     
     private volatile Constructor<T> m_constructor;
-    private volatile FieldUtils.ValueType[] m_constructorArgTypes;
+    private volatile ValueType[] m_constructorArgTypes;
     
 	@SuppressWarnings("unchecked")
 	@Override
 	public <S> T newInstance(Class<T> componentClass, 
              			 ComponentContextImpl<T> componentContext, 
-                         TreeMap<Integer, DependencyManager<S, ?>> parameterMap,
+                         Map<Integer, ReferencePair<S>> parameterMap,
 			             SimpleLogger logger)
     throws Exception
 	{
@@ -56,7 +55,7 @@ public class ConstructorMethodImpl<T> implements ConstructorMethod<T>
 			// activation fields
 			if ( componentContext.getComponentMetadata().getActivationFields() != null )
 			{
-				m_paramTypes = new FieldUtils.ValueType[componentContext.getComponentMetadata().getActivationFields().size()];
+				m_paramTypes = new ValueType[componentContext.getComponentMetadata().getActivationFields().size()];
 				m_fields = new Field[m_paramTypes.length];
 			
 				int index = 0;
@@ -72,12 +71,12 @@ public class ConstructorMethodImpl<T> implements ConstructorMethod<T>
 					{
 						if ( result.usable )
 						{
-							m_paramTypes[index] = FieldUtils.getValueType(result.field.getType());
+							m_paramTypes[index] = ValueUtils.getValueType(result.field.getType());
 							m_fields[index] = result.field;
 						}
 						else
 						{
-							m_paramTypes[index] = FieldUtils.ValueType.ignore;
+							m_paramTypes[index] = ValueType.ignore;
 							m_fields[index] = null;
 						}
 					}
@@ -86,31 +85,31 @@ public class ConstructorMethodImpl<T> implements ConstructorMethod<T>
 			}
 			else
 			{
-				m_paramTypes = FieldUtils.EMPTY_TYPES;
+				m_paramTypes = ValueUtils.EMPTY_VALUE_TYPES;
 				m_fields = null;
 			}
 			// constructor injection
-			if ( ComponentMetadata.CONSTRUCTOR_MARKER.equals(componentContext.getComponentMetadata().getActivate() ) ) 
+			if ( componentContext.getComponentMetadata().isActivateConstructor() ) 
 			{
 				// TODO search constructor
 				m_constructor = null;
 				
 				boolean hasFailure = false;
 				final Class<?>[] argTypes = m_constructor.getParameterTypes();
-				m_constructorArgTypes = new FieldUtils.ValueType[argTypes.length];
+				m_constructorArgTypes = new ValueType[argTypes.length];
 				for(int i=0;i<m_constructorArgTypes.length;i++)
 				{
-					final DependencyManager<S, ?> dm = parameterMap.get(i);
-					ReferenceMetadata reference = dm == null ? null : dm.getReferenceMetadata();
+					final ReferencePair<S> pair = parameterMap.get(i);
+					ReferenceMetadata reference = pair == null ? null : pair.dependencyManager.getReferenceMetadata();
 					if ( reference == null )
 					{
-						m_constructorArgTypes[i] = FieldUtils.getValueType(argTypes[i]);
+						m_constructorArgTypes[i] = ValueUtils.getValueType(argTypes[i]);
 					}
 					else 
 					{
-						m_constructorArgTypes[i] = FieldUtils.getReferenceValueType(componentClass, reference, argTypes[i], null, logger);
+						m_constructorArgTypes[i] = ValueUtils.getReferenceValueType(componentClass, reference, argTypes[i], null, logger);
 					}
-					if ( m_constructorArgTypes[i] == FieldUtils.ValueType.ignore )
+					if ( m_constructorArgTypes[i] == ValueType.ignore )
 					{
 						hasFailure = true;
 						break;
@@ -127,7 +126,7 @@ public class ConstructorMethodImpl<T> implements ConstructorMethod<T>
 		}
 		
 		// if we have fields and one is in state failure (type == null) we can directly throw
-		for(final FieldUtils.ValueType t : m_paramTypes)
+		for(final ValueType t : m_paramTypes)
 		{
 			if ( t == null )
 			{
@@ -137,7 +136,7 @@ public class ConstructorMethodImpl<T> implements ConstructorMethod<T>
 
 		// constructor
 		final T component;
-		if ( ComponentMetadata.CONSTRUCTOR_MARKER.equals(componentContext.getComponentMetadata().getActivate() ) ) 
+		if ( componentContext.getComponentMetadata().isActivateConstructor() ) 
 		{
 			if ( m_constructor == null )
 			{
@@ -146,8 +145,9 @@ public class ConstructorMethodImpl<T> implements ConstructorMethod<T>
 			final Object[] args = new Object[m_constructorArgTypes.length];
 			for(int i=0; i<args.length; i++) 
 			{
-				final DependencyManager<S, ?> dm = parameterMap.get(i);
-				args[i] = FieldUtils.getValue(m_constructorArgTypes[i], 
+				// TODO - get ref pair
+				final ReferencePair<S> pair = parameterMap.get(i);
+				args[i] = ValueUtils.getValue(m_constructorArgTypes[i], 
 						m_constructor.getParameterTypes()[i], 
 						componentContext, 
 						null);
@@ -163,9 +163,9 @@ public class ConstructorMethodImpl<T> implements ConstructorMethod<T>
 		// activation fields
 		for(int i = 0; i<m_paramTypes.length; i++)
 		{
-	    	if ( m_paramTypes[i] != FieldUtils.ValueType.ignore )
+	    	if ( m_paramTypes[i] != ValueType.ignore )
 	    	{
-		        final Object value = FieldUtils.getValue(m_paramTypes[i], 
+		        final Object value = ValueUtils.getValue(m_paramTypes[i], 
 		        		m_fields[i].getType(), 
 		        		(ComponentContextImpl<T>) componentContext, 
 		        		null);

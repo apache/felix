@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.felix.scr.impl.inject;
+package org.apache.felix.scr.impl.inject.methods;
 
 
 import java.lang.reflect.InvocationTargetException;
@@ -27,15 +27,19 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.felix.scr.impl.helper.ComponentMethod;
-import org.apache.felix.scr.impl.helper.MethodResult;
 import org.apache.felix.scr.impl.helper.SimpleLogger;
+import org.apache.felix.scr.impl.inject.ActivatorParameter;
+import org.apache.felix.scr.impl.inject.Annotations;
+import org.apache.felix.scr.impl.inject.ClassUtils;
+import org.apache.felix.scr.impl.inject.LifecycleMethod;
+import org.apache.felix.scr.impl.inject.MethodResult;
+import org.apache.felix.scr.impl.inject.SuitableMethodNotAccessibleException;
 import org.apache.felix.scr.impl.metadata.DSVersion;
 import org.osgi.service.component.ComponentContext;
 import org.osgi.service.log.LogService;
 
 
-public class ActivateMethod extends BaseMethod<ActivatorParameter> implements ComponentMethod
+public class ActivateMethod extends BaseMethod<ActivatorParameter> implements LifecycleMethod
 {
 
     protected final boolean m_supportsInterfaces;
@@ -285,7 +289,7 @@ public class ActivateMethod extends BaseMethod<ActivatorParameter> implements Co
     }
 
     /**
-     * @see org.apache.felix.scr.impl.helper.ComponentMethod#invoke(java.lang.Object, org.osgi.service.component.ComponentContext, int, org.apache.felix.scr.impl.helper.MethodResult, org.apache.felix.scr.impl.helper.SimpleLogger)
+     * @see org.apache.felix.scr.impl.inject.LifecycleMethod#invoke(java.lang.Object, org.osgi.service.component.ComponentContext, int, org.apache.felix.scr.impl.inject.MethodResult, org.apache.felix.scr.impl.helper.SimpleLogger)
      */
     public MethodResult invoke(final Object componentInstance, 
     		final ComponentContext componentContext, 

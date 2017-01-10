@@ -16,18 +16,29 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.felix.scr.impl.helper;
+package org.apache.felix.scr.impl.inject.methods;
+
+import org.apache.felix.scr.impl.metadata.DSVersion;
+
 
 /**
- * Callback for initializing the reference (field references)
+ * Component method to be invoked on service property update of a bound service.
  */
-public interface InitReferenceMethod
+public class UpdatedMethod extends BindMethod
+implements org.apache.felix.scr.impl.inject.ReferenceMethod
 {
-    /**
-     * Initialize the reference. This is usually setting the value of a field.
-     * @param componentInstance The component instance
-     * @param logger The logger
-     * @return {@code true} if initialization succeeded
-     */
-    boolean init( Object componentInstance, SimpleLogger logger );
+
+    public UpdatedMethod( final String methodName,
+            final Class<?> componentClass, final String referenceClassName, final DSVersion dsVersion, final boolean configurableServiceProperties )
+    {
+        super( methodName, componentClass, referenceClassName, dsVersion, configurableServiceProperties );
+    }
+
+
+    @Override
+    protected String getMethodNamePrefix()
+    {
+        return "update";
+    }
+
 }

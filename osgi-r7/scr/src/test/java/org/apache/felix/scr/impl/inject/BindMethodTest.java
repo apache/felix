@@ -19,13 +19,9 @@
 package org.apache.felix.scr.impl.inject;
 
 
-import junit.framework.TestCase;
-
 import org.apache.felix.scr.impl.BundleComponentActivator;
 import org.apache.felix.scr.impl.MockBundle;
-import org.apache.felix.scr.impl.helper.ComponentMethods;
-import org.apache.felix.scr.impl.inject.BindMethod;
-import org.apache.felix.scr.impl.inject.BindParameters;
+import org.apache.felix.scr.impl.inject.methods.BindMethod;
 import org.apache.felix.scr.impl.manager.ComponentContainer;
 import org.apache.felix.scr.impl.manager.ComponentContextImpl;
 import org.apache.felix.scr.impl.manager.RefPair;
@@ -43,6 +39,8 @@ import org.easymock.EasyMock;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceReference;
+
+import junit.framework.TestCase;
 
 
 public class BindMethodTest extends TestCase
@@ -455,7 +453,7 @@ public class BindMethodTest extends TestCase
                 FakeService.class.getName(), dsVersion, false );
         RefPair refPair = new SingleRefPair( m_serviceReference );
         ComponentContextImpl<T1> cc = new ComponentContextImpl(icm, new MockBundle(), null);
-        assertTrue( bm.getServiceObject( cc, refPair, m_context, icm ) );
+        assertTrue( bm.getServiceObject( new BindParameters(cc, refPair), m_context, icm ) );
         BindParameters bp = new BindParameters(cc, refPair);
         bm.invoke( component, bp, null, icm );
         assertEquals( expectCallPerformed, component.callPerformed );

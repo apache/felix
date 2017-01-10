@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.felix.scr.impl.inject;
+package org.apache.felix.scr.impl.inject.methods;
 
 
 import java.lang.reflect.InvocationTargetException;
@@ -26,10 +26,11 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.felix.scr.impl.helper.ComponentServiceObjectsHelper;
-import org.apache.felix.scr.impl.helper.MethodResult;
 import org.apache.felix.scr.impl.helper.ReadOnlyDictionary;
 import org.apache.felix.scr.impl.helper.SimpleLogger;
+import org.apache.felix.scr.impl.inject.BindParameters;
+import org.apache.felix.scr.impl.inject.ClassUtils;
+import org.apache.felix.scr.impl.inject.SuitableMethodNotAccessibleException;
 import org.apache.felix.scr.impl.manager.ComponentContextImpl;
 import org.apache.felix.scr.impl.manager.RefPair;
 import org.apache.felix.scr.impl.metadata.DSVersion;
@@ -39,9 +40,10 @@ import org.osgi.service.log.LogService;
 
 /**
  * Component method to be invoked on service (un)binding.
+ * @param <S>
  */
 public class BindMethod extends BaseMethod<BindParameters>
-implements org.apache.felix.scr.impl.helper.ReferenceMethod
+implements org.apache.felix.scr.impl.inject.ReferenceMethod
 {
     private final String m_referenceClassName;
 
@@ -639,20 +641,16 @@ implements org.apache.felix.scr.impl.helper.ReferenceMethod
             { ClassUtils.MAP_CLASS }, acceptPrivate, acceptPackage, logger );
     }
 
-    public <S, T> boolean getServiceObject( ComponentContextImpl<S> key, RefPair<S, T> refPair, BundleContext context, SimpleLogger logger )
+    public <S, T> boolean getServiceObject( final BindParameters parameters, BundleContext context, SimpleLogger logger )
     {
         //??? this resolves which we need.... better way?
-        if ( refPair.getServiceObject(key) == null && methodExists( logger ) )
+        if ( parameters.getRefPair().getServiceObject(parameters.getComponentContext()) == null && methodExists( logger ) )
         {
             if ( m_paramTypes.contains(ParamType.serviceType) ) {
-                return refPair.getServiceObject(key, context, logger);
+                return parameters.getRefPair().getServiceObject(parameters.getComponentContext(), context, logger);
             }
         }
         return true;
-    }
-
-    public MethodResult invoke(Object componentInstance, ComponentContextImpl<?> componentContext, RefPair<?, ?> refPair, MethodResult methodCallFailureResult, SimpleLogger logger) {
-        return invoke(componentInstance, new BindParameters(componentContext, refPair), methodCallFailureResult, logger);
     }
 
     @Override

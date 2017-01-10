@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.felix.scr.impl.inject;
+package org.apache.felix.scr.impl.inject.methods;
 
 
 import java.lang.reflect.InvocationTargetException;
@@ -27,8 +27,10 @@ import java.security.PrivilegedAction;
 import java.util.Arrays;
 import java.util.Map;
 
-import org.apache.felix.scr.impl.helper.MethodResult;
 import org.apache.felix.scr.impl.helper.SimpleLogger;
+import org.apache.felix.scr.impl.inject.ClassUtils;
+import org.apache.felix.scr.impl.inject.MethodResult;
+import org.apache.felix.scr.impl.inject.SuitableMethodNotAccessibleException;
 import org.apache.felix.scr.impl.metadata.DSVersion;
 import org.osgi.service.log.LogService;
 
@@ -344,7 +346,7 @@ public abstract class BaseMethod<P>
             // be loaded
             if ( logger.isLogEnabled( LogService.LOG_WARNING ) )
             {
-                StringBuffer buf = new StringBuffer();
+                StringBuilder buf = new StringBuilder();
                 buf.append( "Failure loooking up method " ).append( name ).append( '(' );
                 for ( int i = 0; parameterTypes != null && i < parameterTypes.length; i++ )
                 {

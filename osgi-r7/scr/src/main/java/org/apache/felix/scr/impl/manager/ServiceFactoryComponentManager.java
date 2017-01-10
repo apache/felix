@@ -24,9 +24,9 @@ import java.util.Collection;
 import java.util.Dictionary;
 import java.util.IdentityHashMap;
 
-import org.apache.felix.scr.impl.helper.ComponentMethod;
-import org.apache.felix.scr.impl.helper.ComponentMethods;
-import org.apache.felix.scr.impl.helper.MethodResult;
+import org.apache.felix.scr.impl.inject.LifecycleMethod;
+import org.apache.felix.scr.impl.inject.ComponentMethods;
+import org.apache.felix.scr.impl.inject.MethodResult;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.ServiceRegistration;
 import org.osgi.service.component.ComponentConstants;
@@ -215,7 +215,7 @@ public class ServiceFactoryComponentManager<S> extends SingleComponentManager<S>
 
     protected MethodResult invokeModifiedMethod()
     {
-        ComponentMethod modifiedMethod = getComponentMethods().getModifiedMethod();
+        LifecycleMethod modifiedMethod = getComponentMethods().getModifiedMethod();
         MethodResult result = MethodResult.VOID;
         for ( ComponentContextImpl<S> componentContext : getComponentContexts() )
         {

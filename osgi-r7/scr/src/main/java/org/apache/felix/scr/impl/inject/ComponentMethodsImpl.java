@@ -25,10 +25,11 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.felix.scr.impl.helper.ComponentMethod;
-import org.apache.felix.scr.impl.helper.ComponentMethods;
-import org.apache.felix.scr.impl.helper.ConstructorMethod;
-import org.apache.felix.scr.impl.helper.ReferenceMethods;
+import org.apache.felix.scr.impl.inject.field.FieldMethods;
+import org.apache.felix.scr.impl.inject.methods.ActivateMethod;
+import org.apache.felix.scr.impl.inject.methods.BindMethods;
+import org.apache.felix.scr.impl.inject.methods.DeactivateMethod;
+import org.apache.felix.scr.impl.inject.methods.ModifiedMethod;
 import org.apache.felix.scr.impl.metadata.ComponentMetadata;
 import org.apache.felix.scr.impl.metadata.DSVersion;
 import org.apache.felix.scr.impl.metadata.ReferenceMetadata;
@@ -39,9 +40,9 @@ import org.apache.felix.scr.impl.metadata.ReferenceMetadata;
  */
 public class ComponentMethodsImpl<T> implements ComponentMethods<T>
 {
-    private ComponentMethod m_activateMethod;
-    private ComponentMethod m_modifiedMethod;
-    private ComponentMethod m_deactivateMethod;
+    private LifecycleMethod m_activateMethod;
+    private LifecycleMethod m_modifiedMethod;
+    private LifecycleMethod m_deactivateMethod;
     private ConstructorMethod<T> m_constructor;
 
     private final Map<String, ReferenceMethods> bindMethodMap = new HashMap<String, ReferenceMethods>();
@@ -58,7 +59,7 @@ public class ComponentMethodsImpl<T> implements ComponentMethods<T>
         boolean supportsInterfaces = componentMetadata.isConfigureWithInterfaces();
         
         m_activateMethod = new ActivateMethod( 
-        		ComponentMetadata.CONSTRUCTOR_MARKER.equals(componentMetadata.getActivate()) ? null : componentMetadata.getActivate(), 
+        		componentMetadata.isActivateConstructor() ? null : componentMetadata.getActivate(), 
         		componentMetadata.isActivateDeclared(), 
         		implementationObjectClass, 
         		dsVersion, 
@@ -73,7 +74,6 @@ public class ComponentMethodsImpl<T> implements ComponentMethods<T>
         {
             final String refName = referenceMetadata.getName();
             final List<ReferenceMethods> methods = new ArrayList<ReferenceMethods>();
-            // TODO add methods for constructor injection
             if ( referenceMetadata.getField() != null )
             {
                 methods.add(new FieldMethods( referenceMetadata, implementationObjectClass, dsVersion, configurableServiceProperties));
@@ -83,7 +83,11 @@ public class ComponentMethodsImpl<T> implements ComponentMethods<T>
             	methods.add(new BindMethods( referenceMetadata, implementationObjectClass, dsVersion, configurableServiceProperties));
             }
 
-            if ( methods.size() == 1 )
+            if ( methods.isEmpty() )
+            {
+            	bindMethodMap.put( refName, ReferenceMethods.NOPReferenceMethod );
+            }
+            else if ( methods.size() == 1 )
             {
             	bindMethodMap.put( refName, methods.get(0) );
             }
@@ -95,7 +99,7 @@ public class ComponentMethodsImpl<T> implements ComponentMethods<T>
         
         // special constructor handling with activation fields and/or constructor injection
         if ( componentMetadata.getActivationFields() != null 
-             || ComponentMetadata.CONSTRUCTOR_MARKER.equals(componentMetadata.getActivate()))
+             || componentMetadata.isActivateConstructor())
         {
         	m_constructor = new ConstructorMethodImpl();
         }
@@ -106,19 +110,19 @@ public class ComponentMethodsImpl<T> implements ComponentMethods<T>
     }
 
 	@Override
-    public ComponentMethod getActivateMethod()
+    public LifecycleMethod getActivateMethod()
     {
         return m_activateMethod;
     }
 
 	@Override
-    public ComponentMethod getDeactivateMethod()
+    public LifecycleMethod getDeactivateMethod()
     {
         return m_deactivateMethod;
     }
 
 	@Override
-    public ComponentMethod getModifiedMethod()
+    public LifecycleMethod getModifiedMethod()
     {
         return m_modifiedMethod;
     }

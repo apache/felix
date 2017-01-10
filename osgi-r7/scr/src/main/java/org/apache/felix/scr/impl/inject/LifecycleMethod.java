@@ -18,27 +18,23 @@
  */
 package org.apache.felix.scr.impl.inject;
 
-import org.apache.felix.scr.impl.metadata.DSVersion;
-
+import org.apache.felix.scr.impl.helper.SimpleLogger;
+import org.osgi.service.component.ComponentContext;
 
 /**
- * Component method to be invoked on service unbinding.
+ * Interface for invocation one of the lifecycle methods:
+ * <ul>
+ *   <li>activate</li>
+ *   <li>modified</li>
+ *   <li>deactivate</li>
+ * </ul>
  */
-public class UnbindMethod extends BindMethod
-implements org.apache.felix.scr.impl.helper.ReferenceMethod
-{
+public interface LifecycleMethod {
 
-    public UnbindMethod( final String methodName,
-            final Class<?> componentClass, final String referenceClassName, final DSVersion dsVersion, final boolean configurableServiceProperties )
-    {
-        super( methodName, componentClass, referenceClassName, dsVersion, configurableServiceProperties );
-    }
-
-
-    @Override
-    protected String getMethodNamePrefix()
-    {
-        return "unbind";
-    }
+    MethodResult invoke(Object componentInstance,
+                        ComponentContext componentContext,
+                        int reason,
+                        MethodResult methodCallFailureResult,
+                        SimpleLogger logger );
 
 }

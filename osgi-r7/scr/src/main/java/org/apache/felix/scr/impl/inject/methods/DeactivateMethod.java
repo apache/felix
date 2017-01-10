@@ -7,7 +7,7 @@
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *  http://www.apache.org/licenses/LICENSE-2.0
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
@@ -16,25 +16,29 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.felix.scr.impl.helper;
+package org.apache.felix.scr.impl.inject.methods;
 
-import org.apache.felix.scr.impl.metadata.ComponentMetadata;
+import org.apache.felix.scr.impl.metadata.DSVersion;
 
-/**
- * @version $Rev$ $Date$
- */
-public interface ComponentMethods<T>
+
+public class DeactivateMethod extends ActivateMethod
 {
-    void initComponentMethods( ComponentMetadata componentMetadata, Class<T> implementationObjectClass );
 
-    ComponentMethod getActivateMethod();
+    @Override
+    boolean isDeactivate()
+    {
+        return true;
+    }
 
-    ComponentMethod getDeactivateMethod();
+    public DeactivateMethod( final String methodName,
+            final boolean methodRequired, final Class<?> componentClass, final DSVersion dsVersion, final boolean configurableServiceProperties, boolean supportsInterfaces )
+    {
+        super( methodName, methodRequired, componentClass, dsVersion, configurableServiceProperties, supportsInterfaces );
+    }
 
-    ComponentMethod getModifiedMethod();
-
-    ReferenceMethods getBindMethods(String refName );
-
-	ConstructorMethod<T> getConstructor();
+    protected String getMethodNamePrefix()
+    {
+        return "deactivate";
+    }
 
 }

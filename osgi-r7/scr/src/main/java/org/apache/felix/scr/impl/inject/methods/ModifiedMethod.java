@@ -16,29 +16,29 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.felix.scr.impl.inject;
+package org.apache.felix.scr.impl.inject.methods;
 
 import org.apache.felix.scr.impl.metadata.DSVersion;
 
 
-/**
- * Component method to be invoked on service property update of a bound service.
- */
-public class UpdatedMethod extends BindMethod
-implements org.apache.felix.scr.impl.helper.ReferenceMethod
+public class ModifiedMethod extends ActivateMethod
 {
 
-    public UpdatedMethod( final String methodName,
-            final Class<?> componentClass, final String referenceClassName, final DSVersion dsVersion, final boolean configurableServiceProperties )
+    public ModifiedMethod( final String methodName,
+            final Class<?> componentClass, final DSVersion dsVersion, final boolean configurableServiceProperties, boolean supportsInterfaces )
     {
-        super( methodName, componentClass, referenceClassName, dsVersion, configurableServiceProperties );
+        super( methodName, methodName != null, componentClass, dsVersion, configurableServiceProperties, supportsInterfaces );
     }
 
 
-    @Override
+    protected boolean acceptEmpty()
+    {
+        return true;
+    }
+
+
     protected String getMethodNamePrefix()
     {
-        return "update";
+        return "modified";
     }
-
 }

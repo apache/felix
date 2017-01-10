@@ -32,12 +32,12 @@ public class BindParameters
         this.refPair = refPair;
     }
     
-    public ComponentContextImpl<?> getComponentContext()
+    public ComponentContextImpl getComponentContext()
     {
         return componentContext;
     }
     
-    public RefPair<?, ?> getRefPair()
+    public RefPair getRefPair()
     {
         return refPair;
     }

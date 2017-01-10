@@ -16,11 +16,11 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.felix.scr.impl.inject;
+package org.apache.felix.scr.impl.inject.field;
 
-import org.apache.felix.scr.impl.helper.InitReferenceMethod;
-import org.apache.felix.scr.impl.helper.ReferenceMethod;
-import org.apache.felix.scr.impl.helper.ReferenceMethods;
+import org.apache.felix.scr.impl.inject.InitReferenceMethod;
+import org.apache.felix.scr.impl.inject.ReferenceMethod;
+import org.apache.felix.scr.impl.inject.ReferenceMethods;
 import org.apache.felix.scr.impl.metadata.DSVersion;
 import org.apache.felix.scr.impl.metadata.ReferenceMetadata;
 

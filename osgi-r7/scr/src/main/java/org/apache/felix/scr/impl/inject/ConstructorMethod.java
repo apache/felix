@@ -16,10 +16,11 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.felix.scr.impl.helper;
+package org.apache.felix.scr.impl.inject;
 
-import java.util.TreeMap;
+import java.util.Map;
 
+import org.apache.felix.scr.impl.helper.SimpleLogger;
 import org.apache.felix.scr.impl.manager.ComponentContextImpl;
 import org.apache.felix.scr.impl.manager.DependencyManager;
 
@@ -30,6 +31,11 @@ import org.apache.felix.scr.impl.manager.DependencyManager;
  */
 public interface ConstructorMethod<T> {
 
+	public class ReferencePair<S> {
+		public DependencyManager<S, ?> dependencyManager;
+		public DependencyManager.OpenStatus<S, ?> openStatus;
+    }
+	
 	/**
 	 * Create a new instance
 	 * @param componentClass The implementation class of the component
@@ -39,7 +45,7 @@ public interface ConstructorMethod<T> {
 	 */
     <S> T newInstance(Class<T> componentClass,
     		           ComponentContextImpl<T> componentContext,
-    		           TreeMap<Integer, DependencyManager<S, ?>> parameterMap,
+    		           Map<Integer, ReferencePair<S>> parameterMap,
                        SimpleLogger logger )
     throws Exception;
     
@@ -48,7 +54,7 @@ public interface ConstructorMethod<T> {
 		@Override
 		public <S> Object newInstance(Class<Object> componentClass, 
 				ComponentContextImpl<Object> componentContext, 
-				TreeMap<Integer, DependencyManager<S, ?>> parameterMap,
+				Map<Integer, ReferencePair<S>> parameterMap,
 				SimpleLogger logger) 
 				throws Exception
 		{
