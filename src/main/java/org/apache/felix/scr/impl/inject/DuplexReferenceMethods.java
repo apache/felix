@@ -18,6 +18,8 @@
  */
 package org.apache.felix.scr.impl.inject;
 
+import java.util.List;
+
 import org.apache.felix.scr.impl.helper.InitReferenceMethod;
 import org.apache.felix.scr.impl.helper.MethodResult;
 import org.apache.felix.scr.impl.helper.ReferenceMethod;
@@ -29,31 +31,48 @@ import org.osgi.framework.BundleContext;
 
 public class DuplexReferenceMethods implements ReferenceMethods
 {
-    /** First is field methods. */
-    private final ReferenceMethods first;
+    /** The methods in the order they need to be called. */
+    private final List<ReferenceMethods> methods;
 
-    /** Second is method methods. */
-    private final ReferenceMethods second;
-
-    public DuplexReferenceMethods(final ReferenceMethods first, final ReferenceMethods second)
+    public DuplexReferenceMethods(final List<ReferenceMethods> methods)
     {
-        this.first = first;
-        this.second = second;
+        this.methods = methods;
     }
 
     public ReferenceMethod getBind()
     {
-        return new DuplexReferenceMethod(first.getBind(), second.getBind());
+    	final ReferenceMethod[] list = new ReferenceMethod[methods.size()];
+    	int index = 0;
+    	for(final ReferenceMethods m : methods)
+    	{
+    		list[index] = m.getBind();
+    		index++;
+    	}
+        return new DuplexReferenceMethod(list);
     }
 
     public ReferenceMethod getUnbind()
     {
-        return new DuplexReferenceMethod(first.getUnbind(), second.getUnbind());
+    	final ReferenceMethod[] list = new ReferenceMethod[methods.size()];
+    	int index = 0;
+    	for(final ReferenceMethods m : methods)
+    	{
+    		list[index] = m.getUnbind();
+    		index++;
+    	}
+        return new DuplexReferenceMethod(list);
     }
 
     public ReferenceMethod getUpdated()
     {
-        return new DuplexReferenceMethod(first.getUpdated(), second.getUpdated());
+    	final ReferenceMethod[] list = new ReferenceMethod[methods.size()];
+    	int index = 0;
+    	for(final ReferenceMethods m : methods)
+    	{
+    		list[index] = m.getUpdated();
+    		index++;
+    	}
+        return new DuplexReferenceMethod(list);
     }
 
     public InitReferenceMethod getInit()
@@ -63,23 +82,20 @@ public class DuplexReferenceMethods implements ReferenceMethods
 
             public boolean init(Object componentInstance, SimpleLogger logger)
             {
-                final InitReferenceMethod i1 = first.getInit();
-                if ( i1 != null )
-                {
-                    if ( !i1.init(componentInstance, logger))
-                    {
-                        return false;
-                    }
-                }
-                final InitReferenceMethod i2 = second.getInit();
-                if ( i2 != null )
-                {
-                    if ( !i2.init(componentInstance, logger))
-                    {
-                        return false;
-                    }
-                }
-                return true;
+            	boolean result = true;
+            	for(final ReferenceMethods m : methods)
+            	{
+            		final InitReferenceMethod init = m.getInit();
+            		if ( init != null )
+            		{
+            			result = init.init(componentInstance, logger);
+            			if ( !result ) 
+            			{
+            				break;
+            			}
+            		}
+            	}
+                return result;
             }
         };
     }
@@ -87,14 +103,11 @@ public class DuplexReferenceMethods implements ReferenceMethods
     private static final class DuplexReferenceMethod implements ReferenceMethod
     {
 
-        private final ReferenceMethod first;
+        private final ReferenceMethod[] methods;
 
-        private final ReferenceMethod second;
-
-        public DuplexReferenceMethod(final ReferenceMethod first, final ReferenceMethod second)
+        public DuplexReferenceMethod(final ReferenceMethod[] methods)
         {
-            this.first = first;
-            this.second = second;
+            this.methods = methods;
         }
 
         public MethodResult invoke(Object componentInstance,
@@ -102,25 +115,33 @@ public class DuplexReferenceMethods implements ReferenceMethods
                                    RefPair<?, ?> refPair,
                                    MethodResult methodCallFailureResult,
                                    SimpleLogger logger) {
-            if ( first.invoke(componentInstance, componentContext, refPair, methodCallFailureResult, logger) != null )
-            {
-                return second.invoke(componentInstance, componentContext, refPair, methodCallFailureResult, logger);
-            }
-            return null;
+        	MethodResult result = null;
+        	for(final ReferenceMethod m : methods) 
+        	{
+        		result = m.invoke(componentInstance, componentContext, refPair, methodCallFailureResult, logger);
+        		if ( result == null )        			
+        		{
+        			break;
+        		}
+        	}
+            return result;
         }
 
         public <S, T> boolean getServiceObject(ComponentContextImpl<S> key,
                 RefPair<S, T> refPair, BundleContext context,
                 SimpleLogger logger)
         {
-            // only if both return true, we return true
-            boolean result = first.getServiceObject(key, refPair, context, logger);
-            if ( result )
-            {
-                result = second.getServiceObject(key, refPair, context, logger);
-            }
+            // only if all return true, we return true
+        	boolean result = false;
+        	for(final ReferenceMethod m : methods) 
+        	{
+        		result = m.getServiceObject(key, refPair, context, logger);
+        		if (!result )        			
+        		{
+        			break;
+        		}
+        	}
             return result;
         }
-
     }
 }

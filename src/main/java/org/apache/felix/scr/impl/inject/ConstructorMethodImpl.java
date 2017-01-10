@@ -62,8 +62,8 @@ public class ConstructorMethodImpl<T> implements ConstructorMethod<T>
 				int index = 0;
 				for(final String fieldName : componentContext.getComponentMetadata().getActivationFields() ) 
 				{
-					final FieldUtils.FieldSearchResult result = FieldUtils.findField(componentClass, fieldName, logger);
-					if ( result == null )
+					final FieldUtils.FieldSearchResult result = FieldUtils.searchField(componentClass, fieldName, logger);
+					if ( result == null || result.field == null )
 					{
 						m_paramTypes[index] = null;
 						m_fields[index] = null;
@@ -100,23 +100,15 @@ public class ConstructorMethodImpl<T> implements ConstructorMethod<T>
 				m_constructorArgTypes = new FieldUtils.ValueType[argTypes.length];
 				for(int i=0;i<m_constructorArgTypes.length;i++)
 				{
-					// TODO get reference metadata
-					ReferenceMetadata reference = null;
-					for(final ReferenceMetadata ref : componentContext.getComponentMetadata().getDependencies())
-					{
-						if ( ref.getParamterIndex() == i )
-						{
-							reference = ref;
-							break;
-						}
-					}
+					final DependencyManager<S, ?> dm = parameterMap.get(i);
+					ReferenceMetadata reference = dm == null ? null : dm.getReferenceMetadata();
 					if ( reference == null )
 					{
 						m_constructorArgTypes[i] = FieldUtils.getValueType(argTypes[i]);
 					}
 					else 
 					{
-						m_constructorArgTypes[i] = FieldUtils.getReferenceValueType(componentClass, null, argTypes[i], null, logger);
+						m_constructorArgTypes[i] = FieldUtils.getReferenceValueType(componentClass, reference, argTypes[i], null, logger);
 					}
 					if ( m_constructorArgTypes[i] == FieldUtils.ValueType.ignore )
 					{
@@ -154,7 +146,7 @@ public class ConstructorMethodImpl<T> implements ConstructorMethod<T>
 			final Object[] args = new Object[m_constructorArgTypes.length];
 			for(int i=0; i<args.length; i++) 
 			{
-				// TODO key pair for reference
+				final DependencyManager<S, ?> dm = parameterMap.get(i);
 				args[i] = FieldUtils.getValue(m_constructorArgTypes[i], 
 						m_constructor.getParameterTypes()[i], 
 						componentContext, 

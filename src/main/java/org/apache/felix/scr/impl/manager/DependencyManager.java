@@ -1488,9 +1488,9 @@ public class DependencyManager<S, T> implements ReferenceManager<S, T>
         return m_dependencyMetadata.getName();
     }
 
-    public int getParameterIndex() 
+    public ReferenceMetadata getReferenceMetadata() 
     {
-    	return m_dependencyMetadata.getParamterIndex();
+    	return m_dependencyMetadata;
     }
     
     /**

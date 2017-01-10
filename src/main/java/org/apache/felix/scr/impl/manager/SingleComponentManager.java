@@ -241,7 +241,7 @@ public class SingleComponentManager<S> extends AbstractComponentManager<S> imple
 	        {
 	            if ( failedDm == null )
 	            {
-	            	if ( dm.getParameterIndex() != - 1)
+	            	if ( dm.getReferenceMetadata().getParameterIndex() != null)
 	            	{
 		                // if a dependency turned unresolved since the validation check,
 		                // creating the instance fails here, so we deactivate and return
@@ -254,7 +254,7 @@ public class SingleComponentManager<S> extends AbstractComponentManager<S> imple
 		
 		                    failedDm = dm;
 		                }
-		                paramMap.put(dm.getParameterIndex(), dm);
+		                paramMap.put(dm.getReferenceMetadata().getParameterIndex(), dm);
 	                }
 	            }
 	        }
@@ -273,7 +273,7 @@ public class SingleComponentManager<S> extends AbstractComponentManager<S> imple
 	                }
 	                else
 	                {
-	                	if ( md.getParameterIndex() != -1 )
+	                	if ( md.getReferenceMetadata().getParameterIndex() != null )
 	                	{
 	                		md.close( componentContext, componentContext.getEdgeInfo( md ) );
 	                	}
@@ -318,7 +318,7 @@ public class SingleComponentManager<S> extends AbstractComponentManager<S> imple
         {
             if ( failedDm == null )
             {
-            	if ( dm.getParameterIndex() == - 1)
+            	if (dm.getReferenceMetadata().getParameterIndex() == null)
             	{
 	                // if a dependency turned unresolved since the validation check,
 	                // creating the instance fails here, so we deactivate and return
@@ -336,7 +336,7 @@ public class SingleComponentManager<S> extends AbstractComponentManager<S> imple
             }
             else
             {
-            	if ( dm.getParameterIndex() == - 1)
+            	if ( dm.getReferenceMetadata().getParameterIndex() == null )
             	{
             		componentContext.getEdgeInfo( dm ).ignore();
             	}
@@ -353,7 +353,7 @@ public class SingleComponentManager<S> extends AbstractComponentManager<S> imple
                 {
                     skip = false;
                 }
-                if ( !skip || md.getParameterIndex() != -1 )
+                if ( !skip || md.getReferenceMetadata().getParameterIndex() != null )
                 {
                     md.close( componentContext, componentContext.getEdgeInfo( md ) );
                 }

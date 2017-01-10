@@ -33,8 +33,14 @@ import org.apache.felix.scr.impl.metadata.ReferenceMetadata;
 import org.osgi.framework.ServiceReference;
 import org.osgi.service.log.LogService;
 
+/**
+ * Utility methods for handling field and constructor injection.
+ */
 public class FieldUtils {
 
+	/**
+	 * The value type of the field, activation field or constructor parameter
+	 */
 	public enum ValueType
     {
         ignore,
@@ -49,8 +55,12 @@ public class FieldUtils {
         ref_tuple
     }
     
+    /** Empty array. */
 	public static final ValueType[] EMPTY_TYPES = new ValueType[0];
 
+	/**
+	 * Return type for {@link FieldUtils#searchField(Class, String, SimpleLogger)}
+	 */
     public static final class FieldSearchResult 
 	{
 		public final Field field;
@@ -64,18 +74,25 @@ public class FieldUtils {
 	}
 	
     /**
-     * Finds the field named {@code fieldName} in the given
+     * Searches the field named {@code fieldName} in the given
      * {@code targetClass}. If the target class has no acceptable field
      * the class hierarchy is traversed until a field is found or the root
      * of the class hierarchy is reached without finding a field.
+     * <p>
+     * If an unexpected error occurs while searching, {@code null} is
+     * returned. In all other cases a {@code FieldSearchResult} is
+     * returned. If no field is found, {@code FieldSearchResult#field}
+     * is set to {@code null}. If the field is found, but not usable
+     * (e.g. due to visibility restrictions), {@code FieldSearchResult#usable}
+     * is set to {@code false}.
      *
      * @param targetClass The class of the component
      * @param fieldName The name of the field
      * @param logger A logger to log errors / problems
-     * @return The requested field or {@code null} if no acceptable field
-     *      can be found in the target class or any super class.
+     * @return A field search result or {@code null} if an unexpected
+     *         error occurred.
      */
-    public static FieldSearchResult findField( final Class<?> componentClass,
+    public static FieldSearchResult searchField( final Class<?> componentClass,
     		final String fieldName,
     		final SimpleLogger logger )
     {
@@ -128,7 +145,7 @@ public class FieldUtils {
         // nothing found 
         logger.log( LogService.LOG_WARNING, "{0} cannot be found in component class {1}", new Object[]
                         {fieldName, componentClass.getName()}, null );
-        return null;
+        return new FieldSearchResult(null, false);
     }
 
     /**
@@ -373,7 +390,7 @@ public class FieldUtils {
             	else
             	{
 	                logger.log( LogService.LOG_ERROR, "Constructor argument {0} in component {1} has unsupported type {2}", new Object[]
-	                        {metadata.getParamterIndex(), componentClass, typeClass.getName()}, null );            		
+	                        {metadata.getParameterIndex(), componentClass, typeClass.getName()}, null );            		
             	}
                 valueType = ValueType.ignore;
             }
@@ -427,7 +444,7 @@ public class FieldUtils {
             	else
             	{
                     logger.log( LogService.LOG_ERROR, "Constructor argument {0} in component {1} has unsupported type {2}", new Object[]
-                            {metadata.getParamterIndex(), componentClass, typeClass.getName()}, null );            		
+                            {metadata.getParameterIndex(), componentClass, typeClass.getName()}, null );            		
             	}
                 valueType = ValueType.ignore;
             }
@@ -506,6 +523,9 @@ public class FieldUtils {
     	return value;
     }
 
+    /**
+     * Comparable map entry using the service reference to compare.
+     */
     @SuppressWarnings("rawtypes")
     private static final class MapEntryImpl implements Map.Entry, Comparable<Map.Entry<?, ?>>
     {
@@ -552,6 +572,5 @@ public class FieldUtils {
             }
             return new Integer(this.hashCode()).compareTo(o.hashCode());
         }
-
     }
 }

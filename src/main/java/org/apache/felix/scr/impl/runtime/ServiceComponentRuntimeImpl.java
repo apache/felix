@@ -320,6 +320,7 @@ public class ServiceComponentRuntimeImpl implements ServiceComponentRuntime
 		dto.serviceInterfaces = m.getServiceMetadata() == null? EMPTY: m.getServiceMetadata().getProvides();
 		// DS 1.4
 		dto.factoryProperties = m.isFactory() ? m.getFactoryProperties() : null;
+		dto.activationFields = (m.getActivationFields() == null ? EMPTY : m.getActivationFields().toArray(new String[m.getActivationFields().size()]));
 		return dto;
 	}
 
@@ -400,7 +401,7 @@ public class ServiceComponentRuntimeImpl implements ServiceComponentRuntime
 			dto.unbind = r.getUnbind();
 			dto.updated = r.getUpdated();
 			// DS 1.4
-			dto.parameter = (r.getParamterIndex() == -1 ? 0 : r.getParamterIndex());
+			dto.parameter = r.getParameterIndex();
 			dto.collectionType = r.getFieldCollectionType();
 			dtos[i++] = dto;
 		}
