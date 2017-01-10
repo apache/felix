@@ -289,6 +289,45 @@ public class SchematizerServiceTest {
         assertEquals("::::count::embedded::alpha::marco::polo::ping::pong", sb.toString());
     }
 
+    @Test
+    public void testGetParentNode() {
+        Optional<Schema> opt = schematizer
+                .rule("MyDTO", new TypeReference<MyDTO>(){})
+                .rule("MyDTO", "/embedded", new TypeReference<MyEmbeddedDTO>(){})
+                .get("MyDTO");
+
+        assertTrue(opt.isPresent());
+        Schema s = opt.get();
+        assertNotNull(s);
+        Optional<Node> embeddedNode = s.nodeAtPath("/embedded/marco");
+        assertTrue(embeddedNode.isPresent());
+        Optional<Node> parentNode = s.parentOf(embeddedNode.get());
+        assertTrue(parentNode.isPresent());
+        Optional<Node> grandparentNode = s.parentOf(parentNode.get());
+        assertTrue(grandparentNode.isPresent());
+        assertEquals("/", grandparentNode.get().absolutePath());
+    }
+
+    @Test
+    public void testGetParentNode2() {
+        Optional<Schema> opt = schematizer
+                .rule("MyDTO", new TypeReference<MyDTO3<MyEmbeddedDTO2<String>>>(){})
+                .rule("MyDTO", "/embedded", new TypeReference<MyEmbeddedDTO2<String>>(){})
+                .rule("MyDTO", "/embedded/value", String.class)
+                .get("MyDTO");
+
+        assertTrue(opt.isPresent());
+        Schema s = opt.get();
+        assertNotNull(s);
+        Optional<Node> embeddedNode = s.nodeAtPath("/embedded/value");
+        assertTrue(embeddedNode.isPresent());
+        Optional<Node> parentNode = s.parentOf(embeddedNode.get());
+        assertTrue(parentNode.isPresent());
+        Optional<Node> grandparentNode = s.parentOf(parentNode.get());
+        assertTrue(grandparentNode.isPresent());
+        assertEquals("/", grandparentNode.get().absolutePath());
+    }
+
     private void assertNodeEquals(String name, String path, boolean isCollection, Object type, boolean fieldNotNull, Node node) {
         assertNotNull(node);
         assertEquals(name, node.name());

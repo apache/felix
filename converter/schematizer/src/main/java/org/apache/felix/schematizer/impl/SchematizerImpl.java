@@ -188,8 +188,8 @@ public class SchematizerImpl implements Schematizer {
             rootNode = new NodeImpl(contextPath, targetCls, false, contextPath + "/");
         schema.add(rootNode);
         Map<String, NodeImpl> m = createMapFromDTO(name, targetCls, ref, contextPath, rules, schematizer);
-        processNodeParentsAndFields(rootNode, m);
         m.values().stream().filter(v -> v.absolutePath().equals(rootNode.absolutePath() + v.name())).forEach(v -> rootNode.add(v));
+        associateChildNodes( rootNode );
         schema.add(m);
         return schema;
     }
@@ -407,22 +407,6 @@ public class SchematizerImpl implements Schematizer {
 
             // Nothing to do. Return Object.class as the fallback
             return Object.class;
-        }
-    }
-
-    static private void processNodeParentsAndFields(NodeImpl rootNode, Map<String, NodeImpl> map) {
-        for(NodeImpl n : map.values()) {
-            if (n.parent() != null)
-                continue;
-            n.parent(rootNode);
-            String fieldName = n.name();
-            Class<?> parentClass = rawClassOf(rootNode.type());
-            try {
-                Field field = parentClass.getField(fieldName);
-                n.field(field);
-            } catch ( NoSuchFieldException e ) {
-                e.printStackTrace();
-            }
         }
     }
 

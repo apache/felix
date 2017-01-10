@@ -30,7 +30,6 @@ import org.apache.felix.schematizer.Node;
 import org.apache.felix.schematizer.Node.DTO;
 import org.apache.felix.schematizer.NodeVisitor;
 import org.apache.felix.schematizer.Schema;
-import org.apache.felix.schematizer.SchematizingConverter;
 import org.osgi.util.converter.Converter;
 import org.osgi.util.converter.StandardConverter;
 
@@ -59,9 +58,20 @@ public class SchemaImpl
     }
 
     @Override
-    public Optional<Node> nodeAtPath( String absolutePath )
-    {
+    public Optional<Node> nodeAtPath( String absolutePath ) {
         return Optional.ofNullable(nodes.get(absolutePath));
+    }
+
+    @Override
+    public Optional<Node> parentOf( Node aNode ) {
+        if (aNode == null || aNode.absolutePath() == null)
+            return Optional.empty();
+
+        NodeImpl node = nodes.get(aNode.absolutePath());
+        if (node == null)
+            return Optional.empty();
+
+        return Optional.ofNullable( node.parent() );
     }
 
     void add(NodeImpl node) {
@@ -109,6 +119,7 @@ public class SchemaImpl
         return valuesAt("", map, contexts, 0);
     }
 
+    @SuppressWarnings( { "rawtypes", "unchecked" } )
     private Collection<?> valuesAt(String context, Map<String, Object> objectMap, List<String> contexts, int currentIndex) {
         List<Object> result = new ArrayList<>();
         String currentContext = contexts.get(currentIndex);
@@ -140,12 +151,13 @@ public class SchemaImpl
         return result;
     }
 
+    @SuppressWarnings( "rawtypes" )
     private Object convertToType( String path, Map map ) {
         Optional<Node> node = nodeAtPath(path);
         if (!node.isPresent())
             return map;
 
-        Object result = new StandardConverter().convert(map).sourceAs(DTO.class).to(node.get().type());
+        Object result = new StandardConverter().convert(map).to(node.get().type());
         return result;
     }
 
