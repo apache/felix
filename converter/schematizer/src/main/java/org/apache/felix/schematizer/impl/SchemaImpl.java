@@ -104,7 +104,7 @@ public class SchemaImpl
     public Collection<?> valuesAt(String path, Object object) {
         final Converter converter = new StandardConverter();
         @SuppressWarnings( "unchecked" )
-        final Map<String, Object> map = (Map<String, Object>)converter.convert( object ).to( Map.class );
+        final Map<String, Object> map = (Map<String, Object>)converter.convert(object).sourceAs(DTO.class).to( Map.class );
         if (map == null || map.isEmpty())
             return Collections.emptyList();
 
@@ -125,7 +125,6 @@ public class SchemaImpl
         String currentContext = contexts.get(currentIndex);
         Object o = objectMap.get(currentContext);
         if (o instanceof List) {
-            @SuppressWarnings( "unchecked" )
             List<Object> l = (List<Object>)o;
             if (currentIndex == contexts.size() - 1) {
                 // We are at the end, so just add the collection
@@ -143,7 +142,7 @@ public class SchemaImpl
                 return result;
             }
 
-            result.addAll( valuesAt( currentContext, (Map)o, contexts, ++currentIndex ) );
+            result.addAll(valuesAt( currentContext, (Map)o, contexts, ++currentIndex));
         } else {
             result.add(o);
         }
@@ -157,7 +156,7 @@ public class SchemaImpl
         if (!node.isPresent())
             return map;
 
-        Object result = new StandardConverter().convert(map).to(node.get().type());
+        Object result = new StandardConverter().convert(map).targetAs(DTO.class).to(node.get().type());
         return result;
     }
 

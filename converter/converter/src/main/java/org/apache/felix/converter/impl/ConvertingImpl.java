@@ -774,6 +774,9 @@ public class ConvertingImpl implements Converting, InternalConverting {
             Object fVal = field.get(obj);
             if (isMapType(field.getType())) {
                 fVal = converter.convert(fVal).key(ka).to(Map.class);
+             // Depends on whether or not a copy to Map is supposed to be a "deep" copy 
+//            } else if (fVal instanceof DTO) {
+//                fVal = converter.convert(fVal).sourceAs(DTO.class).to(Map.class);
             }
 
             result.put(fn, fVal);
@@ -843,7 +846,7 @@ public class ConvertingImpl implements Converting, InternalConverting {
     }
 
     private Map<?,?> mapView(Object obj, Class<?> sourceCls, InternalConverter converter) {
-        if (Map.class.isAssignableFrom(sourceCls))
+        if (Map.class.isAssignableFrom(sourceCls) || (DTO.class.equals(sourceCls) && obj instanceof Map))
             return (Map<?,?>) obj;
         else if (Dictionary.class.isAssignableFrom(sourceCls))
             return null; // TODO

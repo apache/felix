@@ -490,6 +490,45 @@ public class ConverterTest {
         assertEquals(Alpha.A, e.get("alpha"));
     }
 
+    @Test
+    public void testDTO2Map3() {
+        MyEmbeddedDTO embedded2 = new MyEmbeddedDTO();
+        embedded2.marco = "hohoho";
+        embedded2.polo = Long.MAX_VALUE;
+        embedded2.alpha = Alpha.A;
+
+        MyDTOWithMethods embedded = new MyDTOWithMethods();
+        embedded.ping = "lalala";
+        embedded.pong = Long.MIN_VALUE;
+        embedded.count = Count.ONE;
+        embedded.embedded = embedded2;
+
+        MyDTO8 dto = new MyDTO8();
+        dto.ping = "lalala";
+        dto.pong = Long.MIN_VALUE;
+        dto.count = MyDTO8.Count.ONE;
+        dto.embedded = embedded;
+
+        @SuppressWarnings("rawtypes")
+        Map m = converter.convert(dto).sourceAs(DTO.class).to(Map.class);
+        assertEquals(4, m.size());
+        assertEquals("lalala", m.get("ping"));
+        assertEquals(Long.MIN_VALUE, m.get("pong"));
+        assertEquals(MyDTO8.Count.ONE, m.get("count"));
+        assertNotNull(m.get("embedded"));
+        assertTrue(m.get( "embedded" ) instanceof MyDTOWithMethods);
+        MyDTOWithMethods e = (MyDTOWithMethods)m.get("embedded");
+        assertEquals("lalala", e.ping);
+        assertEquals(Long.MIN_VALUE, e.pong);
+        assertEquals(Count.ONE, e.count);
+        assertNotNull(e.embedded);
+        assertTrue(e.embedded instanceof MyEmbeddedDTO);
+        MyEmbeddedDTO e2 = (MyEmbeddedDTO)e.embedded;
+        assertEquals("hohoho", e2.marco);
+        assertEquals(Long.MAX_VALUE, e2.polo);
+        assertEquals(Alpha.A, e2.alpha);
+    }
+
     @Test @SuppressWarnings({ "rawtypes", "unchecked" })
     public void testDTOFieldShadowing() {
         MySubDTO dto = new MySubDTO();
