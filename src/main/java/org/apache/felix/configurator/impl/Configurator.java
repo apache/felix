@@ -54,7 +54,7 @@ public class Configurator {
 
     private static final String PROP_INITIAL = "configurator.initial";
 
-    private static final String PROP_DIRECTORY = "configurator.directory";
+    private static final String PROP_DIRECTORY = "configurator.binaries";
 
     private final BundleContext bundleContext;
 
@@ -163,11 +163,11 @@ public class Configurator {
         if ( initial == null ) {
             this.processRemoveBundle(-1);
         } else {
-            // YAML or URLs
+            // JSON or URLs ?
             final Set<String> hashes = new HashSet<>();
             final Map<String, String> files = new TreeMap<>();
 
-            if ( initial.indexOf('\n') == -1 ) {
+            if ( !initial.trim().startsWith("{") ) {
                 // URLs
                 final String[] urls = initial.trim().split(",");
                 for(final String urlString : urls) {
@@ -185,7 +185,7 @@ public class Configurator {
                     }
                 }
             } else {
-                // YAML
+                // JSON
                 hashes.add(Util.getSHA256(initial.trim()));
                 files.put(PROP_INITIAL, initial);
             }
