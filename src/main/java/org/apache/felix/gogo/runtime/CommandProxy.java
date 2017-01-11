@@ -75,6 +75,15 @@ public class CommandProxy implements Function
         {
             if (tgt instanceof Function)
             {
+                for (int i = 0; i < arguments.size(); i++)
+                {
+                    Object obj = arguments.get(i);
+                    if (obj instanceof Token)
+                    {
+                        arguments.set(i, obj.toString());
+                    }
+                }
+
                 return ((Function) tgt).execute(session, arguments);
             }
             else
