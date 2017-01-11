@@ -244,21 +244,77 @@ public final class Reflective
     private static int coerce(CommandSession session, Object target, Method m,
         Class<?> types[], Object out[], List<Object> in)
     {
-        in = transformParameters(m, in);
-        if (in == null)
+        List<Object> cnvIn = new ArrayList<>();
+        List<Object> cnvIn2 = new ArrayList<>();
+        int different = 0;
+        for (Object obj : in)
+        {
+            if (obj instanceof Token)
+            {
+                Object s1 = Closure.eval(obj);
+                Object s2 = obj.toString();
+                cnvIn.add(s1);
+                cnvIn2.add(s2);
+                different += s2.equals(s1) ? 0 : 1;
+            } else
+                {
+                cnvIn.add(obj);
+                cnvIn2.add(obj);
+            }
+        }
+
+        cnvIn = transformParameters(m, cnvIn);
+        if (different != 0)
+        {
+            cnvIn2 = transformParameters(m, cnvIn2);
+        }
+        if (cnvIn == null || cnvIn2 == null)
         {
             // missing parameter argument?
             return -1;
         }
 
         int res;
-        res = docoerce(session, target, m, types, out, in);
+
+        res = docoerce(session, target, m, types, out, cnvIn);
+        // Without conversion
+        if (different != 0 && res < 0)
+        {
+            res = docoerce(session, target, m, types, out, cnvIn2);
+        }
+        else if (different != 0 && res > 0)
+        {
+            int res2;
+            Object[] out2 = out.clone();
+            res2 = docoerce(session, target, m, types, out2, cnvIn2) + different * 2;
+            if (res >= 0 && res2 <= res)
+            {
+                res = res2;
+                System.arraycopy(out2, 0, out, 0, out.length);
+            }
+        }
         // Check if the command takes a session
         if (res < 0 && (types.length > 0) && types[0].isInterface()
                     && types[0].isAssignableFrom(session.getClass()))
         {
-            in.add(0, session);
-            res = docoerce(session, target, m, types, out, in);
+            cnvIn.add(0, session);
+            res = docoerce(session, target, m, types, out, cnvIn);
+            if (different != 0 && res < 0)
+            {
+                cnvIn2.add(0, session);
+                res = docoerce(session, target, m, types, out, cnvIn2);
+            }
+            else if (different != 0 && res > 0)
+            {
+                int res2;
+                Object[] out2 = out.clone();
+                res2 = docoerce(session, target, m, types, out2, cnvIn2) + different * 2;
+                if (res >= 0 && res2 <= res)
+                {
+                    res = res2;
+                    System.arraycopy(out2, 0, out, 0, out.length);
+                }
+            }
         }
         return res;
     }

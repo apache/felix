@@ -293,7 +293,7 @@ public class Closure implements Function, Evaluate
         return last == null ? null : last.result;
     }
 
-    private Object eval(Object v)
+    static Object eval(Object v)
     {
         String s = v.toString();
         if ("null".equals(s))
@@ -326,6 +326,11 @@ public class Closure implements Function, Evaluate
 
     public Object eval(final Token t) throws Exception
     {
+        return eval(t, true);
+    }
+
+    public Object eval(final Token t, boolean convertNumeric) throws Exception
+    {
         if (t instanceof Parser.Closure)
         {
             return new Closure(session, this, ((Parser.Closure) t).program());
@@ -354,7 +359,10 @@ public class Closure implements Function, Evaluate
             Object v = Expander.expand(t, this);
             if (t == v)
             {
-                v = eval(v);
+                if (convertNumeric)
+                {
+                    v = eval(v);
+                }
             }
             return v;
         }
@@ -412,7 +420,7 @@ public class Closure implements Function, Evaluate
 
         for (Token t : tokens)
         {
-            Object v = eval(t);
+            Object v = eval(t, values.isEmpty());
 
 //            if ((Token.Type.EXECUTION == t.type) && (tokens.size() == 1)) {
 //                return v;

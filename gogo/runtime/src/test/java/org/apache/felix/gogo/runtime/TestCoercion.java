@@ -124,6 +124,11 @@ public class TestCoercion extends AbstractParserTest
         return "string";
     }
 
+    public String mymethod(String loc)
+    {
+        return loc;
+    }
+
     @Test
     public void testBestCoercion() throws Exception
     {
@@ -133,6 +138,16 @@ public class TestCoercion extends AbstractParserTest
         assertEquals("bundles myloc", "string", c.execute("bundles myloc"));
         assertEquals("bundles 1", "long", c.execute("bundles 1"));
         assertEquals("bundles '1'", "string", c.execute("bundles '1'"));
+    }
+
+    @Test
+    public void testNoCoercionToString() throws Exception
+    {
+        Context c = new Context();
+        c.addCommand("mymethod", this);
+
+        assertEquals("mymethod '1.10'", "1.10", c.execute("mymethod '1.10'"));
+        assertEquals("mymethod 1.10", "1.10", c.execute("mymethod 1.10"));
     }
 
     @Descriptor("list all installed bundles")
