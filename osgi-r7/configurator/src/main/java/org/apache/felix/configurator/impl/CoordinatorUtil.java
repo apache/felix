@@ -21,7 +21,6 @@ package org.apache.felix.configurator.impl;
 import org.apache.felix.configurator.impl.logger.SystemLogger;
 import org.osgi.service.coordinator.Coordination;
 import org.osgi.service.coordinator.Coordinator;
-import org.osgi.service.coordinator.Participant;
 
 /**
  * Utility class for coordinations
@@ -31,20 +30,7 @@ public class CoordinatorUtil {
     public static Object getOrStartCoordination(final Object object) {
         final Coordinator coordinator = (Coordinator) object;
         final Coordination threadCoordination = coordinator.peek();
-        if ( threadCoordination != null ) {
-            threadCoordination.addParticipant(new Participant() {
-
-                @Override
-                public void failed(final Coordination coordination) throws Exception {
-                    // nothing to do
-                }
-
-                @Override
-                public void ended(final Coordination coordination) throws Exception {
-                    // nothing to do
-                }
-            });
-        } else {
+        if ( threadCoordination == null ) {
             try {
                 return coordinator.create("org.apache.felix.configurator", 0L);
             } catch (final Exception e) {
