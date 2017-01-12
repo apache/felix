@@ -20,76 +20,53 @@
 	<parent>
 		<groupId>org.apache.felix</groupId>
 		<artifactId>felix-parent</artifactId>
-		<version>2.1</version>
+		<version>4</version>
+		<relativePath/>
 	</parent>
-	
-  <modelVersion>4.0.0</modelVersion>
-  <name>Apache Felix Utils</name>
-  <description>Utility classes for OSGi.</description>
-  <version>1.8.5-SNAPSHOT</version>
-  <artifactId>org.apache.felix.utils</artifactId>
-  <scm>
-      <connection>scm:svn:http://svn.apache.org/repos/asf/felix/trunk/utils</connection>
-      <developerConnection>scm:svn:https://svn.apache.org/repos/asf/felix/trunk/utils</developerConnection>
-      <url>http://svn.apache.org/repos/asf/felix/utils</url>
-  </scm>
-  <dependencies>
-    <dependency>
-      <groupId>org.osgi</groupId>
-      <artifactId>org.osgi.core</artifactId>
-      <version>4.1.0</version>
-    </dependency>
-    <dependency>
-      <groupId>org.osgi</groupId>
-      <artifactId>org.osgi.compendium</artifactId>
-      <version>4.2.0</version>
-    </dependency>
-  </dependencies>
-  <build>
-    <plugins>
-        <plugin>
-            <groupId>org.apache.maven.plugins</groupId>
-            <artifactId>maven-source-plugin</artifactId>
-            <version>2.2.1</version>
-            <executions>
-                <execution>
-                    <id>attach-sources</id>
-                    <phase>prepare-package</phase>
-                    <goals>
-                        <goal>jar-no-fork</goal>
-                    </goals>
-                </execution>
-            </executions>
-        </plugin>
-        <plugin>
-            <artifactId>maven-compiler-plugin</artifactId>
-            <configuration>
-                <source>1.5</source>
-                <target>1.5</target>
-            </configuration>
-        </plugin>
-       <plugin>
-		<groupId>org.codehaus.mojo</groupId>
-		<artifactId>rat-maven-plugin</artifactId>
-		<configuration>
-			<excludeSubProjects>false</excludeSubProjects>
-			<useEclipseDefaultExcludes>true</useEclipseDefaultExcludes>
-			<useMavenDefaultExcludes>true</useMavenDefaultExcludes>
-			<excludes>
-				<param>doc/*</param>
-				<param>maven-eclipse.xml</param>
-				<param>.checkstyle</param>
-				<param>.externalToolBuilders/*</param>
-			</excludes>
-		</configuration>
-	   </plugin>
-		<plugin>
-			<groupId>org.apache.maven.plugins</groupId>
-			<artifactId>maven-javadoc-plugin</artifactId>
-			<configuration>
-				<additionalparam>-Xdoclint:none</additionalparam>
-			</configuration>
-		</plugin>
-    </plugins>
-  </build>
+
+    <modelVersion>4.0.0</modelVersion>
+    <name>Apache Felix Utils</name>
+    <description>Utility classes for OSGi.</description>
+    <version>1.8.5-SNAPSHOT</version>
+    <artifactId>org.apache.felix.utils</artifactId>
+
+    <scm>
+        <connection>scm:svn:http://svn.apache.org/repos/asf/felix/trunk/utils</connection>
+        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/felix/trunk/utils</developerConnection>
+        <url>http://svn.apache.org/repos/asf/felix/utils</url>
+    </scm>
+
+    <dependencies>
+        <dependency>
+            <groupId>org.osgi</groupId>
+            <artifactId>org.osgi.core</artifactId>
+            <version>4.1.0</version>
+        </dependency>
+        <dependency>
+            <groupId>org.osgi</groupId>
+            <artifactId>org.osgi.compendium</artifactId>
+            <version>4.2.0</version>
+        </dependency>
+    </dependencies>
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.rat</groupId>
+                <artifactId>apache-rat-plugin</artifactId>
+                <configuration>
+                    <excludes combine.children="append">
+                        <!-- Exclude all JSON files -->
+                        <exclude>doc/*</exclude>
+                    </excludes>
+                </configuration>
+            </plugin>
+    		<plugin>
+	    		<groupId>org.apache.maven.plugins</groupId>
+		    	<artifactId>maven-javadoc-plugin</artifactId>
+			    <configuration>
+				    <additionalparam>-Xdoclint:none</additionalparam>
+			    </configuration>
+    		</plugin>
+        </plugins>
+    </build>
 </project>

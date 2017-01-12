@@ -345,14 +345,14 @@ public class InterpolationHelper {
         {
             if (op.startsWith(":-"))
             {
-                if (substValue == null || substValue.isEmpty())
+                if (substValue == null || substValue.length() == 0 )
                 {
                     substValue = op.substring(":-".length());
                 }
             }
             else if (op.startsWith(":+"))
             {
-                if (substValue != null && !substValue.isEmpty())
+                if (substValue != null && substValue.length() != 0)
                 {
                     substValue = op.substring(":+".length());
                 }
