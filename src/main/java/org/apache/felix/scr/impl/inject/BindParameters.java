@@ -18,8 +18,10 @@
  */
 package org.apache.felix.scr.impl.inject;
 
+import org.apache.felix.scr.impl.helper.SimpleLogger;
 import org.apache.felix.scr.impl.manager.ComponentContextImpl;
 import org.apache.felix.scr.impl.manager.RefPair;
+import org.osgi.framework.BundleContext;
 
 public class BindParameters
 {
@@ -41,5 +43,12 @@ public class BindParameters
     {
         return refPair;
     }
-    
+ 
+    public Object getServiceObject() {
+    	return refPair.getServiceObject((ComponentContextImpl) componentContext);
+    }
+
+    public boolean getServiceObject(BundleContext context, SimpleLogger logger) {
+    	return refPair.getServiceObject((ComponentContextImpl) componentContext, context, logger);
+    }
 }

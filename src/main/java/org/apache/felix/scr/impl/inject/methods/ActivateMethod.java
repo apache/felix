@@ -33,7 +33,6 @@ import org.apache.felix.scr.impl.inject.Annotations;
 import org.apache.felix.scr.impl.inject.ClassUtils;
 import org.apache.felix.scr.impl.inject.LifecycleMethod;
 import org.apache.felix.scr.impl.inject.MethodResult;
-import org.apache.felix.scr.impl.inject.SuitableMethodNotAccessibleException;
 import org.apache.felix.scr.impl.metadata.DSVersion;
 import org.osgi.service.component.ComponentContext;
 import org.osgi.service.log.LogService;

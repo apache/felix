@@ -38,7 +38,8 @@ import org.osgi.service.component.ComponentException;
 public class Annotations
 {
 
-    static public <T> T toObject(Class<T> clazz, Map<String, Object> props, Bundle b, boolean supportsInterfaces )
+    @SuppressWarnings("unchecked")
+	static public <T> T toObject(Class<T> clazz, Map<String, Object> props, Bundle b, boolean supportsInterfaces )
     {
         Map<String, Object> m = new HashMap<String, Object>();
 
@@ -188,7 +189,8 @@ public class Annotations
         }
         if (raw instanceof Collection)
         {
-            Collection raws = (Collection) raw;
+            @SuppressWarnings("rawtypes")
+			Collection raws = (Collection) raw;
             int size = raws.size();
             Object result = Array.newInstance(componentType, size);
             int i = 0;

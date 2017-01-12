@@ -30,7 +30,6 @@ import org.apache.felix.scr.impl.helper.ReadOnlyDictionary;
 import org.apache.felix.scr.impl.helper.SimpleLogger;
 import org.apache.felix.scr.impl.inject.BindParameters;
 import org.apache.felix.scr.impl.inject.ClassUtils;
-import org.apache.felix.scr.impl.inject.SuitableMethodNotAccessibleException;
 import org.apache.felix.scr.impl.manager.ComponentContextImpl;
 import org.apache.felix.scr.impl.manager.RefPair;
 import org.apache.felix.scr.impl.metadata.DSVersion;
@@ -644,10 +643,10 @@ implements org.apache.felix.scr.impl.inject.ReferenceMethod
     public <S, T> boolean getServiceObject( final BindParameters parameters, BundleContext context, SimpleLogger logger )
     {
         //??? this resolves which we need.... better way?
-        if ( parameters.getRefPair().getServiceObject(parameters.getComponentContext()) == null && methodExists( logger ) )
+        if ( parameters.getServiceObject() == null && methodExists( logger ) )
         {
             if ( m_paramTypes.contains(ParamType.serviceType) ) {
-                return parameters.getRefPair().getServiceObject(parameters.getComponentContext(), context, logger);
+                return parameters.getServiceObject(context, logger);
             }
         }
         return true;

@@ -285,4 +285,32 @@ public class FieldUtils {
             }
         } );
     }
+
+    /**
+     * Set the field, type etc.
+     * @param f The field
+     * @param component The component instance
+     * @param value The value to set
+     * @param logger The logger
+     */
+	public static void setField( final Field f, 
+    		final Object component,
+    		final Object value,
+    		final SimpleLogger logger )
+    {
+        try
+        {
+            f.set(component, value);
+        }
+        catch ( final IllegalArgumentException iae )
+        {
+            logger.log( LogService.LOG_ERROR, "Field {0} in component {1} can't be set", new Object[]
+                    {f.getName(), component.getClass().getName()}, iae );
+        }
+        catch ( final IllegalAccessException iae )
+        {
+            logger.log( LogService.LOG_ERROR, "Field {0} in component {1} can't be set", new Object[]
+                    {f.getName(), component.getClass().getName()}, iae );
+        }
+    }
 }
