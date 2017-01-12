@@ -64,6 +64,7 @@ public class InterpolationHelper {
      * Perform substitution on a property set
      *
      * @param properties the property set to perform substitution on
+     * @param context The bundle context
      */
     public static void performSubstitution(Map<String,String> properties, BundleContext context)
     {
@@ -74,6 +75,7 @@ public class InterpolationHelper {
      * Perform substitution on a property set
      *
      * @param properties the property set to perform substitution on
+     * @param callback Callback for substituion
      */
     public static void performSubstitution(Map<String,String> properties, SubstitutionCallback callback)
     {
@@ -85,6 +87,8 @@ public class InterpolationHelper {
      *
      * @param properties the property set to perform substitution on
      * @param callback the callback to obtain substitution values
+     * @param substituteFromConfig If substitute from configuration
+     * @param substituteFromSystemProperties If substitute from system properties
      * @param defaultsToEmptyString sets an empty string if a replacement value is not found, leaves intact otherwise
      */
     public static void performSubstitution(Map<String,String> properties,
@@ -217,6 +221,8 @@ public class InterpolationHelper {
      * @param cycleMap Map of variable references used to detect nested cycles.
      * @param configProps Set of configuration properties.
      * @param callback the callback to obtain substitution values
+     * @param substituteFromConfig If substitute from configuration
+     * @param substituteFromSystemProperties If substitute from system properties
      * @param defaultsToEmptyString sets an empty string if a replacement value is not found, leaves intact otherwise
      * @return The value of the specified string after system property substitution.
      * @throws IllegalArgumentException If there was a syntax error in the

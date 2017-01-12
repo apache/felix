@@ -18,11 +18,11 @@
  */
 package org.apache.felix.utils.log;
 
+import java.io.PrintStream;
+
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceReference;
 import org.osgi.service.log.LogService;
-
-import java.io.PrintStream;
 
 /**
  * Internal logger to be used in order to avoid a mandatory dependency on OSGi LogService.
@@ -62,6 +62,11 @@ public class Logger
     }
 
     /**
+	 * Logs a message.
+	 * 
+	 * @param level The severity of the message. T
+	 * @param message Human readable string describing the condition or
+	 *        <code>null</code>.
      * @see LogService#log(int, String)
      */
     public void log(int level, String message)
@@ -70,6 +75,13 @@ public class Logger
     }
 
     /**
+	 * Logs a message.
+	 * 
+	 * @param level The severity of the message. T
+	 * @param message Human readable string describing the condition or
+	 *        <code>null</code>.
+	 * @param exception The exception that reflects the condition or
+	 *        <code>null</code>.
      * @see LogService#log(int, String, Throwable)
      */
     public void log(int level, String message, Throwable exception)
