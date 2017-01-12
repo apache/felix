@@ -1,3 +1,16 @@
+Changes from 1.8.4 to 1.8.6
+---------------------------
+** Improvement
+    * [FELIX-5474] - Do not call no-arg Bundle.getHeaders() method
+    * [FELIX-5434] - Add an update method to Properties
+
+
+Changes from 1.8.4 to 1.8.6
+---------------------------
+** Bug
+    * [FELIX-5370] - Error parsing clauses with values containing ':='
+
+
 Changes from 1.8.0 to 1.8.2
 ---------------------------
 ** Bug
