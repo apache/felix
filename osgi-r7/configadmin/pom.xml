@@ -36,9 +36,9 @@
     </description>
 
     <scm>
-        <connection>scm:svn:http://svn.apache.org/repos/asf/felix/trunk/configadmin</connection>
-        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/felix/trunk/configadmin</developerConnection>
-        <url>http://svn.apache.org/repos/asf/felix/configadmin</url>
+        <connection>scm:svn:http://svn.apache.org/repos/asf/felix/trunk/osgi-r7/configadmin</connection>
+        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/felix/trunk/osgi-r7/configadmin</developerConnection>
+        <url>http://svn.apache.org/repos/asf/felix/osgi-r7/configadmin</url>
     </scm>
 
     <!--

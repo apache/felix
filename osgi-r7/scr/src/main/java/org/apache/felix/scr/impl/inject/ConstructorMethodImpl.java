@@ -27,7 +27,6 @@ import org.apache.felix.scr.impl.inject.ValueUtils.ValueType;
 import org.apache.felix.scr.impl.inject.field.FieldUtils;
 import org.apache.felix.scr.impl.manager.ComponentContextImpl;
 import org.apache.felix.scr.impl.metadata.ReferenceMetadata;
-import org.osgi.service.log.LogService;
 
 /**
  * This implementation is used to construct a component instance object,
@@ -169,38 +168,10 @@ public class ConstructorMethodImpl<T> implements ConstructorMethod<T>
 		        		m_fields[i].getType(), 
 		        		(ComponentContextImpl<T>) componentContext, 
 		        		null);
-				this.setField(m_fields[i], component, value, logger);
+				FieldUtils.setField(m_fields[i], component, value, logger);
 	    	}
 		}
 		
 		return component;
-	}
-
-   
-    /**
-     * Set the field, type etc.
-     * @param f The field
-     * @param logger The logger
-     */
-	private void setField( final Field f, 
-    		final T component,
-    		final Object value,
-    		final SimpleLogger logger )
-    {
-        try
-        {
-            f.set(component, value);
-        }
-        catch ( final IllegalArgumentException iae )
-        {
-            logger.log( LogService.LOG_ERROR, "Field {0} in component {1} can't be set", new Object[]
-                    {f.getName(), component.getClass().getName()}, iae );
-        }
-        catch ( final IllegalAccessException iae )
-        {
-            logger.log( LogService.LOG_ERROR, "Field {0} in component {1} can't be set", new Object[]
-                    {f.getName(), component.getClass().getName()}, iae );
-        }
-    }
-    
+	}    
 }

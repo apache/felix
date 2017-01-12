@@ -519,11 +519,11 @@ public class FieldHandler
             if ( methodType != METHOD_TYPE.UNBIND )
             {
                 //??? this resolves which we need.... better way?
-                if ( rawParameter.getRefPair().getServiceObject(rawParameter.getComponentContext()) == null
+                if ( rawParameter.getServiceObject() == null
                   && handler.fieldExists( logger )
                   && (handler.valueType == ValueType.ref_serviceType || handler.valueType == ValueType.ref_tuple ) )
                 {
-                    return rawParameter.getRefPair().getServiceObject(rawParameter.getComponentContext(), context, logger);
+                    return rawParameter.getServiceObject(context, logger);
                 }
             }
             return true;

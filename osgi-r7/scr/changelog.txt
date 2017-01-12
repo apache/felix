@@ -11,6 +11,7 @@ Changes from 2.0.6 to 2.0.8
     * [FELIX-5459] Use Java 6 as minimum version
     * [FELIX-5374] Reduce severity of log message from SCR when there is no metatype
     * [FELIX-5474] Do not call no-arg Bundle.getHeaders() method
+    * [FELIX-5360] Strange loading of org.apache.felix.service.command.Descriptor
 
 
 Changes from 2.0.4 to 2.0.6
