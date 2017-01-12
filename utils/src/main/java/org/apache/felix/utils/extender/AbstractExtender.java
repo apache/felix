@@ -163,11 +163,6 @@ public abstract class AbstractExtender implements BundleActivator, BundleTracker
         return Executors.newScheduledThreadPool(3);
     }
 
-    /**
-     *
-     * @param bundles
-     * @return
-     */
     protected Collection<Bundle> chooseBundlesToDestroy(Set<Bundle> bundles) {
         return null;
     }
@@ -321,8 +316,8 @@ public abstract class AbstractExtender implements BundleActivator, BundleTracker
      * Create the extension for the given bundle, or null if the bundle is not to be extended.
      *
      * @param bundle the bundle to extend
-     * @return
-     * @throws Exception
+     * @return The extension
+     * @throws Exception If something goes wrong
      */
     protected abstract Extension doCreateExtension(Bundle bundle) throws Exception;
 

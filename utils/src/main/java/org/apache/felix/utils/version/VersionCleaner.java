@@ -33,8 +33,8 @@ public final class VersionCleaner {
      * the version syntax. This method cleans up such a version to match an OSGi
      * version.
      *
-     * @param version
-     * @return
+     * @param version The version to clean
+     * @return The cleaned version
      */
     public static String clean(String version)
     {

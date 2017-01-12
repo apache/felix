@@ -66,7 +66,7 @@ public class VersionRange implements Serializable
     /**
      * atLeast constructor
      *
-     * @param atLeast
+     * @param atLeast Minimum version
      */
     public VersionRange( Version atLeast )
     {
@@ -76,7 +76,8 @@ public class VersionRange implements Serializable
     /**
      * atLeast constructor
      *
-     * @param atLeast
+     * @param atLeast Minimum version
+     * @param exact Exact range
      */
     public VersionRange( Version atLeast, boolean exact )
     {
@@ -226,8 +227,8 @@ public class VersionRange implements Serializable
     /**
      * test a version to see if it falls in the range
      * 
-     * @param version
-     * @return
+     * @param version The version to check
+     * @return Whether the version is within the range
      */
     public boolean contains( Version version )
     {

@@ -171,7 +171,7 @@ public class Properties extends AbstractMap<String, String> {
      *
      * @param os an output stream.
      * @param comment this parameter is ignored as this Properties
-     * @throws IOException
+     * @throws IOException If storing fails
      */
     public void store(OutputStream os, String comment) throws IOException {
         this.save(os);
@@ -194,7 +194,7 @@ public class Properties extends AbstractMap<String, String> {
      *
      * @param key the property key.
      * @param defaultValue a default value.
-     * @return
+     * @return The property value of the default value
      */
     public String getProperty(String key, String defaultValue) {
         if (this.get(key) != null)
@@ -698,12 +698,12 @@ public class Properties extends AbstractMap<String, String> {
      * <p>The only difference between Java strings and JavaScript strings
      * is that in JavaScript, a single quote must be escaped.</p>
      *
-     * <p>Example:
+     * <p>Example:</p>
      * <pre>
      * input string: He didn't say, "Stop!"
      * output string: He didn't say, \"Stop!\"
      * </pre>
-     * </p>
+     *
      *
      * @param str  String to escape values in, may be null
      * @return String with escaped values, <code>null</code> if null string input
