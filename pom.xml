@@ -36,9 +36,9 @@
     <version>0.0.1-SNAPSHOT</version>
 
     <scm>
-        <connection>scm:svn:http://svn.apache.org/repos/asf/felix/trunk/configurator</connection>
-        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/felix/trunk/configurator</developerConnection>
-        <url>http://svn.apache.org/viewvc/felix/trunk/configurator</url>
+        <connection>scm:svn:http://svn.apache.org/repos/asf/felix/trunk/osgi-r7/configurator</connection>
+        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/felix/trunk/osgi-r7/configurator</developerConnection>
+        <url>http://svn.apache.org/viewvc/felix/trunk/osgi-r7/configurator</url>
     </scm>
 
     <properties>
