@@ -846,7 +846,7 @@ public class ConvertingImpl implements Converting, InternalConverting {
     }
 
     private Map<?,?> mapView(Object obj, Class<?> sourceCls, InternalConverter converter) {
-        if (Map.class.isAssignableFrom(sourceCls) || (DTO.class.equals(sourceCls) && obj instanceof Map))
+        if (Map.class.isAssignableFrom(sourceCls) || (DTO.class.isAssignableFrom(sourceCls) && obj instanceof Map))
             return (Map<?,?>) obj;
         else if (Dictionary.class.isAssignableFrom(sourceCls))
             return null; // TODO

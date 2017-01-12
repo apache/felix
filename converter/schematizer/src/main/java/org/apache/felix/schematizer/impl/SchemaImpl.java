@@ -24,12 +24,14 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.function.Function;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 import org.apache.felix.schematizer.Node;
-import org.apache.felix.schematizer.Node.DTO;
 import org.apache.felix.schematizer.NodeVisitor;
 import org.apache.felix.schematizer.Schema;
+import org.osgi.dto.DTO;
 import org.osgi.util.converter.Converter;
 import org.osgi.util.converter.StandardConverter;
 
@@ -132,7 +134,7 @@ public class SchemaImpl
                 return result;
             }
 
-            currentContext = "/" + contexts.get(++currentIndex);
+            currentContext = pathFrom(contexts, ++currentIndex);
             for (Object o2 : l)
                 result.addAll(valuesAt(currentContext, o2));
         } else if (o instanceof Map){
@@ -143,6 +145,8 @@ public class SchemaImpl
             }
 
             result.addAll(valuesAt( currentContext, (Map)o, contexts, ++currentIndex));
+        } else if (currentIndex < contexts.size() - 1) {
+            result.addAll(valuesAt(pathFrom(contexts, ++currentIndex), o));
         } else {
             result.add(o);
         }
@@ -168,5 +172,13 @@ public class SchemaImpl
         return list.stream()
                 .map( v -> new StandardConverter().convert(v).sourceAs(DTO.class).to(node.get().type()))
                 .collect( Collectors.toList() );
+    }
+
+    private String pathFrom(List<String> contexts, int index) {
+        return IntStream.range(0, contexts.size())
+                .filter( i -> i >= index )
+                .mapToObj( i -> contexts.get(i) )
+                .reduce( "", (s1,s2) -> s1 + "/" + s2 );
+                
     }
 }
