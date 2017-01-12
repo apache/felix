@@ -21,19 +21,19 @@
 		<groupId>org.apache.felix</groupId>
 		<artifactId>felix-parent</artifactId>
 		<version>4</version>
-		<relativePath/>
+		<relativePath />
 	</parent>
 
     <modelVersion>4.0.0</modelVersion>
     <name>Apache Felix Utils</name>
     <description>Utility classes for OSGi.</description>
-    <version>1.8.5-SNAPSHOT</version>
+    <version>1.8.6</version>
     <artifactId>org.apache.felix.utils</artifactId>
 
     <scm>
-        <connection>scm:svn:http://svn.apache.org/repos/asf/felix/trunk/utils</connection>
-        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/felix/trunk/utils</developerConnection>
-        <url>http://svn.apache.org/repos/asf/felix/utils</url>
+        <connection>scm:svn:http://svn.apache.org/repos/asf/felix/releases/org.apache.felix.utils-1.8.6</connection>
+        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/felix/releases/org.apache.felix.utils-1.8.6</developerConnection>
+        <url>scm:svn:https://svn.apache.org/repos/asf/felix/releases/org.apache.felix.utils-1.8.6</url>
     </scm>
 
     <dependencies>
