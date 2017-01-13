@@ -35,9 +35,6 @@ import javax.servlet.http.HttpServletResponse;
 import org.apache.felix.webconsole.DefaultVariableResolver;
 import org.apache.felix.webconsole.SimpleWebConsolePlugin;
 import org.apache.felix.webconsole.WebConsoleUtil;
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONWriter;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.Constants;
 import org.osgi.framework.InvalidSyntaxException;
@@ -221,53 +218,45 @@ class WebConsolePlugin extends SimpleWebConsolePlugin
             throws IOException
     {
         final JSONWriter jw = new JSONWriter(pw);
-        try
-        {
-            jw.object();
+        jw.object();
 
-            jw.key("status"); //$NON-NLS-1$
-            final ServiceComponentRuntime scrService = getScrService();
-            if (scrService == null)
+        jw.key("status"); //$NON-NLS-1$
+        final ServiceComponentRuntime scrService = getScrService();
+        if (scrService == null)
+        {
+            jw.value(-1);
+        }
+        else
+        {
+            jw.value(info.configurations.size());
+            if ( !info.configurations.isEmpty())
             {
-                jw.value(-1);
-            }
-            else
-            {
-                jw.value(info.configurations.size());
-                if ( !info.configurations.isEmpty())
+                // render components
+                jw.key("data"); //$NON-NLS-1$
+                jw.array();
+                if (component != null)
                 {
-                    // render components
-                    jw.key("data"); //$NON-NLS-1$
-                    jw.array();
-                    if (component != null)
-                    {
-                        component(jw, component, true);
-                    }
-                    else
-                    {
-                        for( final ComponentDescriptionDTO cd : info.disabled )
-                        {
-                            disabledComponent(jw, cd);
-                        }
-                        for (final ComponentConfigurationDTO cfg : info.configurations)
-                        {
-                            component(jw, cfg, false);
-                        }
-                    }
-                    jw.endArray();
+                    component(jw, component, true);
                 }
+                else
+                {
+                    for( final ComponentDescriptionDTO cd : info.disabled )
+                    {
+                        disabledComponent(jw, cd);
+                    }
+                    for (final ComponentConfigurationDTO cfg : info.configurations)
+                    {
+                        component(jw, cfg, false);
+                    }
+                }
+                jw.endArray();
             }
+        }
 
-            jw.endObject();
-        }
-        catch (JSONException je)
-        {
-            throw new IOException(je.toString());
-        }
+        jw.endObject();
     }
 
     void disabledComponent(final JSONWriter jw, final ComponentDescriptionDTO component)
-            throws JSONException
     {
         final String name = component.name;
 
@@ -302,7 +291,6 @@ class WebConsolePlugin extends SimpleWebConsolePlugin
     }
 
     void component(JSONWriter jw, ComponentConfigurationDTO component, boolean details)
-            throws JSONException
     {
         String id = String.valueOf(component.id);
         String name = component.description.name;
@@ -347,7 +335,6 @@ class WebConsolePlugin extends SimpleWebConsolePlugin
     }
 
     private void gatherComponentDetails(JSONWriter jw, ComponentConfigurationDTO component)
-            throws JSONException
     {
         final Bundle bundle = this.getBundleContext().getBundle(0).getBundleContext().getBundle(component.description.bundle.id);
 
@@ -396,13 +383,17 @@ class WebConsolePlugin extends SimpleWebConsolePlugin
 
         keyVal(jw, "Service Type", component.description.scope);
 
-        JSONArray buf = new JSONArray();
+        jw.object();
+        jw.key("key");
+        jw.value("Services");
+        jw.key("value");
+        jw.array();
         for (int i = 0; i < services.length; i++)
         {
-            buf.put(services[i]);
+            jw.value(services[i]);
         }
-
-        keyVal(jw, "Services", buf);
+        jw.endArray();
+        jw.endObject();
     }
 
     private SatisfiedReferenceDTO findReference(final ComponentConfigurationDTO component, final String name)
@@ -421,18 +412,22 @@ class WebConsolePlugin extends SimpleWebConsolePlugin
     {
         for(final ReferenceDTO dto : component.description.references)
         {
-            JSONArray buf = new JSONArray();
+            jw.object();
+            jw.key("key");
+            jw.value("Reference " + dto.name);
+            jw.key("value");
+            jw.array();
             final SatisfiedReferenceDTO satisfiedRef = findReference(component, dto.name);
 
-            buf.put(satisfiedRef != null ? "Satisfied" : "Unsatisfied");
-            buf.put("Service Name: " + dto.interfaceName);
+            jw.value(satisfiedRef != null ? "Satisfied" : "Unsatisfied");
+            jw.value("Service Name: " + dto.interfaceName);
             if (dto.target != null)
             {
-                buf.put("Target Filter: " + dto.target);
+                jw.value("Target Filter: " + dto.target);
             }
-            buf.put("Cardinality: " + dto.cardinality);
-            buf.put("Policy: " + dto.policy);
-            buf.put("Policy Option: " + dto.policyOption);
+            jw.value("Cardinality: " + dto.cardinality);
+            jw.value("Policy: " + dto.policy);
+            jw.value("Policy Option: " + dto.policyOption);
 
             // list bound services
             if ( satisfiedRef != null )
@@ -458,15 +453,16 @@ class WebConsolePlugin extends SimpleWebConsolePlugin
                         b.append(name);
                         b.append(")");
                     }
-                    buf.put(b.toString());
+                    jw.value(b.toString());
                 }
             }
             else
             {
-                buf.put("No Services bound");
+                jw.value("No Services bound");
             }
 
-            keyVal(jw, "Reference " + dto.name, buf.toString());
+            jw.endArray();
+            jw.endObject();
         }
     }
 
@@ -475,7 +471,11 @@ class WebConsolePlugin extends SimpleWebConsolePlugin
         Map<String, Object> props = component.properties;
         if (props != null)
         {
-            JSONArray buf = new JSONArray();
+            jw.object();
+            jw.key("key");
+            jw.value("Properties");
+            jw.key("value");
+            jw.array();
             TreeSet<String> keys = new TreeSet<String>(props.keySet());
             for (Iterator<String> ki = keys.iterator(); ki.hasNext();)
             {
@@ -486,23 +486,24 @@ class WebConsolePlugin extends SimpleWebConsolePlugin
                 Object prop = props.get(key);
                 prop = WebConsoleUtil.toString(prop);
                 b.append(prop);
-                buf.put(b.toString());
+                jw.value(b.toString());
             }
-
-            keyVal(jw, "Properties", buf);
+            jw.endArray();
+            jw.endObject();
         }
 
     }
 
     private void keyVal(JSONWriter jw, String key, Object value)
     {
-        try
+        if (key != null && value != null)
         {
-            WebConsoleUtil.keyVal(jw, key, value);
-        }
-        catch (JSONException je)
-        {
-            // don't care
+            jw.object();
+            jw.key("key"); //$NON-NLS-1$
+            jw.value(key);
+            jw.key("value"); //$NON-NLS-1$
+            jw.value(value);
+            jw.endObject();
         }
     }
 
