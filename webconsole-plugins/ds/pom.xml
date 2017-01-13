@@ -20,7 +20,7 @@
 
     <artifactId>org.apache.felix.webconsole.plugins.ds</artifactId>
     <packaging>bundle</packaging>
-    <version>2.0.4</version>
+    <version>2.0.5-SNAPSHOT</version>
 
     <name>Apache Felix Web Console Service Component Runtime/Declarative Services Plugin</name>
     <description>
@@ -28,9 +28,9 @@
     </description>
 
     <scm>
-        <connection>scm:svn:http://svn.apache.org/repos/asf/felix/releases/org.apache.felix.webconsole.plugins.ds-2.0.4</connection>
-       <developerConnection>scm:svn:https://svn.apache.org/repos/asf/felix/releases/org.apache.felix.webconsole.plugins.ds-2.0.4</developerConnection>
-        <url>http://svn.apache.org/viewvc/felix/releases/org.apache.felix.webconsole.plugins.ds-2.0.4</url>
+        <connection>scm:svn:http://svn.apache.org/repos/asf/felix/trunk/webconsole-plugins/ds</connection>
+       <developerConnection>scm:svn:https://svn.apache.org/repos/asf/felix/trunk/webconsole-plugins/ds</developerConnection>
+        <url>http://svn.apache.org/viewvc/felix/trunk/webconsole-plugins/ds</url>
     </scm>
 
     <properties>
