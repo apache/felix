@@ -1,5 +1,7 @@
 Changes from 2.0.2 to 2.0.4
 ---------------------------
+** Improvement
+    * [FELIX-5489] - Remove dependency to org.json
 ** Bug
     * [FELIX-5488] - DS Plugin should use PID from ComponentDescriptionDTO
 
