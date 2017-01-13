@@ -14,7 +14,7 @@
     <parent>
         <groupId>org.apache.felix</groupId>
         <artifactId>felix-parent</artifactId>
-        <version>3</version>
+        <version>4</version>
         <relativePath>../../../pom/pom.xml</relativePath>
     </parent>
 

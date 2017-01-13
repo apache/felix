@@ -116,7 +116,7 @@ class WebConsolePlugin extends SimpleWebConsolePlugin
      */
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
-        throws IOException
+            throws IOException
     {
         final String op = request.getParameter(OPERATION);
         RequestInfo reqInfo = new RequestInfo(request, true);
@@ -168,7 +168,7 @@ class WebConsolePlugin extends SimpleWebConsolePlugin
      */
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
-        throws ServletException, IOException
+            throws ServletException, IOException
     {
         String path = request.getPathInfo();
         // don't process if this is request to load a resource
@@ -199,7 +199,7 @@ class WebConsolePlugin extends SimpleWebConsolePlugin
      */
     @Override
     protected void renderContent(HttpServletRequest request, HttpServletResponse response)
-        throws IOException
+            throws IOException
     {
         // get request info from request attribute
         final RequestInfo reqInfo = getRequestInfo(request);
@@ -218,7 +218,7 @@ class WebConsolePlugin extends SimpleWebConsolePlugin
     }
 
     private void renderResult(final PrintWriter pw, RequestInfo info, final ComponentConfigurationDTO component)
-        throws IOException
+            throws IOException
     {
         final JSONWriter jw = new JSONWriter(pw);
         try
@@ -267,7 +267,7 @@ class WebConsolePlugin extends SimpleWebConsolePlugin
     }
 
     void disabledComponent(final JSONWriter jw, final ComponentDescriptionDTO component)
-    throws JSONException
+            throws JSONException
     {
         final String name = component.name;
 
@@ -302,7 +302,7 @@ class WebConsolePlugin extends SimpleWebConsolePlugin
     }
 
     void component(JSONWriter jw, ComponentConfigurationDTO component, boolean details)
-        throws JSONException
+            throws JSONException
     {
         String id = String.valueOf(component.id);
         String name = component.description.name;
@@ -320,46 +320,21 @@ class WebConsolePlugin extends SimpleWebConsolePlugin
         jw.key("stateRaw"); //$NON-NLS-1$
         jw.value(state);
 
-        final Map<String, Object> props = component.properties;
-
-        String pid = null;
-        String configurationPid = null;
-        final Object obj = props != null ? props.get(Constants.SERVICE_PID) : null;
-        if ( obj instanceof String )
-        {
-            pid = (String)obj;
-            configurationPid = pid;
+        final String configurationPid = component.description.configurationPid[0];
+        final String pid;
+        if (component.description.configurationPid.length == 1) {
+            pid = configurationPid;
+        } else {
+            pid = Arrays.toString(component.description.configurationPid);
         }
-        else if ( obj instanceof String[] )
+        jw.key("pid"); //$NON-NLS-1$
+        jw.value(pid);
+        if (isConfigurable(
+                this.getBundleContext().getBundle(0).getBundleContext().getBundle(component.description.bundle.id),
+                configurationPid))
         {
-            final String[] arr = (String[])obj;
-            if ( arr.length > 0 )
-            {
-                pid = Arrays.toString(arr);
-                configurationPid = arr[0];
-            }
-        }
-        else if ( obj instanceof Collection )
-        {
-            final Collection<?> col = (Collection<?>)obj;
-            if ( !col.isEmpty() )
-            {
-                pid = col.toString();
-                configurationPid = col.iterator().next().toString();
-            }
-        }
-        if (pid != null)
-        {
-            jw.key("pid"); //$NON-NLS-1$
-            jw.value(pid);
-            if ( configurationPid != null )
-            {
-                if (isConfigurable(this.getBundleContext().getBundle(0).getBundleContext().getBundle(component.description.bundle.id), configurationPid))
-                {
-                    jw.key("configurable"); //$NON-NLS-1$
-                    jw.value(configurationPid);
-                }
-            }
+            jw.key("configurable"); //$NON-NLS-1$
+            jw.value(configurationPid);
         }
 
         // component details
@@ -372,7 +347,7 @@ class WebConsolePlugin extends SimpleWebConsolePlugin
     }
 
     private void gatherComponentDetails(JSONWriter jw, ComponentConfigurationDTO component)
-        throws JSONException
+            throws JSONException
     {
         final Bundle bundle = this.getBundleContext().getBundle(0).getBundleContext().getBundle(component.description.bundle.id);
 
@@ -380,7 +355,7 @@ class WebConsolePlugin extends SimpleWebConsolePlugin
         jw.array();
 
         keyVal(jw, "Bundle", bundle.getSymbolicName() + " ("
-            + bundle.getBundleId() + ")");
+                + bundle.getBundleId() + ")");
         keyVal(jw, "Implementation Class", component.description.implementationClass);
         if (component.description.factory != null)
         {
@@ -400,6 +375,11 @@ class WebConsolePlugin extends SimpleWebConsolePlugin
         }
 
         listServices(jw, component);
+        if (component.description.configurationPid.length == 1) {
+            keyVal(jw, "PID", component.description.configurationPid[0]);
+        } else {
+            keyVal(jw, "PIDs", Arrays.toString(component.description.configurationPid));
+        }
         listReferences(jw, component);
         listProperties(jw, component);
 
