@@ -20,7 +20,7 @@
 <components xmlns:scr="http://www.osgi.org/xmlns/scr/v1.4.0">
 
     <!-- All fields exist -->
-    <scr:component name="FieldActivatorComponent.satisfied" enabled="false"
+    <scr:component name="FieldActivatorComponent.satisfied" enabled="false" activate="activator"
                    activation-fields="bundle context config annotation">
         <implementation class="org.apache.felix.scr.integration.components.FieldActivatorComponent" />
         <service factory="false">
@@ -31,7 +31,7 @@
     </scr:component>
 
     <!-- Field does not exist -->
-    <scr:component name="FieldActivatorComponent.unsatisfied" enabled="false"
+    <scr:component name="FieldActivatorComponent.unsatisfied" enabled="false" activate="activator"
                    activation-fields="foo">
         <implementation class="org.apache.felix.scr.integration.components.FieldActivatorComponent" />
         <service factory="false">
@@ -40,7 +40,7 @@
     </scr:component>
 
     <!-- Some exist, others not -->
-    <scr:component name="FieldActivatorComponent.partiallysatisfied" enabled="false"
+    <scr:component name="FieldActivatorComponent.partiallysatisfied" enabled="false" activate="activator"
                    activation-fields="bundle context foo">
         <implementation class="org.apache.felix.scr.integration.components.FieldActivatorComponent" />
         <service factory="false">
