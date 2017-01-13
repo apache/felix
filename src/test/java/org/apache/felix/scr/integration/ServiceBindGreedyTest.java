@@ -20,7 +20,6 @@ package org.apache.felix.scr.integration;
 
 
 import java.util.Hashtable;
-import junit.framework.TestCase;
 
 import org.apache.felix.scr.integration.components.SimpleComponent;
 import org.apache.felix.scr.integration.components.SimpleComponent2;
@@ -28,16 +27,17 @@ import org.apache.felix.scr.integration.components.SimpleService2Impl;
 import org.apache.felix.scr.integration.components.SimpleServiceImpl;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.ops4j.pax.exam.junit.JUnit4TestRunner;
-import org.osgi.framework.InvalidSyntaxException;
+import org.ops4j.pax.exam.junit.PaxExam;
 import org.osgi.framework.ServiceReference;
 import org.osgi.service.component.ComponentConstants;
 import org.osgi.service.component.ComponentFactory;
 import org.osgi.service.component.ComponentInstance;
 import org.osgi.service.component.runtime.dto.ComponentConfigurationDTO;
 
+import junit.framework.TestCase;
 
-@RunWith(JUnit4TestRunner.class)
+
+@RunWith(PaxExam.class)
 public class ServiceBindGreedyTest extends ComponentTestBase
 {
 
@@ -549,25 +549,25 @@ public class ServiceBindGreedyTest extends ComponentTestBase
         String name ="test_required_multiple_dynamic_factory"; //also pid
         final String factoryPid = "factory_" + name;
         getConfigurationsDisabledThenEnable(name, 0, ComponentConfigurationDTO.UNSATISFIED_REFERENCE);
-//        final String pid = "test_required_multiple_dynamic_factory";
-//
-//        final Component component = findComponentDescriptorByName( pid );
-//        TestCase.assertNotNull( component );
-//        TestCase.assertEquals( Component.STATE_DISABLED, component.getState() );
-//
-//        // async enabling (unsatisfied)
-//        enableAndCheck(cc.description);
-//        delay();
-//        findComponentConfigurationByName(name, ComponentConfigurationDTO.UNSATISFIED_REFERENCE);
+        //        final String pid = "test_required_multiple_dynamic_factory";
+        //
+        //        final Component component = findComponentDescriptorByName( pid );
+        //        TestCase.assertNotNull( component );
+        //        TestCase.assertEquals( Component.STATE_DISABLED, component.getState() );
+        //
+        //        // async enabling (unsatisfied)
+        //        enableAndCheck(cc.description);
+        //        delay();
+        //        findComponentConfigurationByName(name, ComponentConfigurationDTO.UNSATISFIED_REFERENCE);
 
         // register service, satisfying
         final SimpleServiceImpl srv1 = SimpleServiceImpl.create( bundleContext, "srv1" );
         delay();
-//        TestCase.assertEquals( Component.STATE_FACTORY, component.getState() );
+        //        TestCase.assertEquals( Component.STATE_FACTORY, component.getState() );
 
         // create a component instance
         final ServiceReference[] refs = bundleContext.getServiceReferences( ComponentFactory.class.getName(), "("
-            + ComponentConstants.COMPONENT_FACTORY + "=" + factoryPid + ")" );
+                + ComponentConstants.COMPONENT_FACTORY + "=" + factoryPid + ")" );
         TestCase.assertNotNull( refs );
         TestCase.assertEquals( 1, refs.length );
         final ComponentFactory factory = ( ComponentFactory ) bundleContext.getService( refs[0] );
@@ -586,29 +586,29 @@ public class ServiceBindGreedyTest extends ComponentTestBase
         TestCase.assertTrue( sc.m_multiRef.contains( srv1 ) );
 
         // ensure factory is not bound
-//        TestCase.assertNull( component.getReferences()[0].getServiceReferences() );
+        //        TestCase.assertNull( component.getReferences()[0].getServiceReferences() );
 
         // assert two components managed
         checkConfigurationCount(name, 1, ComponentConfigurationDTO.ACTIVE);
-//        final Component[] allFactoryComponents = findComponentConfigurationsByName( pid, -1 );
-//        TestCase.assertNotNull( allFactoryComponents );
-//        TestCase.assertEquals( 2, allFactoryComponents.length );
-//        for ( int i = 0; i < allFactoryComponents.length; i++ )
-//        {
-//            final Component c = allFactoryComponents[i];
-//            if ( c.getId() == component.getId() )
-//            {
-//                TestCase.assertEquals( Component.STATE_FACTORY, c.getState() );
-//            }
-//            else if ( c.getId() == SimpleComponent.INSTANCE.m_id )
-//            {
-//                TestCase.assertEquals( Component.STATE_ACTIVE, c.getState() );
-//            }
-//            else
-//            {
-//                TestCase.fail( "Unexpected Component " + c );
-//            }
-//        }
+        //        final Component[] allFactoryComponents = findComponentConfigurationsByName( pid, -1 );
+        //        TestCase.assertNotNull( allFactoryComponents );
+        //        TestCase.assertEquals( 2, allFactoryComponents.length );
+        //        for ( int i = 0; i < allFactoryComponents.length; i++ )
+        //        {
+        //            final Component c = allFactoryComponents[i];
+        //            if ( c.getId() == component.getId() )
+        //            {
+        //                TestCase.assertEquals( Component.STATE_FACTORY, c.getState() );
+        //            }
+        //            else if ( c.getId() == SimpleComponent.INSTANCE.m_id )
+        //            {
+        //                TestCase.assertEquals( Component.STATE_ACTIVE, c.getState() );
+        //            }
+        //            else
+        //            {
+        //                TestCase.fail( "Unexpected Component " + c );
+        //            }
+        //        }
 
         // register second service
         final SimpleServiceImpl srv11 = SimpleServiceImpl.create( bundleContext, "srv11" );
@@ -620,7 +620,7 @@ public class ServiceBindGreedyTest extends ComponentTestBase
         TestCase.assertTrue( sc.m_multiRef.contains( srv11 ) );
 
         // ensure factory is not bound
-//        TestCase.assertNull( component.getReferences()[0].getServiceReferences() );
+        //        TestCase.assertNull( component.getReferences()[0].getServiceReferences() );
 
         // drop second service and ensure unbound (and active)
         srv11.drop();
@@ -629,7 +629,7 @@ public class ServiceBindGreedyTest extends ComponentTestBase
         TestCase.assertEquals( SimpleComponent.INSTANCE, instance.getInstance() );
         TestCase.assertEquals( 1, sc.m_multiRef.size() );
         TestCase.assertTrue( sc.m_multiRef.contains( srv1 ) );
-//        TestCase.assertNull( component.getReferences()[0].getServiceReferences() );
+        //        TestCase.assertNull( component.getReferences()[0].getServiceReferences() );
 
 
         // remove the service, expect factory to deactivate and instance to dispose
@@ -641,46 +641,46 @@ public class ServiceBindGreedyTest extends ComponentTestBase
 
         // assert component factory only managed
         //TODO this check should be whether the service is registered.
-//        final Component[] allFactoryComponents2 = findComponentConfigurationsByName( pid, -1 );
-//        TestCase.assertNotNull( allFactoryComponents2 );
-//        TestCase.assertEquals( 1, allFactoryComponents2.length );
-//        for ( int i = 0; i < allFactoryComponents2.length; i++ )
-//        {
-//            final Component c = allFactoryComponents2[i];
-//            if ( c.getId() == component.getId() )
-//            {
-//                TestCase.assertEquals( Component.STATE_UNSATISFIED, c.getState() );
-//            }
-//            else
-//            {
-//                TestCase.fail( "Unexpected Component " + c );
-//            }
-//        }
+        //        final Component[] allFactoryComponents2 = findComponentConfigurationsByName( pid, -1 );
+        //        TestCase.assertNotNull( allFactoryComponents2 );
+        //        TestCase.assertEquals( 1, allFactoryComponents2.length );
+        //        for ( int i = 0; i < allFactoryComponents2.length; i++ )
+        //        {
+        //            final Component c = allFactoryComponents2[i];
+        //            if ( c.getId() == component.getId() )
+        //            {
+        //                TestCase.assertEquals( Component.STATE_UNSATISFIED, c.getState() );
+        //            }
+        //            else
+        //            {
+        //                TestCase.fail( "Unexpected Component " + c );
+        //            }
+        //        }
 
         // registeranother service, factory must come back, instance not
         final SimpleServiceImpl srv2 = SimpleServiceImpl.create( bundleContext, "srv2" );
         delay();
 
-//        TestCase.assertEquals( Component.STATE_FACTORY, component.getState() );
+        //        TestCase.assertEquals( Component.STATE_FACTORY, component.getState() );
         TestCase.assertNull( instance.getInstance() );
 
         // assert component factory only managed
         checkConfigurationCount(name, 0, -1);
-//        final Component[] allFactoryComponents3 = findComponentConfigurationsByName( pid, -1 );
-//        TestCase.assertNotNull( allFactoryComponents3 );
-//        TestCase.assertEquals( 1, allFactoryComponents3.length );
-//        for ( int i = 0; i < allFactoryComponents3.length; i++ )
-//        {
-//            final Component c = allFactoryComponents3[i];
-//            if ( c.getId() == component.getId() )
-//            {
-//                TestCase.assertEquals( Component.STATE_FACTORY, c.getState() );
-//            }
-//            else
-//            {
-//                TestCase.fail( "Unexpected Component " + c );
-//            }
-//        }
+        //        final Component[] allFactoryComponents3 = findComponentConfigurationsByName( pid, -1 );
+        //        TestCase.assertNotNull( allFactoryComponents3 );
+        //        TestCase.assertEquals( 1, allFactoryComponents3.length );
+        //        for ( int i = 0; i < allFactoryComponents3.length; i++ )
+        //        {
+        //            final Component c = allFactoryComponents3[i];
+        //            if ( c.getId() == component.getId() )
+        //            {
+        //                TestCase.assertEquals( Component.STATE_FACTORY, c.getState() );
+        //            }
+        //            else
+        //            {
+        //                TestCase.fail( "Unexpected Component " + c );
+        //            }
+        //        }
     }
 
 

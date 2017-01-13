@@ -19,26 +19,24 @@
 package org.apache.felix.scr.integration;
 
 
-import java.io.IOException;
-
-import junit.framework.TestCase;
-
 import org.apache.felix.scr.integration.components.SimpleComponent;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.ops4j.pax.exam.junit.JUnit4TestRunner;
+import org.ops4j.pax.exam.junit.PaxExam;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceReference;
 import org.osgi.service.component.runtime.dto.ComponentConfigurationDTO;
 
+import junit.framework.TestCase;
 
-@RunWith(JUnit4TestRunner.class)
+
+@RunWith(PaxExam.class)
 public class ServiceComponentTest extends ComponentTestBase
 {
     static
     {
         // uncomment to enable debugging of this test class
-//         paxRunnerVmOption = DEBUG_VM_OPTION;
+        //         paxRunnerVmOption = DEBUG_VM_OPTION;
     }
 
 
@@ -48,7 +46,7 @@ public class ServiceComponentTest extends ComponentTestBase
         final String pid = "ServiceComponent";
 
         // one single component exists without configuration
-		getDisabledConfigurationAndEnable(pid, ComponentConfigurationDTO.ACTIVE);
+        getDisabledConfigurationAndEnable(pid, ComponentConfigurationDTO.ACTIVE);
         final SimpleComponent instance = SimpleComponent.INSTANCE;
         TestCase.assertNotNull( instance );
 
@@ -76,8 +74,8 @@ public class ServiceComponentTest extends ComponentTestBase
         for ( String propKey : reference.getPropertyKeys() )
         {
             TestCase.assertTrue( "Property key [" + propKey
-                + "] must have at least one character and not start with a dot", propKey.length() > 0
-                && !propKey.startsWith( "." ) );
+                    + "] must have at least one character and not start with a dot", propKey.length() > 0
+                    && !propKey.startsWith( "." ) );
         }
     }
 
@@ -88,7 +86,7 @@ public class ServiceComponentTest extends ComponentTestBase
         final String pid = "DelayedServiceComponent";
 
         // one single component exists without configuration
-		getDisabledConfigurationAndEnable(pid, ComponentConfigurationDTO.SATISFIED);
+        getDisabledConfigurationAndEnable(pid, ComponentConfigurationDTO.SATISFIED);
         TestCase.assertNull( SimpleComponent.INSTANCE );
 
         // get the service
@@ -122,7 +120,7 @@ public class ServiceComponentTest extends ComponentTestBase
 
         // one single component exists without configuration
         // the delayed service is expected to only be registered before use
-		getDisabledConfigurationAndEnable(pid, ComponentConfigurationDTO.SATISFIED);
+        getDisabledConfigurationAndEnable(pid, ComponentConfigurationDTO.SATISFIED);
         TestCase.assertNull( SimpleComponent.INSTANCE );
 
         // get the service once
@@ -160,7 +158,7 @@ public class ServiceComponentTest extends ComponentTestBase
 
         // one single component exists without configuration
         // the delayed service is expected to only be registered before use
-		getDisabledConfigurationAndEnable(pid, ComponentConfigurationDTO.SATISFIED);
+        getDisabledConfigurationAndEnable(pid, ComponentConfigurationDTO.SATISFIED);
         TestCase.assertNull( SimpleComponent.INSTANCE );
 
         // get the service

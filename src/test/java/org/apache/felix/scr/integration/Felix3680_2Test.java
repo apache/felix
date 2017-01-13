@@ -23,16 +23,16 @@ import java.util.Iterator;
 
 import javax.inject.Inject;
 
-import junit.framework.TestCase;
-
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.ops4j.pax.exam.junit.JUnit4TestRunner;
+import org.ops4j.pax.exam.junit.PaxExam;
 import org.osgi.framework.BundleContext;
 import org.osgi.service.component.runtime.dto.ComponentDescriptionDTO;
 
+import junit.framework.TestCase;
 
-@RunWith(JUnit4TestRunner.class)
+
+@RunWith(PaxExam.class)
 public class Felix3680_2Test extends ComponentTestBase
 {
     static
@@ -41,10 +41,10 @@ public class Felix3680_2Test extends ComponentTestBase
         //        paxRunnerVmOption = DEBUG_VM_OPTION;
         descriptorFile = "/integration_test_FELIX_3880_2.xml";
         COMPONENT_PACKAGE = COMPONENT_PACKAGE + ".felix3680_2";
-        
+
         restrictedLogging = true;
         // Comment this for displaying debug messages
-//        DS_LOGLEVEL = "warn";
+        //        DS_LOGLEVEL = "warn";
     }
 
     @Inject

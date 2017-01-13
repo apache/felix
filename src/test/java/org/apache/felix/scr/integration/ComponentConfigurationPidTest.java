@@ -19,17 +19,17 @@
 package org.apache.felix.scr.integration;
 
 
-import junit.framework.TestCase;
-
 import org.apache.felix.scr.integration.components.SimpleComponent;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.ops4j.pax.exam.junit.JUnit4TestRunner;
+import org.ops4j.pax.exam.junit.PaxExam;
 import org.osgi.service.component.runtime.dto.ComponentConfigurationDTO;
 import org.osgi.service.component.runtime.dto.ComponentDescriptionDTO;
 
+import junit.framework.TestCase;
 
-@RunWith(JUnit4TestRunner.class)
+
+@RunWith(PaxExam.class)
 public class ComponentConfigurationPidTest extends ComponentTestBase
 {
     static
@@ -68,7 +68,7 @@ public class ComponentConfigurationPidTest extends ComponentTestBase
         disableAndCheck( cd );
         TestCase.assertNull( SimpleComponent.INSTANCE );
     }
-    
+
     @Test
     public void test_configurationpid_must_not_use_name_as_pid() throws Exception
     {
@@ -88,7 +88,7 @@ public class ComponentConfigurationPidTest extends ComponentTestBase
 
         deleteConfig( pid );
         delay();
-        
+
         disableAndCheck( cd );
     }
 }

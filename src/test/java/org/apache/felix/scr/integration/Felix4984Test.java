@@ -25,7 +25,7 @@ import org.apache.felix.scr.integration.components.felix4984.A;
 import org.apache.felix.scr.integration.components.felix4984.B;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.ops4j.pax.exam.junit.JUnit4TestRunner;
+import org.ops4j.pax.exam.junit.PaxExam;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceReference;
@@ -35,7 +35,7 @@ import org.osgi.service.log.LogService;
 import junit.framework.TestCase;
 
 
-@RunWith(JUnit4TestRunner.class)
+@RunWith(PaxExam.class)
 public class Felix4984Test extends ComponentTestBase
 {
     static
@@ -56,7 +56,7 @@ public class Felix4984Test extends ComponentTestBase
         bundle.stop();
 
         for (int i = 0; i < 1000; i ++) {
-        	bundle.start();
+            bundle.start();
 
             String componentNameA = "felix4984.A.1.1.dynamic";
             ComponentConfigurationDTO componentA = findComponentConfigurationByName( componentNameA, ComponentConfigurationDTO.SATISFIED );

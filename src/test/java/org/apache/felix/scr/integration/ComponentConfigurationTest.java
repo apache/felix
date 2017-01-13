@@ -20,28 +20,25 @@ package org.apache.felix.scr.integration;
 
 
 import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
-
-import junit.framework.Assert;
-import junit.framework.TestCase;
 
 import org.apache.felix.scr.integration.components.SimpleComponent;
 import org.apache.felix.scr.integration.components.SimpleServiceImpl;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.ops4j.pax.exam.junit.JUnit4TestRunner;
+import org.ops4j.pax.exam.junit.PaxExam;
 import org.osgi.framework.Constants;
 import org.osgi.service.component.runtime.dto.ComponentConfigurationDTO;
 
+import junit.framework.TestCase;
 
-@RunWith(JUnit4TestRunner.class)
+
+@RunWith(PaxExam.class)
 public class ComponentConfigurationTest extends ComponentTestBase
 {
     static
     {
         // uncomment to enable debugging of this test class
-//          paxRunnerVmOption = DEBUG_VM_OPTION;
+        //          paxRunnerVmOption = DEBUG_VM_OPTION;
     }
 
 
@@ -55,7 +52,7 @@ public class ComponentConfigurationTest extends ComponentTestBase
         delay();
 
         ComponentConfigurationDTO cc = getDisabledConfigurationAndEnable(pid, ComponentConfigurationDTO.ACTIVE);
-        
+
         TestCase.assertNotNull( SimpleComponent.INSTANCE );
         TestCase.assertNull( SimpleComponent.INSTANCE.getProperty( PROP_NAME ) );
 
@@ -106,9 +103,9 @@ public class ComponentConfigurationTest extends ComponentTestBase
 
         TestCase.assertNotSame( "Expect new instance object after reconfiguration", firstInstance, secondInstance );
         TestCase.assertNotSame( "Expect new instance object after configuration deletion (1)", firstInstance,
-            thirdInstance );
+                thirdInstance );
         TestCase.assertNotSame( "Expect new instance object after configuration deletion (2)", secondInstance,
-            thirdInstance );
+                thirdInstance );
 
         disableAndCheck( cc );
         TestCase.assertNull( SimpleComponent.INSTANCE );
@@ -122,7 +119,7 @@ public class ComponentConfigurationTest extends ComponentTestBase
 
         deleteConfig( pid );
         delay();
-        
+
         TestCase.assertNull( SimpleComponent.INSTANCE );
 
         getConfigurationsDisabledThenEnable(pid, 0, ComponentConfigurationDTO.UNSATISFIED_REFERENCE);
@@ -156,7 +153,7 @@ public class ComponentConfigurationTest extends ComponentTestBase
         deleteConfig( pid );
         configure( pid );
         delay();
-        
+
         TestCase.assertNull( SimpleComponent.INSTANCE );
 
         ComponentConfigurationDTO cc = getConfigurationsDisabledThenEnable(pid, 1, ComponentConfigurationDTO.ACTIVE).iterator().next();
@@ -192,7 +189,7 @@ public class ComponentConfigurationTest extends ComponentTestBase
         boolean recreateOnDelete = false;
         dynamicConfigTest(pid, pre13, recreateOnDelete);
     }
-    
+
     @Test
     public void test_SimpleComponent_dynamic_configuration_flag() throws Exception
     {
@@ -203,20 +200,20 @@ public class ComponentConfigurationTest extends ComponentTestBase
     }
 
 
-	private void dynamicConfigTest(final String pid, boolean pre13, boolean recreateOnDelete)  throws Exception
-	{
-	    Object pidWithout;
-	    Object pidWith;
-	    if (pre13)
-	    {
-	        pidWithout = pid + ".description";
-	        pidWith = pid;
-	    }
-	    else 
-	    {
-	        pidWithout = pid + ".description";
-	        pidWith = Arrays.asList(new String[] {pid + ".description", pid});
-	    }
+    private void dynamicConfigTest(final String pid, boolean pre13, boolean recreateOnDelete)  throws Exception
+    {
+        Object pidWithout;
+        Object pidWith;
+        if (pre13)
+        {
+            pidWithout = pid + ".description";
+            pidWith = pid;
+        }
+        else
+        {
+            pidWithout = pid + ".description";
+            pidWith = Arrays.asList(new String[] {pid + ".description", pid});
+        }
         deleteConfig( pid );
         delay();
 
@@ -253,7 +250,7 @@ public class ComponentConfigurationTest extends ComponentTestBase
 
         disableAndCheck( cc );
         TestCase.assertNull( SimpleComponent.INSTANCE );
-	}
+    }
 
 
     @Test
@@ -375,7 +372,7 @@ public class ComponentConfigurationTest extends ComponentTestBase
             {
                 service2.drop();
             }
-             // same instance after reconfiguration
+            // same instance after reconfiguration
             findComponentConfigurationByName(pid, ComponentConfigurationDTO.ACTIVE);
             TestCase.assertEquals( instance, SimpleComponent.INSTANCE );
             TestCase.assertEquals( PROP_NAME, SimpleComponent.INSTANCE.getProperty( PROP_NAME ) );
@@ -484,7 +481,7 @@ public class ComponentConfigurationTest extends ComponentTestBase
         }
         finally
         {
-//            Thread.sleep( 60000 );
+            //            Thread.sleep( 60000 );
             theConfig.remove( targetProp );
             if ( service != null )
             {
@@ -527,7 +524,7 @@ public class ComponentConfigurationTest extends ComponentTestBase
     }
 
     /**
-     * same as test_SimpleComponent_factory_configuration except configurations are present before 
+     * same as test_SimpleComponent_factory_configuration except configurations are present before
      * component is enabled to test initialization.
      */
     @Test
@@ -570,8 +567,8 @@ public class ComponentConfigurationTest extends ComponentTestBase
         // no component config exists without configuration
 
         // create two factory configurations expecting two components
-        final String pid0 = createFactoryConfiguration( factoryPid, "?" );
-        final String pid1 = createFactoryConfiguration( factoryPid, "?" );
+        createFactoryConfiguration( factoryPid, "?" );
+        createFactoryConfiguration( factoryPid, "?" );
         delay();
 
         // expect two components, all active
@@ -583,11 +580,11 @@ public class ComponentConfigurationTest extends ComponentTestBase
 
 
         // create a configuration
-        final String pid3 = createFactoryConfiguration( factoryPid, "?" );
+        createFactoryConfiguration( factoryPid, "?" );
         delay();
 
         getConfigurationsDisabledThenEnable(factoryPid, 3, ComponentConfigurationDTO.ACTIVE);
-        
+
     }
 
 

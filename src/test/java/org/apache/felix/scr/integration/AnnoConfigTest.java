@@ -24,8 +24,6 @@ import java.util.Hashtable;
 import java.util.List;
 import java.util.Map;
 
-import junit.framework.TestCase;
-
 import org.apache.felix.scr.integration.components.annoconfig.AnnoComponent;
 import org.apache.felix.scr.integration.components.annoconfig.AnnoComponent.A1;
 import org.apache.felix.scr.integration.components.annoconfig.AnnoComponent.A1Arrays;
@@ -36,23 +34,25 @@ import org.apache.felix.scr.integration.components.annoconfig.NestedAnnoComponen
 import org.apache.felix.scr.integration.components.annoconfig.NestedAnnoComponent.E2;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.ops4j.pax.exam.junit.JUnit4TestRunner;
+import org.ops4j.pax.exam.junit.PaxExam;
 import org.osgi.service.cm.Configuration;
 import org.osgi.service.component.runtime.dto.ComponentConfigurationDTO;
 
-@RunWith(JUnit4TestRunner.class)
+import junit.framework.TestCase;
+
+@RunWith(PaxExam.class)
 public class AnnoConfigTest extends ComponentTestBase
 {
 
     static
     {
         // uncomment to enable debugging of this test class
-//        paxRunnerVmOption = DEBUG_VM_OPTION;
+        //        paxRunnerVmOption = DEBUG_VM_OPTION;
 
         descriptorFile = "/integration_test_annoconfig.xml";
         COMPONENT_PACKAGE = COMPONENT_PACKAGE + ".annoconfig";
-   }
-    
+    }
+
     @Test
     public void testAnnoConfig() throws Exception
     {
@@ -61,10 +61,10 @@ public class AnnoConfigTest extends ComponentTestBase
         AnnoComponent ac = getServiceFromConfiguration(dto, AnnoComponent.class);
         checkA1NoValues(ac.m_a1_activate);
         checkA1ArraysNoValues(ac.m_a1Arrays_activate);
-        
+
         Configuration c = configure(name, null, allValues());
         delay();
-        
+
         checkA1(ac.m_a1_modified);
         checkA1Array(ac.m_a1Arrays_modified);
 
@@ -74,33 +74,33 @@ public class AnnoConfigTest extends ComponentTestBase
         ac = getServiceFromConfiguration(dto, AnnoComponent.class);
         checkA1(ac.m_a1_activate);
         checkA1Array(ac.m_a1Arrays_activate);
-        
+
         c.delete();
         delay();
-        
+
         checkA1NoValues(ac.m_a1_modified);
         checkA1ArraysNoValues(ac.m_a1Arrays_modified);
-        
+
         c = configure(name, null, arrayValues());
         delay();
-        
+
         checkA1FromArray(ac.m_a1_modified);
         checkA1ArrayFromArray(ac.m_a1Arrays_modified, false);
-        
+
         c.delete();
         delay();
-        
+
         checkA1NoValues(ac.m_a1_modified);
         checkA1ArraysNoValues(ac.m_a1Arrays_modified);
-        
+
         c = configure(name, null, collectionValues());
         delay();
-        
+
         checkA1FromArray(ac.m_a1_modified);
         checkA1ArrayFromArray(ac.m_a1Arrays_modified, true);
 
     }
-    
+
     private Hashtable<String, Object> allValues()
     {
         Hashtable<String, Object> values = new Hashtable<String, Object>();
@@ -132,7 +132,7 @@ public class AnnoConfigTest extends ComponentTestBase
         values.put("string", new String[] {});
         return values;
     }
-    
+
     private Hashtable<String, Object> collectionValues()
     {
         Hashtable<String, Object> values = arrayValues();
@@ -145,7 +145,8 @@ public class AnnoConfigTest extends ComponentTestBase
         collectionValues.remove("string");
         return collectionValues;
     }
-    
+
+    @SuppressWarnings({ "rawtypes", "unchecked" })
     private List<?> toList(Object value)
     {
         List result = new ArrayList();
@@ -172,7 +173,7 @@ public class AnnoConfigTest extends ComponentTestBase
 
 
     private void checkA1FromArray(A1 a)
-    {        
+    {
         TestCase.assertEquals(true, a.bool());
         TestCase.assertEquals((byte)12, a.byt());
         TestCase.assertEquals(String.class, a.clas());
@@ -184,7 +185,7 @@ public class AnnoConfigTest extends ComponentTestBase
         TestCase.assertEquals((short)3, a.shor());
         TestCase.assertEquals(null, a.string());
     }
-    
+
     private void checkA1Array(A1Arrays a)
     {
         assertArrayEquals(new boolean[] {true}, a.bool());
@@ -198,7 +199,7 @@ public class AnnoConfigTest extends ComponentTestBase
         assertArrayEquals(new short[] {(short)3}, a.shor());
         assertArrayEquals(new String[] {"3"}, a.string());
     }
-    
+
     private void checkA1ArrayFromArray(A1Arrays a, boolean caBug)
     {
         assertArrayEquals(new boolean[] {true, false}, a.bool());
@@ -215,7 +216,7 @@ public class AnnoConfigTest extends ComponentTestBase
             assertArrayEquals(new String[] {}, a.string());
         }
     }
-    
+
     private void assertArrayEquals(Object a, Object b)
     {
         TestCase.assertTrue(a.getClass().isArray());
@@ -226,9 +227,9 @@ public class AnnoConfigTest extends ComponentTestBase
         {
             TestCase.assertEquals("different value at " + i, Array.get(a, i), Array.get(b, i));
         }
-        
+
     }
-    
+
     private void checkA1NoValues(A1 a)
     {
         TestCase.assertEquals(false, a.bool());
@@ -256,7 +257,7 @@ public class AnnoConfigTest extends ComponentTestBase
         TestCase.assertEquals(null, a.shor());
         TestCase.assertEquals(null, a.string());
     }
-    
+
     @Test
     public void testNestedAnnoConfig() throws Exception
     {
@@ -264,17 +265,17 @@ public class AnnoConfigTest extends ComponentTestBase
         ComponentConfigurationDTO dto = findComponentConfigurationByName(name, ComponentConfigurationDTO.SATISFIED);
         NestedAnnoComponent ac = getServiceFromConfiguration(dto, NestedAnnoComponent.class);
         checkA2NoValues(ac.m_a2_activate);
-        
-        Configuration c = configure(name, null, allNestedValues());
+
+        configure(name, null, allNestedValues());
         delay();
-        
+
         checkA2(ac.m_a2_modified);
 
         ungetServiceFromConfiguration(dto, NestedAnnoComponent.class);
         checkA2(ac.m_a2_deactivate);
         ac = getServiceFromConfiguration(dto, NestedAnnoComponent.class);
         checkA2(ac.m_a2_activate);
-        
+
 
     }
     private Hashtable<String, Object> allNestedValues()
@@ -306,9 +307,9 @@ public class AnnoConfigTest extends ComponentTestBase
         checkB2(a.b2s()[2], E2.c);
     }
 
-	private void checkB2(B2 b, E2 e2) {
-		TestCase.assertEquals(true, b.bool());
-		TestCase.assertEquals(e2, b.e2());
-	}
+    private void checkB2(B2 b, E2 e2) {
+        TestCase.assertEquals(true, b.bool());
+        TestCase.assertEquals(e2, b.e2());
+    }
 
 }
