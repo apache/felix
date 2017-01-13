@@ -1,3 +1,9 @@
+Changes from 2.0.2 to 2.0.4
+---------------------------
+** Bug
+    * [FELIX-5488] - DS Plugin should use PID from ComponentDescriptionDTO
+
+
 Changes from 2.0.0 to 2.0.2
 ---------------------------
 ** Improvement

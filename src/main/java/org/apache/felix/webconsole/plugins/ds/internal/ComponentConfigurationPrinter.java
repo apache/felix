@@ -32,8 +32,6 @@ import java.util.TreeSet;
 import org.apache.felix.inventory.Format;
 import org.apache.felix.inventory.InventoryPrinter;
 import org.apache.felix.webconsole.WebConsoleUtil;
-import org.json.JSONException;
-import org.json.JSONWriter;
 import org.osgi.framework.Constants;
 import org.osgi.framework.dto.ServiceReferenceDTO;
 import org.osgi.service.component.ComponentConstants;
@@ -79,14 +77,7 @@ class ComponentConfigurationPrinter implements InventoryPrinter
 
         if (Format.JSON.equals(format))
         {
-            try
-            {
-                printComponentsJson(pw, disabled, configurations, isZip);
-            }
-            catch (JSONException t)
-            {
-                // ignore
-            }
+            printComponentsJson(pw, disabled, configurations, isZip);
         }
         else
         {
@@ -95,9 +86,9 @@ class ComponentConfigurationPrinter implements InventoryPrinter
     }
 
     private final void printComponentsJson(final PrintWriter pw,
-        final List<ComponentDescriptionDTO> disabled,
-        final List<ComponentConfigurationDTO> configurations,
-        final boolean details) throws JSONException
+            final List<ComponentDescriptionDTO> disabled,
+            final List<ComponentConfigurationDTO> configurations,
+            final boolean details)
     {
         final JSONWriter jw = new JSONWriter(pw);
         jw.object();
@@ -163,10 +154,10 @@ class ComponentConfigurationPrinter implements InventoryPrinter
         pw.println("]");
 
         pw.println("  Bundle" + cfg.description.bundle.symbolicName + " ("
-            + cfg.description.bundle.id + ")");
+                + cfg.description.bundle.id + ")");
         pw.println("  State=" + toStateString(cfg.state));
         pw.println("  DefaultState="
-            + (cfg.description.defaultEnabled ? "enabled" : "disabled"));
+                + (cfg.description.defaultEnabled ? "enabled" : "disabled"));
         pw.println("  Activation=" + (cfg.description.immediate ? "immediate" : "delayed"));
 
         listServices(pw, cfg);
@@ -182,9 +173,9 @@ class ComponentConfigurationPrinter implements InventoryPrinter
         pw.print(cfg.name);
 
         pw.println("  Bundle" + cfg.bundle.symbolicName + " ("
-            + cfg.bundle.id + ")");
+                + cfg.bundle.id + ")");
         pw.println("  DefaultState="
-            + (cfg.defaultEnabled ? "enabled" : "disabled"));
+                + (cfg.defaultEnabled ? "enabled" : "disabled"));
         pw.println("  Activation=" + (cfg.immediate ? "immediate" : "delayed"));
         pw.println();
     }
@@ -231,7 +222,7 @@ class ComponentConfigurationPrinter implements InventoryPrinter
             final SatisfiedReferenceDTO satisfiedRef = findReference(cfg, dto.name);
 
             pw.println("  Reference=" + dto.name + ", "
-                + (satisfiedRef != null ? "Satisfied" : "Unsatisfied"));
+                    + (satisfiedRef != null ? "Satisfied" : "Unsatisfied"));
 
             pw.println("    Service Name: " + dto.interfaceName);
 
@@ -303,16 +294,16 @@ class ComponentConfigurationPrinter implements InventoryPrinter
     {
         switch (state)
         {
-            case ComponentConfigurationDTO.ACTIVE:
-                return "active";
-            case ComponentConfigurationDTO.SATISFIED:
-                return "satisfied";
-            case ComponentConfigurationDTO.UNSATISFIED_CONFIGURATION:
-                return "unsatisfied (configuration)";
-            case ComponentConfigurationDTO.UNSATISFIED_REFERENCE:
-                return "unsatisfied (reference)";
-            default:
-                return String.valueOf(state);
+        case ComponentConfigurationDTO.ACTIVE:
+            return "active";
+        case ComponentConfigurationDTO.SATISFIED:
+            return "satisfied";
+        case ComponentConfigurationDTO.UNSATISFIED_CONFIGURATION:
+            return "unsatisfied (configuration)";
+        case ComponentConfigurationDTO.UNSATISFIED_REFERENCE:
+            return "unsatisfied (reference)";
+        default:
+            return String.valueOf(state);
         }
     }
 }
