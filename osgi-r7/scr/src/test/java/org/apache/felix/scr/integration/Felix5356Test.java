@@ -24,7 +24,7 @@ import java.util.Hashtable;
 import org.apache.felix.scr.integration.components.SimpleService;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.ops4j.pax.exam.junit.JUnit4TestRunner;
+import org.ops4j.pax.exam.junit.PaxExam;
 import org.osgi.framework.InvalidSyntaxException;
 import org.osgi.framework.ServiceReference;
 import org.osgi.service.component.ComponentFactory;
@@ -37,12 +37,9 @@ import junit.framework.TestCase;
  * Tests of nonstandard ComponentFactory behavior
  */
 
-@RunWith(JUnit4TestRunner.class)
+@RunWith(PaxExam.class)
 public class Felix5356Test extends ComponentTestBase
 {
-
-    private static final String PROP_NAME_FACTORY = ComponentTestBase.PROP_NAME + ".factory";
-
     static
     {
         descriptorFile = "/integration_test_simple_factory_components.xml";

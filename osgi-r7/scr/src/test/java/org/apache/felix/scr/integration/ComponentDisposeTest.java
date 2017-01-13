@@ -19,22 +19,19 @@
 package org.apache.felix.scr.integration;
 
 
-import java.lang.reflect.Field;
 import java.util.Collection;
-import java.util.Map;
-
-import junit.framework.Assert;
-import junit.framework.TestCase;
 
 import org.apache.felix.scr.integration.components.SimpleComponent;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.ops4j.pax.exam.junit.JUnit4TestRunner;
-import org.osgi.service.component.ComponentContext;
+import org.ops4j.pax.exam.junit.PaxExam;
 import org.osgi.service.component.runtime.dto.ComponentConfigurationDTO;
 
+import junit.framework.Assert;
+import junit.framework.TestCase;
 
-@RunWith(JUnit4TestRunner.class)
+
+@RunWith(PaxExam.class)
 public class ComponentDisposeTest extends ComponentTestBase
 {
     static
@@ -55,17 +52,17 @@ public class ComponentDisposeTest extends ComponentTestBase
         getConfigurationsDisabledThenEnable(factoryPid, 0, ComponentConfigurationDTO.ACTIVE);//there should be none
 
         // create two factory configurations expecting two components
-        final String pid0 = createFactoryConfiguration( factoryPid, "?" );
-        final String pid1 = createFactoryConfiguration( factoryPid, "?" );
+        createFactoryConfiguration( factoryPid, "?" );
+        createFactoryConfiguration( factoryPid, "?" );
         delay();
 
         Collection<ComponentConfigurationDTO> ccs = findComponentConfigurationsByName(factoryPid, ComponentConfigurationDTO.ACTIVE);
-		Assert.assertEquals(2, ccs.size());
+        Assert.assertEquals(2, ccs.size());
         // expect two components, only first is active, second is disabled
         TestCase.assertEquals( 2, SimpleComponent.INSTANCES.size() );
         for (ComponentConfigurationDTO cc: ccs)
         {
-        	TestCase.assertTrue(SimpleComponent.INSTANCES.containsKey(cc.id));
+            TestCase.assertTrue(SimpleComponent.INSTANCES.containsKey(cc.id));
         }
 
         // dispose an instance
@@ -79,11 +76,8 @@ public class ComponentDisposeTest extends ComponentTestBase
         ComponentConfigurationDTO cc = findComponentConfigurationByName(factoryPid, ComponentConfigurationDTO.ACTIVE);
 
         TestCase.assertEquals( 1, SimpleComponent.INSTANCES.size() );
-    	TestCase.assertTrue(SimpleComponent.INSTANCES.containsKey(cc.id));
+        TestCase.assertTrue(SimpleComponent.INSTANCES.containsKey(cc.id));
 
-        final SimpleComponent instance = SimpleComponent.INSTANCES.values().iterator().next();
-
+        SimpleComponent.INSTANCES.values().iterator().next();
     }
-
-
 }

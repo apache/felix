@@ -18,34 +18,32 @@
  */
 package org.apache.felix.scr.integration;
 
-import java.util.Iterator;
-
-import junit.framework.TestCase;
-
 import org.apache.felix.scr.integration.components.circularFactory.FactoryClient;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.ops4j.pax.exam.junit.JUnit4TestRunner;
+import org.ops4j.pax.exam.junit.PaxExam;
 import org.osgi.framework.ServiceReference;
 
-@RunWith(JUnit4TestRunner.class)
+import junit.framework.TestCase;
+
+@RunWith(PaxExam.class)
 public class CircularFactoryTest extends ComponentTestBase
 {
 
     static
     {
         // uncomment to enable debugging of this test class
-//        paxRunnerVmOption = DEBUG_VM_OPTION;
+        //        paxRunnerVmOption = DEBUG_VM_OPTION;
 
         descriptorFile = "/integration_test_circularFactory.xml";
         COMPONENT_PACKAGE = COMPONENT_PACKAGE + ".circularFactory";
-   }
-    
+    }
+
     @Test
     public void testCircularFactory() throws Exception
     {
         ServiceReference<FactoryClient> sr = bundle.getBundleContext().getServiceReference( FactoryClient.class );
-        FactoryClient fc = bundle.getBundleContext().getService( sr );
+        bundle.getBundleContext().getService( sr );
 
         for ( String message: log.foundWarnings() )
         {

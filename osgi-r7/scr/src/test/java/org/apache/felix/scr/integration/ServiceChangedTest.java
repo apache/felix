@@ -19,17 +19,17 @@
 package org.apache.felix.scr.integration;
 
 
-import junit.framework.TestCase;
-
 import org.apache.felix.scr.integration.components.SimpleComponent;
 import org.apache.felix.scr.integration.components.SimpleServiceImpl;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.ops4j.pax.exam.junit.JUnit4TestRunner;
+import org.ops4j.pax.exam.junit.PaxExam;
 import org.osgi.service.component.runtime.dto.ComponentConfigurationDTO;
 
+import junit.framework.TestCase;
 
-@RunWith(JUnit4TestRunner.class)
+
+@RunWith(PaxExam.class)
 public class ServiceChangedTest extends ComponentTestBase
 {
     static
@@ -46,7 +46,7 @@ public class ServiceChangedTest extends ComponentTestBase
     {
         final SimpleServiceImpl srv1 = SimpleServiceImpl.create( bundleContext, "srv1" );
         String name = "test_optional_single_dynamic_target";
-		getDisabledConfigurationAndEnable(name, ComponentConfigurationDTO.ACTIVE);
+        getDisabledConfigurationAndEnable(name, ComponentConfigurationDTO.ACTIVE);
 
         final SimpleComponent comp10 = SimpleComponent.INSTANCE;
         TestCase.assertNotNull( comp10 );
@@ -107,8 +107,8 @@ public class ServiceChangedTest extends ComponentTestBase
     {
         final SimpleServiceImpl srv1 = SimpleServiceImpl.create( bundleContext, "srv1" );
         String name = "test_required_single_dynamic_target";
-		getDisabledConfigurationAndEnable(name, ComponentConfigurationDTO.ACTIVE);
-		
+        getDisabledConfigurationAndEnable(name, ComponentConfigurationDTO.ACTIVE);
+
         final SimpleComponent comp10 = SimpleComponent.INSTANCE;
         TestCase.assertNotNull( comp10 );
         TestCase.assertEquals( srv1, comp10.m_singleRef );
@@ -166,7 +166,7 @@ public class ServiceChangedTest extends ComponentTestBase
     {
         final SimpleServiceImpl srv1 = SimpleServiceImpl.create( bundleContext, "srv1" );
         String name = "test_optional_multiple_dynamic_target";
-		getDisabledConfigurationAndEnable(name, ComponentConfigurationDTO.ACTIVE);
+        getDisabledConfigurationAndEnable(name, ComponentConfigurationDTO.ACTIVE);
         final SimpleComponent comp10 = SimpleComponent.INSTANCE;
         TestCase.assertNotNull( comp10 );
         TestCase.assertNull( comp10.m_singleRef );
@@ -229,7 +229,7 @@ public class ServiceChangedTest extends ComponentTestBase
     {
         final SimpleServiceImpl srv1 = SimpleServiceImpl.create( bundleContext, "srv1" );
         String name = "test_required_multiple_dynamic_target";
-		getDisabledConfigurationAndEnable(name, ComponentConfigurationDTO.ACTIVE);
+        getDisabledConfigurationAndEnable(name, ComponentConfigurationDTO.ACTIVE);
         final SimpleComponent comp10 = SimpleComponent.INSTANCE;
         TestCase.assertNotNull( comp10 );
         TestCase.assertNull( comp10.m_singleRef );
@@ -292,7 +292,7 @@ public class ServiceChangedTest extends ComponentTestBase
     {
         final SimpleServiceImpl srv1 = SimpleServiceImpl.create( bundleContext, "srv1" );
         String name = "test_optional_single_static_target";
-		getDisabledConfigurationAndEnable(name, ComponentConfigurationDTO.ACTIVE);
+        getDisabledConfigurationAndEnable(name, ComponentConfigurationDTO.ACTIVE);
         final SimpleComponent comp10 = SimpleComponent.INSTANCE;
         TestCase.assertNotNull( comp10 );
         TestCase.assertEquals( srv1, comp10.m_singleRef );
@@ -363,7 +363,7 @@ public class ServiceChangedTest extends ComponentTestBase
     {
         final SimpleServiceImpl srv1 = SimpleServiceImpl.create( bundleContext, "srv1" );
         String name = "test_required_single_static_target";
-		getDisabledConfigurationAndEnable(name, ComponentConfigurationDTO.ACTIVE);
+        getDisabledConfigurationAndEnable(name, ComponentConfigurationDTO.ACTIVE);
         final SimpleComponent comp10 = SimpleComponent.INSTANCE;
         TestCase.assertNotNull( comp10 );
         TestCase.assertEquals( srv1, comp10.m_singleRef );
@@ -429,7 +429,7 @@ public class ServiceChangedTest extends ComponentTestBase
     {
         final SimpleServiceImpl srv1 = SimpleServiceImpl.create( bundleContext, "srv1" );
         String name = "test_optional_multiple_static_target";
-		getDisabledConfigurationAndEnable(name, ComponentConfigurationDTO.ACTIVE);
+        getDisabledConfigurationAndEnable(name, ComponentConfigurationDTO.ACTIVE);
         final SimpleComponent comp10 = SimpleComponent.INSTANCE;
         TestCase.assertNotNull( comp10 );
         TestCase.assertNull( comp10.m_singleRef );
@@ -505,7 +505,7 @@ public class ServiceChangedTest extends ComponentTestBase
     {
         final SimpleServiceImpl srv1 = SimpleServiceImpl.create( bundleContext, "srv1" );
         String name = "test_required_multiple_static_target";
-		getDisabledConfigurationAndEnable(name, ComponentConfigurationDTO.ACTIVE);
+        getDisabledConfigurationAndEnable(name, ComponentConfigurationDTO.ACTIVE);
         final SimpleComponent comp10 = SimpleComponent.INSTANCE;
         TestCase.assertNotNull( comp10 );
         TestCase.assertNull( comp10.m_singleRef );
@@ -567,5 +567,5 @@ public class ServiceChangedTest extends ComponentTestBase
         TestCase.assertFalse( comp13.m_multiRef.contains( srv2 ) );
         TestCase.assertEquals( 1, comp13.m_multiRefBind );
         TestCase.assertEquals( 0, comp13.m_multiRefUnbind);
-   }
+    }
 }

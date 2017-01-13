@@ -20,21 +20,20 @@ package org.apache.felix.scr.integration;
 
 import java.util.Hashtable;
 
-import junit.framework.TestCase;
-
 import org.apache.felix.scr.integration.components.SimpleComponent;
 import org.apache.felix.scr.integration.components.SimpleServiceImpl;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.ops4j.pax.exam.junit.JUnit4TestRunner;
-import org.osgi.framework.InvalidSyntaxException;
+import org.ops4j.pax.exam.junit.PaxExam;
 import org.osgi.framework.ServiceReference;
 import org.osgi.service.component.ComponentConstants;
 import org.osgi.service.component.ComponentFactory;
 import org.osgi.service.component.ComponentInstance;
 import org.osgi.service.component.runtime.dto.ComponentConfigurationDTO;
 
-@RunWith(JUnit4TestRunner.class)
+import junit.framework.TestCase;
+
+@RunWith(PaxExam.class)
 public class ConfigurationChangeTest extends ComponentTestBase
 {
     private static final String PROP_NAME_FACTORY = ComponentTestBase.PROP_NAME + ".factory";
@@ -42,7 +41,7 @@ public class ConfigurationChangeTest extends ComponentTestBase
     static
     {
         // uncomment to enable debugging of this test class
-//         paxRunnerVmOption = DEBUG_VM_OPTION;
+        //         paxRunnerVmOption = DEBUG_VM_OPTION;
 
         descriptorFile = "/integration_test_simple_components_configuration_change.xml";
     }
@@ -111,8 +110,8 @@ public class ConfigurationChangeTest extends ComponentTestBase
         theConfig.put("ref.target", "(value=srv1)");
         configure( pid );
         delay();//all cm event to complete
-        
-		getDisabledConfigurationAndEnable(pid, ComponentConfigurationDTO.ACTIVE);
+
+        getDisabledConfigurationAndEnable(pid, ComponentConfigurationDTO.ACTIVE);
         final SimpleComponent comp10 = SimpleComponent.INSTANCE;
         TestCase.assertNotNull( comp10 );
         TestCase.assertEquals( srv1, comp10.m_singleRef );
@@ -133,7 +132,7 @@ public class ConfigurationChangeTest extends ComponentTestBase
             comp20 = comp10;
             TestCase.assertEquals( 2, comp20.m_singleRefBind );
             TestCase.assertEquals( 1, comp20.m_singleRefUnbind);
-        } 
+        }
         else
         {
             TestCase.assertEquals( 0, comp10.m_modified );
@@ -214,7 +213,7 @@ public class ConfigurationChangeTest extends ComponentTestBase
         theConfig.put("ref.target", "(value=srv1)");
         configure( pid );
         delay();//let cm thread finish before enabling.
-        
+
         getDisabledConfigurationAndEnable(pid, ComponentConfigurationDTO.ACTIVE);
 
         final SimpleComponent comp10 = SimpleComponent.INSTANCE;
@@ -237,7 +236,7 @@ public class ConfigurationChangeTest extends ComponentTestBase
             comp20 = comp10;
             TestCase.assertEquals( 2, comp20.m_multiRefBind );
             TestCase.assertEquals( 1, comp20.m_multiRefUnbind);
-        } 
+        }
         else
         {
             TestCase.assertEquals( 0, comp10.m_modified );
@@ -252,9 +251,9 @@ public class ConfigurationChangeTest extends ComponentTestBase
         TestCase.assertEquals( 1, comp20.m_multiRef.size() );
         TestCase.assertEquals( srv2, comp20.m_multiRef.iterator().next() );
     }
- 
+
     //I'm not sure what should happen in this case, asking on dev list.
-//    @Test
+    //    @Test
     public void testSingleDynamicRequiredFactory() throws Exception
     {
         String pid = "test_required_single_dynamic_factory";
@@ -268,10 +267,10 @@ public class ConfigurationChangeTest extends ComponentTestBase
         configure( pid );
 
         getDisabledConfigurationAndEnable(pid, ComponentConfigurationDTO.ACTIVE); //?????? Not clear what should happen.
-        
+
         // create a component instance
         final ServiceReference[] refs = bundleContext.getServiceReferences( ComponentFactory.class.getName(), "("
-            + ComponentConstants.COMPONENT_FACTORY + "=" + factoryPid + ")" );
+                + ComponentConstants.COMPONENT_FACTORY + "=" + factoryPid + ")" );
         TestCase.assertNotNull( refs );
         TestCase.assertEquals( 1, refs.length );
         final ComponentFactory factory = ( ComponentFactory ) bundleContext.getService( refs[0] );
@@ -305,7 +304,7 @@ public class ConfigurationChangeTest extends ComponentTestBase
             comp20 = comp10;
             TestCase.assertEquals( 2, comp20.m_singleRefBind );
             TestCase.assertEquals( 1, comp20.m_singleRefUnbind);
-        } 
+        }
         else
         {
             TestCase.assertEquals( 0, comp10.m_modified );

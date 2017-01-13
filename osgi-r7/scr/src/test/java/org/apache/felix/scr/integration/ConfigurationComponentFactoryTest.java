@@ -23,7 +23,7 @@ import java.util.Dictionary;
 import org.apache.felix.scr.integration.components.SimpleComponent;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.ops4j.pax.exam.junit.JUnit4TestRunner;
+import org.ops4j.pax.exam.junit.PaxExam;
 import org.osgi.service.cm.Configuration;
 import org.osgi.service.component.ComponentFactory;
 import org.osgi.service.component.runtime.dto.ComponentConfigurationDTO;
@@ -34,7 +34,7 @@ import junit.framework.TestCase;
  * Tests of nonstandard ComponentFactory behavior
  */
 
-@RunWith(JUnit4TestRunner.class)
+@RunWith(PaxExam.class)
 public class ConfigurationComponentFactoryTest extends ComponentTestBase
 {
 

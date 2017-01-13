@@ -21,7 +21,7 @@ package org.apache.felix.scr.integration;
 import org.apache.felix.scr.integration.components.SimpleComponent;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.ops4j.pax.exam.junit.JUnit4TestRunner;
+import org.ops4j.pax.exam.junit.PaxExam;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.ServiceRegistration;
 import org.osgi.service.cm.Configuration;
@@ -32,7 +32,7 @@ import org.osgi.service.component.runtime.dto.ComponentConfigurationDTO;
 
 import junit.framework.TestCase;
 
-@RunWith(JUnit4TestRunner.class)
+@RunWith(PaxExam.class)
 public class LocationTest extends ComponentTestBase
 {
 
@@ -79,6 +79,7 @@ public class LocationTest extends ComponentTestBase
         ConfigurationListener listener = new ConfigurationListener()
         {
 
+            @Override
             public void configurationEvent(ConfigurationEvent event)
             {
                 if ( event.getType() == ConfigurationEvent.CM_LOCATION_CHANGED )
@@ -89,7 +90,7 @@ public class LocationTest extends ComponentTestBase
 
         };
         ServiceRegistration<ConfigurationListener> sr = bundleContext.registerService( ConfigurationListener.class,
-            listener, null );
+                listener, null );
         config.setBundleLocation( null );
         delay();
 
@@ -128,6 +129,7 @@ public class LocationTest extends ComponentTestBase
         ConfigurationListener listener = new ConfigurationListener()
         {
 
+            @Override
             public void configurationEvent(ConfigurationEvent event)
             {
                 if ( event.getType() == ConfigurationEvent.CM_LOCATION_CHANGED )
@@ -138,7 +140,7 @@ public class LocationTest extends ComponentTestBase
 
         };
         ServiceRegistration<ConfigurationListener> sr = bundleContext.registerService( ConfigurationListener.class,
-            listener, null );
+                listener, null );
         config.setBundleLocation( REGION );
         delay();
 

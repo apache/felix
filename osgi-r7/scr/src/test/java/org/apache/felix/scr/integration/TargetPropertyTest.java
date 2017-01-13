@@ -18,30 +18,23 @@
  */
 package org.apache.felix.scr.integration;
 
-import java.util.Hashtable;
-
-import junit.framework.TestCase;
-
 import org.apache.felix.scr.integration.components.SimpleComponent;
 import org.apache.felix.scr.integration.components.SimpleServiceImpl;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.ops4j.pax.exam.junit.JUnit4TestRunner;
-import org.osgi.framework.InvalidSyntaxException;
-import org.osgi.framework.ServiceReference;
-import org.osgi.service.component.ComponentConstants;
-import org.osgi.service.component.ComponentFactory;
-import org.osgi.service.component.ComponentInstance;
+import org.ops4j.pax.exam.junit.PaxExam;
 import org.osgi.service.component.runtime.dto.ComponentConfigurationDTO;
 
-@RunWith(JUnit4TestRunner.class)
+import junit.framework.TestCase;
+
+@RunWith(PaxExam.class)
 public class TargetPropertyTest extends ComponentTestBase
 {
 
     static
     {
         // uncomment to enable debugging of this test class
-//         paxRunnerVmOption = DEBUG_VM_OPTION;
+        //         paxRunnerVmOption = DEBUG_VM_OPTION;
 
         descriptorFile = "/integration_test_target_properties.xml";
     }
@@ -87,26 +80,26 @@ public class TargetPropertyTest extends ComponentTestBase
         final SimpleServiceImpl srv1 = SimpleServiceImpl.create( bundleContext, expected );
         final SimpleServiceImpl srv2 = SimpleServiceImpl.create( bundleContext, "baz" );
 
-		getDisabledConfigurationAndEnable(pid, ComponentConfigurationDTO.ACTIVE);
+        getDisabledConfigurationAndEnable(pid, ComponentConfigurationDTO.ACTIVE);
         checkTarget(expected, srv1);
-        
+
         //configuration not setting target property does not change it
         configure( pid );
         delay();//all cm event to complete
         checkTarget(expected, srv1);
-        
+
         // update configuration to target srv2
         theConfig.put("one.target", "(value=baz)");
         configure( pid );
         delay();
         checkTarget("baz", srv2);
-        
+
         //update configuration removing target property
         theConfig.remove("one.target");
         configure( pid );
         delay();//all cm event to complete
         checkTarget(expected, srv1);
-        
+
     }
 
     void checkTarget(String expected, final SimpleServiceImpl srv1)

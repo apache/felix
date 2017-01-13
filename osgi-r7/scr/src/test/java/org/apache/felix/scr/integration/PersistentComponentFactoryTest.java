@@ -28,7 +28,7 @@ import org.apache.felix.scr.integration.components.SimpleService;
 import org.apache.felix.scr.integration.components.SimpleServiceImpl;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.ops4j.pax.exam.junit.JUnit4TestRunner;
+import org.ops4j.pax.exam.junit.PaxExam;
 import org.osgi.framework.InvalidSyntaxException;
 import org.osgi.service.component.ComponentFactory;
 import org.osgi.service.component.ComponentInstance;
@@ -37,7 +37,7 @@ import org.osgi.service.log.LogService;
 
 import junit.framework.TestCase;
 
-@RunWith(JUnit4TestRunner.class)
+@RunWith(PaxExam.class)
 public class PersistentComponentFactoryTest extends ComponentTestBase
 {
 
@@ -160,8 +160,8 @@ public class PersistentComponentFactoryTest extends ComponentTestBase
     }
 
     private ComponentInstance testConfiguredFactory(final String componentname, final String componentfactory,
-        boolean optional, boolean expectComponent)
-        throws InvocationTargetException, InterruptedException, InvalidSyntaxException
+            boolean optional, boolean expectComponent)
+                    throws InvocationTargetException, InterruptedException, InvalidSyntaxException
     {
         // ensure there is no configuration for the component
         deleteConfig( componentname );
@@ -193,7 +193,7 @@ public class PersistentComponentFactoryTest extends ComponentTestBase
 
         checkConfigurationCount( componentname, 1, ComponentConfigurationDTO.ACTIVE );
 
-        // delete config, ensure factory is not active anymore and component instance gone 
+        // delete config, ensure factory is not active anymore and component instance gone
         //(configuration required >> dispose of instance.  Also for pre-1.3 components, removing config unconditionally
         //deactivates component.
         deleteConfig( componentname );
@@ -258,7 +258,7 @@ public class PersistentComponentFactoryTest extends ComponentTestBase
         checkConfigurationCount( componentname, 1, ComponentConfigurationDTO.UNSATISFIED_REFERENCE );
 
         final SimpleServiceImpl noMatch = SimpleServiceImpl.create( bundleContext, "nomatch" ).setFilterProperty(
-            "nomatch" );
+                "nomatch" );
         delay();
 
         TestCase.assertNotNull( instanceNonMatch.getInstance() );
@@ -300,7 +300,7 @@ public class PersistentComponentFactoryTest extends ComponentTestBase
         //set up the component that refers to the service the factory will create.
         final String referringComponentName = "ComponentReferringToFactoryObject";
         getConfigurationsDisabledThenEnable( referringComponentName, 1,
-            ComponentConfigurationDTO.UNSATISFIED_REFERENCE );
+                ComponentConfigurationDTO.UNSATISFIED_REFERENCE );
 
         final String componentname = "factory.component.referred";
         final String componentfactory = "factory.component.factory.referred";

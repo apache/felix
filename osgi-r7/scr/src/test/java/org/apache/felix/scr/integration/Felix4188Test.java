@@ -28,13 +28,10 @@ import java.util.concurrent.CountDownLatch;
 
 import javax.inject.Inject;
 
-import junit.framework.Assert;
-import junit.framework.TestCase;
-
 import org.apache.felix.scr.integration.components.felix4188.Felix4188Component;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.ops4j.pax.exam.junit.JUnit4TestRunner;
+import org.ops4j.pax.exam.junit.PaxExam;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.BundleException;
@@ -43,21 +40,24 @@ import org.osgi.framework.InvalidSyntaxException;
 import org.osgi.framework.ServiceReference;
 import org.osgi.service.component.runtime.dto.ComponentConfigurationDTO;
 
+import junit.framework.Assert;
+import junit.framework.TestCase;
+
 /**
  * This test validates the FELIX-4188 issue.
  */
-@RunWith(JUnit4TestRunner.class)
+@RunWith(PaxExam.class)
 public class Felix4188Test extends ComponentTestBase
 {
 
     static
     {
         // uncomment to enable debugging of this test class
-//                paxRunnerVmOption = DEBUG_VM_OPTION;
+        //                paxRunnerVmOption = DEBUG_VM_OPTION;
         descriptorFile = "/integration_test_FELIX_4188.xml";
-//        restrictedLogging = true;
+        //        restrictedLogging = true;
         //comment to get debug logging if the test fails.
-//        DS_LOGLEVEL = "warn";
+        //        DS_LOGLEVEL = "warn";
     }
 
     @Inject
@@ -83,6 +83,7 @@ public class Felix4188Test extends ComponentTestBase
         final CountDownLatch latch = new CountDownLatch(1);
 
         new Thread() {
+            @Override
             public void run() {
                 Bundle scrBundle = scrTracker.getServiceReference().getBundle();
                 try {

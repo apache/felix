@@ -19,18 +19,18 @@
 package org.apache.felix.scr.integration;
 
 
-import junit.framework.TestCase;
-
 import org.apache.felix.scr.integration.components.ActivatorComponent;
 import org.apache.felix.scr.integration.components.SimpleServiceImpl;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.ops4j.pax.exam.junit.JUnit4TestRunner;
+import org.ops4j.pax.exam.junit.PaxExam;
 import org.osgi.framework.ServiceReference;
 import org.osgi.service.component.runtime.dto.ComponentConfigurationDTO;
 
+import junit.framework.TestCase;
 
-@RunWith(JUnit4TestRunner.class)
+
+@RunWith(PaxExam.class)
 public class ComponentActivationTest extends ComponentTestBase
 {
 
@@ -121,9 +121,9 @@ public class ComponentActivationTest extends ComponentTestBase
 
         ActivatorComponent ac = ActivatorComponent.getInstance();
         TestCase.assertNotNull( ac.getSimpleService() );
-        
+
         disableAndCheck( cc );
-        
+
         TestCase.assertNull( ac.getSimpleService() );
     }
 
@@ -141,7 +141,7 @@ public class ComponentActivationTest extends ComponentTestBase
 
         disableAndCheck( cc );
     }
-    
+
     @Test
     public void test_activate_service_factory_register_service() throws Exception
     {
@@ -155,7 +155,7 @@ public class ComponentActivationTest extends ComponentTestBase
 
         disableAndCheck( cc );
     }
-    
+
     @Test
     public void test_activate_register_service_single_static_dependency() throws Exception
     {
@@ -202,15 +202,15 @@ public class ComponentActivationTest extends ComponentTestBase
         ComponentConfigurationDTO cc = getDisabledConfigurationAndEnable(componentname, ComponentConfigurationDTO.UNSATISFIED_REFERENCE);
 
         SimpleServiceImpl ss = SimpleServiceImpl.create( bundleContext, "foo" );
-        
+
         findComponentConfigurationByName(componentname, ComponentConfigurationDTO.SATISFIED);
 
         ServiceReference<ActivatorComponent> ref = bundleContext.getServiceReference( ActivatorComponent.class );
-        
+
         ss.drop();
         findComponentConfigurationByName(componentname, ComponentConfigurationDTO.UNSATISFIED_REFERENCE);
 
-        
+
         TestCase.assertNull(bundleContext.getServiceReference( ActivatorComponent.class ));
         ss = SimpleServiceImpl.create( bundleContext, "foo" );
         ref = bundleContext.getServiceReference( ActivatorComponent.class );

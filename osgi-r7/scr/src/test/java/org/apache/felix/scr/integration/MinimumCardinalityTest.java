@@ -18,37 +18,36 @@
  */
 package org.apache.felix.scr.integration;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Hashtable;
 import java.util.List;
 
-import junit.framework.TestCase;
-
 import org.apache.felix.scr.integration.components.SimpleComponent;
 import org.apache.felix.scr.integration.components.SimpleServiceImpl;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.ops4j.pax.exam.junit.JUnit4TestRunner;
+import org.ops4j.pax.exam.junit.PaxExam;
 import org.osgi.service.cm.Configuration;
 import org.osgi.util.tracker.ServiceTracker;
 
-@RunWith(JUnit4TestRunner.class)
+@RunWith(PaxExam.class)
 public class MinimumCardinalityTest extends ComponentTestBase
 {
-    
+
     private static final String pid = "MinimumCardinality";
-    
+
     static
     {
         descriptorFile = "/integration_test_min_cardinality.xml";
         // uncomment to enable debugging of this test class
-//         paxRunnerVmOption = DEBUG_VM_OPTION;
-        COMPONENT_PACKAGE = COMPONENT_PACKAGE;
+        //         paxRunnerVmOption = DEBUG_VM_OPTION;
     }
-    
+
     @Test
     public void testMinCardinality() throws Exception
     {
@@ -64,11 +63,11 @@ public class MinimumCardinalityTest extends ComponentTestBase
         onePresent( tracker, "2" );
         onePresent( tracker, new int[] {4, 0} );
         onePresent( tracker, null );
-        
+
         configureOne(1);
         required(tracker, 1);
         onePresent( tracker, null );
-        
+
         getConfigurationAdmin().getConfiguration( pid, null ).delete();
         delay();
         assertNull(tracker.getService());
@@ -77,14 +76,14 @@ public class MinimumCardinalityTest extends ComponentTestBase
         manyPresent( tracker, "-1" );
         manyPresent( tracker, new int[] {-4, 0} );
         manyPresent( tracker, null );
-        
+
         configureMany(1);
         required(tracker, 1);
         configureMany(5);
         required(tracker, 5);
         manyPresent( tracker, null );
     }
-    
+
     private void required(ServiceTracker<SimpleComponent, SimpleComponent> tracker, int count)
     {
         delay();
@@ -109,7 +108,7 @@ public class MinimumCardinalityTest extends ComponentTestBase
         assertNotNull(tracker.getService());
         assertEquals(1, tracker.getServices().length);
     }
-    
+
     private void configureOne(Object value ) throws IOException
     {
         configureTarget( "one.cardinality.minimum", value );
@@ -122,7 +121,7 @@ public class MinimumCardinalityTest extends ComponentTestBase
         assertNotNull(tracker.getService());
         assertEquals(1, tracker.getServices().length);
     }
-    
+
     private void configureMany(Object value ) throws IOException
     {
         configureTarget( "many.cardinality.minimum", value );
