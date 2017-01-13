@@ -23,8 +23,6 @@ import java.util.Hashtable;
 
 import org.apache.felix.inventory.Format;
 import org.apache.felix.inventory.InventoryPrinter;
-import org.json.JSONException;
-import org.json.JSONWriter;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceRegistration;
@@ -51,15 +49,15 @@ class MetatypeInventoryPrinter implements InventoryPrinter
         this.metatype = metatype;
 
         this.registration = bundleContext.registerService(InventoryPrinter.SERVICE, this,
-            new Hashtable<String, Object>()
+                new Hashtable<String, Object>()
+        {
             {
-                {
-                    put(InventoryPrinter.NAME, "metatype");
-                    put(InventoryPrinter.TITLE, "Metatype Service");
-                    put(InventoryPrinter.FORMAT, new String[]
+                put(InventoryPrinter.NAME, "metatype");
+                put(InventoryPrinter.TITLE, "Metatype Service");
+                put(InventoryPrinter.FORMAT, new String[]
                         { Format.TEXT.toString(), Format.JSON.toString() });
-                }
-            });
+            }
+        });
     }
 
     void unregister()
@@ -165,21 +163,16 @@ class MetatypeInventoryPrinter implements InventoryPrinter
         {
             switch (defaultValue.length)
             {
-                case 0: // ignore
-                    break;
+            case 0: // ignore
+                break;
 
-                case 1:
-                    pw.keyValue("default", defaultValue[0]);
-                    break;
+            case 1:
+                pw.keyValue("default", defaultValue[0]);
+                break;
 
-                default:
-                    pw.list("default");
-                    for (String value : defaultValue)
-                    {
-                        pw.entry(value);
-                    }
-                    pw.endList();
-                    break;
+            default:
+                pw.list("default", defaultValue);
+                break;
             }
         }
     }
@@ -202,32 +195,32 @@ class MetatypeInventoryPrinter implements InventoryPrinter
     {
         switch (type)
         {
-            case AttributeDefinition.BIGDECIMAL:
-                return "BigDecimal";
-            case AttributeDefinition.BIGINTEGER:
-                return "BigInteger";
-            case AttributeDefinition.BOOLEAN:
-                return "Boolean";
-            case AttributeDefinition.BYTE:
-                return "Byte";
-            case AttributeDefinition.CHARACTER:
-                return "Character";
-            case AttributeDefinition.DOUBLE:
-                return "Double";
-            case AttributeDefinition.FLOAT:
-                return "Float";
-            case AttributeDefinition.INTEGER:
-                return "Integer";
-            case AttributeDefinition.LONG:
-                return "Long";
-            case AttributeDefinition.SHORT:
-                return "Short";
-            case AttributeDefinition.STRING:
-                return "String";
-            case 12 /* PASSWORD */:
-                return "Password";
-            default:
-                return String.valueOf(type);
+        case AttributeDefinition.BIGDECIMAL:
+            return "BigDecimal";
+        case AttributeDefinition.BIGINTEGER:
+            return "BigInteger";
+        case AttributeDefinition.BOOLEAN:
+            return "Boolean";
+        case AttributeDefinition.BYTE:
+            return "Byte";
+        case AttributeDefinition.CHARACTER:
+            return "Character";
+        case AttributeDefinition.DOUBLE:
+            return "Double";
+        case AttributeDefinition.FLOAT:
+            return "Float";
+        case AttributeDefinition.INTEGER:
+            return "Integer";
+        case AttributeDefinition.LONG:
+            return "Long";
+        case AttributeDefinition.SHORT:
+            return "Short";
+        case AttributeDefinition.STRING:
+            return "String";
+        case 12 /* PASSWORD */:
+            return "Password";
+        default:
+            return String.valueOf(type);
         }
     }
 
@@ -257,13 +250,9 @@ class MetatypeInventoryPrinter implements InventoryPrinter
 
         void endGroup();
 
-        void list(String name);
+        void list(String name, String[] values);
 
-        void entry(String value);
-
-        void endList();
-
-        void keyValue(String key, Object value);
+        void keyValue(String key, String value);
 
     }
 
@@ -274,14 +263,11 @@ class MetatypeInventoryPrinter implements InventoryPrinter
 
         private String indent;
 
-        private boolean inList;
-
         TextPrinter(final PrintWriter pw)
         {
             this.pw = pw;
 
             this.indent = "";
-            this.inList = false;
         }
 
         public void start()
@@ -306,31 +292,23 @@ class MetatypeInventoryPrinter implements InventoryPrinter
             }
         }
 
-        public void list(String name)
+        public void list(String name, String[] values)
         {
             this.pw.printf("%s%s: [", indent, name);
-        }
-
-        public void entry(String value)
-        {
-            if (this.inList)
+            boolean first = true;
+            for (String val : values)
             {
-                this.pw.print(", ");
+                if (first) {
+                    first = false;
+                } else {
+                    this.pw.print(", ");
+                }
+                this.pw.print(val);
             }
-            else
-            {
-                this.inList = true;
-            }
-            this.pw.print(value);
-        }
-
-        public void endList()
-        {
-            this.inList = false;
             this.pw.println("]");
         }
 
-        public void keyValue(String key, Object value)
+        public void keyValue(String key, String value)
         {
             this.pw.printf("%s%s: %s%n", indent, key, value);
         }
@@ -338,108 +316,123 @@ class MetatypeInventoryPrinter implements InventoryPrinter
 
     private static class JsonPrinter implements Printer
     {
+        private boolean needsComma;
 
-        private final JSONWriter pw;
+        private final PrintWriter pw;
 
         JsonPrinter(final PrintWriter pw)
         {
-            this.pw = new JSONWriter(pw);
+            this.pw = pw;
         }
 
         public void start()
         {
-            try
-            {
-                this.pw.object();
-            }
-            catch (JSONException ignore)
-            {
-                throw new RuntimeException(ignore);
-            }
+            this.pw.print('{');
         }
 
         public void end()
         {
-            try
-            {
-                this.pw.endObject();
+            this.pw.print('}');
+        }
+
+        private void key(String name) {
+            if (needsComma) {
+                this.pw.print(',');
             }
-            catch (JSONException ignore)
-            {
-                throw new RuntimeException(ignore);
-            }
+            this.pw.print('"');
+            this.pw.print(name);
+            this.pw.print("\" : ");
         }
 
         public void group(String name)
         {
-            try
-            {
-                this.pw.key(name).object();
-            }
-            catch (JSONException ignore)
-            {
-                throw new RuntimeException(ignore);
-            }
+            this.key(name);
+            this.pw.print('{');
+            this.needsComma = false;
         }
 
         public void endGroup()
         {
-            try
-            {
-                this.pw.endObject();
+            this.pw.print('}');
+            this.needsComma = true;
+        }
+
+        public void list(String name, String[] values)
+        {
+            this.key(name);
+            this.pw.print('[');
+            boolean first = true;
+            for (String val : values) {
+                if (first) {
+                    first = false;
+                } else {
+                    this.pw.print(',');
+                }
+                value(val);
             }
-            catch (JSONException ignore)
-            {
-                throw new RuntimeException(ignore);
+            this.pw.print(']');
+            this.needsComma = true;
+        }
+
+        private void value(String value)
+        {
+            if (value == null) {
+                this.pw.print("null");
+            } else {
+                this.pw.print('"');
+                // escape the value
+                final int len = value.length();
+                for(int i=0;i<len;i++){
+                    final char c = value.charAt(i);
+                    switch(c){
+                    case '"':
+                        this.pw.print("\\\"");
+                        break;
+                    case '\\':
+                        this.pw.print("\\\\");
+                        break;
+                    case '\b':
+                        this.pw.print("\\b");
+                        break;
+                    case '\f':
+                        this.pw.print("\\f");
+                        break;
+                    case '\n':
+                        this.pw.print("\\n");
+                        break;
+                    case '\r':
+                        this.pw.print("\\r");
+                        break;
+                    case '\t':
+                        this.pw.print("\\t");
+                        break;
+                    case '/':
+                        this.pw.print("\\/");
+                        break;
+                    default:
+                        if ((c>='\u0000' && c<='\u001F') || (c>='\u007F' && c<='\u009F') || (c>='\u2000' && c<='\u20FF'))
+                        {
+                            final String hex=Integer.toHexString(c);
+                            this.pw.print("\\u");
+                            for(int k=0;k<4-hex.length();k++){
+                                this.pw.print('0');
+                            }
+                            this.pw.print(hex.toUpperCase());
+                        }
+                        else{
+                            this.pw.print(c);
+                        }
+                    }
+                }
+                this.pw.print('"');
             }
         }
 
-        public void list(String name)
+        public void keyValue(String key, String value)
         {
-            try
-            {
-                this.pw.key(name).array();
-            }
-            catch (JSONException ignore)
-            {
-                throw new RuntimeException(ignore);
-            }
-        }
-
-        public void entry(String value)
-        {
-            try
-            {
-                this.pw.value(value);
-            }
-            catch (JSONException ignore)
-            {
-                throw new RuntimeException(ignore);
-            }
-        }
-
-        public void endList()
-        {
-            try
-            {
-                this.pw.endArray();
-            }
-            catch (JSONException ignore)
-            {
-                throw new RuntimeException(ignore);
-            }
-        }
-
-        public void keyValue(String key, Object value)
-        {
-            try
-            {
-                this.pw.key(key).value(value);
-            }
-            catch (JSONException ignore)
-            {
-                throw new RuntimeException(ignore);
-            }
+            key(key);
+            value(value);
+            this.needsComma = true;
         }
     }
 }

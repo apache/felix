@@ -22,7 +22,7 @@
     <parent>
         <groupId>org.apache.felix</groupId>
         <artifactId>felix-parent</artifactId>
-        <version>2.1</version>
+        <version>4</version>
         <relativePath>../../../pom/pom.xml</relativePath>
     </parent>
 
@@ -44,18 +44,9 @@
     <build>
         <plugins>
             <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-compiler-plugin</artifactId>
-                <configuration>
-                    <source>1.5</source>
-                    <target>1.5</target>
-                </configuration>
-            </plugin>
-            
-            <plugin>
                 <groupId>org.apache.felix</groupId>
                 <artifactId>maven-bundle-plugin</artifactId>
-                <version>2.3.4</version>
+                <version>3.2.0</version>
                 <extensions>true</extensions>
                 <configuration>
                     <instructions>
@@ -65,10 +56,20 @@
                         <Bundle-Activator>
                             org.apache.felix.webconsole.plugins.metatype.internal.Activator
                         </Bundle-Activator>
+                        <Import-Package>
+                            !org.osgi.service.metatype,*
+                        </Import-Package>
                         <DynamicImport-Package>
                             org.osgi.service.metatype; version="[1.1,2)"
                         </DynamicImport-Package>
                     </instructions>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-javadoc-plugin</artifactId>
+                <configuration>
+                    <excludePackageNames>org.apache.felix.webconsole.plugins.metatype.internal</excludePackageNames>
                 </configuration>
             </plugin>
         </plugins>
@@ -91,12 +92,6 @@
             <groupId>org.apache.felix</groupId>
             <artifactId>org.apache.felix.inventory</artifactId>
             <version>1.0.0</version>
-            <scope>provided</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.json</groupId>
-            <artifactId>json</artifactId>
-            <version>20070829</version>
             <scope>provided</scope>
         </dependency>
     </dependencies>
