@@ -28,9 +28,9 @@ import org.osgi.service.component.ComponentContext;
 public class FieldActivatorComponent
 {
     public @interface Config {
-        String email() default "bar";
-        int port() default 443;
-        long test() default 5;
+        String email() default "bar"; // property in component xml with value foo
+        int port() default 443; // property in component xml with value 80
+        long test() default 5; // no property in component xml, will be 0
     }
 
     private BundleContext bundle;
@@ -41,7 +41,18 @@ public class FieldActivatorComponent
 
     private Config annotation;
 
-    public String test()
+    private boolean activated;
+
+    private String activationTest;
+
+    @SuppressWarnings("unused")
+    private void activator() {
+        // everything should be set here already
+        activationTest = check();
+        activated = true;
+    }
+
+    private String check()
     {
         if ( bundle == null ) {
             return "bundle is null";
@@ -76,4 +87,13 @@ public class FieldActivatorComponent
         return null;
     }
 
+    public String test() {
+        if ( !activated ) {
+            return "activate not called";
+        }
+        if ( activationTest != null ) {
+            return "not set before activate: " + activationTest;
+        }
+        return check();
+    }
 }
