@@ -68,7 +68,7 @@ function entry( /* Object */ dataEntry ) {
 		_.find('li:eq(1)').removeClass('ui-helper-hidden').click(function() { changeDataEntryState(idPath, 'disable') });
 	}
 	if ( dataEntry.configurable ) _.find('li:eq(2)').removeClass('ui-helper-hidden').click(function() { // configure
-		changeDataEntryState(dataEntry.pid, 'configure');
+		changeDataEntryState(dataEntry.configurable, 'configure');
 	});	
 }
 
