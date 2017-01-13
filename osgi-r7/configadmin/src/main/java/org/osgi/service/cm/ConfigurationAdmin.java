@@ -240,71 +240,65 @@ public interface ConfigurationAdmin {
 	public Configuration getConfiguration(String pid) throws IOException;
 
     /**
-     * Get an existing or new {@code Configuration} object from the persistent
-     * store.
-     *
-     * The PID for this {@code Configuration} object is generated from the
-     * provided factory PID and the alias by starting with the factory PID
-     * appending the character # and then appending the alias.
-     *
-     * <p>
-     * If a {@code Configuration} with this PID already exists in Configuration
-     * Admin service return it. The location parameter is ignored in this case
-     * though it is still used for a security check.
-     *
-     * <p>
-     * Else, return a new {@code Configuration} object. This new object is bound
-     * to the location and the properties are set to {@code null}. If the
-     * location parameter is {@code null}, it will be set when a Managed Service
-     * with the corresponding PID is registered for the first time. If the
-     * location starts with {@code ?} then the configuration is bound to all
-     * targets that are registered with the corresponding PID.
-     *
-     * @param factoryPid PID of factory (not {@code null}).
-     * @param alias An alias for {@code Configuration} (not {@code null}).
-     * @param location The bundle location string, or {@code null}.
-     * @return An existing or new {@code Configuration} object.
-     * @throws IOException if access to persistent storage fails.
-     * @throws SecurityException when the require permissions are not available
-     * @security ConfigurationPermission[*,CONFIGURE] if location is
-     *           {@code null} or if the returned configuration {@code c} already
-     *           exists and c.location is {@code null}
-     * @security ConfigurationPermission[location,CONFIGURE] if location is not
-     *           {@code null}
-     * @security ConfigurationPermission[c.location,CONFIGURE] if the returned
-     *           configuration {@code c} already exists and c.location is not
-     *           {@code null}
-     * @since 1.6
-     */
-	public Configuration getFactoryConfiguration(String factoryPid, String alias, String location) throws IOException;
+	 * Get an existing or new {@code Configuration} object from the persistent
+	 * store. The PID for this {@code Configuration} object is generated from
+	 * the provided factory PID and the name by starting with the factory PID
+	 * appending the character ~ (tilde) and then appending the name.
+	 * <p>
+	 * If a {@code Configuration} with this PID already exists in Configuration
+	 * Admin service return it. The location parameter is ignored in this case
+	 * though it is still used for a security check.
+	 * <p>
+	 * Else, return a new {@code Configuration} object. This new object is bound
+	 * to the location and the properties are set to {@code null}. If the
+	 * location parameter is {@code null}, it will be set when a Managed Service
+	 * with the corresponding PID is registered for the first time. If the
+	 * location starts with {@code ?} then the configuration is bound to all
+	 * targets that are registered with the corresponding PID.
+	 *
+	 * @param factoryPid PID of factory (not {@code null}).
+	 * @param name A name for {@code Configuration} (not {@code null}).
+	 * @param location The bundle location string, or {@code null}.
+	 * @return An existing or new {@code Configuration} object.
+	 * @throws IOException if access to persistent storage fails.
+	 * @throws SecurityException when the require permissions are not available
+	 * @security ConfigurationPermission[*,CONFIGURE] if location is
+	 *           {@code null} or if the returned configuration {@code c} already
+	 *           exists and c.location is {@code null}
+	 * @security ConfigurationPermission[location,CONFIGURE] if location is not
+	 *           {@code null}
+	 * @security ConfigurationPermission[c.location,CONFIGURE] if the returned
+	 *           configuration {@code c} already exists and c.location is not
+	 *           {@code null}
+	 * @since 1.6
+	 */
+	public Configuration getFactoryConfiguration(String factoryPid, String name,
+			String location) throws IOException;
 
     /**
-     * Get an existing or new {@code Configuration} object from the persistent
-     * store.
-     *
-     * The PID for this {@code Configuration} object is generated from the
-     * provided factory PID and the alias by starting with the factory PID
-     * appending the character # and then appending the alias.
-     *
-     * If the {@code Configuration} object for this PID does not exist, create a
-     * new {@code Configuration} object for that PID, where properties are
-     * {@code null}. Bind its location to the calling bundle's location.
-     *
-     * <p>
-     * Otherwise, if the location of the existing {@code Configuration} object
-     * is {@code null}, set it to the calling bundle's location.
-     *
-     * @param factoryPid PID of factory (not {@code null}).
-     * @param alias An alias for {@code Configuration} (not {@code null}).
-     * @return an existing or new {@code Configuration} matching the PID.
-     * @throws IOException if access to persistent storage fails.
-     * @throws SecurityException when the required permission is not available
-     * @security ConfigurationPermission[c.location,CONFIGURE] If the
-     *           configuration {@code c} already exists and c.location is not
-     *           {@code null}
-     * @since 1.6
-     */
-	public Configuration getFactoryConfiguration(String factoryPid, String alias) throws IOException;
+	 * Get an existing or new {@code Configuration} object from the persistent
+	 * store. The PID for this {@code Configuration} object is generated from
+	 * the provided factory PID and the name by starting with the factory PID
+	 * appending the character ~ (tilde) and then appending the name. If the
+	 * {@code Configuration} object for this PID does not exist, create a new
+	 * {@code Configuration} object for that PID, where properties are
+	 * {@code null}. Bind its location to the calling bundle's location.
+	 * <p>
+	 * Otherwise, if the location of the existing {@code Configuration} object
+	 * is {@code null}, set it to the calling bundle's location.
+	 *
+	 * @param factoryPid PID of factory (not {@code null}).
+	 * @param name A name for {@code Configuration} (not {@code null}).
+	 * @return an existing or new {@code Configuration} matching the PID.
+	 * @throws IOException if access to persistent storage fails.
+	 * @throws SecurityException when the required permission is not available
+	 * @security ConfigurationPermission[c.location,CONFIGURE] If the
+	 *           configuration {@code c} already exists and c.location is not
+	 *           {@code null}
+	 * @since 1.6
+	 */
+	public Configuration getFactoryConfiguration(String factoryPid, String name)
+			throws IOException;
 
 	/**
 	 * List the current {@code Configuration} objects which match the filter.

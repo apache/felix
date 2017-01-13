@@ -1,5 +1,5 @@
 /*
- * Copyright (c) OSGi Alliance (2001, 2016). All Rights Reserved.
+ * Copyright (c) OSGi Alliance (2001, 2017). All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -74,10 +74,11 @@ import org.osgi.framework.ServiceReference;
 public interface Configuration {
 	/**
 	 * Configuration Attributes.
+	 * @since 1.6
 	 */
 	enum ConfigurationAttribute {
 		/**
-		 * Mark the configuration as readonly.
+		 * The configuration is read only.
 		 */
 		READ_ONLY
 	}
@@ -111,33 +112,35 @@ public interface Configuration {
 	public Dictionary<String, Object> getProperties();
 
     /**
-     * Return the modified properties of this {@code Configuration} object.
-     *
-     * The {@code Dictionary} object returned is a private copy for the caller
-     * and may be changed without influencing the stored configuration. The keys
-     * in the returned dictionary are case insensitive and are always of type
-     * {@code String}.
-     *
-     * <p>
-     * Before the properties are returned they are run through all
-     * registered {@link ConfigurationPlugin}s handling the configuration
-     * for this PID.
-     *
-     * <p>
-     * If called just after the configuration is created and before update has
-     * been called, this method returns {@code null}.
-     *
-     * @return A private copy of the properties for the caller or {@code null}.
-     *         These properties must not contain the "service.bundleLocation"
-     *         property. The value of this property may be obtained from the
-     *         {@link #getBundleLocation()} method.
-     * @throws IllegalStateException If this configuration has been deleted.
-     */
-    public Dictionary<String, Object> getProcessedProperties(ServiceReference<ManagedService> reference);
+	 * Return the processed properties of this {@code Configuration} object.
+	 * <p>
+	 * The {@code Dictionary} object returned is a private copy for the caller
+	 * and may be changed without influencing the stored configuration. The keys
+	 * in the returned dictionary are case insensitive and are always of type
+	 * {@code String}.
+	 * <p>
+	 * Before the properties are returned they are processed by all the
+	 * registered {@link ConfigurationPlugin}s handling this configuration.
+	 * <p>
+	 * If called just after the configuration is created and before update has
+	 * been called, this method returns {@code null}.
+	 *
+	 * @param reference The reference to the Managed Service or Managed Service
+	 *            Factory to pass to the registered {@link ConfigurationPlugin}s
+	 *            handling this configuration. Must not be {@code null}.
+	 * @return A private copy of the processed properties for the caller or
+	 *         {@code null}. These properties must not contain the
+	 *         "service.bundleLocation" property. The value of this property may
+	 *         be obtained from the {@link #getBundleLocation()} method.
+	 * @throws IllegalStateException If this configuration has been deleted.
+	 * @since 1.6
+	 */
+	public Dictionary<String,Object> getProcessedProperties(
+			ServiceReference< ? > reference);
 
     /**
 	 * Update the properties of this {@code Configuration} object.
-	 *
+	 * <p>
 	 * Stores the properties in persistent storage after adding or overwriting
 	 * the following properties:
 	 * <ul>
@@ -146,41 +149,40 @@ public interface Configuration {
 	 * to the factory PID else it is not set.</li>
 	 * </ul>
 	 * These system properties are all of type {@code String}.
-	 *
 	 * <p>
 	 * If the corresponding Managed Service/Managed Service Factory is
 	 * registered, its updated method must be called asynchronously. Else, this
 	 * callback is delayed until aforementioned registration occurs.
-	 *
 	 * <p>
 	 * Also notifies all Configuration Listeners with a
 	 * {@link ConfigurationEvent#CM_UPDATED} event.
 	 *
 	 * @param properties the new set of properties for this configuration
-	 * @throws ReadOnlyConfigurationException if the configuration is locked
+	 * @throws ReadOnlyConfigurationException If the configuration is
+	 *             {@link ConfigurationAttribute#READ_ONLY read only}.
 	 * @throws IOException if update cannot be made persistent
 	 * @throws IllegalArgumentException if the {@code Dictionary} object
-	 *         contains invalid configuration types or contains case variants of
-	 *         the same key name.
+	 *             contains invalid configuration types or contains case
+	 *             variants of the same key name.
 	 * @throws IllegalStateException If this configuration has been deleted.
 	 */
 	public void update(Dictionary<String, ?> properties) throws IOException;
 
 	/**
 	 * Delete this {@code Configuration} object.
-	 *
+	 * <p>
 	 * Removes this configuration object from the persistent store. Notify
 	 * asynchronously the corresponding Managed Service or Managed Service
 	 * Factory. A {@link ManagedService} object is notified by a call to its
 	 * {@code updated} method with a {@code null} properties argument. A
 	 * {@link ManagedServiceFactory} object is notified by a call to its
 	 * {@code deleted} method.
-	 *
 	 * <p>
 	 * Also notifies all Configuration Listeners with a
 	 * {@link ConfigurationEvent#CM_DELETED} event.
 	 *
-     * @throws ReadOnlyConfigurationException if the configuration is locked
+	 * @throws ReadOnlyConfigurationException If the configuration is
+	 *             {@link ConfigurationAttribute#READ_ONLY read only}.
 	 * @throws IOException If delete fails.
 	 * @throws IllegalStateException If this configuration has been deleted.
 	 */
@@ -197,10 +199,8 @@ public interface Configuration {
 
 	/**
 	 * Update the {@code Configuration} object with the current properties.
-	 *
 	 * Initiate the {@code updated} callback to the Managed Service or Managed
 	 * Service Factory with the current properties asynchronously.
-	 *
 	 * <p>
 	 * This is the only way for a bundle that uses a Configuration Plugin
 	 * service to initiate a callback. For example, when that bundle detects a
@@ -209,27 +209,29 @@ public interface Configuration {
 	 *
 	 * @see ConfigurationPlugin
 	 * @throws IOException if update cannot access the properties in persistent
-	 *         storage
+	 *             storage
 	 * @throws IllegalStateException If this configuration has been deleted.
 	 */
 	public void update() throws IOException;
 
 	/**
 	 * Update the properties of this {@code Configuration} object if the
-	 * provided properties are different than the currently stored set
+	 * provided properties are different than the currently stored set.
 	 * Properties are compared as follows.
 	 * <ul>
-	 * <li>scalars are compared using equals()
-	 * <li>arrays are compared using Arrays.equals()
-	 * <li>Collections are compared using equals()
+	 * <li>scalars are compared using equals()</li>
+	 * <li>arrays are compared using Arrays.equals()</li>
+	 * <li>Collections are compared using equals()</li>
 	 * </ul>
-	 * If the properties compare the same, no operation is performed, otherwise
-	 * the behaviour is identical to the update(Dictionary) method.
+	 * If the new properties are not different than the current properties, no
+	 * operation is performed. Otherwise, the behavior of this method is
+	 * identical to the {@link #update(Dictionary)} method.
 	 * 
-	 * @param properties the new set of properties for this configuration
-	 * @throws ReadOnlyConfigurationException If the configuration is locked
-	 * @throws IOException if update cannot be made persistent
-	 * @throws IllegalArgumentException if the {@code Dictionary} object
+	 * @param properties The new set of properties for this configuration.
+	 * @throws ReadOnlyConfigurationException If the configuration is
+	 *             {@link ConfigurationAttribute#READ_ONLY read only}.
+	 * @throws IOException If update cannot be made persistent.
+	 * @throws IllegalArgumentException If the {@code Dictionary} object
 	 *             contains invalid configuration types or contains case
 	 *             variants of the same key name.
 	 * @throws IllegalStateException If this configuration has been deleted.
@@ -264,7 +266,6 @@ public interface Configuration {
 	 *
 	 * @param location a location, region, or {@code null}
 	 * @throws IllegalStateException If this configuration has been deleted.
-	 * @throws SecurityException when the required permissions are not available
 	 * @throws SecurityException when the required permissions are not available
 	 * @security ConfigurationPermission[this.location,CONFIGURE] if
 	 *           this.location is not {@code null}
@@ -310,12 +311,16 @@ public interface Configuration {
 	public long getChangeCount();
 
 	/**
-	 * Add attributes to the configuration. Currently the only supported
-	 * attribute is {@link ConfigurationAttribute#READ_ONLY}.
+	 * Add attributes to the configuration.
 	 * 
 	 * @param attrs The attributes to add.
 	 * @throws IOException If the new state cannot be persisted.
 	 * @throws IllegalStateException If this configuration has been deleted.
+	 * @throws SecurityException when the required permissions are not available
+	 * @security ConfigurationPermission[this.location,ATTRIBUTE] if
+	 *           this.location is not {@code null}
+	 * @security ConfigurationPermission["*",ATTRIBUTE] if this.location is
+	 *           {@code null}
 	 * @since 1.6
 	 */
 	public void addAttributes(ConfigurationAttribute... attrs)
@@ -336,6 +341,11 @@ public interface Configuration {
 	 * @param attrs The attributes to remove.
 	 * @throws IOException If the new state cannot be persisted.
 	 * @throws IllegalStateException If this configuration has been deleted.
+	 * @throws SecurityException when the required permissions are not available
+	 * @security ConfigurationPermission[this.location,ATTRIBUTE] if
+	 *           this.location is not {@code null}
+	 * @security ConfigurationPermission["*",ATTRIBUTE] if this.location is
+	 *           {@code null}
 	 * @since 1.6
 	 */
 	public void removeAttributes(ConfigurationAttribute... attrs)
