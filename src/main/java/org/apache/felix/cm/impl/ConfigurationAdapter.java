@@ -28,7 +28,6 @@ import org.osgi.framework.ServiceReference;
 import org.osgi.service.cm.Configuration;
 import org.osgi.service.cm.ConfigurationAdmin;
 import org.osgi.service.cm.ConfigurationPermission;
-import org.osgi.service.cm.ManagedService;
 import org.osgi.service.cm.ReadOnlyConfigurationException;
 import org.osgi.service.log.LogService;
 
@@ -100,8 +99,8 @@ public class ConfigurationAdapter implements Configuration
     public void setBundleLocation( String bundleLocation )
     {
         Log.logger.log( LogService.LOG_DEBUG, "setBundleLocation(bundleLocation={0})",
-            new Object[]
-                { bundleLocation } );
+                new Object[]
+                        { bundleLocation } );
 
         // CM 1.4 / 104.13.2.4
         checkActive();
@@ -137,7 +136,7 @@ public class ConfigurationAdapter implements Configuration
     public void update( Dictionary<String, ?> properties ) throws IOException
     {
         Log.logger.log( LogService.LOG_DEBUG, "update(properties={0})", new Object[]
-            { properties } );
+                { properties } );
 
         checkActive();
         checkDeleted();
@@ -283,7 +282,7 @@ public class ConfigurationAdapter implements Configuration
      * @see org.osgi.service.cm.Configuration#getProcessedProperties(ServiceReference)
      */
     @Override
-    public Dictionary<String, Object> getProcessedProperties(ServiceReference<ManagedService> sr)
+    public Dictionary<String, Object> getProcessedProperties(ServiceReference<?> sr)
     {
         final Dictionary<String, Object> props = this.getProperties();
 
@@ -336,7 +335,7 @@ public class ConfigurationAdapter implements Configuration
         if ( !delegatee.isActive() )
         {
             throw new IllegalStateException( "Configuration " + delegatee.getPid()
-                + " not backed by an active Configuration Admin Service" );
+            + " not backed by an active Configuration Admin Service" );
         }
     }
 

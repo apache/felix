@@ -76,7 +76,7 @@ public class ConfigurationAdminImpl implements ConfigurationAdmin
         final ConfigurationManager configurationManager = getConfigurationManager();
 
         Log.logger.log( LogService.LOG_DEBUG, "createFactoryConfiguration(factoryPid={0})", new Object[]
-            { factoryPid } );
+                { factoryPid } );
 
         // FELIX-3360: new factory configuration with implicit binding is dynamic
         ConfigurationImpl config = configurationManager.createFactoryConfiguration( factoryPid, null );
@@ -94,8 +94,8 @@ public class ConfigurationAdminImpl implements ConfigurationAdmin
         final ConfigurationManager configurationManager = getConfigurationManager();
 
         Log.logger.log( LogService.LOG_DEBUG, "createFactoryConfiguration(factoryPid={0}, location={1})",
-            new Object[]
-                { factoryPid, location } );
+                new Object[]
+                        { factoryPid, location } );
 
         // CM 1.4 / 104.13.2.3
         this.checkPermission( configurationManager, ( location == null ) ? "*" : location, false );
@@ -114,7 +114,7 @@ public class ConfigurationAdminImpl implements ConfigurationAdmin
         final ConfigurationManager configurationManager = getConfigurationManager();
 
         Log.logger.log( LogService.LOG_DEBUG, "getConfiguration(pid={0})", new Object[]
-            { pid } );
+                { pid } );
 
         ConfigurationImpl config = configurationManager.getConfiguration( pid );
         if ( config == null )
@@ -129,9 +129,9 @@ public class ConfigurationAdminImpl implements ConfigurationAdmin
             if ( config.getBundleLocation() == null )
             {
                 Log.logger.log( LogService.LOG_DEBUG, "Binding configuration {0} (isNew: {1}) to bundle {2}",
-                    new Object[]
-                        { config.getPid(), config.isNew() ? Boolean.TRUE : Boolean.FALSE,
-                            this.getBundle().getLocation() } );
+                        new Object[]
+                                { config.getPid(), config.isNew() ? Boolean.TRUE : Boolean.FALSE,
+                                        this.getBundle().getLocation() } );
 
                 // FELIX-3360: first implicit binding is dynamic
                 config.setDynamicBundleLocation( getBundle().getLocation(), true );
@@ -156,7 +156,7 @@ public class ConfigurationAdminImpl implements ConfigurationAdmin
         final ConfigurationManager configurationManager = getConfigurationManager();
 
         Log.logger.log( LogService.LOG_DEBUG, "getConfiguration(pid={0}, location={1})", new Object[]
-            { pid, location } );
+                { pid, location } );
 
         // CM 1.4 / 104.13.2.3
         this.checkPermission( configurationManager, ( location == null ) ? "*" : location, false );
@@ -185,7 +185,7 @@ public class ConfigurationAdminImpl implements ConfigurationAdmin
         final ConfigurationManager configurationManager = getConfigurationManager();
 
         Log.logger.log( LogService.LOG_DEBUG, "listConfigurations(filter={0})", new Object[]
-            { filter } );
+                { filter } );
 
         ConfigurationImpl ci[] = configurationManager.listConfigurations( this, filter );
         if ( ci == null || ci.length == 0 )
@@ -275,36 +275,36 @@ public class ConfigurationAdminImpl implements ConfigurationAdmin
                     sm.checkPermission( new ConfigurationPermission( name, action ) );
 
                     Log.logger.log( LogService.LOG_DEBUG,
-                        "Explicit Permission; grant {0} permission on configuration bound to {1} to bundle {2}",
-                        new Object[]
-                            { action, name, getBundle().getLocation() } );
+                            "Explicit Permission; grant {0} permission on configuration bound to {1} to bundle {2}",
+                            new Object[]
+                                    { action, name, getBundle().getLocation() } );
                 }
                 catch ( SecurityException se )
                 {
                     Log.logger
-                        .log(
+                    .log(
                             LogService.LOG_DEBUG,
                             "No Permission; denied {0} permission on configuration bound to {1} to bundle {2}; reason: {3}",
                             new Object[]
-                                { action, name, getBundle().getLocation(), se.getMessage() } );
+                                    { action, name, getBundle().getLocation(), se.getMessage() } );
                     throw se;
                 }
             }
             else if ( Log.logger.isLogEnabled( LogService.LOG_DEBUG ) )
             {
                 Log.logger.log( LogService.LOG_DEBUG,
-                    "Implicit Permission; grant {0} permission on configuration bound to {1} to bundle {2}",
-                    new Object[]
-                        { action, name, getBundle().getLocation() } );
+                        "Implicit Permission; grant {0} permission on configuration bound to {1} to bundle {2}",
+                        new Object[]
+                                { action, name, getBundle().getLocation() } );
 
             }
         }
         else if ( Log.logger.isLogEnabled( LogService.LOG_DEBUG ) )
         {
             Log.logger.log( LogService.LOG_DEBUG,
-                "No SecurityManager installed; grant {0} permission on configuration bound to {1} to bundle {2}",
-                new Object[]
-                    { action, name, getBundle().getLocation() } );
+                    "No SecurityManager installed; grant {0} permission on configuration bound to {1} to bundle {2}",
+                    new Object[]
+                            { action, name, getBundle().getLocation() } );
         }
     }
 
@@ -333,14 +333,14 @@ public class ConfigurationAdminImpl implements ConfigurationAdmin
      * @see org.osgi.service.cm.ConfigurationAdmin#getFactoryConfiguration(java.lang.String, java.lang.String, java.lang.String)
      */
     @Override
-    public Configuration getFactoryConfiguration(String factoryPid, String alias, String location) throws IOException
+    public Configuration getFactoryConfiguration(String factoryPid, String name, String location) throws IOException
     {
         final ConfigurationManager configurationManager = getConfigurationManager();
 
-        Log.logger.log( LogService.LOG_DEBUG, "getFactoryConfiguration(factoryPid={0}, alias={1}, location={2})", new Object[]
-            { factoryPid, alias, location } );
+        Log.logger.log( LogService.LOG_DEBUG, "getFactoryConfiguration(factoryPid={0}, name={1}, location={2})", new Object[]
+                { factoryPid, name, location } );
 
-        final String pid = factoryPid + '#' + alias;
+        final String pid = factoryPid + '~' + name;
 
         // CM 1.4 / 104.13.2.3
         this.checkPermission( configurationManager, ( location == null ) ? "*" : location, false );
@@ -357,20 +357,20 @@ public class ConfigurationAdminImpl implements ConfigurationAdmin
         }
 
         return this.wrap( config );
-      }
+    }
 
 
     /**
      * @see org.osgi.service.cm.ConfigurationAdmin#getFactoryConfiguration(java.lang.String, java.lang.String)
      */
     @Override
-    public Configuration getFactoryConfiguration(String factoryPid, String alias) throws IOException {
+    public Configuration getFactoryConfiguration(String factoryPid, String name) throws IOException {
         final ConfigurationManager configurationManager = getConfigurationManager();
 
-        Log.logger.log( LogService.LOG_DEBUG, "getFactoryConfiguration(factoryPid={0}, alias={1})", new Object[]
-            { factoryPid, alias } );
+        Log.logger.log( LogService.LOG_DEBUG, "getFactoryConfiguration(factoryPid={0}, name={1})", new Object[]
+                { factoryPid, name } );
 
-        final String pid = factoryPid + '#' + alias;
+        final String pid = factoryPid + '~' + name;
 
         ConfigurationImpl config = configurationManager.getConfiguration( pid );
         if ( config == null )
@@ -385,9 +385,9 @@ public class ConfigurationAdminImpl implements ConfigurationAdmin
             if ( config.getBundleLocation() == null )
             {
                 Log.logger.log( LogService.LOG_DEBUG, "Binding configuration {0} (isNew: {1}) to bundle {2}",
-                    new Object[]
-                        { config.getPid(), config.isNew() ? Boolean.TRUE : Boolean.FALSE,
-                            this.getBundle().getLocation() } );
+                        new Object[]
+                                { config.getPid(), config.isNew() ? Boolean.TRUE : Boolean.FALSE,
+                                        this.getBundle().getLocation() } );
 
                 // FELIX-3360: first implicit binding is dynamic
                 config.setDynamicBundleLocation( getBundle().getLocation(), true );
