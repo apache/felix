@@ -125,28 +125,37 @@ public class SchemaImpl
     private Collection<?> valuesAt(String context, Map<String, Object> objectMap, List<String> contexts, int currentIndex) {
         List<Object> result = new ArrayList<>();
         String currentContext = contexts.get(currentIndex);
+        if (objectMap == null)
+            return result;
         Object o = objectMap.get(currentContext);
         if (o instanceof List) {
             List<Object> l = (List<Object>)o;
             if (currentIndex == contexts.size() - 1) {
                 // We are at the end, so just add the collection
-                result.add(convertToType("/" + currentContext, l));
+                result.add(convertToType(pathFrom(contexts, 0), l));
                 return result;
             }
 
             currentContext = pathFrom(contexts, ++currentIndex);
             for (Object o2 : l)
-                result.addAll(valuesAt(currentContext, o2));
+            {
+                final Converter converter = new StandardConverter();
+                final Map<String, Object> m = (Map<String, Object>)converter.convert(o2).sourceAs(DTO.class).to( Map.class );
+                result.addAll( valuesAt( currentContext, m, contexts, currentIndex ) );
+            }        
         } else if (o instanceof Map){
             if (currentIndex == contexts.size() - 1) {
                 // We are at the end, so just add the result
-                result.add(convertToType("/" + currentContext, (Map)o));
+                result.add(convertToType(pathFrom(contexts, 0), (Map)o));
                 return result;
             }
 
             result.addAll(valuesAt( currentContext, (Map)o, contexts, ++currentIndex));
         } else if (currentIndex < contexts.size() - 1) {
-            result.addAll(valuesAt(pathFrom(contexts, ++currentIndex), o));
+            final Converter converter = new StandardConverter();
+            final Map<String, Object> m = (Map<String, Object>)converter.convert(o).sourceAs(DTO.class).to(Map.class);
+            currentContext = pathFrom(contexts, ++currentIndex);
+            result.addAll(valuesAt( currentContext, m, contexts, currentIndex ));
         } else {
             result.add(o);
         }
