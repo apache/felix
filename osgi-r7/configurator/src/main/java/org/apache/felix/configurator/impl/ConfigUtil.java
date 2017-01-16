@@ -52,7 +52,7 @@ public abstract class ConfigUtil {
     public static Configuration getOrCreateConfiguration(final ConfigurationAdmin ca,
             final String pid,
             final boolean createIfNeeded)
-    throws IOException, InvalidSyntaxException {
+                    throws IOException, InvalidSyntaxException {
         final String filter = "(" + Constants.SERVICE_PID + "=" + encode(pid) + ")";
         final Configuration[] configs = ca.listConfigurations(filter);
         if (configs != null && configs.length > 0) {
@@ -62,7 +62,7 @@ public abstract class ConfigUtil {
             return null;
         }
 
-        final int pos = pid.indexOf('#');
+        final int pos = pid.indexOf('~');
         if ( pos != -1 ) {
             final String factoryPid = pid.substring(0, pos);
             final String alias = pid.substring(pos + 1);
