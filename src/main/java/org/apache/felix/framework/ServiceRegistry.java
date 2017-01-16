@@ -181,6 +181,12 @@ public class ServiceRegistry
         // Bundles are allowed to get a reference while unregistering
         // get fresh set of bundles (should be empty, but this is a sanity check)
         ungetServices(ref);
+
+        // Now flush all usage counts as the registration is invalid
+        for (Bundle usingBundle : m_inUseMap.keySet())
+        {
+            flushUsageCount(usingBundle, ref, null);
+        }
     }
 
     private void ungetServices(final ServiceReference<?> ref)
@@ -543,7 +549,7 @@ public class ServiceRegistry
             UsageCount[] usages = entry.getValue();
             for (int useIdx = 0; useIdx < usages.length; useIdx++)
             {
-                if (usages[useIdx].m_ref.equals(ref))
+                if (usages[useIdx].m_ref.equals(ref) && usages[useIdx].m_count.get() > 0)
                 {
                     // Add the bundle to the array to be returned.
                     if (bundles == null)
