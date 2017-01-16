@@ -54,6 +54,10 @@ import org.osgi.framework.hooks.service.EventHook;
 import org.osgi.framework.hooks.service.FindHook;
 import org.osgi.framework.hooks.service.ListenerHook;
 
+import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.CoreMatchers.nullValue;
+import static org.hamcrest.MatcherAssert.assertThat;
+
 public class ServiceRegistryTest extends TestCase
 {
     public void testRegisterEventHookService()
@@ -1226,6 +1230,29 @@ public class ServiceRegistryTest extends TestCase
         // ultimately checks that this thread here is not stuck waiting forwever.
         assertNull(sr.getService(b, ref, false));
         sb.append("Obtained service");
+    }
+
+    public void testUsingBundlesWithoutZeroCounts() throws Exception
+    {
+        ServiceRegistry sr = new ServiceRegistry(null, null);
+        Bundle regBundle = Mockito.mock(Bundle.class);
+
+        ServiceRegistration reg = sr.registerService(
+                regBundle, new String [] {String.class.getName()}, "hi", null);
+        @SuppressWarnings("unchecked")
+        ServiceReference<String> ref = reg.getReference();
+
+        final Bundle clientBundle = Mockito.mock(Bundle.class);
+        Mockito.when(clientBundle.getBundleId()).thenReturn(42L);
+        assertThat(sr.getService(clientBundle, ref, false), is("hi"));
+
+        final Bundle clientBundle2 = Mockito.mock(Bundle.class);
+        Mockito.when(clientBundle.getBundleId()).thenReturn(327L);
+        assertThat(sr.getService(clientBundle2, ref, false), is("hi"));
+
+        assertThat(sr.ungetService(clientBundle, reg.getReference(), null), is(true));
+
+        assertThat(sr.getUsingBundles(reg.getReference()), is(new Bundle[]{clientBundle2}));
     }
 
     private Object getPrivateField(Object obj, String fieldName) throws NoSuchFieldException,
