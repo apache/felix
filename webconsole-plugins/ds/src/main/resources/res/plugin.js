@@ -16,7 +16,7 @@
  */
 function renderData( eventData )  {
 	switch(eventData.status) {
-		case -1: // no event admin
+		case -1: // no scr service
 			$('.statline').html(i18n.stat_no_service);
 			$('#scr').addClass('ui-helper-hidden');
 			break;
@@ -39,7 +39,7 @@ function renderData( eventData )  {
 
 function getEntryId(/* Object */ dataEntry) {
     var id = dataEntry.id;
-    if (id < 0) {
+    if (id == null || id < 0 || id === "") {
         id = dataEntry.name;
         if (dataEntry.pid) {
             id += '/' + dataEntry.pid;
@@ -88,7 +88,7 @@ function showDetails( id ) {
 	}, 'json');
 }
 
-function hideDetails( id ) {
+function hideDetails( id, path ) {
 	var __test__ = $('#img' + id);
 	$('#img' + id).each(function() {
 		$('#pluginInlineDetails').remove();
@@ -97,13 +97,14 @@ function hideDetails( id ) {
 			removeClass('ui-icon-triangle-1-s').//down
 			addClass('ui-icon-triangle-1-e').//right
 		    attr('title', 'Details').
-			unbind('click').click(function() {showDetails(id)});
+			unbind('click').click(function() {showDetails(path)});
 	});
 }
 
 function renderDetails( data ) {
 	data = data.data[0];
-	var id = getEntryId(data).replace(/[./-]/g, '_');
+	var idPath = getEntryId(data);
+	var id = idPath.replace(/[./-]/g, '_');
 	$('#pluginInlineDetails').remove();
 	var __test__ = $('#entry' + id);
 	$('#entry' + id + ' > td').eq(1).append('<div id="pluginInlineDetails"/>');
@@ -123,7 +124,7 @@ function renderDetails( data ) {
 				removeClass('ui-icon-triangle-1-e').//right
 				addClass('ui-icon-triangle-1-s').//down
 				attr('title', 'Hide Details').
-				unbind('click').click(function() {hideDetails(id)});
+				unbind('click').click(function() {hideDetails(id, idPath)});
 		}
 	});
 	$('#pluginInlineDetails').append('<table border="0"><tbody></tbody></table>');

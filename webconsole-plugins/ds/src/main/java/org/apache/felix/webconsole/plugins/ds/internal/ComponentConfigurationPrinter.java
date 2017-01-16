@@ -61,6 +61,7 @@ class ComponentConfigurationPrinter implements InventoryPrinter
      */
     public void print(PrintWriter pw, Format format, boolean isZip)
     {
+        final List<ComponentDescriptionDTO> noConfig = new ArrayList<ComponentDescriptionDTO>();
         final List<ComponentDescriptionDTO> disabled = new ArrayList<ComponentDescriptionDTO>();
         final List<ComponentConfigurationDTO> configurations = new ArrayList<ComponentConfigurationDTO>();
 
@@ -71,17 +72,29 @@ class ComponentConfigurationPrinter implements InventoryPrinter
             {
                 disabled.add(d);
             }
-            configurations.addAll(scrService.getComponentConfigurationDTOs(d));
+            else
+            {
+                final Collection<ComponentConfigurationDTO> configs = scrService.getComponentConfigurationDTOs(d);
+                if ( configs.isEmpty() )
+                {
+                    noConfig.add(d);
+                }
+                else
+                {
+                    configurations.addAll(configs);
+                }
+            }
         }
         Collections.sort(configurations, Util.COMPONENT_COMPARATOR);
 
         if (Format.JSON.equals(format))
         {
+            disabled.addAll(noConfig);
             printComponentsJson(pw, disabled, configurations, isZip);
         }
         else
         {
-            printComponentsText(pw, disabled, configurations);
+            printComponentsText(pw, disabled, noConfig, configurations);
         }
     }
 
@@ -98,7 +111,7 @@ class ComponentConfigurationPrinter implements InventoryPrinter
         // render disabled descriptions
         for(final ComponentDescriptionDTO cd : disabled)
         {
-            plugin.disabledComponent(jw, cd);
+            plugin.disabledComponent(jw, cd, details);
         }
         // render configurations
         for (final ComponentConfigurationDTO cfg : configurations)
@@ -110,26 +123,46 @@ class ComponentConfigurationPrinter implements InventoryPrinter
         jw.endObject();
     }
 
+    private static final String SEP = "----------------------------------------------------------------------";
+
     private static final void printComponentsText(final PrintWriter pw,
             final List<ComponentDescriptionDTO> disabled,
+            final List<ComponentDescriptionDTO> noConfig,
             final List<ComponentConfigurationDTO> configurations)
     {
         if ( !disabled.isEmpty())
         {
+            pw.println(SEP);
             pw.println("Disabled components:");
+            pw.println(SEP);
+            for(final ComponentDescriptionDTO cd : disabled)
+            {
+                disabledComponent(pw, cd);
+            }
+            pw.println();
         }
-        for(final ComponentDescriptionDTO cd : disabled)
+        if ( !noConfig.isEmpty())
         {
-            disabledComponent(pw, cd);
+            pw.println(SEP);
+            pw.println("Components with missing configuration in Config Admin:");
+            pw.println(SEP);
+            for(final ComponentDescriptionDTO cd : noConfig)
+            {
+                disabledComponent(pw, cd);
+            }
+            pw.println();
         }
 
-        if (configurations.size() == 0)
+        pw.println(SEP);
+        if (configurations.isEmpty())
         {
             pw.println("Status: No Component Configurations");
+            pw.println(SEP);
         }
         else
         {
             pw.println("Component Configurations:");
+            pw.println(SEP);
             // order components by id
             TreeMap<Long, ComponentConfigurationDTO> componentMap = new TreeMap<Long, ComponentConfigurationDTO>();
             for(final ComponentConfigurationDTO cfg : configurations)
@@ -153,42 +186,51 @@ class ComponentConfigurationPrinter implements InventoryPrinter
         pw.print(cfg.description.name);
         pw.println("]");
 
-        pw.println("  Bundle" + cfg.description.bundle.symbolicName + " ("
+        pw.println("  Bundle=" + cfg.description.bundle.symbolicName + " ("
                 + cfg.description.bundle.id + ")");
         pw.println("  State=" + toStateString(cfg.state));
         pw.println("  DefaultState="
                 + (cfg.description.defaultEnabled ? "enabled" : "disabled"));
         pw.println("  Activation=" + (cfg.description.immediate ? "immediate" : "delayed"));
+        pw.println("  ConfigurationPolicy=" + cfg.description.configurationPolicy);
 
-        listServices(pw, cfg);
-        listReferences(pw, cfg);
-        listProperties(pw, cfg);
+        listServices(pw, cfg.description);
+        listReferences(pw, cfg.description, cfg);
+        listProperties(pw, cfg.description, cfg);
 
         pw.println();
     }
 
-    private static final void disabledComponent(PrintWriter pw, final ComponentDescriptionDTO cfg)
+    private static final void disabledComponent(PrintWriter pw, final ComponentDescriptionDTO description)
     {
 
-        pw.print(cfg.name);
+        pw.println(description.name);
 
-        pw.println("  Bundle" + cfg.bundle.symbolicName + " ("
-                + cfg.bundle.id + ")");
+        pw.println("  Bundle=" + description.bundle.symbolicName + " ("
+                + description.bundle.id + ")");
         pw.println("  DefaultState="
-                + (cfg.defaultEnabled ? "enabled" : "disabled"));
-        pw.println("  Activation=" + (cfg.immediate ? "immediate" : "delayed"));
+                + (description.defaultEnabled ? "enabled" : "disabled"));
+        pw.println("  Activation=" + (description.immediate ? "immediate" : "delayed"));
+        pw.println("  ConfigurationPolicy=" + description.configurationPolicy);
+
+        listServices(pw, description);
+        listReferences(pw, description, null);
+        listProperties(pw, description, null);
+
         pw.println();
     }
 
-    private static void listServices(PrintWriter pw, final ComponentConfigurationDTO cfg)
+    private static void listServices(PrintWriter pw, final ComponentDescriptionDTO cfg)
     {
-        String[] services = cfg.description.serviceInterfaces;
+        String[] services = cfg.serviceInterfaces;
         if (services == null)
         {
             return;
         }
 
-        pw.println("  ServiceType=" + cfg.description.scope);
+        if ( cfg.scope != null ) {
+            pw.println("  ServiceType=" + cfg.scope);
+        }
 
         StringBuffer buf = new StringBuffer();
         for (int i = 0; i < services.length; i++)
@@ -215,15 +257,22 @@ class ComponentConfigurationPrinter implements InventoryPrinter
         return null;
     }
 
-    private static final void listReferences(PrintWriter pw, final ComponentConfigurationDTO cfg)
+    private static final void listReferences(PrintWriter pw,
+            final ComponentDescriptionDTO description,
+            final ComponentConfigurationDTO configuration)
     {
-        for(final ReferenceDTO dto : cfg.description.references)
+        for(final ReferenceDTO dto : description.references)
         {
-            final SatisfiedReferenceDTO satisfiedRef = findReference(cfg, dto.name);
+            final SatisfiedReferenceDTO satisfiedRef = configuration == null ? null : findReference(configuration, dto.name);
 
-            pw.println("  Reference=" + dto.name + ", "
-                    + (satisfiedRef != null ? "Satisfied" : "Unsatisfied"));
-
+            pw.print("  Reference=");
+            pw.print(dto.name);
+            if ( configuration != null )
+            {
+                pw.print(", ");
+                pw.print(satisfiedRef != null ? "Satisfied" : "Unsatisfied");
+            }
+            pw.println();
             pw.println("    Service Name: " + dto.interfaceName);
 
             if (dto.target != null)
@@ -268,9 +317,11 @@ class ComponentConfigurationPrinter implements InventoryPrinter
         }
     }
 
-    private static final void listProperties(PrintWriter pw, final ComponentConfigurationDTO cfg)
+    private static final void listProperties(PrintWriter pw,
+            final ComponentDescriptionDTO description,
+            final ComponentConfigurationDTO cfg)
     {
-        Map<String, Object> props = cfg.properties;
+        Map<String, Object> props = cfg == null ? description.properties : cfg.properties;
         if (props != null)
         {
 

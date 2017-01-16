@@ -117,21 +117,21 @@ class WebConsolePlugin extends SimpleWebConsolePlugin
     {
         final String op = request.getParameter(OPERATION);
         RequestInfo reqInfo = new RequestInfo(request, true);
-        if (reqInfo.component == null && reqInfo.componentRequested)
+        if (reqInfo.componentRequested)
         {
             boolean found = false;
-            if (OPERATION_ENABLE.equals(op))
+            if ( reqInfo.component != null )
             {
-                final String name = reqInfo.name;
-                for(final ComponentDescriptionDTO cd : reqInfo.disabled)
+                if (OPERATION_ENABLE.equals(op))
                 {
-                    if ( name.equals(cd.name) )
-                    {
-                        wait(getScrService().enableComponent(cd));
-                        reqInfo = new RequestInfo(request, false);
-                        found = true;
-                        break;
-                    }
+                    wait(getScrService().enableComponent(reqInfo.component.description));
+                    reqInfo = new RequestInfo(request, false);
+                    found = true;
+                }
+                else if ( OPERATION_DISABLE.equals(op) )
+                {
+                    wait(getScrService().disableComponent(reqInfo.component.description));
+                    found = true;
                 }
             }
             if ( !found )
@@ -142,16 +142,8 @@ class WebConsolePlugin extends SimpleWebConsolePlugin
         }
         else
         {
-            if (!reqInfo.componentRequested)
-            {
-                response.sendError(500);
-                return;
-            }
-            if (OPERATION_DISABLE.equals(op))
-            {
-                wait(getScrService().disableComponent(reqInfo.component.description));
-                reqInfo = new RequestInfo(request, false);
-            }
+            response.sendError(500);
+            return;
         }
 
         final PrintWriter pw = response.getWriter();
@@ -221,28 +213,34 @@ class WebConsolePlugin extends SimpleWebConsolePlugin
         jw.object();
 
         jw.key("status"); //$NON-NLS-1$
-        final ServiceComponentRuntime scrService = getScrService();
-        if (scrService == null)
+        if (info.scrService == null)
         {
             jw.value(-1);
         }
         else
         {
             jw.value(info.configurations.size());
-            if ( !info.configurations.isEmpty())
+            if ( !info.configurations.isEmpty() )
             {
                 // render components
                 jw.key("data"); //$NON-NLS-1$
                 jw.array();
                 if (component != null)
                 {
-                    component(jw, component, true);
+                    if ( component.state == -1 )
+                    {
+                        disabledComponent(jw, component.description, true);
+                    }
+                    else
+                    {
+                        component(jw, component, true);
+                    }
                 }
                 else
                 {
                     for( final ComponentDescriptionDTO cd : info.disabled )
                     {
-                        disabledComponent(jw, cd);
+                        disabledComponent(jw, cd, false);
                     }
                     for (final ComponentConfigurationDTO cfg : info.configurations)
                     {
@@ -256,9 +254,29 @@ class WebConsolePlugin extends SimpleWebConsolePlugin
         jw.endObject();
     }
 
-    void disabledComponent(final JSONWriter jw, final ComponentDescriptionDTO component)
+    void writePid(final JSONWriter jw, final ComponentDescriptionDTO desc)
     {
-        final String name = component.name;
+        final String configurationPid = desc.configurationPid[0];
+        final String pid;
+        if (desc.configurationPid.length == 1) {
+            pid = configurationPid;
+        } else {
+            pid = Arrays.toString(desc.configurationPid);
+        }
+        jw.key("pid"); //$NON-NLS-1$
+        jw.value(pid);
+        if (isConfigurable(
+                this.getBundleContext().getBundle(0).getBundleContext().getBundle(desc.bundle.id),
+                configurationPid))
+        {
+            jw.key("configurable"); //$NON-NLS-1$
+            jw.value(configurationPid);
+        }
+    }
+
+    void disabledComponent(final JSONWriter jw, final ComponentDescriptionDTO desc, boolean details)
+    {
+        final String name = desc.name;
 
         jw.object();
 
@@ -268,33 +286,31 @@ class WebConsolePlugin extends SimpleWebConsolePlugin
         jw.key("name"); //$NON-NLS-1$
         jw.value(name);
         jw.key("state"); //$NON-NLS-1$
-        jw.value("disabled"); //$NON-NLS-1$
+        if ( desc.defaultEnabled && "require".equals(desc.configurationPolicy))
+        {
+            jw.value("no config");
+        }
+        else
+        {
+            jw.value("disabled"); //$NON-NLS-1$
+        }
         jw.key("stateRaw"); //$NON-NLS-1$
         jw.value(-1);
 
-        if ( component.configurationPid != null && component.configurationPid.length > 0 )
+        writePid(jw, desc);
+
+        if (details)
         {
-            final String pid;
-            if ( component.configurationPid.length == 1 )
-            {
-                pid = component.configurationPid[0];
-            }
-            else
-            {
-                pid = Arrays.toString(component.configurationPid);
-            }
-            jw.key("pid"); //$NON-NLS-1$
-            jw.value(pid);
+            gatherComponentDetails(jw, desc, null);
         }
 
         jw.endObject();
     }
 
-    void component(JSONWriter jw, ComponentConfigurationDTO component, boolean details)
+    void component(JSONWriter jw, ComponentConfigurationDTO config, boolean details)
     {
-        String id = String.valueOf(component.id);
-        String name = component.description.name;
-        int state = component.state;
+        String id = String.valueOf(config.id);
+        String name = config.description.name;
 
         jw.object();
 
@@ -304,85 +320,65 @@ class WebConsolePlugin extends SimpleWebConsolePlugin
         jw.key("name"); //$NON-NLS-1$
         jw.value(name);
         jw.key("state"); //$NON-NLS-1$
-        jw.value(ComponentConfigurationPrinter.toStateString(state));
+        jw.value(ComponentConfigurationPrinter.toStateString(config.state));
         jw.key("stateRaw"); //$NON-NLS-1$
-        jw.value(state);
+        jw.value(config.state);
 
-        final String configurationPid = component.description.configurationPid[0];
-        final String pid;
-        if (component.description.configurationPid.length == 1) {
-            pid = configurationPid;
-        } else {
-            pid = Arrays.toString(component.description.configurationPid);
-        }
-        jw.key("pid"); //$NON-NLS-1$
-        jw.value(pid);
-        if (isConfigurable(
-                this.getBundleContext().getBundle(0).getBundleContext().getBundle(component.description.bundle.id),
-                configurationPid))
-        {
-            jw.key("configurable"); //$NON-NLS-1$
-            jw.value(configurationPid);
-        }
+        writePid(jw, config.description);
 
         // component details
         if (details)
         {
-            gatherComponentDetails(jw, component);
+            gatherComponentDetails(jw, config.description, config);
         }
 
         jw.endObject();
     }
 
-    private void gatherComponentDetails(JSONWriter jw, ComponentConfigurationDTO component)
+    private void gatherComponentDetails(JSONWriter jw,
+            ComponentDescriptionDTO desc,
+            ComponentConfigurationDTO component)
     {
-        final Bundle bundle = this.getBundleContext().getBundle(0).getBundleContext().getBundle(component.description.bundle.id);
+        final Bundle bundle = this.getBundleContext().getBundle(0).getBundleContext().getBundle(desc.bundle.id);
 
         jw.key("props"); //$NON-NLS-1$
         jw.array();
 
         keyVal(jw, "Bundle", bundle.getSymbolicName() + " ("
                 + bundle.getBundleId() + ")");
-        keyVal(jw, "Implementation Class", component.description.implementationClass);
-        if (component.description.factory != null)
+        keyVal(jw, "Implementation Class", desc.implementationClass);
+        if (desc.factory != null)
         {
-            keyVal(jw, "Component Factory Name", component.description.factory);
+            keyVal(jw, "Component Factory Name", desc.factory);
         }
-        keyVal(jw, "Default State", component.description.defaultEnabled ? "enabled" : "disabled");
-        keyVal(jw, "Activation", component.description.immediate ? "immediate" : "delayed");
+        keyVal(jw, "Default State", desc.defaultEnabled ? "enabled" : "disabled");
+        keyVal(jw, "Activation", desc.immediate ? "immediate" : "delayed");
 
-        try
-        {
-            keyVal(jw, "Configuration Policy", component.description.configurationPolicy);
-        }
-        catch (Throwable t)
-        {
-            // missing implementation of said method in the actually bound API
-            // ignore this and just don't display the information
-        }
+        keyVal(jw, "Configuration Policy", desc.configurationPolicy);
 
-        listServices(jw, component);
-        if (component.description.configurationPid.length == 1) {
-            keyVal(jw, "PID", component.description.configurationPid[0]);
+        listServices(jw, desc);
+        if (desc.configurationPid.length == 1) {
+            keyVal(jw, "PID", desc.configurationPid[0]);
         } else {
-            keyVal(jw, "PIDs", Arrays.toString(component.description.configurationPid));
+            keyVal(jw, "PIDs", Arrays.toString(desc.configurationPid));
         }
-        listReferences(jw, component);
-        listProperties(jw, component);
+        listReferences(jw, desc, component);
+        listProperties(jw, desc, component);
 
         jw.endArray();
     }
 
-    private void listServices(JSONWriter jw, ComponentConfigurationDTO component)
+    private void listServices(JSONWriter jw, ComponentDescriptionDTO desc)
     {
-        String[] services = component.description.serviceInterfaces;
+        String[] services = desc.serviceInterfaces;
         if (services == null)
         {
             return;
         }
 
-        keyVal(jw, "Service Type", component.description.scope);
-
+        if ( desc.scope != null ) {
+            keyVal(jw, "Service Type", desc.scope);
+        }
         jw.object();
         jw.key("key");
         jw.value("Services");
@@ -408,18 +404,26 @@ class WebConsolePlugin extends SimpleWebConsolePlugin
         return null;
     }
 
-    private void listReferences(JSONWriter jw, ComponentConfigurationDTO component)
+    private void listReferences(JSONWriter jw, ComponentDescriptionDTO desc, ComponentConfigurationDTO config)
     {
-        for(final ReferenceDTO dto : component.description.references)
+        for(final ReferenceDTO dto : desc.references)
         {
             jw.object();
             jw.key("key");
             jw.value("Reference " + dto.name);
             jw.key("value");
             jw.array();
-            final SatisfiedReferenceDTO satisfiedRef = findReference(component, dto.name);
+            final SatisfiedReferenceDTO satisfiedRef;
+            if ( config != null )
+            {
+                satisfiedRef = findReference(config, dto.name);
 
-            jw.value(satisfiedRef != null ? "Satisfied" : "Unsatisfied");
+                jw.value(satisfiedRef != null ? "Satisfied" : "Unsatisfied");
+            }
+            else
+            {
+                satisfiedRef = null;
+            }
             jw.value("Service Name: " + dto.interfaceName);
             if (dto.target != null)
             {
@@ -456,7 +460,7 @@ class WebConsolePlugin extends SimpleWebConsolePlugin
                     jw.value(b.toString());
                 }
             }
-            else
+            else if ( config != null )
             {
                 jw.value("No Services bound");
             }
@@ -466,9 +470,9 @@ class WebConsolePlugin extends SimpleWebConsolePlugin
         }
     }
 
-    private void listProperties(JSONWriter jw, ComponentConfigurationDTO component)
+    private void listProperties(JSONWriter jw, ComponentDescriptionDTO desc, ComponentConfigurationDTO component)
     {
-        Map<String, Object> props = component.properties;
+        Map<String, Object> props = component != null ? component.properties : desc.properties;
         if (props != null)
         {
             jw.object();
@@ -586,25 +590,10 @@ class WebConsolePlugin extends SimpleWebConsolePlugin
         public final List<ComponentDescriptionDTO> descriptions = new ArrayList<ComponentDescriptionDTO>();
         public final List<ComponentConfigurationDTO> configurations = new ArrayList<ComponentConfigurationDTO>();
         public final List<ComponentDescriptionDTO> disabled = new ArrayList<ComponentDescriptionDTO>();
-        public final String name;
 
         protected RequestInfo(final HttpServletRequest request, final boolean checkPathInfo)
         {
             this.scrService = getScrService();
-            if ( scrService != null )
-            {
-                final Collection<ComponentDescriptionDTO> descs = scrService.getComponentDescriptionDTOs();
-                for(final ComponentDescriptionDTO d : descs)
-                {
-                    descriptions.add(d);
-                    if ( !scrService.isComponentEnabled(d) )
-                    {
-                        disabled.add(d);
-                    }
-                    configurations.addAll(scrService.getComponentConfigurationDTOs(d));
-                }
-                Collections.sort(configurations, Util.COMPONENT_COMPARATOR);
-            }
 
             String info = request.getPathInfo();
             // remove label and starting slash
@@ -621,6 +610,9 @@ class WebConsolePlugin extends SimpleWebConsolePlugin
                 extension = "html"; //$NON-NLS-1$
             }
 
+            if ( scrService != null ) {
+                this.descriptions.addAll(scrService.getComponentDescriptionDTOs());
+            }
             if (checkPathInfo && info.length() > 1 && info.startsWith("/")) //$NON-NLS-1$
             {
                 this.componentRequested = true;
@@ -631,13 +623,37 @@ class WebConsolePlugin extends SimpleWebConsolePlugin
                     component = getComponentByName(info);
                 }
                 this.component = component;
+                if ( this.component != null )
+                {
+                    this.configurations.add(this.component);
+                }
             }
             else
             {
                 this.componentRequested = false;
                 this.component = null;
+
+                for(final ComponentDescriptionDTO d : this.descriptions)
+                {
+                    if ( !scrService.isComponentEnabled(d) )
+                    {
+                        disabled.add(d);
+                    }
+                    else
+                    {
+                        final Collection<ComponentConfigurationDTO> configs = scrService.getComponentConfigurationDTOs(d);
+                        if ( configs.isEmpty() )
+                        {
+                            disabled.add(d);
+                        }
+                        else
+                        {
+                            configurations.addAll(configs);
+                        }
+                    }
+                }
+                Collections.sort(configurations, Util.COMPONENT_COMPARATOR);
             }
-            this.name = info;
 
             request.setAttribute(WebConsolePlugin.this.getClass().getName(), this);
         }
@@ -647,11 +663,14 @@ class WebConsolePlugin extends SimpleWebConsolePlugin
             try
             {
                 final long componentId = Long.parseLong(componentIdPar);
-                for(final ComponentConfigurationDTO cfg : this.configurations)
+                for(final ComponentDescriptionDTO desc : this.descriptions)
                 {
-                    if ( cfg.id == componentId )
+                    for(final ComponentConfigurationDTO cfg : this.scrService.getComponentConfigurationDTOs(desc))
                     {
-                        return cfg;
+                        if ( cfg.id == componentId )
+                        {
+                            return cfg;
+                        }
                     }
                 }
             }
@@ -682,40 +701,39 @@ class WebConsolePlugin extends SimpleWebConsolePlugin
                 }
 
                 Collection<ComponentConfigurationDTO> components = null;
-                try
+                for(final ComponentDescriptionDTO d : this.descriptions)
                 {
-                    for(final ComponentDescriptionDTO d : this.descriptions)
+                    if ( d.name.equals(componentName) )
                     {
-                        if ( d.name.equals(componentName) )
+                        components = scrService.getComponentConfigurationDTOs(d);
+                        if ( components.isEmpty() )
                         {
-                            components = scrService.getComponentConfigurationDTOs(d);
+                            final ComponentConfigurationDTO cfg = new ComponentConfigurationDTO();
+                            cfg.description = d;
+                            cfg.state = -1;
+                            return cfg;
                         }
-                    }
-                }
-                catch (Throwable t)
-                {
-                    // not implemented in the used API version
-                    components = null;
-                }
-
-                if (components != null)
-                {
-                    if (pid != null)
-                    {
-                        final Iterator<ComponentConfigurationDTO> i = components.iterator();
-                        while ( i.hasNext() )
+                        else
                         {
-                            ComponentConfigurationDTO c = i.next();
-                            if (pid.equals(c.properties.get(Constants.SERVICE_PID)))
+                            if (pid != null)
                             {
-                                return c;
+                                final Iterator<ComponentConfigurationDTO> i = components.iterator();
+                                while ( i.hasNext() )
+                                {
+                                    ComponentConfigurationDTO c = i.next();
+                                    if ( pid.equals(c.description.configurationPid[0]))
+                                    {
+                                        return c;
+                                    }
+
+                                }
+                            }
+                            else if (components.size() > 0)
+                            {
+                                return components.iterator().next();
                             }
 
                         }
-                    }
-                    else if (components.size() > 0)
-                    {
-                        return components.iterator().next();
                     }
                 }
             }
