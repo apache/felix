@@ -59,9 +59,9 @@ class InfoProvider implements BundleInfoProvider
     }
 
     /**
-    * @see org.apache.felix.webconsole.bundleinfo.BundleInfoProvider#getBundleInfo(org.osgi.framework.Bundle,
-    *      java.lang.String, java.util.Locale)
-    */
+     * @see org.apache.felix.webconsole.bundleinfo.BundleInfoProvider#getBundleInfo(org.osgi.framework.Bundle,
+     *      java.lang.String, java.util.Locale)
+     */
     public BundleInfo[] getBundleInfo(Bundle bundle, String webConsoleRoot, Locale locale)
     {
         final List<ComponentDescriptionDTO> disabled = new ArrayList<ComponentDescriptionDTO>();
@@ -74,11 +74,22 @@ class InfoProvider implements BundleInfoProvider
             {
                 disabled.add(d);
             }
-            configurations.addAll(scrService.getComponentConfigurationDTOs(d));
+            else
+            {
+                final Collection<ComponentConfigurationDTO> configs = scrService.getComponentConfigurationDTOs(d);
+                if ( configs.isEmpty() )
+                {
+                    disabled.add(d);
+                }
+                else
+                {
+                    configurations.addAll(configs);
+                }
+            }
         }
         Collections.sort(configurations, Util.COMPONENT_COMPARATOR);
 
-        if (configurations.size() == 0)
+        if (configurations.isEmpty())
         {
             return NO_INFO;
         }
@@ -129,7 +140,7 @@ class InfoProvider implements BundleInfoProvider
                 state
         });
         return new BundleInfo(key, (webConsoleRoot == null ? "" : webConsoleRoot) + "/components/" + cfg.id, //$NON-NLS-1$
-            BundleInfoType.LINK, descr);
+                BundleInfoType.LINK, descr);
     }
 
     ServiceRegistration register(BundleContext context)
