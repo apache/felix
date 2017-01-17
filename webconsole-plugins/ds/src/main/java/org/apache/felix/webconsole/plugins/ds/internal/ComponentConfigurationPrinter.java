@@ -111,12 +111,12 @@ class ComponentConfigurationPrinter implements InventoryPrinter
         // render disabled descriptions
         for(final ComponentDescriptionDTO cd : disabled)
         {
-            plugin.disabledComponent(jw, cd, details);
+            plugin.component(jw, cd, null, details);
         }
         // render configurations
         for (final ComponentConfigurationDTO cfg : configurations)
         {
-            plugin.component(jw, cfg, details);
+            plugin.component(jw, cfg.description, cfg, details);
         }
 
         jw.endArray();

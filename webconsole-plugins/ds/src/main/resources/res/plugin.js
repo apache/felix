@@ -40,7 +40,7 @@ function renderData( eventData )  {
 function getEntryId(/* Object */ dataEntry) {
     var id = dataEntry.id;
     if (id == null || id < 0 || id === "") {
-        id = dataEntry.name;
+        id = dataEntry.bundleId + '/' + dataEntry.name;
         if (dataEntry.pid) {
             id += '/' + dataEntry.pid;
         }
