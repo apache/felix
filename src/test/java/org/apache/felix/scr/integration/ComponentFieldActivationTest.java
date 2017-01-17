@@ -19,8 +19,11 @@
 package org.apache.felix.scr.integration;
 
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 
+import java.util.Arrays;
 import java.util.Collection;
 
 import org.apache.felix.scr.integration.components.FieldActivatorComponent;
@@ -55,6 +58,11 @@ public class ComponentFieldActivationTest extends ComponentTestBase
         final String componentname = "FieldActivatorComponent.satisfied";
 
         ComponentConfigurationDTO cc = getDisabledConfigurationAndEnable(componentname, ComponentConfigurationDTO.SATISFIED);
+        assertEquals(4, cc.description.activationFields.length);
+        assertTrue(Arrays.asList(cc.description.activationFields).contains("bundle"));
+        assertTrue(Arrays.asList(cc.description.activationFields).contains("context"));
+        assertTrue(Arrays.asList(cc.description.activationFields).contains("config"));
+        assertTrue(Arrays.asList(cc.description.activationFields).contains("annotation"));
 
         FieldActivatorComponent cmp = this.getServiceFromConfiguration(cc, FieldActivatorComponent.class);
 
@@ -87,6 +95,8 @@ public class ComponentFieldActivationTest extends ComponentTestBase
         final String componentname = "FieldActivatorComponent.unsatisfied";
 
         ComponentConfigurationDTO cc = getDisabledConfigurationAndEnable(componentname, ComponentConfigurationDTO.SATISFIED);
+        assertEquals(1, cc.description.activationFields.length);
+        assertTrue(Arrays.asList(cc.description.activationFields).contains("foo"));
 
         this.failGetServiceFromConfiguration(cc, FieldActivatorComponent.class);
 
@@ -99,8 +109,23 @@ public class ComponentFieldActivationTest extends ComponentTestBase
         final String componentname = "FieldActivatorComponent.partiallysatisfied";
 
         ComponentConfigurationDTO cc = getDisabledConfigurationAndEnable(componentname, ComponentConfigurationDTO.SATISFIED);
+        assertEquals(3, cc.description.activationFields.length);
+        assertTrue(Arrays.asList(cc.description.activationFields).contains("bundle"));
+        assertTrue(Arrays.asList(cc.description.activationFields).contains("context"));
+        assertTrue(Arrays.asList(cc.description.activationFields).contains("foo"));
 
         this.failGetServiceFromConfiguration(cc, FieldActivatorComponent.class);
+
+        disableAndCheck( cc );
+    }
+
+    @Test
+    public void test_field_activator_dto_nofields() throws Exception
+    {
+        final String componentname = "FieldActivatorComponent.nofields";
+
+        ComponentConfigurationDTO cc = getDisabledConfigurationAndEnable(componentname, ComponentConfigurationDTO.SATISFIED);
+        assertEquals(0, cc.description.activationFields.length);
 
         disableAndCheck( cc );
     }
