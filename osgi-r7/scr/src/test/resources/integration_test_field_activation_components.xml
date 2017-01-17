@@ -48,4 +48,11 @@
         </service>
     </scr:component>
 
+    <!-- Some exist, no field -->
+    <scr:component name="FieldActivatorComponent.nofields" enabled="false">
+        <implementation class="org.apache.felix.scr.integration.components.FieldActivatorComponent" />
+        <service factory="false">
+            <provide interface="org.apache.felix.scr.integration.components.FieldActivatorComponent"/>
+        </service>
+    </scr:component>
 </components>
