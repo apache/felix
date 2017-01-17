@@ -2,6 +2,7 @@ Changes from 2.0.4 to 2.0.6
 ---------------------------
 ** Improvement
     * [FELIX-5495] : No details displayed if component is disabled
+    * [FELIX-5496] : Use bundle id and component name as key for urls
 ** Bug
     * [FELIX-5493] : Component descriptions requiring a policy are not displayed if config is missing
     * [FELIX-5494] : URL handling not correct if component has no configuration
