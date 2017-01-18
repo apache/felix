@@ -29,6 +29,7 @@ import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 import java.util.Arrays;
+import java.util.Collections;
 
 public class BaseConverters implements Converter {
 
@@ -63,7 +64,8 @@ public class BaseConverters implements Converter {
                                         .bindTo(proxy)
                                         .invokeWithArguments(args);
                             } else {
-                                return command.execute(null, Arrays.asList(args));
+                                return command.execute(null,
+                                        args != null ? Arrays.asList(args) : Collections.emptyList());
                             }
                         }
                     });
