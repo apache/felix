@@ -63,6 +63,8 @@ import org.jline.reader.impl.LineReaderImpl;
 import org.jline.terminal.Terminal;
 import org.jline.terminal.Terminal.Signal;
 import org.jline.terminal.Terminal.SignalHandler;
+import org.jline.utils.AttributedStringBuilder;
+import org.jline.utils.AttributedStyle;
 
 public class Shell {
 
@@ -420,6 +422,12 @@ public class Shell {
                             System.out.println(session.format(result, Converter.INSPECT));
                         }
                     } catch (Exception e) {
+                        AttributedStringBuilder sb = new AttributedStringBuilder();
+                        sb.style(sb.style().foreground(AttributedStyle.RED));
+                        sb.append(e.toString());
+                        sb.style(sb.style().foregroundDefault());
+                        terminal.writer().println(sb.toAnsi(terminal));
+                        terminal.flush();
                         session.put(Shell.VAR_EXCEPTION, e);
                     }
 
