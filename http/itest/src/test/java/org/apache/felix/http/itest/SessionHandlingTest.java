@@ -32,6 +32,7 @@ import static org.osgi.service.http.whiteboard.HttpWhiteboardConstants.HTTP_WHIT
 
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.io.StringReader;
 import java.util.ArrayList;
 import java.util.Dictionary;
 import java.util.Hashtable;
@@ -39,6 +40,7 @@ import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
+import javax.json.JsonObject;
 import javax.servlet.Servlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -53,9 +55,7 @@ import org.apache.http.impl.client.BasicCookieStore;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.util.EntityUtils;
-import org.json.simple.JSONObject;
-import org.json.simple.JSONValue;
-import org.json.simple.parser.ParseException;
+import org.apache.johnzon.core.JsonProviderImpl;
 import org.junit.After;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -97,7 +97,7 @@ public class SessionHandlingTest extends BaseIntegrationTest
 
             @Override
             protected void doGet(HttpServletRequest req, HttpServletResponse resp)
-                throws IOException
+                    throws IOException
             {
                 final boolean create = req.getParameter("create") != null;
                 if ( create )
@@ -161,7 +161,7 @@ public class SessionHandlingTest extends BaseIntegrationTest
         Thread.sleep(500);
     }
 
-    private JSONObject getJSONResponse(final CloseableHttpClient client, final String path) throws IOException, ParseException
+    private JsonObject getJSONResponse(final CloseableHttpClient client, final String path) throws IOException
     {
         final HttpGet httpGet = new HttpGet(createURL(path).toExternalForm().toString());
         CloseableHttpResponse response1 = client.execute(httpGet);
@@ -170,7 +170,7 @@ public class SessionHandlingTest extends BaseIntegrationTest
             HttpEntity entity1 = response1.getEntity();
             final String content = EntityUtils.toString(entity1);
 
-            return (JSONObject) JSONValue.parseWithException(content);
+            return new JsonProviderImpl().createReader(new StringReader(content)).readObject();
         } finally {
             response1.close();
         }
@@ -196,55 +196,55 @@ public class SessionHandlingTest extends BaseIntegrationTest
                 .setDefaultCookieStore(new BasicCookieStore())
                 .build();
 
-        JSONObject json;
+        JsonObject json;
 
         // session should not be available
         // check for foo servlet
         json = getJSONResponse(httpclient, "/foo");
-        assertFalse(((Boolean)json.get("session")).booleanValue());
+        assertFalse(json.getBoolean("session"));
 
         // check for bar servlet
         json = getJSONResponse(httpclient, "/bar");
-        assertFalse(((Boolean)json.get("session")).booleanValue());
+        assertFalse(json.getBoolean("session"));
 
         // create session for  context of servlet foo
         // check session and session attribute
         json = getJSONResponse(httpclient, "/foo?create=true");
-        assertTrue(((Boolean)json.get("session")).booleanValue());
-        assertEquals("test1", json.get("value"));
-        final String sessionId1 = (String)json.get("sessionId");
+        assertTrue(json.getBoolean("session"));
+        assertEquals("test1", json.getString("value"));
+        final String sessionId1 = json.getString("sessionId");
         assertNotNull(sessionId1);
 
         // check session for servlet bar (= no session)
         json = getJSONResponse(httpclient, "/bar");
-        assertFalse(((Boolean)json.get("session")).booleanValue());
+        assertFalse(json.getBoolean("session"));
         // another request to servlet foo, still the same
         json = getJSONResponse(httpclient, "/foo");
-        assertTrue(((Boolean)json.get("session")).booleanValue());
-        assertEquals("test1", json.get("value"));
-        assertEquals(sessionId1, json.get("sessionId"));
+        assertTrue(json.getBoolean("session"));
+        assertEquals("test1", json.getString("value"));
+        assertEquals(sessionId1, json.getString("sessionId"));
 
         // create session for second context
         json = getJSONResponse(httpclient, "/bar?create=true");
-        assertTrue(((Boolean)json.get("session")).booleanValue());
-        assertEquals("test2", json.get("value"));
-        final String sessionId2 = (String)json.get("sessionId");
+        assertTrue(json.getBoolean("session"));
+        assertEquals("test2", json.getString("value"));
+        final String sessionId2 = json.getString("sessionId");
         assertNotNull(sessionId2);
         assertFalse(sessionId1.equals(sessionId2));
 
         // and context foo is untouched
         json = getJSONResponse(httpclient, "/foo");
-        assertTrue(((Boolean)json.get("session")).booleanValue());
-        assertEquals("test1", json.get("value"));
-        assertEquals(sessionId1, json.get("sessionId"));
+        assertTrue(json.getBoolean("session"));
+        assertEquals("test1", json.getString("value"));
+        assertEquals(sessionId1, json.getString("sessionId"));
 
         // invalidate session for foo context
         json = getJSONResponse(httpclient, "/foo?destroy=true");
-        assertFalse(((Boolean)json.get("session")).booleanValue());
+        assertFalse(json.getBoolean("session"));
         // bar should be untouched
         json = getJSONResponse(httpclient, "/bar");
-        assertTrue(((Boolean)json.get("session")).booleanValue());
-        assertEquals("test2", json.get("value"));
-        assertEquals(sessionId2, json.get("sessionId"));
+        assertTrue(json.getBoolean("session"));
+        assertEquals("test2", json.getString("value"));
+        assertEquals(sessionId2, json.getString("sessionId"));
     }
 }

@@ -310,31 +310,33 @@ public abstract class BaseIntegrationTest
         final String localRepo = System.getProperty("maven.repo.local", "");
 
         return options(
-            when( localRepo.length() > 0 ).useOptions(
-                    systemProperty("org.ops4j.pax.url.mvn.localRepository").value(localRepo)
-            ),
-//            CoreOptions.vmOption("-Xrunjdwp:transport=dt_socket,server=y,suspend=y,address=8787"),
+                when( localRepo.length() > 0 ).useOptions(
+                        systemProperty("org.ops4j.pax.url.mvn.localRepository").value(localRepo)
+                        ),
+                //            CoreOptions.vmOption("-Xrunjdwp:transport=dt_socket,server=y,suspend=y,address=8787"),
 
-            mavenBundle("org.slf4j", "slf4j-api", "1.7.5"),
-            mavenBundle("org.slf4j", "jcl-over-slf4j", "1.7.5"),
-            mavenBundle("org.slf4j", "log4j-over-slf4j", "1.7.5"),
+                mavenBundle("org.slf4j", "slf4j-api", "1.7.5"),
+                mavenBundle("org.slf4j", "jcl-over-slf4j", "1.7.5"),
+                mavenBundle("org.slf4j", "log4j-over-slf4j", "1.7.5"),
 
-            mavenBundle("org.apache.sling", "org.apache.sling.commons.log", "4.0.0"),
-            mavenBundle("org.apache.sling", "org.apache.sling.commons.logservice", "1.0.2"),
+                mavenBundle("org.apache.sling", "org.apache.sling.commons.log", "4.0.0"),
+                mavenBundle("org.apache.sling", "org.apache.sling.commons.logservice", "1.0.2"),
 
-            mavenBundle("org.apache.felix", "org.apache.felix.http.servlet-api", System.getProperty("http.servlet.api.version")).startLevel(START_LEVEL_SYSTEM_BUNDLES),
-            mavenBundle("org.apache.felix", ORG_APACHE_FELIX_HTTP_JETTY, System.getProperty("http.jetty.version")).startLevel(START_LEVEL_SYSTEM_BUNDLES),
-            mavenBundle("org.apache.felix", "org.apache.felix.http.whiteboard", "3.0.0").startLevel(START_LEVEL_SYSTEM_BUNDLES),
-            mavenBundle("org.apache.felix", "org.apache.felix.configadmin").version("1.8.8"),
+                mavenBundle("org.apache.geronimo.specs", "geronimo-json_1.0_spec", "1.0-alpha-1").startLevel(START_LEVEL_SYSTEM_BUNDLES),
+                mavenBundle("org.apache.johnzon", "johnzon-core", "1.0.0").startLevel(START_LEVEL_SYSTEM_BUNDLES),
 
-            mavenBundle("org.apache.httpcomponents", "httpcore-osgi", "4.3.2").startLevel(START_LEVEL_SYSTEM_BUNDLES),
-            mavenBundle("org.apache.httpcomponents", "httpclient-osgi", "4.3.4").startLevel(START_LEVEL_SYSTEM_BUNDLES),
-            mavenBundle("org.mockito", "mockito-all", "1.10.19").startLevel(START_LEVEL_SYSTEM_BUNDLES),
-            mavenBundle("org.objenesis", "objenesis", "2.1").startLevel(START_LEVEL_SYSTEM_BUNDLES),
-            mavenBundle("com.googlecode.json-simple", "json-simple", "1.1.1").startLevel(START_LEVEL_SYSTEM_BUNDLES),
+                mavenBundle("org.apache.felix", "org.apache.felix.http.servlet-api", System.getProperty("http.servlet.api.version")).startLevel(START_LEVEL_SYSTEM_BUNDLES),
+                mavenBundle("org.apache.felix", ORG_APACHE_FELIX_HTTP_JETTY, System.getProperty("http.jetty.version")).startLevel(START_LEVEL_SYSTEM_BUNDLES),
+                mavenBundle("org.apache.felix", "org.apache.felix.http.whiteboard", "3.0.0").startLevel(START_LEVEL_SYSTEM_BUNDLES),
+                mavenBundle("org.apache.felix", "org.apache.felix.configadmin").version("1.8.8"),
 
-            junitBundles(),
-            frameworkStartLevel(START_LEVEL_TEST_BUNDLE));
+                mavenBundle("org.apache.httpcomponents", "httpcore-osgi", "4.3.2").startLevel(START_LEVEL_SYSTEM_BUNDLES),
+                mavenBundle("org.apache.httpcomponents", "httpclient-osgi", "4.3.4").startLevel(START_LEVEL_SYSTEM_BUNDLES),
+                mavenBundle("org.mockito", "mockito-all", "1.10.19").startLevel(START_LEVEL_SYSTEM_BUNDLES),
+                mavenBundle("org.objenesis", "objenesis", "2.1").startLevel(START_LEVEL_SYSTEM_BUNDLES),
+
+                junitBundles(),
+                frameworkStartLevel(START_LEVEL_TEST_BUNDLE));
     }
 
     private final Map<String, ServiceTracker<?, ?>> trackers = new HashMap<String, ServiceTracker<?, ?>>();
