@@ -66,9 +66,10 @@
                 <configuration>
                     <instructions>
                         <Bundle-Activator>org.apache.felix.schematizer.impl.Activator</Bundle-Activator>
-                        <Private-Package>org.apache.felix.schematizer.*, org.apache.felix.serializer.*</Private-Package>
+                        <Private-Package>org.apache.felix.schematizer.*, org.apache.felix.serializer.*,org.yaml.snakeyaml.*</Private-Package>
                         <Export-Package>org.apache.felix.schematizer</Export-Package>
                         <Import-Package>org.apache.felix.converter, org.apache.felix.serializer, *</Import-Package>
+                        <Import-Package>org.osgi.util.converter, org.osgi.service.serializer, *</Import-Package>
                     </instructions>
                 </configuration>
             </plugin>
