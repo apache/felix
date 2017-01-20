@@ -74,7 +74,6 @@ public class RepositorySerializationTest
 	}
 
     @Test
-    @Ignore("davidb: I've ignore'd this test as it fails. Need to revisit once the converter has stabilized")
 	public void shouldPutAndRemoveSimpleEntitiesFromStore() {
 		simpleManager.clear();
 		final SimpleTopEntity e1 = factory.newSimpleTop( "ID01", "Value01", null );
@@ -115,9 +114,6 @@ public class RepositorySerializationTest
 	}
 
     @Test
-    @Ignore("davidb: I've @Ignore-d this test as the DTO used breaks the DTO "
-            + "contract which says that DTOs cannot contain any methods. As these "
-            + "entities contain some methods they are not recognized as DTOs")
     public void shouldPutAndRemoveComplexEntityFromStore() {
         complexManager.clear();
         assertTrue( complexManager.list().isEmpty() );
@@ -158,9 +154,6 @@ public class RepositorySerializationTest
     }
 
     @Test
-    @Ignore("davidb: I've @Ignore-d this test as the DTO used breaks the DTO "
-            + "contract which says that DTOs cannot contain any methods. As these "
-            + "entities contain some methods they are not recognized as DTOs")
     public void shouldPutAllToStore() {
         complexManager.clear();
         assertTrue( complexManager.list().isEmpty() );
@@ -211,7 +204,6 @@ public class RepositorySerializationTest
     }
 
     @Test
-    @Ignore("davidb: I've ignore'd this test as it fails. Need to revisit once the converter has stabilized")
 	public void shouldIterateThroughKeysAndValues() {
 	    simpleManager.clear();
 

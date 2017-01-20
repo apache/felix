@@ -89,12 +89,24 @@ public class JsonParser {
     }
 
     private static Pair<String, Object> parseKeyValue(String jsonKeyValue) {
+        // Should be able to accept an empty key/value
+        if (jsonKeyValue.isEmpty())
+            return null;
+
         Matcher matcher = KEY_VALUE_PATTERN.matcher(jsonKeyValue);
         if (!matcher.matches() || matcher.groupCount() < 2) {
             throw new IllegalArgumentException("Malformatted JSON key-value pair: " + jsonKeyValue);
         }
 
-        return new Pair<>(matcher.group(1), parseValue(matcher.group(2)));
+        try
+        {
+            return new Pair<>(matcher.group(1), parseValue(matcher.group(2)));
+        }
+        catch ( Exception e ) {
+            // The matcher throws as exeption when there is an empty value, when it should just return null;
+            // TODO: find a better solution to solve this problem.
+            return null;
+        }
     }
 
     private static Object parseValue(String jsonValue) {
@@ -142,7 +154,8 @@ public class JsonParser {
 
         for (String element : parseKeyValueListRaw(jsonObject)) {
             Pair<String, Object> pair = parseKeyValue(element);
-            values.put(pair.key, pair.value);
+            if (pair != null)
+                values.put(pair.key, pair.value);
         }
 
         return values;
