@@ -44,7 +44,8 @@
         <webconsole.exports>
             org.apache.felix.webconsole;version=3.2.0;provide:=true,
             org.apache.felix.webconsole.bundleinfo;version=1.0.0;provide:=true,
-            org.apache.felix.webconsole.i18n;version=1.0.0;provide:=true
+            org.apache.felix.webconsole.i18n;version=1.0.0;provide:=true,
+            org.apache.felix.webconsole.json;version=1.0.0;provide:=true
         </webconsole.exports>
     </properties>
 
