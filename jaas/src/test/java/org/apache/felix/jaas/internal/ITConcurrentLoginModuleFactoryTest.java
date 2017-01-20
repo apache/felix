@@ -35,9 +35,10 @@ import java.util.Queue;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.CountDownLatch;
 
+import javax.security.auth.login.ConfigurationSpi;
+
 import org.apache.felix.jaas.LoginModuleFactory;
 import org.apache.sling.testing.mock.osgi.junit.OsgiContext;
-import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -47,7 +48,6 @@ import org.mockito.stubbing.Answer;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceReference;
 
-@Ignore("FELIX-5502")
 @RunWith(Parameterized.class)
 public class ITConcurrentLoginModuleFactoryTest
 {
@@ -55,6 +55,7 @@ public class ITConcurrentLoginModuleFactoryTest
     @Rule
     public OsgiContext context = new OsgiContext();
 
+    //Run the test multiple times
     @Parameterized.Parameters
     public static List<Object[]> data()
     {
@@ -97,6 +98,7 @@ public class ITConcurrentLoginModuleFactoryTest
 
         assertEquals(numOfServices,
             spi.engineGetAppConfigurationEntry(TEST_REALM_NAME).length);
+        assertEquals(1, context.getServices(ConfigurationSpi.class, null).length);
     }
 
     private static class ServiceAdder implements Runnable
