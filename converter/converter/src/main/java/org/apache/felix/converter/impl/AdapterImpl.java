@@ -128,15 +128,27 @@ public class AdapterImpl implements InternalConverter {
         }
 
         @Override
+        public Converting sourceAs(Class<?> type) {
+            treatAsClass = type;
+            del.sourceAs(type);
+            return this;
+        }
+
+        @Override
         public Converting sourceAsBean() {
             del.sourceAsBean();
             return this;
         }
 
         @Override
-        public Converting sourceAs(Class<?> type) {
-            treatAsClass = type;
-            del.sourceAs(type);
+        public Converting sourceAsDTO() {
+            del.sourceAsDTO();
+            return this;
+        }
+
+        @Override
+        public Converting targetAs(Class<?> cls) {
+            del.targetAs(cls);
             return this;
         }
 
@@ -147,8 +159,8 @@ public class AdapterImpl implements InternalConverter {
         }
 
         @Override
-        public Converting targetAs(Class<?> cls) {
-            del.targetAs(cls);
+        public Converting targetAsDTO() {
+            del.targetAsDTO();
             return this;
         }
 

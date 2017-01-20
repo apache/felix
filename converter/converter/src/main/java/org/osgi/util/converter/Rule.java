@@ -23,10 +23,9 @@ import java.lang.reflect.Type;
  *
  * @param <F> The type to convert from.
  * @param <T> The type to convert to.
- * @author $Id: 7f624253be48fc23d8a793b38673305dbfd5ff9a $
+ * @author $Id: c69b80657368cdf11837286f1fa439bf90b5c6e7 $
  * @Immutable
  */
-@Deprecated
 public class Rule<F, T> {
 	private final Type				sourceType;
 	private final Type				targetType;

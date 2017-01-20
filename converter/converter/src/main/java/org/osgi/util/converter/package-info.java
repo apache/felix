@@ -30,7 +30,7 @@
  * <p>
  * {@code  Import-Package: org.osgi.converter; version="[1.0,1.1)"}
  *
- * @author $Id: 1b82a2a1db1431c5e4398f368662b5b6fb5f8547 $
+ * @author $Id: 9ec70b9dd691e49a0b433d1401cbba70d581ef1a $
  */
 @Version("1.0")
 package org.osgi.util.converter;
