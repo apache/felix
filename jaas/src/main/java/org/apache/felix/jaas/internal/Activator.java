@@ -34,7 +34,6 @@ public class Activator implements BundleActivator
     private BundleLoginModuleCreator loginModuleCreator;
     private JaasConfigFactory jaasConfigFactory;
     private ConfigSpiOsgi configSpi;
-    private JaasWebConsolePlugin webConsolePlugin;
     private Logger logger;
 
     @Override
@@ -46,7 +45,6 @@ public class Activator implements BundleActivator
         configSpi = new ConfigSpiOsgi(context, logger);
         registerWebConsolePlugin(context);
 
-        logger.open();
         loginModuleCreator.open();
         configSpi.open();
     }
