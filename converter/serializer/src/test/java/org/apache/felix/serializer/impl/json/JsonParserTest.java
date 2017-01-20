@@ -17,6 +17,8 @@
 package org.apache.felix.serializer.impl.json;
 
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.Map;
 
 import org.junit.Test;
@@ -60,5 +62,16 @@ public class JsonParserTest {
         Map<String, Object> m = jp.getParsed();
         assertEquals(1, m.size());
         assertEquals(Arrays.asList("x", "y", "z"), m.get("abc"));
+    }
+
+    @Test
+    public void testEmptyJsonArray() {
+        String json = "{\"abc\": {\"def\": []}}";
+        JsonParser jp = new JsonParser(json);
+        Map<String, Object> m = jp.getParsed();
+        assertEquals(1, m.size());
+        Map<String, Object> result = new HashMap<>();
+        result.put("def", Collections.emptyList());
+        assertEquals(result, m.get("abc"));
     }
 }
