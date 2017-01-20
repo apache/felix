@@ -77,14 +77,26 @@ public class ConvertingImpl implements Converting, InternalConverting {
     }
 
     @Override
+    public Converting sourceAs(Class<?> cls) {
+        sourceAsClass = cls;
+        return this;
+    }
+
+    @Override
     public Converting sourceAsBean() {
         sourceAsJavaBean = true;
         return this;
     }
 
     @Override
-    public Converting sourceAs(Class<?> cls) {
-        sourceAsClass = cls;
+    public Converting sourceAsDTO() {
+        // TODO Implement
+        return this;
+    }
+
+    @Override
+    public Converting targetAs(Class<?> cls) {
+        targetAsClass = cls;
         return this;
     }
 
@@ -95,8 +107,8 @@ public class ConvertingImpl implements Converting, InternalConverting {
     }
 
     @Override
-    public Converting targetAs(Class<?> cls) {
-        targetAsClass = cls;
+    public Converting targetAsDTO() {
+        // TODO Implement
         return this;
     }
 

@@ -34,10 +34,10 @@ import org.osgi.annotation.versioning.ConsumerType;
  * </pre>
  *
  * @param <T> The target type for the conversion.
- * @author $Id$
+ * @author $Id: 1ea7d4297e6ed805ce147d32614f23bb9145b24c $
  * @Immutable
  */
-@ConsumerType @Deprecated
+@ConsumerType
 public class TypeReference<T> {
 	/**
 	 * A {@link TypeReference} cannot be directly instantiated. To use it, it

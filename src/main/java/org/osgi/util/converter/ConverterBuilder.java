@@ -25,9 +25,9 @@ import org.osgi.util.function.Function;
  * existing converter. The modified behaviour is specified by providing rules
  * and/or conversion functions.
  *
- * @author $Id$
+ * @author $Id: 802ba8cc0fdbfbffc871e3232b822f43338eaaf0 $
  */
-@ProviderType @Deprecated
+@ProviderType
 public interface ConverterBuilder {
 	/**
 	 * Build the specified converter. Each time this method is called a new

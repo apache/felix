@@ -24,10 +24,10 @@ import org.osgi.annotation.versioning.ProviderType;
  * converted to. A {@link Converting} instance can be obtained via the
  * {@link Converter} service by starting a conversion for a specific object.
  *
- * @author $Id$
+ * @author $Id: a7899e684989607923175b298051eeda2ced5aef $
  * @NotThreadSafe
  */
-@ProviderType @Deprecated
+@ProviderType
 public interface Converting {
 	/**
 	 * Always return a fully populated copy of the object, however if the object
@@ -71,6 +71,15 @@ public interface Converting {
 	Converting sourceAsBean();
 
 	/**
+	 * Treat the source object as a DTO even if the source object has methods or
+	 * is otherwise not recognised as a DTO.
+	 *
+	 * @return The current {@code Converting} object so that additional calls
+	 *         can be chained.
+	 */
+	Converting sourceAsDTO();
+
+	/**
 	 * Treat the target object as the specified class. This can be used to
 	 * disambiguate a type if it implements multiple interfaces or extends
 	 * multiple classes.
@@ -89,6 +98,15 @@ public interface Converting {
 	 *         can be chained.
 	 */
 	Converting targetAsBean();
+
+	/**
+	 * Treat the target object as a DTO even if it has methods or is otherwise
+	 * not recognized as a DTO.
+	 *
+	 * @return The current {@code Converting} object so that additional calls
+	 *         can be chained.
+	 */
+	Converting targetAsDTO();
 
 	/**
 	 * Specify the target object type for the conversion as a class object.

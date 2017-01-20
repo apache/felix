@@ -22,10 +22,10 @@ import org.osgi.annotation.versioning.ProviderType;
  * from the service registry. The conversion is then completed via the
  * Converting interface that has methods to specify the target type.
  *
- * @author $Id$
+ * @author $Id: 9b4f95a44c40d64e9ad3653fcf7be03d63713a83 $
  * @ThreadSafe
  */
-@ProviderType @Deprecated
+@ProviderType
 public interface Converter {
 	/**
 	 * Start a conversion for the given object.
