@@ -18,25 +18,26 @@
  */
 package org.apache.felix.webconsole.json;
 
-import java.io.PrintWriter;
+import java.io.IOException;
+import java.io.Writer;
 
 /**
- * Simple JSON writer to be used on top of a {@link PrintWriter}.
+ * Simple JSON writer to be used on top of a {@link Writer}.
  */
 public class JSONWriter
 {
 
-    private final PrintWriter pw;
+    private final Writer pw;
 
     private boolean comma;
 
-    public JSONWriter(final PrintWriter pw)
+    public JSONWriter(final Writer pw)
     {
         this.comma = false;
         this.pw = pw;
     }
 
-    public JSONWriter object()
+    public JSONWriter object() throws IOException
     {
         if (this.comma)  this.pw.write(',');
         this.pw.write("{");
@@ -44,14 +45,14 @@ public class JSONWriter
         return this;
     }
 
-    public JSONWriter endObject()
+    public JSONWriter endObject() throws IOException
     {
         this.pw.write('}');
         this.comma = true;
         return this;
     }
 
-    public JSONWriter array()
+    public JSONWriter array() throws IOException
     {
         if (this.comma)  this.pw.write(',');
         this.pw.write("[");
@@ -59,14 +60,14 @@ public class JSONWriter
         return this;
     }
 
-    public JSONWriter endArray()
+    public JSONWriter endArray() throws IOException
     {
         this.pw.write(']');
         this.comma = true;
         return this;
     }
 
-    public JSONWriter key(String key)
+    public JSONWriter key(String key) throws IOException
     {
         if (this.comma)  this.pw.write(',');
         quote(key);
@@ -75,7 +76,7 @@ public class JSONWriter
         return this;
     }
 
-    public JSONWriter value(final boolean b)
+    public JSONWriter value(final boolean b) throws IOException
     {
         if (this.comma)  this.pw.write(',');
         this.pw.write(b ? "true" : "false");
@@ -83,12 +84,12 @@ public class JSONWriter
         return this;
     }
 
-    public JSONWriter value(final double d)
+    public JSONWriter value(final double d) throws IOException
     {
         return this.value(new Double(d));
     }
 
-    public JSONWriter value(final int i)
+    public JSONWriter value(final int i) throws IOException
     {
         if (this.comma)  this.pw.write(',');
         this.pw.write(String.valueOf(i));
@@ -96,7 +97,7 @@ public class JSONWriter
         return this;
     }
 
-    public JSONWriter value(final long l)
+    public JSONWriter value(final long l) throws IOException
     {
         if (this.comma)  this.pw.write(',');
         this.pw.write(String.valueOf(l));
@@ -104,7 +105,7 @@ public class JSONWriter
         return this;
     }
 
-    public JSONWriter value(final Object value)
+    public JSONWriter value(final Object value) throws IOException
     {
         if (this.comma)
         {
@@ -147,54 +148,64 @@ public class JSONWriter
     /**
      * Quote the provided value and escape some characters.
      * @param value The value to quote
+     * @throws IOException
      */
-    private void quote(final String value)
+    private void quote(final String value) throws IOException
     {
-        pw.print('"');
+        pw.write('"');
         final int len = value.length();
         for(int i=0;i<len;i++)
         {
             final char c = value.charAt(i);
             switch(c){
             case '"':
-                pw.print("\\\"");
+                pw.write("\\\"");
                 break;
             case '\\':
-                pw.print("\\\\");
+                pw.write("\\\\");
                 break;
             case '\b':
-                pw.print("\\b");
+                pw.write("\\b");
                 break;
             case '\f':
-                pw.print("\\f");
+                pw.write("\\f");
                 break;
             case '\n':
-                pw.print("\\n");
+                pw.write("\\n");
                 break;
             case '\r':
-                pw.print("\\r");
+                pw.write("\\r");
                 break;
             case '\t':
-                pw.print("\\t");
+                pw.write("\\t");
                 break;
             case '/':
-                pw.print("\\/");
+                pw.write("\\/");
                 break;
             default:
                 if ((c>='\u0000' && c<='\u001F') || (c>='\u007F' && c<='\u009F') || (c>='\u2000' && c<='\u20FF'))
                 {
                     final String hex=Integer.toHexString(c);
-                    pw.print("\\u");
+                    pw.write("\\u");
                     for(int k=0;k<4-hex.length();k++){
-                        pw.print('0');
+                        pw.write('0');
                     }
-                    pw.print(hex.toUpperCase());
+                    pw.write(hex.toUpperCase());
                 }
                 else{
-                    pw.print(c);
+                    pw.write(c);
                 }
             }
         }
-        pw.print('"');
+        pw.write('"');
+    }
+
+    /**
+     * @see Writer#flush()
+     * @throws IOException
+     */
+    public void flush() throws IOException
+    {
+        this.pw.flush();
     }
 }
