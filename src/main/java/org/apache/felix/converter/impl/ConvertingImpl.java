@@ -70,6 +70,10 @@ public class ConvertingImpl implements Converting, InternalConverting {
     private List<Object> keys = new ArrayList<>();
     private volatile Object root;
     private volatile boolean sourceAsJavaBean = false;
+    @SuppressWarnings( "unused" )
+    private volatile boolean targetAsJavaBean = false;
+    private volatile boolean sourceAsDTO = false;
+    private volatile boolean targetAsDTO = false;
 
     ConvertingImpl(InternalConverter c, Object obj) {
         converter = c;
@@ -84,13 +88,17 @@ public class ConvertingImpl implements Converting, InternalConverting {
 
     @Override
     public Converting sourceAsBean() {
+        // To avoid ambiguity, reset any instruction to sourceAsDTO
+        sourceAsDTO = false;
         sourceAsJavaBean = true;
         return this;
     }
 
     @Override
     public Converting sourceAsDTO() {
-        // TODO Implement
+        // To avoid ambiguity, reset any instruction to sourceAsJavaBean
+        sourceAsJavaBean = false;
+        sourceAsDTO = true;
         return this;
     }
 
@@ -102,13 +110,17 @@ public class ConvertingImpl implements Converting, InternalConverting {
 
     @Override
     public Converting targetAsBean() {
-        // TODO not yet implemented
+        // To avoid ambiguity, reset any instruction to targetAsDTO
+        targetAsDTO = false;
+        targetAsJavaBean = true;
         return this;
     }
 
     @Override
     public Converting targetAsDTO() {
-        // TODO Implement
+        // To avoid ambiguity, reset any instruction to targetAsJavaBean
+        targetAsJavaBean = false;
+        targetAsDTO = true;
         return this;
     }
 
@@ -142,6 +154,7 @@ public class ConvertingImpl implements Converting, InternalConverting {
         return this;
     }
 
+    @SuppressWarnings( "unchecked" )
     @Override
     public void setConverter(Converter c) {
         if (c instanceof InternalConverter)
@@ -190,6 +203,11 @@ public class ConvertingImpl implements Converting, InternalConverting {
 
         sourceClass = sourceAsClass != null ? sourceAsClass : object.getClass();
 
+        // Temporary - to remove next commit!!
+        // This is just to catch any old code that may still be using {source|target}As(DTO.class)
+        if(DTO.class.equals(sourceClass) || DTO.class.equals(targetAsClass))
+            throw new RuntimeException("To update!!");
+
         if (!isCopyRequiredType(targetAsClass) && targetAsClass.isAssignableFrom(sourceClass)) {
                 return object;
         }
@@ -202,7 +220,7 @@ public class ConvertingImpl implements Converting, InternalConverting {
             return convertToArray();
         } else if (Collection.class.isAssignableFrom(targetAsClass)) {
             return convertToCollection();
-        } else if (isDTOType(targetAsClass)) {
+        } else if (isDTOType(targetAsClass) || ((sourceAsDTO || targetAsDTO) && DTO.class.isAssignableFrom(targetActualClass))) {
             return convertToDTO();
         } else if (isMapType(targetAsClass)) {
             return convertToMapType();
@@ -292,16 +310,19 @@ public class ConvertingImpl implements Converting, InternalConverting {
     private <T> T convertToDTO() {
         Map m = mapView(object, sourceClass, converter);
 
+        Class<?> cls = targetAsClass;
+        if (targetAsDTO)
+            cls = targetActualClass;
         try {
             T dto = (T) targetActualClass.newInstance();
 
             for (Map.Entry entry : (Set<Map.Entry>) m.entrySet()) {
                 Field f = null;
                 try {
-                    f = targetAsClass.getDeclaredField(mangleName(entry.getKey().toString()));
+                    f = cls.getDeclaredField(mangleName(entry.getKey().toString()));
                 } catch (NoSuchFieldException e) {
                     try {
-                        f = targetAsClass.getField(mangleName(entry.getKey().toString()));
+                        f = cls.getField(mangleName(entry.getKey().toString()));
                     } catch (NoSuchFieldException e1) {
                         // There is not field with this name
                     }
@@ -309,7 +330,11 @@ public class ConvertingImpl implements Converting, InternalConverting {
 
                 if (f != null) {
                     Object val = entry.getValue();
-                    f.set(dto, converter.convert(val).to(f.getType()));
+                    if (sourceAsDTO && DTO.class.isAssignableFrom(f.getType()))
+                        val = converter.convert(val).sourceAsDTO().to(f.getType());
+                    else
+                        val = converter.convert(val).to(f.getType());
+                    f.set(dto, val);
                 }
             }
 
@@ -355,7 +380,11 @@ public class ConvertingImpl implements Converting, InternalConverting {
                     if (isCopyRequiredType(cls)) {
                         cls = getConstructableType(cls);
                     }
-                    value = converter.convert(value).key(ka).to(cls);
+                    if (sourceAsDTO && DTO.class.isAssignableFrom(cls))
+                        // sourceAsDTO or sourceAsClass???
+                        value = converter.convert(value).key(ka).sourceAsDTO().to(cls);
+                    else
+                        value = converter.convert(value).key(ka).to(cls);
                 }
             }
             instance.put(key, value);
@@ -839,11 +868,11 @@ public class ConvertingImpl implements Converting, InternalConverting {
     }
 
     private Map<?,?> mapView(Object obj, Class<?> sourceCls, InternalConverter converter) {
-        if (Map.class.isAssignableFrom(sourceCls))
+        if (Map.class.isAssignableFrom(sourceCls) || (DTO.class.isAssignableFrom(sourceCls) && obj instanceof Map))
             return (Map<?,?>) obj;
         else if (Dictionary.class.isAssignableFrom(sourceCls))
             return null; // TODO
-        else if (isDTOType(sourceCls))
+        else if (isDTOType(sourceCls) || sourceAsDTO)
             return createMapFromDTO(obj, converter);
         else {
             if (sourceAsJavaBean) {
@@ -856,6 +885,8 @@ public class ConvertingImpl implements Converting, InternalConverting {
     }
 
     private static boolean isCopyRequiredType(Class<?> cls) {
+        if (cls.isEnum())
+            return false;
         return Map.class.isAssignableFrom(cls) ||
                 Collection.class.isAssignableFrom(cls) ||
                 DTO.class.isAssignableFrom(cls) ||

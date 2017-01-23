@@ -52,6 +52,7 @@ import org.apache.felix.converter.impl.MyEmbeddedDTO.Alpha;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.osgi.dto.DTO;
 import org.osgi.util.converter.ConversionException;
 import org.osgi.util.converter.Converter;
 import org.osgi.util.converter.ConverterBuilder;
@@ -462,6 +463,72 @@ public class ConverterTest {
         assertEquals(Alpha.A, e.get("alpha"));
     }
 
+    @Test
+    public void testDTO2Map2() {
+        MyEmbeddedDTO embedded = new MyEmbeddedDTO();
+        embedded.marco = "hohoho";
+        embedded.polo = Long.MAX_VALUE;
+        embedded.alpha = Alpha.A;
+
+        MyDTO dto = new MyDTO();
+        dto.ping = "lalala";
+        dto.pong = Long.MIN_VALUE;
+        dto.count = Count.ONE;
+        dto.embedded = embedded;
+
+        @SuppressWarnings("rawtypes")
+        Map m = converter.convert(dto).sourceAsDTO().to(Map.class);
+        assertEquals(4, m.size());
+        assertEquals("lalala", m.get("ping"));
+        assertEquals(Long.MIN_VALUE, m.get("pong"));
+        assertEquals(Count.ONE, m.get("count"));
+        assertNotNull(m.get("embedded"));
+        @SuppressWarnings("rawtypes")
+        Map e = (Map)m.get("embedded");
+        assertEquals("hohoho", e.get("marco"));
+        assertEquals(Long.MAX_VALUE, e.get("polo"));
+        assertEquals(Alpha.A, e.get("alpha"));
+    }
+
+    @Test
+    public void testDTO2Map3() {
+        MyEmbeddedDTO embedded2 = new MyEmbeddedDTO();
+        embedded2.marco = "hohoho";
+        embedded2.polo = Long.MAX_VALUE;
+        embedded2.alpha = Alpha.A;
+
+        MyDTOWithMethods embedded = new MyDTOWithMethods();
+        embedded.ping = "lalala";
+        embedded.pong = Long.MIN_VALUE;
+        embedded.count = Count.ONE;
+        embedded.embedded = embedded2;
+
+        MyDTO8 dto = new MyDTO8();
+        dto.ping = "lalala";
+        dto.pong = Long.MIN_VALUE;
+        dto.count = MyDTO8.Count.ONE;
+        dto.embedded = embedded;
+
+        @SuppressWarnings("rawtypes")
+        Map m = converter.convert(dto).sourceAsDTO().to(Map.class);
+        assertEquals(4, m.size());
+        assertEquals("lalala", m.get("ping"));
+        assertEquals(Long.MIN_VALUE, m.get("pong"));
+        assertEquals(MyDTO8.Count.ONE, m.get("count"));
+        assertNotNull(m.get("embedded"));
+        assertTrue(m.get( "embedded" ) instanceof MyDTOWithMethods);
+        MyDTOWithMethods e = (MyDTOWithMethods)m.get("embedded");
+        assertEquals("lalala", e.ping);
+        assertEquals(Long.MIN_VALUE, e.pong);
+        assertEquals(Count.ONE, e.count);
+        assertNotNull(e.embedded);
+        assertTrue(e.embedded instanceof MyEmbeddedDTO);
+        MyEmbeddedDTO e2 = (MyEmbeddedDTO)e.embedded;
+        assertEquals("hohoho", e2.marco);
+        assertEquals(Long.MAX_VALUE, e2.polo);
+        assertEquals(Alpha.A, e2.alpha);
+    }
+
     @Test @SuppressWarnings({ "rawtypes", "unchecked" })
     public void testDTOFieldShadowing() {
         MySubDTO dto = new MySubDTO();
@@ -603,7 +670,7 @@ public class ConverterTest {
     }
 
     @Test
-    public void testConvertAs1() {
+    public void testConvertAsInterface() {
         MyBean mb = new MyBean();
         mb.intfVal = 17;
         mb.beanVal = "Hello";
@@ -613,13 +680,21 @@ public class ConverterTest {
     }
 
     @Test
-    public void testConvertAs2() {
+    public void testConvertAsBean() {
         MyBean mb = new MyBean();
         mb.intfVal = 17;
         mb.beanVal = "Hello";
 
         assertEquals(Collections.singletonMap("value", "Hello"),
                 converter.convert(mb).sourceAsBean().to(Map.class));
+    }
+
+    @Test
+    public void testConvertAsDTO() {
+        MyClass3 mc3 = new MyClass3(17);
+
+        assertEquals(17,
+                converter.convert(mc3).sourceAsDTO().to(Map.class).get("value"));
     }
 
     @Test
@@ -678,6 +753,19 @@ public class ConverterTest {
 
         public String getValue() {
             return beanVal;
+        }
+    }
+
+    static class MyClass3 {
+        public int value;
+        public String string = "String";
+
+        public MyClass3( int value ) {
+            this.value = value;
+        }
+
+        public int value() {
+            return value;
         }
     }
 }
