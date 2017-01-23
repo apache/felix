@@ -165,6 +165,7 @@ public class ConvertingImpl implements Converting, InternalConverting {
         return (T) to(ref.getType());
     }
 
+    @SuppressWarnings("unchecked")
     @Override
     public Object to(Type type) {
         Class<?> cls = null;
@@ -647,25 +648,15 @@ public class ConvertingImpl implements Converting, InternalConverting {
 
     @SuppressWarnings("rawtypes")
     private static Map createMapFromInterface(Object obj) {
-        Class intf = null;
-        for (Class i : obj.getClass().getInterfaces()) {
-            intf = i;
-            break;
-        }
-        if (intf == null)
-            throw new ConversionException("" + obj);
-
-        Set<String> invokedMethods = new HashSet<>();
-
         Map result = new HashMap();
-        for (Method md : obj.getClass().getDeclaredMethods()) {
-            handleInterfaceMethod(obj, md, invokedMethods, result);
+        for (Class i : obj.getClass().getInterfaces()) {
+            for (Method md : i.getMethods()) {
+                handleInterfaceMethod(obj, md, new HashSet<>(), result);
+            }
+            if (result.size() > 0)
+                return result;
         }
-        for (Method md : obj.getClass().getMethods()) {
-            handleInterfaceMethod(obj, md, invokedMethods, result);
-        }
-
-        return result;
+        throw new ConversionException("Cannot be converted to map: " + obj);
     }
 
     private static Object createMapOrCollection(Class<?> cls, int initialSize) {
@@ -827,6 +818,9 @@ public class ConvertingImpl implements Converting, InternalConverting {
     @SuppressWarnings({ "rawtypes", "unchecked" })
     private static void handleInterfaceMethod(Object obj, Method md, Set<String> invokedMethods, Map res) {
         if (Modifier.isStatic(md.getModifiers()))
+            return;
+
+        if (md.getParameterCount() > 0)
             return;
 
         String mn = md.getName();
