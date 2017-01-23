@@ -16,8 +16,37 @@
  */
 package org.apache.felix.converter.impl;
 
+import java.util.Map;
+
+import org.osgi.util.converter.ConversionException;
 import org.osgi.util.converter.Converter;
+import org.osgi.util.converter.TypeReference;
 
 public interface InternalConverter extends Converter {
     public InternalConverting convert(Object obj);
+
+    @Override
+    default public boolean equals(Object o1, Object o2) {
+        try {
+            Map<String, Object> m1 = convert(o1).to(new TypeReference<Map<String,Object>>(){});
+            Map<String, Object> m2 = convert(o2).to(new TypeReference<Map<String,Object>>(){});
+
+            if (m1.size() != m2.size())
+                return false;
+
+            for (Map.Entry<String, Object> entry : m1.entrySet()) {
+                Object val = m2.get(entry.getKey());
+                if (!equals(entry.getValue(), val))
+                    return false;
+            }
+            return true;
+        } catch (ConversionException e) {
+            // do lists as well
+
+            // It's a scalar - compare via strings
+            String s1 = convert(o1).to(String.class);
+            String s2 = convert(o2).to(String.class);
+            return s1.equals(s2);
+        }
+    }
 }
