@@ -39,8 +39,6 @@
     
     <properties>
         <felix.java.version>4</felix.java.version>
-        <org.json.version>20070829</org.json.version>
-        <org.json.version.osgi>0.0.0.${org.json.version}</org.json.version.osgi>
         <webconsole.exports>
             org.apache.felix.webconsole;version=3.2.0;provide:=true,
             org.apache.felix.webconsole.bundleinfo;version=1.0.0;provide:=true,
@@ -116,7 +114,6 @@
                             ${webconsole.exports}
                         </Export-Package>
                         <Import-Package>
-                            org.json.*;version=0,
                             javax.servlet.*;version="[2.4,4)",
                             org.apache.commons.io; version="[1.4,3)",
                             *
@@ -184,7 +181,7 @@
        <!--
            The "all-in-one-bundle" profile builds a bundle including certain
            3rd party libraries and classes, namely: Commons IO, Commons
-           FileUpload, JSON, and the OSGi ServiceTracker.
+           FileUpload, and the OSGi ServiceTracker.
            The "all-in-one-bundle" can be used in deployments where these
            dependencies need not be deployed separately.
        -->
@@ -219,7 +216,6 @@
                                             org.apache.commons.io,
                                             org.apache.commons.io.filefilter,
                                             org.apache.commons.io.output,
-                                            org.json;version=${org.json.version.osgi},
                                             org.apache.felix.inventory;version=1.0.0,
                                             ${webconsole.exports}
                                        </Export-Package>
@@ -367,13 +363,6 @@
             <scope>provided</scope>
         </dependency>
 
-        <dependency>
-            <groupId>org.json</groupId>
-            <artifactId>json</artifactId>
-            <version>${org.json.version}</version>
-            <scope>provided</scope>
-        </dependency>
-        
         <dependency>
             <groupId>org.apache.felix</groupId>
             <artifactId>org.apache.felix.shell</artifactId>

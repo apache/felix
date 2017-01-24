@@ -38,8 +38,6 @@ import org.apache.commons.fileupload.FileUploadException;
 import org.apache.commons.fileupload.disk.DiskFileItemFactory;
 import org.apache.commons.fileupload.servlet.ServletFileUpload;
 import org.apache.commons.fileupload.servlet.ServletRequestContext;
-import org.json.JSONException;
-import org.json.JSONWriter;
 
 
 /**
@@ -162,7 +160,7 @@ public final class WebConsoleUtil
                     if ( current == null )
                     {
                         current = new FileItem[]
-                            { fi };
+                                { fi };
                     }
                     else
                     {
@@ -210,8 +208,8 @@ public final class WebConsoleUtil
      *  URL is given and cannot be converted into a valid URL
      */
     public static final void sendRedirect(final HttpServletRequest request,
-                                final HttpServletResponse response,
-                                String redirectUrl) throws IOException {
+            final HttpServletResponse response,
+            String redirectUrl) throws IOException {
         // check for relative URL
         if ( !redirectUrl.startsWith("/") ) { //$NON-NLS-1$
             String base = request.getContextPath() + request.getServletPath() + request.getPathInfo();
@@ -267,25 +265,25 @@ public final class WebConsoleUtil
             {
                 switch (ch = text.charAt(i))
                 {
-                    case '<':
-                        sb.append("&lt;"); //$NON-NLS-1$
-                        break;
-                    case '>':
-                        sb.append("&gt;"); //$NON-NLS-1$
-                        break;
-                    case '&':
-                        sb.append("&amp;"); //$NON-NLS-1$
-                        break;
-                    case ' ':
-                        sb.append("&nbsp;"); //$NON-NLS-1$
-                        break;
-                    case '\r':
-                    case '\n':
-                        if (oldch != '\r' && oldch != '\n') // don't add twice <br>
-                            sb.append("<br/>\n"); //$NON-NLS-1$
-                        break;
-                    default:
-                        sb.append(ch);
+                case '<':
+                    sb.append("&lt;"); //$NON-NLS-1$
+                    break;
+                case '>':
+                    sb.append("&gt;"); //$NON-NLS-1$
+                    break;
+                case '&':
+                    sb.append("&amp;"); //$NON-NLS-1$
+                    break;
+                case ' ':
+                    sb.append("&nbsp;"); //$NON-NLS-1$
+                    break;
+                case '\r':
+                case '\n':
+                    if (oldch != '\r' && oldch != '\n') // don't add twice <br>
+                        sb.append("<br/>\n"); //$NON-NLS-1$
+                    break;
+                default:
+                    sb.append(ch);
                 }
                 oldch = ch;
             }
@@ -303,7 +301,7 @@ public final class WebConsoleUtil
      * @return the request parameter if set and is valid integer, or the default value
      */
     public static final int getParameterInt(HttpServletRequest request, String name,
-        int _default)
+            int _default)
     {
         int ret = _default;
         String param = request.getParameter(name);
@@ -319,32 +317,6 @@ public final class WebConsoleUtil
 
         return ret;
     }
-
-    /**
-     * Writes a key-value pair in a JSON writer. Write is performed only if both key and
-     * value are not null.
-     *
-     * @param jw the writer, where to write the data
-     * @param key the key value, stored under 'key'
-     * @param value the value stored under 'value'
-     * @throws JSONException if the value cannot be serialized.
-     *
-     * @deprecated Plugins should use their own json code/library
-     */
-    public static final void keyVal(JSONWriter jw, String key, Object value)
-        throws JSONException
-    {
-        if (key != null && value != null)
-        {
-            jw.object();
-            jw.key("key"); //$NON-NLS-1$
-            jw.value(key);
-            jw.key("value"); //$NON-NLS-1$
-            jw.value(value);
-            jw.endObject();
-        }
-    }
-
 
     /**
      * Decode the given value expected to be URL encoded.
