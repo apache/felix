@@ -17,6 +17,7 @@
 package org.apache.felix.webconsole.internal.configuration;
 
 
+import java.io.IOException;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Dictionary;
@@ -27,8 +28,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import org.json.JSONException;
-import org.json.JSONWriter;
+import org.apache.felix.webconsole.json.JSONWriter;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.service.cm.Configuration;
@@ -264,7 +264,8 @@ class MetaTypeServiceSupport extends MetaTypeSupport
     }
 
 
-    void mergeWithMetaType( Dictionary props, ObjectClassDefinition ocd, JSONWriter json, Set ignoreAttrIds ) throws JSONException
+    void mergeWithMetaType( Dictionary props, ObjectClassDefinition ocd, JSONWriter json, Set ignoreAttrIds )
+            throws IOException
     {
         json.key( "title" ).value( ocd.getName() ); //$NON-NLS-1$
 

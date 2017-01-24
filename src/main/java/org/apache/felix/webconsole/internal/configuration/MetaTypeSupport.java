@@ -17,17 +17,17 @@
 package org.apache.felix.webconsole.internal.configuration;
 
 
+import java.io.IOException;
 import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Vector;
 
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONWriter;
+import org.apache.felix.webconsole.json.JSONWriter;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.service.metatype.AttributeDefinition;
@@ -78,7 +78,7 @@ class MetaTypeSupport
 
 
     static void attributeToJson( final JSONWriter json, final PropertyDescriptor ad, final Object propValue )
-        throws JSONException
+            throws IOException
     {
         json.object();
 
@@ -149,17 +149,23 @@ class MetaTypeSupport
         }
         else
         {
-            value = new JSONArray( toList( value ) );
-            if ( isPassword )
+            json.key( "values" ); //$NON-NLS-1$
+            json.array();
+            final List list = toList( value );
+            final Iterator iter = list.iterator();
+            while ( iter.hasNext() )
             {
-                JSONArray tmp = ( JSONArray ) value;
-                for ( int tmpI = 0; tmpI < tmp.length(); tmpI++ )
+                final Object val = iter.next();
+                if ( isPassword )
                 {
-                    tmp.put( tmpI, PASSWORD_PLACEHOLDER_VALUE );
+                    json.value(PASSWORD_PLACEHOLDER_VALUE);
+                }
+                else
+                {
+                    json.value(val);
                 }
             }
-            json.key( "values" ); //$NON-NLS-1$
-            json.value( value );
+            json.endArray();
         }
 
         if ( ad.getDescription() != null )
@@ -299,27 +305,27 @@ class MetaTypeSupport
     {
         switch ( type )
         {
-            case AttributeDefinition.BOOLEAN:
-                return Boolean.valueOf( value );
-            case AttributeDefinition.BYTE:
-                return Byte.valueOf( value );
-            case AttributeDefinition.CHARACTER:
-                char c = ( value.length() > 0 ) ? value.charAt( 0 ) : 0;
-                return new Character( c );
-            case AttributeDefinition.DOUBLE:
-                return Double.valueOf( value );
-            case AttributeDefinition.FLOAT:
-                return Float.valueOf( value );
-            case AttributeDefinition.LONG:
-                return Long.valueOf( value );
-            case AttributeDefinition.INTEGER:
-                return Integer.valueOf( value );
-            case AttributeDefinition.SHORT:
-                return Short.valueOf( value );
-            default:
-                // includes AttributeDefinition.STRING
-                // includes ATTRIBUTE_TYPE_PASSWORD/AttributeDefinition.PASSWORD
-                return value;
+        case AttributeDefinition.BOOLEAN:
+            return Boolean.valueOf( value );
+        case AttributeDefinition.BYTE:
+            return Byte.valueOf( value );
+        case AttributeDefinition.CHARACTER:
+            char c = ( value.length() > 0 ) ? value.charAt( 0 ) : 0;
+            return new Character( c );
+        case AttributeDefinition.DOUBLE:
+            return Double.valueOf( value );
+        case AttributeDefinition.FLOAT:
+            return Float.valueOf( value );
+        case AttributeDefinition.LONG:
+            return Long.valueOf( value );
+        case AttributeDefinition.INTEGER:
+            return Integer.valueOf( value );
+        case AttributeDefinition.SHORT:
+            return Short.valueOf( value );
+        default:
+            // includes AttributeDefinition.STRING
+            // includes ATTRIBUTE_TYPE_PASSWORD/AttributeDefinition.PASSWORD
+            return value;
         }
     }
 
@@ -357,33 +363,33 @@ class MetaTypeSupport
         Object array;
         switch ( type )
         {
-            case AttributeDefinition.BOOLEAN:
-                array = new boolean[size];
-                break;
-            case AttributeDefinition.BYTE:
-                array = new byte[size];
-                break;
-            case AttributeDefinition.CHARACTER:
-                array = new char[size];
-                break;
-            case AttributeDefinition.DOUBLE:
-                array = new double[size];
-                break;
-            case AttributeDefinition.FLOAT:
-                array = new float[size];
-                break;
-            case AttributeDefinition.LONG:
-                array = new long[size];
-                break;
-            case AttributeDefinition.INTEGER:
-                array = new int[size];
-                break;
-            case AttributeDefinition.SHORT:
-                array = new short[size];
-                break;
-            default:
-                // unexpected, but assume string
-                array = new String[size];
+        case AttributeDefinition.BOOLEAN:
+            array = new boolean[size];
+            break;
+        case AttributeDefinition.BYTE:
+            array = new byte[size];
+            break;
+        case AttributeDefinition.CHARACTER:
+            array = new char[size];
+            break;
+        case AttributeDefinition.DOUBLE:
+            array = new double[size];
+            break;
+        case AttributeDefinition.FLOAT:
+            array = new float[size];
+            break;
+        case AttributeDefinition.LONG:
+            array = new long[size];
+            break;
+        case AttributeDefinition.INTEGER:
+            array = new int[size];
+            break;
+        case AttributeDefinition.SHORT:
+            array = new short[size];
+            break;
+        default:
+            // unexpected, but assume string
+            array = new String[size];
         }
 
         for ( int i = 0; i < size; i++ )

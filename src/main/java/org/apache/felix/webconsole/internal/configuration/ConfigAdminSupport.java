@@ -44,9 +44,7 @@ import java.util.regex.Pattern;
 import javax.servlet.http.HttpServletRequest;
 
 import org.apache.felix.webconsole.internal.Util;
-import org.json.JSONException;
-import org.json.JSONObject;
-import org.json.JSONWriter;
+import org.apache.felix.webconsole.json.JSONWriter;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
@@ -165,7 +163,7 @@ class ConfigAdminSupport
     }
 
     String applyConfiguration( HttpServletRequest request, String pid )
-        throws IOException
+            throws IOException
     {
         if ( request.getParameter( ConfigManager.ACTION_DELETE ) != null ) //$NON-NLS-1$
         {
@@ -205,10 +203,10 @@ class ConfigAdminSupport
             {
                 String propName = propTokens.nextToken();
                 String paramName = "action".equals(propName) //$NON-NLS-1$
-                    || ConfigManager.ACTION_DELETE.equals(propName)
-                    || ConfigManager.ACTION_APPLY.equals(propName)
-                    || ConfigManager.PROPERTY_LIST.equals(propName)
-                    ? '$' + propName : propName;
+                        || ConfigManager.ACTION_DELETE.equals(propName)
+                        || ConfigManager.ACTION_APPLY.equals(propName)
+                        || ConfigManager.PROPERTY_LIST.equals(propName)
+                        ? '$' + propName : propName;
                 propsToKeep.add(propName);
 
                 PropertyDescriptor ad = (PropertyDescriptor) adMap.get( propName );
@@ -222,11 +220,11 @@ class ConfigAdminSupport
                 int attributeType = MetaTypeSupport.getAttributeType( ad );
 
                 if ( ad == null
-                    || ( ad.getCardinality() == 0 && ( attributeType == AttributeDefinition.STRING || attributeType == MetaTypeServiceSupport.ATTRIBUTE_TYPE_PASSWORD ) ) )
+                        || ( ad.getCardinality() == 0 && ( attributeType == AttributeDefinition.STRING || attributeType == MetaTypeServiceSupport.ATTRIBUTE_TYPE_PASSWORD ) ) )
                 {
                     String prop = request.getParameter( paramName );
                     if ( prop != null
-                        && ( attributeType != MetaTypeSupport.ATTRIBUTE_TYPE_PASSWORD || !MetaTypeSupport.PASSWORD_PLACEHOLDER_VALUE.equals( prop ) ) )
+                            && ( attributeType != MetaTypeSupport.ATTRIBUTE_TYPE_PASSWORD || !MetaTypeSupport.PASSWORD_PLACEHOLDER_VALUE.equals( prop ) ) )
                     {
                         props.put( propName, prop );
                     }
@@ -346,7 +344,7 @@ class ConfigAdminSupport
 
 
     void printConfigurationJson( PrintWriter pw, String pid, Configuration config, String pidFilter,
-        String locale )
+            String locale )
     {
 
         JSONWriter result = new JSONWriter( pw );
@@ -369,7 +367,7 @@ class ConfigAdminSupport
 
 
     void configForm( JSONWriter json, String pid, Configuration config, String pidFilter, String locale )
-        throws JSONException
+            throws IOException
     {
 
         json.key( ConfigManager.PID );
@@ -415,7 +413,7 @@ class ConfigAdminSupport
         {
             json.key( "title" ).value( pid ); //$NON-NLS-1$
             json.key( "description" ).value( //$NON-NLS-1$
-                "This form is automatically generated from existing properties because no property "
+                    "This form is automatically generated from existing properties because no property "
                     + "descriptors are available for this configuration. This may be cause by the absence "
                     + "of the OSGi Metatype Service or the absence of a MetaType descriptor for this configuration." );
 
@@ -426,9 +424,9 @@ class ConfigAdminSupport
 
                 // ignore well known special properties
                 if ( !id.equals( Constants.SERVICE_PID ) && !id.equals( Constants.SERVICE_DESCRIPTION )
-                    && !id.equals( Constants.SERVICE_ID ) && !id.equals( Constants.SERVICE_VENDOR )
-                    && !id.equals( ConfigurationAdmin.SERVICE_BUNDLELOCATION )
-                    && !id.equals( ConfigurationAdmin.SERVICE_FACTORYPID ) )
+                        && !id.equals( Constants.SERVICE_ID ) && !id.equals( Constants.SERVICE_VENDOR )
+                        && !id.equals( ConfigurationAdmin.SERVICE_BUNDLELOCATION )
+                        && !id.equals( ConfigurationAdmin.SERVICE_FACTORYPID ) )
                 {
                     final Object value = props.get( id );
                     final PropertyDescriptor ad = MetaTypeServiceSupport.createAttributeDefinition( id, value );
@@ -446,7 +444,8 @@ class ConfigAdminSupport
     }
 
 
-    void addConfigurationInfo( Configuration config, JSONWriter json, String locale ) throws JSONException
+    void addConfigurationInfo( Configuration config, JSONWriter json, String locale )
+            throws IOException
     {
 
         if ( config.getFactoryPid() != null )
@@ -500,8 +499,8 @@ class ConfigAdminSupport
         try
         {
             final ServiceReference[] refs = getBundleContext().getServiceReferences(
-                (String)null,
-                "(&(" + Constants.OBJECTCLASS + '=' + ManagedService.class.getName() //$NON-NLS-1$
+                    (String)null,
+                    "(&(" + Constants.OBJECTCLASS + '=' + ManagedService.class.getName() //$NON-NLS-1$
                     + ")(" + Constants.SERVICE_PID + '=' + pid + "))"); //$NON-NLS-1$ //$NON-NLS-2$
             if ( refs != null && refs.length > 0 )
             {
@@ -538,13 +537,13 @@ class ConfigAdminSupport
     }
 
 
-    final void listConfigurations( JSONObject json, String pidFilter, String locale, Locale loc )
+    final void listConfigurations( JSONWriter jw, String pidFilter, String locale, Locale loc )
     {
         try
         {
             // start with ManagedService instances
             Map optionsPlain = getServices(ManagedService.class.getName(), pidFilter,
-                locale, true);
+                    locale, true);
 
             // next are the MetaType informations without ManagedService
             final MetaTypeServiceSupport mtss = getMetaTypeSupport();
@@ -591,37 +590,44 @@ class ConfigAdminSupport
                 optionsPlain.put( pid, pid );
             }
 
+            jw.key("pids");//$NON-NLS-1$
+            jw.array();
             for ( Iterator ii = optionsPlain.keySet().iterator(); ii.hasNext(); )
             {
                 String id = ( String ) ii.next();
                 Object name = optionsPlain.get( id );
 
                 final Configuration config = this.getConfiguration( id );
-                JSONObject data = new JSONObject() //
-                    .put( "id", id ) //$NON-NLS-1$
-                    .put( "name", name ); //$NON-NLS-1$
+                jw.object();
+                jw.key("id").value( id ); //$NON-NLS-1$
+                jw.key( "name").value( name ); //$NON-NLS-1$
                 if ( null != config )
                 {
                     // FELIX-3848
-                    data.put ( "has_config", true ); //$NON-NLS-1$
+                    jw.key("has_config").value( true ); //$NON-NLS-1$
 
                     final String fpid = config.getFactoryPid();
                     if ( null != fpid )
                     {
-                        data.put( "fpid", fpid ); //$NON-NLS-1$
-                        data.putOpt( "nameHint", getConfigurationFactoryNameHint(config, mtss) ); //$NON-NLS-1$
+                        jw.key("fpid").value( fpid ); //$NON-NLS-1$
+                        final String val = getConfigurationFactoryNameHint(config, mtss);
+                        if ( val != null )
+                        {
+                            jw.key( "nameHint").value(val ); //$NON-NLS-1$
+                        }
                     }
 
                     final Bundle bundle = getBoundBundle( config );
                     if ( null != bundle )
                     {
-                        data.put( "bundle", bundle.getBundleId() ); //$NON-NLS-1$
-                        data.put( "bundle_name", Util.getName( bundle, loc ) ); //$NON-NLS-1$
+                        jw.key( "bundle").value( bundle.getBundleId() ); //$NON-NLS-1$
+                        jw.key( "bundle_name").value( Util.getName( bundle, loc ) ); //$NON-NLS-1$
                     }
                 }
+                jw.endObject();
 
-                json.append( "pids", data ); //$NON-NLS-1$
             }
+            jw.endArray();
         }
         catch (Exception e)
         {
@@ -642,7 +648,7 @@ class ConfigAdminSupport
         Map adMap = (mtss != null) ? mtss.getAttributeDefinitionMap(config, null) : null;
         if (null == adMap)
         {
-          return null;
+            return null;
         }
 
         // check for configured name hint template
@@ -739,27 +745,31 @@ class ConfigAdminSupport
         return sb.toString();
     }
 
-    final void listFactoryConfigurations(JSONObject json, String pidFilter,
-        String locale)
+    final void listFactoryConfigurations(JSONWriter jw, String pidFilter,
+            String locale)
     {
         try
         {
             final Map optionsFactory = getServices(ManagedServiceFactory.class.getName(),
-                pidFilter, locale, true);
+                    pidFilter, locale, true);
             final MetaTypeServiceSupport mtss = getMetaTypeSupport();
             if ( mtss != null )
             {
                 addMetaTypeNames( optionsFactory, mtss.getFactoryPidObjectClasses( locale ), pidFilter,
-                    ConfigurationAdmin.SERVICE_FACTORYPID );
+                        ConfigurationAdmin.SERVICE_FACTORYPID );
             }
+            jw.key("fpids");
+            jw.array();
             for ( Iterator ii = optionsFactory.keySet().iterator(); ii.hasNext(); )
             {
                 String id = ( String ) ii.next();
                 Object name = optionsFactory.get( id );
-                json.append( "fpids", new JSONObject() //$NON-NLS-1$
-                    .put( "id", id ) //$NON-NLS-1$
-                    .put( "name", name ) ); //$NON-NLS-1$
+                jw.object();
+                jw.key("id").value(id ); //$NON-NLS-1$
+                jw.key("name").value( name ); //$NON-NLS-1$
+                jw.endObject();
             }
+            jw.endArray();
         }
         catch (Exception e)
         {
@@ -768,7 +778,7 @@ class ConfigAdminSupport
     }
 
     SortedMap getServices( String serviceClass, String serviceFilter, String locale,
-        boolean ocdRequired ) throws InvalidSyntaxException
+            boolean ocdRequired ) throws InvalidSyntaxException
     {
         // sorted map of options
         SortedMap optionsFactory = new TreeMap( String.CASE_INSENSITIVE_ORDER );
