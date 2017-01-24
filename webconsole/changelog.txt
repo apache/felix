@@ -3,6 +3,7 @@ Changes from 4.2.18 to 4.3.0
 ** Improvement
     * [FELIX-5503] - Add simple json writer
     * [FELIX-5504] - Switch from org.json to new simple json writer
+    * [FELIX-5509] - Remove method keyVal from WebConsoleUtil
 
 
 Changes from 4.2.16 to 4.2.18
