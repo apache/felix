@@ -19,6 +19,7 @@ package org.apache.felix.webconsole.internal.configuration;
 
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.util.Locale;
 
 import javax.servlet.ServletException;
@@ -29,8 +30,7 @@ import org.apache.felix.webconsole.DefaultVariableResolver;
 import org.apache.felix.webconsole.SimpleWebConsolePlugin;
 import org.apache.felix.webconsole.WebConsoleUtil;
 import org.apache.felix.webconsole.internal.OsgiManagerPlugin;
-import org.json.JSONException;
-import org.json.JSONObject;
+import org.apache.felix.webconsole.json.JSONWriter;
 import org.osgi.framework.Constants;
 import org.osgi.framework.InvalidSyntaxException;
 import org.osgi.service.cm.Configuration;
@@ -208,7 +208,7 @@ public class ConfigManager extends SimpleWebConsolePlugin implements OsgiManager
      * @see org.apache.felix.webconsole.AbstractWebConsolePlugin#doGet(javax.servlet.http.HttpServletRequest, javax.servlet.http.HttpServletResponse)
      */
     protected void doGet( HttpServletRequest request, HttpServletResponse response )
-    throws ServletException, IOException
+            throws ServletException, IOException
     {
         // check for "post" requests from previous versions
         if ( "true".equals(request.getParameter("post")) ) { //$NON-NLS-1$ //$NON-NLS-2$
@@ -386,21 +386,17 @@ public class ConfigManager extends SimpleWebConsolePlugin implements OsgiManager
         final String locale = ( loc != null ) ? loc.toString() : null;
 
 
-        JSONObject json = new JSONObject();
-        try
+        StringWriter json = new StringWriter();
+        JSONWriter jw = new JSONWriter(json);
+        jw.object();
+        final ConfigAdminSupport ca = getConfigurationAdminSupport();
+        jw.key("status").value( ca != null ? Boolean.TRUE : Boolean.FALSE); //$NON-NLS-1$
+        if ( ca != null )
         {
-            final ConfigAdminSupport ca = getConfigurationAdminSupport();
-            json.put("status", ca != null ? Boolean.TRUE : Boolean.FALSE); //$NON-NLS-1$
-            if ( ca != null )
-            {
-                ca.listConfigurations( json, pidFilter, locale, loc );
-                ca.listFactoryConfigurations( json, pidFilter, locale );
-            }
+            ca.listConfigurations( jw, pidFilter, locale, loc );
+            ca.listFactoryConfigurations( jw, pidFilter, locale );
         }
-        catch (JSONException e)
-        {
-            throw new IOException(e.toString());
-        }
+        jw.endObject();
 
         // if a configuration is addressed, display it immediately
         if ( request.getParameter( ACTION_CREATE ) != null && pid != null )

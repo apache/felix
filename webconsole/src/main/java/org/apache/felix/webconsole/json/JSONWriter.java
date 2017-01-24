@@ -20,6 +20,10 @@ package org.apache.felix.webconsole.json;
 
 import java.io.IOException;
 import java.io.Writer;
+import java.lang.reflect.Array;
+import java.util.Iterator;
+import java.util.Map;
+import java.util.Map.Entry;
 
 /**
  * Simple JSON writer to be used on top of a {@link Writer}.
@@ -136,6 +140,32 @@ public class JSONWriter
                 }
                 this.pw.write(str);
             }
+        }
+        else if ( value instanceof Map)
+        {
+            this.comma = false;
+            this.object();
+
+            final Map map = (Map)value;
+            final Iterator iter = map.entrySet().iterator();
+            while ( iter.hasNext() )
+            {
+                Map.Entry entry = (Entry) iter.next();
+                this.key((String)entry.getKey());
+                this.value(entry.getValue());
+            }
+            this.endObject();
+        }
+        else if ( value.getClass().isArray() )
+        {
+            this.comma = false;
+            this.array();
+            for(int i=0;i<Array.getLength(value);i++)
+            {
+                final Object val = Array.get(value, i);
+                value(val);
+            }
+            this.endArray();
         }
         else
         {

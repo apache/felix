@@ -30,8 +30,7 @@ import javax.servlet.http.HttpServletResponse;
 import org.apache.felix.webconsole.SimpleWebConsolePlugin;
 import org.apache.felix.webconsole.WebConsoleUtil;
 import org.apache.felix.webconsole.internal.OsgiManagerPlugin;
-import org.json.JSONException;
-import org.json.JSONWriter;
+import org.apache.felix.webconsole.json.JSONWriter;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceReference;
@@ -87,42 +86,34 @@ public class LogServlet extends SimpleWebConsolePlugin implements OsgiManagerPlu
     {
         // create status line
         final LogReaderService logReaderService = ( LogReaderService ) this.getService( LogReaderService.class
-            .getName() );
+                .getName() );
 
         JSONWriter jw = new JSONWriter( pw );
-        try
+        jw.object();
+
+        jw.key( "status" ); //$NON-NLS-1$
+        jw.value( logReaderService == null ? Boolean.FALSE : Boolean.TRUE );
+
+        jw.key( "data" ); //$NON-NLS-1$
+        jw.array();
+
+        if ( logReaderService != null )
         {
-            jw.object();
-
-            jw.key( "status" ); //$NON-NLS-1$
-            jw.value( logReaderService == null ? Boolean.FALSE : Boolean.TRUE );
-
-            jw.key( "data" ); //$NON-NLS-1$
-            jw.array();
-
-            if ( logReaderService != null )
-            {
-                int index = 0;
-                for ( Enumeration logEntries = logReaderService.getLog(); logEntries.hasMoreElements()
+            int index = 0;
+            for ( Enumeration logEntries = logReaderService.getLog(); logEntries.hasMoreElements()
                     && index < MAX_LOGS; )
+            {
+                LogEntry nextLog = ( LogEntry ) logEntries.nextElement();
+                if ( nextLog.getLevel() <= minLogLevel )
                 {
-                    LogEntry nextLog = ( LogEntry ) logEntries.nextElement();
-                    if ( nextLog.getLevel() <= minLogLevel )
-                    {
-                        logJson( jw, nextLog, index++, traces );
-                    }
+                    logJson( jw, nextLog, index++, traces );
                 }
             }
-
-            jw.endArray();
-
-            jw.endObject();
-
         }
-        catch ( JSONException je )
-        {
-            throw new IOException( je.toString() );
-        }
+
+        jw.endArray();
+
+        jw.endObject();
 
     }
 
@@ -131,7 +122,7 @@ public class LogServlet extends SimpleWebConsolePlugin implements OsgiManagerPlu
      * @see org.apache.felix.webconsole.AbstractWebConsolePlugin#doGet(javax.servlet.http.HttpServletRequest, javax.servlet.http.HttpServletResponse)
      */
     protected void doGet( HttpServletRequest request, HttpServletResponse response ) throws ServletException,
-        IOException
+    IOException
     {
         final int minLevel = WebConsoleUtil.getParameterInt( request, "minLevel", LogService.LOG_DEBUG ); //$NON-NLS-1$
         final String info = request.getPathInfo();
@@ -157,7 +148,7 @@ public class LogServlet extends SimpleWebConsolePlugin implements OsgiManagerPlu
     }
 
 
-    private static final void logJson( JSONWriter jw, LogEntry info, int index, boolean traces ) throws JSONException
+    private static final void logJson( JSONWriter jw, LogEntry info, int index, boolean traces ) throws IOException
     {
         jw.object();
         jw.key( "id" ); //$NON-NLS-1$
@@ -209,15 +200,15 @@ public class LogServlet extends SimpleWebConsolePlugin implements OsgiManagerPlu
     {
         switch ( level )
         {
-            case LogService.LOG_INFO:
-                return "INFO"; //$NON-NLS-1$
-            case LogService.LOG_WARNING:
-                return "WARNING"; //$NON-NLS-1$
-            case LogService.LOG_ERROR:
-                return "ERROR"; //$NON-NLS-1$
-            case LogService.LOG_DEBUG:
-            default:
-                return "DEBUG"; //$NON-NLS-1$
+        case LogService.LOG_INFO:
+            return "INFO"; //$NON-NLS-1$
+        case LogService.LOG_WARNING:
+            return "WARNING"; //$NON-NLS-1$
+        case LogService.LOG_ERROR:
+            return "ERROR"; //$NON-NLS-1$
+        case LogService.LOG_DEBUG:
+        default:
+            return "DEBUG"; //$NON-NLS-1$
         }
     }
 

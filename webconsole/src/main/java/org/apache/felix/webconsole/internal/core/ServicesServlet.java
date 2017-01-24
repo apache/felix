@@ -35,8 +35,7 @@ import org.apache.felix.webconsole.WebConsoleConstants;
 import org.apache.felix.webconsole.WebConsoleUtil;
 import org.apache.felix.webconsole.internal.OsgiManagerPlugin;
 import org.apache.felix.webconsole.internal.Util;
-import org.json.JSONException;
-import org.json.JSONWriter;
+import org.apache.felix.webconsole.json.JSONWriter;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
@@ -132,11 +131,11 @@ public class ServicesServlet extends SimpleWebConsolePlugin implements OsgiManag
     }
 
     public void deactivate() {
-	if ( null != bipReg )
-	{
-	    bipReg.unregister();
-	    bipReg = null;
-	}
+        if ( null != bipReg )
+        {
+            bipReg.unregister();
+            bipReg = null;
+        }
         super.deactivate();
     }
 
@@ -213,7 +212,7 @@ public class ServicesServlet extends SimpleWebConsolePlugin implements OsgiManag
 
 
     private void renderJSON( final HttpServletResponse response, final ServiceReference service, final Locale locale )
-        throws IOException
+            throws IOException
     {
         response.setContentType( "application/json" );
         response.setCharacterEncoding( "UTF-8" );
@@ -222,8 +221,18 @@ public class ServicesServlet extends SimpleWebConsolePlugin implements OsgiManag
         writeJSON( pw, service, locale, null);
     }
 
+    private void keyVal( JSONWriter jw, String key, Object val) throws IOException
+    {
+        if ( val != null )
+        {
+            jw.object();
+            jw.key("key").value(key);
+            jw.key("value").value(val);
+            jw.endObject();
+        }
+    }
 
-    private void serviceDetails( JSONWriter jw, ServiceReference service ) throws JSONException
+    private void serviceDetails( JSONWriter jw, ServiceReference service ) throws IOException
     {
         String[] keys = service.getPropertyKeys();
 
@@ -235,19 +244,19 @@ public class ServicesServlet extends SimpleWebConsolePlugin implements OsgiManag
             String key = keys[i];
             if ( Constants.SERVICE_PID.equals( key ) )
             {
-                Util.keyVal( jw, "Service PID", service.getProperty( key ) );
+                keyVal(jw, "Service PID", service.getProperty( key ));
             }
             else if ( Constants.SERVICE_DESCRIPTION.equals( key ) )
             {
-                Util.keyVal( jw, "Service Description", service.getProperty( key ) );
+                keyVal(jw, "Service Description", service.getProperty( key ));
             }
             else if ( Constants.SERVICE_VENDOR.equals( key ) )
             {
-                Util.keyVal( jw, "Service Vendor", service.getProperty( key ) );
+                keyVal(jw, "Service Vendor", service.getProperty( key ));
             }
             else if ( !Constants.OBJECTCLASS.equals( key ) && !Constants.SERVICE_ID.equals( key ) )
             {
-                Util.keyVal( jw, key, service.getProperty( key ) );
+                keyVal(jw, key, service.getProperty( key ));
             }
 
         }
@@ -257,7 +266,7 @@ public class ServicesServlet extends SimpleWebConsolePlugin implements OsgiManag
     }
 
 
-    private void usingBundles( JSONWriter jw, ServiceReference service, Locale locale ) throws JSONException
+    private void usingBundles( JSONWriter jw, ServiceReference service, Locale locale ) throws IOException
     {
         jw.key( "usingBundles" );
         jw.array();
@@ -278,7 +287,8 @@ public class ServicesServlet extends SimpleWebConsolePlugin implements OsgiManag
     }
 
 
-    private void serviceInfo( JSONWriter jw, ServiceReference service, boolean details, final Locale locale ) throws JSONException
+    private void serviceInfo( JSONWriter jw, ServiceReference service, boolean details, final Locale locale )
+            throws IOException
     {
         jw.object();
         jw.key( "id" );
@@ -309,7 +319,8 @@ public class ServicesServlet extends SimpleWebConsolePlugin implements OsgiManag
     }
 
 
-    private void bundleInfo( final JSONWriter jw, final Bundle bundle, final Locale locale ) throws JSONException
+    private void bundleInfo( final JSONWriter jw, final Bundle bundle, final Locale locale )
+            throws IOException
     {
         jw.key( "bundleId" );
         jw.value( bundle.getBundleId() );
@@ -329,44 +340,36 @@ public class ServicesServlet extends SimpleWebConsolePlugin implements OsgiManag
 
 
     private void writeJSON( final Writer pw, final ServiceReference service, final boolean fullDetails, final Locale locale, final String filter )
-        throws IOException
+            throws IOException
     {
         final ServiceReference[] allServices = this.getServices(filter);
         final String statusLine = getStatusLine( allServices );
 
         final ServiceReference[] services = ( service != null ) ? new ServiceReference[]
-            { service } : allServices;
+                { service } : allServices;
 
-        final JSONWriter jw = new JSONWriter( pw );
+                final JSONWriter jw = new JSONWriter( pw );
 
-        try
-        {
-            jw.object();
+                jw.object();
 
-            jw.key( "status" );
-            jw.value( statusLine );
+                jw.key( "status" );
+                jw.value( statusLine );
 
-            jw.key( "serviceCount" );
-            jw.value( allServices.length );
+                jw.key( "serviceCount" );
+                jw.value( allServices.length );
 
-            jw.key( "data" );
+                jw.key( "data" );
 
-            jw.array();
+                jw.array();
 
-            for ( int i = 0; i < services.length; i++ )
-            {
-                serviceInfo( jw, services[i], fullDetails || service != null, locale );
-            }
+                for ( int i = 0; i < services.length; i++ )
+                {
+                    serviceInfo( jw, services[i], fullDetails || service != null, locale );
+                }
 
-            jw.endArray();
+                jw.endArray();
 
-            jw.endObject();
-
-        }
-        catch ( JSONException je )
-        {
-            throw new IOException( je.toString() );
-        }
+                jw.endObject();
 
     }
 
@@ -375,7 +378,7 @@ public class ServicesServlet extends SimpleWebConsolePlugin implements OsgiManag
      * @see org.apache.felix.webconsole.AbstractWebConsolePlugin#doGet(javax.servlet.http.HttpServletRequest, javax.servlet.http.HttpServletResponse)
      */
     protected void doGet( HttpServletRequest request, HttpServletResponse response ) throws ServletException,
-        IOException
+    IOException
     {
         if (request.getPathInfo().indexOf("/res/") == -1)
         { // not resource

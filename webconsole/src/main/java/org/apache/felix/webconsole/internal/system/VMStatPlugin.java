@@ -20,6 +20,7 @@ package org.apache.felix.webconsole.internal.system;
 
 
 import java.io.IOException;
+import java.io.StringWriter;
 import java.text.DateFormat;
 import java.text.MessageFormat;
 import java.util.Date;
@@ -32,8 +33,7 @@ import org.apache.felix.webconsole.DefaultVariableResolver;
 import org.apache.felix.webconsole.SimpleWebConsolePlugin;
 import org.apache.felix.webconsole.WebConsoleUtil;
 import org.apache.felix.webconsole.internal.OsgiManagerPlugin;
-import org.json.JSONException;
-import org.json.JSONObject;
+import org.apache.felix.webconsole.json.JSONWriter;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleException;
 import org.osgi.service.startlevel.StartLevel;
@@ -86,7 +86,7 @@ public class VMStatPlugin extends SimpleWebConsolePlugin implements OsgiManagerP
      * @see javax.servlet.http.HttpServlet#doPost(javax.servlet.http.HttpServletRequest, javax.servlet.http.HttpServletResponse)
      */
     protected void doPost( HttpServletRequest request, HttpServletResponse response ) throws ServletException,
-        IOException
+    IOException
     {
         final String action = request.getParameter( "action"); //$NON-NLS-1$
 
@@ -202,34 +202,34 @@ public class VMStatPlugin extends SimpleWebConsolePlugin implements OsgiManagerP
         final String startTime = format.format( new Date( startDate ) );
         final String upTime = formatPeriod( System.currentTimeMillis() - startDate );
 
-        JSONObject json = new JSONObject();
-        try
-        {
-            json.put( "systemStartLevel", getStartLevel().getStartLevel() );
-            json.put( "bundleStartLevel", getStartLevel().getInitialBundleStartLevel() );
-            json.put( "lastStarted", startTime );
-            json.put( "upTime", upTime );
-            json.put( "runtime", sysProp( "java.runtime.name" ) + "(build "
-                + sysProp( "java.runtime.version" ) + ")" );
-            json.put( "jvm", sysProp( "java.vm.name" ) + "(build " + sysProp( "java.vm.version" )
-                + ", " + sysProp( "java.vm.info" ) + ")" );
-            json.put( "shutdownTimer", shutdownTimer );
-            json.put( "mem_total", totalMem );
-            json.put( "mem_free", freeMem );
-            json.put( "mem_used", usedMem );
-            json.put( "shutdownType", shutdownType );
+        StringWriter json = new StringWriter();
+        JSONWriter jw = new JSONWriter(json);
+        jw.object();
 
-            // only add the processors if the number is available
-            final int processors = getAvailableProcessors();
-            if ( processors > 0 )
-            {
-                json.put( "processors", processors );
-            }
-        }
-        catch ( JSONException e )
+        jw.key( "systemStartLevel").value(getStartLevel().getStartLevel() );
+        jw.key( "bundleStartLevel").value(getStartLevel().getInitialBundleStartLevel() );
+        jw.key( "lastStarted").value(startTime );
+        jw.key( "upTime").value(upTime );
+        jw.key( "runtime").value(sysProp( "java.runtime.name" ) + "(build "
+                + sysProp( "java.runtime.version" ) + ")" );
+        jw.key( "jvm").value(sysProp( "java.vm.name" ) + "(build " + sysProp( "java.vm.version" )
+        + ", " + sysProp( "java.vm.info" ) + ")" );
+        jw.key( "shutdownTimer").value(shutdownTimer );
+        jw.key( "mem_total").value(totalMem );
+        jw.key( "mem_free").value(freeMem );
+        jw.key( "mem_used").value(usedMem );
+        jw.key( "shutdownType").value(shutdownType );
+
+        // only add the processors if the number is available
+        final int processors = getAvailableProcessors();
+        if ( processors > 0 )
         {
-            throw new IOException( e.toString() );
+            jw.key( "processors").value(processors );
         }
+
+        jw.endObject();
+
+        jw.flush();
 
         DefaultVariableResolver vars = ( ( DefaultVariableResolver ) WebConsoleUtil.getVariableResolver( request ) );
         vars.put( "startData", json.toString() );
@@ -255,9 +255,9 @@ public class VMStatPlugin extends SimpleWebConsolePlugin implements OsgiManagerP
         final Long hours = new Long( period / 1000 / 60 / 60 % 24 );
         final Long days = new Long( period / 1000 / 60 / 60 / 24 );
         return MessageFormat.format(
-            "{0,number} '${vmstat.upTime.format.days}' {1,number,00}:{2,number,00}:{3,number,00}.{4,number,000}",
-            new Object[]
-                { days, hours, mins, secs, msecs } );
+                "{0,number} '${vmstat.upTime.format.days}' {1,number,00}:{2,number,00}:{3,number,00}.{4,number,000}",
+                new Object[]
+                        { days, hours, mins, secs, msecs } );
     }
 
 

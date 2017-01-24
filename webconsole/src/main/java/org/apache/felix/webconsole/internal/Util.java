@@ -23,8 +23,6 @@ import java.util.Comparator;
 import java.util.Enumeration;
 import java.util.Locale;
 
-import org.json.JSONException;
-import org.json.JSONWriter;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.Constants;
 import org.osgi.framework.Version;
@@ -37,7 +35,7 @@ import org.osgi.framework.Version;
 public class Util
 {
 
-    // FIXME: from the constants below only PARAM_ACTION is used, consider removeal of others?
+    // FIXME: from the constants below only PARAM_ACTION is used, consider removal of others?
 
     /** web apps subpage */
     public static final String PAGE_WEBAPPS = "/webapps";
@@ -103,12 +101,12 @@ public class Util
      */
     public static String getHeaderValue( Bundle bundle, String headerName )
     {
-       Object value = bundle.getHeaders().get(headerName);
-       if ( value != null )
-       {
-           return value.toString();
-       }
-       return "";
+        Object value = bundle.getHeaders().get(headerName);
+        if ( value != null )
+        {
+            return value.toString();
+        }
+        return "";
     }
 
     /**
@@ -242,29 +240,6 @@ public class Util
 
             // b1 id must be > b2 id because equality is already checked
             return 1;
-        }
-    }
-
-    /**
-     * Writes a key-value pair in a JSON writer. Write is performed only if both key and
-     * value are not null.
-     *
-     * @param jw the writer, where to write the data
-     * @param key the key value, stored under 'key'
-     * @param value the value stored under 'value'
-     * @throws JSONException if the value cannot be serialized.
-     */
-    public static final void keyVal(JSONWriter jw, String key, Object value)
-        throws JSONException
-    {
-        if (key != null && value != null)
-        {
-            jw.object();
-            jw.key("key"); //$NON-NLS-1$
-            jw.value(key);
-            jw.key("value"); //$NON-NLS-1$
-            jw.value(value);
-            jw.endObject();
         }
     }
 }
