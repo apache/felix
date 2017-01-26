@@ -55,12 +55,15 @@
                             org.apache.felix.http.base.*,
                             org.apache.felix.http.bridge.internal.*
                         </Private-Package>
+                        <Conditional-Package>
+                            org.apache.commons.*
+                        </Conditional-Package>
                         <Import-Package>
                         	org.osgi.service.useradmin;resolution:=optional,
                             *
                         </Import-Package>
                         <Provide-Capability>
-                            osgi.implementation;osgi.implementation="osgi.http";version:Version="1.0";
+                            osgi.implementation;osgi.implementation="osgi.http";version:Version="1.1";
                             uses:="javax.servlet,javax.servlet.http,org.osgi.service.http.context,org.osgi.service.http.whiteboard",
                             osgi.service;objectClass:List&lt;String&gt;="org.osgi.service.http.runtime.HttpServiceRuntime";
                             uses:="org.osgi.service.http.runtime,org.osgi.service.http.runtime.dto"
@@ -81,13 +84,19 @@
             <artifactId>osgi.core</artifactId>
         </dependency>
         <dependency>
-            <groupId>org.osgi</groupId>
-            <artifactId>osgi.cmpn</artifactId>
-        </dependency>
-        <dependency>
             <groupId>org.apache.felix</groupId>
             <artifactId>org.apache.felix.http.api</artifactId>
-            <version>3.0.0</version>
+            <version>3.0.1-SNAPSHOT</version>
+        </dependency>
+        <dependency>
+            <groupId>commons-fileupload</groupId>
+            <artifactId>commons-fileupload</artifactId>
+            <version>1.3.2</version>
+        </dependency>
+        <dependency>
+            <groupId>commons-io</groupId>
+            <artifactId>commons-io</artifactId>
+            <version>2.5</version>
         </dependency>
         <dependency>
             <groupId>org.apache.felix</groupId>

@@ -164,6 +164,34 @@ public abstract class AbstractInfo<T> implements Comparable<AbstractInfo<T>>
         return false;
     }
 
+    protected Integer getIntProperty(ServiceReference<T> ref, String key)
+    {
+        Object value = ref.getProperty(key);
+        if (value instanceof String)
+        {
+            return Integer.valueOf((String) value);
+        }
+        else if (value instanceof Number)
+        {
+            return ((Number) value).intValue();
+        }
+        return null;
+    }
+
+    protected long getLongProperty(ServiceReference<T> ref, String key)
+    {
+        Object value = ref.getProperty(key);
+        if (value instanceof String)
+        {
+            return Long.valueOf((String) value);
+        }
+        else if (value instanceof Number)
+        {
+            return ((Number) value).longValue();
+        }
+        return -1;
+    }
+
     /**
      * Get the init parameters.
      */

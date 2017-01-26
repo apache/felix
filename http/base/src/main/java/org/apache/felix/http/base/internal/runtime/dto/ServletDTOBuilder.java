@@ -18,6 +18,7 @@
  */
 package org.apache.felix.http.base.internal.runtime.dto;
 
+import org.apache.felix.http.base.internal.dispatch.MultipartConfig;
 import org.apache.felix.http.base.internal.handler.ServletHandler;
 import org.apache.felix.http.base.internal.runtime.ServletInfo;
 import org.osgi.service.http.runtime.dto.FailedServletDTO;
@@ -57,7 +58,15 @@ public final class ServletDTOBuilder extends BaseServletDTOBuilder
         }
 
         dto.patterns = BuilderConstants.EMPTY_STRING_ARRAY;
-
+        final MultipartConfig config = info.getMultipartConfig();
+        dto.multipartEnabled = config != null;
+        if ( config != null )
+        {
+            dto.multipartFileSizeThreshold = config.multipartThreshold;
+            dto.multipartLocation = config.multipartLocation;
+            dto.multipartMaxFileSize = config.multipartMaxFileSize;
+            dto.multipartMaxRequestSize = config.multipartMaxRequestSize;
+        }
         return dto;
     }
 }

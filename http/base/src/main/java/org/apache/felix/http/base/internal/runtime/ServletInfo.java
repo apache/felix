@@ -23,6 +23,7 @@ import java.util.Map;
 
 import javax.servlet.Servlet;
 
+import org.apache.felix.http.base.internal.dispatch.MultipartConfig;
 import org.apache.felix.http.base.internal.util.PatternUtil;
 import org.osgi.dto.DTO;
 import org.osgi.framework.ServiceReference;
@@ -66,6 +67,13 @@ public class ServletInfo extends WhiteboardServiceInfo<Servlet>
     private final boolean isResource;
 
     /**
+     * Specifies the multipart config for this servlet
+     * or {@code null} if not enabled.
+     */
+    private final MultipartConfig multipartConfig;
+
+
+    /**
      * The servlet initialization parameters as provided during registration of the servlet.
      */
     private final Map<String, String> initParams;
@@ -79,6 +87,17 @@ public class ServletInfo extends WhiteboardServiceInfo<Servlet>
         this.errorPage = getStringArrayProperty(ref, HttpWhiteboardConstants.HTTP_WHITEBOARD_SERVLET_ERROR_PAGE);
         this.patterns = getStringArrayProperty(ref, HttpWhiteboardConstants.HTTP_WHITEBOARD_SERVLET_PATTERN);
         this.asyncSupported = getBooleanProperty(ref, HttpWhiteboardConstants.HTTP_WHITEBOARD_SERVLET_ASYNC_SUPPORTED);
+        if ( getBooleanProperty(ref, HttpWhiteboardConstants.HTTP_WHITEBOARD_SERVLET_MULTIPART_ENABLED) )
+        {
+            this.multipartConfig = new MultipartConfig(getIntProperty(ref, HttpWhiteboardConstants.HTTP_WHITEBOARD_SERVLET_MULTIPART_FILESIZETHRESHOLD),
+                    getStringProperty(ref, HttpWhiteboardConstants.HTTP_WHITEBOARD_SERVLET_MULTIPART_LOCATION),
+                    getLongProperty(ref, HttpWhiteboardConstants.HTTP_WHITEBOARD_SERVLET_MULTIPART_MAXFILESIZE),
+                    getLongProperty(ref, HttpWhiteboardConstants.HTTP_WHITEBOARD_SERVLET_MULTIPART_MAXREQUESTSIZE));
+        }
+        else
+        {
+            this.multipartConfig = null;
+        }
         this.initParams = getInitParams(ref, HttpWhiteboardConstants.HTTP_WHITEBOARD_SERVLET_INIT_PARAM_PREFIX);
         this.isResource = false;
         this.prefix = null;
@@ -92,6 +111,7 @@ public class ServletInfo extends WhiteboardServiceInfo<Servlet>
         this.patterns = resource.getPatterns();
         this.errorPage = null;
         this.asyncSupported = false;
+        this.multipartConfig = null;
         this.initParams = Collections.emptyMap();
         this.isResource = true;
         this.prefix = resource.getPrefix();
@@ -115,6 +135,7 @@ public class ServletInfo extends WhiteboardServiceInfo<Servlet>
         this.patterns = new String[] {pattern};
         this.initParams = Collections.unmodifiableMap(initParams);
         this.asyncSupported = true;
+        this.multipartConfig = MultipartConfig.DEFAULT_CONFIG;
         this.errorPage = null;
         this.isResource = false;
         this.prefix = null;
@@ -178,5 +199,10 @@ public class ServletInfo extends WhiteboardServiceInfo<Servlet>
     public String getPrefix()
     {
         return prefix;
+    }
+
+    public MultipartConfig getMultipartConfig()
+    {
+        return multipartConfig;
     }
 }
