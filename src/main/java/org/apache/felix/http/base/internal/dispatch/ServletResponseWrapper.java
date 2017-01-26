@@ -74,13 +74,13 @@ final class ServletResponseWrapper extends HttpServletResponseWrapper
         {
             // If we are allowed to have a body
             if (code != SC_NO_CONTENT &&
-                code != SC_NOT_MODIFIED &&
-                code != SC_PARTIAL_CONTENT &&
-                code >= SC_OK)
+                    code != SC_NOT_MODIFIED &&
+                    code != SC_PARTIAL_CONTENT &&
+                    code >= SC_OK)
             {
                 final Throwable exception = (Throwable)request.getAttribute(RequestDispatcher.ERROR_EXCEPTION);
                 final ServletHandler errorResolution = (errorRegistry == null ? null :
-                        errorRegistry.getErrorHandler(code, exception));
+                    errorRegistry.getErrorHandler(code, exception));
 
                 if ( errorResolution != null )
                 {
@@ -105,8 +105,9 @@ final class ServletResponseWrapper extends HttpServletResponseWrapper
 
                         final FilterHandler[] filterHandlers = errorRegistry.getFilterHandlers(errorResolution, DispatcherType.ERROR, request.getRequestURI());
 
-                        // TODO - is async = false correct?
-                        final ServletRequestWrapper reqWrapper = new ServletRequestWrapper(request, errorResolution.getContext(), requestInfo, null, errorResolution.getContextServiceId(), false);
+                        final ServletRequestWrapper reqWrapper = new ServletRequestWrapper(request,
+                                errorResolution.getContext(),
+                                requestInfo, null, errorResolution.getContextServiceId(), false, null);
                         final FilterChain filterChain = new InvocationChain(errorResolution, filterHandlers);
                         filterChain.doFilter(reqWrapper, this);
 
