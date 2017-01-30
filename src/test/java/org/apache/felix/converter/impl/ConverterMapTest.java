@@ -18,6 +18,7 @@ package org.apache.felix.converter.impl;
 
 import java.math.BigInteger;
 import java.net.URL;
+import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Collections;
 import java.util.Date;
@@ -103,7 +104,13 @@ public class ConverterMapTest {
         mb.setEnabled(true);
 
         ConverterBuilder cb = new StandardConverter().newConverterBuilder();
-        cb.rule(Date.class, String.class, v -> sdf.format(v), v -> sdf.parse(v));
+        cb.rule(Date.class, String.class, v -> sdf.format(v), v -> {
+            try {
+                return sdf.parse(v);
+            } catch (ParseException e) {
+                throw new RuntimeException(e);
+            }
+        });
         Converter ca = cb.build();
         Map<String, String> m = ca.convert(mb).sourceAsBean().to(new TypeReference<Map<String, String>>(){});
         assertEquals("true", m.get("enabled"));
