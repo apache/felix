@@ -41,26 +41,39 @@ public class ServletDTO extends BaseServletDTO {
 	public boolean				multipartEnabled;
 
 	/**
-	 * Specifies the size threshold after which the file will be written to disk.
+	 * Specifies the size threshold after which the file will be written to
+	 * disk. If multipart is not enabled for this servlet, {@code 0} is
+	 * returned.
+	 * 
 	 * @since 1.1
+	 * @see #multipartEnabled
 	 */
 	public int					multipartFileSizeThreshold;
 
 	/**
-	 * Specifies the location where the files can be stored on disk.
+	 * Specifies the location where the files can be stored on disk. If
+	 * multipart is not enabled for this servlet, {@code null} is returned.
+	 * 
 	 * @since 1.1
+	 * @see #multipartEnabled
 	 */
 	public String				multipartLocation;
 
 	/**
-	 * Specifies the maximum size of a file being uploaded.
+	 * Specifies the maximum size of a file being uploaded. If multipart is not
+	 * enabled for this servlet, {@code 0} is returned.
+	 * 
 	 * @since 1.1
+	 * @see #multipartEnabled
 	 */
 	public long					multipartMaxFileSize;
 
 	/**
-	 * Specifies the maximum request size.
+	 * Specifies the maximum request size. If multipart is not enabled for this
+	 * servlet, {@code 0} is returned.
+	 * 
 	 * @since 1.1
+	 * @see #multipartEnabled
 	 */
 	public long					multipartMaxRequestSize;
 }

@@ -238,7 +238,10 @@ public final class HttpWhiteboardConstants {
 	 * Service property specifying the size threshold after which the file will
 	 * be written to disk.
 	 * <p>
-	 * When not set the default threshold is determined by the implementation.
+	 * When not set or when the value is not valid, the default threshold is
+	 * determined by the implementation. This property is only evaluated if
+	 * {@link #HTTP_WHITEBOARD_SERVLET_MULTIPART_ENABLED} is set to {@code true}
+	 * .
 	 * <p>
 	 * The value of this service property must be of type {@code Integer}.
 	 *
@@ -252,7 +255,9 @@ public final class HttpWhiteboardConstants {
 	 * disk.
 	 * <p>
 	 * When not set the default location is defined by the value of the system
-	 * property "java.io.tmpdir".
+	 * property "java.io.tmpdir". This property is only evaluated if
+	 * {@link #HTTP_WHITEBOARD_SERVLET_MULTIPART_ENABLED} is set to {@code true}
+	 * .
 	 * <p>
 	 * The value of this service property must be of type {@code String}.
 	 *
@@ -264,7 +269,10 @@ public final class HttpWhiteboardConstants {
 	/**
 	 * Service property specifying the maximum size of a file being uploaded.
 	 * <p>
-	 * When not set the default maximum size is -1 (no maximum size).
+	 * When not set or when the value is not valid, the default maximum size is
+	 * [@code -1} (no maximum size). This property is only evaluated if
+	 * {@link #HTTP_WHITEBOARD_SERVLET_MULTIPART_ENABLED} is set to {@code true}
+	 * .
 	 * <p>
 	 * The value of this service property must be of type {@code Long}.
 	 *
@@ -276,7 +284,10 @@ public final class HttpWhiteboardConstants {
 	/**
 	 * Service property specifying the maximum request size.
 	 * <p>
-	 * When not set the default maximum request size is -1 (no maximum size).
+	 * When not set or when the value is not valid, the default maximum request
+	 * size is {@code -1} (no maximum size). This property is only evaluated if
+	 * {@link #HTTP_WHITEBOARD_SERVLET_MULTIPART_ENABLED} is set to {@code true}
+	 * .
 	 * <p>
 	 * The value of this service property must be of type {@code Long}.
 	 *
