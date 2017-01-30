@@ -49,7 +49,7 @@ public class ConverterImpl implements InternalConverter {
         cb.rule(Character.class, String.class, v -> v.toString(),
                 v -> v.length() > 0 ? v.charAt(0) : 0);
         cb.rule(Class.class, String.class, Class::toString,
-                v -> getClass().getClassLoader().loadClass(v));
+                this::loadClassUnchecked);
         cb.rule(Date.class, String.class, v -> v.toInstant().toString(),
                 v -> Date.from(Instant.parse(v)));
         cb.rule(Double.class, String.class, v -> v.toString(), Double::parseDouble);
@@ -65,6 +65,14 @@ public class ConverterImpl implements InternalConverter {
         cb.rule(Short.class, String.class, v -> v.toString(), Short::parseShort);
         cb.rule(UUID.class, String.class, UUID::toString, UUID::fromString);
         cb.rule(ZonedDateTime.class, String.class, ZonedDateTime::toString, ZonedDateTime::parse);
+    }
+
+    private Class<?> loadClassUnchecked(String className) {
+        try {
+            return getClass().getClassLoader().loadClass(className);
+        } catch (ClassNotFoundException e) {
+            throw new NoClassDefFoundError(className);
+        }
     }
 
     @Override
