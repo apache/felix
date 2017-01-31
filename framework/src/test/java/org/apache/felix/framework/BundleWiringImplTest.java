@@ -37,7 +37,6 @@ import java.util.Map;
 import java.util.Set;
 
 import org.apache.felix.framework.BundleWiringImpl.BundleClassLoader;
-import org.apache.felix.framework.BundleWiringImpl.BundleClassLoaderJava5;
 import org.apache.felix.framework.cache.Content;
 import org.junit.Test;
 import org.mockito.Mockito;
@@ -96,15 +95,6 @@ public class BundleWiringImplTest
         assertNotNull(bundleClassLoader);
     }
 
-    @Test
-    public void testBundleClassLoaderJava5() throws Exception
-    {
-        bundleWiring = mock(BundleWiringImpl.class);
-        BundleClassLoader bundleClassLoader = createBundleClassLoader(
-                BundleClassLoaderJava5.class, bundleWiring);
-        assertNotNull(bundleClassLoader);
-    }
-
     @SuppressWarnings("rawtypes")
     @Test
     public void testFindClassNonExistant() throws Exception
@@ -112,7 +102,7 @@ public class BundleWiringImplTest
         initializeSimpleBundleWiring();
 
         BundleClassLoader bundleClassLoader = createBundleClassLoader(
-                BundleClassLoaderJava5.class, bundleWiring);
+                BundleClassLoader.class, bundleWiring);
         assertNotNull(bundleClassLoader);
         Class foundClass = null;
         try
@@ -151,7 +141,7 @@ public class BundleWiringImplTest
                 testClassBytes);
 
         BundleClassLoader bundleClassLoader = createBundleClassLoader(
-                BundleClassLoaderJava5.class, bundleWiring);
+                BundleClassLoader.class, bundleWiring);
         assertNotNull(bundleClassLoader);
         Class foundClass = null;
         try
@@ -204,17 +194,17 @@ public class BundleWiringImplTest
         when(
                 mockFramework.getService(mockFramework,
                         mockServiceReferenceWeavingHook, false)).thenReturn(
-                new GoodDummyWovenHook());
+                                new GoodDummyWovenHook());
 
         when(hReg.getHooks(WovenClassListener.class)).thenReturn(
                 listeners);
         when(
                 mockFramework.getService(mockFramework,
                         mockServiceReferenceWovenClassListener, false))
-                .thenReturn(dummyWovenClassListener);
+        .thenReturn(dummyWovenClassListener);
 
         BundleClassLoader bundleClassLoader = createBundleClassLoader(
-                BundleClassLoaderJava5.class, bundleWiring);
+                BundleClassLoader.class, bundleWiring);
         assertNotNull(bundleClassLoader);
         Class foundClass = null;
         try
@@ -276,17 +266,17 @@ public class BundleWiringImplTest
         when(
                 mockFramework.getService(mockFramework,
                         mockServiceReferenceWeavingHook, false)).thenReturn(
-                new BadDummyWovenHook());
+                                new BadDummyWovenHook());
 
         when(hReg.getHooks(WovenClassListener.class)).thenReturn(
                 listeners);
         when(
                 mockFramework.getService(mockFramework,
                         mockServiceReferenceWovenClassListener, false))
-                .thenReturn(dummyWovenClassListener);
+        .thenReturn(dummyWovenClassListener);
 
         BundleClassLoader bundleClassLoader = createBundleClassLoader(
-                BundleClassLoaderJava5.class, bundleWiring);
+                BundleClassLoader.class, bundleWiring);
         assertNotNull(bundleClassLoader);
 
         try
@@ -347,17 +337,17 @@ public class BundleWiringImplTest
         when(
                 mockFramework.getService(mockFramework,
                         mockServiceReferenceWeavingHook, false)).thenReturn(
-                new BadDefineWovenHook());
+                                new BadDefineWovenHook());
 
         when(hReg.getHooks(WovenClassListener.class)).thenReturn(
                 listeners);
         when(
                 mockFramework.getService(mockFramework,
                         mockServiceReferenceWovenClassListener, false))
-                .thenReturn(dummyWovenClassListener);
+        .thenReturn(dummyWovenClassListener);
 
         BundleClassLoader bundleClassLoader = createBundleClassLoader(
-                BundleClassLoaderJava5.class, bundleWiring);
+                BundleClassLoader.class, bundleWiring);
         assertNotNull(bundleClassLoader);
         try
         {
@@ -398,7 +388,7 @@ public class BundleWiringImplTest
     @SuppressWarnings("rawtypes")
     private BundleClassLoader createBundleClassLoader(
             Class bundleClassLoaderClass, BundleWiringImpl bundleWiring)
-            throws Exception
+                    throws Exception
     {
         Logger logger = new Logger();
         Constructor ctor = BundleRevisionImpl.getSecureAction().getConstructor(
