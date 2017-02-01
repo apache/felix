@@ -36,11 +36,11 @@ public class KXml2SAXParser extends KXmlParser
 {
 
     /**
-    * The constructor for a parser, it receives a java.io.Reader.
-    *
-    * @param   reader  The reader
-    * @throws XmlPullParserException
-    */
+     * The constructor for a parser, it receives a java.io.Reader.
+     *
+     * @param   reader  The reader
+     * @throws XmlPullParserException
+     */
     public KXml2SAXParser( Reader reader ) throws XmlPullParserException
     {
         super();
@@ -50,12 +50,12 @@ public class KXml2SAXParser extends KXmlParser
 
 
     /**
-    * Parser from the reader provided in the constructor, and call
-    * the startElement and endElement in a KxmlHandler
-    *
-    * @param   handler  The handler
-    * @exception   Exception thrown by the superclass
-    */
+     * Parser from the reader provided in the constructor, and call
+     * the startElement and endElement in a KxmlHandler
+     *
+     * @param   handler  The handler
+     * @exception   Exception thrown by the superclass
+     */
     public void parseXML( KXml2SAXHandler handler ) throws Exception
     {
 
@@ -111,14 +111,14 @@ public class KXml2SAXParser extends KXmlParser
         if ( currentElement == null )
         {
             throw new ParseException( "Unexpected closing element "
-                + new XmlElement( getNamespace(), getName(), getLineNumber(), getColumnNumber() ), null );
+                    + new XmlElement( getNamespace(), getName(), getLineNumber(), getColumnNumber() ), null );
         }
 
         if ( !currentElement.match( getNamespace(), getName() ) )
         {
             throw new ParseException( "Unexpected closing element "
-                + new XmlElement( getNamespace(), getName(), getLineNumber(), getColumnNumber() )
-                + ": Does not match opening element " + currentElement, null );
+                    + new XmlElement( getNamespace(), getName(), getLineNumber(), getColumnNumber() )
+                    + ": Does not match opening element " + currentElement, null );
         }
     }
 
@@ -145,21 +145,33 @@ public class KXml2SAXParser extends KXmlParser
             return namespaceUri.equals( this.namespaceUri ) && name.equals( this.name );
         }
 
+        @Override
         public String toString()
         {
             return name + "@" + line + ":" + col;
         }
     }
-    
-    public class Attributes {
-    	
-    	public String getAttribute(String name) {
-    		return getAttributeValue("", name);
-    	}
-    	
-    	public String getAttribute(String uri, String name) {
-    		return getAttributeValue(uri, name);
-    	}
 
+    public class Attributes {
+
+        public String getAttribute(String name) {
+            return getAttributeValue("", name);
+        }
+
+        public String getAttribute(String uri, String name) {
+            return getAttributeValue(uri, name);
+        }
+
+        public boolean getBoolAttribute(String name, boolean defaultValue) {
+            return getBoolAttribute("", name, defaultValue);
+        }
+
+        public boolean getBoolAttribute(String uri, String name, boolean defaultValue) {
+            final String val = getAttribute(uri, name);
+            if ( val != null ) {
+                return "true".equals(val);
+            }
+            return defaultValue;
+        }
     }
 }

@@ -18,12 +18,10 @@
  */
 package org.apache.felix.scr.impl.xml;
 
-
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
@@ -40,57 +38,11 @@ import org.apache.felix.scr.impl.parser.ParseException;
 import org.osgi.framework.Bundle;
 import org.osgi.service.log.LogService;
 
-
 /**
- *
- *
+ * XML Parser for the component XML
  */
 public class XmlHandler implements KXml2SAXHandler
 {
-
-    // Empty Namespace URI maps to DS 1.0
-    public static final String NAMESPACE_URI_EMPTY = "";
-
-    // Namespace URI of DS 1.0
-    public static final String NAMESPACE_URI = "http://www.osgi.org/xmlns/scr/v1.0.0";
-
-    // Namespace URI of DS 1.1
-    public static final String NAMESPACE_URI_1_1 = "http://www.osgi.org/xmlns/scr/v1.1.0";
-
-    // Namespace URI of DS 1.1-felix (see FELIX-1893)
-    public static final String NAMESPACE_URI_1_1_FELIX = "http://felix.apache.org/xmlns/scr/v1.1.0-felix";
-
-    // Namespace URI of DS 1.2
-    public static final String NAMESPACE_URI_1_2 = "http://www.osgi.org/xmlns/scr/v1.2.0";
-
-    // Namespace URI of DS 1.2-felix (see FELIX-3377)
-    public static final String NAMESPACE_URI_1_2_FELIX = "http://felix.apache.org/xmlns/scr/v1.2.0-felix";
-
-    // Namespace URI of DS 1.3
-    public static final String NAMESPACE_URI_1_3 = "http://www.osgi.org/xmlns/scr/v1.3.0";
-
-    // Namespace URI of Felix DS extensions 1.0
-    public static final String NAMESPACE_URI_1_0_FELIX_EXTENSIONS = "http://felix.apache.org/xmlns/scr/extensions/v1.0.0";
-
-    // Namespace URI of DS 1.4
-    public static final String NAMESPACE_URI_1_4 = "http://www.osgi.org/xmlns/scr/v1.4.0";
-
-    //extension features
-    public static final String CONFIGURABLE_SERVICE_PROPERTIES = "configurableServiceProperties";
-
-    public static final String PERSISTENT_FACTORY_COMPONENT = "persistentFactoryComponent";
-
-    public static final String DELETE_CALLS_MODIFY = "deleteCallsModify";
-
-    public static final String OBSOLETE_FACTORY_COMPONENT_FACTORY = "obsoleteFactoryComponentFactory";
-
-    public static final String CONFIGURE_WITH_INTERFACES = "configureWithInterfaces";
-
-    public static final String DELAYED_KEEP_INSTANCES = "delayedKeepInstances";
-
-    // mapping of namespace URI to namespace code
-    private static final Map<String, DSVersion> NAMESPACE_CODE_MAP;
-
     // the bundle containing the XML resource being parsed
     private final Bundle m_bundle;
 
@@ -125,20 +77,6 @@ public class XmlHandler implements KXml2SAXHandler
     /** Flag for elements inside a component element */
     protected boolean isComponent = false;
 
-    static
-    {
-        NAMESPACE_CODE_MAP = new HashMap<String, DSVersion>();
-        NAMESPACE_CODE_MAP.put( NAMESPACE_URI_EMPTY, DSVersion.DS10 );
-        NAMESPACE_CODE_MAP.put( NAMESPACE_URI, DSVersion.DS10 );
-        NAMESPACE_CODE_MAP.put( NAMESPACE_URI_1_1, DSVersion.DS11 );
-        NAMESPACE_CODE_MAP.put( NAMESPACE_URI_1_1_FELIX, DSVersion.DS11Felix );
-        NAMESPACE_CODE_MAP.put( NAMESPACE_URI_1_2, DSVersion.DS12 );
-        NAMESPACE_CODE_MAP.put( NAMESPACE_URI_1_2_FELIX, DSVersion.DS12Felix );
-        NAMESPACE_CODE_MAP.put( NAMESPACE_URI_1_3, DSVersion.DS13 );
-        NAMESPACE_CODE_MAP.put( NAMESPACE_URI_1_4, DSVersion.DS14 );
-    }
-
-
     // creates an instance with the bundle owning the component descriptor
     // file parsed by this instance
     public XmlHandler( Bundle bundle, Logger logger, boolean globalObsoleteFactoryComponentFactory, boolean globalDelayedKeepInstances )
@@ -151,10 +89,10 @@ public class XmlHandler implements KXml2SAXHandler
 
 
     /**
-    * Called to retrieve the service descriptors
-    *
-    * @return   A list of service descriptors
-    */
+     * Called to retrieve the service descriptors
+     *
+     * @return   A list of service descriptors
+     */
     public List<ComponentMetadata> getComponentMetadataList()
     {
         return m_components;
@@ -168,7 +106,8 @@ public class XmlHandler implements KXml2SAXHandler
      * @param   localName
      * @param   attributes
      * @exception   ParseException
-    **/
+     **/
+    @Override
     public void startElement( String uri, String localName, Attributes attributes ) throws ParseException
     {
         // according to the spec, the elements should have the namespace,
@@ -177,13 +116,13 @@ public class XmlHandler implements KXml2SAXHandler
         if ( firstElement )
         {
             firstElement = false;
-            if ( localName.equals( "component" ) && "".equals( uri ) )
+            if ( localName.equals( XmlConstants.EL_COMPONENT ) && XmlConstants.NAMESPACE_URI_EMPTY.equals( uri ) )
             {
-                overrideNamespace = NAMESPACE_URI;
+                overrideNamespace = XmlConstants.NAMESPACE_URI;
             }
         }
 
-        if ( overrideNamespace != null && "".equals( uri ) )
+        if ( overrideNamespace != null && XmlConstants.NAMESPACE_URI_EMPTY.equals( uri ) )
         {
             uri = overrideNamespace;
         }
@@ -191,13 +130,13 @@ public class XmlHandler implements KXml2SAXHandler
         // FELIX-695: however the spec also states that the inner elements
         // of a component are unqualified, so they don't have
         // the namespace - we allow both: with or without namespace!
-        if ( this.isComponent && "".equals(uri) )
+        if ( this.isComponent && XmlConstants.NAMESPACE_URI_EMPTY.equals(uri) )
         {
-            uri = NAMESPACE_URI;
+            uri = XmlConstants.NAMESPACE_URI;
         }
 
         // get the namespace code for the namespace uri
-        DSVersion namespaceCode = NAMESPACE_CODE_MAP.get( uri );
+        DSVersion namespaceCode = XmlConstants.NAMESPACE_CODE_MAP.get( uri );
         // from now on uri points to the namespace
         if ( namespaceCode != null )
         {
@@ -205,7 +144,7 @@ public class XmlHandler implements KXml2SAXHandler
             {
 
                 // 112.4.3 Component Element
-                if ( localName.equals( "component" ) )
+                if ( localName.equals( XmlConstants.EL_COMPONENT ) )
                 {
                     this.isComponent = true;
 
@@ -268,28 +207,28 @@ public class XmlHandler implements KXml2SAXHandler
                         m_currentComponent.setConfigurationPid( configurationPid );
                     }
 
-                    m_currentComponent.setConfigurableServiceProperties("true".equals(attributes.getAttribute(NAMESPACE_URI_1_0_FELIX_EXTENSIONS, CONFIGURABLE_SERVICE_PROPERTIES)));
-                    m_currentComponent.setPersistentFactoryComponent("true".equals(attributes.getAttribute(NAMESPACE_URI_1_0_FELIX_EXTENSIONS, PERSISTENT_FACTORY_COMPONENT)));
-                    m_currentComponent.setDeleteCallsModify("true".equals(attributes.getAttribute(NAMESPACE_URI_1_0_FELIX_EXTENSIONS, DELETE_CALLS_MODIFY)));
-                    if ( attributes.getAttribute(NAMESPACE_URI_1_0_FELIX_EXTENSIONS, OBSOLETE_FACTORY_COMPONENT_FACTORY) != null)
+                    m_currentComponent.setConfigurableServiceProperties("true".equals(attributes.getAttribute(XmlConstants.NAMESPACE_URI_1_0_FELIX_EXTENSIONS, XmlConstants.ATTR_CONFIGURABLE_SERVICE_PROPERTIES)));
+                    m_currentComponent.setPersistentFactoryComponent("true".equals(attributes.getAttribute(XmlConstants.NAMESPACE_URI_1_0_FELIX_EXTENSIONS, XmlConstants.ATTR_PERSISTENT_FACTORY_COMPONENT)));
+                    m_currentComponent.setDeleteCallsModify("true".equals(attributes.getAttribute(XmlConstants.NAMESPACE_URI_1_0_FELIX_EXTENSIONS, XmlConstants.ATTR_DELETE_CALLS_MODIFY)));
+                    if ( attributes.getAttribute(XmlConstants.NAMESPACE_URI_1_0_FELIX_EXTENSIONS, XmlConstants.ATTR_OBSOLETE_FACTORY_COMPONENT_FACTORY) != null)
                     {
-                        m_currentComponent.setObsoleteFactoryComponentFactory("true".equals(attributes.getAttribute(NAMESPACE_URI_1_0_FELIX_EXTENSIONS, OBSOLETE_FACTORY_COMPONENT_FACTORY)));
+                        m_currentComponent.setObsoleteFactoryComponentFactory("true".equals(attributes.getAttribute(XmlConstants.NAMESPACE_URI_1_0_FELIX_EXTENSIONS, XmlConstants.ATTR_OBSOLETE_FACTORY_COMPONENT_FACTORY)));
                     }
                     else if ( !namespaceCode.isDS13() )
                     {
                         m_currentComponent.setObsoleteFactoryComponentFactory(m_globalObsoleteFactoryComponentFactory);
                     }
-                    m_currentComponent.setConfigureWithInterfaces("true".equals(attributes.getAttribute(NAMESPACE_URI_1_0_FELIX_EXTENSIONS, CONFIGURE_WITH_INTERFACES)));
-                    m_currentComponent.setDelayedKeepInstances(m_globalDelayedKeepInstances || "true".equals(attributes.getAttribute(NAMESPACE_URI_1_0_FELIX_EXTENSIONS, DELAYED_KEEP_INSTANCES)));
+                    m_currentComponent.setConfigureWithInterfaces("true".equals(attributes.getAttribute(XmlConstants.NAMESPACE_URI_1_0_FELIX_EXTENSIONS, XmlConstants.ATTR_CONFIGURE_WITH_INTERFACES)));
+                    m_currentComponent.setDelayedKeepInstances(m_globalDelayedKeepInstances || "true".equals(attributes.getAttribute(XmlConstants.NAMESPACE_URI_1_0_FELIX_EXTENSIONS, XmlConstants.ATTR_DELAYED_KEEP_INSTANCES)));
 
                     // activation-fields is optional (since DS 1.4)
                     String activationFields = attributes.getAttribute( "activation-fields" );
-                    if ( activationFields != null ) 
+                    if ( activationFields != null )
                     {
-                    	final String[] fields = activationFields.split(" ");
-                    	m_currentComponent.setActivationFields( fields );
+                        final String[] fields = activationFields.split(" ");
+                        m_currentComponent.setActivationFields( fields );
                     }
-                    
+
                     // Add this component to the list
                     m_components.add( m_currentComponent );
                 }
@@ -298,18 +237,18 @@ public class XmlHandler implements KXml2SAXHandler
                 else if ( !this.isComponent )
                 {
                     m_logger.log( LogService.LOG_DEBUG,
-                        "Not currently parsing a component; ignoring element {0} (bundle {1})", new Object[]
-                            { localName, m_bundle.getLocation() }, null, null, null );
+                            "Not currently parsing a component; ignoring element {0} (bundle {1})", new Object[]
+                                    { localName, m_bundle.getLocation() }, null, null, null );
                 }
 
                 // 112.4.4 Implementation
-                else if ( localName.equals( "implementation" ) )
+                else if ( localName.equals( XmlConstants.EL_IMPL ) )
                 {
                     // Set the implementation class name (mandatory)
                     m_currentComponent.setImplementationClassName( attributes.getAttribute( "class" ) );
                 }
                 // 112.4.5 [...] Property Elements
-                else if ( localName.equals( "property" ) )
+                else if ( localName.equals( XmlConstants.EL_PROPERTY ) )
                 {
                     PropertyMetadata prop = new PropertyMetadata();
 
@@ -335,7 +274,7 @@ public class XmlHandler implements KXml2SAXHandler
                     }
                 }
                 // 112.4.5 Properties [...] Elements
-                else if ( localName.equals( "properties" ) )
+                else if ( localName.equals( XmlConstants.EL_PROPERTIES ) )
                 {
                     final Properties props = readPropertiesEntry( attributes.getAttribute( "entry" ) );
                     // create PropertyMetadata for the properties from the file
@@ -349,7 +288,7 @@ public class XmlHandler implements KXml2SAXHandler
 
                 }
                 // TODO Section [...] Factory Property Elements
-                else if ( localName.equals( "factoryProperty" ) )
+                else if ( localName.equals( XmlConstants.EL_FACTORY_PROPERTY ) )
                 {
                     PropertyMetadata prop = new PropertyMetadata();
 
@@ -371,11 +310,11 @@ public class XmlHandler implements KXml2SAXHandler
                     else
                     {
                         // hold the metadata pending
-                    	m_pendingFactoryProperty = prop;
+                        m_pendingFactoryProperty = prop;
                     }
                 }
                 // TODO Section [...] Factory Properties [...] Elements
-                else if ( localName.equals( "factoryProperties" ) )
+                else if ( localName.equals( XmlConstants.EL_FACTORY_PROPERTIES ) )
                 {
                     final Properties props = readPropertiesEntry( attributes.getAttribute( "entry" ) );
                     // create PropertyMetadata for the properties from the file
@@ -388,7 +327,7 @@ public class XmlHandler implements KXml2SAXHandler
                     }
                 }
                 // 112.4.6 Service Element
-                else if ( localName.equals( "service" ) )
+                else if ( localName.equals( XmlConstants.EL_SERVICE ) )
                 {
 
                     m_currentService = new ServiceMetadata();
@@ -401,18 +340,18 @@ public class XmlHandler implements KXml2SAXHandler
 
                     if ( attributes.getAttribute( "scope" ) != null )
                     {
-                    	m_currentService.setScope( attributes.getAttribute( "scope" ) );
+                        m_currentService.setScope( attributes.getAttribute( "scope" ) );
                     }
 
                     m_currentComponent.setService( m_currentService );
                 }
-                else if ( localName.equals( "provide" ) )
+                else if ( localName.equals( XmlConstants.EL_PROVIDE ) )
                 {
                     m_currentService.addProvide( attributes.getAttribute( "interface" ) );
                 }
 
                 // 112.4.7 Reference element
-                else if ( localName.equals( "reference" ) )
+                else if ( localName.equals( XmlConstants.EL_REF ) )
                 {
                     ReferenceMetadata ref = new ReferenceMetadata();
 
@@ -477,10 +416,10 @@ public class XmlHandler implements KXml2SAXHandler
 
                 // unexpected element (except the root element "components"
                 // used by the Maven SCR Plugin, which is just silently ignored)
-                else if ( !localName.equals( "components" ) )
+                else if ( !localName.equals( XmlConstants.EL_COMPONENTS ) )
                 {
                     m_logger.log( LogService.LOG_DEBUG, "Ignoring unsupported element {0} (bundle {1})", new Object[]
-                        { localName, m_bundle.getLocation() }, null, null, null );
+                            { localName, m_bundle.getLocation() }, null, null, null );
                 }
             }
             catch ( Exception ex )
@@ -491,51 +430,52 @@ public class XmlHandler implements KXml2SAXHandler
 
         // unexpected namespace (except the root element "components"
         // used by the Maven SCR Plugin, which is just silently ignored)
-        else if ( !localName.equals( "components" ) )
+        else if ( !localName.equals( XmlConstants.EL_COMPONENTS ) )
         {
             m_logger.log( LogService.LOG_DEBUG, "Ignoring unsupported element '{'{0}'}'{1} (bundle {2})", new Object[]
-                { uri, localName, m_bundle.getLocation() }, null, null, null );
+                    { uri, localName, m_bundle.getLocation() }, null, null, null );
         }
     }
 
 
     /**
-    * Method called when a tag closes
-    *
-    * @param   uri
-    * @param   localName
-    */
+     * Method called when a tag closes
+     *
+     * @param   uri
+     * @param   localName
+     */
+    @Override
     public void endElement( String uri, String localName )
     {
-        if ( overrideNamespace != null && "".equals( uri ) )
+        if ( overrideNamespace != null && XmlConstants.NAMESPACE_URI_EMPTY.equals( uri ) )
         {
             uri = overrideNamespace;
         }
 
-        if ( this.isComponent && "".equals(uri) )
+        if ( this.isComponent && XmlConstants.NAMESPACE_URI_EMPTY.equals(uri) )
         {
-            uri = NAMESPACE_URI;
+            uri = XmlConstants.NAMESPACE_URI;
         }
 
-        if ( NAMESPACE_URI.equals( uri ) )
+        if ( XmlConstants.NAMESPACE_URI.equals( uri ) )
         {
-            if ( localName.equals( "component" ) )
+            if ( localName.equals( XmlConstants.EL_COMPONENT ) )
             {
                 this.isComponent = false;
             }
-            else if ( localName.equals( "property" ) && m_pendingProperty != null )
+            else if ( localName.equals( XmlConstants.EL_PROPERTY ) && m_pendingProperty != null )
             {
                 // 112.4.5 body expected to contain property value
                 // if so, the m_pendingProperty field would be null
                 // currently, we just ignore this situation
                 m_pendingProperty = null;
             }
-            else if ( localName.equals( "factoryProperty" ) && m_pendingFactoryProperty != null )
+            else if ( localName.equals( XmlConstants.EL_FACTORY_PROPERTY ) && m_pendingFactoryProperty != null )
             {
                 // 112.4.5 body expected to contain property value
                 // if so, the m_pendingFactoryProperty field would be null
                 // currently, we just ignore this situation
-            	m_pendingFactoryProperty = null;
+                m_pendingFactoryProperty = null;
             }
         }
     }
@@ -544,6 +484,7 @@ public class XmlHandler implements KXml2SAXHandler
     /**
      * @see org.apache.felix.scr.impl.parser.KXml2SAXHandler#characters(java.lang.String)
      */
+    @Override
     public void characters( String text )
     {
         // 112.4.5 If the value attribute is not specified, the body must contain one or more values
@@ -555,7 +496,7 @@ public class XmlHandler implements KXml2SAXHandler
         }
         if ( m_pendingFactoryProperty != null )
         {
-        	m_pendingFactoryProperty.setValues( text );
+            m_pendingFactoryProperty.setValues( text );
             m_currentComponent.addFactoryProperty( m_pendingFactoryProperty );
             m_pendingFactoryProperty = null;
         }
@@ -565,6 +506,7 @@ public class XmlHandler implements KXml2SAXHandler
     /**
      * @see org.apache.felix.scr.impl.parser.KXml2SAXHandler#processingInstruction(java.lang.String, java.lang.String)
      */
+    @Override
     public void processingInstruction( String target, String data )
     {
         // Not used
@@ -574,6 +516,7 @@ public class XmlHandler implements KXml2SAXHandler
     /**
      * @see org.apache.felix.scr.impl.parser.KXml2SAXHandler#setLineNumber(int)
      */
+    @Override
     public void setLineNumber( int lineNumber )
     {
         // Not used
@@ -583,6 +526,7 @@ public class XmlHandler implements KXml2SAXHandler
     /**
      * @see org.apache.felix.scr.impl.parser.KXml2SAXHandler#setColumnNumber(int)
      */
+    @Override
     public void setColumnNumber( int columnNumber )
     {
         // Not used
