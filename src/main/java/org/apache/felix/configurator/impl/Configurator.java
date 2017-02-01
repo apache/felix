@@ -86,35 +86,35 @@ public class Configurator {
 
                 new BundleTrackerCustomizer<Bundle>() {
 
-                    @Override
-                    public Bundle addingBundle(final Bundle bundle, final BundleEvent event) {
-                        if ( active ) {
-                            synchronized ( this ) {
-                                processAddBundle(bundle);
-                                process();
-                            }
-                        }
-                        return bundle;
+            @Override
+            public Bundle addingBundle(final Bundle bundle, final BundleEvent event) {
+                if ( active ) {
+                    synchronized ( this ) {
+                        processAddBundle(bundle);
+                        process();
                     }
+                }
+                return bundle;
+            }
 
-                    @Override
-                    public void modifiedBundle(final Bundle bundle, final BundleEvent event, final Bundle object) {
-                        this.addingBundle(bundle, event);
-                    }
+            @Override
+            public void modifiedBundle(final Bundle bundle, final BundleEvent event, final Bundle object) {
+                this.addingBundle(bundle, event);
+            }
 
-                    @Override
-                    public void removedBundle(final Bundle bundle, final BundleEvent event, final Bundle object) {
-                        if ( active ) {
-                            try {
-                                synchronized ( this ) {
-                                    processRemoveBundle(bundle.getBundleId());
-                                    process();
-                                }
-                            } catch ( final IllegalStateException ise) {
-                                SystemLogger.error("Error processing bundle " + bundle.getBundleId() + " - " + bundle.getSymbolicName(), ise);
-                            }
+            @Override
+            public void removedBundle(final Bundle bundle, final BundleEvent event, final Bundle object) {
+                if ( active ) {
+                    try {
+                        synchronized ( this ) {
+                            processRemoveBundle(bundle.getBundleId());
+                            process();
                         }
+                    } catch ( final IllegalStateException ise) {
+                        SystemLogger.error("Error processing bundle " + bundle.getBundleId() + " - " + bundle.getSymbolicName(), ise);
                     }
+                }
+            }
 
         });
     }
@@ -280,7 +280,7 @@ public class Configurator {
         final Object localCoordinator = this.coordinator;
         Object coordination = null;
         if ( localCoordinator != null ) {
-            coordination = CoordinatorUtil.getOrStartCoordination(localCoordinator);
+            coordination = CoordinatorUtil.getCoordination(localCoordinator);
         }
         try {
             for(final String pid : state.getPids()) {
@@ -310,38 +310,38 @@ public class Configurator {
             final boolean canBeActive = cfg.isActive(activeEnvironments);
 
             switch ( cfg.getState() ) {
-                case INSTALL     : // activate if first found
-                                   if ( canBeActive && toActivate == null ) {
-                                       toActivate = cfg;
-                                   }
-                                   break;
+            case INSTALL     : // activate if first found
+                if ( canBeActive && toActivate == null ) {
+                    toActivate = cfg;
+                }
+                break;
 
-                case IGNORED     : // same as installed
-                case INSTALLED   : // check if we have to uninstall
-                                   if ( canBeActive ) {
-                                       if ( toActivate == null ) {
-                                           toActivate = cfg;
-                                       } else {
-                                           cfg.setState(ConfigState.INSTALL);
-                                       }
-                                   } else {
-                                       if ( toDeactivate == null ) { // this should always be null
-                                           cfg.setState(ConfigState.UNINSTALL);
-                                           toDeactivate = cfg;
-                                       } else {
-                                           cfg.setState(ConfigState.UNINSTALLED);
-                                       }
-                                   }
-                                   break;
+            case IGNORED     : // same as installed
+            case INSTALLED   : // check if we have to uninstall
+                if ( canBeActive ) {
+                    if ( toActivate == null ) {
+                        toActivate = cfg;
+                    } else {
+                        cfg.setState(ConfigState.INSTALL);
+                    }
+                } else {
+                    if ( toDeactivate == null ) { // this should always be null
+                        cfg.setState(ConfigState.UNINSTALL);
+                        toDeactivate = cfg;
+                    } else {
+                        cfg.setState(ConfigState.UNINSTALLED);
+                    }
+                }
+                break;
 
-                case UNINSTALL   : // deactivate if first found (we should only find one anyway)
-                                   if ( toDeactivate == null ) {
-                                       toDeactivate = cfg;
-                                   }
-                                   break;
+            case UNINSTALL   : // deactivate if first found (we should only find one anyway)
+                if ( toDeactivate == null ) {
+                    toDeactivate = cfg;
+                }
+                break;
 
-                case UNINSTALLED : // nothing to do
-                                   break;
+            case UNINSTALLED : // nothing to do
+                break;
             }
 
         }
@@ -400,10 +400,10 @@ public class Configurator {
                     update = true;
                 } else {
                     if ( configList.getLastInstalled() == null
-                         || configList.getChangeCount() != configuration.getChangeCount() ) {
+                            || configList.getChangeCount() != configuration.getChangeCount() ) {
                         ignore = true;
                     } else {
-                       update = true;
+                        update = true;
                     }
                 }
             }
@@ -435,7 +435,7 @@ public class Configurator {
             final Configuration c = ConfigUtil.getOrCreateConfiguration(this.configAdmin, cfg.getPid(), false);
             if ( c != null ) {
                 if ( cfg.getPolicy() == ConfigPolicy.FORCE
-                     || configList.getChangeCount() == c.getChangeCount() ) {
+                        || configList.getChangeCount() == c.getChangeCount() ) {
                     c.delete();
                 }
             }

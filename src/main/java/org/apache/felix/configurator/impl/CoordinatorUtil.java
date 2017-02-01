@@ -27,7 +27,7 @@ import org.osgi.service.coordinator.Coordinator;
  */
 public class CoordinatorUtil {
 
-    public static Object getOrStartCoordination(final Object object) {
+    public static Object getCoordination(final Object object) {
         final Coordinator coordinator = (Coordinator) object;
         final Coordination threadCoordination = coordinator.peek();
         if ( threadCoordination == null ) {
