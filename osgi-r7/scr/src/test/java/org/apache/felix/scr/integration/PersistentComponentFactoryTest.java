@@ -117,7 +117,7 @@ public class PersistentComponentFactoryTest extends ComponentTestBase
         final ComponentInstance instance = factory.newInstance( props );
         TestCase.assertNotNull( instance );
 
-        checkConfigurationCount( componentname, 1, ComponentConfigurationDTO.SATISFIED );
+        checkConfigurationCount( componentname, 1, ComponentConfigurationDTO.FAILED_ACTIVATION );
     }
 
     @Test
