@@ -96,6 +96,12 @@
             <version>1.3.0</version>
             <scope>provided</scope>
         </dependency>
+        <dependency>
+            <groupId>org.osgi</groupId>
+            <artifactId>org.osgi.service.coordinator</artifactId>
+            <version>1.0.2</version>
+            <scope>provided</scope>
+        </dependency>
         
         <!-- Integration Testing with Pax Exam -->
         <dependency>
@@ -178,16 +184,17 @@
                             <!-- when the spec version changes, update the service property that includes the spec version in ConfigurationManager -->
                             org.apache.felix.cm;
                             org.apache.felix.cm.file,
-                            org.osgi.service.cm;provide:=true;version=1.6
+                            org.osgi.service.cm;provide:=true
                         </Export-Package>
                         <Import-Package>
-                            org.osgi.service.cm;version="[1.6,1.7)",
-							org.osgi.service.log;resolution:=optional;version="1.3",
+                            org.osgi.service.cm,
+                            org.osgi.service.coordinator;resolution:=optional,
+							org.osgi.service.log;resolution:=optional,
                             *
                         </Import-Package>
                         <DynamicImport-Package>
-                            <!-- overwrite version from compendium bundle -->
-                            org.osgi.service.log;version="1.3"
+                            org.osgi.service.coordinator;version="[1.0,2)",                            
+                            org.osgi.service.log;version="[1.3,2)",
                         </DynamicImport-Package>
                         <Provide-Capability><![CDATA[
                             osgi.service;objectClass:List<String>="org.osgi.service.cm.ConfigurationAdmin";uses:="org.osgi.service.cm,org.apache.felix.cm",

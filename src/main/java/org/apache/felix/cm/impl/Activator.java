@@ -21,6 +21,8 @@ package org.apache.felix.cm.impl;
 import java.io.IOException;
 import java.util.Dictionary;
 import java.util.Hashtable;
+import java.util.SortedMap;
+import java.util.TreeMap;
 
 import org.apache.felix.cm.PersistenceManager;
 import org.apache.felix.cm.file.FilePersistenceManager;
@@ -31,6 +33,8 @@ import org.osgi.framework.ServiceReference;
 import org.osgi.framework.ServiceRegistration;
 import org.osgi.service.cm.ConfigurationAdmin;
 import org.osgi.service.log.LogService;
+import org.osgi.util.tracker.ServiceTracker;
+import org.osgi.util.tracker.ServiceTrackerCustomizer;
 
 /**
  * Activator for the configuration admin implementation.
@@ -64,6 +68,11 @@ public class Activator implements BundleActivator
     // the service registration of the default file persistence manager
     private volatile ServiceRegistration<PersistenceManager> filepmRegistration;
 
+    // service tracker for optional coordinator
+    @SuppressWarnings("rawtypes")
+    private volatile ServiceTracker coordinatorTracker;
+
+    @SuppressWarnings({ "unchecked", "rawtypes" })
     @Override
     public void start( final BundleContext bundleContext )
     {
@@ -95,8 +104,58 @@ public class Activator implements BundleActivator
             Log.logger.log( LogService.LOG_ERROR, "Cannot create the FilePersistenceManager", iae );
         }
 
-        // start configuration manager implementation
         this.manager = new ConfigurationManager();
+        // start coordinator tracker
+        coordinatorTracker = new ServiceTracker(bundleContext, "org.osgi.service.coordinator.Coordinator",
+                new ServiceTrackerCustomizer()
+        {
+            private final SortedMap<ServiceReference, Object> sortedServices = new TreeMap<ServiceReference, Object>();
+
+            @Override
+            public Object addingService(final ServiceReference reference)
+            {
+                final Object srv = bundleContext.getService(reference);
+                if ( srv != null )
+                {
+                    synchronized ( this.sortedServices )
+                    {
+                        sortedServices.put(reference, srv);
+                        manager.setCoordinator(sortedServices.get(sortedServices.lastKey()));
+                    }
+                }
+                return srv;
+            }
+
+            @Override
+            public void modifiedService(final ServiceReference reference, final Object srv) {
+                synchronized ( this.sortedServices )
+                {
+                    // update the map, service ranking might have changed
+                    sortedServices.remove(reference);
+                    sortedServices.put(reference, srv);
+                    manager.setCoordinator(sortedServices.get(sortedServices.lastKey()));
+                }
+            }
+
+            @Override
+            public void removedService(final ServiceReference reference, final Object service) {
+                synchronized ( this.sortedServices )
+                {
+                    sortedServices.remove(reference);
+                    if ( sortedServices.isEmpty() )
+                    {
+                        manager.setCoordinator(null);
+                    }
+                    else
+                    {
+                        manager.setCoordinator(sortedServices.get(sortedServices.lastKey()));
+                    }
+                }
+                bundleContext.ungetService(reference);
+            }
+        });
+        coordinatorTracker.open();
+        // start configuration manager implementation
         final ServiceReference<ConfigurationAdmin> ref = this.manager.start(dynamicBindings, bundleContext);
 
         // update log
@@ -109,10 +168,19 @@ public class Activator implements BundleActivator
     {
         // stop logger
         Log.logger.stop();
+
+        // stop configuration manager implementation
         if ( this.manager != null )
         {
             this.manager.stop(bundleContext);
             this.manager = null;
+        }
+
+        // stop coordinator tracker
+        if ( this.coordinatorTracker != null )
+        {
+            this.coordinatorTracker.close();
+            this.coordinatorTracker = null;
         }
 
         // shutdown the file persistence manager
