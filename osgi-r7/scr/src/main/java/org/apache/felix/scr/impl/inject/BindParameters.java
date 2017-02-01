@@ -25,7 +25,7 @@ import org.osgi.framework.BundleContext;
 
 public class BindParameters
 {
-    
+
     private final ComponentContextImpl<?> componentContext;
     private final RefPair<?, ?> refPair;
     public BindParameters(ComponentContextImpl<?> componentContext, RefPair<?, ?> refPair)
@@ -33,17 +33,17 @@ public class BindParameters
         this.componentContext = componentContext;
         this.refPair = refPair;
     }
-    
-    public ComponentContextImpl getComponentContext()
+
+    public ComponentContextImpl<?> getComponentContext()
     {
         return componentContext;
     }
-    
+
     public RefPair getRefPair()
     {
         return refPair;
     }
- 
+
     public Object getServiceObject() {
     	return refPair.getServiceObject((ComponentContextImpl) componentContext);
     }

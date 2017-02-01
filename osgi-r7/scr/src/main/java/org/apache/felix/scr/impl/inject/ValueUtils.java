@@ -35,28 +35,35 @@ import org.osgi.service.log.LogService;
  */
 public class ValueUtils {
 
-	/**
-	 * The value type of the field, activation field or constructor parameter
-	 */
-	public enum ValueType
+    private static final String LOGGER_CLASS = "org.osgi.service.log.Logger";
+    private static final String FORMATTER_LOGGER_CLASS = "org.osgi.service.log.FormatterLogger";
+
+    /**
+     * The value type of the field, activation field or constructor parameter
+     */
+    public enum ValueType
     {
         ignore,
-        componentContext,
-        bundleContext,
-        config_map,
-        config_annotation,
-        ref_serviceReference,
-        ref_serviceObjects,
-        ref_serviceType,
-        ref_map,
-        ref_tuple
+        componentContext,       // field activation, constructor
+        bundleContext,          // field activation, constructor
+        config_map,             // field activation, constructor
+        config_annotation,      // field activation, constructor
+        logger,                 // TODO
+        formatterLogger,        // TODO
+        ref_serviceReference,   // reference (field, constructor, method)
+        ref_serviceObjects,     // reference (field, constructor, method)
+        ref_serviceType,        // reference (field, constructor, method)
+        ref_map,                // reference (field, constructor, method)
+        ref_tuple               // reference (field, constructor ??)
     }
-    
+
     /** Empty array. */
-	public static final ValueType[] EMPTY_VALUE_TYPES = new ValueType[0];
+    public static final ValueType[] EMPTY_VALUE_TYPES = new ValueType[0];
 
     /**
      * Get the value type for the parameter class.
+     * This method is used for field activation and constructor injection.
+     *
      * @param typeClass The class of the parameter
      * @return The value type
      */
@@ -64,24 +71,32 @@ public class ValueUtils {
     {
         if ( typeClass == ClassUtils.COMPONENT_CONTEXT_CLASS )
         {
-        	return ValueType.componentContext;
+            return ValueType.componentContext;
         }
         else if ( typeClass == ClassUtils.BUNDLE_CONTEXT_CLASS )
         {
-        	return ValueType.bundleContext;
+            return ValueType.bundleContext;
         }
         else if ( typeClass == ClassUtils.MAP_CLASS )
         {
-        	return ValueType.config_map;
+            return ValueType.config_map;
+        }
+        else if ( typeClass.getName().equals(LOGGER_CLASS) )
+        {
+            return ValueType.logger;
+        }
+        else if ( typeClass.getName().equals(FORMATTER_LOGGER_CLASS) )
+        {
+            return ValueType.formatterLogger;
         }
         else
         {
-        	return ValueType.config_annotation;
+            return ValueType.config_annotation;
         }
     }
 
     /**
-     * Get the value type of the reference
+     * Get the value type of the reference for a field/constructor
      * @param componentClass The component class declaring the reference
      * @param metadata The reference metadata
      * @param typeClass The type of the field/parameter
@@ -89,18 +104,18 @@ public class ValueUtils {
      * @param logger The logger
      * @return The value type for the field. If invalid, {@code ValueType#ignore}
      */
-    public static ValueType getReferenceValueType( 
-    		final Class<?> componentClass,
-    		final ReferenceMetadata metadata,
-    		final Class<?> typeClass, 
-    		final Field field,
-    		final SimpleLogger logger )
+    public static ValueType getReferenceValueType(
+            final Class<?> componentClass,
+            final ReferenceMetadata metadata,
+            final Class<?> typeClass,
+            final Field field,
+            final SimpleLogger logger )
     {
         final Class<?> referenceType = ClassUtils.getClassFromComponentClassLoader(
                 componentClass, metadata.getInterface(), logger);
 
         ValueType valueType = ValueType.ignore;
-        
+
         // unary reference
         if ( !metadata.isMultiple() )
         {
@@ -126,16 +141,16 @@ public class ValueUtils {
             }
             else
             {
-            	if ( field != null )
-            	{
-	                logger.log( LogService.LOG_ERROR, "Field {0} in component {1} has unsupported type {2}", new Object[]
-	                        {metadata.getField(), componentClass, typeClass.getName()}, null );
-            	}
-            	else
-            	{
-	                logger.log( LogService.LOG_ERROR, "Constructor argument {0} in component {1} has unsupported type {2}", new Object[]
-	                        {metadata.getParameterIndex(), componentClass, typeClass.getName()}, null );            		
-            	}
+                if ( field != null )
+                {
+                    logger.log( LogService.LOG_ERROR, "Field {0} in component {1} has unsupported type {2}", new Object[]
+                            {metadata.getField(), componentClass, typeClass.getName()}, null );
+                }
+                else
+                {
+                    logger.log( LogService.LOG_ERROR, "Constructor argument {0} in component {1} has unsupported type {2}", new Object[]
+                            {metadata.getParameterIndex(), componentClass, typeClass.getName()}, null );
+                }
                 valueType = ValueType.ignore;
             }
 
@@ -180,16 +195,16 @@ public class ValueUtils {
             // multiple cardinality, field type must be collection or subtype
             if ( !ClassUtils.COLLECTION_CLASS.isAssignableFrom(typeClass) )
             {
-            	if ( field != null )
-            	{
-	                logger.log( LogService.LOG_ERROR, "Field {0} in component {1} has unsupported type {2}", new Object[]
-	                        {metadata.getField(), componentClass, typeClass.getName()}, null );
-            	}
-            	else
-            	{
+                if ( field != null )
+                {
+                    logger.log( LogService.LOG_ERROR, "Field {0} in component {1} has unsupported type {2}", new Object[]
+                            {metadata.getField(), componentClass, typeClass.getName()}, null );
+                }
+                else
+                {
                     logger.log( LogService.LOG_ERROR, "Constructor argument {0} in component {1} has unsupported type {2}", new Object[]
-                            {metadata.getParameterIndex(), componentClass, typeClass.getName()}, null );            		
-            	}
+                            {metadata.getParameterIndex(), componentClass, typeClass.getName()}, null );
+                }
                 valueType = ValueType.ignore;
             }
 
@@ -209,8 +224,8 @@ public class ValueUtils {
                 if ( typeClass != ClassUtils.LIST_CLASS && typeClass != ClassUtils.COLLECTION_CLASS )
                 {
                     logger.log( LogService.LOG_ERROR, "Field {0} in component {1} has unsupported type {2}."+
-                        " It must be one of java.util.Collection or java.util.List.",
-                        new Object[] {metadata.getField(), componentClass, typeClass.getName()}, null );
+                            " It must be one of java.util.Collection or java.util.List.",
+                            new Object[] {metadata.getField(), componentClass, typeClass.getName()}, null );
                     valueType = ValueType.ignore;
 
                 }
@@ -233,38 +248,42 @@ public class ValueUtils {
     }
 
     /**
-     * Get the value for the parameter type
-     * @param type The parameter type
+     * Get the value for the value type
+     * @param type The value type
+     * @param targetType Optional target type, only required for type {@code ValueType#config_annotation}.
      * @param componentContext The component context
+     * @param refPair The ref pair
+     * @return The value or {@code null}.
      */
     @SuppressWarnings("unchecked")
-	public static Object getValue( final ValueType type,
-			final Class<?> targetType,
-    		@SuppressWarnings("rawtypes") final ComponentContextImpl componentContext,
-    		final RefPair<?, ?> refPair)
+    public static Object getValue( final ValueType type,
+            final Class<?> targetType,
+            @SuppressWarnings("rawtypes") final ComponentContextImpl componentContext,
+            final RefPair<?, ?> refPair)
     {
-    	final Object value;
-    	switch ( type ) {
-    		case ignore : value = null; break;
-    		case componentContext : value = componentContext; break;
-    		case bundleContext : value = componentContext.getBundleContext(); break;
-    		case config_map : // note: getProperties() returns a ReadOnlyDictionary which is a Map
-    			              value = componentContext.getProperties(); break;
-    		case config_annotation : value = Annotations.toObject(targetType,
-                    (Map<String, Object>) componentContext.getProperties(),
-                    componentContext.getBundleContext().getBundle(), componentContext.getComponentMetadata().isConfigureWithInterfaces());
-    		        break;
-    		case ref_serviceType : value = refPair.getServiceObject(componentContext); break;
-    		case ref_serviceReference : value = refPair.getRef(); break;
-    		case ref_serviceObjects : value = componentContext.getComponentServiceObjectsHelper().getServiceObjects(refPair.getRef()); break;
-    		case ref_map : value = new ReadOnlyDictionary( refPair.getRef() ); break;
-    		case ref_tuple : final Object tupleKey = new ReadOnlyDictionary( refPair.getRef() );
-                 final Object tupleValue = refPair.getServiceObject(componentContext);
-                 value = new MapEntryImpl(tupleKey, tupleValue, refPair.getRef());
-                 break;
+        final Object value;
+        switch ( type )
+        {
+            case ignore : value = null; break;
+            case componentContext : value = componentContext; break;
+            case bundleContext : value = componentContext.getBundleContext(); break;
+            case config_map : // note: getProperties() returns a ReadOnlyDictionary which is a Map
+                value = componentContext.getProperties(); break;
+            case config_annotation : value = Annotations.toObject(targetType,
+                (Map<String, Object>) componentContext.getProperties(),
+                componentContext.getBundleContext().getBundle(), componentContext.getComponentMetadata().isConfigureWithInterfaces());
+                break;
+            case ref_serviceType : value = refPair.getServiceObject(componentContext); break;
+            case ref_serviceReference : value = refPair.getRef(); break;
+            case ref_serviceObjects : value = componentContext.getComponentServiceObjectsHelper().getServiceObjects(refPair.getRef()); break;
+            case ref_map : value = new ReadOnlyDictionary( refPair.getRef() ); break;
+            case ref_tuple : final Object tupleKey = new ReadOnlyDictionary( refPair.getRef() );
+                final Object tupleValue = refPair.getServiceObject(componentContext);
+                value = new MapEntryImpl(tupleKey, tupleValue, refPair.getRef());
+                break;
             default: value = null;
-    	}
-    	return value;
+        }
+        return value;
     }
 
     /**
@@ -287,21 +306,25 @@ public class ValueUtils {
             this.ref = ref;
         }
 
+        @Override
         public Object getKey()
         {
             return this.key;
         }
 
+        @Override
         public Object getValue()
         {
             return this.value;
         }
 
+        @Override
         public Object setValue(final Object value)
         {
             throw new UnsupportedOperationException();
         }
 
+        @Override
         public int compareTo(final Map.Entry<?, ?> o)
         {
             if ( o == null )
