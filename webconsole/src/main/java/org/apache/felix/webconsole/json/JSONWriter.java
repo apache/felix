@@ -21,6 +21,7 @@ package org.apache.felix.webconsole.json;
 import java.io.IOException;
 import java.io.Writer;
 import java.lang.reflect.Array;
+import java.util.Collection;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -164,6 +165,18 @@ public class JSONWriter
             {
                 final Object val = Array.get(value, i);
                 value(val);
+            }
+            this.endArray();
+        }
+        else if ( value instanceof Collection )
+        {
+            this.comma = false;
+            this.array();
+            final Collection col = (Collection)value;
+            final Iterator i = col.iterator();
+            while ( i.hasNext())
+            {
+                value(i.next());
             }
             this.endArray();
         }
