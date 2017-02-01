@@ -50,114 +50,119 @@ import org.osgi.util.promise.Promises;
 public class ServiceComponentRuntimeImpl implements ServiceComponentRuntime
 {
 
-	private static final String[] EMPTY = {};
+    private static final String[] EMPTY = {};
 
-	private final BundleContext context;
-	private final ComponentRegistry componentRegistry;
+    private final BundleContext context;
+    private final ComponentRegistry componentRegistry;
 
 
-	public ServiceComponentRuntimeImpl(BundleContext context,ComponentRegistry componentRegistry)
-	{
-		this.context = context;
-		this.componentRegistry = componentRegistry;
-	}
+    public ServiceComponentRuntimeImpl(BundleContext context,ComponentRegistry componentRegistry)
+    {
+        this.context = context;
+        this.componentRegistry = componentRegistry;
+    }
 
-	/**
-	 * @see org.osgi.service.component.runtime.ServiceComponentRuntime#getComponentDescriptionDTOs(org.osgi.framework.Bundle[])
-	 */
-	public Collection<ComponentDescriptionDTO> getComponentDescriptionDTOs(Bundle... bundles)
-	{
-		List<ComponentHolder<?>> holders;
-		if (bundles == null || bundles.length == 0)
-		{
-			holders = componentRegistry.getComponentHolders();
-		}
-		else
-		{
-			holders = componentRegistry.getComponentHolders(bundles);
-		}
+    /**
+     * @see org.osgi.service.component.runtime.ServiceComponentRuntime#getComponentDescriptionDTOs(org.osgi.framework.Bundle[])
+     */
+    @Override
+    public Collection<ComponentDescriptionDTO> getComponentDescriptionDTOs(Bundle... bundles)
+    {
+        List<ComponentHolder<?>> holders;
+        if (bundles == null || bundles.length == 0)
+        {
+            holders = componentRegistry.getComponentHolders();
+        }
+        else
+        {
+            holders = componentRegistry.getComponentHolders(bundles);
+        }
 
-		List<ComponentDescriptionDTO> result = new ArrayList<ComponentDescriptionDTO>(holders.size());
-		for (ComponentHolder<?> holder: holders)
-		{
-		    ComponentDescriptionDTO dto = holderToDescription(holder);
-		    if ( dto != null )
-		    {
-		        result.add(dto);
-		    }
-		}
-		return result;
-	}
+        List<ComponentDescriptionDTO> result = new ArrayList<ComponentDescriptionDTO>(holders.size());
+        for (ComponentHolder<?> holder: holders)
+        {
+            ComponentDescriptionDTO dto = holderToDescription(holder);
+            if ( dto != null )
+            {
+                result.add(dto);
+            }
+        }
+        return result;
+    }
 
-	/**
-	 * @see org.osgi.service.component.runtime.ServiceComponentRuntime#getComponentDescriptionDTO(org.osgi.framework.Bundle, java.lang.String)
-	 */
-	public ComponentDescriptionDTO getComponentDescriptionDTO(Bundle bundle, String name)
-	{
-	    ComponentHolder<?> holder = componentRegistry.getComponentHolder(bundle, name);
-		if ( holder != null )
-		{
-			return holderToDescription(holder);
-		}
-		else
-		{
-			return null;
-		}
-	}
+    /**
+     * @see org.osgi.service.component.runtime.ServiceComponentRuntime#getComponentDescriptionDTO(org.osgi.framework.Bundle, java.lang.String)
+     */
+    @Override
+    public ComponentDescriptionDTO getComponentDescriptionDTO(Bundle bundle, String name)
+    {
+        ComponentHolder<?> holder = componentRegistry.getComponentHolder(bundle, name);
+        if ( holder != null )
+        {
+            return holderToDescription(holder);
+        }
+        else
+        {
+            return null;
+        }
+    }
 
-	/**
-	 * @see org.osgi.service.component.runtime.ServiceComponentRuntime#getComponentConfigurationDTOs(org.osgi.service.component.runtime.dto.ComponentDescriptionDTO)
-	 */
-	public Collection<ComponentConfigurationDTO> getComponentConfigurationDTOs(ComponentDescriptionDTO description)
-	{
-		if ( description == null)
-		{
-			return Collections.emptyList();
-		}
-		try
-		{
-    		ComponentHolder<?> holder = getHolderFromDescription( description);
-    		// Get a fully filled out valid description DTO
-    		description = holderToDescription(holder);
+    /**
+     * @see org.osgi.service.component.runtime.ServiceComponentRuntime#getComponentConfigurationDTOs(org.osgi.service.component.runtime.dto.ComponentDescriptionDTO)
+     */
+    @Override
+    public Collection<ComponentConfigurationDTO> getComponentConfigurationDTOs(ComponentDescriptionDTO description)
+    {
+        if ( description == null)
+        {
+            return Collections.emptyList();
+        }
+        try
+        {
+            ComponentHolder<?> holder = getHolderFromDescription( description);
+            // Get a fully filled out valid description DTO
+            description = holderToDescription(holder);
             if ( description == null)
             {
                 return Collections.emptyList();
             }
-    		List<? extends ComponentManager<?>> managers = holder.getComponents();
-    		List<ComponentConfigurationDTO> result = new ArrayList<ComponentConfigurationDTO>(managers.size());
-    		for (ComponentManager<?> manager: managers)
-    		{
-    			result.add(managerToConfiguration(manager, description));
-    		}
-    		return result;
-		}
-		catch ( IllegalStateException ise)
-		{
-		    return Collections.emptyList();
-		}
-	}
+            List<? extends ComponentManager<?>> managers = holder.getComponents();
+            List<ComponentConfigurationDTO> result = new ArrayList<ComponentConfigurationDTO>(managers.size());
+            for (ComponentManager<?> manager: managers)
+            {
+                result.add(managerToConfiguration(manager, description));
+            }
+            return result;
+        }
+        catch ( IllegalStateException ise)
+        {
+            return Collections.emptyList();
+        }
+    }
 
-	/**
-	 * @see org.osgi.service.component.runtime.ServiceComponentRuntime#isComponentEnabled(org.osgi.service.component.runtime.dto.ComponentDescriptionDTO)
-	 */
-	public boolean isComponentEnabled(ComponentDescriptionDTO description)
-	{
+    /**
+     * @see org.osgi.service.component.runtime.ServiceComponentRuntime#isComponentEnabled(org.osgi.service.component.runtime.dto.ComponentDescriptionDTO)
+     */
+    @Override
+    public boolean isComponentEnabled(ComponentDescriptionDTO description)
+    {
         try
         {
-    		ComponentHolder<?> holder = getHolderFromDescription( description);
-	    	return holder.isEnabled();
+            ComponentHolder<?> holder = getHolderFromDescription( description);
+            return holder.isEnabled();
         }
         catch ( IllegalStateException ise)
         {
             return false;
         }
-	}
+    }
 
-	/**
-	 * @see org.osgi.service.component.runtime.ServiceComponentRuntime#enableComponent(org.osgi.service.component.runtime.dto.ComponentDescriptionDTO)
-	 */
-	public Promise<Void> enableComponent(ComponentDescriptionDTO description)
-	{
+    /**
+     * @see org.osgi.service.component.runtime.ServiceComponentRuntime#enableComponent(org.osgi.service.component.runtime.dto.ComponentDescriptionDTO)
+     */
+    @Override
+    public Promise<Void> enableComponent(ComponentDescriptionDTO description)
+    {
         try
         {
             ComponentHolder<?> holder = getHolderFromDescription( description);
@@ -167,13 +172,14 @@ public class ServiceComponentRuntimeImpl implements ServiceComponentRuntime
         {
             return Promises.failed(ise);
         }
-	}
+    }
 
-	/**
-	 * @see org.osgi.service.component.runtime.ServiceComponentRuntime#disableComponent(org.osgi.service.component.runtime.dto.ComponentDescriptionDTO)
-	 */
-	public Promise<Void> disableComponent(ComponentDescriptionDTO description)
-	{
+    /**
+     * @see org.osgi.service.component.runtime.ServiceComponentRuntime#disableComponent(org.osgi.service.component.runtime.dto.ComponentDescriptionDTO)
+     */
+    @Override
+    public Promise<Void> disableComponent(ComponentDescriptionDTO description)
+    {
         try
         {
             ComponentHolder<?> holder = getHolderFromDescription( description);
@@ -183,19 +189,23 @@ public class ServiceComponentRuntimeImpl implements ServiceComponentRuntime
         {
             return Promises.failed(ise);
         }
-	}
+    }
 
-	private ComponentConfigurationDTO managerToConfiguration(ComponentManager<?> manager, ComponentDescriptionDTO description)
-	{
-		ComponentConfigurationDTO dto = new ComponentConfigurationDTO();
+    private ComponentConfigurationDTO managerToConfiguration(ComponentManager<?> manager, ComponentDescriptionDTO description)
+    {
+        ComponentConfigurationDTO dto = new ComponentConfigurationDTO();
         dto.satisfiedReferences = satisfiedRefManagersToDTO(manager.getReferenceManagers());
         dto.unsatisfiedReferences = unsatisfiedRefManagersToDTO(manager.getReferenceManagers());
-		dto.description = description;
-		dto.id = manager.getId();
-		dto.properties = new HashMap<String, Object>(manager.getProperties());//TODO deep copy?
-		dto.state = manager.getSpecState();
-		return dto;
-	}
+        dto.description = description;
+        dto.id = manager.getId();
+        dto.properties = new HashMap<String, Object>(manager.getProperties());//TODO deep copy?
+        dto.state = manager.getSpecState();
+        if ( dto.state == ComponentConfigurationDTO.FAILED_ACTIVATION )
+        {
+            dto.failure = manager.getFailureReason();
+        }
+        return dto;
+    }
 
     private SatisfiedReferenceDTO[] satisfiedRefManagersToDTO(List<? extends ReferenceManager<?, ?>> referenceManagers)
     {
@@ -249,22 +259,22 @@ public class ServiceComponentRuntimeImpl implements ServiceComponentRuntime
         return dtos.toArray( new UnsatisfiedReferenceDTO[dtos.size()] );
     }
 
-	private ServiceReferenceDTO serviceReferenceToDTO( ServiceReference<?> serviceRef)
-	{
-	    if (serviceRef == null)
-	        return null;
+    private ServiceReferenceDTO serviceReferenceToDTO( ServiceReference<?> serviceRef)
+    {
+        if (serviceRef == null)
+            return null;
 
-		ServiceReferenceDTO dto = new ServiceReferenceDTO();
-		Bundle bundle = serviceRef.getBundle();
-		if (bundle != null)
-		    dto.bundle = bundle.getBundleId();
-		else
-		    dto.bundle = -1; // No bundle ever has -1 as ID, so this indicates no bundle.
+        ServiceReferenceDTO dto = new ServiceReferenceDTO();
+        Bundle bundle = serviceRef.getBundle();
+        if (bundle != null)
+            dto.bundle = bundle.getBundleId();
+        else
+            dto.bundle = -1; // No bundle ever has -1 as ID, so this indicates no bundle.
 
-		dto.id = (Long) serviceRef.getProperty(Constants.SERVICE_ID);
-		dto.properties = deepCopy( serviceRef );
-		Bundle[] usingBundles = serviceRef.getUsingBundles();
-		if (usingBundles != null)
+        dto.id = (Long) serviceRef.getProperty(Constants.SERVICE_ID);
+        dto.properties = deepCopy( serviceRef );
+        Bundle[] usingBundles = serviceRef.getUsingBundles();
+        if (usingBundles != null)
         {
             long[] usingBundleIds = new long[usingBundles.length];
             for (int i = 0; i < usingBundles.length; i++)
@@ -274,55 +284,55 @@ public class ServiceComponentRuntimeImpl implements ServiceComponentRuntime
             dto.usingBundles = usingBundleIds;
         }
         return dto;
-	}
+    }
 
-	/**
-	 * Return the component holder
-	 * @param description Component description DTO
-	 * @return The component holder
-	 * @throws IllegalStateException If the bundle is not active anymore
-	 */
-	private ComponentHolder<?> getHolderFromDescription(ComponentDescriptionDTO description)
-	{
-		if (description.bundle == null)
-		{
-			throw new IllegalArgumentException("No bundle supplied in ComponentDescriptionDTO named " + description.name);
-		}
-		long bundleId = description.bundle.id;
-		Bundle b = context.getBundle(bundleId);
-		String name = description.name;
-		return componentRegistry.getComponentHolder(b, name);
-	}
+    /**
+     * Return the component holder
+     * @param description Component description DTO
+     * @return The component holder
+     * @throws IllegalStateException If the bundle is not active anymore
+     */
+    private ComponentHolder<?> getHolderFromDescription(ComponentDescriptionDTO description)
+    {
+        if (description.bundle == null)
+        {
+            throw new IllegalArgumentException("No bundle supplied in ComponentDescriptionDTO named " + description.name);
+        }
+        long bundleId = description.bundle.id;
+        Bundle b = context.getBundle(bundleId);
+        String name = description.name;
+        return componentRegistry.getComponentHolder(b, name);
+    }
 
-	private ComponentDescriptionDTO holderToDescription( ComponentHolder<?> holder )
-	{
-		ComponentDescriptionDTO dto = new ComponentDescriptionDTO();
-		ComponentMetadata m = holder.getComponentMetadata();
-		dto.activate = m.getActivate();
-		dto.bundle = bundleToDTO(holder.getActivator().getBundleContext());
-		// immediately return if bundle is not active anymore
-		if ( dto.bundle == null )
-		{
-		    return null;
-		}
-		dto.configurationPid = m.getConfigurationPid().toArray(new String[m.getConfigurationPid().size()]);
-		dto.configurationPolicy = m.getConfigurationPolicy();
-		dto.deactivate = m.getDeactivate();
-		dto.defaultEnabled = m.isEnabled();
-		dto.factory = m.getFactoryIdentifier();
-		dto.immediate = m.isImmediate();
-		dto.implementationClass = m.getImplementationClassName();
-		dto.modified = m.getModified();
-		dto.name = m.getName();
-		dto.properties = deepCopy(m.getProperties());
-		dto.references = refsToDTO(m.getDependencies());
-		dto.scope = m.getServiceMetadata() == null? null: m.getServiceMetadata().getScope().name();
-		dto.serviceInterfaces = m.getServiceMetadata() == null? EMPTY: m.getServiceMetadata().getProvides();
-		// DS 1.4
-		dto.factoryProperties = m.isFactory() ? m.getFactoryProperties() : null;
-		dto.activationFields = (m.getActivationFields() == null ? EMPTY : m.getActivationFields().toArray(new String[m.getActivationFields().size()]));
-		return dto;
-	}
+    private ComponentDescriptionDTO holderToDescription( ComponentHolder<?> holder )
+    {
+        ComponentDescriptionDTO dto = new ComponentDescriptionDTO();
+        ComponentMetadata m = holder.getComponentMetadata();
+        dto.activate = m.getActivate();
+        dto.bundle = bundleToDTO(holder.getActivator().getBundleContext());
+        // immediately return if bundle is not active anymore
+        if ( dto.bundle == null )
+        {
+            return null;
+        }
+        dto.configurationPid = m.getConfigurationPid().toArray(new String[m.getConfigurationPid().size()]);
+        dto.configurationPolicy = m.getConfigurationPolicy();
+        dto.deactivate = m.getDeactivate();
+        dto.defaultEnabled = m.isEnabled();
+        dto.factory = m.getFactoryIdentifier();
+        dto.immediate = m.isImmediate();
+        dto.implementationClass = m.getImplementationClassName();
+        dto.modified = m.getModified();
+        dto.name = m.getName();
+        dto.properties = deepCopy(m.getProperties());
+        dto.references = refsToDTO(m.getDependencies());
+        dto.scope = m.getServiceMetadata() == null? null: m.getServiceMetadata().getScope().name();
+        dto.serviceInterfaces = m.getServiceMetadata() == null? EMPTY: m.getServiceMetadata().getProvides();
+        // DS 1.4
+        dto.factoryProperties = m.isFactory() ? m.getFactoryProperties() : null;
+        dto.activationFields = (m.getActivationFields() == null ? EMPTY : m.getActivationFields().toArray(new String[m.getActivationFields().size()]));
+        return dto;
+    }
 
     private Map<String, Object> deepCopy(Map<String, Object> source)
     {
@@ -346,16 +356,16 @@ public class ServiceComponentRuntimeImpl implements ServiceComponentRuntime
     }
 
     Object convert(Object source)
-	{
-	    if (source.getClass().isArray())
-	    {
-	        Class<?> type = source.getClass().getComponentType();
-	        if (checkType(type))
-	        {
-	            return source;
-	        }
-	        return String.valueOf(source);
-	        /* array copy code in case it turns out to be needed
+    {
+        if (source.getClass().isArray())
+        {
+            Class<?> type = source.getClass().getComponentType();
+            if (checkType(type))
+            {
+                return source;
+            }
+            return String.valueOf(source);
+            /* array copy code in case it turns out to be needed
 	        int length = Array.getLength(source);
             Object copy = Array.newInstance(type, length);
 	        for (int i = 0; i<length; i++)
@@ -363,14 +373,14 @@ public class ServiceComponentRuntimeImpl implements ServiceComponentRuntime
 	            Array.set(copy, i, Array.get(source, i));
 	        }
 	        return copy;
-	        */
-	    }
-	    if (checkType(source.getClass()))
-	    {
-	        return source;
-	    }
-	    return String.valueOf(source);
-	}
+             */
+        }
+        if (checkType(source.getClass()))
+        {
+            return source;
+        }
+        return String.valueOf(source);
+    }
 
     boolean checkType(Class<?> type)
     {
@@ -381,40 +391,40 @@ public class ServiceComponentRuntimeImpl implements ServiceComponentRuntime
         return false;
     }
 
-	private ReferenceDTO[] refsToDTO(List<ReferenceMetadata> dependencies)
-	{
-		ReferenceDTO[] dtos = new ReferenceDTO[dependencies.size()];
-		int i = 0;
-		for (ReferenceMetadata r: dependencies)
-		{
-			ReferenceDTO dto = new ReferenceDTO();
-			dto.bind = r.getBind();
-			dto.cardinality = r.getCardinality();
-			dto.field = r.getField();
-			dto.fieldOption = r.getFieldOption();
-			dto.interfaceName = r.getInterface();
-			dto.name = r.getName();
-			dto.policy = r.getPolicy();
-			dto.policyOption = r.getPolicyOption();
-			dto.scope = r.getScope().name();
-			dto.target = r.getTarget();
-			dto.unbind = r.getUnbind();
-			dto.updated = r.getUpdated();
-			// DS 1.4
-			dto.parameter = r.getParameterIndex();
-			dto.collectionType = r.getFieldCollectionType();
-			dtos[i++] = dto;
-		}
-		return dtos;
-	}
+    private ReferenceDTO[] refsToDTO(List<ReferenceMetadata> dependencies)
+    {
+        ReferenceDTO[] dtos = new ReferenceDTO[dependencies.size()];
+        int i = 0;
+        for (ReferenceMetadata r: dependencies)
+        {
+            ReferenceDTO dto = new ReferenceDTO();
+            dto.bind = r.getBind();
+            dto.cardinality = r.getCardinality();
+            dto.field = r.getField();
+            dto.fieldOption = r.getFieldOption();
+            dto.interfaceName = r.getInterface();
+            dto.name = r.getName();
+            dto.policy = r.getPolicy();
+            dto.policyOption = r.getPolicyOption();
+            dto.scope = r.getScope().name();
+            dto.target = r.getTarget();
+            dto.unbind = r.getUnbind();
+            dto.updated = r.getUpdated();
+            // DS 1.4
+            dto.parameter = r.getParameterIndex();
+            dto.collectionType = r.getFieldCollectionType();
+            dtos[i++] = dto;
+        }
+        return dtos;
+    }
 
-	private BundleDTO bundleToDTO(BundleContext bundleContext)
-	{
-		if (bundleContext == null)
-		{
-			return null;
-		}
-		try
+    private BundleDTO bundleToDTO(BundleContext bundleContext)
+    {
+        if (bundleContext == null)
+        {
+            return null;
+        }
+        try
         {
             Bundle bundle = bundleContext.getBundle();
             if (bundle == null)
@@ -433,5 +443,5 @@ public class ServiceComponentRuntimeImpl implements ServiceComponentRuntime
         {
             return null;
         }
-	}
+    }
 }

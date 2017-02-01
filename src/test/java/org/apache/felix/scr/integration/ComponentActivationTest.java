@@ -95,7 +95,7 @@ public class ComponentActivationTest extends ComponentTestBase
         final String componentname = "ActivatorComponent.activate.fail";
 
         // activate must fail, so state remains SATISFIED
-        ComponentConfigurationDTO cc = getDisabledConfigurationAndEnable(componentname, ComponentConfigurationDTO.SATISFIED);
+        ComponentConfigurationDTO cc = getDisabledConfigurationAndEnable(componentname, ComponentConfigurationDTO.FAILED_ACTIVATION);
 
         disableAndCheck( cc );
     }

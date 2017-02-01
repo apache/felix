@@ -28,9 +28,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import org.apache.felix.scr.impl.inject.LifecycleMethod;
 import org.apache.felix.scr.impl.inject.ComponentMethods;
 import org.apache.felix.scr.impl.inject.ConstructorMethod;
+import org.apache.felix.scr.impl.inject.LifecycleMethod;
 import org.apache.felix.scr.impl.inject.MethodResult;
 import org.apache.felix.scr.impl.manager.DependencyManager.OpenStatus;
 import org.apache.felix.scr.impl.metadata.TargetedPID;
@@ -71,7 +71,7 @@ public class SingleComponentManager<S> extends AbstractComponentManager<S> imple
     // null if properties are not to be overwritten
     private Dictionary<String, Object> m_serviceProperties;
 
-   /**
+    /**
      * The constructor receives both the activator and the metadata
      * @param componentMethods
      */
@@ -111,12 +111,14 @@ public class SingleComponentManager<S> extends AbstractComponentManager<S> imple
         {
             S tmpComponent = createImplementationObject( null, new SetImplementationObject<S>()
             {
+                @Override
                 public void presetComponentContext( ComponentContextImpl<S> componentContext )
                 {
                     m_componentContext = componentContext;
                 }
 
 
+                @Override
                 public void resetImplementationObject( S implementationObject )
                 {
                     m_componentContext = null;
@@ -216,7 +218,7 @@ public class SingleComponentManager<S> extends AbstractComponentManager<S> imple
 
 
     @SuppressWarnings("unchecked")
-	protected S createImplementationObject( Bundle usingBundle, SetImplementationObject<S> setter, ComponentContextImpl<S> componentContext )
+    protected S createImplementationObject( Bundle usingBundle, SetImplementationObject<S> setter, ComponentContextImpl<S> componentContext )
     {
         final Class<S> implementationObjectClass;
         S implementationObject = null;
@@ -230,14 +232,14 @@ public class SingleComponentManager<S> extends AbstractComponentManager<S> imple
             log( LogService.LOG_WARNING, "Bundle shut down during instantiation of the implementation object", null);
             return null;
         }
-                
-        // bind target services 
+
+        // bind target services
         final List<DependencyManager.OpenStatus<S, ?>> openStatusList = new ArrayList<DependencyManager.OpenStatus<S,?>>();
-        
+
         final Map<Integer, ConstructorMethod.ReferencePair<S>> paramMap = ( getComponentMetadata().isActivateConstructor() ? new HashMap<Integer, ConstructorMethod.ReferencePair<S>>() : null);
         boolean failed = false;
-	    for ( DependencyManager<S, ?> dm : getDependencyManagers())
-	    {
+        for ( DependencyManager<S, ?> dm : getDependencyManagers())
+        {
             // if a dependency turned unresolved since the validation check,
             // creating the instance fails here, so we deactivate and return
             // null.
@@ -251,69 +253,70 @@ public class SingleComponentManager<S> extends AbstractComponentManager<S> imple
                 break;
             }
             openStatusList.add(open);
-        	if ( dm.getReferenceMetadata().getParameterIndex() != null)
-        	{
-        		final ConstructorMethod.ReferencePair<S> pair = new ConstructorMethod.ReferencePair<S>();
-        		pair.dependencyManager = dm;
-        		pair.openStatus = open;
+            if ( dm.getReferenceMetadata().getParameterIndex() != null)
+            {
+                final ConstructorMethod.ReferencePair<S> pair = new ConstructorMethod.ReferencePair<S>();
+                pair.dependencyManager = dm;
+                pair.openStatus = open;
                 paramMap.put(dm.getReferenceMetadata().getParameterIndex(), pair);
-	        }
-	    }
+            }
+        }
 
-	    if ( !failed )
-	    {
-	        try
-	        {
-	            // 112.4.4 The class is retrieved with the loadClass method of the component's bundle
-	            implementationObjectClass = (Class<S>) bundle.loadClass(
-	                    getComponentMetadata().getImplementationClassName() )  ;
-	
-	            implementationObject = getComponentMethods().getConstructor().newInstance(implementationObjectClass,
-	            		componentContext,
-	            		paramMap,
-	            		this);
-	            
-	        }
-	        catch ( Throwable t )
-	        {
-	            // failed to instantiate, return null
-	            log( LogService.LOG_ERROR, "Error during instantiation of the implementation object", t );
-	            return null;
-	        }
-	
-	        componentContext.setImplementationObject(implementationObject);
-	
-	        // 3. set the implementation object prematurely
-	        setter.presetComponentContext( componentContext );
+        if ( !failed )
+        {
+            try
+            {
+                // 112.4.4 The class is retrieved with the loadClass method of the component's bundle
+                implementationObjectClass = (Class<S>) bundle.loadClass(
+                        getComponentMetadata().getImplementationClassName() )  ;
 
-	        // 4. Bind the target services
+                implementationObject = getComponentMethods().getConstructor().newInstance(implementationObjectClass,
+                        componentContext,
+                        paramMap,
+                        this);
+
+            }
+            catch ( Throwable t )
+            {
+                // failed to instantiate, return null
+                log( LogService.LOG_ERROR, "Error during instantiation of the implementation object", t );
+                this.setFailureReason(t);
+                return null;
+            }
+
+            componentContext.setImplementationObject(implementationObject);
+
+            // 3. set the implementation object prematurely
+            setter.presetComponentContext( componentContext );
+
+            // 4. Bind the target services
             final Iterator<DependencyManager.OpenStatus<S, ?>> iter = openStatusList.iterator();
-	        for ( DependencyManager<S, ?> dm: getDependencyManagers())
-	        {
-	        	final DependencyManager.OpenStatus<S, ?> open = iter.next();
-		        if ( !dm.bind(componentContext, (OpenStatus) open) )
-		        {
+            for ( DependencyManager<S, ?> dm: getDependencyManagers())
+            {
+                final DependencyManager.OpenStatus<S, ?> open = iter.next();
+                if ( !dm.bind(componentContext, (OpenStatus) open) )
+                {
                     log( LogService.LOG_DEBUG, "Cannot create component instance due to failure to bind reference {0}",
                             new Object[] { dm.getName() }, null );
                     failed = true;
                     break;
-		        }
-	        }
-	    }
+                }
+            }
+        }
         if (failed)
         {
             // make sure, we keep no bindings. Only close the dm's we opened.
             int skipCount = getReversedDependencyManagers().size() - openStatusList.size();
             for ( DependencyManager<S, ?> md: getReversedDependencyManagers() )
             {
-            	if ( skipCount > 0 )
-            	{
-            		skipCount--;
-            	} 
-            	else 
-            	{
-            		md.close( componentContext, componentContext.getEdgeInfo( md ) );
-            	}
+                if ( skipCount > 0 )
+                {
+                    skipCount--;
+                }
+                else
+                {
+                    md.close( componentContext, componentContext.getEdgeInfo( md ) );
+                }
                 md.deactivate();
             }
 
@@ -323,10 +326,12 @@ public class SingleComponentManager<S> extends AbstractComponentManager<S> imple
         }
 
         // 5. Call the activate method, if present
+        final MethodResult failedResult = new MethodResult(true, new HashMap<String, Object>());
         final MethodResult result = getComponentMethods().getActivateMethod().invoke( implementationObject,
-                componentContext, 1, null, this );
-        if ( result == null )
+                componentContext, 1, failedResult, this );
+        if ( result == failedResult )
         {
+            this.setFailureReason((Throwable)failedResult.getResult().get("exception"));
             // 112.5.8 If the activate method throws an exception, SCR must log an error message
             // containing the exception with the Log Service and activation fails
             for ( DependencyManager<S, ?> md: getReversedDependencyManagers() )
@@ -336,8 +341,8 @@ public class SingleComponentManager<S> extends AbstractComponentManager<S> imple
 
             if ( implementationObject != null )
             {
-            	// make sure the implementation object is not available
-            	setter.resetImplementationObject( implementationObject );
+                // make sure the implementation object is not available
+                setter.resetImplementationObject( implementationObject );
             }
 
             return null;
@@ -546,7 +551,7 @@ public class SingleComponentManager<S> extends AbstractComponentManager<S> imple
         if (m_componentContext != null)
         {
             m_componentContext.unsetServiceRegistration();
-        }        
+        }
     }
 
     @Override
@@ -832,6 +837,7 @@ public class SingleComponentManager<S> extends AbstractComponentManager<S> imple
         return regProps.equals( props );
     }
 
+    @Override
     public S getService( Bundle bundle, ServiceRegistration<S> serviceRegistration )
     {
         obtainStateLock(  );
@@ -868,7 +874,7 @@ public class SingleComponentManager<S> extends AbstractComponentManager<S> imple
                 //This is backup.  Normally done in createComponent.
                 getActivator().leaveCreate(serviceRegistration.getReference());
             }
-            
+
         }
         finally
         {
@@ -890,14 +896,14 @@ public class SingleComponentManager<S> extends AbstractComponentManager<S> imple
             if ( collectDependencies(componentContext))
             {
                 log( LogService.LOG_DEBUG,
-                    "getService (single component manager) dependencies collected.",
-                    null );
+                        "getService (single component manager) dependencies collected.",
+                        null );
             }
             else
             {
                 log( LogService.LOG_INFO,
-                    "Could not obtain all required dependencies, getService returning null",
-                    null );
+                        "Could not obtain all required dependencies, getService returning null",
+                        null );
                 success = false;
             }
             obtainStateLock(  );
@@ -910,7 +916,8 @@ public class SingleComponentManager<S> extends AbstractComponentManager<S> imple
                     S result = getService(componentContext );
                     if ( result == null )
                     {
-                        success = false;;
+                        success = false;
+                        setState(previousState, State.failed);
                     }
                     else
                     {
@@ -960,6 +967,7 @@ public class SingleComponentManager<S> extends AbstractComponentManager<S> imple
 
     }
 
+    @Override
     public void ungetService( Bundle bundle, ServiceRegistration<S> serviceRegistration, S o )
     {
         obtainStateLock( );

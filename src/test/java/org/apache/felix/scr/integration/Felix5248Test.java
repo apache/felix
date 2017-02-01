@@ -48,7 +48,7 @@ public class Felix5248Test extends ComponentTestBase
 
         String componentName = "Component";
         ComponentConfigurationDTO component = findComponentConfigurationByName( componentName,
-                ComponentConfigurationDTO.SATISFIED );
+                ComponentConfigurationDTO.FAILED_ACTIVATION );
         log.log( LogService.LOG_INFO, "A checked satisfied (not active)" );
 
         props.clear();
