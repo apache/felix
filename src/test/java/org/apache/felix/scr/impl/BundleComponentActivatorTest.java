@@ -24,10 +24,10 @@ import java.util.Arrays;
 import java.util.Enumeration;
 import java.util.Vector;
 
-import junit.framework.TestCase;
-
-import org.easymock.EasyMock;
+import org.mockito.Mockito;
 import org.osgi.framework.Bundle;
+
+import junit.framework.TestCase;
 
 public class BundleComponentActivatorTest extends TestCase
 {
@@ -83,14 +83,11 @@ public class BundleComponentActivatorTest extends TestCase
         final URL[] descriptors = new URL[]
             { new URL( "file:foo.xml" ) };
         final Enumeration de = new Vector( Arrays.asList( descriptors ) ).elements();
-        final Bundle bundle = ( Bundle ) EasyMock.createNiceMock( Bundle.class );
-        EasyMock.expect( bundle.findEntries( "/some/location", "foo.xml", false ) ).andReturn( de );
+        final Bundle bundle = Mockito.mock( Bundle.class );
+        Mockito.when( bundle.findEntries( "/some/location", "foo.xml", false ) ).thenReturn( de );
 
-        EasyMock.replay( new Object[]
-            { bundle } );
         final URL[] urls = BundleComponentActivator.findDescriptors( bundle, "/some/location/foo.xml" );
-        EasyMock.verify( new Object[]
-            { bundle } );
+        Mockito.verify( bundle ).findEntries("/some/location", "foo.xml", false);
 
         assertNotNull( "Descriptor array is not null", urls );
         assertEquals( "Descriptor length", 1, urls.length );
@@ -109,12 +106,11 @@ public class BundleComponentActivatorTest extends TestCase
                 new URL( "file:foo2.xml" )
             };
         final Enumeration de = new Vector( Arrays.asList( urls ) ).elements();
-        final Bundle bundle = (Bundle) EasyMock.createNiceMock( Bundle.class );
-        EasyMock.expect( bundle.findEntries( path, filePattern, false ) ).andReturn( de );
+        final Bundle bundle = Mockito.mock( Bundle.class );
+        Mockito.when( bundle.findEntries( path, filePattern, false ) ).thenReturn( de );
 
-        EasyMock.replay( new Object[]{ bundle } );
         final URL[] actualUrls = BundleComponentActivator.findDescriptors( bundle, location );
-        EasyMock.verify( new Object[]{ bundle } );
+        Mockito.verify( bundle ).findEntries( path, filePattern, false );
 
         assertNotNull( "Descriptor array is not null", actualUrls );
         assertEquals( "Descriptor length", urls.length, actualUrls.length );
@@ -154,12 +150,11 @@ public class BundleComponentActivatorTest extends TestCase
     public void test_findDescriptors_withWildcardLocation_nullEnum()
         throws MalformedURLException
     {
-        final Bundle bundle = (Bundle) EasyMock.createNiceMock( Bundle.class );
-        EasyMock.expect( bundle.findEntries( "/", "*.xml", false ) ).andReturn( null );
+        final Bundle bundle = Mockito.mock( Bundle.class );
+        Mockito.when( bundle.findEntries( "/", "*.xml", false ) ).thenReturn( null );
 
-        EasyMock.replay( new Object[]{ bundle } );
         final URL[] actualUrls = BundleComponentActivator.findDescriptors( bundle, "*.xml" );
-        EasyMock.verify( new Object[]{ bundle } );
+        Mockito.verify( bundle).findEntries( "/", "*.xml", false );
 
         assertNotNull( "Descriptor array is not null", actualUrls );
         assertEquals( "Descriptor length", 0, actualUrls.length );
@@ -173,12 +168,11 @@ public class BundleComponentActivatorTest extends TestCase
     public void test_findDescriptors_withWildcardLocation_emptyEnum()
         throws MalformedURLException
     {
-        final Bundle bundle = (Bundle) EasyMock.createNiceMock( Bundle.class );
-        EasyMock.expect( bundle.findEntries( "/", "*.xml", false ) ).andReturn( new Vector().elements() );
+        final Bundle bundle = Mockito.mock( Bundle.class );
+        Mockito.when( bundle.findEntries( "/", "*.xml", false ) ).thenReturn( new Vector().elements() );
 
-        EasyMock.replay( new Object[]{ bundle } );
         final URL[] actualUrls = BundleComponentActivator.findDescriptors( bundle, "*.xml" );
-        EasyMock.verify( new Object[]{ bundle } );
+        Mockito.verify( bundle ).findEntries( "/", "*.xml", false );
 
         assertNotNull( "Descriptor array is not null", actualUrls );
         assertEquals( "Descriptor length", 0, actualUrls.length );

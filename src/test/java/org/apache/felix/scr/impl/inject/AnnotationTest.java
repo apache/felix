@@ -25,7 +25,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.easymock.EasyMock;
+import org.mockito.Mockito;
 import org.osgi.framework.Bundle;
 
 import junit.framework.TestCase;
@@ -69,10 +69,9 @@ public class AnnotationTest extends TestCase
 
     private Bundle mockBundle() throws ClassNotFoundException
     {
-        Bundle b = EasyMock.createMock(Bundle.class);
-        EasyMock.expect(b.loadClass(String.class.getName())).andReturn((Class) String.class).anyTimes();
-        EasyMock.expect(b.loadClass(Integer.class.getName())).andReturn((Class) Integer.class).anyTimes();
-        EasyMock.replay(b);
+        Bundle b = Mockito.mock(Bundle.class);
+        Mockito.when(b.loadClass(String.class.getName())).thenReturn((Class) String.class);
+        Mockito.when(b.loadClass(Integer.class.getName())).thenReturn((Class) Integer.class);
         return b;
     }
 

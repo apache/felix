@@ -35,7 +35,7 @@ import org.apache.felix.scr.impl.manager.components.T3;
 import org.apache.felix.scr.impl.manager.components2.T2;
 import org.apache.felix.scr.impl.metadata.ComponentMetadata;
 import org.apache.felix.scr.impl.metadata.DSVersion;
-import org.easymock.EasyMock;
+import org.mockito.Mockito;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceReference;
@@ -54,19 +54,15 @@ public class BindMethodTest extends TestCase
     @Override
     public void setUp()
     {
-        m_serviceReference = EasyMock.createNiceMock( ServiceReference.class );
-        m_serviceInstance = EasyMock.createNiceMock( FakeService.class );
-        m_context = EasyMock.createNiceMock( BundleContext.class );
+        m_serviceReference = Mockito.mock( ServiceReference.class );
+        m_serviceInstance = Mockito.mock( FakeService.class );
+        m_context = Mockito.mock( BundleContext.class );
 
-        EasyMock.expect( m_context.getService( m_serviceReference ) ).andReturn( m_serviceInstance )
-                .anyTimes();
+        Mockito.when( m_context.getService( m_serviceReference ) ).thenReturn( m_serviceInstance );
 
-        EasyMock.expect( m_serviceReference.getPropertyKeys() ).andReturn( new String[]
-            { Constants.SERVICE_ID } ).anyTimes();
-        EasyMock.expect( m_serviceReference.getProperty( Constants.SERVICE_ID ) ).andReturn( "Fake Service" )
-            .anyTimes();
-        EasyMock.replay( new Object[]
-            { m_serviceReference, m_context } );
+        Mockito.when( m_serviceReference.getPropertyKeys() ).thenReturn( new String[]
+            { Constants.SERVICE_ID } );
+        Mockito.when( m_serviceReference.getProperty( Constants.SERVICE_ID ) ).thenReturn( "Fake Service" );
     }
 
 
