@@ -22,13 +22,12 @@ package org.apache.felix.scr.impl.manager;
 
 import java.util.concurrent.atomic.AtomicReference;
 
-import org.apache.felix.scr.impl.helper.SimpleLogger;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceReference;
 import org.osgi.service.log.LogService;
 
 /**
- * @version $Rev:$ $Date:$
+ * @version $Rev$ $Date$
  */
 public class SingleRefPair<S, T> extends RefPair<S, T>
 {
@@ -39,11 +38,13 @@ public class SingleRefPair<S, T> extends RefPair<S, T>
         super(ref);
     }
 
+    @Override
     public T getServiceObject(ComponentContextImpl<S> key)
     {
         return serviceObjectRef.get();
     }
 
+    @Override
     public boolean setServiceObject( ComponentContextImpl<S> key, T serviceObject )
     {
         boolean set = serviceObjectRef.compareAndSet( null, serviceObject );
@@ -53,7 +54,8 @@ public class SingleRefPair<S, T> extends RefPair<S, T>
         }
         return set;
     }
-    
+
+    @Override
     public T unsetServiceObject(ComponentContextImpl<S> key)
     {
         return serviceObjectRef.getAndSet( null );
@@ -66,14 +68,13 @@ public class SingleRefPair<S, T> extends RefPair<S, T>
     }
 
     @Override
-    public boolean getServiceObject(ComponentContextImpl<S> key, BundleContext context,
-        SimpleLogger logger)
+    public boolean getServiceObject(ComponentContextImpl<S> key, BundleContext context)
     {
         T service = context.getService( getRef() );
         if ( service == null )
         {
             setFailed();
-            logger.log(
+            key.getLogger().log(
                  LogService.LOG_WARNING,
                  "Could not get service from ref {0}", new Object[] {getRef()}, null );
             return false;

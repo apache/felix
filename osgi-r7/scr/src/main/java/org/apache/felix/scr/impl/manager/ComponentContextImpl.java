@@ -26,6 +26,7 @@ import java.util.concurrent.TimeUnit;
 import org.apache.felix.scr.component.ExtComponentContext;
 import org.apache.felix.scr.impl.helper.ComponentServiceObjectsHelper;
 import org.apache.felix.scr.impl.helper.ReadOnlyDictionary;
+import org.apache.felix.scr.impl.helper.SimpleLogger;
 import org.apache.felix.scr.impl.metadata.ComponentMetadata;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
@@ -48,7 +49,7 @@ public class ComponentContextImpl<S> implements ExtComponentContext {
     private final ComponentInstance<S> m_componentInstance = new ComponentInstanceImpl<S>(this);
 
     private final Bundle m_usingBundle;
-    
+
     private volatile ServiceRegistration<S> m_serviceRegistration;
 
     private volatile S m_implementationObject;
@@ -71,7 +72,7 @@ public class ComponentContextImpl<S> implements ExtComponentContext {
         }
         this.serviceObjectsHelper = new ComponentServiceObjectsHelper(usingBundle.getBundleContext());
     }
-    
+
     public void unsetServiceRegistration() {
         m_serviceRegistration = null;
     }
@@ -117,11 +118,12 @@ public class ComponentContextImpl<S> implements ExtComponentContext {
         return m_componentManager;
     }
 
-    public ComponentMetadata getComponentMetadata() 
+    public ComponentMetadata getComponentMetadata()
     {
     	return m_componentManager.getComponentMetadata();
     }
-    
+
+    @Override
     public final Dictionary<String, Object> getProperties()
     {
         // 112.12.3.5 The Dictionary is read-only and cannot be modified
@@ -129,6 +131,7 @@ public class ComponentContextImpl<S> implements ExtComponentContext {
     }
 
 
+    @Override
     public Object locateService( String name )
     {
         m_componentManager.obtainActivationReadLock( );
@@ -144,6 +147,7 @@ public class ComponentContextImpl<S> implements ExtComponentContext {
     }
 
 
+    @Override
     public Object locateService( String name, ServiceReference ref )
     {
         m_componentManager.obtainActivationReadLock(  );
@@ -159,6 +163,7 @@ public class ComponentContextImpl<S> implements ExtComponentContext {
     }
 
 
+    @Override
     public Object[] locateServices( String name )
     {
         m_componentManager.obtainActivationReadLock(  );
@@ -174,24 +179,32 @@ public class ComponentContextImpl<S> implements ExtComponentContext {
     }
 
 
+    @Override
     public BundleContext getBundleContext()
     {
         return m_componentManager.getBundleContext();
     }
 
 
+    @Override
     public Bundle getUsingBundle()
     {
         return m_usingBundle;
     }
 
+    public SimpleLogger getLogger()
+    {
+        return m_componentManager;
+    }
 
+    @Override
     public ComponentInstance<S> getComponentInstance()
     {
         return m_componentInstance;
     }
 
 
+    @Override
     public void enableComponent( String name )
     {
         ComponentActivator activator = m_componentManager.getActivator();
@@ -202,6 +215,7 @@ public class ComponentContextImpl<S> implements ExtComponentContext {
     }
 
 
+    @Override
     public void disableComponent( String name )
     {
         ComponentActivator activator = m_componentManager.getActivator();
@@ -212,6 +226,7 @@ public class ComponentContextImpl<S> implements ExtComponentContext {
     }
 
 
+    @Override
     public ServiceReference<S> getServiceReference()
     {
         return m_serviceRegistration == null? null: m_serviceRegistration.getReference();
@@ -220,6 +235,7 @@ public class ComponentContextImpl<S> implements ExtComponentContext {
 
     //---------- Speculative MutableProperties interface ------------------------------
 
+    @Override
     public void setServiceProperties(Dictionary<String, ?> properties)
     {
         getComponentManager().setServiceProperties(properties );
@@ -269,12 +285,14 @@ public class ComponentContextImpl<S> implements ExtComponentContext {
         }
 
 
+        @Override
         public S getInstance()
         {
             return m_componentContext.getImplementationObject(true);
         }
 
 
+        @Override
         public void dispose()
         {
             m_componentContext.getComponentManager().dispose();

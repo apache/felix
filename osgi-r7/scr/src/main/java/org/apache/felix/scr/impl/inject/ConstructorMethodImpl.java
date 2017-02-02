@@ -22,7 +22,6 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.util.Map;
 
-import org.apache.felix.scr.impl.helper.SimpleLogger;
 import org.apache.felix.scr.impl.inject.ValueUtils.ValueType;
 import org.apache.felix.scr.impl.inject.field.FieldUtils;
 import org.apache.felix.scr.impl.manager.ComponentContextImpl;
@@ -46,9 +45,8 @@ public class ConstructorMethodImpl<T> implements ConstructorMethod<T>
     @Override
     public <S> T newInstance(Class<T> componentClass,
             ComponentContextImpl<T> componentContext,
-            Map<Integer, ReferencePair<S>> parameterMap,
-            SimpleLogger logger)
-                    throws Exception
+            Map<Integer, ReferencePair<S>> parameterMap)
+    throws Exception
     {
         if ( !m_initialized ) {
             // activation fields
@@ -60,7 +58,7 @@ public class ConstructorMethodImpl<T> implements ConstructorMethod<T>
                 int index = 0;
                 for(final String fieldName : componentContext.getComponentMetadata().getActivationFields() )
                 {
-                    final FieldUtils.FieldSearchResult result = FieldUtils.searchField(componentClass, fieldName, logger);
+                    final FieldUtils.FieldSearchResult result = FieldUtils.searchField(componentClass, fieldName, componentContext.getLogger());
                     if ( result == null || result.field == null )
                     {
                         m_paramTypes[index] = null;
@@ -106,7 +104,7 @@ public class ConstructorMethodImpl<T> implements ConstructorMethod<T>
                     }
                     else
                     {
-                        m_constructorArgTypes[i] = ValueUtils.getReferenceValueType(componentClass, reference, argTypes[i], null, logger);
+                        m_constructorArgTypes[i] = ValueUtils.getReferenceValueType(componentClass, reference, argTypes[i], null, componentContext.getLogger());
                     }
                     if ( m_constructorArgTypes[i] == ValueType.ignore )
                     {
@@ -149,7 +147,8 @@ public class ConstructorMethodImpl<T> implements ConstructorMethod<T>
             {
                 // TODO - get ref pair
                 final ReferencePair<S> pair = parameterMap.get(i);
-                args[i] = ValueUtils.getValue(m_constructorArgTypes[i],
+                args[i] = ValueUtils.getValue(componentClass.getName(),
+                        m_constructorArgTypes[i],
                         m_constructor.getParameterTypes()[i],
                         componentContext,
                         null);
@@ -159,7 +158,7 @@ public class ConstructorMethodImpl<T> implements ConstructorMethod<T>
         else
         {
             component = (T)ConstructorMethod.DEFAULT.newInstance((Class<Object>)componentClass,
-                    (ComponentContextImpl<Object>)componentContext, null, logger);
+                    (ComponentContextImpl<Object>)componentContext, null);
         }
 
         // activation fields
@@ -167,11 +166,12 @@ public class ConstructorMethodImpl<T> implements ConstructorMethod<T>
         {
             if ( m_paramTypes[i] != ValueType.ignore )
             {
-                final Object value = ValueUtils.getValue(m_paramTypes[i],
+                final Object value = ValueUtils.getValue(componentClass.getName(),
+                        m_paramTypes[i],
                         m_fields[i].getType(),
                         componentContext,
                         null);
-                FieldUtils.setField(m_fields[i], component, value, logger);
+                FieldUtils.setField(m_fields[i], component, value, componentContext.getLogger());
             }
         }
 

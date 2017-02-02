@@ -18,8 +18,7 @@
  */
 package org.apache.felix.scr.impl.inject;
 
-import org.apache.felix.scr.impl.helper.SimpleLogger;
-import org.osgi.service.component.ComponentContext;
+import org.apache.felix.scr.impl.manager.ComponentContextImpl;
 
 /**
  * Interface for invocation one of the lifecycle methods:
@@ -32,9 +31,8 @@ import org.osgi.service.component.ComponentContext;
 public interface LifecycleMethod {
 
     MethodResult invoke(Object componentInstance,
-                        ComponentContext componentContext,
+                        ComponentContextImpl<?> componentContext,
                         int reason,
-                        MethodResult methodCallFailureResult,
-                        SimpleLogger logger );
+                        MethodResult methodCallFailureResult);
 
 }

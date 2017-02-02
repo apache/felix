@@ -468,7 +468,7 @@ implements org.apache.felix.scr.impl.inject.ReferenceMethod
             }
 
             // Get the parameters for the current method
-            Class[] parameters = method.getParameterTypes();
+            Class<?>[] parameters = method.getParameterTypes();
 
             // Select only the methods that receive a single
             // parameter
@@ -577,7 +577,7 @@ implements org.apache.felix.scr.impl.inject.ReferenceMethod
         for ( int i = 0; i < candidateBindMethods.length; i++ )
         {
             final Method method = candidateBindMethods[i];
-            final Class[] parameters = method.getParameterTypes();
+            final Class<?>[] parameters = method.getParameterTypes();
             if ( parameters.length == 2 && method.getName().equals( getMethodName() ) )
             {
 
@@ -634,13 +634,13 @@ implements org.apache.felix.scr.impl.inject.ReferenceMethod
     }
 
     @Override
-    public <S, T> boolean getServiceObject( final BindParameters parameters, BundleContext context, SimpleLogger logger )
+    public <S, T> boolean getServiceObject( final BindParameters parameters, BundleContext context )
     {
         //??? this resolves which we need.... better way?
-        if ( parameters.getServiceObject() == null && methodExists( logger ) )
+        if ( parameters.getServiceObject() == null && methodExists( parameters.getComponentContext().getLogger() ) )
         {
             if ( m_paramTypes.contains(ValueUtils.ValueType.ref_serviceType) ) {
-                return parameters.getServiceObject(context, logger);
+                return parameters.getServiceObject(context);
             }
         }
         return true;
@@ -655,7 +655,7 @@ implements org.apache.felix.scr.impl.inject.ReferenceMethod
         int i = 0;
         for ( ValueUtils.ValueType pt: m_paramTypes )
         {
-            result[i++] = ValueUtils.getValue(pt, null, key, refPair);
+            result[i++] = ValueUtils.getValue(getComponentClass().getName(), pt, null, key, refPair);
         }
         return result;
     }

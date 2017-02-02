@@ -20,7 +20,6 @@
 
 package org.apache.felix.scr.impl.manager;
 
-import org.apache.felix.scr.impl.helper.SimpleLogger;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceObjects;
 import org.osgi.framework.ServiceReference;
@@ -50,7 +49,7 @@ public abstract class RefPair<S, T>
         return null;
     }
 
-    public abstract boolean getServiceObject( ComponentContextImpl<S> key, BundleContext context, SimpleLogger logger );
+    public abstract boolean getServiceObject( ComponentContextImpl<S> key, BundleContext context );
 
     public abstract T getServiceObject(ComponentContextImpl<S> key);
 

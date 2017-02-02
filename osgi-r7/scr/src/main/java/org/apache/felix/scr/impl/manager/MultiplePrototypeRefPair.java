@@ -23,7 +23,6 @@ package org.apache.felix.scr.impl.manager;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
-import org.apache.felix.scr.impl.helper.SimpleLogger;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceObjects;
 import org.osgi.framework.ServiceReference;
@@ -74,14 +73,13 @@ public class MultiplePrototypeRefPair<S, T> extends RefPair<S, T>
     }
 
     @Override
-    public boolean getServiceObject(ComponentContextImpl<S> key, BundleContext context,
-        SimpleLogger logger)
+    public boolean getServiceObject(ComponentContextImpl<S> key, BundleContext context)
     {
     	final T service = key.getComponentServiceObjectsHelper().getPrototypeRefInstance(this.getRef(), serviceObjects);
         if ( service == null )
         {
             setFailed();
-            logger.log(
+            key.getLogger().log(
                  LogService.LOG_WARNING,
                  "Could not get service from serviceobjects for ref {0}", new Object[] {getRef()}, null );
             return false;

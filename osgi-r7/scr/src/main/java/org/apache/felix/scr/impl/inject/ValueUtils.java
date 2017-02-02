@@ -19,6 +19,8 @@
 package org.apache.felix.scr.impl.inject;
 
 import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.util.Map;
 
@@ -37,6 +39,7 @@ public class ValueUtils {
 
     private static final String LOGGER_CLASS = "org.osgi.service.log.Logger";
     private static final String FORMATTER_LOGGER_CLASS = "org.osgi.service.log.FormatterLogger";
+    private static final String LOGGER_FACTORY_CLASS = "org.osgi.service.log.LoggerFactory";
 
     /**
      * The value type of the field, activation field or constructor parameter
@@ -48,13 +51,13 @@ public class ValueUtils {
         bundleContext,          // field activation, constructor
         config_map,             // field activation, constructor
         config_annotation,      // field activation, constructor
-        logger,                 // TODO
-        formatterLogger,        // TODO
+        ref_logger,             // reference (field, constructor, method)
+        ref_formatterLogger,    // reference (field, constructor, method)
         ref_serviceReference,   // reference (field, constructor, method)
         ref_serviceObjects,     // reference (field, constructor, method)
         ref_serviceType,        // reference (field, constructor, method)
         ref_map,                // reference (field, constructor, method)
-        ref_tuple               // reference (field, constructor ??)
+        ref_tuple               // reference (field, constructor ??) // TDODO
     }
 
     /** Empty array. */
@@ -81,14 +84,6 @@ public class ValueUtils {
         {
             return ValueType.config_map;
         }
-        else if ( typeClass.getName().equals(LOGGER_CLASS) )
-        {
-            return ValueType.logger;
-        }
-        else if ( typeClass.getName().equals(FORMATTER_LOGGER_CLASS) )
-        {
-            return ValueType.formatterLogger;
-        }
         else
         {
             return ValueType.config_annotation;
@@ -96,11 +91,12 @@ public class ValueUtils {
     }
 
     /**
-     * Get the value type of the reference for a field/constructor
+     * Get the value type of the reference for a field/constructor argument
+     *
      * @param componentClass The component class declaring the reference
      * @param metadata The reference metadata
      * @param typeClass The type of the field/parameter
-     * @param f The optional field. If null, this is a constructor reference
+     * @param f The optional field. If {@code null} this is a constructor reference
      * @param logger The logger
      * @return The value type for the field. If invalid, {@code ValueType#ignore}
      */
@@ -119,25 +115,40 @@ public class ValueUtils {
         // unary reference
         if ( !metadata.isMultiple() )
         {
+            // service interface or supertype
             if ( typeClass.isAssignableFrom(referenceType) )
             {
                 valueType = ValueType.ref_serviceType;
             }
+            // service reference
             else if ( typeClass == ClassUtils.SERVICE_REFERENCE_CLASS )
             {
                 valueType = ValueType.ref_serviceReference;
             }
+            // components service object
             else if ( typeClass == ClassUtils.COMPONENTS_SERVICE_OBJECTS_CLASS )
             {
                 valueType = ValueType.ref_serviceObjects;
             }
+            // map (properties)
             else if ( typeClass == ClassUtils.MAP_CLASS )
             {
                 valueType = ValueType.ref_map;
             }
+            // tuple (map.entry)
             else if ( typeClass == ClassUtils.MAP_ENTRY_CLASS )
             {
                 valueType = ValueType.ref_tuple;
+            }
+            // 1.4: Logger - reference needs to be of type LoggerFactory
+            else if ( typeClass.getName().equals(LOGGER_CLASS) && metadata.getInterface().equals(LOGGER_FACTORY_CLASS) )
+            {
+                return ValueType.ref_logger;
+            }
+            // 1.4: FormatterLogger - reference needs to be of type LoggerFactory
+            else if ( typeClass.getName().equals(FORMATTER_LOGGER_CLASS) && metadata.getInterface().equals(LOGGER_FACTORY_CLASS) )
+            {
+                return ValueType.ref_formatterLogger;
             }
             else
             {
@@ -249,6 +260,7 @@ public class ValueUtils {
 
     /**
      * Get the value for the value type
+     * @param componentType The class of the component
      * @param type The value type
      * @param targetType Optional target type, only required for type {@code ValueType#config_annotation}.
      * @param componentContext The component context
@@ -256,7 +268,9 @@ public class ValueUtils {
      * @return The value or {@code null}.
      */
     @SuppressWarnings("unchecked")
-    public static Object getValue( final ValueType type,
+    public static Object getValue(
+            final String componentType,
+            final ValueType type,
             final Class<?> targetType,
             @SuppressWarnings("rawtypes") final ComponentContextImpl componentContext,
             final RefPair<?, ?> refPair)
@@ -264,26 +278,66 @@ public class ValueUtils {
         final Object value;
         switch ( type )
         {
-            case ignore : value = null; break;
-            case componentContext : value = componentContext; break;
-            case bundleContext : value = componentContext.getBundleContext(); break;
-            case config_map : // note: getProperties() returns a ReadOnlyDictionary which is a Map
-                value = componentContext.getProperties(); break;
-            case config_annotation : value = Annotations.toObject(targetType,
-                (Map<String, Object>) componentContext.getProperties(),
-                componentContext.getBundleContext().getBundle(), componentContext.getComponentMetadata().isConfigureWithInterfaces());
-                break;
-            case ref_serviceType : value = refPair.getServiceObject(componentContext); break;
-            case ref_serviceReference : value = refPair.getRef(); break;
-            case ref_serviceObjects : value = componentContext.getComponentServiceObjectsHelper().getServiceObjects(refPair.getRef()); break;
-            case ref_map : value = new ReadOnlyDictionary( refPair.getRef() ); break;
-            case ref_tuple : final Object tupleKey = new ReadOnlyDictionary( refPair.getRef() );
-                final Object tupleValue = refPair.getServiceObject(componentContext);
-                value = new MapEntryImpl(tupleKey, tupleValue, refPair.getRef());
-                break;
+            case ignore                 : value = null;
+                                          break;
+            case componentContext       : value = componentContext;
+                                          break;
+            case bundleContext          : value = componentContext.getBundleContext();
+                                          break;
+            case config_map             : // note: getProperties() returns a ReadOnlyDictionary which is a Map
+                                          value = componentContext.getProperties();
+                                          break;
+            case config_annotation      : value = Annotations.toObject(targetType,
+                                                (Map<String, Object>) componentContext.getProperties(),
+                                          componentContext.getBundleContext().getBundle(), componentContext.getComponentMetadata().isConfigureWithInterfaces());
+                                          break;
+            case ref_serviceType        : value = refPair.getServiceObject(componentContext);
+                                          break;
+            case ref_serviceReference   : value = refPair.getRef();
+                                          break;
+            case ref_serviceObjects     : value = componentContext.getComponentServiceObjectsHelper().getServiceObjects(refPair.getRef());
+                                          break;
+            case ref_map                : value = new ReadOnlyDictionary( refPair.getRef() );
+                                          break;
+            case ref_tuple              : final Object tupleKey = new ReadOnlyDictionary( refPair.getRef() );
+                                          final Object tupleValue = refPair.getServiceObject(componentContext);
+                                          value = new MapEntryImpl(tupleKey, tupleValue, refPair.getRef());
+                                          break;
+            case ref_logger             :
+            case ref_formatterLogger    : value = getLogger(componentType, targetType, componentContext, refPair);
+                                          break;
             default: value = null;
         }
         return value;
+    }
+
+    private static Object getLogger(String componentType,
+            final Class<?> targetType,
+            @SuppressWarnings("rawtypes") final ComponentContextImpl componentContext,
+            final RefPair<?, ?> refPair )
+    {
+        @SuppressWarnings("unchecked")
+        final Object factory = refPair.getServiceObject(componentContext);
+        if ( factory != null )
+        {
+            Exception error = null;
+            try {
+                final Method m = factory.getClass().getMethod("getLogger", new Class[] {String.class, Class.class});
+                return m.invoke(factory, new Object[] {componentType, targetType});
+            } catch (NoSuchMethodException e) {
+                error = e;
+            } catch (SecurityException e) {
+                error = e;
+            } catch (IllegalAccessException e) {
+                error = e;
+            } catch (IllegalArgumentException e) {
+                error = e;
+            } catch (InvocationTargetException e) {
+                error = e;
+            }
+            componentContext.getLogger().log( LogService.LOG_ERROR, "Unexpected error while trying to get logger.", null, error );
+        }
+        return null;
     }
 
     /**

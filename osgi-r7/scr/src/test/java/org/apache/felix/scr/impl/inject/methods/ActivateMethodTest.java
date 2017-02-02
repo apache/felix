@@ -19,20 +19,16 @@
 package org.apache.felix.scr.impl.inject.methods;
 
 
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.util.Hashtable;
 import java.util.List;
 import java.util.Map;
 
-import junit.framework.TestCase;
-
-import org.apache.felix.scr.impl.BundleComponentActivator;
-import org.apache.felix.scr.impl.manager.ComponentContainer;
 import org.apache.felix.scr.impl.inject.ActivatorParameter;
-import org.apache.felix.scr.impl.inject.ComponentMethods;
 import org.apache.felix.scr.impl.inject.ComponentMethodsImpl;
-import org.apache.felix.scr.impl.inject.methods.ActivateMethod;
-import org.apache.felix.scr.impl.inject.methods.BaseMethod;
+import org.apache.felix.scr.impl.manager.ComponentActivator;
+import org.apache.felix.scr.impl.manager.ComponentContainer;
+import org.apache.felix.scr.impl.manager.ComponentContextImpl;
 import org.apache.felix.scr.impl.manager.SingleComponentManager;
 import org.apache.felix.scr.impl.metadata.ComponentMetadata;
 import org.apache.felix.scr.impl.metadata.DSVersion;
@@ -41,10 +37,12 @@ import org.apache.felix.scr.impl.metadata.instances.BaseObject;
 import org.apache.felix.scr.impl.metadata.instances.Level1Object;
 import org.apache.felix.scr.impl.metadata.instances.Level3Object;
 import org.apache.felix.scr.impl.metadata.instances2.Level2Object;
-import org.easymock.EasyMock;
+import org.mockito.Mockito;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.service.component.ComponentContext;
+
+import junit.framework.TestCase;
 
 
 public class ActivateMethodTest extends TestCase
@@ -52,7 +50,7 @@ public class ActivateMethodTest extends TestCase
 
     private static final Class ACCEPT_METHOD_CLASS = AcceptMethod.class;
 
-    private ComponentContext m_ctx;
+    private Bundle m_bundle;
 
     BaseObject base = new BaseObject();
 
@@ -62,19 +60,13 @@ public class ActivateMethodTest extends TestCase
 
     Level3Object level3 = new Level3Object();
 
+    @Override
     protected void setUp() throws Exception
     {
         super.setUp();
-        Bundle bundle = ( Bundle ) EasyMock.createNiceMock( Bundle.class );
-        BundleContext context = ( BundleContext ) EasyMock.createNiceMock( BundleContext.class );
-        EasyMock.expect( context.getBundle() ).andReturn( bundle ).anyTimes();
-
-        m_ctx = (ComponentContext) EasyMock.createNiceMock(ComponentContext.class);
-        EasyMock.expect( m_ctx.getProperties() ).andReturn( new Hashtable() ).anyTimes();
-        EasyMock.expect( m_ctx.getBundleContext() ).andReturn( context ).anyTimes();
-        EasyMock.replay( new Object[]
-            { m_ctx, context } );
-
+        m_bundle = Mockito.mock( Bundle.class );
+        BundleContext context = Mockito.mock( BundleContext.class );
+        Mockito.when(context.getBundle()).thenReturn(m_bundle);
     }
 
 
@@ -297,7 +289,8 @@ public class ActivateMethodTest extends TestCase
         ComponentContainer<?> container = newContainer();
         SingleComponentManager<?> icm = new SingleComponentManager( container, new ComponentMethodsImpl() );
         ActivateMethod am = new ActivateMethod( methodName, methodName != null, obj.getClass(), version, false, false );
-        am.invoke( obj, new ActivatorParameter( m_ctx, -1 ), null, icm );
+
+        am.invoke( obj, new ActivatorParameter( new ComponentContextImpl(icm, m_bundle, null), -1 ), null );
         Method m = am.getMethod();
         assertNotNull( m );
         assertEquals( methodName, m.getName() );
@@ -310,16 +303,21 @@ public class ActivateMethodTest extends TestCase
         final ComponentMetadata metadata = newMetadata();
         ComponentContainer container = new ComponentContainer() {
 
-            public BundleComponentActivator getActivator()
+            @Override
+            public ComponentActivator getActivator()
             {
-                return null;
+                final ComponentActivator ca = Mockito.mock(ComponentActivator.class);
+                Mockito.when(ca.getBundleContext()).thenReturn(Mockito.mock(BundleContext.class));
+                return ca;
             }
 
+            @Override
             public ComponentMetadata getComponentMetadata()
             {
                 return metadata;
             }
 
+            @Override
             public void disposed(SingleComponentManager component)
             {
             }
@@ -328,7 +326,7 @@ public class ActivateMethodTest extends TestCase
             {
                 return false;
             }
-            
+
         };
         return container;
     }
@@ -373,7 +371,7 @@ public class ActivateMethodTest extends TestCase
         ComponentContainer container = newContainer();
         SingleComponentManager icm = new SingleComponentManager( container, new ComponentMethodsImpl() );
         ActivateMethod am = new ActivateMethod( methodName, methodName != null, obj.getClass(), version, false, false );
-        am.invoke( obj, new ActivatorParameter( m_ctx, -1 ), null, icm );
+        am.invoke( obj, new ActivatorParameter( new ComponentContextImpl(icm, m_bundle, null), -1 ), null );
         Method m = am.getMethod();
         assertNull( m );
         assertNull( obj.getCalledMethod() );
@@ -387,7 +385,7 @@ public class ActivateMethodTest extends TestCase
         boolean accepted = BaseMethod.accept( method, acceptPrivate, acceptPackage, false );
         assertEquals( expected, accepted );
     }
-    
+
     private static @interface Ann{}
     private static class Sort
     {
@@ -400,7 +398,7 @@ public class ActivateMethodTest extends TestCase
         public void a(ComponentContext cc) {};
         public void a(ComponentContext cc, BundleContext c) {};
         public void b() {};
-        
+
     }
     public void testMethodSorting() throws Exception
     {
@@ -422,10 +420,10 @@ public class ActivateMethodTest extends TestCase
         assertEquals(2, ms.get(6).getParameterTypes().length);
         assertEquals(0, ms.get(7).getParameterTypes().length);
     }
-    
+
     public void test_13_annos() throws Exception
     {
         checkMethod(base, "activate_13_2_annotations", "activate_13_2_annotations", DSVersion.DS13 );
     }
-    
+
 }

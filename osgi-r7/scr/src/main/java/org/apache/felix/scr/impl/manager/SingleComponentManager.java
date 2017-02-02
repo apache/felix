@@ -272,8 +272,7 @@ public class SingleComponentManager<S> extends AbstractComponentManager<S> imple
 
                 implementationObject = getComponentMethods().getConstructor().newInstance(implementationObjectClass,
                         componentContext,
-                        paramMap,
-                        this);
+                        paramMap);
 
             }
             catch ( Throwable t )
@@ -328,7 +327,7 @@ public class SingleComponentManager<S> extends AbstractComponentManager<S> imple
         // 5. Call the activate method, if present
         final MethodResult failedResult = new MethodResult(true, new HashMap<String, Object>());
         final MethodResult result = getComponentMethods().getActivateMethod().invoke( implementationObject,
-                componentContext, 1, failedResult, this );
+                componentContext, 1, failedResult );
         if ( result == failedResult )
         {
             this.setFailureReason((Throwable)failedResult.getResult().get("exception"));
@@ -378,7 +377,7 @@ public class SingleComponentManager<S> extends AbstractComponentManager<S> imple
             // method throws an exception, SCR must log an error message containing the
             // exception with the Log Service and continue) has already been logged
             final MethodResult result = getComponentMethods().getDeactivateMethod().invoke( implementationObject,
-                    componentContext, reason, null, this );
+                    componentContext, reason, null );
             if ( result != null )
             {
                 setServiceProperties( result, null );
@@ -806,7 +805,7 @@ public class SingleComponentManager<S> extends AbstractComponentManager<S> imple
         if ( getInstance() != null )
         {
             return modifiedMethod.invoke( getInstance(), m_componentContext, -1,
-                    MethodResult.VOID, this );
+                    MethodResult.VOID );
         }
         return MethodResult.VOID;
     }

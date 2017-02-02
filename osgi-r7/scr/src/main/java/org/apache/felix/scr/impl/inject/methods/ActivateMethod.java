@@ -33,8 +33,8 @@ import org.apache.felix.scr.impl.inject.Annotations;
 import org.apache.felix.scr.impl.inject.ClassUtils;
 import org.apache.felix.scr.impl.inject.LifecycleMethod;
 import org.apache.felix.scr.impl.inject.MethodResult;
+import org.apache.felix.scr.impl.manager.ComponentContextImpl;
 import org.apache.felix.scr.impl.metadata.DSVersion;
-import org.osgi.service.component.ComponentContext;
 import org.osgi.service.log.LogService;
 
 
@@ -42,7 +42,7 @@ public class ActivateMethod extends BaseMethod<ActivatorParameter> implements Li
 {
 
     protected final boolean m_supportsInterfaces;
-    
+
     public ActivateMethod( final String methodName,
             final boolean methodRequired,
             final Class<?> componentClass,
@@ -200,6 +200,7 @@ public class ActivateMethod extends BaseMethod<ActivatorParameter> implements Li
         }
         Collections.sort(result, new Comparator<Method>(){
 
+            @Override
             public int compare(Method m1, Method m2)
             {
                 final int l1 = m1.getParameterTypes().length;
@@ -290,23 +291,22 @@ public class ActivateMethod extends BaseMethod<ActivatorParameter> implements Li
     /**
      * @see org.apache.felix.scr.impl.inject.LifecycleMethod#invoke(java.lang.Object, org.osgi.service.component.ComponentContext, int, org.apache.felix.scr.impl.inject.MethodResult, org.apache.felix.scr.impl.helper.SimpleLogger)
      */
-    public MethodResult invoke(final Object componentInstance, 
-    		final ComponentContext componentContext, 
-    		final int reason, 
-    		final MethodResult methodCallFailureResult, 
-    		final SimpleLogger logger) {
-        return invoke(componentInstance, new ActivatorParameter(componentContext, reason), methodCallFailureResult, logger);
+    @Override
+    public MethodResult invoke(final Object componentInstance,
+    		final ComponentContextImpl<?> componentContext,
+    		final int reason,
+    		final MethodResult methodCallFailureResult) {
+        return invoke(componentInstance, new ActivatorParameter(componentContext, reason), methodCallFailureResult);
     }
 
     @Override
-    public MethodResult invoke(final  Object componentInstance, 
+    public MethodResult invoke(final  Object componentInstance,
     		final ActivatorParameter rawParameter,
-    		final MethodResult methodCallFailureResult, 
-    		final SimpleLogger logger )
+    		final MethodResult methodCallFailureResult)
     {
-        if (methodExists( logger ))
+        if (methodExists( rawParameter.getLogger() ))
         {
-            return super.invoke(componentInstance, rawParameter, methodCallFailureResult, logger );
+            return super.invoke(componentInstance, rawParameter, methodCallFailureResult );
         }
         return null;
     }

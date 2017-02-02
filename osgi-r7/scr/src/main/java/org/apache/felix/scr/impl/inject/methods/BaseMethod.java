@@ -28,6 +28,7 @@ import java.util.Arrays;
 import java.util.Map;
 
 import org.apache.felix.scr.impl.helper.SimpleLogger;
+import org.apache.felix.scr.impl.inject.BaseParameter;
 import org.apache.felix.scr.impl.inject.ClassUtils;
 import org.apache.felix.scr.impl.inject.MethodResult;
 import org.apache.felix.scr.impl.metadata.DSVersion;
@@ -37,7 +38,7 @@ import org.osgi.service.log.LogService;
 /**
  * Component method to be invoked on service (un)binding.
  */
-public abstract class BaseMethod<P>
+public abstract class BaseMethod<P extends BaseParameter>
 {
 
     private final DSVersion dsVersion;
@@ -212,7 +213,7 @@ public abstract class BaseMethod<P>
             final boolean acceptPackage, SimpleLogger logger ) throws SuitableMethodNotAccessibleException, InvocationTargetException;
 
 
-    private MethodResult invokeMethod(final Object componentInstance, final P rawParameter, SimpleLogger logger )
+    private MethodResult invokeMethod(final Object componentInstance, final P rawParameter )
             throws InvocationTargetException
     {
         try
@@ -220,23 +221,23 @@ public abstract class BaseMethod<P>
             if ( componentInstance != null )
             {
                 final Object[] params = getParameters(m_method, rawParameter);
-                logger.log( LogService.LOG_DEBUG, "invoking {0}: {1}: parameters {2}", new Object[]
+                rawParameter.getLogger().log( LogService.LOG_DEBUG, "invoking {0}: {1}: parameters {2}", new Object[]
                         { getMethodNamePrefix(), getMethodName(), Arrays.asList( params ) }, null );
                 Object result = m_method.invoke(componentInstance, params);
-                logger.log( LogService.LOG_DEBUG, "invoked {0}: {1}", new Object[]
+                rawParameter.getLogger().log( LogService.LOG_DEBUG, "invoked {0}: {1}", new Object[]
                         { getMethodNamePrefix(), getMethodName() }, null );
                 return new MethodResult((m_method.getReturnType() != Void.TYPE), (Map<String, Object>) result);
             }
             else
             {
-                logger.log( LogService.LOG_WARNING, "Method {0}: {1} cannot be called on null object",
+                rawParameter.getLogger().log( LogService.LOG_WARNING, "Method {0}: {1} cannot be called on null object",
                         new Object[]
                                 { getMethodNamePrefix(), getMethodName() }, null );
             }
         }
         catch ( IllegalStateException ise )
         {
-            logger.log( LogService.LOG_DEBUG, ise.getMessage(), null );
+            rawParameter.getLogger().log( LogService.LOG_DEBUG, ise.getMessage(), null );
             return null;
         }
         catch ( IllegalAccessException ex )
@@ -244,7 +245,7 @@ public abstract class BaseMethod<P>
             // 112.3.1 If the method is not is not declared protected or
             // public, SCR must log an error message with the log service,
             // if present, and ignore the method
-            logger.log( LogService.LOG_DEBUG, "Method {0} cannot be called", new Object[]
+            rawParameter.getLogger().log( LogService.LOG_DEBUG, "Method {0} cannot be called", new Object[]
                     { getMethodName() }, ex );
         }
         catch ( InvocationTargetException ex )
@@ -496,15 +497,15 @@ public abstract class BaseMethod<P>
      *      found and called, but the method threw an exception.
      */
     public MethodResult invoke( final Object componentInstance, final P rawParameter,
-            final MethodResult methodCallFailureResult, SimpleLogger logger )
+            final MethodResult methodCallFailureResult )
     {
         try
         {
-            return m_state.invoke( this, componentInstance, rawParameter, logger );
+            return m_state.invoke( this, componentInstance, rawParameter );
         }
         catch ( InvocationTargetException ite )
         {
-            logger.log( LogService.LOG_ERROR, "The {0} method has thrown an exception", new Object[]
+            rawParameter.getLogger().log( LogService.LOG_ERROR, "The {0} method has thrown an exception", new Object[]
                     { getMethodName() }, ite.getCause() );
             if ( methodCallFailureResult != null && methodCallFailureResult.getResult() != null )
             {
@@ -524,11 +525,11 @@ public abstract class BaseMethod<P>
     private static interface State
     {
 
-        <P> MethodResult invoke( final BaseMethod<P> baseMethod, final Object componentInstance, final P rawParameter, SimpleLogger logger )
+        <P extends BaseParameter> MethodResult invoke( final BaseMethod<P> baseMethod, final Object componentInstance, final P rawParameter )
                 throws InvocationTargetException;
 
 
-        <P> boolean methodExists( final BaseMethod<P> baseMethod, SimpleLogger logger );
+        <P extends BaseParameter> boolean methodExists( final BaseMethod<P> baseMethod, SimpleLogger logger );
     }
 
     private static class NotApplicable implements State
@@ -538,14 +539,14 @@ public abstract class BaseMethod<P>
 
 
         @Override
-        public <P> MethodResult invoke( final BaseMethod<P> baseMethod, final Object componentInstance, final P rawParameter, SimpleLogger logger )
+        public <P extends BaseParameter> MethodResult invoke( final BaseMethod<P> baseMethod, final Object componentInstance, final P rawParameter )
         {
             return MethodResult.VOID;
         }
 
 
         @Override
-        public <P> boolean methodExists( final BaseMethod<P> baseMethod, SimpleLogger logger )
+        public <P extends BaseParameter> boolean methodExists( final BaseMethod<P> baseMethod, SimpleLogger logger )
         {
             return true;
         }
@@ -556,7 +557,7 @@ public abstract class BaseMethod<P>
         private static final State INSTANCE = new NotResolved();
 
 
-        private synchronized <P> void resolve( final BaseMethod<P> baseMethod, SimpleLogger logger )
+        private synchronized <P extends BaseParameter> void resolve( final BaseMethod<P> baseMethod, SimpleLogger logger )
         {
             logger.log( LogService.LOG_DEBUG, "getting {0}: {1}", new Object[]
                     {baseMethod.getMethodNamePrefix(), baseMethod.getMethodName()}, null );
@@ -578,16 +579,16 @@ public abstract class BaseMethod<P>
 
 
         @Override
-        public <P> MethodResult invoke( final BaseMethod<P> baseMethod, final Object componentInstance, final P rawParameter, SimpleLogger logger )
+        public <P extends BaseParameter> MethodResult invoke( final BaseMethod<P> baseMethod, final Object componentInstance, final P rawParameter )
                 throws InvocationTargetException
         {
-            resolve( baseMethod, logger );
-            return baseMethod.getState().invoke( baseMethod, componentInstance, rawParameter, logger );
+            resolve( baseMethod, rawParameter.getLogger() );
+            return baseMethod.getState().invoke( baseMethod, componentInstance, rawParameter );
         }
 
 
         @Override
-        public <P> boolean methodExists( final BaseMethod<P> baseMethod, SimpleLogger logger )
+        public <P extends BaseParameter> boolean methodExists( final BaseMethod<P> baseMethod, SimpleLogger logger )
         {
             resolve( baseMethod, logger );
             return baseMethod.getState().methodExists( baseMethod, logger );
@@ -600,19 +601,19 @@ public abstract class BaseMethod<P>
 
 
         @Override
-        public <P> MethodResult invoke( final BaseMethod<P> baseMethod, final Object componentInstance, final P rawParameter, SimpleLogger logger )
+        public <P extends BaseParameter> MethodResult invoke( final BaseMethod<P> baseMethod, final Object componentInstance, final P rawParameter )
         {
             // 112.3.1 If the method is not found , SCR must log an error
             // message with the log service, if present, and ignore the
             // method
-            logger.log( LogService.LOG_ERROR, "{0} method [{1}] not found", new Object[]
+            rawParameter.getLogger().log( LogService.LOG_ERROR, "{0} method [{1}] not found", new Object[]
                     { baseMethod.getMethodNamePrefix(), baseMethod.getMethodName() }, null );
             return null;
         }
 
 
         @Override
-        public <P> boolean methodExists( final BaseMethod<P> baseMethod, SimpleLogger logger )
+        public <P extends BaseParameter> boolean methodExists( final BaseMethod<P> baseMethod, SimpleLogger logger )
         {
             return false;
         }
@@ -624,15 +625,15 @@ public abstract class BaseMethod<P>
 
 
         @Override
-        public <P> MethodResult invoke( final BaseMethod<P> baseMethod, final Object componentInstance, final P rawParameter, SimpleLogger logger )
+        public <P extends BaseParameter> MethodResult invoke( final BaseMethod<P> baseMethod, final Object componentInstance, final P rawParameter )
                 throws InvocationTargetException
         {
-            return baseMethod.invokeMethod( componentInstance, rawParameter, logger );
+            return baseMethod.invokeMethod( componentInstance, rawParameter );
         }
 
 
         @Override
-        public <P> boolean methodExists( final BaseMethod<P> baseMethod, SimpleLogger logger )
+        public <P extends BaseParameter> boolean methodExists( final BaseMethod<P> baseMethod, SimpleLogger logger )
         {
             return true;
         }
