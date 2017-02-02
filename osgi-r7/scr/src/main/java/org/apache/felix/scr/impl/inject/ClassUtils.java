@@ -58,6 +58,10 @@ public class ClassUtils
     public static final Class<?> BUNDLE_CONTEXT_CLASS = BundleContext.class;
     public static final Class<?> INTEGER_CLASS = Integer.class;
 
+    public static final String LOGGER_CLASS = "org.osgi.service.log.Logger";
+    public static final String FORMATTER_LOGGER_CLASS = "org.osgi.service.log.FormatterLogger";
+    public static final String LOGGER_FACTORY_CLASS = "org.osgi.service.log.LoggerFactory";
+
 
     // this bundle's context
     private static BundleContext m_context;

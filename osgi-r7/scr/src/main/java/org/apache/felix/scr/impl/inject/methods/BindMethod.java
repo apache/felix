@@ -24,7 +24,6 @@ import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 
 import org.apache.felix.scr.impl.helper.SimpleLogger;
 import org.apache.felix.scr.impl.inject.BindParameters;
@@ -302,9 +301,9 @@ implements org.apache.felix.scr.impl.inject.ReferenceMethod
                                     paramTypes.add(ValueUtils.ValueType.ref_serviceObjects);
                                 }
                             }
-                            else if (paramType == Map.class)
+                            else if (paramType == ClassUtils.MAP_CLASS)
                             {
-                                if (specialMatch && parameterClass == Map.class)
+                                if (specialMatch && parameterClass == ClassUtils.MAP_CLASS)
                                 {
                                     specialMatch = false;
                                     paramTypes.add(ValueUtils.ValueType.ref_serviceType);
@@ -317,6 +316,23 @@ implements org.apache.felix.scr.impl.inject.ReferenceMethod
                             else if (paramType.isAssignableFrom( parameterClass ) )
                             {
                                 paramTypes.add(ValueUtils.ValueType.ref_serviceType);
+                            }
+                            // DS 1.4 : Logger and FormattedLogger
+                            else if ( getDSVersion().isDS14() && ClassUtils.LOGGER_FACTORY_CLASS.equals(m_referenceClassName) )
+                            {
+                                 if ( paramType.getName().equals(ClassUtils.LOGGER_CLASS) )
+                                 {
+                                     paramTypes.add(ValueUtils.ValueType.ref_logger);
+                                 }
+                                 else if ( paramType.getName().equals(ClassUtils.FORMATTER_LOGGER_CLASS) )
+                                 {
+                                     paramTypes.add(ValueUtils.ValueType.ref_formatterLogger);
+                                 }
+                                 else
+                                 {
+                                     matches = false;
+                                     break;
+                                 }
                             }
                             else
                             {
