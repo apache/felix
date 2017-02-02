@@ -37,10 +37,6 @@ import org.osgi.service.log.LogService;
  */
 public class ValueUtils {
 
-    private static final String LOGGER_CLASS = "org.osgi.service.log.Logger";
-    private static final String FORMATTER_LOGGER_CLASS = "org.osgi.service.log.FormatterLogger";
-    private static final String LOGGER_FACTORY_CLASS = "org.osgi.service.log.LoggerFactory";
-
     /**
      * The value type of the field, activation field or constructor parameter
      */
@@ -141,12 +137,12 @@ public class ValueUtils {
                 valueType = ValueType.ref_tuple;
             }
             // 1.4: Logger - reference needs to be of type LoggerFactory
-            else if ( typeClass.getName().equals(LOGGER_CLASS) && metadata.getInterface().equals(LOGGER_FACTORY_CLASS) )
+            else if ( typeClass.getName().equals(ClassUtils.LOGGER_CLASS) && metadata.getInterface().equals(ClassUtils.LOGGER_FACTORY_CLASS) )
             {
                 return ValueType.ref_logger;
             }
             // 1.4: FormatterLogger - reference needs to be of type LoggerFactory
-            else if ( typeClass.getName().equals(FORMATTER_LOGGER_CLASS) && metadata.getInterface().equals(LOGGER_FACTORY_CLASS) )
+            else if ( typeClass.getName().equals(ClassUtils.FORMATTER_LOGGER_CLASS) && metadata.getInterface().equals(ClassUtils.LOGGER_FACTORY_CLASS) )
             {
                 return ValueType.ref_formatterLogger;
             }
