@@ -78,6 +78,7 @@ public abstract class XmlConstants
     public static final String ATTR_ENTRY = "entry";
     public static final String ATTR_FACTORY = "factory";
     public static final String ATTR_IMMEDIATE = "immediate";
+    public static final String ATTR_INTERFACE = "interface";
     public static final String ATTR_MODIFIED = "modified";
     public static final String ATTR_NAME = "name";
     public static final String ATTR_TYPE = "type";
@@ -98,6 +99,7 @@ public abstract class XmlConstants
 
     // mapping of namespace URI to namespace code
     public static final Map<String, DSVersion> NAMESPACE_CODE_MAP;
+
 
     static
     {

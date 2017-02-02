@@ -453,9 +453,9 @@ public class BindMethodTest extends TestCase
                 FakeService.class.getName(), dsVersion, false );
         RefPair refPair = new SingleRefPair( m_serviceReference );
         ComponentContextImpl<T1> cc = new ComponentContextImpl(icm, new MockBundle(), null);
-        assertTrue( bm.getServiceObject( new BindParameters(cc, refPair), m_context, icm ) );
+        assertTrue( bm.getServiceObject( new BindParameters(cc, refPair), m_context ) );
         BindParameters bp = new BindParameters(cc, refPair);
-        bm.invoke( component, bp, null, icm );
+        bm.invoke( component, bp, null );
         assertEquals( expectCallPerformed, component.callPerformed );
     }
 
@@ -464,16 +464,19 @@ public class BindMethodTest extends TestCase
         final ComponentMetadata metadata = newMetadata();
         ComponentContainer container = new ComponentContainer() {
 
+            @Override
             public BundleComponentActivator getActivator()
             {
                 return null;
             }
 
+            @Override
             public ComponentMetadata getComponentMetadata()
             {
                 return metadata;
             }
 
+            @Override
             public void disposed(SingleComponentManager component)
             {
             }

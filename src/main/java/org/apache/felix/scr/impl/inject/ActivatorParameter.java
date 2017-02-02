@@ -18,25 +18,17 @@
  */
 package org.apache.felix.scr.impl.inject;
 
-import org.osgi.service.component.ComponentContext;
+import org.apache.felix.scr.impl.manager.ComponentContextImpl;
 
-public final class ActivatorParameter
+public final class ActivatorParameter extends BaseParameter
 {
-    private final ComponentContext m_componentContext;
     private final int m_reason;
 
-    public ActivatorParameter( ComponentContext componentContext, int reason )
+    public ActivatorParameter( ComponentContextImpl<?> componentContext, int reason )
     {
-        this.m_componentContext = componentContext;
+        super(componentContext);
         this.m_reason = reason;
     }
-
-
-    public ComponentContext getComponentContext()
-    {
-        return m_componentContext;
-    }
-
 
     public int getReason()
     {

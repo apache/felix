@@ -48,6 +48,7 @@ public class DuplexReferenceMethods implements ReferenceMethods
         this.unbind = new DuplexReferenceMethod(unbindList);
         this.init = new InitReferenceMethod()
         {
+            @Override
             public boolean init(final Object componentInstance, final SimpleLogger logger)
             {
             	boolean result = true;
@@ -57,7 +58,7 @@ public class DuplexReferenceMethods implements ReferenceMethods
             		if ( init != null )
             		{
             			result = init.init(componentInstance, logger);
-            			if ( !result ) 
+            			if ( !result )
             			{
             				break;
             			}
@@ -68,21 +69,25 @@ public class DuplexReferenceMethods implements ReferenceMethods
         };
     }
 
+    @Override
     public ReferenceMethod getBind()
     {
     	return this.bind;
     }
 
+    @Override
     public ReferenceMethod getUnbind()
     {
     	return this.unbind;
     }
 
+    @Override
     public ReferenceMethod getUpdated()
     {
     	return this.updated;
     }
 
+    @Override
     public InitReferenceMethod getInit()
     {
     	return this.init;
@@ -98,15 +103,15 @@ public class DuplexReferenceMethods implements ReferenceMethods
             this.methods = methods;
         }
 
+        @Override
         public MethodResult invoke(final Object componentInstance,
         		final BindParameters parameters,
-        		final MethodResult methodCallFailureResult,
-        		final SimpleLogger logger) {
+        		final MethodResult methodCallFailureResult) {
         	MethodResult result = null;
-        	for(final ReferenceMethod m : methods) 
+        	for(final ReferenceMethod m : methods)
         	{
-        		result = m.invoke(componentInstance, parameters, methodCallFailureResult, logger);
-        		if ( result == null )        			
+        		result = m.invoke(componentInstance, parameters, methodCallFailureResult);
+        		if ( result == null )
         		{
         			break;
         		}
@@ -114,17 +119,17 @@ public class DuplexReferenceMethods implements ReferenceMethods
             return result;
         }
 
+        @Override
         public <S, T> boolean getServiceObject(
         		final BindParameters parameters,
-        		final BundleContext context,
-        		final SimpleLogger logger)
+        		final BundleContext context)
         {
             // only if all return true, we return true
         	boolean result = false;
-        	for(final ReferenceMethod m : methods) 
+        	for(final ReferenceMethod m : methods)
         	{
-        		result = m.getServiceObject(parameters, context, logger);
-        		if (!result )        			
+        		result = m.getServiceObject(parameters, context);
+        		if (!result )
         		{
         			break;
         		}

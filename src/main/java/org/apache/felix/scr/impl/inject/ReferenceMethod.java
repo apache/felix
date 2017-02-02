@@ -18,7 +18,6 @@
  */
 package org.apache.felix.scr.impl.inject;
 
-import org.apache.felix.scr.impl.helper.SimpleLogger;
 import org.osgi.framework.BundleContext;
 
 /**
@@ -35,15 +34,13 @@ public interface ReferenceMethod
      * @param logger Logger
      * @return The method result
      */
-	
+
 	<S, T> MethodResult invoke( Object componentInstance,
                          BindParameters parameters,
-                         MethodResult methodCallFailureResult,
-                         SimpleLogger logger );
+                         MethodResult methodCallFailureResult );
 
     <S, T> boolean getServiceObject( BindParameters parameters,
-            BundleContext context,
-            SimpleLogger logger );
+            BundleContext context);
 
     /**
      * A NOP implementation.
@@ -51,17 +48,15 @@ public interface ReferenceMethod
     ReferenceMethod NOPReferenceMethod = new ReferenceMethod() {
 
 		@Override
-		public <S, T> MethodResult invoke(final Object componentInstance, 
+		public <S, T> MethodResult invoke(final Object componentInstance,
 				final BindParameters parameters,
-				final MethodResult methodCallFailureResult, 
-				final SimpleLogger logger) {
+				final MethodResult methodCallFailureResult) {
 			return MethodResult.VOID;
 		}
 
 		@Override
 		public <S, T> boolean getServiceObject(final BindParameters parameters,
-				final BundleContext context, 
-				final SimpleLogger logger) {
+				final BundleContext context) {
 			return true;
 		}
     };

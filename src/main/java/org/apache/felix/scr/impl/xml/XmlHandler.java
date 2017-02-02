@@ -152,9 +152,9 @@ public class XmlHandler implements KXml2SAXHandler
                     m_currentComponent = new ComponentMetadata( namespaceCode );
 
                     // name attribute is optional (since DS 1.1)
-                    if ( attributes.getAttribute( "name" ) != null )
+                    if ( attributes.getAttribute( XmlConstants.ATTR_NAME ) != null )
                     {
-                        m_currentComponent.setName( attributes.getAttribute( "name" ) );
+                        m_currentComponent.setName( attributes.getAttribute( XmlConstants.ATTR_NAME ) );
                     }
 
                     // enabled attribute is optional
@@ -253,18 +253,18 @@ public class XmlHandler implements KXml2SAXHandler
                     PropertyMetadata prop = new PropertyMetadata();
 
                     // name attribute is mandatory
-                    prop.setName( attributes.getAttribute( "name" ) );
+                    prop.setName( attributes.getAttribute( XmlConstants.ATTR_NAME ) );
 
                     // type attribute is optional
-                    if ( attributes.getAttribute( "type" ) != null )
+                    if ( attributes.getAttribute( XmlConstants.ATTR_TYPE ) != null )
                     {
-                        prop.setType( attributes.getAttribute( "type" ) );
+                        prop.setType( attributes.getAttribute( XmlConstants.ATTR_TYPE ) );
                     }
 
                     // 112.4.5: If the value attribute is specified, the body of the element is ignored.
-                    if ( attributes.getAttribute( "value" ) != null )
+                    if ( attributes.getAttribute( XmlConstants.ATTR_VALUE ) != null )
                     {
-                        prop.setValue( attributes.getAttribute( "value" ) );
+                        prop.setValue( attributes.getAttribute( XmlConstants.ATTR_VALUE ) );
                         m_currentComponent.addProperty( prop );
                     }
                     else
@@ -287,24 +287,24 @@ public class XmlHandler implements KXml2SAXHandler
                     }
 
                 }
-                // TODO Section [...] Factory Property Elements
+                // 112.4.9 [...] Factory Property Element
                 else if ( localName.equals( XmlConstants.EL_FACTORY_PROPERTY ) )
                 {
                     PropertyMetadata prop = new PropertyMetadata();
 
                     // name attribute is mandatory
-                    prop.setName( attributes.getAttribute( "name" ) );
+                    prop.setName( attributes.getAttribute( XmlConstants.ATTR_NAME ) );
 
                     // type attribute is optional
-                    if ( attributes.getAttribute( "type" ) != null )
+                    if ( attributes.getAttribute( XmlConstants.ATTR_TYPE ) != null )
                     {
-                        prop.setType( attributes.getAttribute( "type" ) );
+                        prop.setType( attributes.getAttribute( XmlConstants.ATTR_TYPE ) );
                     }
 
                     // 112.4.5: If the value attribute is specified, the body of the element is ignored.
-                    if ( attributes.getAttribute( "value" ) != null )
+                    if ( attributes.getAttribute( XmlConstants.ATTR_VALUE ) != null )
                     {
-                        prop.setValue( attributes.getAttribute( "value" ) );
+                        prop.setValue( attributes.getAttribute( XmlConstants.ATTR_VALUE ) );
                         m_currentComponent.addFactoryProperty( prop );
                     }
                     else
@@ -313,7 +313,7 @@ public class XmlHandler implements KXml2SAXHandler
                         m_pendingFactoryProperty = prop;
                     }
                 }
-                // TODO Section [...] Factory Properties [...] Elements
+                // 112.4.9 [...] Factory Properties Element
                 else if ( localName.equals( XmlConstants.EL_FACTORY_PROPERTIES ) )
                 {
                     final Properties props = readPropertiesEntry( attributes.getAttribute( "entry" ) );
@@ -347,7 +347,7 @@ public class XmlHandler implements KXml2SAXHandler
                 }
                 else if ( localName.equals( XmlConstants.EL_PROVIDE ) )
                 {
-                    m_currentService.addProvide( attributes.getAttribute( "interface" ) );
+                    m_currentService.addProvide( attributes.getAttribute( XmlConstants.ATTR_INTERFACE ) );
                 }
 
                 // 112.4.7 Reference element
@@ -356,12 +356,12 @@ public class XmlHandler implements KXml2SAXHandler
                     ReferenceMetadata ref = new ReferenceMetadata();
 
                     // name attribute is optional (since DS 1.1)
-                    if ( attributes.getAttribute( "name" ) != null )
+                    if ( attributes.getAttribute( XmlConstants.ATTR_NAME ) != null )
                     {
-                        ref.setName( attributes.getAttribute( "name" ) );
+                        ref.setName( attributes.getAttribute( XmlConstants.ATTR_NAME ) );
                     }
 
-                    ref.setInterface( attributes.getAttribute( "interface" ) );
+                    ref.setInterface( attributes.getAttribute( XmlConstants.ATTR_INTERFACE ) );
 
                     // Cardinality
                     if ( attributes.getAttribute( "cardinality" ) != null )

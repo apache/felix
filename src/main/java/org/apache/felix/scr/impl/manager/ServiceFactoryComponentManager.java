@@ -232,7 +232,7 @@ public class ServiceFactoryComponentManager<S> extends SingleComponentManager<S>
         {
             S instance = componentContext.getImplementationObject(true);
             result = modifiedMethod.invoke( instance,
-                    componentContext, -1, MethodResult.VOID, this );
+                    componentContext, -1, MethodResult.VOID );
 
         }
         return result;

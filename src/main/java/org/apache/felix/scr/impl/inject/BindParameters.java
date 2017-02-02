@@ -18,25 +18,18 @@
  */
 package org.apache.felix.scr.impl.inject;
 
-import org.apache.felix.scr.impl.helper.SimpleLogger;
 import org.apache.felix.scr.impl.manager.ComponentContextImpl;
 import org.apache.felix.scr.impl.manager.RefPair;
 import org.osgi.framework.BundleContext;
 
-public class BindParameters
+public class BindParameters extends BaseParameter
 {
 
-    private final ComponentContextImpl<?> componentContext;
     private final RefPair<?, ?> refPair;
     public BindParameters(ComponentContextImpl<?> componentContext, RefPair<?, ?> refPair)
     {
-        this.componentContext = componentContext;
+        super(componentContext);
         this.refPair = refPair;
-    }
-
-    public ComponentContextImpl<?> getComponentContext()
-    {
-        return componentContext;
     }
 
     public RefPair getRefPair()
@@ -44,11 +37,13 @@ public class BindParameters
         return refPair;
     }
 
+    @SuppressWarnings({ "unchecked", "rawtypes" })
     public Object getServiceObject() {
-    	return refPair.getServiceObject((ComponentContextImpl) componentContext);
+    	return refPair.getServiceObject((ComponentContextImpl)this.getComponentContext());
     }
 
-    public boolean getServiceObject(BundleContext context, SimpleLogger logger) {
-    	return refPair.getServiceObject((ComponentContextImpl) componentContext, context, logger);
+    @SuppressWarnings({ "unchecked", "rawtypes" })
+    public boolean getServiceObject(BundleContext context) {
+    	return refPair.getServiceObject((ComponentContextImpl)this.getComponentContext(), context);
     }
 }

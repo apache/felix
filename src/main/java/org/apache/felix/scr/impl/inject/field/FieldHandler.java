@@ -70,6 +70,7 @@ public class FieldHandler
         new Comparator<RefPair<?, ?>>()
         {
 
+            @Override
             public int compare(final RefPair<?, ?> o1, final RefPair<?, ?> o2)
             {
                 return o1.getRef().compareTo(o2.getRef());
@@ -182,8 +183,7 @@ public class FieldHandler
 
     private MethodResult updateField(final METHOD_TYPE mType,
                                      final Object componentInstance,
-                                     final BindParameters bp,
-                                     final SimpleLogger logger )
+                                     final BindParameters bp)
         throws InvocationTargetException
     {
         @SuppressWarnings("rawtypes")
@@ -218,7 +218,8 @@ public class FieldHandler
             		{
             			return MethodResult.REACTIVATE;
             		}
-                    final Object obj = ValueUtils.getValue(valueType, field.getType(), key, refPair);
+                    final Object obj = ValueUtils.getValue(componentInstance.getClass().getName(),
+                            valueType, field.getType(), key, refPair);
                     this.setFieldValue(componentInstance, obj);
                     this.boundValues.put(refPair, obj);
             	}
@@ -226,7 +227,8 @@ public class FieldHandler
             // bind needs always be done
             else
             {
-                final Object obj = ValueUtils.getValue(valueType, field.getType(), key, refPair);
+                final Object obj = ValueUtils.getValue(componentInstance.getClass().getName(),
+                        valueType, field.getType(), key, refPair);
                 this.setFieldValue(componentInstance, obj);
                 this.boundValues.put(refPair, obj);
             }
@@ -238,7 +240,8 @@ public class FieldHandler
             // bind: replace or update the field
             if ( mType == METHOD_TYPE.BIND )
             {
-                final Object obj = ValueUtils.getValue(valueType, field.getType(), key, refPair);
+                final Object obj = ValueUtils.getValue(componentInstance.getClass().getName(),
+                        valueType, field.getType(), key, refPair);
                 this.boundValues.put(refPair, obj);
                 if ( metadata.isReplace() )
                 {
@@ -276,7 +279,8 @@ public class FieldHandler
             	{
                     if ( !this.metadata.isStatic() )
                     {
-	                    final Object obj = ValueUtils.getValue(valueType, field.getType(), key, refPair);
+	                    final Object obj = ValueUtils.getValue(componentInstance.getClass().getName(),
+	                            valueType, field.getType(), key, refPair);
 	                    final Object oldObj = this.boundValues.put(refPair, obj);
 
 	                    if ( metadata.isReplace() )
@@ -349,8 +353,7 @@ public class FieldHandler
         MethodResult invoke( final FieldHandler handler,
                 final METHOD_TYPE mType,
                 final Object componentInstance,
-                final BindParameters rawParameter,
-                final SimpleLogger logger )
+                final BindParameters rawParameter)
         throws InvocationTargetException;
 
         boolean fieldExists( final FieldHandler handler, final SimpleLogger logger);
@@ -370,28 +373,28 @@ public class FieldHandler
 
             // resolve the field
         	final FieldUtils.FieldSearchResult result = FieldUtils.searchField( handler.componentClass, handler.metadata.getField(), logger );
-        	if ( result == null ) 
+        	if ( result == null )
         	{
-        		handler.field = null;         
+        		handler.field = null;
         		handler.valueType = null;
         		handler.state = NotFound.INSTANCE;
                 logger.log(LogService.LOG_ERROR, "Field [{0}] not found; Component will fail",
                     new Object[] { handler.metadata.getField() }, null);
         	}
-        	else 
+        	else
         	{
         		handler.field = result.field;
-            	if ( !result.usable ) 
+            	if ( !result.usable )
             	{
             		handler.valueType = ValueType.ignore;
             	}
             	else
             	{
-            		handler.valueType = ValueUtils.getReferenceValueType( 
+            		handler.valueType = ValueUtils.getReferenceValueType(
             				handler.componentClass,
             				handler.metadata,
             				result.field.getType(),
-            				result.field, 
+            				result.field,
             				logger );
             	}
                 handler.state = Resolved.INSTANCE;
@@ -400,17 +403,18 @@ public class FieldHandler
         	}
         }
 
+        @Override
         public MethodResult invoke( final FieldHandler handler,
                 final METHOD_TYPE mType,
                 final Object componentInstance,
-                final BindParameters rawParameter,
-                SimpleLogger logger )
+                final BindParameters rawParameter)
         throws InvocationTargetException
         {
-            resolve( handler, logger );
-            return handler.state.invoke( handler, mType, componentInstance, rawParameter, logger );
+            resolve( handler, rawParameter.getLogger() );
+            return handler.state.invoke( handler, mType, componentInstance, rawParameter );
         }
 
+        @Override
         public boolean fieldExists( final FieldHandler handler, final SimpleLogger logger)
         {
             resolve( handler, logger );
@@ -425,17 +429,18 @@ public class FieldHandler
     {
         private static final State INSTANCE = new NotFound();
 
+        @Override
         public MethodResult invoke( final FieldHandler handler,
                 final METHOD_TYPE mType,
                 final Object componentInstance,
-                final BindParameters rawParameter,
-                final SimpleLogger logger )
+                final BindParameters rawParameter)
         {
-            logger.log( LogService.LOG_ERROR, "Field [{0}] not found", new Object[]
+            rawParameter.getLogger().log( LogService.LOG_ERROR, "Field [{0}] not found", new Object[]
                 { handler.metadata.getField() }, null );
             return null;
         }
 
+        @Override
         public boolean fieldExists( final FieldHandler handler, final SimpleLogger logger)
         {
             return false;
@@ -449,16 +454,17 @@ public class FieldHandler
     {
         private static final State INSTANCE = new Resolved();
 
+        @Override
         public MethodResult invoke( final FieldHandler handler,
                 final METHOD_TYPE mType,
                 final Object componentInstance,
-                final BindParameters rawParameter,
-                final SimpleLogger logger )
+                final BindParameters rawParameter)
             throws InvocationTargetException
         {
-            return handler.updateField( mType, componentInstance, rawParameter, logger );
+            return handler.updateField( mType, componentInstance, rawParameter );
         }
 
+        @Override
         public boolean fieldExists( final FieldHandler handler, final SimpleLogger logger)
         {
             return true;
@@ -484,10 +490,10 @@ public class FieldHandler
             this.handler = handler;
         }
 
+        @Override
         public <S, T> MethodResult invoke(final Object componentInstance,
                 final BindParameters rawParameter,
-                final MethodResult methodCallFailureResult,
-                final SimpleLogger logger)
+                final MethodResult methodCallFailureResult)
         {
             if ( handler.valueType == ValueType.ignore )
             {
@@ -499,31 +505,30 @@ public class FieldHandler
                 return handler.state.invoke( handler,
                         methodType,
                         componentInstance,
-                        rawParameter,
-                        logger );
+                        rawParameter);
             }
             catch ( final InvocationTargetException ite )
             {
-                logger.log( LogService.LOG_ERROR, "The {0} field has thrown an exception", new Object[]
+                rawParameter.getLogger().log( LogService.LOG_ERROR, "The {0} field has thrown an exception", new Object[]
                     { handler.metadata.getField() }, ite.getCause() );
             }
 
             return methodCallFailureResult;
         }
 
+        @Override
         public <S, T> boolean getServiceObject(
                 final BindParameters rawParameter,
-                final BundleContext context,
-                final SimpleLogger logger)
+                final BundleContext context)
         {
             if ( methodType != METHOD_TYPE.UNBIND )
             {
                 //??? this resolves which we need.... better way?
                 if ( rawParameter.getServiceObject() == null
-                  && handler.fieldExists( logger )
+                  && handler.fieldExists( rawParameter.getLogger() )
                   && (handler.valueType == ValueType.ref_serviceType || handler.valueType == ValueType.ref_tuple ) )
                 {
-                    return rawParameter.getServiceObject(context, logger);
+                    return rawParameter.getServiceObject(context);
                 }
             }
             return true;
@@ -554,6 +559,7 @@ public class FieldHandler
         return new InitReferenceMethod()
         {
 
+            @Override
             public boolean init(final Object componentInstance, final SimpleLogger logger)
             {
                 if ( fieldExists( logger ) )

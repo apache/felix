@@ -20,13 +20,12 @@ package org.apache.felix.scr.impl.inject;
 
 import java.util.Map;
 
-import org.apache.felix.scr.impl.helper.SimpleLogger;
 import org.apache.felix.scr.impl.manager.ComponentContextImpl;
 import org.apache.felix.scr.impl.manager.DependencyManager;
 
 /**
  * This object describes a constructor for a component.
- * The name ConstructorMethod has been chosen to avoid a clash with the 
+ * The name ConstructorMethod has been chosen to avoid a clash with the
  * existing Constructor class.
  */
 public interface ConstructorMethod<T> {
@@ -35,27 +34,25 @@ public interface ConstructorMethod<T> {
 		public DependencyManager<S, ?> dependencyManager;
 		public DependencyManager.OpenStatus<S, ?> openStatus;
     }
-	
+
 	/**
 	 * Create a new instance
 	 * @param componentClass The implementation class of the component
 	 * @param componentContext The component context
-	 * @param logger A logger 
+	 * @param logger A logger
 	 * @return The instance
 	 */
     <S> T newInstance(Class<T> componentClass,
     		           ComponentContextImpl<T> componentContext,
-    		           Map<Integer, ReferencePair<S>> parameterMap,
-                       SimpleLogger logger )
+    		           Map<Integer, ReferencePair<S>> parameterMap)
     throws Exception;
-    
+
     public ConstructorMethod<Object> DEFAULT = new ConstructorMethod<Object>() {
-		
+
 		@Override
-		public <S> Object newInstance(Class<Object> componentClass, 
-				ComponentContextImpl<Object> componentContext, 
-				Map<Integer, ReferencePair<S>> parameterMap,
-				SimpleLogger logger) 
+		public <S> Object newInstance(Class<Object> componentClass,
+				ComponentContextImpl<Object> componentContext,
+				Map<Integer, ReferencePair<S>> parameterMap)
 				throws Exception
 		{
             // 112.4.4 The class must be public and have a public constructor without arguments so component instances
