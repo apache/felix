@@ -18,6 +18,9 @@
  */
 package org.apache.felix.dm.itest.api;
 
+import java.util.concurrent.TimeUnit;
+import java.util.stream.IntStream;
+
 import org.apache.felix.dm.Component;
 import org.apache.felix.dm.DependencyManager;
 import org.apache.felix.dm.itest.util.Ensure;
@@ -35,46 +38,62 @@ import org.junit.Assert;
  */
 public class FELIX5471_SynchronousUnbindTest extends ServiceRaceTest {
 	
-	final Ensure m_ensure = new Ensure();
+	volatile Ensure m_ensure;
 	
     public FELIX5471_SynchronousUnbindTest() {
         setParallel(); // Configure DM to use a threadpool
     }
     
-    public void testSynchronousUnbind() {
+    public void testSynchronousUnbind() {    	
     	DependencyManager dm = getDM();
     	
-		Component a = dm.createComponent()
-				.setImplementation(new A())
-				.add(dm.createServiceDependency().setService(M.class).setRequired(true).setCallbacks("add", "remove"));
+        IntStream.range(0, 1000).forEach(i -> {
+        	m_ensure = new Ensure(false);
+        	
+        	Component a = dm.createComponent()
+        			.setImplementation(new A())
+        			.add(dm.createServiceDependency().setService(M.class).setRequired(true).setCallbacks("add", "remove"));
 		
-		Component m = dm.createComponent()
-				.setImplementation(new M())
-				.setInterface(M.class.getName(), null)
-				.add(dm.createServiceDependency().setService(X.class).setRequired(true).setCallbacks("add", "remove"));
+        	Component m = dm.createComponent()
+        			.setImplementation(new M())
+        			.setInterface(M.class.getName(), null)
+        			.add(dm.createServiceDependency().setService(X.class).setRequired(true).setCallbacks("add", "remove"));
 
-		Component x = dm.createComponent()
-				.setImplementation(new X())
-				.setInterface(X.class.getName(), null);
+        	Component x = dm.createComponent()
+        			.setImplementation(new X())
+					.setInterface(X.class.getName(), null);
+			
+        	dm.add(a);
+        	dm.add(m);
+        	dm.add(x);
+        	m_ensure.waitForStep(3, 5000);
 		
-		dm.add(a);
-		dm.add(m);
-		dm.add(x);
-		m_ensure.waitForStep(3, 5000);
+        	// make sure the threadpool is quiescent
+        	super.m_threadPool.awaitQuiescence(5000, TimeUnit.MILLISECONDS);
 		
-		dm.remove(x);
-		m_ensure.waitForStep(6, 5000);
+        	dm.remove(x);
+        	m_ensure.waitForStep(6, 5000);
+        	
+        	dm.remove(a);
+        	dm.remove(m);
+        	
+        	// make sure the threadpool is quiescent
+        	super.m_threadPool.awaitQuiescence(5000, TimeUnit.MILLISECONDS);
+        	
+            if ((i + 1) % 100 == 0) {
+                warn("Performed 100 tests (total=%d).", (i + 1));
+            }
+
+        });
     }
     
     public class A {
     	void add(M m) {
-    		System.out.println("[" + Thread.currentThread().getName() + "] A.add(" + m + ")");
     		Assert.assertTrue("A.add(M): M is not started", m.isStarted());
     		m_ensure.step(3);
     	}
     	
     	void remove(M m) {
-    		System.out.println("[" + Thread.currentThread().getName() + "] A.remove(" + m + ")");
     		Assert.assertTrue("A.remove(M): M is not started", m.isStarted());
     		m_ensure.step(4);
     	}
@@ -97,12 +116,10 @@ public class FELIX5471_SynchronousUnbindTest extends ServiceRaceTest {
     	}
 
     	void add(X x) {
-    		System.out.println("[" + Thread.currentThread().getName() + "] M.add(" + x + ")");
     		Assert.assertTrue("M.add(X): X is not started", x.isStarted());
     	}
     	
     	void remove(X x) {
-    		System.out.println("[" + Thread.currentThread().getName() + "] M.remove(" + x + ")");
     		Assert.assertTrue("M.add(X): X is not started", x.isStarted());
     		m_ensure.step(5);
     	}
