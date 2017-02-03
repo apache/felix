@@ -899,7 +899,6 @@ public class ResolverImpl implements Resolver
         }
         else if (candCap.getNamespace().equals(BundleNamespace.BUNDLE_NAMESPACE))
         {
-
             // Get the candidate's package space to determine which packages
             // will be visible to the current resource.
             if (visitedRequiredBundles.add(candCap.getResource()))
@@ -911,6 +910,13 @@ public class ResolverImpl implements Resolver
                     mergeCandidatePackage(
                         packages.m_requiredPkgs,
                         currentReq,
+                        blame.m_cap);
+                }
+                // now merge in substitutes
+                for (Blame blame : resourcePkgMap.get(
+                    candCap.getResource()).m_substitePkgs.values())
+                {
+                    mergeCandidatePackage(packages.m_requiredPkgs, currentReq,
                         blame.m_cap);
                 }
             }
@@ -1143,7 +1149,8 @@ public class ResolverImpl implements Resolver
             {
                 public void run()
                 {
-                    calculateExportedPackages(session, allCandidates, resource, packages.m_exportedPkgs);
+                    calculateExportedPackages(session, allCandidates, resource,
+                        packages.m_exportedPkgs, packages.m_substitePkgs);
                 }
             });
         }
@@ -1573,7 +1580,7 @@ public class ResolverImpl implements Resolver
             ResolveSession session,
             Candidates allCandidates,
             Resource resource,
-            OpenHashMap<String, Blame> exports)
+        OpenHashMap<String, Blame> exports, OpenHashMap<String, Blame> substitutes)
     {
         // Get all exported packages.
         Wiring wiring = session.getContext().getWirings().get(resource);
@@ -1598,9 +1605,34 @@ public class ResolverImpl implements Resolver
         // already excludes imported substitutable exports, but
         // for resolving resources we must look in the candidate
         // map to determine which exports are substitutable.
-        if (!exports.isEmpty())
+        if (wiring != null)
         {
-            if (wiring == null)
+            Collection<Wire> substitutionWires;
+            if (wiring instanceof FelixWiring)
+            {
+                substitutionWires = ((FelixWiring) wiring).getSubstitutionWires();
+            }
+            else
+            {
+                substitutionWires = getSubstitutionWires(wiring);
+            }
+            for (Wire wire : substitutionWires)
+            {
+                Capability cap = wire.getCapability();
+                if (!cap.getResource().equals(wire.getProvider()))
+                {
+                    cap = new WrappedCapability(wire.getProvider(), cap);
+                }
+                substitutes.put(
+                    // Using a null on requirement instead of the wire requirement here.
+                    // It is unclear if we want to treat the substitution requirement as a permutation req here.
+                    (String) cap.getAttributes().get(PackageNamespace.PACKAGE_NAMESPACE),
+                    new Blame(cap, null));
+            }
+        }
+        else
+        {
+            if (!exports.isEmpty())
             {
                 for (Requirement req : resource.getRequirements(null))
                 {
@@ -1610,13 +1642,62 @@ public class ResolverImpl implements Resolver
                         if (cand != null)
                         {
                             String pkgName = (String) cand.getAttributes().get(PackageNamespace.PACKAGE_NAMESPACE);
-                            exports.remove(pkgName);
+                            Blame blame = exports.remove(pkgName);
+                            if (blame != null)
+                            {
+                                // Using a null on requirement instead of the wire requirement here.
+                                // It is unclear if we want to treat the substitution requirement as a permutation req here.
+                                substitutes.put(pkgName, new Blame(cand, null));
+                            }
                         }
                     }
                 }
             }
         }
         return exports;
+    }
+
+    private static Collection<Wire> getSubstitutionWires(Wiring wiring)
+    {
+        Set<String> exportNames = new HashSet<String>();
+        for (Capability cap : wiring.getResource().getCapabilities(null))
+        {
+            if (PackageNamespace.PACKAGE_NAMESPACE.equals(cap.getNamespace()))
+            {
+                exportNames.add(
+                    (String) cap.getAttributes().get(PackageNamespace.PACKAGE_NAMESPACE));
+            }
+        }
+        // Add fragment exports
+        for (Wire wire : wiring.getProvidedResourceWires(null))
+        {
+            if (HostNamespace.HOST_NAMESPACE.equals(wire.getCapability().getNamespace()))
+            {
+                for (Capability cap : wire.getRequirement().getResource().getCapabilities(
+                    null))
+                {
+                    if (PackageNamespace.PACKAGE_NAMESPACE.equals(cap.getNamespace()))
+                    {
+                        exportNames.add((String) cap.getAttributes().get(
+                            PackageNamespace.PACKAGE_NAMESPACE));
+                    }
+                }
+            }
+        }
+        Collection<Wire> substitutionWires = new ArrayList<Wire>();
+        for (Wire wire : wiring.getRequiredResourceWires(null))
+        {
+            if (PackageNamespace.PACKAGE_NAMESPACE.equals(
+                wire.getCapability().getNamespace()))
+            {
+                if (exportNames.contains(wire.getCapability().getAttributes().get(
+                    PackageNamespace.PACKAGE_NAMESPACE)))
+                {
+                    substitutionWires.add(wire);
+                }
+            }
+        }
+        return substitutionWires;
     }
 
     private static boolean isCompatible(
@@ -2022,6 +2103,7 @@ public class ResolverImpl implements Resolver
     public static class Packages
     {
         public final OpenHashMap<String, Blame> m_exportedPkgs;
+        public final OpenHashMap<String, Blame> m_substitePkgs;
         public final OpenHashMap<String, List<Blame>> m_importedPkgs;
         public final OpenHashMap<String, List<Blame>> m_requiredPkgs;
         public final OpenHashMap<String, ArrayMap<Capability, UsedBlames>> m_usedPkgs;
@@ -2034,6 +2116,7 @@ public class ResolverImpl implements Resolver
             int nbReqs = resource.getRequirements(null).size();
 
             m_exportedPkgs = new OpenHashMap<String, Blame>(nbCaps);
+            m_substitePkgs = new OpenHashMap<String, Blame>(nbCaps);
             m_importedPkgs = new OpenHashMap<String, List<Blame>>(nbReqs) {
                 public List<Blame> compute(String s) {
                     return new ArrayList<Blame>();

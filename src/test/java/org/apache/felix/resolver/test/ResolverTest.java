@@ -33,6 +33,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.apache.felix.resolver.FelixWiring;
 import org.apache.felix.resolver.Logger;
 import org.apache.felix.resolver.ResolverImpl;
 import org.apache.felix.resolver.test.util.BundleCapability;
@@ -856,6 +857,197 @@ public class ResolverTest
 
     }
 
+    @Test
+    public void testScenario17_1() throws Exception
+    {
+        Map<Resource, Wiring> wirings = new HashMap<Resource, Wiring>();
+        Map<Requirement, List<Capability>> candMap = new HashMap<Requirement, List<Capability>>();
+        Map<String, Resource> resources = new HashMap<String, Resource>();
+        populateScenario17(false, false, wirings, candMap, resources);
+        ResolverImpl resolver = new ResolverImpl(new Logger(Logger.LOG_DEBUG), 1);
+        ResolveContextImpl rci = new ResolveContextImpl(
+            Collections.<Resource, Wiring> emptyMap(), candMap,
+            Collections.singletonList((Resource) resources.get("requiresMisc")),
+            Collections.<Resource> emptyList());
+
+        resolver.resolve(rci);
+    }
+
+    @Test
+    public void testScenario17_2() throws Exception
+    {
+        Map<Resource, Wiring> wirings = new HashMap<Resource, Wiring>();
+        Map<Requirement, List<Capability>> candMap = new HashMap<Requirement, List<Capability>>();
+        Map<String, Resource> resources = new HashMap<String, Resource>();
+        populateScenario17(false, false, wirings, candMap, resources);
+        ResolverImpl resolver = new ResolverImpl(new Logger(Logger.LOG_DEBUG), 1);
+        ResolveContextImpl rci = new ResolveContextImpl(wirings, candMap,
+            Collections.singletonList((Resource) resources.get("requiresMisc")),
+            Collections.<Resource> emptyList());
+
+        resolver.resolve(rci);
+    }
+
+    @Test
+    public void testScenario17_3() throws Exception
+    {
+        Map<Resource, Wiring> wirings = new HashMap<Resource, Wiring>();
+        Map<Requirement, List<Capability>> candMap = new HashMap<Requirement, List<Capability>>();
+        Map<String, Resource> resources = new HashMap<String, Resource>();
+        populateScenario17(true, false, wirings, candMap, resources);
+        ResolverImpl resolver = new ResolverImpl(new Logger(Logger.LOG_DEBUG), 1);
+        ResolveContextImpl rci = new ResolveContextImpl(
+            Collections.<Resource, Wiring> emptyMap(), candMap,
+            Collections.singletonList((Resource) resources.get("requiresMisc")),
+            Collections.<Resource> emptyList());
+
+        resolver.resolve(rci);
+    }
+
+    @Test
+    public void testScenario17_4() throws Exception
+    {
+        Map<Resource, Wiring> wirings = new HashMap<Resource, Wiring>();
+        Map<Requirement, List<Capability>> candMap = new HashMap<Requirement, List<Capability>>();
+        Map<String, Resource> resources = new HashMap<String, Resource>();
+        populateScenario17(true, false, wirings, candMap, resources);
+        ResolverImpl resolver = new ResolverImpl(new Logger(Logger.LOG_DEBUG), 1);
+        ResolveContextImpl rci = new ResolveContextImpl(wirings, candMap,
+            Collections.singletonList((Resource) resources.get("requiresMisc")),
+            Collections.<Resource> emptyList());
+
+        resolver.resolve(rci);
+    }
+
+    @Test
+    public void testScenario17_5() throws Exception
+    {
+        Map<Resource, Wiring> wirings = new HashMap<Resource, Wiring>();
+        Map<Requirement, List<Capability>> candMap = new HashMap<Requirement, List<Capability>>();
+        Map<String, Resource> resources = new HashMap<String, Resource>();
+        populateScenario17(false, true, wirings, candMap, resources);
+        ResolverImpl resolver = new ResolverImpl(new Logger(Logger.LOG_DEBUG), 1);
+        ResolveContextImpl rci = new ResolveContextImpl(wirings, candMap,
+            Collections.singletonList((Resource) resources.get("requiresMisc")),
+            Collections.<Resource> emptyList());
+
+        resolver.resolve(rci);
+    }
+
+    @Test
+    public void testScenario17_6() throws Exception
+    {
+        Map<Resource, Wiring> wirings = new HashMap<Resource, Wiring>();
+        Map<Requirement, List<Capability>> candMap = new HashMap<Requirement, List<Capability>>();
+        Map<String, Resource> resources = new HashMap<String, Resource>();
+        populateScenario17(true, true, wirings, candMap, resources);
+        ResolverImpl resolver = new ResolverImpl(new Logger(Logger.LOG_DEBUG), 1);
+        ResolveContextImpl rci = new ResolveContextImpl(wirings, candMap,
+            Collections.singletonList((Resource) resources.get("requiresMisc")),
+            Collections.<Resource> emptyList());
+
+        resolver.resolve(rci);
+    }
+
+    private void populateScenario17(boolean realSubstitute, boolean felixWiring,
+        Map<Resource, Wiring> wirings,
+        Map<Requirement, List<Capability>> candMap, Map<String, Resource> resources)
+    {
+        ResourceImpl core = new ResourceImpl("core");
+        resources.put("core", core);
+        Capability core_pkgCap = addCap(core, PackageNamespace.PACKAGE_NAMESPACE, "pkg1");
+        Capability core_bundleCap = addCap(core, BundleNamespace.BUNDLE_NAMESPACE,
+            "core");
+        Requirement core_pkgReq = addReq(core, PackageNamespace.PACKAGE_NAMESPACE,
+            "pkg1");
+
+        ResourceImpl misc = new ResourceImpl("misc");
+        resources.put("misc", misc);
+        Capability misc_pkgCap = addCap(misc, PackageNamespace.PACKAGE_NAMESPACE, "pkg1");
+        Capability misc_bundleCap = addCap(misc, BundleNamespace.BUNDLE_NAMESPACE,
+            "misc");
+        Requirement misc_bundleReq = addReq(misc, BundleNamespace.BUNDLE_NAMESPACE,
+            "core");
+
+        ResourceImpl importsCore = new ResourceImpl("importsCore");
+        resources.put("ImportsCore", importsCore);
+        Capability importsCore_pkgCap = addCap(importsCore,
+            PackageNamespace.PACKAGE_NAMESPACE, "pkg2", "pkg1");
+        Requirement importsCore_pkgReq = addReq(importsCore,
+            PackageNamespace.PACKAGE_NAMESPACE, "pkg1");
+
+        ResourceImpl requiresMisc = new ResourceImpl("requiresMisc");
+        resources.put("requiresMisc", requiresMisc);
+        Requirement requiresMisc_pkgReq = addReq(requiresMisc,
+            PackageNamespace.PACKAGE_NAMESPACE, "pkg2");
+        Requirement requiresMisc_bundleReq = addReq(requiresMisc,
+            BundleNamespace.BUNDLE_NAMESPACE, "misc");
+
+        ResourceImpl substitutesCore = new ResourceImpl("substitutesCore");
+        resources.put("substitutesCore", substitutesCore);
+        Capability substitutesCore_pkgCap = addCap(substitutesCore,
+            PackageNamespace.PACKAGE_NAMESPACE, "pkg1");
+
+        candMap.put(core_pkgReq, Collections.singletonList(
+            realSubstitute ? substitutesCore_pkgCap : core_pkgCap));
+        candMap.put(misc_bundleReq, Collections.singletonList(core_bundleCap));
+        candMap.put(importsCore_pkgReq, Collections.singletonList(
+            realSubstitute ? substitutesCore_pkgCap : core_pkgCap));
+        candMap.put(requiresMisc_pkgReq, Collections.singletonList(importsCore_pkgCap));
+        candMap.put(requiresMisc_bundleReq, Collections.singletonList(misc_bundleCap));
+
+        Map<Resource, List<Wire>> wires = new HashMap<Resource, List<Wire>>();
+        wires.put(substitutesCore, new ArrayList<Wire>());
+        wires.put(core, new ArrayList<Wire>());
+        if (realSubstitute)
+        {
+            wires.get(core).add(new SimpleWire(core_pkgReq, substitutesCore_pkgCap));
+        }
+        wires.put(misc, new ArrayList<Wire>());
+        wires.get(misc).add(new SimpleWire(misc_bundleReq, core_bundleCap));
+
+        Map<Resource, List<Wire>> invertedWires = new HashMap<Resource, List<Wire>>();
+        invertedWires.put(substitutesCore, new ArrayList<Wire>());
+        if (realSubstitute)
+        {
+            invertedWires.get(substitutesCore).add(
+                new SimpleWire(core_pkgReq, substitutesCore_pkgCap));
+        }
+        invertedWires.put(core, new ArrayList<Wire>());
+        invertedWires.get(core).add(new SimpleWire(misc_bundleReq, core_bundleCap));
+        invertedWires.put(misc, new ArrayList<Wire>());
+
+        wirings.put(substitutesCore, new SimpleWiring(substitutesCore,
+            Arrays.asList(substitutesCore_pkgCap), wires, invertedWires));
+
+        Wiring coreWiring;
+        if (felixWiring)
+        {
+            if (realSubstitute)
+            {
+                coreWiring = new SimpleFelixWiring(core,
+                    Arrays.asList(core_bundleCap, core_pkgCap), wires, invertedWires,
+                    Arrays.<Wire> asList(
+                        new SimpleWire(core_pkgReq, substitutesCore_pkgCap)));
+            }
+            else
+            {
+                coreWiring = new SimpleFelixWiring(core,
+                    Arrays.asList(core_bundleCap, core_pkgCap), wires, invertedWires,
+                    Collections.<Wire> emptyList());
+            }
+        }
+        else
+        {
+            coreWiring = new SimpleWiring(core,
+                Arrays.asList(core_bundleCap, core_pkgCap), wires, invertedWires);
+        }
+
+        wirings.put(core, coreWiring);
+        wirings.put(misc, new SimpleWiring(misc,
+            Arrays.asList(misc_bundleCap, misc_pkgCap), wires, invertedWires));
+    }
+
     private static String getResourceName(Resource r)
     {
         return r.getCapabilities(IdentityNamespace.IDENTITY_NAMESPACE).get(0).getAttributes()
@@ -1290,6 +1482,23 @@ public class ResolverTest
         }
     }
 
+    private static class SimpleFelixWiring extends SimpleWiring implements FelixWiring
+    {
+        final Collection<Wire> substitutionWires;
+
+        public SimpleFelixWiring(Resource resource, List<Capability> resourceCapabilities, Map<Resource, List<Wire>> wires, Map<Resource, List<Wire>> invertedWires, Collection<Wire> substitutionWires)
+        {
+            super(resource, resourceCapabilities, wires, invertedWires);
+            this.substitutionWires = substitutionWires;
+        }
+
+        public Collection<Wire> getSubstitutionWires()
+        {
+            return substitutionWires;
+        }
+
+    }
+
     private static class SimpleWiring implements Wiring {
         final Resource resource;
         final Map<Resource, List<Wire>> wires;
@@ -1379,3 +1588,4 @@ public class ResolverTest
         }
     }
 }
+
