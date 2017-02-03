@@ -25,6 +25,7 @@ import java.util.Hashtable;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.TimeUnit;
 
 import org.junit.Assert;
@@ -52,9 +53,6 @@ public class ServiceRaceTest extends TestBase {
     final static int LOOPS = 3000;
     final Ensure m_done = new Ensure(true);
 
-    // Executor used to bind/unbind service dependencies.
-    ExecutorService m_threadpool;
-    
     // Timestamp used to log the time consumed to execute 100 tests.
     long m_timeStamp;
     
@@ -108,15 +106,15 @@ public class ServiceRaceTest extends TestBase {
             // We are not using a parallel DM, so we create a custom threadpool in order to add components concurrently.
             int cores = Math.max(16, Runtime.getRuntime().availableProcessors());
             info("using " + cores + " cores.");
-            m_threadpool = Executors.newFixedThreadPool(Math.max(cores, DEPENDENCIES + 3 /* start/stop/configure */));
+            m_threadPool = new ForkJoinPool(Math.max(cores, DEPENDENCIES + 3 /* start/stop/configure */));
         }
     }
 
     void shutdownThreadPool() {
-        if (! m_parallel && m_threadpool != null) {
-            m_threadpool.shutdown();
+        if (! m_parallel && m_threadPool != null) {
+            m_threadPool.shutdown();
             try {
-                m_threadpool.awaitTermination(60, TimeUnit.SECONDS);
+                m_threadPool.awaitTermination(60, TimeUnit.SECONDS);
             } catch (InterruptedException e) {
             }
         }
@@ -228,6 +226,8 @@ public class ServiceRaceTest extends TestBase {
         stepConfDeleted.waitForStep(1, STEP_WAIT);
         step.ensure();
         Assert.assertEquals(0, clientImpl.getDependencies());
+        
+        m_threadPool.awaitQuiescence(5000, TimeUnit.MILLISECONDS);
 
         if (super.errorsLogged()) {
             throw new IllegalStateException("Race test interrupted (some error occured, see previous logs)");
@@ -244,7 +244,7 @@ public class ServiceRaceTest extends TestBase {
     private void schedule(Runnable task) {
         if (! m_parallel) {
             // not using parallel DM, so use our custom threadpool.
-            m_threadpool.execute(task);
+            m_threadPool.execute(task);
         } else {
             task.run();
         }        

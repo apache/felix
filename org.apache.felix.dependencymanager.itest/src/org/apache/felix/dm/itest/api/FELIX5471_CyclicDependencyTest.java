@@ -18,8 +18,8 @@
  */
 package org.apache.felix.dm.itest.api;
 
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
+import java.util.concurrent.ForkJoinPool;
+import java.util.concurrent.TimeUnit;
 
 import org.apache.felix.dm.Component;
 import org.apache.felix.dm.ComponentState;
@@ -37,10 +37,10 @@ public class FELIX5471_CyclicDependencyTest extends TestBase {
 
 	public void testCyclicDependency() throws InterruptedException {
 		DependencyManager m = getDM();
-		ExecutorService tpool = Executors.newFixedThreadPool(2);
+		ForkJoinPool tpool = new ForkJoinPool(2);
 		try {
 			for (int count = 0; count < 1000; count++) {
-				m_ensure = new Ensure();
+				m_ensure = new Ensure(false);
 
 				Component a = m.createComponent()
 						.setImplementation(new A())
@@ -63,12 +63,14 @@ public class FELIX5471_CyclicDependencyTest extends TestBase {
 				a.add(l);
 				b.add(l);
 				
-				m_ensure.waitForStep(4, 50000); // A started, B started
+				m_ensure.waitForStep(4, 5000); // A started, B started
 
 				tpool.execute(() -> m.remove(a));
 				tpool.execute(() -> m.remove(b));
 				
-				m_ensure.waitForStep(10, 50000); // A unbound from  B, stopped and inactive, B unbound from A, stopped and inactive
+				m_ensure.waitForStep(10, 5000); // A unbound from  B, stopped and inactive, B unbound from A, stopped and inactive
+				
+				tpool.awaitQuiescence(5000, TimeUnit.MILLISECONDS);				
 			}
 		} finally {
 			tpool.shutdown();
