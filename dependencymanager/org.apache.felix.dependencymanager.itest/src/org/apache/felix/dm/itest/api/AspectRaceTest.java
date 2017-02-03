@@ -23,6 +23,7 @@ import java.util.Hashtable;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -49,7 +50,6 @@ public class AspectRaceTest extends TestBase {
     final static int ASPECTS_PER_SERVICE = 10;
     final static int ITERATIONS = 1000;
     final AtomicInteger m_IDGenerator = new AtomicInteger();
-    ExecutorService m_threadpool;
 
     public void testConcurrentAspects() {
         try {
@@ -87,6 +87,8 @@ public class AspectRaceTest extends TestBase {
                 if (!tracker.awaitStopped(5000)) {
                     throw new IllegalStateException("Could not stop components timely.");
                 }
+                
+                m_threadPool.awaitQuiescence(5000, TimeUnit.MILLISECONDS);
 
                 if ((loop) % 50 == 0) {
                     warn("Performed " + loop + " tests.");
@@ -111,15 +113,15 @@ public class AspectRaceTest extends TestBase {
         // Create a threadpool only if setParallel() method has not been called.
         if (! m_parallel) {
             int cores = Math.max(16, Runtime.getRuntime().availableProcessors());
-            m_threadpool = Executors.newFixedThreadPool(cores);
+            m_threadPool = new ForkJoinPool(cores);
         }
     }
     
     void shutdownThreadPool() {
-        if (! m_parallel && m_threadpool != null) {
-            m_threadpool.shutdown();
+        if (! m_parallel && m_threadPool != null) {
+            m_threadPool.shutdown();
             try {
-                m_threadpool.awaitTermination(60, TimeUnit.SECONDS);
+                m_threadPool.awaitTermination(60, TimeUnit.SECONDS);
             } catch (InterruptedException e) {
             }
         }
@@ -248,19 +250,19 @@ public class AspectRaceTest extends TestBase {
                 }
             } else {
                 for (final Component s : m_services) {
-                    m_threadpool.execute(new Runnable() {
+                    m_threadPool.execute(new Runnable() {
                         public void run() {
                             m_dm.add(s);
                         }
                     });
                 }
-                m_threadpool.execute(new Runnable() {
+                m_threadPool.execute(new Runnable() {
                     public void run() {
                         m_dm.add(m_controller);
                     }
                 });
                 for (final Component a : m_aspects) {
-                    m_threadpool.execute(new Runnable() {
+                    m_threadPool.execute(new Runnable() {
                         public void run() {
                             m_dm.add(a);
                         }
