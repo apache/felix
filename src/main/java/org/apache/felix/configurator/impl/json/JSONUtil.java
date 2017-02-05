@@ -197,7 +197,7 @@ public class JSONUtil {
                                 }
                             } else {
                                 try {
-                                    Object convertedVal = converter.convert(value, typeInfo);
+                                    Object convertedVal = converter.convert(pid.toString(), value, typeInfo);
                                     if ( convertedVal == null ) {
                                         convertedVal = value.toString();
                                     }
@@ -247,7 +247,7 @@ public class JSONUtil {
         	return serializer.deserialize(Map.class).from(reader);
         } catch ( final IOException ioe) {
             SystemLogger.error("Invalid JSON from " + name);
-            return null;        	
+            return null;
         }
     }
 
