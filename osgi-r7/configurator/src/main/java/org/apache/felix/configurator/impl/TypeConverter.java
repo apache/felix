@@ -55,7 +55,9 @@ public class TypeConverter {
      * @return The converted value or {@code null} if the conversion failed.
      * @throws IOException If an error happens
      */
-    public Object convert(final Object value,
+    public Object convert(
+            final String pid,
+            final Object value,
             final String typeInfo) throws IOException {
         if ( typeInfo == null ) {
             if ( value instanceof String || value instanceof Boolean ) {
@@ -100,7 +102,7 @@ public class TypeConverter {
             if ( path == null ) {
                 throw new IOException("Invalid path for binary property: " + value);
             }
-            final File filePath = Util.extractFile(bundle, path);
+            final File filePath = Util.extractFile(bundle, pid, path);
             if ( filePath == null ) {
                 throw new IOException("Invalid path for binary property: " + value);
             }
@@ -119,7 +121,7 @@ public class TypeConverter {
             final String[] filePaths = new String[paths.length];
             int i = 0;
             while ( i < paths.length ) {
-                final File filePath = Util.extractFile(bundle, paths[i]);
+                final File filePath = Util.extractFile(bundle, pid, paths[i]);
                 if ( filePath == null ) {
                     throw new IOException("Invalid path for binary property: " + value);
                 }

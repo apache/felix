@@ -28,6 +28,7 @@ import java.io.UnsupportedEncodingException;
 import java.lang.reflect.Field;
 import java.net.URL;
 import java.net.URLConnection;
+import java.net.URLEncoder;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.Collections;
@@ -204,17 +205,19 @@ public class Util {
         return null;
     }
 
-    public static File extractFile(final Bundle bundle, final String path) {
+    public static File extractFile(final Bundle bundle, final String pid, final String path) {
         final URL url = bundle.getEntry(path);
         if ( url == null ) {
             SystemLogger.error("Entry " + path + " not found in bundle " + bundle);
             return null;
         }
-        final File newFile = new File(binDirectory, UUID.randomUUID().toString());
         URLConnection connection = null;
         try {
             connection = url.openConnection();
 
+            final File dir = new File(binDirectory, URLEncoder.encode(pid, "UTF-8"));
+            dir.mkdir();
+            final File newFile = new File(dir, UUID.randomUUID().toString());
 
             try(final BufferedInputStream in = new BufferedInputStream(connection.getInputStream());
                 final FileOutputStream fos = new FileOutputStream(newFile)) {
@@ -229,7 +232,10 @@ public class Util {
 
             return newFile;
         } catch ( final IOException ioe ) {
-            SystemLogger.error("Unable to read " + path + " in bundle " + bundle, ioe);
+            SystemLogger.error("Unable to read " + path +
+                    " in bundle " + bundle +
+                    " for pid " + pid +
+                    " and write to " + binDirectory, ioe);
         }
 
         return null;
