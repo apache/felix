@@ -150,6 +150,7 @@ public interface Component {
      * 
      * @return the service registration
      */
+	@SuppressWarnings("rawtypes")
 	public ServiceRegistration getServiceRegistration();
 
     /**

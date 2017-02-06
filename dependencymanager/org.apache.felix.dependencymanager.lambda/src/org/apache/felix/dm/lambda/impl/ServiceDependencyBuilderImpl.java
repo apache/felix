@@ -169,6 +169,8 @@ public class ServiceDependencyBuilderImpl<S> extends ServiceCallbacksBuilderImpl
         } else {
             sd.setAutoConfig(m_autoConfig);
         }
+        
+        sd.setDereference(m_dereferenceServiceInternally); // false if the callback signature only contains service ref and/or component parameters.
         return sd;
     }
     

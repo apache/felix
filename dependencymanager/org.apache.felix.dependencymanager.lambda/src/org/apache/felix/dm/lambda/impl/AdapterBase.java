@@ -24,6 +24,7 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
+import org.apache.felix.dm.ComponentStateListener;
 import org.apache.felix.dm.lambda.BundleDependencyBuilder;
 import org.apache.felix.dm.lambda.ComponentBuilder;
 import org.apache.felix.dm.lambda.ConfigurationDependencyBuilder;
@@ -300,6 +301,11 @@ public interface AdapterBase<B extends ComponentBuilder<B>> extends ComponentBui
     
     default B composition(Supplier<Object[]> getCompositionMethod) {
         andThenBuild(compBuilder -> compBuilder.composition(getCompositionMethod));
+        return (B) this;
+    }
+    
+    default B listener(ComponentStateListener listener) {
+        andThenBuild(compBuilder -> compBuilder.listener(listener));
         return (B) this;
     }
 }

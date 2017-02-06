@@ -40,6 +40,7 @@ import org.apache.felix.dm.itest.util.Ensure;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Filter;
 import org.osgi.framework.InvalidSyntaxException;
+import org.osgi.framework.ServiceReference;
 
 /**
  * Test a ResourceAdapterService which provides its interface using a @ServiceLifecycle.
@@ -119,7 +120,7 @@ public class ResourceAdapterServiceTestWithPublisher {
                 m_handlers.put(handler, filter);
             }
             for (int i = 0; i < m_resources.length; i++) {
-                if (filter == null || filter.match(ResourceUtil.createProperties(m_resources[i]))) {
+                if (filter == null || filter.match((ServiceReference)ResourceUtil.createProperties(m_resources[i]))) {
                     handler.added(m_resources[i]);
                 }
             }
@@ -139,7 +140,7 @@ public class ResourceAdapterServiceTestWithPublisher {
 
         private void removeResources(ResourceHandler handler, Filter filter) {
             for (int i = 0; i < m_resources.length; i++) {
-                if (filter == null || filter.match(ResourceUtil.createProperties(m_resources[i]))) {
+                if (filter == null || filter.match((ServiceReference<?>)ResourceUtil.createProperties(m_resources[i]))) {
                     handler.removed(m_resources[i]);
                 }
             }

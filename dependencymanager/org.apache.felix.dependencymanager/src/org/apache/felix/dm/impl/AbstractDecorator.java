@@ -20,14 +20,17 @@ package org.apache.felix.dm.impl;
 
 import java.net.URL;
 import java.util.Dictionary;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.Stream;
 
 import org.apache.felix.dm.Component;
 import org.apache.felix.dm.ComponentStateListener;
 import org.apache.felix.dm.Dependency;
 import org.apache.felix.dm.DependencyManager;
 import org.apache.felix.dm.context.ComponentContext;
+import org.apache.felix.dm.context.DependencyContext;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceReference;
@@ -41,6 +44,7 @@ public abstract class AbstractDecorator  {
     protected volatile DependencyManager m_manager;
     private final Map<Object, Component> m_services = new ConcurrentHashMap<>();
     private volatile ComponentContext m_decoratorComponent;
+    private final Map<Dependency, Dependency> m_depclones = new HashMap<>();
 
     public abstract Component createService(Object[] properties) throws Exception;
     
@@ -93,7 +97,14 @@ public abstract class AbstractDecorator  {
      */
     public void addDependency(Dependency ... dependencies) {
         for (Component component : m_services.values()) {
-            component.add(dependencies);
+	    	Dependency[] copy = Stream.of(dependencies)
+	    			.map(d -> (DependencyContext) d)
+	    			.map(dc -> dc.createCopy())
+	    			.toArray(Dependency[]::new);
+	    	for (int i = 0; i < dependencies.length; i ++) {
+	    		m_depclones.put(dependencies[i], copy[i]);
+	    	}
+            component.add(copy);
         }
     }
     
@@ -102,7 +113,10 @@ public abstract class AbstractDecorator  {
      */
     public void removeDependency(Dependency d) {
         for (Component component : m_services.values()) {
-            component.remove(d);
+        	Dependency copy = m_depclones.remove(d);
+        	if (copy != null) {
+        		component.remove(copy);
+        	}
         }
     }
     
@@ -153,13 +167,13 @@ public abstract class AbstractDecorator  {
     }
     
     // callbacks for services
-    public void added(ServiceReference ref, Object service) throws Exception {
+    public void added(ServiceReference<?> ref, Object service) throws Exception {
         Component newService = createService(new Object[] { ref, service });
         m_services.put(ref, newService);
         m_manager.add(newService);
     }
     
-    public void removed(ServiceReference ref, Object service) {
+    public void removed(ServiceReference<?> ref, Object service) {
         Component newService;
         newService = (Component) m_services.remove(ref);
         if (newService == null) {
@@ -168,7 +182,7 @@ public abstract class AbstractDecorator  {
         m_manager.remove(newService);
     }
     
-    public void swapped(ServiceReference oldRef, Object oldService, ServiceReference newRef, Object newService) {
+    public void swapped(ServiceReference<?> oldRef, Object oldService, ServiceReference<?> newRef, Object newService) {
         Component service = (Component) m_services.remove(oldRef);
         if (service == null) {
             throw new IllegalStateException("Service should not be null here.");

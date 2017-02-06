@@ -14,14 +14,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
--buildpath:  \
-	osgi.core;version=4.2,\
-	osgi.cmpn;version=4.2,\
+-buildpath: \
 	${junit},\
 	org.apache.felix.dependencymanager.annotation;version=latest,\
 	org.apache.felix.dependencymanager;version=latest,\
 	org.apache.felix.dependencymanager.runtime;version=latest,\
-	org.apache.felix.dependencymanager.itest.api;version=latest
+	org.apache.felix.dependencymanager.itest.api;version=latest,\
+	osgi.core;version=6.0,\
+	osgi.cmpn;version=6.0
 -runbundles:  \
 	org.apache.felix.configadmin;version=1.8.8,\
 	org.apache.felix.metatype;version=1.0.4,\

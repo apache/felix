@@ -24,6 +24,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.Executor;
+import java.util.function.Supplier;
 
 import org.apache.felix.dm.Component;
 import org.apache.felix.dm.ComponentDeclaration;
@@ -80,38 +81,39 @@ public class FilterComponent implements Component, ComponentContext, ComponentDe
     public String toString() {
         return m_component.toString();
     }
-
+    
     public Component add(Dependency ... dependencies) {
-        m_component.add(dependencies);
-        // Add the dependencies to all already instantiated services.
-        // If one dependency from the list is required, we have nothing to do, since our internal
-        // service will be stopped/restarted.
-        for (Dependency dependency : dependencies) {
-            if (((DependencyContext) dependency).isRequired()) {
-                return this;
+    	m_component.getExecutor().execute(() -> {
+    		m_component.add(dependencies);
+    		Object instance = m_component.getInstance();
+    		if (instance instanceof AbstractDecorator) {
+    			AbstractDecorator ad = (AbstractDecorator) instance;
+    			ad.addDependency(dependencies); // will clone the dependencies for each component instance
+    		}
+    	});
+        return this;
+    }
+    
+    public Component remove(Dependency dependency) {
+    	m_component.getExecutor().execute(() -> {
+    		m_component.remove(dependency);
+    		Object instance = m_component.getInstance();
+            if (instance != null && instance instanceof AbstractDecorator) {
+            	((AbstractDecorator) instance).removeDependency(dependency); // will remove the previously cloned dependency
             }
-        }
-        // Ok, the list contains no required dependencies: add optionals dependencies in already instantiated services.
-        Object[] instances = m_component.getInstances();
-        if (instances.length > 0) {
-            AbstractDecorator ad = (AbstractDecorator) instances[0];
-            if (ad != null) {
-                ad.addDependency(dependencies);
-            }
-        }
+        });
         return this;
     }
 
     public Component add(ComponentStateListener listener) {
-        m_stateListeners.add(listener);
-        // Add the listener to all already instantiated services.
-        Object[] instances = m_component.getInstances();
-        if (instances.length > 0) {
-            AbstractDecorator ad = (AbstractDecorator) instances[0];
-            if (ad != null) {
-                ad.addStateListener(listener);
-            }
-        }
+    	m_component.getExecutor().execute(() -> {
+    		m_stateListeners.add(listener);
+    		// Add the listener to all already instantiated services.
+    		Object instance = m_component.getInstance();
+    		if (instance instanceof AbstractDecorator) {
+    			((AbstractDecorator) instance).addStateListener(listener);
+    		}
+    	});
         return this;
     }
 
@@ -128,37 +130,16 @@ public class FilterComponent implements Component, ComponentContext, ComponentDe
         return m_serviceProperties;
     }
 
-    public ServiceRegistration getServiceRegistration() {
+    public ServiceRegistration<?> getServiceRegistration() {
         return m_component.getServiceRegistration();
-    }
-
-    public Component remove(Dependency dependency) {
-        m_component.remove(dependency);
-        // Remove the dependency (if optional) from all already instantiated services.
-        // If the dependency is required, our internal service will be stopped, so in this case
-        // we have nothing to do.
-        if (!((DependencyContext) dependency).isRequired())
-        {
-            Object[] instances = m_component.getInstances();
-            if (instances.length > 0) {
-                AbstractDecorator ad = (AbstractDecorator) instances[0];
-                if (ad != null) {
-                    ad.removeDependency(dependency);
-                }
-            }
-        }
-        return this;
     }
 
     public Component remove(ComponentStateListener listener) {
         m_stateListeners.remove(listener);
         // Remove the listener from all already instantiated services.
-        Object[] instances = m_component.getInstances();
-        if (instances.length > 0) {
-            AbstractDecorator ad = (AbstractDecorator) instances[0];
-            if (ad != null) {
-                ad.removeStateListener(listener);
-            }
+        Object instance = m_component.getInstance();
+        if (instance != null && instance instanceof AbstractDecorator) {
+        	((AbstractDecorator) instance).removeStateListener(listener);
         }
         return this;
     }
@@ -228,12 +209,9 @@ public class FilterComponent implements Component, ComponentContext, ComponentDe
         m_serviceProperties = (Dictionary<String, Object>) serviceProperties;
         // Set the properties to all already instantiated services.
         if (serviceProperties != null) {
-            Object[] instances = m_component.getInstances();
-            if (instances.length > 0) {
-                AbstractDecorator ad = (AbstractDecorator) instances[0];
-                if (ad != null) {
-                    ad.setServiceProperties(serviceProperties);
-                }
+            Object instance = m_component.getInstance();
+            if (instance instanceof AbstractDecorator) {
+            	((AbstractDecorator) instance).setServiceProperties(serviceProperties);
             }
         }
         return this;
@@ -253,6 +231,10 @@ public class FilterComponent implements Component, ComponentContext, ComponentDe
     
     public void invokeCallbackMethod(Object[] instances, String methodName, Class<?>[][] signatures, Object[][] parameters, boolean logIfNotFound) {
         m_component.invokeCallbackMethod(instances, methodName, signatures, parameters, logIfNotFound);
+    }
+    
+    public void invokeCallback(Object[] instances, String methodName, Class<?>[][] signatures, Supplier<?>[][] paramsSupplier, boolean logIfNotFound) {
+        m_component.invokeCallbackMethod(instances, methodName, signatures, paramsSupplier, logIfNotFound);
     }
             
     public DependencyManager getDependencyManager() {
@@ -367,10 +349,11 @@ public class FilterComponent implements Component, ComponentContext, ComponentDe
     }
     
     protected void copyDependencies(List<DependencyContext> dependencies, Component component) {
-        for (DependencyContext dc : dependencies) {
-            DependencyContext copy = dc.createCopy();
-
-            component.add(copy);
-        }
+    	dependencies.stream().map(dc -> dc.createCopy()).forEach(component::add);
     }
+	
+	@Override
+    public ComponentContext instantiateComponent() {
+		return m_component.instantiateComponent();
+	}
 }

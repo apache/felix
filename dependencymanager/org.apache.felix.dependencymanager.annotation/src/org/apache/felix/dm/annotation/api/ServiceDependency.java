@@ -152,4 +152,15 @@ public @interface ServiceDependency
      * @return true if dependency service properties must be published along with the service, false if not.
      */
     boolean propagate() default false;
+    
+    /**
+     * Configures whether or not this dependency should internally obtain the service object for all tracked service references.
+     * 
+     * By default, DM internally dereferences all discovered service references (using 
+     * <code>BundleContext.getService(ServiceReference ref)</code> methods. 
+     * However, sometimes, your callback only needs the ServiceReference, and sometimes you don't want to dereference the service.
+     * So, in this case you can use the <code>dereference(false)</code> method in order to tell to DM 
+     * that it should never internally dereference the service dependency internally. 
+     */
+    boolean dereference() default true;
 }

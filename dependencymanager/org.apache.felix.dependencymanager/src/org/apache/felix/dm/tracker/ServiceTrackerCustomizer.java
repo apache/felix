@@ -46,6 +46,7 @@ import org.osgi.framework.ServiceReference;
  * @ThreadSafe
  * @version $Revision: 5874 $
  */
+@SuppressWarnings("rawtypes")
 public interface ServiceTrackerCustomizer {
 	/**
 	 * A service is being added to the <code>ServiceTracker</code>.

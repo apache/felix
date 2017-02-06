@@ -18,17 +18,15 @@
  */
 package org.apache.felix.dm.itest.api;
 
-import java.io.IOException;
 import java.util.Dictionary;
 import java.util.Hashtable;
 import java.util.Map;
-
-import org.junit.Assert;
 
 import org.apache.felix.dm.Component;
 import org.apache.felix.dm.DependencyManager;
 import org.apache.felix.dm.itest.util.Ensure;
 import org.apache.felix.dm.itest.util.TestBase;
+import org.junit.Assert;
 import org.osgi.service.cm.ConfigurationAdmin;
 
 /**
@@ -53,7 +51,7 @@ public class FactoryConfigurationAdapterTest extends TestBase
         m_ensure = new Ensure();
         
         // Create a Configuration instance, which will create/update/remove a configuration for factoryPid "MyFactoryPid"
-        ConfigurationCreator configurator = new ConfigurationCreator("MyFactoryPid", "key", "value1");
+        FactoryConfigurationCreator configurator = new FactoryConfigurationCreator(m_ensure, "MyFactoryPid", 1, "key", "value1");
         Component s1 = m.createComponent()
             .setImplementation(configurator)
             .add(m.createServiceDependency()
@@ -105,55 +103,6 @@ public class FactoryConfigurationAdapterTest extends TestBase
         m.clear();
     }
 
-    public static class ConfigurationCreator {
-        private volatile ConfigurationAdmin m_ca;
-        private String m_key;
-        private String m_value;
-        private org.osgi.service.cm.Configuration m_conf;
-        private String m_factoryPid;
-        
-        public ConfigurationCreator(String factoryPid, String key, String value) {
-            m_factoryPid = factoryPid;
-            m_key = key;
-            m_value = value;
-        }
-
-        public void start() {
-            try {
-                m_ensure.step(1);
-                m_conf = m_ca.createFactoryConfiguration(m_factoryPid, null);
-                Hashtable props = new Hashtable();
-                props.put(m_key, m_value);
-                m_conf.update(props);
-            }
-            catch (IOException e) {
-                Assert.fail("Could not create configuration: " + e.getMessage());
-            }
-        }
-        
-        public void update(String key, String val) {
-            Hashtable props = new Hashtable();
-            props.put(key, val);
-            try {
-                m_conf.update(props);
-            }
-            catch (IOException e) {
-                Assert.fail("Could not update configuration: " + e.getMessage());
-            }
-        }
-        
-        public void stop() {
-            try
-            {
-                m_conf.delete();
-            }
-            catch (IOException e)
-            {
-                Assert.fail("Could not remove configuration: " + e.toString());
-            }
-        }
-    }
-    
     public interface AdapterService {
         public void doService();
     }

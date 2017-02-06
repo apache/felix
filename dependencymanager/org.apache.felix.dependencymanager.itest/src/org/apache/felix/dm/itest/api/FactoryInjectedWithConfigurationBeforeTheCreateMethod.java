@@ -77,7 +77,7 @@ public class FactoryInjectedWithConfigurationBeforeTheCreateMethod extends TestB
                 m_conf = m_ca.getConfiguration(m_pid, null);
                 Properties props = new Properties();
                 props.setProperty("testkey", "testvalue");
-                m_conf.update(props);
+                m_conf.update(toR6Dictionary(props));
             }
             catch (IOException e) {
                 Assert.fail("Could not create configuration: " + e.getMessage());

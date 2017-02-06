@@ -27,6 +27,7 @@ import org.osgi.framework.ServiceRegistration;
 /**
  * Test test validates that we can lookup ALL existing services using annotation, and "(objectClass=*)" filter.
  */
+@SuppressWarnings("rawtypes")
 public class FELIX5337Test extends TestBase {
     public void testCatchAllServicesUsingAnnotation() {
         Ensure e = new Ensure();

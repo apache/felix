@@ -40,9 +40,6 @@ public class BundleAdapterBuilderImpl implements AdapterBase<BundleAdapterBuilde
     protected final Map<Cb, List<MethodRef<Object>>> m_refs = new HashMap<>();
     private DependencyManager m_dm;
     private boolean m_autoAdd;
-    private String m_added;
-    private String m_changed;
-    private String m_removed;
     private String m_filter;
     private int m_stateMask = -1;
     private boolean m_propagate;
@@ -282,7 +279,7 @@ public class BundleAdapterBuilderImpl implements AdapterBase<BundleAdapterBuilde
     }
     
     private void checkHasNoReflectionCallbacks() {
-        if (m_added != null || m_changed != null || m_removed != null) {
+        if (m_add != null || m_change != null || m_remove != null) {
             throw new IllegalStateException("Can't mix method references with reflection based callbacks");
         }
     }

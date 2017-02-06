@@ -21,7 +21,9 @@
 	org.apache.felix.configadmin;version=1.8.8,\
 	org.apache.felix.dependencymanager;version=latest,\
 	org.apache.felix.dependencymanager.shell;version=latest,\
-	biz.aQute.junit;version=3.0.0
+	biz.aQute.junit;version=3.0.0,\
+	org.apache.felix.gogo.command,\
+	org.apache.felix.gogo.shell
 -runee: JavaSE-1.8
 -runvm: -ea
 -runfw: org.apache.felix.framework;version='[5.2.0,5.2.0]'

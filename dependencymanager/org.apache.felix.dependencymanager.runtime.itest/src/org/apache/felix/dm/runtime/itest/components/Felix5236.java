@@ -33,6 +33,7 @@ import org.osgi.framework.ServiceRegistration;
  */
 @Component(provides=Felix5236.class)
 @Property(name="v1", value="s")
+@SuppressWarnings("rawtypes")
 public class Felix5236 {
     public final static String ENSURE = "Felix5236";
     

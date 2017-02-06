@@ -32,6 +32,7 @@ import org.osgi.framework.ServiceReference;
 /**
  * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
+@SuppressWarnings("rawtypes")
 public abstract class AbstractFactoryFilterIndex {
 	protected final Map<Long, SortedSet<ServiceReference>> m_sidToServiceReferencesMap = new HashMap<>();
 	protected final Map <ServiceListener, String> m_listenerToFilterMap = new HashMap<>();

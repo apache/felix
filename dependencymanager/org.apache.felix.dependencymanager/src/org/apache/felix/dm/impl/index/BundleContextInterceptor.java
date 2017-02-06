@@ -19,6 +19,7 @@
 package org.apache.felix.dm.impl.index;
 
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 
@@ -34,6 +35,7 @@ import org.osgi.framework.ServiceReference;
 /**
  * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
+@SuppressWarnings("rawtypes")
 public class BundleContextInterceptor extends BundleContextInterceptorBase {
 	protected static final String INDEX_LOG_TRESHOLD = "org.apache.felix.dm.index.log.treshold";
     private final ServiceRegistryCache m_cache;
@@ -158,5 +160,20 @@ public class BundleContextInterceptor extends BundleContextInterceptorBase {
 
     public void serviceChanged(ServiceEvent event) {
         m_cache.serviceChangedForFilterIndices(event);
+    }
+
+    @SuppressWarnings("unchecked")
+    @Override
+    public <S> ServiceReference<S> getServiceReference(Class<S> clazz)
+    {
+        return getServiceReference(clazz.getName());
+    }
+
+    @SuppressWarnings("unchecked")
+	@Override
+    public <S> Collection<ServiceReference<S>> getServiceReferences(Class<S> clazz, String filter)
+        throws InvalidSyntaxException
+    {
+        return Arrays.asList(getServiceReferences(clazz.getName(), filter));
     }
 }

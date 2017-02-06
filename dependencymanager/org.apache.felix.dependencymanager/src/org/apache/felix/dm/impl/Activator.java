@@ -33,14 +33,14 @@ import org.osgi.util.tracker.ServiceTrackerCustomizer;
  * @see {@link ComponentExecutorFactory}
  * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
-public class Activator implements BundleActivator, ServiceTrackerCustomizer {
+public class Activator implements BundleActivator, ServiceTrackerCustomizer<ComponentExecutorFactory, ComponentExecutorFactory> {
     private BundleContext m_context;
     
 	@Override
 	public void start(BundleContext context) throws Exception {
 		m_context = context;
         Filter filter = context.createFilter("(objectClass=" + ComponentExecutorFactory.class.getName() + ")");
-        ServiceTracker tracker = new ServiceTracker(context, filter, this);
+        ServiceTracker<ComponentExecutorFactory, ComponentExecutorFactory> tracker = new ServiceTracker<>(context, filter, this);
         tracker.open();
 	}
 
@@ -49,19 +49,18 @@ public class Activator implements BundleActivator, ServiceTrackerCustomizer {
 	}
 
 	@Override
-	public Object addingService(ServiceReference reference) {
+	public ComponentExecutorFactory addingService(ServiceReference<ComponentExecutorFactory> reference) {
 		ComponentExecutorFactory factory = (ComponentExecutorFactory) m_context.getService(reference);
 		ComponentScheduler.instance().bind(factory);
 		return factory;
 	}
 
 	@Override
-	public void modifiedService(ServiceReference reference, Object service) {
+	public void modifiedService(ServiceReference<ComponentExecutorFactory> reference, ComponentExecutorFactory service) {
 	}
 
 	@Override
-	public void removedService(ServiceReference reference, Object service) {
-		ComponentExecutorFactory factory = (ComponentExecutorFactory) service;
+	public void removedService(ServiceReference<ComponentExecutorFactory> reference, ComponentExecutorFactory factory) {
 		ComponentScheduler.instance().unbind(factory);
 	}
 }

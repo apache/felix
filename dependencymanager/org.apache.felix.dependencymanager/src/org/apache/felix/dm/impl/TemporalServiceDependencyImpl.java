@@ -99,8 +99,9 @@ public class TemporalServiceDependencyImpl extends ServiceDependencyImpl impleme
     /**
      * The ServiceTracker calls us here in order to inform about a service arrival.
      */
-    @Override
-    public void addedService(ServiceReference ref, Object service) {
+	@SuppressWarnings("rawtypes")
+	@Override
+    public void addedService(ServiceReference ref, Object event) {    	
         // Update our service cache, using the tracker. We do this because the
         // just added service might not be the service with the highest rank ...
         boolean makeAvailable = false;
@@ -111,8 +112,8 @@ public class TemporalServiceDependencyImpl extends ServiceDependencyImpl impleme
             }
         }
         if (makeAvailable) {
-            getComponentContext().handleEvent(this, EventType.ADDED,
-                new ServiceEventImpl(m_component.getBundle(), m_component.getBundleContext(), ref, m_serviceInstance));
+            getComponentContext().handleEvent(this, EventType.ADDED, 
+            		 new ServiceEventImpl(m_component, ref, m_serviceInstance));
         } else {
             // This added will possibly unblock our invoke() method (if it's blocked in m_tracker.waitForService method).
         }
@@ -121,7 +122,8 @@ public class TemporalServiceDependencyImpl extends ServiceDependencyImpl impleme
     /**
      * The ServiceTracker calls us here when a tracked service properties are modified.
      */
-    @Override
+    @SuppressWarnings("rawtypes")
+	@Override
     public void modifiedService(ServiceReference ref, Object service) {
         // We don't care.
     }
@@ -129,9 +131,12 @@ public class TemporalServiceDependencyImpl extends ServiceDependencyImpl impleme
     /**
      * The ServiceTracker calls us here when a tracked service is lost.
      */
-    @Override
-    public void removedService(ServiceReference ref, Object service) {
-        // If we detect that the fwk is stopping, we behave as our superclass. That is:
+    @SuppressWarnings("rawtypes")
+	@Override
+    public void removedService(ServiceReference ref, Object event) {
+    	ServiceEventImpl eventImpl = (ServiceEventImpl) event;
+    	
+    	// If we detect that the fwk is stopping, we behave as our superclass. That is:
         // the lost dependency has to trigger our service deactivation, since the fwk is stopping
         // and the lost dependency won't come up anymore.
         if (m_frameworkBundle.getState() == Bundle.STOPPING) {
@@ -148,28 +153,31 @@ public class TemporalServiceDependencyImpl extends ServiceDependencyImpl impleme
             }
             if (makeUnavailable) {
                 // the event.close method will unget the service.
-                m_component.handleEvent(this, EventType.REMOVED, new ServiceEventImpl(m_component.getBundle(),
-                    m_component.getBundleContext(), ref, m_serviceInstance));
+                m_component.handleEvent(this, EventType.REMOVED, new ServiceEventImpl(m_component, ref, m_serviceInstance));
             }
         } else {
-            // Unget what we got in addingService (see ServiceTracker 701.4.1)
-            m_component.getBundleContext().ungetService(ref);
-            // if there is no available services, the next call to invoke() method will block until another service
-            // becomes available. Else the next call to invoke() will return that highest ranked available service.
+        	eventImpl.close(); // will unget the service.                	
+        	// if there is no available services, the next call to invoke() method will block until another service
+        	// becomes available. Else the next call to invoke() will return that highest ranked available service.            
         }
     }
 
     @Override
     public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
-        Object service = null;
+        ServiceEventImpl event = null;
         try {
-            service = m_tracker.waitForService(m_timeout);
+            event = (ServiceEventImpl) m_tracker.waitForService(m_timeout);
         } catch (InterruptedException e) {            
         }
         
-        if (service == null) {
+        if (event == null) {
             throw new IllegalStateException("Service unavailable: " + m_trackedServiceName.getName());
         }
+        
+        Object service = event.getEvent();
+        if (service == null) {
+            throw new IllegalStateException("Service unavailable: " + m_trackedServiceName.getName());
+        }       
         
         try {
 			try {

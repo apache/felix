@@ -73,6 +73,7 @@ public class FELIX5428_CleanupDependenciesWhenComponentIsStopped extends TestBas
 		
 	}
 	
+	@SuppressWarnings("unused")
 	class Consumer {
 		final List<Provider> m_providers = new ArrayList<>();
 		

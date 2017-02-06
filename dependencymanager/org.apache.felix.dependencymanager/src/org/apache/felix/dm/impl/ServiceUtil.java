@@ -18,10 +18,14 @@
  */
 package org.apache.felix.dm.impl;
 
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.Dictionary;
 import java.util.Enumeration;
+import java.util.HashSet;
 import java.util.Hashtable;
 import java.util.List;
+import java.util.Set;
 
 import org.apache.felix.dm.DependencyManager;
 import org.osgi.framework.Bundle;
@@ -38,6 +42,62 @@ public class ServiceUtil {
      * Useful when needing to provide empty service properties.
      */
     public final static Dictionary<String, Object> EMPTY_PROPERTIES = new Hashtable<>();
+    
+    /**
+     * Defines service properties which must not be propagated from the dependencies to component service properties.
+     */
+    public final static Set<String> NOT_PROPAGATABLE_SERVICE_PROPERTIES = 
+    		Collections.unmodifiableSet(new HashSet<>(Arrays.asList(
+    				Constants.SERVICE_ID,
+    				Constants.SERVICE_RANKING,
+    				Constants.SERVICE_BUNDLEID,
+    				Constants.SERVICE_SCOPE,    				
+    				Constants.OBJECTCLASS,
+    				DependencyManager.ASPECT)));
+
+    /**
+     * Helper method used to convert a dictionary with untyped keys to a dictionary having a String key.
+     * (this method is useful when converting a Properties object into a compatible Dictionary<String, Object>
+     * object that is often needed in OSGI R6 API. 
+     */
+    @SuppressWarnings("unchecked")
+	public static <K,V> Dictionary<K, V> toR6Dictionary(Dictionary<?,?> properties) {
+    	return (Dictionary<K, V>) properties;
+    }
+
+    /**
+     * Dump some service properties in a petty form.
+     */
+    public static void appendProperties(StringBuilder result, Dictionary<?, ?> properties) {
+        if (properties != null) {
+            result.append("(");
+            Enumeration<?> enumeration = properties.keys();
+            while (enumeration.hasMoreElements()) {
+                Object key = enumeration.nextElement();
+                result.append(key.toString());
+                result.append('=');
+                Object value = properties.get(key);
+                if (value instanceof String[]) {
+                    String[] values = (String[]) value;
+                    result.append('{');
+                    for (int i = 0; i < values.length; i++) {
+                        if (i > 0) {
+                            result.append(',');
+                        }
+                        result.append(values[i].toString());
+                    }
+                    result.append('}');
+                }
+                else {
+                    result.append(value.toString());
+                }
+                if (enumeration.hasMoreElements()) {
+                    result.append(',');
+                }
+            }
+            result.append(")");
+        }
+    }
 
     /**
      * Returns the service ranking of a service, based on its service reference. If
@@ -47,7 +107,7 @@ public class ServiceUtil {
      * @param ref the service reference to determine the ranking for
      * @return the ranking
      */
-    public static int getRanking(ServiceReference ref) {
+    public static int getRanking(ServiceReference<?> ref) {
         return getRankingAsInteger(ref).intValue();
     }
     
@@ -59,7 +119,7 @@ public class ServiceUtil {
      * @param ref the service reference to determine the ranking for
      * @return the ranking
      */
-    public static Integer getRankingAsInteger(ServiceReference ref) {
+    public static Integer getRankingAsInteger(ServiceReference<?> ref) {
         Integer rank = (Integer) ref.getProperty(Constants.SERVICE_RANKING);
         if (rank != null) {
             return rank;
@@ -75,7 +135,7 @@ public class ServiceUtil {
      * @param ref the service reference to determine the service ID of
      * @return the service ID
      */
-    public static long getServiceId(ServiceReference ref) {
+    public static long getServiceId(ServiceReference<?> ref) {
         return getServiceIdAsLong(ref).longValue();
     }
     
@@ -87,11 +147,11 @@ public class ServiceUtil {
      * @param ref the service reference to determine the service ID of
      * @return the service ID
      */
-    public static Long getServiceIdAsLong(ServiceReference ref) {
+    public static Long getServiceIdAsLong(ServiceReference<?> ref) {
     	return getServiceIdObject(ref);
     }
     
-    public static Long getServiceIdObject(ServiceReference ref) {
+    public static Long getServiceIdObject(ServiceReference<?> ref) {
         Long aid = (Long) ref.getProperty(DependencyManager.ASPECT);
         if (aid != null) {
             return aid;
@@ -110,7 +170,7 @@ public class ServiceUtil {
      * @param ref the service reference
      * @return <code>true</code> if it's an aspect, <code>false</code> otherwise
      */
-    public static boolean isAspect(ServiceReference ref) {
+    public static boolean isAspect(ServiceReference<?> ref) {
         Long aid = (Long) ref.getProperty(DependencyManager.ASPECT);
         return (aid != null);
     }
@@ -122,7 +182,7 @@ public class ServiceUtil {
      * @param ref the service reference
      * @return a string representation of the service
      */
-    public static String toString(ServiceReference ref) {
+    public static String toString(ServiceReference<?> ref) {
         if (ref == null) {
             return "ServiceReference[null]";
         }
@@ -150,7 +210,7 @@ public class ServiceUtil {
      * @param exclude a list of properties to exclude, or <code>null</code> to show everything
      * @return a string representation of the service properties
      */
-    public static String propertiesToString(ServiceReference ref, List<String> exclude) {
+    public static String propertiesToString(ServiceReference<?> ref, List<String> exclude) {
         StringBuffer buf = new StringBuffer();
         String[] keys = ref.getPropertyKeys();
         for (int i = 0; i < keys.length; i++) {
@@ -187,7 +247,7 @@ public class ServiceUtil {
      * @param ref the ServiceReference to wrap
      * @return a new Dictionary used to wrap the ServiceReference properties
      */
-    public static Dictionary<String, Object> propertiesToDictionary(final ServiceReference ref) {
+    public static Dictionary<String, Object> propertiesToDictionary(final ServiceReference<?> ref) {
         return new Dictionary<String, Object>() {
             private Dictionary<String, Object> m_wrapper;
             

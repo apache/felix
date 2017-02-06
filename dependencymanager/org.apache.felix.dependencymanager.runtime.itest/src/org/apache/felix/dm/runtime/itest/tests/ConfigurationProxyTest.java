@@ -28,6 +28,7 @@ import org.osgi.framework.ServiceRegistration;
  * 
  * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
+@SuppressWarnings("rawtypes")
 public class ConfigurationProxyTest extends TestBase {
     /**
      * Validates ServiceDependency method signatures.

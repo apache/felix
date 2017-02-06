@@ -86,6 +86,13 @@ public abstract class AbstractBuilder
         if (componentField != null)
         {
             c.setAutoConfig(Component.class, componentField);
+        }       
+
+        // See if Service Registration must be auto configured
+        String registrationField = srvMeta.getString(Params.registrationField, null);
+        if (registrationField != null)
+        {
+            c.setAutoConfig(ServiceRegistration.class, registrationField);
         }
 
         // Now, if the component has a @Started annotation, then add our component state listener,

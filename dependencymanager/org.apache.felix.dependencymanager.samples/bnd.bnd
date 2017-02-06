@@ -15,14 +15,14 @@
 # limitations under the License.
 #
 Bundle-Version: 1.0.0.${tstamp}
--buildpath:  \
-	osgi.core;version=4.2,\
-	osgi.cmpn;version=4.2,\
+-buildpath: \
 	biz.aQute.bnd.annotation,\
 	org.apache.felix.dependencymanager;version=latest,\
 	org.apache.felix.gogo.runtime;version=latest,\
 	org.apache.felix.dependencymanager.runtime;version=latest,\
-	org.apache.felix.dependencymanager.annotation;version=latest
+	org.apache.felix.dependencymanager.annotation;version=latest,\
+	osgi.core;version=6.0,\
+	osgi.cmpn;version=6.0
 -sub:  \
 	*.bnd
 -metatype: *

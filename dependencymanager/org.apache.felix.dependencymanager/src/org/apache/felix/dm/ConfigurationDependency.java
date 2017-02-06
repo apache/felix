@@ -22,7 +22,7 @@ import java.util.Collection;
 import java.util.Dictionary;
 import java.util.Map;
 
-import aQute.bnd.annotation.ProviderType;
+import org.osgi.annotation.versioning.ProviderType;
 
 /**
  * Configuration dependency that can track the availability of a (valid) configuration. To use

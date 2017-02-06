@@ -200,8 +200,7 @@ public class MetaTypeProviderImpl implements MetaTypeProvider, ManagedService, M
      * We also implements the ManagedService and we just delegates the configuration handling to
      * our associated ConfigurationDependency.
      */
-    @SuppressWarnings("rawtypes")
-    public void updated(Dictionary properties) throws ConfigurationException {
+    public void updated(Dictionary<String, ?> properties) throws ConfigurationException {
         m_managedServiceDelegate.updated(properties);
     }
 
@@ -268,8 +267,7 @@ public class MetaTypeProviderImpl implements MetaTypeProvider, ManagedService, M
         return m_pid;
     }
 
-    @SuppressWarnings("rawtypes")
-    public void updated(String pid, Dictionary properties) throws ConfigurationException {
+    public void updated(String pid, Dictionary<String, ?> properties) throws ConfigurationException {
         m_managedServiceFactoryDelegate.updated(pid, properties);
     }
 }

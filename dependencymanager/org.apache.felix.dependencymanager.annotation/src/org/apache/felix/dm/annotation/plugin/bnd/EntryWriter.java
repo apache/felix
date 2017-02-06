@@ -18,46 +18,67 @@
  */
 package org.apache.felix.dm.annotation.plugin.bnd;
 
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.Set;
-
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
 
 import aQute.bnd.osgi.Annotation;
 
 /**
  * This class encodes a component descriptor entry line, using json.
+ * We are using a slightly adapted version of the nice JsonSerializingImpl class from the Apache Felix Converter project.
+ * 
+ * Internally, we store parameters in a map. The format of key/values stored in the map is the following:
+ * 
+ * The JSON object has the following form:
+ * 
+ * entry            ::= String | String[] | dictionary
+ * dictionary       ::= key-value-pair*
+ * key-value-pair   ::= key value
+ * value            ::= String | String[] | value-type
+ * value-type       ::= jsonObject with value-type-info
+ * value-type-info  ::= "type"=primitive java type
+ *                      "value"=String|String[]
+ *                      
+ * Exemple:
+ * 
+ * {"string-param" : "string-value",
+ *  "string-array-param" : ["string1", "string2"],
+ *  "properties" : {
+ *      "string-param" : "string-value",
+ *      "string-array-param" : ["str1", "str2],
+ *      "long-param" : {"type":"java.lang.Long", "value":"1"}}
+ *      "long-array-param" : {"type":"java.lang.Long", "value":["1"]}}
+ *  }
+ * }
  * 
  * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
 public class EntryWriter
 {
-    // Every descriptor entries contains a type parameter for identifying the kind of entry
+    /**
+     * Every descriptor entries contains a type parameter for identifying the kind of entry
+     */
     private final static String TYPE = "type";
 
-    /** All parameters as stored in a json object */
-    private JSONObject m_json;
+    /** 
+     * All parameters as stored in a map object 
+     */
+    private final HashMap<String, Object> m_params = new HashMap<>();
 
     /** The entry type */
-    private EntryType m_type;
-
+    private final EntryType m_type;
+    
     /**
      * Makes a new component descriptor entry.
      */
     public EntryWriter(EntryType type)
     {
         m_type = type;
-        m_json = new JSONObject();
-        try
-        {
-            m_json.put("type", type.toString());
-        }
-        catch (JSONException e)
-        {
-            throw new RuntimeException("could not initialize json object", e);
-        }
+        m_params.put("type", type.toString());
     }
 
     /**
@@ -70,71 +91,64 @@ public class EntryWriter
 
     /**
      * Returns a string representation for the given component descriptor entry.
+     * @param m_logger 
      */
-    @Override
     public String toString()
     {
-        return m_json.toString();
+    	return new JsonWriter(m_params).toString();
     }
 
     /**
-     * Put a String parameter in this descritor entry.
+     * Adds a String parameter in this descritor entry.
      */
     public void put(EntryParam param, String value)
     {
         checkType(param.toString());
-        try
-        {
-            m_json.put(param.toString(), value);
-        }
-        catch (JSONException e)
-        {
-            throw new IllegalArgumentException("could not add param " + param + ":" + value, e);
-        }
-    }
+        m_params.put(param.toString(), value);
+    }    
 
     /**
-     * Put a String[] parameter in this descriptor entry.
+     * Adds a String[] parameter in this descriptor entry.
      */
-    public void put(EntryParam param, String[] array)
+    public void put(EntryParam param, String[] values)
     {
         checkType(param.toString());
-        try
-        {
-            m_json.put(param.toString(), new JSONArray(Arrays.asList(array)));
-        }
-        catch (JSONException e)
-        {
-            throw new IllegalArgumentException("could not add param " + param + ":"
-                + Arrays.toString(array), e);
-        }
+        m_params.put(param.toString(), Arrays.asList(values));
     }
 
     /**
-     * Puts a json object.
-     * @throws JSONException 
+     * Adds a property in this descriptor entry.
      */
-    public void putJsonObject(EntryParam param, JSONObject jsonObject) throws JSONException
+    @SuppressWarnings("unchecked")
+    public void addProperty(String name, Object value, Class<?> type)
     {
-        m_json.put(param.toString(),  jsonObject);
+		Map<String, Object> properties = (Map<String, Object>) m_params.get(EntryParam.properties.toString());
+		if (properties == null) {
+			properties = new HashMap<>();
+			m_params.put(EntryParam.properties.toString(), properties);
+		}
+        if (value.getClass().isArray())
+        {
+            Object[] array = (Object[]) value;
+            if (array.length == 1)
+            {
+                value = array[0];
+            }
+        }
+
+        if (type.equals(String.class))
+        {
+        	properties.put(name, value.getClass().isArray() ? Arrays.asList((Object[]) value) : value);
+        }
+        else
+        {
+           Map<String, Object> val = new HashMap<>();
+           val.put("type", type.getName());
+           val.put("value", value.getClass().isArray() ? Arrays.asList((Object[]) value) : value);
+           properties.put(name, val);
+        }
     }
     
-    /**
-     * Gets a json object associated to the given parameter name.
-     * @throws JSONException 
-     */
-    public JSONObject getJsonObject(EntryParam param) 
-    {
-        try
-        {
-            return (JSONObject) m_json.get(param.toString());
-        }
-        catch (JSONException e)
-        {
-            return null;
-        }
-    }
-
     /**
      * Get a String attribute value from an annotation and write it into this descriptor entry.
      */
@@ -151,34 +165,6 @@ public class EntryWriter
             put(param, value.toString());
         }
         return value == null ? null : value.toString();
-    }
-
-    /**
-     * Get a String array attribute value from an annotation and write it into this descriptor entry.
-     */
-    public void putStringArray(Annotation annotation, EntryParam param, String[] def)
-    {
-        checkType(param.toString());
-        Object value = annotation.get(param.toString());
-        if (value == null && def != null)
-        {
-            value = def;
-        }
-        if (value != null)
-        {
-            for (Object v: ((Object[]) value))
-            {
-                try
-                {
-                    m_json.append(param.toString(), v.toString());
-                }
-                catch (JSONException e)
-                {
-                    throw new IllegalArgumentException("Could not add param " + param + ":"
-                        + value.toString(), e);
-                }
-            }
-        }
     }
 
     /**
@@ -221,6 +207,7 @@ public class EntryWriter
                     + " has not a class array type");
             }
 
+            List<String> classes = new ArrayList<>();
             for (Object v: ((Object[]) value))
             {
                 if (! usingDefault)
@@ -228,21 +215,13 @@ public class EntryWriter
                 	// Parse the annotation attribute value.
                     v = AnnotationCollector.parseClassAttrValue(v);
                 }
-                try
-                {
-                    m_json.append(param.toString(), v.toString());
-                    collect.add(v.toString());
-                }
-                catch (JSONException e)
-                {
-                    throw new IllegalArgumentException("Could not add param " + param + ":"
-                            + value.toString(), e);
-                }
+                classes.add(v.toString());
+                collect.add(v.toString());
             }
             
+            m_params.put(param.toString(), classes);
             return ((Object[]) value).length;
         }
-        
         return 0;
     }
 

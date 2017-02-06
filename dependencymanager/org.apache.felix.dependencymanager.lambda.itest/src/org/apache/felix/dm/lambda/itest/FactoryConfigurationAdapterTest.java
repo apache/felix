@@ -92,6 +92,55 @@ public class FactoryConfigurationAdapterTest extends TestBase
         m.clear();
     }
 
+    public void testFactoryConfigurationAdapterWithMethodRef() {
+        DependencyManager m = getDM();
+        // helper class that ensures certain steps get executed in sequence
+        m_ensure = new Ensure();
+        
+        // Create a Configuration instance, which will create/update/remove a configuration for factoryPid "MyFactoryPid"
+        ConfigurationCreator configurator = new ConfigurationCreator("MyFactoryPid", "key", "value1");
+        Component s1 = component(m).impl(configurator).withSvc(ConfigurationAdmin.class, true).build();
+           
+        // Create an Adapter that will be instantiated, once the configuration is created.
+        // This Adapter provides an AdapterService, and depends on an AdapterExtraDependency service.
+        Component s2 = factoryPidAdapter(m)
+            .factoryPid("MyFactoryPid")
+            .impl(Adapter.class)
+            .update(Adapter::updated)
+            .propagate()
+            .provides(AdapterService.class, "foo", "bar")            
+            .withSvc(AdapterExtraDependency.class, true)
+            .build();
+                    
+        // Create extra adapter service dependency upon which our adapter depends on.
+        Component s3 = component(m)
+            .impl(new AdapterExtraDependency()).provides(AdapterExtraDependency.class).build();
+        
+        // Create an AdapterService Consumer
+        Component s4 = component(m)
+            .impl(AdapterServiceConsumer.class).withSvc(AdapterService.class, srv -> srv.add("bind").change("change").remove("remove")).build();
+        
+        // Start services
+        m.add(s1);
+        m.add(s2);
+        m.add(s3);
+        m.add(s4);
+        
+        // Wait for step 8: the AdapterService consumer has been injected with the AdapterService, and has called the doService method.
+        m_ensure.waitForStep(8, 10000);
+        
+        // Modify configuration.
+        configurator.update("key", "value2");
+        
+        // Wait for step 13: the AdapterService has been updated, and the AdapterService consumer has seen the change
+        m_ensure.waitForStep(13, 10000);
+        
+        // Remove the configuration
+        m.remove(s1); // The stop method will remove the configuration
+        m_ensure.waitForStep(16, 10000);
+        m.clear();
+    }
+
     public static class ConfigurationCreator {
         private volatile ConfigurationAdmin m_ca;
         private String m_key;

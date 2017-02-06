@@ -29,20 +29,19 @@ import org.osgi.framework.ServiceRegistration;
  * 
  * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
-public final class ServiceRegistrationImpl implements ServiceRegistration {
+public final class ServiceRegistrationImpl implements ServiceRegistration<Object> {
     public static final ServiceRegistrationImpl ILLEGAL_STATE = new ServiceRegistrationImpl();
-    private volatile ServiceRegistration m_registration;
+    private volatile ServiceRegistration<Object> m_registration;
 
     public ServiceRegistrationImpl() {
         m_registration = null;
     }
     
-    public ServiceReference getReference() {
+    public ServiceReference<Object> getReference() {
         return ensureRegistration().getReference();
     }
 
-    @SuppressWarnings("rawtypes")
-    public void setProperties(Dictionary dictionary) {
+    public void setProperties(Dictionary<String, ?> dictionary) {
         ensureRegistration().setProperties(dictionary);
     }
 
@@ -62,7 +61,7 @@ public final class ServiceRegistrationImpl implements ServiceRegistration {
         return ensureRegistration().toString();
     }
     
-    private synchronized ServiceRegistration ensureRegistration() {
+    private synchronized ServiceRegistration<Object> ensureRegistration() {
         while (m_registration == null) {
             try {
                 wait();
@@ -82,9 +81,10 @@ public final class ServiceRegistrationImpl implements ServiceRegistration {
     /**
      * Sets the service registration and notifies all waiting parties.
      */
-    void setServiceRegistration(ServiceRegistration registration) {
+    @SuppressWarnings("unchecked")
+	<T> void setServiceRegistration(ServiceRegistration<T> registration) {
         synchronized (this) {
-        	m_registration = registration;
+        	m_registration = (ServiceRegistration<Object>) registration;
             notifyAll();
         }
     }

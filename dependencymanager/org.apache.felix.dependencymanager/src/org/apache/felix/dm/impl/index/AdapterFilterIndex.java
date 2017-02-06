@@ -42,6 +42,7 @@ import org.osgi.framework.ServiceReference;
 /**
  * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
+@SuppressWarnings("rawtypes")
 public class AdapterFilterIndex extends AbstractFactoryFilterIndex implements FilterIndex, ServiceTrackerCustomizer {
 	// (&(objectClass=foo.Bar)(|(service.id=18233)(org.apache.felix.dependencymanager.aspect=18233)))
 	private static final String FILTER_REGEXP = "\\(&\\(" + Constants.OBJECTCLASS + "=([a-zA-Z\\.\\$0-9]*)\\)\\(\\|\\(" 
@@ -198,7 +199,8 @@ public class AdapterFilterIndex extends AbstractFactoryFilterIndex implements Fi
         }
     }
 
-    public Object addingService(ServiceReference reference) {
+    @SuppressWarnings("unchecked")
+	public Object addingService(ServiceReference reference) {
         BundleContext context;
         synchronized (m_lock) {
             context = m_context;

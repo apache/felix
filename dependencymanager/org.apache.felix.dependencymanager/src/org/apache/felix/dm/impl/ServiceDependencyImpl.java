@@ -27,6 +27,7 @@ import java.util.HashSet;
 import java.util.Hashtable;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Supplier;
 
 import org.apache.felix.dm.Component;
 import org.apache.felix.dm.ComponentDeclaration;
@@ -51,13 +52,14 @@ public class ServiceDependencyImpl extends AbstractDependency<ServiceDependency>
     protected volatile Class<?> m_trackedServiceName;
     private volatile String m_trackedServiceFilter;
     private volatile String m_trackedServiceFilterUnmodified;
-    private volatile ServiceReference m_trackedServiceReference;
+    private volatile ServiceReference<?> m_trackedServiceReference;
     private volatile Object m_defaultImplementation;
     private volatile Object m_defaultImplementationInstance;
     private volatile Object m_nullObject;
     private volatile boolean m_debug = false;
     private volatile String m_debugKey;
     private volatile long m_trackedServiceReferenceId;
+	private volatile boolean m_obtainServiceBeforeInjection = true;
     
     public ServiceDependency setDebug(String debugKey) {
     	m_debugKey = debugKey;
@@ -117,9 +119,9 @@ public class ServiceDependencyImpl extends AbstractDependency<ServiceDependency>
      * Wraps service properties behind a Map.
      */
     private final static class ServicePropertiesMap extends AbstractMap<String, Object> {
-        private final ServiceReference m_ref;
+        private final ServiceReference<?> m_ref;
 
-        public ServicePropertiesMap(ServiceReference ref) {
+        public ServicePropertiesMap(ServiceReference<?> ref) {
             m_ref = ref;
         }
 
@@ -196,9 +198,16 @@ public class ServiceDependencyImpl extends AbstractDependency<ServiceDependency>
         return this;
     }
 
-    public ServiceDependency setService(Class<?> serviceName, ServiceReference serviceReference) {
+    @SuppressWarnings("rawtypes")
+	public ServiceDependency setService(Class<?> serviceName, ServiceReference serviceReference) {
         setService(serviceName, serviceReference, null);
         return this;
+    }
+    
+    @Override
+    public ServiceDependency setDereference(boolean obtainServiceBeforeInjection) {
+    	m_obtainServiceBeforeInjection = obtainServiceBeforeInjection;
+    	return this;
     }
 
 	@Override
@@ -235,9 +244,17 @@ public class ServiceDependencyImpl extends AbstractDependency<ServiceDependency>
 	}
 
 	@Override
-	public Object addingService(ServiceReference reference) {
+	public Object addingService(@SuppressWarnings("rawtypes") ServiceReference reference) {
 		try {
-		    return m_component.getBundleContext().getService(reference);
+			ServiceEventImpl event = new ServiceEventImpl(m_component, reference, null);
+			if (m_obtainServiceBeforeInjection) {
+				Object service = event.getEvent(); // will dereference the service object.
+				if (service == null) {
+					// service concurrently removed, ignore
+					return null;
+				}
+			}
+		    return event;
 		} catch (IllegalStateException e) {
 		    // most likely our bundle is being stopped. Only log an exception if our component is enabled.
 		    if (m_component.isActive()) {
@@ -249,25 +266,56 @@ public class ServiceDependencyImpl extends AbstractDependency<ServiceDependency>
 	}
 
 	@Override
-	public void addedService(ServiceReference reference, Object service) {
+	public void addedService(@SuppressWarnings("rawtypes") ServiceReference reference, Object event) {
+		ServiceEventImpl evt = (ServiceEventImpl) event;
 		if (m_debug) {
-			System.out.println(m_debugKey + " addedService: ref=" + reference + ", service=" + service);
+			System.out.println(m_debugKey + " addedService: ref=" + reference);
 		}
-        m_component.handleEvent(this, EventType.ADDED,
-            new ServiceEventImpl(m_component.getBundle(), m_component.getBundleContext(), reference, service));
+        m_component.handleEvent(this, EventType.ADDED, evt);
 	}
 
 	@Override
-	public void modifiedService(ServiceReference reference, Object service) {
-        m_component.handleEvent(this, EventType.CHANGED,
-            new ServiceEventImpl(m_component.getBundle(), m_component.getBundleContext(), reference, service));
+	public void modifiedService(@SuppressWarnings("rawtypes") ServiceReference reference, Object event) {
+		ServiceEventImpl evt = (ServiceEventImpl) event;
+		m_component.handleEvent(this, EventType.CHANGED, evt);
 	}
 
 	@Override
-	public void removedService(ServiceReference reference, Object service) {
-        m_component.handleEvent(this, EventType.REMOVED,
-            new ServiceEventImpl(m_component.getBundle(), m_component.getBundleContext(), reference, service));
+	public void removedService(@SuppressWarnings("rawtypes") ServiceReference reference, Object event) {
+		ServiceEventImpl evt = (ServiceEventImpl) event;
+        m_component.handleEvent(this, EventType.REMOVED, evt);
 	}
+	
+	@SuppressWarnings("rawtypes")
+	@Override
+	public void swappedService(final ServiceReference reference, final Object service, final ServiceReference newReference, final Object newService) {
+		ServiceEventImpl evt = (ServiceEventImpl) service;
+		ServiceEventImpl newEvt = (ServiceEventImpl) newService;
+		
+		if (m_obtainServiceBeforeInjection) {
+			try {
+				newEvt.getEvent();
+			} catch (IllegalStateException e) {
+				// most likely our bundle is being stopped. Only log an exception if our component is enabled.
+				if (m_component.isActive()) {
+					m_component.getLogger().warn("could not handle service dependency for component %s", e,
+							m_component.getComponentDeclaration().getClassName());
+				}
+				return;
+			}
+		}
+				
+		if (m_swap != null) {
+			// it will not trigger a state change, but the actual swap should be scheduled to prevent things
+			// getting out of order.		    		    
+		    // We delegate the swap handling to the ComponentImpl, which is the class responsible for state management.
+		    // The ComponentImpl will first check if the component is in the proper state so the swap method can be invoked.		    
+            m_component.handleEvent(this, EventType.SWAPPED, evt, newEvt);
+		} else {
+			addedService(newReference, newService);
+			removedService(reference, service);
+		}
+	}		
 	
     @Override
     public void invokeCallback(EventType type, Event ... events) {
@@ -289,10 +337,9 @@ public class ServiceDependencyImpl extends AbstractDependency<ServiceDependency>
             break;
         case SWAPPED:
             if (m_swap != null) {
-                ServiceEventImpl oldE = (ServiceEventImpl) events[0];
-                ServiceEventImpl newE = (ServiceEventImpl) events[1];
-                invokeSwap(m_swap, oldE.getReference(), oldE.getEvent(), newE.getReference(), newE.getEvent(),
-                    getInstances());
+                ServiceEventImpl oldEvent = (ServiceEventImpl) events[0];
+                ServiceEventImpl newEvent = (ServiceEventImpl) events[1];
+                invokeSwap(m_swap, oldEvent, newEvent, getInstances());
             }
             break;
         }
@@ -381,7 +428,7 @@ public class ServiceDependencyImpl extends AbstractDependency<ServiceDependency>
     }	
         
     /** Internal method to set the name, service reference and/or filter. */
-    private void setService(Class<?> serviceName, ServiceReference serviceReference, String serviceFilter) {
+    private void setService(Class<?> serviceName, ServiceReference<?> serviceReference, String serviceFilter) {
         ensureNotActive();
         if (serviceName == null) {
             m_trackedServiceName = Object.class;
@@ -461,9 +508,11 @@ public class ServiceDependencyImpl extends AbstractDependency<ServiceDependency>
 
     public void invoke(String method, Event e, Object[] instances) {
         ServiceEventImpl se = (ServiceEventImpl) e;
-        ServicePropertiesMap propertiesMap = new ServicePropertiesMap(se.getReference());
-        Dictionary<?,?> properties = se.getProperties();
-        m_component.invokeCallbackMethod(instances, method,
+        // Be as lazy as possible, in case no properties or map has to be injected
+        Supplier<Dictionary<?,?>> properties = () -> se.getProperties();
+        Supplier<ServicePropertiesMap> propertiesMap = () -> new ServicePropertiesMap(se.getReference());
+        
+        m_component.invokeCallback(instances, method,
             new Class[][]{
                 {Component.class, ServiceReference.class, m_trackedServiceName},
                 {Component.class, ServiceReference.class, Object.class}, 
@@ -480,37 +529,37 @@ public class ServiceDependencyImpl extends AbstractDependency<ServiceDependency>
                 {Map.class, m_trackedServiceName}, 
                 {m_trackedServiceName, Dictionary.class}, 
                 {Dictionary.class, m_trackedServiceName}, 
-                {Object.class}, 
+                {Object.class},
                 {}},
             
-            new Object[][]{
-                {m_component, se.getReference(), se.getEvent()},
-                {m_component, se.getReference(), se.getEvent()}, 
-                {m_component, se.getReference()}, 
-                {m_component, se.getEvent()},
-                {m_component, se.getEvent()},
-                {m_component},
-                {m_component, propertiesMap, se.getEvent()},
-                {se.getReference(), se.getEvent()},
-                {se.getReference(), se.getEvent()}, 
-                {se.getReference()}, 
-                {se.getEvent()}, 
-                {se.getEvent(), propertiesMap},
-                {propertiesMap, se.getEvent()},
-                {se.getEvent(), properties},
-                {properties, se.getEvent()},
-                {se.getEvent()}, 
-                {}}
+            new Supplier[][]{
+                new Supplier<?>[] {() -> m_component, () -> se.getReference(), () -> se.getEvent()},
+                new Supplier<?>[] {() -> m_component, () -> se.getReference(), () -> se.getEvent()}, 
+                new Supplier<?>[] {() -> m_component, () -> se.getReference()}, 
+                new Supplier<?>[] {() -> m_component, () -> se.getEvent()},
+                new Supplier<?>[] {() -> m_component, () -> se.getEvent()},
+                new Supplier<?>[] {() -> m_component},
+                new Supplier<?>[] {() -> m_component, () -> propertiesMap.get(), () -> se.getEvent()},
+                new Supplier<?>[] {() -> se.getReference(), () -> se.getEvent()},
+                new Supplier<?>[] {() -> se.getReference(), () -> se.getEvent()}, 
+                new Supplier<?>[] {() -> se.getReference()}, 
+                new Supplier<?>[] {() -> se.getEvent()}, 
+                new Supplier<?>[] {() -> se.getEvent(), () -> propertiesMap.get()},
+                new Supplier<?>[] {() -> propertiesMap.get(), () -> se.getEvent()},
+                new Supplier<?>[] {() -> se.getEvent(), () -> properties.get()},
+                new Supplier<?>[] {() -> properties.get(), () -> se.getEvent()},
+                new Supplier<?>[] {() -> se.getEvent()},
+                {}},
+            true // log if method is not found
         );
     }
         
-    public void invokeSwap(String swapMethod, ServiceReference previousReference, Object previous,
-			ServiceReference currentReference, Object current, Object[] instances) {
+    private void invokeSwap(String swapMethod, ServiceEventImpl previous, ServiceEventImpl current, Object[] instances) {
     	if (m_debug) {
     		System.out.println("invoke swap: " + swapMethod + " on component " + m_component + ", instances: " + Arrays.toString(instances) + " - " + ((ComponentDeclaration)m_component).getState());
     	}
     	try {
-		m_component.invokeCallbackMethod(instances, swapMethod,
+    		m_component.invokeCallback(instances, swapMethod,
 				new Class[][]{
             		{m_trackedServiceName, m_trackedServiceName}, 
             		{Object.class, Object.class},
@@ -519,35 +568,28 @@ public class ServiceDependencyImpl extends AbstractDependency<ServiceDependency>
             		{Component.class, m_trackedServiceName, m_trackedServiceName}, 
             		{Component.class, Object.class, Object.class},
             		{Component.class, ServiceReference.class, m_trackedServiceName, ServiceReference.class, m_trackedServiceName},
-            		{Component.class, ServiceReference.class, Object.class, ServiceReference.class, Object.class}}, 
+            		{Component.class, ServiceReference.class, Object.class, ServiceReference.class, Object.class},
+            		{ServiceReference.class, ServiceReference.class},
+            		{Component.class, ServiceReference.class, ServiceReference.class},
+            	}, 
 	            
-            	new Object[][]{
-                    {previous, current}, 
-                    {previous, current}, 
-                    {previousReference, previous, currentReference, current},
-                    {previousReference, previous, currentReference, current}, {m_component, previous, current},
-                    {m_component, previous, current}, {m_component, previousReference, previous, currentReference, current},
-                    {m_component, previousReference, previous, currentReference, current}}
-			);
+	            new Supplier[][]{
+            		new Supplier<?>[] {() -> previous.getEvent(), () -> current.getEvent()}, 
+            		new Supplier<?>[] {() -> previous.getEvent(), () -> current.getEvent()}, 
+            		new Supplier<?>[] {() -> previous.getReference(), () -> previous.getEvent(), () -> current.getReference(), () -> current.getEvent()}, 
+            		new Supplier<?>[] {() -> previous.getReference(), () -> previous.getEvent(), () -> current.getReference(), () -> current.getEvent()}, 
+            		new Supplier<?>[] {() -> m_component, () -> previous.getEvent(), () -> current.getEvent()}, 
+            		new Supplier<?>[] {() -> m_component, () -> previous.getEvent(), () -> current.getEvent()}, 
+            		new Supplier<?>[] {() -> m_component, () -> previous.getReference(), () -> previous.getEvent(), () -> current.getReference(), () -> current.getEvent()}, 
+            		new Supplier<?>[] {() -> m_component, () -> previous.getReference(), () -> previous.getEvent(), () -> current.getReference(), () -> current.getEvent()}, 
+            		new Supplier<?>[] {() -> previous.getReference(), () -> current.getReference()}, 
+            		new Supplier<?>[] {() -> m_component, () -> previous.getReference(), () -> current.getReference()}
+            	},
+            		
+            	true); // log if not found
     	} catch (Throwable e) {
     	    m_component.getLogger().err("Could not invoke swap callback", e);
     	}
 	}
-
-	@Override
-	public void swappedService(final ServiceReference reference, final Object service,
-			final ServiceReference newReference, final Object newService) {
-		if (m_swap != null) {
-			// it will not trigger a state change, but the actual swap should be scheduled to prevent things
-			// getting out of order.		    		    
-		    // We delegate the swap handling to the ComponentImpl, which is the class responsible for state management.
-		    // The ComponentImpl will first check if the component is in the proper state so the swap method can be invoked.		    
-            m_component.handleEvent(this, EventType.SWAPPED,
-                new ServiceEventImpl(m_component.getBundle(), m_component.getBundleContext(), reference, service),
-                new ServiceEventImpl(m_component.getBundle(), m_component.getBundleContext(), newReference, newService));
-		} else {
-			addedService(newReference, newService);
-			removedService(reference, service);
-		}
-	}	
+	
 }

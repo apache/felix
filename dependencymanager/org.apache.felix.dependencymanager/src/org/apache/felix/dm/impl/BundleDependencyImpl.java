@@ -149,7 +149,7 @@ public class BundleDependencyImpl extends AbstractDependency<BundleDependency> i
         }
         Filter filter = m_filter;
         if (filter != null) {
-            Dictionary<?,?> headers = bundle.getHeaders();
+            Dictionary<String,?> headers = bundle.getHeaders();
             if (!m_filter.match(headers)) {
                 return null;
             }
@@ -246,7 +246,7 @@ public class BundleDependencyImpl extends AbstractDependency<BundleDependency> i
                 throw new IllegalStateException("Could not invoke callback");
             }
             else {
-                return (Dictionary<String, Object>) bundle.getHeaders();
+                return ServiceUtil.toR6Dictionary(bundle.getHeaders());
             }
         }
         else {

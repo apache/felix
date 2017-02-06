@@ -38,6 +38,7 @@ import org.osgi.service.cm.ConfigurationAdmin;
 /**
  * Tests various bind method signatures
  */
+@SuppressWarnings("rawtypes")
 public class MethodSignatures {
 	// For Consumer service
     public final static String ENSURE_SERVICE_DEPENDENCY = "MethodSignatures1";

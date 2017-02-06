@@ -19,11 +19,11 @@
 package org.apache.felix.dm.runtime.itest.components;
 
 import java.io.IOException;
-import java.util.Properties;
+import java.util.Dictionary;
+import java.util.Hashtable;
 
 import org.apache.felix.dm.annotation.api.Component;
 import org.apache.felix.dm.annotation.api.ConfigurationDependency;
-import org.apache.felix.dm.annotation.api.Init;
 import org.apache.felix.dm.annotation.api.ServiceDependency;
 import org.apache.felix.dm.annotation.api.Start;
 import org.apache.felix.dm.annotation.api.Stop;
@@ -99,7 +99,7 @@ public class OptionalConfiguration {
 	        try {
 	        	Assert.assertNotNull(m_ca);
 	            m_conf = m_ca.getConfiguration(PID, null);
-	            Properties props = new Properties();
+	            Dictionary<String, Object> props = new Hashtable<>();
 	            props.put("testkey", "testvalue");
 	            m_conf.update(props);
 	        }

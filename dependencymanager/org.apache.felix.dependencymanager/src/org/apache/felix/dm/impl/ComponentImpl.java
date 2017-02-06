@@ -21,6 +21,7 @@ package org.apache.felix.dm.impl;
 import static org.apache.felix.dm.ComponentState.INACTIVE;
 import static org.apache.felix.dm.ComponentState.INSTANTIATED_AND_WAITING_FOR_REQUIRED;
 import static org.apache.felix.dm.ComponentState.STARTING;
+import static org.apache.felix.dm.ComponentState.STARTED;
 import static org.apache.felix.dm.ComponentState.STOPPED;
 import static org.apache.felix.dm.ComponentState.STOPPING;
 import static org.apache.felix.dm.ComponentState.TRACKING_OPTIONAL;
@@ -46,6 +47,8 @@ import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.Executor;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.function.Predicate;
+import java.util.function.Supplier;
 
 import org.apache.felix.dm.Component;
 import org.apache.felix.dm.ComponentDeclaration;
@@ -74,7 +77,7 @@ public class ComponentImpl implements Component, ComponentContext, ComponentDecl
     /**
      * NullObject ServiceRegistration that is injected in components that don't provide any services. 
      */
-	private static final ServiceRegistration NULL_REGISTRATION = (ServiceRegistration) Proxy
+	private static final ServiceRegistration<?> NULL_REGISTRATION = (ServiceRegistration<?>) Proxy
 			.newProxyInstance(ComponentImpl.class.getClassLoader(),
 					new Class[] { ServiceRegistration.class },
 					new DefaultNullObject());
@@ -115,7 +118,7 @@ public class ComponentImpl implements Component, ComponentContext, ComponentDecl
 	
 	/**
 	 * List of Component state listeners. We use a COW list in order to avoid ConcurrentModificationException while iterating on the 
-     * list and while a component synchronously add more listeners from one of its callback method.
+     * list and while a component synchronously adds more listeners from one of its callback method.
 	 */
 	private final List<ComponentStateListener> m_listeners = new CopyOnWriteArrayList<>();
 	
@@ -162,7 +165,7 @@ public class ComponentImpl implements Component, ComponentContext, ComponentDecl
     /**
      * The component service registration. Can be a NullObject in case the component does not provide a service.
      */
-    private volatile ServiceRegistration m_registration;
+    private volatile ServiceRegistration<?> m_registration;
     
     /**
      * Map of auto configured fields (BundleContext, ServiceRegistration, DependencyManager, or Component).
@@ -566,6 +569,39 @@ public class ComponentImpl implements Component, ComponentContext, ComponentDecl
 
         }
     }
+    
+    public void invokeCallback(Object[] instances, String methodName, Class<?>[][] signatures, Supplier<?>[][] parameters, boolean logIfNotFound) {
+        boolean callbackFound = false;
+        for (int i = 0; i < instances.length; i++) {
+            try {
+                InvocationUtil.invokeCallbackMethod(instances[i], methodName, signatures, parameters);
+                callbackFound |= true;
+            }
+            catch (NoSuchMethodException e) {
+                // if the method does not exist, ignore it
+            }
+            catch (InvocationTargetException e) {
+                // the method itself threw an exception, log that
+                m_logger.log(Logger.LOG_ERROR, "Invocation of '" + methodName + "' failed.", e.getCause());
+                callbackFound |= true;
+            }
+            catch (Throwable e) {
+                m_logger.log(Logger.LOG_ERROR, "Could not invoke '" + methodName + "'.", e);
+            }
+        }
+        
+        // If the callback is not found, we don't log if the method is on an AbstractDecorator.
+        // (Aspect or Adapter are not interested in user dependency callbacks)        
+        if (logIfNotFound && ! callbackFound && ! (getInstance() instanceof AbstractDecorator)) {
+            if (m_logger == null) {
+                System.out.println("\"" + methodName + "\" callback not found on component instances "
+                    + Arrays.toString(instances));
+            } else {
+                m_logger.log(LogService.LOG_ERROR, "\"" + methodName + "\" callback not found on component instances "
+                    + Arrays.toString(instances));
+            }
+        }    	
+    }
 
     @Override
     public boolean isAvailable() {
@@ -625,7 +661,8 @@ public class ComponentImpl implements Component, ComponentContext, ComponentDecl
         return this;
     }
     
-    @Override
+    @SuppressWarnings("rawtypes")
+	@Override
     public ServiceRegistration getServiceRegistration() {
         return m_registration;
     }
@@ -635,7 +672,7 @@ public class ComponentImpl implements Component, ComponentContext, ComponentDecl
     public <K,V> Dictionary<K, V> getServiceProperties() {
         if (m_serviceProperties != null) {
             // Applied patch from FELIX-4304
-            Hashtable<Object, Object> serviceProperties = new Hashtable<>();
+            Hashtable<String, Object> serviceProperties = new Hashtable<>();
             addTo(serviceProperties, m_serviceProperties);
             return (Dictionary<K, V>) serviceProperties;
         }
@@ -646,7 +683,7 @@ public class ComponentImpl implements Component, ComponentContext, ComponentDecl
     @SuppressWarnings("unchecked")
     public Component setServiceProperties(final Dictionary<?, ?> serviceProperties) {
         getExecutor().execute(() -> {
-            Dictionary<Object, Object> properties = null;
+            Dictionary<String, Object> properties = null;
             m_serviceProperties = (Dictionary<Object, Object>) serviceProperties;
             if ((m_registration != null) && (m_serviceName != null)) {
                 properties = calculateServiceProperties();
@@ -725,7 +762,7 @@ public class ComponentImpl implements Component, ComponentContext, ComponentDecl
     }
     
     public String getName() {
-        StringBuffer sb = new StringBuffer();
+        StringBuilder sb = new StringBuilder();
         Object serviceName = m_serviceName;
         // If the component provides service(s), return the services as the component name.
         if (serviceName instanceof String[]) {
@@ -736,10 +773,10 @@ public class ComponentImpl implements Component, ComponentContext, ComponentDecl
                 }
                 sb.append(names[i]);
             }
-            appendProperties(sb);
+           ServiceUtil.appendProperties(sb, calculateServiceProperties());
         } else if (serviceName instanceof String) {
             sb.append(serviceName.toString());
-            appendProperties(sb);
+            ServiceUtil.appendProperties(sb, calculateServiceProperties());
         } else {
             // The component does not provide a service, use the component definition as the name.
             Object componentDefinition = m_componentDefinition;
@@ -763,26 +800,6 @@ public class ComponentImpl implements Component, ComponentContext, ComponentDecl
             }
         }
         return sb.toString();
-    }
-    
-    private String toString(Object implementation) {
-        if (implementation instanceof Class) {
-            return (((Class<?>) implementation).getName());
-        } else {
-            // If the implementation instance does not override "toString", just display
-            // the class name, else display the component using its toString method
-            try {
-            Method m = implementation.getClass().getMethod("toString", new Class[0]);
-                if (m.getDeclaringClass().equals(Object.class)) {
-                    return implementation.getClass().getName();
-                } else {
-                    return implementation.toString();
-                }
-            }  catch (java.lang.NoSuchMethodException e) {
-                // Just display the class name
-                return implementation.getClass().getName();
-            }
-        }
     }
     
     @Override
@@ -869,10 +886,9 @@ public class ComponentImpl implements Component, ComponentContext, ComponentDecl
     public Map<String, Long> getCallbacksTime() {
         return m_stopwatch;
     }
-    
-    // ---------------------- Package/Private methods ---------------------------
-    
-    void instantiateComponent() {
+        
+    @Override
+    public ComponentContext instantiateComponent() {
         m_logger.debug("instantiating component.");
 
         // TODO add more complex factory instantiations of one or more components in a composition here
@@ -932,7 +948,30 @@ public class ComponentImpl implements Component, ComponentContext, ComponentDecl
             autoConfigureImplementation(DependencyManager.class, m_manager);
             autoConfigureImplementation(Component.class, this);
         }
+        return this;
     }    
+    
+   // ---------------------- Package/Private methods ---------------------------       
+
+    private String toString(Object implementation) {
+        if (implementation instanceof Class) {
+            return (((Class<?>) implementation).getName());
+        } else {
+            // If the implementation instance does not override "toString", just display
+            // the class name, else display the component using its toString method
+            try {
+            Method m = implementation.getClass().getMethod("toString", new Class[0]);
+                if (m.getDeclaringClass().equals(Object.class)) {
+                    return implementation.getClass().getName();
+                } else {
+                    return implementation.toString();
+                }
+            }  catch (java.lang.NoSuchMethodException e) {
+                // Just display the class name
+                return implementation.getClass().getName();
+            }
+        }
+    }
     
     /**
      * Runs the state machine, to see if a change event has to trigger some component state transition.
@@ -1004,7 +1043,7 @@ public class ComponentImpl implements Component, ComponentContext, ComponentDecl
             notifyListeners(newState);
             return true;
         }
-        if (oldState == ComponentState.WAITING_FOR_REQUIRED && newState == ComponentState.INSTANTIATED_AND_WAITING_FOR_REQUIRED) {
+        if (oldState == WAITING_FOR_REQUIRED && newState == INSTANTIATED_AND_WAITING_FOR_REQUIRED) {
             instantiateComponent();
             invokeAutoConfigDependencies();
             invokeAddRequiredDependencies();
@@ -1012,17 +1051,18 @@ public class ComponentImpl implements Component, ComponentContext, ComponentDecl
             notifyListeners(newState);
             return true;
         }
-        if (oldState == ComponentState.INSTANTIATED_AND_WAITING_FOR_REQUIRED && newState == ComponentState.TRACKING_OPTIONAL) {
+        if (oldState == INSTANTIATED_AND_WAITING_FOR_REQUIRED && newState == TRACKING_OPTIONAL) {
             invokeAutoConfigInstanceBoundDependencies();
             invokeAddRequiredInstanceBoundDependencies();
             notifyListeners(STARTING);
             invokeStart();
+            notifyListeners(STARTED);
             invokeAddOptionalDependencies();
             registerService();
             notifyListeners(newState);
             return true;
         }
-        if (oldState == ComponentState.TRACKING_OPTIONAL && newState == ComponentState.INSTANTIATED_AND_WAITING_FOR_REQUIRED) {
+        if (oldState == TRACKING_OPTIONAL && newState == INSTANTIATED_AND_WAITING_FOR_REQUIRED) {
             notifyListeners(STOPPING);
         	unregisterService();
             invokeRemoveOptionalDependencies();
@@ -1032,7 +1072,7 @@ public class ComponentImpl implements Component, ComponentContext, ComponentDecl
             notifyListeners(STOPPED);
             return true;
         }
-        if (oldState == ComponentState.INSTANTIATED_AND_WAITING_FOR_REQUIRED && newState == ComponentState.WAITING_FOR_REQUIRED) {
+        if (oldState == INSTANTIATED_AND_WAITING_FOR_REQUIRED && newState == WAITING_FOR_REQUIRED) {
             invoke(m_callbackDestroy);
             removeInstanceBoundDependencies();
             invokeRemoveRequiredDependencies();
@@ -1042,7 +1082,7 @@ public class ComponentImpl implements Component, ComponentContext, ComponentDecl
             }
             return true;
         }
-        if (oldState == ComponentState.WAITING_FOR_REQUIRED && newState == ComponentState.INACTIVE) {
+        if (oldState == WAITING_FOR_REQUIRED && newState == INACTIVE) {
             stopDependencies();
             destroyComponent();
             notifyListeners(newState);
@@ -1053,7 +1093,10 @@ public class ComponentImpl implements Component, ComponentContext, ComponentDecl
     }
     
 	private void cleanup() {
-		m_dependencyEvents.values().forEach(eventList -> eventList.clear());
+		m_dependencyEvents.values().forEach(eventList -> {
+			eventList.forEach(event -> event.close());
+			eventList.clear();
+		});
 	}
 
 	private void invokeStart() {
@@ -1203,29 +1246,33 @@ public class ComponentImpl implements Component, ComponentContext, ComponentDecl
     }
     
     private void handleSwapped(DependencyContext dc, Event oldEvent, Event newEvent) {
-        if (! m_isStarted) {
-            return;
-        }
-        Set<Event> dependencyEvents = m_dependencyEvents.get(dc);        
-        dependencyEvents.remove(oldEvent);
-        dependencyEvents.add(newEvent);
+    	try {
+    		if (! m_isStarted) {
+    			return;
+    		}
+    		Set<Event> dependencyEvents = m_dependencyEvents.get(dc);        
+    		dependencyEvents.remove(oldEvent);
+    		dependencyEvents.add(newEvent);
                 
-        // Depending on the state, we possible have to invoke the callbacks and update the component instance.        
-        switch (m_state) {
-        case WAITING_FOR_REQUIRED:
-            // No need to swap, we don't have yet injected anything
-            break;
-        case INSTANTIATED_AND_WAITING_FOR_REQUIRED:
-            // Only swap *non* instance-bound dependencies
-            if (!dc.isInstanceBound()) {
-            	invokeSwapCallback(dc, oldEvent, newEvent);
-            }
-            break;
-        case TRACKING_OPTIONAL:
-        	invokeSwapCallback(dc, oldEvent, newEvent);
-            break;
-        default:
-        }
+    		// Depending on the state, we possible have to invoke the callbacks and update the component instance.        
+    		switch (m_state) {
+    		case WAITING_FOR_REQUIRED:
+    			// No need to swap, we don't have yet injected anything
+    			break;
+    		case INSTANTIATED_AND_WAITING_FOR_REQUIRED:
+    			// Only swap *non* instance-bound dependencies
+    			if (!dc.isInstanceBound()) {
+    				invokeSwapCallback(dc, oldEvent, newEvent);
+    			}
+    			break;
+    		case TRACKING_OPTIONAL:
+    			invokeSwapCallback(dc, oldEvent, newEvent);
+    			break;
+    		default:
+    		}
+    	} finally {
+    		oldEvent.close();
+    	}
     }
         	
     private boolean allRequiredAvailable() {
@@ -1317,10 +1364,10 @@ public class ComponentImpl implements Component, ComponentContext, ComponentDecl
             autoConfigureImplementation(ServiceRegistration.class, m_registration);
             
             // service name can either be a string or an array of strings
-            ServiceRegistration registration;
+            ServiceRegistration<?> registration;
 
             // determine service properties
-            Dictionary<?,?> properties = calculateServiceProperties();
+            Dictionary<String, Object> properties = calculateServiceProperties();
 
             // register the service
             try {
@@ -1353,37 +1400,34 @@ public class ComponentImpl implements Component, ComponentContext, ComponentDecl
         }
     }
     
-    private Dictionary<Object, Object> calculateServiceProperties() {
-		Dictionary<Object, Object> properties = new Hashtable<>();
-		for (int i = 0; i < m_dependencies.size(); i++) {
-			DependencyContext d = (DependencyContext) m_dependencies.get(i);
-			if (d.isPropagated() && d.isAvailable()) {
-				Dictionary<Object, Object> dict = d.getProperties();
-				addTo(properties, dict);
-			}
-		}
-		// our service properties must not be overriden by propagated dependency properties, so we add our service
-		// properties after having added propagated dependency properties.
+    private Dictionary<String, Object> calculateServiceProperties() {
+    	Dictionary<String, Object> properties = new Hashtable<>();
+    	// First add propagated dependency service properties which does not override our component service properties
+    	Predicate<DependencyContext> dependencyPropagated = (dc) -> dc.isPropagated() && dc.isAvailable();
+    	
+		m_dependencies.stream()
+			.filter(dc -> dependencyPropagated.test(dc))
+			.forEach(dc -> addTo(properties, dc.getProperties()));
+		
+		// Now add our component service properties, which overrides previously added propagated dependency service properties
 		addTo(properties, m_serviceProperties);
-		if (properties.size() == 0) {
-			properties = null;
-		}
-		return properties;
+		
+		return properties.size() == 0 ? null : properties;
 	}
 
-	private void addTo(Dictionary<Object, Object> properties, Dictionary<Object, Object> additional) {
+    private void addTo(Dictionary<String, Object> properties, Dictionary<?, Object> additional) {
 		if (properties == null) {
 			throw new IllegalArgumentException("Dictionary to add to cannot be null.");
 		}
 		if (additional != null) {
-			Enumeration<Object> e = additional.keys();
+			Enumeration<?> e = additional.keys();
 			while (e.hasMoreElements()) {
 				Object key = e.nextElement();
-				properties.put(key, additional.get(key));
+				properties.put(key.toString(), additional.get(key));
 			}
 		}
 	}
-	
+
 	private void destroyComponent() {
 		m_componentInstance = null;
 	}
@@ -1525,7 +1569,7 @@ public class ComponentImpl implements Component, ComponentContext, ComponentDecl
 	    	m_invokeCallbackCache.clear();
 	    }
 	}
-
+	
 	private void invoke(String name) {
         if (name != null) {
             // if a callback instance was specified, look for the method there, if not,
@@ -1562,7 +1606,7 @@ public class ComponentImpl implements Component, ComponentContext, ComponentDecl
 		}
 	}
 	
-    private void autoConfigureImplementation(Class<?> clazz, Object instance) {
+	void autoConfigureImplementation(Class<?> clazz, Object instance) {
         if (((Boolean) m_autoConfig.get(clazz)).booleanValue()) {
             configureImplementation(clazz, instance, (String) m_autoConfigInstance.get(clazz));
         }
@@ -1577,7 +1621,7 @@ public class ComponentImpl implements Component, ComponentContext, ComponentDecl
      * @param instance the object to fill in the implementation class(es) field
      * @param instanceName the name of the instance to fill in, or <code>null</code> if not used
      */
-    private void configureImplementation(Class<?> clazz, Object instance, String fieldName) {
+    void configureImplementation(Class<?> clazz, Object instance, String fieldName) {
         Object[] targets = getInstances();
         if (! FieldUtil.injectField(targets, fieldName, clazz, instance, m_logger) && fieldName != null) {
             // If the target is an abstract decorator (i.e: an adapter, or an aspect), we must not log warnings
@@ -1637,6 +1681,8 @@ public class ComponentImpl implements Component, ComponentContext, ComponentDecl
                     m_logger.log(Logger.LOG_ERROR, "Could not obtain instances from the composition manager.", e);
                     instances = m_componentInstance == null ? new Object[] {} : new Object[] { m_componentInstance };
                 }
+            } else {
+            	return new Object[0];
             }
         }
         else {
@@ -1644,38 +1690,6 @@ public class ComponentImpl implements Component, ComponentContext, ComponentDecl
         }
         return instances;
 	}
-
-    private void appendProperties(StringBuffer result) {
-        Dictionary<Object, Object> properties = calculateServiceProperties();
-        if (properties != null) {
-            result.append("(");
-            Enumeration<?> enumeration = properties.keys();
-            while (enumeration.hasMoreElements()) {
-                Object key = enumeration.nextElement();
-                result.append(key.toString());
-                result.append('=');
-                Object value = properties.get(key);
-                if (value instanceof String[]) {
-                    String[] values = (String[]) value;
-                    result.append('{');
-                    for (int i = 0; i < values.length; i++) {
-                        if (i > 0) {
-                            result.append(',');
-                        }
-                        result.append(values[i].toString());
-                    }
-                    result.append('}');
-                }
-                else {
-                    result.append(value.toString());
-                }
-                if (enumeration.hasMoreElements()) {
-                    result.append(',');
-                }
-            }
-            result.append(")");
-        }
-    }
     
     /**
      * Executes a task using our component queue. The queue associated to this component is by default a "SerialExecutor", or 

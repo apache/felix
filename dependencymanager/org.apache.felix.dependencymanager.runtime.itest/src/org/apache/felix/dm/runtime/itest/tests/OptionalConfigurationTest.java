@@ -23,6 +23,7 @@ import org.apache.felix.dm.itest.util.TestBase;
 import org.apache.felix.dm.runtime.itest.components.OptionalConfiguration;
 import org.osgi.framework.ServiceRegistration;
 
+@SuppressWarnings("rawtypes")
 public class OptionalConfigurationTest extends TestBase {
 	
     public void testOptionalConfig() throws Throwable {

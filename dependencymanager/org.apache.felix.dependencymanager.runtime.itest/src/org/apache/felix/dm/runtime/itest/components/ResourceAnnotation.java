@@ -19,11 +19,10 @@
 package org.apache.felix.dm.runtime.itest.components;
 
 import java.net.URL;
+import java.util.Dictionary;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
-
-import org.junit.Assert;
 
 import org.apache.felix.dm.DependencyManager;
 import org.apache.felix.dm.ResourceHandler;
@@ -39,6 +38,7 @@ import org.apache.felix.dm.annotation.api.ServiceDependency;
 import org.apache.felix.dm.annotation.api.Start;
 import org.apache.felix.dm.annotation.api.Stop;
 import org.apache.felix.dm.itest.util.Ensure;
+import org.junit.Assert;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Filter;
 import org.osgi.framework.InvalidSyntaxException;
@@ -165,7 +165,7 @@ public class ResourceAnnotation {
                 m_handlers.put(handler, filter);
             }
             for (int i = 0; i < m_resources.length; i++) {
-                if (filter == null || filter.match(ResourceUtil.createProperties(m_resources[i]))) {
+                if (filter == null || filter.match((Dictionary<String, ?>) ResourceUtil.createProperties(m_resources[i]))) {
                     System.out.println("ResourceProvider: calling handled.added(" + m_resources[i] + ")");
                     handler.added(m_resources[i], null);
                 }
@@ -186,9 +186,10 @@ public class ResourceAnnotation {
             removeResources(handler, filter);
         }
 
-        private void removeResources(ResourceHandler handler, Filter filter) {
+        @SuppressWarnings("unchecked")
+		private void removeResources(ResourceHandler handler, Filter filter) {
             for (int i = 0; i < m_resources.length; i++) {
-                if (filter == null || filter.match(ResourceUtil.createProperties(m_resources[i]))) {
+                if (filter == null || filter.match((Dictionary<String, ?>) ResourceUtil.createProperties(m_resources[i]))) {
                     handler.removed(m_resources[i], null);
                 }
             }
