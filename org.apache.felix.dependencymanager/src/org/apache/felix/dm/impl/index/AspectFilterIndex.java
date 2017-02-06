@@ -43,6 +43,7 @@ import org.osgi.framework.ServiceReference;
 /**
  * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
+@SuppressWarnings("rawtypes")
 public class AspectFilterIndex extends AbstractFactoryFilterIndex implements FilterIndex, ServiceTrackerCustomizer {
 	// (&(objectClass=foo.Bar)(|(!(service.ranking=*))(service.ranking<=99))(|(service.id=4451)(org.apache.felix.dependencymanager.aspect=4451)))
     private static final String FILTER_START = "(&(" + Constants.OBJECTCLASS + "=";
@@ -240,7 +241,8 @@ public class AspectFilterIndex extends AbstractFactoryFilterIndex implements Fil
 		}
     }
 
-    public Object addingService(ServiceReference reference) {
+    @SuppressWarnings("unchecked")
+	public Object addingService(ServiceReference reference) {
         BundleContext context;
         synchronized (m_lock) {
             context = m_context;

@@ -40,6 +40,7 @@ import org.osgi.framework.ServiceReference;
 /**
  * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
+@SuppressWarnings("rawtypes")
 public class TrackedTest {
 
 	@Test
@@ -73,7 +74,7 @@ public class TrackedTest {
 		tracker.open();
 		Tracked tracked = tracker.getTracked();
 		
-		ServiceReference[] initialReferences = new ServiceReference[] {
+		ServiceReference<?>[] initialReferences = new ServiceReference[] {
 				createServiceReference(1L),
 				createServiceReference(2L, 1L, 10),
 				createServiceReference(3L),
@@ -104,7 +105,7 @@ public class TrackedTest {
 		tracker.open();
 		Tracked tracked = tracker.getTracked();
 		
-		ServiceReference[] initialReferences = new ServiceReference[] {
+		ServiceReference<?>[] initialReferences = new ServiceReference[] {
 				createServiceReference(1L),
 				createServiceReference(2L, 1L, 10),
 				createServiceReference(3L),
@@ -117,7 +118,7 @@ public class TrackedTest {
 		assertArrayEquals(new Long[] { 2L, 5L }, customizer.getServiceReferenceIds());
 		
 		// create a service event that registers another but lower ranked aspect for service with id 1. 
-		ServiceReference newReference = createServiceReference(6L, 1L, 8);
+		ServiceReference<?> newReference = createServiceReference(6L, 1L, 8);
 		ServiceEvent event = new ServiceEvent(ServiceEvent.REGISTERED, newReference);
 		tracked.serviceChanged(event);
 		assertArrayEquals(new Long[] { 2L, 5L }, customizer.getServiceReferenceIds());
@@ -133,7 +134,7 @@ public class TrackedTest {
 		assertArrayEquals(new Long[] { 5L, 4L }, customizer.getServiceReferenceIds());	
 		
 		// create a service event that registers a higher ranked aspect for service with id 1.
-		ServiceReference higherRankedReference = createServiceReference(7L, 1L, 15);
+		ServiceReference<?> higherRankedReference = createServiceReference(7L, 1L, 15);
 		ServiceEvent addHigherRankedEvent = new ServiceEvent(ServiceEvent.REGISTERED, higherRankedReference);
 		tracked.serviceChanged(addHigherRankedEvent);
 		assertArrayEquals(new Long[] { 5L, 7L }, customizer.getServiceReferenceIds());	
@@ -165,11 +166,11 @@ public class TrackedTest {
 		return context;
 	}
 	
-	private ServiceReference createServiceReference(Long serviceId) {
+	private ServiceReference<?> createServiceReference(Long serviceId) {
 		return createServiceReference(serviceId, null, null);
 	}
 
-	private ServiceReference createServiceReference(Long serviceId, Long aspectId, Integer ranking) {
+	private ServiceReference<?> createServiceReference(Long serviceId, Long aspectId, Integer ranking) {
 		return new TestServiceReference(serviceId, aspectId, ranking);
 	}
 
@@ -183,7 +184,7 @@ public class TrackedTest {
 	
 	class TestCustomizer implements ServiceTrackerCustomizer {
 		
-		List<ServiceReference> serviceReferences = new ArrayList<>();
+		List<ServiceReference<?>> serviceReferences = new ArrayList<>();
 
 		@Override
 		public Object addingService(ServiceReference reference) {

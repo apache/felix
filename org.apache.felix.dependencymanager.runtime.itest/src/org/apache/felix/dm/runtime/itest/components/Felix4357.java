@@ -65,13 +65,14 @@ import org.osgi.framework.ServiceRegistration;
 @Property(name="v28", value="65", type=Character.class)
 @Property(name="v29", charValue=65)
 @Property(name="v30", charValue={65, 66})
+@SuppressWarnings("rawtypes")
 public class Felix4357 {
     public final static String ENSURE = "Felix4357";
     
     @ServiceDependency(filter = "(name=" + ENSURE + ")")
     volatile Ensure m_ensure;
     
-    @Registered
+	@Registered
     void registered(ServiceRegistration sr) {
         ServiceReference ref = sr.getReference();
         assertEquals(m_ensure, ref, "v1", "s", 1);

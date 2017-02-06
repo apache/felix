@@ -18,6 +18,8 @@
  */
 package org.apache.felix.dm.impl;
 
+import static org.apache.felix.dm.impl.ServiceUtil.toR6Dictionary;
+
 import java.util.Arrays;
 import java.util.Dictionary;
 import java.util.Hashtable;
@@ -48,7 +50,7 @@ import org.osgi.service.cm.ManagedService;
 public class ConfigurationDependencyImpl extends AbstractDependency<ConfigurationDependency> implements ConfigurationDependency, ManagedService {
     private volatile Dictionary<String, Object> m_settings;
 	private volatile String m_pid;
-	private ServiceRegistration m_registration;
+	private ServiceRegistration<?> m_registration;
 	private volatile Class<?> m_configType;
     private volatile MetaTypeProviderImpl m_metaType;
 	private boolean m_mayInvokeUpdateCallback;
@@ -179,7 +181,7 @@ public class ConfigurationDependencyImpl extends AbstractDependency<Configuratio
 	        if (m_metaType != null) {
 	            ms = m_metaType;
 	        }
-	        m_registration = context.registerService(ManagedService.class.getName(), ms, props);
+	        m_registration = context.registerService(ManagedService.class.getName(), ms, toR6Dictionary(props));
         }
         super.start();
     }

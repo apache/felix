@@ -38,7 +38,8 @@ import org.osgi.framework.ServiceReference;
  * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
 public class AdapterServiceImpl extends FilterComponent {
-    /**
+	
+	/**
      * Creates a new Adapter Service implementation.
      * 
      * @param dm the dependency manager used to create our internal adapter service
@@ -89,7 +90,7 @@ public class AdapterServiceImpl extends FilterComponent {
         }
         
         public Component createService(Object[] properties) {
-            ServiceReference ref = (ServiceReference) properties[0]; 
+            ServiceReference<?> ref = (ServiceReference<?>) properties[0]; 
             Object aspect = ref.getProperty(DependencyManager.ASPECT);            
             String serviceIdToTrack = (aspect != null) ? aspect.toString() : ref.getProperty(Constants.SERVICE_ID).toString();
             List<DependencyContext> dependencies = m_component.getDependencies();
@@ -133,7 +134,7 @@ public class AdapterServiceImpl extends FilterComponent {
             return "Adapter for " + m_adapteeInterface + ((m_adapteeFilter != null) ? " with filter " + m_adapteeFilter : "");
         }
         
-        public Dictionary<String, Object> getServiceProperties(ServiceReference ref) {
+        public Dictionary<String, Object> getServiceProperties(ServiceReference<?> ref) {
             Dictionary<String, Object> props = new Hashtable<>();
             if (m_serviceProperties != null) {
                 Enumeration<String> e = m_serviceProperties.keys();
@@ -145,16 +146,16 @@ public class AdapterServiceImpl extends FilterComponent {
             return props;
         }
         
-        public Dictionary<String, Object> propagateAdapteeProperties(ServiceReference ref) {
+        public Dictionary<String, Object> propagateAdapteeProperties(ServiceReference<?> ref) {
             Dictionary<String, Object> props = new Hashtable<>();
             String[] keys = ref.getPropertyKeys();
             for (int i = 0; i < keys.length; i++) {
                 String key = keys[i];
-                if (key.equals(DependencyManager.ASPECT) || key.equals(Constants.SERVICE_ID) || key.equals(Constants.SERVICE_RANKING) || key.equals(Constants.OBJECTCLASS)) {
-                    // do not copy these either
+                if (ServiceUtil.NOT_PROPAGATABLE_SERVICE_PROPERTIES.contains(key)) {
+                    // do not copy this key which is not propagatable.
                 }
                 else {
-                    props.put(key, ref.getProperty(key));
+                	props.put(key, ref.getProperty(key));
                 }
             }
             return props;

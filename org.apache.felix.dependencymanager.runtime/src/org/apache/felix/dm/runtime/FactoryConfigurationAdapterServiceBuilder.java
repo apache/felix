@@ -52,17 +52,11 @@ public class FactoryConfigurationAdapterServiceBuilder extends AbstractBuilder
         Dictionary<String, Object> properties = srvMeta.getDictionary(Params.properties, null);
         boolean propagate = "true".equals(srvMeta.getString(Params.propagate, "false"));
         String configProxyClassName = srvMeta.getString(Params.configType, null);
+
         Component c = null;
         
-        if (configProxyClassName != null)
-        {
-            Class<?> configProxyClass = b.loadClass(configProxyClassName);
-            c = dm.createFactoryConfigurationAdapterService(factoryPid, updated, propagate, configProxyClass);
-        }
-        else
-        {
-            c = dm.createFactoryConfigurationAdapterService(factoryPid, updated, propagate);
-        }
+        Class<?> configProxyClass = configProxyClassName != null ? b.loadClass(configProxyClassName) : null;
+        c = dm.createFactoryConfigurationAdapterService(factoryPid, updated, propagate, null, configProxyClass);
 
         c.setInterface(provides, properties);
         String factoryMethod = srvMeta.getString(Params.factoryMethod, null);

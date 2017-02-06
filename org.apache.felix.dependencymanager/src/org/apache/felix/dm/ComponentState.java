@@ -49,6 +49,12 @@ public enum ComponentState {
     STARTING,
         
 	/**
+	 * The component has been called in its started callback. At this point, the component has not yet been registered
+	 * in the service registry.
+	 */
+	STARTED,
+
+	/**
 	 * The component is started. At this point, the component:<p>
 	 * <ul>
 	 * <li> has been called in its start callback 

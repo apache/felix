@@ -38,7 +38,7 @@ import org.osgi.framework.ServiceRegistration;
  * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
 public class ResourceDependencyImpl extends AbstractDependency<ResourceDependency> implements ResourceDependency, ResourceHandler, ComponentDependencyDeclaration {
-    private volatile ServiceRegistration m_registration;
+    private volatile ServiceRegistration<?> m_registration;
     private volatile String m_resourceFilter;
     private volatile URL m_trackedResource;
 

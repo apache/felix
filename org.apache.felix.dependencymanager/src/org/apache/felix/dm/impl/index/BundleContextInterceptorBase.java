@@ -20,6 +20,7 @@ package org.apache.felix.dm.impl.index;
 
 import java.io.File;
 import java.io.InputStream;
+import java.util.Collection;
 import java.util.Dictionary;
 import java.util.HashMap;
 import java.util.Map;
@@ -32,7 +33,9 @@ import org.osgi.framework.BundleListener;
 import org.osgi.framework.Filter;
 import org.osgi.framework.FrameworkListener;
 import org.osgi.framework.InvalidSyntaxException;
+import org.osgi.framework.ServiceFactory;
 import org.osgi.framework.ServiceListener;
+import org.osgi.framework.ServiceObjects;
 import org.osgi.framework.ServiceReference;
 import org.osgi.framework.ServiceRegistration;
 
@@ -41,6 +44,7 @@ import org.osgi.framework.ServiceRegistration;
  * 
  * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
+@SuppressWarnings({ "unchecked", "rawtypes" })
 public abstract class BundleContextInterceptorBase implements BundleContext, ServiceListener {
     protected final BundleContext m_context;
     /** Keeps track of all service listeners and their optional filters. */
@@ -114,14 +118,24 @@ public abstract class BundleContextInterceptorBase implements BundleContext, Ser
         m_context.removeFrameworkListener(listener);
     }
 
-    public ServiceRegistration registerService(String[] clazzes, Object service, @SuppressWarnings("rawtypes") Dictionary properties) {
+	public ServiceRegistration registerService(String[] clazzes, Object service, Dictionary properties) {
         return m_context.registerService(clazzes, service, properties);
     }
 
-    public ServiceRegistration registerService(String clazz, Object service, @SuppressWarnings("rawtypes") Dictionary properties) {
+    public ServiceRegistration registerService(String clazz, Object service, Dictionary properties) {
         return m_context.registerService(clazz, service, properties);
     }
 
+    @Override
+    public <S> ServiceRegistration<S> registerService(Class<S> clazz, S service, Dictionary<String, ?> properties) {
+        return m_context.registerService(clazz, service, properties);
+    }
+    
+    @Override
+    public <S> ServiceRegistration<S> registerService(Class<S> clazz, ServiceFactory<S> factory, Dictionary<String, ?> properties) {
+        return m_context.registerService(clazz, factory, properties);
+    }
+    
     public ServiceReference[] getServiceReferences(String clazz, String filter) throws InvalidSyntaxException {
         return m_context.getServiceReferences(clazz, filter);
     }
@@ -134,8 +148,24 @@ public abstract class BundleContextInterceptorBase implements BundleContext, Ser
         return m_context.getServiceReference(clazz);
     }
 
+    @Override
+    public <S> ServiceReference<S> getServiceReference(Class<S> clazz) {
+        return m_context.getServiceReference(clazz);
+    }
+
+    @Override
+    public <S> Collection<ServiceReference<S>> getServiceReferences(Class<S> clazz, String filter) throws InvalidSyntaxException {
+        return m_context.getServiceReferences(clazz, filter);
+    }
+
     public Object getService(ServiceReference reference) {
         return m_context.getService(reference);
+    }
+
+    @Override
+    public <S> ServiceObjects<S> getServiceObjects(ServiceReference<S> reference)
+    {
+        return m_context.getServiceObjects(reference);
     }
 
     public boolean ungetService(ServiceReference reference) {
@@ -150,7 +180,11 @@ public abstract class BundleContextInterceptorBase implements BundleContext, Ser
         return m_context.createFilter(filter);
     }
 
-	@SuppressWarnings("unchecked")
+    @Override
+    public Bundle getBundle(String location) {
+        return m_context.getBundle(location);
+    }
+    
 	protected Entry<ServiceListener, String>[] synchronizeCollection() {
         // lazy copy on write: we make a new copy only if writes have changed the collection
         synchronized (m_serviceListenerFilterMap) {

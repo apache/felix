@@ -18,6 +18,7 @@
  */
 package org.apache.felix.dm;
 
+import org.osgi.annotation.versioning.ProviderType;
 import org.osgi.framework.ServiceReference;
 
 /**
@@ -25,6 +26,7 @@ import org.osgi.framework.ServiceReference;
  * 
  * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
+@ProviderType
 public interface ServiceDependency extends Dependency, ComponentDependencyDeclaration {
     /**
      * Sets the callbacks for this service. These callbacks can be used as hooks whenever a
@@ -244,7 +246,8 @@ public interface ServiceDependency extends Dependency, ComponentDependencyDeclar
      * @param serviceReference the service reference to track
      * @return this service dependency
      */
-    public ServiceDependency setService(Class<?> serviceName, ServiceReference serviceReference);
+    @SuppressWarnings("rawtypes")
+	public ServiceDependency setService(Class<?> serviceName, ServiceReference serviceReference);
     
     /**
      * Sets the default implementation for this service dependency. You can use this to supply
@@ -261,6 +264,8 @@ public interface ServiceDependency extends Dependency, ComponentDependencyDeclar
     /**
      * Sets propagation of the service dependency properties to the provided service properties. Any additional
      * service properties specified directly are merged with these.
+     * 
+     * @param propagate true if the dependency service properties should be propagated to the component service properties.
      */
     public ServiceDependency setPropagate(boolean propagate);
     
@@ -282,4 +287,15 @@ public interface ServiceDependency extends Dependency, ComponentDependencyDeclar
      * @return this service dependency.
      */
     public ServiceDependency setDebug(String debugKey);
+    
+    /**
+     * Configures whether or not this dependency should internally obtain the service object for all tracked service references.
+     * 
+     * By default, DM internally dereferences all discovered service references (using 
+     * <code>BundleContext.getService(ServiceReference ref)</code> methods. 
+     * However, sometimes, your callback only needs the ServiceReference, and sometimes you don't want to dereference the service.
+     * So, in this case you can use the <code>setDereference(false)</code> method in order to tell to DM 
+     * that it should never internally dereference the service dependency internally. 
+     */
+    public ServiceDependency setDereference(boolean dereferenceServiceInternally);
 }

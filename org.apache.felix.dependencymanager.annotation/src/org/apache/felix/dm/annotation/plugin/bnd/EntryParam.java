@@ -65,6 +65,8 @@ public enum EntryParam
     bundleContextField, 
     dependencyManagerField, 
     componentField, 
+    registrationField, 
     registered, 
-    unregistered
+    unregistered,
+    dereference
 }

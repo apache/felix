@@ -18,24 +18,33 @@
  */
 package org.apache.felix.dependencymanager.samples.dynamicdep.api;
 
-import aQute.bnd.annotation.metatype.Meta.AD;
-import aQute.bnd.annotation.metatype.Meta.OCD;
+import org.osgi.service.metatype.annotations.AttributeDefinition;
+import org.osgi.service.metatype.annotations.ObjectClassDefinition;
+import org.osgi.service.metatype.annotations.Option;
 
 /**
- * This interface describes the configuration for our DynamicDependencyComponent component. We are using the bnd metatype
+ * This interface describes the configuration for our DynamicDependencyComponent component. We are using the metatype
  * annotations, allowing to configure our component  from web console.
  * 
  * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
-@OCD(name = "Dynamic Dependency Configuration", 
-     description = "Declare here the configuration for the DynamicDependency component.")
+@ObjectClassDefinition(
+		name = "Dynamic Dependency Configuration",
+		description = "Declare here the configuration for the DynamicDependency component.",
+		pid="org.apache.felix.dependencymanager.samples.dynamicdep.api.DynamicDependencyConfiguration")
 public interface DynamicDependencyConfiguration {
-    @AD(description = "Enter the storage type to use", 
-    		deflt = "mapdb", 
-    		optionLabels= {"Map DB Storage implementation", "File Storage implementation"},
-    		optionValues={"mapdb", "file"})
+    
+    @AttributeDefinition(description = "Enter the storage type to use", 
+        defaultValue = "mapdb",
+        options={
+        	@Option(label="Map DB Storage implementation", value="mapdb"),
+        	@Option(label="File Storage implementation", value="file")
+        })
     String storageType();
 
-    @AD(description = "Specifies here is the storage dependency is required or not (if false, a null object will be used)", deflt = "true")
+    @AttributeDefinition(
+    	description = "Specifies here is the storage dependency is required or not (if false, a null object will be used)", 
+    	defaultValue = "true")
     boolean storageRequired();
+
 }

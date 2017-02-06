@@ -106,7 +106,7 @@ public class FELIX5337 implements FrameworkListener {
 		if (m_bctx.getBundle(0).getState() != Bundle.ACTIVE) {
 			m_bctx.addFrameworkListener(this);
 		} else {
-			frameworkEvent(new FrameworkEvent(FrameworkEvent.STARTED, m_bctx.getBundle()));
+			frameworkEvent(new FrameworkEvent(FrameworkEvent.STARTED, m_bctx.getBundle(), null));
 		}
 	}
 

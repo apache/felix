@@ -71,10 +71,16 @@ public class Patterns
     public final static Pattern BUNDLE_CONTEXT = Pattern.compile("Lorg/osgi/framework/BundleContext;");
 
     // Pattern used to parse a field whose type is DependencyManager
-    public final static Pattern DEPENDENCY_MANAGER = Pattern.compile("Lorg.apache.felix.dm.DependencyManager;");
+    public final static Pattern DEPENDENCY_MANAGER = Pattern.compile("Lorg/apache/felix/dm/DependencyManager;");
     
     // Pattern used to parse a field whose type is Component
-    public final static Pattern COMPONENT = Pattern.compile("Lorg.apache.felix.dm.Component;");
+    public final static Pattern COMPONENT = Pattern.compile("Lorg/apache/felix/dm/Component;");
+    
+    // Pattern used to parse a field whose type is ServiceRegistration
+    public final static Pattern SERVICE_REGISTRATION = Pattern.compile("Lorg/osgi/framework/ServiceRegistration;");    
+
+    // Pattern used to check if a method returns a Map
+    public final static Pattern METHOD_RETURN_MAP = Pattern.compile("\\(\\)Ljava/util/Map;");
 
     /**
      * Parses a class.

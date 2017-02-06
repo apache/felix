@@ -37,6 +37,7 @@ import org.osgi.service.log.LogService;
 /**
  * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
+@SuppressWarnings("rawtypes")
 public class SimpleAnnotations {
     /**
      * Provides a <code>Runnable</code> service, which is required by the

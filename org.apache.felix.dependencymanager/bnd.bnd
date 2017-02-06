@@ -15,11 +15,12 @@
 # limitations under the License.
 #
 -buildpath: \
-	osgi.core;version=4.2,\
-	osgi.cmpn;version=4.2,\
 	org.mockito.mockito-all;version=1.9,\
 	${junit},\
-	biz.aQute.bndlib;version=3.0
+	biz.aQute.bndlib;version=3.0,\
+	osgi.core;version=6.0,\
+	osgi.cmpn;version=6.0,\
+	osgi.annotation;version=6.0
 Private-Package: \
 	org.apache.felix.dm.impl,\
 	org.apache.felix.dm.impl.index,\

@@ -42,7 +42,8 @@ public class BundleEventImpl extends Event {
     @SuppressWarnings("unchecked")
     @Override
     public Dictionary<String, Object> getProperties() {
-        return getBundle().getHeaders();
+        return ServiceUtil.toR6Dictionary(getBundle().getHeaders());
+
     }
     
     public BundleEvent getBundleEvent() {

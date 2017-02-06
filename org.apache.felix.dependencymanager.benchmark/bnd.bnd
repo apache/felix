@@ -17,10 +17,10 @@
 javac.source:          1.8
 javac.target:          1.8
 Bundle-Version: 1.0.0
--buildpath:  \
+-buildpath: \
 	org.apache.felix.dependencymanager;version=latest,\
-	osgi.core;version=4.2,\
-	osgi.cmpn;version=4.2
+	osgi.core;version=6.0,\
+	osgi.cmpn;version=6.0
 
 -sub:  \
 	*.bnd

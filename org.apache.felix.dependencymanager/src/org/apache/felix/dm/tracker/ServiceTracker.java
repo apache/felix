@@ -63,6 +63,7 @@ import org.osgi.framework.Version;
  * @ThreadSafe
  * @version $Revision: 6386 $
  */
+@SuppressWarnings("rawtypes")
 public class ServiceTracker implements ServiceTrackerCustomizer {
 	/* set this to true to compile in debug messages */
 	static final boolean				DEBUG			= false;
@@ -498,6 +499,7 @@ public class ServiceTracker implements ServiceTrackerCustomizer {
 	 *         <code>ServiceTracker</code>.
 	 * @see ServiceTrackerCustomizer#addingService(ServiceReference)
 	 */
+	@SuppressWarnings("unchecked")
 	public Object addingService(ServiceReference reference) {
 		return context.getService(reference);
 	}

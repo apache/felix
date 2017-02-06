@@ -38,6 +38,7 @@ import java.util.function.Supplier;
 import java.util.stream.Stream;
 
 import org.apache.felix.dm.Component;
+import org.apache.felix.dm.ComponentStateListener;
 import org.apache.felix.dm.Dependency;
 import org.apache.felix.dm.DependencyManager;
 import org.apache.felix.dm.context.ComponentContext;
@@ -74,7 +75,8 @@ public class ComponentBuilderImpl implements ComponentBuilder<ComponentBuilderIm
     private Object m_initCallbackInstance;
     private Object m_startCallbackInstance;
     private Object m_stopCallbackInstance;
-    private Object m_destroyCallbackInstance;   
+    private Object m_destroyCallbackInstance;
+    private final List<ComponentStateListener> m_listeners = new ArrayList<>();
     
     enum ComponentCallback { INIT, START, STOP, DESTROY };
     
@@ -546,6 +548,11 @@ public class ComponentBuilderImpl implements ComponentBuilder<ComponentBuilderIm
         m_destroyCallbackInstance = null;
         return this;
     }
+        
+    public ComponentBuilderImpl listener(ComponentStateListener listener) {
+    	m_listeners.add(listener);
+    	return this;
+    }
     
     public Component build() {
         if (m_serviceNames != null) {
@@ -555,7 +562,9 @@ public class ComponentBuilderImpl implements ComponentBuilder<ComponentBuilderIm
         if (m_properties != null) {
             m_component.setServiceProperties(m_properties);
         }
-                
+        
+        m_listeners.stream().forEach(m_component::add);
+
         if (! m_componentUpdated) { // Don't override impl or set callbacks if component is being updated
            if (m_impl != null) {               
                m_component.setImplementation(m_impl);

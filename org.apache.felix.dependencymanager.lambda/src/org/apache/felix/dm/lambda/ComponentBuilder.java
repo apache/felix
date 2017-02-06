@@ -26,6 +26,7 @@ import java.util.function.Supplier;
 import java.util.stream.Stream;
 
 import org.apache.felix.dm.Component;
+import org.apache.felix.dm.ComponentStateListener;
 import org.apache.felix.dm.lambda.callbacks.InstanceCb;
 import org.apache.felix.dm.lambda.callbacks.InstanceCbComponent;
 
@@ -761,6 +762,13 @@ public interface ComponentBuilder<B extends ComponentBuilder<B>> {
      * @return this builder
      */
     B composition(Supplier<Object[]> getCompositionMethod);
+        
+    /**
+     * Adds a component state listener to this component.
+     * 
+     * @param listener the state listener
+     */
+	B listener(ComponentStateListener listener);
     
     /**
      * Builds the real DependencyManager Component.

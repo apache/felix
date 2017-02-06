@@ -104,17 +104,18 @@ public class DependencyBuilder
         String autoConfigField = m_metaData.getString(Params.autoConfig, null);
         boolean required = "true".equals(m_metaData.getString(Params.required, "true"));
         boolean propagate = "true".equals(m_metaData.getString(Params.propagate, "false"));
+        boolean dereference = "true".equals(m_metaData.getString(Params.dereference, "true"));
 
         Dependency dp = createServiceDependency(dm, serviceClass,
             serviceFilter, defaultServiceImplClass, added, changed,
-            removed, autoConfigField, timeout, required, propagate);
+            removed, autoConfigField, timeout, required, propagate, dereference);
         return dp;
     }
 
     private Dependency createServiceDependency(DependencyManager dm, Class<?> serviceClass, 
         String serviceFilter, Class<?> defaultServiceImplClass, String added,
         String changed, String removed, String autoConfigField, long timeout, boolean required,
-        boolean propagate)
+        boolean propagate, boolean dereference)
     {
         ServiceDependency sd = timeout != -1 ? dm.createTemporalServiceDependency(timeout)
             : dm.createServiceDependency();
@@ -134,6 +135,7 @@ public class DependencyBuilder
         }
         
         sd.setPropagate(propagate);
+        sd.setDereference(dereference);
         return sd;
     }
 

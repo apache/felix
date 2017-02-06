@@ -121,7 +121,7 @@ public class FELIX5200_FactoryPidNotRestartedTest extends TestBase {
                 m_conf = m_ca.createFactoryConfiguration(m_pid, null);
                 Properties props = new Properties();
                 props.setProperty("some", "properties");
-                m_conf.update(props);
+                m_conf.update(toR6Dictionary(props));              
             }
             catch (IOException e) {
                 Assert.fail("Could not create configuration: " + e.getMessage());

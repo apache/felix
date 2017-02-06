@@ -20,8 +20,8 @@ package org.apache.felix.dependencymanager.samples.dictionary.api;
 
 import java.util.List;
 
-import aQute.bnd.annotation.metatype.Meta.AD;
-import aQute.bnd.annotation.metatype.Meta.OCD;
+import org.osgi.service.metatype.annotations.AttributeDefinition;
+import org.osgi.service.metatype.annotations.ObjectClassDefinition;
 
 /**
  * This interface describes the configuration for our DictionaryAspect component. We are using the bnd metatype
@@ -29,9 +29,11 @@ import aQute.bnd.annotation.metatype.Meta.OCD;
  * 
  * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
-@OCD(name="Spell Checker Aspect Dictionary",
-     description = "Declare here the list of english words to be added into the default english dictionary")
+@ObjectClassDefinition(
+	name="Spell Checker Aspect Dictionary",
+    description = "Declare here the list of english words to be added into the default english dictionary",
+    pid="org.apache.felix.dependencymanager.samples.dictionary.api.DictionaryAspectConfiguration")
 public interface DictionaryAspectConfiguration {
-    @AD(description = "Dictionary aspect words")
+    @AttributeDefinition(description = "Dictionary aspect words")
     List<String> words();
 }

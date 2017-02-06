@@ -20,8 +20,8 @@ package org.apache.felix.dependencymanager.samples.dictionary.api;
 
 import java.util.List;
 
-import aQute.bnd.annotation.metatype.Meta.AD;
-import aQute.bnd.annotation.metatype.Meta.OCD;
+import org.osgi.service.metatype.annotations.AttributeDefinition;
+import org.osgi.service.metatype.annotations.ObjectClassDefinition;
 
 /**
  * This interface describes the configuration for our DictionaryImpl component. We are using the bnd metatype
@@ -29,13 +29,13 @@ import aQute.bnd.annotation.metatype.Meta.OCD;
  * 
  * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
-@OCD(name="Spell Checker Dictionary",
-     factory = true, 
+@ObjectClassDefinition(name="Spell Checker Dictionary",
+     factoryPid = "org.apache.felix.dependencymanager.samples.dictionary.api.DictionaryConfiguration", 
      description = "Declare here some Dictionary instances, allowing to instantiates some DictionaryService services for a given dictionary language")
 public interface DictionaryConfiguration {
-    @AD(description = "Describes the dictionary language", deflt = "en")
+    @AttributeDefinition(description = "Describes the dictionary language", defaultValue = "en")
     String lang();
 
-    @AD(description = "Declare here the list of words supported by this dictionary.")
+    @AttributeDefinition(description = "Declare here the list of words supported by this dictionary.")
     List<String> words();
 }

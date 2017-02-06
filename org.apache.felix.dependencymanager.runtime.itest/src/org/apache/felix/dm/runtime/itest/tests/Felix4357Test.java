@@ -29,6 +29,7 @@ import org.osgi.framework.ServiceRegistration;
  * 
  * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
+@SuppressWarnings("rawtypes")
 public class Felix4357Test extends TestBase {
     
     public void testSingleProperty() {

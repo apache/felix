@@ -29,7 +29,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.FileDescriptor;
 import java.io.FileOutputStream;
 import java.io.PrintStream;
-import java.util.Properties;
+import java.util.Hashtable;
 
 import javax.crypto.Cipher;
 
@@ -259,7 +259,7 @@ public class DMCommandTest {
         Bundle bundle1 = mock(Bundle.class);
         when(bundle1.getState()).thenReturn(Bundle.RESOLVED);
         when(bundle1.getSymbolicName()).thenReturn("BadBundle");
-        Properties headers = new Properties();
+        Hashtable<String, String> headers = new Hashtable<>();
         when(bundle1.getHeaders()).thenReturn(headers);
         
         setupBundles(bundle1);
@@ -277,7 +277,7 @@ public class DMCommandTest {
         Bundle bundle1 = mock(Bundle.class);
         when(bundle1.getState()).thenReturn(Bundle.RESOLVED);
         when(bundle1.getSymbolicName()).thenReturn("BadBundle");
-        Properties headers = new Properties();
+        Hashtable<String, String> headers = new Hashtable<>();
         headers.put("Fragment-Host", "some value");
         when(bundle1.getHeaders()).thenReturn(headers);
         setupBundles(bundle1);

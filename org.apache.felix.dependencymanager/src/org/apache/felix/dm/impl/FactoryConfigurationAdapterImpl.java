@@ -30,6 +30,7 @@ import org.apache.felix.dm.Component;
 import org.apache.felix.dm.DependencyManager;
 import org.apache.felix.dm.Logger;
 import org.apache.felix.dm.PropertyMetaData;
+import org.apache.felix.dm.context.ComponentContext;
 import org.apache.felix.dm.impl.metatype.MetaTypeProviderImpl;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
@@ -147,7 +148,7 @@ public class FactoryConfigurationAdapterImpl extends FilterComponent {
             }
             
             // Instantiate the component, because we need to invoke the updated callback synchronously, in the CM calling thread.
-            ((ComponentImpl) newService).instantiateComponent();
+            ((ComponentContext) newService).instantiateComponent();
 
             CallbackTypeDef callbackInfo = createCallbackType(m_logger, newService, m_configType, settings);
             invokeUpdated(newService, callbackInfo);

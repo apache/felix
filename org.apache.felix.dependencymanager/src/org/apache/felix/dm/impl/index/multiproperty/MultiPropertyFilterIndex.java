@@ -43,6 +43,7 @@ import org.osgi.framework.ServiceReference;
 /**
  * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
+@SuppressWarnings("rawtypes")
 public class MultiPropertyFilterIndex implements FilterIndex, ServiceTrackerCustomizer {
 
     private final Object m_lock = new Object();
@@ -50,7 +51,7 @@ public class MultiPropertyFilterIndex implements FilterIndex, ServiceTrackerCust
     private BundleContext m_context;
 	private Map<String, Property> m_configProperties = new LinkedHashMap<>();
 	private List<String> m_negatePropertyKeys = new ArrayList<>();
-    private final Map<String, List<ServiceReference>> m_keyToServiceReferencesMap = new HashMap<>();
+	private final Map<String, List<ServiceReference>> m_keyToServiceReferencesMap = new HashMap<>();
     private final Map<String, List<ServiceListener>> m_keyToListenersMap = new HashMap<>();
     private final Map<ServiceListener, String> m_listenerToFilterMap = new HashMap<>();
 
@@ -281,7 +282,8 @@ public class MultiPropertyFilterIndex implements FilterIndex, ServiceTrackerCust
 		return builder.toString();
     }
     
-    public Object addingService(ServiceReference reference) {
+    @SuppressWarnings("unchecked")
+	public Object addingService(ServiceReference reference) {
         BundleContext context;
         synchronized (m_lock) {
             context = m_context;

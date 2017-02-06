@@ -52,7 +52,7 @@ public class FactoryConfigurationAdapterImplTest {
         FactoryConfigurationAdapterImpl cdi = createConfigurationDependency(service, Map.class);
         ensure.step(1);
 
-        ((ManagedServiceFactory) cdi.m_component.getInstance()).updated(CONF_PID, createDictionary());
+        ((ManagedServiceFactory) cdi.m_component.getInstance()).updated(CONF_PID, (Dictionary<String, ?>) createDictionary());
 
         TimeUnit.SECONDS.sleep(1L);
 
@@ -67,7 +67,7 @@ public class FactoryConfigurationAdapterImplTest {
 
         FactoryConfigurationAdapterImpl cdi = createConfigurationDependency(service, MyConfiguration.class);
 
-        ((ManagedServiceFactory) cdi.m_component.getInstance()).updated(CONF_PID, createDictionary());
+        ((ManagedServiceFactory) cdi.m_component.getInstance()).updated(CONF_PID, (Dictionary<String, ?>) createDictionary());
 
         ensure.waitForStep(1, 1000);
 
@@ -83,7 +83,7 @@ public class FactoryConfigurationAdapterImplTest {
 
         FactoryConfigurationAdapterImpl cdi = createConfigurationDependency(service);
 
-        ((ManagedServiceFactory) cdi.m_component.getInstance()).updated(CONF_PID, createDictionary());
+        ((ManagedServiceFactory) cdi.m_component.getInstance()).updated(CONF_PID, (Dictionary<String, ?>) createDictionary());
 
         ensure.waitForStep(1, 1000);
 
@@ -99,7 +99,7 @@ public class FactoryConfigurationAdapterImplTest {
 
         FactoryConfigurationAdapterImpl cdi = createConfigurationDependency(service);
 
-        ((ManagedServiceFactory) cdi.m_component.getInstance()).updated(CONF_PID, createDictionary());
+        ((ManagedServiceFactory) cdi.m_component.getInstance()).updated(CONF_PID, (Dictionary<String, ?>) createDictionary());
 
         ensure.waitForStep(1, 1000);
 
@@ -137,7 +137,7 @@ public class FactoryConfigurationAdapterImplTest {
         return (FactoryConfigurationAdapterImpl) result;
     }
 
-    private Dictionary<?,?> createDictionary() {
+    private Dictionary<String, Object> createDictionary() {
         Dictionary<String, Object> result = new Hashtable<>();
         result.put("true", "true");
         result.put("value", "42");

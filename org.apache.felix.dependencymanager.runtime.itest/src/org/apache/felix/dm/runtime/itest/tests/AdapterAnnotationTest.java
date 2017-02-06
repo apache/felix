@@ -32,6 +32,7 @@ import org.osgi.framework.ServiceRegistration;
  * 
  * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
+@SuppressWarnings("rawtypes")
 public class AdapterAnnotationTest extends TestBase {
     /**
      * Check if an adapter gets injected with its adaptee using default auto config mode.

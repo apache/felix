@@ -25,6 +25,7 @@ import org.osgi.framework.ServiceReference;
 /**
  * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
+@SuppressWarnings("rawtypes")
 public class Utils {
     public static final String DM_BSN = "org.apache.felix.dependencymanager"; 
 

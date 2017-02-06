@@ -31,7 +31,7 @@ import org.apache.felix.dm.itest.util.TestBase;
 public class UngetServiceTest extends TestBase {
 	final Ensure m_ensure = new Ensure();
 
-	public void testAbstractClassDependency() {
+	public void testUngetService() {
 		DependencyManager m = getDM();
 		
 		Component service = m.createComponent()
@@ -51,7 +51,9 @@ public class UngetServiceTest extends TestBase {
 		
 		// The client has been removed and the service reference must have been ungotten.
 		ServiceReference ref = clientImpl.getServiceRef();
-		Assert.assertEquals(false, this.context.ungetService(ref));				
+		Assert.assertEquals(false, this.context.ungetService(ref));		
+
+		m.remove(service);
 	}
 
 	public class Service {

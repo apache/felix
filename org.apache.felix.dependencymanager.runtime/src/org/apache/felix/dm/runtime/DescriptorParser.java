@@ -25,7 +25,6 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.felix.dm.DependencyManager;
-import org.json.JSONObject;
 import org.osgi.framework.Bundle;
 
 /**
@@ -51,15 +50,9 @@ public class DescriptorParser
         // The first line is a Service Component (a Service, an Aspect Service, etc ...)
         line = reader.readLine();
         Log.instance().debug("DescriptorParser: parsing service %s", line);
-        JSONObject json = new JSONObject(line);
-        JSONMetaData serviceMetaData = new JSONMetaData(json);
+        JSONMetaData serviceMetaData = new JSONMetaData(line);
 
-        String type = (String) json.get("type");
-        if (type == null)
-        {
-            throw new IllegalArgumentException("Invalid descriptor"
-                    + ": no \"type\" parameter found in first line");
-        }
+        String type = serviceMetaData.getString(Params.type);
 
         AbstractBuilder builder = m_builders.get(type);
         if (builder == null)
@@ -73,8 +66,7 @@ public class DescriptorParser
         while ((line = reader.readLine()) != null)
         {
             Log.instance().debug("Parsing dependency %s", line);
-            JSONObject dep = new JSONObject(line);
-            serviceDependencies.add(new JSONMetaData(dep));
+            serviceDependencies.add(new JSONMetaData(line));
         }
 
         // and Invoke the builder

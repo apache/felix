@@ -162,9 +162,23 @@ public class ResourceAdapterDependencyAddAndRemoveTest2 extends TestBase {
             case WAITING_FOR_REQUIRED:
                 System.out.println("WAITING_FOR_REQUIRED");
                 break;
-            case TRACKING_OPTIONAL:
+			case STARTING:
+                System.out.println("STARTING");
+				break;
+			case STARTED:
+                System.out.println("STARTED");
+				break;
+			case TRACKING_OPTIONAL:
                 System.out.println("TRACKING_OPTIONAL");
                 break;
+			case STOPPING:
+                System.out.println("STOPING");
+				break;
+			case STOPPED:
+                System.out.println("STOPPED");
+				break;
+			default:
+				break;
 
             }
         }

@@ -20,10 +20,7 @@ package org.apache.felix.dm.itest.api;
 
 import java.io.IOException;
 import java.util.Dictionary;
-import java.util.HashMap;
 import java.util.Hashtable;
-import java.util.Map;
-import java.util.Properties;
 
 import org.apache.felix.dm.itest.util.Ensure;
 import org.junit.Assert;

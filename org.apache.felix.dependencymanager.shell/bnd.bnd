@@ -14,13 +14,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
--buildpath:  \
-	osgi.core;version=4.2,\
-	osgi.cmpn;version=4.2,\
+-buildpath: \
 	org.apache.felix.gogo.runtime;version=0.10,\
 	org.mockito.mockito-all;version=1.9,\
 	org.apache.felix.dependencymanager;version=latest,\
-	${junit}
+	${junit},\
+	osgi.core;version=6.0,\
+	osgi.cmpn;version=6.0
 Private-Package: \
 	org.apache.felix.dm.shell
 Bundle-Activator:org.apache.felix.dm.shell.Activator
