@@ -58,17 +58,18 @@ public class ConvertingImpl implements Converting, InternalConverting {
         interfaceImplementations = Collections.unmodifiableMap(m);
     }
 
-    private volatile InternalConverter converter;
+    volatile InternalConverter converter;
     private volatile Object object;
-    private volatile Class<?> sourceAsClass;
     private volatile Object defaultValue;
     private volatile boolean hasDefault;
-    private volatile Class<?> sourceClass;
-    private volatile Class<?> targetActualClass;
+    volatile Class<?> sourceClass;
+    volatile Class<?> sourceAsClass;
+    private volatile Class<?> targetClass;
     private volatile Class<?> targetAsClass;
-    private volatile Type[] typeArguments;
-    private List<Object> keys = new ArrayList<>();
+    volatile Type[] typeArguments;
+    List<Object> keys = new ArrayList<>();
     private volatile Object root;
+    private volatile boolean forceCopy = false;
     private volatile boolean sourceAsJavaBean = false;
     @SuppressWarnings( "unused" )
     private volatile boolean targetAsJavaBean = false;
@@ -126,7 +127,8 @@ public class ConvertingImpl implements Converting, InternalConverting {
 
     @Override
     public Converting copy() {
-        // TODO Implement this
+        forceCopy  = true;
+
         return null;
     }
 
@@ -154,7 +156,6 @@ public class ConvertingImpl implements Converting, InternalConverting {
         return this;
     }
 
-    @SuppressWarnings( "unchecked" )
     @Override
     public void setConverter(Converter c) {
         if (c instanceof InternalConverter)
@@ -197,16 +198,11 @@ public class ConvertingImpl implements Converting, InternalConverting {
         if (object == null)
             return handleNull(cls);
 
-        targetActualClass = Util.primitiveToBoxed(cls);
+        targetClass = Util.primitiveToBoxed(cls);
         if (targetAsClass == null)
-            targetAsClass = targetActualClass;
+            targetAsClass = targetClass;
 
         sourceClass = sourceAsClass != null ? sourceAsClass : object.getClass();
-
-        // Temporary - to remove next commit!!
-        // This is just to catch any old code that may still be using {source|target}As(DTO.class)
-        if(DTO.class.equals(sourceClass) || DTO.class.equals(targetAsClass))
-            throw new RuntimeException("To update!!");
 
         if (!isCopyRequiredType(targetAsClass) && targetAsClass.isAssignableFrom(sourceClass)) {
                 return object;
@@ -220,7 +216,7 @@ public class ConvertingImpl implements Converting, InternalConverting {
             return convertToArray();
         } else if (Collection.class.isAssignableFrom(targetAsClass)) {
             return convertToCollection();
-        } else if (isDTOType(targetAsClass) || ((sourceAsDTO || targetAsDTO) && DTO.class.isAssignableFrom(targetActualClass))) {
+        } else if (isDTOType(targetAsClass) || ((sourceAsDTO || targetAsDTO) && DTO.class.isAssignableFrom(targetClass))) {
             return convertToDTO();
         } else if (isMapType(targetAsClass)) {
             return convertToMapType();
@@ -238,7 +234,7 @@ public class ConvertingImpl implements Converting, InternalConverting {
             return res2;
         } else {
             if (defaultValue != null)
-                return converter.convert(defaultValue).sourceAs(sourceAsClass).targetAs(targetAsClass).to(targetActualClass);
+                return converter.convert(defaultValue).sourceAs(sourceAsClass).targetAs(targetAsClass).to(targetClass);
             else
                 return null;
         }
@@ -312,17 +308,17 @@ public class ConvertingImpl implements Converting, InternalConverting {
 
         Class<?> cls = targetAsClass;
         if (targetAsDTO)
-            cls = targetActualClass;
+            cls = targetClass;
         try {
-            T dto = (T) targetActualClass.newInstance();
+            T dto = (T) targetClass.newInstance();
 
             for (Map.Entry entry : (Set<Map.Entry>) m.entrySet()) {
                 Field f = null;
                 try {
-                    f = cls.getDeclaredField(mangleName(entry.getKey().toString()));
+                    f = cls.getDeclaredField(Util.mangleName(entry.getKey().toString()));
                 } catch (NoSuchFieldException e) {
                     try {
-                        f = cls.getField(mangleName(entry.getKey().toString()));
+                        f = cls.getField(Util.mangleName(entry.getKey().toString()));
                     } catch (NoSuchFieldException e1) {
                         // There is not field with this name
                     }
@@ -340,7 +336,7 @@ public class ConvertingImpl implements Converting, InternalConverting {
 
             return dto;
         } catch (Exception e) {
-            throw new ConversionException("Cannot create DTO " + targetActualClass, e);
+            throw new ConversionException("Cannot create DTO " + targetClass, e);
         }
     }
 
@@ -349,15 +345,14 @@ public class ConvertingImpl implements Converting, InternalConverting {
         Map m = mapView(object, sourceClass, converter);
         if (m == null)
             return null;
-        Type targetKeyType = null, targetValueType = null;
-        if (typeArguments != null && typeArguments.length > 1) {
+        Type targetKeyType = null;
+        if (typeArguments != null && typeArguments.length > 0) {
             targetKeyType = typeArguments[0];
-            targetValueType = typeArguments[1];
         }
 
-        Class<?> ctrCls = interfaceImplementations.get(targetActualClass);
+        Class<?> ctrCls = interfaceImplementations.get(targetClass);
         if (ctrCls == null)
-            ctrCls = targetActualClass;
+            ctrCls = targetClass;
 
         Map instance = (Map) createMapOrCollection(ctrCls, m.size());
         if (instance == null)
@@ -369,32 +364,62 @@ public class ConvertingImpl implements Converting, InternalConverting {
             if (targetKeyType != null)
                 key = converter.convert(key).key(ks.toArray()).to(targetKeyType);
             ks.add(key);
-            Object[] ka = ks.toArray();
 
             Object value = entry.getValue();
-            if (value != null) {
-                if (targetValueType != null) {
-                    value = converter.convert(value).key(ka).to(targetValueType);
-                } else {
-                    Class<?> cls = value.getClass();
-                    if (isCopyRequiredType(cls)) {
-                        cls = getConstructableType(cls);
-                    }
-                    if (sourceAsDTO && DTO.class.isAssignableFrom(cls))
-                        // sourceAsDTO or sourceAsClass???
-                        value = converter.convert(value).key(ka).sourceAsDTO().to(cls);
-                    else
-                        value = converter.convert(value).key(ka).to(cls);
-                }
-            }
+            value = convertMapValue(value, ks.toArray());
             instance.put(key, value);
         }
 
         return instance;
     }
 
+    Object convertMapValue(Object value, Object[] ka) {
+        Type targetValueType = null;
+        if (typeArguments != null && typeArguments.length > 1) {
+            targetValueType = typeArguments[1];
+        }
+
+        if (value != null) {
+            if (targetValueType != null) {
+                value = converter.convert(value).key(ka).to(targetValueType);
+            } else {
+                Class<?> cls = value.getClass();
+                if (isCopyRequiredType(cls)) {
+                    cls = getConstructableType(cls);
+                }
+                if (sourceAsDTO && DTO.class.isAssignableFrom(cls))
+                    value = converter.convert(value).key(ka).sourceAsDTO().to(cls);
+                else
+                    value = converter.convert(value).key(ka).to(cls);
+            }
+        }
+        return value;
+    }
+
+    @SuppressWarnings({ "unchecked", "rawtypes" })
+    private Map convertToMapDelegate() {
+        if (Map.class.isAssignableFrom(sourceClass)) {
+            return MapDelegate.forMap((Map) object, this);
+        } else if (Dictionary.class.isAssignableFrom(sourceClass)) {
+            return MapDelegate.forDictionary((Dictionary) object, this);
+        } else if (isDTOType(sourceClass) || sourceAsDTO) {
+            return MapDelegate.forDTO(object, this);
+        } else if (sourceAsJavaBean) {
+            return MapDelegate.forBean(object, this);
+        }
+
+        // Assume it's an interface
+        return MapDelegate.forInterface(object, this);
+    }
+
     @SuppressWarnings({ "unchecked", "rawtypes" })
     private Object convertToMapType() {
+        if (Map.class.equals(targetClass) && !forceCopy) {
+            Map res = convertToMapDelegate();
+            if (res != null)
+                return res;
+        }
+
         if (Map.class.isAssignableFrom(targetAsClass))
             return convertToMap();
         else if (Dictionary.class.isAssignableFrom(targetAsClass))
@@ -423,7 +448,7 @@ public class ConvertingImpl implements Converting, InternalConverting {
         @SuppressWarnings("rawtypes")
         Map m = mapView(object, sourceCls, converter);
         try {
-            Object res = targetActualClass.newInstance();
+            Object res = targetClass.newInstance();
             for (Method setter : getSetters(targetCls)) {
                 String setterName = setter.getName();
                 StringBuilder propName = new StringBuilder(Character.valueOf(Character.toLowerCase(setterName.charAt(3))).toString());
@@ -447,7 +472,7 @@ public class ConvertingImpl implements Converting, InternalConverting {
             new InvocationHandler() {
                 @Override
                 public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
-                    String propName = getInterfacePropertyName(method);
+                    String propName = Util.getInterfacePropertyName(method);
                     if (propName == null)
                         return null;
 
@@ -574,14 +599,7 @@ public class ConvertingImpl implements Converting, InternalConverting {
                 return null;
             }
         } else if (Enum.class.isAssignableFrom(targetAsClass)) {
-            if (object instanceof Boolean) {
-                try {
-                    Method m = targetAsClass.getMethod("valueOf", String.class);
-                    return m.invoke(null, object.toString().toUpperCase());
-                } catch (Exception e) {
-                    throw new RuntimeException(e);
-                }
-            } else if (object instanceof Number) {
+            if (object instanceof Number) {
                 try {
                     Method m = targetAsClass.getMethod("values");
                     Object[] values = (Object[]) m.invoke(null);
@@ -589,8 +607,24 @@ public class ConvertingImpl implements Converting, InternalConverting {
                 } catch (Exception e) {
                     throw new RuntimeException(e);
                 }
+            } else {
+                try {
+                    Method m = targetAsClass.getMethod("valueOf", String.class);
+                    return m.invoke(null, object.toString());
+                } catch (Exception e) {
+                    try {
+                        // Case insensitive fallback
+                        Method m = targetAsClass.getMethod("values");
+                        for (Object v : (Object[]) m.invoke(null)) {
+                            if (v.toString().equalsIgnoreCase(object.toString())) {
+                                return v;
+                            }
+                        }
+                    } catch (Exception e1) {
+                        throw new RuntimeException(e1);
+                    }
+                }
             }
-
         }
         return null;
     }
@@ -598,13 +632,13 @@ public class ConvertingImpl implements Converting, InternalConverting {
     @SuppressWarnings("unchecked")
     private <T> T tryStandardMethods() {
         try {
-            Method m = targetActualClass.getDeclaredMethod("valueOf", String.class);
+            Method m = targetClass.getDeclaredMethod("valueOf", String.class);
             if (m != null) {
                 return (T) m.invoke(null, object.toString());
             }
         } catch (Exception e) {
             try {
-                Constructor<?> ctr = targetActualClass.getConstructor(String.class);
+                Constructor<?> ctr = targetClass.getConstructor(String.class);
                 return (T) ctr.newInstance(object.toString());
             } catch (Exception e2) {
             }
@@ -654,9 +688,6 @@ public class ConvertingImpl implements Converting, InternalConverting {
         for (Method md : sourceCls.getDeclaredMethods()) {
             handleBeanMethod(obj, md, invokedMethods, result);
         }
-        for (Method md : sourceCls.getMethods()) {
-            handleBeanMethod(obj, md, invokedMethods, result);
-        }
 
         return result;
     }
@@ -666,11 +697,12 @@ public class ConvertingImpl implements Converting, InternalConverting {
         Set<String> handledFields = new HashSet<>();
 
         Map result = new HashMap();
+        // Do we need 'declaredfields'? We only need to look at the public ones...
         for (Field f : obj.getClass().getDeclaredFields()) {
-            handleField(obj, f, handledFields, result, converter);
+            handleDTOField(obj, f, handledFields, result, converter);
         }
         for (Field f : obj.getClass().getFields()) {
-            handleField(obj, f, handledFields, result, converter);
+            handleDTOField(obj, f, handledFields, result, converter);
         }
         return result;
     }
@@ -732,59 +764,13 @@ public class ConvertingImpl implements Converting, InternalConverting {
         return null;
     }
 
-    private static String getAccessorPropertyName(Method md) {
-        if (md.getReturnType().equals(Void.class))
-            return null; // not an accessor
-
-        if (md.getParameterTypes().length > 0)
-            return null; // not an accessor
-
-        if (Object.class.equals(md.getDeclaringClass()))
-            return null; // do not use any methods on the Object class as a accessor
-
-        String mn = md.getName();
-        int prefix;
-        if (mn.startsWith("get"))
-            prefix = 3;
-        else if (mn.startsWith("is"))
-            prefix = 2;
-        else
-            return null; // not an accessor prefix
-
-        if (mn.length() <= prefix)
-            return null; // just 'get' or 'is': not an accessor
-        String propStr = mn.substring(prefix);
-        StringBuilder propName = new StringBuilder(propStr.length());
-        char firstChar = propStr.charAt(0);
-        if (!Character.isUpperCase(firstChar))
-            return null; // no acccessor as no camel casing
-        propName.append(Character.toLowerCase(firstChar));
-        if (propStr.length() > 1)
-            propName.append(propStr.substring(1));
-
-        return propName.toString();
-    }
-
-    private static String getInterfacePropertyName(Method md) {
-        if (md.getReturnType().equals(Void.class))
-            return null; // not an accessor
-
-        if (md.getParameterTypes().length > 1)
-            return null; // not an accessor
-
-        if (Object.class.equals(md.getDeclaringClass()))
-            return null; // do not use any methods on the Object class as a accessor
-
-        return md.getName().replace('_', '.'); // TODO support all the escaping mechanisms.
-    }
-
     @SuppressWarnings({ "rawtypes", "unchecked" })
-    private void handleField(Object obj, Field field, Set<String> handledFields, Map result,
+    private void handleDTOField(Object obj, Field field, Set<String> handledFields, Map result,
             InternalConverter converter) {
-        if (Modifier.isStatic(field.getModifiers()))
+        String fn = Util.getDTOKey(field);
+        if (fn == null)
             return;
 
-        String fn = unMangleName(field.getName());
         if (handledFields.contains(fn))
             return; // Field with this name was already handled
 
@@ -804,64 +790,38 @@ public class ConvertingImpl implements Converting, InternalConverting {
         }
     }
 
-    private String mangleName(String key) {
-        String res = key.replace("_", "__");
-        res = res.replace("$", "$$");
-        res = res.replaceAll("[.]([._])", "_\\$$1");
-        res = res.replace('.', '_');
-        // TODO handle Java keywords
-        return res;
-    }
-
-    private String unMangleName(String key) {
-        String res = key.replaceAll("_\\$", ".");
-        res = res.replace("__", "\f"); // parkl double underscore as formfeed char
-        res = res.replace('_', '.');
-        res = res.replace("$$", "\b"); // park double dollar as backspace char
-        res = res.replace("$", "");
-        res = res.replace('\f', '_');  // convert formfeed char back to single underscore
-        res = res.replace('\b', '$');  // convert backspace char back go dollar
-        return res;
-    }
-
     @SuppressWarnings({ "rawtypes", "unchecked" })
     private static void handleBeanMethod(Object obj, Method md, Set<String> invokedMethods, Map res) {
-        if (Modifier.isStatic(md.getModifiers()))
+        String bp = Util.getBeanKey(md);
+        if (bp == null)
             return;
 
-        String mn = md.getName();
-        if (invokedMethods.contains(mn))
+        if (invokedMethods.contains(bp))
             return; // method with this name already invoked
 
-        String propName = getAccessorPropertyName(md);
-        if (propName == null)
-            return;
-
         try {
-            res.put(propName.toString(), md.invoke(obj));
-            invokedMethods.add(mn);
+            res.put(bp, md.invoke(obj));
+            invokedMethods.add(bp);
         } catch (Exception e) {
         }
     }
 
     @SuppressWarnings({ "rawtypes", "unchecked" })
     private static void handleInterfaceMethod(Object obj, Method md, Set<String> invokedMethods, Map res) {
-        if (Modifier.isStatic(md.getModifiers()))
-            return;
-
-        if (md.getParameterCount() > 0)
-            return;
-
         String mn = md.getName();
         if (invokedMethods.contains(mn))
             return; // method with this name already invoked
 
-        String propName = getInterfacePropertyName(md);
+        String propName = Util.getInterfacePropertyName(md);
         if (propName == null)
             return;
 
         try {
-            res.put(propName.toString(), md.invoke(obj));
+            Object r = Util.getInterfaceProperty(obj, md);
+            if (r == null)
+                return;
+
+            res.put(propName, r);
             invokedMethods.add(mn);
         } catch (Exception e) {
         }

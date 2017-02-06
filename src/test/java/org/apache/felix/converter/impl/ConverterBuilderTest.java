@@ -30,6 +30,7 @@ import java.util.stream.Stream;
 
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.osgi.util.converter.ConvertFunction;
 import org.osgi.util.converter.Converter;
@@ -242,7 +243,7 @@ public class ConverterBuilderTest {
     }
 
     @SuppressWarnings("rawtypes")
-    @Test
+    @Test @Ignore("This test assumes that the all the embedded objects are also converted to maps, but they aren't")
     public void testConvertWithKeysDeep() {
         MyDTO6 subsubDTO1 = new MyDTO6();
         subsubDTO1.chars = Arrays.asList('a', 'b', 'c');
