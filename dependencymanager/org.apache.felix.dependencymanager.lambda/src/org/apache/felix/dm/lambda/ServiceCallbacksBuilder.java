@@ -799,11 +799,12 @@ public interface ServiceCallbacksBuilder<S, B extends ServiceCallbacksBuilder<S,
     /**
      * Configures whether or not this dependency should internally obtain the service object for all tracked service references.
      * 
-     * By default, DM internally dereferences all discovered service references (using 
-     * <code>BundleContext.getService(ServiceReference ref)</code> methods. 
-     * However, sometimes, your callback only needs the ServiceReference, and sometimes you don't want to dereference the service.
-     * So, in this case you can use the <code>dereference(false)</code> method in order to tell to DM 
-     * that it should never internally dereference the service dependency internally. 
+     * By default, if you use a java method reference as dependency callbacks, then DM lambda auto-detects if your method takes as argument a 
+     * ServiceReference. And in this case, the service reference is not internally dereferenced by DM (using BundleContext.getServiceReference() method).
+     * But if you are using a reflection based callback method name, then by default DM always internally dereference the service. In this case
+     * you can invoke the <code>dereference(false)</code> method in case you don't want DM to internally dereference the service.
+     * You will use this method typically when you are using a method name as the callback and when for example you want to 
+     * dereference yourself the service using the ServiceObjects OSGi API.
      */
     B dereference(boolean obtainServiceBeforeInjection);
 }

@@ -25,6 +25,7 @@ import java.util.function.Function;
 import java.util.function.Supplier;
 
 import org.apache.felix.dm.ComponentStateListener;
+import org.apache.felix.dm.Dependency;
 import org.apache.felix.dm.lambda.BundleDependencyBuilder;
 import org.apache.felix.dm.lambda.ComponentBuilder;
 import org.apache.felix.dm.lambda.ConfigurationDependencyBuilder;
@@ -171,6 +172,11 @@ public interface AdapterBase<B extends ComponentBuilder<B>> extends ComponentBui
     
     default B properties(FluentProperty ...properties) {
         andThenBuild(compBuilder -> compBuilder.properties(properties));
+        return (B) this;
+    }
+    
+    default B withDep(Dependency dependency) {
+        andThenBuild(compBuilder -> compBuilder.withDep(dependency));
         return (B) this;
     }
     
