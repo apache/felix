@@ -45,9 +45,4 @@ public class StandardConverter implements Converter {
     public ConverterBuilder newConverterBuilder() {
         return converter.newConverterBuilder();
     }
-
-    @Override
-    public boolean equals(Object o1, Object o2) {
-        return converter.equals(o1, o2);
-    }
 }

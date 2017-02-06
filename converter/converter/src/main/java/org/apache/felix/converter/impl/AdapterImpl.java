@@ -177,6 +177,7 @@ public class AdapterImpl implements InternalConverter {
             return (T) to(ref.getType());
         }
 
+        @SuppressWarnings("unchecked")
         @Override
         public Object to(Type type) {
             if (object != null) {
