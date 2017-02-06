@@ -19,6 +19,8 @@ package org.apache.felix.converter.impl;
 import java.lang.reflect.Type;
 import java.math.BigDecimal;
 import java.math.BigInteger;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.net.URL;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -34,6 +36,7 @@ import java.util.Date;
 import java.util.GregorianCalendar;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
@@ -52,7 +55,6 @@ import org.apache.felix.converter.impl.MyEmbeddedDTO.Alpha;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-import org.osgi.dto.DTO;
 import org.osgi.util.converter.ConversionException;
 import org.osgi.util.converter.Converter;
 import org.osgi.util.converter.ConverterBuilder;
@@ -456,11 +458,17 @@ public class ConverterTest {
         assertEquals(Long.MIN_VALUE, m.get("pong"));
         assertEquals(Count.ONE, m.get("count"));
         assertNotNull(m.get("embedded"));
-        @SuppressWarnings("rawtypes")
+
+        MyEmbeddedDTO e = (MyEmbeddedDTO) m.get("embedded");
+        assertEquals("hohoho", e.marco);
+        assertEquals(Long.MAX_VALUE, e.polo);
+        assertEquals(Alpha.A, e.alpha);
+        /*
         Map e = (Map)m.get("embedded");
         assertEquals("hohoho", e.get("marco"));
         assertEquals(Long.MAX_VALUE, e.get("polo"));
         assertEquals(Alpha.A, e.get("alpha"));
+        */
     }
 
     @Test
@@ -483,11 +491,18 @@ public class ConverterTest {
         assertEquals(Long.MIN_VALUE, m.get("pong"));
         assertEquals(Count.ONE, m.get("count"));
         assertNotNull(m.get("embedded"));
-        @SuppressWarnings("rawtypes")
+
+        MyEmbeddedDTO e = (MyEmbeddedDTO) m.get("embedded");
+        assertEquals("hohoho", e.marco);
+        assertEquals(Long.MAX_VALUE, e.polo);
+        assertEquals(Alpha.A, e.alpha);
+
+        /* TODO this is the way it was, but it does not seem right
         Map e = (Map)m.get("embedded");
         assertEquals("hohoho", e.get("marco"));
         assertEquals(Long.MAX_VALUE, e.get("polo"));
         assertEquals(Alpha.A, e.get("alpha"));
+        */
     }
 
     @Test
@@ -523,7 +538,7 @@ public class ConverterTest {
         assertEquals(Count.ONE, e.count);
         assertNotNull(e.embedded);
         assertTrue(e.embedded instanceof MyEmbeddedDTO);
-        MyEmbeddedDTO e2 = (MyEmbeddedDTO)e.embedded;
+        MyEmbeddedDTO e2 = e.embedded;
         assertEquals("hohoho", e2.marco);
         assertEquals(Long.MAX_VALUE, e2.polo);
         assertEquals(Alpha.A, e2.alpha);
@@ -723,7 +738,112 @@ public class ConverterTest {
 
         // And convert back
         Map<String, String> m2 = converter.convert(dto).to(new TypeReference<Map<String,String>>() {});
-        assertEquals(m, m2);
+        assertEquals(new HashMap<String,String>(m), new HashMap<String,String>(m2));
+    }
+
+    @SuppressWarnings("unchecked")
+    @Test
+    public void testLiveMapFromInterface() {
+        int[] val = new int[1];
+        val[0] = 51;
+
+        MyIntf intf = new MyIntf() {
+            @Override
+            public int value() {
+                return val[0];
+            }
+        };
+
+        @SuppressWarnings("rawtypes")
+        Map m = converter.convert(intf).to(Map.class);
+        assertEquals(51, m.get("value"));
+
+        val[0] = 52;
+        assertEquals("Changes to the backing map should be reflected",
+                52, m.get("value"));
+
+        m.put("value", 53);
+        assertEquals(53, m.get("value"));
+
+        val[0] = 54;
+        assertEquals("Changes to the backing map should not be reflected any more",
+                53, m.get("value"));
+    }
+
+    @SuppressWarnings("unchecked")
+    @Test
+    public void testLiveMapFromDTO() {
+        MyDTO8 myDTO = new MyDTO8();
+
+        myDTO.count = MyDTO8.Count.TWO;
+        myDTO.pong = 42L;
+
+        @SuppressWarnings("rawtypes")
+        Map m = converter.convert(myDTO).to(Map.class);
+        assertEquals(42L, m.get("pong"));
+
+        myDTO.ping = "Ping!";
+        assertEquals("Ping!", m.get("ping"));
+        myDTO.pong = 52L;
+        assertEquals(52L, m.get("pong"));
+        myDTO.ping = "Pong!";
+        assertEquals("Pong!", m.get("ping"));
+
+        m.put("pong", 62L);
+        myDTO.ping = "Poing!";
+        myDTO.pong = 72L;
+        assertEquals("Pong!", m.get("ping"));
+        assertEquals(62L, m.get("pong"));
+    }
+
+    @Test
+    public void testLiveMapFromDictionary() throws URISyntaxException {
+        URI testURI = new URI("http://foo");
+        Hashtable<String, Object> d = new Hashtable<>();
+        d.put("test", testURI);
+
+        Map<String, Object> m = converter.convert(d).to(new TypeReference<Map<String, Object>>(){});
+        assertEquals(testURI, m.get("test"));
+
+        URI testURI2 = new URI("http://bar");
+        d.put("test2", testURI2);
+        assertEquals(testURI2, m.get("test2"));
+        assertEquals(testURI, m.get("test"));
+    }
+
+    @Test
+    public void testLiveMapFromMap() {
+        Map<String, String> s = new HashMap<>();
+
+        s.put("true", "123");
+        s.put("false", "456");
+
+        Map<Boolean, Short> m = converter.convert(s).to(new TypeReference<Map<Boolean, Short>>(){});
+        assertEquals(Short.valueOf("123"), m.get(Boolean.TRUE));
+        assertEquals(Short.valueOf("456"), m.get(Boolean.FALSE));
+
+        s.remove("true");
+        assertNull(m.get(Boolean.TRUE));
+
+        s.put("TRUE", "999");
+        assertEquals(Short.valueOf("999"), m.get(Boolean.TRUE));
+    }
+
+    @Test
+    public void testLiveMapFromBean() {
+        MyBean mb = new MyBean();
+        mb.beanVal = "" + Long.MAX_VALUE;
+
+        Map<SomeEnum, Long> m = converter.convert(mb).sourceAsBean().to(new TypeReference<Map<SomeEnum, Long>>(){});
+        assertEquals(1, m.size());
+        assertEquals(Long.valueOf(Long.MAX_VALUE), m.get(SomeEnum.VALUE));
+
+        mb.beanVal = "" + Long.MIN_VALUE;
+        assertEquals(Long.valueOf(Long.MIN_VALUE), m.get(SomeEnum.VALUE));
+
+        m.put(SomeEnum.GETVALUE, 123L);
+        mb.beanVal = "12";
+        assertEquals(Long.valueOf(Long.MIN_VALUE), m.get(SomeEnum.VALUE));
     }
 
     static class MyClass2 {
@@ -768,4 +888,6 @@ public class ConverterTest {
             return value;
         }
     }
+
+    enum SomeEnum { VALUE, GETVALUE };
 }

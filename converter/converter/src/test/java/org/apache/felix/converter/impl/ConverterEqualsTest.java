@@ -21,6 +21,7 @@ import java.util.HashMap;
 import java.util.Hashtable;
 import java.util.Map;
 
+import org.junit.Ignore;
 import org.junit.Test;
 import org.osgi.util.converter.Converter;
 import org.osgi.util.converter.StandardConverter;
@@ -29,7 +30,7 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 public class ConverterEqualsTest {
-    @Test
+    @Test @Ignore("This functionality should go")
     public void testEquals() {
         Converter c = new StandardConverter();
 
