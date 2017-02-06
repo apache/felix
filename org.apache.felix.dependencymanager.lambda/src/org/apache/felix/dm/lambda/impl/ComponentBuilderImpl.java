@@ -54,6 +54,7 @@ import org.apache.felix.dm.lambda.callbacks.InstanceCbComponent;
 
 public class ComponentBuilderImpl implements ComponentBuilder<ComponentBuilderImpl> {
     private final List<DependencyBuilder<?>> m_dependencyBuilders = new ArrayList<>();
+    private final List<Dependency> m_dependencies = new ArrayList<>();
     private final Component m_component;
     private final boolean m_componentUpdated;
     private String[] m_serviceNames;
@@ -408,8 +409,14 @@ public class ComponentBuilderImpl implements ComponentBuilder<ComponentBuilderIm
         m_compositionMethod = "getComposition";
         return this;
     }
-
+    
     @Override
+    public ComponentBuilderImpl withDep(Dependency dep) {
+    	m_dependencies.add(dep);
+    	return this;
+    }
+    
+   @Override
     public <U> ComponentBuilderImpl withSvc(Class<U> service, Consumer<ServiceDependencyBuilder<U>> consumer) {
         ServiceDependencyBuilder<U> dep = new ServiceDependencyBuilderImpl<>(m_component, service);
         consumer.accept(dep);
@@ -600,9 +607,10 @@ public class ComponentBuilderImpl implements ComponentBuilder<ComponentBuilderIm
         
         if (m_dependencyBuilders.size() > 0) {
             // add atomically in case we are building some component dependencies from a component init method.
-            // We first transform the list of builders into a stream of built Dependencies, then we collect the result 
-            // to an array of Dependency[].
-            m_component.add(m_dependencyBuilders.stream().map(builder -> builder.build()).toArray(Dependency[]::new));
+        	List<Dependency> depList = new ArrayList<>();
+            m_dependencyBuilders.stream().map(builder -> builder.build()).forEach(depList::add);
+            depList.addAll(m_dependencies);
+            m_component.add(depList.stream().toArray(Dependency[]::new));
         }
         return m_component;
     }

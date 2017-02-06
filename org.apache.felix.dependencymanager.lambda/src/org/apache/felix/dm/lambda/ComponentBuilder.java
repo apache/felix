@@ -27,6 +27,7 @@ import java.util.stream.Stream;
 
 import org.apache.felix.dm.Component;
 import org.apache.felix.dm.ComponentStateListener;
+import org.apache.felix.dm.Dependency;
 import org.apache.felix.dm.lambda.callbacks.InstanceCb;
 import org.apache.felix.dm.lambda.callbacks.InstanceCbComponent;
 
@@ -476,6 +477,12 @@ public interface ComponentBuilder<B extends ComponentBuilder<B>> {
      */
     <U> B withFuture(CompletableFuture<U> future, Consumer<FutureDependencyBuilder<U>> consumer);
         
+    /**
+     * Adds a generic Dependency Manager dependency. You can use this method if you want to add a dependency
+     * that you have built using the Dependency Manager API, or a specific custom DM dependency (like toggles, etc ...).
+     */
+    B withDep(Dependency dependency);    
+    
     /**
      * Sets the name of the method used as the "init" callback. This method, when found, is
      * invoked as part of the life cycle management of the component implementation. 
