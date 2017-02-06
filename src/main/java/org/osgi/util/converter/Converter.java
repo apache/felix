@@ -22,7 +22,6 @@ import org.osgi.annotation.versioning.ProviderType;
  * from the service registry. The conversion is then completed via the
  * Converting interface that has methods to specify the target type.
  *
- * @author $Id: 9b4f95a44c40d64e9ad3653fcf7be03d63713a83 $
  * @ThreadSafe
  */
 @ProviderType
@@ -42,17 +41,4 @@ public interface Converter {
 	 * @return A new Converter Builder.
 	 */
 	ConverterBuilder newConverterBuilder();
-
-	/**
-	 * Check whether two objects are logically equal. For example when two
-	 * map-like structures are compared the contents are converted to a common
-	 * type and then compared. This method recursively compares any nested
-	 * objects
-	 * 
-	 * @param o1 The first object.
-	 * @param o2 The second object.
-	 * @return {@code true} if the two objects are logically equal, otherwise
-	 *         {@code false}.
-	 */
-	boolean equals(Object o1, Object o2);
 }
