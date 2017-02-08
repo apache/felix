@@ -32,6 +32,42 @@ import java.lang.annotation.Target;
  * extra properties you supply here. It will also inherit all dependencies, 
  * and if you declare the original service as a member it will be injected.
  * 
+ * <p> For "add", "change", "remove" callbacks, the following method signatures are supported:
+ * 
+ * <pre>{@code
+ * (Component comp, ServiceReference ref, Service service)
+ * (Component comp, ServiceReference ref, Object service)
+ * (Component comp, ServiceReference ref)
+ * (Component comp, Service service)
+ * (Component comp, Object service)
+ * (Component comp)
+ * (Component comp, Map properties, Service service)
+ * (ServiceReference ref, Service service)
+ * (ServiceReference ref, Object service)
+ * (ServiceReference ref)
+ * (Service service)
+ * (Service service, Map propeerties)
+ * (Map properties, Service, service)
+ * (Service service, Dictionary properties)
+ * (Dictionary properties, Service service)
+ * (Object service)
+ * }</pre>
+ * 
+ * <p> For "swap" callbacks, the following method signatures are supported:
+ * 
+ * <pre>{@code
+ * (Service old, Service replace)
+ * (Object old, Object replace)
+ * (ServiceReference old, Service old, ServiceReference replace, Service replace)
+ * (ServiceReference old, Object old, ServiceReference replace, Object replace)
+ * (Component comp, Service old, Service replace)
+ * (Component comp, Object old, Object replace)
+ * (Component comp, ServiceReference old, Service old, ServiceReference replace, Service replace)
+ * (Component comp, ServiceReference old, Object old, ServiceReference replace, Object replace)
+ * (ServiceReference old, ServiceReference replace)
+ * (Component comp, ServiceReference old, ServiceReference replace)
+ * }</pre>
+ * 
  * <h3>Usage Examples</h3>
  * 
  * <p> Here, the AspectService is registered into the OSGI registry each time an InterceptedService

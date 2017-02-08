@@ -31,7 +31,7 @@ import java.util.regex.Pattern;
 /**
  * A very small JSON parser.
  * Code adapted from the org.apache.felix.serializer.impl.json.JsonParser.java, 
- * from the Apache Felix Converter proejct.
+ * from the Apache Felix Converter project.
  *
  * The JSON input is parsed into an object structure in the following way:
  * <ul>
