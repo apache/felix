@@ -27,6 +27,42 @@ import java.lang.annotation.Target;
  * Annotates a method or a field for injecting a Service Dependency. When applied on a class 
  * field, optional unavailable dependencies are injected with a NullObject.
  * 
+ * <p> For "add", "change", "remove" callbacks, the following method signatures are supported:
+ * 
+ * <pre>{@code
+ * (Component comp, ServiceReference ref, Service service)
+ * (Component comp, ServiceReference ref, Object service)
+ * (Component comp, ServiceReference ref)
+ * (Component comp, Service service)
+ * (Component comp, Object service)
+ * (Component comp)
+ * (Component comp, Map properties, Service service)
+ * (ServiceReference ref, Service service)
+ * (ServiceReference ref, Object service)
+ * (ServiceReference ref)
+ * (Service service)
+ * (Service service, Map propeerties)
+ * (Map properties, Service, service)
+ * (Service service, Dictionary properties)
+ * (Dictionary properties, Service service)
+ * (Object service)
+ * }</pre>
+ * 
+ * <p> For "swap" callbacks, the following method signatures are supported:
+ * 
+ * <pre>{@code
+ * (Service old, Service replace)
+ * (Object old, Object replace)
+ * (ServiceReference old, Service old, ServiceReference replace, Service replace)
+ * (ServiceReference old, Object old, ServiceReference replace, Object replace)
+ * (Component comp, Service old, Service replace)
+ * (Component comp, Object old, Object replace)
+ * (Component comp, ServiceReference old, Service old, ServiceReference replace, Service replace)
+ * (Component comp, ServiceReference old, Object old, ServiceReference replace, Object replace)
+ * (ServiceReference old, ServiceReference replace)
+ * (Component comp, ServiceReference old, ServiceReference replace)
+ * }</pre>
+ * 
  * <h3>Usage Examples</h3>
  * Here, the MyComponent component is injected with a dependency over a "MyDependency" service
  * 
@@ -79,6 +115,7 @@ public @interface ServiceDependency
     /**
      * The callback method to be invoked when the service is available. This attribute is only meaningful when 
      * the annotation is applied on a class field.
+     * 
      * @return the add callback
      */
     String added() default "";
@@ -95,6 +132,12 @@ public @interface ServiceDependency
      */
     String removed() default "";
     
+    /**
+     * the method to call when the service was swapped due to addition or removal of an aspect
+     * @return the swap callback
+     */
+    String swap() default "";
+
     /** 
      * The max time in millis to wait for the dependency availability. 
      * Specifying a positive number allow to block the caller thread between service updates. Only
@@ -160,7 +203,9 @@ public @interface ServiceDependency
      * <code>BundleContext.getService(ServiceReference ref)</code> methods. 
      * However, sometimes, your callback only needs the ServiceReference, and sometimes you don't want to dereference the service.
      * So, in this case you can use the <code>dereference(false)</code> method in order to tell to DM 
-     * that it should never internally dereference the service dependency internally. 
+     * that it should never internally dereference the service dependency internally.
+     * 
+     * @return false if the service must never be dereferenced by dependency manager (internally).
      */
     boolean dereference() default true;
 }

@@ -722,6 +722,9 @@ public class AnnotationCollector extends ClassDataCollector
         // removed callback
         writer.putString(annotation, EntryParam.removed, null); 
         
+        // swap callback
+        writer.putString(annotation, EntryParam.swap, null); 
+
         // name attribute
         parseDependencyName(writer, annotation);
         

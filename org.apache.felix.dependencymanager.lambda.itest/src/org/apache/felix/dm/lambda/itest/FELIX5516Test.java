@@ -30,15 +30,30 @@ import org.osgi.framework.ServiceReference;
 import org.osgi.framework.ServiceRegistration;
 
 /**
- * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
+ * Validates that a service dependency is not dereferenced internally by DM.
+ * When you use a method reference for the dependency callback, then dm-lambda auto-detect that the
+ * service dependency must not be internally dereferenced.
+ * But you when you method reflection based callbacks, you have to call the "dereference(false)" method
+ * from the ServiceDependencyBuilder, which indicates to DM that the service reference must not be 
+ * dereferenced internally (using BundleContext.getServiceReference() method). 
  */
 public class FELIX5516Test extends TestBase {
-    private final static Ensure m_ensure = new Ensure();
+    private final Ensure m_ensure = new Ensure();
 
-    public void testServiceNotDereferencedInternally() throws Exception {
+    public void testServiceNotDereferencedInternallyUsingMethodReference() throws Exception {
         final DependencyManager dm = getDM();
         Component service = component(dm).impl(new Factory()).provides(Service.class).build();
-        Component client = component(dm).impl(new Client()).withSvc(Service.class, svc -> svc.required().dereference(false).add(Client::bind)).build();
+        Component client = component(dm).impl(new Client()).withSvc(Service.class, svc -> svc.required().add(Client::bind)).build();
+        dm.add(service);
+        dm.add(client);
+        m_ensure.waitForStep(9,  5000);        
+        dm.clear();
+    }
+    
+    public void testServiceNotDereferencedInternallyUsingReflectionCallback() throws Exception {
+        final DependencyManager dm = getDM();
+        Component service = component(dm).impl(new Factory()).provides(Service.class).build();
+        Component client = component(dm).impl(new Client()).withSvc(Service.class, svc -> svc.required().dereference(false).add("bind")).build();
         dm.add(service);
         dm.add(client);
         m_ensure.waitForStep(9,  5000);        
@@ -47,11 +62,11 @@ public class FELIX5516Test extends TestBase {
 
     public interface Service {}
     
-    public static class ServiceImpl implements Service {
+    public class ServiceImpl implements Service {
     	
     }
     
-    public static class Factory implements PrototypeServiceFactory<Service> {
+    public class Factory implements PrototypeServiceFactory<Service> {
 		@Override
 		public Service getService(Bundle bundle, ServiceRegistration<Service> registration) {
 			m_ensure.step();
@@ -64,7 +79,7 @@ public class FELIX5516Test extends TestBase {
 		}
     }
     
-    public static class Client {
+    public class Client {
     	ServiceReference<Service> m_ref;
         BundleContext m_ctx;
                 

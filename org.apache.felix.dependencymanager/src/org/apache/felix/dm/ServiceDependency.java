@@ -24,6 +24,42 @@ import org.osgi.framework.ServiceReference;
 /**
  * Service dependency that can track an OSGi service.
  * 
+ * When defining dependency method callbacks; for "add", "change", "remove" callbacks, the following method signatures are supported:
+ * 
+ * <pre>{@code
+ * (Component comp, ServiceReference ref, Service service)
+ * (Component comp, ServiceReference ref, Object service)
+ * (Component comp, ServiceReference ref)
+ * (Component comp, Service service)
+ * (Component comp, Object service)
+ * (Component comp)
+ * (Component comp, Map properties, Service service)
+ * (ServiceReference ref, Service service)
+ * (ServiceReference ref, Object service)
+ * (ServiceReference ref)
+ * (Service service)
+ * (Service service, Map propeerties)
+ * (Map properties, Service, service)
+ * (Service service, Dictionary properties)
+ * (Dictionary properties, Service service)
+ * (Object service)
+ * }</pre>
+ * 
+ * <p> For "swap" callbacks, the following method signatures are supported:
+ * 
+ * <pre>{@code
+ * (Service old, Service replace)
+ * (Object old, Object replace)
+ * (ServiceReference old, Service old, ServiceReference replace, Service replace)
+ * (ServiceReference old, Object old, ServiceReference replace, Object replace)
+ * (Component comp, Service old, Service replace)
+ * (Component comp, Object old, Object replace)
+ * (Component comp, ServiceReference old, Service old, ServiceReference replace, Service replace)
+ * (Component comp, ServiceReference old, Object old, ServiceReference replace, Object replace)
+ * (ServiceReference old, ServiceReference replace)
+ * (Component comp, ServiceReference old, ServiceReference replace)
+ * }</pre>
+ * 
  * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
 @ProviderType
@@ -296,6 +332,8 @@ public interface ServiceDependency extends Dependency, ComponentDependencyDeclar
      * However, sometimes, your callback only needs the ServiceReference, and sometimes you don't want to dereference the service.
      * So, in this case you can use the <code>setDereference(false)</code> method in order to tell to DM 
      * that it should never internally dereference the service dependency internally. 
+     * 
+     * @return false if the service must never be dereferenced by dependency manager (internally).
      */
     public ServiceDependency setDereference(boolean dereferenceServiceInternally);
 }
