@@ -1,15 +1,11 @@
 Apache Felix Dependency Manager Annotation
-Copyright 2011-2016 The Apache Software Foundation
+Copyright 2011-2017 The Apache Software Foundation
 
 This software was developed at the Apache Software Foundation
 (http://www.apache.org) and may have dependencies on other
 Apache software licensed under Apache License 2.0.
 
 I. Included Third-Party Software
-
-This product includes software from http://www.json.org.
-Copyright (c) 2002 JSON.org
-Licensed under the JSON License
 
 II. Used Third-Party Software
 
@@ -20,10 +16,9 @@ Licensed under the Apache License 2.0.
 
 This product uses software developed by Peter Kriens
 (http://www.aqute.biz/Code/Bnd)
-Copyright 2006-2016 aQute, All rights reserved
+Copyright 2006-2017 aQute, All rights reserved
 Licensed under the Apache License 2.0.
 
 III. Overall License Summary
 
 - Apache License 2.0
-- JSON License
