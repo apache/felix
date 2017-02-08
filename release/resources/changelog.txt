@@ -1,3 +1,59 @@
+Release Notes - Felix - Version org.apache.felix.dependencymanager-r9
+======================================================================
+
+** List of bundles being part of the release:
+    * org.apache.felix.dependencymanager; version=4.4.0
+    * org.apache.felix.dependencymanager.shell; version=4.0.5
+    * org.apache.felix.dependencymanager.runtime; version=4.0.4
+    * org.apache.felix.dependencymanager.annotation; version=4.2.0
+    * org.apache.felix.dependencymanager.lambda; version=1.1.0
+
+** Bug
+    * [FELIX-5236] - Single @Property annotation on a type doesn't work
+    * [FELIX-5242] - Configuration updates may be missed when the component is restarting
+    * [FELIX-5244] - Can't inject service using a method ref on a parent class method.
+    * [FELIX-5245] - Typo in error logged when a component callback is not found.
+    * [FELIX-5268] - Service not unregistered while bundle is starting
+    * [FELIX-5273] - Wrong log when a callback is not found from component instance(s)
+    * [FELIX-5274] - remove callback fails after manually removing dynamic dependencies
+    * [FELIX-5399] - Unable to define default map or list config types
+    * [FELIX-5400] - Can't override default configuration type list value using an empty list
+    * [FELIX-5401] - Can't override default configuration type map value using an empty map
+    * [FELIX-5402] - Factory configuration adapter ignores factory method
+    * [FELIX-5411] - When you stop a component, the service references are not ungotten.
+    * [FELIX-5426] - Remove callbacks aren't called for optional dependencies in a "circular" dependency scenario
+    * [FELIX-5428] - Dependency events set not cleared when component is removed
+    * [FELIX-5429] - Aspect swap callback sometimes not called on optional dependencies
+    * [FELIX-5469] - Methodcache system size property is not used
+    * [FELIX-5471] - Ensure that unbound services are always handled synchronously
+    * [FELIX-5517] - @Inject annotation ignored when applied on ServiceRegistration
+    * [FELIX-5519] - services are not ungotten when swapped by an aspect
+    * [FELIX-5523] - required dependencies added to a started adapter (or aspect) are not injected
+
+** Improvement
+    * [FELIX-5228] - Upgrade DM With latest release of BndTools
+    * [FELIX-5237] - Configurable invocation handler should use default method values
+    * [FELIX-5346] - Start annotation not propagated to sub classes
+    * [FELIX-5355] - Allow to use properties having dots with configuration proxies
+    * [FELIX-5365] - Generate warning on service published and consumed on same interface but different bundles
+    * [FELIX-5403] - Improve the Javadoc for org.apache.felix.dm.ComponentStateListener
+    * [FELIX-5405] - Do not have org.apache.felix.dm.Logger invoke toString() of message parameters when enabled log level is not high enough 
+    * [FELIX-5406] - DM lambda fluent service properties don't support dots
+    * [FELIX-5407] - DM annotation plugin generates temp log files even if logging is disabled
+    * [FELIX-5408] - Parallel DM should not stop components asynchronously
+    * [FELIX-5467] - MultiPropertyFilterIndex is unusable when a service reference contains a lot of values for one key
+    * [FELIX-5499] - Remove usage of json.org from dependency manager
+    * [FELIX-5515] - Upgrade DM to OSGi R6 API
+    * [FELIX-5516] - Allow to not dereference services internally
+    * [FELIX-5518] - Remove all eclipse warnings in DM code
+    * [FELIX-5520] - ComponentStateListener not supported in DM lambda
+    * [FELIX-5521] - add more callback method signature in DM lambda service dependency callbacks
+    * [FELIX-5522] - Refactor aspect service implementation
+    * [FELIX-5524] - add more signatures for aspect swap callbacks
+    * [FELIX-5526] - Allow to use generic custom DM dependencies when using dm lambda.
+    * [FELIX-5531] - Document dependency callback signatures
+    * [FELIX-5532] - Swap callback is missing in @ServiceDependency annotation
+    
 Release Notes - Felix - Version org.apache.felix.dependencymanager-r8
 ======================================================================
 
