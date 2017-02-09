@@ -1,3 +1,9 @@
+Changes from 1.8.6 to 1.8.8
+---------------------------
+** Improvement
+    * [FELIX-5534] - Add simple JSONWriter
+
+
 Changes from 1.8.4 to 1.8.6
 ---------------------------
 ** Improvement
