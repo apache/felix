@@ -228,6 +228,9 @@ public interface Configuration {
 	 * identical to the {@link #update(Dictionary)} method.
 	 * 
 	 * @param properties The new set of properties for this configuration.
+	 * @return If the properties are different and the configuration is updated
+	 *         {@code true} is returned. If the properties are the same,
+	 *         {@code false} is returned.
 	 * @throws ReadOnlyConfigurationException If the configuration is
 	 *             {@link ConfigurationAttribute#READ_ONLY read only}.
 	 * @throws IOException If update cannot be made persistent.
@@ -237,7 +240,7 @@ public interface Configuration {
 	 * @throws IllegalStateException If this configuration has been deleted.
 	 * @since 1.6
 	 */
-	public void updateIfDifferent(Dictionary<String, ? > properties)
+	public boolean updateIfDifferent(Dictionary<String, ? > properties)
 			throws IOException;
 
     /**
