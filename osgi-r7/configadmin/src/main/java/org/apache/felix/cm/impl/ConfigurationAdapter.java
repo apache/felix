@@ -189,7 +189,7 @@ public class ConfigurationAdapter implements Configuration
      */
     @SuppressWarnings("unchecked")
     @Override
-    public void updateIfDifferent(final Dictionary<String, ?> properties) throws IOException
+    public boolean updateIfDifferent(final Dictionary<String, ?> properties) throws IOException
     {
         Log.logger.log( LogService.LOG_DEBUG, "updateIfDifferent(properties={0})", new Object[]
                 { properties } );
@@ -201,7 +201,9 @@ public class ConfigurationAdapter implements Configuration
         if ( !ConfigurationImpl.equals((Dictionary<String, Object>)properties, delegatee.getProperties(false)) )
         {
             delegatee.update( properties );
+            return true;
         }
+        return false;
     }
 
 
