@@ -54,6 +54,9 @@ Release Notes - Felix - Version org.apache.felix.dependencymanager-r9
     * [FELIX-5531] - Document dependency callback signatures
     * [FELIX-5532] - Swap callback is missing in @ServiceDependency annotation
     
+** Task
+    * [FELIX-5533] - Fix a semantic versioning issue when releasing dependency manager
+
 Release Notes - Felix - Version org.apache.felix.dependencymanager-r8
 ======================================================================
 
