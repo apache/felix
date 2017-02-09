@@ -52,3 +52,8 @@ javac.target:          1.8
 	org.apache.felix.log.maxSize=100000,\
 	org.apache.felix.log.storeDebug=true,\
 	gosh.args=--noshutdown
+	
+# we do not release this project in binary distribution.
+-releaserepo: 
+-baseline: 
+

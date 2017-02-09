@@ -46,3 +46,6 @@ Test-Cases:  \
 	org.apache.felix.log.storeDebug=true,\
 	gosh.args=--noshutdown
 	
+# we do not release this project in binary distribution.
+-releaserepo: 
+-baseline: 

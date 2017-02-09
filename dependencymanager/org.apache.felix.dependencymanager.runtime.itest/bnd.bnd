@@ -54,3 +54,8 @@ Bundle-Description: Integration tests for Apache Felix Dependency Manager Runtim
 Bundle-Category: test
 Bundle-License: http://www.apache.org/licenses/LICENSE-2.0.txt
 Bundle-Vendor: The Apache Software Foundation
+
+
+# we do not release this project in binary distribution.
+-releaserepo: 
+-baseline: 

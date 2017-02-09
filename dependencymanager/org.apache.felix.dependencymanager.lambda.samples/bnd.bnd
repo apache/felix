@@ -12,3 +12,7 @@ Bundle-Version: 0.0.0.${tstamp}
 Bundle-License: http://www.apache.org/licenses/LICENSE-2.0.txt
 Bundle-DocURL: http://felix.apache.org/documentation/subprojects/apache-felix-dependency-manager.html
 Bundle-Vendor: The Apache Software Foundation
+
+# we do not release this project in binary distribution.
+-releaserepo: 
+-baseline: 
