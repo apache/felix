@@ -1,32 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<repository increment="1486195444000" name="Local" xmlns="http://www.osgi.org/xmlns/repository/v1.0.0">
-  <resource>
-    <capability namespace="osgi.identity">
-      <attribute name="osgi.identity" value="de.twentyeleven.skysail.org.json-osgi"/>
-      <attribute name="type" value="osgi.bundle"/>
-      <attribute name="version" type="Version" value="20080701.0.0"/>
-    </capability>
-    <capability namespace="osgi.content">
-      <attribute name="osgi.content" value="7d299abb0f4f0330c746dc456a767f1b02b3675ed24a2d4b9d6e7e7b99e7e223"/>
-      <attribute name="url" value="de.twentyeleven.skysail.org.json-osgi/de.twentyeleven.skysail.org.json-osgi-20080701.0.0.jar"/>
-      <attribute name="size" type="Long" value="38491"/>
-      <attribute name="mime" value="application/vnd.osgi.bundle"/>
-    </capability>
-    <capability namespace="osgi.wiring.bundle">
-      <attribute name="osgi.wiring.bundle" value="de.twentyeleven.skysail.org.json-osgi"/>
-      <attribute name="bundle-version" type="Version" value="20080701.0.0"/>
-    </capability>
-    <capability namespace="osgi.wiring.host">
-      <attribute name="osgi.wiring.host" value="de.twentyeleven.skysail.org.json-osgi"/>
-      <attribute name="bundle-version" type="Version" value="20080701.0.0"/>
-    </capability>
-    <capability namespace="osgi.wiring.package">
-      <attribute name="osgi.wiring.package" value="org.json"/>
-      <attribute name="version" type="Version" value="20080701.0.0"/>
-      <attribute name="bundle-symbolic-name" value="de.twentyeleven.skysail.org.json-osgi"/>
-      <attribute name="bundle-version" type="Version" value="20080701.0.0"/>
-    </capability>
-  </resource>
+<repository increment="1486329514000" name="Local" xmlns="http://www.osgi.org/xmlns/repository/v1.0.0">
   <resource>
     <capability namespace="osgi.identity">
       <attribute name="osgi.identity" value="org.apache.felix.http.api"/>
