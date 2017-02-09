@@ -1,30 +1,30 @@
 <?xml version="1.0" encoding="utf-8"?>
-<repository increment="1486195444000" name="Release" xmlns="http://www.osgi.org/xmlns/repository/v1.0.0">
+<repository increment="1486650346000" name="Release" xmlns="http://www.osgi.org/xmlns/repository/v1.0.0">
   <resource>
     <capability namespace="osgi.identity">
       <attribute name="osgi.identity" value="org.apache.felix.dependencymanager.annotation"/>
       <attribute name="type" value="osgi.bundle"/>
-      <attribute name="version" type="Version" value="4.1.0"/>
+      <attribute name="version" type="Version" value="4.2.0"/>
     </capability>
     <capability namespace="osgi.content">
-      <attribute name="osgi.content" value="793f3c09e8e1afea7c79e98babc2ad476d361c5f75f8bf4c9cc4a56f052381d1"/>
-      <attribute name="url" value="org.apache.felix.dependencymanager.annotation/org.apache.felix.dependencymanager.annotation-4.1.0.jar"/>
-      <attribute name="size" type="Long" value="98112"/>
+      <attribute name="osgi.content" value="218abddf0c9cdbdab4444e56b69bc131fb6d7f50c57a1cc17d7e92a6de9a2ec7"/>
+      <attribute name="url" value="org.apache.felix.dependencymanager.annotation/org.apache.felix.dependencymanager.annotation-4.2.0.jar"/>
+      <attribute name="size" type="Long" value="143625"/>
       <attribute name="mime" value="application/vnd.osgi.bundle"/>
     </capability>
     <capability namespace="osgi.wiring.bundle">
       <attribute name="osgi.wiring.bundle" value="org.apache.felix.dependencymanager.annotation"/>
-      <attribute name="bundle-version" type="Version" value="4.1.0"/>
+      <attribute name="bundle-version" type="Version" value="4.2.0"/>
     </capability>
     <capability namespace="osgi.wiring.host">
       <attribute name="osgi.wiring.host" value="org.apache.felix.dependencymanager.annotation"/>
-      <attribute name="bundle-version" type="Version" value="4.1.0"/>
+      <attribute name="bundle-version" type="Version" value="4.2.0"/>
     </capability>
     <capability namespace="osgi.wiring.package">
       <attribute name="osgi.wiring.package" value="org.apache.felix.dm.annotation.api"/>
-      <attribute name="version" type="Version" value="1.1.0"/>
+      <attribute name="version" type="Version" value="1.2.0"/>
       <attribute name="bundle-symbolic-name" value="org.apache.felix.dependencymanager.annotation"/>
-      <attribute name="bundle-version" type="Version" value="4.1.0"/>
+      <attribute name="bundle-version" type="Version" value="4.2.0"/>
     </capability>
     <requirement namespace="osgi.wiring.package">
       <directive name="filter" value="(&amp;(osgi.wiring.package=aQute.bnd.osgi)(version&gt;=2.3.0)(!(version&gt;=3.0.0)))"/>
@@ -36,7 +36,7 @@
       <directive name="filter" value="(&amp;(osgi.wiring.package=aQute.service.reporter)(version&gt;=1.0.0)(!(version&gt;=2.0.0)))"/>
     </requirement>
     <requirement namespace="osgi.wiring.package">
-      <directive name="filter" value="(&amp;(osgi.wiring.package=org.apache.felix.dm.annotation.api)(version&gt;=1.1.0)(!(version&gt;=2.0.0)))"/>
+      <directive name="filter" value="(&amp;(osgi.wiring.package=org.apache.felix.dm.annotation.api)(version&gt;=1.2.0)(!(version&gt;=2.0.0)))"/>
     </requirement>
     <requirement namespace="osgi.ee">
       <directive name="filter" value="(&amp;(osgi.ee=JavaSE)(version=1.8))"/>
@@ -46,44 +46,44 @@
     <capability namespace="osgi.identity">
       <attribute name="osgi.identity" value="org.apache.felix.dependencymanager.lambda"/>
       <attribute name="type" value="osgi.bundle"/>
-      <attribute name="version" type="Version" value="1.0.0"/>
+      <attribute name="version" type="Version" value="1.1.0"/>
     </capability>
     <capability namespace="osgi.content">
-      <attribute name="osgi.content" value="8a5ac3d7a6535ee118599c8efd232e688496b1ee29d8db861d53bf2d98e646ec"/>
-      <attribute name="url" value="org.apache.felix.dependencymanager.lambda/org.apache.felix.dependencymanager.lambda-1.0.0.jar"/>
-      <attribute name="size" type="Long" value="160716"/>
+      <attribute name="osgi.content" value="cd3dfe8111322565fcb38cd93a0b0b76f74e15d08ab11eadf2d4bd805fe738f5"/>
+      <attribute name="url" value="org.apache.felix.dependencymanager.lambda/org.apache.felix.dependencymanager.lambda-1.1.0.jar"/>
+      <attribute name="size" type="Long" value="296957"/>
       <attribute name="mime" value="application/vnd.osgi.bundle"/>
     </capability>
     <capability namespace="osgi.wiring.bundle">
       <attribute name="osgi.wiring.bundle" value="org.apache.felix.dependencymanager.lambda"/>
-      <attribute name="bundle-version" type="Version" value="1.0.0"/>
+      <attribute name="bundle-version" type="Version" value="1.1.0"/>
     </capability>
     <capability namespace="osgi.wiring.host">
       <attribute name="osgi.wiring.host" value="org.apache.felix.dependencymanager.lambda"/>
-      <attribute name="bundle-version" type="Version" value="1.0.0"/>
+      <attribute name="bundle-version" type="Version" value="1.1.0"/>
     </capability>
     <capability namespace="osgi.wiring.package">
       <attribute name="osgi.wiring.package" value="org.apache.felix.dm.lambda"/>
-      <attribute name="version" type="Version" value="1.0.0"/>
+      <attribute name="version" type="Version" value="1.1.0"/>
       <attribute name="bundle-symbolic-name" value="org.apache.felix.dependencymanager.lambda"/>
-      <attribute name="bundle-version" type="Version" value="1.0.0"/>
+      <attribute name="bundle-version" type="Version" value="1.1.0"/>
       <directive name="uses" value="org.apache.felix.dm,org.apache.felix.dm.lambda.callbacks,org.osgi.framework"/>
     </capability>
     <capability namespace="osgi.wiring.package">
       <attribute name="osgi.wiring.package" value="org.apache.felix.dm.lambda.callbacks"/>
-      <attribute name="version" type="Version" value="1.0.0"/>
+      <attribute name="version" type="Version" value="1.1.0"/>
       <attribute name="bundle-symbolic-name" value="org.apache.felix.dependencymanager.lambda"/>
-      <attribute name="bundle-version" type="Version" value="1.0.0"/>
+      <attribute name="bundle-version" type="Version" value="1.1.0"/>
       <directive name="uses" value="org.apache.felix.dm,org.osgi.framework"/>
     </capability>
     <requirement namespace="osgi.wiring.package">
-      <directive name="filter" value="(&amp;(osgi.wiring.package=org.apache.felix.dm)(version&gt;=4.3.0)(!(version&gt;=5.0.0)))"/>
+      <directive name="filter" value="(&amp;(osgi.wiring.package=org.apache.felix.dm)(version&gt;=4.4.0)(!(version&gt;=5.0.0)))"/>
     </requirement>
     <requirement namespace="osgi.wiring.package">
-      <directive name="filter" value="(&amp;(osgi.wiring.package=org.apache.felix.dm.context)(version&gt;=4.2.0)(!(version&gt;=5.0.0)))"/>
+      <directive name="filter" value="(&amp;(osgi.wiring.package=org.apache.felix.dm.context)(version&gt;=4.3.0)(!(version&gt;=5.0.0)))"/>
     </requirement>
     <requirement namespace="osgi.wiring.package">
-      <directive name="filter" value="(&amp;(osgi.wiring.package=org.apache.felix.dm.lambda.callbacks)(version&gt;=1.0.0)(!(version&gt;=2.0.0)))"/>
+      <directive name="filter" value="(&amp;(osgi.wiring.package=org.apache.felix.dm.lambda.callbacks)(version&gt;=1.1.0)(!(version&gt;=2.0.0)))"/>
     </requirement>
     <requirement namespace="osgi.wiring.package">
       <directive name="filter" value="(&amp;(osgi.wiring.package=org.osgi.framework)(version&gt;=1.8.0)(!(version&gt;=2.0.0)))"/>
@@ -96,27 +96,27 @@
     <capability namespace="osgi.identity">
       <attribute name="osgi.identity" value="org.apache.felix.dependencymanager.runtime"/>
       <attribute name="type" value="osgi.bundle"/>
-      <attribute name="version" type="Version" value="4.0.3"/>
+      <attribute name="version" type="Version" value="4.0.4"/>
     </capability>
     <capability namespace="osgi.content">
-      <attribute name="osgi.content" value="026b86f032e7719ba3962a427e258a2b67f44f551c4de67ac94b98f265f9d8f2"/>
-      <attribute name="url" value="org.apache.felix.dependencymanager.runtime/org.apache.felix.dependencymanager.runtime-4.0.3.jar"/>
-      <attribute name="size" type="Long" value="108447"/>
+      <attribute name="osgi.content" value="529749a862c2e3bedcd0a26596268887a1394e19136996e86e76010d150596c2"/>
+      <attribute name="url" value="org.apache.felix.dependencymanager.runtime/org.apache.felix.dependencymanager.runtime-4.0.4.jar"/>
+      <attribute name="size" type="Long" value="132362"/>
       <attribute name="mime" value="application/vnd.osgi.bundle"/>
     </capability>
     <capability namespace="osgi.wiring.bundle">
       <attribute name="osgi.wiring.bundle" value="org.apache.felix.dependencymanager.runtime"/>
-      <attribute name="bundle-version" type="Version" value="4.0.3"/>
+      <attribute name="bundle-version" type="Version" value="4.0.4"/>
     </capability>
     <capability namespace="osgi.wiring.host">
       <attribute name="osgi.wiring.host" value="org.apache.felix.dependencymanager.runtime"/>
-      <attribute name="bundle-version" type="Version" value="4.0.3"/>
+      <attribute name="bundle-version" type="Version" value="4.0.4"/>
     </capability>
     <capability namespace="osgi.wiring.package">
       <attribute name="osgi.wiring.package" value="org.apache.felix.dm.runtime.api"/>
       <attribute name="version" type="Version" value="1.0.0"/>
       <attribute name="bundle-symbolic-name" value="org.apache.felix.dependencymanager.runtime"/>
-      <attribute name="bundle-version" type="Version" value="4.0.3"/>
+      <attribute name="bundle-version" type="Version" value="4.0.4"/>
     </capability>
     <capability namespace="osgi.extender">
       <attribute name="osgi.extender" value="org.apache.felix.dependencymanager.runtime"/>
@@ -149,34 +149,34 @@
     <capability namespace="osgi.identity">
       <attribute name="osgi.identity" value="org.apache.felix.dependencymanager.shell"/>
       <attribute name="type" value="osgi.bundle"/>
-      <attribute name="version" type="Version" value="4.0.4"/>
+      <attribute name="version" type="Version" value="4.0.5"/>
     </capability>
     <capability namespace="osgi.content">
-      <attribute name="osgi.content" value="32a101ce27c8994e12d7ea85d322faf85ede0e6099354e4feabf0332ad3d7ee3"/>
-      <attribute name="url" value="org.apache.felix.dependencymanager.shell/org.apache.felix.dependencymanager.shell-4.0.4.jar"/>
-      <attribute name="size" type="Long" value="21239"/>
+      <attribute name="osgi.content" value="edfbd21a282abb5a4348feaeccfb5227cdc86e1867de213b0883bb792ad371ce"/>
+      <attribute name="url" value="org.apache.felix.dependencymanager.shell/org.apache.felix.dependencymanager.shell-4.0.5.jar"/>
+      <attribute name="size" type="Long" value="32406"/>
       <attribute name="mime" value="application/vnd.osgi.bundle"/>
     </capability>
     <capability namespace="osgi.wiring.bundle">
       <attribute name="osgi.wiring.bundle" value="org.apache.felix.dependencymanager.shell"/>
-      <attribute name="bundle-version" type="Version" value="4.0.4"/>
+      <attribute name="bundle-version" type="Version" value="4.0.5"/>
     </capability>
     <capability namespace="osgi.wiring.host">
       <attribute name="osgi.wiring.host" value="org.apache.felix.dependencymanager.shell"/>
-      <attribute name="bundle-version" type="Version" value="4.0.4"/>
+      <attribute name="bundle-version" type="Version" value="4.0.5"/>
     </capability>
     <requirement namespace="osgi.wiring.package">
       <directive name="filter" value="(&amp;(osgi.wiring.package=org.apache.felix.dm)(version&gt;=4.0.0)(!(version&gt;=5.0.0)))"/>
     </requirement>
     <requirement namespace="osgi.wiring.package">
-      <directive name="filter" value="(&amp;(osgi.wiring.package=org.apache.felix.dm.diagnostics)(version&gt;=1.0.0)(!(version&gt;=2.0.0)))"/>
+      <directive name="filter" value="(&amp;(osgi.wiring.package=org.apache.felix.dm.diagnostics)(version&gt;=1.1.0)(!(version&gt;=2.0.0)))"/>
     </requirement>
     <requirement namespace="osgi.wiring.package">
       <attribute name="status" value="provisional"/>
       <directive name="filter" value="(&amp;(osgi.wiring.package=org.apache.felix.service.command)(version&gt;=0.10.0)(!(version&gt;=1.0.0)))"/>
     </requirement>
     <requirement namespace="osgi.wiring.package">
-      <directive name="filter" value="(&amp;(osgi.wiring.package=org.osgi.framework)(version&gt;=1.5.0)(!(version&gt;=2.0.0)))"/>
+      <directive name="filter" value="(&amp;(osgi.wiring.package=org.osgi.framework)(version&gt;=1.8.0)(!(version&gt;=2.0.0)))"/>
     </requirement>
     <requirement namespace="osgi.ee">
       <directive name="filter" value="(&amp;(osgi.ee=JavaSE)(version=1.8))"/>
@@ -186,64 +186,64 @@
     <capability namespace="osgi.identity">
       <attribute name="osgi.identity" value="org.apache.felix.dependencymanager"/>
       <attribute name="type" value="osgi.bundle"/>
-      <attribute name="version" type="Version" value="4.3.0"/>
+      <attribute name="version" type="Version" value="4.4.0"/>
     </capability>
     <capability namespace="osgi.content">
-      <attribute name="osgi.content" value="4688963f5cc4aa35048fca6db4586c3945c009c76942d6b0508e76ae11cf8a6f"/>
-      <attribute name="url" value="org.apache.felix.dependencymanager/org.apache.felix.dependencymanager-4.3.0.jar"/>
-      <attribute name="size" type="Long" value="240627"/>
+      <attribute name="osgi.content" value="821f7112e17f366fda75aac7c177941e0232f0fde08b3772df3fa63a2af4aecd"/>
+      <attribute name="url" value="org.apache.felix.dependencymanager/org.apache.felix.dependencymanager-4.4.0.jar"/>
+      <attribute name="size" type="Long" value="457273"/>
       <attribute name="mime" value="application/vnd.osgi.bundle"/>
     </capability>
     <capability namespace="osgi.wiring.bundle">
       <attribute name="osgi.wiring.bundle" value="org.apache.felix.dependencymanager"/>
-      <attribute name="bundle-version" type="Version" value="4.3.0"/>
+      <attribute name="bundle-version" type="Version" value="4.4.0"/>
     </capability>
     <capability namespace="osgi.wiring.host">
       <attribute name="osgi.wiring.host" value="org.apache.felix.dependencymanager"/>
-      <attribute name="bundle-version" type="Version" value="4.3.0"/>
+      <attribute name="bundle-version" type="Version" value="4.4.0"/>
     </capability>
     <capability namespace="osgi.wiring.package">
       <attribute name="osgi.wiring.package" value="org.apache.felix.dm"/>
-      <attribute name="version" type="Version" value="4.3.0"/>
+      <attribute name="version" type="Version" value="4.4.0"/>
       <attribute name="bundle-symbolic-name" value="org.apache.felix.dependencymanager"/>
-      <attribute name="bundle-version" type="Version" value="4.3.0"/>
+      <attribute name="bundle-version" type="Version" value="4.4.0"/>
       <directive name="uses" value="org.osgi.framework"/>
     </capability>
     <capability namespace="osgi.wiring.package">
       <attribute name="osgi.wiring.package" value="org.apache.felix.dm.tracker"/>
       <attribute name="version" type="Version" value="4.0.0"/>
       <attribute name="bundle-symbolic-name" value="org.apache.felix.dependencymanager"/>
-      <attribute name="bundle-version" type="Version" value="4.3.0"/>
+      <attribute name="bundle-version" type="Version" value="4.4.0"/>
       <directive name="uses" value="org.osgi.framework"/>
     </capability>
     <capability namespace="osgi.wiring.package">
       <attribute name="osgi.wiring.package" value="org.apache.felix.dm.context"/>
-      <attribute name="version" type="Version" value="4.2.0"/>
+      <attribute name="version" type="Version" value="4.3.0"/>
       <attribute name="bundle-symbolic-name" value="org.apache.felix.dependencymanager"/>
-      <attribute name="bundle-version" type="Version" value="4.3.0"/>
+      <attribute name="bundle-version" type="Version" value="4.4.0"/>
       <directive name="uses" value="org.apache.felix.dm,org.osgi.framework"/>
     </capability>
     <capability namespace="osgi.wiring.package">
       <attribute name="osgi.wiring.package" value="org.apache.felix.dm.diagnostics"/>
-      <attribute name="version" type="Version" value="1.0.0"/>
+      <attribute name="version" type="Version" value="1.1.0"/>
       <attribute name="bundle-symbolic-name" value="org.apache.felix.dependencymanager"/>
-      <attribute name="bundle-version" type="Version" value="4.3.0"/>
+      <attribute name="bundle-version" type="Version" value="4.4.0"/>
       <directive name="uses" value="org.apache.felix.dm"/>
     </capability>
     <requirement namespace="osgi.wiring.package">
-      <directive name="filter" value="(&amp;(osgi.wiring.package=org.apache.felix.dm.context)(version&gt;=4.2.0)(!(version&gt;=4.3.0)))"/>
+      <directive name="filter" value="(&amp;(osgi.wiring.package=org.apache.felix.dm.context)(version&gt;=4.3.0)(!(version&gt;=4.4.0)))"/>
     </requirement>
     <requirement namespace="osgi.wiring.package">
-      <directive name="filter" value="(&amp;(osgi.wiring.package=org.osgi.framework)(version&gt;=1.5.0)(!(version&gt;=2.0.0)))"/>
+      <directive name="filter" value="(&amp;(osgi.wiring.package=org.osgi.framework)(version&gt;=1.8.0)(!(version&gt;=1.9.0)))"/>
     </requirement>
     <requirement namespace="osgi.wiring.package">
-      <directive name="filter" value="(&amp;(osgi.wiring.package=org.osgi.service.cm)(version&gt;=1.3.0)(!(version&gt;=2.0.0)))"/>
+      <directive name="filter" value="(&amp;(osgi.wiring.package=org.osgi.service.cm)(version&gt;=1.5.0)(!(version&gt;=2.0.0)))"/>
     </requirement>
     <requirement namespace="osgi.wiring.package">
-      <directive name="filter" value="(&amp;(osgi.wiring.package=org.osgi.service.metatype)(version&gt;=1.1.0)(!(version&gt;=2.0.0)))"/>
+      <directive name="filter" value="(&amp;(osgi.wiring.package=org.osgi.service.metatype)(version&gt;=1.3.0)(!(version&gt;=2.0.0)))"/>
     </requirement>
     <requirement namespace="osgi.wiring.package">
-      <directive name="filter" value="(&amp;(osgi.wiring.package=org.osgi.util.tracker)(version&gt;=1.4.0)(!(version&gt;=2.0.0)))"/>
+      <directive name="filter" value="(&amp;(osgi.wiring.package=org.osgi.util.tracker)(version&gt;=1.5.0)(!(version&gt;=2.0.0)))"/>
     </requirement>
     <requirement namespace="osgi.ee">
       <directive name="filter" value="(&amp;(osgi.ee=JavaSE)(version=1.8))"/>
