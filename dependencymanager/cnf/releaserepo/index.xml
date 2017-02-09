@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<repository increment="1486675704000" name="Release" xmlns="http://www.osgi.org/xmlns/repository/v1.0.0">
+<repository increment="1486676907000" name="Release" xmlns="http://www.osgi.org/xmlns/repository/v1.0.0">
   <resource>
     <capability namespace="osgi.identity">
       <attribute name="osgi.identity" value="org.apache.felix.dependencymanager.annotation"/>
@@ -7,7 +7,7 @@
       <attribute name="version" type="Version" value="4.2.0"/>
     </capability>
     <capability namespace="osgi.content">
-      <attribute name="osgi.content" value="194a0f2f58129ff45fb98f416ab51e64382f3b036f3d70cfdc24321d1b25bd65"/>
+      <attribute name="osgi.content" value="b7a54e16edb8ed31a1faf90f5ab3291a4a5eb6d2a7a22de25ed3d5b263d1eed0"/>
       <attribute name="url" value="org.apache.felix.dependencymanager.annotation/org.apache.felix.dependencymanager.annotation-4.2.0.jar"/>
       <attribute name="size" type="Long" value="144478"/>
       <attribute name="mime" value="application/vnd.osgi.bundle"/>
@@ -49,7 +49,7 @@
       <attribute name="version" type="Version" value="1.1.0"/>
     </capability>
     <capability namespace="osgi.content">
-      <attribute name="osgi.content" value="a9247c62cbf311f7573ce61956a431008f1d5deffcebc5d2a946bfde01035b5b"/>
+      <attribute name="osgi.content" value="ca33cfd8204ca7f0552927614880c08feed8e6a2a01f26216d00bfec1cd5eaa2"/>
       <attribute name="url" value="org.apache.felix.dependencymanager.lambda/org.apache.felix.dependencymanager.lambda-1.1.0.jar"/>
       <attribute name="size" type="Long" value="297572"/>
       <attribute name="mime" value="application/vnd.osgi.bundle"/>
@@ -99,7 +99,7 @@
       <attribute name="version" type="Version" value="4.0.4"/>
     </capability>
     <capability namespace="osgi.content">
-      <attribute name="osgi.content" value="e491827cc720ea5ea7d2797cc826e911e8a6ea376326ea1b2b17f3c78496aebb"/>
+      <attribute name="osgi.content" value="1c29166dcd2458cb3d28b44f46b3c4c286950c8c2198ffc6203a239e3f1d77bf"/>
       <attribute name="url" value="org.apache.felix.dependencymanager.runtime/org.apache.felix.dependencymanager.runtime-4.0.4.jar"/>
       <attribute name="size" type="Long" value="132368"/>
       <attribute name="mime" value="application/vnd.osgi.bundle"/>
@@ -152,7 +152,7 @@
       <attribute name="version" type="Version" value="4.0.5"/>
     </capability>
     <capability namespace="osgi.content">
-      <attribute name="osgi.content" value="a71fb5fcca751c65da4cd9bf89ee19b9c2d20921a860d6eabf71c52101847c32"/>
+      <attribute name="osgi.content" value="d2698b25f68b435ad2e05b3cce34e8ab70f3d80c1896b1d9f1dfd53349a49636"/>
       <attribute name="url" value="org.apache.felix.dependencymanager.shell/org.apache.felix.dependencymanager.shell-4.0.5.jar"/>
       <attribute name="size" type="Long" value="32575"/>
       <attribute name="mime" value="application/vnd.osgi.bundle"/>
@@ -189,7 +189,7 @@
       <attribute name="version" type="Version" value="4.4.0"/>
     </capability>
     <capability namespace="osgi.content">
-      <attribute name="osgi.content" value="7e6a42e745bc6cb948cae9182591d515a2d1b89fba8bf877145e4d1010d60e07"/>
+      <attribute name="osgi.content" value="d4a8f18693caaeb43a960dd206b9f593a06f89d2be6a6f35f9b8be06869463ee"/>
       <attribute name="url" value="org.apache.felix.dependencymanager/org.apache.felix.dependencymanager-4.4.0.jar"/>
       <attribute name="size" type="Long" value="455578"/>
       <attribute name="mime" value="application/vnd.osgi.bundle"/>
