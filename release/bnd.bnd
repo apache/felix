@@ -21,3 +21,7 @@
 	org.apache.felix.dependencymanager.annotation,\
 	org.apache.felix.dependencymanager.runtime
 	
+
+# we do not release this project in binary distribution.
+-releaserepo: 
+-baseline: 
