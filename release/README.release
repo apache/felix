@@ -23,7 +23,17 @@ Before you can start staging a release candidate, you must:
 * increment the ext.dmRelease parameter in release/build.gradle, if not already done, and commit.
 * check if release notes are up-to-date, in release/resources/changelog.txt.
 * in the changelog file, also make sure that all bundles which are part of the release are all referenced (bundle names + versions).
+* release the bundles that are part of the dm binary distribution.
 * create a tagged version of the sources in preparation of the release candidate.
+
+Release the binary bundles
+==========================
+
+first, release the bundles that are part of the dm binary distribution:
+
+$ gradle release
+
+This will generates some new releases in cnf/releaserepo. Commit the newly created releases and uncommit the previous ones.
 
 Create a tagged version
 =======================
@@ -50,18 +60,6 @@ $ ./gradlew org.apache.felix.dependencymanager.annotation:jar
 $ ./gradlew jar
 $ ./gradlew test
 $ ./gradlew check
-
-Now release under bndtools only the necessary bundles:
-
-- Click on the bndtools "Release workspace bundles", and release the bundles that have been modified and need to be released.
-
-currently, the bundles that can be released are:
-
-* org.apache.felix.dependencymanager
-* org.apache.felix.dependencymanager.shell 
-* org.apache.felix.dependencymanager.annotation 
-* org.apache.felix.dependencymanager.runtime 
-* org.apache.felix.dependencymanager.lambda
 
 - create the staging:
 
