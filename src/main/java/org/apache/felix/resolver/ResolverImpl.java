@@ -1608,9 +1608,10 @@ public class ResolverImpl implements Resolver
         if (wiring != null)
         {
             Collection<Wire> substitutionWires;
-            if (wiring instanceof FelixWiring)
+            if (session.getContext() instanceof FelixResolveContext)
             {
-                substitutionWires = ((FelixWiring) wiring).getSubstitutionWires();
+                substitutionWires = ((FelixResolveContext) session.getContext()).getSubstitutionWires(
+                    wiring);
             }
             else
             {

@@ -18,7 +18,11 @@
  */package org.apache.felix.resolver;
 
 import java.util.Collection;
+
+import org.osgi.framework.namespace.PackageNamespace;
 import org.osgi.resource.Resource;
+import org.osgi.resource.Wire;
+import org.osgi.resource.Wiring;
 
 public interface FelixResolveContext
 {
@@ -41,4 +45,19 @@ public interface FelixResolveContext
      * resources. The returned collection may be unmodifiable.
      */
     public Collection<Resource> getOndemandResources(Resource host);
+
+    /**
+     * Returns the subset of {@link Wiring#getRequiredResourceWires(String) require wires}
+     * that provide wires to {@link Capability capabilities} which substitute capabilities
+     * of the given wiring. For example, when a {@link PackageNamespace package} name is both
+     * provided and required by the same resource. If the package requirement is resolved
+     * to a capability hosted by a different wiring then the package capability is
+     * considered to be substituted.
+     *
+     * @param wiring the wiring to get the substitution wires from
+     * @return A collection containing a snapshot of the substitution {@link Wire}s
+     * for the {@link Requirement requirements} of this wiring, or an empty list
+     * if this wiring has no substitution wires.
+     */
+    public Collection<Wire> getSubstitutionWires(Wiring wiring);
 }
