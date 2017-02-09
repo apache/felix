@@ -43,8 +43,8 @@ import java.util.regex.Pattern;
 
 import javax.servlet.http.HttpServletRequest;
 
+import org.apache.felix.utils.json.JSONWriter;
 import org.apache.felix.webconsole.internal.Util;
-import org.apache.felix.webconsole.json.JSONWriter;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
