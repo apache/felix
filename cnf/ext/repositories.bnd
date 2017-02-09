@@ -35,3 +35,4 @@
 		latest=false;
 
 -releaserepo: Release
+-baselinerepo: Release
