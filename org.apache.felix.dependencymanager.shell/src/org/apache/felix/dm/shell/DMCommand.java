@@ -661,7 +661,6 @@ public class DMCommand {
     }
 
     private boolean isFragment(Bundle b) {
-        @SuppressWarnings("unchecked")
         Dictionary<String, String> headers = b.getHeaders();
         return headers.get("Fragment-Host") != null;
     }
