@@ -16,6 +16,7 @@
  */
 package org.apache.felix.converter.impl;
 
+import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -160,8 +161,9 @@ class Util {
         if (md.getParameterTypes().length > 1)
             return null; // not an accessor
 
-        if (Object.class.equals(md.getDeclaringClass()))
-            return null; // do not use any methods on the Object class as a accessor
+        if (Object.class.equals(md.getDeclaringClass()) ||
+            Annotation.class.equals(md.getDeclaringClass()))
+            return null; // do not use any methods on the Object or Annotation class as a accessor
 
         return md.getName().replace('_', '.'); // TODO support all the escaping mechanisms.
     }
