@@ -22,10 +22,13 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Dictionary;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
+
+import org.osgi.util.converter.ConversionException;
 
 abstract class DynamicMapLikeFacade<K, V> implements Map<K, V> {
     protected final ConvertingImpl convertingImpl;
@@ -210,7 +213,7 @@ class DynamicDTOFacade extends DynamicMapLikeFacade<String, Object> {
 }
 
 class DynamicInterfaceFacade extends DynamicMapLikeFacade<String, Object> {
-    private Map <String, Method> keys = null;
+    private Map <String, Set<Method>> keys = null;
     private final Object backingObject;
 
     DynamicInterfaceFacade(Object backingObject, ConvertingImpl convertingImpl) {
@@ -220,12 +223,18 @@ class DynamicInterfaceFacade extends DynamicMapLikeFacade<String, Object> {
 
     @Override
     public Object get(Object key) {
-        Method m = getKeys().get(key);
-        try {
-            return m.invoke(backingObject);
-        } catch (Exception e) {
-            throw new RuntimeException(e);
+        Set<Method> set = getKeys().get(key);
+        for (Iterator<Method> iterator = set.iterator();iterator.hasNext();) {
+            Method m = iterator.next();
+            if (m.getParameterCount() > 0)
+                continue;
+            try {
+                return m.invoke(backingObject);
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
         }
+        throw new ConversionException("Missing no-arg method for key: " + key);
     }
 
     @Override
@@ -233,7 +242,7 @@ class DynamicInterfaceFacade extends DynamicMapLikeFacade<String, Object> {
         return getKeys().keySet();
     }
 
-    private Map<String, Method> getKeys() {
+    private Map<String, Set<Method>> getKeys() {
         if (keys == null)
             keys = Util.getInterfaceKeys(convertingImpl.sourceClass);
 

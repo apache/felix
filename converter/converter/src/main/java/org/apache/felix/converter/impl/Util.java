@@ -24,7 +24,9 @@ import java.lang.reflect.Type;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.Map;
+import java.util.Set;
 
 class Util {
     private static final Map<Class<?>, Class<?>> boxedClasses;
@@ -134,13 +136,19 @@ class Util {
         return unMangleName(f.getName());
     }
 
-    static Map<String, Method> getInterfaceKeys(Class<?> intf) {
-        Map<String, Method> keys = new LinkedHashMap<>();
+    static Map<String, Set<Method>> getInterfaceKeys(Class<?> intf) {
+        Map<String, Set<Method>> keys = new LinkedHashMap<>();
 
         for (Method md : intf.getMethods()) {
             String name = getInterfacePropertyName(md);
-            if (name != null)
-                keys.put(name, md);
+            if (name != null) {
+                Set<Method> set = keys.get(name);
+                if (set == null) {
+                    set = new LinkedHashSet<>();
+                    keys.put(name, set);
+                }
+                set.add(md);
+            }
         }
         return keys;
     }
