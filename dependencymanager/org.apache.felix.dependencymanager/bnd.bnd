@@ -17,7 +17,6 @@
 -buildpath: \
 	org.mockito.mockito-all;version=1.9,\
 	${junit},\
-	biz.aQute.bndlib;version=3.0,\
 	osgi.core;version=6.0,\
 	osgi.cmpn;version=6.0,\
 	osgi.annotation;version=6.0
