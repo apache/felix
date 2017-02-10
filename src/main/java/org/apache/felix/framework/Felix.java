@@ -2215,12 +2215,12 @@ public class Felix extends BundleImpl implements Framework
             Throwable rethrow = null;
             try
             {
-	            // Set the bundle's activator.
-	            bundle.setActivator(createBundleActivator(bundle));
+                // Set the bundle's activator.
+                bundle.setActivator(createBundleActivator(bundle));
             }
             catch (Throwable th) 
             {
-            	rethrow = th;
+                rethrow = th;
             }
 
             try
@@ -2230,7 +2230,7 @@ public class Felix extends BundleImpl implements Framework
                 
                 if (rethrow != null) 
                 {
-                	throw rethrow;
+                    throw rethrow;
                 }
                 // Activate the bundle if it has an activator.
                 if (bundle.getActivator() != null)
@@ -2333,15 +2333,15 @@ public class Felix extends BundleImpl implements Framework
         // in a finally block.
         try
         {
-        	// Check if the bundle is not currently STARTING or STOPPING because if it is
-        	// we are in a loop where the bundle being started or stopped triggered an update
-        	// of itself (either directly or indirectly) which we can not handle.
-        	if ((bundle.getState() & (Bundle.STARTING | Bundle.STOPPING)) != 0) 
-        	{
-        		throw new BundleException("Bundle " + bundle
+            // Check if the bundle is not currently STARTING or STOPPING because if it is
+            // we are in a loop where the bundle being started or stopped triggered an update
+            // of itself (either directly or indirectly) which we can not handle.
+            if ((bundle.getState() & (Bundle.STARTING | Bundle.STOPPING)) != 0) 
+            {
+                throw new BundleException("Bundle " + bundle
                     + " cannot be update, since it is either STARTING or STOPPING.");
-        	}
-        	
+            }
+            
             // Variable to indicate whether bundle is active or not.
             Throwable rethrow = null;
 
