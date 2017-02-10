@@ -2211,15 +2211,27 @@ public class Felix extends BundleImpl implements Framework
             {
                 return;
             }
-
-            // Fire STARTING event to signify call to bundle activator.
-            fireBundleEvent(BundleEvent.STARTING, bundle);
+            
+            Throwable rethrow = null;
+            try
+            {
+	            // Set the bundle's activator.
+	            bundle.setActivator(createBundleActivator(bundle));
+            }
+            catch (Throwable th) 
+            {
+            	rethrow = th;
+            }
 
             try
             {
-                // Set the bundle's activator.
-                bundle.setActivator(createBundleActivator(bundle));
-
+                // Fire STARTING event to signify call to bundle activator.
+                fireBundleEvent(BundleEvent.STARTING, bundle);
+                
+                if (rethrow != null) 
+                {
+                	throw rethrow;
+                }
                 // Activate the bundle if it has an activator.
                 if (bundle.getActivator() != null)
                 {
@@ -2301,7 +2313,7 @@ public class Felix extends BundleImpl implements Framework
         // Acquire bundle lock.
         try
         {
-            acquireBundleLock(bundle, Bundle.INSTALLED | Bundle.RESOLVED | Bundle.ACTIVE);
+            acquireBundleLock(bundle, Bundle.INSTALLED | Bundle.RESOLVED | Bundle.ACTIVE | Bundle.STARTING | Bundle.STOPPING);
         }
         catch (IllegalStateException ex)
         {
@@ -2313,7 +2325,7 @@ public class Felix extends BundleImpl implements Framework
             {
                 throw new BundleException(
                     "Bundle " + bundle
-                    + " cannot be update, since it is either starting or stopping.");
+                    + " cannot be update, since we could not get a lock for it without deadlock.");
             }
         }
 
@@ -2321,6 +2333,15 @@ public class Felix extends BundleImpl implements Framework
         // in a finally block.
         try
         {
+        	// Check if the bundle is not currently STARTING or STOPPING because if it is
+        	// we are in a loop where the bundle being started or stopped triggered an update
+        	// of itself (either directly or indirectly) which we can not handle.
+        	if ((bundle.getState() & (Bundle.STARTING | Bundle.STOPPING)) != 0) 
+        	{
+        		throw new BundleException("Bundle " + bundle
+                    + " cannot be update, since it is either STARTING or STOPPING.");
+        	}
+        	
             // Variable to indicate whether bundle is active or not.
             Throwable rethrow = null;
 
