@@ -270,8 +270,11 @@ public class ConfigSpiOsgi extends ConfigurationSpi implements ManagedService,
 
         if (!newDefaultRealmName.equals(defaultRealmName))
         {
-            defaultRealmName = newDefaultRealmName;
-            recreateConfigs();
+            synchronized (lock)
+            {
+                defaultRealmName = newDefaultRealmName;
+                recreateConfigs();
+            }
         }
 
         String newProviderName = PropertiesUtil.toString(properties.get(JAAS_CONFIG_PROVIDER_NAME),

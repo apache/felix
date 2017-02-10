@@ -53,7 +53,6 @@ import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceReference;
 import org.osgi.service.cm.ConfigurationException;
 
-@Ignore("FELIX-5536")
 @RunWith(Parameterized.class)
 public class ITConcurrentLoginModuleFactoryTest
 {
