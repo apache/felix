@@ -20,6 +20,7 @@
 package org.apache.felix.jaas.internal;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
@@ -28,7 +29,9 @@ import static org.mockito.Mockito.when;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Dictionary;
 import java.util.HashMap;
+import java.util.Hashtable;
 import java.util.List;
 import java.util.Map;
 import java.util.Queue;
@@ -39,6 +42,7 @@ import javax.security.auth.login.ConfigurationSpi;
 
 import org.apache.felix.jaas.LoginModuleFactory;
 import org.apache.sling.testing.mock.osgi.junit.OsgiContext;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -47,11 +51,13 @@ import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceReference;
+import org.osgi.service.cm.ConfigurationException;
 
+@Ignore("FELIX-5536")
 @RunWith(Parameterized.class)
 public class ITConcurrentLoginModuleFactoryTest
 {
-    private static final String TEST_REALM_NAME = "FELIX";
+    private static final String TEST_REALM_NAME = ConfigSpiOsgi.DEFAULT_REALM_NAME;
     @Rule
     public OsgiContext context = new OsgiContext();
 
@@ -89,6 +95,11 @@ public class ITConcurrentLoginModuleFactoryTest
             t.start();
         }
 
+        ConfigModifier cm = new ConfigModifier(latch, references, spi);
+        Thread cmt = new Thread(cm);
+        threads.add(cmt);
+        cmt.start();
+
         latch.countDown();
 
         for (Thread t : threads)
@@ -96,8 +107,12 @@ public class ITConcurrentLoginModuleFactoryTest
             t.join();
         }
 
-        assertEquals(numOfServices,
-            spi.engineGetAppConfigurationEntry(TEST_REALM_NAME).length);
+        Map<String, ConfigSpiOsgi.Realm> configs = spi.getAllConfiguration();
+        assertFalse(configs.isEmpty());
+        for (ConfigSpiOsgi.Realm r : configs.values())
+        {
+            assertEquals(numOfServices, r.engineGetAppConfigurationEntry().length);
+        }
         assertEquals(1, context.getServices(ConfigurationSpi.class, null).length);
     }
 
@@ -136,11 +151,53 @@ public class ITConcurrentLoginModuleFactoryTest
         }
     }
 
+    private static class ConfigModifier implements Runnable
+    {
+        private final CountDownLatch latch;
+        private final Queue<ServiceReference> references;
+        private final ConfigSpiOsgi spi;
+        volatile String realmName;
+        private int runCount;
+
+        ConfigModifier(CountDownLatch latch, Queue<ServiceReference> references, ConfigSpiOsgi spi)
+        {
+            this.latch = latch;
+            this.references = references;
+            this.spi = spi;
+        }
+
+        @Override
+        public void run()
+        {
+            try
+            {
+                latch.await();
+            }
+            catch (InterruptedException ignore)
+            {
+                return;
+            }
+            while (!references.isEmpty())
+            {
+                Dictionary<String, Object> dict = new Hashtable<String, Object>();
+                realmName = TEST_REALM_NAME + runCount++;
+                dict.put("jaas.defaultRealmName", realmName);
+                try
+                {
+                    spi.updated(dict);
+                } catch (ConfigurationException e)
+                {
+                    e.printStackTrace();
+                }
+            }
+        }
+    }
+
+
     private static ServiceReference newReference()
     {
         final Map<String, Object> props = new HashMap<String, Object>();
         props.put(LoginModuleFactory.JAAS_CONTROL_FLAG, "REQUIRED");
-        props.put(LoginModuleFactory.JAAS_REALM_NAME, TEST_REALM_NAME);
 
         ServiceReference sr = mock(ServiceReference.class);
         when(sr.getProperty(any(String.class))).thenAnswer(new Answer<Object>()

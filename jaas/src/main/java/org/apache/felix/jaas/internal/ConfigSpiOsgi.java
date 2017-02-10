@@ -78,7 +78,7 @@ public class ConfigSpiOsgi extends ConfigurationSpi implements ManagedService,
      *
      * In case it does not find any config it looks for config entry for an app named 'other'
      */
-    private static final String DEFAULT_REALM_NAME = "other";
+    static final String DEFAULT_REALM_NAME = "other";
 
     @Property
     private static final String JAAS_DEFAULT_REALM_NAME = "jaas.defaultRealmName";
