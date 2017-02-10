@@ -362,9 +362,12 @@ public class ConfigSpiOsgi extends ConfigurationSpi implements ManagedService,
 
     private void deregisterProvider(String providerName)
     {
-        Security.removeProvider(providerName);
-        log.log(LogService.LOG_INFO, "Removed provider " + providerName + " type "
-            + JAAS_CONFIG_ALGO_NAME + " from Security providers list");
+        if (providerName != null)
+        {
+            Security.removeProvider(providerName);
+            log.log(LogService.LOG_INFO, "Removed provider " + providerName + " type "
+                    + JAAS_CONFIG_ALGO_NAME + " from Security providers list");
+        }
     }
 
     // ---------- ServiceTracker ----------------------------------------------
