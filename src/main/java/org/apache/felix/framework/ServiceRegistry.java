@@ -471,9 +471,20 @@ public class ServiceRegistry
                         {
                             if (usage.m_svcHolderRef.compareAndSet(holder, null))
                             {
-                                // Remove reference from usages array.
-                                ((ServiceRegistrationImpl.ServiceReferenceImpl) ref)
-                                    .getRegistration().ungetService(bundle, svc);
+                            	// Temporarily increase the usage again so that the 
+                            	// service factory still sees the usage in the unget
+                            	usage.m_count.incrementAndGet();
+                            	try
+                            	{
+	                                // Remove reference from usages array.
+	                                ((ServiceRegistrationImpl.ServiceReferenceImpl) ref)
+	                                    .getRegistration().ungetService(bundle, svc);
+                            	}
+                            	finally 
+                            	{
+                            		// now we can decrease the usage again
+                            		usage.m_count.decrementAndGet();
+                            	}
 
                             }
                         }
