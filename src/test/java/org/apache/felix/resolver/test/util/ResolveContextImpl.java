@@ -20,11 +20,15 @@ package org.apache.felix.resolver.test.util;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+
+import org.apache.felix.resolver.FelixResolveContext;
 import org.osgi.resource.Capability;
 import org.osgi.resource.Requirement;
 import org.osgi.resource.Resource;
+import org.osgi.resource.Wire;
 import org.osgi.resource.Wiring;
 import org.osgi.service.resolver.HostedCapability;
 import org.osgi.service.resolver.ResolveContext;
@@ -87,5 +91,28 @@ public class ResolveContextImpl extends ResolveContext
     public Map<Resource, Wiring> getWirings()
     {
         return m_wirings;
+    }
+
+    public static class FelixResolveContextImpl extends ResolveContextImpl implements FelixResolveContext
+    {
+        private final Map<Wiring, Collection<Wire>> m_substitutions;
+
+        public FelixResolveContextImpl(Map<Resource, Wiring> wirings, Map<Requirement, List<Capability>> candMap, Collection<Resource> mandatory, Collection<Resource> optional, Map<Wiring, Collection<Wire>> substitutions)
+        {
+            super(wirings, candMap, mandatory, optional);
+            this.m_substitutions = substitutions;
+        }
+
+        public Collection<Resource> getOndemandResources(Resource host)
+        {
+            return Collections.emptyList();
+        }
+
+        public Collection<Wire> getSubstitutionWires(Wiring wiring)
+        {
+            Collection<Wire> result = m_substitutions.get(wiring);
+            return result == null ? Collections.<Wire> emptyList() : result;
+        }
+
     }
 }
