@@ -16,6 +16,7 @@
  */
 package org.apache.felix.utils.json;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
@@ -26,8 +27,6 @@ import java.util.Map;
 import java.util.Stack;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-
-import org.apache.felix.utils.io.InputStreams;
 
 /**
  * A very small JSON parser.
@@ -216,8 +215,40 @@ public class JSONParser {
         return parseKeyValueListRaw(jsonList);
     }
 
+    /**
+     * Read an entire input stream into a byte array.
+     * @param is The input stream to read.
+     * @return The byte array with the contents of the input stream.
+     * @throws IOException if the underlying read operation on the input stream
+     * throws an error.
+     */
+    private static byte [] readStream(InputStream is) throws IOException {
+        try {
+            ByteArrayOutputStream baos = new ByteArrayOutputStream();
+            byte[] bytes = new byte[65536];
+
+            int length = 0;
+            int offset = 0;
+
+            while ((length = is.read(bytes, offset, bytes.length - offset)) != -1) {
+                offset += length;
+
+                if (offset == bytes.length) {
+                    baos.write(bytes, 0, bytes.length);
+                    offset = 0;
+                }
+            }
+            if (offset != 0) {
+                baos.write(bytes, 0, offset);
+            }
+            return baos.toByteArray();
+        } finally {
+            is.close();
+        }
+    }
+
     private static String readStreamAsString(InputStream is) throws IOException {
-        byte [] bytes = InputStreams.readStream(is);
+        byte [] bytes = readStream(is);
         if (bytes.length < 5)
             // need at least 5 bytes to establish the encoding
             throw new IllegalArgumentException("Malformatted JSON");
@@ -261,4 +292,6 @@ public class JSONParser {
         }
         return new String(bytes, encoding);
     }
+
+
 }
