@@ -292,8 +292,8 @@ public class ServiceRegistry
     @SuppressWarnings("unchecked")
     public <S> S getService(final Bundle bundle, final ServiceReference<S> ref, final boolean isServiceObjects)
     {
-    	// prototype scope is only possible if called from ServiceObjects
-    	final boolean isPrototype = isServiceObjects && ref.getProperty(Constants.SERVICE_SCOPE) == Constants.SCOPE_PROTOTYPE;
+        // prototype scope is only possible if called from ServiceObjects
+        final boolean isPrototype = isServiceObjects && ref.getProperty(Constants.SERVICE_SCOPE) == Constants.SCOPE_PROTOTYPE;
         UsageCount usage = null;
         Object svcObj = null;
 
@@ -471,20 +471,20 @@ public class ServiceRegistry
                         {
                             if (usage.m_svcHolderRef.compareAndSet(holder, null))
                             {
-                            	// Temporarily increase the usage again so that the 
-                            	// service factory still sees the usage in the unget
-                            	usage.m_count.incrementAndGet();
-                            	try
-                            	{
-	                                // Remove reference from usages array.
-	                                ((ServiceRegistrationImpl.ServiceReferenceImpl) ref)
-	                                    .getRegistration().ungetService(bundle, svc);
-                            	}
-                            	finally 
-                            	{
-                            		// now we can decrease the usage again
-                            		usage.m_count.decrementAndGet();
-                            	}
+                                // Temporarily increase the usage again so that the 
+                                // service factory still sees the usage in the unget
+                                usage.m_count.incrementAndGet();
+                                try
+                                {
+                                    // Remove reference from usages array.
+                                    ((ServiceRegistrationImpl.ServiceReferenceImpl) ref)
+                                        .getRegistration().ungetService(bundle, svc);
+                                }
+                                finally 
+                                {
+                                    // now we can decrease the usage again
+                                    usage.m_count.decrementAndGet();
+                                }
 
                             }
                         }
