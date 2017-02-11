@@ -107,6 +107,27 @@ abstract class DynamicMapLikeFacade<K, V> implements Map<K, V> {
         }
         return res;
     }
+
+    @Override
+    public String toString() {
+        StringBuilder sb = new StringBuilder();
+
+        sb.append('{');
+        boolean first = true;
+        for (Map.Entry<K, V> entry : entrySet()) {
+            if (first)
+                first = false;
+            else
+                sb.append(", ");
+
+            sb.append(entry.getKey());
+            sb.append('=');
+            sb.append(entry.getValue());
+        }
+        sb.append('}');
+
+        return sb.toString();
+    }
 }
 
 class DynamicBeanFacade extends DynamicMapLikeFacade<String,Object> {
