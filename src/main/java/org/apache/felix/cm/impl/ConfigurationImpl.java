@@ -678,6 +678,16 @@ public class ConfigurationImpl extends ConfigurationBase
      */
     static boolean equals( Dictionary<String, Object> props1, Dictionary<String, Object> props2)
     {
+        if (props1 == null) {
+            if (props2 == null) {
+                return true;
+            } else {
+                return false;
+            }
+        } else if (props2 == null) {
+            return false;
+        }
+
         final int count1 = getCount(props1);
         final int count2 = getCount(props2);
         if ( count1 != count2 )
