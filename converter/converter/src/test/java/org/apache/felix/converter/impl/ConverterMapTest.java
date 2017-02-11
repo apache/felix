@@ -229,6 +229,16 @@ public class ConverterMapTest {
         assertFalse(ta.za_za());
     }
 
+    @Test
+    public void testAnnotationMethods() {
+        TestAnnotation ta = converter.convert(new HashMap<>()).to(TestAnnotation.class);
+        Map<String, Object> m = converter.convert(ta).to(new TypeReference<Map<String, Object>>(){});
+        assertEquals(3, m.size());
+        assertEquals("fooo!", m.get("foo"));
+        assertEquals(42, m.get("bar"));
+        assertEquals(false, m.get("za.za"));
+    }
+
     @SuppressWarnings({ "rawtypes", "unchecked" })
     @Test
     public void testCopyMap() {

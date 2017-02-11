@@ -22,11 +22,14 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.lang.reflect.Type;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 
 class Util {
@@ -151,6 +154,20 @@ class Util {
                 set.add(md);
             }
         }
+
+        for (Iterator<Entry<String, Set<Method>>> it = keys.entrySet().iterator(); it.hasNext(); ) {
+            Entry<String, Set<Method>> entry = it.next();
+            boolean zeroArgFound = false;
+            for (Method md : entry.getValue()) {
+                if (md.getParameterCount() == 0) {
+                    // OK found the zero-arg param
+                    zeroArgFound = true;
+                    break;
+                }
+            }
+            if (!zeroArgFound)
+                it.remove();
+        }
         return keys;
     }
 
@@ -165,7 +182,24 @@ class Util {
             Annotation.class.equals(md.getDeclaringClass()))
             return null; // do not use any methods on the Object or Annotation class as a accessor
 
+        if (md.getDeclaringClass().getSimpleName().startsWith("$Proxy")) {
+            // TODO is there a better way to do this?
+            if (isInheritedMethodInProxy(md, Object.class) ||
+                    isInheritedMethodInProxy(md, Annotation.class))
+                return null;
+        }
+
         return md.getName().replace('_', '.'); // TODO support all the escaping mechanisms.
+    }
+
+    private static boolean isInheritedMethodInProxy(Method md, Class<?> cls) {
+        for (Method om : cls.getMethods()) {
+            if (om.getName().equals(md.getName()) &&
+                    Arrays.equals(om.getParameterTypes(), md.getParameterTypes())) {
+                return true;
+            }
+        }
+        return false;
     }
 
     static Object getInterfaceProperty(Object obj, Method md) throws IllegalAccessException, IllegalArgumentException, InvocationTargetException {

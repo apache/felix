@@ -232,6 +232,11 @@ class MapDelegate<K, V> implements Map<K, V> {
         delegate = new HashMap<>(delegate);
     }
 
+    @Override
+    public String toString() {
+        return delegate.toString();
+    }
+
     static class MapEntry<K,V> implements Map.Entry<K,V> {
         private final K key;
         private final V value;
