@@ -20,12 +20,11 @@ package org.apache.felix.webconsole.plugins.scriptconsole.internal;
 
 import org.apache.commons.fileupload.FileItem;
 import org.apache.commons.io.IOUtils;
+import org.apache.felix.utils.json.JSONWriter;
 import org.apache.felix.webconsole.AbstractWebConsolePlugin;
 import org.apache.felix.webconsole.DefaultVariableResolver;
 import org.apache.felix.webconsole.SimpleWebConsolePlugin;
 import org.apache.felix.webconsole.WebConsoleUtil;
-import org.json.JSONException;
-import org.json.JSONWriter;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceRegistration;
@@ -213,13 +212,13 @@ class ScriptConsolePlugin extends SimpleWebConsolePlugin
         {
             return getScriptConfig0();
         }
-        catch (JSONException e)
+        catch (IOException e)
         {
             throw new RuntimeException(e);
         }
     }
 
-    private String getScriptConfig0() throws JSONException
+    private String getScriptConfig0() throws IOException
     {
         StringWriter sw = new StringWriter();
         JSONWriter jw = new JSONWriter(sw);

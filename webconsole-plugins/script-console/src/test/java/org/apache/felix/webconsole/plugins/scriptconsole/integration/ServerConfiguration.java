@@ -19,14 +19,19 @@
 
 package org.apache.felix.webconsole.plugins.scriptconsole.integration;
 
+import static org.ops4j.pax.exam.CoreOptions.cleanCaches;
+import static org.ops4j.pax.exam.CoreOptions.frameworkProperty;
+import static org.ops4j.pax.exam.CoreOptions.mavenBundle;
+import static org.ops4j.pax.exam.CoreOptions.options;
+import static org.ops4j.pax.exam.CoreOptions.systemProperty;
+import static org.ops4j.pax.exam.CoreOptions.wrappedBundle;
+
+import java.io.File;
+
 import org.ops4j.pax.exam.Configuration;
 import org.ops4j.pax.exam.CoreOptions;
 import org.ops4j.pax.exam.Option;
 import org.ops4j.pax.exam.OptionUtils;
-
-import java.io.File;
-
-import static org.ops4j.pax.exam.CoreOptions.*;
 
 public class ServerConfiguration
 {
@@ -80,7 +85,6 @@ public class ServerConfiguration
                 mavenBundle("org.apache.felix", "org.apache.felix.webconsole").versionAsInProject(),
                 mavenBundle("commons-io", "commons-io").versionAsInProject(),
                 wrappedBundle(mavenBundle("commons-fileupload", "commons-fileupload").versionAsInProject()),
-                wrappedBundle(mavenBundle("org.json", "json").versionAsInProject()),
                 mavenBundle("org.codehaus.groovy", "groovy-all", "2.1.0"),
                 frameworkProperty("osgi.clean").value("true"),
 //            systemProperty("org.ops4j.pax.logging.DefaultServiceLog.level").value("INFO"),
