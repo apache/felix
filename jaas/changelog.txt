@@ -1,3 +1,20 @@
+Changes from 1.0.0 to 1.0.2
+---------------------------
+** Bug
+    * [FELIX-5536] - ConfigSpiOSGi may end with incomplete realm due to race conditions
+
+** Improvement
+    * [FELIX-5537] - ConfigSpiOsgi should not try to unregister provider if not registered
+
+Changes from 0.0.4 to 1.0.0
+---------------------------
+** Bug
+    * [FELIX-5502] - Startup logs from ConfigSpiOsgi may get dropped due to race condition
+    * [FELIX-5505] - ConfigSpiOSGi may miss out on registering some LoginModuleFactory due to race condition
+
+** Task
+    * [FELIX-3981] - Create a sample project for demonstrating Felix JAAS main features
+
 Changes from 0.0.2 to 0.0.4
 ---------------------------
 ** Bug
