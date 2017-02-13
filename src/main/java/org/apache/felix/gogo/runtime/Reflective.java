@@ -307,6 +307,7 @@ public final class Reflective
             else if (different != 0 && res > 0)
             {
                 int res2;
+                cnvIn2.add(0, session);
                 Object[] out2 = out.clone();
                 res2 = docoerce(session, target, m, types, out2, cnvIn2) + different * 2;
                 if (res >= 0 && res2 <= res)
