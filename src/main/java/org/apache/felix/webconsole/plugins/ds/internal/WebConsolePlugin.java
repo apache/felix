@@ -32,6 +32,7 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.apache.felix.utils.json.JSONWriter;
 import org.apache.felix.webconsole.DefaultVariableResolver;
 import org.apache.felix.webconsole.SimpleWebConsolePlugin;
 import org.apache.felix.webconsole.WebConsoleUtil;
@@ -254,7 +255,7 @@ class WebConsolePlugin extends SimpleWebConsolePlugin
         jw.endObject();
     }
 
-    void writePid(final JSONWriter jw, final ComponentDescriptionDTO desc)
+    void writePid(final JSONWriter jw, final ComponentDescriptionDTO desc) throws IOException
     {
         final String configurationPid = desc.configurationPid[0];
         final String pid;
@@ -276,7 +277,7 @@ class WebConsolePlugin extends SimpleWebConsolePlugin
 
     void component(JSONWriter jw,
             final ComponentDescriptionDTO desc,
-            final ComponentConfigurationDTO config, boolean details)
+            final ComponentConfigurationDTO config, boolean details) throws IOException
     {
         String id = config == null ? "" : String.valueOf(config.id);
         String name = desc.name;
@@ -324,7 +325,7 @@ class WebConsolePlugin extends SimpleWebConsolePlugin
 
     private void gatherComponentDetails(JSONWriter jw,
             ComponentDescriptionDTO desc,
-            ComponentConfigurationDTO component)
+            ComponentConfigurationDTO component) throws IOException
     {
         final Bundle bundle = this.getBundleContext().getBundle(0).getBundleContext().getBundle(desc.bundle.id);
 
@@ -355,7 +356,7 @@ class WebConsolePlugin extends SimpleWebConsolePlugin
         jw.endArray();
     }
 
-    private void listServices(JSONWriter jw, ComponentDescriptionDTO desc)
+    private void listServices(JSONWriter jw, ComponentDescriptionDTO desc) throws IOException
     {
         String[] services = desc.serviceInterfaces;
         if (services == null)
@@ -391,7 +392,7 @@ class WebConsolePlugin extends SimpleWebConsolePlugin
         return null;
     }
 
-    private void listReferences(JSONWriter jw, ComponentDescriptionDTO desc, ComponentConfigurationDTO config)
+    private void listReferences(JSONWriter jw, ComponentDescriptionDTO desc, ComponentConfigurationDTO config) throws IOException
     {
         for(final ReferenceDTO dto : desc.references)
         {
@@ -457,7 +458,7 @@ class WebConsolePlugin extends SimpleWebConsolePlugin
         }
     }
 
-    private void listProperties(JSONWriter jw, ComponentDescriptionDTO desc, ComponentConfigurationDTO component)
+    private void listProperties(JSONWriter jw, ComponentDescriptionDTO desc, ComponentConfigurationDTO component) throws IOException
     {
         Map<String, Object> props = component != null ? component.properties : desc.properties;
         if (props != null)
@@ -485,7 +486,7 @@ class WebConsolePlugin extends SimpleWebConsolePlugin
 
     }
 
-    private void keyVal(JSONWriter jw, String key, Object value)
+    private void keyVal(JSONWriter jw, String key, Object value) throws IOException
     {
         if (key != null && value != null)
         {
