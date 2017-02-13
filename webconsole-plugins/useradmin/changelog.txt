@@ -1,3 +1,9 @@
+Changes from 1.0.2 to 1.0.4
+---------------------------
+** Improvement
+    * [FELIX-5510] - Remove usage of org.json form web console plugins
+
+
 Changes from 1.0.0 to 1.0.2
 ---------------------------
 ** Bug

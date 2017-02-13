@@ -21,19 +21,19 @@ import java.io.PrintWriter;
 import java.security.MessageDigest;
 import java.security.Provider;
 import java.security.Security;
+import java.util.Collection;
 import java.util.Dictionary;
 import java.util.Enumeration;
 import java.util.Iterator;
+import java.util.Map;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.apache.felix.utils.json.JSONParser;
+import org.apache.felix.utils.json.JSONWriter;
 import org.apache.felix.webconsole.SimpleWebConsolePlugin;
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
-import org.json.JSONWriter;
 import org.osgi.service.useradmin.Group;
 import org.osgi.service.useradmin.Role;
 import org.osgi.service.useradmin.User;
@@ -63,6 +63,7 @@ class WebConsolePlugin extends SimpleWebConsolePlugin
         TEMPLATE = readTemplateFile("/res/plugin.html"); //$NON-NLS-1$
     }
 
+    @Override
     public String getCategory()
     {
         return CATEGORY;
@@ -71,12 +72,14 @@ class WebConsolePlugin extends SimpleWebConsolePlugin
     /**
      * @see org.apache.felix.webconsole.AbstractWebConsolePlugin#renderContent(HttpServletRequest, HttpServletResponse)
      */
+    @Override
     protected final void renderContent(HttpServletRequest req,
         HttpServletResponse response) throws ServletException, IOException
     {
         response.getWriter().print(TEMPLATE);
     }
 
+    @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp)
         throws ServletException, IOException
     {
@@ -115,7 +118,7 @@ class WebConsolePlugin extends SimpleWebConsolePlugin
                 final Role xrole = userAdmin.getRole(role);
                 final Group xgroup = (Group) userAdmin.getRole(group);
                 if (contains(xgroup.getRequiredMembers(), xrole)) // if required
-                { 
+                {
                     xgroup.removeMember(xrole);
                     xgroup.addMember(xrole); // add as basic
                 }
@@ -148,13 +151,15 @@ class WebConsolePlugin extends SimpleWebConsolePlugin
             }
             else if ("set".equals(action)) { //$NON-NLS-1$
                 final String dataRaw = req.getParameter("data"); //$NON-NLS-1$
-                final JSONObject data = new JSONObject(dataRaw);
-                Role xrole = userAdmin.getRole(data.getString("name")); //$NON-NLS-1$
+                JSONParser parser = new JSONParser(dataRaw);
+
+                final Map<String, Object> data = parser.getParsed();
+                Role xrole = userAdmin.getRole((String)data.get("name")); //$NON-NLS-1$
                 if (null == xrole)
                 {
                     xrole = userAdmin.createRole(//
-                        data.getString("name"), //$NON-NLS-1$
-                        data.getInt("type")); //$NON-NLS-1$
+                        (String)data.get("name"), //$NON-NLS-1$
+                        (int)(long)(Long)data.get("type")); //$NON-NLS-1$
                 }
                 doSetData(xrole, data);
                 out.print(true);
@@ -166,6 +171,7 @@ class WebConsolePlugin extends SimpleWebConsolePlugin
                 Role[] roles = userAdmin.getRoles(null);
                 toJSON(jw, roles, false);
             }
+            jw.flush();
         }
         catch (Exception e)
         {
@@ -173,17 +179,18 @@ class WebConsolePlugin extends SimpleWebConsolePlugin
         }
     }
 
-    private static final void doSetData(Role role, JSONObject data) throws JSONException
+    @SuppressWarnings("unchecked")
+    private static final void doSetData(Role role, Map<String, Object> data) throws IOException
     {
-        putProps(role.getProperties(), data.optJSONObject("properties")); //$NON-NLS-1$
+        putProps(role.getProperties(), (Map<String, Object>)data.get("properties")); //$NON-NLS-1$
         if (role instanceof User)
         {
-            putProps(((User) role).getCredentials(), data.optJSONObject("credentials")); //$NON-NLS-1$
+            putProps(((User) role).getCredentials(), (Map<String, Object>)data.get("credentials")); //$NON-NLS-1$
         }
     }
 
-    private static final void putProps(Dictionary dest, JSONObject props)
-        throws JSONException
+    private static final void putProps(Dictionary dest, Map<String, Object> props)
+        throws IOException
     {
         // clear the old properties
         if (!dest.isEmpty())
@@ -194,36 +201,37 @@ class WebConsolePlugin extends SimpleWebConsolePlugin
             }
         }
         // it's empty - don't process it at all
-        if (props == null || props.length() == 0)
+        if (props == null || props.size() == 0)
         {
             return;
         }
         // append the new one
-        for (Iterator i = props.keys(); i.hasNext();)
+        for (Iterator i = props.keySet().iterator(); i.hasNext();)
         {
             Object key = i.next();
-            Object val = props.get((String) key);
+            Object val = props.get(key);
 
-            if (val instanceof JSONArray)
+            if (val instanceof Collection)
             {
-                val = toArray((JSONArray) val);
+                val = toArray((Collection) val);
             }
             dest.put(key, val);
         }
     }
 
-    private static final byte[] toArray(JSONArray array) throws JSONException
+    private static final byte[] toArray(Collection array) throws IOException
     {
-        final byte[] ret = new byte[array.length()];
+        final byte[] ret = new byte[array.size()];
+        Iterator iter = array.iterator();
         for (int i = 0; i < ret.length; i++)
         {
-            ret[i] = (byte) (array.getInt(i) & 0xff);
+            ret[i] = (byte) ((Long)iter.next() & 0xff);
         }
         return ret;
     }
 
     private static final void toJSON(JSONWriter jw, Role role, boolean details)
-        throws JSONException
+        throws IOException
     {
         jw.object();
         jw.key("type"); //$NON-NLS-1$
@@ -275,7 +283,7 @@ class WebConsolePlugin extends SimpleWebConsolePlugin
     }
 
     private static final void toJSON(JSONWriter jw, Dictionary props)
-        throws JSONException
+        throws IOException
     {
         jw.object();
         for (Enumeration e = props.keys(); e.hasMoreElements();)
@@ -289,7 +297,7 @@ class WebConsolePlugin extends SimpleWebConsolePlugin
     }
 
     private static final void toJSON(JSONWriter jw, Role[] roles, boolean details)
-        throws JSONException
+        throws IOException
     {
         jw.array();
         for (int i = 0; roles != null && i < roles.length; i++)
@@ -302,7 +310,7 @@ class WebConsolePlugin extends SimpleWebConsolePlugin
     private static final String DIGEST_KEY_PREFIX = "MessageDigest."; //$NON-NLS-1$
 
     private static void getMessageDigestAlgorithms(final JSONWriter jw)
-        throws JSONException
+        throws IOException
     {
         Provider[] providers = Security.getProviders();
         jw.array();
