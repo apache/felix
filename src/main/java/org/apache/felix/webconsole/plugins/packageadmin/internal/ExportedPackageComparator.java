@@ -22,13 +22,11 @@ import java.util.Comparator;
 
 import org.osgi.service.packageadmin.ExportedPackage;
 
-final class ExportedPackageComparator implements Comparator/*<ExportedPackage>*/
+final class ExportedPackageComparator implements Comparator<ExportedPackage>
 {
 
-    public int compare(Object _o1, Object _o2)
+    public int compare(ExportedPackage o1, ExportedPackage o2)
     {
-        ExportedPackage o1 = (ExportedPackage) _o1;
-        ExportedPackage o2 = (ExportedPackage) _o2;
         if (o1 == o2)
         {
             return 0;

@@ -23,7 +23,7 @@
     <parent>
         <groupId>org.apache.felix</groupId>
         <artifactId>felix-parent</artifactId>
-        <version>2</version>
+        <version>4</version>
         <relativePath>../../../pom/pom.xml</relativePath>
     </parent>
 
@@ -84,7 +84,8 @@
                             org.apache.felix.webconsole.plugins.packageadmin.*
                         </Private-Package>
                         <Embed-Dependency>
-                            org.apache.felix.utils;inline=org/apache/felix/utils/manifest/*
+                            org.apache.felix.utils;inline=org/apache/felix/utils/manifest/*,
+                            org.apache.felix.utils;inline=org/apache/felix/utils/json/JSONWriter*
                         </Embed-Dependency>
                         <Bundle-Activator>
                             org.apache.felix.webconsole.plugins.packageadmin.internal.Activator
@@ -126,7 +127,7 @@
         <dependency>
             <groupId>org.apache.felix</groupId>
             <artifactId>org.apache.felix.utils</artifactId>
-            <version>1.4.0</version>
+            <version>1.9.0</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
@@ -151,12 +152,6 @@
             <groupId>org.apache.felix</groupId>
             <artifactId>org.apache.felix.inventory</artifactId>
             <version>1.0.0</version>
-            <scope>provided</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.json</groupId>
-            <artifactId>json</artifactId>
-            <version>20070829</version>
             <scope>provided</scope>
         </dependency>
     </dependencies>
