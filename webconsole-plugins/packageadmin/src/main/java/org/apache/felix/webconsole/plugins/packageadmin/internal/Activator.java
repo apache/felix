@@ -6,9 +6,9 @@
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License. You may obtain a copy of the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
  * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
@@ -41,7 +41,7 @@ public class Activator implements BundleActivator, ServiceTrackerCustomizer
 
     private BundleContext context;
     private SimpleWebConsolePlugin plugin;
-    private ServiceRegistration printerReg;
+    private ServiceRegistration<InventoryPrinter> printerReg;
 
     /**
      * @see org.osgi.framework.BundleActivator#start(org.osgi.framework.BundleContext)
@@ -54,13 +54,13 @@ public class Activator implements BundleActivator, ServiceTrackerCustomizer
         this.pkgAdminTracker.open();
 
         // register configuration printer
-        final Dictionary/*<String, Object>*/props = new Hashtable/*<String, Object>*/();
+        final Dictionary<String, Object> props = new Hashtable<String, Object>();
         props.put(InventoryPrinter.NAME, "duplicate_exports"); //$NON-NLS-1$
         props.put(InventoryPrinter.TITLE, "Duplicate Exports"); //$NON-NLS-1$
         props.put(InventoryPrinter.FORMAT, new String[] { Format.TEXT.toString() });
 
         printerReg = context.registerService(
-            InventoryPrinter.class.getName(),
+            InventoryPrinter.class,
             new WebConsolePrinter(context, pkgAdminTracker), props);
     }
 

@@ -50,7 +50,8 @@ class WebConsolePrinter implements InventoryPrinter
      * @see org.apache.felix.inventory.InventoryPrinter#print(
      *  java.io.PrintWriter, org.apache.felix.inventory.Format, boolean)
      */
-    public void print(PrintWriter pw, Format format, boolean isZip) 
+    @SuppressWarnings("deprecation")
+    public void print(PrintWriter pw, Format format, boolean isZip)
     {
         final PackageAdmin pa = (PackageAdmin) tracker.getService();
         if (pa == null)
@@ -61,7 +62,7 @@ class WebConsolePrinter implements InventoryPrinter
 
         try
         {
-            Map/*<String, Set<ExportedPackage>>*/exports = WebConsolePlugin.collectExportedPackages(
+            Map<String, Set<ExportedPackage>> exports = WebConsolePlugin.collectExportedPackages(
                 pa, bc);
 
             pw.print("Status: PackageAdmin service reports ");
@@ -77,25 +78,26 @@ class WebConsolePrinter implements InventoryPrinter
         }
     }
 
+    @SuppressWarnings("deprecation")
     private void dumpDuplicatesAsTxt(final PrintWriter pw,
-        final Map/*<String, Set<ExportedPackage>>*/exports)
+        final Map<String, Set<ExportedPackage>> exports)
     {
         pw.println("Duplicate Exported Packages");
         pw.println("---------------------------");
-        final List/*<String[]>*/lines = new ArrayList/*<String[]>*/();
+        final List<String[]> lines = new ArrayList<String[]>();
         lines.add(new String[] { "Package", "Exports", "Imports" });
 
-        for (Iterator/*<Entry<String, Set<ExportedPackage>>>*/entriesIter = exports.entrySet().iterator(); entriesIter.hasNext();)
+        for (Iterator<Entry<String, Set<ExportedPackage>>> entriesIter = exports.entrySet().iterator(); entriesIter.hasNext();)
         {
-            Entry/*<String, Set<ExportedPackage>>*/exportEntry = (Entry) entriesIter.next();
+            Entry<String, Set<ExportedPackage>> exportEntry = entriesIter.next();
 
-            final Set/*<ExportedPackage>*/exportSet = (Set) exportEntry.getValue();
+            final Set<ExportedPackage> exportSet = exportEntry.getValue();
             if (exportSet.size() > 1)
             {
-                String firstCol = (String) exportEntry.getKey();
-                for (Iterator packageIter = exportSet.iterator(); packageIter.hasNext();)
+                String firstCol = exportEntry.getKey();
+                for (Iterator<ExportedPackage> packageIter = exportSet.iterator(); packageIter.hasNext();)
                 {
-                    ExportedPackage exportedPackage = (ExportedPackage) packageIter.next();
+                    ExportedPackage exportedPackage = packageIter.next();
                     final Bundle[] importers = exportedPackage.getImportingBundles();
                     final String secondCol = "version=" + exportedPackage.getVersion()
                         + ", Bundle " + exportedPackage.getExportingBundle();
@@ -129,7 +131,7 @@ class WebConsolePrinter implements InventoryPrinter
         int maxFirst = 0, maxSecond = 0;
         for (int i = 0; i < lines.size(); i++)
         {
-            final String[] entry = (String[]) lines.get(i);
+            final String[] entry = lines.get(i);
             if (entry[0].length() > maxFirst)
             {
                 maxFirst = entry[0].length();
@@ -143,7 +145,7 @@ class WebConsolePrinter implements InventoryPrinter
         maxSecond += 2;
         for (int i = 0; i < lines.size(); i++)
         {
-            final String[] entry = (String[]) lines.get(i);
+            final String[] entry = lines.get(i);
             padText(pw, entry[0], maxFirst);
             padText(pw, entry[1], maxSecond);
             pw.println(entry[2]);

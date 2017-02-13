@@ -21,10 +21,14 @@ package org.apache.felix.webconsole.plugins.packageadmin.internal;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Comparator;
 import java.util.Enumeration;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
@@ -39,13 +43,11 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.commons.io.IOUtils;
+import org.apache.felix.utils.json.JSONWriter;
 import org.apache.felix.utils.manifest.Clause;
 import org.apache.felix.utils.manifest.Parser;
 import org.apache.felix.webconsole.SimpleWebConsolePlugin;
 import org.apache.felix.webconsole.WebConsoleUtil;
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
@@ -58,20 +60,23 @@ import org.osgi.service.packageadmin.PackageAdmin;
  */
 class WebConsolePlugin extends SimpleWebConsolePlugin
 {
-
+    private static final long serialVersionUID = 1L;
     private static final String LABEL = "depfinder"; //$NON-NLS-1$
     private static final String TITLE = "%pluginTitle"; //$NON-NLS-1$
     private static final String CATEGORY = "OSGi"; //$NON-NLS-1$
     private static final String CSS[] = { "/" + LABEL + "/res/plugin.css" }; //$NON-NLS-1$ //$NON-NLS-2$
 
-    private static final Comparator/*<ExportedPackage>*/EXPORT_PACKAGE_COMPARATOR = new ExportedPackageComparator();
+    @SuppressWarnings("deprecation")
+    private static final Comparator<ExportedPackage> EXPORT_PACKAGE_COMPARATOR = new ExportedPackageComparator();
 
+    @SuppressWarnings("deprecation")
     private final PackageAdmin pa;
     private final BundleContext bc;
 
     // templates
     private final String TEMPLATE;
 
+    @SuppressWarnings("deprecation")
     WebConsolePlugin(BundleContext bc, Object pa)
     {
         super(LABEL, TITLE, CATEGORY, CSS);
@@ -84,6 +89,7 @@ class WebConsolePlugin extends SimpleWebConsolePlugin
     }
 
 
+    @Override
     public String getCategory()
     {
         return CATEGORY;
@@ -93,6 +99,7 @@ class WebConsolePlugin extends SimpleWebConsolePlugin
     /**
      * @see org.apache.felix.webconsole.AbstractWebConsolePlugin#renderContent(HttpServletRequest, HttpServletResponse)
      */
+    @Override
     protected final void renderContent(HttpServletRequest req,
         HttpServletResponse response) throws ServletException, IOException
     {
@@ -102,41 +109,39 @@ class WebConsolePlugin extends SimpleWebConsolePlugin
     /**
      * @see HttpServlet#doPost(HttpServletRequest, HttpServletResponse)
      */
+    @Override
     protected final void doPost(HttpServletRequest req, HttpServletResponse resp)
         throws ServletException, IOException
     {
         final Object json;
 
-        try
-        {
-            String action = req.getParameter("action"); //$NON-NLS-1$
-            if ("deps".equals(action)) { //$NON-NLS-1$
-                json = doFindDependencies(req, pa);
-            }
-            else if ("dups".equals(action)) { //$NON-NLS-1$
-                Map/*<String, Set<ExportedPackage>>*/packages = collectExportedPackages(
-                    pa, bc);
-                json = doFindDuplicates(packages);
-            }
-            else
-            {
-                throw new ServletException("Invalid action: " + action);
-            }
+        String action = req.getParameter("action"); //$NON-NLS-1$
+        if ("deps".equals(action)) { //$NON-NLS-1$
+            json = doFindDependencies(req, pa);
         }
-        catch (JSONException e)
+        else if ("dups".equals(action)) { //$NON-NLS-1$
+            @SuppressWarnings("deprecation")
+            Map<String, Set<ExportedPackage>> packages = collectExportedPackages(
+                pa, bc);
+            json = doFindDuplicates(packages);
+        }
+        else
         {
-            throw new ServletException(e);
+            throw new ServletException("Invalid action: " + action);
         }
 
         WebConsoleUtil.setNoCache(resp);
         resp.setContentType("application/json; utf-8"); //$NON-NLS-1$
-        resp.getWriter().println(json);
+        JSONWriter writer = new JSONWriter(resp.getWriter());
+        writer.value(json);
+        writer.flush();
     }
 
-    static final Map/*<String, Set<ExportedPackage>>*/collectExportedPackages(
+    @SuppressWarnings("deprecation")
+    static final Map<String, Set<ExportedPackage>> collectExportedPackages(
         final PackageAdmin pa, final BundleContext bundleContext)
     {
-        Map/*<String, Set<ExportedPackage>>*/exports = new TreeMap/*<String, Set<ExportedPackage>>*/();
+        Map<String, Set<ExportedPackage>> exports = new TreeMap<String, Set<ExportedPackage>>();
 
         Bundle[] bundles = bundleContext.getBundles();
         for (int i = 0; bundles != null && i < bundles.length; i++)
@@ -146,10 +151,10 @@ class WebConsolePlugin extends SimpleWebConsolePlugin
             for (int j = 0; bundleExports != null && j < bundleExports.length; j++)
             {
                 final ExportedPackage exportedPackage = bundleExports[j];
-                Set/*<ExportedPackage>*/exportSet = (Set) exports.get(exportedPackage.getName());
+                Set<ExportedPackage> exportSet = exports.get(exportedPackage.getName());
                 if (exportSet == null)
                 {
-                    exportSet = new TreeSet/*<ExportedPackage>*/(
+                    exportSet = new TreeSet<ExportedPackage>(
                         EXPORT_PACKAGE_COMPARATOR);
                     exports.put(exportedPackage.getName(), exportSet);
                 }
@@ -160,31 +165,41 @@ class WebConsolePlugin extends SimpleWebConsolePlugin
         return exports;
     }
 
-    private static final JSONObject doFindDependencies(HttpServletRequest req,
-        PackageAdmin pa) throws JSONException
+    @SuppressWarnings("deprecation")
+    private static final Map<String, Object> doFindDependencies(HttpServletRequest req,
+        PackageAdmin pa)
     {
-        final JSONObject json = new JSONObject();
+        final Map<String, Object> json = new HashMap<String, Object>();
 
         final String findField = req.getParameter("plugin.find"); //$NON-NLS-1$
         if (findField != null)
         {
-            Set/*<String>*/packageNames = getPackageNames(findField);
-            Set/*<Bundle>*/exportingBundles = new LinkedHashSet/*<Bundle>*/();
+            Set<String> packageNames = getPackageNames(findField);
+            Set<Bundle> exportingBundles = new LinkedHashSet<Bundle>();
 
-            for (Iterator/*<String>*/i = packageNames.iterator(); i.hasNext();)
+            for (Iterator<String> i = packageNames.iterator(); i.hasNext();)
             {
-                String name = (String) i.next();
-                json.append("packages", getPackageInfo(name, pa, exportingBundles)); //$NON-NLS-1$
+                String name = i.next();
+                @SuppressWarnings("unchecked")
+                List<Object> pl = (List<Object>)json.get("packages"); //$NON-NLS-1$
+                if ( pl == null )
+                {
+                    pl = new ArrayList<Object>();
+                    json.put("packages", pl);
+                }
+                pl.add( getPackageInfo(name, pa, exportingBundles));
             }
 
-            final JSONObject mavenJson = new JSONObject();
+            final Map<String, Object> mavenJson = new HashMap<String, Object>();
             json.put("maven", mavenJson); //$NON-NLS-1$
-            for (Iterator/*<Bundle>*/i = exportingBundles.iterator(); i.hasNext();)
+            for (Iterator<Bundle> i = exportingBundles.iterator(); i.hasNext();)
             {
-                Bundle bundle = (Bundle) i.next();
-                mavenJson.putOpt(//
-                    String.valueOf(bundle.getBundleId()), //
-                    getMavenInfo(bundle));
+                Bundle bundle = i.next();
+                final Object value = getMavenInfo(bundle);
+                if ( value != null )
+                {
+                    mavenJson.put(String.valueOf(bundle.getBundleId()), value);
+                }
             }
         }
 
@@ -192,48 +207,55 @@ class WebConsolePlugin extends SimpleWebConsolePlugin
 
     }
 
-    private static final JSONArray doFindDuplicates(
-        final Map/*<String, Set<ExportedPackage>>*/exports) throws JSONException
+    @SuppressWarnings("deprecation")
+    private static final Collection<Object> doFindDuplicates(
+        final Map<String, Set<ExportedPackage>> exports)
     {
-        final JSONArray ret = new JSONArray();
-        for (Iterator entryIter = exports.entrySet().iterator(); entryIter.hasNext();)
+        final List<Object> ret = new ArrayList<Object>();
+        for (Iterator<Entry<String, Set<ExportedPackage>>> entryIter = exports.entrySet().iterator(); entryIter.hasNext();)
         {
-            Entry/*<String, Set<ExportedPackage>>*/exportEntry = (Entry) entryIter.next();
-            Set/*<ExportedPackage>*/exportSet = (Set) exportEntry.getValue();
+            Entry<String, Set<ExportedPackage>> exportEntry = entryIter.next();
+            Set<ExportedPackage> exportSet = exportEntry.getValue();
             if (exportSet.size() > 1)
             {
-                final JSONObject container = new JSONObject();
-                ret.put(container);
-                for (Iterator packageIter = exportSet.iterator(); packageIter.hasNext();)
+                final Map<String, Object> container = new HashMap<String, Object>();
+                ret.add(container);
+                for (Iterator<ExportedPackage> packageIter = exportSet.iterator(); packageIter.hasNext();)
                 {
-                    ExportedPackage exportedPackage = (ExportedPackage) packageIter.next();
-                    final JSONObject json = toJSON(exportedPackage);
-                    container//
-                    .put("name", exportedPackage.getName()) //$NON-NLS-1$
-                    .append("entries", json); //$NON-NLS-1$
+                    ExportedPackage exportedPackage = packageIter.next();
+                    final Map<String, Object> json = toJSON(exportedPackage);
+                    container.put("name", exportedPackage.getName()); //$NON-NLS-1$
+                    @SuppressWarnings("unchecked")
+                    List<Object> imps = (List<Object>) container.get("entries"); //$NON-NLS-1$
+                    if ( imps == null )
+                    {
+                        imps = new ArrayList<Object>();
+                        container.put("entries", imps); //$NON-NLS-1$
+                    }
+                    imps.add(json);
                 }
             }
         }
         return ret;
     }
 
-    private static final JSONObject toJSON(Bundle bundle, JSONObject json)
-        throws JSONException
+    private static final void toJSON(Bundle bundle, Map<String, Object> json)
     {
         json.put("bid", bundle.getBundleId()); //$NON-NLS-1$
-        json.putOpt("bsn", bundle.getSymbolicName()); //$NON-NLS-1$
-        return json;
+        if ( bundle.getSymbolicName() != null )
+        {
+            json.put("bsn", bundle.getSymbolicName()); //$NON-NLS-1$
+        }
     }
 
-    private static final JSONObject toJSON(final String pkgName, final Bundle[] importers, final JSONObject json)
-        throws JSONException
+    private static final void toJSON(final String pkgName, final Bundle[] importers, final Map<String, Object> json)
     {
         for (int i = 0; i < importers.length; i++)
         {
             Bundle bundle = importers[i];
-            final JSONObject usingJson = new JSONObject();
+            final Map<String, Object> usingJson = new HashMap<String, Object>();
             toJSON(bundle, usingJson);
-            final String ip = (String) bundle.getHeaders().get(Constants.IMPORT_PACKAGE);
+            final String ip = bundle.getHeaders().get(Constants.IMPORT_PACKAGE);
             final Clause[] clauses = Parser.parseHeader(ip);
             for (int j = 0; j < clauses.length; j++)
             {
@@ -244,43 +266,58 @@ class WebConsolePlugin extends SimpleWebConsolePlugin
                     break;
                 }
             }
-            json.append("importers", usingJson); //$NON-NLS-1$
+            @SuppressWarnings("unchecked")
+            List<Object> imps = (List<Object>) json.get("importers"); //$NON-NLS-1$
+            if ( imps == null )
+            {
+                imps = new ArrayList<Object>();
+                json.put("importers", imps); //$NON-NLS-1$
+            }
+            imps.add(usingJson);
         }
-        return json;
     }
 
-    private static final JSONObject toJSON(final ExportedPackage pkg)
-        throws JSONException
+    @SuppressWarnings("deprecation")
+    private static final Map<String, Object> toJSON(final ExportedPackage pkg)
     {
-        final JSONObject ret = new JSONObject();
+        final Map<String, Object> ret = new HashMap<String, Object>();
         ret.put("version", pkg.getVersion()); //$NON-NLS-1$
         toJSON(pkg.getExportingBundle(), ret);
         toJSON(pkg.getName(), pkg.getImportingBundles(), ret);
         return ret;
     }
 
-    private static final JSONObject getPackageInfo(String packageName, PackageAdmin pa,
-        Set/*<Bundle>*/exportingBundles) throws JSONException
+    @SuppressWarnings("deprecation")
+    private static final Map<String, Object> getPackageInfo(String packageName, PackageAdmin pa,
+        Set<Bundle> exportingBundles)
     {
-        final JSONObject ret = new JSONObject();
+        final Map<String, Object> ret = new HashMap<String, Object>();
         final ExportedPackage[] exports = pa.getExportedPackages(packageName);
         for (int i = 0; exports != null && i < exports.length; i++)
         {
             final ExportedPackage x = exports[i];
-            ret.append("exporters", toJSON(x)); //$NON-NLS-1$
+            @SuppressWarnings("unchecked")
+            List<Object> el = (List<Object>)ret.get("exporters"); //$NON-NLS-1$
+            if ( el == null )
+            {
+                el = new ArrayList<Object>();
+                ret.put("exporters", el); //$NON-NLS-1$
+            }
+            el.add(toJSON(x));
             exportingBundles.add(x.getExportingBundle());
         }
-        return ret.put("name", packageName); //$NON-NLS-1$
+        ret.put("name", packageName); //$NON-NLS-1$
+        return ret;
     }
 
-    private static final JSONObject getMavenInfo(Bundle bundle)
+    private static final Map<Object, Object> getMavenInfo(Bundle bundle)
     {
-        JSONObject ret = null;
+        Map<Object, Object> ret = null;
 
-        Enumeration entries = bundle.findEntries("META-INF/maven", "pom.properties", true); //$NON-NLS-1$ //$NON-NLS-2$
+        Enumeration<URL> entries = bundle.findEntries("META-INF/maven", "pom.properties", true); //$NON-NLS-1$ //$NON-NLS-2$
         if (entries != null)
         {
-            URL u = (URL) entries.nextElement();
+            URL u = entries.nextElement();
             java.util.Properties props = new java.util.Properties();
             InputStream is = null;
             try
@@ -288,7 +325,7 @@ class WebConsolePlugin extends SimpleWebConsolePlugin
                 is = u.openStream();
                 props.load(u.openStream());
 
-                ret = new JSONObject(props);
+                ret = new HashMap<Object, Object>(props);
             }
             catch (IOException e)
             {
@@ -302,10 +339,10 @@ class WebConsolePlugin extends SimpleWebConsolePlugin
         return ret;
     }
 
-    static final Set/*<String>*/getPackageNames(String findField)
+    static final Set<String> getPackageNames(String findField)
     {
         StringTokenizer tok = new StringTokenizer(findField, " \t\n\f\r"); //$NON-NLS-1$
-        SortedSet/*<String>*/result = new TreeSet/*<String>*/();
+        SortedSet<String> result = new TreeSet<String>();
         while (tok.hasMoreTokens())
         {
             String part = tok.nextToken().trim();
