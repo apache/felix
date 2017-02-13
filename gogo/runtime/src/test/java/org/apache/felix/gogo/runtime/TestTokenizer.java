@@ -529,6 +529,13 @@ public class TestTokenizer
         }
     }
 
+    @Test
+    public void testFelix5541() {
+        Tokenizer t = new Tokenizer("<");
+        assertEquals("<", t.next().toString());
+        assertNull(t.next());
+    }
+
     private BundleContext createMockContext() throws ClassNotFoundException
     {
         Bundle systemBundle = mock(Bundle.class);
