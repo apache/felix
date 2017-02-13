@@ -31,8 +31,7 @@ import org.apache.felix.webconsole.DefaultVariableResolver;
 import org.apache.felix.webconsole.SimpleWebConsolePlugin;
 import org.apache.felix.webconsole.WebConsoleUtil;
 import org.apache.felix.webconsole.internal.Util;
-import org.json.JSONException;
-import org.json.JSONWriter;
+import org.apache.felix.utils.json.JSONWriter;
 import org.osgi.service.deploymentadmin.DeploymentAdmin;
 import org.osgi.service.deploymentadmin.DeploymentPackage;
 import org.osgi.util.tracker.ServiceTracker;
@@ -168,34 +167,27 @@ class WebConsolePlugin extends SimpleWebConsolePlugin
         StringWriter w = new StringWriter();
         PrintWriter w2 = new PrintWriter(w);
         JSONWriter jw = new JSONWriter(w2);
-        try
+        jw.object();
+        if (null == admin)
         {
-            jw.object();
-            if (null == admin)
-            {
-                jw.key("error"); //$NON-NLS-1$
-                jw.value(true);
-            }
-            else
-            {
-                final DeploymentPackage[] packages = admin.listDeploymentPackages();
-                jw.key("data"); //$NON-NLS-1$
+            jw.key("error"); //$NON-NLS-1$
+            jw.value(true);
+        }
+        else
+        {
+            final DeploymentPackage[] packages = admin.listDeploymentPackages();
+            jw.key("data"); //$NON-NLS-1$
 
-                jw.array();
-                for (int i = 0; i < packages.length; i++)
-                {
-                    packageInfoJson(jw, packages[i]);
-                }
-                jw.endArray();
-
+            jw.array();
+            for (int i = 0; i < packages.length; i++)
+            {
+                packageInfoJson(jw, packages[i]);
             }
-            jw.endObject();
+            jw.endArray();
 
         }
-        catch (JSONException je)
-        {
-            throw new IOException(je.toString());
-        }
+        jw.endObject();
+
 
         // prepare variables
         DefaultVariableResolver vars = ((DefaultVariableResolver) WebConsoleUtil.getVariableResolver(request));
@@ -205,7 +197,7 @@ class WebConsolePlugin extends SimpleWebConsolePlugin
     }
 
     private static final void packageInfoJson(JSONWriter jw, DeploymentPackage pack)
-        throws JSONException
+        throws IOException
     {
         jw.object();
         jw.key("id"); //$NON-NLS-1$
@@ -231,10 +223,21 @@ class WebConsolePlugin extends SimpleWebConsolePlugin
 
         jw.key("props"); //$NON-NLS-1$
         jw.array();
-        WebConsoleUtil.keyVal(jw, "Package Name", pack.getName());
-        WebConsoleUtil.keyVal(jw, "Version", pack.getVersion());
+        jw.object();
+        jw.key("key");
+        jw.value("Package Name");
+        jw.key("value");
+        jw.value(pack.getName());
+        jw.endObject();
 
-        final StringBuffer buffer = new StringBuffer();
+        jw.object();
+        jw.key("key");
+        jw.value("Version");
+        jw.key("value");
+        jw.value(pack.getVersion());
+        jw.endObject();
+
+        final StringBuilder buffer = new StringBuilder();
         for (int i = 0; i < pack.getBundleInfos().length; i++)
         {
             buffer.append(pack.getBundleInfos()[i].getSymbolicName());
@@ -242,7 +245,12 @@ class WebConsolePlugin extends SimpleWebConsolePlugin
             buffer.append(pack.getBundleInfos()[i].getVersion());
             buffer.append("<br/>"); //$NON-NLS-1$
         }
-        WebConsoleUtil.keyVal(jw, "Bundles", buffer.toString());
+        jw.object();
+        jw.key("key");
+        jw.value("Bundles");
+        jw.key("value");
+        jw.value(buffer.toString());
+        jw.endObject();
 
         jw.endArray();
 
