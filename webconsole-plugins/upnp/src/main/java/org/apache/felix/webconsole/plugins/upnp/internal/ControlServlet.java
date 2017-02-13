@@ -21,6 +21,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.lang.reflect.Constructor;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
 import java.util.Dictionary;
@@ -28,6 +29,7 @@ import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Hashtable;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 
 import javax.servlet.ServletException;
@@ -35,8 +37,7 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import org.json.JSONException;
-import org.json.JSONObject;
+import org.apache.felix.utils.json.JSONWriter;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceReference;
 import org.osgi.service.log.LogService;
@@ -52,7 +53,7 @@ import org.osgi.util.tracker.ServiceTracker;
  * the WebConsolePlugin just to improve readability. This servlet actually
  * is not registered in HTTP service.
  */
-public final class ControlServlet extends HttpServlet 
+public final class ControlServlet extends HttpServlet
 {
 
     private static final long serialVersionUID = -5789642544511401813L;
@@ -65,7 +66,7 @@ public final class ControlServlet extends HttpServlet
     // holds lock for the devices & icons cache above
     private final Object cacheLock = new Object();
 
-    private final Map/*<String,SessionObject>*/ sessions = Collections.synchronizedMap(new HashMap(10)); 
+    private final Map/*<String,SessionObject>*/ sessions = Collections.synchronizedMap(new HashMap(10));
 
     private final ServiceTracker tracker;
     private final BundleContext bc;
@@ -76,6 +77,7 @@ public final class ControlServlet extends HttpServlet
      * @see javax.servlet.http.HttpServlet#doGet(javax.servlet.http.HttpServletRequest,
      *      javax.servlet.http.HttpServletResponse)
      */
+    @Override
     protected final void doGet(HttpServletRequest request, HttpServletResponse response)
         throws ServletException, IOException
     {
@@ -130,12 +132,13 @@ public final class ControlServlet extends HttpServlet
      * @see javax.servlet.http.HttpServlet#doPost(javax.servlet.http.HttpServletRequest,
      *      javax.servlet.http.HttpServletResponse)
      */
+    @Override
     protected final void doPost(HttpServletRequest request, HttpServletResponse response)
         throws ServletException, IOException
     {
         try
         {
-            JSONObject json = new JSONObject();
+            Map<String, Object> json = new HashMap<String, Object>();
 
             String method = request.getParameter("action"); //$NON-NLS-1$
 
@@ -150,10 +153,17 @@ public final class ControlServlet extends HttpServlet
                     if (refs[i] != null
                         && refs[i].getProperty(UPnPDevice.PARENT_UDN) == null)
                     {
-                        JSONObject deviceJSON = deviceTreeToJSON(refs[i]);
+                        Map<String, Object> deviceJSON = deviceTreeToJSON(refs[i]);
                         if (null != deviceJSON)
                         {
-                            json.append("devices", deviceJSON); //$NON-NLS-1$
+                            @SuppressWarnings("unchecked")
+                            List<Object> list = (List<Object>) json.get("devices"); //$NON-NLS-1$
+                            if ( list == null )
+                            {
+                                list = new ArrayList<Object>();
+                                json.put("devices", list); //$NON-NLS-1$
+                            }
+                            list.add(deviceJSON);
                         }
                     }
                 }
@@ -191,7 +201,9 @@ public final class ControlServlet extends HttpServlet
 
             response.setContentType("application/json"); //$NON-NLS-1$
             response.setCharacterEncoding("UTF-8"); //$NON-NLS-1$
-            response.getWriter().print(json.toString(2));
+            final JSONWriter writer = new JSONWriter(response.getWriter());
+            writer.value(json);
+            writer.flush();
         }
         catch (ServletException e)
         {
@@ -240,7 +252,7 @@ public final class ControlServlet extends HttpServlet
         return getService(device, serviceUrn);
     }
 
-    private final JSONObject deviceTreeToJSON(ServiceReference ref) throws JSONException
+    private final Map<String, Object> deviceTreeToJSON(ServiceReference ref)
     {
         final UPnPDevice device = (UPnPDevice) tracker.getService(ref);
         if (null == device)
@@ -256,40 +268,45 @@ public final class ControlServlet extends HttpServlet
             return null;
         }
 
-        final JSONObject json = Serializer.deviceToJSON(ref, device);
+        final Map<String, Object> json = Serializer.deviceToJSON(ref, device);
 
         // add child devices
         final Object[] refs = tracker.getServiceReferences();
-        for (int i = 0; refs != null && i < refs.length; i++)
+        if ( refs != null )
         {
-            ref = (ServiceReference) refs[i];
-
-            final Object parent = ref.getProperty(UPnPDevice.PARENT_UDN);
-            final Object currentUDN = ref.getProperty(UPnPDevice.UDN);
-            if (parent == null)
-            { // no parent
-                continue;
-            }
-            else if (currentUDN != null && currentUDN.equals(parent))
-            { // self ?
-                continue;
-            }
-            else if (parentUdn.equals(parent))
+            List<Object> children = new ArrayList<Object>();
+            json.put("children", children); //$NON-NLS-1$
+            for (int i = 0; i < refs.length; i++)
             {
-                JSONObject deviceJSON = deviceTreeToJSON(ref);
-                if (null != deviceJSON)
+                ref = (ServiceReference) refs[i];
+
+                final Object parent = ref.getProperty(UPnPDevice.PARENT_UDN);
+                final Object currentUDN = ref.getProperty(UPnPDevice.UDN);
+                if (parent == null)
+                { // no parent
+                    continue;
+                }
+                else if (currentUDN != null && currentUDN.equals(parent))
+                { // self ?
+                    continue;
+                }
+                else if (parentUdn.equals(parent))
                 {
-                    json.append("children", deviceJSON); //$NON-NLS-1$
+                    Map<String, Object> deviceJSON = deviceTreeToJSON(ref);
+                    if (null != deviceJSON)
+                    {
+                        children.add(deviceJSON);
+                    }
                 }
             }
         }
         return json;
     }
 
-    private static final JSONObject invoke(UPnPAction action, String[] names,
+    private static final Map<String, Object> invoke(UPnPAction action, String[] names,
         String[] vals) throws Exception
     {
-        final JSONObject json = new JSONObject();
+        final Map<String, Object> json = new HashMap<String, Object>();
 
         // check input arguments
         Hashtable inputArgs = null;
@@ -335,6 +352,8 @@ public final class ControlServlet extends HttpServlet
         // prepare output arguments
         if (out != null && out.size() > 0)
         {
+            final Object[] outputs = new Object[out.size()];
+            int index = 0;
             for (Enumeration e = out.keys(); e.hasMoreElements();)
             {
                 final String key = (String) e.nextElement();
@@ -353,11 +372,15 @@ public final class ControlServlet extends HttpServlet
                     value = Hex.encode((byte[]) value);
                 }
 
-                json.append("output", new JSONObject() // //$NON-NLS-1$
-                .put("name", key)// //$NON-NLS-1$
-                .put("type", var.getUPnPDataType()) // //$NON-NLS-1$
-                .put("value", value)); //$NON-NLS-1$
+                final Map<String, Object> output = new HashMap<String, Object>();
+                output.put("name", key); // //$NON-NLS-1$
+                output.put("type", var.getUPnPDataType()); // //$NON-NLS-1$
+                output.put("value", value); //$NON-NLS-1$
+
+                outputs[index] = output;
+                index++;
             }
+            json.put("output", outputs); // //$NON-NLS-1$
         }
         return json;
     }
@@ -431,7 +454,7 @@ public final class ControlServlet extends HttpServlet
 
     /**
      * Creates new XML-RPC handler.
-     * 
+     *
      * @param bc the bundle context
      * @param iconServlet the icon servlet.
      */
@@ -451,7 +474,7 @@ public final class ControlServlet extends HttpServlet
         {
           icons.clear();
         }
-        synchronized (sessions) 
+        synchronized (sessions)
         {
           for (Iterator i = sessions.values().iterator(); i.hasNext();)
           {

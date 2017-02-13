@@ -16,6 +16,7 @@
  */
 package org.apache.felix.webconsole.plugins.upnp.internal;
 
+import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.Arrays;
 import java.util.Iterator;
@@ -23,10 +24,8 @@ import java.util.TreeMap;
 
 import org.apache.felix.inventory.Format;
 import org.apache.felix.inventory.InventoryPrinter;
+import org.apache.felix.utils.json.JSONWriter;
 import org.apache.felix.webconsole.WebConsoleUtil;
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
 import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceReference;
 import org.osgi.service.upnp.UPnPAction;
@@ -76,7 +75,7 @@ class ConfigurationPrinterImpl implements InventoryPrinter, Constants
             {
                 printJSON(componentMap, pw);
             }
-            catch (JSONException e)
+            catch (IOException e)
             {
                 printText(componentMap, pw);
             }
@@ -87,11 +86,13 @@ class ConfigurationPrinterImpl implements InventoryPrinter, Constants
         }
     }
 
-    private void printJSON(TreeMap componentMap, PrintWriter pw) throws JSONException
+    private void printJSON(TreeMap componentMap, PrintWriter pw) throws IOException
     {
-        final JSONObject ret = new JSONObject();
-        final JSONArray jDevices = new JSONArray();
-        ret.put("devices", jDevices); //$NON-NLS-1$
+        final JSONWriter writer = new JSONWriter(pw);
+        writer.object();
+
+        writer.key("devices");
+        writer.array();
 
         // render components
         for (Iterator ci = componentMap.values().iterator(); ci.hasNext();)
@@ -100,13 +101,15 @@ class ConfigurationPrinterImpl implements InventoryPrinter, Constants
             final UPnPDevice device = (UPnPDevice) tracker.getService(ref);
             if (device != null)
             {
-                jDevices.put(Serializer.deviceToJSON(ref, device));
+                writer.value(Serializer.deviceToJSON(ref, device));
             }
         }
+        writer.endArray();
 
-        ret.write(pw);
+        writer.endObject();
+        writer.flush();
     }
-    
+
     private void printText(TreeMap componentMap, PrintWriter pw)
     {
 
@@ -208,7 +211,7 @@ class ConfigurationPrinterImpl implements InventoryPrinter, Constants
             {
                 print(pw, vars[i]);
             }
-        } 
+        }
     }
 
     private void print(PrintWriter pw, UPnPStateVariable var)
@@ -240,6 +243,6 @@ class ConfigurationPrinterImpl implements InventoryPrinter, Constants
         pw.println();
     }
 
-    
+
 
 }

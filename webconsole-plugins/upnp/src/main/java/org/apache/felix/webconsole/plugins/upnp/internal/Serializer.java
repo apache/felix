@@ -16,8 +16,9 @@
  */
 package org.apache.felix.webconsole.plugins.upnp.internal;
 
-import org.json.JSONException;
-import org.json.JSONObject;
+import java.util.HashMap;
+import java.util.Map;
+
 import org.osgi.framework.ServiceReference;
 import org.osgi.service.upnp.UPnPAction;
 import org.osgi.service.upnp.UPnPDevice;
@@ -33,15 +34,14 @@ class Serializer
         // prevent instantiation
     }
 
-    static final JSONObject deviceToJSON(ServiceReference ref, UPnPDevice device)
-        throws JSONException
+    static final Map<String, Object> deviceToJSON(ServiceReference ref, UPnPDevice device)
     {
-        final JSONObject json = new JSONObject();
+        final Map<String, Object> json = new HashMap<String, Object>();
         json.put("icon", device.getIcons(null) != null); //$NON-NLS-1$
 
         // add properties
         final String[] props = ref.getPropertyKeys();
-        final JSONObject _props = new JSONObject();
+        final Map<String, Object> _props = new HashMap<String, Object>();
         for (int i = 0; props != null && i < props.length; i++)
         {
             _props.put(props[i], ref.getProperty(props[i]));
@@ -49,18 +49,23 @@ class Serializer
         json.put("props", _props); //$NON-NLS-1$
 
         final UPnPService[] services = device.getServices();
-        for (int i = 0; services != null && i < services.length; i++)
+        if ( services != null )
         {
-            json.append("services", services[i].getType()); //$NON-NLS-1$
+            final String[] serviceTypes = new String[services.length];
+            for (int i = 0; i < services.length; i++)
+            {
+                serviceTypes[i] = services[i].getType();
+            }
+            json.put("services", serviceTypes); //$NON-NLS-1$
         }
 
         return json;
     }
 
-    static final JSONObject serviceToJSON(UPnPService service,
-        SessionObject session) throws JSONException
+    static final Map<String, Object> serviceToJSON(UPnPService service,
+        SessionObject session)
     {
-        final JSONObject json = new JSONObject();
+        final Map<String, Object> json = new HashMap<String, Object>();
 
         // add service properties
         json.put("type", service.getType()); //$NON-NLS-1$
@@ -68,56 +73,73 @@ class Serializer
 
         // add state variables
         final UPnPStateVariable[] vars = service.getStateVariables();
-        for (int i = 0; vars != null && i < vars.length; i++)
+        if ( vars != null )
         {
-            Object value = null;
-            if (vars[i] instanceof UPnPLocalStateVariable)
+            @SuppressWarnings("unchecked")
+            Map<String, Object>[] arr = new Map[vars.length];
+            for (int i = 0; vars != null && i < vars.length; i++)
             {
-                value = ((UPnPLocalStateVariable) vars[i]).getCurrentValue();
+                Object value = null;
+                if (vars[i] instanceof UPnPLocalStateVariable)
+                {
+                    value = ((UPnPLocalStateVariable) vars[i]).getCurrentValue();
+                }
+
+                if (value == null)
+                    value = session.getValue(vars[i].getName());
+                if (value == null)
+                    value = "---"; //$NON-NLS-1$
+
+                arr[i] = variableToJSON(vars[i], vars[i].getName());
+                arr[i].put("value", value);// //$NON-NLS-1$
             }
-
-            if (value == null)
-                value = session.getValue(vars[i].getName());
-            if (value == null)
-                value = "---"; //$NON-NLS-1$
-
-            json.append("variables", variableToJSON(vars[i], vars[i].getName()) //$NON-NLS-1$
-            .put("value", value));// //$NON-NLS-1$
+            json.put("variables", arr); //$NON-NLS-1$
         }
 
         // add actions
         final UPnPAction[] actions = service.getActions();
-        for (int i = 0; actions != null && i < actions.length; i++)
+        if ( actions != null )
         {
-            json.append("actions", actionToJSON(actions[i])); //$NON-NLS-1$
+            Object[] arr = new Object[actions.length];
+            for (int i = 0; i < actions.length; i++)
+            {
+                arr[i] = actionToJSON(actions[i]);
+            }
+            json.put("actions", arr); //$NON-NLS-1$
         }
 
         return json;
     }
 
-    static final JSONObject variableToJSON(final UPnPStateVariable var,
-        final String name) throws JSONException
+    static final Map<String, Object> variableToJSON(final UPnPStateVariable var,
+        final String name)
     {
-        return new JSONObject()//
-        .put("name", name) // //$NON-NLS-1$
-        .put("default", var.getDefaultValue()) // //$NON-NLS-1$
-        .put("min", var.getMinimum()) //$NON-NLS-1$
-        .put("max", var.getMaximum()) //$NON-NLS-1$
-        .put("step", var.getStep()) //$NON-NLS-1$
-        .put("allowed", var.getAllowedValues()) //$NON-NLS-1$
-        .put("sendsEvents", var.sendsEvents()) //$NON-NLS-1$
-        .put("type", var.getUPnPDataType()); //$NON-NLS-1$
+        final Map<String, Object> json = new HashMap<String, Object>();
+        json.put("name", name); // //$NON-NLS-1$
+        json.put("default", var.getDefaultValue()); // //$NON-NLS-1$
+        json.put("min", var.getMinimum()); //$NON-NLS-1$
+        json.put("max", var.getMaximum()); //$NON-NLS-1$
+        json.put("step", var.getStep()); //$NON-NLS-1$
+        json.put("allowed", var.getAllowedValues()); //$NON-NLS-1$
+        json.put("sendsEvents", var.sendsEvents()); //$NON-NLS-1$
+        json.put("type", var.getUPnPDataType()); //$NON-NLS-1$
+        return json;
     }
 
-    static final JSONObject actionToJSON(UPnPAction action) throws JSONException
+    static final Map<String, Object> actionToJSON(UPnPAction action)
     {
-        final JSONObject json = new JSONObject();
+        final Map<String, Object> json = new HashMap<String, Object>();
         json.put("name", action.getName()); //$NON-NLS-1$
         final String[] names = action.getInputArgumentNames();
-        for (int i = 0; names != null && i < names.length; i++)
+        if ( names != null )
         {
-            final UPnPStateVariable variable = action.getStateVariable(names[i]);
-            json.append("inVars", variableToJSON(variable, names[i])); //$NON-NLS-1$
+            Object[] vars = new Object[names.length];
+            for (int i = 0; i < names.length; i++)
+            {
+                final UPnPStateVariable variable = action.getStateVariable(names[i]);
+                vars[i] = variableToJSON(variable, names[i]); //$NON-NLS-1$
+            }
+            json.put("inVars", vars); //$NON-NLS-1$
         }
 
         return json;
