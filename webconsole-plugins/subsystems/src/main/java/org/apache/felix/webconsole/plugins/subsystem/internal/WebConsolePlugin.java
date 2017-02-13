@@ -32,12 +32,11 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.commons.fileupload.FileItem;
+import org.apache.felix.utils.json.JSONWriter;
 import org.apache.felix.webconsole.AbstractWebConsolePlugin;
 import org.apache.felix.webconsole.DefaultVariableResolver;
 import org.apache.felix.webconsole.SimpleWebConsolePlugin;
 import org.apache.felix.webconsole.WebConsoleUtil;
-import org.json.JSONException;
-import org.json.JSONWriter;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.InvalidSyntaxException;
 import org.osgi.framework.ServiceReference;
@@ -344,32 +343,25 @@ public class WebConsolePlugin extends SimpleWebConsolePlugin
     private void renderResult(PrintWriter pw, RequestInfo reqInfo) throws IOException
     {
         JSONWriter jw = new JSONWriter(pw);
-        try
+        jw.object();
+
+        List<Subsystem> subsystems = getSubsystems();
+
+        jw.key("status");
+        jw.value(subsystems.size());
+
+        jw.key("data");
+        jw.array();
+        for (Subsystem ss : subsystems)
         {
-            jw.object();
-
-            List<Subsystem> subsystems = getSubsystems();
-
-            jw.key("status");
-            jw.value(subsystems.size());
-
-            jw.key("data");
-            jw.array();
-            for (Subsystem ss : subsystems)
-            {
-                subsystem(jw, ss);
-            }
-            jw.endArray();
-
-            jw.endObject();
+            subsystem(jw, ss);
         }
-        catch (JSONException je)
-        {
-            throw new IOException(je);
-        }
+        jw.endArray();
+
+        jw.endObject();
     }
 
-    private void subsystem(JSONWriter jw, Subsystem ss) throws JSONException
+    private void subsystem(JSONWriter jw, Subsystem ss) throws IOException
     {
         jw.object();
 
