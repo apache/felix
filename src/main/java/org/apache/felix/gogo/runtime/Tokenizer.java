@@ -107,11 +107,14 @@ public class Tokenizer extends BaseTokenizer
                 case '>':
                 case '<':
                     t = text.subSequence(start, index);
-                    tn = text.subSequence(start, index + 1);
-                    if (redir.matcher(tn).matches())
+                    if (!eot())
                     {
-                        getch();
-                        break;
+                        tn = text.subSequence(start, index + 1);
+                        if (redir.matcher(tn).matches())
+                        {
+                            getch();
+                            break;
+                        }
                     }
                     if (redir.matcher(t).matches() && start < index - 1)
                     {
