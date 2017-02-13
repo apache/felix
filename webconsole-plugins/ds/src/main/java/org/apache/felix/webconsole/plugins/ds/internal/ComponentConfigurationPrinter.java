@@ -18,6 +18,7 @@
  */
 package org.apache.felix.webconsole.plugins.ds.internal;
 
+import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -31,6 +32,7 @@ import java.util.TreeSet;
 
 import org.apache.felix.inventory.Format;
 import org.apache.felix.inventory.InventoryPrinter;
+import org.apache.felix.utils.json.JSONWriter;
 import org.apache.felix.webconsole.WebConsoleUtil;
 import org.osgi.framework.Constants;
 import org.osgi.framework.dto.ServiceReferenceDTO;
@@ -90,7 +92,13 @@ class ComponentConfigurationPrinter implements InventoryPrinter
         if (Format.JSON.equals(format))
         {
             disabled.addAll(noConfig);
-            printComponentsJson(pw, disabled, configurations, isZip);
+            try
+            {
+                printComponentsJson(pw, disabled, configurations, isZip);
+            } catch (IOException ignore)
+            {
+                // ignore
+            }
         }
         else
         {
@@ -101,7 +109,7 @@ class ComponentConfigurationPrinter implements InventoryPrinter
     private final void printComponentsJson(final PrintWriter pw,
             final List<ComponentDescriptionDTO> disabled,
             final List<ComponentConfigurationDTO> configurations,
-            final boolean details)
+            final boolean details) throws IOException
     {
         final JSONWriter jw = new JSONWriter(pw);
         jw.object();
