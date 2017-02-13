@@ -89,6 +89,9 @@
                             javax.servlet,javax.servlet.http
                         </DynamicImport-Package>
                         <Include-Resource>{maven-resources},OSGI-INF=target/classes/OSGI-INF</Include-Resource>
+                        <Embed-Dependency>
+                             org.apache.felix.utils;inline=org/apache/felix/utils/json/JSONWriter**
+                        </Embed-Dependency>
                     </instructions>
                 </configuration>
             </plugin>
@@ -126,6 +129,12 @@
             <groupId>org.osgi</groupId>
             <artifactId>org.osgi.compendium</artifactId>
             <version>4.0.0</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.felix</groupId>
+            <artifactId>org.apache.felix.utils</artifactId>
+            <version>1.9.0</version>
             <scope>provided</scope>
         </dependency>
     </dependencies>
