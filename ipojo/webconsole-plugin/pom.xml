@@ -61,6 +61,9 @@
                             org.apache.felix.ipojo.webconsole
                         </Private-Package>
                         <Import-Package>*</Import-Package>
+                        <Embed-Dependency>
+                             org.apache.felix.utils;inline=org/apache/felix/utils/json/JSONWriter**
+                        </Embed-Dependency>
                     </instructions>
                 </configuration>
             </plugin>
@@ -115,9 +118,9 @@
             <scope>provided</scope>
         </dependency>
         <dependency>
-            <groupId>org.json</groupId>
-            <artifactId>json</artifactId>
-            <version>20070829</version>
+            <groupId>org.apache.felix</groupId>
+            <artifactId>org.apache.felix.utils</artifactId>
+            <version>1.9.0</version>
             <scope>compile</scope>
         </dependency>
     </dependencies>

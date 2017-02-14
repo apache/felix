@@ -1,4 +1,4 @@
-/* 
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -21,7 +21,6 @@ package org.apache.felix.ipojo.webconsole;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.PrintWriter;
 import java.net.URL;
 import java.util.Arrays;
 import java.util.Enumeration;
@@ -47,12 +46,10 @@ import org.apache.felix.ipojo.handlers.dependency.DependencyDescription;
 import org.apache.felix.ipojo.handlers.dependency.DependencyHandlerDescription;
 import org.apache.felix.ipojo.handlers.providedservice.ProvidedServiceDescription;
 import org.apache.felix.ipojo.handlers.providedservice.ProvidedServiceHandlerDescription;
+import org.apache.felix.utils.json.JSONWriter;
 import org.apache.felix.webconsole.AbstractWebConsolePlugin;
 import org.apache.felix.webconsole.DefaultVariableResolver;
 import org.apache.felix.webconsole.WebConsoleUtil;
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
 import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceReference;
 
@@ -65,7 +62,7 @@ import org.osgi.framework.ServiceReference;
 @Provides
 @Instantiate
 public class IPOJOPlugin extends AbstractWebConsolePlugin {
-    
+
     /**
      * Used CSS files.
      */
@@ -75,24 +72,24 @@ public class IPOJOPlugin extends AbstractWebConsolePlugin {
      * Template : Instance list.
      */
     private final String INSTANCES;
-    
+
     /**
      * Template : Factory list.
      */
     private final String FACTORIES;
-    
+
     /**
-     * Template : Handler list. 
+     * Template : Handler list.
      */
     private final String HANDLERS;
-    
+
     /**
-     * Template : Factory details. 
+     * Template : Factory details.
      */
     private final String FACTORY_DETAILS;
-    
+
     /**
-     * Template : Instance details. 
+     * Template : Instance details.
      */
     private final String INSTANCE_DETAILS;
 
@@ -106,8 +103,8 @@ public class IPOJOPlugin extends AbstractWebConsolePlugin {
      * Title used by the web console.
      */
     @ServiceProperty(name = "felix.webconsole.title")
-    private String m_title = "iPOJO"; 
-    
+    private String m_title = "iPOJO";
+
     /**
      * CSS files used by the plugin.
      */
@@ -131,7 +128,7 @@ public class IPOJOPlugin extends AbstractWebConsolePlugin {
      */
     @Requires(optional = true, specification = HandlerFactory.class)
     private List<HandlerFactory> m_handlers;
-    
+
     /**
      * Instantiates the plugin.
      * This method loads all template files.
@@ -143,7 +140,7 @@ public class IPOJOPlugin extends AbstractWebConsolePlugin {
         FACTORY_DETAILS = readTemplate("/res/factory.html" );
         INSTANCE_DETAILS = readTemplate("/res/instance.html" );
     }
-    
+
     /**
      * Helper method loading a template file.
      * @param templateFile the template file name
@@ -198,7 +195,7 @@ public class IPOJOPlugin extends AbstractWebConsolePlugin {
         final RequestInfo reqInfo = new RequestInfo(request);
         // prepare variables
         DefaultVariableResolver vars = ( ( DefaultVariableResolver ) WebConsoleUtil.getVariableResolver( request ) );
-                
+
         if (reqInfo.instances) { // Instance
             if (reqInfo.name == null) { // All
                 response.getWriter().print( INSTANCES );
@@ -221,130 +218,139 @@ public class IPOJOPlugin extends AbstractWebConsolePlugin {
             response.getWriter().print( INSTANCES );
         }
     }
-    
+
     /**
      * Writes the JSON object containing the info for all instances.
      * @param pw the writer where the json object is printed.
      * @throws IOException the JSON object cannot be written
      */
-    private void getAllInstances(PrintWriter pw) throws IOException {
-        try {
-            JSONObject resp = new JSONObject();
-            // Statline:
-            resp.put("count", m_archs.size());
-            resp.put("valid_count", StateUtils.getValidInstancesCount(m_archs));
-            resp.put("invalid_count", StateUtils.getInvalidInstancesCount(m_archs));
-            // End statline
-            
-            JSONArray instances = new JSONArray();
-            for (Architecture arch : m_archs) {
-                JSONObject instance = new JSONObject();
-                instance.put("name", arch.getInstanceDescription().getName());
-                instance.put("factory", arch.getInstanceDescription().getComponentDescription().getName());
-                instance.put("state", StateUtils.getInstanceState(arch.getInstanceDescription().getState()));
-                instances.put(instance);
-            }
-            resp.put("data", instances);
-            
-            pw.print(resp.toString());
-        } catch (JSONException e) {
-            // Propagate the exception.
-            throw new IOException(e.toString());
+    private void getAllInstances(JSONWriter pw) throws IOException {
+        pw.object();
+        // Statline:
+        pw.key("count");
+        pw.value( m_archs.size());
+        pw.key("valid_count");
+        pw.value( StateUtils.getValidInstancesCount(m_archs));
+        pw.key("invalid_count");
+        pw.value( StateUtils.getInvalidInstancesCount(m_archs));
+        // End statline
+
+        pw.key("data");
+        pw.array();
+        for (Architecture arch : m_archs) {
+            pw.object();
+            pw.key("name");
+            pw.value(arch.getInstanceDescription().getName());
+            pw.key("factory");
+            pw.value(arch.getInstanceDescription().getComponentDescription().getName());
+            pw.key("state");
+            pw.value(StateUtils.getInstanceState(arch.getInstanceDescription().getState()));
+            pw.endObject();
         }
+        pw.endArray();
+
+        pw.endObject();
     }
-    
+
     /**
      * Writes the JSON object containing the info for all factories.
      * @param pw the writer when the json object is printed
      * @throws IOException the JSON object cannot be written
      */
-    private void getAllFactories(PrintWriter pw) throws IOException {
-        try {
-            JSONObject resp = new JSONObject();
-            // Statline:
-            resp.put("count", m_factories.size());
-            resp.put("valid_count", StateUtils.getValidFactoriesCount(m_factories));
-            resp.put("invalid_count", StateUtils.getInvalidFactoriesCount(m_factories));
-            // End statline
+    private void getAllFactories(JSONWriter pw) throws IOException {
+        pw.object();
+        // Statline:
+        pw.key("count");
+        pw.value(m_factories.size());
+        pw.key("valid_count");
+        pw.value(StateUtils.getValidFactoriesCount(m_factories));
+        pw.key("invalid_count");
+        pw.value(StateUtils.getInvalidFactoriesCount(m_factories));
+        // End statline
 
-            JSONArray factories = new JSONArray();
-            for (Factory factory : m_factories) {
-                String version = factory.getVersion();
-                String name = factory.getName();
-                
-                String state = StateUtils.getFactoryState(factory.getState());
-                String bundle = factory.getBundleContext().getBundle().getSymbolicName()
-                    + " (" + factory.getBundleContext().getBundle().getBundleId() + ")";
-                JSONObject fact = new JSONObject();
-                fact.put("name", name);
-                if (version != null) {
-                    fact.put("version", version);
-                }
-                fact.put("bundle", bundle);
-                fact.put("state", state);
-                factories.put(fact);
+        pw.key("data");
+        pw.array();
+        for (Factory factory : m_factories) {
+            String version = factory.getVersion();
+            String name = factory.getName();
+
+            String state = StateUtils.getFactoryState(factory.getState());
+            String bundle = factory.getBundleContext().getBundle().getSymbolicName()
+                + " (" + factory.getBundleContext().getBundle().getBundleId() + ")";
+            pw.object();
+            pw.key("name");
+            pw.value(name);
+            if (version != null) {
+                pw.key("version");
+                pw.value(version);
             }
-            resp.put("data", factories);
-            
-            pw.print(resp.toString());
-        } catch (JSONException e) {
-            // Propagate the exception.
-            throw new IOException(e.toString());
+            pw.key("bundle");
+            pw.value(bundle);
+            pw.key("state");
+            pw.value(state);
+            pw.endObject();
         }
+        pw.endArray();
+
+        pw.endObject();
     }
-    
+
     /**
      * Writes the JSON object containing the info for all handlers.
      * @param pw the writer when the json object is printed
      * @throws IOException the JSON object cannot be written
      */
-    private void getAllHandlers(PrintWriter pw) throws IOException {
-        try {
-            JSONObject resp = new JSONObject();
+    private void getAllHandlers(JSONWriter pw) throws IOException {
+        pw.object();
 
-            // Statline:
-            resp.put("count", m_handlers.size());
-            resp.put("valid_count", StateUtils.getValidHandlersCount(m_handlers));
-            resp.put("invalid_count", StateUtils.getInvalidHandlersCount(m_handlers));
-            // End statline
-            
-            JSONArray factories = new JSONArray();
-            for (HandlerFactory factory : m_handlers) {
-                String version = factory.getVersion();
-                String name = factory.getHandlerName();
-                
-                String state = StateUtils.getFactoryState(factory.getState());
-                String bundle = factory.getBundleContext().getBundle().getSymbolicName()
-                    + " (" + factory.getBundleContext().getBundle().getBundleId() + ")";
-                JSONObject fact = new JSONObject();
-                fact.put("name", name);
-                if (version != null) {
-                    fact.put("version", version);
-                }
-                fact.put("bundle", bundle);
-                fact.put("state", state);
-                fact.put("type", factory.getType());
-                if (! factory.getMissingHandlers().isEmpty()) {
-                    fact.put("missing", factory.getMissingHandlers().toString());
-                }
-                factories.put(fact);
+        // Statline:
+        pw.key("count");
+        pw.value(m_handlers.size());
+        pw.key("valid_count");
+        pw.value(StateUtils.getValidHandlersCount(m_handlers));
+        pw.key("invalid_count");
+        pw.value(StateUtils.getInvalidHandlersCount(m_handlers));
+        // End statline
+
+        pw.key("data");
+        pw.array();
+        for (HandlerFactory factory : m_handlers) {
+            String version = factory.getVersion();
+            String name = factory.getHandlerName();
+
+            String state = StateUtils.getFactoryState(factory.getState());
+            String bundle = factory.getBundleContext().getBundle().getSymbolicName()
+                + " (" + factory.getBundleContext().getBundle().getBundleId() + ")";
+            pw.object();
+            pw.key("name");
+            pw.value( name);
+            if (version != null) {
+                pw.key("version");
+                pw.value(version);
             }
-            resp.put("data", factories);
-            
-            pw.print(resp.toString());
-        } catch (JSONException e) {
-            // Propagate the exception.
-            throw new IOException(e.toString());
+            pw.key("bundle");
+            pw.value(bundle);
+            pw.key("state");
+            pw.value(state);
+            pw.key("type");
+            pw.value(factory.getType());
+            if (! factory.getMissingHandlers().isEmpty()) {
+                pw.key("missing");
+                pw.value(factory.getMissingHandlers().toString());
+            }
+            pw.endObject();
         }
+        pw.endArray();
+        pw.endObject();
     }
-    
+
     /**
      * Writes the JSON object containing details about a specific factory.
      * @param pw the writer
      * @param name the factory name
      * @throws IOException if the json object cannot be written.
      */
-    private void getFactoryDetail(PrintWriter pw, String name) throws IOException{
+    private void getFactoryDetail(JSONWriter pw, String name) throws IOException{
         // Find the factory
         Factory factory = null;
         for (Factory fact : m_factories) {
@@ -352,92 +358,98 @@ public class IPOJOPlugin extends AbstractWebConsolePlugin {
                 factory = fact;
             }
         }
-        
+
         if (factory == null) {
             // This will be used a error message (cannot be interpreted as json)
-            pw.println("The factory " + name + " does not exist or is private");
+            pw.value("The factory " + name + " does not exist or is private");
             return;
         }
-        
-        try {
-            JSONObject resp = new JSONObject();
-            
-            // Statline.
-            resp.put("count", m_factories.size());
-            resp.put("valid_count", StateUtils.getValidFactoriesCount(m_factories));
-            resp.put("invalid_count", StateUtils.getInvalidFactoriesCount(m_factories));
-            // End of the statline
-            
-            // Factory object
-            JSONObject data = new JSONObject();
-            data.put("name", factory.getName());
-            data.put("state", StateUtils.getFactoryState(factory.getState()));
-            
-            String bundle = factory.getBundleContext().getBundle().getSymbolicName()
-            + " (" + factory.getBundleContext().getBundle().getBundleId() + ")";
-            data.put("bundle", bundle);
-            
-            // Provided service specifications
-            if (factory.getComponentDescription().getprovidedServiceSpecification().length != 0) {
-                JSONArray services = new JSONArray
-                    (Arrays.asList(factory.getComponentDescription().getprovidedServiceSpecification()));
-                data.put("services", services);
-            }
-            
-            // Properties
-            PropertyDescription[] props = factory.getComponentDescription().getProperties();
-            if (props != null  && props.length != 0) {
-                JSONArray properties = new JSONArray();
-                for (int i = 0; i < props.length; i++) {
-                    JSONObject prop = new JSONObject();
-                    prop.put("name", props[i].getName());
-                    prop.put("type", props[i].getType());
-                    prop.put("mandatory", props[i].isMandatory());
-                    prop.put("immutable", props[i].isImmutable());
-                    if (props[i].getValue() != null) {
-                        prop.put("value", props[i].getValue());
-                    }
-                    properties.put(prop);
-                }
-                data.put("properties", properties);
-            }
-            
-            if (! factory.getRequiredHandlers().isEmpty()) {
-                JSONArray req = new JSONArray
-                    (factory.getRequiredHandlers());
-                data.put("requiredHandlers", req);
-            }
-            
-            if (! factory.getMissingHandlers().isEmpty()) {
-                JSONArray req = new JSONArray
-                    (factory.getMissingHandlers());
-                data.put("missingHandlers", req);
-            }
-            
-            List<?> instances = StateUtils.getInstanceList(m_archs, name);
-            if (! instances.isEmpty()) {
-                JSONArray req = new JSONArray(instances);
-                data.put("instances", req);
-            }
-            
-            data.put("architecture", factory.getDescription().toString());
-            resp.put("data", data);
-            
-            pw.print(resp.toString());
-        } catch (JSONException e) {
-            // Propagate the exception.
-            throw new IOException(e.toString());
+
+        pw.object();
+
+        // Statline.
+        pw.key("count");
+        pw.value(m_factories.size());
+        pw.key("valid_count");
+        pw.value(StateUtils.getValidFactoriesCount(m_factories));
+        pw.key("invalid_count");
+        pw.value(StateUtils.getInvalidFactoriesCount(m_factories));
+        // End of the statline
+
+        // Factory object
+        pw.key("data");
+        pw.object();
+        pw.key("name");
+        pw.value(factory.getName());
+        pw.key("state");
+        pw.value(StateUtils.getFactoryState(factory.getState()));
+
+        String bundle = factory.getBundleContext().getBundle().getSymbolicName()
+        + " (" + factory.getBundleContext().getBundle().getBundleId() + ")";
+        pw.key("bundle");
+        pw.value(bundle);
+
+        // Provided service specifications
+        if (factory.getComponentDescription().getprovidedServiceSpecification().length != 0) {
+            pw.key("services");
+            pw.value(factory.getComponentDescription().getprovidedServiceSpecification());
         }
-        
+
+        // Properties
+        PropertyDescription[] props = factory.getComponentDescription().getProperties();
+        if (props != null  && props.length != 0) {
+            pw.key("properties");
+            pw.array();
+            for (int i = 0; i < props.length; i++) {
+                pw.object();
+                pw.key("name");
+                pw.value(props[i].getName());
+                pw.key("type");
+                pw.value(props[i].getType());
+                pw.key("mandatory");
+                pw.value(props[i].isMandatory());
+                pw.key("immutable");
+                pw.value(props[i].isImmutable());
+                if (props[i].getValue() != null) {
+                    pw.key("value");
+                    pw.value(props[i].getValue());
+                }
+                pw.endObject();
+            }
+            pw.key("properties");
+            pw.array();
+            pw.endArray();
+        }
+
+        if (! factory.getRequiredHandlers().isEmpty()) {
+            pw.key("requiredHandlers");
+            pw.value(factory.getRequiredHandlers());
+        }
+
+        if (! factory.getMissingHandlers().isEmpty()) {
+            pw.key("missingHandlers");
+            pw.value(factory.getMissingHandlers());
+        }
+
+        List<?> instances = StateUtils.getInstanceList(m_archs, name);
+        if (! instances.isEmpty()) {
+            pw.key("instances");
+            pw.value(instances);
+        }
+
+        pw.key("architecture");
+        pw.value(factory.getDescription().toString());
+        pw.endObject();
+        pw.endObject();
     }
-    
+
     /**
      * Writes the JSON object containing details about a specific instance.
      * @param pw the writer
      * @param name the instance name
      * @throws IOException if the json object cannot be written.
      */
-    private void getInstanceDetail(PrintWriter pw, String name) throws IOException {
+    private void getInstanceDetail(JSONWriter pw, String name) throws IOException {
         // Find the factory
         InstanceDescription instance = null;
         for (Architecture arch : m_archs) {
@@ -445,47 +457,44 @@ public class IPOJOPlugin extends AbstractWebConsolePlugin {
                 instance = arch.getInstanceDescription();
             }
         }
-        
+
         if (instance == null) {
             // This will be used a error message (cannot be interpreted as json)
-            pw.println("The instance " + name + " does not exist or " +
+            pw.value("The instance " + name + " does not exist or " +
             		"does not exposed its architecture");
             return;
         }
-        
-        try {
-            JSONObject resp = new JSONObject();
-            resp.put("count", m_factories.size());
-            resp.put("valid_count", StateUtils.getValidFactoriesCount(m_factories));
-            resp.put("invalid_count", StateUtils.getInvalidFactoriesCount(m_factories));
-            
-            // instance object
-            JSONObject data = new JSONObject();
-            data.put("name", instance.getName());
-            data.put("state", StateUtils.getInstanceState(instance.getState()));
-            data.put("factory", instance.getComponentDescription().getName());
-            
-            JSONArray services = getProvidedServiceDetail(instance.getHandlerDescription("org.apache.felix.ipojo:provides"));
-            if (services != null) {
-                data.put("services", services);
-            }
-            
-            JSONArray reqs = getRequiredServiceDetail(instance.getHandlerDescription("org.apache.felix.ipojo:requires"));
-            if (reqs != null) {
-                data.put("req", reqs);
-            }
-            
-            data.put("architecture", instance.getDescription().toString());
-            resp.put("data", data);
-            
-            pw.print(resp.toString());
-        } catch (JSONException e) {
-            // Propagate the exception.
-            throw new IOException(e.toString());
-        }
-        
+
+        pw.object();
+
+        pw.key("count");
+        pw.value(m_factories.size());
+        pw.key("valid_count");
+        pw.value(StateUtils.getValidFactoriesCount(m_factories));
+        pw.key("invalid_count");
+        pw.value(StateUtils.getInvalidFactoriesCount(m_factories));
+
+        // instance object
+        pw.key("data");
+        pw.object();
+        pw.key("name");
+        pw.value(instance.getName());
+        pw.key("state");
+        pw.value(StateUtils.getInstanceState(instance.getState()));
+        pw.key("factory");
+        pw.value(instance.getComponentDescription().getName());
+
+        getProvidedServiceDetail(pw, instance.getHandlerDescription("org.apache.felix.ipojo:provides"));
+
+        getRequiredServiceDetail(pw, instance.getHandlerDescription("org.apache.felix.ipojo:requires"));
+
+        pw.key("architecture");
+        pw.value(instance.getDescription().toString());
+
+        pw.endObject();
+        pw.endObject();
     }
-    
+
     /**
      * Endpoint dealing with JSON requests.
      * @param request the request
@@ -499,39 +508,45 @@ public class IPOJOPlugin extends AbstractWebConsolePlugin {
     protected void doGet(HttpServletRequest request,
             HttpServletResponse response) throws ServletException, IOException {
         final RequestInfo reqInfo = new RequestInfo(request);
-        
+
         if (reqInfo.extension.equals("json")) {
             response.setContentType("application/json");
+            final JSONWriter writer = new JSONWriter(response.getWriter());
             if (reqInfo.instances) {
                 if (reqInfo.name == null) {
-                    this.getAllInstances(response.getWriter());
+                    this.getAllInstances(writer);
+                    writer.flush();
                     return;
                 } else {
-                    this.getInstanceDetail(response.getWriter(), reqInfo.name);
+                    this.getInstanceDetail(writer, reqInfo.name);
+                    writer.flush();
                     return;
                 }
             }
 
             if (reqInfo.factories) {
                 if (reqInfo.name == null) {
-                    this.getAllFactories(response.getWriter());
+                    this.getAllFactories(writer);
+                    writer.flush();
                     return;
                 } else {
-                    this.getFactoryDetail(response.getWriter(), reqInfo.name);
+                    this.getFactoryDetail(writer, reqInfo.name);
+                    writer.flush();
                     return;
                 }
             }
 
             if (reqInfo.handlers) {
-                this.getAllHandlers(response.getWriter());
+                this.getAllHandlers(writer);
             }
             // nothing more to do
+            writer.flush();
             return;
         }
         // Otherwise, delegate to super.
         super.doGet(request, response);
     }
-    
+
     /**
      * Allows loading the 'ui' folder as web resource.
      * @param path the resource path
@@ -544,44 +559,48 @@ public class IPOJOPlugin extends AbstractWebConsolePlugin {
         }
         return null;
     }
-    
+
     /**
      * Creates the JSON Array describing the provided services.
      * @param hd the provided service handler
      * @return the JSON Array or null if no provided service
      * @throws JSONException if the array cannot be created.
      */
-    private JSONArray getProvidedServiceDetail(HandlerDescription hd) throws JSONException {
+    private void getProvidedServiceDetail(final JSONWriter pw, HandlerDescription hd) throws IOException {
         if (hd == null) {
-            return null;
+            return;
         }
 
-        JSONArray array = new JSONArray();
+        pw.key("services");
+        pw.array();
         ProvidedServiceHandlerDescription desc = (ProvidedServiceHandlerDescription) hd;
 
         for (ProvidedServiceDescription ps : desc.getProvidedServices()) {
-            JSONObject svc = new JSONObject();
+            pw.object();
             String spec = Arrays.toString(ps.getServiceSpecifications());
             if (spec.startsWith("[")) {
                 spec = spec.substring(1, spec.length() - 1);
             }
-            svc.put("specification", spec);
-            svc.put("state", StateUtils.getProvidedServiceState(ps.getState()));
-            
+            pw.key("specification");
+            pw.value(spec);
+            pw.key("state");
+            pw.value(StateUtils.getProvidedServiceState(ps.getState()));
+
             if (ps.getServiceReference() != null) {
-                svc.put("id", (Long) ps.getServiceReference().getProperty(Constants.SERVICE_ID));
-            }
-            
-            if (ps.getProperties() != null  &&!  ps.getProperties().isEmpty()) {
-                svc.put("properties", getServiceProperties(ps.getProperties()));
+                pw.key("id");
+                pw.value(ps.getServiceReference().getProperty(Constants.SERVICE_ID));
             }
 
-            array.put(svc);
+            if (ps.getProperties() != null  && !ps.getProperties().isEmpty()) {
+                pw.key("properties");
+                getServiceProperties(pw, ps.getProperties());
+            }
+
+            pw.endObject();
         }
-        
-        return array;
+        pw.endArray();
     }
-    
+
     /**
      * Builds the JSON Array containing object representing the given properties
      * (name / value pair).
@@ -589,27 +608,31 @@ public class IPOJOPlugin extends AbstractWebConsolePlugin {
      * @return the JSON Array
      * @throws JSONException if the array cannot be created correctly
      */
-    private JSONArray getServiceProperties(Properties properties) throws JSONException {
-        JSONArray array = new JSONArray();
+    private void getServiceProperties(JSONWriter pw, Properties properties) throws IOException {
+        pw.array();
         Enumeration<Object> e = properties.keys();
         while (e.hasMoreElements()) {
             String key = (String) e.nextElement();
             Object value = properties.get(key);
-            JSONObject prop = new JSONObject();
-            prop.put("name", key);
+            pw.object();
+            pw.key("name");
+            pw.value(key);
             if (value != null  && value.getClass().isArray()) {
                 // TODO Test with primitive types
-                prop.put("value", Arrays.toString((Object[]) value));
+                pw.key("value");
+                pw.value(Arrays.toString((Object[]) value));
             } else if (value != null) {
-                prop.put("value", value.toString());
+                pw.key("value");
+                pw.value(value.toString());
             } else {
-                prop.put("value", "no value");
+                pw.key("value");
+                pw.value("no value");
             }
-            array.put(prop);
+            pw.endObject();
         }
-        return array;
+        pw.endArray();
     }
-    
+
     /**
      * Builds the JSON Array representing the required services.
      * @param hd the dependency handler
@@ -617,38 +640,48 @@ public class IPOJOPlugin extends AbstractWebConsolePlugin {
      * dependencies, or null if there is no service dependency.
      * @throws JSONException if the JSON array cannot be created.
      */
-    private JSONArray getRequiredServiceDetail(
-            HandlerDescription hd) throws JSONException {
+    private void getRequiredServiceDetail(JSONWriter pw,
+            HandlerDescription hd) throws IOException {
         if (hd == null) {
-            return null;
+            return;
         }
-        JSONArray array = new JSONArray();
+        pw.key("reqs");
+        pw.array();
         DependencyHandlerDescription desc = (DependencyHandlerDescription) hd;
         for (DependencyDescription dep : desc.getDependencies()) {
-            JSONObject req = new JSONObject();
-            req.put("specification",dep.getSpecification());
-            req.put("id", dep.getId());
-            req.put("state", StateUtils.getDependencyState(dep.getState()));
-            req.put("policy", StateUtils.getDependencyBindingPolicy(dep.getPolicy()));
-            req.put("optional", dep.isOptional());
-            req.put("aggregate", dep.isMultiple());
+            pw.object();
+            pw.key("specification");
+            pw.value(dep.getSpecification());
+            pw.key("id");
+            pw.value(dep.getId());
+            pw.key("state");
+            pw.value(StateUtils.getDependencyState(dep.getState()));
+            pw.key("policy");
+            pw.value(StateUtils.getDependencyBindingPolicy(dep.getPolicy()));
+            pw.key("optional");
+            pw.value(dep.isOptional());
+            pw.key("aggregate");
+            pw.value(dep.isMultiple());
             if (dep.getFilter() != null) {
-                req.put("filter", dep.getFilter());
+                pw.key("filter");
+                pw.value(dep.getFilter());
             }
             if (dep.getServiceReferences() != null  && dep.getServiceReferences().size() != 0) {
-                req.put("matching",  getServiceReferenceList(dep.getServiceReferences()));
+                pw.key("matching");
+                getServiceReferenceList(pw, dep.getServiceReferences());
             }
-            
+
             if (dep.getUsedServices() != null  && dep.getUsedServices().size() != 0) {
-                req.put("used",  getServiceReferenceList(dep.getUsedServices()));
+                pw.key("used");
+                getServiceReferenceList(pw, dep.getUsedServices());
             }
-            
-            array.put(req);
+
+            pw.endObject();
         }
 
-        return array;
+        pw.endArray();
     }
-    
+
     /**
      * Builds the JSON Array representing the given service reference list.
      * The array contains JSON objects. Those object contains the service id (id)
@@ -658,23 +691,26 @@ public class IPOJOPlugin extends AbstractWebConsolePlugin {
      * @return the JSON Array
      * @throws JSONException if the array cannot be created.
      */
-    private JSONArray getServiceReferenceList(List<ServiceReference> refs) throws JSONException {
-        JSONArray array = new JSONArray();
+    private void getServiceReferenceList(JSONWriter pw, List<ServiceReference> refs) throws IOException {
+        pw.array();
         if (refs != null) {
             for (ServiceReference ref : refs) {
-                JSONObject reference = new JSONObject();
+                pw.object();
                 if (ref.getProperty("instance.name") == null) {
-                    reference.put("id", ref.getProperty(Constants.SERVICE_ID));
+                    pw.key("id");
+                    pw.value(ref.getProperty(Constants.SERVICE_ID));
                 } else {
-                    reference.put("id", ref.getProperty(Constants.SERVICE_ID));
-                    reference.put("instance", ref.getProperty("instance.name"));
+                    pw.key("id");
+                    pw.value(ref.getProperty(Constants.SERVICE_ID));
+                    pw.key("instance");
+                    pw.value(ref.getProperty("instance.name"));
                 }
-                array.put(reference);
+                pw.endObject();
             }
         }
-        return array;
+        pw.endArray();
     }
-    
+
     /**
      * Gets the plugin label.
      * @return the label.
@@ -694,7 +730,7 @@ public class IPOJOPlugin extends AbstractWebConsolePlugin {
     public String getTitle() {
         return m_title;
     }
-    
+
     /**
      * Get the CSS used by the plugin.
      * @return the list of CSS
@@ -731,13 +767,13 @@ public class IPOJOPlugin extends AbstractWebConsolePlugin {
          * The handlers.
          */
         public final boolean handlers;
-        
+
         /**
          * The specific factory or instance name.
          */
         public final String name;
-    
-        
+
+
         /**
          * Creates a RequestInfo.
          * @param request the request
@@ -746,7 +782,7 @@ public class IPOJOPlugin extends AbstractWebConsolePlugin {
             String info = request.getPathInfo();
             // remove label and starting slash
             info = info.substring(getLabel().length() + 1);
-    
+
             // get extension
             if (info.endsWith(".json")) {
                 extension = "json";
@@ -754,14 +790,14 @@ public class IPOJOPlugin extends AbstractWebConsolePlugin {
             } else {
                 extension = "html";
             }
-    
+
             if (info.startsWith("/")) {
                 path = info.substring(1);
-    
+
                 instances = path.startsWith("instances");
                 factories = path.startsWith("factories");
                 handlers = path.startsWith("handlers");
-                
+
                 if (instances  && path.startsWith("instances/")) {
                     name = path.substring("instances".length() + 1);
                 } else if (factories  && path.startsWith("factories/")) {
@@ -776,10 +812,10 @@ public class IPOJOPlugin extends AbstractWebConsolePlugin {
                 factories = false;
                 handlers = false;
             }
-           
+
             request.setAttribute(IPOJOPlugin.class.getName(), this);
         }
-    
+
     }
 
 }

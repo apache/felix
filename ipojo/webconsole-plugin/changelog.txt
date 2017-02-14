@@ -1,6 +1,12 @@
 Changes from the 1.6.0 to the 1.7.0
 -----------------------------------
 ** Improvements
+    * Remove dependency to org.json
+
+    
+Changes from the 1.6.0 to the 1.7.0
+-----------------------------------
+** Improvements
     * Integration with the webconsole 4.x
 
 ** Task
