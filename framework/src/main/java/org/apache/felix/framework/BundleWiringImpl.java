@@ -1748,6 +1748,12 @@ public class BundleWiringImpl implements BundleWiring
             {
                 break;
             }
+            // Break if this goes through ServiceRegistrationImpl.ServiceReferenceImpl 
+            // because it must be a assignability check which should not implicitly boot delegate
+            else if (ServiceRegistrationImpl.ServiceReferenceImpl.class.equals(classes[i]))
+            {
+            	break;
+            }
             else if (isClassExternal(classes[i]))
             {
                 try
