@@ -21,25 +21,30 @@ package org.apache.felix.framework;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.apache.felix.framework.StatefulResolver.ResolverHookRecord;
 import org.apache.felix.framework.resolver.CandidateComparator;
 import org.apache.felix.resolver.FelixResolveContext;
+import org.apache.felix.resolver.ResolverImpl;
+import org.osgi.framework.namespace.HostNamespace;
+import org.osgi.framework.namespace.PackageNamespace;
 import org.osgi.framework.wiring.BundleCapability;
 import org.osgi.framework.wiring.BundleRequirement;
 import org.osgi.framework.wiring.BundleRevision;
 import org.osgi.resource.Capability;
 import org.osgi.resource.Requirement;
 import org.osgi.resource.Resource;
+import org.osgi.resource.Wire;
 import org.osgi.resource.Wiring;
 import org.osgi.service.resolver.HostedCapability;
 import org.osgi.service.resolver.ResolveContext;
 
 /**
- *
- * @author rickhall
+ * 
  */
 public class ResolveContextImpl extends ResolveContext implements FelixResolveContext
 {
@@ -90,7 +95,7 @@ public class ResolveContextImpl extends ResolveContext implements FelixResolveCo
             m_resolverHookrecord, br, true, true);
 
         // Casting the result to a List of Capability.
-        // TODO Can we do this without the strang double-cast?
+        // TODO Can we do this without the strange double-cast?
         @SuppressWarnings("unchecked")
         List<Capability> caps =
             (List<Capability>) (List<? extends Capability>) result;
@@ -120,4 +125,50 @@ public class ResolveContextImpl extends ResolveContext implements FelixResolveCo
     {
         return m_wirings;
     }
+
+	@Override
+	public Collection<Wire> getSubstitutionWires(Wiring wiring) {
+		// TODO: this is calculating information that probably has been calculated 
+		// already or at least could be calculated quicker taking into account the
+		// current state. We need to revisit this.
+		Set<String> exportNames = new HashSet<String>();
+        for (Capability cap : wiring.getResource().getCapabilities(null))
+        {
+            if (PackageNamespace.PACKAGE_NAMESPACE.equals(cap.getNamespace()))
+            {
+                exportNames.add(
+                    (String) cap.getAttributes().get(PackageNamespace.PACKAGE_NAMESPACE));
+            }
+        }
+        // Add fragment exports
+        for (Wire wire : wiring.getProvidedResourceWires(null))
+        {
+            if (HostNamespace.HOST_NAMESPACE.equals(wire.getCapability().getNamespace()))
+            {
+                for (Capability cap : wire.getRequirement().getResource().getCapabilities(
+                    null))
+                {
+                    if (PackageNamespace.PACKAGE_NAMESPACE.equals(cap.getNamespace()))
+                    {
+                        exportNames.add((String) cap.getAttributes().get(
+                            PackageNamespace.PACKAGE_NAMESPACE));
+                    }
+                }
+            }
+        }
+        Collection<Wire> substitutionWires = new ArrayList<Wire>();
+        for (Wire wire : wiring.getRequiredResourceWires(null))
+        {
+            if (PackageNamespace.PACKAGE_NAMESPACE.equals(
+                wire.getCapability().getNamespace()))
+            {
+                if (exportNames.contains(wire.getCapability().getAttributes().get(
+                    PackageNamespace.PACKAGE_NAMESPACE)))
+                {
+                    substitutionWires.add(wire);
+                }
+            }
+        }
+        return substitutionWires;
+	}
 }
