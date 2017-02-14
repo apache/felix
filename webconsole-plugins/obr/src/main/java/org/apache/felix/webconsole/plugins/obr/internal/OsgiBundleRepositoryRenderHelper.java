@@ -20,13 +20,16 @@ package org.apache.felix.webconsole.plugins.obr.internal;
 
 
 import java.io.IOException;
+import java.io.StringWriter;
 import java.net.URL;
+import java.util.Iterator;
+import java.util.Map;
+import java.util.Map.Entry;
 
 import javax.servlet.ServletException;
 
+import org.apache.felix.utils.json.JSONWriter;
 import org.apache.felix.webconsole.AbstractWebConsolePlugin;
-import org.json.JSONException;
-import org.json.JSONObject;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Version;
@@ -51,33 +54,55 @@ class OsgiBundleRepositoryRenderHelper extends AbstractBundleRepositoryRenderHel
     }
 
 
+    @Override
     String getData( final String filter, final boolean details, Bundle[] bundles )
     {
         RepositoryAdmin admin = ( RepositoryAdmin ) getRepositoryAdmin();
         if ( admin != null )
         {
-            JSONObject json = new JSONObject();
+            final StringWriter sw = new StringWriter();
+            JSONWriter json = new JSONWriter(sw);
             try
             {
-                json.put( "status", true ); //$NON-NLS-1$
-                json.put( "details", details ); //$NON-NLS-1$
+                json.object();
+                json.key( "status" ); //$NON-NLS-1$
+                json.value(true);
+                json.key( "details" ); //$NON-NLS-1$
+                json.value(details);
 
                 final Repository repositories[] = admin.listRepositories();
-                for ( int i = 0; repositories != null && i < repositories.length; i++ )
+                if ( repositories != null )
                 {
-                    json.append( "repositories", new JSONObject() //$NON-NLS-1$
-                        .put( "lastModified", repositories[i].getLastModified() ) //$NON-NLS-1$
-                        .put( "name", repositories[i].getName() ) //$NON-NLS-1$
-                        .put( "url", repositories[i].getURL() ) ); //$NON-NLS-1$
+                    json.key("repositories"); //$NON-NLS-1$
+                    json.array();
+                    for ( int i = 0; i < repositories.length; i++ )
+                    {
+                        json.object();
+                        json.key("lastModified"); //$NON-NLS-1$
+                        json.value(repositories[i].getLastModified());
+                        json.key("name"); //$NON-NLS-1$
+                        json.value(repositories[i].getName());
+                        json.key("url"); //$NON-NLS-1$
+                        json.value(repositories[i].getURL());
+                        json.endObject();
+                    }
+                    json.endArray();
                 }
-
                 Resource[] resources = admin.discoverResources( filter );
-                for ( int i = 0; resources != null && i < resources.length; i++ )
+                if ( resources != null )
                 {
-                    json.append( "resources", toJSON( resources[i], bundles, details ) ); //$NON-NLS-1$
+                    json.key("resources"); //$NON-NLS-1$
+                    json.array();
+                    for ( int i = 0; i < resources.length; i++ )
+                    {
+                        toJSON( json, resources[i], bundles, details );
+                    }
+                    json.endArray();
                 }
+                json.endObject();
+                json.flush();
             }
-            catch ( JSONException e )
+            catch ( IOException e )
             {
                 logger.log( "Failed to serialize repository to JSON object.", e );
             }
@@ -91,21 +116,25 @@ class OsgiBundleRepositoryRenderHelper extends AbstractBundleRepositoryRenderHel
                     {
                         reason = e.getMessage() + "(" + reason + ")";
                     }
-                    json.put( "error", reason ); //$NON-NLS-1$
+                    json.key( "error" ); //$NON-NLS-1$
+                    json.value(reason);
+                    json.endObject();
+                    json.flush();
                 }
-                catch ( JSONException je )
+                catch ( IOException je )
                 {
                     // ignore
                 }
             }
 
-            return json.toString();
+            return sw.toString();
         }
 
         // fall back to no data
         return "{}"; //$NON-NLS-1$
     }
 
+    @Override
     void doAction( String action, String urlParam ) throws IOException, ServletException
     {
         RepositoryAdmin admin = ( RepositoryAdmin ) getRepositoryAdmin();
@@ -140,6 +169,7 @@ class OsgiBundleRepositoryRenderHelper extends AbstractBundleRepositoryRenderHel
     }
 
 
+    @Override
     final void doDeploy( String[] bundles, boolean start, boolean optional )
     {
         // check whether we have to do something
@@ -192,7 +222,7 @@ class OsgiBundleRepositoryRenderHelper extends AbstractBundleRepositoryRenderHel
     }
 
 
-    private final JSONObject toJSON( Resource resource, Bundle[] bundles, boolean details ) throws JSONException
+    private final void toJSON( JSONWriter json, Resource resource, Bundle[] bundles, boolean details ) throws IOException
     {
         final String symbolicName = resource.getSymbolicName();
         final Version version = resource.getVersion();
@@ -205,31 +235,54 @@ class OsgiBundleRepositoryRenderHelper extends AbstractBundleRepositoryRenderHel
                 installed = ver.toString();
             }
         }
-        JSONObject json = new JSONObject()
-            .put( "id", resource.getId() ) // //$NON-NLS-1$
-            .put( "presentationname", resource.getPresentationName() ) // //$NON-NLS-1$
-            .put( "symbolicname", symbolicName ) // //$NON-NLS-1$
-            .put( "url", resource.getURL() ) // //$NON-NLS-1$
-            .put( "version", version ) // //$NON-NLS-1$
-            .put( "categories", resource.getCategories() ) // //$NON-NLS-1$
-            .put( "installed", installed ); //$NON-NLS-1$
+        json.object();
+        json.key("id"); //$NON-NLS-1$
+        json.value(resource.getId());
+        json.key("presentationname"); //$NON-NLS-1$
+        json.value(resource.getPresentationName());
+        json.key("symbolicname"); //$NON-NLS-1$
+        json.value(symbolicName);
+        json.key("url"); //$NON-NLS-1$
+        json.value(resource.getURL());
+        json.key("version"); //$NON-NLS-1$
+        json.value(version);
+        json.key("categories"); //$NON-NLS-1$
+        json.value(resource.getCategories());
+        json.key("installed"); //$NON-NLS-1$
+        json.value(installed);
 
         if ( details )
         {
             Capability[] caps = resource.getCapabilities();
-            for ( int i = 0; caps != null && i < caps.length; i++ )
+            if ( caps != null )
             {
-                json.append( "capabilities", new JSONObject() //$NON-NLS-1$
-                    .put( "name", caps[i].getName() ) //$NON-NLS-1$
-                    .put( "properties", new JSONObject( caps[i].getProperties() ) ) ); //$NON-NLS-1$
+                json.key("capabilities"); //$NON-NLS-1$
+                json.array();
+                for ( int i = 0; i < caps.length; i++ )
+                {
+                    json.key("name"); //$NON-NLS-1$
+                    json.value(caps[i].getName());
+                    json.key("properties"); //$NON-NLS-1$
+                    toJSON(json, caps[i].getProperties());
+                }
+                json.endArray();
             }
             Requirement[] reqs = resource.getRequirements();
-            for ( int i = 0; reqs != null && i < reqs.length; i++ )
+            if ( caps != null )
             {
-                json.append( "requirements", new JSONObject() //$NON-NLS-1$
-                    .put( "name", reqs[i].getName() ) //$NON-NLS-1$
-                    .put( "filter", reqs[i].getFilter() ) //$NON-NLS-1$
-                    .put( "optional", reqs[i].isOptional() ) ); //$NON-NLS-1$
+                json.key("requirements"); //$NON-NLS-1$
+                json.array();
+
+                for ( int i = 0; i < reqs.length; i++ )
+                {
+                    json.key("name"); //$NON-NLS-1$
+                    json.value(reqs[i].getName());
+                    json.key("filter"); //$NON-NLS-1$
+                    json.value(reqs[i].getFilter());
+                    json.key("optional"); //$NON-NLS-1$
+                    json.value(reqs[i].isOptional());
+                }
+                json.endArray();
             }
 
             final RepositoryAdmin admin = ( RepositoryAdmin ) getRepositoryAdmin();
@@ -237,25 +290,57 @@ class OsgiBundleRepositoryRenderHelper extends AbstractBundleRepositoryRenderHel
             resolver.add( resource );
             resolver.resolve(); // (Resolver.NO_OPTIONAL_RESOURCES);
             Resource[] required = resolver.getRequiredResources();
-            for ( int i = 0; required != null && i < required.length; i++ )
+            if ( required != null )
             {
-                json.append( "required", toJSON( required[i], bundles, false ) ); //$NON-NLS-1$
+                json.key("required"); //$NON-NLS-1$
+                json.array();
+                for ( int i = 0; i < required.length; i++ )
+                {
+                    toJSON( json, required[i], bundles, false );
+                }
+                json.endArray();
             }
             Resource[] optional = resolver.getOptionalResources();
-            for ( int i = 0; optional != null && i < optional.length; i++ )
+            if ( optional != null )
             {
-                json.append( "optional", toJSON( optional[i], bundles, false ) ); //$NON-NLS-1$
+                json.key("optional"); //$NON-NLS-1$
+                json.array();
+                for ( int i = 0; optional != null && i < optional.length; i++ )
+                {
+                    toJSON( json, optional[i], bundles, false );
+                }
+                json.endArray();
             }
             Requirement/*Reason*/[] unsatisfied = resolver.getUnsatisfiedRequirements();
-            for ( int i = 0; unsatisfied != null && i < unsatisfied.length; i++ )
+            if ( unsatisfied != null )
             {
-                json.append( "unsatisfied", new JSONObject() //$NON-NLS-1$
-                    .put( "name", unsatisfied[i].getName() ) //$NON-NLS-1$
-                    .put( "filter", unsatisfied[i].getFilter() ) //$NON-NLS-1$
-                    .put( "optional", unsatisfied[i].isOptional() ) ); //$NON-NLS-1$
+                json.key("unsatisfied"); //$NON-NLS-1$
+                json.array();
+                for ( int i = 0; i < unsatisfied.length; i++ )
+                {
+                    json.key("name"); //$NON-NLS-1$
+                    json.value(unsatisfied[i].getName());
+                    json.key("filter"); //$NON-NLS-1$
+                    json.value(unsatisfied[i].getFilter());
+                    json.key("optional"); //$NON-NLS-1$
+                    json.value(unsatisfied[i].isOptional());
+                }
+                json.endArray();
             }
         }
-        return json;
+        json.endObject();
     }
 
+    private void toJSON( final JSONWriter writer, final Map props ) throws IOException
+    {
+        writer.object();
+        Iterator i = props.entrySet().iterator();
+        while ( i.hasNext() )
+        {
+            Map.Entry entry = (Entry) i.next();
+            writer.key(entry.getKey().toString());
+            writer.value(entry.getValue());
+        }
+        writer.endObject();
+    }
 }
