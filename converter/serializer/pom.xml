@@ -28,7 +28,7 @@
 
     <name>Apache Felix Serializer Services</name>
     <artifactId>org.apache.felix.serializer</artifactId>
-    <version>0.1.0-SNAPSHOT</version>
+    <version>0.1-SNAPSHOT</version>
     <packaging>jar</packaging>
 
     <scm>
