@@ -30,7 +30,7 @@
   <version>5.7.0-SNAPSHOT</version>
   <properties>
     <dollar>$</dollar>
-    <framework.version>5.6.2</framework.version>
+    <framework.version>5.7.0-SNAPSHOT</framework.version>
     <gogo.runtime.version>1.0.2</gogo.runtime.version>
     <gogo.jline.shell.version>1.0.2</gogo.jline.shell.version>
     <gogo.command.version>1.0.2</gogo.command.version>
