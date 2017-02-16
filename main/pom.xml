@@ -43,9 +43,9 @@
   <properties>
     <log.level>4</log.level>
     <dollar>$</dollar>
-    <gogo.runtime.version>1.0.0</gogo.runtime.version>
-    <gogo.jline.shell.version>1.0.0</gogo.jline.shell.version>
-    <gogo.command.version>1.0.0</gogo.command.version>
+    <gogo.runtime.version>1.0.2</gogo.runtime.version>
+    <gogo.jline.shell.version>1.0.2</gogo.jline.shell.version>
+    <gogo.command.version>1.0.2</gogo.command.version>
     <jline.version>3.0.1</jline.version>
     <obr.version>2.0.8</obr.version>
   </properties>
