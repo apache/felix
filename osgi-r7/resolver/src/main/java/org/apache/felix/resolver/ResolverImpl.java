@@ -1630,17 +1630,7 @@ public class ResolverImpl implements Resolver
         // map to determine which exports are substitutable.
         if (wiring != null)
         {
-            Collection<Wire> substitutionWires;
-            if (session.getContext() instanceof FelixResolveContext)
-            {
-                substitutionWires = ((FelixResolveContext) session.getContext()).getSubstitutionWires(
-                    wiring);
-            }
-            else
-            {
-                substitutionWires = getSubstitutionWires(wiring);
-            }
-            for (Wire wire : substitutionWires)
+            for (Wire wire : session.getContext().getSubstitutionWires(wiring))
             {
                 Capability cap = wire.getCapability();
                 if (!cap.getResource().equals(wire.getProvider()))
@@ -1679,49 +1669,6 @@ public class ResolverImpl implements Resolver
             }
         }
         return exports;
-    }
-
-    private static Collection<Wire> getSubstitutionWires(Wiring wiring)
-    {
-        Set<String> exportNames = new HashSet<String>();
-        for (Capability cap : wiring.getResource().getCapabilities(null))
-        {
-            if (PackageNamespace.PACKAGE_NAMESPACE.equals(cap.getNamespace()))
-            {
-                exportNames.add(
-                    (String) cap.getAttributes().get(PackageNamespace.PACKAGE_NAMESPACE));
-            }
-        }
-        // Add fragment exports
-        for (Wire wire : wiring.getProvidedResourceWires(null))
-        {
-            if (HostNamespace.HOST_NAMESPACE.equals(wire.getCapability().getNamespace()))
-            {
-                for (Capability cap : wire.getRequirement().getResource().getCapabilities(
-                    null))
-                {
-                    if (PackageNamespace.PACKAGE_NAMESPACE.equals(cap.getNamespace()))
-                    {
-                        exportNames.add((String) cap.getAttributes().get(
-                            PackageNamespace.PACKAGE_NAMESPACE));
-                    }
-                }
-            }
-        }
-        Collection<Wire> substitutionWires = new ArrayList<Wire>();
-        for (Wire wire : wiring.getRequiredResourceWires(null))
-        {
-            if (PackageNamespace.PACKAGE_NAMESPACE.equals(
-                wire.getCapability().getNamespace()))
-            {
-                if (exportNames.contains(wire.getCapability().getAttributes().get(
-                    PackageNamespace.PACKAGE_NAMESPACE)))
-                {
-                    substitutionWires.add(wire);
-                }
-            }
-        }
-        return substitutionWires;
     }
 
     private static boolean isCompatible(
