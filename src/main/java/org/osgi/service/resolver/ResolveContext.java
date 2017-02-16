@@ -16,16 +16,23 @@
 
 package org.osgi.service.resolver;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.CancellationException;
 
 import org.osgi.annotation.versioning.ConsumerType;
+import org.osgi.framework.namespace.BundleNamespace;
+import org.osgi.framework.namespace.HostNamespace;
+import org.osgi.framework.namespace.PackageNamespace;
 import org.osgi.resource.Capability;
 import org.osgi.resource.Requirement;
 import org.osgi.resource.Resource;
+import org.osgi.resource.Wire;
 import org.osgi.resource.Wiring;
 
 /**
@@ -59,7 +66,7 @@ import org.osgi.resource.Wiring;
  * capabilities, wires and effective requirements.
  * 
  * @ThreadSafe
- * @author $Id: f70c6ec70d096ff04b9b4610add6bc25591f9a38 $
+ * @author $Id: 887cb785c112f51b400164044b822c291d081bdb $
  */
 @ConsumerType
 public abstract class ResolveContext {
@@ -237,11 +244,89 @@ public abstract class ResolveContext {
 	 * of resources which may allow the resolve operation to complete normally.
 	 * 
 	 * @param callback the callback to execute in order to cancel the resolve
-	 *            operation
+	 *            operation. Must not be {@code null}.
 	 * @throws IllegalStateException if the resolver attempts to register more
 	 *             than one callback for a resolve operation
+	 * @since 1.1
 	 */
 	public void onCancel(Runnable callback) {
 		// do nothing by default
+	}
+
+	/**
+	 * Returns the subset of {@link Wiring#getRequiredResourceWires(String)
+	 * required} wires that provide wires to {@link Capability capabilities}
+	 * which substitute capabilities of the wiring. For example, when a
+	 * {@link PackageNamespace package} name is both provided and required by
+	 * the same resource. If the package requirement is resolved to a capability
+	 * provided by a different wiring then the package capability is considered
+	 * to be substituted.
+	 * <p>
+	 * The resolver asks the resolve context to return substitution wires for
+	 * each wiring that {@link Wiring#getResourceCapabilities(String) provides}
+	 * a {@link BundleNamespace bundle} namespace capability that is used to
+	 * resolve one or more bundle requirements.
+	 * <p>
+	 * Note that this method searches all the {@link PackageNamespace package}
+	 * capabilities declared as {@link Resource#getCapabilities(String)
+	 * provided} by the resource associated with the wiring and fragment
+	 * resources wired to the wiring with the {@link HostNamespace host}
+	 * namespace. The provided package names are compared against the
+	 * {@link Wiring#getRequiredResourceWires(String) required} package wires to
+	 * determine which wires are substitution wires. Subclasses of
+	 * <code>ResolveContext</code> should provide a more efficient
+	 * implementation of this method.
+	 *
+	 * @param wiring the wiring to get the substitution wires for. Must not be
+	 *            {@code null}.
+	 * @return A list containing a snapshot of the substitution {@link Wire}s
+	 *         for the {@link Requirement requirements} of the wiring, or an
+	 *         empty list if the wiring has no substitution wires. The list
+	 *         contains the wires in the order they are found in the
+	 *         {@link Wiring#getRequiredResourceWires(String) required} wires of
+	 *         the wiring.
+	 * @since 1.1
+	 */
+	public List<Wire> getSubstitutionWires(Wiring wiring) {
+		// Keep track of the declared capability package names
+		Set<String> exportNames = new HashSet<String>();
+
+		// Add packages declared as provided by the wiring host
+		for (Capability cap : wiring.getResource().getCapabilities(null)) {
+			if (PackageNamespace.PACKAGE_NAMESPACE.equals(cap.getNamespace())) {
+				exportNames.add((String) cap.getAttributes()
+						.get(PackageNamespace.PACKAGE_NAMESPACE));
+			}
+		}
+
+		// Add packages declared as provided by the attached fragments
+		for (Wire wire : wiring.getProvidedResourceWires(null)) {
+			if (HostNamespace.HOST_NAMESPACE
+					.equals(wire.getCapability().getNamespace())) {
+				Resource fragment = wire.getRequirement().getResource();
+				for (Capability cap : fragment.getCapabilities(null)) {
+					if (PackageNamespace.PACKAGE_NAMESPACE
+							.equals(cap.getNamespace())) {
+						exportNames.add((String) cap.getAttributes()
+								.get(PackageNamespace.PACKAGE_NAMESPACE));
+					}
+				}
+			}
+		}
+
+		// collect the package wires that substitute one of the declared
+		// export package names
+		List<Wire> substitutionWires = new ArrayList<Wire>();
+		for (Wire wire : wiring.getRequiredResourceWires(null)) {
+			if (PackageNamespace.PACKAGE_NAMESPACE
+					.equals(wire.getCapability().getNamespace())) {
+				if (exportNames
+						.contains(wire.getCapability().getAttributes().get(
+								PackageNamespace.PACKAGE_NAMESPACE))) {
+					substitutionWires.add(wire);
+				}
+			}
+		}
+		return substitutionWires;
 	}
 }
