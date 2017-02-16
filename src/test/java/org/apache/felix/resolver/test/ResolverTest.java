@@ -983,7 +983,7 @@ public class ResolverTest
         }
         Collection<Resource> mandatory = Collections.<Resource> singletonList(requiresMisc);
         if (felixResolveContext) {
-            Map<Wiring, Collection<Wire>> substitutions = new HashMap<Wiring, Collection<Wire>>();
+            Map<Wiring, List<Wire>> substitutions = new HashMap<Wiring, List<Wire>>();
             if (realSubstitute && coreWiring != null)
             {
                 substitutions.put(coreWiring, Arrays.<Wire> asList(

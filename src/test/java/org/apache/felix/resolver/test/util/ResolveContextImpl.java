@@ -24,7 +24,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.felix.resolver.FelixResolveContext;
 import org.osgi.resource.Capability;
 import org.osgi.resource.Requirement;
 import org.osgi.resource.Resource;
@@ -93,11 +92,11 @@ public class ResolveContextImpl extends ResolveContext
         return m_wirings;
     }
 
-    public static class FelixResolveContextImpl extends ResolveContextImpl implements FelixResolveContext
+    public static class FelixResolveContextImpl extends ResolveContextImpl
     {
-        private final Map<Wiring, Collection<Wire>> m_substitutions;
+        private final Map<Wiring, List<Wire>> m_substitutions;
 
-        public FelixResolveContextImpl(Map<Resource, Wiring> wirings, Map<Requirement, List<Capability>> candMap, Collection<Resource> mandatory, Collection<Resource> optional, Map<Wiring, Collection<Wire>> substitutions)
+        public FelixResolveContextImpl(Map<Resource, Wiring> wirings, Map<Requirement, List<Capability>> candMap, Collection<Resource> mandatory, Collection<Resource> optional, Map<Wiring, List<Wire>> substitutions)
         {
             super(wirings, candMap, mandatory, optional);
             this.m_substitutions = substitutions;
@@ -108,9 +107,9 @@ public class ResolveContextImpl extends ResolveContext
             return Collections.emptyList();
         }
 
-        public Collection<Wire> getSubstitutionWires(Wiring wiring)
+        public List<Wire> getSubstitutionWires(Wiring wiring)
         {
-            Collection<Wire> result = m_substitutions.get(wiring);
+            List<Wire> result = m_substitutions.get(wiring);
             return result == null ? Collections.<Wire> emptyList() : result;
         }
 
