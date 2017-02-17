@@ -481,14 +481,19 @@ public class ConvertingImpl implements Converting, InternalConverting {
                     Object val = m.get(propName);
 
                     // If no value is available take the default if specified
+                    boolean defaultUsed = false; // TODO maybe we don't need this...
                     if (val == null) {
                         if (targetCls.isAnnotation()) {
                             val = method.getDefaultValue();
+                            defaultUsed = true;
                         }
 
-                        if (val == null && args != null && args.length == 1)
+                        if (val == null && args != null && args.length == 1) {
                             val = args[0];
+                            defaultUsed = true;
+                        }
                     }
+
                     return converter.convert(val).to(targetType);
                 }
             });
