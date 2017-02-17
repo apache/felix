@@ -371,7 +371,15 @@ final class MemoryUsageSupport implements NotificationListener, ServiceListener
             committedTotal += formatNumber(buf, "committed", usage.getCommitted());
             maxTotal += formatNumber(buf, "max", usage.getMax());
 
-            final long score = 100L * usage.getUsed() / usage.getMax();
+            final long score;
+            if ( usage.getMax() == -1 )
+            {
+                score = 100;
+            }
+            else
+            {
+                score = 100L * usage.getUsed() / usage.getMax();
+            }
             buf.append(",'score':'").append(score).append("%'");
 
             buf.append("},");
