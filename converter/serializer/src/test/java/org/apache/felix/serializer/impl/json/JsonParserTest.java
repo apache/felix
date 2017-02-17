@@ -19,6 +19,7 @@ package org.apache.felix.serializer.impl.json;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import org.junit.Test;
@@ -35,6 +36,44 @@ public class JsonParserTest {
         assertEquals(2, m.size());
         assertEquals("ho", m.get("hi"));
         assertTrue((Boolean) m.get("ha"));
+    }
+
+    @Test
+    public void testJsonWithNewline() {
+        String json = ""
+                + "{\n"
+                + "  \"hi\": \"ho\",\n"
+                + "  \"ha\": [\n"
+                + "    \"one\",\n"
+                + "    \"two\",\n"
+                + "    \"three\"\n"
+                + "  ]\n"
+                + "}\n"
+                + "\n";
+        JsonParser jp = new JsonParser(json);
+        Map<String, Object> m = jp.getParsed();
+        assertEquals(2, m.size());
+        assertEquals("ho", m.get("hi"));
+        assertEquals(3, ((List<?>)m.get("ha")).size());
+    }
+
+    @Test
+    public void testJsonWithCRLF() {
+        String json = ""
+                + "{\r\n"
+                + "  \"hi\": \"ho\",\r\n"
+                + "  \"ha\": [\r\n"
+                + "    \"one\",\r\n"
+                + "    \"two\",\r\n"
+                + "    \"three\"\r\n"
+                + "  ]\r\n"
+                + "}\r\n"
+                + "\r\n";
+        JsonParser jp = new JsonParser(json);
+        Map<String, Object> m = jp.getParsed();
+        assertEquals(2, m.size());
+        assertEquals("ho", m.get("hi"));
+        assertEquals(3, ((List<?>)m.get("ha")).size());
     }
 
     @Test
