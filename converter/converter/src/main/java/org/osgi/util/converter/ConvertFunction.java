@@ -49,4 +49,27 @@ public interface ConvertFunction<F, T> {
 	 */
 	T convert(F obj, Type targetType, Object root, Object[] keyPath)
 			throws Exception;
+
+	/**
+	 * Override the default error handling mechanism. Whenever a converter
+	 * throws a Conversion Exception, this can be overridden with either another
+	 * runtime exception or an actual value.
+	 *
+	 * @param obj The object to be converted. This object will never be
+	 *            {@code null} as the convert function will not be invoked for
+	 *            null values.
+	 * @param targetType The target type.
+	 * @param root The root object, if this obj was embedded in a root object.
+	 *            Otherwise {@code null}.
+	 * @param keyPath If the object is embedded in a root object, the path of
+	 *            keys that reach this object. Otherwise {@code null}.
+	 * @return A value to use in case of an error. This method can return
+	 *         {@code null} to indicate that it cannot handle the error.
+	 * @throws RuntimeException Another Runtime Exception may also be thrown by
+	 *             this handler.
+	 */
+	default T handleError(F obj, Type targetType, Object root,
+			Object[] keyPath) {
+		return null;
+	}
 }
