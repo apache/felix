@@ -180,45 +180,59 @@ public class AdapterImpl implements InternalConverter {
         @SuppressWarnings("unchecked")
         @Override
         public Object to(Type type) {
-            if (object != null) {
-                Set<Type> fromTypes = assignableTypes(treatAsClass != null ? treatAsClass : object.getClass());
-                Set<Type> toTypes = assignableTypes(type);
+            List<ConvertFunction<Object, Object>> converters = new ArrayList<>();
+            try {
+                if (object != null) {
+                    Set<Type> fromTypes = assignableTypes(treatAsClass != null ? treatAsClass : object.getClass());
+                    Set<Type> toTypes = assignableTypes(type);
 
-                List<ConvertFunction<Object, Object>> converters = new ArrayList<>();
-                for (Type fromType : fromTypes) {
-                    for (Type toType : toTypes) {
-                        // TODO what exactly do we use as order here?
-                        converters.add(classRules.get(new TypePair(fromType, Util.primitiveToBoxed(toType))));
-                    }
-                }
-                for (Type fromType : fromTypes) {
-                    converters.add(classRules.get(new TypePair(fromType, Object.class)));
-                }
-                for (Type toType : toTypes) {
-                    converters.add(classRules.get(new TypePair(Object.class, Util.primitiveToBoxed(toType))));
-                }
-
-                for (Iterator<ConvertFunction<Object, Object>> it = converters.iterator(); it.hasNext(); ) {
-                    ConvertFunction<Object, Object> func = it.next();
-                    it.remove();
-                    if (func == null)
-                        continue;
-
-                    try {
-                        Object res = func.convert(object, type, root, keys.toArray());
-                        if (res != null) {
-                            return res;
+                    for (Type fromType : fromTypes) {
+                        for (Type toType : toTypes) {
+                            // TODO what exactly do we use as order here?
+                            converters.add(classRules.get(new TypePair(fromType, Util.primitiveToBoxed(toType))));
                         }
-                    } catch (Exception ex) {
-                        if (hasDefault)
-                            return defaultValue;
-                        else
-                            throw new ConversionException("Cannot convert " + object + " to " + type, ex);
+                    }
+                    for (Type fromType : fromTypes) {
+                        converters.add(classRules.get(new TypePair(fromType, Object.class)));
+                    }
+                    for (Type toType : toTypes) {
+                        converters.add(classRules.get(new TypePair(Object.class, Util.primitiveToBoxed(toType))));
+                    }
+
+                    for (Iterator<ConvertFunction<Object, Object>> it = converters.iterator(); it.hasNext(); ) {
+                        // remove null values
+                        ConvertFunction<Object, Object> func = it.next();
+                        if (func == null)
+                            it.remove();
+                    }
+
+                    for (ConvertFunction<Object,Object> cf : converters) {
+                        try {
+                            Object res = cf.convert(object, type, root, keys.toArray());
+                            if (res != null) {
+                                return res;
+                            }
+                        } catch (Exception ex) {
+                            if (hasDefault)
+                                // TODO override this too!
+                                return defaultValue;
+                            else
+                                throw new ConversionException("Cannot convert " + object + " to " + type, ex);
+                        }
                     }
                 }
-            }
 
-            return del.to(type);
+                return del.to(type);
+            } catch (Exception ex) {
+                // do custom error handling
+                for (ConvertFunction<Object, Object> cf : converters) {
+                    Object eh = cf.handleError(object, type, root, keys.toArray());
+                    if (eh != null)
+                        return eh;
+                }
+                // No error handler, throw the original exception
+                throw ex;
+            }
         }
 
         @Override

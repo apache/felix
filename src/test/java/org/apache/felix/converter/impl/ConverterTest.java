@@ -56,8 +56,10 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.osgi.util.converter.ConversionException;
+import org.osgi.util.converter.ConvertFunction;
 import org.osgi.util.converter.Converter;
 import org.osgi.util.converter.ConverterBuilder;
+import org.osgi.util.converter.Rule;
 import org.osgi.util.converter.StandardConverter;
 import org.osgi.util.converter.TypeReference;
 
@@ -342,8 +344,73 @@ public class ConverterTest {
         int[] ia = {1, 2};
         assertEquals("1,2", adapted.convert(ia).to(String.class));
         assertArrayEquals(ia, adapted.convert("1,2").to(int[].class));
-
     }
+
+    @Test
+    public void testCustomErrorHandling() {
+        ConvertFunction<String,Integer> func = new ConvertFunction<String,Integer>() {
+            @Override
+            public Integer convert(String obj, Type targetType, Object root, Object[] keyPath) throws Exception {
+                return null;
+            }
+
+            @Override
+            public Integer handleError(String obj, Type targetType, Object root, Object[] keyPath) {
+                if ("hello".equals(obj)) {
+                    return -1;
+                }
+                return null;
+            }
+        };
+
+        ConverterBuilder cb = converter.newConverterBuilder();
+        cb.rule(new Rule<>(String.class, Integer.class, func));
+        Converter adapted = cb.build();
+
+        assertEquals(new Integer(12), adapted.convert("12").to(Integer.class));
+        assertEquals(new Integer(-1), adapted.convert("hello").to(Integer.class));
+
+        // This is with the non-adapted converter
+        try {
+            converter.convert("hello").to(Integer.class);
+            fail("Should have thrown a Conversion Exception when converting 'hello' to a number");
+        } catch (ConversionException ce) {
+            // good
+        }
+    }
+
+    /*
+    @Test
+    @SuppressWarnings({ "rawtypes", "unchecked" })
+    public void testCustomDefaultHandling() {
+        // TODO re-enable
+        Map<String, String> m = new HashMap<>();
+//        MyAnnotation ann = converter.convert(m).to(MyAnnotation.class);
+//        assertEquals(17, ann.value());
+
+        // Now register a custom default handler
+        ConvertFunction<Map,MyAnnotation> func = new ConvertFunction<Map,MyAnnotation>() {
+            @Override
+            public MyAnnotation convert(Map obj, Type targetType, Object root, Object[] keyPath) throws Exception {
+                return null;
+            }
+
+            @Override
+            public MyAnnotation handleDefault(Map obj, Class<?> targetType, Object root, Object[] keyPath) {
+                return 42;
+            }
+        };
+
+        ConverterBuilder cb = converter.newConverterBuilder();
+        Rule r = new Rule(Map.class, MyAnnotation.class, func);
+        cb.rule(r);
+        Converter adapted = cb.build();
+
+        MyAnnotation ann2 = adapted.convert(m).to(MyAnnotation.class);
+        assertEquals("The default value from the annotation should have been overridden by the default handler",
+                42, ann2.value());
+    }
+    */
 
     @Test
     public void testUUIDConversion() {
@@ -887,6 +954,10 @@ public class ConverterTest {
         public int value() {
             return value;
         }
+    }
+
+    static @interface MyAnnotation {
+        int value() default 17;
     }
 
     enum SomeEnum { VALUE, GETVALUE };
