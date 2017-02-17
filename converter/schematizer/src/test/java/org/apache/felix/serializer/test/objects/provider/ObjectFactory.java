@@ -30,7 +30,7 @@ public class ObjectFactory
         final ComplexTopEntity top = new ComplexTopEntity();
         top.id = anId;
         top.value = aValue;
-        top.embeddedValue = cnv.convert( aMiddle ).to( ComplexMiddleEntity.class );
+        top.embeddedValue = cnv.convert( aMiddle ).sourceAsDTO().to( ComplexMiddleEntity.class );
         return top;
     }
 

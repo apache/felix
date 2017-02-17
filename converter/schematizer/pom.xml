@@ -28,7 +28,7 @@
 
     <name>Apache Felix Schematizer Service</name>
     <artifactId>org.apache.felix.schematizer</artifactId>
-    <version>0.1-SNAPSHOT</version>
+    <version>0.1.0-SNAPSHOT</version>
     <packaging>jar</packaging>
 
     <scm>

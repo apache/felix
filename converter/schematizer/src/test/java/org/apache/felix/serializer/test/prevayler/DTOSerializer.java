@@ -28,18 +28,17 @@ import java.util.Optional;
 
 import org.apache.felix.schematizer.Schema;
 import org.apache.felix.schematizer.Schematizer;
+import org.apache.felix.schematizer.SchematizingConverter;
 import org.apache.felix.schematizer.TypeRule;
 import org.apache.felix.schematizer.impl.SchematizerImpl;
 import org.apache.felix.serializer.impl.json.JsonSerializerImpl;
-import org.osgi.util.converter.Converter;
-import org.osgi.util.converter.StandardConverter;
 import org.osgi.util.converter.TypeReference;
 
 public class DTOSerializer<C extends CommandDTO<?>>
 {
     private static final int MARKER_LENGTH = 10;
 
-    private final Converter converter = new StandardConverter();
+    private final SchematizingConverter converter = new SchematizingConverter();
     private final JsonSerializerImpl serializer = new JsonSerializerImpl();
     private final List<TypeRule<?>> rules;
     private final Map<String, Schema> schemas = new HashMap<>();
@@ -62,8 +61,7 @@ public class DTOSerializer<C extends CommandDTO<?>>
         Schema s = schemas.get( command.name() );
         return (C)serializer
                 .deserialize( CommandDTO.class )
-                .with( converter )
-                .withContext( s )
+                .with( converter.withSchema( s ) )
                 .from( in );
     }
 
@@ -96,7 +94,8 @@ public class DTOSerializer<C extends CommandDTO<?>>
         }
 
         out.write( markerFor( command.command ) );
-        serializer.serialize( command ).to( out );
+        Schema s = schemas.get( name );
+        serializer.serialize( command ).with( converter.withSchema( s ) ).to( out );
     }
 
     private final byte[] markerFor( Command command )

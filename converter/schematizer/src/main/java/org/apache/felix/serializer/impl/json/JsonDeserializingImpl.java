@@ -31,6 +31,7 @@ import java.util.Scanner;
 
 import org.apache.felix.schematizer.Node;
 import org.apache.felix.schematizer.Schema;
+import org.apache.felix.schematizer.Schematizing;
 import org.apache.felix.schematizer.impl.Util;
 import org.osgi.dto.DTO;
 import org.osgi.service.serializer.Deserializing;
@@ -42,6 +43,7 @@ public class JsonDeserializingImpl<T> implements Deserializing<T> {
     private final Object target;
     private Converter converter;
     private Schema schema;
+    private boolean asDTO = false;
 
     public JsonDeserializingImpl(Converter c, Object t) {
         converter = c;
@@ -52,13 +54,11 @@ public class JsonDeserializingImpl<T> implements Deserializing<T> {
     public JsonDeserializingImpl<T> with(Converter c)
     {
         converter = c;
-        return this;
-    }
-
-    public JsonDeserializingImpl<T> withContext(Object obj)
-    {
-        if(obj instanceof Schema)
-            schema = (Schema)obj;
+        if(converter instanceof Schematizing) {
+            Schematizing s = (Schematizing)converter;
+            schema = s.getSchema();
+            asDTO = s.isDTOType();
+        }
         return this;
     }
 
@@ -73,7 +73,10 @@ public class JsonDeserializingImpl<T> implements Deserializing<T> {
         if (schema != null)
             return deserialize(m);
 
-        return converter.convert(m).to(clazz);
+        if (asDTO)
+            return converter.convert(m).targetAsDTO().to(clazz);
+        else
+            return converter.convert(m).to(clazz);
     }
 
     @Override
@@ -144,6 +147,8 @@ public class JsonDeserializingImpl<T> implements Deserializing<T> {
                 try {
                     Field f = targetCls.getField(entry.getKey().toString());
                     Object val = entry.getValue();
+                    if (val == null)
+                        continue;
                     String path = contextPath + f.getName();
                     Optional<Node> opt = schema.nodeAtPath(path);
                     if (opt.isPresent()) {
@@ -169,14 +174,12 @@ public class JsonDeserializingImpl<T> implements Deserializing<T> {
                                     else if (DTO.class.isAssignableFrom(Util.rawClassOf(type)))
                                         c.add(convertToDTO((Class)Util.rawClassOf(type), (Map)o, schema, path + "/"));
                                     else
-                                        c.add(converter.convert(c).to(type));
+                                        c.add(converter.convert(o).to(type));
                                 }
                                 obj = c;
                             } else {
                                 Type type = node.type();
-                                if (val == null)
-                                    obj = null;
-                                else if (DTO.class.isAssignableFrom(Util.rawClassOf(type)))
+                                if (DTO.class.isAssignableFrom(Util.rawClassOf(type)))
                                     obj = convertToDTO((Class)Util.rawClassOf(type), (Map)val, schema, path + "/");
                                 else
                                     obj = converter.convert(val).to(type);
@@ -211,6 +214,8 @@ public class JsonDeserializingImpl<T> implements Deserializing<T> {
 
     @SuppressWarnings( "unchecked" )
     private <V extends Collection<?>>V instantiateCollection(Class<V> collectionClass) {
+        if (collectionClass == null)
+            return (V)new ArrayList<V>();
         if (Collection.class.equals(collectionClass) || List.class.isAssignableFrom(collectionClass))
             return (V)new ArrayList<V>();
         else

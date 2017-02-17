@@ -123,7 +123,10 @@ public class JsonParser {
         case 'N':
             return null;
         default:
-            return Long.parseLong(jsonValue);
+            if (jsonValue.contains("."))
+                return Double.parseDouble(jsonValue);
+            else
+                return Long.parseLong(jsonValue);
         }
     }
 
@@ -132,6 +135,10 @@ public class JsonParser {
             throw new IllegalArgumentException("Malformatted JSON object: " + jsonObject);
 
         jsonObject = jsonObject.substring(1, jsonObject.length() - 1);
+
+        if (jsonObject.isEmpty())
+            return null;
+
         Map<String, Object> values = new HashMap<>();
         for (String element : parseKeyValueListRaw(jsonObject)) {
             Pair<String, Object> pair = parseKeyValue(element);
@@ -144,7 +151,9 @@ public class JsonParser {
     private static List<String> parseKeyValueListRaw(String jsonKeyValueList) {
         if (jsonKeyValueList.trim().isEmpty())
             return Collections.emptyList();
-        jsonKeyValueList = jsonKeyValueList + ","; // append comma to simplify parsing
+        // Append comma to simplify parsing, if there is not already a trailing comma
+        if (!jsonKeyValueList.endsWith(","))
+                jsonKeyValueList = jsonKeyValueList + ",";
         List<String> elements = new ArrayList<>();
 
         int i=0;

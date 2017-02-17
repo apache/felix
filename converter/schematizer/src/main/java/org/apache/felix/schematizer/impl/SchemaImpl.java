@@ -15,14 +15,23 @@
  */
 package org.apache.felix.schematizer.impl;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 import org.apache.felix.schematizer.Node;
 import org.apache.felix.schematizer.NodeVisitor;
 import org.apache.felix.schematizer.Schema;
+import org.osgi.util.converter.Converter;
+import org.osgi.util.converter.StandardConverter;
 
 public class SchemaImpl
         implements Schema
@@ -49,9 +58,20 @@ public class SchemaImpl
     }
 
     @Override
-    public Optional<Node> nodeAtPath( String absolutePath )
-    {
+    public Optional<Node> nodeAtPath( String absolutePath ) {
         return Optional.ofNullable(nodes.get(absolutePath));
+    }
+
+    @Override
+    public Optional<Node> parentOf( Node aNode ) {
+        if (aNode == null || aNode.absolutePath() == null)
+            return Optional.empty();
+
+        NodeImpl node = nodes.get(aNode.absolutePath());
+        if (node == null)
+            return Optional.empty();
+
+        return Optional.ofNullable( node.parent() );
     }
 
     void add(NodeImpl node) {
@@ -78,5 +98,94 @@ public class SchemaImpl
     @Override
     public void visit(NodeVisitor visitor) {
         nodes.values().stream().forEach(n ->  visitor.apply(n));
+    }
+
+    @Override
+    public Collection<?> valuesAt(String path, Object object) {
+        final Converter converter = new StandardConverter();
+        @SuppressWarnings( "unchecked" )
+        final Map<String, Object> map = (Map<String, Object>)converter.convert(object).sourceAsDTO().to( Map.class );
+        if (map == null || map.isEmpty())
+            return Collections.emptyList();
+
+        if (path.startsWith("/"))
+            path = path.substring(1);
+        String[] pathParts = path.split("/");
+        if (pathParts.length <= 0)
+            return Collections.emptyList();
+
+        List<String> contexts = Arrays.asList(pathParts);
+
+        return valuesAt("", map, contexts, 0);
+    }
+
+    @SuppressWarnings( { "rawtypes", "unchecked" } )
+    private Collection<?> valuesAt(String context, Map<String, Object> objectMap, List<String> contexts, int currentIndex) {
+        List<Object> result = new ArrayList<>();
+        String currentContext = contexts.get(currentIndex);
+        if (objectMap == null)
+            return result;
+        Object o = objectMap.get(currentContext);
+        if (o instanceof List) {
+            List<Object> l = (List<Object>)o;
+            if (currentIndex == contexts.size() - 1) {
+                // We are at the end, so just add the collection
+                result.add(convertToType(pathFrom(contexts, 0), l));
+                return result;
+            }
+
+            currentContext = pathFrom(contexts, ++currentIndex);
+            for (Object o2 : l)
+            {
+                final Converter converter = new StandardConverter();
+                final Map<String, Object> m = (Map<String, Object>)converter.convert(o2).sourceAsDTO().to( Map.class );
+                result.addAll( valuesAt( currentContext, m, contexts, currentIndex ) );
+            }        
+        } else if (o instanceof Map){
+            if (currentIndex == contexts.size() - 1) {
+                // We are at the end, so just add the result
+                result.add(convertToType(pathFrom(contexts, 0), (Map)o));
+                return result;
+            }
+
+            result.addAll(valuesAt( currentContext, (Map)o, contexts, ++currentIndex));
+        } else if (currentIndex < contexts.size() - 1) {
+            final Converter converter = new StandardConverter();
+            final Map<String, Object> m = (Map<String, Object>)converter.convert(o).sourceAsDTO().to(Map.class);
+            currentContext = pathFrom(contexts, ++currentIndex);
+            result.addAll(valuesAt( currentContext, m, contexts, currentIndex ));
+        } else {
+            result.add(o);
+        }
+
+        return result;
+    }
+
+    @SuppressWarnings( "rawtypes" )
+    private Object convertToType( String path, Map map ) {
+        Optional<Node> node = nodeAtPath(path);
+        if (!node.isPresent())
+            return map;
+
+        Object result = new StandardConverter().convert(map).targetAsDTO().to(node.get().type());
+        return result;
+    }
+
+    private List<?> convertToType( String path, List<?> list ) {
+        Optional<Node> node = nodeAtPath(path);
+        if (!node.isPresent())
+            return list;
+
+        return list.stream()
+                .map( v -> new StandardConverter().convert(v).sourceAsDTO().to(node.get().type()))
+                .collect( Collectors.toList() );
+    }
+
+    private String pathFrom(List<String> contexts, int index) {
+        return IntStream.range(0, contexts.size())
+                .filter( i -> i >= index )
+                .mapToObj( i -> contexts.get(i) )
+                .reduce( "", (s1,s2) -> s1 + "/" + s2 );
+                
     }
 }

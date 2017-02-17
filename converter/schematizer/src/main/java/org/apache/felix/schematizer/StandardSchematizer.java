@@ -19,6 +19,7 @@ package org.apache.felix.schematizer;
 import java.util.Map;
 import java.util.Optional;
 
+import org.apache.felix.schematizer.impl.SchematizerImpl;
 import org.osgi.dto.DTO;
 import org.osgi.util.converter.TypeReference;
 
@@ -26,7 +27,7 @@ public class StandardSchematizer implements Schematizer {
     private final Schematizer schematizer;
 
     public StandardSchematizer() {
-        schematizer = null;//new SchematizerImpl();
+        schematizer = new SchematizerImpl();
     }
 
     @Override
@@ -57,5 +58,10 @@ public class StandardSchematizer implements Schematizer {
     @Override
     public <T extends DTO> Schematizer rule(String name, TypeReference<T> type) {
         return schematizer.rule(name, type);
+    }
+
+    @Override
+    public Schematizer usingLookup(ClassLoader classLoader) {
+        return schematizer.usingLookup(classLoader);
     }
 }
