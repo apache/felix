@@ -29,7 +29,7 @@
 
     <artifactId>org.apache.felix.webconsole.plugins.packageadmin</artifactId>
     <packaging>bundle</packaging>
-    <version>1.0.3-SNAPSHOT</version>
+    <version>1.0.4</version>
 
     <name>Apache Felix Web Console Package Admin Service Plugin</name>
     <description>
@@ -40,13 +40,13 @@
 
     <scm>
         <connection>
-            scm:svn:http://svn.apache.org/repos/asf/felix/trunk/webconsole-plugins/packageadmin
+            scm:svn:http://svn.apache.org/repos/asf/felix/releases/org.apache.felix.webconsole.plugins.packageadmin-1.0.4
         </connection>
         <developerConnection>
-            scm:svn:https://svn.apache.org/repos/asf/felix/trunk/webconsole-plugins/packageadmin
+            scm:svn:https://svn.apache.org/repos/asf/felix/releases/org.apache.felix.webconsole.plugins.packageadmin-1.0.4
         </developerConnection>
         <url>
-            http://svn.apache.org/viewvc/felix/trunk/webconsole-plugins/packageadmin
+            http://svn.apache.org/viewvc/felix/releases/org.apache.felix.webconsole.plugins.packageadmin-1.0.4
         </url>
     </scm>
 
