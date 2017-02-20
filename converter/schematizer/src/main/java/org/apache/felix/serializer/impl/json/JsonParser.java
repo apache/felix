@@ -76,7 +76,7 @@ public class JsonParser {
 
     public JsonParser(CharSequence json) {
         String str = json.toString();
-        str = str.trim().replace('\n', ' ');
+        str = str.trim().replace('\n', ' ').replace('\r', ' ');
         parsed = parseObject(str);
     }
 
