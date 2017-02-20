@@ -30,6 +30,7 @@ import org.osgi.service.coordinator.Participant;
  */
 public class CoordinatorUtil
 {
+
     public static final class Notifier implements Participant
     {
         private final List<Runnable> runnables = new ArrayList<Runnable>();
@@ -86,6 +87,7 @@ public class CoordinatorUtil
             if ( n == null )
             {
                 n = new Notifier(thread);
+                c.addParticipant(n);
             }
             n.add(task);
             return true;

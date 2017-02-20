@@ -22,6 +22,7 @@
 # -> MANIFEST.MF
 (org.osgi.framework.PackagePermission "org.osgi.service.log" "import")
 (org.osgi.framework.PackagePermission "org.osgi.framework" "import")
+(org.osgi.framework.PackagePermission "org.osgi.util.tracker" "import")
 (org.osgi.framework.PackagePermission "org.osgi.service.cm" "import,exportonly")
 (org.osgi.framework.PackagePermission "org.apache.felix.cm" "import,exportonly")
 (org.osgi.framework.PackagePermission "org.apache.felix.cm.file" "import,exportonly")
@@ -48,3 +49,8 @@
 
 # -> BaseTracker.getAccessControlContext
 (java.security.SecurityPermission "createAccessControlContext")
+
+# Coordinator Support
+(org.osgi.framework.PackagePermission "org.osgi.service.coordinator" "import")
+(org.osgi.framework.ServicePermission "org.osgi.service.coordinator.*" "get")
+(org.osgi.service.coordinator.CoordinationPermission "*" "initiate,participate")
