@@ -16,11 +16,13 @@
  */
 package org.apache.felix.utils.json;
 
+import java.io.StringWriter;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.junit.Ignore;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
@@ -73,5 +75,16 @@ public class JSONParserTest {
         Map<String, Object> result = new HashMap<String, Object>();
         result.put("def", Collections.emptyList());
         assertEquals(result, m.get("abc"));
+    }
+
+    @Ignore("FELIX-5555")
+    @Test
+    public void escapeChar() throws Exception{
+        StringWriter sw = new StringWriter();
+        JSONWriter js = new JSONWriter(sw);
+        js.object().key("foo").value("/bar").endObject().flush();
+
+        JSONParser jp = new JSONParser(sw.toString());
+        assertEquals("/bar", jp.getParsed().get("foo"));
     }
 }
