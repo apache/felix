@@ -1023,7 +1023,8 @@ public class Felix extends BundleImpl implements Framework
         {
             // Spec says stop() on SystemBundle should return immediately and
             // shutdown framework on another thread.
-            new Thread(new Runnable() {
+            (new Thread("FelixShutdown") 
+            {
                 @Override
                 public void run()
                 {
@@ -1039,7 +1040,7 @@ public class Felix extends BundleImpl implements Framework
                             ex);
                     }
                 }
-            }, "FelixShutdown").start();
+            }).start();
         }
     }
 
