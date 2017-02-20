@@ -188,7 +188,7 @@
                         </Export-Package>
                         <Import-Package>
                             org.osgi.service.cm,
-                            org.osgi.service.coordinator;resolution:=optional,
+							org.osgi.service.coordinator;resolution:=optional,
 							org.osgi.service.log;resolution:=optional,
                             *
                         </Import-Package>
@@ -204,9 +204,6 @@
                         <Require-Capability><![CDATA[
                             osgi.service;filter:="(objectClass=org.osgi.service.log.LogService)";effective:=active;resolution:=optional
                         ]]></Require-Capability>
-                        <Embed-Dependency>
-                            org.osgi.core;inline=org/osgi/util/tracker/ServiceTracker*|org/osgi/util/tracker/AbstractTracked.class
-                        </Embed-Dependency>
                     </instructions>
                 </configuration>
                    <executions>
