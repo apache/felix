@@ -28,6 +28,7 @@ import org.osgi.framework.Constants.OBJECTCLASS
 
 import org.apache.felix.servicediagnostics._
 import org.apache.felix.servicediagnostics.Util._
+import org.apache.felix.servicediagnostics.JSON._
 
 /**
  * This is the ServiceDiagnostics implementation. 
@@ -63,15 +64,6 @@ class ServiceDiagnosticsImpl(val bc:BundleContext) extends ServiceDiagnostics
       override def toString = name + " -> " + edges.map(_.name)
       override def equals(o:Any) = o != null && o.getClass == getClass && o.asInstanceOf[Node].comp == comp
     }
-
-    //debug helper
-    def json(l:Iterable[Node]) = l.toList.sortWith { (n1,n2) => 
-        n1.name < n2.name
-    }.foldLeft(new org.json.JSONArray()) { (j,n) => 
-        j.put(new org.json.JSONObject(new java.util.HashMap[String,java.util.List[String]] {{
-            put(n.name, new java.util.ArrayList[String] {{ addAll(n.edges.map(_.name)) }})
-          }}))
-    }.toString(2)
 
     /**
      * Implements ServiceDiagnostics.unresolved.
