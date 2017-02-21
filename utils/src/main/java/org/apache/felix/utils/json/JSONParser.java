@@ -21,7 +21,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.LinkedHashMap;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Stack;
@@ -134,7 +134,7 @@ public class JSONParser {
         if (!(jsonObject.startsWith("{") && jsonObject.endsWith("}")))
             throw new IllegalArgumentException("Malformatted JSON object: " + jsonObject);
 
-        Map<String, Object> values = new LinkedHashMap<String, Object>();
+        Map<String, Object> values = new HashMap<String, Object>();
 
         jsonObject = jsonObject.substring(1, jsonObject.length() - 1).trim();
         if (jsonObject.length() == 0)

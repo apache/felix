@@ -16,19 +16,17 @@
  */
 package org.apache.felix.utils.json;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
-
 import java.io.StringWriter;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 import org.junit.Ignore;
 import org.junit.Test;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 public class JSONParserTest {
     @Test
@@ -77,27 +75,6 @@ public class JSONParserTest {
         Map<String, Object> result = new HashMap<String, Object>();
         result.put("def", Collections.emptyList());
         assertEquals(result, m.get("abc"));
-    }
-
-    @Test
-    public void testJsonOrder() {
-        String json = "{\"prop5\":1,\"prop1\":2,\"prop6\":3,\"prop2\":4,\"prop4\":5,\"prop3\":6}";
-        JSONParser jp = new JSONParser(json);
-        Map<String, Object> m = jp.getParsed();
-        assertEquals(6, m.size());
-        
-        List<Map.Entry<String,Object>> entries = new ArrayList<Map.Entry<String,Object>>(m.entrySet());
-        assertEntry(entries, 0, "prop5", 1L);
-        assertEntry(entries, 1, "prop1", 2L);
-        assertEntry(entries, 2, "prop6", 3L);
-        assertEntry(entries, 3, "prop2", 4L);
-        assertEntry(entries, 4, "prop4", 5L);
-        assertEntry(entries, 5, "prop3", 6L);
-    }
-    private void assertEntry(List<Map.Entry<String,Object>> list, int index, String key, Object value) {
-        Map.Entry<String,Object> entry = list.get(index);
-        assertEquals(key, entry.getKey());
-        assertEquals(value, entry.getValue());
     }
 
     @Ignore("FELIX-5555")
