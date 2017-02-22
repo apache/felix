@@ -20,24 +20,38 @@ import static java.util.Collections.list;
 
 import java.util.Dictionary;
 import java.util.Hashtable;
+import java.util.Timer;
+import java.util.TimerTask;
 
 import org.apache.felix.http.base.internal.registry.HandlerRegistry;
 import org.apache.felix.http.base.internal.runtime.dto.RequestInfoDTOBuilder;
 import org.apache.felix.http.base.internal.runtime.dto.RuntimeDTOBuilder;
 import org.apache.felix.http.base.internal.whiteboard.WhiteboardManager;
 import org.osgi.framework.ServiceReference;
+import org.osgi.framework.ServiceRegistration;
 import org.osgi.service.http.runtime.HttpServiceRuntime;
 import org.osgi.service.http.runtime.dto.RequestInfoDTO;
 import org.osgi.service.http.runtime.dto.RuntimeDTO;
 
 public final class HttpServiceRuntimeImpl implements HttpServiceRuntime
 {
+    /**
+     * Service property for change count. This constant is defined here to avoid
+     * a dependency on R7 of the framework.
+     * The value of the property is of type {@code Long}.
+     */
+    private static String PROP_CHANGECOUNT = "service.changecount";
+
     private volatile Hashtable<String, Object> attributes = new Hashtable<String, Object>();
 
     private final HandlerRegistry registry;
     private final WhiteboardManager contextManager;
 
+    private volatile long changeCount;
+
     private volatile ServiceReference<HttpServiceRuntime> serviceReference;
+
+    private volatile Timer timer;
 
     public HttpServiceRuntimeImpl(HandlerRegistry registry,
             WhiteboardManager contextManager)
@@ -74,6 +88,7 @@ public final class HttpServiceRuntimeImpl implements HttpServiceRuntime
         {
             replacement.put(key, newAttributes.get(key));
         }
+        replacement.put(PROP_CHANGECOUNT, this.changeCount);
         attributes = replacement;
     }
 
@@ -86,5 +101,38 @@ public final class HttpServiceRuntimeImpl implements HttpServiceRuntime
             final ServiceReference<HttpServiceRuntime> reference)
     {
         this.serviceReference = reference;
+    }
+
+    public void updateChangeCount(final ServiceRegistration<HttpServiceRuntime> reg)
+    {
+        if ( reg != null )
+        {
+            final long count;
+            synchronized ( this )
+            {
+                count = this.changeCount++;
+                this.setAttribute(PROP_CHANGECOUNT, this.changeCount);
+                if ( this.timer == null )
+                {
+                    this.timer = new Timer();
+                }
+            }
+            timer.schedule(new TimerTask()
+            {
+
+                @Override
+                public void run() {
+                    synchronized ( HttpServiceRuntimeImpl.this )
+                    {
+                        if ( changeCount == count )
+                        {
+                            reg.setProperties(getAttributes());
+                            timer.cancel();
+                            timer = null;
+                        }
+                    }
+                }
+            }, 2000L);
+        }
     }
 }
