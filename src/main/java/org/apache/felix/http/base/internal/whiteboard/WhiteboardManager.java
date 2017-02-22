@@ -451,6 +451,7 @@ public final class WhiteboardManager
             {
                 this.failureStateHandler.addFailure(info, FAILURE_REASON_VALIDATION_FAILED);
             }
+            updateRuntimeChangeCount();
             return true;
         }
         return false;
@@ -518,6 +519,7 @@ public final class WhiteboardManager
             }
         }
         this.failureStateHandler.removeAll(info);
+        updateRuntimeChangeCount();
     }
 
     /**
@@ -643,6 +645,7 @@ public final class WhiteboardManager
             {
                 this.failureStateHandler.addFailure(info, FAILURE_REASON_VALIDATION_FAILED);
             }
+            updateRuntimeChangeCount();
             return true;
         }
         return false;
@@ -728,6 +731,7 @@ public final class WhiteboardManager
             }
             this.failureStateHandler.removeAll(info);
         }
+        updateRuntimeChangeCount();
     }
 
     /**
@@ -963,12 +967,12 @@ public final class WhiteboardManager
             return true;
         }
         final AtomicBoolean result = new AtomicBoolean(true);
-        final FilterChain chain = new FilterChain() 
+        final FilterChain chain = new FilterChain()
         {
 
             @Override
             public void doFilter(final ServletRequest request, final ServletResponse response)
-            throws IOException, ServletException 
+            throws IOException, ServletException
             {
                 result.set(true);
             }
@@ -983,5 +987,10 @@ public final class WhiteboardManager
             }
         }
         return result.get();
+    }
+
+    private void updateRuntimeChangeCount()
+    {
+        this.serviceRuntime.updateChangeCount(this.runtimeServiceReg);
     }
 }
