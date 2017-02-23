@@ -696,7 +696,7 @@ public class ConfigurationManager implements BundleListener
         // schedule asynchronous events
         if ( asyncSender.hasConfigurationEventListeners() )
         {
-            if ( this.coordinator == null || !CoordinatorUtil.addToCoordination(this.coordinator, updateThread, asyncSender) )
+            if ( this.coordinator == null || !CoordinatorUtil.addToCoordination(this.coordinator, eventThread, asyncSender) )
             {
                 eventThread.schedule( asyncSender );
             }
