@@ -22,7 +22,6 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.junit.Ignore;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
@@ -77,14 +76,31 @@ public class JSONParserTest {
         assertEquals(result, m.get("abc"));
     }
 
-    @Ignore("FELIX-5555")
     @Test
-    public void escapeChar() throws Exception{
+    public void testEscapeChar() throws Exception{
         StringWriter sw = new StringWriter();
         JSONWriter js = new JSONWriter(sw);
         js.object().key("foo").value("/bar").endObject().flush();
 
         JSONParser jp = new JSONParser(sw.toString());
         assertEquals("/bar", jp.getParsed().get("foo"));
+    }
+
+    @Test
+    public void testEscapeChar2() throws Exception{
+        String s = "{\"tab\":\"\\t\","
+                + "\"quotes\": \"\\'\\\"\\\'\","
+                + "\"slashes\": \"\\/\\\\\\/\","
+                + "\"back\\bspace\": \"form\\ffeed\","
+                + "\"\\n\\n\\n\": \"\\r\\r\\r\","
+                + "\"!\\u2708!\\u2708!\": \"\\u2202\"}";
+        JSONParser jp = new JSONParser(s);
+        Map<String, Object> parsed = jp.getParsed();
+        assertEquals("\t", parsed.get("tab"));
+        assertEquals("\'\"\'", parsed.get("quotes"));
+        assertEquals("/\\/", parsed.get("slashes"));
+        assertEquals("form\ffeed", parsed.get("back\bspace"));
+        assertEquals("\r\r\r", parsed.get("\n\n\n"));
+        assertEquals("\u2202", parsed.get("!\u2708!\u2708!"));
     }
 }

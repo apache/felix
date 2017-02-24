@@ -94,7 +94,7 @@ public class JSONParser {
             throw new IllegalArgumentException("Malformatted JSON key-value pair: " + jsonKeyValue);
         }
 
-        return new Pair<String, Object>(matcher.group(1), parseValue(matcher.group(2)));
+        return new Pair<String, Object>(unEscapeString(matcher.group(1)), parseValue(matcher.group(2)));
     }
 
     private static Object parseValue(String jsonValue) {
@@ -105,7 +105,7 @@ public class JSONParser {
             if (!jsonValue.endsWith("\""))
                 throw new IllegalArgumentException("Malformatted JSON string: " + jsonValue);
 
-            return jsonValue.substring(1, jsonValue.length() - 1);
+            return unEscapeString(jsonValue.substring(1, jsonValue.length() - 1));
         case '[':
             List<Object> entries = new ArrayList<Object>();
             for (String v : parseListValuesRaw(jsonValue)) {
@@ -128,6 +128,43 @@ public class JSONParser {
             }
             return Long.parseLong(jsonValue);
         }
+    }
+
+    private static String unEscapeString(String s) {
+        StringBuilder sb = new StringBuilder(s);
+
+        for (int i = 0; i<sb.length(); i++) {
+            if (sb.charAt(i) == '\\' && sb.length() > i+1) {
+                sb.deleteCharAt(i);
+
+                char nextChar = sb.charAt(i);
+                switch (nextChar) {
+                case 'b':
+                    sb.setCharAt(i, '\b');
+                    break;
+                case 'f':
+                    sb.setCharAt(i, '\f');
+                    break;
+                case 'n':
+                    sb.setCharAt(i, '\n');
+                    break;
+                case 'r':
+                    sb.setCharAt(i, '\r');
+                    break;
+                case 't':
+                    sb.setCharAt(i, '\t');
+                    break;
+                case 'u':
+                    if (sb.length() > i+4) {
+                        int uc = Integer.parseInt(sb.substring(i+1, i+5), 16);
+                        sb.replace(i, i+5, "" + (char) uc);
+                    }
+                    break;
+                }
+            }
+        }
+
+        return sb.toString();
     }
 
     private static Map<String, Object> parseObject(String jsonObject) {
@@ -292,6 +329,4 @@ public class JSONParser {
         }
         return new String(bytes, encoding);
     }
-
-
 }
