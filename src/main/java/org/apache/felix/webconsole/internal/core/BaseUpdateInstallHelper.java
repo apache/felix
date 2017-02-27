@@ -33,6 +33,7 @@ import org.osgi.framework.FrameworkEvent;
 import org.osgi.framework.FrameworkListener;
 import org.osgi.service.log.LogService;
 import org.osgi.service.packageadmin.PackageAdmin;
+import org.osgi.service.startlevel.StartLevel;
 
 
 abstract class BaseUpdateInstallHelper implements Runnable
@@ -75,6 +76,11 @@ abstract class BaseUpdateInstallHelper implements Runnable
     protected final SimpleWebConsolePlugin getLog()
     {
         return plugin;
+    }
+    
+    protected Bundle getTargetBundle()
+    {
+        return null;
     }
 
 
@@ -119,13 +125,96 @@ abstract class BaseUpdateInstallHelper implements Runnable
             // invalid by the time we want to call the update
             PackageAdmin pa = ( refreshPackages ) ? ( PackageAdmin ) getService( PackageAdmin.class.getName() ) : null;
 
-            // perform the action!
-            Bundle bundle = doRun();
-
-            if ( pa != null && bundle != null )
+            // same for the startlevel
+            StartLevel startLevel = null;
+            
+            Bundle bundle = getTargetBundle();
+            
+            int state = pa != null && bundle != null ? bundle.getState() : 0;
+            int startFlags = 0;
+            
+            // If the bundle has been started we want to stop it first, then update it, refresh it, and restart it
+            // because otherwise, it will be stopped and started twice (once by the update and once by the refresh)
+            if ((state & (Bundle.ACTIVE | Bundle.STARTING)) != 0)
             {
-                // refresh packages and give it at most 5 seconds to finish
-                refreshPackages( pa, plugin.getBundle().getBundleContext(), 5000L, bundle );
+                // we need the StartLevel service  before we stop the bundle
+                // before the update, since we might be stopping
+                // our selves in which case the bundle context will be
+                // invalid by the time we want to call the startlevel
+                startLevel = (StartLevel) getService(StartLevel.class.getName());
+                
+                // We want to start the bundle afterwards without affecting the persistent state of the bundle
+                // However, we can only use the transient options if the framework startlevel is not less than the 
+                // bundle startlevel (in case that there is no starlevel service we assume we are good).
+                if (startLevel == null || startLevel.getStartLevel() >= startLevel.getBundleStartLevel(bundle))
+                {
+                    startFlags |= Bundle.START_TRANSIENT;
+                }
+                
+                // If the bundle is in the starting state it might be lazy and not started yet - hence, start it 
+                // according to its policy.
+                if (state == Bundle.STARTING)
+                {
+                    startFlags |= Bundle.START_ACTIVATION_POLICY;
+                }
+                
+                // We stop the bundle transiently - assuming we can also start it transiently later (see above) in which
+                // case we didn't mess with its persistent state at all.
+                bundle.stop(Bundle.STOP_TRANSIENT);
+            }
+            
+            // We want to catch an exception during update to be able to restart the bundle if we stopped it previously
+            Exception rethrow = null;
+            try
+            {
+                // perform the action!
+                bundle = doRun();
+    
+                
+                if ( pa != null && bundle != null )
+                {
+                    // refresh packages and give it at most 5 seconds to finish
+                    refreshPackages( pa, plugin.getBundle().getBundleContext(), 5000L, bundle );
+                }
+            }
+            catch (Exception ex)
+            {
+                rethrow = ex;
+                throw ex;
+            }
+            finally
+            {
+                // If we stopped the bundle lets try to restart it (we created the correct flags above already).
+                if ((state & (Bundle.ACTIVE | Bundle.STARTING)) != 0)
+                {
+                    try
+                    {
+                        bundle.start(startFlags);
+                    }
+                    catch (Exception ex)
+                    {
+                        if (rethrow == null)
+                        {
+                            throw ex;
+                        }
+                        else
+                        {
+                            try
+                            {
+                                getLog().log( LogService.LOG_ERROR, "Cannot restart bundle: " + bundle + " after exception during update!", ex);
+                            }
+                            catch ( Exception secondary )
+                            {
+                                // at the time this exception happens the log used might have
+                                // been destroyed and is not available to use any longer. So
+                                // we only can write to stderr at this time to at least get
+                                // some message out ...
+                                System.err.println( "Cannot restart bundle: " + bundle + " after exception during update!");
+                                ex.printStackTrace( System.err );
+                            }
+                        }
+                    }
+                }
             }
         }
         catch ( Exception e )

@@ -61,6 +61,10 @@ class UpdateHelper extends BaseUpdateInstallHelper
         return bundle;
     }
 
+    protected Bundle getTargetBundle() 
+    {
+        return bundle;
+    }
 
     protected Bundle doRun() throws Exception
     {
@@ -97,7 +101,6 @@ class UpdateHelper extends BaseUpdateInstallHelper
         // bundle was not updated, return nothing
         return null;
     }
-
 
     private boolean updateFromBundleLocation()
     {
