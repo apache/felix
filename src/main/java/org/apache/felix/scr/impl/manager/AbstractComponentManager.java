@@ -170,12 +170,12 @@ public abstract class AbstractComponentManager<S> implements SimpleLogger, Compo
      * @param container
      * @param componentMethods
      */
-    protected AbstractComponentManager(ComponentContainer<S> container, ComponentMethods componentMethods)
+    protected AbstractComponentManager(ComponentContainer<S> container, ComponentMethods<S> componentMethods)
     {
         this(container, componentMethods, false);
     }
 
-    protected AbstractComponentManager(ComponentContainer<S> container, ComponentMethods componentMethods, boolean factoryInstance)
+    protected AbstractComponentManager(ComponentContainer<S> container, ComponentMethods<S> componentMethods, boolean factoryInstance)
     {
         m_enabledLatchRef.get().resolve(null);
         m_factoryInstance = factoryInstance;
@@ -1424,6 +1424,7 @@ public abstract class AbstractComponentManager<S> implements SimpleLogger, Compo
             {
                 this.failureReason = null;
             }
+            this.getActivator().updateChangeCount();
         }
         else
         {

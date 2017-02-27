@@ -49,9 +49,9 @@ import org.osgi.service.log.LogService;
  * class directly as the holder for component instances created by the
  * {@link #newInstance(Dictionary)} method.
  * <p>
- * This class implements spec-compliant component factories and the felix 
+ * This class implements spec-compliant component factories and the felix
  * "persistent" component factory, where the factory is always registered whether or
- * not all dependencies are present and the created components also persist whether or 
+ * not all dependencies are present and the created components also persist whether or
  * not the dependencies are present to allow the component instance to exist.
  */
 public class ComponentFactoryImpl<S> extends AbstractComponentManager<S> implements ComponentFactory<S>, ComponentContainer<S>
@@ -75,19 +75,19 @@ public class ComponentFactoryImpl<S> extends AbstractComponentManager<S> impleme
      * by the {@link #newInstance(Dictionary)} method.
      */
     private volatile Map<String, Object> m_configuration;
-    
+
     /**
      * Flag telling if our component factory is currently configured from config admin.
      * We are configured when configuration policy is required and we have received the
      * config admin properties, or when configuration policy is optional or ignored.
      */
     private volatile boolean m_hasConfiguration;
-    
+
     /**
      * Configuration change count (R5) or imitation (R4)
      */
     protected volatile long m_changeCount = -1;
-    
+
     protected TargetedPID m_targetedPID;
 
     public ComponentFactoryImpl( ComponentContainer<S> container, ComponentMethods componentMethods )
@@ -98,15 +98,16 @@ public class ComponentFactoryImpl<S> extends AbstractComponentManager<S> impleme
     }
 
 
+    @Override
     protected boolean verifyDependencyManagers()
     {
         if (!getComponentMetadata().isPersistentFactoryComponent())
         {
             return super.verifyDependencyManagers();
         }
-        return true;    
+        return true;
     }
-    
+
     @Override
     public boolean isFactory()
     {
@@ -116,6 +117,7 @@ public class ComponentFactoryImpl<S> extends AbstractComponentManager<S> impleme
     /* (non-Javadoc)
     * @see org.osgi.service.component.ComponentFactory#newInstance(java.util.Dictionary)
     */
+    @Override
     public ComponentInstance<S> newInstance( Dictionary<String, ?> dictionary )
     {
         final SingleComponentManager<S> cm = createComponentManager();
@@ -129,7 +131,7 @@ public class ComponentFactoryImpl<S> extends AbstractComponentManager<S> impleme
         cm.enableInternal();
 
         ComponentInstance<S> instance;
-        if ( getComponentMetadata().isPersistentFactoryComponent() ) 
+        if ( getComponentMetadata().isPersistentFactoryComponent() )
         {
             instance = new ModifyComponentInstance<S>(cm);
         }
@@ -148,10 +150,10 @@ public class ComponentFactoryImpl<S> extends AbstractComponentManager<S> impleme
         {
             m_componentInstances.put( cm, cm );
         }
-        
+
         return instance;
     }
-    
+
     private static class ModifyComponentInstance<S> implements ExtFactoryComponentInstance<S>
     {
         private final SingleComponentManager<S> cm;
@@ -161,37 +163,41 @@ public class ComponentFactoryImpl<S> extends AbstractComponentManager<S> impleme
             this.cm = cm;
         }
 
+        @Override
         public void dispose()
         {
-            cm.dispose();            
+            cm.dispose();
         }
 
+        @Override
         public S getInstance()
         {
             final ComponentInstance<S> componentInstance = cm.getComponentInstance();
             return componentInstance == null? null: componentInstance.getInstance();
         }
 
+        @Override
         public void modify(Dictionary<String, ?> properties)
         {
             cm.setFactoryProperties( properties );
-            cm.reconfigure(false);            
+            cm.reconfigure(false);
         }
-        
+
     }
 
     /**
      * Compares this {@code ComponentFactoryImpl} object to another object.
-     * 
+     *
      * <p>
      * A component factory impl is considered to be <b>equal to </b> another component
      * factory impl if the component names are equal(using {@code String.equals}).
-     * 
+     *
      * @param object The {@code ComponentFactoryImpl} object to be compared.
      * @return {@code true} if {@code object} is a
      *         {@code ComponentFactoryImpl} and is equal to this object;
      *         {@code false} otherwise.
      */
+    @Override
     public boolean equals(Object object)
     {
         if (!(object instanceof ComponentFactoryImpl<?>))
@@ -202,13 +208,14 @@ public class ComponentFactoryImpl<S> extends AbstractComponentManager<S> impleme
         ComponentFactoryImpl<?> other = (ComponentFactoryImpl<?>) object;
         return getComponentMetadata().getName().equals(other.getComponentMetadata().getName());
     }
-    
+
    /**
     * Returns a hash code value for the object.
-    * 
+    *
     * @return An integer which is a hash code value for this object.
     */
-   public int hashCode()
+   @Override
+public int hashCode()
    {
        return getComponentMetadata().getName().hashCode();
    }
@@ -220,6 +227,7 @@ public class ComponentFactoryImpl<S> extends AbstractComponentManager<S> impleme
      * configuration instances are to disabled as a consequence of deactivating
      * the component factory.
      */
+    @Override
     protected void deleteComponent( int reason )
     {
     }
@@ -238,10 +246,11 @@ public class ComponentFactoryImpl<S> extends AbstractComponentManager<S> impleme
     }
 
 
-    /** 
-     * For ComponentFactoryImpl, this is used only for updating targets on the dependency managers, so we don't need any other 
+    /**
+     * For ComponentFactoryImpl, this is used only for updating targets on the dependency managers, so we don't need any other
      * properties.
      */
+    @Override
     public Map<String, Object> getProperties()
     {
         Map<String, Object> props = new HashMap<String, Object>();
@@ -256,7 +265,7 @@ public class ComponentFactoryImpl<S> extends AbstractComponentManager<S> impleme
             }
         }
 
-        // add target properties from configuration (if we have one)        
+        // add target properties from configuration (if we have one)
         for ( String key :  m_configuration.keySet() )
         {
             if ( key.endsWith( ".target" ) )
@@ -267,7 +276,8 @@ public class ComponentFactoryImpl<S> extends AbstractComponentManager<S> impleme
 
         return props;
     }
-    
+
+    @Override
     public void setServiceProperties( Dictionary<String, ?> serviceProperties )
     {
         throw new IllegalStateException( "ComponentFactory service properties are immutable" );
@@ -285,6 +295,7 @@ public class ComponentFactoryImpl<S> extends AbstractComponentManager<S> impleme
         //do nothing
     }
 
+    @Override
     public Dictionary<String, Object> getServiceProperties()
     {
         Dictionary<String, Object> props = new Hashtable<String, Object>(getComponentMetadata().getFactoryProperties());
@@ -298,25 +309,30 @@ public class ComponentFactoryImpl<S> extends AbstractComponentManager<S> impleme
         return props;
     }
 
+    @Override
     boolean hasInstance()
     {
         return false;
     }
 
+    @Override
     protected boolean collectDependencies(ComponentContextImpl<S> componentContext)
     {
         return true;
     }
 
+    @Override
     <T> boolean invokeUpdatedMethod( DependencyManager<S, T> dependencyManager, RefPair<S, T> ref, int trackingCount )
     {
     	return false;
     }
 
+    @Override
     <T> void invokeBindMethod( DependencyManager<S, T> dependencyManager, RefPair<S, T> reference, int trackingCount )
     {
     }
 
+    @Override
     <T> void invokeUnbindMethod( DependencyManager<S, T> dependencyManager, RefPair<S, T> oldRef, int trackingCount )
     {
     }
@@ -337,6 +353,7 @@ public class ComponentFactoryImpl<S> extends AbstractComponentManager<S> impleme
      * or if the owning bundle is stopped. In both cases all components created
      * by this holder must be disposed off.
      */
+    @Override
     public void dispose( int reason )
     {
         List<AbstractComponentManager<S>> cms = new ArrayList<AbstractComponentManager<S>>( );
@@ -356,6 +373,7 @@ public class ComponentFactoryImpl<S> extends AbstractComponentManager<S> impleme
     }
 
 
+    @Override
     public void disposed( SingleComponentManager<S> component )
     {
         synchronized ( m_componentInstances )
@@ -424,5 +442,4 @@ public class ComponentFactoryImpl<S> extends AbstractComponentManager<S> impleme
             cms.addAll(m_componentInstances.keySet());
         }
     }
-
 }
