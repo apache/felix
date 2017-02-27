@@ -49,14 +49,12 @@ import org.osgi.util.promise.Promises;
 
 public class ServiceComponentRuntimeImpl implements ServiceComponentRuntime
 {
-
     private static final String[] EMPTY = {};
 
     private final BundleContext context;
     private final ComponentRegistry componentRegistry;
 
-
-    public ServiceComponentRuntimeImpl(BundleContext context,ComponentRegistry componentRegistry)
+    public ServiceComponentRuntimeImpl(final BundleContext context, final ComponentRegistry componentRegistry)
     {
         this.context = context;
         this.componentRegistry = componentRegistry;
@@ -165,8 +163,13 @@ public class ServiceComponentRuntimeImpl implements ServiceComponentRuntime
     {
         try
         {
-            ComponentHolder<?> holder = getHolderFromDescription( description);
-            return holder.enableComponents(true);
+            final ComponentHolder<?> holder = getHolderFromDescription( description);
+            final boolean doUpdate = !holder.isEnabled();
+            final Promise<Void> result =  holder.enableComponents(true);
+            if ( doUpdate ) {
+                this.componentRegistry.updateChangeCount();
+            }
+            return result;
         }
         catch ( IllegalStateException ise)
         {
@@ -182,8 +185,13 @@ public class ServiceComponentRuntimeImpl implements ServiceComponentRuntime
     {
         try
         {
-            ComponentHolder<?> holder = getHolderFromDescription( description);
-            return holder.disableComponents(true); //synchronous
+            final ComponentHolder<?> holder = getHolderFromDescription( description);
+            final boolean doUpdate = holder.isEnabled();
+            final Promise<Void> result = holder.disableComponents(true); //synchronous
+            if ( doUpdate ) {
+                this.componentRegistry.updateChangeCount();
+            }
+            return result;
         }
         catch ( IllegalStateException ise)
         {

@@ -79,7 +79,7 @@ public class Activator extends AbstractExtender implements SimpleLogger
     //  thread acting upon configurations
     private ComponentActorThread m_componentActor;
 
-    private ServiceRegistration<?> m_runtime_reg;
+    private ServiceRegistration<ServiceComponentRuntime> m_runtime_reg;
 
     private ScrCommand m_scrCommand;
 
@@ -156,8 +156,11 @@ public class Activator extends AbstractExtender implements SimpleLogger
         m_componentBundles = new HashMap<Long, BundleComponentActivator>();
         m_componentRegistry = new ComponentRegistry( this );
 
-        final ServiceComponentRuntime runtime = new ServiceComponentRuntimeImpl( m_globalContext, m_componentRegistry );
-        m_runtime_reg = m_context.registerService( ServiceComponentRuntime.class, runtime, null );
+        final ServiceComponentRuntimeImpl runtime = new ServiceComponentRuntimeImpl( m_globalContext, m_componentRegistry );
+        m_runtime_reg = m_context.registerService( ServiceComponentRuntime.class,
+                runtime,
+                m_componentRegistry.getServiceRegistrationProperties() );
+        m_componentRegistry.setRegistration(m_runtime_reg);
 
         // log SCR startup
         log( LogService.LOG_INFO, m_bundle, " Version = {0}",
@@ -245,6 +248,7 @@ public class Activator extends AbstractExtender implements SimpleLogger
             this.bundle = bundle;
         }
 
+        @Override
         public void start()
         {
             boolean acquired = false;
@@ -273,6 +277,7 @@ public class Activator extends AbstractExtender implements SimpleLogger
             }
         }
 
+        @Override
         public void destroy()
         {
             boolean acquired = false;
@@ -469,12 +474,14 @@ public class Activator extends AbstractExtender implements SimpleLogger
     }
 
     //    @Override
+    @Override
     public void log(int level, String message, Throwable ex)
     {
         log( level, null, message, ex );
     }
 
     //    @Override
+    @Override
     public void log(int level, String pattern, Object[] arguments, Throwable ex)
     {
         if ( isLogEnabled( level ) )
@@ -496,6 +503,7 @@ public class Activator extends AbstractExtender implements SimpleLogger
     /**
      * Returns <code>true</code> if logging for the given level is enabled.
      */
+    @Override
     public boolean isLogEnabled(int level)
     {
         return m_configuration == null || m_configuration.getLogLevel() >= level;

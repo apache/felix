@@ -21,11 +21,15 @@ package org.apache.felix.scr.impl;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Dictionary;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Hashtable;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.Timer;
+import java.util.TimerTask;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
@@ -43,9 +47,11 @@ import org.apache.felix.scr.impl.metadata.TargetedPID;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceReference;
+import org.osgi.framework.ServiceRegistration;
 import org.osgi.service.cm.ConfigurationAdmin;
 import org.osgi.service.component.ComponentConstants;
 import org.osgi.service.component.ComponentException;
+import org.osgi.service.component.runtime.ServiceComponentRuntime;
 import org.osgi.service.log.LogService;
 
 
@@ -55,6 +61,13 @@ import org.osgi.service.log.LogService;
  */
 public class ComponentRegistry
 {
+    /**
+     * Service property for change count. This constant is defined here to avoid
+     * a dependency on R7 of the framework.
+     * The value of the property is of type {@code Long}.
+     */
+    private static String PROP_CHANGECOUNT = "service.changecount";
+
 
     /**
      * The map of known components indexed by component name. The values are
@@ -275,7 +288,7 @@ public class ComponentRegistry
                 set.add( componentHolder );
             }
         }
-
+        this.updateChangeCount();
   }
 
     /**
@@ -411,6 +424,7 @@ public class ComponentRegistry
                     }
                 }
             }
+            this.updateChangeCount();
         }
     }
 
@@ -588,6 +602,7 @@ public class ComponentRegistry
             Runnable runnable = new Runnable()
             {
 
+                @Override
                 @SuppressWarnings("unchecked")
                 public void run()
                 {
@@ -721,4 +736,58 @@ public class ComponentRegistry
 		}
 
 	}
+
+	private final Object changeCountLock = new Object();
+
+    private volatile long changeCount;
+
+    private volatile Timer timer;
+
+    private volatile ServiceRegistration<ServiceComponentRuntime> registration;
+
+    public Dictionary<String, Object> getServiceRegistrationProperties()
+    {
+        final Dictionary<String, Object> props = new Hashtable<String, Object>();
+        props.put(PROP_CHANGECOUNT, this.changeCount);
+
+        return props;
+    }
+
+    public void setRegistration(final ServiceRegistration<ServiceComponentRuntime> reg)
+    {
+        this.registration = reg;
+    }
+
+    public void updateChangeCount()
+    {
+        if ( registration != null )
+        {
+            final long count;
+            synchronized ( changeCountLock )
+            {
+                this.changeCount++;
+                count = this.changeCount;
+                if ( this.timer == null )
+                {
+                    this.timer = new Timer();
+                }
+            }
+            timer.schedule(new TimerTask()
+            {
+
+                @Override
+                public void run() {
+                    synchronized ( changeCountLock )
+                    {
+                        if ( changeCount == count )
+                        {
+                            registration.setProperties(getServiceRegistrationProperties());
+                            timer.cancel();
+                            timer = null;
+                        }
+                    }
+                }
+            }, 5000L);
+        }
+    }
 }

@@ -103,6 +103,7 @@ public class BundleComponentActivator implements ComponentActivator
     {
         private Map<Filter, List<ExtendedServiceListener<ExtendedServiceEvent>>> filterMap = new HashMap<Filter, List<ExtendedServiceListener<ExtendedServiceEvent>>>();
 
+        @Override
         public void serviceChanged(ServiceEvent event)
         {
             ServiceReference<?> ref = event.getServiceReference();
@@ -186,6 +187,7 @@ public class BundleComponentActivator implements ComponentActivator
         }
     }
 
+    @Override
     public void addServiceListener(String classNameFilter, Filter eventFilter,
         ExtendedServiceListener<ExtendedServiceEvent> listener)
     {
@@ -213,6 +215,7 @@ public class BundleComponentActivator implements ComponentActivator
         listenerInfo.add( eventFilter, listener );
     }
 
+    @Override
     public void removeServiceListener(String className, Filter filter,
         ExtendedServiceListener<ExtendedServiceEvent> listener)
     {
@@ -259,7 +262,7 @@ public class BundleComponentActivator implements ComponentActivator
             new Object[] { m_bundle.getBundleId() }, null, null, null );
 
         // Get the Metadata-Location value from the manifest
-        String descriptorLocations = (String) m_bundle.getHeaders("").get("Service-Component");
+        String descriptorLocations = m_bundle.getHeaders("").get("Service-Component");
         if ( descriptorLocations == null )
         {
             throw new ComponentException( "Service-Component entry not found in the manifest" );
@@ -566,6 +569,7 @@ public class BundleComponentActivator implements ComponentActivator
      * (not fully setup, though) and reset early in the process of
      * {@link #dispose(int) disposing} this instance.
      */
+    @Override
     public boolean isActive()
     {
         return m_active.get();
@@ -576,11 +580,13 @@ public class BundleComponentActivator implements ComponentActivator
     *
     * @return the BundleContext
     */
+    @Override
     public BundleContext getBundleContext()
     {
         return m_context;
     }
 
+    @Override
     public ScrConfiguration getConfiguration()
     {
         return m_configuration;
@@ -595,6 +601,7 @@ public class BundleComponentActivator implements ComponentActivator
      * @param name The name of the component to enable or <code>null</code> to
      *      enable all components.
      */
+    @Override
     public void enableComponent(final String name)
     {
         final List<ComponentHolder<?>> holder = getSelectedComponents( name );
@@ -621,6 +628,7 @@ public class BundleComponentActivator implements ComponentActivator
      * @param name The name of the component to disable or <code>null</code> to
      *      disable all components.
      */
+    @Override
     public void disableComponent(final String name)
     {
         final List<ComponentHolder<?>> holder = getSelectedComponents( name );
@@ -673,11 +681,13 @@ public class BundleComponentActivator implements ComponentActivator
 
     //---------- Component ID support
 
+    @Override
     public long registerComponentId(AbstractComponentManager<?> componentManager)
     {
         return m_componentRegistry.registerComponentId( componentManager );
     }
 
+    @Override
     public void unregisterComponentId(AbstractComponentManager<?> componentManager)
     {
         m_componentRegistry.unregisterComponentId( componentManager.getId() );
@@ -692,6 +702,7 @@ public class BundleComponentActivator implements ComponentActivator
      *
      * @param task The component task to execute
      */
+    @Override
     public void schedule(Runnable task)
     {
         if ( isActive() )
@@ -728,6 +739,7 @@ public class BundleComponentActivator implements ComponentActivator
     /**
      * Returns <code>true</code> if logging for the given level is enabled.
      */
+    @Override
     public boolean isLogEnabled(int level)
     {
         return m_configuration.getLogLevel() >= level;
@@ -746,6 +758,7 @@ public class BundleComponentActivator implements ComponentActivator
      * @param componentId
      * @param ex An optional <code>Throwable</code> whose stack trace is written,
      */
+    @Override
     public void log(int level, String pattern, Object[] arguments, ComponentMetadata metadata, Long componentId,
         Throwable ex)
     {
@@ -766,6 +779,7 @@ public class BundleComponentActivator implements ComponentActivator
      * @param componentId
      * @param ex An optional <code>Throwable</code> whose stack trace is written,
      */
+    @Override
     public void log(int level, String message, ComponentMetadata metadata, Long componentId, Throwable ex)
     {
         if ( isLogEnabled( level ) )
@@ -804,27 +818,32 @@ public class BundleComponentActivator implements ComponentActivator
         }
     }
 
+    @Override
     public <T> boolean enterCreate(ServiceReference<T> serviceReference)
     {
         return m_componentRegistry.enterCreate( serviceReference );
     }
 
+    @Override
     public <T> void leaveCreate(ServiceReference<T> serviceReference)
     {
         m_componentRegistry.leaveCreate( serviceReference );
     }
 
+    @Override
     public <T> void missingServicePresent(ServiceReference<T> serviceReference)
     {
         m_componentRegistry.missingServicePresent( serviceReference, m_componentActor );
     }
 
+    @Override
     public <S, T> void registerMissingDependency(DependencyManager<S, T> dependencyManager,
         ServiceReference<T> serviceReference, int trackingCount)
     {
         m_componentRegistry.registerMissingDependency( dependencyManager, serviceReference, trackingCount );
     }
 
+    @Override
     public RegionConfigurationSupport setRegionConfigurationSupport(ServiceReference<ConfigurationAdmin> reference)
     {
         RegionConfigurationSupport rcs = m_componentRegistry.registerRegionConfigurationSupport( reference );
@@ -835,9 +854,15 @@ public class BundleComponentActivator implements ComponentActivator
         return rcs;
     }
 
+    @Override
     public void unsetRegionConfigurationSupport(RegionConfigurationSupport rcs)
     {
         m_componentRegistry.unregisterRegionConfigurationSupport( rcs );
         // TODO anything needed?
+    }
+
+    @Override
+    public void updateChangeCount() {
+        this.m_componentRegistry.updateChangeCount();
     }
 }

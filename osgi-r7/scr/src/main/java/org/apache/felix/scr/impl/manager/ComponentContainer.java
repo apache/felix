@@ -40,5 +40,4 @@ public interface ComponentContainer<S>
      * calling the dispose method.
      */
     void disposed(SingleComponentManager<S> component);
-
 }

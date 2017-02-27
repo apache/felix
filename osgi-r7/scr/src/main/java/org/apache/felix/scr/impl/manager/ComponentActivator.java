@@ -54,4 +54,6 @@ public interface ComponentActivator extends Logger, ExtendedServiceListenerConte
 
     void unsetRegionConfigurationSupport(RegionConfigurationSupport rcs);
 
+    /** Inform about any change in the state of the components. */
+    void updateChangeCount();
 }
