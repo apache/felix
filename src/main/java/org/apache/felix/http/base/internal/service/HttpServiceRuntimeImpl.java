@@ -110,7 +110,8 @@ public final class HttpServiceRuntimeImpl implements HttpServiceRuntime
             final long count;
             synchronized ( this )
             {
-                count = this.changeCount++;
+                this.changeCount++;
+                count = this.changeCount;
                 this.setAttribute(PROP_CHANGECOUNT, this.changeCount);
                 if ( this.timer == null )
                 {
