@@ -48,6 +48,7 @@
     <gogo.command.version>1.0.2</gogo.command.version>
     <jline.version>3.0.1</jline.version>
     <obr.version>2.0.8</obr.version>
+    <jansi.version>1.14</jansi.version>
   </properties>
   <profiles>
     <profile>
@@ -137,6 +138,14 @@
                      <groupId>org.jline</groupId>
                      <artifactId>jline</artifactId>
                      <version>${jline.version}</version>
+                     <type>jar</type>
+                     <overWrite>true</overWrite>
+                     <outputDirectory>${project.basedir}/bundle</outputDirectory>
+                   </artifactItem>
+                   <artifactItem>
+                     <groupId>org.fusesource.jansi</groupId>
+                     <artifactId>jansi</artifactId>
+                     <version>${jansi.version}</version>
                      <type>jar</type>
                      <overWrite>true</overWrite>
                      <outputDirectory>${project.basedir}/bundle</outputDirectory>
