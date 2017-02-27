@@ -30,12 +30,13 @@
   <version>5.7.0-SNAPSHOT</version>
   <properties>
     <dollar>$</dollar>
-    <framework.version>5.7.0-SNAPSHOT</framework.version>
+    <framework.version>5.6.2</framework.version>
     <gogo.runtime.version>1.0.2</gogo.runtime.version>
     <gogo.jline.shell.version>1.0.2</gogo.jline.shell.version>
     <gogo.command.version>1.0.2</gogo.command.version>
     <jline.version>3.0.1</jline.version>
     <obr.version>2.0.8</obr.version>
+    <jansi.version>1.14</jansi.version>
   </properties>
     <scm>
       <connection>scm:svn:http://svn.apache.org/repos/asf/felix/trunk/main.distribution</connection>
@@ -101,6 +102,14 @@
                    <groupId>org.jline</groupId>
                    <artifactId>jline</artifactId>
                    <version>${jline.version}</version>
+                   <type>jar</type>
+                   <overWrite>true</overWrite>
+                   <outputDirectory>${project.basedir}/bundle</outputDirectory>
+                 </artifactItem>
+                 <artifactItem>
+                   <groupId>org.fusesource.jansi</groupId>
+                   <artifactId>jansi</artifactId>
+                   <version>${jansi.version}</version>
                    <type>jar</type>
                    <overWrite>true</overWrite>
                    <outputDirectory>${project.basedir}/bundle</outputDirectory>
