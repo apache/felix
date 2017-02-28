@@ -2,6 +2,7 @@ Changes from 1.0.6 to 1.0.8
 ---------------------------
 ** Bug
     * [FELIX-5552] - Handle MemoryPoolMXBean.getUsed returning -1
+    * [FELIX-4019] - Memory Management Plugin does not handle unknown values properly
 
 
 Changes from 1.0.4 to 1.0.6
