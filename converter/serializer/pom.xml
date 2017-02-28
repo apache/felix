@@ -101,7 +101,14 @@
             <artifactId>snakeyaml</artifactId>
             <version>1.17</version>
         </dependency>
-        
+
+        <dependency>
+            <groupId>org.apache.felix</groupId>
+            <artifactId>org.apache.felix.utils</artifactId>
+            <version>1.9.1-SNAPSHOT</version>
+            <scope>provided</scope>
+        </dependency>
+
         <dependency>
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>

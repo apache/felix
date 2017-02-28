@@ -33,6 +33,7 @@ import org.apache.felix.schematizer.Node;
 import org.apache.felix.schematizer.Schema;
 import org.apache.felix.schematizer.Schematizing;
 import org.apache.felix.schematizer.impl.Util;
+import org.apache.felix.utils.json.JSONParser;
 import org.osgi.dto.DTO;
 import org.osgi.service.serializer.Deserializing;
 import org.osgi.util.converter.ConversionException;
@@ -65,7 +66,7 @@ public class JsonDeserializingImpl<T> implements Deserializing<T> {
     @Override
     @SuppressWarnings("unchecked")
     public T from(CharSequence in) {
-        JsonParser jp = new JsonParser(in);
+        JSONParser jp = new JSONParser(in);
         Map<?,?> m = jp.getParsed();
         Class<T> clazz = (Class<T>)Util.rawClassOf(target);
         if (m.getClass().isAssignableFrom(clazz))

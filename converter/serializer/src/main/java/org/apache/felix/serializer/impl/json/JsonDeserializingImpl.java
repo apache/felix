@@ -25,6 +25,7 @@ import java.util.Map;
 import java.util.Scanner;
 
 import org.apache.felix.serializer.impl.Util;
+import org.apache.felix.utils.json.JSONParser;
 import org.osgi.service.serializer.Deserializing;
 import org.osgi.util.converter.ConversionException;
 import org.osgi.util.converter.Converter;
@@ -41,7 +42,7 @@ public class JsonDeserializingImpl<T> implements Deserializing<T> {
     @Override
     @SuppressWarnings("unchecked")
     public T from(CharSequence in) {
-        JsonParser jp = new JsonParser(in);
+        JSONParser jp = new JSONParser(in);
         Map<?,?> m = jp.getParsed();
         if (type instanceof Class)
             if (m.getClass().isAssignableFrom((Class<?>) type))

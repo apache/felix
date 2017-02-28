@@ -22,6 +22,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.felix.utils.json.JSONParser;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
@@ -31,7 +32,7 @@ public class JsonParserTest {
     @Test
     public void testJsonSimple() {
         String json = "{\"hi\": \"ho\", \"ha\": true}";
-        JsonParser jp = new JsonParser(json);
+        JSONParser jp = new JSONParser(json);
         Map<String, Object> m = jp.getParsed();
         assertEquals(2, m.size());
         assertEquals("ho", m.get("hi"));
@@ -50,7 +51,7 @@ public class JsonParserTest {
                 + "  ]\n"
                 + "}\n"
                 + "\n";
-        JsonParser jp = new JsonParser(json);
+        JSONParser jp = new JSONParser(json);
         Map<String, Object> m = jp.getParsed();
         assertEquals(2, m.size());
         assertEquals("ho", m.get("hi"));
@@ -69,7 +70,7 @@ public class JsonParserTest {
                 + "  ]\r\n"
                 + "}\r\n"
                 + "\r\n";
-        JsonParser jp = new JsonParser(json);
+        JSONParser jp = new JSONParser(json);
         Map<String, Object> m = jp.getParsed();
         assertEquals(2, m.size());
         assertEquals("ho", m.get("hi"));
@@ -80,7 +81,7 @@ public class JsonParserTest {
     @SuppressWarnings("unchecked")
     public void testJsonComplex() {
         String json = "{\"a\": [1,2,3,4,5], \"b\": {\"x\": 12, \"y\": 42, \"z\": {\"test test\": \"hello hello\"}}, \"ddd\": 12.34}";
-        JsonParser jp = new JsonParser(json);
+        JSONParser jp = new JSONParser(json);
         Map<String, Object> m = jp.getParsed();
         assertEquals(3, m.size());
         assertEquals(Arrays.asList(1L, 2L, 3L, 4L, 5L), m.get("a"));
@@ -97,7 +98,7 @@ public class JsonParserTest {
     @Test
     public void testJsonArray() {
         String json = "{\"abc\": [\"x\", \"y\", \"z\"]}";
-        JsonParser jp = new JsonParser(json);
+        JSONParser jp = new JSONParser(json);
         Map<String, Object> m = jp.getParsed();
         assertEquals(1, m.size());
         assertEquals(Arrays.asList("x", "y", "z"), m.get("abc"));
@@ -106,7 +107,7 @@ public class JsonParserTest {
     @Test
     public void testEmptyJsonArray() {
         String json = "{\"abc\": {\"def\": []}}";
-        JsonParser jp = new JsonParser(json);
+        JSONParser jp = new JSONParser(json);
         Map<String, Object> m = jp.getParsed();
         assertEquals(1, m.size());
         Map<String, Object> result = new HashMap<>();
