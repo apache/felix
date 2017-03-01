@@ -557,7 +557,7 @@ public class NativeLibraryClause
         //If we don't find a match do it the old way for compatibility
         if (value.startsWith("win"))
         {
-            String os = "win";
+            String os = OS_WIN_32;
             if (value.indexOf("32") >= 0 || value.indexOf("*") >= 0)
             {
                 os = OS_WIN_32;
