@@ -1974,6 +1974,11 @@ public class BundleWiringImpl implements BundleWiring
                     }
                     throw ex;
                 }
+                if (clazz == null)
+                {
+                    // We detected a cycle
+                    throw new ClassNotFoundException("Cycle detected while trying to load class: " + name);
+                }
             }
 
             // Resolve the class and return it.
