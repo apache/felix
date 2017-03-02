@@ -1,3 +1,9 @@
+Changes from 1.8.2 to 1.8.4
+---------------------------
+
+** Bug
+    * [FELIX-5576] - SCR components and factoryPids random issues
+
 Changes from 1.8 to 1.8.2
 ---------------------------
 

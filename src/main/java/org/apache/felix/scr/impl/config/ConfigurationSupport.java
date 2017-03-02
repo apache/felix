@@ -357,8 +357,8 @@ public class ConfigurationSupport implements ConfigurationListener
                                 //this is a better match, delete old before setting new
                                 componentHolder.configurationDeleted( pid.getServicePid() );
                             }
-                            componentHolder.configurationUpdated( pid.getServicePid(), configInfo.getProps(),
-                                    configInfo.getChangeCount(), pid );
+                            componentHolder.configurationUpdated( targetedPid.getServicePid(), configInfo.getProps(),
+                                    configInfo.getChangeCount(), targetedPid );
                         }
                     }
                     //else worse match, do nothing
