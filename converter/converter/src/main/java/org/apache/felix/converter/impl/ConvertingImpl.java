@@ -67,8 +67,6 @@ public class ConvertingImpl implements Converting, InternalConverting {
     private volatile Class<?> targetClass;
     private volatile Class<?> targetAsClass;
     volatile Type[] typeArguments;
-    List<Object> keys = new ArrayList<>();
-    private volatile Object root;
     private volatile boolean forceCopy = false;
     private volatile boolean sourceAsJavaBean = false;
     @SuppressWarnings( "unused" )
@@ -137,22 +135,6 @@ public class ConvertingImpl implements Converting, InternalConverting {
         defaultValue = defVal;
         hasDefault = true;
 
-        return this;
-    }
-
-    @Override
-    public InternalConverting key(Object ... ks) {
-        for (Object k : ks) {
-            keys.add(k);
-        }
-
-        return this;
-    }
-
-    @Override
-    public InternalConverting root(Object rootObject) {
-        if (root == null)
-            root = rootObject;
         return this;
     }
 
@@ -345,10 +327,6 @@ public class ConvertingImpl implements Converting, InternalConverting {
         Map m = mapView(object, sourceClass, converter);
         if (m == null)
             return null;
-        Type targetKeyType = null;
-        if (typeArguments != null && typeArguments.length > 0) {
-            targetKeyType = typeArguments[0];
-        }
 
         Class<?> ctrCls = interfaceImplementations.get(targetClass);
         if (ctrCls == null)
@@ -359,21 +337,16 @@ public class ConvertingImpl implements Converting, InternalConverting {
             return null;
 
         for (Map.Entry entry : (Set<Entry>) m.entrySet()) {
-            List<Object> ks = new ArrayList<>(keys);
             Object key = entry.getKey();
-            if (targetKeyType != null)
-                key = converter.convert(key).key(ks.toArray()).to(targetKeyType);
-            ks.add(key);
-
             Object value = entry.getValue();
-            value = convertMapValue(value, ks.toArray());
+            value = convertMapValue(value);
             instance.put(key, value);
         }
 
         return instance;
     }
 
-    Object convertMapValue(Object value, Object[] ka) {
+    Object convertMapValue(Object value) {
         Type targetValueType = null;
         if (typeArguments != null && typeArguments.length > 1) {
             targetValueType = typeArguments[1];
@@ -381,16 +354,16 @@ public class ConvertingImpl implements Converting, InternalConverting {
 
         if (value != null) {
             if (targetValueType != null) {
-                value = converter.convert(value).key(ka).to(targetValueType);
+                value = converter.convert(value).to(targetValueType);
             } else {
                 Class<?> cls = value.getClass();
                 if (isCopyRequiredType(cls)) {
                     cls = getConstructableType(cls);
                 }
                 if (sourceAsDTO && DTO.class.isAssignableFrom(cls))
-                    value = converter.convert(value).key(ka).sourceAsDTO().to(cls);
+                    value = converter.convert(value).sourceAsDTO().to(cls);
                 else
-                    value = converter.convert(value).key(ka).to(cls);
+                    value = converter.convert(value).to(cls);
             }
         }
         return value;
@@ -780,15 +753,7 @@ public class ConvertingImpl implements Converting, InternalConverting {
             return; // Field with this name was already handled
 
         try {
-            List<Object> ks = new ArrayList<>(keys);
-            ks.add(fn);
-            Object[] ka = ks.toArray();
-
             Object fVal = field.get(obj);
-            if (isMapType(field.getType())) {
-                fVal = converter.convert(fVal).key(ka).to(Map.class);
-            }
-
             result.put(fn, fVal);
             handledFields.add(fn);
         } catch (Exception e) {

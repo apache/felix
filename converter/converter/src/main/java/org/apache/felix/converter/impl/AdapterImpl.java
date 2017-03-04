@@ -105,24 +105,6 @@ public class AdapterImpl implements InternalConverter {
         }
 
         @Override
-        public InternalConverting key(Object ... ks) {
-            for (Object k : ks) {
-                keys.add(k);
-                del.key(k);
-            }
-
-            return this;
-        }
-
-        @Override
-        public InternalConverting root(Object rootObject) {
-            if (root == null)
-                root = rootObject;
-            del.root(rootObject);
-            return this;
-        }
-
-        @Override
         public void setConverter(Converter c) {
             del.setConverter(c);
         }

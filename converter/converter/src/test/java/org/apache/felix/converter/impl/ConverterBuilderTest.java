@@ -19,7 +19,6 @@ package org.apache.felix.converter.impl;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Dictionary;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
@@ -198,48 +197,6 @@ public class ConverterBuilderTest {
         assertNull(converter.convert(mb).sourceAs(MyIntf.class).to(MyCustomDTO.class).field);
         assertEquals("Hello", cc.convert(mb).to(MyCustomDTO.class).field);
         assertEquals("17", cc.convert(mb).sourceAs(MyIntf.class).to(MyCustomDTO.class).field);
-    }
-
-    @Test
-    public void testConvertWithKeys() {
-        ConverterBuilder cb = converter.newConverterBuilder();
-        ConvertFunction<Number, String> ntc = new ConvertFunction<Number, String>() {
-            @Override
-            public String convert(Number obj, Type targetType, Object root, Object[] key) throws Exception {
-                if ("cost".equals(key[0]))
-                    return "$" + obj + ".00";
-                else
-                    return "" + obj;
-            }
-        };
-        ConvertFunction<String, Number> ctn = new ConvertFunction<String, Number>() {
-            @Override
-            public Number convert(String obj, Type targetType, Object root, Object[] key) throws Exception {
-                if ("cost".equals(key[0])) {
-                    int dotIdx = obj.indexOf('.');
-                    obj = obj.substring(1, dotIdx); // eat off dollar sign and decimals
-                }
-                return Integer.parseInt(obj);
-            }
-        };
-        cb.rule(new Rule<Number, String>(Number.class, String.class, ntc, ctn));
-        Converter c = cb.build();
-
-        Map<String, Integer> m = new HashMap<>();
-        m.put("amount", 7);
-        m.put("cost", 100);
-
-        // Convert to Dictionary<String,String>
-        Dictionary<String,String> d = c.convert(m).to(new TypeReference<Dictionary<String, String>>(){});
-        assertEquals(2, d.size());
-        assertEquals("7", d.get("amount"));
-        assertEquals("$100.00", d.get("cost"));
-
-        // Convert back to HashMap<String,Integer>
-        HashMap<String, Integer> hm = c.convert(d).to(new TypeReference<HashMap<String, Integer>>() {});
-        assertEquals(2, hm.size());
-        assertEquals(7, (int) hm.get("amount"));
-        assertEquals(100, (int) hm.get("cost"));
     }
 
     @SuppressWarnings("rawtypes")
