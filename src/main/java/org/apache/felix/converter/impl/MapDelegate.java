@@ -92,9 +92,7 @@ class MapDelegate<K, V> implements Map<K, V> {
     }
 
     private Object getConvertedValue(Object key, Object val) {
-        List<Object> ks = new ArrayList<>(convertingImpl.keys);
-        ks.add(key);
-        return convertingImpl.convertMapValue(val, ks.toArray());
+        return convertingImpl.convertMapValue(val);
     }
 
     private Object findConvertedKey(Set<?> keySet, Object key) {
