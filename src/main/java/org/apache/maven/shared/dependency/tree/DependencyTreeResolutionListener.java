@@ -32,7 +32,6 @@ import org.apache.maven.artifact.Artifact;
 import org.apache.maven.artifact.resolver.ResolutionListener;
 import org.apache.maven.artifact.resolver.ResolutionListenerForDepMgmt;
 import org.apache.maven.artifact.versioning.VersionRange;
-import org.apache.maven.shared.dependency.tree.traversal.CollectingDependencyNodeVisitor;
 import org.codehaus.plexus.logging.Logger;
 
 

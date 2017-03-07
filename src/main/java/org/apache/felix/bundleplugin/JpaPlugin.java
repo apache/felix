@@ -19,10 +19,6 @@
 package org.apache.felix.bundleplugin;
 
 
-import javax.xml.transform.Transformer;
-import javax.xml.transform.TransformerFactory;
-import javax.xml.transform.stream.StreamResult;
-import javax.xml.transform.stream.StreamSource;
 import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -30,25 +26,20 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.URL;
-import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
-import java.util.regex.Pattern;
 
-import aQute.bnd.header.Attrs;
+import javax.xml.transform.Transformer;
+import javax.xml.transform.TransformerFactory;
+import javax.xml.transform.stream.StreamResult;
+import javax.xml.transform.stream.StreamSource;
+
 import aQute.bnd.osgi.Analyzer;
-import aQute.bnd.osgi.Descriptors.PackageRef;
-import aQute.bnd.osgi.Jar;
 import aQute.bnd.osgi.Processor;
 import aQute.bnd.osgi.Resource;
 import aQute.bnd.service.AnalyzerPlugin;
 import aQute.libg.generics.Create;
-import org.apache.felix.utils.manifest.Attribute;
-import org.apache.felix.utils.manifest.Clause;
-import org.osgi.framework.Constants;
-
-import static org.apache.felix.utils.manifest.Parser.parseHeader;
 
 
 public class JpaPlugin implements AnalyzerPlugin
