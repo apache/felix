@@ -82,8 +82,6 @@ public class AdapterImpl implements InternalConverter {
         private volatile Object defaultValue;
         private volatile Class<?> treatAsClass;
         private volatile boolean hasDefault;
-        private volatile List<Object> keys = new ArrayList<>();
-        private volatile Object root;
 
         ConvertingWrapper(Object obj, InternalConverting c) {
             object = obj;
@@ -190,7 +188,7 @@ public class AdapterImpl implements InternalConverter {
 
                     for (ConvertFunction<Object,Object> cf : converters) {
                         try {
-                            Object res = cf.convert(object, type, root, keys.toArray());
+                            Object res = cf.convert(object, type);
                             if (res != null) {
                                 return res;
                             }
@@ -208,7 +206,7 @@ public class AdapterImpl implements InternalConverter {
             } catch (Exception ex) {
                 // do custom error handling
                 for (ConvertFunction<Object, Object> cf : converters) {
-                    Object eh = cf.handleError(object, type, root, keys.toArray());
+                    Object eh = cf.handleError(object, type);
                     if (eh != null)
                         return eh;
                 }
@@ -273,7 +271,7 @@ public class AdapterImpl implements InternalConverter {
         }
 
         @Override
-        public T convert(F obj, Type targetType, Object root, Object[] keys) throws Exception {
+        public T convert(F obj, Type targetType) throws Exception {
             return function.apply(obj);
         }
     }
