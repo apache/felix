@@ -1188,7 +1188,10 @@ public class BundlePlugin extends AbstractMojo
             {
                 Set optionalPackages = getOptionalPackages( currentProject, dependencyGraph );
 
-                Map<String, ? extends Map<String, String>> values = new Analyzer().parseHeader( importPackages );
+                Map<String, ? extends Map<String, String>> values;
+                try (Analyzer analyzer = new Analyzer()) {
+                    values = analyzer.parseHeader( importPackages );
+                }
                 for ( Map.Entry<String, ? extends Map<String, String>> entry : values.entrySet() )
                 {
                     String pkg = entry.getKey();

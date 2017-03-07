@@ -153,7 +153,9 @@ public class BlueprintComponentTest extends AbstractMojoTestCase
             assertTrue( pkgs.contains( "p" + i ) );
         }
 
-        new Verifier(builder).verify();
+        try (Verifier verifier = new Verifier(builder)) {
+            verifier.verify();
+        }
     }
 
     public void testAnalyzer() throws Exception
@@ -165,7 +167,10 @@ public class BlueprintComponentTest extends AbstractMojoTestCase
         jar.setManifest(manifest);
         analyzer.setJar(jar);
         analyzer.analyze();
-        new Verifier(analyzer).verify();
+
+        try (Verifier verifier = new Verifier(analyzer)) {
+            verifier.verify();
+        }
     }
 
 }

@@ -76,10 +76,9 @@ public class DefaultMaven2OsgiConverter implements Maven2OsgiConverter
     {
         if ( ( artifact.getFile() != null ) && artifact.getFile().isFile() )
         {
-            Analyzer analyzer = new Analyzer();
 
             JarFile jar = null;
-            try
+            try (Analyzer analyzer = new Analyzer())
             {
                 jar = new JarFile( artifact.getFile(), false );
 
