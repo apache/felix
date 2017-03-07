@@ -28,12 +28,6 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.jar.Manifest;
 
-import aQute.bnd.osgi.Analyzer;
-import aQute.bnd.osgi.Jar;
-import aQute.bnd.osgi.Verifier;
-import aQute.libg.generics.Create;
-import junit.framework.TestCase;
-
 import org.apache.felix.utils.manifest.Clause;
 import org.apache.felix.utils.manifest.Parser;
 import org.apache.maven.artifact.Artifact;
@@ -50,7 +44,11 @@ import org.apache.maven.shared.dependency.graph.DependencyGraphBuilder;
 import org.apache.maven.shared.dependency.graph.DependencyNode;
 import org.osgi.framework.Constants;
 
+import aQute.bnd.osgi.Analyzer;
 import aQute.bnd.osgi.Builder;
+import aQute.bnd.osgi.Jar;
+import aQute.bnd.osgi.Verifier;
+import aQute.libg.generics.Create;
 
 
 public class BlueprintComponentTest extends AbstractMojoTestCase

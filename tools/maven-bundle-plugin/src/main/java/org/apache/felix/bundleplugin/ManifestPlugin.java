@@ -47,12 +47,10 @@ import org.codehaus.plexus.util.Scanner;
 import org.osgi.service.metatype.MetaTypeService;
 import org.sonatype.plexus.build.incremental.BuildContext;
 
-import aQute.bnd.header.Parameters;
 import aQute.bnd.osgi.Analyzer;
 import aQute.bnd.osgi.Builder;
 import aQute.bnd.osgi.Instructions;
 import aQute.bnd.osgi.Jar;
-import aQute.bnd.osgi.Processor;
 import aQute.bnd.osgi.Resource;
 import aQute.lib.collections.ExtList;
 
