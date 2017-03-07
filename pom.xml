@@ -162,7 +162,7 @@
   <dependency>
     <groupId>biz.aQute.bnd</groupId>
     <artifactId>biz.aQute.bndlib</artifactId>
-    <version>3.2.0</version>
+    <version>3.3.0</version>
   </dependency>
   <dependency>
     <groupId>org.apache.felix</groupId>
