@@ -350,12 +350,12 @@ public class ConverterTest {
     public void testCustomErrorHandling() {
         ConvertFunction<String,Integer> func = new ConvertFunction<String,Integer>() {
             @Override
-            public Integer convert(String obj, Type targetType, Object root, Object[] keyPath) throws Exception {
+            public Integer convert(String obj, Type targetType) throws Exception {
                 return null;
             }
 
             @Override
-            public Integer handleError(String obj, Type targetType, Object root, Object[] keyPath) {
+            public Integer handleError(String obj, Type targetType) {
                 if ("hello".equals(obj)) {
                     return -1;
                 }
@@ -378,39 +378,6 @@ public class ConverterTest {
             // good
         }
     }
-
-    /*
-    @Test
-    @SuppressWarnings({ "rawtypes", "unchecked" })
-    public void testCustomDefaultHandling() {
-        // TODO re-enable
-        Map<String, String> m = new HashMap<>();
-//        MyAnnotation ann = converter.convert(m).to(MyAnnotation.class);
-//        assertEquals(17, ann.value());
-
-        // Now register a custom default handler
-        ConvertFunction<Map,MyAnnotation> func = new ConvertFunction<Map,MyAnnotation>() {
-            @Override
-            public MyAnnotation convert(Map obj, Type targetType, Object root, Object[] keyPath) throws Exception {
-                return null;
-            }
-
-            @Override
-            public MyAnnotation handleDefault(Map obj, Class<?> targetType, Object root, Object[] keyPath) {
-                return 42;
-            }
-        };
-
-        ConverterBuilder cb = converter.newConverterBuilder();
-        Rule r = new Rule(Map.class, MyAnnotation.class, func);
-        cb.rule(r);
-        Converter adapted = cb.build();
-
-        MyAnnotation ann2 = adapted.convert(m).to(MyAnnotation.class);
-        assertEquals("The default value from the annotation should have been overridden by the default handler",
-                42, ann2.value());
-    }
-    */
 
     @Test
     public void testUUIDConversion() {

@@ -85,7 +85,7 @@ public class ConverterBuilderTest {
         cb.rule(char[].class, String.class, ConverterBuilderTest::convertToString, null);
         cb.rule(new Rule<String, Number>(String.class, Number.class, new ConvertFunction<String, Number>() {
             @Override
-            public Number convert(String obj, Type targetType, Object root, Object[] key) throws Exception {
+            public Number convert(String obj, Type targetType) throws Exception {
                 if (Integer.class.equals(targetType))
                     return Integer.valueOf(-1);
                 else if (Long.class.equals(targetType))
@@ -110,7 +110,7 @@ public class ConverterBuilderTest {
         Converter ca = converter.newConverterBuilder().rule(
                 new Rule<Integer, Long>(Integer.class, Long.class, new ConvertFunction<Integer,Long>() {
             @Override
-            public Long convert(Integer obj, Type targetType, Object root, Object[] key) throws Exception {
+            public Long convert(Integer obj, Type targetType) throws Exception {
                 if (obj.intValue() != 1)
                     return new Long(-obj.intValue());
                 return null;
@@ -127,7 +127,7 @@ public class ConverterBuilderTest {
     public void testWildcardAdapter() {
         ConvertFunction<List, Object> foo = new ConvertFunction<List, Object>() {
             @Override
-            public Object convert(List t, Type type, Object root, Object[] key) throws Exception {
+            public Object convert(List t, Type type) throws Exception {
                 if (type instanceof Class) {
                     if (Number.class.isAssignableFrom((Class<?>) type))
                         return converter.convert(t.size()).to(type);
@@ -138,7 +138,7 @@ public class ConverterBuilderTest {
 
         Rule<List, Object> r = new Rule<>(List.class, Object.class, foo);
         Rule<Object, Object> allCatch = new Rule<>(Object.class, Object.class,
-                (v,t,o,k) -> v.toString());
+                (v,t) -> v.toString());
 
         ConverterBuilder cb = converter.newConverterBuilder();
         cb.rule(r);
@@ -154,13 +154,13 @@ public class ConverterBuilderTest {
     public void testWildcardAdapter2() {
         Map<Object, Object> snooped = new HashMap<>();
         Rule<Object, ArrayList> r = new Rule<>(Object.class, ArrayList.class,
-                (v,t,o,k) -> null,
-                (v,t,o,k) -> "arraylist");
+                (v,t) -> null,
+                (v,t) -> "arraylist");
         Rule<Object, List> r2 = new Rule<>(Object.class, List.class,
-                (v,t,o,k) -> null,
-                (v,t,o,k) -> "list");
+                (v,t) -> null,
+                (v,t) -> "list");
         Rule<Object, Object> allCatch = new Rule<>(Object.class, Object.class,
-                (v,t,o,k) -> {snooped.put(v,t); return null;}, null);
+                (v,t) -> {snooped.put(v,t); return null;}, null);
 
         ConverterBuilder cb = converter.newConverterBuilder();
         cb.rule(r);
@@ -184,9 +184,9 @@ public class ConverterBuilderTest {
     public void testConvertAs() {
         ConverterBuilder cb = converter.newConverterBuilder();
         cb.rule(new Rule<>(MyIntf.class, MyCustomDTO.class,
-                (i, t, o, k) -> { MyCustomDTO dto = new MyCustomDTO(); dto.field = "" + i.value(); return dto; }));
+                (i, t) -> { MyCustomDTO dto = new MyCustomDTO(); dto.field = "" + i.value(); return dto; }));
         cb.rule(new Rule<>(MyBean.class, MyCustomDTO.class,
-                (b, t, o, k) -> { MyCustomDTO dto = new MyCustomDTO(); dto.field = b.getValue(); return dto; }));
+                (b, t) -> { MyCustomDTO dto = new MyCustomDTO(); dto.field = b.getValue(); return dto; }));
         Converter cc = cb.build();
 
         MyBean mb = new MyBean();
@@ -223,14 +223,10 @@ public class ConverterBuilderTest {
         ConverterBuilder cb = converter.newConverterBuilder();
         ConvertFunction<MyDTO6, Map> fun = new ConvertFunction<MyDTO6, Map>() {
             @Override @SuppressWarnings("unchecked")
-            public Map convert(MyDTO6 obj, Type targetType, Object root, Object[] keys) throws Exception {
+            public Map convert(MyDTO6 obj, Type targetType) throws Exception {
                 StringBuilder sb = new StringBuilder();
                 for (Character c : obj.chars) {
                     sb.append(c);
-                }
-
-                if ("sub2".equals(keys[0]) && "subsub1".equals(keys[1])) {
-                    sb.append(sb.toString());
                 }
 
                 Map m = new HashMap();

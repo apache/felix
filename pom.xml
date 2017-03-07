@@ -90,6 +90,12 @@
     <dependencies>
         <dependency>
             <groupId>org.osgi</groupId>
+            <artifactId>org.osgi.util.converter</artifactId>
+            <version>1.0.0-SNAPSHOT</version>
+        </dependency>
+        
+        <dependency>
+            <groupId>org.osgi</groupId>
             <artifactId>org.osgi.util.function</artifactId>
             <version>1.0.0</version>
         </dependency>
@@ -121,4 +127,12 @@
             <scope>test</scope>            
         </dependency>
     </dependencies>
+    
+    <repositories>
+        <repository>
+            <id>osgi-snapshots</id>
+            <name>OSGi Snapshot Repository</name>
+            <url>https://oss.sonatype.org/content/repositories/osgi/</url>
+        </repository>
+    </repositories>    
 </project>
