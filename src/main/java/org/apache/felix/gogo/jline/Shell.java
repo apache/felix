@@ -59,7 +59,6 @@ import org.jline.reader.LineReader;
 import org.jline.reader.LineReaderBuilder;
 import org.jline.reader.ParsedLine;
 import org.jline.reader.UserInterruptException;
-import org.jline.reader.impl.LineReaderImpl;
 import org.jline.terminal.Terminal;
 import org.jline.terminal.Terminal.Signal;
 import org.jline.terminal.Terminal.SignalHandler;
@@ -378,8 +377,8 @@ public class Shell {
                 terminal.writer().write(getStatusLine(job, width, status));
                 terminal.flush();
                 if (reading.get() && !stopping.get()) {
-                    ((LineReaderImpl) reader).redrawLine();
-                    ((LineReaderImpl) reader).redisplay();
+                    reader.callWidget("redraw-line");
+                    reader.callWidget("redisplay");
                 }
             }
         });
