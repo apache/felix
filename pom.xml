@@ -29,7 +29,7 @@
     <name>Apache Felix Gogo</name>
     <description>Apache Felix Gogo Subproject</description>
     <artifactId>gogo-parent</artifactId>
-    <version>2</version>
+    <version>3-SNAPSHOT</version>
 
     <dependencyManagement>
         <dependencies>
@@ -77,10 +77,4 @@
             </plugin>
         </plugins>
     </build>
-
-  <scm>
-    <connection>scm:svn:http://svn.apache.org/repos/asf/felix/releases/gogo-parent-2</connection>
-    <developerConnection>scm:svn:https://svn.apache.org/repos/asf/felix/releases/gogo-parent-2</developerConnection>
-    <url>http://svn.apache.org/viewvc/felix/releases/?root=Apache-SVN/gogo-parent-2</url>
-  </scm>
 </project>
