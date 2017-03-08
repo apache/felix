@@ -359,7 +359,10 @@ public class Shell {
         }
 
         if (login && interactive && !opt.isSet("noshutdown")) {
-            System.out.println("gosh: stopping framework");
+            if (terminal != null) {
+                terminal.writer().println("gosh: stopping framework");
+                terminal.flush();
+            }
             shutdown();
         }
 
