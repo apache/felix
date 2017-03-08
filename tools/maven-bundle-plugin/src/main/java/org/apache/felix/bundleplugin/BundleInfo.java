@@ -60,7 +60,7 @@ public class BundleInfo
     /**
      * Get a list of packages that are exported in more than one bundle.
      * Key is package name and value list of artifacts where it's exported.
-     * @return {@link Map} &lt; {@link String}, {@link Set} &lt; {@link Artifact} > >
+     * @return {@link Map} &lt; {@link String}, {@link Set} &lt; {@link Artifact} &gt; &gt;
      */
     public Map<String, Set<Artifact>> getDuplicatedExports()
     {

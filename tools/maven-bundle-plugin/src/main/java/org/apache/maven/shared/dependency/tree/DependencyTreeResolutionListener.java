@@ -385,7 +385,7 @@ public class DependencyTreeResolutionListener implements ResolutionListener, Res
      * Gets a list of all dependency nodes in the computed dependency tree.
      * 
      * @return a list of dependency nodes
-     * @deprecated As of 1.1, use a {@link CollectingDependencyNodeVisitor} on the root dependency node
+     * @deprecated As of 1.1, use a CollectingDependencyNodeVisitor on the root dependency node
      */
     public Collection getNodes()
     {

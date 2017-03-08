@@ -39,8 +39,6 @@ import aQute.bnd.osgi.Analyzer;
 /**
  * Default implementation of {@link Maven2OsgiConverter}
  * 
- * @plexus.component
- * 
  * @author <a href="mailto:carlos@apache.org">Carlos Sanchez</a>
  * @version $Id: DefaultMaven2OsgiConverter.java 661727 2008-05-30 14:21:49Z bentmann $
  */
@@ -62,14 +60,14 @@ public class DefaultMaven2OsgiConverter implements Maven2OsgiConverter
      * <li>if artifact.getFile is not null and the jar contains a OSGi Manifest with
      * Bundle-SymbolicName property then that value is returned</li>
      * <li>if groupId has only one section (no dots) and artifact.getFile is not null then the
-     * first package name with classes is returned. eg. commons-logging:commons-logging ->
+     * first package name with classes is returned. eg. commons-logging:commons-logging -&gt;
      * org.apache.commons.logging</li>
      * <li>if artifactId is equal to last section of groupId then groupId is returned. eg.
-     * org.apache.maven:maven -> org.apache.maven</li>
+     * org.apache.maven:maven -&gt; org.apache.maven</li>
      * <li>if artifactId starts with last section of groupId that portion is removed. eg.
-     * org.apache.maven:maven-core -> org.apache.maven.core</li>
+     * org.apache.maven:maven-core -&gt; org.apache.maven.core</li>
      * <li>if artifactId starts with groupId then the artifactId is removed. eg.
-     * org.apache:org.apache.maven.core -> org.apache.maven.core</li>
+     * org.apache:org.apache.maven.core -&gt; org.apache.maven.core</li>
      * </ul>
      */
     public String getBundleSymbolicName( Artifact artifact )

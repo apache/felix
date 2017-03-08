@@ -46,7 +46,7 @@ import org.apache.maven.project.MavenProject;
  *
  * Supported checks in the current version:
  * <ul>
- * <li>All packages declared in the <a href="http://bnd.bndtools.org/heads/export_package.html">Export-Package<a/> header are really included in the bundle.</li>
+ * <li>All packages declared in the <a href="http://bnd.bndtools.org/heads/export_package.html">Export-Package</a> header are really included in the bundle.</li>
  * </ul>
  */
 @Mojo(
