@@ -1,3 +1,42 @@
+Changes from 3.2.0 to 3.3.0
+---------------------------
+
+** Bug
+    * [FELIX-5579] - Bundle Plugin uses insecure maven-archiver 2.5
+    * [FELIX-5582] - maven-bundle-plugin: Make sure Closeable resources are closed
+
+** Improvement
+    * [FELIX-5424] - Augment exported service metadata
+    * [FELIX-5581] - Update to bndlib 3.3.0
+
+
+Changes from 3.0.1 to 3.2.0
+---------------------------
+
+** Bug
+    * [FELIX-5116] - Dump SCR component definitions broken
+
+** Improvement
+    * [FELIX-5149] - Update to bndlib 3.1.0
+    * [FELIX-5253] - Update to bndlib 3.2.0
+
+** New Feature
+    * [FELIX-4009] - maven bundle plugin should be integrated directly with eclipse
+    * [FELIX-5233] - New JPA analyser for the maven bundle plugin
+    * [FELIX-5258] - Add a new MOJO which verifies the bundle integrity
+
+
+Changes from 3.0.0 to 3.0.1
+---------------------------
+
+** Bug
+    * [FELIX-5062] - maven-bundle-plugin includes tests dependencies in package analysis
+    * [FELIX-5070] - Simple syntax for specifying embedded dependencies has broken
+
+** Improvement
+    * [FELIX-5073] - Option to create dependency-reduced-pom exists
+
+
 Changes from 2.5.5 to 3.0.0
 ---------------------------
 
