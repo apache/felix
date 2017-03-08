@@ -245,11 +245,8 @@ public class BundlePlugin extends AbstractMojo
 
     /**
      * Artifact resolver, needed to download source jars for inclusion in classpath.
-     *
-     * @component
-     * @required
-     * @readonly
      */
+    @Component
     protected ArtifactResolver artifactResolver;
 
 
