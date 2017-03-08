@@ -12,7 +12,7 @@
 	<parent>
 		<groupId>org.apache.felix</groupId>
 		<artifactId>gogo-parent</artifactId>
-		<version>1.0.1-SNAPSHOT</version>
+		<version>2</version>
 		<relativePath>../gogo-parent/pom.xml</relativePath>
 	</parent>
 	<modelVersion>4.0.0</modelVersion>
