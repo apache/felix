@@ -18,7 +18,6 @@
  */
 package org.apache.felix.gogo.jline;
 
-import java.io.Closeable;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Dictionary;
@@ -40,7 +39,6 @@ import org.jline.terminal.Terminal;
 import org.jline.terminal.TerminalBuilder;
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
-import org.osgi.framework.BundleException;
 import org.osgi.framework.ServiceRegistration;
 
 public class Activator implements BundleActivator, SingleServiceListener {
