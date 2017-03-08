@@ -28,7 +28,7 @@
  <modelVersion>4.0.0</modelVersion>
 
  <artifactId>maven-bundle-plugin</artifactId>
- <version>3.3.0</version>
+ <version>3.3.1-SNAPSHOT</version>
  <packaging>maven-plugin</packaging>
 
  <name>Maven Bundle Plugin</name>
@@ -40,9 +40,9 @@
  </description>
 
  <scm>
-     <connection>scm:svn:http://svn.apache.org/repos/asf/felix/releases/maven-bundle-plugin-3.3.0</connection>
-     <developerConnection>scm:svn:https://svn.apache.org/repos/asf/felix/releases/maven-bundle-plugin-3.3.0</developerConnection>
-     <url>http://svn.apache.org/viewvc/felix/releases/maven-bundle-plugin-3.3.0</url>
+     <connection>scm:svn:http://svn.apache.org/repos/asf/felix/trunk/tools/maven-bundle-plugin</connection>
+     <developerConnection>scm:svn:https://svn.apache.org/repos/asf/felix/trunk/tools/maven-bundle-plugin</developerConnection>
+     <url>http://svn.apache.org/viewvc/felix/trunk/tools/maven-bundle-plugin</url>
  </scm>
 
  <!-- Support for publishing the mvn site. -->
