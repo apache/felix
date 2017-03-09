@@ -22,7 +22,7 @@
    <artifactId>felix-parent</artifactId>
    <groupId>org.apache.felix</groupId>
    <version>4</version>
-   <relativePath>../pom/pom.xml</relativePath>
+   <relativePath>../../pom/pom.xml</relativePath>
  </parent>
 
  <modelVersion>4.0.0</modelVersion>
@@ -106,7 +106,7 @@
             <artifactId>maven-scm-publish-plugin</artifactId>
             <version>1.1</version>
             <configuration>
-              <checkoutDirectory>${user.home}/maven-sites/bundle-plugin-archives/bundle-plugin-LATEST</checkoutDirectory>
+              <checkoutDirectory>${user.home}/maven-sites/${maven.site.path}</checkoutDirectory>
               <tryUpdate>true</tryUpdate>
             </configuration>
           </plugin>
