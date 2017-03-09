@@ -28,7 +28,7 @@
 
 Maven Bundle Plugin
 
-  This Maven 2 plugin is based on the {{{http://www.aqute.biz/Bnd/Bnd/}BND}} tool from Peter Kriens. The way BND works is by treating your project as a big collection of classes (e.g., project code, dependencies, and the class path). The way you create a bundle with BND is to tell it the content of the bundle's JAR file as a subset of the available classes. This plugin wraps BND to make it work specifically with the Maven 2 project structure and to provide it with reasonable default behavior for Maven 2 projects.
+  This Maven plugin is based on the {{{http://bnd.bndtools.org/}BND}} tool from Peter Kriens. The way BND works is by treating your project as a big collection of classes (e.g., project code, dependencies, and the class path). The way you create a bundle with BND is to tell it the content of the bundle's JAR file as a subset of the available classes. This plugin wraps BND to make it work specifically with the Maven project structure and to provide it with reasonable default behavior for Maven projects.
 
 * Goals Overview
 
