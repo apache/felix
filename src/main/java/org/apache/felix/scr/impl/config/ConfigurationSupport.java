@@ -395,7 +395,7 @@ public class ConfigurationSupport implements ConfigurationListener
 
     }
 
-    private static class ConfigurationInfo
+    protected static class ConfigurationInfo
     {
         private final Dictionary<String, Object> props;
         private final String bundleLocation;
@@ -440,7 +440,7 @@ public class ConfigurationSupport implements ConfigurationListener
      * @param bundleContext BundleContext to get the CA from
      * @return ConfigurationInfo object containing the info we need from the configuration.
      */
-    private ConfigurationInfo getConfigurationInfo(final TargetedPID pid, ComponentHolder componentHolder,
+    protected ConfigurationInfo getConfigurationInfo(final TargetedPID pid, ComponentHolder componentHolder,
             final BundleContext bundleContext)
     {
         final ServiceReference caRef = bundleContext
