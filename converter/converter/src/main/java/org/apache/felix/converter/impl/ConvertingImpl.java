@@ -200,7 +200,7 @@ public class ConvertingImpl implements Converting, InternalConverting {
             return convertToCollection();
         } else if (isDTOType(targetAsClass) || ((sourceAsDTO || targetAsDTO) && DTO.class.isAssignableFrom(targetClass))) {
             return convertToDTO();
-        } else if (isMapType(targetAsClass)) {
+        } else if (isMapType(targetAsClass, targetAsJavaBean)) {
             return convertToMapType();
         }
 
@@ -540,7 +540,7 @@ public class ConvertingImpl implements Converting, InternalConverting {
         return true;
     }
 
-    private static boolean isMapType(Class<?> cls) {
+    private static boolean isMapType(Class<?> cls, boolean asJavaBean) {
         // All interface types that are not Collections are treated as maps
         if (Map.class.isAssignableFrom(cls))
             return true;
@@ -548,7 +548,7 @@ public class ConvertingImpl implements Converting, InternalConverting {
             return true;
         else if (isDTOType(cls))
             return true;
-        else if (isWriteableJavaBean(cls))
+        else if (asJavaBean && isWriteableJavaBean(cls))
             return true;
         else
             return Dictionary.class.isAssignableFrom(cls);

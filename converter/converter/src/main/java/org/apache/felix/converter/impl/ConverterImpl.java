@@ -50,6 +50,7 @@ public class ConverterImpl implements InternalConverter {
                 v -> v.length() > 0 ? v.charAt(0) : 0);
         cb.rule(Class.class, String.class, Class::toString,
                 this::loadClassUnchecked);
+        cb.rule(Date.class, Long.class, d -> d.getTime(), l -> new Date(l));
         cb.rule(Date.class, String.class, v -> v.toInstant().toString(),
                 v -> Date.from(Instant.parse(v)));
         cb.rule(Double.class, String.class, v -> v.toString(), Double::parseDouble);
