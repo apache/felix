@@ -66,7 +66,7 @@
                 <configuration>
                     <instructions>
                         <Bundle-Activator>org.apache.felix.serializer.impl.Activator</Bundle-Activator>
-                        <Private-Package>org.apache.felix.serializer.*,org.yaml.snakeyaml.*</Private-Package>
+                        <Private-Package>org.apache.felix.serializer.*,org.yaml.snakeyaml.*,org.apache.felix.utils.*</Private-Package>
                         <Export-Package>org.osgi.service.serializer</Export-Package>
                         <Import-Package>*</Import-Package>
                     </instructions>
