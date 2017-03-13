@@ -23,6 +23,7 @@ import org.apache.felix.schematizer.Schematizer;
 import org.apache.felix.serializer.impl.json.JsonSerializerImpl;
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
+import org.osgi.framework.ServiceFactory;
 import org.osgi.service.serializer.Serializer;
 
 public class Activator implements BundleActivator {
@@ -35,7 +36,7 @@ public class Activator implements BundleActivator {
         jsonProps.put("provider", "felix");
         context.registerService(Serializer.class, new JsonSerializerImpl(), jsonProps);
 
-        context.registerService(Schematizer.class, new SchematizerImpl(), null);
+        context.registerService(Schematizer.class, (ServiceFactory<Schematizer>)new SchematizerImpl(), null);
     }
 
     @Override

@@ -44,14 +44,33 @@ import org.apache.felix.schematizer.Schema;
 import org.apache.felix.schematizer.Schematizer;
 import org.apache.felix.schematizer.TypeRule;
 import org.osgi.dto.DTO;
+import org.osgi.framework.Bundle;
+import org.osgi.framework.ServiceFactory;
+import org.osgi.framework.ServiceRegistration;
 import org.osgi.util.converter.StandardConverter;
 import org.osgi.util.converter.TypeReference;
 
-public class SchematizerImpl implements Schematizer {
+public class SchematizerImpl implements Schematizer, ServiceFactory<Schematizer> {
 
     private final Map<String, SchemaImpl> schemas = new HashMap<>();
     private volatile Map<String, Map<String, Object>> typeRules = new HashMap<>();
     private final List<ClassLoader> classloaders = new ArrayList<>();
+
+    @Override
+    public Schematizer getService( Bundle bundle, ServiceRegistration<Schematizer> registration ) {
+        return this;
+    }
+
+    @Override
+    public void ungetService(Bundle bundle, ServiceRegistration<Schematizer> registration, Schematizer service) {
+        // For now, a brutish, simplistic version. If there is any change to the environment, just
+        // wipe the state and start over.
+        //
+        // TODO: something more precise, which will remove only the classes that are no longer valid (if that is possible).
+        schemas.clear();
+        typeRules.clear();
+        classloaders.clear();
+    }
 
     @Override
     public Optional<Schema> get(String name) {
