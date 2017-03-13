@@ -65,7 +65,7 @@
                 </executions>
                 <configuration>
                     <instructions>
-                        <Private-Package>org.apache.felix.converter.*</Private-Package>
+                        <Private-Package>org.apache.felix.converter.*,org.apache.felix.utils.*</Private-Package>
                         <Export-Package>org.osgi.util.function,org.osgi.util.converter</Export-Package>
                         <Import-Package>org.osgi.util.converter, *</Import-Package>
                     </instructions>
