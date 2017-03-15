@@ -49,7 +49,9 @@ public class AnnotationTest extends TestCase
         assertEquals("foo_bar", Annotations.fixup("foo__bar"));
         assertEquals("foo$", Annotations.fixup("foo$$$"));
         assertEquals("foo_.", Annotations.fixup("foo___"));
-        assertEquals("foo..bar", Annotations.fixup("foo$_$_bar"));
+        assertEquals("foo-.bar", Annotations.fixup("foo$_$_bar"));
+        assertEquals("six-prop", Annotations.fixup("six$_$prop"));
+        assertEquals("seven$.prop", Annotations.fixup("seven$$_$prop"));
     }
 
     public enum E1 {a, b, c}
@@ -67,6 +69,7 @@ public class AnnotationTest extends TestCase
         String string();
     }
 
+    @SuppressWarnings({ "unchecked", "rawtypes" })
     private Bundle mockBundle() throws ClassNotFoundException
     {
         Bundle b = Mockito.mock(Bundle.class);
@@ -290,7 +293,7 @@ public class AnnotationTest extends TestCase
 
     private Map<String, Object> arrayValues()
     {
-        Map<String, Object> values = new HashMap();
+        Map<String, Object> values = new HashMap<String, Object>();
         values.put("bool", new boolean[] {true, false});
         values.put("byt", new byte[] {12, 3});
         values.put("cha", new char[] {'c', 'h', 'a', 'r'});
@@ -326,7 +329,7 @@ public class AnnotationTest extends TestCase
 
     private List<?> toList(Object value)
     {
-        List result = new ArrayList();
+        List<Object> result = new ArrayList<Object>();
         for (int i = 0; i < Array.getLength(value); i++)
         {
             result.add(Array.get(value, i));
