@@ -209,7 +209,7 @@ public class Annotations
 
     }
 
-    private static final Pattern p = Pattern.compile("(\\$\\$)|(\\$)|(__)|(_)");
+    private static final Pattern p = Pattern.compile("(\\$_\\$)|(\\$\\$)|(\\$)|(__)|(_)");
 
     static String fixup(String name)
     {
@@ -217,11 +217,12 @@ public class Annotations
         StringBuffer b = new StringBuffer();
         while (m.find())
         {
-            String replacement = "";//null;
-            if (m.group(1) != null) replacement = "\\$";
-            if (m.group(2) != null) replacement = "";
-            if (m.group(3) != null) replacement = "_";
-            if (m.group(4) != null) replacement = ".";
+            String replacement = "";
+            if (m.group(1) != null) replacement = "-";
+            if (m.group(2) != null) replacement = "\\$";
+            if (m.group(3) != null) replacement = "";
+            if (m.group(4) != null) replacement = "_";
+            if (m.group(5) != null) replacement = ".";
 
             m.appendReplacement(b, replacement);
         }
@@ -238,6 +239,7 @@ public class Annotations
             this.values = values;
         }
 
+        @Override
         public Object invoke(Object proxy, Method method, Object[] args) throws Throwable
         {
             Object value = values.get(method.getName());
