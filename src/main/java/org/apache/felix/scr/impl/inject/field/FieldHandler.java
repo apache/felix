@@ -24,10 +24,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Comparator;
 import java.util.List;
-import java.util.Map;
-import java.util.TreeMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.CopyOnWriteArraySet;
 
@@ -64,18 +61,6 @@ public class FieldHandler
 
     /** State handling. */
     private volatile State state;
-
-    /** Mapping of ref pairs to value bound */
-    private final Map<RefPair<?, ?>, Object> boundValues = new TreeMap<RefPair<?,?>, Object>(
-        new Comparator<RefPair<?, ?>>()
-        {
-
-            @Override
-            public int compare(final RefPair<?, ?> o1, final RefPair<?, ?> o2)
-            {
-                return o1.getRef().compareTo(o2.getRef());
-            }
-        });
 
     /**
      * Create a new field handler
@@ -171,10 +156,10 @@ public class FieldHandler
         return true;
     }
 
-    private Collection<Object> getReplaceCollection()
+    private Collection<Object> getReplaceCollection(final BindParameters bp)
     {
         final List<Object> objects = new ArrayList<Object>();
-        for(final Object val : this.boundValues.values())
+        for(final Object val : bp.getComponentContext().getBoundValues(metadata.getName()).values())
         {
             objects.add(val);
         }
@@ -200,12 +185,12 @@ public class FieldHandler
                 if ( this.metadata.isOptional() && !this.metadata.isStatic() )
                 {
                     // we only reset if it was previously set with this value
-                    if ( this.boundValues.size() == 1 )
+                    if ( bp.getComponentContext().getBoundValues(metadata.getName()).size() == 1 )
                     {
                         this.setFieldValue(componentInstance, null);
                     }
                 }
-                this.boundValues.remove(refPair);
+                bp.getComponentContext().getBoundValues(metadata.getName()).remove(refPair);
             }
             // updated needs only be done, if the value type is map or tuple
             // If it's a dynamic reference, the value can be updated
@@ -221,7 +206,7 @@ public class FieldHandler
                     final Object obj = ValueUtils.getValue(componentInstance.getClass().getName(),
                             valueType, field.getType(), key, refPair);
                     this.setFieldValue(componentInstance, obj);
-                    this.boundValues.put(refPair, obj);
+                    bp.getComponentContext().getBoundValues(metadata.getName()).put(refPair, obj);
             	}
             }
             // bind needs always be done
@@ -230,7 +215,7 @@ public class FieldHandler
                 final Object obj = ValueUtils.getValue(componentInstance.getClass().getName(),
                         valueType, field.getType(), key, refPair);
                 this.setFieldValue(componentInstance, obj);
-                this.boundValues.put(refPair, obj);
+                bp.getComponentContext().getBoundValues(metadata.getName()).put(refPair, obj);
             }
         }
         else
@@ -242,10 +227,10 @@ public class FieldHandler
             {
                 final Object obj = ValueUtils.getValue(componentInstance.getClass().getName(),
                         valueType, field.getType(), key, refPair);
-                this.boundValues.put(refPair, obj);
+                bp.getComponentContext().getBoundValues(metadata.getName()).put(refPair, obj);
                 if ( metadata.isReplace() )
                 {
-                    this.setFieldValue(componentInstance, getReplaceCollection());
+                    this.setFieldValue(componentInstance, getReplaceCollection(bp));
                 }
                 else
                 {
@@ -259,10 +244,10 @@ public class FieldHandler
             {
                 if ( !metadata.isStatic() )
                 {
-                    final Object obj = this.boundValues.remove(refPair);
+                    final Object obj = bp.getComponentContext().getBoundValues(metadata.getName()).remove(refPair);
                     if ( metadata.isReplace() )
                     {
-                        this.setFieldValue(componentInstance, getReplaceCollection());
+                        this.setFieldValue(componentInstance, getReplaceCollection(bp));
                     }
                     else
                     {
@@ -281,11 +266,11 @@ public class FieldHandler
                     {
 	                    final Object obj = ValueUtils.getValue(componentInstance.getClass().getName(),
 	                            valueType, field.getType(), key, refPair);
-	                    final Object oldObj = this.boundValues.put(refPair, obj);
+	                    final Object oldObj = bp.getComponentContext().getBoundValues(metadata.getName()).put(refPair, obj);
 
 	                    if ( metadata.isReplace() )
 	                    {
-	                        this.setFieldValue(componentInstance, getReplaceCollection());
+	                        this.setFieldValue(componentInstance, getReplaceCollection(bp));
 	                    }
 	                    else
 	                    {

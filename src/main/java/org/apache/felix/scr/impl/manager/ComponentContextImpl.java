@@ -19,7 +19,11 @@
 package org.apache.felix.scr.impl.manager;
 
 
+import java.util.Comparator;
 import java.util.Dictionary;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.TreeMap;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
@@ -59,6 +63,11 @@ public class ComponentContextImpl<S> implements ExtComponentContext {
     private final CountDownLatch accessibleLatch = new CountDownLatch(1);
 
     private final ComponentServiceObjectsHelper serviceObjectsHelper;
+
+    /** Mapping of ref pairs to value bound */
+    private final Map<String, Map<RefPair<?, ?>, Object>> boundValues = new HashMap<String, Map<RefPair<?,?>,Object>>();
+
+
 
     public ComponentContextImpl( final SingleComponentManager<S> componentManager, final Bundle usingBundle, ServiceRegistration<S> serviceRegistration )
     {
@@ -300,4 +309,28 @@ public class ComponentContextImpl<S> implements ExtComponentContext {
 
     }
 
+    public Map<RefPair<?, ?>, Object> getBoundValues(final String key)
+    {
+        Map<RefPair<?, ?>, Object> map = this.boundValues.get(key);
+        if ( map == null )
+        {
+            map = createNewFieldHandlerMap();
+            this.boundValues.put(key, map);
+        }
+        return map;
+    }
+
+    private Map<RefPair<?, ?>, Object> createNewFieldHandlerMap()
+    {
+        return new TreeMap<RefPair<?,?>, Object>(
+                new Comparator<RefPair<?, ?>>()
+                {
+
+                    @Override
+                    public int compare(final RefPair<?, ?> o1, final RefPair<?, ?> o2)
+                    {
+                        return o1.getRef().compareTo(o2.getRef());
+                    }
+                });
+    }
 }
