@@ -246,16 +246,16 @@ public class AnnoConfigTest extends ComponentTestBase
 
     private void checkA1ArraysNoValues(A1Arrays a)
     {
-        TestCase.assertEquals(null, a.bool());
-        TestCase.assertEquals(null, a.byt());
-        TestCase.assertEquals(null, a.clas());
-        TestCase.assertEquals(null, a.e1());
-        TestCase.assertEquals(null, a.doubl());
-        TestCase.assertEquals(null, a.floa());
-        TestCase.assertEquals(null, a.integer());
-        TestCase.assertEquals(null,  a.lon());
-        TestCase.assertEquals(null, a.shor());
-        TestCase.assertEquals(null, a.string());
+        TestCase.assertEquals(0, a.bool().length);
+        TestCase.assertEquals(0, a.byt().length);
+        TestCase.assertEquals(0, a.clas().length);
+        TestCase.assertEquals(0, a.e1().length);
+        TestCase.assertEquals(0, a.doubl().length);
+        TestCase.assertEquals(0, a.floa().length);
+        TestCase.assertEquals(0, a.integer().length);
+        TestCase.assertEquals(0,  a.lon().length);
+        TestCase.assertEquals(0, a.shor().length);
+        TestCase.assertEquals(0, a.string().length);
     }
 
     @Test
