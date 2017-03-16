@@ -281,7 +281,7 @@ public class Annotations
     {
         if (raw == null)
         {
-            return null;
+            return Array.newInstance(componentType, 0);
         }
         if (raw.getClass().isArray())
         {
