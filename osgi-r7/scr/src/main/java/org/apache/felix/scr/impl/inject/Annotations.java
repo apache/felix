@@ -118,7 +118,8 @@ public class Annotations
             final Field f = clazz.getField(PREFIX_CONSTANT);
             if ( Modifier.isStatic(f.getModifiers())
                  && Modifier.isPublic(f.getModifiers())
-                 && Modifier.isFinal(f.getModifiers()) )
+                 && Modifier.isFinal(f.getModifiers())
+                 && String.class.isAssignableFrom(f.getType()))
             {
                 final Object value = f.get(null);
                 if ( value != null )
