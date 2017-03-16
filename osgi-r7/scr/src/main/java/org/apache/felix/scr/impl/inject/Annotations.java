@@ -18,16 +18,22 @@
  */
 package org.apache.felix.scr.impl.inject;
 
+import java.lang.annotation.Annotation;
 import java.lang.reflect.Array;
+import java.lang.reflect.Field;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
 import java.lang.reflect.Proxy;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -37,18 +43,119 @@ import org.osgi.service.component.ComponentException;
 
 public class Annotations
 {
+    /** Capture all methods defined by the annotation interface */
+    private static final Set<Method> ANNOTATION_METHODS = new HashSet<Method>();
+    static
+    {
+        for(final Method m : Annotation.class.getMethods())
+        {
+            ANNOTATION_METHODS.add(m);
+        }
+    }
+
+    /** Constant for the single element method */
+    private static final String VALUE_METHOD = "value";
+
+    /** Constant for the prefix constant. */
+    private static final String PREFIX_CONSTANT = "PREFIX_";
+
+    /**
+     * Check whether the provided type is a single element annotation.
+     * A single element annotation has a method named "value" and all
+     * other annotation methods must have a default value.
+     * @param clazz The provided type
+     * @return {@code true} if the type is a single element annotation.
+     */
+    static public boolean isSingleElementAnnotation(final Class<?> clazz)
+    {
+        boolean result = false;
+        if ( clazz.isAnnotation() )
+        {
+            result = true;
+            boolean hasValue = false;
+            for ( final Method method: clazz.getMethods() )
+            {
+                // filter out methods from Annotation
+                boolean isFromAnnotation = false;
+                for(final Method objMethod : ANNOTATION_METHODS)
+                {
+                    if ( objMethod.getName().equals(method.getName())
+                      && Arrays.equals(objMethod.getParameterTypes(), method.getParameterTypes()) )
+                    {
+                        isFromAnnotation = true;
+                        break;
+                    }
+                }
+                if ( isFromAnnotation )
+                {
+                    continue;
+                }
+                if ( VALUE_METHOD.equals(method.getName()) )
+                {
+                    hasValue = true;
+                    continue;
+                }
+                if ( method.getDefaultValue() == null )
+                {
+                    result = false;
+                    break;
+                }
+
+            }
+            if ( result )
+            {
+                result = hasValue;
+            }
+
+        }
+        return result;
+    }
+
+    static public String getPrefix(Class<?> clazz)
+    {
+        try
+        {
+            final Field f = clazz.getField(PREFIX_CONSTANT);
+            if ( Modifier.isStatic(f.getModifiers())
+                 && Modifier.isPublic(f.getModifiers())
+                 && Modifier.isFinal(f.getModifiers()) )
+            {
+                final Object value = f.get(null);
+                if ( value != null )
+                {
+                    return value.toString();
+                }
+            }
+        }
+        catch ( final Exception ignore)
+        {
+            // ignore
+        }
+        return null;
+    }
 
     @SuppressWarnings("unchecked")
 	static public <T> T toObject(Class<T> clazz, Map<String, Object> props, Bundle b, boolean supportsInterfaces )
     {
-        Map<String, Object> m = new HashMap<String, Object>();
+        final boolean isSingleElementAnn = isSingleElementAnnotation(clazz);
+        final String prefix = getPrefix(clazz);
+        final Map<String, Object> m = new HashMap<String, Object>();
 
-        Method[] methods = clazz.getMethods();
-        Map<String, Method> complexFields = new HashMap<String, Method>();
-        for ( Method method: methods )
+        final Map<String, Method> complexFields = new HashMap<String, Method>();
+        for ( final Method method: clazz.getMethods() )
         {
-            String name = method.getName();
-            String key = fixup(name);
+            final String name = method.getName();
+            final String key;
+            if ( isSingleElementAnn && name.equals(VALUE_METHOD) )
+            {
+                key = mapTypeNameToKey(clazz.getSimpleName());
+            }
+            else
+            {
+                final String mapped = mapIdentifierToKey(name);
+                key = (prefix == null ? mapped : prefix.concat(mapped));
+            }
+
             Object raw = props.get(key);
             Class<?> returnType = method.getReturnType();
             Object cooked;
@@ -211,7 +318,7 @@ public class Annotations
 
     private static final Pattern p = Pattern.compile("(\\$_\\$)|(\\$\\$)|(\\$)|(__)|(_)");
 
-    static String fixup(String name)
+    static String mapIdentifierToKey(String name)
     {
         Matcher m = p.matcher(name);
         StringBuffer b = new StringBuffer();
@@ -228,6 +335,26 @@ public class Annotations
         }
         m.appendTail(b);
         return b.toString();
+    }
+
+    static String mapTypeNameToKey(String name)
+    {
+        final StringBuilder sb = new StringBuilder();
+        boolean lastLow = false;
+        for(final char c : name.toCharArray())
+        {
+            if ( lastLow && Character.isAlphabetic(c) && Character.isUpperCase(c) )
+            {
+                sb.append('.');
+            }
+            lastLow = false;
+            if ( Character.isAlphabetic(c) && Character.isLowerCase(c))
+            {
+                lastLow = true;
+            }
+            sb.append(Character.toLowerCase(c));
+        }
+        return sb.toString();
     }
 
     private final static class Handler implements InvocationHandler

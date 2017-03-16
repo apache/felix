@@ -33,25 +33,32 @@ import junit.framework.TestCase;
 public class AnnotationTest extends TestCase
 {
 
-    public void testNameFixup() throws Exception
+    public void testMapIdentifierToKey() throws Exception
     {
-        assertEquals("foo", Annotations.fixup("foo"));
-        assertEquals("foo", Annotations.fixup("$foo"));
-        assertEquals("foo", Annotations.fixup("foo$"));
-        assertEquals("$foo", Annotations.fixup("$$foo"));
-        assertEquals("foobar", Annotations.fixup("foo$bar"));
-        assertEquals("foo$bar", Annotations.fixup("foo$$bar"));
-        assertEquals("foo.", Annotations.fixup("foo_"));
-        assertEquals("foo_", Annotations.fixup("foo__"));
-        assertEquals(".foo", Annotations.fixup("_foo"));
-        assertEquals("_foo", Annotations.fixup("__foo"));
-        assertEquals("foo.bar", Annotations.fixup("foo_bar"));
-        assertEquals("foo_bar", Annotations.fixup("foo__bar"));
-        assertEquals("foo$", Annotations.fixup("foo$$$"));
-        assertEquals("foo_.", Annotations.fixup("foo___"));
-        assertEquals("foo-.bar", Annotations.fixup("foo$_$_bar"));
-        assertEquals("six-prop", Annotations.fixup("six$_$prop"));
-        assertEquals("seven$.prop", Annotations.fixup("seven$$_$prop"));
+        assertEquals("foo", Annotations.mapIdentifierToKey("foo"));
+        assertEquals("foo", Annotations.mapIdentifierToKey("$foo"));
+        assertEquals("foo", Annotations.mapIdentifierToKey("foo$"));
+        assertEquals("$foo", Annotations.mapIdentifierToKey("$$foo"));
+        assertEquals("foobar", Annotations.mapIdentifierToKey("foo$bar"));
+        assertEquals("foo$bar", Annotations.mapIdentifierToKey("foo$$bar"));
+        assertEquals("foo.", Annotations.mapIdentifierToKey("foo_"));
+        assertEquals("foo_", Annotations.mapIdentifierToKey("foo__"));
+        assertEquals(".foo", Annotations.mapIdentifierToKey("_foo"));
+        assertEquals("_foo", Annotations.mapIdentifierToKey("__foo"));
+        assertEquals("foo.bar", Annotations.mapIdentifierToKey("foo_bar"));
+        assertEquals("foo_bar", Annotations.mapIdentifierToKey("foo__bar"));
+        assertEquals("foo$", Annotations.mapIdentifierToKey("foo$$$"));
+        assertEquals("foo_.", Annotations.mapIdentifierToKey("foo___"));
+        assertEquals("foo-.bar", Annotations.mapIdentifierToKey("foo$_$_bar"));
+        assertEquals("six-prop", Annotations.mapIdentifierToKey("six$_$prop"));
+        assertEquals("seven$.prop", Annotations.mapIdentifierToKey("seven$$_$prop"));
+    }
+
+    public void testMapTypeNameToKey() throws Exception
+    {
+        assertEquals("service.ranking", Annotations.mapTypeNameToKey("ServiceRanking"));
+        assertEquals("some_value", Annotations.mapTypeNameToKey("Some_Value"));
+        assertEquals("osgi.property", Annotations.mapTypeNameToKey("OSGiProperty"));
     }
 
     public enum E1 {a, b, c}
@@ -606,6 +613,70 @@ public class AnnotationTest extends TestCase
         assertOdder("one", ot.odder1());
         assertOdder("two", ot.odder2());
         assertOdder("three", ot.odder3());
+    }
+
+    public @interface SETest1 {
+        String value();
+    }
+
+    public @interface SETest2 {
+        boolean foo() default true;
+        String value();
+    }
+
+    public @interface SETest3 {
+        boolean foo();
+        String value();
+    }
+
+    public @interface SETest4 {
+        boolean foo();
+        String values();
+    }
+
+    public @interface PrefixTest {
+        String PREFIX_ = "org.apache.";
+
+        boolean foo() default true;
+        String[] values() default {"a"};
+        String value();
+    }
+
+    public void testSingleElementAnnotation() throws Exception
+    {
+        assertFalse(Annotations.isSingleElementAnnotation(Map.class));
+        assertTrue(Annotations.isSingleElementAnnotation(SETest1.class));
+        assertTrue(Annotations.isSingleElementAnnotation(SETest2.class));
+        assertFalse(Annotations.isSingleElementAnnotation(SETest3.class));
+        assertFalse(Annotations.isSingleElementAnnotation(SETest4.class));
+    }
+
+    public void testGetPrefix() throws Exception
+    {
+        assertNull(Annotations.getPrefix(Map.class));
+        assertNull(Annotations.getPrefix(SETest1.class));
+        assertNull(Annotations.getPrefix(SETest2.class));
+        assertNull(Annotations.getPrefix(SETest3.class));
+        assertNull(Annotations.getPrefix(SETest4.class));
+        assertNull(Annotations.getPrefix(A1.class));
+        assertEquals("org.apache.", Annotations.getPrefix(PrefixTest.class));
+    }
+
+    public void testMappingWithPrefix() throws Exception
+    {
+        final Map<String, Object> values = new HashMap<String, Object>();
+        values.put("foo", false);
+        values.put("org.apache.foo", true);
+        values.put("values", "false-values");
+        values.put("org.apache.values", "true-values");
+        values.put("value", "false-value");
+        values.put("prefix.test", "true-value");
+
+        final PrefixTest o = Annotations.toObject( PrefixTest.class, values, mockBundle(), true);
+        assertEquals("true-value", o.value());
+        assertEquals(1, o.values().length);
+        assertEquals("true-values", o.values()[0]);
+        assertEquals(true, o.foo());
     }
 
     private void assertOdd(String expectedContent, Object actual) {
