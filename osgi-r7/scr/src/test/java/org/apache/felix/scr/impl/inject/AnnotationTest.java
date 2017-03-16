@@ -226,7 +226,7 @@ public class AnnotationTest extends TestCase
         assertEquals(0, a.lon());
         assertEquals((short)0, a.shor());
         assertEquals(null, a.string());
-        assertEquals(null, a.array());
+        assertEquals(0, a.array().length);
     }
 
     public @interface A1Arrays {
@@ -251,17 +251,17 @@ public class AnnotationTest extends TestCase
         assertTrue("expected an A1Arrays", o instanceof A1Arrays);
 
         A1Arrays a = (A1Arrays) o;
-        assertEquals(null, a.bool());
-        assertEquals(null, a.byt());
-        assertEquals(null, a.cha());
-        assertEquals(null, a.clas());
-        assertEquals(null, a.e1());
-        assertEquals(null, a.doubl());
-        assertEquals(null, a.floa());
-        assertEquals(null, a.integer());
-        assertEquals(null,  a.lon());
-        assertEquals(null, a.shor());
-        assertEquals(null, a.string());
+        assertEquals(0, a.bool().length);
+        assertEquals(0, a.byt().length);
+        assertEquals(0, a.cha().length);
+        assertEquals(0, a.clas().length);
+        assertEquals(0, a.e1().length);
+        assertEquals(0, a.doubl().length);
+        assertEquals(0, a.floa().length);
+        assertEquals(0, a.integer().length);
+        assertEquals(0,  a.lon().length);
+        assertEquals(0, a.shor().length);
+        assertEquals(0, a.string().length);
     }
 
     public void testA1Array() throws Exception
