@@ -344,12 +344,12 @@ public class Annotations
         boolean lastLow = false;
         for(final char c : name.toCharArray())
         {
-            if ( lastLow && Character.isAlphabetic(c) && Character.isUpperCase(c) )
+            if ( lastLow && (Character.isLetter(c) || Character.isDigit(c)) && Character.isUpperCase(c) )
             {
                 sb.append('.');
             }
             lastLow = false;
-            if ( Character.isAlphabetic(c) && Character.isLowerCase(c))
+            if ( (Character.isLetter(c) || Character.isDigit(c)) && Character.isLowerCase(c))
             {
                 lastLow = true;
             }
