@@ -65,7 +65,7 @@ public class ComponentContextImpl<S> implements ExtComponentContext {
     private final ComponentServiceObjectsHelper serviceObjectsHelper;
 
     /** Mapping of ref pairs to value bound */
-    private final Map<String, Map<RefPair<?, ?>, Object>> boundValues = new HashMap<String, Map<RefPair<?,?>,Object>>();
+    private Map<String, Map<RefPair<?, ?>, Object>> boundValues;
 
 
 
@@ -140,6 +140,7 @@ public class ComponentContextImpl<S> implements ExtComponentContext {
     }
 
 
+    @SuppressWarnings("unchecked")
     @Override
     public Object locateService( String name )
     {
@@ -156,6 +157,7 @@ public class ComponentContextImpl<S> implements ExtComponentContext {
     }
 
 
+    @SuppressWarnings({ "unchecked", "rawtypes" })
     @Override
     public Object locateService( String name, ServiceReference ref )
     {
@@ -206,6 +208,7 @@ public class ComponentContextImpl<S> implements ExtComponentContext {
         return m_componentManager;
     }
 
+    @SuppressWarnings("unchecked")
     @Override
     public ComponentInstance<S> getComponentInstance()
     {
@@ -309,8 +312,12 @@ public class ComponentContextImpl<S> implements ExtComponentContext {
 
     }
 
-    public Map<RefPair<?, ?>, Object> getBoundValues(final String key)
+    public synchronized Map<RefPair<?, ?>, Object> getBoundValues(final String key)
     {
+        if ( this.boundValues == null )
+        {
+            this.boundValues = new HashMap<String, Map<RefPair<?,?>,Object>>();
+        }
         Map<RefPair<?, ?>, Object> map = this.boundValues.get(key);
         if ( map == null )
         {
@@ -323,14 +330,14 @@ public class ComponentContextImpl<S> implements ExtComponentContext {
     private Map<RefPair<?, ?>, Object> createNewFieldHandlerMap()
     {
         return new TreeMap<RefPair<?,?>, Object>(
-                new Comparator<RefPair<?, ?>>()
-                {
+            new Comparator<RefPair<?, ?>>()
+            {
 
-                    @Override
-                    public int compare(final RefPair<?, ?> o1, final RefPair<?, ?> o2)
-                    {
-                        return o1.getRef().compareTo(o2.getRef());
-                    }
-                });
+                @Override
+                public int compare(final RefPair<?, ?> o1, final RefPair<?, ?> o2)
+                {
+                    return o1.getRef().compareTo(o2.getRef());
+                }
+            });
     }
 }

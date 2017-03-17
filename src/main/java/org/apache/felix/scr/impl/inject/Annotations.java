@@ -234,7 +234,7 @@ public class Annotations
             }
         }
 
-        InvocationHandler h = new Handler(m);
+        final InvocationHandler h = new Handler(m, clazz);
         return (T) Proxy.newProxyInstance(clazz.getClassLoader(), new Class<?>[] { clazz }, h);
     }
 
@@ -362,9 +362,12 @@ public class Annotations
     {
         private final Map<String, Object> values;
 
-        public Handler(Map<String, Object> values)
+        private final Class<?> type;
+
+        public Handler(final Map<String, Object> values, final Class<?> type)
         {
             this.values = values;
+            this.type = type;
         }
 
         @Override
@@ -375,9 +378,54 @@ public class Annotations
             {
                 throw new ComponentException(((Invalid)value).getMessage());
             }
+            if ( value == null )
+            {
+                // check for methods of the Annotations class like hashCode, toString, equals etc.
+                if (method.getName().equals("hashCode") &&
+                    method.getParameterTypes().length == 0 )
+                {
+                    int hashCode = 0;
+                    for (final Map.Entry<String, Object> entry : values.entrySet()) {
+                        if (value instanceof Invalid) {
+                            continue;
+                        }
+                        hashCode += (127 * entry.getKey().hashCode()) ^ entry.getValue().hashCode();
+                    }
+                    value = hashCode;
+                }
+                else if (method.getName().equals("equals")
+                         && method.getParameterTypes().length == 1)
+                {
+                    final Object other = args[0];
+                    if (proxy == other)
+                    {
+                        value = true;
+                    }
+                    else
+                    {
+                        value = false;
+                        if (type.isInstance(other) && Proxy.isProxyClass(other.getClass()))
+                        {
+                            final InvocationHandler ih = Proxy.getInvocationHandler(other);
+                            if (ih instanceof Handler) {
+                                value = ((Handler)ih).values.equals(values);
+                            }
+                        }
+                    }
+                }
+                else if (method.getName().equals("toString")
+                        && method.getParameterTypes().length == 0 )
+                {
+                    value = type.getName() + " : " + values;
+                }
+                else if (method.getName().equals("annotationType")
+                         && method.getParameterTypes().length == 0 )
+                {
+                    value = type;
+                }
+            }
             return value;
         }
-
     }
 
     private final static class Invalid
