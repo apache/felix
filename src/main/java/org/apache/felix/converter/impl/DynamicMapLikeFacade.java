@@ -252,6 +252,8 @@ class DynamicInterfaceFacade extends DynamicMapLikeFacade<String, Object> {
             try {
                 return m.invoke(backingObject);
             } catch (Exception e) {
+            	if (RuntimeException.class.isAssignableFrom(e.getCause().getClass()))
+        			throw ((RuntimeException) e.getCause());
                 throw new RuntimeException(e);
             }
         }

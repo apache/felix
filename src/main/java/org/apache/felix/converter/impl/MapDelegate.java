@@ -137,8 +137,10 @@ class MapDelegate<K, V> implements Map<K, V> {
 
     public Set<K> keySet() {
         Set<K> keys = new HashSet<>();
-        for (Map.Entry<K,V> entry : entrySet()) {
-            keys.add(entry.getKey());
+        for (Object key : delegate.keySet()) {
+            @SuppressWarnings("unchecked")
+            K k = (K) findConvertedKey(internalKeySet(), key);
+            keys.add(k);
         }
         return keys;
     }

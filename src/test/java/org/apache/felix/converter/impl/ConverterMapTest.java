@@ -29,6 +29,7 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
+import org.osgi.util.converter.ConversionException;
 import org.osgi.util.converter.Converter;
 import org.osgi.util.converter.ConverterBuilder;
 import org.osgi.util.converter.Rule;
@@ -42,6 +43,7 @@ import static org.junit.Assert.assertNotSame;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 public class ConverterMapTest {
     private Converter converter;
@@ -200,9 +202,19 @@ public class ConverterMapTest {
         Map m = new HashMap<>();
 
         TestInterface ti = converter.convert(m).to(TestInterface.class);
-        assertNull(ti.foo());
+        try {
+            ti.foo();
+            fail("Should have thrown a conversion exception");
+        } catch (ConversionException ce) {
+        	// good
+        }
         assertEquals(999, ti.bar("999"));
-        assertNull(ti.za_za());
+        try {
+            assertNull(ti.za_za());
+            fail("Should have thrown a conversion exception");
+        } catch (ConversionException ce) {
+            // good
+        }
     }
 
     @SuppressWarnings({ "unchecked", "rawtypes" })
@@ -229,7 +241,6 @@ public class ConverterMapTest {
         TestAnnotation ta = converter.convert(m).to(TestAnnotation.class);
         assertEquals("fooo!", ta.foo());
         assertEquals(42, ta.bar());
-        assertFalse(ta.za_za());
     }
 
     @Test
@@ -239,7 +250,12 @@ public class ConverterMapTest {
         assertEquals(3, m.size());
         assertEquals("fooo!", m.get("foo"));
         assertEquals(42, m.get("bar"));
-        assertEquals(false, m.get("za.za"));
+        try {
+            assertEquals(false, m.get("za.za"));
+            fail("Should have thrown a conversion exception as there is no default for 'za.za'");
+        } catch (ConversionException ce) {
+        	// good
+        }
     }
 
     @SuppressWarnings({ "rawtypes", "unchecked" })

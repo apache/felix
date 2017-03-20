@@ -189,7 +189,7 @@ class Util {
                 return null;
         }
 
-        return md.getName().replace('_', '.'); // TODO support all the escaping mechanisms.
+        return unMangleName(getPrefix(md.getDeclaringClass()), md.getName());
     }
 
     private static boolean isInheritedMethodInProxy(Method md, Class<?> cls) {
@@ -223,6 +223,15 @@ class Util {
         } catch (Exception ex) {
             // LOG no prefix field
         }
+
+        if (!cls.isInterface()) {
+            for (Class<?> intf : cls.getInterfaces()) {
+                String prefix = getPrefix(intf);
+                if (prefix.length() > 0)
+                    return prefix;
+            }
+        }
+
         return "";
     }
 

@@ -882,16 +882,70 @@ public class ConverterTest {
     public void testPrefixDTO() {
         Map<String, String> m = new HashMap<>();
         m.put("org.foo.bar.width", "327");
+        m.put("org.foo.bar.warp", "eeej");
         m.put("length", "12");
 
         PrefixDTO dto = converter.convert(m).to(PrefixDTO.class);
-        assertEquals(327, dto.width);
+        assertEquals(327L, dto.width);
         assertEquals("This one should not be set", 0, dto.length);
 
         Map<String, String> m2 = converter.convert(dto).to(new TypeReference<HashMap<String,String>>() {});
         Map<String, String> expected = new HashMap<>();
         expected.put("org.foo.bar.width", "327");
         expected.put("org.foo.bar.length", "0");
+        assertEquals(expected, m2);
+    }
+
+    @Test
+    public void testPrefixInterface() {
+        Map<String, String> m = new HashMap<>();
+        m.put("org.foo.bar.width", "327");
+        m.put("org.foo.bar.warp", "eeej");
+        m.put("length", "12");
+
+        PrefixInterface i = converter.convert(m).to(PrefixInterface.class);
+        assertEquals(327L, i.width());
+        try {
+            i.length();
+            fail("Should have thrown an exception");
+        } catch (ConversionException ce) {
+            // good
+        }
+
+        PrefixInterface i2 = new PrefixInterface() {
+            @Override
+            public long width() {
+                return Long.MAX_VALUE;
+            }
+
+            @Override
+            public int length() {
+                return Integer.MIN_VALUE;
+            }
+        };
+
+        Map<String, String> m2 = converter.convert(i2).to(new TypeReference<Map<String,String>>() {});
+        Map<String, String> expected = new HashMap<>();
+        expected.put("org.foo.bar.width", "" + Long.MAX_VALUE);
+        expected.put("org.foo.bar.length", "" + Integer.MIN_VALUE);
+        assertEquals(expected, m2);
+    }
+
+    @Test
+    public void testAnnotationInterface() {
+        Map<String, String> m = new HashMap<>();
+        m.put("org.foo.bar.width", "327");
+        m.put("org.foo.bar.warp", "eeej");
+        m.put("length", "12");
+
+        PrefixAnnotation pa = converter.convert(m).to(PrefixAnnotation.class);
+        assertEquals(327L, pa.width());
+        assertEquals(51, pa.length());
+
+        Map<String, String> m2 = converter.convert(pa).to(new TypeReference<Map<String,String>>() {});
+        Map<String, String> expected = new HashMap<>();
+        expected.put("org.foo.bar.width", "327");
+        expected.put("org.foo.bar.length", "51");
         assertEquals(expected, m2);
     }
 
