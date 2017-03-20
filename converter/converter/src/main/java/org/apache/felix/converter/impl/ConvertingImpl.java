@@ -418,7 +418,7 @@ public class ConvertingImpl implements Converting, InternalConverting {
                 }
             }));
         else if (targetAsClass.isInterface())
-            return createProxy(sourceClass, targetAsClass);
+            return createInterface(sourceClass, targetAsClass);
         return createJavaBean(sourceClass, targetAsClass);
     }
 
@@ -444,7 +444,7 @@ public class ConvertingImpl implements Converting, InternalConverting {
     }
 
     @SuppressWarnings("rawtypes")
-    private Object createProxy(Class<?> sourceCls, Class<?> targetCls) {
+    private Object createInterface(Class<?> sourceCls, Class<?> targetCls) {
         Map m = mapView(object, sourceCls, converter);
         return Proxy.newProxyInstance(targetCls.getClassLoader(), new Class[] {targetCls},
             new InvocationHandler() {
@@ -467,6 +467,9 @@ public class ConvertingImpl implements Converting, InternalConverting {
                         if (val == null && args != null && args.length == 1) {
                             val = args[0];
                         }
+
+                        if (val == null)
+                            throw new ConversionException("No value for property: " + propName);
                     }
 
                     return converter.convert(val).to(targetType);
