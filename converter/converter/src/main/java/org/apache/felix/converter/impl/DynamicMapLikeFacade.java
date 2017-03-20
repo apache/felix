@@ -267,7 +267,7 @@ class DynamicInterfaceFacade extends DynamicMapLikeFacade<String, Object> {
 
     private Map<String, Set<Method>> getKeys() {
         if (keys == null)
-            keys = Util.getInterfaceKeys(convertingImpl.sourceClass);
+            keys = Util.getInterfaceKeys(convertingImpl.sourceClass, backingObject);
 
         return keys;
     }

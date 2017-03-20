@@ -140,11 +140,12 @@ class Util {
         return unMangleName(getPrefix(f.getDeclaringClass()), f.getName());
     }
 
-    static Map<String, Set<Method>> getInterfaceKeys(Class<?> intf) {
+    static Map<String, Set<Method>> getInterfaceKeys(Class<?> intf, Object object) {
         Map<String, Set<Method>> keys = new LinkedHashMap<>();
 
+        String seank = getSingleElementAnnotationKey(intf, object);
         for (Method md : intf.getMethods()) {
-            String name = getInterfacePropertyName(md);
+            String name = getInterfacePropertyName(md, seank, object);
             if (name != null) {
                 Set<Method> set = keys.get(name);
                 if (set == null) {
@@ -171,16 +172,86 @@ class Util {
         return keys;
     }
 
-    static String getInterfacePropertyName(Method md) {
+    static String getSingleElementAnnotationKey(Class<?> intf, Object obj) {
+        Class<?> ann = getAnnotationType(intf, obj);
+        if (ann == null)
+            return null;
+
+        boolean valueFound = false;
+        for (Method md : ann.getDeclaredMethods()) {
+            if ("value".equals(md.getName())) {
+                valueFound = true;
+                continue;
+            }
+
+            if (md.getDefaultValue() == null) {
+                // All elements bar value must have a default
+                return null;
+            }
+        }
+
+        if (!valueFound) {
+            // Single Element Annotation must have a value element.
+            return null;
+        }
+
+        return toSingleElementAnnotationKey(ann.getSimpleName());
+    }
+
+    private static Class<?> getAnnotationType(Class<?> intf, Object obj) {
+        try {
+            Method md = intf.getMethod("annotationType");
+            Object res = md.invoke(obj);
+            if (res instanceof Class)
+                return (Class<?>) res;
+        } catch (Exception e) {
+        }
+        return null;
+    }
+
+    private static String toSingleElementAnnotationKey(String simpleName) {
+        StringBuilder sb = new StringBuilder();
+
+        boolean capitalSeen = true;
+        for (char c : simpleName.toCharArray()) {
+            if (!capitalSeen) {
+                if (Character.isUpperCase(c)) {
+                    capitalSeen = true;
+                    sb.append('.');
+                }
+            } else {
+                if (Character.isLowerCase(c)) {
+                    capitalSeen = false;
+                }
+            }
+            sb.append(Character.toLowerCase(c));
+        }
+
+        return sb.toString();
+    }
+
+    static String getInterfacePropertyName(Method md, String singleElementAnnotationKey, Object object) {
         if (md.getReturnType().equals(Void.class))
             return null; // not an accessor
 
         if (md.getParameterTypes().length > 1)
             return null; // not an accessor
 
+        if ("value".equals(md.getName()) && md.getParameterTypes().length == 0 && singleElementAnnotationKey != null)
+            return singleElementAnnotationKey;
+
         if (Object.class.equals(md.getDeclaringClass()) ||
             Annotation.class.equals(md.getDeclaringClass()))
             return null; // do not use any methods on the Object or Annotation class as a accessor
+
+        if ("annotationType".equals(md.getName())) {
+            try {
+                Object cls = md.invoke(object);
+                if (cls instanceof Class && ((Class<?>) cls).isAnnotation())
+                    return null;
+            } catch (Exception e) {
+            }
+        }
 
         if (md.getDeclaringClass().getSimpleName().startsWith("$Proxy")) {
             // TODO is there a better way to do this?

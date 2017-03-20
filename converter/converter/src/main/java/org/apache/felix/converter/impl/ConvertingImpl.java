@@ -450,7 +450,7 @@ public class ConvertingImpl implements Converting, InternalConverting {
             new InvocationHandler() {
                 @Override
                 public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
-                    String propName = Util.getInterfacePropertyName(method);
+                    String propName = Util.getInterfacePropertyName(method, Util.getSingleElementAnnotationKey(targetCls, proxy), proxy);
                     if (propName == null)
                         return null;
 
@@ -714,7 +714,7 @@ public class ConvertingImpl implements Converting, InternalConverting {
         Map result = new HashMap();
         for (Class i : obj.getClass().getInterfaces()) {
             for (Method md : i.getMethods()) {
-                handleInterfaceMethod(obj, md, new HashSet<>(), result);
+                handleInterfaceMethod(obj, i, md, new HashSet<>(), result);
             }
             if (result.size() > 0)
                 return result;
@@ -801,12 +801,12 @@ public class ConvertingImpl implements Converting, InternalConverting {
     }
 
     @SuppressWarnings({ "rawtypes", "unchecked" })
-    private static void handleInterfaceMethod(Object obj, Method md, Set<String> invokedMethods, Map res) {
+    private static void handleInterfaceMethod(Object obj, Class<?> intf, Method md, Set<String> invokedMethods, Map res) {
         String mn = md.getName();
         if (invokedMethods.contains(mn))
             return; // method with this name already invoked
 
-        String propName = Util.getInterfacePropertyName(md);
+        String propName = Util.getInterfacePropertyName(md, Util.getSingleElementAnnotationKey(intf, obj), obj);
         if (propName == null)
             return;
 
