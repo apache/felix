@@ -16,6 +16,7 @@
  */
 package org.apache.felix.converter.impl;
 
+import java.lang.annotation.Annotation;
 import java.math.BigInteger;
 import java.net.URL;
 import java.text.SimpleDateFormat;
@@ -258,6 +259,37 @@ public class ConverterMapTest {
         }
     }
 
+    @Test
+    @SuppressWarnings({ "unchecked", "rawtypes" })
+    public void testSingleElementAnnotation() {
+    	class MySingleElementAnnotation implements SingleElementAnnotation {
+            @Override
+            public Class<? extends Annotation> annotationType() {
+                return SingleElementAnnotation.class;
+            }
+
+            @Override
+            public String[] value() {
+                return new String[] {"hi", "there"};
+            }
+
+            @Override
+            public long somethingElse() {
+                return 42;
+            }
+    	};
+    	MySingleElementAnnotation sea = new MySingleElementAnnotation();
+    	Map m = converter.convert(sea).to(Map.class);
+    	Map expected = new HashMap();
+    	expected.put("single.element.annotation", new String[] {"hi", "there"});
+    	expected.put("somethingElse", 42);
+    	assertEquals(2, m.size());
+    	assertArrayEquals(new String[] {"hi", "there"}, (String []) m.get("single.element.annotation"));
+    	assertEquals(42L, m.get("somethingElse"));
+
+    	// TODO support conversion in the other direction too.
+    }
+
     @SuppressWarnings({ "rawtypes", "unchecked" })
     @Test
     public void testCopyMap() {
@@ -280,5 +312,10 @@ public class ConverterMapTest {
         String foo() default "fooo!";
         int bar() default 42;
         boolean za_za();
+    }
+
+    @interface SingleElementAnnotation {
+    	String[] value();
+    	long somethingElse() default -87;
     }
 }
