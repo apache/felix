@@ -18,17 +18,18 @@ package org.apache.felix.converter.impl;
 
 import java.lang.reflect.Type;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
-import org.apache.felix.converter.impl.AdapterImpl.ConvertFunctionImpl;
+import org.osgi.util.converter.ConvertFunction;
 import org.osgi.util.converter.ConverterBuilder;
-import org.osgi.util.converter.Rule;
-import org.osgi.util.converter.TypeReference;
-import org.osgi.util.function.Function;
+import org.osgi.util.converter.TargetRule;
 
 public class ConverterBuilderImpl implements ConverterBuilder {
     private final InternalConverter adapter;
-    private final List<Rule<?,?>> rules = new ArrayList<>();
+    private final Map<Type, List<ConvertFunction<?>>> rules = new HashMap<>();
+    private final List<ConvertFunction<?>> catchAllRules = new ArrayList<>();
 
     public ConverterBuilderImpl(InternalConverter a) {
         this.adapter = a;
@@ -36,31 +37,34 @@ public class ConverterBuilderImpl implements ConverterBuilder {
 
     @Override
     public InternalConverter build() {
-        return new AdapterImpl(adapter, rules);
+        return new AdapterImpl(adapter, rules, catchAllRules);
     }
 
     @Override
-    public <F, T> ConverterBuilder rule(Rule<F, T> rule) {
-        rules.add(rule);
+    public <T> ConverterBuilder rule(ConvertFunction<T> func) {
+    	catchAllRules.add(func);
         return this;
     }
 
     @Override
-    public <F, T> ConverterBuilder rule(Class<F> fromCls, Class<T> toCls, Function<F, T> toFun, Function<T, F> fromFun) {
-        rules.add(new Rule<F, T>(fromCls, toCls, new ConvertFunctionImpl<>(toFun), new ConvertFunctionImpl<>(fromFun)));
+    public <T> ConverterBuilder rule(Type t, ConvertFunction<T> func) {
+    	getRulesList(t).add(func);
+    	return this;
+    }
+
+    @Override
+    public <T> ConverterBuilder rule(TargetRule<T> rule) {
+    	Type type = rule.getTargetType();
+    	getRulesList(type).add(rule.getFunction());
         return this;
     }
 
-    @Override
-    public <F, T> ConverterBuilder rule(TypeReference<F> fromRef, TypeReference<T> toRef, Function<F, T> toFun,
-            Function<T, F> fromFun) {
-        // TODO Auto-generated method stub
-        return null;
-    }
-
-    @Override
-    public <F, T> ConverterBuilder rule(Type fromType, Type toType, Function<F, T> toFun, Function<T, F> fromFun) {
-        // TODO Auto-generated method stub
-        return null;
+    private List<ConvertFunction<?>> getRulesList(Type type) {
+        List<ConvertFunction<?>> l = rules.get(type);
+    	if (l == null) {
+    		l = new ArrayList<>();
+    		rules.put(type, l);
+    	}
+        return l;
     }
 }
