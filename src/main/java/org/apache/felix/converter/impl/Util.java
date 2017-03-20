@@ -137,7 +137,7 @@ class Util {
         if (!Modifier.isPublic(f.getModifiers()))
             return null;
 
-        return unMangleName(f.getName());
+        return unMangleName(getPrefix(f.getDeclaringClass()), f.getName());
     }
 
     static Map<String, Set<Method>> getInterfaceKeys(Class<?> intf) {
@@ -212,7 +212,26 @@ class Util {
         return md.invoke(obj);
     }
 
-    static String mangleName(String key) {
+    static String getPrefix(Class<?> cls) {
+        try {
+            Field prefixField = cls.getDeclaredField("PREFIX_");
+            if (prefixField.getType().equals(String.class)) {
+                if ((prefixField.getModifiers() & (Modifier.PUBLIC | Modifier.FINAL | Modifier.STATIC)) > 0) {
+                    return (String) prefixField.get(null);
+                }
+            }
+        } catch (Exception ex) {
+            // LOG no prefix field
+        }
+        return "";
+    }
+
+    static String mangleName(String prefix, String key) {
+        if (!key.startsWith(prefix))
+            return null;
+
+        key = key.substring(prefix.length());
+
         String res = key.replace("_", "__");
         res = res.replace("$", "$$");
         res = res.replaceAll("[.]([._])", "_\\$$1");
@@ -221,7 +240,7 @@ class Util {
         return res;
     }
 
-    static String unMangleName(String key) {
+    static String unMangleName(String prefix, String key) {
         String res = key.replaceAll("_\\$", ".");
         res = res.replace("__", "\f"); // park double underscore as formfeed char
         res = res.replace('_', '.');
@@ -230,6 +249,6 @@ class Util {
         res = res.replace('\f', '_');  // convert formfeed char back to single underscore
         res = res.replace('\b', '$');  // convert backspace char back go dollar
         // TODO handle Java keywords
-        return res;
+        return prefix + res;
     }
 }

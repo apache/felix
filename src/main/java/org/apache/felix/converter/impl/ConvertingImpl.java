@@ -295,17 +295,19 @@ public class ConvertingImpl implements Converting, InternalConverting {
         if (targetAsDTO)
             cls = targetClass;
         try {
+            String prefix = Util.getPrefix(cls);
+
             T dto = (T) targetClass.newInstance();
 
             for (Map.Entry entry : (Set<Map.Entry>) m.entrySet()) {
                 Field f = null;
                 try {
-                    f = cls.getDeclaredField(Util.mangleName(entry.getKey().toString()));
-                } catch (NoSuchFieldException e) {
+                    f = cls.getDeclaredField(Util.mangleName(prefix, entry.getKey().toString()));
+                } catch (NoSuchFieldException | NullPointerException e) {
                     try {
-                        f = cls.getField(Util.mangleName(entry.getKey().toString()));
-                    } catch (NoSuchFieldException e1) {
-                        // There is not field with this name
+                        f = cls.getField(Util.mangleName(prefix, entry.getKey().toString()));
+                    } catch (NoSuchFieldException | NullPointerException e1) {
+                        // There is no field with this name
                     }
                 }
 
