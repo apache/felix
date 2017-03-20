@@ -18,35 +18,26 @@ package org.apache.felix.converter.impl;
 
 import java.lang.reflect.Type;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
-import java.util.Iterator;
-import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
-import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
 
 import org.osgi.util.converter.ConversionException;
 import org.osgi.util.converter.ConvertFunction;
 import org.osgi.util.converter.Converter;
 import org.osgi.util.converter.ConverterBuilder;
 import org.osgi.util.converter.Converting;
-import org.osgi.util.converter.Rule;
 import org.osgi.util.converter.TypeReference;
-import org.osgi.util.function.Function;
 
 public class AdapterImpl implements InternalConverter {
     private final InternalConverter delegate;
-    private final Map<TypePair, ConvertFunction<Object, Object>> classRules =
-            new ConcurrentHashMap<>();
+    private final Map<Type, List<ConvertFunction<?>>> typeRules;
+    private final List<ConvertFunction<?>> allRules;
 
-    AdapterImpl(InternalConverter converter, List<Rule<?,?>> rules) {
-        this.delegate = converter;
-        for (Rule<?,?> r : rules) {
-            rule(r);
-        }
+    AdapterImpl(InternalConverter converter, Map<Type, List<ConvertFunction<?>>> rules, List<ConvertFunction<?>> catchAllRules) {
+        delegate = converter;
+        typeRules = rules;
+        allRules = catchAllRules;
     }
 
     @Override
@@ -61,26 +52,10 @@ public class AdapterImpl implements InternalConverter {
         return new ConverterBuilderImpl(this);
     }
 
-    @SuppressWarnings("unchecked")
-    private <F, T> AdapterImpl rule(Rule<F, T> rule) {
-        ConvertFunction<F, T> toFun = rule.getToFunction();
-        if (toFun != null)
-            classRules.put(new TypePair(rule.getSourceType(), rule.getTargetType()),
-                (ConvertFunction<Object, Object>) toFun);
-
-
-        ConvertFunction<T, F> fromFun = rule.getBackFunction();
-        if (fromFun != null)
-            classRules.put(new TypePair(rule.getTargetType(), rule.getSourceType()),
-                (ConvertFunction<Object, Object>) fromFun);
-        return this;
-    }
-
     private class ConvertingWrapper implements InternalConverting {
         private final InternalConverting del;
         private final Object object;
         private volatile Object defaultValue;
-        private volatile Class<?> treatAsClass;
         private volatile boolean hasDefault;
 
         ConvertingWrapper(Object obj, InternalConverting c) {
@@ -109,7 +84,6 @@ public class AdapterImpl implements InternalConverter {
 
         @Override
         public Converting sourceAs(Class<?> type) {
-            treatAsClass = type;
             del.sourceAs(type);
             return this;
         }
@@ -134,7 +108,7 @@ public class AdapterImpl implements InternalConverter {
 
         @Override
         public Converting targetAsBean() {
-            // TODO not yet implemented
+            del.targetAsBean();
             return this;
         }
 
@@ -160,33 +134,16 @@ public class AdapterImpl implements InternalConverter {
         @SuppressWarnings("unchecked")
         @Override
         public Object to(Type type) {
-            List<ConvertFunction<Object, Object>> converters = new ArrayList<>();
+            List<ConvertFunction<?>> tr = typeRules.get(Util.primitiveToBoxed(type));
+            if (tr == null)
+                tr = Collections.emptyList();
+            List<ConvertFunction<?>> converters = new ArrayList<>(tr.size() + allRules.size());
+            converters.addAll(tr);
+            converters.addAll(allRules);
+
             try {
                 if (object != null) {
-                    Set<Type> fromTypes = assignableTypes(treatAsClass != null ? treatAsClass : object.getClass());
-                    Set<Type> toTypes = assignableTypes(type);
-
-                    for (Type fromType : fromTypes) {
-                        for (Type toType : toTypes) {
-                            // TODO what exactly do we use as order here?
-                            converters.add(classRules.get(new TypePair(fromType, Util.primitiveToBoxed(toType))));
-                        }
-                    }
-                    for (Type fromType : fromTypes) {
-                        converters.add(classRules.get(new TypePair(fromType, Object.class)));
-                    }
-                    for (Type toType : toTypes) {
-                        converters.add(classRules.get(new TypePair(Object.class, Util.primitiveToBoxed(toType))));
-                    }
-
-                    for (Iterator<ConvertFunction<Object, Object>> it = converters.iterator(); it.hasNext(); ) {
-                        // remove null values
-                        ConvertFunction<Object, Object> func = it.next();
-                        if (func == null)
-                            it.remove();
-                    }
-
-                    for (ConvertFunction<Object,Object> cf : converters) {
+                    for (ConvertFunction<?> cf : converters) {
                         try {
                             Object res = cf.convert(object, type);
                             if (res != null) {
@@ -194,7 +151,6 @@ public class AdapterImpl implements InternalConverter {
                             }
                         } catch (Exception ex) {
                             if (hasDefault)
-                                // TODO override this too!
                                 return defaultValue;
                             else
                                 throw new ConversionException("Cannot convert " + object + " to " + type, ex);
@@ -205,7 +161,7 @@ public class AdapterImpl implements InternalConverter {
                 return del.to(type);
             } catch (Exception ex) {
                 // do custom error handling
-                for (ConvertFunction<Object, Object> cf : converters) {
+                for (ConvertFunction<?> cf : converters) {
                     Object eh = cf.handleError(object, type);
                     if (eh != null)
                         return eh;
@@ -218,61 +174,6 @@ public class AdapterImpl implements InternalConverter {
         @Override
         public String toString() {
             return to(String.class);
-        }
-    }
-
-    private static Set<Type> assignableTypes(Type mostSpecialized) {
-        if (!(mostSpecialized instanceof Class))
-            return Collections.singleton(mostSpecialized);
-
-        Class<?> curClass = (Class<?>) mostSpecialized;
-        Set<Type> lookupTypes = new LinkedHashSet<>(); // Iteration order matters!
-        while((curClass != null) && (!(Object.class.equals(curClass)))) {
-            lookupTypes.add(curClass);
-            lookupTypes.addAll(Arrays.asList(curClass.getInterfaces()));
-            curClass = curClass.getSuperclass();
-        }
-        lookupTypes.add(Object.class); // Object is the superclass of any type
-        return lookupTypes;
-    }
-
-    static class TypePair {
-        private final Type from;
-        private final Type to;
-
-        TypePair(Type from, Type to) {
-            this.from = from;
-            this.to = to;
-        }
-
-        @Override
-        public int hashCode() {
-            return Objects.hash(from, to);
-        }
-
-        @Override
-        public boolean equals(Object obj) {
-            if (obj == this)
-                return true;
-            if (!(obj instanceof TypePair))
-                return false;
-
-            TypePair o = (TypePair) obj;
-            return Objects.equals(from, o.from) &&
-                    Objects.equals(to, o.to);
-        }
-    }
-
-    static class ConvertFunctionImpl<F, T> implements ConvertFunction<F, T> {
-        private final Function<F, T> function;
-
-        public ConvertFunctionImpl(Function<F, T> function) {
-            this.function = function;
-        }
-
-        @Override
-        public T convert(F obj, Type targetType) throws Exception {
-            return function.apply(obj);
         }
     }
 }

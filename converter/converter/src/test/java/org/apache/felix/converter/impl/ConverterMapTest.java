@@ -18,7 +18,6 @@ package org.apache.felix.converter.impl;
 
 import java.math.BigInteger;
 import java.net.URL;
-import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Collections;
 import java.util.Date;
@@ -32,6 +31,7 @@ import org.junit.Ignore;
 import org.junit.Test;
 import org.osgi.util.converter.Converter;
 import org.osgi.util.converter.ConverterBuilder;
+import org.osgi.util.converter.Rule;
 import org.osgi.util.converter.StandardConverter;
 import org.osgi.util.converter.TypeReference;
 
@@ -105,13 +105,14 @@ public class ConverterMapTest {
         mb.setEnabled(true);
 
         ConverterBuilder cb = new StandardConverter().newConverterBuilder();
-        cb.rule(Date.class, String.class, v -> sdf.format(v), v -> {
+        cb.rule(new Rule<Date,String>(v -> sdf.format(v)) {});
+        cb.rule(new Rule<String,Date>(v -> {
             try {
                 return sdf.parse(v);
-            } catch (ParseException e) {
-                throw new RuntimeException(e);
+            } catch (Exception ex) {
+                return null;
             }
-        });
+        }) {});
         Converter ca = cb.build();
         Map<String, String> m = ca.convert(mb).sourceAsBean().to(new TypeReference<Map<String, String>>(){});
         assertEquals("true", m.get("enabled"));

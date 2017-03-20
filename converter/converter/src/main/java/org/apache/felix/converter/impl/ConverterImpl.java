@@ -29,6 +29,7 @@ import java.util.UUID;
 import java.util.regex.Pattern;
 
 import org.osgi.util.converter.ConverterBuilder;
+import org.osgi.util.converter.Rule;
 
 public class ConverterImpl implements InternalConverter {
     @Override
@@ -37,35 +38,30 @@ public class ConverterImpl implements InternalConverter {
     }
 
     public void addStandardRules(ConverterBuilder cb) {
-        cb.rule(Byte.class, String.class, v -> v.toString(), Byte::parseByte);
-        cb.rule(Calendar.class, String.class, v -> v.getTime().toInstant().toString(),
-                v -> {
-                    Calendar cc = Calendar.getInstance();
-                    cc.setTime(Date.from(Instant.parse(v)));
-                    return cc;
-                });
-        cb.rule(Character.class, Boolean.class, v -> v.charValue() != 0,
-                v -> v.booleanValue() ? (char) 1 : (char) 0);
-        cb.rule(Character.class, String.class, v -> v.toString(),
-                v -> v.length() > 0 ? v.charAt(0) : 0);
-        cb.rule(Class.class, String.class, Class::toString,
-                this::loadClassUnchecked);
-        cb.rule(Date.class, Long.class, d -> d.getTime(), l -> new Date(l));
-        cb.rule(Date.class, String.class, v -> v.toInstant().toString(),
-                v -> Date.from(Instant.parse(v)));
-        cb.rule(Double.class, String.class, v -> v.toString(), Double::parseDouble);
-        cb.rule(Float.class, String.class, v -> v.toString(), Float::parseFloat);
-        cb.rule(Integer.class, String.class, v -> v.toString(), Integer::parseInt);
-        cb.rule(LocalDateTime.class, String.class, LocalDateTime::toString, LocalDateTime::parse);
-        cb.rule(LocalDate.class, String.class, LocalDate::toString, LocalDate::parse);
-        cb.rule(LocalTime.class, String.class, LocalTime::toString, LocalTime::parse);
-        cb.rule(Long.class, String.class, v -> v.toString(), Long::parseLong);
-        cb.rule(OffsetDateTime.class, String.class, OffsetDateTime::toString, OffsetDateTime::parse);
-        cb.rule(OffsetTime.class, String.class, OffsetTime::toString, OffsetTime::parse);
-        cb.rule(Pattern.class, String.class, Pattern::toString, Pattern::compile);
-        cb.rule(Short.class, String.class, v -> v.toString(), Short::parseShort);
-        cb.rule(UUID.class, String.class, UUID::toString, UUID::fromString);
-        cb.rule(ZonedDateTime.class, String.class, ZonedDateTime::toString, ZonedDateTime::parse);
+        cb.rule(new Rule<Calendar, String>(f -> f.getTime().toInstant().toString()) {});
+        cb.rule(new Rule<String, Calendar>(f -> {
+            Calendar cc = Calendar.getInstance();
+            cc.setTime(Date.from(Instant.parse(f)));
+            return cc;
+        }) {});
+        cb.rule(new Rule<Calendar,Long>(f -> f.getTime().getTime()) {});
+        cb.rule(new Rule<Long,Calendar>(f -> new Calendar.Builder().setInstant(f).build()) {});
+        cb.rule(new Rule<Character,Boolean>(c -> c.charValue() != 0) {});
+        cb.rule(new Rule<Boolean,Character>(b -> b.booleanValue() ? (char) 1 : (char) 0) {});
+        cb.rule(new Rule<String,Character>(f -> f.length() > 0 ? f.charAt(0) : 0) {});
+        cb.rule(new Rule<String,Class<?>>(this::loadClassUnchecked) {});
+        cb.rule(new Rule<Date,Long>(Date::getTime) {});
+        cb.rule(new Rule<Long,Date>(f -> new Date(f)) {});
+        cb.rule(new Rule<Date,String>(f -> f.toInstant().toString()) {});
+        cb.rule(new Rule<String,Date>(f -> Date.from(Instant.parse(f))) {});
+        cb.rule(new Rule<String, LocalDateTime>(LocalDateTime::parse) {});
+        cb.rule(new Rule<String, LocalDate>(LocalDate::parse) {});
+        cb.rule(new Rule<String, LocalTime>(LocalTime::parse) {});
+        cb.rule(new Rule<String, OffsetDateTime>(OffsetDateTime::parse) {});
+        cb.rule(new Rule<String, OffsetTime>(OffsetTime::parse) {});
+        cb.rule(new Rule<String, Pattern>(Pattern::compile) {});
+        cb.rule(new Rule<String, UUID>(UUID::fromString) {});
+        cb.rule(new Rule<String, ZonedDateTime>(ZonedDateTime::parse) {});
     }
 
     private Class<?> loadClassUnchecked(String className) {

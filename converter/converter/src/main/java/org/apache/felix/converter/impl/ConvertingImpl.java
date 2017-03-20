@@ -48,14 +48,18 @@ import org.osgi.util.converter.Converting;
 import org.osgi.util.converter.TypeReference;
 
 public class ConvertingImpl implements Converting, InternalConverting {
-    private static final Map<Class<?>, Class<?>> interfaceImplementations;
+    private static final Map<Class<?>, Class<?>> INTERFACE_IMPLS;
     static {
         Map<Class<?>, Class<?>> m = new HashMap<>();
         m.put(Collection.class, ArrayList.class);
         m.put(List.class, ArrayList.class);
         m.put(Set.class, LinkedHashSet.class); // preserves insertion order
         m.put(Map.class, LinkedHashMap.class); // preserves insertion order
-        interfaceImplementations = Collections.unmodifiableMap(m);
+        INTERFACE_IMPLS = Collections.unmodifiableMap(m);
+    }
+    private static final Collection<Class<?>> NO_MAP_VIEW_TYPES;
+    static {
+        NO_MAP_VIEW_TYPES = Arrays.asList(String.class);
     }
 
     volatile InternalConverter converter;
@@ -69,7 +73,6 @@ public class ConvertingImpl implements Converting, InternalConverting {
     volatile Type[] typeArguments;
     private volatile boolean forceCopy = false;
     private volatile boolean sourceAsJavaBean = false;
-    @SuppressWarnings( "unused" )
     private volatile boolean targetAsJavaBean = false;
     private volatile boolean sourceAsDTO = false;
     private volatile boolean targetAsDTO = false;
@@ -218,7 +221,7 @@ public class ConvertingImpl implements Converting, InternalConverting {
             if (defaultValue != null)
                 return converter.convert(defaultValue).sourceAs(sourceAsClass).targetAs(targetAsClass).to(targetClass);
             else
-                return null;
+                throw new ConversionException("Cannot convert " + object + " to " + targetAsClass);
         }
     }
 
@@ -263,7 +266,7 @@ public class ConvertingImpl implements Converting, InternalConverting {
             targetElementType = (Class<?>) typeArguments[0];
         }
 
-        Class<?> ctrCls = interfaceImplementations.get(targetAsClass);
+        Class<?> ctrCls = INTERFACE_IMPLS.get(targetAsClass);
         Class<?>targetCls;
         if (ctrCls != null)
             targetCls = ctrCls;
@@ -328,7 +331,7 @@ public class ConvertingImpl implements Converting, InternalConverting {
         if (m == null)
             return null;
 
-        Class<?> ctrCls = interfaceImplementations.get(targetClass);
+        Class<?> ctrCls = INTERFACE_IMPLS.get(targetClass);
         if (ctrCls == null)
             ctrCls = targetClass;
 
@@ -454,16 +457,13 @@ public class ConvertingImpl implements Converting, InternalConverting {
                     Object val = m.get(propName);
 
                     // If no value is available take the default if specified
-                    boolean defaultUsed = false; // TODO maybe we don't need this...
                     if (val == null) {
                         if (targetCls.isAnnotation()) {
                             val = method.getDefaultValue();
-                            defaultUsed = true;
                         }
 
                         if (val == null && args != null && args.length == 1) {
                             val = args[0];
-                            defaultUsed = true;
                         }
                     }
 
@@ -478,6 +478,11 @@ public class ConvertingImpl implements Converting, InternalConverting {
 
         Class<?> boxed = Util.primitiveToBoxed(cls);
         if (boxed.equals(cls)) {
+            if (cls.isArray()) {
+                return new Object[] {};
+            } else if (Collection.class.isAssignableFrom(cls)) {
+                return converter.convert(Collections.emptyList()).to(cls);
+            }
             // This is not a primitive, just return null
             return null;
         }
@@ -487,9 +492,9 @@ public class ConvertingImpl implements Converting, InternalConverting {
             return 0L;
         } else if (cls.equals(double.class) ) {
             return 0.0;
-        } else {
-            return 0;
         }
+
+        return 0;
     }
 
     private static boolean isDTOType(Class<?> cls) {
@@ -571,6 +576,20 @@ public class ConvertingImpl implements Converting, InternalConverting {
         } else if (Number.class.isAssignableFrom(targetAsClass)) {
             if (object instanceof Boolean) {
                 return ((Boolean) object).booleanValue() ? 1 : 0;
+            } else if (object instanceof Number) {
+                if (Byte.class.isAssignableFrom(targetAsClass)) {
+                    return ((Number) object).byteValue();
+                } else if (Short.class.isAssignableFrom(targetAsClass)) {
+                    return ((Number) object).shortValue();
+                } else if (Integer.class.isAssignableFrom(targetAsClass)) {
+                    return ((Number) object).intValue();
+                } else if (Long.class.isAssignableFrom(targetAsClass)) {
+                    return ((Number) object).longValue();
+                } else if (Float.class.isAssignableFrom(targetAsClass)) {
+                    return ((Number) object).floatValue();
+                } else if (Double.class.isAssignableFrom(targetAsClass)) {
+                    return ((Number) object).doubleValue();
+                }
             }
         } else if (Class.class.equals(targetAsClass)) {
             if (object instanceof Collection && ((Collection<?>) object).size() == 0) {
@@ -731,7 +750,7 @@ public class ConvertingImpl implements Converting, InternalConverting {
                 }
             }
             for (Class<?> intf : cls.getInterfaces()) {
-                Class<?> impl = interfaceImplementations.get(intf);
+                Class<?> impl = INTERFACE_IMPLS.get(intf);
                 if (impl != null)
                     return impl;
             }
@@ -804,14 +823,18 @@ public class ConvertingImpl implements Converting, InternalConverting {
             return null; // TODO
         else if (isDTOType(sourceCls) || sourceAsDTO)
             return createMapFromDTO(obj, converter);
-        else {
-            if (sourceAsJavaBean) {
-                Map<?,?> m = createMapFromBeanAccessors(obj, sourceCls);
-                if (m.size() > 0)
-                    return m;
-            }
-        }
+        else if (sourceAsJavaBean) {
+            Map<?,?> m = createMapFromBeanAccessors(obj, sourceCls);
+            if (m.size() > 0)
+                return m;
+        } else if (typeProhibitedFromMapView(sourceCls))
+            throw new ConversionException("No map view for " + obj);
+
         return createMapFromInterface(obj);
+    }
+
+    private boolean typeProhibitedFromMapView(Class<?> sourceCls) {
+        return NO_MAP_VIEW_TYPES.contains(sourceCls);
     }
 
     private static boolean isCopyRequiredType(Class<?> cls) {

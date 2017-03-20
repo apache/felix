@@ -301,7 +301,7 @@ public class ConverterTest {
     @Test
     public void testExceptionDefaultValue() {
         assertEquals(42, (int) converter.convert("haha").defaultValue(42).to(int.class));
-        assertNull(converter.convert("haha").defaultValue(null).to(int.class));
+        assertEquals(999, (int) converter.convert("haha").defaultValue(999).to(int.class));
         try {
             converter.convert("haha").to(int.class);
             fail("Should have thrown an exception");
@@ -323,9 +323,9 @@ public class ConverterTest {
     @Test
     public void testCustomStringArrayConversion() {
         ConverterBuilder cb = converter.newConverterBuilder();
-        cb.rule(String[].class, String.class,
-                v -> Stream.of(v).collect(Collectors.joining(",")),
-                v -> v.split(","));
+        cb.rule(new Rule<String[],String>(v -> Stream.of(v).collect(Collectors.joining(","))){});
+        cb.rule(new Rule<String,String[]>(v -> v.split(",")){});
+
         Converter adapted = cb.build();
 
         String[] sa = {"A", "B"};
@@ -336,9 +336,8 @@ public class ConverterTest {
     @Test
     public void testCustomIntArrayConversion() {
         ConverterBuilder cb = converter.newConverterBuilder();
-        cb.rule(int[].class, String.class,
-                v -> Arrays.stream(v).mapToObj(Integer::toString).collect(Collectors.joining(",")),
-                v -> Arrays.stream(v.split(",")).mapToInt(Integer::parseInt).toArray());
+        cb.rule(String.class, (f,t) -> f instanceof int[] ? Arrays.stream((int []) f).mapToObj(Integer::toString).collect(Collectors.joining(",")) : null);
+        cb.rule(int[].class, (f,t) -> f instanceof String ? Arrays.stream(((String) f).split(",")).mapToInt(Integer::parseInt).toArray() : null);
         Converter adapted = cb.build();
 
         int[] ia = {1, 2};
@@ -348,14 +347,14 @@ public class ConverterTest {
 
     @Test
     public void testCustomErrorHandling() {
-        ConvertFunction<String,Integer> func = new ConvertFunction<String,Integer>() {
+        ConvertFunction<Integer> func = new ConvertFunction<Integer>() {
             @Override
-            public Integer convert(String obj, Type targetType) throws Exception {
+            public Integer convert(Object obj, Type targetType) throws Exception {
                 return null;
             }
 
             @Override
-            public Integer handleError(String obj, Type targetType) {
+            public Integer handleError(Object obj, Type targetType) {
                 if ("hello".equals(obj)) {
                     return -1;
                 }
@@ -364,8 +363,7 @@ public class ConverterTest {
         };
 
         ConverterBuilder cb = converter.newConverterBuilder();
-        cb.rule(new Rule<>(String.class, Integer.class, func));
-        Converter adapted = cb.build();
+        Converter adapted = cb.rule(Integer.class, func).build();
 
         assertEquals(new Integer(12), adapted.convert("12").to(Integer.class));
         assertEquals(new Integer(-1), adapted.convert("hello").to(Integer.class));
