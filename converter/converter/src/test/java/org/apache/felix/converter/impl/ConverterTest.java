@@ -878,6 +878,23 @@ public class ConverterTest {
         assertEquals(Long.valueOf(Long.MIN_VALUE), m.get(SomeEnum.VALUE));
     }
 
+    @Test
+    public void testPrefixDTO() {
+        Map<String, String> m = new HashMap<>();
+        m.put("org.foo.bar.width", "327");
+        m.put("length", "12");
+
+        PrefixDTO dto = converter.convert(m).to(PrefixDTO.class);
+        assertEquals(327, dto.width);
+        assertEquals("This one should not be set", 0, dto.length);
+
+        Map<String, String> m2 = converter.convert(dto).to(new TypeReference<HashMap<String,String>>() {});
+        Map<String, String> expected = new HashMap<>();
+        expected.put("org.foo.bar.width", "327");
+        expected.put("org.foo.bar.length", "0");
+        assertEquals(expected, m2);
+    }
+
     static class MyClass2 {
         private final String value;
         public MyClass2(String v) {
