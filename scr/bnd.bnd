@@ -37,6 +37,7 @@ Import-Package: \
  org.osgi.util.function;version="[1.0,2)", \
  org.apache.felix.service.command;resolution:=optional, \
  org.apache.felix.shell;provide:=true;resolution:=optional, \
+ java.lang.management;resolution:=optional, \
  *
 
 DynamicImport-Package: \
