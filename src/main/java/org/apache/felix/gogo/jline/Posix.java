@@ -1006,6 +1006,7 @@ public class Posix {
                 "  -? --help                show help",
                 "  -1                       list one entry per line",
                 "  -C                       multi-column output",
+                "     --color=WHEN          colorize the output, may be `always', `never' or `auto'",
                 "  -a                       list entries starting with .",
                 "  -F                       append file type indicators",
                 "  -m                       comma separated",
@@ -1019,7 +1020,28 @@ public class Posix {
                 "  -h                       print sizes in human readable form"
         };
         Options opt = parseOptions(session, usage, argv);
-        Map<String, String> colors = getColorMap(session, "LS");
+        String color = opt.isSet("color") ? opt.get("color") : "auto";
+        boolean colored;
+        switch (color) {
+            case "always":
+            case "yes":
+            case "force":
+                colored = true;
+                break;
+            case "never":
+            case "no":
+            case "none":
+                colored = false;
+                break;
+            case "auto":
+            case "tty":
+            case "if-tty":
+                colored = process.isTty(1);
+                break;
+            default:
+                throw new IllegalArgumentException("invalid argument ‘" + color + "’ for ‘--color’");
+        }
+        Map<String, String> colors = colored ? getLsColorMap(session) : Collections.emptyMap();
 
         class PathEntry implements Comparable<PathEntry> {
             final Path abs;
@@ -1096,7 +1118,7 @@ public class Posix {
                 }
                 String col = colors.get(type);
                 boolean addSuffix = opt.isSet("F");
-                if (col != null && !col.isEmpty() && process.isTty(1)) { // TODO: ability to force colors if piped
+                if (col != null && !col.isEmpty()) {
                     return "\033[" + col + "m" + path.toString() + "\033[m" + (addSuffix ? suffix : "") + link;
                 } else {
                     return path.toString() + (addSuffix ? suffix : "") + link;
@@ -1489,6 +1511,26 @@ public class Posix {
         boolean lineNumber = opt.isSet("line-number");
         boolean count = opt.isSet("count");
         String color = opt.isSet("color") ? opt.get("color") : "auto";
+        boolean colored;
+        switch (color) {
+            case "always":
+            case "yes":
+            case "force":
+                colored = true;
+                break;
+            case "never":
+            case "no":
+            case "none":
+                colored = false;
+                break;
+            case "auto":
+            case "tty":
+            case "if-tty":
+                colored = process.isTty(1);
+                break;
+            default:
+                throw new IllegalArgumentException("invalid argument ‘" + color + "’ for ‘--color’");
+        }
 
         List<Source> sources = new ArrayList<>();
         if (opt.args().isEmpty()) {
@@ -1515,7 +1557,9 @@ public class Posix {
                     }
                     if (p.matcher(line).matches() ^ invertMatch) {
                         AttributedStringBuilder sbl = new AttributedStringBuilder();
-                        sbl.style(AttributedStyle.DEFAULT.foreground(AttributedStyle.BLACK + AttributedStyle.BRIGHT));
+                        if (colored) {
+                            sbl.style(AttributedStyle.DEFAULT.foreground(AttributedStyle.BLACK + AttributedStyle.BRIGHT));
+                        }
                         if (!count && sources.size() > 1) {
                             sbl.append(source.getName());
                             sbl.append(":");
@@ -1523,11 +1567,13 @@ public class Posix {
                         if (!count && lineNumber) {
                             sbl.append(String.format("%6d  ", lineno));
                         }
-                        sbl.style(AttributedStyle.DEFAULT);
+                        if (colored) {
+                            sbl.style(AttributedStyle.DEFAULT);
+                        }
                         Matcher matcher2 = p2.matcher(line);
                         AttributedString aLine = AttributedString.fromAnsi(line);
                         AttributedStyle style = AttributedStyle.DEFAULT;
-                        if (!invertMatch && !color.equalsIgnoreCase("never")) {
+                        if (!invertMatch && colored) {
                             style = style.bold().foreground(AttributedStyle.RED);
                         }
                         int cur = 0;
@@ -1933,15 +1979,15 @@ public class Posix {
         return perms;
     }
 
-    public static Map<String, String> getColorMap(CommandSession session, String name) {
+    public static Map<String, String> getLsColorMap(CommandSession session) {
+        return getColorMap(session, "LS", DEFAULT_LS_COLORS);
+    }
+
+    public static Map<String, String> getColorMap(CommandSession session, String name, String def) {
         Object obj = session.get(name + "_COLORS");
         String str = obj != null ? obj.toString() : null;
         if (str == null || !str.matches("[a-z]{2}=[0-9]+(;[0-9]+)*(:[a-z]{2}=[0-9]+(;[0-9]+)*)*")) {
-            if ("LS".equals(name)) {
-                str = DEFAULT_LS_COLORS;
-            } else {
-                str = "";
-            }
+            str = def;
         }
         return Arrays.stream(str.split(":"))
                 .collect(Collectors.toMap(s -> s.substring(0, s.indexOf('=')),
