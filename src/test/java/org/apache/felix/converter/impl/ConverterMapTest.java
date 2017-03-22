@@ -280,9 +280,6 @@ public class ConverterMapTest {
     	};
     	MySingleElementAnnotation sea = new MySingleElementAnnotation();
     	Map m = converter.convert(sea).to(Map.class);
-    	Map expected = new HashMap();
-    	expected.put("single.element.annotation", new String[] {"hi", "there"});
-    	expected.put("somethingElse", 42);
     	assertEquals(2, m.size());
     	assertArrayEquals(new String[] {"hi", "there"}, (String []) m.get("single.element.annotation"));
     	assertEquals(42L, m.get("somethingElse"));
