@@ -18,6 +18,7 @@
  */
 package org.apache.felix.framework.util.manifestparser;
 
+import java.nio.ByteOrder;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -722,7 +723,7 @@ public class NativeLibraryClause
         }
         else if (value.startsWith(PROC_ARM))
         {
-            return PROC_ARM;
+            return ByteOrder.nativeOrder() == ByteOrder.BIG_ENDIAN ? PROC_ARM_BE : PROC_ARM_LE;
         }
         else if (value.startsWith(PROC_ALPHA))
         {
