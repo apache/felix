@@ -36,6 +36,7 @@ import org.jline.reader.LineReader.RegionType;
 import org.jline.reader.impl.DefaultHighlighter;
 import org.jline.utils.AttributedString;
 import org.jline.utils.AttributedStringBuilder;
+import org.jline.utils.AttributedStyle;
 import org.jline.utils.WCWidth;
 
 public class Highlighter extends DefaultHighlighter {
@@ -164,17 +165,14 @@ public class Highlighter extends DefaultHighlighter {
             }
 
             AttributedStringBuilder sb = new AttributedStringBuilder();
-            Type prevType = Type.Unknown;
             for (int i = 0; i < repaired.length(); i++) {
-                if (i == underlineStart) {
+                sb.style(AttributedStyle.DEFAULT);
+                applyStyle(sb, colors, types[i]);
+                if (i >= underlineStart && i <= underlineEnd) {
                     sb.style(sb.style().underline());
                 }
-                if (i == negativeStart) {
+                if (i >= negativeStart && i <= negativeEnd) {
                     sb.style(sb.style().inverse());
-                }
-                if (types[i] != prevType) {
-                    prevType = types[i];
-                    applyStyle(sb, colors, prevType);
                 }
                 char c = repaired.charAt(i);
                 if (c == '\t' || c == '\n') {
@@ -190,12 +188,6 @@ public class Highlighter extends DefaultHighlighter {
                         sb.append(c);
                     }
                 }
-                if (i == underlineEnd) {
-                    sb.style(sb.style().underlineOff());
-                }
-                if (i == negativeEnd) {
-                    sb.style(sb.style().inverseOff());
-                }
             }
 
             return sb.toAttributedString();
@@ -208,8 +200,6 @@ public class Highlighter extends DefaultHighlighter {
         String col = colors.get(type.color);
         if (col != null && !col.isEmpty()) {
             sb.appendAnsi("\033[" + col + "m");
-        } else {
-            sb.style(sb.style().foregroundDefault());
         }
     }
 
