@@ -29,6 +29,7 @@ import org.junit.Test;
 import org.osgi.util.converter.Converter;
 import org.osgi.util.converter.StandardConverter;
 import org.osgi.util.converter.TypeReference;
+import org.osgi.util.converter.TypeRule;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -83,7 +84,8 @@ public class JsonSerializerTest {
         m.put("submap", m1);
 
         Converter ca = converter.newConverterBuilder().
-                rule(Foo.class, String.class, Foo::tsFun, v -> Foo.fsFun(v)).build();
+                rule(new TypeRule<Foo, String>(Foo.class, String.class, Foo::tsFun)).
+                rule(new TypeRule<String, Foo>(String.class, Foo.class, v -> Foo.fsFun(v))).build();
 
         JsonSerializerImpl jsonCodec = new JsonSerializerImpl();
         String json = jsonCodec.serialize(m).with(ca).toString();

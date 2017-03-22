@@ -19,6 +19,7 @@ package org.apache.felix.serializer.impl.yaml;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.apache.felix.serializer.impl.yaml.YamlSerializerTest.Foo;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Ignore;
@@ -26,6 +27,7 @@ import org.junit.Test;
 import org.osgi.util.converter.Converter;
 import org.osgi.util.converter.StandardConverter;
 import org.osgi.util.converter.TypeReference;
+import org.osgi.util.converter.TypeRule;
 
 import static org.junit.Assert.assertEquals;
 
@@ -80,7 +82,8 @@ public class YamlSerializerTest {
         m.put("submap", m1);
 
         Converter ca = converter.newConverterBuilder().
-                rule(Foo.class, String.class, Foo::tsFun, v -> Foo.fsFun(v)).build();
+                rule(new TypeRule<Foo, String>(Foo.class, String.class, Foo::tsFun)).
+                rule(new TypeRule<String, Foo>(String.class, Foo.class, v -> Foo.fsFun(v))).build();
 
         YamlSerializerImpl yamlCodec = new YamlSerializerImpl();
         String yaml = yamlCodec.serialize(m).with(ca).toString();
