@@ -66,7 +66,7 @@
                 <configuration>
                     <instructions>
                         <Private-Package>org.apache.felix.converter.*,org.apache.felix.utils.*</Private-Package>
-                        <Export-Package>org.osgi.util.function,org.osgi.util.converter</Export-Package>
+                        <Export-Package>org.osgi.util.function,org.osgi.util.converter;-split-package:=merge-first</Export-Package>
                         <Import-Package>org.osgi.util.converter, *</Import-Package>
                     </instructions>
                 </configuration>
