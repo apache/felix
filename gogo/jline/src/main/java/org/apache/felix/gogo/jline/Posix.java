@@ -106,6 +106,7 @@ public class Posix {
     };
 
     public static final String DEFAULT_LS_COLORS = "dr=1;91:ex=1;92:sl=1;96:ot=34;43";
+    public static final String DEFAULT_GREP_COLORS = "mt=1;31:fn=35:ln=32";
 
     private static final LinkOption[] NO_FOLLOW_OPTIONS = new LinkOption[]{LinkOption.NOFOLLOW_LINKS};
     private static final List<String> WINDOWS_EXECUTABLE_EXTENSIONS = Collections.unmodifiableList(Arrays.asList(".bat", ".exe", ".cmd"));
@@ -1531,6 +1532,7 @@ public class Posix {
             default:
                 throw new IllegalArgumentException("invalid argument ‘" + color + "’ for ‘--color’");
         }
+        Map<String, String> colors = colored ? getColorMap(session, "GREP", DEFAULT_GREP_COLORS) : Collections.emptyMap();
 
         List<Source> sources = new ArrayList<>();
         if (opt.args().isEmpty()) {
@@ -1558,13 +1560,16 @@ public class Posix {
                     if (p.matcher(line).matches() ^ invertMatch) {
                         AttributedStringBuilder sbl = new AttributedStringBuilder();
                         if (colored) {
-                            sbl.style(AttributedStyle.DEFAULT.foreground(AttributedStyle.BLACK + AttributedStyle.BRIGHT));
+                            applyStyle(sbl, colors, "fn");
                         }
                         if (!count && sources.size() > 1) {
                             sbl.append(source.getName());
                             sbl.append(":");
                         }
                         if (!count && lineNumber) {
+                            if (colored) {
+                                applyStyle(sbl, colors, "ln");
+                            }
                             sbl.append(String.format("%6d  ", lineno));
                         }
                         if (colored) {
@@ -1573,16 +1578,17 @@ public class Posix {
                         Matcher matcher2 = p2.matcher(line);
                         AttributedString aLine = AttributedString.fromAnsi(line);
                         AttributedStyle style = AttributedStyle.DEFAULT;
-                        if (!invertMatch && colored) {
-                            style = style.bold().foreground(AttributedStyle.RED);
-                        }
                         int cur = 0;
                         while (matcher2.find()) {
                             int index = matcher2.start(0);
                             AttributedString prefix = aLine.subSequence(cur, index);
                             sbl.append(prefix);
                             cur = matcher2.end();
-                            sbl.append(aLine.subSequence(index, cur), style);
+                            if (!invertMatch && colored) {
+                                applyStyle(sbl, colors, "mt");
+                            }
+                            sbl.append(aLine.subSequence(index, cur));
+                            sbl.style(AttributedStyle.DEFAULT);
                             nb++;
                         }
                         sbl.append(aLine.subSequence(cur, aLine.length()));
@@ -1994,4 +2000,10 @@ public class Posix {
                                           s -> s.substring(s.indexOf('=') + 1)));
     }
 
+    private void applyStyle(AttributedStringBuilder sb, Map<String, String> colors, String type) {
+        String col = colors.get(type);
+        if (col != null && !col.isEmpty()) {
+            sb.appendAnsi("\033[" + col + "m");
+        }
+    }
 }
