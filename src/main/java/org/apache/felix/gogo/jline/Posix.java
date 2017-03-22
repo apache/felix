@@ -106,6 +106,7 @@ public class Posix {
     };
 
     public static final String DEFAULT_LS_COLORS = "dr=1;91:ex=1;92:sl=1;96:ot=34;43";
+    public static final String DEFAULT_GREP_COLORS = "mt=1;31:fn=35:ln=32:se=36";
 
     private static final LinkOption[] NO_FOLLOW_OPTIONS = new LinkOption[]{LinkOption.NOFOLLOW_LINKS};
     private static final List<String> WINDOWS_EXECUTABLE_EXTENSIONS = Collections.unmodifiableList(Arrays.asList(".bat", ".exe", ".cmd"));
@@ -1470,7 +1471,8 @@ public class Posix {
                 "     --color=WHEN          Use markers to distinguish the matching string, may be `always', `never' or `auto'",
                 "  -B --before-context=NUM  Print NUM lines of leading context before matching lines",
                 "  -A --after-context=NUM   Print NUM lines of trailing context after matching lines",
-                "  -C --context=NUM         Print NUM lines of output context"
+                "  -C --context=NUM         Print NUM lines of output context",
+                "     --pad-lines           Pad line numbers"
         };
         Options opt = parseOptions(session, usage, argv);
         List<String> args = opt.args();
@@ -1500,6 +1502,7 @@ public class Posix {
         int after = opt.isSet("after-context") ? opt.getNumber("after-context") : -1;
         int before = opt.isSet("before-context") ? opt.getNumber("before-context") : -1;
         int context = opt.isSet("context") ? opt.getNumber("context") : 0;
+        String lineFmt = opt.isSet("pad-lines") ? "%6d" : "%d";
         if (after < 0) {
             after = context;
         }
@@ -1531,6 +1534,7 @@ public class Posix {
             default:
                 throw new IllegalArgumentException("invalid argument ‘" + color + "’ for ‘--color’");
         }
+        Map<String, String> colors = colored ? getColorMap(session, "GREP", DEFAULT_GREP_COLORS) : Collections.emptyMap();
 
         List<Source> sources = new ArrayList<>();
         if (opt.args().isEmpty()) {
@@ -1555,44 +1559,66 @@ public class Posix {
                     if (line.length() == 1 && line.charAt(0) == '\n') {
                         break;
                     }
-                    if (p.matcher(line).matches() ^ invertMatch) {
-                        AttributedStringBuilder sbl = new AttributedStringBuilder();
-                        if (colored) {
-                            sbl.style(AttributedStyle.DEFAULT.foreground(AttributedStyle.BLACK + AttributedStyle.BRIGHT));
-                        }
-                        if (!count && sources.size() > 1) {
+                    boolean matches = p.matcher(line).matches();
+                    AttributedStringBuilder sbl = new AttributedStringBuilder();
+                    if (!count) {
+                        if (sources.size() > 1) {
+                            if (colored) {
+                                applyStyle(sbl, colors, "fn");
+                            }
                             sbl.append(source.getName());
+                            if (colored) {
+                                applyStyle(sbl, colors, "se");
+                            }
                             sbl.append(":");
                         }
-                        if (!count && lineNumber) {
-                            sbl.append(String.format("%6d  ", lineno));
+                        if (lineNumber) {
+                            if (colored) {
+                                applyStyle(sbl, colors, "ln");
+                            }
+                            sbl.append(String.format(lineFmt, lineno));
+                            if (colored) {
+                                applyStyle(sbl, colors, "se");
+                            }
+                            sbl.append((matches ^ invertMatch) ? ":" : "-");
                         }
+                        String style = matches ^ invertMatch ^ (invertMatch && colors.containsKey("rv"))
+                                ? "sl" : "cx";
                         if (colored) {
-                            sbl.style(AttributedStyle.DEFAULT);
+                            applyStyle(sbl, colors, style);
                         }
                         Matcher matcher2 = p2.matcher(line);
                         AttributedString aLine = AttributedString.fromAnsi(line);
-                        AttributedStyle style = AttributedStyle.DEFAULT;
-                        if (!invertMatch && colored) {
-                            style = style.bold().foreground(AttributedStyle.RED);
-                        }
                         int cur = 0;
                         while (matcher2.find()) {
                             int index = matcher2.start(0);
                             AttributedString prefix = aLine.subSequence(cur, index);
                             sbl.append(prefix);
                             cur = matcher2.end();
-                            sbl.append(aLine.subSequence(index, cur), style);
+                            if (colored) {
+                                applyStyle(sbl, colors, invertMatch ? "mc" : "ms", "mt");
+                            }
+                            sbl.append(aLine.subSequence(index, cur));
+                            if (colored) {
+                                applyStyle(sbl, colors, style);
+                            }
                             nb++;
                         }
                         sbl.append(aLine.subSequence(cur, aLine.length()));
+                    }
+                    if (matches ^ invertMatch) {
                         lines.add(sbl.toAnsi(Shell.getTerminal(session)));
                         lineMatch = lines.size();
                     } else {
                         if (lineMatch != 0 & lineMatch + after + before <= lines.size()) {
                             if (!count) {
                                 if (!firstPrint && before + after > 0) {
-                                    process.out().println("--");
+                                    AttributedStringBuilder sbl2 = new AttributedStringBuilder();
+                                    if (colored) {
+                                        applyStyle(sbl2, colors, "se");
+                                    }
+                                    sbl2.append("--");
+                                    process.out().println(sbl2.toAnsi(Shell.getTerminal(session)));
                                 } else {
                                     firstPrint = false;
                                 }
@@ -1605,7 +1631,7 @@ public class Posix {
                             }
                             lineMatch = 0;
                         }
-                        lines.add(line);
+                        lines.add(sbl.toAnsi(Shell.getTerminal(session)));
                         while (lineMatch == 0 && lines.size() > before) {
                             lines.remove(0);
                         }
@@ -1614,7 +1640,12 @@ public class Posix {
                 }
                 if (!count && lineMatch > 0) {
                     if (!firstPrint && before + after > 0) {
-                        process.out().println("--");
+                        AttributedStringBuilder sbl2 = new AttributedStringBuilder();
+                        if (colored) {
+                            applyStyle(sbl2, colors, "se");
+                        }
+                        sbl2.append("--");
+                        process.out().println(sbl2.toAnsi(Shell.getTerminal(session)));
                     } else {
                         firstPrint = false;
                     }
@@ -1986,12 +2017,26 @@ public class Posix {
     public static Map<String, String> getColorMap(CommandSession session, String name, String def) {
         Object obj = session.get(name + "_COLORS");
         String str = obj != null ? obj.toString() : null;
-        if (str == null || !str.matches("[a-z]{2}=[0-9]+(;[0-9]+)*(:[a-z]{2}=[0-9]+(;[0-9]+)*)*")) {
+        if (str == null || !str.matches("[a-z]{2}=[0-9]*(;[0-9]+)*(:[a-z]{2}=[0-9]*(;[0-9]+)*)*")) {
             str = def;
         }
         return Arrays.stream(str.split(":"))
                 .collect(Collectors.toMap(s -> s.substring(0, s.indexOf('=')),
                                           s -> s.substring(s.indexOf('=') + 1)));
+    }
+
+    private void applyStyle(AttributedStringBuilder sb, Map<String, String> colors, String... types) {
+        String col = null;
+        for (String type : types) {
+            col = colors.get(type);
+            if (col != null) {
+                break;
+            }
+        }
+        sb.style(AttributedStyle.DEFAULT);
+        if (col != null && !col.isEmpty()) {
+            sb.appendAnsi("\033[" + col + "m");
+        }
     }
 
 }
