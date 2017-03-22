@@ -18,12 +18,11 @@ package org.apache.felix.schematizer.impl;
 
 import java.lang.reflect.Type;
 
+import org.osgi.util.converter.ConvertFunction;
 import org.osgi.util.converter.Converter;
 import org.osgi.util.converter.ConverterBuilder;
-import org.osgi.util.converter.Rule;
 import org.osgi.util.converter.StandardConverter;
-import org.osgi.util.converter.TypeReference;
-import org.osgi.util.function.Function;
+import org.osgi.util.converter.TargetRule;
 
 public class SchematizingConverterBuilderImpl implements ConverterBuilder {
 
@@ -32,31 +31,22 @@ public class SchematizingConverterBuilderImpl implements ConverterBuilder {
     @Override
     public Converter build()
     {
-        Converter converter = builder.build(); 
+        Converter converter = builder.build();
         return new SchematizingConverterImpl(converter);
     }
 
-    @Override
-    public <F, T> ConverterBuilder rule( Rule<F, T> rule )
-    {
-        return builder.rule(rule);
+    public <T> ConverterBuilder rule(Type type, ConvertFunction<T> function) {
+        builder.rule(type, function);
+        return this;
     }
 
-    @Override
-    public <F, T> ConverterBuilder rule( Class<F> fromCls, Class<T> toCls, Function<F, T> toFun, Function<T, F> fromFun )
-    {
-        return builder.rule(fromCls, toCls, toFun, fromFun);
+    public <T> ConverterBuilder rule(TargetRule<T> rule) {
+        builder.rule(rule);
+        return this;
     }
 
-    @Override
-    public <F, T> ConverterBuilder rule( TypeReference<F> fromRef, TypeReference<T> toRef, Function<F, T> toFun, Function<T, F> fromFun )
-    {
-        return builder.rule(fromRef, toRef, toFun, fromFun);
-    }
-
-    @Override
-    public <F, T> ConverterBuilder rule( Type fromType, Type toType, Function<F, T> toFun, Function<T, F> fromFun )
-    {
-        return builder.rule(fromType, toType, toFun, fromFun);
+    public <T> ConverterBuilder rule(ConvertFunction<T> func) {
+        builder.rule(func);
+        return this;
     }
 }
