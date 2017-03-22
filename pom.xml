@@ -54,7 +54,7 @@
         <dependency>
             <groupId>org.jline</groupId>
             <artifactId>jline</artifactId>
-            <version>3.0.0</version>
+            <version>3.2.0</version>
         </dependency>
         <dependency>
             <groupId>org.apache.sshd</groupId>
@@ -78,6 +78,7 @@
                         <Import-Package>
                             !org.apache.felix.gogo.runtime.threadio,
                             org.apache.felix.service.*;version="[1.0,2.0)",
+                            org.jline*;version="[3.0,4)",
                             *
                         </Import-Package>
                         <Bundle-SymbolicName>${project.artifactId}</Bundle-SymbolicName>

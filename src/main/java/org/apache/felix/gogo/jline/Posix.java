@@ -82,6 +82,7 @@ import org.jline.builtins.Options;
 import org.jline.builtins.Source;
 import org.jline.builtins.Source.PathSource;
 import org.jline.builtins.Source.StdInSource;
+import org.jline.builtins.TTop;
 import org.jline.terminal.Attributes;
 import org.jline.terminal.Terminal;
 import org.jline.utils.AttributedString;
@@ -98,12 +99,29 @@ import org.jline.utils.OSUtils;
  */
 public class Posix {
 
-    static final String[] functions = {
-            "cat", "echo", "grep", "sort", "sleep", "cd", "pwd", "ls",
-            "less", "watch", "nano", "tmux",
-            "head", "tail", "clear", "wc",
-            "date"
-    };
+    static final String[] functions;
+
+    static {
+        // TTop function is new in JLine 3.2
+        String[] func;
+        try {
+            Class cl = TTop.class;
+            func = new String[] {
+                    "cat", "echo", "grep", "sort", "sleep", "cd", "pwd", "ls",
+                    "less", "watch", "nano", "tmux",
+                    "head", "tail", "clear", "wc",
+                    "date", "ttop",
+            };
+        } catch (Throwable t) {
+            func = new String[] {
+                    "cat", "echo", "grep", "sort", "sleep", "cd", "pwd", "ls",
+                    "less", "watch", "nano", "tmux",
+                    "head", "tail", "clear", "wc",
+                    "date"
+            };
+        }
+        functions = func;
+    }
 
     public static final String DEFAULT_LS_COLORS = "dr=1;91:ex=1;92:sl=1;96:ot=34;43";
     public static final String DEFAULT_GREP_COLORS = "mt=1;31:fn=35:ln=32:se=36";
@@ -195,6 +213,9 @@ public class Posix {
                 break;
             case "tmux":
                 tmux(session, process, argv);
+                break;
+            case "ttop":
+                ttop(session, process, argv);
                 break;
             case "clear":
                 clear(session, process, argv);
@@ -795,6 +816,10 @@ public class Posix {
                 e.printStackTrace();
             }
         }
+    }
+
+    protected void ttop(final CommandSession session, Process process, String[] argv) throws Exception {
+        TTop.ttop(Shell.getTerminal(session), process.out(), process.err(), argv);
     }
 
     protected void nano(final CommandSession session, Process process, String[] argv) throws Exception {
