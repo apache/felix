@@ -66,7 +66,8 @@ public class ConvertingImpl implements Converting, InternalConverting {
     volatile InternalConverter converter;
     private volatile Object object;
     private volatile Object defaultValue;
-    private volatile boolean hasDefault;
+    private volatile boolean hasDefault = false;
+    private volatile boolean keysIgnoreCase = false;
     volatile Class<?> sourceClass;
     volatile Class<?> sourceAsClass;
     private volatile Class<?> targetClass;
@@ -138,6 +139,13 @@ public class ConvertingImpl implements Converting, InternalConverting {
     public Converting defaultValue(Object defVal) {
         defaultValue = defVal;
         hasDefault = true;
+
+        return this;
+    }
+
+    @Override
+    public Converting keysIgnoreCase() {
+        keysIgnoreCase = true;
 
         return this;
     }
