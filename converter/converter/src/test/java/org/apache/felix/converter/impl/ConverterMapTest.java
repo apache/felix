@@ -321,6 +321,37 @@ public class ConverterMapTest {
         assertTrue(ta.equals(ta));
     }
 
+    @Test
+    public void testCaseInsensitiveKeysAnnotation() {
+        Map<String, Object> m = new HashMap<>();
+        m.put("FOO", "Bleh");
+        m.put("baR", 21);
+        m.put("za.za", true);
+
+        TestInterface ti = converter.convert(m).keysIgnoreCase().to(TestInterface.class);
+        assertEquals("Bleh", ti.foo());
+        assertEquals(21, ti.bar("42"));
+        assertTrue(ti.za_za());
+    }
+
+    @Test
+    public void testCaseSensitiveKeysAnnotation() {
+        Map<String, Object> m = new HashMap<>();
+        m.put("FOO", "Bleh");
+        m.put("baR", 21);
+        m.put("za.za", true);
+
+        TestInterface ti = converter.convert(m).to(TestInterface.class);
+        try {
+            ti.foo();
+            fail("Should have thrown a conversion exception as 'foo' was not set");
+        } catch (ConversionException ce) {
+            // good
+        }
+        assertEquals(42, ti.bar("42"));
+        assertTrue(ti.za_za());
+    }
+
     interface TestInterface {
         String foo();
         int bar();
