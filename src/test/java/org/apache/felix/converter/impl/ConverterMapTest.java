@@ -24,6 +24,7 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.Dictionary;
 import java.util.HashMap;
+import java.util.Hashtable;
 import java.util.Map;
 
 import org.junit.After;
@@ -350,6 +351,32 @@ public class ConverterMapTest {
         }
         assertEquals(42, ti.bar("42"));
         assertTrue(ti.za_za());
+    }
+
+    @Test
+    public void testCaseInsensitiveDTO() {
+        Dictionary<String, String> d = new Hashtable<>();
+        d.put("COUNT", "one");
+        d.put("PinG", "Piiiiiiing!");
+        d.put("pong", "999");
+
+        MyDTO dto = converter.convert(d).keysIgnoreCase().to(MyDTO.class);
+        assertEquals(MyDTO.Count.ONE, dto.count);
+        assertEquals("Piiiiiiing!", dto.ping);
+        assertEquals(999L, dto.pong);
+    }
+
+    @Test
+    public void testCaseSensitiveDTO() {
+        Dictionary<String, String> d = new Hashtable<>();
+        d.put("COUNT", "one");
+        d.put("PinG", "Piiiiiiing!");
+        d.put("pong", "999");
+
+        MyDTO dto = converter.convert(d).to(MyDTO.class);
+        assertNull(dto.count);
+        assertNull(dto.ping);
+        assertEquals(999L, dto.pong);
     }
 
     interface TestInterface {
