@@ -78,6 +78,12 @@ public class AdapterImpl implements InternalConverter {
         }
 
         @Override
+        public Converting keysIgnoreCase() {
+            del.keysIgnoreCase();
+            return this;
+        }
+
+        @Override
         public void setConverter(Converter c) {
             del.setConverter(c);
         }
