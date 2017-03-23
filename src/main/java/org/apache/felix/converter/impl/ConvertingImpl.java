@@ -484,6 +484,15 @@ public class ConvertingImpl implements Converting, InternalConverting {
                     Class<?> targetType = method.getReturnType();
 
                     Object val = m.get(propName);
+                    if (val == null && keysIgnoreCase) {
+                        // try in a case-insensitive way
+                        for (Iterator it = m.keySet().iterator(); it.hasNext() && val == null; ) {
+                            String k = it.next().toString();
+                            if (propName.equalsIgnoreCase(k)) {
+                                val = m.get(k);
+                            }
+                        }
+                    }
 
                     // If no value is available take the default if specified
                     if (val == null) {
