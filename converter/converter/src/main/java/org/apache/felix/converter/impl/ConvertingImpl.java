@@ -309,14 +309,40 @@ public class ConvertingImpl implements Converting, InternalConverting {
             T dto = (T) targetClass.newInstance();
 
             for (Map.Entry entry : (Set<Map.Entry>) m.entrySet()) {
+                Object key = entry.getKey();
+                if (key == null)
+                    continue;
+
+                String fieldName = Util.mangleName(prefix, key.toString());
+                if (fieldName == null)
+                    continue;
+
                 Field f = null;
                 try {
-                    f = cls.getDeclaredField(Util.mangleName(prefix, entry.getKey().toString()));
-                } catch (NoSuchFieldException | NullPointerException e) {
+                    f = cls.getDeclaredField(fieldName);
+                } catch (NoSuchFieldException e) {
                     try {
-                        f = cls.getField(Util.mangleName(prefix, entry.getKey().toString()));
+                        f = cls.getField(fieldName);
                     } catch (NoSuchFieldException | NullPointerException e1) {
                         // There is no field with this name
+                        if (keysIgnoreCase) {
+                            // If enabled, try again but now ignore case
+                            for (Field fs : cls.getDeclaredFields()) {
+                                if (fs.getName().equalsIgnoreCase(fieldName)) {
+                                    f = fs;
+                                    break;
+                                }
+                            }
+
+                            if (f == null) {
+                                for (Field fs : cls.getFields()) {
+                                    if (fs.getName().equalsIgnoreCase(fieldName)) {
+                                        f = fs;
+                                        break;
+                                    }
+                                }
+                            }
+                        }
                     }
                 }
 
