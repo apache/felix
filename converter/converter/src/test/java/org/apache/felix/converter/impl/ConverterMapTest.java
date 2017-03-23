@@ -40,6 +40,7 @@ import org.osgi.util.converter.TypeReference;
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNotSame;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertSame;
@@ -260,7 +261,7 @@ public class ConverterMapTest {
     }
 
     @Test
-    @SuppressWarnings({ "unchecked", "rawtypes" })
+    @SuppressWarnings({ "rawtypes", "unchecked" })
     public void testSingleElementAnnotation() {
     	class MySingleElementAnnotation implements SingleElementAnnotation {
             @Override
@@ -284,7 +285,10 @@ public class ConverterMapTest {
     	assertArrayEquals(new String[] {"hi", "there"}, (String []) m.get("single.element.annotation"));
     	assertEquals(42L, m.get("somethingElse"));
 
-    	// TODO support conversion in the other direction too.
+    	m.put("somethingElse", 51.0);
+    	SingleElementAnnotation sea2 = converter.convert(m).to(SingleElementAnnotation.class);
+    	assertArrayEquals(new String[] {"hi", "there"}, sea2.value());
+    	assertEquals(51L, sea2.somethingElse());
     }
 
     @SuppressWarnings({ "rawtypes", "unchecked" })
@@ -296,6 +300,25 @@ public class ConverterMapTest {
         Map cm = converter.convert(m).to(Map.class);
         assertNotSame(m, cm);
         assertSame(m.get("key"), cm.get("key"));
+    }
+
+    @Test
+    public void testProxyObjectMethodsInterface() {
+        Map<String, String> m = new HashMap<>();
+        TestInterface ti = converter.convert(m).to(TestInterface.class);
+        assertTrue(ti.equals(ti));
+        assertFalse(ti.equals(new Object()));
+        assertFalse(ti.equals(null));
+
+        assertNotNull(ti.toString());
+        assertTrue(ti.hashCode() != 0);
+    }
+
+    @Test
+    public void testProxyObjectMethodsAnnotation() {
+        Map<String, String> m = new HashMap<>();
+        TestAnnotation ta = converter.convert(m).to(TestAnnotation.class);
+        assertTrue(ta.equals(ta));
     }
 
     interface TestInterface {

@@ -16,6 +16,7 @@
  */
 package org.apache.felix.converter.impl;
 
+import java.lang.annotation.Annotation;
 import java.lang.reflect.Array;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
@@ -450,6 +451,24 @@ public class ConvertingImpl implements Converting, InternalConverting {
             new InvocationHandler() {
                 @Override
                 public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
+                    Class<?> mdDecl = method.getDeclaringClass();
+                    if (mdDecl.equals(Object.class))
+                        switch (method.getName()) {
+                        case "equals":
+                            return proxy == args[0];
+                        case "hashCode":
+                            return System.identityHashCode(proxy);
+                        case "toString":
+                            return "Proxy for " + targetCls;
+                        default:
+                            throw new UnsupportedOperationException("Method " + method + " not supported on proxy for " + targetCls);
+                        }
+                    if (mdDecl.equals(Annotation.class)) {
+                        if ("annotationType".equals(method.getName()) && method.getParameterTypes().length == 0) {
+                            return targetCls;
+                        }
+                    }
+
                     String propName = Util.getInterfacePropertyName(method, Util.getSingleElementAnnotationKey(targetCls, proxy), proxy);
                     if (propName == null)
                         return null;

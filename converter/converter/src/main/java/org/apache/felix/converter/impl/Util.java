@@ -244,7 +244,7 @@ class Util {
             Annotation.class.equals(md.getDeclaringClass()))
             return null; // do not use any methods on the Object or Annotation class as a accessor
 
-        if ("annotationType".equals(md.getName())) {
+        if ("annotationType".equals(md.getName()) && md.getParameterTypes().length == 0) {
             try {
                 Object cls = md.invoke(object);
                 if (cls instanceof Class && ((Class<?>) cls).isAnnotation())
