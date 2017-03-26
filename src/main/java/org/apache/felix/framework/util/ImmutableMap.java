@@ -20,19 +20,25 @@ package org.apache.felix.framework.util;
 
 import java.util.AbstractMap;
 import java.util.AbstractSet;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
 
 public class ImmutableMap<K, V> extends AbstractMap<K, V>
 {
+    @SuppressWarnings({ "rawtypes" })
+    private static final ImmutableMap EMPTY_MAP = new ImmutableMap();
+
     final Entry<K, V>[] entries;
 
+    @SuppressWarnings("unchecked")
     public static <K, V> ImmutableMap<K, V> newInstance(Entry<K, V>... entries)
     {
-        return new ImmutableMap<K, V>(entries);
+        return entries.length == 0 ? EMPTY_MAP : new ImmutableMap<K, V>(entries);
     }
 
+    @SuppressWarnings("unchecked")
     public static <K, V> ImmutableMap<K, V> newInstance(Map<K, V> entries)
     {
         if (entries instanceof ImmutableMap)
@@ -41,8 +47,14 @@ public class ImmutableMap<K, V> extends AbstractMap<K, V>
         }
         else
         {
-            return new ImmutableMap<K, V>(entries);
+            return entries.isEmpty() ? EMPTY_MAP : new ImmutableMap<K, V>(entries);
         }
+    }
+
+    @SuppressWarnings("unchecked")
+    private ImmutableMap()
+    {
+        this.entries = new Entry[0];
     }
 
     protected ImmutableMap(Entry<K, V>[] entries)
@@ -50,6 +62,7 @@ public class ImmutableMap<K, V> extends AbstractMap<K, V>
         this.entries = entries.clone();
     }
 
+    @SuppressWarnings("unchecked")
     protected ImmutableMap(Map<K, V> map)
     {
         this.entries = map.entrySet().toArray(new Entry[map.size()]);
