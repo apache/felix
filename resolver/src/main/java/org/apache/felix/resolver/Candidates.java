@@ -1225,7 +1225,8 @@ class Candidates
                 // See ResolverImpl::checkPackageSpaceConsistency
 
                 // Check if the current candidate is substitutable by the req;
-                // This check is necessary here because
+                // This check is necessary here because of the way we traverse used blames
+                // allows multiple requirements to be permuted in one Candidates
                 if (req.equals(m_subtitutableMap.get(current)))
                 {
                     // this is a substitute req,
@@ -1235,14 +1236,20 @@ class Candidates
                     {
                         for (Requirement dependent : dependents)
                         {
-                            CandidateSelector dependentSelector = m_candidateMap.get(dependent);
-                            // If the dependent selector only has one capability left then we know it is
-                            // using the current candidate and has no options left
-                            if (dependentSelector != null && dependentSelector.getRemainingCandidateCount() <= 1)
+                            CandidateSelector dependentSelector = m_candidateMap.get(
+                                dependent);
+                            // If the dependent selector only has one capability left then check if
+                            // the current candidate is the selector's current candidate.
+                            if (dependentSelector != null
+                                && dependentSelector.getRemainingCandidateCount() <= 1)
                             {
-                                // return false since we do not want to allow this requirement
-                                // to substitute the capability
-                                return false;
+                                if (current.equals(
+                                    dependentSelector.getCurrentCandidate()))
+                                {
+                                    // return false since we do not want to allow this requirement
+                                    // to substitute the capability
+                                    return false;
+                                }
                             }
                         }
                     }

@@ -23,6 +23,8 @@ import java.util.*;
 import java.util.Map.Entry;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicReference;
+
 import org.apache.felix.resolver.util.ArrayMap;
 import org.apache.felix.resolver.util.CandidateSelector;
 import org.apache.felix.resolver.util.OpenHashMap;
@@ -1337,8 +1339,9 @@ public class ResolverImpl implements Resolver
         // When several reqs are permuted at the same time this reduces the number of solutions tried.
         // See the method Candidates::canRemoveCandidate for a case where substitutions must be checked
         // because of this code that may permute multiple reqs in on candidates permutation.
+        AtomicReference<Candidates> permRef1 = new AtomicReference<Candidates>();
+        AtomicReference<Candidates> permRef2 = new AtomicReference<Candidates>();
         Set<Requirement> mutated = null;
-        Candidates permutation = null;
 
         // Check if there are any uses conflicts with exported packages.
         for (Entry<String, Blame> entry : pkgs.m_exportedPkgs.fast())
@@ -1354,54 +1357,11 @@ public class ResolverImpl implements Resolver
             {
                 if (!isCompatible(exportBlame, usedBlames.m_cap, resourcePkgMap))
                 {
-                    for (Blame usedBlame : usedBlames.m_blames)
-                    {
-                        if (session.checkMultiple(usedBlames, usedBlame, allCandidates))
-                        {
-                            // Continue to the next usedBlame, if possible we
-                            // removed the conflicting candidates.
-                            continue;
-                        }
-                        // Create a candidate permutation that eliminates all candidates
-                        // that conflict with existing selected candidates.
-                        permutation = (permutation != null)
-                            ? permutation
-                            : allCandidates.copy();
-                        if (rethrow == null)
-                        {
-                            rethrow = new UseConstraintError(
-                                    session.getContext(), allCandidates, resource, pkgName, usedBlame);
-                        }
-                        mutated = (mutated != null)
-                            ? mutated
-                            : new HashSet<Requirement>();
-
-                        for (int reqIdx = usedBlame.m_reqs.size() - 1; reqIdx >= 0; reqIdx--)
-                        {
-                            Requirement req = usedBlame.m_reqs.get(reqIdx);
-                            // Sanity check for multiple.
-                            if (Util.isMultiple(req))
-                            {
-                                continue;
-                            }
-                            // If we've already permutated this requirement in another
-                            // uses constraint, don't permutate it again just continue
-                            // with the next uses constraint.
-                            if (mutated.contains(req))
-                            {
-                                break;
-                            }
-
-                            // See if we can permutate the candidates for blamed
-                            // requirement; there may be no candidates if the resource
-                            // associated with the requirement is already resolved.
-                            if (permutation.canRemoveCandidate(req)) {
-                                permutation.removeFirstCandidate(req);
-                                mutated.add(req);
-                                break;
-                            }
-                        }
-                    }
+                    mutated = (mutated != null)
+                        ? mutated
+                        : new HashSet<Requirement>();
+                    rethrow = permuteUsedBlames(session, rethrow, allCandidates, resource,
+                        pkgName, null, usedBlames, permRef1, permRef2, mutated);
                 }
             }
 
@@ -1409,7 +1369,8 @@ public class ResolverImpl implements Resolver
             {
                 if (!mutated.isEmpty())
                 {
-                    session.addPermutation(PermutationType.USES, permutation);
+                    session.addPermutation(PermutationType.USES, permRef1.get());
+                    session.addPermutation(PermutationType.USES, permRef2.get());
                 }
                 if (m_logger.isDebugEnabled())
                 {
@@ -1451,60 +1412,13 @@ public class ResolverImpl implements Resolver
             {
                 if (!isCompatible(requirementBlames, usedBlames.m_cap, resourcePkgMap))
                 {
+                    mutated = (mutated != null)
+                        ? mutated
+                        : new HashSet<Requirement>();
                     // Split packages, need to think how to get a good message for split packages (sigh)
                     // For now we just use the first requirement that brings in the package that conflicts
                     Blame requirementBlame = requirementBlames.get(0);
-                    for (Blame usedBlame : usedBlames.m_blames)
-                    {
-                        if (session.checkMultiple(usedBlames, usedBlame, allCandidates))
-                        {
-                            // Continue to the next usedBlame, if possible we
-                            // removed the conflicting candidates.
-                            continue;
-                        }
-                        // Create a candidate permutation that eliminates all candidates
-                        // that conflict with existing selected candidates.
-                        permutation = (permutation != null)
-                            ? permutation
-                            : allCandidates.copy();
-                        if (rethrow == null)
-                        {
-                            rethrow = new UseConstraintError(
-                                    session.getContext(), allCandidates,
-                                    resource, pkgName,
-                                    requirementBlame, usedBlame);
-                        }
-
-                        mutated = (mutated != null)
-                            ? mutated
-                            : new HashSet<Requirement>();
-
-                        for (int reqIdx = usedBlame.m_reqs.size() - 1; reqIdx >= 0; reqIdx--)
-                        {
-                            Requirement req = usedBlame.m_reqs.get(reqIdx);
-                            // Sanity check for multiple.
-                            if (Util.isMultiple(req))
-                            {
-                                continue;
-                            }
-                            // If we've already permutated this requirement in another
-                            // uses constraint, don't permutate it again just continue
-                            // with the next uses constraint.
-                            if (mutated.contains(req))
-                            {
-                                break;
-                            }
-
-                            // See if we can permutate the candidates for blamed
-                            // requirement; there may be no candidates if the resource
-                            // associated with the requirement is already resolved.
-                            if (permutation.canRemoveCandidate(req)) {
-                                permutation.removeFirstCandidate(req);
-                                mutated.add(req);
-                                break;
-                            }
-                        }
-                    }
+                    rethrow = permuteUsedBlames(session, rethrow, allCandidates, resource, pkgName, requirementBlame, usedBlames, permRef1, permRef2, mutated);
                 }
 
                 // If there was a uses conflict, then we should add a uses
@@ -1518,7 +1432,8 @@ public class ResolverImpl implements Resolver
                     // Add uses permutation if we m_mutated any candidates.
                     if (!mutated.isEmpty())
                     {
-                        session.addPermutation(PermutationType.USES, permutation);
+                        session.addPermutation(PermutationType.USES, permRef1.get());
+                        session.addPermutation(PermutationType.USES, permRef2.get());
                     }
 
                     // Try to permutate the candidate for the original
@@ -1582,6 +1497,99 @@ public class ResolverImpl implements Resolver
             }
         }
         return null;
+    }
+
+    private ResolutionError permuteUsedBlames(ResolveSession session,
+        ResolutionError rethrow, Candidates allCandidates, Resource resource,
+        String pkgName, Blame requirementBlame, UsedBlames usedBlames,
+        AtomicReference<Candidates> permRef1, AtomicReference<Candidates> permRef2,
+        Set<Requirement> mutated)
+    {
+        for (Blame usedBlame : usedBlames.m_blames)
+        {
+            if (session.checkMultiple(usedBlames, usedBlame, allCandidates))
+            {
+                // Continue to the next usedBlame, if possible we
+                // removed the conflicting candidates.
+                continue;
+            }
+
+            if (rethrow == null)
+            {
+                if (requirementBlame == null)
+                {
+                    rethrow = new UseConstraintError(session.getContext(), allCandidates,
+                        resource, pkgName, usedBlame);
+                }
+                else
+                {
+                    rethrow = new UseConstraintError(session.getContext(), allCandidates,
+                        resource, pkgName, requirementBlame, usedBlame);
+                }
+            }
+
+            // Create a candidate permutation that eliminates all candidates
+            // that conflict with existing selected candidates going from direct requirement -> root
+            Candidates perm1 = permRef1.get();
+            if (perm1 == null)
+            {
+                perm1 = allCandidates.copy();
+                permRef1.set(perm1);
+            }
+            for (int reqIdx = usedBlame.m_reqs.size() - 1; reqIdx >= 0; reqIdx--)
+            {
+                Requirement req = usedBlame.m_reqs.get(reqIdx);
+                if (permuteUsedBlameRequirement(req, mutated, perm1))
+                {
+                    break;
+                }
+            }
+            // Create a candidate permutation that eliminates all candidates
+            // that conflict with existing selected candidates going from root -> direct requirement
+            Candidates perm2 = permRef2.get();
+            if (perm2 == null)
+            {
+                perm2 = allCandidates.copy();
+                permRef2.set(perm2);
+            }
+            for (int reqIdx = 0; reqIdx < usedBlame.m_reqs.size(); reqIdx++)
+            {
+                Requirement req = usedBlame.m_reqs.get(reqIdx);
+                if (permuteUsedBlameRequirement(req, mutated, perm2))
+                {
+                    break;
+                }
+            }
+        }
+        return rethrow;
+    }
+
+    private boolean permuteUsedBlameRequirement(Requirement req, Set<Requirement> mutated,
+        Candidates permutation)
+    {
+        // Sanity check for multiple.
+        if (Util.isMultiple(req))
+        {
+            return false;
+        }
+        // If we've already permutated this requirement in another
+        // uses constraint, don't permutate it again just continue
+        // with the next uses constraint.
+        if (mutated.contains(req))
+        {
+            return true;
+        }
+
+        // See if we can permutate the candidates for blamed
+        // requirement; there may be no candidates if the resource
+        // associated with the requirement is already resolved.
+        if (permutation.canRemoveCandidate(req))
+        {
+            permutation.removeFirstCandidate(req);
+            mutated.add(req);
+            return true;
+        }
+        return false;
     }
 
     private static OpenHashMap<String, Blame> calculateExportedPackages(
