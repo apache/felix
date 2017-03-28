@@ -22,7 +22,7 @@
     <parent>
         <groupId>org.apache.felix</groupId>
         <artifactId>felix-parent</artifactId>
-        <version>3</version>
+        <version>4</version>
         <relativePath>../pom/pom.xml</relativePath>
     </parent>
 
@@ -38,7 +38,7 @@
     </description>
     
     <properties>
-        <felix.java.version>4</felix.java.version>
+        <felix.java.version>6</felix.java.version>
         <webconsole.exports>
             org.apache.felix.webconsole;version=3.3.0;provide:=true,
             org.apache.felix.webconsole.bundleinfo;version=1.0.0;provide:=true,
@@ -93,7 +93,7 @@
             <plugin>
                 <groupId>org.apache.felix</groupId>
                 <artifactId>maven-bundle-plugin</artifactId>
-                <version>2.3.6</version>
+                <version>3.3.0</version>
                 <extensions>true</extensions>
                 <configuration>
                     <instructions>
@@ -115,6 +115,15 @@
                         <Import-Package>
                             javax.servlet.*;version="[2.4,4)",
                             org.apache.commons.io; version="[1.4,3)",
+                            !org.apache.felix.bundlerepository,
+                            !org.osgi.service.obr,
+                            !org.osgi.service.cm,
+                            !org.osgi.service.condpermadmin,
+                            !org.osgi.service.log,
+                            !org.osgi.service.metatype,
+                            !org.osgi.service.permissionadmin,
+                            !org.osgi.service.prefs,
+                            !org.osgi.service.wireadmin,
                             *
                         </Import-Package>
                         <DynamicImport-Package>
