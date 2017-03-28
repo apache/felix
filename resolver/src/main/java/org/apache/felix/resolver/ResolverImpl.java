@@ -1288,8 +1288,6 @@ public class ResolverImpl implements Resolver
         Packages pkgs = resourcePkgMap.get(resource);
 
         ResolutionError rethrow = null;
-        Candidates permutation = null;
-        Set<Requirement> mutated = null;
 
         // Check for conflicting imports from fragments.
         // TODO: Is this only needed for imports or are generic and bundle requirements also needed?
@@ -1331,6 +1329,16 @@ public class ResolverImpl implements Resolver
                 }
             }
         }
+
+        // IMPLEMENTATION NOTE:
+        // Below we track the mutated reqs that have been permuted
+        // in a single candidates permutation.  This permutation may contain a
+        // delta of several reqs which conflict with a directly imported/required candidates.
+        // When several reqs are permuted at the same time this reduces the number of solutions tried.
+        // See the method Candidates::canRemoveCandidate for a case where substitutions must be checked
+        // because of this code that may permute multiple reqs in on candidates permutation.
+        Set<Requirement> mutated = null;
+        Candidates permutation = null;
 
         // Check if there are any uses conflicts with exported packages.
         for (Entry<String, Blame> entry : pkgs.m_exportedPkgs.fast())

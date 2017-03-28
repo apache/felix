@@ -1203,7 +1203,54 @@ class Candidates
     public boolean canRemoveCandidate(Requirement req)
     {
         CandidateSelector candidates = m_candidateMap.get(req);
-        return ((candidates != null) && (candidates.getRemainingCandidateCount() > 1 || Util.isOptional(req)));
+        if (candidates != null)
+        {
+            Capability current = candidates.getCurrentCandidate();
+            if (current != null)
+            {
+                // IMPLEMENTATION NOTE:
+                // Here we check for a req that is used for a substitutable export.
+                // If we find a substitutable req then an extra check is done to see
+                // if the substitutable capability is currently depended on as the
+                // only provider of some other requirement.  If it is then we do not
+                // allow the candidate to be removed.
+                // This is done because of the way we attempt to reduce permutations
+                // checked by permuting all used requirements that conflict with a
+                // directly imported/required capability in one go.
+                // If we allowed these types of substitutable requirements to move
+                // to the next capability then the permutation would be thrown out
+                // because it would cause some other resource to not resolve.
+                // That in turn would throw out the complete permutation along with
+                // any follow on permutations that could have resulted.
+                // See ResolverImpl::checkPackageSpaceConsistency
+
+                // Check if the current candidate is substitutable by the req;
+                // This check is necessary here because
+                if (req.equals(m_subtitutableMap.get(current)))
+                {
+                    // this is a substitute req,
+                    // make sure there is not an existing dependency that would fail if we substitute
+                    Set<Requirement> dependents = m_dependentMap.get(current);
+                    if (dependents != null)
+                    {
+                        for (Requirement dependent : dependents)
+                        {
+                            CandidateSelector dependentSelector = m_candidateMap.get(dependent);
+                            // If the dependent selector only has one capability left then we know it is
+                            // using the current candidate and has no options left
+                            if (dependentSelector != null && dependentSelector.getRemainingCandidateCount() <= 1)
+                            {
+                                // return false since we do not want to allow this requirement
+                                // to substitute the capability
+                                return false;
+                            }
+                        }
+                    }
+                }
+            }
+            return candidates.getRemainingCandidateCount() > 1 || Util.isOptional(req);
+        }
+        return false;
     }
 
     static class DynamicImportFailed extends ResolutionError {
