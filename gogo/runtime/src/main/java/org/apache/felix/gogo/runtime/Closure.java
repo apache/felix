@@ -150,6 +150,17 @@ public class Closure implements Function, Evaluate
 
     public Object execute(CommandSession x, List<Object> values, Channel capturingOutput) throws Exception
     {
+        if (x != null && x != session)
+        {
+            if (x instanceof CommandSessionImpl)
+            {
+                return new Closure((CommandSessionImpl) x, null, program).execute(x, values, capturingOutput);
+            }
+            else
+            {
+                throw new IllegalStateException("The current session is not a Gogo session");
+            }
+        }
         try
         {
             location.remove();
