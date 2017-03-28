@@ -19,10 +19,15 @@
 package org.apache.felix.gogo.jline;
 
 import java.io.File;
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.OutputStream;
+import java.io.PrintStream;
+import java.io.PrintWriter;
 import java.io.Reader;
 import java.lang.annotation.Annotation;
+import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.net.URI;
 import java.net.URL;
@@ -51,6 +56,7 @@ import org.apache.felix.service.command.Converter;
 import org.apache.felix.service.command.Descriptor;
 import org.apache.felix.service.command.Function;
 import org.apache.felix.service.command.Parameter;
+import org.apache.felix.service.threadio.ThreadIO;
 import org.jline.builtins.Completers.CompletionData;
 import org.jline.builtins.Completers.CompletionEnvironment;
 import org.jline.builtins.Options;
@@ -87,6 +93,7 @@ public class Shell {
     private final String profile;
     private final Context context;
     private final CommandProcessor processor;
+    private final ThreadIO tio;
 
     private AtomicBoolean stopping = new AtomicBoolean();
 
@@ -95,12 +102,27 @@ public class Shell {
     }
 
     public Shell(Context context, CommandProcessor processor, String profile) {
+        this(context, processor, null, profile);
+    }
+
+    public Shell(Context context, CommandProcessor processor, ThreadIO tio, String profile) {
         this.context = context;
         this.processor = processor;
+        this.tio = tio != null ? tio : getThreadIO(processor);
         String baseDir = context.getProperty("gosh.home");
         baseDir = (baseDir == null) ? context.getProperty("user.dir") : baseDir;
         this.baseURI = new File(baseDir).toURI();
         this.profile = profile != null ? profile : "gosh_profile";
+    }
+
+    private ThreadIO getThreadIO(CommandProcessor processor) {
+        try {
+            Field field = processor.getClass().getDeclaredField("threadIO");
+            field.setAccessible(true);
+            return (ThreadIO) field.get(processor);
+        } catch (Throwable t) {
+            return null;
+        }
     }
 
     public Context getContext() {
@@ -215,7 +237,7 @@ public class Shell {
         stopping.set(true);
     }
 
-    public Object gosh(final CommandSession session, String[] argv) throws Exception {
+    public Object gosh(CommandSession currentSession, String[] argv) throws Exception {
         final String[] usage = {
                 "gosh - execute script with arguments in a new session",
                 "  args are available as session variables $1..$9 and $args.",
@@ -246,133 +268,171 @@ public class Shell {
             throw opt.usageError("option --command requires argument(s)");
         }
 
-        CommandSession newSession = (login ? session : processor.createSession(session));
+        CommandSession session;
+        if (login) {
+            session = currentSession;
+        } else {
+            session = createChildSession(currentSession);
+        }
 
         if (opt.isSet("xtrace")) {
-            newSession.put("echo", true);
+            session.put("echo", true);
         }
-
-        // export variables starting with upper-case to newSession
-        getVariables(session).stream()
-                .filter(key -> key.matches("[.]?[A-Z].*"))
-                .forEach(key -> newSession.put(key, session.get(key)));
 
         Terminal terminal = getTerminal(session);
-        newSession.put(Shell.VAR_CONTEXT, context);
-        newSession.put(Shell.VAR_TERMINAL, terminal);
-        newSession.put(Shell.VAR_PROCESSOR, processor);
-        newSession.put(Shell.VAR_SESSION, session);
-        newSession.put("#TERM", (Function) (s, arguments) -> terminal.getType());
-        newSession.put("#COLUMNS", (Function) (s, arguments) -> terminal.getWidth());
-        newSession.put("#LINES", (Function) (s, arguments) -> terminal.getHeight());
-        newSession.put("#PWD", (Function) (s, arguments) -> s.currentDir().toString());
-        newSession.put(LineReader.HISTORY_FILE, Paths.get(System.getProperty("user.home"), ".gogo.history"));
+        session.put(Shell.VAR_CONTEXT, context);
+        session.put(Shell.VAR_PROCESSOR, processor);
+        session.put(Shell.VAR_SESSION, session);
+        session.put("#TERM", (Function) (s, arguments) -> terminal.getType());
+        session.put("#COLUMNS", (Function) (s, arguments) -> terminal.getWidth());
+        session.put("#LINES", (Function) (s, arguments) -> terminal.getHeight());
+        session.put("#PWD", (Function) (s, arguments) -> s.currentDir().toString());
+        session.put(LineReader.HISTORY_FILE, Paths.get(System.getProperty("user.home"), ".gogo.history"));
 
-        LineReader reader;
-        if (args.isEmpty() && interactive) {
-            CompletionEnvironment completionEnvironment = new CompletionEnvironment() {
+        if (tio != null) {
+            PrintWriter writer = terminal.writer();
+            PrintStream out = new PrintStream(new OutputStream() {
                 @Override
-                public Map<String, List<CompletionData>> getCompletions() {
-                    return Shell.getCompletions(newSession);
+                public void write(int b) throws IOException {
+                    write(new byte[]{(byte) b}, 0, 1);
                 }
-                @Override
-                public Set<String> getCommands() {
-                    return Shell.getCommands(session);
+                public void write(byte b[], int off, int len) throws IOException {
+                    writer.write(new String(b, off, len));
                 }
-                @Override
-                public String resolveCommand(String command) {
-                    return Shell.resolve(session, command);
+                public void flush() throws IOException {
+                    writer.flush();
                 }
-                @Override
-                public String commandName(String command) {
-                    int idx = command.indexOf(':');
-                    return idx >= 0 ? command.substring(idx + 1) : command;
+                public void close() throws IOException {
+                    writer.close();
                 }
-                @Override
-                public Object evaluate(LineReader reader, ParsedLine line, String func) throws Exception {
-                    session.put(Shell.VAR_COMMAND_LINE, line);
-                    return session.execute(func);
-                }
-            };
-            reader = LineReaderBuilder.builder()
-                    .terminal(terminal)
-                    .variables(((CommandSessionImpl) newSession).getVariables())
-                    .completer(new org.jline.builtins.Completers.Completer(completionEnvironment))
-                    .highlighter(new Highlighter(session))
-                    .parser(new Parser())
-                    .expander(new Expander(newSession))
-                    .build();
-            reader.setOpt(LineReader.Option.AUTO_FRESH_LINE);
-            newSession.put(Shell.VAR_READER, reader);
-            newSession.put(Shell.VAR_COMPLETIONS, new HashMap());
-        } else {
-            reader = null;
+            });
+            tio.setStreams(terminal.input(), out, out);
         }
 
-        if (login || interactive) {
-            URI uri = baseURI.resolve("etc/" + profile);
-            if (!new File(uri).exists()) {
-                URL url = getClass().getResource("/ext/" + profile);
-                if (url == null) {
-                    url = getClass().getResource("/" + profile);
-                }
-                uri = (url == null) ? null : url.toURI();
-            }
-            if (uri != null) {
-                source(newSession, uri.toString());
-            }
-        }
-
-        Object result = null;
-
-        if (args.isEmpty()) {
-            if (interactive) {
-                result = runShell(session, newSession, terminal, reader);
-            }
-        } else {
-            CharSequence program;
-
-            if (opt.isSet("command")) {
-                StringBuilder buf = new StringBuilder();
-                for (String arg : args) {
-                    if (buf.length() > 0) {
-                        buf.append(' ');
+        try {
+            LineReader reader;
+            if (args.isEmpty() && interactive) {
+                CompletionEnvironment completionEnvironment = new CompletionEnvironment() {
+                    @Override
+                    public Map<String, List<CompletionData>> getCompletions() {
+                        return Shell.getCompletions(session);
                     }
-                    buf.append(arg);
-                }
-                program = buf;
+
+                    @Override
+                    public Set<String> getCommands() {
+                        return Shell.getCommands(session);
+                    }
+
+                    @Override
+                    public String resolveCommand(String command) {
+                        return Shell.resolve(session, command);
+                    }
+
+                    @Override
+                    public String commandName(String command) {
+                        int idx = command.indexOf(':');
+                        return idx >= 0 ? command.substring(idx + 1) : command;
+                    }
+
+                    @Override
+                    public Object evaluate(LineReader reader, ParsedLine line, String func) throws Exception {
+                        session.put(Shell.VAR_COMMAND_LINE, line);
+                        return session.execute(func);
+                    }
+                };
+                reader = LineReaderBuilder.builder()
+                        .terminal(terminal)
+                        .variables(((CommandSessionImpl) session).getVariables())
+                        .completer(new org.jline.builtins.Completers.Completer(completionEnvironment))
+                        .highlighter(new Highlighter(session))
+                        .parser(new Parser())
+                        .expander(new Expander(session))
+                        .build();
+                reader.setOpt(LineReader.Option.AUTO_FRESH_LINE);
+                session.put(Shell.VAR_READER, reader);
+                session.put(Shell.VAR_COMPLETIONS, new HashMap());
             } else {
-                URI script = session.currentDir().toUri().resolve(args.remove(0));
+                reader = null;
+            }
 
-                // set script arguments
-                newSession.put("0", script);
-                newSession.put("args", args);
+            if (login || interactive) {
+                URI uri = baseURI.resolve("etc/" + profile);
+                if (!new File(uri).exists()) {
+                    URL url = getClass().getResource("/ext/" + profile);
+                    if (url == null) {
+                        url = getClass().getResource("/" + profile);
+                    }
+                    uri = (url == null) ? null : url.toURI();
+                }
+                if (uri != null) {
+                    source(session, uri.toString());
+                }
+            }
 
-                for (int i = 0; i < args.size(); ++i) {
-                    newSession.put(String.valueOf(i + 1), args.get(i));
+            Object result = null;
+
+            if (args.isEmpty()) {
+                if (interactive) {
+                    result = runShell(session, terminal, reader);
+                }
+            } else {
+                CharSequence program;
+
+                if (opt.isSet("command")) {
+                    StringBuilder buf = new StringBuilder();
+                    for (String arg : args) {
+                        if (buf.length() > 0) {
+                            buf.append(' ');
+                        }
+                        buf.append(arg);
+                    }
+                    program = buf;
+                } else {
+                    URI script = session.currentDir().toUri().resolve(args.remove(0));
+
+                    // set script arguments
+                    session.put("0", script);
+                    session.put("args", args);
+
+                    for (int i = 0; i < args.size(); ++i) {
+                        session.put(String.valueOf(i + 1), args.get(i));
+                    }
+
+                    program = readScript(script);
                 }
 
-                program = readScript(script);
+                result = session.execute(program);
             }
 
-            result = newSession.execute(program);
-        }
-
-        if (login && interactive && !opt.isSet("noshutdown")) {
-            if (terminal != null) {
-                terminal.writer().println("gosh: stopping framework");
-                terminal.flush();
+            if (login && interactive && !opt.isSet("noshutdown")) {
+                if (terminal != null) {
+                    terminal.writer().println("gosh: stopping framework");
+                    terminal.flush();
+                }
+                shutdown();
             }
-            shutdown();
-        }
 
-        return result;
+            return result;
+        } finally {
+            if (tio != null) {
+                tio.close();
+            }
+        }
     }
 
-    private Object runShell(final CommandSession session, CommandSession newSession, Terminal terminal,
+    private CommandSession createChildSession(CommandSession parent) {
+        CommandSession session = processor.createSession(parent);
+        getVariables(parent).stream()
+                .filter(key -> key.matches("[.]?[A-Z].*"))
+                .forEach(key -> session.put(key, parent.get(key)));
+        session.put(Shell.VAR_TERMINAL, getTerminal(parent));
+        return session;
+    }
+
+    private Object runShell(final CommandSession session, Terminal terminal,
                             LineReader reader) throws InterruptedException {
         AtomicBoolean reading = new AtomicBoolean();
-        newSession.setJobListener((job, previous, current) -> {
+        session.setJobListener((job, previous, current) -> {
             if (previous == Status.Background || current == Status.Background
                     || previous == Status.Suspended || current == Status.Suspended) {
                 int width = terminal.getWidth();
@@ -380,19 +440,19 @@ public class Shell {
                 terminal.writer().write(getStatusLine(job, width, status));
                 terminal.flush();
                 if (reading.get() && !stopping.get()) {
-                    reader.callWidget("redraw-line");
-                    reader.callWidget("redisplay");
+                    reader.callWidget(LineReader.REDRAW_LINE);
+                    reader.callWidget(LineReader.REDISPLAY);
                 }
             }
         });
         SignalHandler intHandler = terminal.handle(Signal.INT, s -> {
-            Job current = newSession.foregroundJob();
+            Job current = session.foregroundJob();
             if (current != null) {
                 current.interrupt();
             }
         });
         SignalHandler suspHandler = terminal.handle(Signal.TSTP, s -> {
-            Job current = newSession.foregroundJob();
+            Job current = session.foregroundJob();
             if (current != null) {
                 current.suspend();
             }

@@ -18,8 +18,11 @@
  */
 package org.apache.felix.gogo.jline;
 
+import java.io.FilterInputStream;
+import java.io.FilterOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.io.PrintStream;
 
 import org.apache.felix.gogo.jline.Shell.Context;
@@ -49,7 +52,7 @@ public class Main {
             try {
                 CommandProcessorImpl processor = new CommandProcessorImpl(tio);
                 Context context = new MyContext();
-                Shell shell = new Shell(context, processor);
+                Shell shell = new Shell(context, processor, tio, null);
                 processor.addCommand("gogo", processor, "addCommand");
                 processor.addCommand("gogo", processor, "removeCommand");
                 processor.addCommand("gogo", processor, "eval");
@@ -70,7 +73,17 @@ public class Main {
                     // ignore
                 }
                 */
-                CommandSession session = processor.createSession(terminal.input(), terminal.output(), terminal.output());
+                InputStream in = new FilterInputStream(terminal.input()) {
+                    @Override
+                    public void close() throws IOException {
+                    }
+                };
+                OutputStream out = new FilterOutputStream(terminal.output()) {
+                    @Override
+                    public void close() throws IOException {
+                    }
+                };
+                CommandSession session = processor.createSession(in, out, out);
                 session.put(Shell.VAR_CONTEXT, context);
                 session.put(Shell.VAR_TERMINAL, terminal);
                 try {
