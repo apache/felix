@@ -150,7 +150,7 @@ public class Posix {
             process.err().println(e.getMessage());
             process.error(0);
         } catch (Exception e) {
-            process.err().println(argv[0] + ": " + e.getMessage());
+            process.err().println(argv[0] + ": " + e.toString());
             process.error(1);
         }
     }
