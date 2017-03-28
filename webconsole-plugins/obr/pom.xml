@@ -132,6 +132,7 @@
             <artifactId>org.osgi.service.obr</artifactId>
             <version>1.0.2</version>
             <scope>provided</scope>
+            <optional>true</optional>
         </dependency>
         <dependency>
             <groupId>org.apache.felix</groupId>
