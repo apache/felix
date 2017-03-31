@@ -18,9 +18,6 @@
  */
 package org.apache.felix.eventadmin.impl.tasks;
 
-import java.lang.management.ManagementFactory;
-import java.lang.management.ThreadMXBean;
-
 import org.apache.felix.eventadmin.impl.handler.EventHandlerProxy;
 import org.osgi.service.event.Event;
 
@@ -37,8 +34,6 @@ public class HandlerTask implements Runnable
 	private final long timeout;
 
 	private final BlacklistLatch handlerLatch;
-
-	private volatile long threadId;
 
 	private volatile long startTime;
 
@@ -58,23 +53,9 @@ public class HandlerTask implements Runnable
 		this.event = event;
 		this.timeout = timeout;
 		this.handlerLatch = handlerLatch;
-		this.threadId = -1l;
 		this.startTime = -1l;
 		this.endTime = -1l;
 	}
-
-	/**
-	 *
-	 * Perform timing based on thread CPU time with clock time fall back.
-	 *
-	 * @return
-	 */
-	public long getTimeInMillis()
-    {
-        ThreadMXBean bean = ManagementFactory.getThreadMXBean();
-        return bean.isThreadCpuTimeEnabled() ?
-            bean.getThreadCpuTime(threadId)/1000000 : System.currentTimeMillis();
-    }
 
 	/**
 	 * Run Hander Event
@@ -84,11 +65,10 @@ public class HandlerTask implements Runnable
     {
         try
         {
-        	threadId = Thread.currentThread().getId();
-            startTime = getTimeInMillis();
+            startTime = System.currentTimeMillis();
             // execute the task
             task.sendEvent(event);
-            endTime = getTimeInMillis();
+            endTime = System.currentTimeMillis();
             checkForBlacklist();
         }
         finally
@@ -123,7 +103,7 @@ public class HandlerTask implements Runnable
      */
     public void checkForBlacklist()
     {
-    	if(useTimeout() && getTaskTime() > this.timeout)
+    	if (useTimeout() && getTaskTime() > this.timeout)
 		{
 			task.blackListHandler();
 		}
@@ -135,15 +115,15 @@ public class HandlerTask implements Runnable
      *
      * @return
      */
-    public long getTaskTime()
+    private long getTaskTime()
     {
-    	if(threadId < 0l || startTime < 0l)
+    	if (startTime < 0l)
     	{
     		return 0l;
     	}
     	else if(endTime < 0l)
     	{
-    		return getTimeInMillis() - startTime;
+    		return System.currentTimeMillis() - startTime;
     	}
     	return endTime - startTime;
 
