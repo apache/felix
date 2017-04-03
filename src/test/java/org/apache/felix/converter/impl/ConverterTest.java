@@ -62,6 +62,7 @@ import org.osgi.util.converter.Rule;
 import org.osgi.util.converter.StandardConverter;
 import org.osgi.util.converter.TypeReference;
 
+import static org.apache.felix.converter.impl.Helper.convert;
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -335,8 +336,8 @@ public class ConverterTest {
     @Test
     public void testCustomIntArrayConversion() {
         ConverterBuilder cb = converter.newConverterBuilder();
-        cb.rule(String.class, (f,t) -> f instanceof int[] ? Arrays.stream((int []) f).mapToObj(Integer::toString).collect(Collectors.joining(",")) : null);
-        cb.rule(int[].class, (f,t) -> f instanceof String ? Arrays.stream(((String) f).split(",")).mapToInt(Integer::parseInt).toArray() : null);
+        cb.rule(String.class, convert((f,t) -> f instanceof int[] ? Arrays.stream((int []) f).mapToObj(Integer::toString).collect(Collectors.joining(",")) : null));
+        cb.rule(int[].class, convert((f,t) -> f instanceof String ? Arrays.stream(((String) f).split(",")).mapToInt(Integer::parseInt).toArray() : null));
         Converter adapted = cb.build();
 
         int[] ia = {1, 2};
