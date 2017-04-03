@@ -167,11 +167,11 @@ public class AdapterImpl implements InternalConverter {
                 return del.to(type);
             } catch (Exception ex) {
                 // TODO do custom error handling
-//                for (ConvertFunction<?> cf : converters) {
-//                    Object eh = cf.handleError(object, type);
-//                    if (eh != null)
-//                        return eh;
-//                }
+                for (ConvertFunction<?> cf : converters) {
+                    Object eh = cf.handleError(object, type);
+                    if (eh != null)
+                        return eh;
+                }
 
                 // No error handler, throw the original exception
                 throw ex;
