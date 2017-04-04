@@ -196,7 +196,7 @@ public class ManifestParser
 
         List<ParsedHeaderClause> requireClauses =
             parseStandardHeader((String) headerMap.get(Constants.REQUIRE_CAPABILITY));
-        importClauses = normalizeRequireCapabilityClauses(
+        importClauses = normalizeCapabilityClauses(
             m_logger, requireClauses, getManifestVersion());
         List<BundleRequirement> requireReqs = convertRequireCapabilities(importClauses, owner);
 
@@ -222,7 +222,7 @@ public class ManifestParser
 
         List<ParsedHeaderClause> provideClauses =
             parseStandardHeader((String) headerMap.get(Constants.PROVIDE_CAPABILITY));
-        exportClauses = normalizeProvideCapabilityClauses(
+        exportClauses = normalizeCapabilityClauses(
             logger, provideClauses, getManifestVersion());
         List<BundleCapability> provideCaps = convertProvideCapabilities(provideClauses, owner);
 
@@ -551,19 +551,6 @@ public class ManifestParser
         return clauses;
     }
 
-    private static List<ParsedHeaderClause> normalizeRequireCapabilityClauses(
-        Logger logger, List<ParsedHeaderClause> clauses, String mv)
-        throws BundleException
-    {
-
-        if (!mv.equals("2") && !clauses.isEmpty())
-        {
-            // Should we error here if we are not an R4 bundle?
-        }
-
-        return clauses;
-    }
-
     private static List<BundleRequirement> convertRequireCapabilities(
         List<ParsedHeaderClause> clauses, BundleRevision owner)
         throws BundleException
@@ -715,7 +702,7 @@ public class ManifestParser
         return result;
     }
     
-    private static List<ParsedHeaderClause> normalizeProvideCapabilityClauses(
+    private static List<ParsedHeaderClause> normalizeCapabilityClauses(
         Logger logger, List<ParsedHeaderClause> clauses, String mv)
         throws BundleException
     {
