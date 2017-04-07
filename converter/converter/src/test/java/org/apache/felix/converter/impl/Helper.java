@@ -16,9 +16,9 @@
  */
 package org.apache.felix.converter.impl;
 
-import org.osgi.util.converter.ConvertFunction;
-
 import java.lang.reflect.Type;
+
+import org.osgi.util.converter.ConvertFunction;
 
 public class Helper {
 
@@ -41,11 +41,6 @@ public class Helper {
             @Override
             public T convert(Object obj, Type targetType) throws Exception {
                 return converter != null ? converter.convert(obj, targetType) : null;
-            }
-
-            @Override
-            public T handleError(Object obj, Type targetType) {
-                return errorHandler != null ? errorHandler.handleError(obj, targetType) : null;
             }
         };
     }
