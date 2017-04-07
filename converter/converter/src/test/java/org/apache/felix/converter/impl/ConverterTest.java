@@ -949,6 +949,19 @@ public class ConverterTest {
         assertEquals(expected, m2);
     }
 
+    @Test
+    public void testPrefixEnumAnnotation() {
+        PrefixEnumAnnotation pea = converter.convert(Collections.emptyMap()).to(PrefixEnumAnnotation.class);
+
+        assertEquals(1000, pea.timeout());
+        assertEquals(PrefixEnumAnnotation.Type.SINGLE, pea.type());
+
+        @SuppressWarnings("rawtypes")
+        Map m = converter.convert(pea).to(Map.class);
+        assertEquals(1000L, m.get("com.acme.config.timeout"));
+        assertEquals(PrefixEnumAnnotation.Type.SINGLE, m.get("com.acme.config.type"));
+    }
+
     static class MyClass2 {
         private final String value;
         public MyClass2(String v) {
