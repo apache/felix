@@ -22,14 +22,15 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.osgi.util.converter.ConvertFunction;
+import org.osgi.util.converter.ConverterFunction;
 import org.osgi.util.converter.ConverterBuilder;
 import org.osgi.util.converter.TargetRule;
 
 public class ConverterBuilderImpl implements ConverterBuilder {
     private final InternalConverter adapter;
-    private final Map<Type, List<ConvertFunction<?>>> rules = new HashMap<>();
-    private final List<ConvertFunction<?>> catchAllRules = new ArrayList<>();
+    private final Map<Type, List<ConverterFunction<?>>> rules = new HashMap<>();
+    private final List<ConverterFunction<?>> catchAllRules = new ArrayList<>();
+    private final List<ConverterFunction<?>> errorHandlers = new ArrayList<>();
 
     public ConverterBuilderImpl(InternalConverter a) {
         this.adapter = a;
@@ -37,17 +38,23 @@ public class ConverterBuilderImpl implements ConverterBuilder {
 
     @Override
     public InternalConverter build() {
-        return new AdapterImpl(adapter, rules, catchAllRules);
+        return new AdapterImpl(adapter, rules, catchAllRules, errorHandlers);
     }
 
     @Override
-    public <T> ConverterBuilder rule(ConvertFunction<T> func) {
+    public <T> ConverterBuilder errorHandler(ConverterFunction<T> func) {
+        errorHandlers.add(func);
+        return this;
+    }
+
+    @Override
+    public <T> ConverterBuilder rule(ConverterFunction<T> func) {
     	catchAllRules.add(func);
         return this;
     }
 
     @Override
-    public <T> ConverterBuilder rule(Type t, ConvertFunction<T> func) {
+    public <T> ConverterBuilder rule(Type t, ConverterFunction<T> func) {
     	getRulesList(t).add(func);
     	return this;
     }
@@ -59,8 +66,8 @@ public class ConverterBuilderImpl implements ConverterBuilder {
         return this;
     }
 
-    private List<ConvertFunction<?>> getRulesList(Type type) {
-        List<ConvertFunction<?>> l = rules.get(type);
+    private List<ConverterFunction<?>> getRulesList(Type type) {
+        List<ConverterFunction<?>> l = rules.get(type);
     	if (l == null) {
     		l = new ArrayList<>();
     		rules.put(type, l);

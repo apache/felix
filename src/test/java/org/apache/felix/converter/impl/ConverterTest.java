@@ -56,13 +56,13 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.osgi.util.converter.ConversionException;
+import org.osgi.util.converter.ConverterFunction;
 import org.osgi.util.converter.Converter;
 import org.osgi.util.converter.ConverterBuilder;
 import org.osgi.util.converter.Rule;
 import org.osgi.util.converter.StandardConverter;
 import org.osgi.util.converter.TypeReference;
 
-import static org.apache.felix.converter.impl.Helper.convert;
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -336,8 +336,8 @@ public class ConverterTest {
     @Test
     public void testCustomIntArrayConversion() {
         ConverterBuilder cb = converter.newConverterBuilder();
-        cb.rule(String.class, convert((f,t) -> f instanceof int[] ? Arrays.stream((int []) f).mapToObj(Integer::toString).collect(Collectors.joining(",")) : null));
-        cb.rule(int[].class, convert((f,t) -> f instanceof String ? Arrays.stream(((String) f).split(",")).mapToInt(Integer::parseInt).toArray() : null));
+        cb.rule(String.class, (f,t) -> f instanceof int[] ? Arrays.stream((int []) f).mapToObj(Integer::toString).collect(Collectors.joining(",")) : null);
+        cb.rule(int[].class, (f,t) -> f instanceof String ? Arrays.stream(((String) f).split(",")).mapToInt(Integer::parseInt).toArray() : null);
         Converter adapted = cb.build();
 
         int[] ia = {1, 2};
@@ -345,37 +345,32 @@ public class ConverterTest {
         assertArrayEquals(ia, adapted.convert("1,2").to(int[].class));
     }
 
-//    @Test
-//    public void testCustomErrorHandling() {
-//        ConvertFunction<Integer> func = new ConvertFunction<Integer>() {
-//            @Override
-//            public Integer convert(Object obj, Type targetType) throws Exception {
-//                return null;
-//            }
-//
-//            @Override
-//            public Integer handleError(Object obj, Type targetType) {
-//                if ("hello".equals(obj)) {
-//                    return -1;
-//                }
-//                return null;
-//            }
-//        };
-//
-//        ConverterBuilder cb = converter.newConverterBuilder();
-//        Converter adapted = cb.rule(Integer.class, func).build();
-//
-//        assertEquals(new Integer(12), adapted.convert("12").to(Integer.class));
-//        assertEquals(new Integer(-1), adapted.convert("hello").to(Integer.class));
-//
-//        // This is with the non-adapted converter
-//        try {
-//            converter.convert("hello").to(Integer.class);
-//            fail("Should have thrown a Conversion Exception when converting 'hello' to a number");
-//        } catch (ConversionException ce) {
-//            // good
-//        }
-//    }
+    @Test
+    public void testCustomErrorHandling() {
+        ConverterFunction<Integer> func = new ConverterFunction<Integer>() {
+            @Override
+            public Integer apply(Object obj, Type targetType) {
+                if ("hello".equals(obj)) {
+                    return -1;
+                }
+                return null;
+            }
+        };
+
+        ConverterBuilder cb = converter.newConverterBuilder();
+        Converter adapted = cb.errorHandler(func).build();
+
+        assertEquals(new Integer(12), adapted.convert("12").to(Integer.class));
+        assertEquals(new Integer(-1), adapted.convert("hello").to(Integer.class));
+
+        // This is with the non-adapted converter
+        try {
+            converter.convert("hello").to(Integer.class);
+            fail("Should have thrown a Conversion Exception when converting 'hello' to a number");
+        } catch (ConversionException ce) {
+            // good
+        }
+    }
 
     @Test
     public void testUUIDConversion() {
