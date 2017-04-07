@@ -31,13 +31,13 @@ import java.util.stream.Stream;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.osgi.util.converter.ConverterFunction;
 import org.osgi.util.converter.Converter;
 import org.osgi.util.converter.ConverterBuilder;
 import org.osgi.util.converter.Rule;
 import org.osgi.util.converter.TypeRule;
 import org.osgi.util.function.Function;
 
-import static org.apache.felix.converter.impl.Helper.convert;
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 
@@ -85,8 +85,8 @@ public class ConverterBuilderTest {
     public void testSecondLevelAdapter() {
         ConverterBuilder cb = converter.newConverterBuilder();
         cb.rule(new TypeRule<>(char[].class, String.class, ConverterBuilderTest::convertToString));
-        cb.rule(Integer.class, convert((f,t) -> -1));
-        cb.rule(Long.class, convert((f,t) -> -1L));
+        cb.rule(Integer.class, (f,t) -> -1);
+        cb.rule(Long.class, (f,t) -> -1L);
         Converter ca = cb.build();
 
         assertEquals("hi", ca.convert(new char[] {'h', 'i'}).to(String.class));
@@ -121,9 +121,9 @@ public class ConverterBuilderTest {
 
     @Test
     public void testWildcardAdapter() {
-        Helper.ConvertFunctionConverter<Object> foo = new Helper.ConvertFunctionConverter<Object>() {
+        ConverterFunction<Object> foo = new ConverterFunction<Object>() {
             @Override
-            public Object convert(Object obj, Type type) throws Exception {
+            public Object apply(Object obj, Type type) throws Exception {
                 if (!(obj instanceof List))
                     return null;
 
@@ -137,8 +137,8 @@ public class ConverterBuilderTest {
         };
 
         ConverterBuilder cb = converter.newConverterBuilder();
-        cb.rule(convert(foo));
-        cb.rule(convert((v,t) -> v.toString()));
+        cb.rule(foo);
+        cb.rule((v,t) -> v.toString());
         Converter ca = cb.build();
 
         assertEquals(3L, (long) ca.convert(Arrays.asList("a", "b", "c")).to(Long.class));
@@ -148,9 +148,9 @@ public class ConverterBuilderTest {
 
     @Test
     public void testWildcardAdapter1() {
-        Helper.ConvertFunctionConverter<Object> foo = new Helper.ConvertFunctionConverter<Object>() {
+        ConverterFunction<Object> foo = new ConverterFunction<Object>() {
             @Override
-            public Object convert(Object obj, Type type) throws Exception {
+            public Object apply(Object obj, Type type) throws Exception {
                 if (!(obj instanceof List))
                     return null;
 
@@ -164,8 +164,8 @@ public class ConverterBuilderTest {
         };
 
         ConverterBuilder cb = converter.newConverterBuilder();
-        cb.rule(convert((v,t) -> converter.convert(1).to(t)));
-        cb.rule(convert(foo));
+        cb.rule((v,t) -> converter.convert(1).to(t));
+        cb.rule(foo);
         Converter ca = cb.build();
 
         // The catchall converter should be called always because it can handle all and was registered first
@@ -186,7 +186,7 @@ public class ConverterBuilderTest {
                 Arrays.sort(v, Collections.reverseOrder());
                 return new CopyOnWriteArrayList<>(Arrays.asList(v));
             }) {});
-        cb.rule(convert((v,t) -> { snooped.put(v,t); return null;}));
+        cb.rule((v,t) -> { snooped.put(v,t); return null;});
         Converter ca = cb.build();
 
         assertEquals(new ArrayList<>(Arrays.asList("c", "b", "a")), ca.convert(
