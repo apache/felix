@@ -46,7 +46,7 @@ public class InterpolationHelper {
      */
     public interface SubstitutionCallback {
 
-        public String getValue(String key);
+        String getValue(String key);
 
     }
 
@@ -298,6 +298,7 @@ public class InterpolationHelper {
         // return the existing value.
         if ((startDelim < 0) || (stopDelim < 0))
         {
+            cycleMap.remove(currentKey);
             return val;
         }
 
@@ -396,6 +397,8 @@ public class InterpolationHelper {
         // Now perform substitution again, since there could still
         // be substitutions to make.
         val = doSubstVars(val, currentKey, cycleMap, configProps, callback, substituteFromConfig, substituteFromSystemProperties, defaultsToEmptyString);
+
+        cycleMap.remove(currentKey);
 
         // Return the value.
         return val;
