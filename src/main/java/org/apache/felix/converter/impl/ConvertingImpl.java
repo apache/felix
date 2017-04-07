@@ -131,8 +131,7 @@ public class ConvertingImpl implements Converting, InternalConverting {
     @Override
     public Converting copy() {
         forceCopy  = true;
-
-        return null;
+        return this;
     }
 
     @Override
