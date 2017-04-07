@@ -29,7 +29,7 @@
   <name>Apache Felix File Install</name>
   <description>A utility to automatically install bundles from a directory.</description>
   <url>http://felix.apache.org/site/apache-felix-file-install.html</url>
-  <version>3.5.9-SNAPSHOT</version>
+  <version>3.6.0-SNAPSHOT</version>
   <artifactId>org.apache.felix.fileinstall</artifactId>
   <scm>
     <connection>scm:svn:http://svn.apache.org/repos/asf/felix/trunk/fileinstall</connection>
@@ -60,7 +60,7 @@
     <dependency>
       <groupId>org.apache.felix</groupId>
       <artifactId>org.apache.felix.utils</artifactId>
-      <version>1.8.4</version>
+      <version>1.10.0-SNAPSHOT</version>
     </dependency>
   </dependencies>
   <build>
@@ -105,7 +105,6 @@
             </Bundle-DocURL>
             <_versionpolicy>[$(version;==;$(@)),$(version;+;$(@)))</_versionpolicy>
             <Embed-Dependency>
-                org.apache.felix.configadmin;inline="org/apache/felix/cm/file/ConfigurationHandler.class",
                 org.apache.felix.utils;inline="org/apache/felix/utils/collections/DictionaryAsMap*.class"
             </Embed-Dependency>
           </instructions>

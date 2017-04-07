@@ -24,12 +24,12 @@ import java.security.AccessController;
 import java.security.PrivilegedAction;
 import java.util.*;
 
-import org.apache.felix.cm.file.ConfigurationHandler;
 import org.apache.felix.fileinstall.ArtifactInstaller;
 import org.apache.felix.fileinstall.ArtifactListener;
 import org.apache.felix.fileinstall.internal.Util.Logger;
 import org.apache.felix.utils.collections.DictionaryAsMap;
 import org.apache.felix.utils.properties.InterpolationHelper;
+import org.apache.felix.utils.properties.TypedProperties;
 import org.osgi.framework.*;
 import org.osgi.service.cm.*;
 
@@ -129,61 +129,36 @@ public class ConfigInstaller implements ArtifactInstaller, ConfigurationListener
                 Dictionary dict = config.getProperties();
                 String fileName = (String) dict.get( DirectoryWatcher.FILENAME );
                 File file = fileName != null ? fromConfigKey(fileName) : null;
-                if( file != null && file.isFile()   ) {
-                    if( fileName.endsWith( ".cfg" ) )
+                if( file != null && file.isFile() ) {
+                    TypedProperties props = new TypedProperties( context );
+                    props.load( file );
+                    // remove "removed" properties from the cfg file
+                    List<String> propertiesToRemove = new ArrayList<>();
+                    for( String key : props.keySet() )
                     {
-                        org.apache.felix.utils.properties.Properties props = new org.apache.felix.utils.properties.Properties( file, context );
-                        // remove "removed" properties from the cfg file
-                        List<String> propertiesToRemove = new ArrayList<String>();
-                        for( String key : props.keySet() )
-                        {
-                            if( dict.get(key) == null
-                                    && !Constants.SERVICE_PID.equals(key)
-                                    && !ConfigurationAdmin.SERVICE_FACTORYPID.equals(key)
-                                    && !DirectoryWatcher.FILENAME.equals(key) ) {
-                                propertiesToRemove.add(key);
-                            }
-                        }
-                        for( Enumeration e  = dict.keys(); e.hasMoreElements(); )
-                        {
-                            String key = e.nextElement().toString();
-                            if( !Constants.SERVICE_PID.equals(key)
-                                    && !ConfigurationAdmin.SERVICE_FACTORYPID.equals(key)
-                                    && !DirectoryWatcher.FILENAME.equals(key) )
-                            {
-                                String val = dict.get( key ).toString();
-                                props.put( key, val );
-                            }
-                        }
-                        for( String key : propertiesToRemove )
-                        {
-                            props.remove(key);
-                        }
-                        props.save();
-                    }
-                    else if( fileName.endsWith( ".config" ) )
-                    {
-                        OutputStream fos = new FileOutputStream( file );
-                        Properties props = new Properties();
-                        for( Enumeration e  = dict.keys(); e.hasMoreElements(); )
-                        {
-                            String key = e.nextElement().toString();
-                            if( !Constants.SERVICE_PID.equals(key)
-                                    && !ConfigurationAdmin.SERVICE_FACTORYPID.equals(key)
-                                    && !DirectoryWatcher.FILENAME.equals(key) )
-                            {
-                                props.put( key, dict.get( key ) );
-                            }
-                        }
-                        try
-                        {
-                            ConfigurationHandler.write( fos, props );
-                        }
-                        finally
-                        {
-                            fos.close();
+                        if( dict.get(key) == null
+                                && !Constants.SERVICE_PID.equals(key)
+                                && !ConfigurationAdmin.SERVICE_FACTORYPID.equals(key)
+                                && !DirectoryWatcher.FILENAME.equals(key) ) {
+                            propertiesToRemove.add(key);
                         }
                     }
+                    for( Enumeration e  = dict.keys(); e.hasMoreElements(); )
+                    {
+                        String key = e.nextElement().toString();
+                        if( !Constants.SERVICE_PID.equals(key)
+                                && !ConfigurationAdmin.SERVICE_FACTORYPID.equals(key)
+                                && !DirectoryWatcher.FILENAME.equals(key) )
+                        {
+                            Object val = dict.get( key );
+                            props.put( key, val );
+                        }
+                    }
+                    for( String key : propertiesToRemove )
+                    {
+                        props.remove(key);
+                    }
+                    props.save( file );
                     // we're just writing out what's already loaded into ConfigAdmin, so
                     // update file checksum since lastModified gets updated when writing
                     fileInstall.updateChecksum(file);
@@ -225,36 +200,27 @@ public class ConfigInstaller implements ArtifactInstaller, ConfigurationListener
      */
     boolean setConfig(final File f) throws Exception
     {
-        final Hashtable<String, Object> ht = new Hashtable<String, Object>();
+        final Hashtable<String, Object> ht = new Hashtable<>();
         final InputStream in = new BufferedInputStream(new FileInputStream(f));
         try
         {
-            if ( f.getName().endsWith( ".cfg" ) )
-            {
+            in.mark(1);
+            boolean isXml = in.read() == '<';
+            in.reset();
+            if (isXml) {
                 final Properties p = new Properties();
-                in.mark(1);
-                boolean isXml = in.read() == '<';
-                in.reset();
-                if (isXml) {
-                    p.loadFromXML(in);
-                } else {
-                    p.load(in);
-                }
-                Map<String, String> strMap = new HashMap<String, String>();
+                p.loadFromXML(in);
+                Map<String, String> strMap = new HashMap<>();
                 for (Object k : p.keySet()) {
                     strMap.put(k.toString(), p.getProperty(k.toString()));
                 }
                 InterpolationHelper.performSubstitution(strMap, context);
                 ht.putAll(strMap);
-            }
-            else if ( f.getName().endsWith( ".config" ) )
-            {
-                final Dictionary config = ConfigurationHandler.read(in);
-                final Enumeration i = config.keys();
-                while ( i.hasMoreElements() )
-                {
-                    final Object key = i.nextElement();
-                    ht.put(key.toString(), config.get(key));
+            } else {
+                TypedProperties p = new TypedProperties(context);
+                p.load(in);
+                for (String k : p.keySet()) {
+                    ht.put(k, p.get(k));
                 }
             }
         }
@@ -267,7 +233,7 @@ public class ConfigInstaller implements ArtifactInstaller, ConfigurationListener
         Configuration config = getConfiguration(toConfigKey(f), pid[0], pid[1]);
 
         Dictionary<String, Object> props = config.getProperties();
-        Hashtable<String, Object> old = props != null ? new Hashtable<String, Object>(new DictionaryAsMap<String, Object>(props)) : null;
+        Hashtable<String, Object> old = props != null ? new Hashtable<String, Object>(new DictionaryAsMap<>(props)) : null;
         if (old != null) {
         	old.remove( DirectoryWatcher.FILENAME );
         	old.remove( Constants.SERVICE_PID );
