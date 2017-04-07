@@ -169,6 +169,27 @@ public class ConfigInstaller implements ArtifactInstaller, ConfigurationListener
                 Util.log( context, Logger.LOG_INFO, "Unable to save configuration", e );
             }
         }
+
+        if (configurationEvent.getType() == ConfigurationEvent.CM_DELETED)
+        {
+            try {
+                Configuration config = getConfigurationAdmin().getConfiguration(
+                        configurationEvent.getPid(),
+                        configurationEvent.getFactoryPid());
+                Dictionary dict = config.getProperties();
+                String fileName = (String) dict.get(DirectoryWatcher.FILENAME);
+                File file = fileName != null ? fromConfigKey(fileName) : null;
+                if (file != null && file.isFile()) {
+                    if (!file.delete()) {
+                        throw new IOException("Unable to delete file: " + file);
+                    }
+                }
+            }
+            catch (Exception e)
+            {
+                Util.log( context, Logger.LOG_INFO, "Unable to delete configuration file", e );
+            }
+        }
     }
 
     boolean shouldSaveConfig()
