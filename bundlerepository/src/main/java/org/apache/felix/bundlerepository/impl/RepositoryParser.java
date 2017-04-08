@@ -71,7 +71,7 @@ public abstract class RepositoryParser
     }
 
 
-    public abstract RepositoryImpl parseRepository(InputStream is) throws Exception;
+    public abstract RepositoryImpl parseRepository(InputStream is, String repositoryURI) throws Exception;
 
     public abstract RepositoryImpl parseRepository(Reader r) throws Exception;
 

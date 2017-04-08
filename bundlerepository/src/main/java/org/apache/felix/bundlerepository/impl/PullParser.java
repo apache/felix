@@ -36,7 +36,7 @@ public class PullParser extends RepositoryParser
     {
     }
 
-    public RepositoryImpl parseRepository(InputStream is) throws Exception
+    public RepositoryImpl parseRepository(InputStream is, String repositoryURI) throws Exception
     {
         XmlPullParser reader = new KXmlParser();
 
@@ -50,14 +50,17 @@ public class PullParser extends RepositoryParser
             throw new Exception("Expected element 'repository' at the root of the document");
         }
 
+        RepositoryImpl repo;
         if ("http://www.osgi.org/xmlns/repository/v1.0.0".equals(reader.getNamespace()))
             // TODO there are a bunch of other methods here that create a parser, should they be updated too?
             // at the very least they should be made namespace-aware too, so that parsing is the same no matter
             // how its initiated.
-            return SpecXMLPullParser.parse(reader);
+            return SpecXMLPullParser.parse(reader, repositoryURI);
         else
             // We're parsing the old
-            return parse(reader);
+            repo = parse(reader);
+            repo.setURI(repositoryURI);
+            return repo;
     }
 
     public RepositoryImpl parseRepository(Reader r) throws Exception

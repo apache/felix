@@ -132,8 +132,8 @@ public class DataModelHelperImpl implements DataModelHelper
 
             if (is != null)
             {
-                RepositoryImpl repository = repository(is);
-                repository.setURI(url.toExternalForm());
+                RepositoryImpl repository = repository(is,url.toExternalForm());
+                
                 return repository;
             }
             else
@@ -158,10 +158,11 @@ public class DataModelHelperImpl implements DataModelHelper
         }
     }
 
-    public RepositoryImpl repository(InputStream is) throws Exception
+    public RepositoryImpl repository(InputStream is, String uri) throws Exception
     {
         RepositoryParser parser = RepositoryParser.getParser();
-        RepositoryImpl repository = parser.parseRepository(is);
+        RepositoryImpl repository = parser.parseRepository(is, uri);
+        
         return repository;
     }
 
