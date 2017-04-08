@@ -40,6 +40,16 @@
       <artifactId>org.apache.felix.utils</artifactId>
       <version>1.8.0</version>
       <optional>true</optional>
+      <exclusions>
+        <exclusion>
+          <groupId>org.apache.felix</groupId>
+          <artifactId>org.osgi.core</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>org.apache.felix</groupId>
+          <artifactId>org.osgi.compendium</artifactId>
+        </exclusion>
+      </exclusions>
     </dependency>
     <dependency>
       <groupId>${project.groupId}</groupId>
@@ -52,18 +62,31 @@
           <artifactId>org.osgi.core</artifactId>
         </exclusion>
       </exclusions>
+      <scope>provided</scope>
     </dependency>
     <dependency>
       <groupId>${project.groupId}</groupId>
       <artifactId>org.apache.felix.shell</artifactId>
       <version>1.4.1</version>
       <optional>true</optional>
+      <scope>provided</scope>
+      <exclusions>
+        <exclusion>
+          <groupId>org.apache.felix</groupId>
+          <artifactId>org.osgi.core</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>org.apache.felix</groupId>
+          <artifactId>org.osgi.compendium</artifactId>
+        </exclusion>
+      </exclusions>
     </dependency>
     <dependency>
       <groupId>${project.groupId}</groupId>
       <artifactId>org.apache.felix.gogo.runtime</artifactId>
       <version>1.0.0</version>
       <optional>true</optional>
+      <scope>provided</scope>
     </dependency>
     <dependency>
       <groupId>net.sf.kxml</groupId>
@@ -82,11 +105,13 @@
         <artifactId>org.osgi.compendium</artifactId>
         <version>5.0.0</version>
         <optional>true</optional>
+        <scope>provided</scope>
     </dependency>
     <dependency>
        <groupId>org.osgi</groupId>
         <artifactId>org.osgi.core</artifactId>
         <version>5.0.0</version>
+        <scope>provided</scope>
     </dependency>
     <dependency>
         <groupId>org.codehaus.woodstox</groupId>
@@ -98,6 +123,7 @@
         <groupId>org.easymock</groupId>
         <artifactId>easymock</artifactId>
         <version>3.4</version>
+        <scope>test</scope>
     </dependency>
   </dependencies>
   <build>
