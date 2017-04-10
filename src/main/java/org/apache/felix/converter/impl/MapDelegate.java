@@ -146,7 +146,6 @@ class MapDelegate<K, V> implements Map<K, V> {
         for (Object key : internalKeys) {
             @SuppressWarnings("unchecked")
             K k = (K) findConvertedKey(internalKeys, key);
-//            /* */ K k = (K) key;
             keys.add(k);
         }
         return keys;
