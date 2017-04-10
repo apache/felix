@@ -97,6 +97,11 @@ class MapDelegate<K, V> implements Map<K, V> {
 
     private Object findConvertedKey(Set<?> keySet, Object key) {
         for (Object k : keySet) {
+            if (key.equals(k))
+                return k;
+        }
+
+        for (Object k : keySet) {
             Object c = convertingImpl.converter.convert(k).to(key.getClass());
             if (c != null && c.equals(key))
                 return k;
@@ -137,9 +142,11 @@ class MapDelegate<K, V> implements Map<K, V> {
 
     public Set<K> keySet() {
         Set<K> keys = new HashSet<>();
-        for (Object key : delegate.keySet()) {
+        Set<K> internalKeys = internalKeySet();
+        for (Object key : internalKeys) {
             @SuppressWarnings("unchecked")
-            K k = (K) findConvertedKey(internalKeySet(), key);
+            K k = (K) findConvertedKey(internalKeys, key);
+//            /* */ K k = (K) key;
             keys.add(k);
         }
         return keys;
