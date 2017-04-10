@@ -213,6 +213,9 @@ class DynamicDTOFacade extends DynamicMapLikeFacade<String, Object> {
     @Override
     public Object get(Object key) {
         Field f = getKeys().get(key);
+        if (f == null)
+            return null;
+
         try {
             return f.get(backingObject);
         } catch (Exception e) {

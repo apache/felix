@@ -695,13 +695,13 @@ public class ConvertingImpl implements Converting, InternalConverting {
     @SuppressWarnings("unchecked")
     private <T> T tryStandardMethods() {
         try {
-            Method m = targetClass.getDeclaredMethod("valueOf", String.class);
+            Method m = targetAsClass.getDeclaredMethod("valueOf", String.class);
             if (m != null) {
                 return (T) m.invoke(null, object.toString());
             }
         } catch (Exception e) {
             try {
-                Constructor<?> ctr = targetClass.getConstructor(String.class);
+                Constructor<?> ctr = targetAsClass.getConstructor(String.class);
                 return (T) ctr.newInstance(object.toString());
             } catch (Exception e2) {
             }

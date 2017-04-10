@@ -56,9 +56,9 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.osgi.util.converter.ConversionException;
-import org.osgi.util.converter.ConverterFunction;
 import org.osgi.util.converter.Converter;
 import org.osgi.util.converter.ConverterBuilder;
+import org.osgi.util.converter.ConverterFunction;
 import org.osgi.util.converter.Rule;
 import org.osgi.util.converter.StandardConverter;
 import org.osgi.util.converter.TypeReference;
@@ -815,12 +815,14 @@ public class ConverterTest {
         assertEquals(52L, m.get("pong"));
         myDTO.ping = "Pong!";
         assertEquals("Pong!", m.get("ping"));
+        assertNull(m.get("nonexistant"));
 
         m.put("pong", 62L);
         myDTO.ping = "Poing!";
         myDTO.pong = 72L;
         assertEquals("Pong!", m.get("ping"));
         assertEquals(62L, m.get("pong"));
+        assertNull(m.get("nonexistant"));
     }
 
     @Test
@@ -955,6 +957,13 @@ public class ConverterTest {
         Map m = converter.convert(pea).to(Map.class);
         assertEquals(1000L, m.get("com.acme.config.timeout"));
         assertEquals(PrefixEnumAnnotation.Type.SINGLE, m.get("com.acme.config.type"));
+    }
+
+    @Test
+    public void testTargetAsString() {
+        Map<String, String> m = new HashMap<>();
+        CharSequence cs = converter.convert(m).targetAs(String.class).to(CharSequence.class);
+        assertEquals("{}", cs);
     }
 
     static class MyClass2 {
