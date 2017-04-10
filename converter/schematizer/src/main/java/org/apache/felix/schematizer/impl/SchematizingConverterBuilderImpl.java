@@ -18,9 +18,9 @@ package org.apache.felix.schematizer.impl;
 
 import java.lang.reflect.Type;
 
-import org.osgi.util.converter.ConvertFunction;
 import org.osgi.util.converter.Converter;
 import org.osgi.util.converter.ConverterBuilder;
+import org.osgi.util.converter.ConverterFunction;
 import org.osgi.util.converter.StandardConverter;
 import org.osgi.util.converter.TargetRule;
 
@@ -35,7 +35,13 @@ public class SchematizingConverterBuilderImpl implements ConverterBuilder {
         return new SchematizingConverterImpl(converter);
     }
 
-    public <T> ConverterBuilder rule(Type type, ConvertFunction<T> function) {
+    @Override
+    public <T> ConverterBuilder errorHandler(ConverterFunction<T> func) {
+        builder.errorHandler(func);
+        return this;
+    }
+
+    public <T> ConverterBuilder rule(Type type, ConverterFunction<T> function) {
         builder.rule(type, function);
         return this;
     }
@@ -45,7 +51,7 @@ public class SchematizingConverterBuilderImpl implements ConverterBuilder {
         return this;
     }
 
-    public <T> ConverterBuilder rule(ConvertFunction<T> func) {
+    public <T> ConverterBuilder rule(ConverterFunction<T> func) {
         builder.rule(func);
         return this;
     }
