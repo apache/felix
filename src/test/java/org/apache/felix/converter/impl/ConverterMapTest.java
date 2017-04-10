@@ -29,7 +29,6 @@ import java.util.Map;
 
 import org.junit.After;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.osgi.util.converter.ConversionException;
 import org.osgi.util.converter.Converter;
@@ -125,7 +124,6 @@ public class ConverterMapTest {
     }
 
     @Test
-    @Ignore("This test is broken :-(")
     public void testMapToJavaBean() {
         Map<String, String> m = new HashMap<>();
 
@@ -133,7 +131,7 @@ public class ConverterMapTest {
         m.put("enabled", "true");
         m.put("numbers", "42");
         m.put("s", "will disappear");
-        MyBean mb = converter.convert(m).to(MyBean.class);
+        MyBean mb = converter.convert(m).targetAsBean().to(MyBean.class);
         assertEquals("Joe", mb.getMe());
         assertTrue(mb.isEnabled());
         assertNull(mb.getF());
