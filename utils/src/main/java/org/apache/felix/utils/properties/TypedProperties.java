@@ -16,11 +16,8 @@
  */
 package org.apache.felix.utils.properties;
 
-import org.osgi.framework.BundleContext;
-
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -32,7 +29,6 @@ import java.util.AbstractMap;
 import java.util.AbstractSet;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -40,10 +36,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import org.apache.felix.utils.properties.InterpolationHelper.SubstitutionCallback;
-import org.apache.felix.utils.properties.InterpolationHelper.BundleContextSubstitutionCallback;
-
-import static org.apache.felix.utils.properties.InterpolationHelper.performSubstitution;
 import static org.apache.felix.utils.properties.InterpolationHelper.substVars;
 
 /**
@@ -59,6 +51,8 @@ import static org.apache.felix.utils.properties.InterpolationHelper.substVars;
  */
 public class TypedProperties extends AbstractMap<String, Object> {
 
+    public static final String ENV_PREFIX = "env:";
+
     private final Properties storage;
     private final SubstitutionCallback callback;
     private final boolean substitute;
@@ -69,10 +63,6 @@ public class TypedProperties extends AbstractMap<String, Object> {
 
     public TypedProperties(boolean substitute) {
         this(null, substitute);
-    }
-
-    public TypedProperties(BundleContext context) {
-        this(wrap(new BundleContextSubstitutionCallback(context)), true);
     }
 
     public TypedProperties(SubstitutionCallback callback) {
@@ -299,7 +289,18 @@ public class TypedProperties extends AbstractMap<String, Object> {
         if (!substitute) {
             return;
         }
-        final SubstitutionCallback callback = cb != null ? cb  : wrap(new BundleContextSubstitutionCallback(null));
+        final SubstitutionCallback callback = cb != null ? cb  : new SubstitutionCallback() {
+            public String getValue(String name, String key, String value) {
+                if (value.startsWith(ENV_PREFIX))
+                {
+                    return System.getenv(value.substring(ENV_PREFIX.length()));
+                }
+                else
+                {
+                    return System.getProperty(value);
+                }
+            }
+        }; //wrap(new BundleContextSubstitutionCallback(null));
         Map<String, TypedProperties> props = Collections.singletonMap("root", this);
         substitute(props, prepare(props), callback, true);
     }

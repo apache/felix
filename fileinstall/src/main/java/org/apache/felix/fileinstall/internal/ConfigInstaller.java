@@ -130,7 +130,7 @@ public class ConfigInstaller implements ArtifactInstaller, ConfigurationListener
                 String fileName = (String) dict.get( DirectoryWatcher.FILENAME );
                 File file = fileName != null ? fromConfigKey(fileName) : null;
                 if( file != null && file.isFile() ) {
-                    TypedProperties props = new TypedProperties( context );
+                    TypedProperties props = new TypedProperties( bundleSubstitution() );
                     props.load( file );
                     // remove "removed" properties from the cfg file
                     List<String> propertiesToRemove = new ArrayList<>();
@@ -238,7 +238,7 @@ public class ConfigInstaller implements ArtifactInstaller, ConfigurationListener
                 InterpolationHelper.performSubstitution(strMap, context);
                 ht.putAll(strMap);
             } else {
-                TypedProperties p = new TypedProperties(context);
+                TypedProperties p = new TypedProperties( bundleSubstitution() );
                 p.load(in);
                 for (String k : p.keySet()) {
                     ht.put(k, p.get(k));
@@ -363,6 +363,16 @@ public class ConfigInstaller implements ArtifactInstaller, ConfigurationListener
         {
             return null;
         }
+    }
+
+    TypedProperties.SubstitutionCallback bundleSubstitution() {
+        final InterpolationHelper.SubstitutionCallback cb = new InterpolationHelper.BundleContextSubstitutionCallback(context);
+        return new TypedProperties.SubstitutionCallback() {
+            @Override
+            public String getValue(String name, String key, String value) {
+                return cb.getValue(value);
+            }
+        };
     }
 
     private String escapeFilterValue(String s) {

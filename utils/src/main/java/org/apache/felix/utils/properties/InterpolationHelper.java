@@ -420,7 +420,7 @@ public class InterpolationHelper {
         return val;
     }
 
-    static class BundleContextSubstitutionCallback implements SubstitutionCallback
+    public static class BundleContextSubstitutionCallback implements SubstitutionCallback
     {
         private final BundleContext context;
 
