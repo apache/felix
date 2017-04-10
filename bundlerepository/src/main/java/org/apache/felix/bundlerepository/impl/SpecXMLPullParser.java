@@ -203,8 +203,8 @@ public class SpecXMLPullParser
             else if (ContentNamespace.CAPABILITY_URL_ATTRIBUTE.equals(entry.getKey())) {
                 String value = (String) entry.getValue();
                 URI uri = URI.create(value); 
-                resource.put(Resource.URI, uri.isAbsolute()? uri.getPath(): 
-                    repo.resolve(uri));
+                URI resourceURI = uri.isAbsolute()? uri:URI.create(repo.toString().concat(value));
+                resource.put(Resource.URI, resourceURI);
             }
             else
                 resource.put(entry.getKey(), entry.getValue());

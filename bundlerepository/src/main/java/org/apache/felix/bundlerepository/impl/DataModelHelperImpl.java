@@ -101,7 +101,7 @@ public class DataModelHelperImpl implements DataModelHelper
                 ZipEntry entry = zin.getNextEntry();
                 while (entry != null)
                 {
-                    if (entry.getName().equals("repository.xml"))
+                    if (entry.getName().equals("repository.xml") || entry.getName().equals("index.xml"))
                     {
                         is = zin;
                         break;
@@ -132,7 +132,11 @@ public class DataModelHelperImpl implements DataModelHelper
 
             if (is != null)
             {
-                RepositoryImpl repository = repository(is,url.toExternalForm());
+                String repostr = url.toExternalForm();
+                if (repostr.endsWith("zip")) {
+                    repostr = "jar:".concat(repostr).concat("!/");
+                }
+                RepositoryImpl repository = repository(is, repostr);
                 
                 return repository;
             }
