@@ -43,7 +43,6 @@ public class YamlSerializerTest {
     }
 
     @Test
-//    @Ignore("dleangen: This test no longer passes. Need to revist.")
     public void testYAMLCodec() throws Exception {
         Map<Object, Object> m1 = new HashMap<>();
         m1.put("x", true);
