@@ -135,10 +135,10 @@ public class DataModelHelperImpl implements DataModelHelper
                 String repostr = url.toExternalForm();
                 if (repostr.endsWith("zip")) {
                     repostr = "jar:".concat(repostr).concat("!/");
+                } else if (repostr.endsWith(".xml")) {
+                    repostr = repostr.substring(0, repostr.lastIndexOf('/')+1);
                 }
-                RepositoryImpl repository = repository(is, repostr);
-                
-                return repository;
+                return repository(is, repostr);
             }
             else
             {
