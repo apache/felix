@@ -29,6 +29,7 @@ import java.util.Map.Entry;
 
 import junit.framework.TestCase;
 
+import org.apache.felix.bundlerepository.Resolver;
 import org.apache.felix.utils.log.Logger;
 import org.mockito.Mockito;
 import org.osgi.framework.Bundle;
@@ -42,30 +43,79 @@ import org.osgi.resource.Resource;
 import org.osgi.service.repository.ContentNamespace;
 import org.osgi.service.repository.Repository;
 
-public class OSGiRepositoryXMLTest extends TestCase
-{
-    public void testIdentityCapability() throws Exception
-    {
+public class OSGiRepositoryXMLTest extends TestCase {
+    public void testIdentityCapability() throws Exception {
         RepositoryAdminImpl repoAdmin = createRepositoryAdmin();
         URL url = getClass().getResource("/spec_repository.xml");
         repoAdmin.addRepository(url);
 
         Repository repo = new OSGiRepositoryImpl(repoAdmin);
-        Requirement req = new OSGiRequirementImpl("osgi.identity", "(osgi.identity=cdi-subsystem)");
+        Requirement req = new OSGiRequirementImpl("osgi.identity",
+                "(osgi.identity=cdi-subsystem)");
 
-        Map<Requirement, Collection<Capability>> result = repo.findProviders(Collections.singleton(req));
+        Map<Requirement, Collection<Capability>> result = repo
+                .findProviders(Collections.singleton(req));
         assertEquals(1, result.size());
         Collection<Capability> caps = result.values().iterator().next();
         assertEquals(1, caps.size());
         Capability cap = caps.iterator().next();
 
-        assertEquals("cdi-subsystem", cap.getAttributes().get(IdentityNamespace.IDENTITY_NAMESPACE));
-        assertEquals(Version.parseVersion("0.5.0"), cap.getAttributes().get(IdentityNamespace.CAPABILITY_VERSION_ATTRIBUTE));
-        assertEquals("osgi.subsystem.feature", cap.getAttributes().get(IdentityNamespace.CAPABILITY_TYPE_ATTRIBUTE));
+        assertEquals("cdi-subsystem",
+                cap.getAttributes().get(IdentityNamespace.IDENTITY_NAMESPACE));
+        assertEquals(Version.parseVersion("0.5.0"), cap.getAttributes()
+                .get(IdentityNamespace.CAPABILITY_VERSION_ATTRIBUTE));
+        assertEquals("osgi.subsystem.feature", cap.getAttributes()
+                .get(IdentityNamespace.CAPABILITY_TYPE_ATTRIBUTE));
     }
 
-    public void testOtherIdentityAttribute() throws Exception
-    {
+    public void testIdentityCapabilityWithRelativePath() throws Exception {
+        URL url = getClass().getResource("/spec_repository.xml");
+        RepositoryAdminImpl repoAdmin = createRepositoryAdmin();
+        repoAdmin.addRepository(url);
+
+        Resolver resolver = repoAdmin.resolver();
+
+        org.apache.felix.bundlerepository.Resource[] discoverResources = repoAdmin
+                .discoverResources(
+                        "(symbolicname=org.apache.felix.bundlerepository.test_file_6*)");
+        assertNotNull(discoverResources);
+        assertEquals(1, discoverResources.length);
+
+        resolver.add(discoverResources[0]);
+        assertTrue(resolver.resolve());
+
+        org.apache.felix.bundlerepository.Resource[] resources = resolver.getAddedResources();
+        assertNotNull(resources[0]);
+        String repostr = url.toExternalForm().substring(0, url.toExternalForm().lastIndexOf('/')+1);
+        assertEquals(repostr+"repo_files/test_file_6.jar", resources[0].getURI());
+   
+    }
+
+    public void testIdentityCapabilityForZipWithRelativePath() throws Exception {
+        URL url = getClass().getResource("/spec_repository.zip");
+        RepositoryAdminImpl repoAdmin = createRepositoryAdmin();
+        repoAdmin.addRepository(url);
+
+        Resolver resolver = repoAdmin.resolver();
+
+        org.apache.felix.bundlerepository.Resource[] discoverResources = repoAdmin
+                .discoverResources(
+                        "(symbolicname=org.apache.felix.bundlerepository.test_file_6*)");
+        assertNotNull(discoverResources);
+        assertEquals(1, discoverResources.length);
+
+        resolver.add(discoverResources[0]);
+        assertTrue(resolver.resolve());
+
+        org.apache.felix.bundlerepository.Resource[] resources = resolver.getAddedResources();
+        assertNotNull(resources[0]);
+        String repostr = url.toExternalForm().substring(0, url.toExternalForm().lastIndexOf('/')+1);
+        assertEquals("jar:"+ repostr+"spec_repository.zip!/repo_files/test_file_6.jar", resources[0].getURI());
+   
+    }
+
+
+    public void testOtherIdentityAttribute() throws Exception {
         RepositoryAdminImpl repoAdmin = createRepositoryAdmin();
         URL url = getClass().getResource("/spec_repository.xml");
         repoAdmin.addRepository(url);
@@ -74,17 +124,17 @@ public class OSGiRepositoryXMLTest extends TestCase
         Requirement req = new OSGiRequirementImpl("osgi.identity",
                 "(license=http://www.opensource.org/licenses/mytestlicense)");
 
-        Map<Requirement, Collection<Capability>> result = repo.findProviders(Collections.singleton(req));
+        Map<Requirement, Collection<Capability>> result = repo
+                .findProviders(Collections.singleton(req));
         assertEquals(1, result.size());
         Collection<Capability> caps = result.values().iterator().next();
         assertEquals(1, caps.size());
         Capability cap = caps.iterator().next();
-        assertEquals("org.apache.felix.bundlerepository.test_file_3", cap.getAttributes().
-                get(IdentityNamespace.IDENTITY_NAMESPACE));
+        assertEquals("org.apache.felix.bundlerepository.test_file_3",
+                cap.getAttributes().get(IdentityNamespace.IDENTITY_NAMESPACE));
     }
 
-    public void testContentCapability() throws Exception
-    {
+    public void testContentCapability() throws Exception {
         RepositoryAdminImpl repoAdmin = createRepositoryAdmin();
         URL url = getClass().getResource("/spec_repository.xml");
         repoAdmin.addRepository(url);
@@ -92,7 +142,8 @@ public class OSGiRepositoryXMLTest extends TestCase
         Repository repo = new OSGiRepositoryImpl(repoAdmin);
         Requirement req = new OSGiRequirementImpl("foo", "(bar=toast)");
 
-        Map<Requirement, Collection<Capability>> result = repo.findProviders(Collections.singleton(req));
+        Map<Requirement, Collection<Capability>> result = repo
+                .findProviders(Collections.singleton(req));
         assertEquals(1, result.size());
         Collection<Capability> caps = result.values().iterator().next();
         assertEquals(1, caps.size());
@@ -101,41 +152,53 @@ public class OSGiRepositoryXMLTest extends TestCase
         assertEquals("foo", cap.getNamespace());
         assertEquals(0, cap.getDirectives().size());
         assertEquals(1, cap.getAttributes().size());
-        Entry<String, Object> fooCap = cap.getAttributes().entrySet().iterator().next();
+        Entry<String, Object> fooCap = cap.getAttributes().entrySet().iterator()
+                .next();
         assertEquals("bar", fooCap.getKey());
         assertEquals("toast", fooCap.getValue());
 
         Resource res = cap.getResource();
-        List<Capability> idCaps = res.getCapabilities(IdentityNamespace.IDENTITY_NAMESPACE);
+        List<Capability> idCaps = res
+                .getCapabilities(IdentityNamespace.IDENTITY_NAMESPACE);
         assertEquals(1, idCaps.size());
         Capability idCap = idCaps.iterator().next();
 
-        assertEquals("org.apache.felix.bundlerepository.test_file_3", idCap.getAttributes().get(IdentityNamespace.IDENTITY_NAMESPACE));
-        assertEquals(Version.parseVersion("1.2.3.something"), idCap.getAttributes().get(IdentityNamespace.CAPABILITY_VERSION_ATTRIBUTE));
-        assertEquals("osgi.bundle", idCap.getAttributes().get(IdentityNamespace.CAPABILITY_TYPE_ATTRIBUTE));
+        assertEquals("org.apache.felix.bundlerepository.test_file_3", idCap
+                .getAttributes().get(IdentityNamespace.IDENTITY_NAMESPACE));
+        assertEquals(Version.parseVersion("1.2.3.something"),
+                idCap.getAttributes()
+                        .get(IdentityNamespace.CAPABILITY_VERSION_ATTRIBUTE));
+        assertEquals("osgi.bundle", idCap.getAttributes()
+                .get(IdentityNamespace.CAPABILITY_TYPE_ATTRIBUTE));
 
-        List<Capability> contentCaps = res.getCapabilities(ContentNamespace.CONTENT_NAMESPACE);
+        List<Capability> contentCaps = res
+                .getCapabilities(ContentNamespace.CONTENT_NAMESPACE);
         assertEquals(1, contentCaps.size());
         Capability contentCap = contentCaps.iterator().next();
 
-        assertEquals("b5d4045c3f466fa91fe2cc6abe79232a1a57cdf104f7a26e716e0a1e2789df78",
-            contentCap.getAttributes().get(ContentNamespace.CONTENT_NAMESPACE));
-        assertEquals(new Long(3), contentCap.getAttributes().get(ContentNamespace.CAPABILITY_SIZE_ATTRIBUTE));
-        assertEquals("application/vnd.osgi.bundle", contentCap.getAttributes().get(ContentNamespace.CAPABILITY_MIME_ATTRIBUTE));
+        assertEquals(
+                "b5d4045c3f466fa91fe2cc6abe79232a1a57cdf104f7a26e716e0a1e2789df78",
+                contentCap.getAttributes()
+                        .get(ContentNamespace.CONTENT_NAMESPACE));
+        assertEquals(new Long(3), contentCap.getAttributes()
+                .get(ContentNamespace.CAPABILITY_SIZE_ATTRIBUTE));
+        assertEquals("application/vnd.osgi.bundle", contentCap.getAttributes()
+                .get(ContentNamespace.CAPABILITY_MIME_ATTRIBUTE));
 
         URL fileURL = getClass().getResource("/repo_files/test_file_3.jar");
         byte[] expectedBytes = Streams.suck(fileURL.openStream());
 
-        String resourceURL = (String) contentCap.getAttributes().get(ContentNamespace.CAPABILITY_URL_ATTRIBUTE);
+        String resourceURL = (String) contentCap.getAttributes()
+                .get(ContentNamespace.CAPABILITY_URL_ATTRIBUTE);
         byte[] actualBytes = Streams.suck(new URL(resourceURL).openStream());
         assertEquals(3L, actualBytes.length);
         assertTrue(Arrays.equals(expectedBytes, actualBytes));
     }
 
-    private RepositoryAdminImpl createRepositoryAdmin() throws Exception
-    {
+    private RepositoryAdminImpl createRepositoryAdmin() throws Exception {
         Bundle sysBundle = Mockito.mock(Bundle.class);
-        Mockito.when(sysBundle.getHeaders()).thenReturn(new Hashtable<String, String>());
+        Mockito.when(sysBundle.getHeaders())
+                .thenReturn(new Hashtable<String, String>());
         BundleRevision br = Mockito.mock(BundleRevision.class);
         Mockito.when(sysBundle.adapt(BundleRevision.class)).thenReturn(br);
 
@@ -145,6 +208,5 @@ public class OSGiRepositoryXMLTest extends TestCase
 
         return new RepositoryAdminImpl(bc, new Logger(bc));
     }
-
 
 }
