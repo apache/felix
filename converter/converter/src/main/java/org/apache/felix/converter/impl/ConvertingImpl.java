@@ -572,8 +572,10 @@ public class ConvertingImpl implements Converting, InternalConverting {
         }
 
         if (cls.getDeclaredMethods().length > 0) {
-            // should not have any methods
-            return false;
+            // should not have any methods, but lambdas should be permitted
+            for (Method m : cls.getDeclaredMethods())
+                if (!m.getName().startsWith("lambda$"))
+                    return false;
         }
 
         for (Method m : cls.getMethods()) {
