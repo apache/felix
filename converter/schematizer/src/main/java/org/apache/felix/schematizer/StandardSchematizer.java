@@ -16,11 +16,8 @@
  */
 package org.apache.felix.schematizer;
 
-import java.util.Map;
-import java.util.Optional;
-
 import org.apache.felix.schematizer.impl.SchematizerImpl;
-import org.osgi.dto.DTO;
+import org.osgi.util.converter.Converter;
 import org.osgi.util.converter.TypeReference;
 
 public class StandardSchematizer implements Schematizer {
@@ -31,37 +28,27 @@ public class StandardSchematizer implements Schematizer {
     }
 
     @Override
-    public Optional<Schema> get(String name) {
-        return schematizer.get(name);
+    public Schematizer schematize(String schemaName, Object type) {
+        return schematizer.schematize(schemaName, type);
     }
 
     @Override
-    public Optional<Schema> from(String name, Map<String, Node.DTO> map) {
-        return schematizer.from(name, map);
+    public Schema get(String schemaName) {
+        return schematizer.get(schemaName);
     }
 
     @Override
-    public <T extends DTO> Schematizer rule(String name, TypeRule<T> rule) {
-        return schematizer.rule(name, rule);
+    public Schematizer type(String name, String path, TypeReference<?> type) {
+        return schematizer.type(name, path, type);
     }
 
     @Override
-    public <T extends DTO> Schematizer rule( String name, String path, TypeReference<T> type ) {
-        return schematizer.rule(name, path, type);
+    public Schematizer type(String name, String path, Class<?> type) {
+        return schematizer.type(name, path, type);
     }
 
     @Override
-    public <T> Schematizer rule(String name, String path, Class<T> cls) {
-        return schematizer.rule(name, path, cls);
-    }
-
-    @Override
-    public <T extends DTO> Schematizer rule(String name, TypeReference<T> type) {
-        return schematizer.rule(name, type);
-    }
-
-    @Override
-    public Schematizer usingLookup(ClassLoader classLoader) {
-        return schematizer.usingLookup(classLoader);
+    public Converter converterFor(String schemaName) {
+        return schematizer.converterFor(schemaName);
     }
 }

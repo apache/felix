@@ -18,38 +18,22 @@ package org.apache.felix.serializer.test.prevayler;
 
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.lang.reflect.Type;
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-
-import org.apache.felix.schematizer.Schema;
 import org.apache.felix.schematizer.Schematizer;
-import org.apache.felix.schematizer.SchematizingConverter;
-import org.apache.felix.schematizer.TypeRule;
 import org.apache.felix.schematizer.impl.SchematizerImpl;
 import org.apache.felix.serializer.impl.json.JsonSerializerImpl;
-import org.osgi.util.converter.TypeReference;
+import org.osgi.util.converter.Converter;
 
 public class DTOSerializer<C extends CommandDTO<?>>
 {
     private static final int MARKER_LENGTH = 10;
 
-    private final SchematizingConverter converter = new SchematizingConverter();
+    private final Schematizer schematizer = new SchematizerImpl();
     private final JsonSerializerImpl serializer = new JsonSerializerImpl();
-    private final List<TypeRule<?>> rules;
-    private final Map<String, Schema> schemas = new HashMap<>();
     private final Class<?> entityType;
 
-    public DTOSerializer(
-            List<TypeRule<?>> aRulesList,
-            Class<?> anEntityType )
+    public DTOSerializer(Class<?> anEntityType)
     {
-        rules = new ArrayList<>();
-        rules.addAll( aRulesList );
         entityType = anEntityType;
     }
 
@@ -58,44 +42,22 @@ public class DTOSerializer<C extends CommandDTO<?>>
             throws Exception
     {
         Command command = parseCommandFrom( in );
-        Schema s = schemas.get( command.name() );
+        Converter c = schematizer.converterFor( command.name() );
         return (C)serializer
                 .deserialize( CommandDTO.class )
-                .with( converter.withSchema( s ) )
+                .with( c )
                 .from( in );
     }
 
-    @SuppressWarnings( { "unchecked", "rawtypes" } )
     public void serialize( OutputStream out, C command )
             throws Exception
     {
         // Lazy load the schemas as we collect new types to serialize
         String name = command.command.name();
-        if( !schemas.containsKey( name ) )
-        {
-            Schematizer s = new SchematizerImpl()
-                    .rule( name, new TypeReference(){
-                        @Override
-                        public Type getType()
-                        {
-                            return new AggregateTypeReference( null, command.getClass(), entityType ).getType();
-                        }
-                    } );
-            rules.stream()
-                .forEach( r -> s.rule( name, (TypeRule)r ) );
-            Optional<Schema> opt = s.get( name );
-
-            // TODO: What do we do if there is no schema?? Just continue anyway?
-            if( opt.isPresent() )
-            {
-                Schema schema = opt.get();
-                schemas.put( name, schema );
-            }
-        }
-
+        schematizer.schematize( name, entityType ).get( name );
         out.write( markerFor( command.command ) );
-        Schema s = schemas.get( name );
-        serializer.serialize( command ).with( converter.withSchema( s ) ).to( out );
+        Converter c = schematizer.converterFor(name);
+        serializer.serialize( command ).with( c ).to( out );
     }
 
     private final byte[] markerFor( Command command )

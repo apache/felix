@@ -20,7 +20,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
-import java.util.Optional;
 
 import org.apache.felix.schematizer.Schema;
 import org.apache.felix.schematizer.impl.MyEmbeddedDTO.Alpha;
@@ -48,14 +47,9 @@ public class SchemaTest {
 
     @Test
     public void testValues() {
-        Optional<Schema> opt = schematizer
-                .rule("MyDTO", new TypeReference<MyDTO3<MyEmbeddedDTO2<String>>>(){})
-                .rule("MyDTO", "/embedded", new TypeReference<MyEmbeddedDTO2<String>>(){})
-                .rule("MyDTO", "/embedded/value", String.class)
+        final Schema s = schematizer
+                .schematize("MyDTO", new TypeReference<MyDTO3<MyEmbeddedDTO2<String>>>(){})
                 .get("MyDTO");
-
-        assertTrue(opt.isPresent());
-        Schema s = opt.get();
         assertNotNull(s);
 
         MyEmbeddedDTO2<String> embedded1 = new MyEmbeddedDTO2<>();
@@ -89,13 +83,9 @@ public class SchemaTest {
 
     @Test
     public void testEmbeddedValues() {
-        Optional<Schema> opt = schematizer
-                .rule("MyDTO", new TypeReference<MyDTO>(){})
-                .rule("MyDTO", "/embedded", new TypeReference<MyEmbeddedDTO>(){})
+        Schema s = schematizer
+                .schematize("MyDTO", new TypeReference<MyDTO>(){})
                 .get("MyDTO");
-
-        assertTrue(opt.isPresent());
-        Schema s = opt.get();
         assertNotNull(s);
 
         MyEmbeddedDTO embedded = new MyEmbeddedDTO();
@@ -122,14 +112,9 @@ public class SchemaTest {
 
     @Test
     public void testNullValues() {
-        Optional<Schema> opt = schematizer
-                .rule("MyDTO", new TypeReference<MyDTO3<MyEmbeddedDTO2<String>>>(){})
-                .rule("MyDTO", "/embedded", new TypeReference<MyEmbeddedDTO2<String>>(){})
-                .rule("MyDTO", "/embedded/value", String.class)
+        Schema s = schematizer
+                .schematize("MyDTO", new TypeReference<MyDTO3<MyEmbeddedDTO2<String>>>(){})
                 .get("MyDTO");
-
-        assertTrue(opt.isPresent());
-        Schema s = opt.get();
         assertNotNull(s);
 
         MyEmbeddedDTO2<String> embedded1 = new MyEmbeddedDTO2<>();

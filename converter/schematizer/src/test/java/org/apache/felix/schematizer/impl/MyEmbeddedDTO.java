@@ -16,8 +16,10 @@
  */
 package org.apache.felix.schematizer.impl;
 
+import org.apache.felix.schematizer.AsDTO;
 import org.osgi.dto.DTO;
 
+@AsDTO
 public class MyEmbeddedDTO extends DTO {
     public enum Alpha { A, B, C }
 

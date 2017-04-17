@@ -16,8 +16,10 @@
  */
 package org.apache.felix.schematizer.impl;
 
+import org.apache.felix.schematizer.AsDTO;
 import org.osgi.dto.DTO;
 
+@AsDTO
 public class MyDTO extends DTO {
     public enum Count { ONE, TWO, THREE }
 

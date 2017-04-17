@@ -16,45 +16,33 @@
  */
 package org.apache.felix.schematizer.impl;
 
-import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
-import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
-import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
-import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
-import java.util.Optional;
 import java.util.Set;
-import java.util.function.Function;
+import java.util.Map.Entry;
 import java.util.stream.Collectors;
 
-import org.apache.felix.schematizer.Node;
-import org.apache.felix.schematizer.Node.CollectionType;
-import org.apache.felix.schematizer.Schema;
 import org.apache.felix.schematizer.Schematizer;
-import org.apache.felix.schematizer.TypeRule;
-import org.osgi.dto.DTO;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.ServiceFactory;
 import org.osgi.framework.ServiceRegistration;
+import org.osgi.util.converter.Converter;
 import org.osgi.util.converter.StandardConverter;
 import org.osgi.util.converter.TypeReference;
 
-public class SchematizerImpl implements Schematizer, ServiceFactory<Schematizer> {
+import static org.apache.felix.schematizer.impl.Util.*;
 
+public class SchematizerImpl implements Schematizer, ServiceFactory<Schematizer> {
     private final Map<String, SchemaImpl> schemas = new HashMap<>();
-    private volatile Map<String, Map<String, Object>> typeRules = new HashMap<>();
-    private final List<ClassLoader> classloaders = new ArrayList<>();
+    private final Map<String, Map<String, Object>> typeRules = new HashMap<>();
 
     @Override
     public Schematizer getService( Bundle bundle, ServiceRegistration<Schematizer> registration ) {
@@ -68,160 +56,91 @@ public class SchematizerImpl implements Schematizer, ServiceFactory<Schematizer>
         //
         // TODO: something more precise, which will remove only the classes that are no longer valid (if that is possible).
         schemas.clear();
-        typeRules.clear();
-        classloaders.clear();
     }
 
     @Override
-    public Optional<Schema> get(String name) {
-        if (!schemas.containsKey(name)) {
-            SchemaImpl schema = schematize(name, "");
-            schemas.put(name, schema);
-        }
-
-        return Optional.ofNullable(schemas.get(name));
-    }
-
-    @Override
-    public Optional<Schema> from(String name, Map<String, Node.DTO> map) {
-        try {
-            // TODO: some validation of the Map here would be good
-            SchemaImpl schema = new SchemaImpl(name);
-            Object rootMap = map.get("/");
-            Node.DTO rootDTO = new StandardConverter().convert(rootMap).to(Node.DTO.class);
-            Map<String, NodeImpl> allNodes = new HashMap<>();
-            NodeImpl root = new NodeImpl(rootDTO, "", new Instantiator(classloaders), allNodes);
-            associateChildNodes(root);
-            schema.add(root);
-            schema.add(allNodes);
-            return Optional.of(schema);
-        } catch (Throwable t) {
-            return Optional.empty();
-        }
-    }
-
-    @Override
-    public <T extends DTO> Schematizer rule(String name, TypeRule<T> rule) {
-        Map<String, Object> rules = rulesFor(name);
-        rules.put(rule.getPath(), rule.getType());
-        return this;
-    }
-
-    @Override
-    public <T extends DTO> Schematizer rule(String name, String path, TypeReference<T> type) {
-        Map<String, Object> rules = rulesFor(name);
+    public Schematizer type(String schemaName, String path, TypeReference<?> type) {
+        Map<String, Object> rules = rulesFor(schemaName);
+        // The internal implementation uses "" as the path for the root,
+        // but the API accepts "/".
+        path = "/".equals( path ) ? "" : path;
         rules.put(path, type);
         return this;
     }
 
     @Override
-    public <T extends DTO> Schematizer rule(String name, TypeReference<T> type) {
-        Map<String, Object> rules = rulesFor(name);
-        rules.put("/", type);
-        return this;
-    }
-
-    @Override
-    public <T> Schematizer rule(String name, String path, Class<T> cls) {
-        Map<String, Object> rules = rulesFor(name);
+    public Schematizer type(String schemaName, String path, Class<?> cls) {
+        Map<String, Object> rules = rulesFor(schemaName);
+        // The internal implementation uses "" as the path for the root,
+        // but the API accepts "/".
+        path = "/".equals( path ) ? "" : path;
         rules.put(path, cls);
         return this;
     }
 
-    private Map<String, Object> rulesFor(String name) {
-        if (!typeRules.containsKey(name))
-            typeRules.put(name, new HashMap<>());
+    private Map<String, Object> rulesFor(String schemaName) {
+        if (!typeRules.containsKey(schemaName))
+            typeRules.put(schemaName, new HashMap<>());
 
-        return typeRules.get(name);
+        return typeRules.get(schemaName);
     }
 
     @Override
-    public Schematizer usingLookup( ClassLoader classloader ) {
-        if (classloader != null)
-            classloaders.add(classloader);
+    public SchematizerImpl schematize(String schemaName, Object type) {
+        return schematize(schemaName, type, "");
+    }
+
+    public SchematizerImpl schematize(String schemaName, Object type, String context) {
+        // TODO: test to ensure that the schema is not already in the cache
+        Map<String, Object> rules = typeRules.get(schemaName);
+        rules = ( rules != null ) ? rules : Collections.emptyMap();
+        SchemaImpl schema = internalSchematize(schemaName, type, context, rules, false);
+        schemas.put(schemaName, schema);
         return this;
     }
 
-    /**
-     * Top-level entry point for schematizing a DTO. This is the starting point to set up the
-     * parsing. All other methods make recursive calls.
-     */
-    private SchemaImpl schematize(String name, String contextPath) {
-        Map<String, Object> rules = typeRules.get(name);
-        rules = ( rules != null ) ? rules : Collections.emptyMap();
-        return SchematizerImpl.internalSchematize(name, contextPath, rules, false, this);
-    }
-
-    @SuppressWarnings( { "unchecked", "rawtypes" } )
-    /**
-     * Schematize any node, without knowing in advance its type.
-     */
     private static SchemaImpl internalSchematize(
-            String name,
+            String schemaName, 
+            Object unknownType, 
             String contextPath,
             Map<String, Object> rules,
-            boolean isCollection,
-            SchematizerImpl schematizer)  {
-        Class<?> cls = null;
-        TypeReference<? extends DTO> ref = null;
-        if (contextPath.isEmpty() && rules.containsKey("/")) {
-            ref = (TypeReference)typeReferenceOf(rules.get("/"));
-            if (ref == null )
-                cls = rawClassOf(rules.get("/"));
+            boolean isCollection) {
+
+        TypeRefOrClass type = new TypeRefOrClass(unknownType, rules.get(contextPath));
+
+        if (asDTO(type.cls)) {
+            return schematizeDTO(schemaName, type, contextPath, rules, isCollection);
         }
 
-        if (rules.containsKey(contextPath)) {
-            ref = (TypeReference)(typeReferenceOf(rules.get(contextPath)));
-            if (ref == null )
-                cls = rawClassOf(rules.get(contextPath));
-        }
-
-        if (ref != null )
-            cls = rawClassOf(ref);
-
-        if (cls == null)
-            return handleInvalid();
-
-        if (DTO.class.isAssignableFrom(cls)) {
-            Class<? extends DTO> targetCls = (Class<DTO>)cls;
-            return schematizeDTO(name, targetCls, ref, contextPath, rules, isCollection, schematizer);
-        }
-
-        return schematizeObject( name, cls, contextPath, rules, isCollection, schematizer);
+        return schematizeObject(schemaName, type.cls, contextPath, isCollection);
     }
 
     private static SchemaImpl schematizeDTO(
-            String name,
-            Class<? extends DTO> targetCls,
-            TypeReference<? extends DTO> ref,
+            String schemaName,
+            TypeRefOrClass type,
             String contextPath,
             Map<String, Object> rules,
-            boolean isCollection,
-            SchematizerImpl schematizer) {
+            boolean isCollection ) {
 
-        SchemaImpl schema = new SchemaImpl(name);
-        NodeImpl rootNode;
-        if (ref != null)
-            rootNode = new NodeImpl(contextPath, ref, false, contextPath + "/");
-        else
-            rootNode = new NodeImpl(contextPath, targetCls, false, contextPath + "/");
+        SchemaImpl schema = new SchemaImpl(schemaName);
+        NodeImpl rootNode = new NodeImpl(contextPath, type.isTypeRef() ? type.typeRef : type.cls, false, contextPath + "/");
         schema.add(rootNode);
-        Map<String, NodeImpl> m = createMapFromDTO(name, targetCls, ref, contextPath, rules, schematizer);
-        m.values().stream().filter(v -> v.absolutePath().equals(rootNode.absolutePath() + v.name())).forEach(v -> rootNode.add(v));
+        Map<String, NodeImpl> m = createMapFromDTO(schemaName, type, rules, contextPath);
+        m.values().stream()
+            .filter(v -> v.absolutePath().equals(rootNode.absolutePath() + v.name()))
+            .forEach(v -> rootNode.add(v));
         associateChildNodes( rootNode );
         schema.add(m);
         return schema;
     }
 
     private static SchemaImpl schematizeObject(
-            String name,
+            String schemaName,
             Class<?> targetCls,
             String contextPath,
-            Map<String, Object> rules,
-            boolean isCollection,
-            SchematizerImpl schematizer) {
+            boolean isCollection) {
 
-        SchemaImpl schema = new SchemaImpl(name);
+        SchemaImpl schema = new SchemaImpl(schemaName);
         NodeImpl node = new NodeImpl(contextPath, targetCls, isCollection, contextPath + "/");
         schema.add(node);
         return schema;
@@ -229,36 +148,37 @@ public class SchematizerImpl implements Schematizer, ServiceFactory<Schematizer>
 
     private static final Comparator<Entry<String, NodeImpl>> byPath = (e1, e2) -> e1.getValue().absolutePath().compareTo(e2.getValue().absolutePath());
     private static Map<String, NodeImpl> createMapFromDTO(
-            String name,
-            Class<?> targetCls,
-            TypeReference<? extends DTO> ref,
-            String contextPath,
-            Map<String, Object> typeRules,
-            SchematizerImpl schematizer) {
+            String schemaName,
+            TypeRefOrClass type,
+            Map<String, Object> rules,
+            String contextPath) {
         Set<String> handledFields = new HashSet<>();
 
         Map<String, NodeImpl> result = new HashMap<>();
-        for (Field f : targetCls.getDeclaredFields()) {
-            handleField(name, f, handledFields, result, targetCls, ref, contextPath, typeRules, schematizer);
+        for (Field f : type.cls.getDeclaredFields()) {
+            handleField(schemaName, f, rules, handledFields, result, contextPath);
         }
-        for (Field f : targetCls.getFields()) {
-            handleField(name, f, handledFields, result, targetCls, ref, contextPath, typeRules, schematizer);
+        for (Field f : type.cls.getFields()) {
+            handleField(schemaName, f, rules, handledFields, result, contextPath);
         }
 
-        return result.entrySet().stream().sorted(byPath).collect(Collectors.toMap(Entry::getKey, Entry::getValue, (e1, e2) -> e1, LinkedHashMap::new));
+        return result.entrySet().stream()
+                .sorted(byPath)
+                .collect(Collectors.toMap(
+                        Entry::getKey, 
+                        Entry::getValue, 
+                        (e1, e2) -> e1, 
+                        LinkedHashMap::new));
     }
 
-    @SuppressWarnings( { "rawtypes", "unchecked" } )
+    @SuppressWarnings( { "unchecked", "rawtypes" } )
     private static void handleField(
-            String name,
+            String schemaName,
             Field field,
+            Map<String, Object> rules,
             Set<String> handledFields,
             Map<String, NodeImpl> result,
-            Class<?> targetCls,
-            TypeReference<?> ref,
-            String contextPath,
-            Map<String, Object> rules,
-            SchematizerImpl schematizer) {
+            String contextPath) {
         if (Modifier.isStatic(field.getModifiers()))
             return;
 
@@ -274,21 +194,19 @@ public class SchematizerImpl implements Schematizer, ServiceFactory<Schematizer>
                 // only need it to test whether or not it is a collection.
                 Class<?> actualFieldType = field.getType();
                 boolean isCollection = Collection.class.isAssignableFrom(actualFieldType);
-                Class<?> rawClass = rawClassOf(rules.get(path));
+                Class<?> ruleBasedClass = rawClassOf(rules.get(path));
                 // This is the type we will persist in the Schema (as provided by the rules), NOT the "actual" field type.
-                SchemaImpl embedded = SchematizerImpl.internalSchematize(name, path, rules, isCollection, schematizer);
-                Class<?> fieldClass = Util.primitiveToBoxed(rawClass);
-                TypeReference fieldRef = typeReferenceOf(rules.get(path));
+                SchemaImpl embedded = SchematizerImpl.internalSchematize(schemaName, ruleBasedClass, path, rules, isCollection);
+                Class<?> fieldClass = Util.primitiveToBoxed(ruleBasedClass);
+                TypeRefOrClass fieldType = new TypeRefOrClass(fieldClass,rules.get(path));
                 if (isCollection)
                     node = new CollectionNode(
                             field.getName(),
-                            fieldRef,
+                            fieldType.get(),
                             path,
                             (Class)actualFieldType);
-                else if (fieldRef != null )
-                    node = new NodeImpl(fieldName, fieldRef, false, path);
                 else
-                    node = new NodeImpl(fieldName, fieldClass, false, path);
+                    node = new NodeImpl(fieldName, fieldType.get(), false, path);
                 Map<String, NodeImpl> allNodes = embedded.toMapInternal();
                 allNodes.remove(path + "/");
                 result.putAll(allNodes);
@@ -297,29 +215,21 @@ public class SchematizerImpl implements Schematizer, ServiceFactory<Schematizer>
             } else {
                 Type fieldType = field.getType();
                 Class<?> rawClass = rawClassOf(fieldType);
-                Class<?> fieldClass = Util.primitiveToBoxed(rawClass);
+                Class<?> fieldClass = primitiveToBoxed(rawClass);
 
-                if (Collection.class.isAssignableFrom(fieldClass)) {
-                    CollectionType collectionTypeAnnotation = field.getAnnotation( CollectionType.class );
-                    Class<?> collectionType;
-                    if (collectionTypeAnnotation != null)
-                        collectionType = collectionTypeAnnotation.value();
-                    else if (hasCollectionTypeAnnotation(field))
-                        collectionType = collectionTypeOf(field);
-                    else
-                        collectionType = Object.class;                        
+                if (isCollectionType(fieldClass)) {
+                    Class<?> collectionType = getCollectionTypeOf(field);
                     node = new CollectionNode(
                             field.getName(),
                             collectionType,
                             path,
                             (Class)fieldClass);
 
-                    if (DTO.class.isAssignableFrom(collectionType)) {
-                        SchematizerImpl newSchematizer = new SchematizerImpl();
-                        newSchematizer.typeRules.put(path, rules);
-                        if (!rules.containsKey(path))
-                            newSchematizer.rule(path, path, collectionType);
-                        SchemaImpl embedded = newSchematizer.schematize(path, path);
+                    if (asDTO(collectionType)) {
+//                        newSchematizer.typeRules.put(path, rules);
+//                        if (!rules.containsKey(path))
+//                            newSchematizer.rule(path, path, collectionType);
+                        SchemaImpl embedded = new SchematizerImpl().schematize(path, collectionType, path).get(path);
                         Map<String, NodeImpl> allNodes = embedded.toMapInternal();
                         allNodes.remove(path + "/");
                         result.putAll(allNodes);
@@ -327,12 +237,11 @@ public class SchematizerImpl implements Schematizer, ServiceFactory<Schematizer>
                         node.add(childNodes);
                     }
                 }
-                else if (DTO.class.isAssignableFrom(fieldClass)) {
-                    SchematizerImpl newSchematizer = new SchematizerImpl();
-                    newSchematizer.typeRules.put(path, rules);
-                    if (!rules.containsKey(path))
-                        newSchematizer.rule(path, path, fieldClass);
-                    SchemaImpl embedded = newSchematizer.schematize(path, path);
+                else if (asDTO(fieldClass)) {
+//                    newSchematizer.typeRules.put(path, rules);
+//                    if (!rules.containsKey(path))
+//                        newSchematizer.rule(path, path, fieldClass);
+                    SchemaImpl embedded = new SchematizerImpl().schematize(path, fieldClass, path).get(path);
                     node = new NodeImpl(
                             field.getName(),
                             fieldClass,
@@ -361,74 +270,6 @@ public class SchematizerImpl implements Schematizer, ServiceFactory<Schematizer>
         }
     }
 
-    private static Map<String, NodeImpl> extractChildren( String path, Map<String, NodeImpl> allNodes ) {
-        final Map<String, NodeImpl> children = new HashMap<>();
-        for (String key : allNodes.keySet()) {
-            String newKey = key.replace(path, "");
-            if (!newKey.substring(1).contains("/"))
-                children.put( newKey, allNodes.get(key));
-        }
-
-        return children;
-    }
-
-    private static SchemaImpl handleInvalid() {
-        // TODO
-        return null;
-    }
-
-    private static Class<?> rawClassOf(Object type) {
-        Class<?> rawClass = null;
-        if (type instanceof Class) {
-            rawClass = (Class<?>)type;
-        } else if (type instanceof ParameterizedType) {
-            ParameterizedType paramType = (ParameterizedType) type;
-            Type rawType = paramType.getRawType();
-            if (rawType instanceof Class)
-                rawClass = (Class<?>)rawType;
-        } else if (type instanceof TypeReference) {
-            return rawClassOf(((TypeReference<?>)type).getType());
-        }
-
-        return rawClass;
-    }
-
-    private static TypeReference<?> typeReferenceOf(Object type) {
-        TypeReference<?> typeRef = null;
-        if (type instanceof TypeReference)
-            typeRef = (TypeReference<?>)type;
-        return typeRef;
-    }
-
-    public static class Instantiator implements Function<String, Type> {
-        private final List<ClassLoader> classloaders = new ArrayList<>();
-
-        public Instantiator(List<ClassLoader> aClassLoadersList) {
-            classloaders.addAll( aClassLoadersList );
-        }
-
-        @Override
-        public Type apply(String className) {
-            for (ClassLoader cl : classloaders) {
-                try {
-                    return cl.loadClass(className);
-                } catch (ClassNotFoundException e) {
-                    // Try next
-                }
-            }
-
-            // Could not find the class. Try "this" ClassLoader
-            try {
-                return getClass().getClassLoader().loadClass(className);
-            } catch (ClassNotFoundException e) {
-                // Too bad
-            }
-
-            // Nothing to do. Return Object.class as the fallback
-            return Object.class;
-        }
-    }
-
     static private void associateChildNodes(NodeImpl rootNode) {
         for (NodeImpl child: rootNode.childrenInternal().values()) {
             child.parent(rootNode);
@@ -445,33 +286,143 @@ public class SchematizerImpl implements Schematizer, ServiceFactory<Schematizer>
         }
     }
 
-    static private boolean hasCollectionTypeAnnotation(Field field) {
-        if (field == null)
-            return false;
-
-        Annotation[] annotations = field.getAnnotations();
-        if (annotations.length == 0)
-            return false;
-
-        return Arrays.stream(annotations)
-            .map(a -> a.annotationType().getName())
-            .anyMatch(a -> "CollectionType".equals(a.substring(a.lastIndexOf(".") + 1) ));
+    @Override
+    public SchemaImpl get(String schemaName) {
+        return schemas.get(schemaName);
     }
 
-    static private Class<?> collectionTypeOf(Field field) {
-        Annotation[] annotations = field.getAnnotations();
+    @Override
+    public Converter converterFor(String schemaName) {
+//        ConverterBuilder b = new StandardConverter().newConverterBuilder();
+//        Schema s = schemas.get(schemaName);
+//        RuleExtractor ex = new RuleExtractor();
+//        s.visit( ex );
+//        ex.rules().stream().forEach( rule -> b.rule(rule) );
+//        return b.build();
+        return new StandardConverter()
+                .newConverterBuilder()
+                .rule(new SchemaBasedConverter<Object>(schemas.get(schemaName)))
+                .build();
+    }
 
-        Annotation annotation = Arrays.stream(annotations)
-            .filter(a -> "CollectionType".equals(a.annotationType().getName().substring(a.annotationType().getName().lastIndexOf(".") + 1) ))
-            .findFirst()
-            .get();
+//    private static class RuleExtractor implements NodeVisitor {
+//        private final List<TargetRule<?>> rules = new ArrayList<>();
+//
+//        @Override
+//        public void apply(Node node) {
+//            rules.add(new DTOTargetRule<Type>(node));
+//        }
+//
+//        List<TargetRule<?>> rules() {
+//            return rules;
+//        }
+//    }
+//    private static class DTOTargetRule<T> implements TargetRule<T> {
+//        private final Type type;
+//
+//        public DTOTargetRule(Node node) {
+//            if (node.isCollection())
+//                type = new CollectionType(node.collectionType(), new TypeRefOrClass(node.type()));
+//            else
+//                type = node.type();
+//        }
+//
+//        @Override
+//        public ConverterFunction<T> getFunction() {
+//            return (obj,t) -> {
+//                TypeRefOrClass type = null;
+//                if(t instanceof CollectionType) {
+//                    return convertCollection((Collection<?>)obj, (CollectionType)t);
+//                } else {
+//                    type = new TypeRefOrClass(t);
+//                    return convertObject(obj,type);                    
+//                }
+//            };
+//        }
+//
+//        @SuppressWarnings( "unchecked" )
+//        private T convertCollection(Collection<?> c, CollectionType type) {
+//            Collection<Object> copy = newCollection(type);
+//            for(Object obj : c)
+//                copy.add((Object)convertObject(obj, type.itemType));
+//            return (T)copy;
+//        }
+//
+//        private Collection<Object> newCollection(CollectionType type) {
+//            // TODO what else?
+//            return new ArrayList<>();
+//        }
+//
+//        @SuppressWarnings( "unchecked" )
+//        private T convertObject(Object obj, TypeRefOrClass type) {
+//            Converter c = new StandardConverter();
+//            if (asDTO(type.getClassType()))
+//                if(type.isTypeRef())
+//                    return c.convert(obj).targetAsDTO().to((TypeReference<T>)type.getTypeRef());
+//                else
+//                    return c.convert(obj).targetAsDTO().to(type.getType());
+//            return c.convert(obj).targetAsDTO().to(type.getType());
+//        }
+//
+//        @Override
+//        public Type getTargetType() {
+//            if (type instanceof CollectionType)
+//                return ((CollectionType)type).collectionType;
+//            return type;
+//        }
+//    };
 
-        try {
-            Method m = annotation.annotationType().getMethod("value");
-            Class<?> value = (Class<?>)m.invoke(annotation, (Object[])null);
-            return value;            
-        } catch ( Exception e ) {
-            return null;
+    static class TypeRefOrClass {
+        TypeReference<?> typeRef;
+        Class<?> cls;
+
+        public TypeRefOrClass(Object type, Object ruleBasedType) {
+            this(ruleBasedType != null ? ruleBasedType : type);
+        }
+
+        public TypeRefOrClass(Object type) {
+            typeRef = (TypeReference<?>)(typeReferenceOf(type));
+            if (typeRef != null )
+                cls = rawClassOf(typeRef);
+            else
+                cls = rawClassOf(type);
+        }
+
+        boolean isTypeRef() {
+            return typeRef != null;
+        }
+
+        TypeReference<?> getTypeRef() {
+            return typeRef;
+        }
+
+        Object get() {
+            if (typeRef != null )
+                return typeRef;
+            return cls;
+        }
+
+        Type getType() {
+            if (typeRef != null)
+                return typeRef.getType();
+            return cls;
+        }
+
+        Class<?> getClassType() {
+            Type t = getType();
+            if (t instanceof Class)
+                return (Class<?>)t;
+            return t.getClass();
+        }
+    }
+
+    static class CollectionType implements Type {
+        Class<? extends Collection<?>> collectionType;
+        TypeRefOrClass itemType;
+
+        public CollectionType(Class<? extends Collection<?>> aCollectionType, TypeRefOrClass anItemType) {
+            collectionType = aCollectionType;
+            itemType = anItemType;
         }
     }
 }

@@ -39,22 +39,11 @@ public class NodeImpl implements Node {
 
     public NodeImpl(
             String aName,
-            Type aType,
+            Object aType,
             boolean isACollection,
             String anAbsolutePath ) {
         name = aName;
         type = aType;
-        isCollection = isACollection;
-        absolutePath = anAbsolutePath;
-    }
-
-    public NodeImpl(
-            String aName,
-            TypeReference<?> aTypeRef,
-            boolean isACollection,
-            String anAbsolutePath ) {
-        name = aName;
-        type = aTypeRef;
         isCollection = isACollection;
         absolutePath = anAbsolutePath;
     }

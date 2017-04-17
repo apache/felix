@@ -17,13 +17,13 @@ package org.apache.felix.schematizer;
 
 import java.util.Collection;
 import java.util.Map;
-import java.util.Optional;
 
 public interface Schema {
     String name();
     Node rootNode();
-    Optional<Node> nodeAtPath(String absolutePath);
-    Optional<Node> parentOf(Node aNode);
+    boolean hasNodeAtPath(String absolutePath);
+    Node nodeAtPath(String absolutePath);
+    Node parentOf(Node aNode);
     Map<String, Node.DTO> toMap();
 
     /**

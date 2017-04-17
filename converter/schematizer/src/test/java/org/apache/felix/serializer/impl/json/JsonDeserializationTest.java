@@ -17,32 +17,26 @@
 package org.apache.felix.serializer.impl.json;
 
 import java.util.ArrayList;
-import java.util.Optional;
 
-import org.apache.felix.schematizer.Schema;
-import org.apache.felix.schematizer.SchematizingConverter;
 import org.apache.felix.schematizer.impl.SchematizerImpl;
 import org.apache.felix.serializer.impl.json.MyDTO.Count;
 import org.apache.felix.serializer.impl.json.MyEmbeddedDTO.Alpha;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.osgi.util.converter.Converter;
 import org.osgi.util.converter.TypeReference;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
 public class JsonDeserializationTest {
-    private SchematizingConverter converter;
 
     @Before
     public void setUp() {
-        converter = new SchematizingConverter();
     }
 
     @After
     public void tearDown() {
-        converter = null;
     }
 
     @Test
@@ -58,20 +52,13 @@ public class JsonDeserializationTest {
         dto.count = Count.TWO;
         dto.embedded = embedded;
 
-        // TODO
-        Optional<Schema> opt = new SchematizerImpl()
-            .rule("MyDTO", new TypeReference<MyDTO>(){})
-            .rule("MyDTO", "/embedded", new TypeReference<MyEmbeddedDTO>(){})
-            .get("MyDTO");
-
-        assertTrue(opt.isPresent());
-
-        Schema s = opt.get();
-
-        String serialized = new JsonSerializerImpl().serialize(dto).with(converter.withSchema(s)).toString();
+        Converter c = new SchematizerImpl()
+                .schematize("MyDTO", new TypeReference<MyDTO>(){})
+                .converterFor("MyDTO");
+        String serialized = new JsonSerializerImpl().serialize(dto).with(c).toString();
         MyDTO result = new JsonSerializerImpl()
                 .deserialize(MyDTO.class)
-                .with(converter.withSchema(s))
+                .with(c)
                 .from(serialized);
 
         assertEquals(dto.ping, result.ping);
@@ -95,19 +82,13 @@ public class JsonDeserializationTest {
 
         String serialized = new JsonSerializerImpl().serialize(dto).toString();
 
-        Optional<Schema> opt = new SchematizerImpl()
-                .rule("MyDTO", new TypeReference<MyDTO2<MyEmbeddedDTO2<String>>>(){})
-                .rule("MyDTO", "/embedded", new TypeReference<MyEmbeddedDTO2<String>>(){})
-                .rule("MyDTO", "/embedded/value", String.class)
-                .get("MyDTO");
-
-        assertTrue(opt.isPresent());
-
-        Schema s = opt.get();
-        MyDTO2<MyEmbeddedDTO2<String>> result =
-                new JsonSerializerImpl()
+        Converter c = new SchematizerImpl()
+                .type("MyDTO", "/embedded", new TypeReference<MyEmbeddedDTO2<String>>(){})
+                .schematize("MyDTO", new TypeReference<MyDTO2<MyEmbeddedDTO2<String>>>(){})
+                .converterFor("MyDTO");
+        MyDTO2<MyEmbeddedDTO2<String>> result = new JsonSerializerImpl()
                 .deserialize(new TypeReference<MyDTO2<MyEmbeddedDTO2<String>>>(){})
-                .with(converter.withSchema(s))
+                .with(c)
                 .from(serialized);
 
         assertEquals(dto.ping, result.ping);

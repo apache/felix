@@ -22,6 +22,7 @@ import java.lang.annotation.Target;
 import java.lang.reflect.Field;
 import java.lang.reflect.Type;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
@@ -36,7 +37,7 @@ public interface Node {
         Class<?> value() default Object.class;
     }
 
-    public static class DTO extends org.osgi.dto.DTO {
+    static class DTO extends org.osgi.dto.DTO {
         public String name;
         public String path;
         public String type;
@@ -56,4 +57,15 @@ public interface Node {
     boolean isCollection();
     Map<String, Node> children();
     Class<? extends Collection<?>> collectionType();
+
+    static Node ERROR = new Node() {
+        @Override public String name() { return "ERROR"; }
+        @Override public String absolutePath() { return "ERROR"; }
+        @Override public Type type() { return Object.class; }
+        @Override public Field field() { return null; }
+        @Override public Optional<TypeReference<?>> typeReference() { return Optional.empty(); }
+        @Override public boolean isCollection() { return false; }
+        @Override public Map<String, Node> children() { return Collections.emptyMap(); }
+        @Override public Class<? extends Collection<?>> collectionType() { return null; }        
+    };
 }

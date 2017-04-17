@@ -14,22 +14,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.felix.serializer.test.prevayler;
+package org.apache.felix.schematizer;
 
-import java.lang.reflect.ParameterizedType;
-import java.lang.reflect.Type;
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
 
-public final class AggregateTypeReference
-{
-    private final ParameterizedType type;
-
-    public AggregateTypeReference( Type anOwner, Type aType, Type... varargs )
-    {
-        type = new ParameterizedAggregateType( anOwner, aType, varargs );
-    }
-
-    public Type getType()
-    {
-        return type;
-    }
+@Target(ElementType.TYPE)
+@Retention(RetentionPolicy.RUNTIME)
+public @interface AsDTO {
 }

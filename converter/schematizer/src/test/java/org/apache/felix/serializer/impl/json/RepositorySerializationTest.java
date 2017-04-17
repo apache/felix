@@ -55,7 +55,6 @@ import static org.junit.Assert.assertTrue;
  *
  * @author David Leangen
  */
-@Ignore("This test fails, need to fix")
 public class RepositorySerializationTest
 {
     private SimpleManager simpleManager;
@@ -75,6 +74,7 @@ public class RepositorySerializationTest
 	}
 
     @Test
+    @Ignore("temporary")
 	public void shouldPutAndRemoveSimpleEntitiesFromStore() {
 		simpleManager.clear();
 		final SimpleTopEntity e1 = factory.newSimpleTop( "ID01", "Value01", null );
@@ -115,6 +115,7 @@ public class RepositorySerializationTest
 	}
 
     @Test
+    @Ignore("temporary")
     public void shouldPutAndRemoveComplexEntityFromStore() {
         complexManager.clear();
         assertTrue( complexManager.list().isEmpty() );
@@ -155,6 +156,7 @@ public class RepositorySerializationTest
     }
 
     @Test
+    @Ignore("temporary")
     public void shouldPutAllToStore() {
         complexManager.clear();
         assertTrue( complexManager.list().isEmpty() );
@@ -205,6 +207,7 @@ public class RepositorySerializationTest
     }
 
     @Test
+    @Ignore("temporary")
 	public void shouldIterateThroughKeysAndValues() {
 	    simpleManager.clear();
 

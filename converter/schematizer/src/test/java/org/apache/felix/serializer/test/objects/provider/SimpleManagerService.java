@@ -16,18 +16,14 @@
  */
 package org.apache.felix.serializer.test.objects.provider;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
-import org.apache.felix.schematizer.TypeRule;
 import org.apache.felix.serializer.test.objects.SimpleManager;
 import org.apache.felix.serializer.test.objects.SimpleTop;
-import org.apache.felix.serializer.test.prevayler.AggregateTypeReference;
 import org.apache.felix.serializer.test.prevayler.MockPrevaylerBackedRepository;
 import org.apache.felix.serializer.test.prevayler.Repository;
-import org.osgi.util.converter.TypeReference;
 
 public class SimpleManagerService
 	implements SimpleManager
@@ -37,14 +33,7 @@ public class SimpleManagerService
 	private final Repository<SimpleTopEntity> repository;
 
 	public SimpleManagerService() {
-        final List<TypeRule<?>> rules = new ArrayList<>();
-        rules.add( new TypeRule<>( "/entity", new TypeReference<Object>(){
-            @Override
-            public java.lang.reflect.Type getType()
-            {
-                return new AggregateTypeReference( null, SimpleTopEntity.class, new java.lang.reflect.Type(){} ).getType();
-            }} ) );
-	    repository = new MockPrevaylerBackedRepository<>(rules, SimpleTopEntity.class);
+	    repository = new MockPrevaylerBackedRepository<>(SimpleTopEntity.class);
     }
 
 	@Override

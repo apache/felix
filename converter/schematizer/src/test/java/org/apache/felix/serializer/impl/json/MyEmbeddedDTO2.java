@@ -16,8 +16,10 @@
  */
 package org.apache.felix.serializer.impl.json;
 
+import org.apache.felix.schematizer.AsDTO;
 import org.osgi.dto.DTO;
 
+@AsDTO
 public class MyEmbeddedDTO2<T> extends DTO {
     public T value;
 }

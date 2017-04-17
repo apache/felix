@@ -16,19 +16,15 @@
  */
 package org.apache.felix.serializer.test.objects.provider;
 
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
-import org.apache.felix.schematizer.TypeRule;
 import org.apache.felix.serializer.test.objects.ComplexManager;
 import org.apache.felix.serializer.test.objects.ComplexTop;
-import org.apache.felix.serializer.test.prevayler.AggregateTypeReference;
 import org.apache.felix.serializer.test.prevayler.MockPrevaylerBackedRepository;
 import org.apache.felix.serializer.test.prevayler.Repository;
-import org.osgi.util.converter.TypeReference;
 
 public class ComplexManagerService
 	implements ComplexManager
@@ -36,14 +32,7 @@ public class ComplexManagerService
     private final Repository<ComplexTopEntity> repository;
 
     public ComplexManagerService() {
-        final List<TypeRule<?>> rules = new ArrayList<>();
-        rules.add( new TypeRule<>( "/entity", new TypeReference<Object>(){
-            @Override
-            public java.lang.reflect.Type getType()
-            {
-                return new AggregateTypeReference( null, ComplexTopEntity.class, new java.lang.reflect.Type(){} ).getType();
-            }} ) );
-        repository = new MockPrevaylerBackedRepository<>(rules, ComplexTopEntity.class);
+        repository = new MockPrevaylerBackedRepository<>(ComplexTopEntity.class);
     }
 
     @Override

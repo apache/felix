@@ -23,7 +23,6 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
@@ -33,9 +32,7 @@ import org.apache.felix.schematizer.Schema;
 import org.osgi.util.converter.Converter;
 import org.osgi.util.converter.StandardConverter;
 
-public class SchemaImpl
-        implements Schema
-{
+public class SchemaImpl implements Schema {
     private final String name;
     private final HashMap<String, NodeImpl> nodes = new LinkedHashMap<>();
 
@@ -58,20 +55,25 @@ public class SchemaImpl
     }
 
     @Override
-    public Optional<Node> nodeAtPath( String absolutePath ) {
-        return Optional.ofNullable(nodes.get(absolutePath));
+    public boolean hasNodeAtPath(String absolutePath) {
+        return nodes.containsKey(absolutePath);
     }
 
     @Override
-    public Optional<Node> parentOf( Node aNode ) {
+    public Node nodeAtPath( String absolutePath ) {
+        return nodes.get(absolutePath);
+    }
+
+    @Override
+    public Node parentOf( Node aNode ) {
         if (aNode == null || aNode.absolutePath() == null)
-            return Optional.empty();
+            return Node.ERROR;
 
         NodeImpl node = nodes.get(aNode.absolutePath());
         if (node == null)
-            return Optional.empty();
+            return Node.ERROR;
 
-        return Optional.ofNullable( node.parent() );
+        return node.parent();
     }
 
     void add(NodeImpl node) {
@@ -163,21 +165,21 @@ public class SchemaImpl
 
     @SuppressWarnings( "rawtypes" )
     private Object convertToType( String path, Map map ) {
-        Optional<Node> node = nodeAtPath(path);
-        if (!node.isPresent())
+        if (!hasNodeAtPath(path))
             return map;
 
-        Object result = new StandardConverter().convert(map).targetAsDTO().to(node.get().type());
+        Node node = nodeAtPath(path);
+        Object result = new StandardConverter().convert(map).targetAsDTO().to(node.type());
         return result;
     }
 
     private List<?> convertToType( String path, List<?> list ) {
-        Optional<Node> node = nodeAtPath(path);
-        if (!node.isPresent())
+        if (!hasNodeAtPath(path))
             return list;
 
+        Node node = nodeAtPath(path);
         return list.stream()
-                .map( v -> new StandardConverter().convert(v).sourceAsDTO().to(node.get().type()))
+                .map( v -> new StandardConverter().convert(v).sourceAsDTO().to(node.type()))
                 .collect( Collectors.toList() );
     }
 

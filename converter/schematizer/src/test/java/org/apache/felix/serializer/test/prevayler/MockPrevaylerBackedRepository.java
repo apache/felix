@@ -24,8 +24,6 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
-import org.apache.felix.schematizer.TypeRule;
-
 public class MockPrevaylerBackedRepository<E>
     implements Repository<E>
 {
@@ -33,8 +31,8 @@ public class MockPrevaylerBackedRepository<E>
     private final DTOSerializer<CommandDTO<?>> serializer;
     private final MockPrevaylerSerializer prevayler;
 
-    public MockPrevaylerBackedRepository(List<TypeRule<?>> rules, Class<E> anEntityType) {
-        serializer = new DTOSerializer<>(rules, anEntityType);
+    public MockPrevaylerBackedRepository(Class<E> anEntityType) {
+        serializer = new DTOSerializer<>(anEntityType);
         prevayler = new SerializerAdapter(serializer);
     }
 

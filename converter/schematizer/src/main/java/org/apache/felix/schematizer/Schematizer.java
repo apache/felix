@@ -15,26 +15,49 @@
  */
 package org.apache.felix.schematizer;
 
-import java.util.Map;
-import java.util.Optional;
-
 import org.osgi.annotation.versioning.ProviderType;
-import org.osgi.dto.DTO;
+import org.osgi.util.converter.Converter;
 import org.osgi.util.converter.TypeReference;
 
 @ProviderType
 public interface Schematizer {
-    Optional<Schema> get(String name);
-    Optional<Schema> from(String name, Map<String, Node.DTO> map);
+    /**
+     * Can be a class or a TypeReference.
+     * 
+     * TODO: Consider splitting into two separate methods.
+     */
+    Schematizer schematize(String schemaName, Object type);
 
-    <T extends DTO>Schematizer rule(String name, TypeRule<T> rule);
-    <T extends DTO>Schematizer rule(String name, String path, TypeReference<T> type);
-    <T>Schematizer rule(String name, String path, Class<T> cls);
+    Schema get(String schemaName);
 
     /**
-     * Shortcut for rule(String name, String path, TypeReference<T> type) when path is "/".
+     * Associates a type rule. Useful for classes that have type parameters, which
+     * get lost at runtime.
+     * 
+     * @param name the name of the Schema to which this rule is to be associated
+     * @param path the path in the object graph where the rule gets applied
+     * @param type the type
      */
-    <T extends DTO>Schematizer rule(String name, TypeReference<T> type);
+    Schematizer type(String name, String path, TypeReference<?> type);
 
-    Schematizer usingLookup(ClassLoader classLoader);    
+    /**
+     * Associates a type rule. Useful for classes that have type parameters, which
+     * get lost at runtime.
+     * 
+     * @param name the name of the Schema to which this rule is to be associated
+     * @param path the path in the object graph where the rule gets applied
+     * @param type the type
+     */
+    Schematizer type(String name, String path, Class<?> type);
+
+    /**
+     * Returns a Converter for the Schema corresponding to the given name.
+     * The Schema must already have been schematized using the given name.
+     */
+    Converter converterFor(String schemaName);
+
+//    /**
+//     * Returns a Converter for the provided Schema.
+//     */
+//    Converter converterFor(Schema s);
 }

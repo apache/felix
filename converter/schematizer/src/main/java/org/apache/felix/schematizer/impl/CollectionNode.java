@@ -21,7 +21,6 @@ import java.util.Map;
 import java.util.function.Function;
 
 import org.apache.felix.schematizer.Node;
-import org.osgi.util.converter.TypeReference;
 
 public class CollectionNode
         extends NodeImpl
@@ -30,19 +29,10 @@ public class CollectionNode
 
     public CollectionNode(
             String aName,
-            Type aType,
+            Object aType,
             String anAbsolutePath,
             Class<? extends Collection<?>> aCollectionType ) {
         super( aName, aType, true, anAbsolutePath );
-        collectionType = aCollectionType;
-    }
-
-    public CollectionNode(
-            String aName,
-            TypeReference<?> aTypeRef,
-            String anAbsolutePath,
-            Class<? extends Collection<?>> aCollectionType ) {
-        super( aName, aTypeRef, true, anAbsolutePath );
         collectionType = aCollectionType;
     }
 
