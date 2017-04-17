@@ -38,8 +38,9 @@ import org.mockito.InOrder;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
-import org.osgi.framework.wiring.BundleRevision;
-import org.osgi.resource.Requirement;
+import org.osgi.framework.wiring.BundleRequirement;
+import org.osgi.framework.wiring.BundleWire;
+import org.osgi.framework.wiring.BundleWiring;
 import org.osgi.service.cm.Configuration;
 import org.osgi.service.cm.ConfigurationAdmin;
 
@@ -49,10 +50,15 @@ public class ConfiguratorTest {
 
     private BundleContext bundleContext;
 
+    private Bundle bundle;
+
     private ConfigurationAdmin configurationAdmin;
 
     @Before public void setup() throws IOException {
+        bundle = mock(Bundle.class);
+        when(bundle.getBundleId()).thenReturn(42L);
         bundleContext = mock(BundleContext.class);
+        when(bundleContext.getBundle()).thenReturn(bundle);
         when(bundleContext.getBundles()).thenReturn(new Bundle[0]);
         when(bundleContext.getDataFile("binaries" + File.separatorChar + ".check")).thenReturn(Files.createTempDirectory("test").toFile());
         configurationAdmin = mock(ConfigurationAdmin.class);
@@ -64,10 +70,15 @@ public class ConfiguratorTest {
         final Bundle b = mock(Bundle.class);
         when(b.getBundleId()).thenReturn(id);
         when(b.getLastModified()).thenReturn(5L);
-        final BundleRevision rev = mock(BundleRevision.class);
-        when(b.adapt(BundleRevision.class)).thenReturn(rev);
-        final Requirement req = mock(Requirement.class);
-        when(rev.getRequirements(Util.NS_OSGI_IMPL)).thenReturn(Collections.singletonList(req));
+        final BundleWiring wiring = mock(BundleWiring.class);
+        when(b.adapt(BundleWiring.class)).thenReturn(wiring);
+        final BundleRequirement req = mock(BundleRequirement.class);
+        when(wiring.getRequirements(Util.NS_OSGI_IMPL)).thenReturn(Collections.singletonList(req));
+        final BundleWire wire = mock(BundleWire.class);
+        when(wire.getProviderWiring()).thenReturn(wiring);
+        when(wire.getRequirement()).thenReturn(req);
+        when(wiring.getBundle()).thenReturn(bundle);
+        when(wiring.getRequiredWires(Util.NS_OSGI_IMPL)).thenReturn(Collections.singletonList(wire));
         final Vector<URL> urls = new Vector<>();
         urls.add(this.getClass().getResource("/bundles/" + id + ".json"));
         when(b.findEntries("OSGI-INF/configurator", "*.json", false)).thenReturn(urls.elements());

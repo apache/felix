@@ -44,6 +44,7 @@ import org.osgi.framework.BundleEvent;
 import org.osgi.framework.InvalidSyntaxException;
 import org.osgi.service.cm.Configuration;
 import org.osgi.service.cm.ConfigurationAdmin;
+import org.osgi.service.configurator.ConfiguratorConstants;
 import org.osgi.util.tracker.BundleTrackerCustomizer;
 
 /**
@@ -51,10 +52,6 @@ import org.osgi.util.tracker.BundleTrackerCustomizer;
  *
  */
 public class Configurator {
-
-    private static final String PROP_INITIAL = "configurator.initial";
-
-    private static final String PROP_DIRECTORY = "configurator.binaries";
 
     private final BundleContext bundleContext;
 
@@ -70,29 +67,37 @@ public class Configurator {
 
     private volatile Object coordinator;
 
+    private final WorkerQueue queue;
+
     /**
      * Create a new configurator and start it
      * @param bc The bundle context
      * @param ca The configuration admin
      */
     public Configurator(final BundleContext bc, final ConfigurationAdmin ca) {
+        this.queue = new WorkerQueue();
         this.bundleContext = bc;
         this.configAdmin = ca;
         this.activeEnvironments = Util.getActiveEnvironments(bc);
         this.state = State.createOrReadState(bundleContext);
         this.state.changeEnvironments(this.activeEnvironments);
-        this.tracker = new org.osgi.util.tracker.BundleTracker<Bundle>(this.bundleContext,
-                Bundle.INSTALLED|Bundle.ACTIVE|Bundle.RESOLVED|Bundle.STARTING,
+        this.tracker = new org.osgi.util.tracker.BundleTracker<>(this.bundleContext,
+                Bundle.ACTIVE|Bundle.STARTING|Bundle.UNINSTALLED,
 
                 new BundleTrackerCustomizer<Bundle>() {
 
             @Override
             public Bundle addingBundle(final Bundle bundle, final BundleEvent event) {
-                if ( active ) {
-                    synchronized ( this ) {
-                        processAddBundle(bundle);
-                        process();
-                    }
+                if ( active &&
+                    (event.getType() == Bundle.ACTIVE || event.getType() == Bundle.STARTING) ) {
+                    queue.enqueue(new Runnable() {
+
+                        @Override
+                        public void run() {
+                            processAddBundle(bundle);
+                            process();
+                        }
+                    });
                 }
                 return bundle;
             }
@@ -104,15 +109,19 @@ public class Configurator {
 
             @Override
             public void removedBundle(final Bundle bundle, final BundleEvent event, final Bundle object) {
-                if ( active ) {
-                    try {
-                        synchronized ( this ) {
-                            processRemoveBundle(bundle.getBundleId());
-                            process();
+                if ( active && event.getType() == Bundle.UNINSTALLED ) {
+                    queue.enqueue(new Runnable() {
+
+                        @Override
+                        public void run() {
+                            try {
+                                processRemoveBundle(bundle.getBundleId());
+                                process();
+                            } catch ( final IllegalStateException ise) {
+                                SystemLogger.error("Error processing bundle " + bundle.getBundleId() + " - " + bundle.getSymbolicName(), ise);
+                            }
                         }
-                    } catch ( final IllegalStateException ise) {
-                        SystemLogger.error("Error processing bundle " + bundle.getBundleId() + " - " + bundle.getSymbolicName(), ise);
-                    }
+                    });
                 }
             }
 
@@ -124,6 +133,7 @@ public class Configurator {
      */
     public void shutdown() {
         this.active = false;
+        this.queue.stop();
         this.tracker.close();
     }
 
@@ -132,7 +142,7 @@ public class Configurator {
      */
     public void start() {
         // get the directory for storing binaries
-        String dirPath = this.bundleContext.getProperty(PROP_DIRECTORY);
+        String dirPath = this.bundleContext.getProperty(ConfiguratorConstants.CONFIGURATOR_BINARIES);
         if ( dirPath != null ) {
             final File dir = new File(dirPath);
             if ( dir.exists() && dir.isDirectory() ) {
@@ -159,7 +169,7 @@ public class Configurator {
         }
 
         // before we start the tracker we process all available bundles and initial configuration
-        final String initial = this.bundleContext.getProperty(PROP_INITIAL);
+        final String initial = this.bundleContext.getProperty(ConfiguratorConstants.CONFIGURATOR_INITIAL);
         if ( initial == null ) {
             this.processRemoveBundle(-1);
         } else {
@@ -187,7 +197,7 @@ public class Configurator {
             } else {
                 // JSON
                 hashes.add(Util.getSHA256(initial.trim()));
-                files.put(PROP_INITIAL, initial);
+                files.put(ConfiguratorConstants.CONFIGURATOR_INITIAL, initial);
             }
             if ( state.getInitialHashes() != null && state.getInitialHashes().equals(hashes)) {
                 if ( state.environmentsChanged() ) {
@@ -234,7 +244,7 @@ public class Configurator {
             final long bundleId = bundle.getBundleId();
             final long bundleLastModified = bundle.getLastModified();
             final Long lastModified = state.getLastModified(bundleId);
-            if ( lastModified != null && lastModified == bundleLastModified ) {
+            if ( lastModified != null && lastModified.longValue() == bundleLastModified ) {
                 if ( state.environmentsChanged() ) {
                     state.checkEnvironments(bundleId);
                 }
@@ -244,7 +254,7 @@ public class Configurator {
             if ( lastModified != null ) {
                 processRemoveBundle(bundleId);
             }
-            final Set<String> paths = Util.isConfigurerBundle(bundle);
+            final Set<String> paths = Util.isConfigurerBundle(bundle, this.bundleContext.getBundle().getBundleId());
             if ( paths != null ) {
                 final BundleState config = org.apache.felix.configurator.impl.json.JSONUtil.readConfigurationsFromBundle(bundle, paths);
                 for(final String pid : config.getPids()) {
