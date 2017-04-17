@@ -21,6 +21,7 @@ import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
+import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.util.Arrays;
 import java.util.Collections;
@@ -31,6 +32,8 @@ import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
+
+import org.osgi.util.converter.TypeReference;
 
 class Util {
     private static final Map<Class<?>, Class<?>> boxedClasses;
@@ -53,6 +56,15 @@ class Util {
     static Type primitiveToBoxed(Type type) {
         if (type instanceof Class)
             return primitiveToBoxed((Class<?>) type);
+        else
+            return null;
+    }
+
+    static Type baseType(Type type) {
+        if (type instanceof Class)
+            return primitiveToBoxed((Class<?>) type);
+        else if (type instanceof ParameterizedType)
+            return type;
         else
             return null;
     }

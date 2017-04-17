@@ -143,7 +143,7 @@ public class AdapterImpl implements InternalConverter {
         @SuppressWarnings("unchecked")
         @Override
         public Object to(Type type) {
-            List<ConverterFunction<?>> tr = typeRules.get(Util.primitiveToBoxed(type));
+            List<ConverterFunction<?>> tr = typeRules.get(Util.baseType(type));
             if (tr == null)
                 tr = Collections.emptyList();
             List<ConverterFunction<?>> converters = new ArrayList<>(tr.size() + allRules.size());
