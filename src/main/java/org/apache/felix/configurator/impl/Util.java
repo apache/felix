@@ -34,15 +34,15 @@ import java.security.NoSuchAlgorithmException;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
 import org.apache.felix.configurator.impl.logger.SystemLogger;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
-import org.osgi.framework.wiring.BundleRevision;
-import org.osgi.resource.Requirement;
+import org.osgi.framework.wiring.BundleRequirement;
+import org.osgi.framework.wiring.BundleWire;
+import org.osgi.framework.wiring.BundleWiring;
 
 public class Util {
 
@@ -62,38 +62,45 @@ public class Util {
      * @return Set of locations or {@code null}
      */
     @SuppressWarnings("unchecked")
-    public static Set<String> isConfigurerBundle(final Bundle bundle) {
-        final BundleRevision bundleRevision = bundle.adapt(BundleRevision.class);
-        if ( bundleRevision == null ) {
+    public static Set<String> isConfigurerBundle(final Bundle bundle, final long configuratorBundleId) {
+        // check for bundle wiring
+        final BundleWiring bundleWiring = bundle.adapt(BundleWiring.class);
+        if ( bundleWiring == null ) {
             return null;
         }
 
-        final List<Requirement> requirements = bundleRevision.getRequirements(NS_OSGI_IMPL);
+        // check for bundle requirement to implementation namespace
+        final List<BundleRequirement> requirements = bundleWiring.getRequirements(NS_OSGI_IMPL);
         if ( requirements == null || requirements.isEmpty() ) {
             return null;
         }
-        // TODO check version etc
-        for(final Requirement req : requirements) {
-            final Map<String, Object> attributes = req.getAttributes();
-
-            final Object val = attributes.get(PROP_CONFIGURATIONS);
-            if ( val != null ) {
-                if ( val instanceof String ) {
-                    return Collections.singleton((String)val);
-                }
-                if ( val instanceof List ) {
-                    final List<String> paths = (List<String>)val;
-                    final Set<String> result = new HashSet<>();
-                    for(final String p : paths) {
-                        result.add(p);
+        // get all wires for the implementation namespace
+        final List<BundleWire> wires = bundleWiring.getRequiredWires(NS_OSGI_IMPL);
+        for(final BundleWire wire : wires) {
+            // if the wire is to this bundle (configurator), it must be the correct
+            // requirement (no need to do additional checks like version etc.)
+            if ( wire.getProviderWiring() != null
+                 && wire.getProviderWiring().getBundle().getBundleId() == configuratorBundleId ) {
+                final Object val = wire.getRequirement().getAttributes().get(PROP_CONFIGURATIONS);
+                if ( val != null ) {
+                    if ( val instanceof String ) {
+                        return Collections.singleton((String)val);
                     }
-                    return result;
+                    if ( val instanceof List ) {
+                        final List<String> paths = (List<String>)val;
+                        final Set<String> result = new HashSet<>();
+                        for(final String p : paths) {
+                            result.add(p);
+                        }
+                        return result;
+                    }
+                    SystemLogger.error("Attribute " + PROP_CONFIGURATIONS + " for configurator requirement has an invalid type: " + val +
+                                       ". Using default configuration.");
                 }
-                SystemLogger.error("Attribute " + PROP_CONFIGURATIONS + " for configurator requirement has an invalid type: " + val +
-                                   ". Using default configuration.");
+                return Collections.singleton(DEFAULT_PATH);
             }
-            return Collections.singleton(DEFAULT_PATH);
         }
+
         return null;
     }
 
