@@ -25,6 +25,7 @@ import java.util.Date;
 import java.util.Dictionary;
 import java.util.HashMap;
 import java.util.Hashtable;
+import java.util.LinkedHashMap;
 import java.util.Map;
 
 import org.junit.After;
@@ -375,6 +376,28 @@ public class ConverterMapTest {
         assertNull(dto.count);
         assertNull(dto.ping);
         assertEquals(999L, dto.pong);
+    }
+
+    @Test
+    public void testRemovePasswords() {
+        Map<String, Object> m = new LinkedHashMap<>();
+        m.put("foo", "bar");
+        m.put("password", "secret");
+
+        Converter c = converter.newConverterBuilder().
+            rule(new Rule<Map<String,Object>,String>(v -> {
+                Map<String, Object> cm = new LinkedHashMap<>(v);
+
+                for (Map.Entry<String, Object> entry : cm.entrySet()) {
+                    if (entry.getKey().contains("password"))
+                        entry.setValue("xxx");
+                }
+                return converter.convert(cm).to(String.class);
+            }) {}).
+            build();
+        assertEquals("{foo=bar, password=xxx}", c.convert(m).to(String.class));
+        assertEquals("Original should not be modified",
+                "{foo=bar, password=secret}", m.toString());
     }
 
     interface TestInterface {
