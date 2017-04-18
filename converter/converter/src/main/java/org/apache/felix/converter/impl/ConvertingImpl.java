@@ -22,7 +22,6 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
-import java.lang.reflect.Modifier;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Proxy;
 import java.lang.reflect.Type;
@@ -209,7 +208,7 @@ public class ConvertingImpl implements Converting, InternalConverting {
             return convertToArray();
         } else if (Collection.class.isAssignableFrom(targetAsClass)) {
             return convertToCollection();
-        } else if (isDTOType(targetAsClass) || ((sourceAsDTO || targetAsDTO) && DTO.class.isAssignableFrom(targetClass))) {
+        } else if (DTOUtil.isDTOType(targetAsClass) || ((sourceAsDTO || targetAsDTO) && DTO.class.isAssignableFrom(targetClass))) {
             return convertToDTO();
         } else if (isMapType(targetAsClass, targetAsJavaBean)) {
             return convertToMapType();
@@ -414,7 +413,7 @@ public class ConvertingImpl implements Converting, InternalConverting {
             return MapDelegate.forMap((Map) object, this);
         } else if (Dictionary.class.isAssignableFrom(sourceClass)) {
             return MapDelegate.forDictionary((Dictionary) object, this);
-        } else if (isDTOType(sourceClass) || sourceAsDTO) {
+        } else if (DTOUtil.isDTOType(sourceClass) || sourceAsDTO) {
             return MapDelegate.forDTO(object, this);
         } else if (sourceAsJavaBean) {
             return MapDelegate.forBean(object, this);
@@ -563,61 +562,13 @@ public class ConvertingImpl implements Converting, InternalConverting {
         return 0;
     }
 
-    private static boolean isDTOType(Class<?> cls) {
-        try {
-            cls.getDeclaredConstructor();
-        } catch (NoSuchMethodException | SecurityException e) {
-            // No zero-arg constructor, not a DTO
-            return false;
-        }
-
-        if (cls.getDeclaredMethods().length > 0) {
-            // should not have any methods
-            return false;
-        }
-
-        for (Method m : cls.getMethods()) {
-            try {
-                Object.class.getMethod(m.getName(), m.getParameterTypes());
-            } catch (NoSuchMethodException snme) {
-                // Not a method defined by Object.class (or override of such method)
-                return false;
-            }
-        }
-
-        for (Field f : cls.getDeclaredFields()) {
-            int modifiers = f.getModifiers();
-            if (Modifier.isStatic(modifiers)) {
-                // ignore static fields
-                continue;
-            }
-
-            if (!Modifier.isPublic(modifiers)) {
-                return false;
-            }
-        }
-
-        for (Field f : cls.getFields()) {
-            int modifiers = f.getModifiers();
-            if (Modifier.isStatic(modifiers)) {
-                // ignore static fields
-                continue;
-            }
-
-            if (!Modifier.isPublic(modifiers)) {
-                return false;
-            }
-        }
-        return true;
-    }
-
     private static boolean isMapType(Class<?> cls, boolean asJavaBean) {
         // All interface types that are not Collections are treated as maps
         if (Map.class.isAssignableFrom(cls))
             return true;
         else if (cls.isInterface() && !Collection.class.isAssignableFrom(cls))
             return true;
-        else if (isDTOType(cls))
+        else if (DTOUtil.isDTOType(cls))
             return true;
         else if (asJavaBean && isWriteableJavaBean(cls))
             return true;
@@ -887,7 +838,7 @@ public class ConvertingImpl implements Converting, InternalConverting {
             return (Map<?,?>) obj;
         else if (Dictionary.class.isAssignableFrom(sourceCls))
             return null; // TODO
-        else if (isDTOType(sourceCls) || sourceAsDTO)
+        else if (DTOUtil.isDTOType(sourceCls) || sourceAsDTO)
             return createMapFromDTO(obj, converter);
         else if (sourceAsJavaBean) {
             Map<?,?> m = createMapFromBeanAccessors(obj, sourceCls);

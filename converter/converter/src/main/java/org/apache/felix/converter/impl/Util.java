@@ -33,8 +33,6 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 
-import org.osgi.util.converter.TypeReference;
-
 class Util {
     private static final Map<Class<?>, Class<?>> boxedClasses;
     static {
