@@ -14,12 +14,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.felix.converter.impl;
+package org.apache.felix.converter;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 
+import org.osgi.annotation.versioning.ProviderType;
+
+@ProviderType
 public class DTOUtil {
     private DTOUtil() {
         // Do not instantiate. This is a utility class.
