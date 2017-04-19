@@ -1,3 +1,11 @@
+Changes from 2.0.8 to 2.0.10
+----------------------------
+** Improvement
+    * [FELIX-5568] SCR contains compact3 profile code
+** Bug
+    * [FELIX-5572] Reference target filter fails when using field strategy for multiple cardinality reference with multiple component instances
+
+
 Changes from 2.0.6 to 2.0.8
 ---------------------------
 ** Improvement
