@@ -36,7 +36,7 @@ import org.osgi.service.component.ComponentContext;
 import org.osgi.service.log.LogService;
 
 
-public class ActivateMethod extends BaseMethod<ActivatorParameter> implements ComponentMethod
+public class ActivateMethod extends BaseMethod<ActivatorParameter, Object> implements ComponentMethod
 {
 
     protected static final Class<?> COMPONENT_CONTEXT_CLASS = ComponentContext.class;
@@ -59,7 +59,7 @@ public class ActivateMethod extends BaseMethod<ActivatorParameter> implements Co
 
 
     @Override
-    protected Method doFindMethod( Class<?> targetClass, boolean acceptPrivate, boolean acceptPackage, SimpleLogger logger )
+    protected MethodInfo<Object> doFindMethod( Class<?> targetClass, boolean acceptPrivate, boolean acceptPackage, SimpleLogger logger )
         throws SuitableMethodNotAccessibleException, InvocationTargetException
     {
 
@@ -72,7 +72,7 @@ public class ActivateMethod extends BaseMethod<ActivatorParameter> implements Co
                 { COMPONENT_CONTEXT_CLASS }, acceptPrivate, acceptPackage, logger );
             if ( method != null )
             {
-                return method;
+                return new MethodInfo<Object>(method);
             }
         }
         catch ( SuitableMethodNotAccessibleException thrown )
@@ -94,7 +94,7 @@ public class ActivateMethod extends BaseMethod<ActivatorParameter> implements Co
                     {
                         if ( accept( m, acceptPrivate, acceptPackage, returnValue() ) )
                         {
-                            return m;
+                            return new MethodInfo<Object>(m);
                         }
                         suitableMethodNotAccessible = true;
                     }
@@ -102,7 +102,7 @@ public class ActivateMethod extends BaseMethod<ActivatorParameter> implements Co
                     {
                         if ( accept( m, acceptPrivate, acceptPackage, returnValue() ) )
                         {
-                            return m;
+                            return new MethodInfo<Object>(m);
                         }
                         suitableMethodNotAccessible = true;
                     }
@@ -110,7 +110,7 @@ public class ActivateMethod extends BaseMethod<ActivatorParameter> implements Co
                     {
                         if ( accept( m, acceptPrivate, acceptPackage, returnValue() ) )
                         {
-                            return m;
+                            return new MethodInfo<Object>(m);
                         }
                         suitableMethodNotAccessible = true;
                     }
@@ -118,7 +118,7 @@ public class ActivateMethod extends BaseMethod<ActivatorParameter> implements Co
                     {
                         if ( accept( m, acceptPrivate, acceptPackage, returnValue() ) )
                         {
-                            return m;
+                            return new MethodInfo<Object>(m);
                         }
                         suitableMethodNotAccessible = true;
                     }
@@ -126,7 +126,7 @@ public class ActivateMethod extends BaseMethod<ActivatorParameter> implements Co
                     {
                         if ( accept( m, acceptPrivate, acceptPackage, returnValue() ) )
                         {
-                            return m;
+                            return new MethodInfo<Object>(m);
                         }
                         suitableMethodNotAccessible = true;
                     }
@@ -152,7 +152,7 @@ public class ActivateMethod extends BaseMethod<ActivatorParameter> implements Co
                     {
                         if ( accept( m, acceptPrivate, acceptPackage, returnValue() ) )
                         {
-                            return m;
+                            return new MethodInfo<Object>(m);
                         }
                         suitableMethodNotAccessible = true;
                     }
@@ -162,7 +162,7 @@ public class ActivateMethod extends BaseMethod<ActivatorParameter> implements Co
                 {
                     if ( accept( m, acceptPrivate, acceptPackage, returnValue() ) )
                     {
-                        return m;
+                        return new MethodInfo<Object>(m);
                     }
                     suitableMethodNotAccessible = true;
                 }
@@ -178,6 +178,11 @@ public class ActivateMethod extends BaseMethod<ActivatorParameter> implements Co
         return null;
     }
 
+    @Override
+    protected void setTypes(Object types)
+    {
+        // Don't care about types
+    }
 
     boolean isDeactivate()
     {

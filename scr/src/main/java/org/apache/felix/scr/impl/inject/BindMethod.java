@@ -26,10 +26,10 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.felix.scr.impl.helper.ComponentServiceObjectsHelper;
 import org.apache.felix.scr.impl.helper.MethodResult;
 import org.apache.felix.scr.impl.helper.ReadOnlyDictionary;
 import org.apache.felix.scr.impl.helper.SimpleLogger;
+import org.apache.felix.scr.impl.inject.BindMethod.ParamType;
 import org.apache.felix.scr.impl.manager.ComponentContextImpl;
 import org.apache.felix.scr.impl.manager.RefPair;
 import org.apache.felix.scr.impl.metadata.DSVersion;
@@ -40,12 +40,12 @@ import org.osgi.service.log.LogService;
 /**
  * Component method to be invoked on service (un)binding.
  */
-public class BindMethod extends BaseMethod<BindParameters>
+public class BindMethod extends BaseMethod<BindParameters, List<BindMethod.ParamType>>
 implements org.apache.felix.scr.impl.helper.ReferenceMethod
 {
     private final String m_referenceClassName;
 
-    private enum ParamType {
+    enum ParamType {
         serviceReference,
         serviceObjects,
         serviceType,
@@ -83,7 +83,7 @@ implements org.apache.felix.scr.impl.helper.ReferenceMethod
      *      trying to find the requested method.
      */
     @Override
-    protected Method doFindMethod( final Class<?> targetClass,
+    protected MethodInfo<List<ParamType>> doFindMethod(final Class<?> targetClass,
     		final boolean acceptPrivate,
     		final boolean acceptPackage,
     		final SimpleLogger logger )
@@ -119,8 +119,8 @@ implements org.apache.felix.scr.impl.helper.ReferenceMethod
                 {
                     logger.log( LogService.LOG_DEBUG, "doFindMethod: Found Method " + method, null );
                 }
-                m_paramTypes = Collections.singletonList(ParamType.serviceReference);
-                return method;
+                return new MethodInfo<List<ParamType>>(method,
+                    Collections.singletonList(ParamType.serviceReference));
             }
         }
         catch ( SuitableMethodNotAccessibleException ex )
@@ -140,8 +140,8 @@ implements org.apache.felix.scr.impl.helper.ReferenceMethod
 	                {
 	                    logger.log( LogService.LOG_DEBUG, "doFindMethod: Found Method " + method, null );
 	                }
-	                m_paramTypes = Collections.singletonList(ParamType.serviceObjects);
-	                return method;
+                    return new MethodInfo<List<ParamType>>(method,
+                        Collections.singletonList(ParamType.serviceObjects));
 	            }
 	        }
 	        catch ( SuitableMethodNotAccessibleException ex )
@@ -173,8 +173,8 @@ implements org.apache.felix.scr.impl.helper.ReferenceMethod
 	                {
 	                    logger.log( LogService.LOG_DEBUG, "doFindMethod: Found Method " + method, null );
 	                }
-	                m_paramTypes = Collections.singletonList(ParamType.serviceType);
-                    return method;
+                    return new MethodInfo<List<ParamType>>(method,
+                        Collections.singletonList(ParamType.serviceType));
                 }
             }
             catch ( SuitableMethodNotAccessibleException ex )
@@ -192,8 +192,8 @@ implements org.apache.felix.scr.impl.helper.ReferenceMethod
 	                {
 	                    logger.log( LogService.LOG_DEBUG, "doFindMethod: Found Method " + method, null );
 	                }
-                    m_paramTypes = Collections.singletonList(ParamType.serviceType);
-                    return method;
+                    return new MethodInfo<List<ParamType>>(method,
+                        Collections.singletonList(ParamType.serviceType));
                 }
             }
             catch ( SuitableMethodNotAccessibleException ex )
@@ -213,8 +213,8 @@ implements org.apache.felix.scr.impl.helper.ReferenceMethod
     	                {
     	                    logger.log( LogService.LOG_DEBUG, "doFindMethod: Found Method " + method, null );
     	                }
-                        m_paramTypes = Collections.singletonList(ParamType.map);
-                        return method;
+                        return new MethodInfo<List<ParamType>>(method,
+                            Collections.singletonList(ParamType.map));
                     }
                 }
                 catch ( SuitableMethodNotAccessibleException ex )
@@ -240,8 +240,7 @@ implements org.apache.felix.scr.impl.helper.ReferenceMethod
                         List<ParamType> paramTypes = new ArrayList<ParamType>(2);
                         paramTypes.add(ParamType.serviceType);
                         paramTypes.add(ParamType.map);
-                        m_paramTypes = paramTypes;
-                        return method;
+                        return new MethodInfo<List<ParamType>>(method, paramTypes);
                     }
                 }
                 catch ( SuitableMethodNotAccessibleException ex )
@@ -263,8 +262,7 @@ implements org.apache.felix.scr.impl.helper.ReferenceMethod
                         List<ParamType> paramTypes = new ArrayList<ParamType>(2);
                         paramTypes.add(ParamType.serviceType);
                         paramTypes.add(ParamType.map);
-                        m_paramTypes = paramTypes;
-                        return method;
+                        return new MethodInfo<List<ParamType>>(method, paramTypes);
                     }
                 }
                 catch ( SuitableMethodNotAccessibleException ex )
@@ -338,8 +336,7 @@ implements org.apache.felix.scr.impl.helper.ReferenceMethod
             	                {
             	                    logger.log( LogService.LOG_DEBUG, "doFindMethod: Found Method " + m, null );
             	                }
-                                m_paramTypes = paramTypes;
-                                return m;
+                                return new MethodInfo<List<ParamType>>(m, paramTypes);
                             }
                             suitableMethodNotAccessible = true;
                         }
@@ -367,6 +364,12 @@ implements org.apache.felix.scr.impl.helper.ReferenceMethod
 
         // no method found
         return null;
+    }
+
+    @Override
+    protected void setTypes(List<ParamType> types)
+    {
+        m_paramTypes = types;
     }
 
     /**
