@@ -69,7 +69,7 @@ public class StaxParser extends RepositoryParser
         return false;
     }
 
-    public RepositoryImpl parseRepository(InputStream is) throws Exception
+    public RepositoryImpl parseRepository(InputStream is, String repositoryURI) throws Exception
     {
         XMLStreamReader reader = getFactory().createXMLStreamReader(is);
         int event = reader.nextTag();
@@ -77,7 +77,9 @@ public class StaxParser extends RepositoryParser
         {
             throw new Exception("Expected element 'repository' at the root of the document");
         }
-        return parseRepository(reader);
+        RepositoryImpl repo = parseRepository(reader);
+        repo.setURI(repositoryURI);
+        return repo;
     }
 
     public RepositoryImpl parseRepository(Reader r) throws Exception
