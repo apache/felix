@@ -36,7 +36,7 @@ import org.osgi.service.log.LogService;
 /**
  * Component method to be invoked on service (un)binding.
  */
-public abstract class BaseMethod<P>
+public abstract class BaseMethod<P, T>
 {
 
     private final DSVersion dsVersion;
@@ -103,16 +103,18 @@ public abstract class BaseMethod<P>
         return m_componentClass;
     }
 
+    protected abstract void setTypes(T types);
 
-    void setMethod( Method method, SimpleLogger logger )
+    synchronized void setMethod(MethodInfo<T> methodInfo, SimpleLogger logger)
     {
-        this.m_method = method;
+        this.m_method = methodInfo == null ? null : methodInfo.getMethod();
 
-        if ( method != null )
+        if (m_method != null)
         {
+            setTypes(methodInfo.getTypes());
             m_state = Resolved.INSTANCE;
             logger.log( LogService.LOG_DEBUG, "Found {0} method: {1}", new Object[]
-                { getMethodNamePrefix(), method }, null );
+            { getMethodNamePrefix(), m_method }, null);
         }
         else if ( m_methodRequired )
         {
@@ -149,7 +151,7 @@ public abstract class BaseMethod<P>
      *      trying to find the requested method.
      * @param logger
      */
-    private Method findMethod( SimpleLogger logger ) throws InvocationTargetException
+    private MethodInfo<T> findMethod(SimpleLogger logger) throws InvocationTargetException
     {
         boolean acceptPrivate = getDSVersion().isDS11();
         boolean acceptPackage = getDSVersion().isDS11();
@@ -170,7 +172,9 @@ public abstract class BaseMethod<P>
 
             try
             {
-                Method method = doFindMethod( theClass, acceptPrivate, acceptPackage, logger );
+                MethodInfo<T> method = doFindMethod(theClass, acceptPrivate,
+                    acceptPackage,
+                    logger);
                 if ( method != null )
                 {
                     return method;
@@ -207,7 +211,8 @@ public abstract class BaseMethod<P>
     }
 
 
-    protected abstract Method doFindMethod( final Class<?> targetClass, final boolean acceptPrivate,
+    protected abstract MethodInfo<T> doFindMethod(final Class<?> targetClass,
+        final boolean acceptPrivate,
             final boolean acceptPackage, SimpleLogger logger ) throws SuitableMethodNotAccessibleException, InvocationTargetException;
 
 
@@ -515,14 +520,41 @@ public abstract class BaseMethod<P>
         return m_state.methodExists( this, logger );
     }
 
+    protected static final class MethodInfo<T>
+    {
+        private final Method m_method;
+        private final T m_types;
+
+        public MethodInfo(Method m)
+        {
+            this(m, null);
+        }
+
+        public MethodInfo(Method m, T types)
+        {
+            m_method = m;
+            m_types = types;
+        }
+
+        public Method getMethod()
+        {
+            return m_method;
+        }
+
+        public T getTypes()
+        {
+            return m_types;
+        }
+    }
+
     private static interface State
     {
 
-        <P> MethodResult invoke( final BaseMethod<P> baseMethod, final Object componentInstance, final P rawParameter, SimpleLogger logger )
+        <P, T> MethodResult invoke( final BaseMethod<P, T> baseMethod, final Object componentInstance, final P rawParameter, SimpleLogger logger )
             throws InvocationTargetException;
 
 
-        <P> boolean methodExists( final BaseMethod<P> baseMethod, SimpleLogger logger );
+        <P, T> boolean methodExists( final BaseMethod<P, T> baseMethod, SimpleLogger logger );
     }
 
     private static class NotApplicable implements State
@@ -531,13 +563,13 @@ public abstract class BaseMethod<P>
         private static final State INSTANCE = new NotApplicable();
 
 
-        public <P> MethodResult invoke( final BaseMethod<P> baseMethod, final Object componentInstance, final P rawParameter, SimpleLogger logger )
+        public <P, T> MethodResult invoke( final BaseMethod<P, T> baseMethod, final Object componentInstance, final P rawParameter, SimpleLogger logger )
         {
             return MethodResult.VOID;
         }
 
 
-        public <P> boolean methodExists( final BaseMethod<P> baseMethod, SimpleLogger logger )
+        public <P, T> boolean methodExists( final BaseMethod<P, T> baseMethod, SimpleLogger logger )
         {
             return true;
         }
@@ -548,13 +580,14 @@ public abstract class BaseMethod<P>
         private static final State INSTANCE = new NotResolved();
 
 
-        private synchronized <P> void resolve( final BaseMethod<P> baseMethod, SimpleLogger logger )
+        private <P, T> void resolve(final BaseMethod<P, T> baseMethod,
+            SimpleLogger logger)
         {
             logger.log( LogService.LOG_DEBUG, "getting {0}: {1}", new Object[]
                     {baseMethod.getMethodNamePrefix(), baseMethod.getMethodName()}, null );
 
             // resolve the method
-            Method method = null;
+            MethodInfo<T> method = null;
             try
             {
                 method = baseMethod.findMethod( logger );
@@ -569,7 +602,7 @@ public abstract class BaseMethod<P>
         }
 
 
-        public <P> MethodResult invoke( final BaseMethod<P> baseMethod, final Object componentInstance, final P rawParameter, SimpleLogger logger )
+        public <P, T> MethodResult invoke( final BaseMethod<P, T> baseMethod, final Object componentInstance, final P rawParameter, SimpleLogger logger )
             throws InvocationTargetException
         {
             resolve( baseMethod, logger );
@@ -577,7 +610,7 @@ public abstract class BaseMethod<P>
         }
 
 
-        public <P> boolean methodExists( final BaseMethod<P> baseMethod, SimpleLogger logger )
+        public <P, T> boolean methodExists( final BaseMethod<P, T> baseMethod, SimpleLogger logger )
         {
             resolve( baseMethod, logger );
             return baseMethod.getState().methodExists( baseMethod, logger );
@@ -589,7 +622,7 @@ public abstract class BaseMethod<P>
         private static final State INSTANCE = new NotFound();
 
 
-        public <P> MethodResult invoke( final BaseMethod<P> baseMethod, final Object componentInstance, final P rawParameter, SimpleLogger logger )
+        public <P, T> MethodResult invoke( final BaseMethod<P, T> baseMethod, final Object componentInstance, final P rawParameter, SimpleLogger logger )
         {
             // 112.3.1 If the method is not found , SCR must log an error
             // message with the log service, if present, and ignore the
@@ -600,7 +633,7 @@ public abstract class BaseMethod<P>
         }
 
 
-        public <P> boolean methodExists( final BaseMethod<P> baseMethod, SimpleLogger logger )
+        public <P, T> boolean methodExists( final BaseMethod<P, T> baseMethod, SimpleLogger logger )
         {
             return false;
         }
@@ -611,14 +644,14 @@ public abstract class BaseMethod<P>
         private static final State INSTANCE = new Resolved();
 
 
-        public <P> MethodResult invoke( final BaseMethod<P> baseMethod, final Object componentInstance, final P rawParameter, SimpleLogger logger )
+        public <P, T> MethodResult invoke( final BaseMethod<P, T> baseMethod, final Object componentInstance, final P rawParameter, SimpleLogger logger )
             throws InvocationTargetException
         {
             return baseMethod.invokeMethod( componentInstance, rawParameter, logger );
         }
 
 
-        public <P> boolean methodExists( final BaseMethod<P> baseMethod, SimpleLogger logger )
+        public <P, T> boolean methodExists( final BaseMethod<P, T> baseMethod, SimpleLogger logger )
         {
             return true;
         }
