@@ -26,10 +26,8 @@ import java.security.AccessController;
 import java.security.PrivilegedAction;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
-import java.util.TreeMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.CopyOnWriteArraySet;
 
@@ -73,17 +71,6 @@ public class FieldHandler
 
     /** State handling. */
     private volatile State state;
-
-    /** Mapping of ref pairs to value bound */
-    private final Map<RefPair<?, ?>, Object> boundValues = new TreeMap<RefPair<?,?>, Object>(
-        new Comparator<RefPair<?, ?>>()
-        {
-
-            public int compare(final RefPair<?, ?> o1, final RefPair<?, ?> o2)
-            {
-                return o1.getRef().compareTo(o2.getRef());
-            }
-        });
 
     /**
      * Create a new field handler
@@ -428,21 +415,25 @@ public class FieldHandler
             this.ref = ref;
         }
 
+        @Override
         public Object getKey()
         {
             return this.key;
         }
 
+        @Override
         public Object getValue()
         {
             return this.value;
         }
 
+        @Override
         public Object setValue(final Object value)
         {
             throw new UnsupportedOperationException();
         }
 
+        @Override
         public int compareTo(final Map.Entry<?, ?> o)
         {
             if ( o == null )
@@ -551,10 +542,10 @@ public class FieldHandler
         return true;
     }
 
-    private Collection<Object> getReplaceCollection()
+    private Collection<Object> getReplaceCollection(final BindParameters bp)
     {
         final List<Object> objects = new ArrayList<Object>();
-        for(final Object val : this.boundValues.values())
+        for(final Object val : bp.getComponentContext().getBoundValues(metadata.getName()).values())
         {
             objects.add(val);
         }
@@ -580,12 +571,12 @@ public class FieldHandler
                 if ( this.metadata.isOptional() && !this.metadata.isStatic() )
                 {
                     // we only reset if it was previously set with this value
-                    if ( this.boundValues.size() == 1 )
+                    if ( bp.getComponentContext().getBoundValues(metadata.getName()).size() == 1 )
                     {
                         this.setFieldValue(componentInstance, null);
                     }
                 }
-                this.boundValues.remove(refPair);
+                bp.getComponentContext().getBoundValues(metadata.getName()).remove(refPair);
             }
             // updated needs only be done, if the value type is map or tuple
             // If it's a dynamic reference, the value can be updated
@@ -600,7 +591,7 @@ public class FieldHandler
             		}
                     final Object obj = getValue(key, refPair);
                     this.setFieldValue(componentInstance, obj);
-                    this.boundValues.put(refPair, obj);
+                    bp.getComponentContext().getBoundValues(metadata.getName()).put(refPair, obj);
             	}
             }
             // bind needs always be done
@@ -608,7 +599,7 @@ public class FieldHandler
             {
                 final Object obj = getValue(key, refPair);
                 this.setFieldValue(componentInstance, obj);
-                this.boundValues.put(refPair, obj);
+                bp.getComponentContext().getBoundValues(metadata.getName()).put(refPair, obj);
             }
         }
         else
@@ -619,10 +610,10 @@ public class FieldHandler
             if ( mType == METHOD_TYPE.BIND )
             {
                 final Object obj = getValue(key, refPair);
-                this.boundValues.put(refPair, obj);
+                bp.getComponentContext().getBoundValues(metadata.getName()).put(refPair, obj);
                 if ( metadata.isReplace() )
                 {
-                    this.setFieldValue(componentInstance, getReplaceCollection());
+                    this.setFieldValue(componentInstance, getReplaceCollection(bp));
                 }
                 else
                 {
@@ -636,10 +627,10 @@ public class FieldHandler
             {
                 if ( !metadata.isStatic() )
                 {
-                    final Object obj = this.boundValues.remove(refPair);
+                    final Object obj = bp.getComponentContext().getBoundValues(metadata.getName()).remove(refPair);
                     if ( metadata.isReplace() )
                     {
-                        this.setFieldValue(componentInstance, getReplaceCollection());
+                        this.setFieldValue(componentInstance, getReplaceCollection(bp));
                     }
                     else
                     {
@@ -657,11 +648,11 @@ public class FieldHandler
                     if ( !this.metadata.isStatic() )
                     {
 	                    final Object obj = getValue(key, refPair);
-	                    final Object oldObj = this.boundValues.put(refPair, obj);
+	                    final Object oldObj = bp.getComponentContext().getBoundValues(metadata.getName()).put(refPair, obj);
 
 	                    if ( metadata.isReplace() )
 	                    {
-	                        this.setFieldValue(componentInstance, getReplaceCollection());
+	                        this.setFieldValue(componentInstance, getReplaceCollection(bp));
 	                    }
 	                    else
 	                    {
@@ -783,6 +774,7 @@ public class FieldHandler
     {
         AccessController.doPrivileged( new PrivilegedAction<Object>()
         {
+            @Override
             public Object run()
             {
                 field.setAccessible( true );
@@ -848,6 +840,7 @@ public class FieldHandler
             handler.setField( field, logger );
         }
 
+        @Override
         public MethodResult invoke( final FieldHandler handler,
                 final METHOD_TYPE mType,
                 final Object componentInstance,
@@ -859,6 +852,7 @@ public class FieldHandler
             return handler.state.invoke( handler, mType, componentInstance, rawParameter, logger );
         }
 
+        @Override
         public boolean fieldExists( final FieldHandler handler, final SimpleLogger logger)
         {
             resolve( handler, logger );
@@ -873,6 +867,7 @@ public class FieldHandler
     {
         private static final State INSTANCE = new NotFound();
 
+        @Override
         public MethodResult invoke( final FieldHandler handler,
                 final METHOD_TYPE mType,
                 final Object componentInstance,
@@ -884,6 +879,7 @@ public class FieldHandler
             return null;
         }
 
+        @Override
         public boolean fieldExists( final FieldHandler handler, final SimpleLogger logger)
         {
             return false;
@@ -897,6 +893,7 @@ public class FieldHandler
     {
         private static final State INSTANCE = new Resolved();
 
+        @Override
         public MethodResult invoke( final FieldHandler handler,
                 final METHOD_TYPE mType,
                 final Object componentInstance,
@@ -907,6 +904,7 @@ public class FieldHandler
             return handler.updateField( mType, componentInstance, rawParameter, logger );
         }
 
+        @Override
         public boolean fieldExists( final FieldHandler handler, final SimpleLogger logger)
         {
             return true;
@@ -932,6 +930,7 @@ public class FieldHandler
             this.handler = handler;
         }
 
+        @Override
         public MethodResult invoke(Object componentInstance,
                                    ComponentContextImpl<?> componentContext,
                                    RefPair<?, ?> refPair,
@@ -970,6 +969,7 @@ public class FieldHandler
             return methodCallFailureResult;
         }
 
+        @Override
         public <S, T> boolean getServiceObject(final ComponentContextImpl<S> key,
                 final RefPair<S, T> refPair,
                 final BundleContext context,
@@ -1013,6 +1013,7 @@ public class FieldHandler
         return new InitReferenceMethod()
         {
 
+            @Override
             public boolean init(final Object componentInstance, final SimpleLogger logger)
             {
                 if ( fieldExists( logger ) )
