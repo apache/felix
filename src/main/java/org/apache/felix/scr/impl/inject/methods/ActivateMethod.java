@@ -38,7 +38,7 @@ import org.apache.felix.scr.impl.metadata.DSVersion;
 import org.osgi.service.log.LogService;
 
 
-public class ActivateMethod extends BaseMethod<ActivatorParameter> implements LifecycleMethod
+public class ActivateMethod extends BaseMethod<ActivatorParameter, Object> implements LifecycleMethod
 {
 
     protected final boolean m_supportsInterfaces;
@@ -56,7 +56,7 @@ public class ActivateMethod extends BaseMethod<ActivatorParameter> implements Li
 
 
     @Override
-    protected Method doFindMethod( Class<?> targetClass, boolean acceptPrivate, boolean acceptPackage, SimpleLogger logger )
+    protected MethodInfo<Object> doFindMethod( Class<?> targetClass, boolean acceptPrivate, boolean acceptPackage, SimpleLogger logger )
         throws SuitableMethodNotAccessibleException, InvocationTargetException
     {
 
@@ -69,7 +69,7 @@ public class ActivateMethod extends BaseMethod<ActivatorParameter> implements Li
                 { ClassUtils.COMPONENT_CONTEXT_CLASS }, acceptPrivate, acceptPackage, logger );
             if ( method != null )
             {
-                return method;
+                return new MethodInfo<Object>(method);
             }
         }
         catch ( SuitableMethodNotAccessibleException thrown )
@@ -91,7 +91,7 @@ public class ActivateMethod extends BaseMethod<ActivatorParameter> implements Li
                     {
                         if ( accept( m, acceptPrivate, acceptPackage, returnValue() ) )
                         {
-                            return m;
+                            return new MethodInfo<Object>(m);
                         }
                         suitableMethodNotAccessible = true;
                     }
@@ -99,7 +99,7 @@ public class ActivateMethod extends BaseMethod<ActivatorParameter> implements Li
                     {
                         if ( accept( m, acceptPrivate, acceptPackage, returnValue() ) )
                         {
-                            return m;
+                            return new MethodInfo<Object>(m);
                         }
                         suitableMethodNotAccessible = true;
                     }
@@ -107,7 +107,7 @@ public class ActivateMethod extends BaseMethod<ActivatorParameter> implements Li
                     {
                         if ( accept( m, acceptPrivate, acceptPackage, returnValue() ) )
                         {
-                            return m;
+                            return new MethodInfo<Object>(m);
                         }
                         suitableMethodNotAccessible = true;
                     }
@@ -115,7 +115,7 @@ public class ActivateMethod extends BaseMethod<ActivatorParameter> implements Li
                     {
                         if ( accept( m, acceptPrivate, acceptPackage, returnValue() ) )
                         {
-                            return m;
+                            return new MethodInfo<Object>(m);
                         }
                         suitableMethodNotAccessible = true;
                     }
@@ -123,7 +123,7 @@ public class ActivateMethod extends BaseMethod<ActivatorParameter> implements Li
                     {
                         if ( accept( m, acceptPrivate, acceptPackage, returnValue() ) )
                         {
-                            return m;
+                            return new MethodInfo<Object>(m);
                         }
                         suitableMethodNotAccessible = true;
                     }
@@ -149,7 +149,7 @@ public class ActivateMethod extends BaseMethod<ActivatorParameter> implements Li
                     {
                         if ( accept( m, acceptPrivate, acceptPackage, returnValue() ) )
                         {
-                            return m;
+                            return new MethodInfo<Object>(m);
                         }
                         suitableMethodNotAccessible = true;
                     }
@@ -159,7 +159,7 @@ public class ActivateMethod extends BaseMethod<ActivatorParameter> implements Li
                 {
                     if ( accept( m, acceptPrivate, acceptPackage, returnValue() ) )
                     {
-                        return m;
+                        return new MethodInfo<Object>(m);
                     }
                     suitableMethodNotAccessible = true;
                 }
@@ -175,6 +175,11 @@ public class ActivateMethod extends BaseMethod<ActivatorParameter> implements Li
         return null;
     }
 
+    @Override
+    protected void setTypes(Object types)
+    {
+        // Don't care about types
+    }
 
     boolean isDeactivate()
     {
