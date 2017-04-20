@@ -40,7 +40,7 @@ import org.osgi.service.log.LogService;
  * Component method to be invoked on service (un)binding.
  * @param <S>
  */
-public class BindMethod extends BaseMethod<BindParameters>
+public class BindMethod extends BaseMethod<BindParameters, List<ValueUtils.ValueType>>
 implements org.apache.felix.scr.impl.inject.ReferenceMethod
 {
     private final String m_referenceClassName;
@@ -76,7 +76,7 @@ implements org.apache.felix.scr.impl.inject.ReferenceMethod
      *      trying to find the requested method.
      */
     @Override
-    protected Method doFindMethod( final Class<?> targetClass,
+    protected MethodInfo<List<ValueUtils.ValueType>> doFindMethod( final Class<?> targetClass,
             final boolean acceptPrivate,
             final boolean acceptPackage,
             final SimpleLogger logger )
@@ -112,8 +112,7 @@ implements org.apache.felix.scr.impl.inject.ReferenceMethod
                 {
                     logger.log( LogService.LOG_DEBUG, "doFindMethod: Found Method " + method, null );
                 }
-                m_paramTypes = Collections.singletonList(ValueUtils.ValueType.ref_serviceReference);
-                return method;
+                return new MethodInfo<List<ValueUtils.ValueType>>(method, Collections.singletonList(ValueUtils.ValueType.ref_serviceReference));
             }
         }
         catch ( SuitableMethodNotAccessibleException ex )
@@ -133,8 +132,7 @@ implements org.apache.felix.scr.impl.inject.ReferenceMethod
                     {
                         logger.log( LogService.LOG_DEBUG, "doFindMethod: Found Method " + method, null );
                     }
-                    m_paramTypes = Collections.singletonList(ValueUtils.ValueType.ref_serviceObjects);
-                    return method;
+                    return new MethodInfo<List<ValueUtils.ValueType>>(method, Collections.singletonList(ValueUtils.ValueType.ref_serviceObjects));
                 }
             }
             catch ( SuitableMethodNotAccessibleException ex )
@@ -166,8 +164,8 @@ implements org.apache.felix.scr.impl.inject.ReferenceMethod
                     {
                         logger.log( LogService.LOG_DEBUG, "doFindMethod: Found Method " + method, null );
                     }
-                    m_paramTypes = Collections.singletonList(ValueUtils.ValueType.ref_serviceType);
-                    return method;
+                    return new MethodInfo<List<ValueUtils.ValueType>>(method,
+                        Collections.singletonList(ValueUtils.ValueType.ref_serviceType));
                 }
             }
             catch ( SuitableMethodNotAccessibleException ex )
@@ -185,8 +183,8 @@ implements org.apache.felix.scr.impl.inject.ReferenceMethod
                     {
                         logger.log( LogService.LOG_DEBUG, "doFindMethod: Found Method " + method, null );
                     }
-                    m_paramTypes = Collections.singletonList(ValueUtils.ValueType.ref_serviceType);
-                    return method;
+                    return new MethodInfo<List<ValueUtils.ValueType>>(method,
+                        Collections.singletonList(ValueUtils.ValueType.ref_serviceType));
                 }
             }
             catch ( SuitableMethodNotAccessibleException ex )
@@ -206,8 +204,8 @@ implements org.apache.felix.scr.impl.inject.ReferenceMethod
                         {
                             logger.log( LogService.LOG_DEBUG, "doFindMethod: Found Method " + method, null );
                         }
-                        m_paramTypes = Collections.singletonList(ValueUtils.ValueType.ref_map);
-                        return method;
+                        return new MethodInfo<List<ValueUtils.ValueType>>(method,
+                            Collections.singletonList(ValueUtils.ValueType.ref_map));
                     }
                 }
                 catch ( SuitableMethodNotAccessibleException ex )
@@ -233,8 +231,7 @@ implements org.apache.felix.scr.impl.inject.ReferenceMethod
                         List<ValueUtils.ValueType> paramTypes = new ArrayList<ValueUtils.ValueType>(2);
                         paramTypes.add(ValueUtils.ValueType.ref_serviceType);
                         paramTypes.add(ValueUtils.ValueType.ref_map);
-                        m_paramTypes = paramTypes;
-                        return method;
+                        return new MethodInfo<List<ValueUtils.ValueType>>(method, paramTypes);
                     }
                 }
                 catch ( SuitableMethodNotAccessibleException ex )
@@ -256,8 +253,8 @@ implements org.apache.felix.scr.impl.inject.ReferenceMethod
                         List<ValueUtils.ValueType> paramTypes = new ArrayList<ValueUtils.ValueType>(2);
                         paramTypes.add(ValueUtils.ValueType.ref_serviceType);
                         paramTypes.add(ValueUtils.ValueType.ref_map);
-                        m_paramTypes = paramTypes;
-                        return method;
+                        return new MethodInfo<List<ValueUtils.ValueType>>(method,
+                            paramTypes);
                     }
                 }
                 catch ( SuitableMethodNotAccessibleException ex )
@@ -348,8 +345,7 @@ implements org.apache.felix.scr.impl.inject.ReferenceMethod
                                 {
                                     logger.log( LogService.LOG_DEBUG, "doFindMethod: Found Method " + m, null );
                                 }
-                                m_paramTypes = paramTypes;
-                                return m;
+                                return new MethodInfo<List<ValueUtils.ValueType>>(m, paramTypes);
                             }
                             suitableMethodNotAccessible = true;
                         }
@@ -377,6 +373,12 @@ implements org.apache.felix.scr.impl.inject.ReferenceMethod
 
         // no method found
         return null;
+    }
+
+    @Override
+    protected void setTypes(List<ValueUtils.ValueType> types)
+    {
+        m_paramTypes = types;
     }
 
     /**
