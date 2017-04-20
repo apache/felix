@@ -102,7 +102,8 @@ public class ResourceImpl implements Resource
 
     public String getPresentationName()
     {
-        return (String) m_map.get(PRESENTATION_NAME);
+        String pres = (String) m_map.get(PRESENTATION_NAME);
+        return (pres!=null && !pres.isEmpty())? pres : toString();
     }
 
     public String getSymbolicName()
