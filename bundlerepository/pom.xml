@@ -153,6 +153,7 @@
             <Export-Service>org.apache.felix.bundlerepository.RepositoryAdmin,org.osgi.service.obr.RepositoryAdmin</Export-Service>
             <_versionpolicy>[$(version;==;$(@)),$(version;+;$(@)))</_versionpolicy>
             <Include-Resource>META-INF/LICENSE=LICENSE,META-INF/LICENSE.kxml2=LICENSE.kxml2,META-INF/NOTICE=NOTICE,META-INF/DEPENDENCIES=DEPENDENCIES</Include-Resource>
+            <Provide-Capability>osgi.implementation;osgi.implementation="osgi.repository";uses:="org.osgi.service.repository";version:Version="1.1",osgi.service;objectClass:List&lt;String&gt;="org.osgi.service.repository.Repository";uses:="org.osgi.service.repository"</Provide-Capability>
           </instructions>
         </configuration>
       </plugin>
