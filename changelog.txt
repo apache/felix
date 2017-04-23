@@ -5,6 +5,7 @@ Changes from 2.0.8 to 2.0.10
 ** Bug
     * [FELIX-5572] Reference target filter fails when using field strategy for multiple cardinality reference with multiple component instances
     * [FELIX-5615] Global lock in BaseMethod.NotResolved::resolve method can cause deadlock
+    * [FELIX-5613] SCR bundle fails to start without Config Admin
 
 
 Changes from 2.0.6 to 2.0.8
