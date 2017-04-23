@@ -40,13 +40,11 @@ import org.osgi.framework.ServiceRegistration;
 import org.osgi.service.cm.Configuration;
 import org.osgi.service.cm.ConfigurationAdmin;
 import org.osgi.service.cm.ConfigurationEvent;
-import org.osgi.service.cm.ConfigurationException;
 import org.osgi.service.cm.ConfigurationListener;
 import org.osgi.service.cm.ConfigurationPermission;
-import org.osgi.service.cm.ManagedService;
 import org.osgi.service.log.LogService;
 
-public abstract class RegionConfigurationSupport implements ConfigurationListener
+public abstract class RegionConfigurationSupport
 {
 
     private final SimpleLogger logger;
@@ -79,8 +77,19 @@ public abstract class RegionConfigurationSupport implements ConfigurationListene
         Dictionary<String, Object> props = new Hashtable<String, Object>();
         props.put( Constants.SERVICE_DESCRIPTION, "Declarative Services Configuration Support Listener" );
         props.put( Constants.SERVICE_VENDOR, "The Apache Software Foundation" );
-        this.m_registration = caBundleContext.registerService( ConfigurationListener.class, this, props );
 
+        // If RegionConfigurationSupport *directly* implements ConfigurationListener then we get NoClassDefFoundError
+        // when SCR is started without a wiring to an exporter of Config Admin API. This construction allows the
+        // class loading exception to be caught and confined.
+        ConfigurationListener serviceDelegator = new ConfigurationListener() 
+        {
+            @Override
+            public void configurationEvent(ConfigurationEvent event) 
+            {
+                RegionConfigurationSupport.this.configurationEvent(event);
+            }
+        };
+        this.m_registration = caBundleContext.registerService(ConfigurationListener.class, serviceDelegator, props );
     }
 
     public Long getBundleId()
