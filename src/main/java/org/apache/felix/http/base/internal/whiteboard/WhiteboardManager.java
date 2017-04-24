@@ -606,6 +606,7 @@ public final class WhiteboardManager
                     {
                         this.failureStateHandler.addFailure(info, FAILURE_REASON_VALIDATION_FAILED);
                     }
+                    updateRuntimeChangeCount();
                     return true;
                 }
                 synchronized ( this.contextMap )
@@ -698,6 +699,7 @@ public final class WhiteboardManager
                             {
                                 iter.remove();
                                 this.preprocessorHandlers = newList;
+                                updateRuntimeChangeCount();
                                 return;
                             }
                         }
