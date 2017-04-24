@@ -664,14 +664,34 @@ public final class WhiteboardManager
     private int checkForServletRegistrationInHttpServiceContext(final WhiteboardContextHandler h,
             final WhiteboardServiceInfo<?> info)
     {
-        if ( info instanceof ServletInfo || info instanceof ResourceInfo )
+        if ( h.getContextInfo().getServiceId() == HttpServiceFactory.HTTP_SERVICE_CONTEXT_SERVICE_ID )
         {
-            if ( h.getContextInfo().getServiceId() == HttpServiceFactory.HTTP_SERVICE_CONTEXT_SERVICE_ID )
-            {
+        	if ( info instanceof ResourceInfo )
+        	{
                 this.failureStateHandler.addFailure(info, HttpServiceFactory.HTTP_SERVICE_CONTEXT_SERVICE_ID, DTOConstants.FAILURE_REASON_VALIDATION_FAILED);
 
                 return DTOConstants.FAILURE_REASON_VALIDATION_FAILED;
             }
+        	else if ( info instanceof ServletInfo )
+        	{
+        		final ServletInfo servletInfo = (ServletInfo)info;
+        		final boolean nameIsEmpty = servletInfo.getName() == null || servletInfo.getName().isEmpty();
+        		final boolean errorPageIsEmpty = servletInfo.getErrorPage() == null || servletInfo.getErrorPage().length == 0;
+        		final boolean patternIsEmpty = servletInfo.getPatterns() == null || servletInfo.getPatterns().length == 0;
+        		if ( !nameIsEmpty || !errorPageIsEmpty )
+        		{
+        			if ( patternIsEmpty ) 
+        			{
+        				// no pattern, so this is valid
+        				return -1;
+        			}
+        		}
+
+        		// pattern is invalid, regardless of the other values
+                this.failureStateHandler.addFailure(info, HttpServiceFactory.HTTP_SERVICE_CONTEXT_SERVICE_ID, DTOConstants.FAILURE_REASON_VALIDATION_FAILED);
+
+                return DTOConstants.FAILURE_REASON_VALIDATION_FAILED;        		
+        	}
         }
 
         return -1;
