@@ -139,6 +139,16 @@ public class Configurator {
         });
     }
 
+    public void configAdminAdded() {
+        queue.enqueue(new Runnable() {
+
+            @Override
+            public void run() {
+                process();
+            }
+        });
+    }
+
     private String getBundleIdentity(final Bundle bundle) {
         if ( bundle.getSymbolicName() == null ) {
             return bundle.getBundleId() + " (" + bundle.getLocation() + ")";
@@ -323,15 +333,13 @@ public class Configurator {
         if ( localCoordinator != null ) {
             coordination = CoordinatorUtil.getCoordination(localCoordinator);
         }
-        boolean noRetryNeeded = true;
+
         try {
             for(final String pid : state.getPids()) {
                 final ConfigList configList = state.getConfigurations(pid);
 
                 if ( configList.hasChanges() ) {
-                    if ( !process(configList) ) {
-                        noRetryNeeded = false;
-                    }
+                    process(configList);
                     State.writeState(this.bundleContext, state);
                 }
             }
@@ -339,9 +347,6 @@ public class Configurator {
             if ( coordination != null ) {
                 CoordinatorUtil.endCoordination(coordination);
             }
-        }
-        if ( !noRetryNeeded ) {
-            // TODO
         }
     }
 

@@ -115,6 +115,8 @@ public class ServicesListener {
                 configurator.setCoordinator(coordinator);
                 if ( isNew ) {
                     configurator.start();
+                } else {
+                    configurator.configAdminAdded();
                 }
             } else {
                 if ( configurator != null ) {
