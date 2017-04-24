@@ -59,6 +59,7 @@ public class Util {
     /**
      * Check if the bundle contains configurations for the configurator
      * @param bundle The bundle
+     * @param configuratorBundleId The bundle id of the configurator bundle to check the wiring
      * @return Set of locations or {@code null}
      */
     @SuppressWarnings("unchecked")

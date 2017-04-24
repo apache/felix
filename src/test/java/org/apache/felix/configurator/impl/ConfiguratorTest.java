@@ -38,6 +38,7 @@ import org.mockito.InOrder;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
+import org.osgi.framework.ServiceReference;
 import org.osgi.framework.wiring.BundleRequirement;
 import org.osgi.framework.wiring.BundleWire;
 import org.osgi.framework.wiring.BundleWiring;
@@ -54,19 +55,29 @@ public class ConfiguratorTest {
 
     private ConfigurationAdmin configurationAdmin;
 
+    private ServiceReference<ConfigurationAdmin> caRef;
+
+    @SuppressWarnings("unchecked")
     @Before public void setup() throws IOException {
         bundle = mock(Bundle.class);
         when(bundle.getBundleId()).thenReturn(42L);
         bundleContext = mock(BundleContext.class);
+        when(bundle.getBundleContext()).thenReturn(bundleContext);
         when(bundleContext.getBundle()).thenReturn(bundle);
+        when(bundleContext.getBundle(Constants.SYSTEM_BUNDLE_LOCATION)).thenReturn(bundle);
+        when(bundleContext.getBundle(42)).thenReturn(bundle);
         when(bundleContext.getBundles()).thenReturn(new Bundle[0]);
         when(bundleContext.getDataFile("binaries" + File.separatorChar + ".check")).thenReturn(Files.createTempDirectory("test").toFile());
-        configurationAdmin = mock(ConfigurationAdmin.class);
+        caRef = mock(ServiceReference.class);
+        when(caRef.getBundle()).thenReturn(bundle);
 
-        configurator = new Configurator(bundleContext, configurationAdmin);
+        configurationAdmin = mock(ConfigurationAdmin.class);
+        when(bundleContext.getService(caRef)).thenReturn(configurationAdmin);
+
+        configurator = new Configurator(bundleContext, Collections.singletonList(caRef));
     }
 
-    private Bundle setupBundle(final long id) {
+    private Bundle setupBundle(final long id) throws Exception {
         final Bundle b = mock(Bundle.class);
         when(b.getBundleId()).thenReturn(id);
         when(b.getLastModified()).thenReturn(5L);
@@ -83,6 +94,10 @@ public class ConfiguratorTest {
         urls.add(this.getClass().getResource("/bundles/" + id + ".json"));
         when(b.findEntries("OSGI-INF/configurator", "*.json", false)).thenReturn(urls.elements());
 
+        final BundleContext bContext = mock(BundleContext.class);
+        when(b.getBundleContext()).thenReturn(bContext);
+        when(bContext.getServiceReferences(ConfigurationAdmin.class, null)).thenReturn(Collections.singleton(caRef));
+        when(bundleContext.getBundle(id)).thenReturn(b);
         return b;
     }
 

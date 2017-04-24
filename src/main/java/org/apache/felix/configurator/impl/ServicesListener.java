@@ -18,6 +18,10 @@
  */
 package org.apache.felix.configurator.impl;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+
 import org.apache.felix.configurator.impl.logger.SystemLogger;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
@@ -26,6 +30,8 @@ import org.osgi.framework.ServiceEvent;
 import org.osgi.framework.ServiceListener;
 import org.osgi.framework.ServiceReference;
 import org.osgi.service.cm.ConfigurationAdmin;
+import org.osgi.util.tracker.ServiceTracker;
+import org.osgi.util.tracker.ServiceTrackerCustomizer;
 
 /**
  * The {@code ServicesListener} listens for the required services
@@ -37,8 +43,8 @@ public class ServicesListener {
     /** The bundle context. */
     private final BundleContext bundleContext;
 
-    /** The listener for the config admin. */
-    private final Listener caListener;
+    /** The service tracker for configuration admin */
+    private final ServiceTracker<ConfigurationAdmin, ServiceReference<ConfigurationAdmin>> caTracker;
 
     /** The listener for the coordinator. */
     private final Listener coordinatorListener;
@@ -46,14 +52,45 @@ public class ServicesListener {
     /** The current configurator. */
     private volatile Configurator configurator;
 
+    private final List<ServiceReference<ConfigurationAdmin>> configAdminReferences;
+
     /**
      * Start listeners
      */
     public ServicesListener(final BundleContext bundleContext) {
         this.bundleContext = bundleContext;
-        this.caListener = new Listener(ConfigurationAdmin.class.getName());
+        this.configAdminReferences = new ArrayList<>();
+        this.caTracker = new ServiceTracker<>(bundleContext, ConfigurationAdmin.class,
+
+                new ServiceTrackerCustomizer<ConfigurationAdmin, ServiceReference<ConfigurationAdmin>>() {
+
+            @Override
+            public ServiceReference<ConfigurationAdmin> addingService(final ServiceReference<ConfigurationAdmin> reference) {
+                synchronized ( configAdminReferences ) {
+                    configAdminReferences.add(reference);
+                    Collections.sort(configAdminReferences);
+                }
+                notifyChange();
+                return reference;
+            }
+
+            @Override
+            public void modifiedService(final ServiceReference<ConfigurationAdmin> reference,
+                    final ServiceReference<ConfigurationAdmin> service) {
+                // nothing to do
+            }
+
+            @Override
+            public void removedService(final ServiceReference<ConfigurationAdmin> reference,
+                    final ServiceReference<ConfigurationAdmin> service) {
+                synchronized ( configAdminReferences ) {
+                    configAdminReferences.remove(reference);
+                }
+                notifyChange();
+            }
+        });
         this.coordinatorListener = new Listener("org.osgi.service.coordinator.Coordinator");
-        this.caListener.start();
+        this.caTracker.open();
         this.coordinatorListener.start();
         SystemLogger.debug("Started services listener for configurator.");
     }
@@ -62,27 +99,29 @@ public class ServicesListener {
      * Notify of service changes from the listeners.
      * If all services are available, start
      */
-    public synchronized void notifyChange() {
-        // check if all services are available
-        final ConfigurationAdmin ca = (ConfigurationAdmin)this.caListener.getService();
-        final Object coordinator = this.coordinatorListener.getService();
-        SystemLogger.debug("Services updated for configurator: " + ca + " - " + coordinator);
+    public void notifyChange() {
+        synchronized ( configAdminReferences ) {
+            // check if there is at least a single configuration admin
+            final boolean hasConfigAdmin = !this.configAdminReferences.isEmpty();
+            final Object coordinator = this.coordinatorListener.getService();
+            SystemLogger.debug("Services updated for configurator: " + configAdminReferences + " - " + coordinator);
 
-        if ( ca != null ) {
-            boolean isNew = configurator == null;
-            if ( isNew ) {
-                SystemLogger.debug("Starting new configurator");
-                configurator = new Configurator(this.bundleContext, ca);
-            }
-            configurator.setCoordinator(coordinator);
-            if ( isNew ) {
-                configurator.start();
-            }
-        } else {
-            if ( configurator != null ) {
-                SystemLogger.debug("Stopping configurator");
-                configurator.shutdown();
-                configurator = null;
+            if ( hasConfigAdmin ) {
+                boolean isNew = configurator == null;
+                if ( isNew ) {
+                    SystemLogger.debug("Starting new configurator");
+                    configurator = new Configurator(this.bundleContext, this.configAdminReferences);
+                }
+                configurator.setCoordinator(coordinator);
+                if ( isNew ) {
+                    configurator.start();
+                }
+            } else {
+                if ( configurator != null ) {
+                    SystemLogger.debug("Stopping configurator");
+                    configurator.shutdown();
+                    configurator = null;
+                }
             }
         }
     }
@@ -91,7 +130,7 @@ public class ServicesListener {
      * Deactivate this listener.
      */
     public void deactivate() {
-        this.caListener.deactivate();
+        this.caTracker.close();
         this.coordinatorListener.deactivate();
         if ( configurator != null ) {
             configurator.shutdown();

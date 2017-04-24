@@ -43,13 +43,15 @@ public class State extends AbstractState implements Serializable {
 
     private static final String FILE_NAME = "state.ser";
 
-    private final Map<Long, Long> bundlesLastModified = new HashMap<Long, Long>();
+    private final Map<Long, Long> bundlesLastModified = new HashMap<>();
+
+    private final Map<Long, Long> bundlesConfigAdminBundleId = new HashMap<>();
 
     private final Set<String> environments = new HashSet<>();
 
     private volatile Set<String> initialHashes;
 
-    volatile transient boolean envsChanged = true;
+    private volatile transient boolean envsChanged = true;
 
     /**
      * Serialize the object
@@ -120,6 +122,18 @@ public class State extends AbstractState implements Serializable {
 
     public void removeLastModified(final long bundleId) {
         this.bundlesLastModified.remove(bundleId);
+    }
+
+    public Long getConfigAdminBundleId(final long bundleId) {
+        return this.bundlesConfigAdminBundleId.get(bundleId);
+    }
+
+    public void setConfigAdminBundleId(final long bundleId, final long lastModified) {
+        this.bundlesConfigAdminBundleId.put(bundleId, lastModified);
+    }
+
+    public void removeConfigAdminBundleId(final long bundleId) {
+        this.bundlesConfigAdminBundleId.remove(bundleId);
     }
 
     public Set<Long> getKnownBundleIds() {
