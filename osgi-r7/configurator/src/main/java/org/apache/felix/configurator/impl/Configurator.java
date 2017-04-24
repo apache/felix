@@ -389,36 +389,41 @@ public class Configurator {
         // if there is a configuration to activate, we can directly activate it
         // without deactivating (reducing the changes of the configuration from two
         // to one)
+        boolean noRetryNeeded = true;
         if ( toActivate != null && toActivate.getState() == ConfigState.INSTALL ) {
-            activate(configList, toActivate);
+            noRetryNeeded = activate(configList, toActivate);
         }
         if ( toActivate == null && toDeactivate != null ) {
-            deactivate(configList, toDeactivate);
+            noRetryNeeded = deactivate(configList, toDeactivate);
         }
 
-        // remove all uninstall(ed) configurations
-        final Iterator<Config> iter = configList.iterator();
-        boolean foundInstalled = false;
-        while ( iter.hasNext() ) {
-            final Config cfg = iter.next();
-            if ( cfg.getState() == ConfigState.UNINSTALL || cfg.getState() == ConfigState.UNINSTALLED ) {
-                if ( cfg.getFiles() != null ) {
-                    for(final File f : cfg.getFiles()) {
-                        f.delete();
+        if ( noRetryNeeded ) {
+            // remove all uninstall(ed) configurations
+            final Iterator<Config> iter = configList.iterator();
+            boolean foundInstalled = false;
+            while ( iter.hasNext() ) {
+                final Config cfg = iter.next();
+                if ( cfg.getState() == ConfigState.UNINSTALL || cfg.getState() == ConfigState.UNINSTALLED ) {
+                    if ( cfg.getFiles() != null ) {
+                        for(final File f : cfg.getFiles()) {
+                            f.delete();
+                        }
+                    }
+                    iter.remove();
+                } else if ( cfg.getState() == ConfigState.INSTALLED ) {
+                    if ( foundInstalled ) {
+                        cfg.setState(ConfigState.INSTALL);
+                    } else {
+                        foundInstalled = true;
                     }
                 }
-                iter.remove();
-            } else if ( cfg.getState() == ConfigState.INSTALLED ) {
-                if ( foundInstalled ) {
-                    cfg.setState(ConfigState.INSTALL);
-                } else {
-                    foundInstalled = true;
-                }
             }
-        }
 
-        // mark as processed
-        configList.setHasChanges(false);
+            // mark as processed
+            configList.setHasChanges(false);
+        } else {
+            // TODO
+        }
     }
 
     private ConfigurationAdmin getConfigurationAdmin(final long configAdminServiceBundleId) {
@@ -449,7 +454,7 @@ public class Configurator {
         // check for configuration admin
         Long configAdminServiceBundleId = this.state.getConfigAdminBundleId(cfg.getBundleId());
         if ( configAdminServiceBundleId == null ) {
-            final Bundle configBundle = this.bundleContext.getBundle(Constants.SYSTEM_BUNDLE_LOCATION).getBundleContext().getBundle(cfg.getBundleId());
+            final Bundle configBundle = cfg.getBundleId() == -1 ? this.bundleContext.getBundle() : this.bundleContext.getBundle(Constants.SYSTEM_BUNDLE_LOCATION).getBundleContext().getBundle(cfg.getBundleId());
             if ( configBundle != null ) {
                 try {
                     final Collection<ServiceReference<ConfigurationAdmin>> refs = configBundle.getBundleContext().getServiceReferences(ConfigurationAdmin.class, null);
