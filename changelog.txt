@@ -1,3 +1,12 @@
+Changes from 4.3.0 to 4.3.2
+---------------------------
+** Bug
+    * [FELIX-5620] - Bundle start/stop buttons are missing
+** Improvement
+    * [FELIX-5566] - Stop/update/refresh/start bundles when updating through the webconsole for faster turnaround
+    * [FELIX-5602] - Use Java 6 as base java version
+
+
 Changes from 4.2.18 to 4.3.0
 ----------------------------
 ** Improvement

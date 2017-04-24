@@ -132,6 +132,7 @@ public class BundlesServlet extends SimpleWebConsolePlugin implements OsgiManage
     /**
      * @see org.apache.felix.webconsole.AbstractWebConsolePlugin#activate(org.osgi.framework.BundleContext)
      */
+    @Override
     public void activate( BundleContext bundleContext )
     {
         super.activate( bundleContext );
@@ -166,6 +167,7 @@ public class BundlesServlet extends SimpleWebConsolePlugin implements OsgiManage
     /**
      * @see org.apache.felix.webconsole.SimpleWebConsolePlugin#deactivate()
      */
+    @Override
     public void deactivate()
     {
         if ( configurationPrinter != null )
@@ -189,6 +191,7 @@ public class BundlesServlet extends SimpleWebConsolePlugin implements OsgiManage
     /**
      * @see org.apache.felix.webconsole.ConfigurationPrinter#printConfiguration(java.io.PrintWriter)
      */
+    @Override
     public void printConfiguration( PrintWriter pw )
     {
         try
@@ -272,6 +275,7 @@ public class BundlesServlet extends SimpleWebConsolePlugin implements OsgiManage
     /**
      * @see org.apache.felix.webconsole.AbstractWebConsolePlugin#doGet(javax.servlet.http.HttpServletRequest, javax.servlet.http.HttpServletResponse)
      */
+    @Override
     protected void doGet( HttpServletRequest request, HttpServletResponse response ) throws ServletException,
     IOException
     {
@@ -309,6 +313,7 @@ public class BundlesServlet extends SimpleWebConsolePlugin implements OsgiManage
     /**
      * @see javax.servlet.http.HttpServlet#doPost(javax.servlet.http.HttpServletRequest, javax.servlet.http.HttpServletResponse)
      */
+    @Override
     protected void doPost( HttpServletRequest req, HttpServletResponse resp ) throws ServletException, IOException
     {
         boolean success = false;
@@ -500,6 +505,7 @@ public class BundlesServlet extends SimpleWebConsolePlugin implements OsgiManage
     /**
      * @see org.apache.felix.webconsole.AbstractWebConsolePlugin#renderContent(javax.servlet.http.HttpServletRequest, javax.servlet.http.HttpServletResponse)
      */
+    @Override
     protected void renderContent( HttpServletRequest request, HttpServletResponse response ) throws IOException
     {
         // get request info from request attribute
@@ -544,13 +550,13 @@ public class BundlesServlet extends SimpleWebConsolePlugin implements OsgiManage
     private void writeJSON( final Writer pw, final Bundle bundle, final String pluginRoot, final String servicesRoot, final Locale locale, final String filter, final BundleException be )
             throws IOException, InvalidSyntaxException
     {
-        final Map map = createObjectStructure( bundle, pluginRoot, servicesRoot, false, locale, filter, be );
+        final Map<String, Object> map = createObjectStructure( bundle, pluginRoot, servicesRoot, false, locale, filter, be );
         final JSONWriter writer = new JSONWriter(pw);
 
         writer.value(map);
     }
 
-    private Map createObjectStructure( final Bundle bundle, final String pluginRoot,
+    private Map<String, Object> createObjectStructure( final Bundle bundle, final String pluginRoot,
             final String servicesRoot, final boolean fullDetails, final Locale locale, final String filter, final BundleException be ) throws IOException, InvalidSyntaxException
     {
         final Bundle[] allBundles = this.getBundles();
@@ -565,7 +571,7 @@ public class BundlesServlet extends SimpleWebConsolePlugin implements OsgiManage
         else if (filter != null)
         {
             Filter f = getBundleContext().createFilter(filter);
-            ArrayList list = new ArrayList(allBundles.length);
+            ArrayList<Bundle> list = new ArrayList<Bundle>(allBundles.length);
             final String localeString = locale.toString();
             for (int i = 0, size = allBundles.length; i < size; i++)
             {
@@ -574,8 +580,7 @@ public class BundlesServlet extends SimpleWebConsolePlugin implements OsgiManage
                     list.add(allBundles[i]);
                 }
             }
-            bundles = new Bundle[list.size()];
-            list.toArray(bundles);
+            bundles = list.toArray(new Bundle[list.size()]);
         }
         else
         {
@@ -584,7 +589,7 @@ public class BundlesServlet extends SimpleWebConsolePlugin implements OsgiManage
 
         Util.sort( bundles, locale );
 
-        final Map map = new LinkedHashMap();
+        final Map<String, Object> map = new LinkedHashMap<String, Object>();
 
         if (null != be)
         {
@@ -677,13 +682,17 @@ public class BundlesServlet extends SimpleWebConsolePlugin implements OsgiManage
         return ret;
     }
 
-    private Map bundleInfo( Bundle bundle, boolean details, final String pluginRoot, final String servicesRoot, final Locale locale )
+    private Map<String, Object> bundleInfo( final Bundle bundle,
+            final boolean details,
+            final String pluginRoot,
+            final String servicesRoot,
+            final Locale locale )
     {
-        final Map result = new LinkedHashMap();
-        result.put("id", String.valueOf(bundle.getBundleId()) );
+        final Map<String, Object> result = new LinkedHashMap<String, Object>();
+        result.put("id", bundle.getBundleId() );
         result.put("name", Util.getName( bundle, locale ) );
-        result.put("fragment", String.valueOf(isFragmentBundle(bundle)) );
-        result.put("stateRaw", String.valueOf(bundle.getState() ) );
+        result.put("fragment", isFragmentBundle(bundle) );
+        result.put("stateRaw", bundle.getState() );
         result.put("state", toStateString( bundle ) );
         result.put("version", Util.getHeaderValue(bundle, Constants.BUNDLE_VERSION) );
         if ( bundle.getSymbolicName() != null )
@@ -744,28 +753,32 @@ public class BundlesServlet extends SimpleWebConsolePlugin implements OsgiManage
         return getPackageAdmin().getBundleType( bundle ) == PackageAdmin.BUNDLE_TYPE_FRAGMENT;
     }
 
-    private void keyVal(final List props, final String key, final Object val)
+    private void keyVal(final List<Map<String, Object>> props, final String key, final Object val)
     {
         if ( val != null )
         {
-            final Map obj = new LinkedHashMap();
+            final Map<String, Object> obj = new LinkedHashMap<String, Object>();
             obj.put("key", key);
             obj.put("value", val);
             props.add(obj);
         }
     }
-    private final void bundleDetails( final Map result, Bundle bundle, final String pluginRoot, final String servicesRoot, final Locale locale)
+    private final void bundleDetails( final Map<String, Object> result,
+            final Bundle bundle,
+            final String pluginRoot,
+            final String servicesRoot,
+            final Locale locale)
     {
-        Dictionary headers = bundle.getHeaders( locale == null ? null : locale.toString() );
+        final Dictionary<String, String> headers = bundle.getHeaders( locale == null ? null : locale.toString() );
 
-        final List props = new ArrayList();
+        final List<Map<String, Object>> props = new ArrayList<Map<String, Object>>();
 
         keyVal( props, "Symbolic Name", bundle.getSymbolicName() );
         keyVal( props, "Version", headers.get( Constants.BUNDLE_VERSION ) );
         keyVal( props, "Bundle Location", bundle.getLocation() );
         keyVal( props, "Last Modification", new Date( bundle.getLastModified() ) );
 
-        String docUrl = ( String ) headers.get( Constants.BUNDLE_DOCURL );
+        String docUrl = headers.get( Constants.BUNDLE_DOCURL );
         if ( docUrl != null )
         {
             keyVal( props, "Bundle Documentation", docUrl );
@@ -803,11 +816,11 @@ public class BundlesServlet extends SimpleWebConsolePlugin implements OsgiManage
     }
 
 
-    private final void bundleInfoDetails( List props, Bundle bundle, String appRoot, final Locale locale)
+    private final void bundleInfoDetails( List<Map<String, Object>> props, Bundle bundle, String appRoot, final Locale locale)
     {
-        final Map val = new LinkedHashMap();
+        final Map<String, Object> val = new LinkedHashMap<String, Object>();
         val.put("key", "nfo");
-        final Map value = new LinkedHashMap();
+        final Map<String, Object[]> value = new LinkedHashMap<String, Object[]>();
         final Object[] bundleInfoProviders = bundleInfoTracker.getServices();
         for ( int i = 0; bundleInfoProviders != null && i < bundleInfoProviders.length; i++ )
         {
@@ -828,9 +841,9 @@ public class BundlesServlet extends SimpleWebConsolePlugin implements OsgiManage
     }
 
 
-    private static final Object bundleInfo( BundleInfo info )
+    private static final Map<String, Object> bundleInfo( BundleInfo info )
     {
-        final Map val = new LinkedHashMap();
+        final Map<String, Object> val = new LinkedHashMap<String, Object>();
         val.put( "name", info.getName() );
         val.put( "description", info.getDescription() );
         val.put( "type", info.getType().getName() );
@@ -877,6 +890,7 @@ public class BundlesServlet extends SimpleWebConsolePlugin implements OsgiManage
                 }
 
 
+                @Override
                 public int compare( Object o1, Object o2 )
                 {
                     return compare( ( ExportedPackage ) o1, ( ExportedPackage ) o2 );
@@ -940,6 +954,7 @@ public class BundlesServlet extends SimpleWebConsolePlugin implements OsgiManage
                     }
 
 
+                    @Override
                     public int compare( Object o1, Object o2 )
                     {
                         return compare( ( ExportedPackage ) o1, ( ExportedPackage ) o2 );
@@ -997,6 +1012,7 @@ public class BundlesServlet extends SimpleWebConsolePlugin implements OsgiManage
                     }
 
 
+                    @Override
                     public int compare( Object o1, Object o2 )
                     {
                         return compare( ( Clause) o1, ( Clause ) o2 );
