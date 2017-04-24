@@ -167,11 +167,6 @@ public final class WhiteboardManager
 
         this.webContext = containerContext;
 
-        final Dictionary<String, Object> props = new Hashtable<String, Object>();
-        props.put(HttpWhiteboardConstants.HTTP_WHITEBOARD_CONTEXT_NAME, HttpWhiteboardConstants.HTTP_WHITEBOARD_DEFAULT_CONTEXT_NAME);
-        props.put(HttpWhiteboardConstants.HTTP_SERVICE_CONTEXT_PROPERTY, HttpWhiteboardConstants.HTTP_WHITEBOARD_DEFAULT_CONTEXT_NAME);
-        props.put(HttpWhiteboardConstants.HTTP_WHITEBOARD_CONTEXT_PATH, "/");
-        props.put(Constants.SERVICE_RANKING, Integer.MIN_VALUE);
 
         // add context for http service
         final List<WhiteboardContextHandler> list = new ArrayList<WhiteboardContextHandler>();
@@ -182,6 +177,11 @@ public final class WhiteboardManager
                 httpServiceFactory, webContext, this.httpBundleContext.getBundle()));
         this.contextMap.put(HttpServiceFactory.HTTP_SERVICE_CONTEXT_NAME, list);
 
+        // add default context
+        final Dictionary<String, Object> props = new Hashtable<String, Object>();
+        props.put(HttpWhiteboardConstants.HTTP_WHITEBOARD_CONTEXT_NAME, HttpWhiteboardConstants.HTTP_WHITEBOARD_DEFAULT_CONTEXT_NAME);
+        props.put(HttpWhiteboardConstants.HTTP_WHITEBOARD_CONTEXT_PATH, "/");
+        props.put(Constants.SERVICE_RANKING, Integer.MIN_VALUE);
         this.defaultContextRegistration = httpBundleContext.registerService(
                 ServletContextHelper.class,
                 new ServiceFactory<ServletContextHelper>()
@@ -564,6 +564,8 @@ public final class WhiteboardManager
                     final Map<String, String> props = new HashMap<String, String>();
                     props.put(HttpWhiteboardConstants.HTTP_WHITEBOARD_CONTEXT_NAME, h.getContextInfo().getName());
                     props.put(HttpWhiteboardConstants.HTTP_WHITEBOARD_CONTEXT_PATH, h.getContextInfo().getPath());
+                    props.put(HttpWhiteboardConstants.HTTP_SERVICE_CONTEXT_PROPERTY, h.getContextInfo().getName());
+
                     if ( info.getContextSelectionFilter().matches(props) )
                     {
                         result.add(h);
