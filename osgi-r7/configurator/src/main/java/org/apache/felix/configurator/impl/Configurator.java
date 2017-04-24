@@ -323,12 +323,15 @@ public class Configurator {
         if ( localCoordinator != null ) {
             coordination = CoordinatorUtil.getCoordination(localCoordinator);
         }
+        boolean noRetryNeeded = true;
         try {
             for(final String pid : state.getPids()) {
                 final ConfigList configList = state.getConfigurations(pid);
 
                 if ( configList.hasChanges() ) {
-                    process(configList);
+                    if ( !process(configList) ) {
+                        noRetryNeeded = false;
+                    }
                     State.writeState(this.bundleContext, state);
                 }
             }
@@ -337,13 +340,17 @@ public class Configurator {
                 CoordinatorUtil.endCoordination(coordination);
             }
         }
+        if ( !noRetryNeeded ) {
+            // TODO
+        }
     }
 
     /**
      * Process changes to a pid.
      * @param configList The config list
+     * @return {@code true} if the change has been processed, {@code false} if a retry is required
      */
-    public void process(final ConfigList configList) {
+    public boolean process(final ConfigList configList) {
         Config toActivate = null;
         Config toDeactivate = null;
 
@@ -421,9 +428,8 @@ public class Configurator {
 
             // mark as processed
             configList.setHasChanges(false);
-        } else {
-            // TODO
         }
+        return noRetryNeeded;
     }
 
     private ConfigurationAdmin getConfigurationAdmin(final long configAdminServiceBundleId) {
