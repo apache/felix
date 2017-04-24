@@ -21,6 +21,7 @@ import java.util.Set;
 
 import javax.annotation.CheckForNull;
 import javax.servlet.FilterChain;
+import javax.servlet.FilterConfig;
 import javax.servlet.RequestDispatcher;
 import javax.servlet.ServletException;
 import javax.servlet.ServletRequest;
@@ -38,6 +39,7 @@ import org.apache.felix.http.base.internal.registry.HandlerRegistry;
 import org.apache.felix.http.base.internal.registry.PathResolution;
 import org.apache.felix.http.base.internal.registry.PerContextHandlerRegistry;
 import org.apache.felix.http.base.internal.whiteboard.WhiteboardManager;
+import org.osgi.service.http.whiteboard.Preprocessor;
 
 public final class Dispatcher
 {
@@ -85,70 +87,80 @@ public final class Dispatcher
             mgr.sessionDestroyed(session, ids);
         }
 
-        // invoke preprocessors
-        if ( !mgr.invokePreprocessors(req, res) )
-        {
-            return;
-        }
+        // invoke preprocessors and then dispatching
+        mgr.invokePreprocessors(req, res, new Preprocessor() {
+			
+			@Override
+			public void init(FilterConfig filterConfig) throws ServletException {
+			}
+			
+			@Override
+			public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain)
+					throws IOException, ServletException {
+		        // get full decoded path for dispatching
+		        // we can't use req.getRequestURI() or req.getRequestURL() as these are returning the encoded path
+		        String path = req.getServletPath();
+		        if ( path == null )
+		        {
+		            path = "";
+		        }
+		        if ( req.getPathInfo() != null )
+		        {
+		            path = path.concat(req.getPathInfo());
+		        }
+		        final String requestURI = path;
 
-        // get full decoded path for dispatching
-        // we can't use req.getRequestURI() or req.getRequestURL() as these are returning the encoded path
-        String path = req.getServletPath();
-        if ( path == null )
-        {
-            path = "";
-        }
-        if ( req.getPathInfo() != null )
-        {
-            path = path.concat(req.getPathInfo());
-        }
-        final String requestURI = path;
+		        // Determine which servlet we should forward the request to...
+		        final PathResolution pr = handlerRegistry.resolveServlet(requestURI);
 
-        // Determine which servlet we should forward the request to...
-        final PathResolution pr = this.handlerRegistry.resolveServlet(requestURI);
+		        final PerContextHandlerRegistry errorRegistry = (pr != null ? pr.handlerRegistry : handlerRegistry.getBestMatchingRegistry(requestURI));
+		        final String servletName = (pr != null ? pr.handler.getName() : null);
+		        final HttpServletResponse wrappedResponse = new ServletResponseWrapper(req, res, servletName, errorRegistry);
+		        if ( pr == null )
+		        {
+		            wrappedResponse.sendError(404);
+		            return;
+		        }
 
-        final PerContextHandlerRegistry errorRegistry = (pr != null ? pr.handlerRegistry : this.handlerRegistry.getBestMatchingRegistry(requestURI));
-        final String servletName = (pr != null ? pr.handler.getName() : null);
-        final HttpServletResponse wrappedResponse = new ServletResponseWrapper(req, res, servletName, errorRegistry);
-        if ( pr == null )
-        {
-            wrappedResponse.sendError(404);
-            return;
-        }
+		        final ExtServletContext servletContext = pr.handler.getContext();
+		        final RequestInfo requestInfo = new RequestInfo(pr.servletPath, pr.pathInfo, null, req.getRequestURI());
 
-        final ExtServletContext servletContext = pr.handler.getContext();
-        final RequestInfo requestInfo = new RequestInfo(pr.servletPath, pr.pathInfo, null, req.getRequestURI());
+		        final HttpServletRequest wrappedRequest = new ServletRequestWrapper(req, servletContext, requestInfo, null,
+		                pr.handler.getContextServiceId(),
+		                pr.handler.getServletInfo().isAsyncSupported(),
+		                pr.handler.getServletInfo().getMultipartConfig());
+		        final FilterHandler[] filterHandlers = handlerRegistry.getFilters(pr, req.getDispatcherType(), pr.requestURI);
 
-        final HttpServletRequest wrappedRequest = new ServletRequestWrapper(req, servletContext, requestInfo, null,
-                pr.handler.getContextServiceId(),
-                pr.handler.getServletInfo().isAsyncSupported(),
-                pr.handler.getServletInfo().getMultipartConfig());
-        final FilterHandler[] filterHandlers = this.handlerRegistry.getFilters(pr, req.getDispatcherType(), pr.requestURI);
+		        try
+		        {
+		            if ( servletContext.getServletRequestListener() != null )
+		            {
+		                servletContext.getServletRequestListener().requestInitialized(new ServletRequestEvent(servletContext, wrappedRequest));
+		            }
+		            final FilterChain filterChain = new InvocationChain(pr.handler, filterHandlers);
+		            filterChain.doFilter(wrappedRequest, wrappedResponse);
 
-        try
-        {
-            if ( servletContext.getServletRequestListener() != null )
-            {
-                servletContext.getServletRequestListener().requestInitialized(new ServletRequestEvent(servletContext, wrappedRequest));
-            }
-            final FilterChain filterChain = new InvocationChain(pr.handler, filterHandlers);
-            filterChain.doFilter(wrappedRequest, wrappedResponse);
+		        }
+		        catch ( final Exception e)
+		        {
+		            SystemLogger.error("Exception while processing request to " + requestURI, e);
+		            req.setAttribute(RequestDispatcher.ERROR_EXCEPTION, e);
+		            req.setAttribute(RequestDispatcher.ERROR_EXCEPTION_TYPE, e.getClass().getName());
 
-        }
-        catch ( final Exception e)
-        {
-            SystemLogger.error("Exception while processing request to " + requestURI, e);
-            req.setAttribute(RequestDispatcher.ERROR_EXCEPTION, e);
-            req.setAttribute(RequestDispatcher.ERROR_EXCEPTION_TYPE, e.getClass().getName());
+		            wrappedResponse.sendError(500);
+		        }
+		        finally
+		        {
+		            if ( servletContext.getServletRequestListener() != null )
+		            {
+		                servletContext.getServletRequestListener().requestDestroyed(new ServletRequestEvent(servletContext, wrappedRequest));
+		            }
+		        }			}
+			
+			@Override
+			public void destroy() {
+			}
+		}); 
 
-            wrappedResponse.sendError(500);
-        }
-        finally
-        {
-            if ( servletContext.getServletRequestListener() != null )
-            {
-                servletContext.getServletRequestListener().requestDestroyed(new ServletRequestEvent(servletContext, wrappedRequest));
-            }
-        }
     }
 }

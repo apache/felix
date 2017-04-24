@@ -97,6 +97,7 @@ import org.osgi.service.http.runtime.dto.DTOConstants;
 import org.osgi.service.http.runtime.dto.PreprocessorDTO;
 import org.osgi.service.http.runtime.dto.ServletContextDTO;
 import org.osgi.service.http.whiteboard.HttpWhiteboardConstants;
+import org.osgi.service.http.whiteboard.Preprocessor;
 import org.osgi.util.tracker.ServiceTracker;
 
 public final class WhiteboardManager
@@ -145,7 +146,7 @@ public final class WhiteboardManager
         this.httpBundleContext = bundleContext;
         this.httpServiceFactory = httpServiceFactory;
         this.registry = registry;
-        this.serviceRuntime = new HttpServiceRuntimeImpl(registry, this);
+        this.serviceRuntime = new HttpServiceRuntimeImpl(registry, this, bundleContext);
         this.plugin = new HttpServicePlugin(bundleContext, this.serviceRuntime);
     }
 
@@ -982,35 +983,41 @@ public final class WhiteboardManager
      * @throws IOException
      * @throws ServletException
      */
-    public boolean invokePreprocessors(final HttpServletRequest req, final HttpServletResponse res)
+    public void invokePreprocessors(final HttpServletRequest req, 
+    		final HttpServletResponse res,
+    		final Preprocessor dispatcher)
     throws ServletException, IOException
     {
         final List<PreprocessorHandler> localHandlers = this.preprocessorHandlers;
         if ( localHandlers.isEmpty() )
         {
-            return true;
+        	// no preprocessors, we can directly execute
+            dispatcher.doFilter(req, res, null);
         }
-        final AtomicBoolean result = new AtomicBoolean(true);
-        final FilterChain chain = new FilterChain()
+        else
         {
-
-            @Override
-            public void doFilter(final ServletRequest request, final ServletResponse response)
-            throws IOException, ServletException
-            {
-                result.set(true);
-            }
-        };
-        for(final PreprocessorHandler handler : localHandlers)
-        {
-            result.set(false);
-            handler.handle(req, res, chain);
-            if ( !result.get() )
-            {
-                break;
-            }
+	        final FilterChain chain = new FilterChain()
+	        {
+	        	private int index = 0;
+	
+	            @Override
+	            public void doFilter(final ServletRequest request, final ServletResponse response)
+	            throws IOException, ServletException
+	            {
+	            	if ( index == localHandlers.size() ) 
+	            	{
+	            		dispatcher.doFilter(request, response, null);
+	            	}
+	            	else 
+	            	{
+	            		final PreprocessorHandler handler = localHandlers.get(index);
+	            		index++;
+	            		handler.handle(request, response, this);
+	            	}
+	            }
+	        };
+	        chain.doFilter(req, res);
         }
-        return result.get();
     }
 
     private void updateRuntimeChangeCount()
