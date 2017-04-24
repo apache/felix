@@ -82,14 +82,16 @@ public class Configurator {
         this.state = State.createOrReadState(bundleContext);
         this.state.changeEnvironments(this.activeEnvironments);
         this.tracker = new org.osgi.util.tracker.BundleTracker<>(this.bundleContext,
-                Bundle.ACTIVE|Bundle.STARTING|Bundle.UNINSTALLED,
+                Bundle.ACTIVE|Bundle.STARTING|Bundle.STOPPING|Bundle.RESOLVED|Bundle.INSTALLED,
 
                 new BundleTrackerCustomizer<Bundle>() {
 
             @Override
             public Bundle addingBundle(final Bundle bundle, final BundleEvent event) {
+                final int state = bundle.getState();
                 if ( active &&
-                    (event.getType() == Bundle.ACTIVE || event.getType() == Bundle.STARTING) ) {
+                    (state == Bundle.ACTIVE || state == Bundle.STARTING) ) {
+                    SystemLogger.debug("Adding bundle " + getBundleIdentity(bundle) + " : " + getBundleState(state));
                     queue.enqueue(new Runnable() {
 
                         @Override
@@ -109,7 +111,9 @@ public class Configurator {
 
             @Override
             public void removedBundle(final Bundle bundle, final BundleEvent event, final Bundle object) {
-                if ( active && event.getType() == Bundle.UNINSTALLED ) {
+                final int state = bundle.getState();
+                if ( active && state == Bundle.UNINSTALLED ) {
+                    SystemLogger.debug("Removing bundle " + getBundleIdentity(bundle) + " : " + getBundleState(state));
                     queue.enqueue(new Runnable() {
 
                         @Override
@@ -118,7 +122,7 @@ public class Configurator {
                                 processRemoveBundle(bundle.getBundleId());
                                 process();
                             } catch ( final IllegalStateException ise) {
-                                SystemLogger.error("Error processing bundle " + bundle.getBundleId() + " - " + bundle.getSymbolicName(), ise);
+                                SystemLogger.error("Error processing bundle " + getBundleIdentity(bundle), ise);
                             }
                         }
                     });
@@ -126,6 +130,26 @@ public class Configurator {
             }
 
         });
+    }
+
+    private String getBundleIdentity(final Bundle bundle) {
+        if ( bundle.getSymbolicName() == null ) {
+            return bundle.getBundleId() + " (" + bundle.getLocation() + ")";
+        } else {
+            return bundle.getSymbolicName() + ":" + bundle.getVersion() + " (" + bundle.getBundleId() + ")";
+        }
+    }
+
+    private String getBundleState(int state) {
+        switch ( state ) {
+            case Bundle.ACTIVE : return "active";
+            case Bundle.INSTALLED : return "installed";
+            case Bundle.RESOLVED : return "resolved";
+            case Bundle.STARTING : return "starting";
+            case Bundle.STOPPING : return "stopping";
+            case Bundle.UNINSTALLED : return "uninstalled";
+        }
+        return String.valueOf(state);
     }
 
     /**
@@ -263,7 +287,7 @@ public class Configurator {
             }
             state.setLastModified(bundleId, bundleLastModified);
         } catch ( final IllegalStateException ise) {
-            SystemLogger.error("Error processing bundle " + bundle.getBundleId() + " - " + bundle.getSymbolicName(), ise);
+            SystemLogger.error("Error processing bundle " + getBundleIdentity(bundle), ise);
         }
     }
 
