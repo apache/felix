@@ -27,6 +27,7 @@ import org.apache.felix.http.base.internal.registry.HandlerRegistry;
 import org.apache.felix.http.base.internal.runtime.dto.RequestInfoDTOBuilder;
 import org.apache.felix.http.base.internal.runtime.dto.RuntimeDTOBuilder;
 import org.apache.felix.http.base.internal.whiteboard.WhiteboardManager;
+import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceReference;
 import org.osgi.framework.ServiceRegistration;
 import org.osgi.service.http.runtime.HttpServiceRuntime;
@@ -40,8 +41,10 @@ public final class HttpServiceRuntimeImpl implements HttpServiceRuntime
      * a dependency on R7 of the framework.
      * The value of the property is of type {@code Long}.
      */
-    private static String PROP_CHANGECOUNT = "service.changecount";
+    private static final String PROP_CHANGECOUNT = "service.changecount";
 
+    private static final String PROP_CHANGECOUNTDELAY = "org.apache.felix.http.whiteboard.changecount.delay";
+    
     private volatile Hashtable<String, Object> attributes = new Hashtable<String, Object>();
 
     private final HandlerRegistry registry;
@@ -53,11 +56,32 @@ public final class HttpServiceRuntimeImpl implements HttpServiceRuntime
 
     private volatile Timer timer;
 
+    private final long updateChangeCountDelay;
+    
     public HttpServiceRuntimeImpl(HandlerRegistry registry,
-            WhiteboardManager contextManager)
+            WhiteboardManager contextManager,
+            BundleContext bundleContext)
     {
         this.registry = registry;
         this.contextManager = contextManager;
+        final Object val = bundleContext.getProperty(PROP_CHANGECOUNTDELAY);
+        long value = 2000L;
+        if ( val != null ) 
+        {
+        	try 
+        	{
+        		value = Long.parseLong(val.toString());
+        	} 
+        	catch ( final NumberFormatException nfe) 
+        	{
+        		// ignore
+        	}
+        	if ( value < 1 )
+        	{
+        		value = 0L;
+        	}
+        }
+    	updateChangeCountDelay = value;
     }
 
     @Override
@@ -113,27 +137,35 @@ public final class HttpServiceRuntimeImpl implements HttpServiceRuntime
                 this.changeCount++;
                 count = this.changeCount;
                 this.setAttribute(PROP_CHANGECOUNT, this.changeCount);
-                if ( this.timer == null )
+                if ( this.updateChangeCountDelay > 0 && this.timer == null )
                 {
                     this.timer = new Timer();
                 }
             }
-            timer.schedule(new TimerTask()
+            if ( this.updateChangeCountDelay == 0L ) 
             {
-
-                @Override
-                public void run() {
-                    synchronized ( HttpServiceRuntimeImpl.this )
-                    {
-                        if ( changeCount == count )
-                        {
-                            reg.setProperties(getAttributes());
-                            timer.cancel();
-                            timer = null;
-                        }
-                    }
-                }
-            }, 2000L);
+                reg.setProperties(getAttributes());
+            } 
+            else 
+            {
+	            timer.schedule(new TimerTask()
+	            {
+	
+	                @Override
+	                public void run() 
+	                {
+	                    synchronized ( HttpServiceRuntimeImpl.this )
+	                    {
+	                        if ( changeCount == count )
+	                        {
+	                            reg.setProperties(getAttributes());
+	                            timer.cancel();
+	                            timer = null;
+	                        }
+	                    }
+	                }
+	            }, this.updateChangeCountDelay);
+            }
         }
     }
 }
