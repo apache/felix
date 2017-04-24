@@ -23,6 +23,8 @@ import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
@@ -30,6 +32,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
 
+import org.apache.felix.configurator.impl.json.JSONUtil;
 import org.apache.felix.configurator.impl.logger.SystemLogger;
 import org.apache.felix.configurator.impl.model.BundleState;
 import org.apache.felix.configurator.impl.model.Config;
@@ -41,7 +44,9 @@ import org.apache.felix.configurator.impl.model.State;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.BundleEvent;
+import org.osgi.framework.Constants;
 import org.osgi.framework.InvalidSyntaxException;
+import org.osgi.framework.ServiceReference;
 import org.osgi.service.cm.Configuration;
 import org.osgi.service.cm.ConfigurationAdmin;
 import org.osgi.service.configurator.ConfiguratorConstants;
@@ -55,8 +60,6 @@ public class Configurator {
 
     private final BundleContext bundleContext;
 
-    private final ConfigurationAdmin configAdmin;
-
     private final State state;
 
     private final Set<String> activeEnvironments;
@@ -69,15 +72,18 @@ public class Configurator {
 
     private final WorkerQueue queue;
 
+    private final List<ServiceReference<ConfigurationAdmin>> configAdminReferences;
+
     /**
      * Create a new configurator and start it
+     *
      * @param bc The bundle context
-     * @param ca The configuration admin
+     * @param configAdminReferences Dynamic list of references to the configuration admin service visible to the configurator
      */
-    public Configurator(final BundleContext bc, final ConfigurationAdmin ca) {
+    public Configurator(final BundleContext bc, final List<ServiceReference<ConfigurationAdmin>> configAdminReferences) {
         this.queue = new WorkerQueue();
         this.bundleContext = bc;
-        this.configAdmin = ca;
+        this.configAdminReferences = configAdminReferences;
         this.activeEnvironments = Util.getActiveEnvironments(bc);
         this.state = State.createOrReadState(bundleContext);
         this.state.changeEnvironments(this.activeEnvironments);
@@ -121,6 +127,7 @@ public class Configurator {
                             try {
                                 processRemoveBundle(bundle.getBundleId());
                                 process();
+                                Configurator.this.state.removeConfigAdminBundleId(bundle.getBundleId());
                             } catch ( final IllegalStateException ise) {
                                 SystemLogger.error("Error processing bundle " + getBundleIdentity(bundle), ise);
                             }
@@ -280,7 +287,7 @@ public class Configurator {
             }
             final Set<String> paths = Util.isConfigurerBundle(bundle, this.bundleContext.getBundle().getBundleId());
             if ( paths != null ) {
-                final BundleState config = org.apache.felix.configurator.impl.json.JSONUtil.readConfigurationsFromBundle(bundle, paths);
+                final BundleState config = JSONUtil.readConfigurationsFromBundle(bundle, paths);
                 for(final String pid : config.getPids()) {
                     state.addAll(pid, config.getConfigurations(pid));
                 }
@@ -380,7 +387,7 @@ public class Configurator {
 
         }
         // if there is a configuration to activate, we can directly activate it
-        // without deactivating (reduced the changes of the configuration from two
+        // without deactivating (reducing the changes of the configuration from two
         // to one)
         if ( toActivate != null && toActivate.getState() == ConfigState.INSTALL ) {
             activate(configList, toActivate);
@@ -414,27 +421,80 @@ public class Configurator {
         configList.setHasChanges(false);
     }
 
+    private ConfigurationAdmin getConfigurationAdmin(final long configAdminServiceBundleId) {
+        ServiceReference<ConfigurationAdmin> ref = null;
+        synchronized ( this.configAdminReferences ) {
+            for(final ServiceReference<ConfigurationAdmin> r : this.configAdminReferences ) {
+                final Bundle bundle = r.getBundle();
+                if ( bundle != null && bundle.getBundleId() == configAdminServiceBundleId) {
+                    ref = r;
+                    break;
+                }
+            }
+        }
+        if ( ref != null ) {
+            return this.bundleContext.getService(ref);
+        }
+        return null;
+    }
+
     /**
      * Try to activate a configuration
      * Check policy and change count
-     * @param cfg The configuration
+     * @param configList The configuration list
+     * @param cfg The configuration to activate
+     * @return {@code true} if activation was successful
      */
-    public void activate(final ConfigList configList, final Config cfg) {
+    public boolean activate(final ConfigList configList, final Config cfg) {
+        // check for configuration admin
+        Long configAdminServiceBundleId = this.state.getConfigAdminBundleId(cfg.getBundleId());
+        if ( configAdminServiceBundleId == null ) {
+            final Bundle configBundle = this.bundleContext.getBundle(Constants.SYSTEM_BUNDLE_LOCATION).getBundleContext().getBundle(cfg.getBundleId());
+            if ( configBundle != null ) {
+                try {
+                    final Collection<ServiceReference<ConfigurationAdmin>> refs = configBundle.getBundleContext().getServiceReferences(ConfigurationAdmin.class, null);
+                    final List<ServiceReference<ConfigurationAdmin>> sortedRefs = new ArrayList<>(refs);
+                    Collections.sort(sortedRefs);
+                    for(int i=sortedRefs.size();i>0;i--) {
+                        final ServiceReference<ConfigurationAdmin> r = sortedRefs.get(i-1);
+                        synchronized ( this.configAdminReferences ) {
+                            if ( this.configAdminReferences.contains(r) ) {
+                                configAdminServiceBundleId = r.getBundle().getBundleId();
+                                break;
+                            }
+                        }
+                    }
+                } catch (final InvalidSyntaxException e) {
+                    // this can never happen as we pass {@code null} as the filter
+                }
+            }
+        }
+        if ( configAdminServiceBundleId == null ) {
+            // no configuration admin found, we have to retry
+            return false;
+        }
+        final ConfigurationAdmin configAdmin = this.getConfigurationAdmin(configAdminServiceBundleId);
+        if ( configAdmin == null ) {
+            // getting configuration admin failed, we have to retry
+            return false;
+        }
+        this.state.setConfigAdminBundleId(cfg.getBundleId(), configAdminServiceBundleId);
+
         boolean ignore = false;
         try {
             // get existing configuration - if any
             boolean update = false;
-            Configuration configuration = ConfigUtil.getOrCreateConfiguration(this.configAdmin, cfg.getPid(), false);
+            Configuration configuration = ConfigUtil.getOrCreateConfiguration(configAdmin, cfg.getPid(), false);
             if ( configuration == null ) {
                 // new configuration
-                configuration = ConfigUtil.getOrCreateConfiguration(this.configAdmin, cfg.getPid(), true);
+                configuration = ConfigUtil.getOrCreateConfiguration(configAdmin, cfg.getPid(), true);
                 update = true;
             } else {
                 if ( cfg.getPolicy() == ConfigPolicy.FORCE ) {
                     update = true;
                 } else {
                     if ( configList.getLastInstalled() == null
-                            || configList.getChangeCount() != configuration.getChangeCount() ) {
+                         || configList.getChangeCount() != configuration.getChangeCount() ) {
                         ignore = true;
                     } else {
                         update = true;
@@ -457,6 +517,8 @@ public class Configurator {
             configList.setChangeCount(-1);
             configList.setLastInstalled(null);
         }
+
+        return true;
     }
 
     /**
@@ -464,20 +526,34 @@ public class Configurator {
      * Check policy and change count
      * @param cfg The configuration
      */
-    public void deactivate(final ConfigList configList, final Config cfg) {
-        try {
-            final Configuration c = ConfigUtil.getOrCreateConfiguration(this.configAdmin, cfg.getPid(), false);
-            if ( c != null ) {
-                if ( cfg.getPolicy() == ConfigPolicy.FORCE
-                        || configList.getChangeCount() == c.getChangeCount() ) {
-                    c.delete();
-                }
+    public boolean deactivate(final ConfigList configList, final Config cfg) {
+        final Long configAdminServiceBundleId = this.state.getConfigAdminBundleId(cfg.getBundleId());
+        // check if configuration admin bundle is still available
+        // if not or if we didn't record anything, we consider the configuration uninstalled
+        final Bundle configBundle = configAdminServiceBundleId == null ? null : this.bundleContext.getBundle(Constants.SYSTEM_BUNDLE_LOCATION).getBundleContext().getBundle(configAdminServiceBundleId);
+        if ( configBundle != null ) {
+            final ConfigurationAdmin configAdmin = this.getConfigurationAdmin(configAdminServiceBundleId);
+            if ( configAdmin == null ) {
+                // getting configuration admin failed, we have to retry
+                return false;
             }
-        } catch (final InvalidSyntaxException | IOException e) {
-            SystemLogger.error("Unable to remove configuration " + cfg.getPid() + " : " + e.getMessage(), e);
+
+            try {
+                final Configuration c = ConfigUtil.getOrCreateConfiguration(configAdmin, cfg.getPid(), false);
+                if ( c != null ) {
+                    if ( cfg.getPolicy() == ConfigPolicy.FORCE
+                            || configList.getChangeCount() == c.getChangeCount() ) {
+                        c.delete();
+                    }
+                }
+            } catch (final InvalidSyntaxException | IOException e) {
+                SystemLogger.error("Unable to remove configuration " + cfg.getPid() + " : " + e.getMessage(), e);
+            }
         }
         cfg.setState(ConfigState.UNINSTALLED);
         configList.setChangeCount(-1);
         configList.setLastInstalled(null);
+
+        return true;
     }
 }
