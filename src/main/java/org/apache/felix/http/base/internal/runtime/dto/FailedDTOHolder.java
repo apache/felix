@@ -77,13 +77,18 @@ public final class FailedDTOHolder
                 this.failedErrorPageDTOs.add(dto);
             }
 
-            if ( ((ServletInfo) info).getPatterns() != null || !isError )
+            if ( ((ServletInfo) info).getPatterns() != null || ((ServletInfo)info).getName() != null || !isError )
             {
                 final FailedServletDTO dto = (FailedServletDTO)ServletDTOBuilder.build((ServletInfo) info, failureCode);
                 if ( ((ServletInfo) info).getPatterns() != null )
                 {
                     dto.patterns = ((ServletInfo) info).getPatterns();
+                } 
+                else 
+                {
+                	dto.patterns = BuilderConstants.EMPTY_STRING_ARRAY;
                 }
+                dto.name = ((ServletInfo)info).getName();
                 dto.servletContextId = contextId;
                 this.failedServletDTOs.add(dto);
             }
