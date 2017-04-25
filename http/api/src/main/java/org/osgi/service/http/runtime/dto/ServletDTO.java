@@ -1,5 +1,5 @@
 /*
- * Copyright (c) OSGi Alliance (2012, 2016). All Rights Reserved.
+ * Copyright (c) OSGi Alliance (2012, 2017). All Rights Reserved.
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -27,10 +27,10 @@ package org.osgi.service.http.runtime.dto;
 public class ServletDTO extends BaseServletDTO {
 	/**
 	 * The request mappings for the servlet.
-	 * 
 	 * <p>
 	 * The specified patterns are used to determine whether a request is mapped
-	 * to the servlet. This array is never empty.
+	 * to the servlet. This array is never {@code null}. It might be empty for
+	 * named servlets.
 	 */
 	public String[]				patterns;
 

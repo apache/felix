@@ -1,5 +1,5 @@
 /*
- * Copyright (c) OSGi Alliance (2012, 2014). All Rights Reserved.
+ * Copyright (c) OSGi Alliance (2012, 2017). All Rights Reserved.
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,6 +17,7 @@
 package org.osgi.service.http.runtime.dto;
 
 import java.util.Map;
+
 import org.osgi.dto.DTO;
 
 /**
@@ -27,7 +28,9 @@ import org.osgi.dto.DTO;
  */
 public abstract class BaseServletDTO extends DTO {
 	/**
-	 * The name of the servlet. This value is never {@code null}.
+	 * The name of the servlet. This value is never {@code null}, unless this
+	 * object represents a {@code FailedServletDTO} or a
+	 * {@code FailedErrorPageDTO} where the value might be {@code null}.
 	 */
 	public String				name;
 
@@ -35,7 +38,8 @@ public abstract class BaseServletDTO extends DTO {
 	 * The information string from the servlet.
 	 * <p>
 	 * This is the value returned by the {@code Servlet.getServletInfo()}
-	 * method.
+	 * method. For a {@code FailedServletDTO} or a {@code FailedErrorPageDTO}
+	 * this is always {@code null}.
 	 */
 	public String				servletInfo;
 

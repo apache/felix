@@ -1,5 +1,5 @@
 /*
- * Copyright (c) OSGi Alliance (2012, 2015). All Rights Reserved.
+ * Copyright (c) OSGi Alliance (2012, 2017). All Rights Reserved.
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,6 +17,7 @@
 package org.osgi.service.http.runtime.dto;
 
 import java.util.Map;
+
 import org.osgi.dto.DTO;
 
 /**
