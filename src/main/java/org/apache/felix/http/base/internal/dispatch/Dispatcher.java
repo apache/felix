@@ -91,12 +91,17 @@ public final class Dispatcher
         mgr.invokePreprocessors(req, res, new Preprocessor() {
 			
 			@Override
-			public void init(FilterConfig filterConfig) throws ServletException {
-			}
+			public void init(final FilterConfig filterConfig) throws ServletException 
+			{
+				// nothing to do			
+		    }
 			
 			@Override
-			public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain)
-					throws IOException, ServletException {
+			public void doFilter(final ServletRequest request, final ServletResponse response, final FilterChain chain)
+			throws IOException, ServletException 
+			{
+				final HttpServletRequest req = (HttpServletRequest)request;
+				final HttpServletResponse res = (HttpServletResponse)response;
 		        // get full decoded path for dispatching
 		        // we can't use req.getRequestURI() or req.getRequestURL() as these are returning the encoded path
 		        String path = req.getServletPath();
@@ -158,7 +163,9 @@ public final class Dispatcher
 		        }			}
 			
 			@Override
-			public void destroy() {
+			public void destroy() 
+			{
+				// nothing to do
 			}
 		}); 
 
