@@ -111,15 +111,9 @@ public class Filter {
 		return true;
 	}
 	
-	public static void main(String args[]) {
-		Filter parser = Filter.parse("(&(objectClass=OBJECTCLASS)(&(a=x)(a=n)(a=y)(b=y)(c=z)))");
-		System.out.println("key: " + parser.createKey());
-	}
-
-	protected String createKey() {
-		StringBuilder builder = new StringBuilder();
+	protected MultiPropertyKey createKey(int filterSize) {
+		MultiPropertyKey multiPropertyKey = new MultiPropertyKey(0);
 		Iterator<String> keys = m_propertyKeys.iterator();
-		
 		while (keys.hasNext()) {
 			String key = keys.next();
 			Property prop = m_properties.get(key);
@@ -127,21 +121,17 @@ public class Filter {
 				Iterator<String> values = prop.getValues().iterator();
 				while (values.hasNext()) {
 					String value = values.next();
-					builder.append(key);
-					builder.append("=");
-					builder.append(value);
-					if (keys.hasNext() || values.hasNext()) {
-						builder.append(";");
-					}
+					multiPropertyKey.append(toKey(key, value));
 				}
 			}
 		}
-		// strip the final ';' in case the last key was a wildcard property
-		if (builder.charAt(builder.length() - 1) == ';') {
-			return builder.toString().substring(0, builder.length() - 1);
-		} else {
-			return builder.toString();
-		}
+		return multiPropertyKey;
 	}
+	
+    protected MultiPropertyKey toKey(String key, Object value) {
+    	MultiPropertyKey multiPropertyKey = new MultiPropertyKey(1);    
+    	multiPropertyKey.add(key, value.toString());
+    	return multiPropertyKey;
+    }
 	
 }
