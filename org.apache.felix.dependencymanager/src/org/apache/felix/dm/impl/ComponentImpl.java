@@ -168,6 +168,11 @@ public class ComponentImpl implements Component, ComponentContext, ComponentDecl
     private volatile ServiceRegistration<?> m_registration;
     
     /**
+     * The component name as it must be returned by getName.
+     */
+    private volatile String m_componentName;
+    
+    /**
      * Map of auto configured fields (BundleContext, ServiceRegistration, DependencyManager, or Component).
      * By default, all fields mentioned above are auto configured (injected in class fields having the same type).
      */
@@ -381,6 +386,7 @@ public class ComponentImpl implements Component, ComponentContext, ComponentDecl
                 }
                 m_dependencyEvents.put(dc, new ConcurrentSkipListSet<Event>());
                 m_dependencies.add(dc);
+                generateNameBasedOnServiceAndProperties();
                 dc.setComponentContext(ComponentImpl.this);
                 if (!(m_state == ComponentState.INACTIVE)) {
                     dc.setInstanceBound(true);
@@ -399,6 +405,7 @@ public class ComponentImpl implements Component, ComponentContext, ComponentDecl
 		    DependencyContext dc = (DependencyContext) d;
 		    // First remove this dependency from the dependency list
 		    m_dependencies.remove(d);
+		    generateNameBasedOnServiceAndProperties();
 		    // Now we can stop the dependency (our component won't be deactivated, it will only be unbound with
 		    // the removed dependency).
 		    if (!(m_state == ComponentState.INACTIVE)) {
@@ -438,6 +445,7 @@ public class ComponentImpl implements Component, ComponentContext, ComponentDecl
 		ensureNotActive();
 	    m_serviceName = serviceName;
 	    m_serviceProperties = (Dictionary<Object, Object>) properties;
+	    generateNameBasedOnServiceAndProperties();
 	    return this;
 	}
 
@@ -447,6 +455,7 @@ public class ComponentImpl implements Component, ComponentContext, ComponentDecl
 	    ensureNotActive();
 	    m_serviceName = serviceName;
 	    m_serviceProperties = (Dictionary<Object, Object>) properties;
+	    generateNameBasedOnServiceAndProperties();
 	    return this;
 	}
 	
@@ -685,6 +694,7 @@ public class ComponentImpl implements Component, ComponentContext, ComponentDecl
         getExecutor().execute(() -> {
             Dictionary<String, Object> properties = null;
             m_serviceProperties = (Dictionary<Object, Object>) serviceProperties;
+            generateNameBasedOnServiceAndProperties();
             if ((m_registration != null) && (m_serviceName != null)) {
                 properties = calculateServiceProperties();
                 m_registration.setProperties(properties);
@@ -761,23 +771,13 @@ public class ComponentImpl implements Component, ComponentContext, ComponentDecl
         return null;
     }
     
+
+    
     public String getName() {
         StringBuilder sb = new StringBuilder();
         Object serviceName = m_serviceName;
-        // If the component provides service(s), return the services as the component name.
-        if (serviceName instanceof String[]) {
-            String[] names = (String[]) serviceName;
-            for (int i = 0; i < names.length; i++) {
-                if (i > 0) {
-                    sb.append(", ");
-                }
-                sb.append(names[i]);
-            }
-           ServiceUtil.appendProperties(sb, calculateServiceProperties());
-        } else if (serviceName instanceof String) {
-            sb.append(serviceName.toString());
-            ServiceUtil.appendProperties(sb, calculateServiceProperties());
-        } else {
+
+        if( (!(serviceName instanceof String[])) && (!(serviceName instanceof String))) {
             // The component does not provide a service, use the component definition as the name.
             Object componentDefinition = m_componentDefinition;
             if (componentDefinition != null) {
@@ -798,8 +798,31 @@ public class ComponentImpl implements Component, ComponentContext, ComponentDecl
                     }
                 }
             }
-        }
-        return sb.toString();
+            m_componentName = sb.toString();
+        } 
+        return m_componentName;
+    }
+    
+    
+    private void generateNameBasedOnServiceAndProperties() {
+    	StringBuilder sb = new StringBuilder();
+        Object serviceName = m_serviceName;
+
+        // If the component provides service(s), return the services as the component name.
+    	if (serviceName instanceof String[]) {
+            String[] names = (String[]) serviceName;
+            for (int i = 0; i < names.length; i++) {
+                if (i > 0) {
+                    sb.append(", ");
+                }
+                sb.append(names[i]);
+            }
+            ServiceUtil.appendProperties(sb, calculateServiceProperties());
+       } else if(serviceName instanceof String) { 
+          	  sb.append(serviceName.toString());
+          	  ServiceUtil.appendProperties(sb, calculateServiceProperties());
+       }
+    	m_componentName = sb.toString();
     }
     
     @Override
@@ -1553,6 +1576,7 @@ public class ComponentImpl implements Component, ComponentContext, ComponentDecl
     	for (DependencyContext dep : m_dependencies) {
     		if (dep.isInstanceBound()) {
     			m_dependencies.remove(dep);
+    			generateNameBasedOnServiceAndProperties();
     			dep.stop();
     		}
     	}

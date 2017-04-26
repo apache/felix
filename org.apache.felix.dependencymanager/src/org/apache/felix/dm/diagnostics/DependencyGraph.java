@@ -156,12 +156,14 @@ public class DependencyGraph {
 		Properties properties = parseProperties(dependencyName);
 
         String componentName = cd.getName();
-        int cuttOff = componentName.indexOf("(");
+        String simpleComponentName = componentName;
+        
+        int cuttOff = simpleComponentName.indexOf("(");
         if (cuttOff != -1) {
-            componentName = componentName.substring(0, cuttOff).trim();
+            simpleComponentName = simpleComponentName.substring(0, cuttOff).trim();
         }
-        for (String serviceName : componentName.split(",")) {
-            if (simpleName.equals(serviceName.trim()) && doPropertiesMatch(properties, parseProperties(cd.getName()))) {
+        for (String serviceName : simpleComponentName.split(",")) {
+            if (simpleName.equals(serviceName.trim()) && doPropertiesMatch(properties, parseProperties(componentName))) {
                 return true;
             }
         }
