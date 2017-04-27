@@ -26,13 +26,18 @@ import java.util.RandomAccess;
 
 public class ImmutableList<E> extends AbstractList<E> implements RandomAccess
 {
+    @SuppressWarnings("rawtypes")
+    private static final ImmutableList EMPTY_LIST = new ImmutableList();
+    
     final Object[] elements;
 
+    @SuppressWarnings("unchecked")
     public static <E> ImmutableList<E> newInstance(E... elements)
     {
-        return new ImmutableList<E>(elements);
+        return elements.length == 0 ? EMPTY_LIST : new ImmutableList<E>(elements);
     }
 
+    @SuppressWarnings("unchecked")
     public static <E> ImmutableList<E> newInstance(Collection<? extends E> elements)
     {
         if (elements instanceof ImmutableList)
@@ -41,8 +46,13 @@ public class ImmutableList<E> extends AbstractList<E> implements RandomAccess
         }
         else
         {
-            return new ImmutableList<E>(elements);
+            return elements.isEmpty() ? EMPTY_LIST : new ImmutableList<E>(elements);
         }
+    }
+
+    private ImmutableList()
+    {
+        this.elements = new Object[0];
     }
 
     protected ImmutableList(E... elements)
@@ -55,6 +65,7 @@ public class ImmutableList<E> extends AbstractList<E> implements RandomAccess
         this.elements = elements.toArray();
     }
 
+    @SuppressWarnings("unchecked")
     public E get(int index)
     {
         return (E) elements[index];
@@ -115,6 +126,7 @@ public class ImmutableList<E> extends AbstractList<E> implements RandomAccess
             return cursor != size();
         }
 
+        @SuppressWarnings("unchecked")
         public E next()
         {
             return (E) elements[cursor++];
@@ -125,6 +137,7 @@ public class ImmutableList<E> extends AbstractList<E> implements RandomAccess
             return cursor != 0;
         }
 
+        @SuppressWarnings("unchecked")
         public E previous()
         {
             return (E) elements[--cursor];
