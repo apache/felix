@@ -24,6 +24,7 @@ public class NativeLibraryClauseTest extends TestCase {
     public void testNormalizeOSName() {
         assertEquals("win32", NativeLibraryClause.normalizeOSName("win 32"));
         assertEquals("win32", NativeLibraryClause.normalizeOSName("Win*"));
+        assertEquals("win32", NativeLibraryClause.normalizeOSName("Windows NonExistingFutureVersion 4711"));
         assertEquals("windows95", NativeLibraryClause.normalizeOSName("Windows 95"));
         assertEquals("windows98", NativeLibraryClause.normalizeOSName("Windows 98"));
         assertEquals("windowsnt", NativeLibraryClause.normalizeOSName("WinNT"));
@@ -31,6 +32,7 @@ public class NativeLibraryClauseTest extends TestCase {
         assertEquals("windows2003", NativeLibraryClause.normalizeOSName("Win2003"));
         assertEquals("windowsserver2008", NativeLibraryClause.normalizeOSName("Windows Server 2008"));
         assertEquals("windowsserver2012", NativeLibraryClause.normalizeOSName("Windows Server 2012"));
+        assertEquals("windowsserver2016", NativeLibraryClause.normalizeOSName("Windows Server 2016"));
         assertEquals("windowsxp", NativeLibraryClause.normalizeOSName("WinXP"));
         assertEquals("windowsce", NativeLibraryClause.normalizeOSName("WinCE"));
         assertEquals("windowsvista", NativeLibraryClause.normalizeOSName("WinVista"));
