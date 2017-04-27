@@ -31,9 +31,9 @@ import java.util.stream.Stream;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-import org.osgi.util.converter.ConverterFunction;
 import org.osgi.util.converter.Converter;
 import org.osgi.util.converter.ConverterBuilder;
+import org.osgi.util.converter.ConverterFunction;
 import org.osgi.util.converter.Rule;
 import org.osgi.util.converter.TypeRule;
 import org.osgi.util.function.Function;
@@ -121,7 +121,7 @@ public class ConverterBuilderTest {
 
     @Test
     public void testWildcardAdapter() {
-        ConverterFunction<Object> foo = new ConverterFunction<Object>() {
+        ConverterFunction foo = new ConverterFunction() {
             @Override
             public Object apply(Object obj, Type type) throws Exception {
                 if (!(obj instanceof List))
@@ -148,7 +148,7 @@ public class ConverterBuilderTest {
 
     @Test
     public void testWildcardAdapter1() {
-        ConverterFunction<Object> foo = new ConverterFunction<Object>() {
+        ConverterFunction foo = new ConverterFunction() {
             @Override
             public Object apply(Object obj, Type type) throws Exception {
                 if (!(obj instanceof List))
