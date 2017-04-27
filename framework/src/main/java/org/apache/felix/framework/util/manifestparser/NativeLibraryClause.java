@@ -313,7 +313,7 @@ public class NativeLibraryClause
     private boolean checkOSVersions(String osVersion, String[] osversions) 
         throws BundleException
     {
-        Version currentOSVersion = Version.parseVersion(formatOSVersion(osVersion));
+        Version currentOSVersion = Version.parseVersion(normalizeOSVersion(osVersion));
         for (int i = 0; (osversions != null) && (i < osversions.length); i++)
         {
             try
@@ -455,7 +455,7 @@ public class NativeLibraryClause
                     }
                     else if (property.equals(Constants.BUNDLE_NATIVECODE_OSVERSION))
                     {
-                        osVersionList.add(normalizeOSVersion(value));
+                        osVersionList.add(normalizeOSVersionRange(value));
                     }
                     else if (property.equals(Constants.BUNDLE_NATIVECODE_PROCESSOR))
                     {
@@ -494,26 +494,6 @@ public class NativeLibraryClause
             logger.log(Logger.LOG_ERROR,
                 "Error parsing native library header.", ex);
             throw ex;
-        }
-    }
-
-    public static String formatOSVersion(String value)
-    {
-        // Header: 'Bundle-NativeCode', Parameter: 'osversion'
-        // Standardized 'osversion': major.minor.micro, only digits
-        try
-        {
-            Pattern versionPattern = Pattern.compile("\\d+\\.?\\d*\\.?\\d*");
-            Matcher matcher = versionPattern.matcher(value);
-            if (matcher.find())
-            {
-                value = matcher.group();
-            }
-            return Version.parseVersion(value).toString();
-        }
-        catch (Exception ex)
-        {
-            return Version.emptyVersion.toString();
         }
     }
 
@@ -691,6 +671,10 @@ public class NativeLibraryClause
         {
             return OS_VXWORKS;
         }
+        else if (value.startsWith(OS_EPOC))
+        {
+            return OS_EPOC;
+        }
         return value;
     }
 
@@ -755,20 +739,109 @@ public class NativeLibraryClause
         {
             return PROC_SPARC;
         }
+
         return value;
     }
 
+    public static String normalizeOSVersionRange(String value)
+    {
+        if (value.indexOf(',') >= 0)
+        {
+            try
+            {
+                String s = value.substring(1, value.length() - 1);
+                String vlo = s.substring(0, s.indexOf(',')).trim();
+                String vhi = s.substring(s.indexOf(',') + 1, s.length()).trim();
+                return new VersionRange(new Version(cleanupVersion(vlo)), (value.charAt(0) == '['), new Version(
+                    cleanupVersion(vhi)), (value.charAt(value.length() - 1) == ']')).toString();
+            }
+
+            catch (Exception ex)
+            {
+                return Version.emptyVersion.toString();
+            }
+        }
+
+        return normalizeOSVersion(value);
+    }
+    
     public static String normalizeOSVersion(String value)
     {
-        // Header: 'Bundle-NativeCode', Parameter: 'osversion'
-        // Standardized 'osversion': major.minor.micro, only digits
-        try
+        return new Version(cleanupVersion(value)).toString();
+    }
+    
+    private static final Pattern FUZZY_VERSION = Pattern.compile( "(\\d+)(\\.(\\d+)(\\.(\\d+))?)?([^a-zA-Z0-9](.*))?",
+        Pattern.DOTALL );
+
+    private static String cleanupVersion( String version )
+    {
+        StringBuffer result = new StringBuffer();
+        Matcher m = FUZZY_VERSION.matcher( version );
+        if ( m.matches() )
         {
-            return VersionRange.parse(value).toString();
+            String major = m.group( 1 );
+            String minor = m.group( 3 );
+            String micro = m.group( 5 );
+            String qualifier = m.group( 7 );
+
+            if ( major != null )
+            {
+                result.append( major );
+                if ( minor != null )
+                {
+                    result.append( "." );
+                    result.append( minor );
+                    if ( micro != null )
+                    {
+                        result.append( "." );
+                        result.append( micro );
+                        if ( qualifier != null )
+                        {
+                            result.append( "." );
+                            cleanupModifier( result, qualifier );
+                        }
+                    }
+                    else if ( qualifier != null )
+                    {
+                        result.append( ".0." );
+                        cleanupModifier( result, qualifier );
+                    }
+                    else
+                    {
+                        result.append( ".0" );
+                    }
+                }
+                else if ( qualifier != null )
+                {
+                    result.append( ".0.0." );
+                    cleanupModifier( result, qualifier );
+                }
+                else
+                {
+                    result.append( ".0.0" );
+                }
+            }
         }
-        catch (Exception ex)
+        else
         {
-            return Version.emptyVersion.toString();
+            result.append( "0.0.0." );
+            cleanupModifier( result, version );
+        }
+        return result.toString();
+    }
+
+
+    private static void cleanupModifier( StringBuffer result, String modifier )
+    {
+        for ( int i = 0; i < modifier.length(); i++ )
+        {
+            char c = modifier.charAt( i );
+            if ( ( c >= '0' && c <= '9' ) || ( c >= 'a' && c <= 'z' ) || ( c >= 'A' && c <= 'Z' ) || c == '_'
+                || c == '-' )
+                result.append( c );
+            else
+                result.append( '_' );
         }
     }
+
 }
