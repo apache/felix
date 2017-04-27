@@ -4596,9 +4596,6 @@ public class Felix extends BundleImpl implements Framework
             FelixConstants.FRAMEWORK_LANGUAGE,
             System.getProperty("user.language"));
         m_configMutableMap.put(
-            FelixConstants.FRAMEWORK_OS_VERSION,
-            System.getProperty("os.version"));
-        m_configMutableMap.put(
             FelixConstants.SUPPORTS_FRAMEWORK_EXTENSION,
             "true");
         m_configMutableMap.put(
@@ -4616,6 +4613,8 @@ public class Felix extends BundleImpl implements Framework
         m_configMutableMap.put(FelixConstants.FRAMEWORK_OS_NAME, s);
         s = NativeLibraryClause.normalizeProcessor(System.getProperty("os.arch"));
         m_configMutableMap.put(FelixConstants.FRAMEWORK_PROCESSOR, s);
+        m_configMutableMap.put(FelixConstants.FRAMEWORK_OS_VERSION,
+            NativeLibraryClause.normalizeOSVersion(System.getProperty("os.version")));
         m_configMutableMap.put(
             FelixConstants.FELIX_VERSION_PROPERTY, getFrameworkVersion());
 
