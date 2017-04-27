@@ -285,8 +285,7 @@ class ExtensionManager extends URLStreamHandler implements Content
 
         if( osVersion != null)
         {
-            osVersion = NativeLibraryClause.formatOSVersion(osVersion);
-            attributes.put(NativeNamespace.CAPABILITY_OSVERSION_ATTRIBUTE, Version.parseVersion(osVersion));
+            attributes.put(NativeNamespace.CAPABILITY_OSVERSION_ATTRIBUTE, new Version(NativeLibraryClause.normalizeOSVersion(osVersion)));
         }
 
         if( userLang != null)
