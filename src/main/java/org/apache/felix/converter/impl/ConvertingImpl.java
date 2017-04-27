@@ -42,7 +42,6 @@ import java.util.Map.Entry;
 import java.util.Set;
 
 import org.apache.felix.converter.DTOUtil;
-import org.osgi.dto.DTO;
 import org.osgi.util.converter.ConversionException;
 import org.osgi.util.converter.Converter;
 import org.osgi.util.converter.Converting;
@@ -209,7 +208,7 @@ public class ConvertingImpl implements Converting, InternalConverting {
             return convertToArray();
         } else if (Collection.class.isAssignableFrom(targetAsClass)) {
             return convertToCollection();
-        } else if (DTOUtil.isDTOType(targetAsClass) || ((sourceAsDTO || targetAsDTO) && DTO.class.isAssignableFrom(targetClass))) {
+        } else if (DTOUtil.isDTOType(targetAsClass)) {
             return convertToDTO();
         } else if (isMapType(targetAsClass, targetAsJavaBean)) {
             return convertToMapType();
@@ -347,7 +346,7 @@ public class ConvertingImpl implements Converting, InternalConverting {
 
                 if (f != null) {
                     Object val = entry.getValue();
-                    if (sourceAsDTO && DTO.class.isAssignableFrom(f.getType()))
+                    if (sourceAsDTO && DTOUtil.isDTOType(f.getType()))
                         val = converter.convert(val).sourceAsDTO().to(f.getType());
                     else
                         val = converter.convert(val).to(f.getType());
@@ -399,7 +398,7 @@ public class ConvertingImpl implements Converting, InternalConverting {
                 if (isCopyRequiredType(cls)) {
                     cls = getConstructableType(cls);
                 }
-                if (sourceAsDTO && DTO.class.isAssignableFrom(cls))
+                if (sourceAsDTO && DTOUtil.isDTOType(cls))
                     value = converter.convert(value).sourceAsDTO().to(cls);
                 else
                     value = converter.convert(value).to(cls);
@@ -835,7 +834,7 @@ public class ConvertingImpl implements Converting, InternalConverting {
     }
 
     private Map<?,?> mapView(Object obj, Class<?> sourceCls, InternalConverter converter) {
-        if (Map.class.isAssignableFrom(sourceCls) || (DTO.class.isAssignableFrom(sourceCls) && obj instanceof Map))
+        if (Map.class.isAssignableFrom(sourceCls) || (DTOUtil.isDTOType(sourceCls) && obj instanceof Map))
             return (Map<?,?>) obj;
         else if (Dictionary.class.isAssignableFrom(sourceCls))
             return null; // TODO
@@ -860,7 +859,7 @@ public class ConvertingImpl implements Converting, InternalConverting {
             return false;
         return Map.class.isAssignableFrom(cls) ||
                 Collection.class.isAssignableFrom(cls) ||
-                DTO.class.isAssignableFrom(cls) ||
+                DTOUtil.isDTOType(cls) ||
                 // isJavaBean
                 cls.isArray();
     }
