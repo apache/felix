@@ -1,12 +1,10 @@
 {
-  "configurations" : [
-    {
-      "service.pid" : "a",
-      "foo" : "bar2"
-    },
-    {
-      "service.pid" : "b",
-      "x" : "y2"
-    }
-  ]
+  "configurations" : {
+    "a" : {
+              "foo" : "bar2"
+          },
+    "b" : {
+              "x" : "y2"
+          }
+  }
 }

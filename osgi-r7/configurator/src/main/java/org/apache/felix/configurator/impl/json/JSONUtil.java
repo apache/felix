@@ -25,11 +25,14 @@ import java.io.StringWriter;
 import java.io.Writer;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Dictionary;
 import java.util.Enumeration;
+import java.util.HashSet;
 import java.util.Hashtable;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import javax.json.Json;
@@ -50,7 +53,6 @@ import org.apache.felix.configurator.impl.model.Config;
 import org.apache.felix.configurator.impl.model.ConfigPolicy;
 import org.apache.felix.configurator.impl.model.ConfigurationFile;
 import org.osgi.framework.Bundle;
-import org.osgi.util.converter.TypeReference;
 
 public class JSONUtil {
 
@@ -58,13 +60,9 @@ public class JSONUtil {
 
     private static final String PROP_VERSION = INTERNAL_PREFIX + "json-version";
 
-    private static final String PROP_ENVIRONMENTS = "environments";
-
     private static final String PROP_RANKING = "ranking";
 
     private static final String PROP_POLICY = "policy";
-
-    private static final String PROP_PID = "service.pid";
 
     public static BundleState readConfigurationsFromBundle(final Bundle bundle, final Set<String> paths) {
         final BundleState config = new BundleState();
@@ -139,88 +137,92 @@ public class JSONUtil {
             final String contents) {
         final String identifier = (url == null ? name : url.toString());
         final JsonObject json = parseJSON(name, contents);
-        final List<?> configs = verifyJSON(name, json);
+        final Map<String, ?> configs = verifyJSON(name, json);
         if ( configs != null ) {
             final List<Config> configurations = new ArrayList<>();
-            for(final Object obj : configs) {
-                if ( ! (obj instanceof JsonObject) ) {
-                    SystemLogger.error("Ignoring configuration in '" + identifier + "' (not a configuration) : " + obj);
+            for(final Map.Entry<String, ?> entry : configs.entrySet()) {
+                if ( ! (entry.getValue() instanceof JsonObject) ) {
+                    SystemLogger.error("Ignoring configuration in '" + identifier + "' (not a configuration) : " + entry.getKey());
                 } else {
-                    final JsonObject mainMap = (JsonObject)obj;
-                    final Object pid = getValue(mainMap, PROP_PID);
-                    if ( ! (pid instanceof String) ) {
-                        SystemLogger.error("Ignoring configuration in '" + identifier + "' (no service.pid) : " + obj);
+                    final JsonObject mainMap = (JsonObject)entry.getValue();
+                    final int envIndex = entry.getKey().indexOf('[');
+                    if ( envIndex != -1 && !entry.getKey().endsWith("]") ) {
+                        SystemLogger.error("Ignoring configuration in '" + identifier + "' (invalid environments definition) : " + entry.getKey());
+                        continue;
+                    }
+                    final String pid;
+                    final Set<String> environments;
+                    if ( envIndex == -1 ) {
+                        pid = entry.getKey();
+                        environments = null;
                     } else {
-                        Set<String> environments = null;
-                        int ranking = 0;
-                        ConfigPolicy policy = ConfigPolicy.DEFAULT;
+                        pid = entry.getKey().substring(0, envIndex);
+                        environments = new HashSet<>(Arrays.asList(entry.getKey().substring(envIndex + 1, entry.getKey().length()).split(",")));
+                        if ( environments.isEmpty() ) {
+                            SystemLogger.warning("Invalid environments for configuration in '" + identifier + "' : " + pid);
+                        }
+                    }
 
-                        final Dictionary<String, Object> properties = new Hashtable<>();
-                        boolean valid = true;
-                        for(final String mapKey : mainMap.keySet()) {
-                            if ( mapKey.equals(PROP_PID) ) {
-                                continue;
-                            }
-                            final Object value = getValue(mainMap, mapKey);
+                    int ranking = 0;
+                    ConfigPolicy policy = ConfigPolicy.DEFAULT;
 
-                            final boolean internalKey = mapKey.startsWith(INTERNAL_PREFIX);
-                            String key = mapKey;
-                            if ( internalKey ) {
-                                key = key.substring(INTERNAL_PREFIX.length());
-                            }
-                            final int pos = key.indexOf(':');
-                            String typeInfo = null;
-                            if ( pos != -1 ) {
-                                typeInfo = key.substring(pos + 1);
-                                key = key.substring(0, pos);
-                            }
+                    final Dictionary<String, Object> properties = new Hashtable<>();
+                    boolean valid = true;
+                    for(final String mapKey : mainMap.keySet()) {
+                        final Object value = getValue(mainMap, mapKey);
 
-                            if ( internalKey ) {
-                                // no need to do type conversion based on typeInfo for internal props, type conversion is done directly below
-                                if ( key.equals(PROP_ENVIRONMENTS) ) {
-                                    environments = TypeConverter.getConverter().convert(value).defaultValue(null).to(new TypeReference<Set<String>>() {});
-                                    if ( environments == null ) {
-                                        SystemLogger.warning("Invalid environments for configuration in '" + identifier + "' : " + pid + " - " + value);
-                                    }
-                                } else if ( key.equals(PROP_RANKING) ) {
-                                    final Integer intObj = TypeConverter.getConverter().convert(value).defaultValue(null).to(Integer.class);
-                                    if ( intObj == null ) {
-                                        SystemLogger.warning("Invalid ranking for configuration in '" + identifier + "' : " + pid + " - " + value);
+                        final boolean internalKey = mapKey.startsWith(INTERNAL_PREFIX);
+                        String key = mapKey;
+                        if ( internalKey ) {
+                            key = key.substring(INTERNAL_PREFIX.length());
+                        }
+                        final int pos = key.indexOf(':');
+                        String typeInfo = null;
+                        if ( pos != -1 ) {
+                            typeInfo = key.substring(pos + 1);
+                            key = key.substring(0, pos);
+                        }
+
+                        if ( internalKey ) {
+                            // no need to do type conversion based on typeInfo for internal props, type conversion is done directly below
+                            if ( key.equals(PROP_RANKING) ) {
+                                final Integer intObj = TypeConverter.getConverter().convert(value).defaultValue(null).to(Integer.class);
+                                if ( intObj == null ) {
+                                    SystemLogger.warning("Invalid ranking for configuration in '" + identifier + "' : " + pid + " - " + value);
+                                } else {
+                                    ranking = intObj.intValue();
+                                }
+                            } else if ( key.equals(PROP_POLICY) ) {
+                                final String stringVal = TypeConverter.getConverter().convert(value).defaultValue(null).to(String.class);
+                                if ( stringVal == null ) {
+                                    SystemLogger.error("Invalid policy for configuration in '" + identifier + "' : " + pid + " - " + value);
+                                } else {
+                                    if ( value.equals("default") || value.equals("force") ) {
+                                        policy = ConfigPolicy.valueOf(stringVal.toUpperCase());
                                     } else {
-                                        ranking = intObj.intValue();
-                                    }
-                                } else if ( key.equals(PROP_POLICY) ) {
-                                    final String stringVal = TypeConverter.getConverter().convert(value).defaultValue(null).to(String.class);
-                                    if ( stringVal == null ) {
                                         SystemLogger.error("Invalid policy for configuration in '" + identifier + "' : " + pid + " - " + value);
-                                    } else {
-                                        if ( value.equals("default") || value.equals("force") ) {
-                                            policy = ConfigPolicy.valueOf(stringVal.toUpperCase());
-                                        } else {
-                                            SystemLogger.error("Invalid policy for configuration in '" + identifier + "' : " + pid + " - " + value);
-                                        }
                                     }
-                                }
-                            } else {
-                                try {
-                                    Object convertedVal = converter.convert(pid.toString(), value, typeInfo);
-                                    if ( convertedVal == null ) {
-                                        convertedVal = value.toString();
-                                    }
-                                    properties.put(mapKey, convertedVal);
-                                } catch ( final IOException io ) {
-                                    SystemLogger.error("Invalid value/type for configuration in '" + identifier + "' : " + pid + " - " + mapKey);
-                                    valid = false;
-                                    break;
                                 }
                             }
+                        } else {
+                            try {
+                                Object convertedVal = converter.convert(pid, value, typeInfo);
+                                if ( convertedVal == null ) {
+                                    convertedVal = value.toString();
+                                }
+                                properties.put(mapKey, convertedVal);
+                            } catch ( final IOException io ) {
+                                SystemLogger.error("Invalid value/type for configuration in '" + identifier + "' : " + pid + " - " + mapKey);
+                                valid = false;
+                                break;
+                            }
                         }
+                    }
 
-                        if ( valid ) {
-                            final Config c = new Config((String)pid, environments, properties, bundleId, ranking, policy);
-                            c.setFiles(converter.flushFiles());
-                            configurations.add(c);
-                        }
+                    if ( valid ) {
+                        final Config c = new Config(pid, environments, properties, bundleId, ranking, policy);
+                        c.setFiles(converter.flushFiles());
+                        configurations.add(c);
                     }
                 }
             }
@@ -303,9 +305,10 @@ public class JSONUtil {
      * Verify the JSON according to the rules
      * @param name The JSON name
      * @param root The JSON root object.
-     * @return JSON array with configurations or {@code null}
+     * @return JSON map with configurations or {@code null}
      */
-    public static List<?> verifyJSON(final String name, final JsonObject root) {
+    @SuppressWarnings("unchecked")
+    public static Map<String, ?> verifyJSON(final String name, final JsonObject root) {
         if ( root == null ) {
             return null;
         }
@@ -328,10 +331,10 @@ public class JSONUtil {
             // short cut, we just return false as we don't have to process this file
             return null;
         }
-        if ( !(configs instanceof List) ) {
-            SystemLogger.error("Configurations must be an array of configurations in " + name);
+        if ( !(configs instanceof Map) ) {
+            SystemLogger.error("Configurations must be a map of configurations in " + name);
             return null;
         }
-        return (List<?>) configs;
+        return (Map<String, ?>) configs;
     }
 }
