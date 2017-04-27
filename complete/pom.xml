@@ -84,6 +84,12 @@
 						<Bundle-Activator>org.apache.felix.httplite.osgi.Activator</Bundle-Activator>
 						<Bundle-Vendor>The Apache Software Foundation</Bundle-Vendor>
 						<Include-Resource>META-INF/LICENSE=LICENSE,META-INF/NOTICE=NOTICE,META-INF/DEPENDENCIES=DEPENDENCIES</Include-Resource>
+						<Import-Package>
+							javax.servlet;version="2.4",
+							javax.servlet.http;version="2.4",
+							org.osgi.service.http;version="1.2",
+							*
+						</Import-Package>
 						<Export-Package>
 							javax.servlet;version="2.4",
 							javax.servlet.http;version="2.4",
