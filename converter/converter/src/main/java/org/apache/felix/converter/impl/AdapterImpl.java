@@ -23,20 +23,20 @@ import java.util.List;
 import java.util.Map;
 
 import org.osgi.util.converter.ConversionException;
-import org.osgi.util.converter.ConverterFunction;
 import org.osgi.util.converter.Converter;
 import org.osgi.util.converter.ConverterBuilder;
+import org.osgi.util.converter.ConverterFunction;
 import org.osgi.util.converter.Converting;
 import org.osgi.util.converter.TypeReference;
 
 public class AdapterImpl implements InternalConverter {
     private final InternalConverter delegate;
-    private final Map<Type, List<ConverterFunction<?>>> typeRules;
-    private final List<ConverterFunction<?>> allRules;
-    private final List<ConverterFunction<?>> errorHandlers;
+    private final Map<Type, List<ConverterFunction>> typeRules;
+    private final List<ConverterFunction> allRules;
+    private final List<ConverterFunction> errorHandlers;
 
-    AdapterImpl(InternalConverter converter, Map<Type, List<ConverterFunction<?>>> rules,
-            List<ConverterFunction<?>> catchAllRules, List<ConverterFunction<?>> errHandlers) {
+    AdapterImpl(InternalConverter converter, Map<Type, List<ConverterFunction>> rules,
+            List<ConverterFunction> catchAllRules, List<ConverterFunction> errHandlers) {
         delegate = converter;
         typeRules = rules;
         allRules = catchAllRules;
@@ -143,16 +143,16 @@ public class AdapterImpl implements InternalConverter {
         @SuppressWarnings("unchecked")
         @Override
         public Object to(Type type) {
-            List<ConverterFunction<?>> tr = typeRules.get(Util.baseType(type));
+            List<ConverterFunction> tr = typeRules.get(Util.baseType(type));
             if (tr == null)
                 tr = Collections.emptyList();
-            List<ConverterFunction<?>> converters = new ArrayList<>(tr.size() + allRules.size());
+            List<ConverterFunction> converters = new ArrayList<>(tr.size() + allRules.size());
             converters.addAll(tr);
             converters.addAll(allRules);
 
             try {
                 if (object != null) {
-                    for (ConverterFunction<?> cf : converters) {
+                    for (ConverterFunction cf : converters) {
                         try {
                             Object res = cf.apply(object, type);
                             if (res != null) {
@@ -169,7 +169,7 @@ public class AdapterImpl implements InternalConverter {
 
                 return del.to(type);
             } catch (Exception ex) {
-                for (ConverterFunction<?> eh : errorHandlers) {
+                for (ConverterFunction eh : errorHandlers) {
                     try {
                         Object handled = eh.apply(object, type);
                         if (handled != null)

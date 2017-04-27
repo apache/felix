@@ -28,9 +28,9 @@ import org.osgi.util.converter.TargetRule;
 
 public class ConverterBuilderImpl implements ConverterBuilder {
     private final InternalConverter adapter;
-    private final Map<Type, List<ConverterFunction<?>>> rules = new HashMap<>();
-    private final List<ConverterFunction<?>> catchAllRules = new ArrayList<>();
-    private final List<ConverterFunction<?>> errorHandlers = new ArrayList<>();
+    private final Map<Type, List<ConverterFunction>> rules = new HashMap<>();
+    private final List<ConverterFunction> catchAllRules = new ArrayList<>();
+    private final List<ConverterFunction> errorHandlers = new ArrayList<>();
 
     public ConverterBuilderImpl(InternalConverter a) {
         this.adapter = a;
@@ -42,32 +42,32 @@ public class ConverterBuilderImpl implements ConverterBuilder {
     }
 
     @Override
-    public ConverterBuilder errorHandler(ConverterFunction<Object> func) {
+    public ConverterBuilder errorHandler(ConverterFunction func) {
         errorHandlers.add(func);
         return this;
     }
 
     @Override
-    public ConverterBuilder rule(ConverterFunction<Object> func) {
+    public ConverterBuilder rule(ConverterFunction func) {
     	catchAllRules.add(func);
         return this;
     }
 
     @Override
-    public <T> ConverterBuilder rule(Type t, ConverterFunction<T> func) {
+    public ConverterBuilder rule(Type t, ConverterFunction func) {
     	getRulesList(t).add(func);
     	return this;
     }
 
     @Override
-    public <T> ConverterBuilder rule(TargetRule<T> rule) {
+    public ConverterBuilder rule(TargetRule rule) {
     	Type type = rule.getTargetType();
     	getRulesList(type).add(rule.getFunction());
         return this;
     }
 
-    private List<ConverterFunction<?>> getRulesList(Type type) {
-        List<ConverterFunction<?>> l = rules.get(type);
+    private List<ConverterFunction> getRulesList(Type type) {
+        List<ConverterFunction> l = rules.get(type);
     	if (l == null) {
     		l = new ArrayList<>();
     		rules.put(type, l);

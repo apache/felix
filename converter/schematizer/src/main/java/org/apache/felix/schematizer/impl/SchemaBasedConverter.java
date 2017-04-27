@@ -33,9 +33,10 @@ import org.osgi.util.converter.StandardConverter;
 import org.osgi.util.converter.TargetRule;
 import org.osgi.util.converter.TypeReference;
 
-import static org.apache.felix.schematizer.impl.Util.*;
+import static org.apache.felix.schematizer.impl.Util.asDTO;
+import static org.apache.felix.schematizer.impl.Util.rawClassOf;
 
-public class SchemaBasedConverter<T> implements TargetRule<T> {
+public class SchemaBasedConverter<T> implements TargetRule {
     private final SchemaImpl schema;
     private final Converter converter;
 
@@ -45,7 +46,7 @@ public class SchemaBasedConverter<T> implements TargetRule<T> {
     }
 
     @Override
-    public ConverterFunction<T> getFunction() {
+    public ConverterFunction getFunction() {
         return (obj,t) -> {
             if (!(obj instanceof Map) || schema == null)
                 return handleInvalid();
