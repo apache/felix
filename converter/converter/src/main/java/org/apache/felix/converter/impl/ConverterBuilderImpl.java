@@ -22,8 +22,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.osgi.util.converter.ConverterFunction;
 import org.osgi.util.converter.ConverterBuilder;
+import org.osgi.util.converter.ConverterFunction;
 import org.osgi.util.converter.TargetRule;
 
 public class ConverterBuilderImpl implements ConverterBuilder {
@@ -42,13 +42,13 @@ public class ConverterBuilderImpl implements ConverterBuilder {
     }
 
     @Override
-    public <T> ConverterBuilder errorHandler(ConverterFunction<T> func) {
+    public ConverterBuilder errorHandler(ConverterFunction<Object> func) {
         errorHandlers.add(func);
         return this;
     }
 
     @Override
-    public <T> ConverterBuilder rule(ConverterFunction<T> func) {
+    public ConverterBuilder rule(ConverterFunction<Object> func) {
     	catchAllRules.add(func);
         return this;
     }
