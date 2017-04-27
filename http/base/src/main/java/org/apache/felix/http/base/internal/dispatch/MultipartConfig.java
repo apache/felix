@@ -22,7 +22,7 @@ public final class MultipartConfig
 {
     public static final MultipartConfig DEFAULT_CONFIG = new MultipartConfig(null, null, -1, -1);
 
-    private static final String TEMP_DIR = System.getProperty("java.io.tmpdir");
+    public static final MultipartConfig INVALID_CONFIG = new MultipartConfig(null, null, -1, -1);
 
     /**
      * Specifies the multipart threshold
@@ -57,14 +57,7 @@ public final class MultipartConfig
         {
             this.multipartThreshold = DiskFileItemFactory.DEFAULT_SIZE_THRESHOLD;
         }
-        if ( location != null )
-        {
-            this.multipartLocation = location;
-        }
-        else
-        {
-            this.multipartLocation = TEMP_DIR;
-        }
+        this.multipartLocation = location;
         if ( maxFileSize > 0 || maxFileSize == -1 ) {
             this.multipartMaxFileSize = maxFileSize;
         }
