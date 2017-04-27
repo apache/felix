@@ -15,6 +15,6 @@
  * limitations under the License.
  */
 @Version("1.0")
-package org.apache.felix.converter;
+package org.apache.felix.converter.dto;
 
 import org.osgi.annotation.versioning.Version;
