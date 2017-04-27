@@ -35,15 +35,9 @@ import org.jline.terminal.TerminalBuilder;
 public class Main {
 
     public static void main(String[] args) throws IOException {
-        InputStream sin = System.in;
-        PrintStream sout = System.out;
-        PrintStream serr = System.err;
-
         try (Terminal terminal = TerminalBuilder.builder()
                 .name("gogo")
-                .type(System.getenv("TERM"))
                 .system(true)
-                .streams(sin, sout)
                 .nativeSignals(true)
                 .signalHandler(Terminal.SignalHandler.SIG_IGN)
                 .build()) {
@@ -61,18 +55,6 @@ public class Main {
                 register(processor, new Procedural(), Procedural.functions);
                 register(processor, new Posix(processor), Posix.functions);
                 register(processor, shell, Shell.functions);
-                /*
-                try {
-                    register(processor, new Telnet(processor), Telnet.functions);
-                } catch (Throwable t) {
-                    // ignore
-                }
-                try {
-                    register(processor, new Ssh(processor), Ssh.functions);
-                } catch (Throwable t) {
-                    // ignore
-                }
-                */
                 InputStream in = new FilterInputStream(terminal.input()) {
                     @Override
                     public void close() throws IOException {

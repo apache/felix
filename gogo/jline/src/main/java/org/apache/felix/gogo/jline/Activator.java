@@ -110,6 +110,7 @@ public class Activator implements BundleActivator, SingleServiceListener {
         regs.add(context.registerService(Shell.class.getName(), shell, dict));
 
         Terminal terminal = TerminalBuilder.builder()
+                .name("gogo")
                 .system(true)
                 .nativeSignals(true)
                 .signalHandler(Terminal.SignalHandler.SIG_IGN)
