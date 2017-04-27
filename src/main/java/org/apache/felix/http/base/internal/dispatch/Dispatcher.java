@@ -89,16 +89,16 @@ public final class Dispatcher
 
         // invoke preprocessors and then dispatching
         mgr.invokePreprocessors(req, res, new Preprocessor() {
-			
+
 			@Override
-			public void init(final FilterConfig filterConfig) throws ServletException 
+			public void init(final FilterConfig filterConfig) throws ServletException
 			{
-				// nothing to do			
+				// nothing to do
 		    }
-			
+
 			@Override
 			public void doFilter(final ServletRequest request, final ServletResponse response, final FilterChain chain)
-			throws IOException, ServletException 
+			throws IOException, ServletException
 			{
 				final HttpServletRequest req = (HttpServletRequest)request;
 				final HttpServletResponse res = (HttpServletResponse)response;
@@ -133,7 +133,7 @@ public final class Dispatcher
 		        final HttpServletRequest wrappedRequest = new ServletRequestWrapper(req, servletContext, requestInfo, null,
 		                pr.handler.getContextServiceId(),
 		                pr.handler.getServletInfo().isAsyncSupported(),
-		                pr.handler.getServletInfo().getMultipartConfig());
+		                pr.handler.getMultipartConfig());
 		        final FilterHandler[] filterHandlers = handlerRegistry.getFilters(pr, req.getDispatcherType(), pr.requestURI);
 
 		        try
@@ -161,13 +161,13 @@ public final class Dispatcher
 		                servletContext.getServletRequestListener().requestDestroyed(new ServletRequestEvent(servletContext, wrappedRequest));
 		            }
 		        }			}
-			
+
 			@Override
-			public void destroy() 
+			public void destroy()
 			{
 				// nothing to do
 			}
-		}); 
+		});
 
     }
 }

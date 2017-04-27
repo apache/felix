@@ -89,10 +89,19 @@ public class ServletInfo extends WhiteboardServiceInfo<Servlet>
         this.asyncSupported = getBooleanProperty(ref, HttpWhiteboardConstants.HTTP_WHITEBOARD_SERVLET_ASYNC_SUPPORTED);
         if ( getBooleanProperty(ref, HttpWhiteboardConstants.HTTP_WHITEBOARD_SERVLET_MULTIPART_ENABLED) )
         {
-            this.multipartConfig = new MultipartConfig(getIntProperty(ref, HttpWhiteboardConstants.HTTP_WHITEBOARD_SERVLET_MULTIPART_FILESIZETHRESHOLD),
-                    getStringProperty(ref, HttpWhiteboardConstants.HTTP_WHITEBOARD_SERVLET_MULTIPART_LOCATION),
-                    getLongProperty(ref, HttpWhiteboardConstants.HTTP_WHITEBOARD_SERVLET_MULTIPART_MAXFILESIZE),
-                    getLongProperty(ref, HttpWhiteboardConstants.HTTP_WHITEBOARD_SERVLET_MULTIPART_MAXREQUESTSIZE));
+            MultipartConfig cfg = null;
+            try
+            {
+                cfg = new MultipartConfig(getIntProperty(ref, HttpWhiteboardConstants.HTTP_WHITEBOARD_SERVLET_MULTIPART_FILESIZETHRESHOLD),
+                        getStringProperty(ref, HttpWhiteboardConstants.HTTP_WHITEBOARD_SERVLET_MULTIPART_LOCATION),
+                        getLongProperty(ref, HttpWhiteboardConstants.HTTP_WHITEBOARD_SERVLET_MULTIPART_MAXFILESIZE),
+                        getLongProperty(ref, HttpWhiteboardConstants.HTTP_WHITEBOARD_SERVLET_MULTIPART_MAXREQUESTSIZE));
+            }
+            catch (final IllegalArgumentException iae)
+            {
+                cfg = MultipartConfig.INVALID_CONFIG;
+            }
+            this.multipartConfig = cfg;
         }
         else
         {
@@ -115,6 +124,42 @@ public class ServletInfo extends WhiteboardServiceInfo<Servlet>
         this.initParams = Collections.emptyMap();
         this.isResource = true;
         this.prefix = resource.getPrefix();
+    }
+
+    private Integer getIntProperty(final ServiceReference<Servlet> ref, final String key)
+    {
+        final Object value = ref.getProperty(key);
+        if (value instanceof String)
+        {
+            return Integer.valueOf((String) value);
+        }
+        else if (value instanceof Number)
+        {
+            return ((Number) value).intValue();
+        }
+        else if ( value != null )
+        {
+            throw new IllegalArgumentException();
+        }
+        return null;
+    }
+
+    private long getLongProperty(final ServiceReference<Servlet> ref, final String key)
+    {
+        final Object value = ref.getProperty(key);
+        if (value instanceof String)
+        {
+            return Long.valueOf((String) value);
+        }
+        else if (value instanceof Number)
+        {
+            return ((Number) value).longValue();
+        }
+        else if ( value != null )
+        {
+            throw new IllegalArgumentException();
+        }
+        return -1;
     }
 
     @SuppressWarnings("rawtypes")
@@ -144,7 +189,9 @@ public class ServletInfo extends WhiteboardServiceInfo<Servlet>
     @Override
     public boolean isValid()
     {
-        boolean valid = super.isValid() && !(isEmpty(this.patterns) && isEmpty(this.errorPage) && isEmpty(this.name));
+        boolean valid = super.isValid()
+                && !(isEmpty(this.patterns) && isEmpty(this.errorPage) && isEmpty(this.name))
+                && this.multipartConfig != MultipartConfig.INVALID_CONFIG;
         if ( valid )
         {
             if ( this.patterns != null )
