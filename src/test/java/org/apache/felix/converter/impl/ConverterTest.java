@@ -347,9 +347,9 @@ public class ConverterTest {
 
     @Test
     public void testCustomErrorHandling() {
-        ConverterFunction<Integer> func = new ConverterFunction<Integer>() {
+        ConverterFunction<Object> func = new ConverterFunction<Object>() {
             @Override
-            public Integer apply(Object obj, Type targetType) {
+            public Object apply(Object obj, Type targetType) {
                 if ("hello".equals(obj)) {
                     return -1;
                 }
