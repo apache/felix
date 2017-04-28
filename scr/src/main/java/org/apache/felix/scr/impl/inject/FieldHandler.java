@@ -828,7 +828,9 @@ public class FieldHandler
             try
             {
                 field = handler.findField( logger );
-                field = handler.validateField( field, logger );
+                if ( field != null ) {
+                    field = handler.validateField( field, logger );
+                }
             }
             catch ( final InvocationTargetException ex )
             {
