@@ -98,6 +98,7 @@
         <groupId>org.easymock</groupId>
         <artifactId>easymock</artifactId>
         <version>3.4</version>
+        <scope>test</scope>
     </dependency>
   </dependencies>
   <build>
