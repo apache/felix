@@ -36,6 +36,7 @@ import org.apache.felix.scr.impl.inject.MethodResult;
 import org.apache.felix.scr.impl.inject.ReferenceMethod;
 import org.apache.felix.scr.impl.inject.ValueUtils;
 import org.apache.felix.scr.impl.inject.ValueUtils.ValueType;
+import org.apache.felix.scr.impl.inject.field.FieldUtils.FieldSearchResult;
 import org.apache.felix.scr.impl.manager.ComponentContextImpl;
 import org.apache.felix.scr.impl.manager.RefPair;
 import org.apache.felix.scr.impl.metadata.ReferenceMetadata;
@@ -351,41 +352,14 @@ public class FieldHandler
     {
         private static final State INSTANCE = new NotResolved();
 
-        private synchronized void resolve( final FieldHandler handler, final SimpleLogger logger )
+        private void resolve(final FieldHandler handler, final SimpleLogger logger)
         {
             logger.log( LogService.LOG_DEBUG, "getting field: {0}", new Object[]
                     {handler.metadata.getField()}, null );
 
             // resolve the field
         	final FieldUtils.FieldSearchResult result = FieldUtils.searchField( handler.componentClass, handler.metadata.getField(), logger );
-        	if ( result == null )
-        	{
-        		handler.field = null;
-        		handler.valueType = null;
-        		handler.state = NotFound.INSTANCE;
-                logger.log(LogService.LOG_ERROR, "Field [{0}] not found; Component will fail",
-                    new Object[] { handler.metadata.getField() }, null);
-        	}
-        	else
-        	{
-        		handler.field = result.field;
-            	if ( !result.usable )
-            	{
-            		handler.valueType = ValueType.ignore;
-            	}
-            	else
-            	{
-            		handler.valueType = ValueUtils.getReferenceValueType(
-            				handler.componentClass,
-            				handler.metadata,
-            				result.field.getType(),
-            				result.field,
-            				logger );
-            	}
-                handler.state = Resolved.INSTANCE;
-                logger.log( LogService.LOG_DEBUG, "Found field: {0}",
-                        new Object[] { result.field }, null );
-        	}
+            handler.setSearchResult(result, logger);
         }
 
         @Override
@@ -459,6 +433,34 @@ public class FieldHandler
     public boolean fieldExists( SimpleLogger logger )
     {
         return this.state.fieldExists( this, logger );
+    }
+
+    synchronized void setSearchResult(FieldSearchResult result, SimpleLogger logger)
+    {
+        if (result == null)
+        {
+            field = null;
+            valueType = null;
+            state = NotFound.INSTANCE;
+            logger.log(LogService.LOG_ERROR, "Field [{0}] not found; Component will fail",
+                new Object[] { metadata.getField() }, null);
+        }
+        else
+        {
+            field = result.field;
+            if (!result.usable)
+            {
+                valueType = ValueType.ignore;
+            }
+            else
+            {
+                valueType = ValueUtils.getReferenceValueType(componentClass, metadata,
+                    result.field.getType(), result.field, logger);
+            }
+            state = Resolved.INSTANCE;
+            logger.log(LogService.LOG_DEBUG, "Found field: {0}",
+                new Object[] { result.field }, null);
+        }
     }
 
     public static final class ReferenceMethodImpl
