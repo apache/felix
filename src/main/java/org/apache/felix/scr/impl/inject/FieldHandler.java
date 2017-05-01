@@ -93,9 +93,10 @@ public class FieldHandler
      * @param f The field or {@code null}.
      * @param logger The logger
      */
-    private void setField( final Field f, final SimpleLogger logger )
+    synchronized private void setField( final FieldInfo f, final SimpleLogger logger )
     {
-        this.field = f;
+        this.field = f.getField();
+        this.valueType = f.getType();
 
         if ( f != null )
         {
@@ -259,10 +260,15 @@ public class FieldHandler
      * Validate the field, type etc.
      * @param f The field
      * @param logger The logger
-     * @return The field if it's valid, {@code null} otherwise.
+     * @return The FieldInfo, the field info will have a type of {@link ParamType#ignore}
+     * if the field is not valid.
      */
-    private Field validateField( final Field f, final SimpleLogger logger )
+    private FieldInfo validateField( final Field f, final SimpleLogger logger )
     {
+        if (f == null)
+        {
+            return new FieldInfo(f, ParamType.ignore);
+        }
         final Class<?> fieldType = f.getType();
         final Class<?> referenceType = ClassUtils.getClassFromComponentClassLoader(
                 this.componentClass, metadata.getInterface(), logger);
@@ -272,45 +278,45 @@ public class FieldHandler
         {
             logger.log( LogService.LOG_ERROR, "Field {0} in component {1} must not be static", new Object[]
                     {metadata.getField(), this.componentClass}, null );
-        	valueType = ParamType.ignore;
-        	return f;
+            return new FieldInfo(f, ParamType.ignore);
         }
 
+        ParamType type = null;
         // unary reference
         if ( !metadata.isMultiple() )
         {
             if ( fieldType.isAssignableFrom(referenceType) )
             {
-                valueType = ParamType.serviceType;
+                type = ParamType.serviceType;
             }
             else if ( fieldType == ClassUtils.SERVICE_REFERENCE_CLASS )
             {
-                valueType = ParamType.serviceReference;
+                type = ParamType.serviceReference;
             }
             else if ( fieldType == ClassUtils.COMPONENTS_SERVICE_OBJECTS_CLASS )
             {
-                valueType = ParamType.serviceObjects;
+                type = ParamType.serviceObjects;
             }
             else if ( fieldType == ClassUtils.MAP_CLASS )
             {
-                valueType = ParamType.map;
+                type = ParamType.map;
             }
             else if ( fieldType == ClassUtils.MAP_ENTRY_CLASS )
             {
-                valueType = ParamType.tuple;
+                type = ParamType.tuple;
             }
             else
             {
                 logger.log( LogService.LOG_ERROR, "Field {0} in component {1} has unsupported type {2}", new Object[]
                         {metadata.getField(), this.componentClass, fieldType.getName()}, null );
-                valueType = ParamType.ignore;
+                type = ParamType.ignore;
             }
 
             // if the field is dynamic, it has to be volatile (field is ignored, case logged) (112.3.8.1)
             if ( !metadata.isStatic() && !Modifier.isVolatile(f.getModifiers()) ) {
                 logger.log( LogService.LOG_ERROR, "Field {0} in component {1} must be declared volatile to handle a dynamic reference", new Object[]
                         {metadata.getField(), this.componentClass}, null );
-                valueType = ParamType.ignore;
+                type = ParamType.ignore;
             }
 
             // the field must not be final (field is ignored, case logged) (112.3.8.1)
@@ -318,30 +324,30 @@ public class FieldHandler
             {
                 logger.log( LogService.LOG_ERROR, "Field {0} in component {1} must not be declared as final", new Object[]
                         {metadata.getField(), this.componentClass}, null );
-                valueType = ParamType.ignore;
+                type = ParamType.ignore;
             }
         }
         else
         {
             if ( ReferenceMetadata.FIELD_VALUE_TYPE_SERVICE.equals(metadata.getFieldCollectionType()) )
             {
-                valueType = ParamType.serviceType;
+                type = ParamType.serviceType;
             }
             else if ( ReferenceMetadata.FIELD_VALUE_TYPE_REFERENCE.equals(metadata.getFieldCollectionType()) )
             {
-                valueType = ParamType.serviceReference;
+                type = ParamType.serviceReference;
             }
             else if ( ReferenceMetadata.FIELD_VALUE_TYPE_SERVICEOBJECTS.equals(metadata.getFieldCollectionType()) )
             {
-                valueType = ParamType.serviceObjects;
+                type = ParamType.serviceObjects;
             }
             else if ( ReferenceMetadata.FIELD_VALUE_TYPE_PROPERTIES.equals(metadata.getFieldCollectionType()) )
             {
-                valueType = ParamType.map;
+                type = ParamType.map;
             }
             else if ( ReferenceMetadata.FIELD_VALUE_TYPE_TUPLE.equals(metadata.getFieldCollectionType()) )
             {
-                valueType = ParamType.tuple;
+                type = ParamType.tuple;
             }
 
             // multiple cardinality, field type must be collection or subtype
@@ -349,7 +355,7 @@ public class FieldHandler
             {
                 logger.log( LogService.LOG_ERROR, "Field {0} in component {1} has unsupported type {2}", new Object[]
                         {metadata.getField(), this.componentClass, fieldType.getName()}, null );
-                valueType = ParamType.ignore;
+                type = ParamType.ignore;
             }
 
             // additional checks for replace strategy:
@@ -360,7 +366,7 @@ public class FieldHandler
                 {
                     logger.log( LogService.LOG_ERROR, "Field {0} in component {1} must be declared volatile to handle a dynamic reference", new Object[]
                             {metadata.getField(), this.componentClass}, null );
-                    valueType = ParamType.ignore;
+                    type = ParamType.ignore;
                 }
 
                 // replace strategy: field must not be final (field is ignored, case logged) (112.3.8.1)
@@ -370,14 +376,14 @@ public class FieldHandler
                     logger.log( LogService.LOG_ERROR, "Field {0} in component {1} has unsupported type {2}."+
                         " It must be one of java.util.Collection or java.util.List.",
                         new Object[] {metadata.getField(), this.componentClass, fieldType.getName()}, null );
-                    valueType = ParamType.ignore;
+                    type = ParamType.ignore;
 
                 }
                 if ( Modifier.isFinal(f.getModifiers()) )
                 {
                     logger.log( LogService.LOG_ERROR, "Field {0} in component {1} must not be declared as final", new Object[]
                             {metadata.getField(), this.componentClass}, null );
-                    valueType = ParamType.ignore;
+                    type = ParamType.ignore;
                 }
             }
         }
@@ -386,9 +392,9 @@ public class FieldHandler
         {
             logger.log( LogService.LOG_ERROR, "Update strategy for field {0} in component {1} only allowed for non static field references.", new Object[]
                     {metadata.getField(), this.componentClass}, null );
-            valueType = ParamType.ignore;
+            type = ParamType.ignore;
         }
-        return f;
+        return new FieldInfo(f, type);
     }
 
     private enum METHOD_TYPE
@@ -818,28 +824,25 @@ public class FieldHandler
     {
         private static final State INSTANCE = new NotResolved();
 
-        private synchronized void resolve( final FieldHandler handler, final SimpleLogger logger )
+        private void resolve( final FieldHandler handler, final SimpleLogger logger )
         {
             logger.log( LogService.LOG_DEBUG, "getting field: {0}", new Object[]
                     {handler.metadata.getField()}, null );
 
             // resolve the field
-            Field field = null;
+            FieldInfo fieldInfo = null;
             try
             {
-                field = handler.findField( logger );
-                if ( field != null ) {
-                    field = handler.validateField( field, logger );
-                }
+                fieldInfo = handler.validateField(handler.findField(logger), logger);
             }
             catch ( final InvocationTargetException ex )
             {
                 logger.log( LogService.LOG_WARNING, "{0} cannot be found", new Object[]
                         {handler.metadata.getField()}, ex.getTargetException() );
-                field = null;
+                fieldInfo = new FieldInfo(null, ParamType.ignore);
             }
 
-            handler.setField( field, logger );
+            handler.setField(fieldInfo, logger );
         }
 
         @Override
@@ -1025,5 +1028,23 @@ public class FieldHandler
                 return false;
             }
         };
+    }
+
+    private static final class FieldInfo {
+        private final Field m_field;
+        private final ParamType m_type;
+        public FieldInfo(Field m_field, ParamType m_type)
+        {
+            this.m_field = m_field;
+            this.m_type = m_type;
+        }
+
+        Field getField() {
+            return m_field;
+        }
+
+        ParamType getType() {
+            return m_type;
+        }
     }
 }
