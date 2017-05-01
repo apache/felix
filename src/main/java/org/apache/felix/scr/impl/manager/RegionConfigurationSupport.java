@@ -40,8 +40,10 @@ import org.osgi.framework.ServiceRegistration;
 import org.osgi.service.cm.Configuration;
 import org.osgi.service.cm.ConfigurationAdmin;
 import org.osgi.service.cm.ConfigurationEvent;
+import org.osgi.service.cm.ConfigurationException;
 import org.osgi.service.cm.ConfigurationListener;
 import org.osgi.service.cm.ConfigurationPermission;
+import org.osgi.service.cm.ManagedService;
 import org.osgi.service.log.LogService;
 
 public abstract class RegionConfigurationSupport
