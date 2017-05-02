@@ -243,6 +243,7 @@ public abstract class AbstractDependency<T extends Dependency> implements
     @Override
     public void stop() {
         m_isStarted = false;
+        m_available = false;
     }
 
     /**
