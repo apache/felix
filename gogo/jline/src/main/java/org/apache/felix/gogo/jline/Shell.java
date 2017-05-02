@@ -493,7 +493,7 @@ public class Shell {
                         session.put(Shell.VAR_EXCEPTION, e);
                     }
 
-                    //waitJobCompletion(session);
+                    waitJobCompletion(session);
 
                 } catch (UserInterruptException e) {
                     // continue;
