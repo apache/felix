@@ -545,4 +545,21 @@ public class TestTokenizer
         when(bc.getBundles()).thenReturn(new Bundle[] { systemBundle });
         return bc;
     }
+
+    @Test
+    public void testHereDocMissing() throws Exception {
+        try {
+            new Parser("a <<").statement();
+            fail("Expected exception");
+        } catch (EOFError e) {
+            assertEquals("foo\n", e.repair());
+        }
+        try {
+            new Parser("a << foo\n").statement();
+            fail("Expected exception");
+        } catch (EOFError e) {
+            assertEquals("\nfoo\n", e.repair());
+        }
+        new Parser("a << foo\n \nfoo\n").statement();
+    }
 }
