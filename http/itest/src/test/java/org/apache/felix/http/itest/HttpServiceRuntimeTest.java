@@ -98,7 +98,7 @@ public class HttpServiceRuntimeTest extends BaseIntegrationTest
 {
     private static final String HTTP_CONTEXT_NAME = "org.osgi.service.http";
 
-    Collection<ServiceRegistration<?>> registrations = new ArrayList<ServiceRegistration<?>>();
+    Collection<ServiceRegistration<?>> registrations = new ArrayList<>();
 
     private static final long DEFAULT_SLEEP = 100;
 
@@ -320,7 +320,7 @@ public class HttpServiceRuntimeTest extends BaseIntegrationTest
 
         contextDTO = assertDefaultContext(runtimeDTOWithBothSerlvets);
         assertEquals(2, contextDTO.servletDTOs.length);
-        final Set<String> names = new HashSet<String>();
+        final Set<String> names = new HashSet<>();
         names.add(contextDTO.servletDTOs[0].name);
         names.add(contextDTO.servletDTOs[1].name);
         assertTrue(names.contains("testServlet 1"));
@@ -387,7 +387,7 @@ public class HttpServiceRuntimeTest extends BaseIntegrationTest
         assertEquals("/resources", contextDTO.resourceDTOs[0].prefix);
         assertEquals(1, contextDTO.resourceDTOs[0].patterns.length);
         assertEquals(1, contextDTO.resourceDTOs[1].patterns.length);
-        final Set<String> patterns = new HashSet<String>();
+        final Set<String> patterns = new HashSet<>();
         patterns.add(contextDTO.resourceDTOs[0].patterns[0]);
         patterns.add(contextDTO.resourceDTOs[1].patterns[0]);
         assertTrue(patterns.contains("/resource_1/*"));
@@ -475,7 +475,7 @@ public class HttpServiceRuntimeTest extends BaseIntegrationTest
     private void assertContainsAllHundredFrom(Long start, long[] errorCodes)
     {
         assertEquals(100, errorCodes.length);
-        SortedSet<Long> distinctErrorCodes = new TreeSet<Long>();
+        SortedSet<Long> distinctErrorCodes = new TreeSet<>();
         for (Long code : errorCodes)
         {
             distinctErrorCodes.add(code);
@@ -646,12 +646,12 @@ public class HttpServiceRuntimeTest extends BaseIntegrationTest
         assertEquals(contextServiceId, testContextDTO.listenerDTOs[0].servletContextId);
     }
 
-    private void assertServlet(final ServletDTO[] servletDTOs, 
-    		final String name, 
-    		final long contextServiceId) 
+    private void assertServlet(final ServletDTO[] servletDTOs,
+    		final String name,
+    		final long contextServiceId)
     {
     	assertNotNull(servletDTOs);
-    	for(final ServletDTO dto : servletDTOs) 
+    	for(final ServletDTO dto : servletDTOs)
     	{
     		if ( name.equals(dto.name) && contextServiceId == dto.servletContextId )
     		{
@@ -1220,7 +1220,7 @@ public class HttpServiceRuntimeTest extends BaseIntegrationTest
 
         assertEquals(3, runtimeDTO.servletContextDTOs.length);
 
-        final List<String> names = new ArrayList<String>();
+        final List<String> names = new ArrayList<>();
         for(final ServletContextDTO dto : runtimeDTO.servletContextDTOs)
         {
             names.add(dto.name);
@@ -1285,9 +1285,8 @@ public class HttpServiceRuntimeTest extends BaseIntegrationTest
         assertTrue(0 > runtimeDTO.servletContextDTOs[0].servletDTOs[0].serviceId);
     }
 
-    // As specified in OSGi Compendium Release 6, Chapter 140.9
     @Test
-    public void serviceWithoutRequiredPropertiesIsIgnored() throws InterruptedException
+    public void namedServletIsNotIgnored() throws InterruptedException
     {
         // Neither pattern nor error page specified
         Dictionary<String, ?> properties = createDictionary(HTTP_WHITEBOARD_SERVLET_NAME, "servlet");
@@ -1302,7 +1301,9 @@ public class HttpServiceRuntimeTest extends BaseIntegrationTest
 
         assertEquals(0, runtimeDTO.failedServletContextDTOs.length);
         ServletContextDTO defaultContext = assertDefaultContext(runtimeDTO);
-        assertEquals(0, defaultContext.servletDTOs.length);
+        assertEquals(1, defaultContext.servletDTOs.length);
+        assertEquals(0, defaultContext.servletDTOs[0].patterns.length);
+        assertEquals("servlet", defaultContext.servletDTOs[0].name);
     }
 
     @Test
