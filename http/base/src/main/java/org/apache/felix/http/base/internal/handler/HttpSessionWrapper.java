@@ -467,4 +467,25 @@ public class HttpSessionWrapper implements HttpSession
             return listener;
         }
     }
+
+    @Override
+    public int hashCode()
+    {
+        return this.getId().hashCode();
+    }
+
+    @Override
+    public boolean equals(final Object obj)
+    {
+        if (this == obj)
+        {
+            return true;
+        }
+        if (obj == null || this.getClass() != obj.getClass() )
+        {
+            return false;
+        }
+        final HttpSessionWrapper other = (HttpSessionWrapper) obj;
+        return other.getId().equals(this.getId());
+    }
 }

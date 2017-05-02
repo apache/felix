@@ -60,24 +60,31 @@ public abstract class ServletHandler implements Comparable<ServletHandler>
         this.context = context;
         this.servletInfo = servletInfo;
         final MultipartConfig origConfig = servletInfo.getMultipartConfig();
-        String location = origConfig.multipartLocation;
-        if ( location == null ) {
-            final Object obj = context.getAttribute(JAVA_SERVLET_TEMP_DIR_PROP);
-            if ( obj != null ) {
-                if ( obj instanceof File ) {
-                    location = ((File)obj).getAbsolutePath();
-                } else {
-                    location = obj.toString();
+        if ( origConfig != null )
+        {
+            String location = origConfig.multipartLocation;
+            if ( location == null ) {
+                final Object obj = context == null ? null : context.getAttribute(JAVA_SERVLET_TEMP_DIR_PROP);
+                if ( obj != null ) {
+                    if ( obj instanceof File ) {
+                        location = ((File)obj).getAbsolutePath();
+                    } else {
+                        location = obj.toString();
+                    }
                 }
             }
+            if ( location == null ) {
+                location = TEMP_DIR;
+            }
+            this.mpConfig = new MultipartConfig(origConfig.multipartThreshold,
+                    location,
+                    origConfig.multipartMaxFileSize,
+                    origConfig.multipartMaxRequestSize);
         }
-        if ( location == null ) {
-            location = TEMP_DIR;
+        else
+        {
+            this.mpConfig = null;
         }
-        this.mpConfig = new MultipartConfig(origConfig.multipartThreshold,
-                location,
-                origConfig.multipartMaxFileSize,
-                origConfig.multipartMaxRequestSize);
     }
 
     @Override
