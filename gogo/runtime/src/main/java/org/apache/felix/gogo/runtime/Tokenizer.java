@@ -239,7 +239,7 @@ public class Tokenizer extends BaseTokenizer
             getch();
         }
         if (ch == EOT) {
-            throw new EOFError(sLine, sCol, "expected here-doc start", "heredoc", "foo");
+            throw new EOFError(sLine, sCol, "expected here-doc start", "heredoc", "foo\n");
         }
         Token token = text.subSequence(start, index - 1);
         getch();
@@ -274,7 +274,7 @@ public class Tokenizer extends BaseTokenizer
             }
             if (ch == EOT)
             {
-                throw new EOFError(sLine, sCol, "unexpected eof found in here-doc", "heredoc", token.toString());
+                throw new EOFError(sLine, sCol, "unexpected eof found in here-doc", "heredoc", "\n" + token.toString() + "\n");
             }
             getch();
         }
