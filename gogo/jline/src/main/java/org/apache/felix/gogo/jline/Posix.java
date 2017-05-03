@@ -892,20 +892,32 @@ public class Posix {
     }
 
     protected void less(CommandSession session, Process process, String[] argv) throws Exception {
-        final String[] usage = {
+        String[] usage = {
                 "less -  file pager",
                 "Usage: less [OPTIONS] [FILES]",
                 "  -? --help                    Show help",
                 "  -e --quit-at-eof             Exit on second EOF",
                 "  -E --QUIT-AT-EOF             Exit on EOF",
+                "  -F --quit-if-one-screen      Exit if entire file fits on first screen",
                 "  -q --quiet --silent          Silent mode",
                 "  -Q --QUIET --SILENT          Completely  silent",
                 "  -S --chop-long-lines         Do not fold long lines",
                 "  -i --ignore-case             Search ignores lowercase case",
                 "  -I --IGNORE-CASE             Search ignores all case",
                 "  -x --tabs                    Set tab stops",
-                "  -N --LINE-NUMBERS            Display line number for each line"
+                "  -N --LINE-NUMBERS            Display line number for each line",
+                "     --no-init                 Disable terminal initialization",
+                "     --no-keypad               Disable keypad handling"
         };
+        boolean hasExtendedOptions = false;
+        try {
+            Less.class.getField("quitIfOneScreen");
+            hasExtendedOptions = true;
+        } catch (NoSuchFieldException e) {
+            List<String> ustrs = new ArrayList<>(Arrays.asList(usage));
+            ustrs.removeIf(s -> s.contains("--quit-if-one-screen") || s.contains("--no-init") || s.contains("--no-keypad"));
+            usage = ustrs.toArray(new String[ustrs.size()]);
+        }
         Options opt = parseOptions(session, usage, argv);
         List<Source> sources = new ArrayList<>();
         if (opt.args().isEmpty()) {
@@ -940,6 +952,11 @@ public class Posix {
             less.tabs = opt.getNumber("tabs");
         }
         less.printLineNumbers = opt.isSet("LINE-NUMBERS");
+        if (hasExtendedOptions) {
+            Less.class.getField("quitIfOneScreen").set(less, opt.isSet("quit-if-one-screen"));
+            Less.class.getField("noInit").set(less, opt.isSet("no-init"));
+            Less.class.getField("noKeypad").set(less, opt.isSet("no-keypad"));
+        }
         less.run(sources);
     }
 
