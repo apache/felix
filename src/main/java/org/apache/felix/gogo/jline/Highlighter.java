@@ -63,6 +63,10 @@ public class Highlighter extends DefaultHighlighter {
                     statements = parser.statements();
                 } catch (EOFError e) {
                     repaired = repaired + " " + e.repair();
+                    // Make sure we don't loop forever
+                    if (repaired.length() > buffer.length() + 1024) {
+                        return new AttributedStringBuilder().append(buffer).toAttributedString();
+                    }
                 }
             }
 
