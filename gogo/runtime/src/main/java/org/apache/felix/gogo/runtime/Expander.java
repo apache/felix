@@ -562,6 +562,14 @@ public class Expander extends BaseTokenizer
             {
                 doubleQuoted = true;
             }
+            else if (c == '~')
+            {
+                Object home = evaluate.get("HOME");
+                if (home != null)
+                {
+                    buf.append(home.toString());
+                }
+            }
             else
             {
                 if ("*(|<[?".indexOf(c) >= 0 && !hasUnescapedReserved)
