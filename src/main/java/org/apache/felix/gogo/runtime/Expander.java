@@ -24,7 +24,6 @@ import java.nio.file.FileVisitResult;
 import java.nio.file.FileVisitor;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.PathMatcher;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -601,7 +600,7 @@ public class Expander extends BaseTokenizer
             dir = currentDir;
             prefix = "";
         }
-        final PathMatcher matcher = dir.getFileSystem().getPathMatcher("glob:" + arg);
+        final GlobPathMatcher matcher = new GlobPathMatcher(arg.toString());
         Files.walkFileTree(dir,
                 EnumSet.of(FileVisitOption.FOLLOW_LINKS),
                 Integer.MAX_VALUE,
@@ -619,11 +618,18 @@ public class Expander extends BaseTokenizer
                             return FileVisitResult.SKIP_SUBTREE;
                         }
                         Path r = dir.relativize(file);
-                        if (matcher.matches(r))
+                        if (matcher.matches(r.toString(), true))
                         {
                             expanded.add(prefix + r.toString());
                         }
-                        return FileVisitResult.CONTINUE;
+                        if (matcher.matches(r.toString(), false))
+                        {
+                            return FileVisitResult.CONTINUE;
+                        }
+                        else
+                        {
+                            return FileVisitResult.SKIP_SUBTREE;
+                        }
                     }
 
                     @Override
@@ -632,7 +638,7 @@ public class Expander extends BaseTokenizer
                         if (!Files.isHidden(file))
                         {
                             Path r = dir.relativize(file);
-                            if (matcher.matches(r))
+                            if (matcher.matches(r.toString(), true))
                             {
                                 expanded.add(prefix + r.toString());
                             }
