@@ -27,7 +27,7 @@
     <packaging>bundle</packaging>
     <name>Apache Felix Gogo JLine Shell</name>
     <artifactId>org.apache.felix.gogo.jline</artifactId>
-    <version>1.0.5-SNAPSHOT</version>
+    <version>1.0.6</version>
     <properties>
         <!-- Skip because of NPE -->
         <animal.sniffer.skip>true</animal.sniffer.skip>
@@ -108,4 +108,10 @@
             </plugin>
         </plugins>
     </build>
+
+  <scm>
+    <connection>scm:svn:http://svn.apache.org/repos/asf/felix/releases/org.apache.felix.gogo.jline-1.0.6</connection>
+    <developerConnection>scm:svn:https://svn.apache.org/repos/asf/felix/releases/org.apache.felix.gogo.jline-1.0.6</developerConnection>
+    <url>http://svn.apache.org/viewvc/felix/releases/?root=Apache-SVN/org.apache.felix.gogo.jline-1.0.6</url>
+  </scm>
 </project>
