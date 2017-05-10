@@ -560,8 +560,8 @@ public class BundlesServlet extends SimpleWebConsolePlugin implements OsgiManage
             final String servicesRoot, final boolean fullDetails, final Locale locale, final String filter, final BundleException be ) throws IOException, InvalidSyntaxException
     {
         final Bundle[] allBundles = this.getBundles();
-        final Object[] status = getStatusLine(allBundles);
-        final String statusLine = (String) status[5];
+        final List<Object> status = getStatusLine(allBundles);
+        final String statusLine = (String) status.remove(5);
         // filter bundles by headers
         final Bundle[] bundles;
         if (bundle != null)
@@ -602,7 +602,7 @@ public class BundlesServlet extends SimpleWebConsolePlugin implements OsgiManage
         map.put("status", statusLine);
 
         // add raw status
-        map.put( "s", status );
+        map.put( "s", status.toArray() );
 
         final Object[] bundlesArray = new Object[bundles.length];
         for ( int i = 0; i < bundles.length; i++ )
@@ -615,9 +615,9 @@ public class BundlesServlet extends SimpleWebConsolePlugin implements OsgiManage
         return map;
     }
 
-    private Object[] getStatusLine(final Bundle[] bundles)
+    private List<Object> getStatusLine(final Bundle[] bundles)
     {
-        Object[] ret = new Object[6];
+        List<Object> ret = new ArrayList<Object>();
         int active = 0, installed = 0, resolved = 0, fragments = 0;
         for ( int i = 0; i < bundles.length; i++ )
         {
@@ -673,12 +673,12 @@ public class BundlesServlet extends SimpleWebConsolePlugin implements OsgiManage
             }
             buffer.append('.');
         }
-        ret[0] = new Integer(bundles.length);
-        ret[1] = new Integer(active);
-        ret[2] = new Integer(fragments);
-        ret[3] = new Integer(resolved);
-        ret[4] = new Integer(installed);
-        ret[5] = buffer.toString();
+        ret.add(new Integer(bundles.length));
+        ret.add(new Integer(active));
+        ret.add(new Integer(fragments));
+        ret.add(new Integer(resolved));
+        ret.add(new Integer(installed));
+        ret.add(buffer.toString());
         return ret;
     }
 
