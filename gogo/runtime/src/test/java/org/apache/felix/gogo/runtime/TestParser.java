@@ -45,6 +45,23 @@ public class TestParser extends AbstractParserTest
     int beentheredonethat = 0;
 
     @Test
+    public void testError() throws Exception {
+        Context context = new Context();
+        context.addCommand("gogo", new Function() {
+            @Override
+            public Object execute(CommandSession session, List<Object> arguments) throws Exception {
+                throw new Error(arguments.get(0).toString());
+            }
+        }, "error");
+        try {
+            context.execute("error bar");
+            fail("Expected an exception");
+        } catch (Throwable t) {
+            assertEquals("java.util.concurrent.ExecutionException: java.lang.Error: bar", t.toString());
+        }
+    }
+
+    @Test
     public void testEvaluatation() throws Exception
     {
         Context c = new Context();

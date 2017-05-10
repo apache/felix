@@ -563,7 +563,7 @@ public class CommandSessionImpl implements CommandSession, Converter
         }
     }
 
-    class JobImpl implements Job
+    class JobImpl implements Job, Runnable
     {
         private final int id;
         private final JobImpl parent;
@@ -760,13 +760,7 @@ public class CommandSessionImpl implements CommandSession, Converter
                     foreground();
                     break;
             }
-            future = executor.submit(new Callable<Void>() {
-                @Override
-                public Void call() throws Exception {
-                    JobImpl.this.call();
-                    return null;
-                }
-            });
+            future = executor.submit(this);
             while (this.status == Status.Foreground)
             {
                 JobImpl.this.wait();
@@ -785,7 +779,7 @@ public class CommandSessionImpl implements CommandSession, Converter
             return CommandSessionImpl.this;
         }
 
-        private Void call() throws Exception
+        public void run()
         {
             Thread thread = Thread.currentThread();
             String name = thread.getName();
@@ -824,12 +818,19 @@ public class CommandSessionImpl implements CommandSession, Converter
 
                 result = results.get(results.size() - 1).get();
             }
+            catch (Exception e)
+            {
+                result = new Result(e);
+            }
+            catch (Throwable t)
+            {
+                result = new Result(new ExecutionException(t));
+            }
             finally
             {
                 done();
                 thread.setName(name);
             }
-            return null;
         }
 
         public void add(Job child)
