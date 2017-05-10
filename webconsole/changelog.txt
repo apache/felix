@@ -1,3 +1,8 @@
+Changes from 4.3.2 to 4.3.4
+---------------------------
+** Bug
+    * [FELIX-5638] - Unintended Web Console RESTful API change
+
 Changes from 4.3.0 to 4.3.2
 ---------------------------
 ** Bug
