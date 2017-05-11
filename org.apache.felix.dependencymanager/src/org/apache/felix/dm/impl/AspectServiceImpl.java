@@ -71,7 +71,12 @@ public class AspectServiceImpl extends FilterComponent {
         }  
 	}
 	
-    private Hashtable<String, Object> getServiceProperties(ServiceReference<?> originalServiceRef) {
+	/**
+	 * Returns the aspect service properties (not the inherited properties from the lower ranked aspect or from the original service).
+	 * @param originalServiceRef
+	 * @return
+	 */
+    private Hashtable<String, Object> getAspectServiceProperties(ServiceReference<?> originalServiceRef) {
         Hashtable<String, Object> props = new Hashtable<>();
         if (m_serviceProperties != null) {
             Enumeration<String> e = m_serviceProperties.keys();
@@ -104,7 +109,7 @@ public class AspectServiceImpl extends FilterComponent {
             List<DependencyContext> dependencies = m_component.getDependencies();
             // Remove our internal dependency, replace it with one that points to the specific service that just was passed in.
             dependencies.remove(0);
-            Hashtable<String, Object> serviceProperties = getServiceProperties(originalServiceRef);
+            Hashtable<String, Object> serviceProperties = getAspectServiceProperties(originalServiceRef);
             String[] serviceInterfaces = getServiceInterfaces();
             
             ServiceDependency aspectDependency = (ServiceDependencyImpl) m_manager.createServiceDependency()
