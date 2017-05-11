@@ -32,7 +32,7 @@ import org.junit.Assert;
  */
 public class FELIX5636_PropagateServicePropertiesToAspectInitCallback extends TestBase {
 	
-	final Ensure m_e = new Ensure();
+	final static Ensure m_e = new Ensure();
 	
 	public void testAbstractClassDependency() {
 		DependencyManager manager = getDM();
