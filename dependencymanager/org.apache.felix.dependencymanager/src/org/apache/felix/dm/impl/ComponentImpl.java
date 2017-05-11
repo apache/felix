@@ -679,13 +679,7 @@ public class ComponentImpl implements Component, ComponentContext, ComponentDecl
     @SuppressWarnings("unchecked")
     @Override
     public <K,V> Dictionary<K, V> getServiceProperties() {
-        if (m_serviceProperties != null) {
-            // Applied patch from FELIX-4304
-            Hashtable<String, Object> serviceProperties = new Hashtable<>();
-            addTo(serviceProperties, m_serviceProperties);
-            return (Dictionary<K, V>) serviceProperties;
-        }
-        return null;
+    	return (Dictionary<K, V>) calculateServiceProperties();
     }
 
     @Override
