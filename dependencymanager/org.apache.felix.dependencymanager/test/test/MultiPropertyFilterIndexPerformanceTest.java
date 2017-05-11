@@ -10,7 +10,7 @@ import org.osgi.framework.ServiceReference;
 
 public class MultiPropertyFilterIndexPerformanceTest {
 
-	final int testSize = 500000;
+	final int testSize = 5000;
 
 	final int iterations = 10;
 	
