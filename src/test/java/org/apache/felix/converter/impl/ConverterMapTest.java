@@ -17,6 +17,7 @@
 package org.apache.felix.converter.impl;
 
 import java.lang.annotation.Annotation;
+import java.lang.reflect.Method;
 import java.math.BigInteger;
 import java.net.URL;
 import java.text.SimpleDateFormat;
@@ -398,6 +399,34 @@ public class ConverterMapTest {
         assertEquals("{foo=bar, password=xxx}", c.convert(m).to(String.class));
         assertEquals("Original should not be modified",
                 "{foo=bar, password=secret}", m.toString());
+    }
+
+    @SuppressWarnings({ "unchecked", "rawtypes" })
+    @Test
+    public void testAnnotationDefaultMaterializer() throws Exception {
+        Map<String, Object> vals = new HashMap<>();
+        vals.put("bar", 99L);
+        vals.put("tar", true);
+        vals.put("za.za", false);
+
+        Class<?> ta1cls = getClass().getClassLoader().loadClass(getClass().getPackage().getName() + ".sub1.TestAnn1");
+        Object ta = converter.convert(vals).to(ta1cls);
+        Map vals2 = converter.convert(ta).to(Map.class);
+        vals2.putAll(vals);
+        Class<?> ta2cls = getClass().getClassLoader().loadClass(getClass().getPackage().getName() + ".sub2.TestAnn2");
+        Object ta2 = converter.convert(vals2).to(ta2cls);
+
+        Method m1 = ta2cls.getDeclaredMethod("foo");
+        m1.setAccessible(true);
+        assertEquals("fooo!", m1.invoke(ta2));
+
+        Method m2 = ta2cls.getDeclaredMethod("bar");
+        m2.setAccessible(true);
+        assertEquals(99, m2.invoke(ta2));
+
+        Method m3 = ta2cls.getDeclaredMethod("tar");
+        m3.setAccessible(true);
+        assertEquals(true, m3.invoke(ta2));
     }
 
     interface TestInterface {

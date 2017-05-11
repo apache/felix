@@ -79,8 +79,9 @@ class Util {
         Map<String, Method> keys = new LinkedHashMap<>();
         for (Method md : beanClass.getDeclaredMethods()) {
             String key = getBeanKey(md);
-            if (key != null && !keys.containsKey(key))
+            if (key != null && !keys.containsKey(key)) {
                 keys.put(key, md);
+            }
         }
         return keys;
     }
@@ -162,6 +163,7 @@ class Util {
                     set = new LinkedHashSet<>();
                     keys.put(name, set);
                 }
+                md.setAccessible(true);
                 set.add(md);
             }
         }
