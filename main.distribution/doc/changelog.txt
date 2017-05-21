@@ -1,3 +1,13 @@
+Changes from 5.6.2 to 5.6.4
+---------------------------
+
+** Improvement
+    * Update to latest framework version 5.6.4
+    * Update to latest gogo.jline 1.0.6
+    * Update to latest obr 2.0.10
+    * Update to jline 3.3.0
+    * Update to jansi 1.16
+
 Changes from 5.6.2 to 5.6.2-jansi
 ---------------------------------
 
