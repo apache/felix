@@ -1,3 +1,20 @@
+Changes from 5.6.2 to 5.6.4
+---------------------------
+
+** Bug
+    * [FELIX-4695] - Normalize os.version system property in framework properties
+    * [FELIX-4837] - Workaround for JNLPClassLoader in ShutdownHook 
+    * [FELIX-5553] - Cannot load native libraries in Windows Server 2016 with the name win32
+    * [FELIX-5573] - Don't return null but throw a CNFE from BundleClassloader.loadclass and Bundle.loadClass on recursive class loads.
+    * [FELIX-5604] - Normalize require capabilites the same way we normalize provide capabilites
+    * [FELIX-5605] - Update to latest resolver 1.14.0
+
+** Improvement
+    * [FELIX-4696] - Improve native OS version sanitation
+    * [FELIX-5574] - When detecting an unknow Windows OS name, provides a suitable default value for org.osgi.framework.os.name
+    * [FELIX-5589] - reduce memory usage of BundleRequirementImpl / BundleCapabilityImpl
+    * [FELIX-5593] - Specify ARM processor Endianness
+
 Changes from 5.6.1 to 5.6.2
 ---------------------------
 
