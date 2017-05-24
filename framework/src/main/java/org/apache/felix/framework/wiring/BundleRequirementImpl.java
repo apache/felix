@@ -27,7 +27,6 @@ import org.osgi.framework.Constants;
 import org.osgi.framework.wiring.BundleCapability;
 import org.osgi.framework.wiring.BundleRequirement;
 import org.osgi.framework.wiring.BundleRevision;
-import org.osgi.resource.Resource;
 
 public class BundleRequirementImpl implements BundleRequirement
 {
@@ -44,8 +43,8 @@ public class BundleRequirementImpl implements BundleRequirement
     {
         m_revision = revision;
         m_namespace = namespace;
-        m_dirs = ImmutableMap.newInstance(dirs);
-        m_attrs = ImmutableMap.newInstance(attrs);
+        m_dirs = dirs.isEmpty() ? Collections.EMPTY_MAP : ImmutableMap.newInstance(dirs);
+        m_attrs = attrs.isEmpty() ? Collections.EMPTY_MAP : ImmutableMap.newInstance(attrs);
         m_filter = filter;
 
         // Find resolution import directives.
