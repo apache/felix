@@ -20,11 +20,13 @@ import java.io.StringWriter;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 public class JSONParserTest {
@@ -102,5 +104,42 @@ public class JSONParserTest {
         assertEquals("form\ffeed", parsed.get("back\bspace"));
         assertEquals("\r\r\r", parsed.get("\n\n\n"));
         assertEquals("\u2202", parsed.get("!\u2708!\u2708!"));
+    }
+
+    @Test
+    public void testTopLevelArraySimple() throws Exception {
+        String s = "[\"a one\", 5, true]";
+
+        JSONParser jp = new JSONParser(s);
+        List<Object> res = jp.getParsedList();
+        assertEquals(3, res.size());
+        assertEquals("a one", res.get(0));
+        assertEquals(5L, res.get(1));
+        assertEquals(true, res.get(2));
+    }
+
+    @SuppressWarnings("rawtypes")
+    @Test
+    public void testTopLevelArrayComplex() throws Exception{
+        String s = "[{\"key1\": 123, \"key2\": 321}, [[true, false], \"hi \"]]";
+
+        JSONParser jp = new JSONParser(s);
+        List<Object> res = jp.getParsedList();
+        assertEquals(2, res.size());
+
+        Map m = (Map) res.get(0);
+        assertEquals(2, m.size());
+        assertEquals(123L, m.get("key1"));
+        assertEquals(321L, m.get("key2"));
+
+        List l = (List) res.get(1);
+        assertEquals(2, l.size());
+
+        List l2 = (List) l.get(0);
+        assertEquals(2, l2.size());
+        assertTrue((Boolean) l2.get(0));
+        assertFalse((Boolean) l2.get(1));
+
+        assertEquals("hi ", l.get(1));
     }
 }

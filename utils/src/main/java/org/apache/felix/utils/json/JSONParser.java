@@ -72,7 +72,7 @@ public class JSONParser {
         }
     }
 
-    private final Map<String, Object> parsed;
+    private final Object parsed;
 
     public JSONParser(CharSequence json) {
         String str = json.toString();
@@ -84,8 +84,20 @@ public class JSONParser {
         this(readStreamAsString(is));
     }
 
+    @SuppressWarnings("unchecked")
     public Map<String, Object> getParsed() {
-        return parsed;
+        if (parsed instanceof Map)
+            return (Map<String, Object>) parsed;
+        else
+            return null;
+    }
+
+    @SuppressWarnings("unchecked")
+    public List<Object> getParsedList() {
+        if (parsed instanceof List)
+            return (List<Object>) parsed;
+        else
+            return null;
     }
 
     private static Pair<String, Object> parseKeyValue(String jsonKeyValue) {
@@ -167,8 +179,16 @@ public class JSONParser {
         return sb.toString();
     }
 
-    private static Map<String, Object> parseObject(String jsonObject) {
-        if (!(jsonObject.startsWith("{") && jsonObject.endsWith("}")))
+    private static Object parseObject(String jsonObject) {
+        if (jsonObject.startsWith("[") && jsonObject.endsWith("]")) {
+            // It's a list
+            List<Object> values = new ArrayList<Object>();
+
+            for(String val : parseListValuesRaw(jsonObject)) {
+                values.add(parseValue(val));
+            }
+            return values;
+        } else if (!(jsonObject.startsWith("{") && jsonObject.endsWith("}")))
             throw new IllegalArgumentException("Malformatted JSON object: " + jsonObject);
 
         Map<String, Object> values = new HashMap<String, Object>();
