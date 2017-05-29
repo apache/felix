@@ -25,8 +25,6 @@ import java.util.Dictionary;
 import java.util.List;
 import java.util.Set;
 
-import org.apache.felix.configurator.impl.Util;
-
 public class Config implements Serializable, Comparable<Config> {
 
     private static final long serialVersionUID = 1L;
@@ -107,12 +105,12 @@ public class Config implements Serializable, Comparable<Config> {
         if ( version < 1 || version > VERSION ) {
             throw new ClassNotFoundException(this.getClass().getName());
         }
-        Util.setField(this, "pid", in.readObject());
-        Util.setField(this, "properties", in.readObject());
-        Util.setField(this, "environments", in.readObject());
-        Util.setField(this, "policy", ConfigPolicy.valueOf((String)in.readObject()));
-        Util.setField(this, "bundleId", in.readLong());
-        Util.setField(this, "ranking", in.readInt());
+        ReflectionUtil.setField(this, "pid", in.readObject());
+        ReflectionUtil.setField(this, "properties", in.readObject());
+        ReflectionUtil.setField(this, "environments", in.readObject());
+        ReflectionUtil.setField(this, "policy", ConfigPolicy.valueOf((String)in.readObject()));
+        ReflectionUtil.setField(this, "bundleId", in.readLong());
+        ReflectionUtil.setField(this, "ranking", in.readInt());
         this.index = in.readInt();
         this.state = ConfigState.valueOf((String)in.readObject());
         this.files = (List<File>) in.readObject();

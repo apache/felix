@@ -16,13 +16,14 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.felix.configurator.impl;
+package org.apache.felix.configurator.impl.conversion;
 
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.felix.configurator.impl.logger.SystemLogger;
 import org.osgi.framework.Bundle;
 import org.osgi.util.converter.Converter;
 import org.osgi.util.converter.StandardConverter;
@@ -30,13 +31,14 @@ import org.osgi.util.converter.TypeReference;
 
 public class TypeConverter {
 
+
     public static Converter getConverter() {
         return new StandardConverter();
     }
 
-    private final List<File> allFiles = new ArrayList<File>();
+    private final List<File> allFiles = new ArrayList<>();
 
-    private final List<File> files = new ArrayList<File>();
+    private final List<File> files = new ArrayList<>();
 
     private final Bundle bundle;
 
@@ -102,13 +104,22 @@ public class TypeConverter {
             if ( path == null ) {
                 throw new IOException("Invalid path for binary property: " + value);
             }
-            final File filePath = Util.extractFile(bundle, pid, path);
-            if ( filePath == null ) {
+            try {
+                final File filePath = BinUtil.extractFile(bundle, pid, path);
+                if ( filePath == null ) {
+                    SystemLogger.error("Entry " + path + " not found in bundle " + bundle);
+                    throw new IOException("Invalid path for binary property: " + value);
+                }
+                files.add(filePath);
+                allFiles.add(filePath);
+                return filePath.getAbsolutePath();
+            } catch ( final IOException ioe ) {
+                SystemLogger.error("Unable to read " + path +
+                        " in bundle " + bundle +
+                        " for pid " + pid +
+                        " and write to " + BinUtil.binDirectory, ioe);
                 throw new IOException("Invalid path for binary property: " + value);
             }
-            files.add(filePath);
-            allFiles.add(filePath);
-            return filePath.getAbsolutePath();
 
         } else if ( "binary[]".equals(typeInfo) ) {
             if ( bundle == null ) {
@@ -121,13 +132,22 @@ public class TypeConverter {
             final String[] filePaths = new String[paths.length];
             int i = 0;
             while ( i < paths.length ) {
-                final File filePath = Util.extractFile(bundle, pid, paths[i]);
-                if ( filePath == null ) {
+                try {
+                    final File filePath = BinUtil.extractFile(bundle, pid, paths[i]);
+                    if ( filePath == null ) {
+                        SystemLogger.error("Entry " + paths[i] + " not found in bundle " + bundle);
+                        throw new IOException("Invalid path for binary property: " + value);
+                    }
+                    files.add(filePath);
+                    allFiles.add(filePath);
+                    filePaths[i] = filePath.getAbsolutePath();
+                } catch ( final IOException ioe ) {
+                    SystemLogger.error("Unable to read " + paths[i] +
+                            " in bundle " + bundle +
+                            " for pid " + pid +
+                            " and write to " + BinUtil.binDirectory, ioe);
                     throw new IOException("Invalid path for binary property: " + value);
                 }
-                files.add(filePath);
-                allFiles.add(filePath);
-                filePaths[i] = filePath.getAbsolutePath();
                 i++;
             }
             return filePaths;

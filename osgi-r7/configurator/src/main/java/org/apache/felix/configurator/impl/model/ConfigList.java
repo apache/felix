@@ -25,8 +25,6 @@ import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 
-import org.apache.felix.configurator.impl.Util;
-
 /**
  * The config list holds all configurations for a single PID
  */
@@ -75,7 +73,7 @@ public class ConfigList implements Serializable, Iterable<Config> {
         if ( version < 1 || version > VERSION ) {
             throw new ClassNotFoundException(this.getClass().getName());
         }
-        Util.setField(this, "configurations", in.readObject());
+        ReflectionUtil.setField(this, "configurations", in.readObject());
         lastInstalled = (Config) in.readObject();
         this.changeCount = in.readLong();
         this.hasChanges = in.readBoolean();

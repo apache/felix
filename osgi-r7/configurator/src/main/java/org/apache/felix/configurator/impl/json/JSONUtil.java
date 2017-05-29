@@ -18,12 +18,15 @@
  */
 package org.apache.felix.configurator.impl.json;
 
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.io.Reader;
 import java.io.StringReader;
 import java.io.StringWriter;
 import java.io.Writer;
 import java.net.URL;
+import java.net.URLConnection;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -46,8 +49,7 @@ import javax.json.JsonStructure;
 import javax.json.JsonValue;
 import javax.json.JsonValue.ValueType;
 
-import org.apache.felix.configurator.impl.TypeConverter;
-import org.apache.felix.configurator.impl.Util;
+import org.apache.felix.configurator.impl.conversion.TypeConverter;
 import org.apache.felix.configurator.impl.model.BundleState;
 import org.apache.felix.configurator.impl.model.Config;
 import org.apache.felix.configurator.impl.model.ConfigPolicy;
@@ -116,8 +118,8 @@ public class JSONUtil {
                 final int pos = filePath.lastIndexOf('/');
                 final String name = path + filePath.substring(pos);
 
-                final String contents = Util.getResource(name, url);
-                if ( contents != null ) {
+                try {
+                    final String contents = getResource(name, url);
                     boolean done = false;
                     final TypeConverter converter = new TypeConverter(bundle);
                     try {
@@ -131,6 +133,8 @@ public class JSONUtil {
                             converter.cleanupFiles();
                         }
                     }
+                } catch ( final IOException ioe ) {
+                    report.errors.add("Unable to read " + name + " : " + ioe.getMessage());
                 }
             }
             Collections.sort(result);
@@ -390,5 +394,32 @@ public class JSONUtil {
             return null;
         }
         return (Map<String, ?>) configs;
+    }
+
+    /**
+     * Read the contents of a resource, encoded as UTF-8
+     * @param name The resource name
+     * @param url The resource URL
+     * @return The contents
+     * @throws IOException If anything goes wrong
+     */
+    public static String getResource(final String name, final URL url)
+    throws IOException {
+        final URLConnection connection = url.openConnection();
+
+        try(final BufferedReader in = new BufferedReader(
+                new InputStreamReader(
+                    connection.getInputStream(), "UTF-8"))) {
+
+            final StringBuilder sb = new StringBuilder();
+            String line;
+
+            while ((line = in.readLine()) != null) {
+                sb.append(line);
+                sb.append('\n');
+            }
+
+            return sb.toString();
+        }
     }
 }
