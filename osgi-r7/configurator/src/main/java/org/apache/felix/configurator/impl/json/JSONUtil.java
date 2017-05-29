@@ -47,7 +47,6 @@ import javax.json.JsonValue.ValueType;
 
 import org.apache.felix.configurator.impl.TypeConverter;
 import org.apache.felix.configurator.impl.Util;
-import org.apache.felix.configurator.impl.logger.SystemLogger;
 import org.apache.felix.configurator.impl.model.BundleState;
 import org.apache.felix.configurator.impl.model.Config;
 import org.apache.felix.configurator.impl.model.ConfigPolicy;
@@ -64,12 +63,28 @@ public class JSONUtil {
 
     private static final String PROP_POLICY = "policy";
 
-    public static BundleState readConfigurationsFromBundle(final Bundle bundle, final Set<String> paths) {
+    public static final class Report {
+
+        public final List<String> warnings = new ArrayList<>();
+
+        public final List<String> errors = new ArrayList<>();
+    }
+
+    /**
+     * Read all configurations from a bundle
+     * @param bundle The bundle
+     * @param paths The paths to read from
+     * @param report The report for errors and warnings
+     * @return The bundle state.
+     */
+    public static BundleState readConfigurationsFromBundle(final Bundle bundle,
+            final Set<String> paths,
+            final Report report) {
         final BundleState config = new BundleState();
 
         final List<ConfigurationFile> allFiles = new ArrayList<>();
         for(final String path : paths) {
-            final List<ConfigurationFile> files = readJSON(bundle, path);
+            final List<ConfigurationFile> files = readJSON(bundle, path, report);
             allFiles.addAll(files);
         }
         Collections.sort(allFiles);
@@ -81,11 +96,15 @@ public class JSONUtil {
 
     /**
      * Read all json files from a given path in the bundle
+     *
      * @param bundle The bundle
      * @param path The path
+     * @param report The report for errors and warnings
      * @return A list of configuration files - sorted by url, might be empty.
      */
-    public static List<ConfigurationFile> readJSON(final Bundle bundle, final String path) {
+    public static List<ConfigurationFile> readJSON(final Bundle bundle,
+            final String path,
+            final Report report) {
         final List<ConfigurationFile> result = new ArrayList<>();
         final Enumeration<URL> urls = bundle.findEntries(path, "*.json", false);
         if ( urls != null ) {
@@ -101,7 +120,7 @@ public class JSONUtil {
                     boolean done = false;
                     final TypeConverter converter = new TypeConverter(bundle);
                     try {
-                        final ConfigurationFile file = readJSON(converter, name, url, bundle.getBundleId(), contents);
+                        final ConfigurationFile file = readJSON(converter, name, url, bundle.getBundleId(), contents, report);
                         if ( file != null ) {
                             result.add(file);
                             done = true;
@@ -115,7 +134,7 @@ public class JSONUtil {
             }
             Collections.sort(result);
         } else {
-            SystemLogger.error("No configurations found at path " + path);
+            report.errors.add("No configurations found at path " + path);
         }
         return result;
     }
@@ -127,6 +146,7 @@ public class JSONUtil {
      * @param url The url to that file or {@code null}
      * @param bundleId The bundle id of the bundle containing the file
      * @param contents The contents of the file
+     * @param report The report for errors and warnings
      * @return The configuration file or {@code null}.
      */
     public static ConfigurationFile readJSON(
@@ -134,12 +154,13 @@ public class JSONUtil {
             final String name,
             final URL url,
             final long bundleId,
-            final String contents) {
+            final String contents,
+            final Report report) {
         final String identifier = (url == null ? name : url.toString());
-        final JsonObject json = parseJSON(name, contents);
-        final Map<String, ?> configs = verifyJSON(name, json);
+        final JsonObject json = parseJSON(name, contents, report);
+        final Map<String, ?> configs = verifyJSON(name, json, report);
         if ( configs != null ) {
-            final List<Config> list = readConfigurationsJSON(converter, bundleId, identifier, configs);
+            final List<Config> list = readConfigurationsJSON(converter, bundleId, identifier, configs, report);
             if ( !list.isEmpty() ) {
                 final ConfigurationFile file = new ConfigurationFile(url, list);
 
@@ -149,19 +170,29 @@ public class JSONUtil {
         return null;
     }
 
+    /**
+     * Read the configurations JSON
+     * @param converter The converter to use
+     * @param bundleId The bundle id
+     * @param identifier The identifier
+     * @param configs The map containing the configurations
+     * @param report The report for errors and warnings
+     * @return The list of {@code Config}s or {@code null}
+     */
     public static List<Config> readConfigurationsJSON(final TypeConverter converter,
             final long bundleId,
             final String identifier,
-            final Map<String, ?> configs) {
+            final Map<String, ?> configs,
+            final Report report) {
         final List<Config> configurations = new ArrayList<>();
         for(final Map.Entry<String, ?> entry : configs.entrySet()) {
             if ( ! (entry.getValue() instanceof JsonObject) ) {
-                SystemLogger.error("Ignoring configuration in '" + identifier + "' (not a configuration) : " + entry.getKey());
+                report.errors.add("Ignoring configuration in '" + identifier + "' (not a configuration) : " + entry.getKey());
             } else {
                 final JsonObject mainMap = (JsonObject)entry.getValue();
                 final int envIndex = entry.getKey().indexOf('[');
                 if ( envIndex != -1 && !entry.getKey().endsWith("]") ) {
-                    SystemLogger.error("Ignoring configuration in '" + identifier + "' (invalid environments definition) : " + entry.getKey());
+                    report.errors.add("Ignoring configuration in '" + identifier + "' (invalid environments definition) : " + entry.getKey());
                     continue;
                 }
                 final String pid;
@@ -173,7 +204,7 @@ public class JSONUtil {
                     pid = entry.getKey().substring(0, envIndex);
                     environments = new HashSet<>(Arrays.asList(entry.getKey().substring(envIndex + 1, entry.getKey().length()).split(",")));
                     if ( environments.isEmpty() ) {
-                        SystemLogger.warning("Invalid environments for configuration in '" + identifier + "' : " + pid);
+                        report.warnings.add("Invalid environments for configuration in '" + identifier + "' : " + pid);
                     }
                 }
 
@@ -202,19 +233,19 @@ public class JSONUtil {
                         if ( key.equals(PROP_RANKING) ) {
                             final Integer intObj = TypeConverter.getConverter().convert(value).defaultValue(null).to(Integer.class);
                             if ( intObj == null ) {
-                                SystemLogger.warning("Invalid ranking for configuration in '" + identifier + "' : " + pid + " - " + value);
+                                report.warnings.add("Invalid ranking for configuration in '" + identifier + "' : " + pid + " - " + value);
                             } else {
                                 ranking = intObj.intValue();
                             }
                         } else if ( key.equals(PROP_POLICY) ) {
                             final String stringVal = TypeConverter.getConverter().convert(value).defaultValue(null).to(String.class);
                             if ( stringVal == null ) {
-                                SystemLogger.error("Invalid policy for configuration in '" + identifier + "' : " + pid + " - " + value);
+                                report.errors.add("Invalid policy for configuration in '" + identifier + "' : " + pid + " - " + value);
                             } else {
                                 if ( value.equals("default") || value.equals("force") ) {
                                     policy = ConfigPolicy.valueOf(stringVal.toUpperCase());
                                 } else {
-                                    SystemLogger.error("Invalid policy for configuration in '" + identifier + "' : " + pid + " - " + value);
+                                    report.errors.add("Invalid policy for configuration in '" + identifier + "' : " + pid + " - " + value);
                                 }
                             }
                         }
@@ -226,7 +257,7 @@ public class JSONUtil {
                             }
                             properties.put(mapKey, convertedVal);
                         } catch ( final IOException io ) {
-                            SystemLogger.error("Invalid value/type for configuration in '" + identifier + "' : " + pid + " - " + mapKey);
+                            report.errors.add("Invalid value/type for configuration in '" + identifier + "' : " + pid + " - " + mapKey);
                             valid = false;
                             break;
                         }
@@ -247,9 +278,12 @@ public class JSONUtil {
      * Parse a JSON content
      * @param name The name of the file
      * @param contents The contents
+     * @param report The report for errors and warnings
      * @return The parsed JSON object or {@code null} on failure,
      */
-    public static JsonObject parseJSON(final String name, String contents) {
+    public static JsonObject parseJSON(final String name,
+            String contents,
+            final Report report) {
         // minify JSON first (remove comments)
         try (final Reader in = new StringReader(contents);
              final Writer out = new StringWriter()) {
@@ -257,7 +291,7 @@ public class JSONUtil {
             min.jsmin();
             contents = out.toString();
         } catch ( final IOException ioe) {
-            SystemLogger.error("Invalid JSON from " + name);
+            report.errors.add("Invalid JSON from " + name);
             return null;
         }
         try (final JsonReader reader = Json.createReader(new StringReader(contents)) ) {
@@ -265,7 +299,7 @@ public class JSONUtil {
             if ( obj != null && obj.getValueType() == ValueType.OBJECT ) {
                 return (JsonObject)obj;
             }
-            SystemLogger.error("Invalid JSON from " + name);
+            report.errors.add("Invalid JSON from " + name);
         }
         return null;
     }
@@ -315,10 +349,13 @@ public class JSONUtil {
      * Verify the JSON according to the rules
      * @param name The JSON name
      * @param root The JSON root object.
+     * @param report The report for errors and warnings
      * @return JSON map with configurations or {@code null}
      */
     @SuppressWarnings("unchecked")
-    public static Map<String, ?> verifyJSON(final String name, final JsonObject root) {
+    public static Map<String, ?> verifyJSON(final String name,
+            final JsonObject root,
+            final Report report) {
         if ( root == null ) {
             return null;
         }
@@ -327,12 +364,12 @@ public class JSONUtil {
 
             final int v = TypeConverter.getConverter().convert(version).defaultValue(-1).to(Integer.class);
             if ( v == -1 ) {
-                SystemLogger.error("Invalid version information in " + name + " : " + version);
+                report.errors.add("Invalid version information in " + name + " : " + version);
                 return null;
             }
             // we only support version 1
             if ( v != 1 ) {
-                SystemLogger.error("Invalid version number in " + name + " : " + version);
+                report.errors.add("Invalid version number in " + name + " : " + version);
                 return null;
             }
         }
@@ -342,7 +379,7 @@ public class JSONUtil {
             return null;
         }
         if ( !(configs instanceof Map) ) {
-            SystemLogger.error("Configurations must be a map of configurations in " + name);
+            report.errors.add("Configurations must be a map of configurations in " + name);
             return null;
         }
         return (Map<String, ?>) configs;
