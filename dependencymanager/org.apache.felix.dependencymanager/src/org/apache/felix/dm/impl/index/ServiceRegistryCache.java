@@ -62,6 +62,10 @@ public class ServiceRegistryCache implements ServiceListener/*, CommandProvider*
         index.close();
         m_filterIndexList.remove(index);
     }
+    
+    public int getSize() {
+    	return m_filterIndexList.size();
+    }
 
     public void serviceChanged(ServiceEvent event) {
         // any incoming event is first dispatched to the list of filter indices
