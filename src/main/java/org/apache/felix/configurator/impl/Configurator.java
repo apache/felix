@@ -32,6 +32,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
 
+import org.apache.felix.configurator.impl.conversion.BinUtil;
 import org.apache.felix.configurator.impl.json.JSONUtil;
 import org.apache.felix.configurator.impl.logger.SystemLogger;
 import org.apache.felix.configurator.impl.model.BundleState;
@@ -85,7 +86,14 @@ public class Configurator {
         this.bundleContext = bc;
         this.configAdminReferences = configAdminReferences;
         this.activeEnvironments = Util.getActiveEnvironments(bc);
-        this.state = State.createOrReadState(bundleContext);
+        State s = null;
+        try {
+            s = State.createOrReadState(bundleContext);
+        } catch ( final ClassNotFoundException | IOException e ) {
+            SystemLogger.error("Unable to read persisted state from " + State.FILE_NAME, e);
+            s = new State();
+        }
+        this.state = s;
         this.state.changeEnvironments(this.activeEnvironments);
         this.tracker = new org.osgi.util.tracker.BundleTracker<>(this.bundleContext,
                 Bundle.ACTIVE|Bundle.STARTING|Bundle.STOPPING|Bundle.RESOLVED|Bundle.INSTALLED,
@@ -187,26 +195,26 @@ public class Configurator {
         if ( dirPath != null ) {
             final File dir = new File(dirPath);
             if ( dir.exists() && dir.isDirectory() ) {
-                Util.binDirectory = dir;
+                BinUtil.binDirectory = dir;
             } else if ( dir.exists() ) {
                 SystemLogger.error("Directory property is pointing at a file not a dir: " + dirPath + ". Using default path.");
             } else {
                 try {
                     if ( dir.mkdirs() ) {
-                        Util.binDirectory = dir;
+                        BinUtil.binDirectory = dir;
                     }
                 } catch ( final SecurityException se ) {
                     // ignore
                 }
-                if ( Util.binDirectory == null ) {
+                if ( BinUtil.binDirectory == null ) {
                     SystemLogger.error("Unable to create a directory at: " + dirPath + ". Using default path.");
                 }
             }
         }
-        if ( Util.binDirectory == null ) {
-            Util.binDirectory = this.bundleContext.getDataFile("binaries" + File.separatorChar + ".check");
-            Util.binDirectory = Util.binDirectory.getParentFile();
-            Util.binDirectory.mkdirs();
+        if ( BinUtil.binDirectory == null ) {
+            BinUtil.binDirectory = this.bundleContext.getDataFile("binaries" + File.separatorChar + ".check");
+            BinUtil.binDirectory = BinUtil.binDirectory.getParentFile();
+            BinUtil.binDirectory.mkdirs();
         }
 
         // before we start the tracker we process all available bundles and initial configuration
@@ -228,10 +236,12 @@ public class Configurator {
                     } catch (final MalformedURLException e) {
                     }
                     if ( url != null ) {
-                        final String contents = Util.getResource(urlString, url);
-                        if ( contents != null ) {
+                        try {
+                            final String contents = JSONUtil.getResource(urlString, url);
                             files.put(urlString, contents);
                             hashes.add(Util.getSHA256(contents.trim()));
+                        } catch ( final IOException ioe ) {
+                            SystemLogger.error("Unable to read " + urlString, ioe);
                         }
                     }
                 }
@@ -354,9 +364,14 @@ public class Configurator {
 
                 if ( configList.hasChanges() ) {
                     process(configList);
-                    State.writeState(this.bundleContext, state);
+                    try {
+                        State.writeState(this.bundleContext, state);
+                    } catch ( final IOException ioe) {
+                        SystemLogger.error("Unable to persist state to " + State.FILE_NAME, ioe);
+                    }
                 }
             }
+
         } finally {
             if ( coordination != null ) {
                 CoordinatorUtil.endCoordination(coordination);

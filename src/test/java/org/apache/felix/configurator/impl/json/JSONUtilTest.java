@@ -31,7 +31,7 @@ import java.util.List;
 
 import javax.json.JsonObject;
 
-import org.apache.felix.configurator.impl.TypeConverter;
+import org.apache.felix.configurator.impl.conversion.TypeConverter;
 import org.apache.felix.configurator.impl.model.ConfigurationFile;
 import org.junit.Test;
 

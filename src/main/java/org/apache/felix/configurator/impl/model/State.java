@@ -30,8 +30,6 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
-import org.apache.felix.configurator.impl.Util;
-import org.apache.felix.configurator.impl.logger.SystemLogger;
 import org.osgi.framework.BundleContext;
 
 public class State extends AbstractState implements Serializable {
@@ -41,7 +39,7 @@ public class State extends AbstractState implements Serializable {
     /** Serialization version. */
     private static final int VERSION = 1;
 
-    private static final String FILE_NAME = "state.ser";
+    public static final String FILE_NAME = "state.ser";
 
     private final Map<Long, Long> bundlesLastModified = new HashMap<>();
 
@@ -80,12 +78,13 @@ public class State extends AbstractState implements Serializable {
         if ( version < 1 || version > VERSION ) {
             throw new ClassNotFoundException(this.getClass().getName());
         }
-        Util.setField(this, "bundlesLastModified", in.readObject());
-        Util.setField(this, "environments", in.readObject());
+        ReflectionUtil.setField(this, "bundlesLastModified", in.readObject());
+        ReflectionUtil.setField(this, "environments", in.readObject());
         initialHashes = (Set<String>) in.readObject();
     }
 
-    public static State createOrReadState(final BundleContext bc) {
+    public static State createOrReadState(final BundleContext bc)
+    throws ClassNotFoundException, IOException {
         final File f = bc.getDataFile(FILE_NAME);
         if ( f == null || !f.exists() ) {
             return new State();
@@ -93,13 +92,11 @@ public class State extends AbstractState implements Serializable {
         try ( final ObjectInputStream ois = new ObjectInputStream(new FileInputStream(f)) ) {
 
             return (State) ois.readObject();
-        } catch ( final ClassNotFoundException | IOException e ) {
-            SystemLogger.error("Unable to read persisted state from " + f, e);
-            return new State();
         }
     }
 
-    public static void writeState(final BundleContext bc, final State state) {
+    public static void writeState(final BundleContext bc, final State state)
+    throws IOException {
         final File f = bc.getDataFile(FILE_NAME);
         if ( f == null ) {
             // do nothing, no file system support
@@ -107,8 +104,6 @@ public class State extends AbstractState implements Serializable {
         }
         try ( final ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(f)) ) {
             oos.writeObject(state);
-        } catch ( final IOException e) {
-            SystemLogger.error("Unable to persist state to " + f, e);
         }
     }
 
