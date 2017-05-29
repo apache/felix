@@ -105,7 +105,9 @@ public class TypeConverterTest {
     @Test public void testSimpleTypeConversions() throws Exception {
         final TypeConverter converter = new TypeConverter(null);
 
-        final JsonObject config = JSONUtil.parseJSON("a", JSONUtilTest.readJSON("json/simple-types.json"));
+        final JsonObject config = JSONUtil.parseJSON("a",
+                JSONUtilTest.readJSON("json/simple-types.json"),
+                new JSONUtil.Report());
         final JsonObject properties = (JsonObject)config.get("config");
 
         assertTrue(converter.convert(null, JSONUtil.getValue(properties, "string"), null) instanceof String);
@@ -134,7 +136,9 @@ public class TypeConverterTest {
     @Test public void testSimpleTypeConversionsWithTypeHint() throws Exception {
         final TypeConverter converter = new TypeConverter(null);
 
-        final JsonObject config = JSONUtil.parseJSON("a", JSONUtilTest.readJSON("json/simple-types.json"));
+        final JsonObject config = JSONUtil.parseJSON("a",
+                JSONUtilTest.readJSON("json/simple-types.json"),
+                new JSONUtil.Report());
         final JsonObject properties = (JsonObject)config.get("config");
 
         assertTrue(converter.convert(null, JSONUtil.getValue(properties, "string"), "String") instanceof String);
@@ -214,7 +218,9 @@ public class TypeConverterTest {
     @SuppressWarnings("unchecked")
     @Test public void testCollectionTypeConversion() throws Exception {
         final TypeConverter converter = new TypeConverter(null);
-        final JsonObject config = JSONUtil.parseJSON("a", JSONUtilTest.readJSON("json/simple-types.json"));
+        final JsonObject config = JSONUtil.parseJSON("a",
+                JSONUtilTest.readJSON("json/simple-types.json"),
+                new JSONUtil.Report());
         final JsonObject properties = (JsonObject)config.get("config");
 
         assertTrue(converter.convert(null, JSONUtil.getValue(properties, "string.array"), "Collection<String>") instanceof Collection<?>);

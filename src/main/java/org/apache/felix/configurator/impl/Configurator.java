@@ -248,12 +248,19 @@ public class Configurator {
                 if ( state.getInitialHashes() != null ) {
                     processRemoveBundle(-1);
                 }
+                final JSONUtil.Report report = new JSONUtil.Report();
                 final List<ConfigurationFile> allFiles = new ArrayList<>();
                 for(final Map.Entry<String, String> entry : files.entrySet()) {
-                    final ConfigurationFile file = org.apache.felix.configurator.impl.json.JSONUtil.readJSON(null, entry.getKey(), null, -1, entry.getValue());
+                    final ConfigurationFile file = org.apache.felix.configurator.impl.json.JSONUtil.readJSON(null, entry.getKey(), null, -1, entry.getValue(), report);
                     if ( file != null ) {
                         allFiles.add(file);
                     }
+                }
+                for(final String w : report.warnings) {
+                    SystemLogger.warning(w);
+                }
+                for(final String e : report.errors) {
+                    SystemLogger.error(e);
                 }
                 final BundleState bState = new BundleState();
                 bState.addFiles(allFiles);
@@ -297,7 +304,14 @@ public class Configurator {
             }
             final Set<String> paths = Util.isConfigurerBundle(bundle, this.bundleContext.getBundle().getBundleId());
             if ( paths != null ) {
-                final BundleState config = JSONUtil.readConfigurationsFromBundle(bundle, paths);
+                final JSONUtil.Report report = new JSONUtil.Report();
+                final BundleState config = JSONUtil.readConfigurationsFromBundle(bundle, paths, report);
+                for(final String w : report.warnings) {
+                    SystemLogger.warning(w);
+                }
+                for(final String e : report.errors) {
+                    SystemLogger.error(e);
+                }
                 for(final String pid : config.getPids()) {
                     state.addAll(pid, config.getConfigurations(pid));
                 }

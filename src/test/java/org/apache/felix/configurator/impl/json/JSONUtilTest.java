@@ -55,14 +55,17 @@ public class JSONUtilTest {
 
     @Test public void testReadJSON() throws Exception {
         final ConfigurationFile cg = JSONUtil.readJSON(new TypeConverter(null),
-                "a", new URL("http://a"), 1, readJSON("json/valid.json"));
+                "a", new URL("http://a"), 1, readJSON("json/valid.json"),
+                new JSONUtil.Report());
         assertNotNull(cg);
         assertEquals(2, cg.getConfigurations().size());
     }
 
     @SuppressWarnings("unchecked")
     @Test public void testTypes() throws Exception {
-        final JsonObject config = JSONUtil.parseJSON("a", JSONUtilTest.readJSON("json/simple-types.json"));
+        final JsonObject config = JSONUtil.parseJSON("a",
+                JSONUtilTest.readJSON("json/simple-types.json"),
+                new JSONUtil.Report());
         final JsonObject properties = (JsonObject)config.get("config");
 
         assertTrue(JSONUtil.getValue(properties, "string") instanceof String);
