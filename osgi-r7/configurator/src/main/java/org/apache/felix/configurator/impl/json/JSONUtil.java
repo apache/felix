@@ -29,6 +29,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.Dictionary;
 import java.util.Enumeration;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Hashtable;
 import java.util.List;
@@ -186,10 +187,11 @@ public class JSONUtil {
             final Report report) {
         final List<Config> configurations = new ArrayList<>();
         for(final Map.Entry<String, ?> entry : configs.entrySet()) {
-            if ( ! (entry.getValue() instanceof JsonObject) ) {
+            if ( ! (entry.getValue() instanceof Map) ) {
                 report.errors.add("Ignoring configuration in '" + identifier + "' (not a configuration) : " + entry.getKey());
             } else {
-                final JsonObject mainMap = (JsonObject)entry.getValue();
+                @SuppressWarnings("unchecked")
+                final Map<String, ?> mainMap = (Map<String, ?>)entry.getValue();
                 final int envIndex = entry.getKey().indexOf('[');
                 if ( envIndex != -1 && !entry.getKey().endsWith("]") ) {
                     report.errors.add("Ignoring configuration in '" + identifier + "' (invalid environments definition) : " + entry.getKey());
@@ -214,7 +216,7 @@ public class JSONUtil {
                 final Dictionary<String, Object> properties = new Hashtable<>();
                 boolean valid = true;
                 for(final String mapKey : mainMap.keySet()) {
-                    final Object value = getValue(mainMap, mapKey);
+                    final Object value = mainMap.get(mapKey);
 
                     final boolean internalKey = mapKey.startsWith(INTERNAL_PREFIX);
                     String key = mapKey;
@@ -339,8 +341,13 @@ public class JSONUtil {
                              array.add(getValue(x));
                          }
                          return array;
-            // type OBJECT -> return object
-            case OBJECT : return value;
+             // type OBJECT -> return map
+             case OBJECT : final Map<String, Object> map = new HashMap<>();
+                           final JsonObject obj = (JsonObject)value;
+                           for(final Map.Entry<String, JsonValue> entry : obj.entrySet()) {
+                               map.put(entry.getKey(), getValue(entry.getValue()));
+                           }
+                           return map;
         }
         return null;
     }
