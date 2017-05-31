@@ -30,8 +30,6 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
-import org.osgi.framework.BundleContext;
-
 public class State extends AbstractState implements Serializable {
 
     private static final long serialVersionUID = 1L;
@@ -83,9 +81,8 @@ public class State extends AbstractState implements Serializable {
         initialHashes = (Set<String>) in.readObject();
     }
 
-    public static State createOrReadState(final BundleContext bc)
+    public static State createOrReadState(final File f)
     throws ClassNotFoundException, IOException {
-        final File f = bc.getDataFile(FILE_NAME);
         if ( f == null || !f.exists() ) {
             return new State();
         }
@@ -95,9 +92,8 @@ public class State extends AbstractState implements Serializable {
         }
     }
 
-    public static void writeState(final BundleContext bc, final State state)
+    public static void writeState(final File f, final State state)
     throws IOException {
-        final File f = bc.getDataFile(FILE_NAME);
         if ( f == null ) {
             // do nothing, no file system support
             return;

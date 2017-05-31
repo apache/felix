@@ -49,12 +49,10 @@ import javax.json.JsonStructure;
 import javax.json.JsonValue;
 import javax.json.JsonValue.ValueType;
 
-import org.apache.felix.configurator.impl.conversion.TypeConverter;
 import org.apache.felix.configurator.impl.model.BundleState;
 import org.apache.felix.configurator.impl.model.Config;
 import org.apache.felix.configurator.impl.model.ConfigPolicy;
 import org.apache.felix.configurator.impl.model.ConfigurationFile;
-import org.osgi.framework.Bundle;
 
 public class JSONUtil {
 
@@ -75,19 +73,19 @@ public class JSONUtil {
 
     /**
      * Read all configurations from a bundle
-     * @param bundle The bundle
+     * @param provider The bundle provider
      * @param paths The paths to read from
      * @param report The report for errors and warnings
      * @return The bundle state.
      */
-    public static BundleState readConfigurationsFromBundle(final Bundle bundle,
+    public static BundleState readConfigurationsFromBundle(final BinUtil.ResourceProvider provider,
             final Set<String> paths,
             final Report report) {
         final BundleState config = new BundleState();
 
         final List<ConfigurationFile> allFiles = new ArrayList<>();
         for(final String path : paths) {
-            final List<ConfigurationFile> files = readJSON(bundle, path, report);
+            final List<ConfigurationFile> files = readJSON(provider, path, report);
             allFiles.addAll(files);
         }
         Collections.sort(allFiles);
@@ -100,16 +98,16 @@ public class JSONUtil {
     /**
      * Read all json files from a given path in the bundle
      *
-     * @param bundle The bundle
+     * @param provider The bundle provider
      * @param path The path
      * @param report The report for errors and warnings
      * @return A list of configuration files - sorted by url, might be empty.
      */
-    public static List<ConfigurationFile> readJSON(final Bundle bundle,
+    public static List<ConfigurationFile> readJSON(final BinUtil.ResourceProvider provider,
             final String path,
             final Report report) {
         final List<ConfigurationFile> result = new ArrayList<>();
-        final Enumeration<URL> urls = bundle.findEntries(path, "*.json", false);
+        final Enumeration<URL> urls = provider.findEntries(path, "*.json");
         if ( urls != null ) {
             while ( urls.hasMoreElements() ) {
                 final URL url = urls.nextElement();
@@ -121,9 +119,9 @@ public class JSONUtil {
                 try {
                     final String contents = getResource(name, url);
                     boolean done = false;
-                    final TypeConverter converter = new TypeConverter(bundle);
+                    final TypeConverter converter = new TypeConverter(provider);
                     try {
-                        final ConfigurationFile file = readJSON(converter, name, url, bundle.getBundleId(), contents, report);
+                        final ConfigurationFile file = readJSON(converter, name, url, provider.getBundleId(), contents, report);
                         if ( file != null ) {
                             result.add(file);
                             done = true;

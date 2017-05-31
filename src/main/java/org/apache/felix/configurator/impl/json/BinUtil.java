@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.felix.configurator.impl.conversion;
+package org.apache.felix.configurator.impl.json;
 
 import java.io.BufferedInputStream;
 import java.io.File;
@@ -25,17 +25,27 @@ import java.io.IOException;
 import java.net.URL;
 import java.net.URLConnection;
 import java.net.URLEncoder;
+import java.util.Enumeration;
 import java.util.UUID;
-
-import org.osgi.framework.Bundle;
 
 public class BinUtil {
 
     public static volatile File binDirectory;
 
-    public static File extractFile(final Bundle bundle, final String pid, final String path)
+    public interface ResourceProvider {
+
+        long getBundleId();
+
+        URL getEntry(String path);
+
+        String getIdentifier();
+
+        Enumeration<URL> findEntries(String path, String filePattern);
+    }
+
+    public static File extractFile(final ResourceProvider provider, final String pid, final String path)
     throws IOException {
-        final URL url = bundle.getEntry(path);
+        final URL url = provider.getEntry(path);
         if ( url == null ) {
             return null;
         }
