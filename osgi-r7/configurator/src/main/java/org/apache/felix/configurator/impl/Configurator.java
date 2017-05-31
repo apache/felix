@@ -25,6 +25,7 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Enumeration;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
@@ -32,7 +33,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
 
-import org.apache.felix.configurator.impl.conversion.BinUtil;
+import org.apache.felix.configurator.impl.json.BinUtil;
 import org.apache.felix.configurator.impl.json.JSONUtil;
 import org.apache.felix.configurator.impl.logger.SystemLogger;
 import org.apache.felix.configurator.impl.model.BundleState;
@@ -88,7 +89,7 @@ public class Configurator {
         this.activeEnvironments = Util.getActiveEnvironments(bc);
         State s = null;
         try {
-            s = State.createOrReadState(bundleContext);
+            s = State.createOrReadState(bundleContext.getDataFile(State.FILE_NAME));
         } catch ( final ClassNotFoundException | IOException e ) {
             SystemLogger.error("Unable to read persisted state from " + State.FILE_NAME, e);
             s = new State();
@@ -315,7 +316,28 @@ public class Configurator {
             final Set<String> paths = Util.isConfigurerBundle(bundle, this.bundleContext.getBundle().getBundleId());
             if ( paths != null ) {
                 final JSONUtil.Report report = new JSONUtil.Report();
-                final BundleState config = JSONUtil.readConfigurationsFromBundle(bundle, paths, report);
+                final BundleState config = JSONUtil.readConfigurationsFromBundle(new BinUtil.ResourceProvider() {
+
+                    @Override
+                    public String getIdentifier() {
+                        return bundle.toString();
+                    }
+
+                    @Override
+                    public URL getEntry(String path) {
+                        return bundle.getEntry(path);
+                    }
+
+                    @Override
+                    public long getBundleId() {
+                        return bundle.getBundleId();
+                    }
+
+                    @Override
+                    public Enumeration<URL> findEntries(String path, String filePattern) {
+                        return bundle.findEntries(path, filePattern, false);
+                    }
+                }, paths, report);
                 for(final String w : report.warnings) {
                     SystemLogger.warning(w);
                 }
@@ -365,7 +387,7 @@ public class Configurator {
                 if ( configList.hasChanges() ) {
                     process(configList);
                     try {
-                        State.writeState(this.bundleContext, state);
+                        State.writeState(this.bundleContext.getDataFile(State.FILE_NAME), state);
                     } catch ( final IOException ioe) {
                         SystemLogger.error("Unable to persist state to " + State.FILE_NAME, ioe);
                     }

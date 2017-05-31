@@ -16,20 +16,18 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.felix.configurator.impl.conversion;
+package org.apache.felix.configurator.impl.json;
 
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.osgi.framework.Bundle;
 import org.osgi.util.converter.Converter;
 import org.osgi.util.converter.StandardConverter;
 import org.osgi.util.converter.TypeReference;
 
 public class TypeConverter {
-
 
     public static Converter getConverter() {
         return new StandardConverter();
@@ -39,14 +37,14 @@ public class TypeConverter {
 
     private final List<File> files = new ArrayList<>();
 
-    private final Bundle bundle;
+    private final BinUtil.ResourceProvider provider;
 
     /**
      * Create a new instance
-     * @param bundle The bundle, might be {@code null}.
+     * @param provider The bundle provider, might be {@code null}.
      */
-    public TypeConverter(final Bundle bundle) {
-        this.bundle = bundle;
+    public TypeConverter(final BinUtil.ResourceProvider provider) {
+        this.provider = provider;
     }
 
     /**
@@ -96,7 +94,7 @@ public class TypeConverter {
 
         // binary
         if ( "binary".equals(typeInfo) ) {
-            if ( bundle == null ) {
+            if ( provider == null ) {
                 throw new IOException("Binary files only allowed within a bundle");
             }
             final String path = getConverter().convert(value).defaultValue(null).to(String.class);
@@ -105,22 +103,22 @@ public class TypeConverter {
             }
             final File filePath;
             try {
-                filePath = BinUtil.extractFile(bundle, pid, path);
+                filePath = BinUtil.extractFile(provider, pid, path);
             } catch ( final IOException ioe ) {
                 throw new IOException("Unable to read " + path +
-                        " in bundle " + bundle +
+                        " in bundle " + provider.getIdentifier() +
                         " for pid " + pid +
                         " and write to " + BinUtil.binDirectory + " : " + ioe.getMessage(), ioe);
             }
             if ( filePath == null ) {
-                throw new IOException("Entry " + path + " not found in bundle " + bundle);
+                throw new IOException("Entry " + path + " not found in bundle " + provider.getIdentifier());
             }
             files.add(filePath);
             allFiles.add(filePath);
             return filePath.getAbsolutePath();
 
         } else if ( "binary[]".equals(typeInfo) ) {
-            if ( bundle == null ) {
+            if ( provider == null ) {
                 throw new IOException("Binary files only allowed within a bundle");
             }
             final String[] paths = getConverter().convert(value).defaultValue(null).to(String[].class);
@@ -132,15 +130,15 @@ public class TypeConverter {
             while ( i < paths.length ) {
                 final File filePath;
                 try {
-                    filePath = BinUtil.extractFile(bundle, pid, paths[i]);
+                    filePath = BinUtil.extractFile(provider, pid, paths[i]);
                 } catch ( final IOException ioe ) {
                     throw new IOException("Unable to read " + paths[i] +
-                            " in bundle " + bundle +
+                            " in bundle " + provider.getIdentifier() +
                             " for pid " + pid +
                             " and write to " + BinUtil.binDirectory + " : " + ioe.getMessage(), ioe);
                 }
                 if ( filePath == null ) {
-                    throw new IOException("Entry " + paths[i] + " not found in bundle " + bundle);
+                    throw new IOException("Entry " + paths[i] + " not found in bundle " + provider.getIdentifier());
                 }
                 files.add(filePath);
                 allFiles.add(filePath);

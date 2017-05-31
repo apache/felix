@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.felix.configurator.impl.conversion;
+package org.apache.felix.configurator.impl.json;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -29,9 +29,8 @@ import java.util.Collection;
 
 import javax.json.JsonObject;
 
-import org.apache.felix.configurator.impl.conversion.TypeConverter;
 import org.apache.felix.configurator.impl.json.JSONUtil;
-import org.apache.felix.configurator.impl.json.JSONUtilTest;
+import org.apache.felix.configurator.impl.json.TypeConverter;
 import org.junit.Test;
 
 public class TypeConverterTest {
