@@ -259,7 +259,7 @@ public class JSONUtil {
                             if ( convertedVal == null ) {
                                 convertedVal = value.toString();
                             }
-                            properties.put(mapKey, convertedVal);
+                            properties.put(key, convertedVal);
                         } catch ( final IOException io ) {
                             report.errors.add("Invalid value/type for configuration in '" + identifier + "' : " + pid + " - " + mapKey + " : " + io.getMessage());
                             valid = false;
