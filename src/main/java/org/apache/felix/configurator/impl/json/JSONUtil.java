@@ -298,12 +298,19 @@ public class JSONUtil {
             report.errors.add("Invalid JSON from " + name);
             return null;
         }
-        try (final JsonReader reader = Json.createReader(new StringReader(contents)) ) {
-            final JsonStructure obj = reader.read();
-            if ( obj != null && obj.getValueType() == ValueType.OBJECT ) {
-                return (JsonObject)obj;
+        // Jonhzon uses TCCL
+        final ClassLoader oldCL = Thread.currentThread().getContextClassLoader();
+        try {
+            Thread.currentThread().setContextClassLoader(JSONUtil.class.getClassLoader());
+            try (final JsonReader reader = Json.createReader(new StringReader(contents)) ) {
+                final JsonStructure obj = reader.read();
+                if ( obj != null && obj.getValueType() == ValueType.OBJECT ) {
+                    return (JsonObject)obj;
+                }
+                report.errors.add("Invalid JSON from " + name);
             }
-            report.errors.add("Invalid JSON from " + name);
+        } finally {
+            Thread.currentThread().setContextClassLoader(oldCL);
         }
         return null;
     }
