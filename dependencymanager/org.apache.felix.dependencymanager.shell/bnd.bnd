@@ -15,16 +15,16 @@
 # limitations under the License.
 #
 -buildpath: \
-	org.apache.felix.gogo.runtime;version=0.10,\
 	org.mockito.mockito-all;version=1.9,\
 	org.apache.felix.dependencymanager;version=latest,\
 	${junit},\
 	osgi.core;version=6.0,\
-	osgi.cmpn;version=6.0
+	osgi.cmpn;version=6.0,\
+	org.apache.felix.gogo.runtime;version=1.0
 Private-Package: \
 	org.apache.felix.dm.shell
 Bundle-Activator:org.apache.felix.dm.shell.Activator
-Bundle-Version: 4.0.5
+Bundle-Version: 4.0.6
 Include-Resource: META-INF/=resources/LICENSE,\
 	META-INF/=resources/NOTICE,\
 	META-INF/=resources/DEPENDENCIES,\
@@ -33,6 +33,4 @@ Bundle-Name: Apache Felix Dependency Manager Shell
 Bundle-Description: Gogo Shell commands for Apache Felix Dependency Manager
 Bundle-Category: osgi
 Bundle-License: http://www.apache.org/licenses/LICENSE-2.0.txt
-Bundle-Vendor: The Apache Software Foundation
-# Work around used to make sure DM api is imported using proper version range (can be removed with bndtools 3)
-Import-Package: org.apache.felix.dm;version="[4.0, 5)", *
+Bundle-Vendor: The Apache Software Foundation 

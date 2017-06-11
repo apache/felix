@@ -16,24 +16,22 @@
 #
 -runbundles: \
 	org.apache.felix.metatype;version=1.0.4,\
-	org.apache.felix.gogo.runtime;version=0.10.0,\
 	org.apache.felix.log;version=1.0.1,\
 	org.apache.felix.configadmin;version=1.8.8,\
 	org.apache.felix.dependencymanager;version=latest,\
 	org.apache.felix.dependencymanager.shell;version=latest,\
 	biz.aQute.junit;version=3.0.0,\
-	org.apache.felix.gogo.command,\
-	org.apache.felix.gogo.shell
+	org.apache.felix.gogo.runtime;version=1.0.6
 -runee: JavaSE-1.8
 -runvm: -ea
 -runfw: org.apache.felix.framework;version='[5.2.0,5.2.0]'
--buildpath:  \
+-buildpath: \
 	osgi.core;version=4.2,\
 	osgi.cmpn;version=4.2,\
-	org.apache.felix.gogo.runtime;version=0.10,\
 	org.apache.felix.dependencymanager;version=latest,\
 	org.apache.felix.dependencymanager.shell;version=latest,\
-	${junit}
+	${junit},\
+	org.apache.felix.gogo.runtime;version=1.0
 -runsystempackages: \
 	sun.reflect
 -sub:  \
