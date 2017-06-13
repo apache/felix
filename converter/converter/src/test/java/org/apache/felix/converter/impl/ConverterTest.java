@@ -966,6 +966,21 @@ public class ConverterTest {
         assertEquals("{}", cs);
     }
 
+    @SuppressWarnings("rawtypes")
+    @Test
+    public void testLongArrayToLongCollection() {
+        Long[] la = new Long[] {Long.MIN_VALUE, Long.MAX_VALUE};
+
+        List lc = converter.convert(la).to(List.class);
+
+        assertEquals(la.length, lc.size());
+
+        int i=0;
+        for (Iterator it = lc.iterator(); it.hasNext(); i++) {
+            assertEquals(la[i], it.next());
+        }
+    }
+
     static class MyClass2 {
         private final String value;
         public MyClass2(String v) {
