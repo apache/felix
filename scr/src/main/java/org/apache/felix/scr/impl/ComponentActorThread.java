@@ -75,14 +75,22 @@ class ComponentActorThread implements Runnable
             {
                 while ( tasks.isEmpty() )
                 {
+                    boolean interrupted = Thread.interrupted();
                     try
                     {
                         tasks.wait();
                     }
                     catch ( InterruptedException ie )
                     {
-                        Thread.currentThread().interrupt();
+                        interrupted = true;
                         // don't care
+                    }
+                    finally
+                    {
+                        if (interrupted)
+                        { // restore interrupt status
+                            Thread.currentThread().interrupt();
+                        }
                     }
                 }
 
@@ -126,14 +134,23 @@ class ComponentActorThread implements Runnable
         {
             while ( !tasks.isEmpty() )
             {
+                boolean interrupted = Thread.interrupted();
                 try
                 {
                     tasks.wait();
                 }
                 catch ( InterruptedException e )
                 {
-                    Thread.currentThread().interrupt();
-                    logger.log( LogService.LOG_ERROR, "Interrupted exception waiting for queue to empty", e );
+                    interrupted = true;
+                    logger.log(LogService.LOG_ERROR,
+                        "Interrupted exception waiting for queue to empty", e);
+                }
+                finally
+                {
+                    if (interrupted)
+                    { // restore interrupt status
+                        Thread.currentThread().interrupt();
+                    }
                 }
             }
         }
