@@ -19,10 +19,19 @@
 package org.apache.felix.dm.lambda.samples.hello;
 
 /**
- * The interface for our service provider.
- *
- * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
+ * The implementation for our HelloService interface.
  */
-public interface ServiceProvider {
-    public void hello();
+public class HelloServiceImpl implements HelloService {
+	
+	/**
+	 * Our component is starting.
+	 */
+	void start() {
+		System.out.println("Hello service starting");
+	}
+
+	@Override
+	public String sayHello() {
+		return "hello !";
+	}
 }
