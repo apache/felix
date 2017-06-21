@@ -114,10 +114,14 @@ public class ConverterTest {
         assertFalse(converter.convert(null).to(boolean.class));
         assertFalse(converter.convert(Collections.emptyList()).to(boolean.class));
 
-        // Converstions to integer
+        // Conversions to integer
         assertEquals(Integer.valueOf(123), converter.convert("123").to(int.class));
         assertEquals(1, (int) converter.convert(true).to(int.class));
         assertEquals(0, (int) converter.convert(false).to(int.class));
+        assertEquals(65, (int) converter.convert('A').to(int.class));
+
+        // Conversions to long
+        assertEquals(Long.valueOf(65), converter.convert('A').to(Long.class));
 
         // Conversions to Class
         assertEquals(BigDecimal.class, converter.convert("java.math.BigDecimal").to(Class.class));
@@ -129,6 +133,7 @@ public class ConverterTest {
         assertEquals('1', (char) converter.convert("123").to(Character.class));
         assertEquals('Q', (char) converter.convert(null).defaultValue('Q').to(Character.class));
         assertEquals((char) 123, (char) converter.convert(123L).to(Character.class));
+        assertEquals((char) 123, (char) converter.convert(123).to(Character.class));
         assertEquals(Byte.valueOf((byte) 123), converter.convert("123").to(Byte.class));
         assertEquals(Float.valueOf("12.3"), converter.convert("12.3").to(Float.class));
         assertEquals(Double.valueOf("12.3"), converter.convert("12.3").to(Double.class));

@@ -46,9 +46,13 @@ public class ConverterImpl implements InternalConverter {
         }) {});
         cb.rule(new Rule<Calendar,Long>(f -> f.getTime().getTime()) {});
         cb.rule(new Rule<Long,Calendar>(f -> new Calendar.Builder().setInstant(f).build()) {});
+
         cb.rule(new Rule<Character,Boolean>(c -> c.charValue() != 0) {});
         cb.rule(new Rule<Boolean,Character>(b -> b.booleanValue() ? (char) 1 : (char) 0) {});
+        cb.rule(new Rule<Character,Integer>(c -> (int) c.charValue()) {});
+        cb.rule(new Rule<Character,Long>(c -> (long) c.charValue()) {});
         cb.rule(new Rule<String,Character>(f -> f.length() > 0 ? f.charAt(0) : 0) {});
+
         cb.rule(new Rule<String,Class<?>>(this::loadClassUnchecked) {});
         cb.rule(new Rule<Date,Long>(Date::getTime) {});
         cb.rule(new Rule<Long,Date>(f -> new Date(f)) {});
