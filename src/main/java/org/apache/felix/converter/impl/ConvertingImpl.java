@@ -577,15 +577,8 @@ public class ConvertingImpl implements Converting, InternalConverting {
             // This is not a primitive, just return null
             return null;
         }
-        if (cls.equals(boolean.class)) {
-            return false;
-        } else if (cls.equals(long.class) ) {
-            return 0L;
-        } else if (cls.equals(double.class) ) {
-            return 0.0;
-        }
 
-        return 0;
+        return converter.convert(0).to(cls);
     }
 
     private static boolean isMapType(Class<?> cls, boolean asJavaBean) {
