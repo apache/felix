@@ -1,3 +1,23 @@
+Release Notes - Felix - Version org.apache.felix.dependencymanager-r10
+======================================================================
+
+** List of bundles being part of the release:
+    * org.apache.felix.dependencymanager; version=4.4.1
+    * org.apache.felix.dependencymanager.shell; version=4.0.6
+    * org.apache.felix.dependencymanager.runtime; version=4.0.4
+    * org.apache.felix.dependencymanager.annotation; version=4.2.0
+    * org.apache.felix.dependencymanager.lambda; version=1.1.0
+
+** Bug
+    * [FELIX-5630] - NullObject is created for a required dependency if the component is removed and added again to the dependency manager
+    * [FELIX-5636] - Component of aspect service does not have any service properties anymore
+
+** Improvement
+    * [FELIX-5619] - MultiProperyFilterIndex memory consumption
+    * [FELIX-5623] - Improve performance of ComponentImpl.getName method
+    * [FELIX-5650] - Support latest version of Gogo
+    * [FELIX-5653] - Simplify DM-Lambda samples
+
 Release Notes - Felix - Version org.apache.felix.dependencymanager-r9
 ======================================================================
 
