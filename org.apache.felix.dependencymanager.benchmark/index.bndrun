@@ -19,9 +19,7 @@
 	org.apache.felix.dependencymanager.shell;version=latest,\
 	org.apache.felix.metatype;version=1.0.10,\
 	org.apache.felix.log;version=1.0.1,\
-	org.apache.felix.gogo.command;version=0.12.0,\
-	org.apache.felix.gogo.shell;version=0.10.0,\
-	org.apache.felix.gogo.runtime;version=0.10.0,\
+	${gogo},\
 	org.apache.felix.configadmin;version=1.8.8,\
 	org.apache.felix.dependencymanager.benchmark.scenario;version=latest,\
 	org.apache.felix.dependencymanager.benchmark.dependencymanager;version=latest,\
