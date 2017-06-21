@@ -216,9 +216,11 @@ public class ConvertingImpl implements Converting, InternalConverting {
 
         // At this point we know that the target is a 'singular' type: not a map, collection or array
         if (Collection.class.isAssignableFrom(sourceClass)) {
-            return convertCollectionToSingleValue(cls);
+            return convertCollectionToSingleValue(targetAsClass);
+        } else if (object instanceof Map.Entry) {
+            return convertMapEntryToSingleValue(targetAsClass);
         } else if ((object = asBoxedArray(object)) instanceof Object[]) {
-            return convertArrayToSingleValue(cls);
+            return convertArrayToSingleValue(targetAsClass);
         }
 
         Object res2 = tryStandardMethods();
@@ -246,6 +248,30 @@ public class ConvertingImpl implements Converting, InternalConverting {
             return null;
         else
             return converter.convert(coll.iterator().next()).to(cls);
+    }
+
+    @SuppressWarnings("rawtypes")
+    private Object convertMapEntryToSingleValue(Class<?> cls) {
+        Map.Entry entry = (Map.Entry) object;
+
+        Class keyCls = entry.getKey() != null ? entry.getKey().getClass() : null;
+        Class valueCls = entry.getValue() != null ? entry.getValue().getClass() : null;
+
+        if (cls.equals(keyCls)) {
+            return converter.convert(entry.getKey()).to(cls);
+        } else if (cls.equals(valueCls)) {
+            return converter.convert(entry.getValue()).to(cls);
+        } else if (cls.isAssignableFrom(keyCls)) {
+            return converter.convert(entry.getKey()).to(cls);
+        } else if (cls.isAssignableFrom(valueCls)) {
+            return converter.convert(entry.getValue()).to(cls);
+        } else if (entry.getKey() instanceof String) {
+            return converter.convert(entry.getKey()).to(cls);
+        } else if (entry.getValue() instanceof String) {
+            return converter.convert(entry.getValue()).to(cls);
+        }
+
+        return converter.convert(converter.convert(entry.getKey()).to(String.class)).to(cls);
     }
 
     @SuppressWarnings("unchecked")

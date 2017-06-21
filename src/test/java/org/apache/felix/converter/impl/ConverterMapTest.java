@@ -429,6 +429,57 @@ public class ConverterMapTest {
         assertEquals(true, m3.invoke(ta2));
     }
 
+    @Test
+    public void testMapEntry() {
+        Map<String, Boolean> m1 = Collections.singletonMap("Hi", Boolean.TRUE);
+        Map.Entry<String, Boolean> e1 = getMapEntry(m1);
+
+        assertTrue(converter.convert(e1).to(Boolean.class));
+        assertTrue(converter.convert(e1).to(boolean.class));
+        assertEquals("Hi", converter.convert(e1).to(String.class));
+
+    }
+
+    @Test
+    public void testMapEntry1() {
+        Map<Long, String> m1 = Collections.singletonMap(17L, "18");
+        Map.Entry<Long, String> e1 = getMapEntry(m1);
+
+        assertEquals(17L, converter.convert(e1).to(Number.class));
+        assertEquals("18", converter.convert(e1).to(String.class));
+        assertEquals("18", converter.convert(e1).to(Bar.class).value);
+    }
+
+    @Test
+    public void testMapEntry2() {
+        Map<String, Short> m1 = Collections.singletonMap("123", Short.valueOf((short) 567));
+        Map.Entry<String, Short> e1 = getMapEntry(m1);
+
+        assertEquals(Integer.valueOf(123), converter.convert(e1).to(Integer.class));
+    }
+
+    @Test
+    public void testMapEntry3() {
+        Map<Long,Long> l1 = Collections.singletonMap(9L, 10L);
+        Map.Entry<Long, Long> e1 = getMapEntry(l1);
+
+        assertEquals("Should take the key if key and value are equally suitable",
+                9L, (long) converter.convert(e1).to(long.class));
+    }
+
+    @Test
+    public void testMapEntry4() {
+        Map<Foo, Foo> m1 = Collections.singletonMap(new Foo(111), new Foo(999));
+        Map.Entry<Foo, Foo> e1 = getMapEntry(m1);
+
+        assertEquals("111", converter.convert(e1).to(Bar.class).value);
+    }
+
+    private <K,V> Map.Entry<K,V> getMapEntry(Map<K,V> map) {
+        assertEquals("This method assumes a map of size 1", 1, map.size());
+        return map.entrySet().iterator().next();
+    }
+
     interface TestInterface {
         String foo();
         int bar();
@@ -445,5 +496,25 @@ public class ConverterMapTest {
     @interface SingleElementAnnotation {
     	String[] value();
     	long somethingElse() default -87;
+    }
+
+    private static class Foo {
+        private final int value;
+
+        Foo(int v) {
+            value = v;
+        }
+
+        @Override
+        public String toString() {
+            return "" + value;
+        }
+    }
+
+    public static class Bar {
+        final String value;
+        public Bar(String v) {
+            value = v;
+        }
     }
 }
