@@ -36,7 +36,7 @@ Release the binary bundles
 
 first, release the bundles that are part of the dm binary distribution:
 
-$ gradle release
+$ ./gradlew release
 
 This will generates some new releases in cnf/releaserepo. Commit the newly created releases and uncommit the previous ones.
 
