@@ -23,6 +23,7 @@ import java.util.Properties;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.ServiceReference;
 
+@SuppressWarnings("rawtypes")
 class TestReference implements ServiceReference {
 	Properties props = new Properties();
 

@@ -43,6 +43,7 @@ public class MultiPropertyFilterIndexPerformanceTest {
 	}
 
 	
+	@SuppressWarnings("rawtypes")
 	private void testPerformance(MultiPropertyFilterIndex filterIndex, int runSize, String indexName) {
 		System.gc();
 		long start = System.currentTimeMillis();

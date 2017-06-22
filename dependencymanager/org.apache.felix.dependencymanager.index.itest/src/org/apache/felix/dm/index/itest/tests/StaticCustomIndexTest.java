@@ -56,7 +56,8 @@ public class StaticCustomIndexTest extends TestBase {
         super.setUp();    	
     }
     	
-    public void tearDown() throws Exception {
+    @SuppressWarnings("unchecked")
+	public void tearDown() throws Exception {
         super.tearDown();
         System.getProperties().remove(OPENED);
         Consumer<String> reset = (Consumer<String>) System.getProperties().get("org.apache.felix.dependencymanager.filterindex.reset");

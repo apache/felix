@@ -95,18 +95,22 @@ public class FELIX5630_NullObjectTest extends TestBase {
 
     
 	private class A {
+		@SuppressWarnings("unused")
 		public void init() {
 			System.out.println("init");
 		}
 
+		@SuppressWarnings("unused")
 		public void start() {
 			System.out.println("start");
 		}
 
+		@SuppressWarnings("unused")
 		public void stop() {
 			System.out.println("stop");
 		}
 
+		@SuppressWarnings("unused")
 		public void destroy() {
 			System.out.println("destroy");
 		}

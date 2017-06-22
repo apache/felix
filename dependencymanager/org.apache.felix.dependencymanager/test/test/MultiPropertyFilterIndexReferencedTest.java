@@ -31,6 +31,7 @@ import org.osgi.framework.ServiceReference;
 public class MultiPropertyFilterIndexReferencedTest {
 
 	
+	@SuppressWarnings("rawtypes")
 	@Test
 	public void noContext() {
 		MultiPropertyFilterIndex singleValueFilterIndex = new MultiPropertyFilterIndex("objectClass,!context");
@@ -56,6 +57,7 @@ public class MultiPropertyFilterIndexReferencedTest {
 	}
 	
 	
+	@SuppressWarnings("rawtypes")
 	@Test
 	public void noContextCid() {
 		MultiPropertyFilterIndex multiPropertyIndex_new = new MultiPropertyFilterIndex("objectClass,cid,!context");
@@ -90,6 +92,7 @@ public class MultiPropertyFilterIndexReferencedTest {
 	
 	
 
+	@SuppressWarnings("rawtypes")
 	@Test
 	public void singleKeyfilterIndex() {
 		MultiPropertyFilterIndex multiPropertyIndex = new MultiPropertyFilterIndex("objectClass");
@@ -128,6 +131,7 @@ public class MultiPropertyFilterIndexReferencedTest {
 		assertTrue(byClazzName.get(1).equals(ref3));
 	}
 	
+	@SuppressWarnings("rawtypes")
 	@Test
 	public void propertyIndexWithDoubleNoPermutationKeys() {
 		String filterConfig =  "objectClass,#related-concept-absoluteidentifier,#context-concept-absoluteidentifier,StoreClass";
@@ -151,6 +155,7 @@ public class MultiPropertyFilterIndexReferencedTest {
 		assertTrue(result_new.size() == 1);
 	}
 	
+	@SuppressWarnings("rawtypes")
 	@Test
 	public void propertyIndexWithDoubleMultiProperty() {
 		String filterConfig =  "objectClass,related-concept-absoluteidentifier,context-concept-absoluteidentifier,StoreClass";
@@ -176,6 +181,7 @@ public class MultiPropertyFilterIndexReferencedTest {
 	}
 	
 	
+	@SuppressWarnings("rawtypes")
 	@Test
 	public void MultiPropertyFilterIndexTypes() {
 		
@@ -207,6 +213,7 @@ public class MultiPropertyFilterIndexReferencedTest {
 		assertTrue(combi.size() == 1);
 	}
 	
+	@SuppressWarnings("rawtypes")
 	@Test
 	public void MultiPropertyFilterIndexKeyGen() {
 		String key = "(&(objectClass=org.acme.xyz.framework.internationalization.Translatable)(component-identifier=org.acme.xyz.framework.webui.engine.impl.CompoundProcessContextGroupingPanelFactory))";
@@ -230,6 +237,7 @@ public class MultiPropertyFilterIndexReferencedTest {
 	}
 	
 	
+	@SuppressWarnings("rawtypes")
 	class TestReference implements ServiceReference {
 		Properties props = new Properties();
 	
