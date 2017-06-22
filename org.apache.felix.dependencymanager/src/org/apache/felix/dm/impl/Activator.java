@@ -20,7 +20,6 @@ package org.apache.felix.dm.impl;
 
 import org.apache.felix.dm.ComponentExecutorFactory;
 import org.apache.felix.dm.FilterIndex;
-import org.apache.felix.dm.impl.index.ServiceRegistryCache;
 import org.apache.felix.dm.impl.index.ServiceRegistryCacheManager;
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;

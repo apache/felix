@@ -53,8 +53,10 @@ public class DynamicCustomIndexTest extends TestBase {
         BundleContext context = FrameworkUtil.getBundle(this.getClass()).getBundleContext();
     	m_systemConf = context.getProperty(DependencyManager.SERVICEREGISTRY_CACHE_INDICES);
     	
-    	// Reset filter indices    	
-    	DependencyManager dm = new DependencyManager(context);
+    	// Reset filter indices (we must initialize DependencyManager, so its static initializer will register
+    	// the reset backdoor.
+    	@SuppressWarnings("unused")
+		DependencyManager dm = new DependencyManager(context);
     	Consumer<String> reset = (Consumer<String>) System.getProperties().get("org.apache.felix.dependencymanager.filterindex.reset");
         reset.accept(null); // clear filter index
         
