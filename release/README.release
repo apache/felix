@@ -21,8 +21,13 @@ Before you can start staging a release candidate, you must:
 
 * make sure there are no dependencies on snapshots/unreleased versions;
 * increment the ext.dmRelease parameter in release/build.gradle, if not already done, and commit.
-* check if release notes are up-to-date, in release/resources/changelog.txt.
-* in the changelog file, also make sure that all bundles which are part of the release are all referenced (bundle names + versions).
+* check if release notes are up-to-date in dm sub projects which are part of the release:
+- org.apache.felix.dependencymanager/resources/changelog.txt
+- org.apache.felix.dependencymanager.annotation/resources/changelog.txt
+- org.apache.felix.dependencymanager.lambda/resources/changelog.txt
+- org.apache.felix.dependencymanager.runtime/resources/changelog.txt
+- org.apache.felix.dependencymanager.shell/resources/changelog.txt
+* in the changelog files, also make sure that all bundles which are part of the release are all referenced (bundle names + versions).
 * release the bundles that are part of the dm binary distribution.
 * create a tagged version of the sources in preparation of the release candidate.
 

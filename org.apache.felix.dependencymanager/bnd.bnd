@@ -30,10 +30,7 @@ Export-Package:  \
 	org.apache.felix.dm.tracker,\
 	org.apache.felix.dm.context,\
 	org.apache.felix.dm.diagnostics
-Include-Resource: META-INF/=resources/LICENSE,\
-	META-INF/=resources/NOTICE,\
-	META-INF/=resources/DEPENDENCIES,\
-	META-INF/=${workspace}/release/resources/changelog.txt
+Include-Resource: META-INF/=resources/
 Import-Package: !org.junit,!org.mockito.*,*
 Bundle-Activator: org.apache.felix.dm.impl.Activator
 Bundle-Version: 4.4.1

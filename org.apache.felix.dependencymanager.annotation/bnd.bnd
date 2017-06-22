@@ -23,11 +23,7 @@ Private-Package: \
 	org.apache.felix.dm.annotation.plugin.bnd
 Export-Package: \
 	org.apache.felix.dm.annotation.api
-Include-Resource: META-INF/=resources/LICENSE,\
-	META-INF/=resources/NOTICE,\
-	META-INF/=resources/DEPENDENCIES,\
-	META-INF/=${workspace}/release/resources/changelog.txt
-
+Include-Resource: META-INF/=resources/
 Bundle-Name: Apache Felix Dependency Manager Annotations
 Bundle-Description: Annotations for Apache Felix Dependency Manager
 Bundle-Category: osgi

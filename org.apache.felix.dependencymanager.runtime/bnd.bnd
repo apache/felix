@@ -26,11 +26,7 @@ Export-Package:  \
 	org.apache.felix.dm.runtime.api
 Provide-Capability: osgi.extender; osgi.extender="org.apache.felix.dependencymanager.runtime";\
 	uses:="org.apache.felix.dm";version:Version="4.0.0"
-Include-Resource: META-INF/=resources/LICENSE,\
-	META-INF/=resources/NOTICE,\
-	META-INF/=resources/DEPENDENCIES,\
-	META-INF/=${workspace}/release/resources/changelog.txt
-
+Include-Resource: META-INF/=resources/
 Bundle-Name: Apache Felix Dependency Manager Runtime
 Bundle-Description: Loads Apache Felix Dependency Manager component descriptors from active \
 	annoted bundles
