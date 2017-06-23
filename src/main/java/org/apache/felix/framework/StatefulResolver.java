@@ -156,7 +156,9 @@ class StatefulResolver
                         @Override
                         public Thread newThread(Runnable r)
                         {
-                            return new Thread(r, "FelixResolver-" + counter.incrementAndGet());
+                            Thread thread = new Thread(r, "FelixResolver-" + counter.incrementAndGet());
+                            thread.setDaemon(true);
+                            return thread;
                         }
                     });
             executor.allowCoreThreadTimeOut(true);
