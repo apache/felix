@@ -32,6 +32,33 @@ import static org.junit.Assert.assertNotNull;
 public class ExpanderTest {
 
     @Test
+    public void testOctalAndHex() throws Exception {
+        Evaluate evaluate = new Evaluate() {
+            @Override
+            public Object eval(Token t) throws Exception {
+                return null;
+            }
+            @Override
+            public Object get(String key) {
+                return null;
+            }
+            @Override
+            public Object put(String key, Object value) {
+                return null;
+            }
+            @Override
+            public Object expr(Token t) {
+                return null;
+            }
+            @Override
+            public Path currentDir() {
+                return null;
+            }
+        };
+        assertEquals("\033\033", Expander.expand("$'\\033\\u001B'", evaluate));
+    }
+
+    @Test
     public void testGenerateFiles() throws IOException {
         final Path testdir = Paths.get(".").toAbsolutePath().resolve("target/testdir").normalize();
         Evaluate evaluate = new Evaluate() {
