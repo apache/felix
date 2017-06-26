@@ -857,6 +857,7 @@ public class Expander extends BaseTokenizer
                     case '8':
                     case '9':
                         ch = 0;
+                        i--;
                         for (int j = 0; j < 3; j++)
                         {
                             c = i < arg.length() - 1 ? arg.charAt(++i) : -1;
