@@ -1048,7 +1048,7 @@ public class Expression {
      * @return <code>true</code>, if the input string is a number.
      */
     private boolean isNumber(String st) {
-        if (st.charAt(0) == minusSign && st.length() == 1)
+        if (st == null || st.isEmpty() || st.charAt(0) == minusSign && st.length() == 1)
             return false;
         for (char ch : st.toCharArray()) {
             if (!Character.isDigit(ch) && ch != minusSign
