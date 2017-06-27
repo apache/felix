@@ -23,7 +23,7 @@
 import aQute.bnd.build.Workspace
 
 // Our release number, which has to be monotonically incremented each time we make a new release.
-ext.dmRelease = "r10"
+ext.dmRelease = "r11"
 
 // Our Apache svn Staging repo
 ext.svnStagingPath = "https://dist.apache.org/repos/dist/dev/felix"
@@ -102,7 +102,7 @@ task makeStaging << {
     	ant.zipfileset(dir: '../gradle', prefix: topdir+"-src/gradle", includes: '**')    	
 		ant.zipfileset(dir: 'resources/deps', prefix: topdir+"-src", includes: '*')
 		ant.zipfileset(dir: '../cnf', prefix: topdir+"-src/cnf",
-		    		   includes: 'buildrepo/**,localrepo/**,releaserepo/**,plugins/**,gradle/**')
+		    		   includes: 'buildrepo/**,localrepo/**,releaserepo/**,nonosgi-repo/**,plugins/**,gradle/**')
     }
 
     // Package binaries as a simple collection of bundles. We use same license files as for src distrib.
