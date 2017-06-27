@@ -14,7 +14,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-Bundle-Version: 4.2.0
+Bundle-Version: 4.2.1
 -buildpath: \
 	biz.aQute.bndlib;version=2.4,\
 	osgi.core;version=6.0,\
