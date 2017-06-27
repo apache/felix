@@ -1,3 +1,16 @@
+Release Notes - Felix - Version org.apache.felix.dependencymanager-r11
+======================================================================
+
+** List of bundles being part of the release:
+    * org.apache.felix.dependencymanager; version=4.4.1
+    * org.apache.felix.dependencymanager.shell; version=4.0.6
+    * org.apache.felix.dependencymanager.runtime; version=4.0.5
+    * org.apache.felix.dependencymanager.annotation; version=4.2.1
+    * org.apache.felix.dependencymanager.lambda; version=1.1.1
+
+** Improvement
+    * [FELIX-5658] - Include poms in dm artifacts
+
 Release Notes - Felix - Version org.apache.felix.dependencymanager-r9
 ======================================================================
 
