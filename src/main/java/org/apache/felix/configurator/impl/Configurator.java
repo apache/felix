@@ -48,6 +48,7 @@ import org.osgi.framework.BundleContext;
 import org.osgi.framework.BundleEvent;
 import org.osgi.framework.Constants;
 import org.osgi.framework.InvalidSyntaxException;
+import org.osgi.framework.ServicePermission;
 import org.osgi.framework.ServiceReference;
 import org.osgi.service.cm.Configuration;
 import org.osgi.service.cm.ConfigurationAdmin;
@@ -496,21 +497,24 @@ public class Configurator {
         if ( configAdminServiceBundleId == null ) {
             final Bundle configBundle = cfg.getBundleId() == -1 ? this.bundleContext.getBundle() : this.bundleContext.getBundle(Constants.SYSTEM_BUNDLE_LOCATION).getBundleContext().getBundle(cfg.getBundleId());
             if ( configBundle != null ) {
-                try {
-                    final Collection<ServiceReference<ConfigurationAdmin>> refs = configBundle.getBundleContext().getServiceReferences(ConfigurationAdmin.class, null);
-                    final List<ServiceReference<ConfigurationAdmin>> sortedRefs = new ArrayList<>(refs);
-                    Collections.sort(sortedRefs);
-                    for(int i=sortedRefs.size();i>0;i--) {
-                        final ServiceReference<ConfigurationAdmin> r = sortedRefs.get(i-1);
-                        synchronized ( this.configAdminReferences ) {
-                            if ( this.configAdminReferences.contains(r) ) {
-                                configAdminServiceBundleId = r.getBundle().getBundleId();
-                                break;
+                if ( System.getSecurityManager() == null
+                     || configBundle.hasPermission( new ServicePermission(ConfigurationAdmin.class.getName(), ServicePermission.GET)) ) {
+                    try {
+                        final Collection<ServiceReference<ConfigurationAdmin>> refs = configBundle.getBundleContext().getServiceReferences(ConfigurationAdmin.class, null);
+                        final List<ServiceReference<ConfigurationAdmin>> sortedRefs = new ArrayList<>(refs);
+                        Collections.sort(sortedRefs);
+                        for(int i=sortedRefs.size();i>0;i--) {
+                            final ServiceReference<ConfigurationAdmin> r = sortedRefs.get(i-1);
+                            synchronized ( this.configAdminReferences ) {
+                                if ( this.configAdminReferences.contains(r) ) {
+                                    configAdminServiceBundleId = r.getBundle().getBundleId();
+                                    break;
+                                }
                             }
                         }
+                    } catch (final InvalidSyntaxException e) {
+                        // this can never happen as we pass {@code null} as the filter
                     }
-                } catch (final InvalidSyntaxException e) {
-                    // this can never happen as we pass {@code null} as the filter
                 }
             }
         }

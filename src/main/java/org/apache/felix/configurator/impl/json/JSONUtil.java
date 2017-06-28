@@ -56,7 +56,7 @@ public class JSONUtil {
 
     private static final String INTERNAL_PREFIX = ":configurator:";
 
-    private static final String PROP_VERSION = INTERNAL_PREFIX + "json-version";
+    private static final String PROP_VERSION = INTERNAL_PREFIX + "resource-version";
 
     private static final String PROP_RANKING = "ranking";
 
