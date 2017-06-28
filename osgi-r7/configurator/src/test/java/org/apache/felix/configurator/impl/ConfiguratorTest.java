@@ -84,12 +84,12 @@ public class ConfiguratorTest {
         final BundleWiring wiring = mock(BundleWiring.class);
         when(b.adapt(BundleWiring.class)).thenReturn(wiring);
         final BundleRequirement req = mock(BundleRequirement.class);
-        when(wiring.getRequirements(Util.NS_OSGI_IMPL)).thenReturn(Collections.singletonList(req));
+        when(wiring.getRequirements(Util.NS_OSGI_EXTENDER)).thenReturn(Collections.singletonList(req));
         final BundleWire wire = mock(BundleWire.class);
         when(wire.getProviderWiring()).thenReturn(wiring);
         when(wire.getRequirement()).thenReturn(req);
         when(wiring.getBundle()).thenReturn(bundle);
-        when(wiring.getRequiredWires(Util.NS_OSGI_IMPL)).thenReturn(Collections.singletonList(wire));
+        when(wiring.getRequiredWires(Util.NS_OSGI_EXTENDER)).thenReturn(Collections.singletonList(wire));
         final Vector<URL> urls = new Vector<>();
         urls.add(this.getClass().getResource("/bundles/" + id + ".json"));
         when(b.findEntries("OSGI-INF/configurator", "*.json", false)).thenReturn(urls.elements());

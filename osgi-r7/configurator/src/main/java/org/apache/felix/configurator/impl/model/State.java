@@ -26,7 +26,6 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.Serializable;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
@@ -43,11 +42,7 @@ public class State extends AbstractState implements Serializable {
 
     private final Map<Long, Long> bundlesConfigAdminBundleId = new HashMap<>();
 
-    private final Set<String> environments = new HashSet<>();
-
     private volatile Set<String> initialHashes;
-
-    private volatile transient boolean envsChanged = true;
 
     /**
      * Serialize the object
@@ -60,7 +55,6 @@ public class State extends AbstractState implements Serializable {
     throws IOException {
         out.writeInt(VERSION);
         out.writeObject(bundlesLastModified);
-        out.writeObject(environments);
         out.writeObject(initialHashes);
     }
 
@@ -77,7 +71,6 @@ public class State extends AbstractState implements Serializable {
             throw new ClassNotFoundException(this.getClass().getName());
         }
         ReflectionUtil.setField(this, "bundlesLastModified", in.readObject());
-        ReflectionUtil.setField(this, "environments", in.readObject());
         initialHashes = (Set<String>) in.readObject();
     }
 
@@ -131,21 +124,7 @@ public class State extends AbstractState implements Serializable {
         return this.bundlesLastModified.keySet();
     }
 
-    public Set<String> getEnvironments() {
-        return this.environments;
-    }
-
-    public void changeEnvironments(final Set<String> envs) {
-        this.envsChanged = this.environments.equals(envs);
-        this.environments.clear();
-        this.environments.addAll(envs);
-    }
-
-    public boolean environmentsChanged() {
-        return this.envsChanged;
-    }
-
-    public Set<String> getInitialHashes() {
+   public Set<String> getInitialHashes() {
         return this.initialHashes;
     }
 
@@ -188,7 +167,7 @@ public class State extends AbstractState implements Serializable {
 
     @Override
     public String toString() {
-        return "State [bundlesLastModified=" + bundlesLastModified + ", environments=" + environments
-                + ", initialHashes=" + initialHashes + "]";
+        return "State [bundlesLastModified=" + bundlesLastModified +
+                ", initialHashes=" + initialHashes + "]";
     }
 }
