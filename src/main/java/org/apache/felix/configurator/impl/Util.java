@@ -28,16 +28,13 @@ import java.util.Set;
 
 import org.apache.felix.configurator.impl.logger.SystemLogger;
 import org.osgi.framework.Bundle;
-import org.osgi.framework.BundleContext;
 import org.osgi.framework.wiring.BundleRequirement;
 import org.osgi.framework.wiring.BundleWire;
 import org.osgi.framework.wiring.BundleWiring;
 
 public class Util {
 
-    private static final String PROP_ENVIRONMENTS = "configurator.environment";
-
-    public static final String NS_OSGI_IMPL = "osgi.implementation";
+    public static final String NS_OSGI_EXTENDER = "osgi.extender";
 
     public static final String PROP_CONFIGURATIONS = "configurations";
 
@@ -58,12 +55,12 @@ public class Util {
         }
 
         // check for bundle requirement to implementation namespace
-        final List<BundleRequirement> requirements = bundleWiring.getRequirements(NS_OSGI_IMPL);
+        final List<BundleRequirement> requirements = bundleWiring.getRequirements(NS_OSGI_EXTENDER);
         if ( requirements == null || requirements.isEmpty() ) {
             return null;
         }
         // get all wires for the implementation namespace
-        final List<BundleWire> wires = bundleWiring.getRequiredWires(NS_OSGI_IMPL);
+        final List<BundleWire> wires = bundleWiring.getRequiredWires(NS_OSGI_EXTENDER);
         for(final BundleWire wire : wires) {
             // if the wire is to this bundle (configurator), it must be the correct
             // requirement (no need to do additional checks like version etc.)
@@ -92,50 +89,7 @@ public class Util {
         return null;
     }
 
-    /**
-     * Get the set of active environments from the framework property.
-     *
-     * @param bc The bundle context
-     * @return A set with the environments, might be empty
-     */
-    public static Set<String> getActiveEnvironments(final BundleContext bc) {
-        final String value = bc.getProperty(PROP_ENVIRONMENTS);
-        if ( value == null ) {
-            return Collections.emptySet();
-        }
-        final Set<String> envs = new HashSet<>();
-        for(final String name : value.split(",") ) {
-            if ( isValidEnvironmentName(name) ) {
-                envs.add(name.trim());
-            } else {
-                SystemLogger.error("Invalid environment name: " + name);
-            }
-        }
-        return envs;
-    }
-
-    public static boolean isValidEnvironmentName(final String name) {
-        if ( name == null ) {
-            return false;
-        }
-        final String testName = name.trim();
-        boolean isValid = !testName.isEmpty();
-        for(int i=0; i<testName.length(); i++) {
-            final char c = testName.charAt(i);
-            if ( c == '-'
-                 || c == '_'
-                 || (c >= '0' && c <= '9')
-                 || (c >= 'a' && c <= 'z')
-                 || (c >= 'A' && c <= 'Z')) {
-                continue;
-            }
-            isValid = false;
-            break;
-        }
-        return isValid;
-    }
-
-   public static String getSHA256(final String value) {
+    public static String getSHA256(final String value) {
         try {
             StringBuilder builder = new StringBuilder();
             MessageDigest md = MessageDigest.getInstance("SHA-256");

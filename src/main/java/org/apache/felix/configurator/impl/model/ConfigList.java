@@ -115,8 +115,7 @@ public class ConfigList implements Serializable, Iterable<Config> {
             // search if we already have this configuration
             for(final Config current : this.configurations) {
                 if ( current.getBundleId() == cfg.getBundleId()
-                  && current.getRanking() == cfg.getRanking()
-                  && current.getEnvironments().equals(cfg.getEnvironments()) ) {
+                  && current.getRanking() == cfg.getRanking()) {
                     if ( current.getState() == ConfigState.UNINSTALL ) {
                         cfg.setState(ConfigState.INSTALLED);
                         current.setState(ConfigState.UNINSTALLED);

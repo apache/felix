@@ -28,12 +28,10 @@ import java.io.Writer;
 import java.net.URL;
 import java.net.URLConnection;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.Dictionary;
 import java.util.Enumeration;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Hashtable;
 import java.util.List;
 import java.util.Map;
@@ -194,23 +192,7 @@ public class JSONUtil {
             } else {
                 @SuppressWarnings("unchecked")
                 final Map<String, ?> mainMap = (Map<String, ?>)entry.getValue();
-                final int envIndex = entry.getKey().indexOf('[');
-                if ( envIndex != -1 && !entry.getKey().endsWith("]") ) {
-                    report.errors.add("Ignoring configuration in '" + identifier + "' (invalid environments definition) : " + entry.getKey());
-                    continue;
-                }
-                final String pid;
-                final Set<String> environments;
-                if ( envIndex == -1 ) {
-                    pid = entry.getKey();
-                    environments = null;
-                } else {
-                    pid = entry.getKey().substring(0, envIndex);
-                    environments = new HashSet<>(Arrays.asList(entry.getKey().substring(envIndex + 1, entry.getKey().length()).split(",")));
-                    if ( environments.isEmpty() ) {
-                        report.warnings.add("Invalid environments for configuration in '" + identifier + "' : " + pid);
-                    }
-                }
+                final String pid = entry.getKey();
 
                 int ranking = 0;
                 ConfigPolicy policy = ConfigPolicy.DEFAULT;
@@ -269,7 +251,7 @@ public class JSONUtil {
                 }
 
                 if ( valid ) {
-                    final Config c = new Config(pid, environments, properties, bundleId, ranking, policy);
+                    final Config c = new Config(pid, properties, bundleId, ranking, policy);
                     c.setFiles(converter.flushFiles());
                     configurations.add(c);
                 }

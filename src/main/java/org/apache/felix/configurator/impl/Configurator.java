@@ -64,8 +64,6 @@ public class Configurator {
 
     private final State state;
 
-    private final Set<String> activeEnvironments;
-
     private final org.osgi.util.tracker.BundleTracker<Bundle> tracker;
 
     private volatile boolean active = true;
@@ -86,7 +84,6 @@ public class Configurator {
         this.queue = new WorkerQueue();
         this.bundleContext = bc;
         this.configAdminReferences = configAdminReferences;
-        this.activeEnvironments = Util.getActiveEnvironments(bc);
         State s = null;
         try {
             s = State.createOrReadState(bundleContext.getDataFile(State.FILE_NAME));
@@ -95,7 +92,6 @@ public class Configurator {
             s = new State();
         }
         this.state = s;
-        this.state.changeEnvironments(this.activeEnvironments);
         this.tracker = new org.osgi.util.tracker.BundleTracker<>(this.bundleContext,
                 Bundle.ACTIVE|Bundle.STARTING|Bundle.STOPPING|Bundle.RESOLVED|Bundle.INSTALLED,
 
@@ -251,11 +247,7 @@ public class Configurator {
                 hashes.add(Util.getSHA256(initial.trim()));
                 files.put(ConfiguratorConstants.CONFIGURATOR_INITIAL, initial);
             }
-            if ( state.getInitialHashes() != null && state.getInitialHashes().equals(hashes)) {
-                if ( state.environmentsChanged() ) {
-                    state.checkEnvironments(-1);
-                }
-            } else {
+            if ( state.getInitialHashes() == null || !state.getInitialHashes().equals(hashes)) {
                 if ( state.getInitialHashes() != null ) {
                     processRemoveBundle(-1);
                 }
@@ -304,9 +296,6 @@ public class Configurator {
             final long bundleLastModified = bundle.getLastModified();
             final Long lastModified = state.getLastModified(bundleId);
             if ( lastModified != null && lastModified.longValue() == bundleLastModified ) {
-                if ( state.environmentsChanged() ) {
-                    state.checkEnvironments(bundleId);
-                }
                 // no changes, nothing to do
                 return;
             }
@@ -411,41 +400,30 @@ public class Configurator {
         Config toDeactivate = null;
 
         for(final Config cfg : configList) {
-            final boolean canBeActive = cfg.isActive(activeEnvironments);
-
             switch ( cfg.getState() ) {
-            case INSTALL     : // activate if first found
-                if ( canBeActive && toActivate == null ) {
-                    toActivate = cfg;
-                }
-                break;
+                case INSTALL     : // activate if first found
+                    if ( toActivate == null ) {
+                        toActivate = cfg;
+                    }
+                    break;
 
-            case IGNORED     : // same as installed
-            case INSTALLED   : // check if we have to uninstall
-                if ( canBeActive ) {
+                case IGNORED     : // same as installed
+                case INSTALLED   : // check if we have to uninstall
                     if ( toActivate == null ) {
                         toActivate = cfg;
                     } else {
                         cfg.setState(ConfigState.INSTALL);
                     }
-                } else {
-                    if ( toDeactivate == null ) { // this should always be null
-                        cfg.setState(ConfigState.UNINSTALL);
-                        toDeactivate = cfg;
-                    } else {
-                        cfg.setState(ConfigState.UNINSTALLED);
+                    break;
+
+                case UNINSTALL   : // deactivate if first found (we should only find one anyway)
+                    if ( toDeactivate == null ) {
+                       toDeactivate = cfg;
                     }
-                }
-                break;
+                    break;
 
-            case UNINSTALL   : // deactivate if first found (we should only find one anyway)
-                if ( toDeactivate == null ) {
-                    toDeactivate = cfg;
-                }
-                break;
-
-            case UNINSTALLED : // nothing to do
-                break;
+                case UNINSTALLED : // nothing to do
+                    break;
             }
 
         }
