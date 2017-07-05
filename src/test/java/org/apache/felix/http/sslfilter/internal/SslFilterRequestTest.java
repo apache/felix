@@ -91,19 +91,19 @@ public class SslFilterRequestTest
         
         when(req.getHeader(HDR_X_FORWARDED_PORT)).thenReturn(null);        
         when(req.getServerPort()).thenReturn(-1);
-        assertEquals(-1, sreq.getServerPort());
+        assertEquals(443, sreq.getServerPort());
         
         when(req.getHeader(HDR_X_FORWARDED_PORT)).thenReturn("");        
         when(req.getServerPort()).thenReturn(-1);
-        assertEquals(-1, sreq.getServerPort());
+        assertEquals(443, sreq.getServerPort());
         
         when(req.getHeader(HDR_X_FORWARDED_PORT)).thenReturn("WRONG");        
         when(req.getServerPort()).thenReturn(-1);
-        assertEquals(-1, sreq.getServerPort());
+        assertEquals(443, sreq.getServerPort());
         
         when(req.getHeader(HDR_X_FORWARDED_PORT)).thenReturn("W1");        
         when(req.getServerPort()).thenReturn(-1);
-        assertEquals(-1, sreq.getServerPort());
+        assertEquals(443, sreq.getServerPort());
         
         when(req.getHeader(HDR_X_FORWARDED_PORT)).thenReturn("443");        
         assertEquals(443, sreq.getServerPort());
