@@ -28,7 +28,7 @@
 
     <name>Apache Felix Http Jetty</name>
     <artifactId>org.apache.felix.http.jetty</artifactId>
-    <version>3.4.3-SNAPSHOT</version>
+    <version>3.4.3-R7-SNAPSHOT</version>
     <packaging>jar</packaging>
     
     <scm>
@@ -188,12 +188,12 @@
         <dependency>
             <groupId>org.apache.felix</groupId>
             <artifactId>org.apache.felix.http.api</artifactId>
-            <version>3.0.1-SNAPSHOT</version>
+            <version>3.0.1-R7-SNAPSHOT</version>
         </dependency>
         <dependency>
             <groupId>org.apache.felix</groupId>
             <artifactId>org.apache.felix.http.base</artifactId>
-            <version>3.0.19-SNAPSHOT</version>
+            <version>3.0.19-R7-SNAPSHOT</version>
         </dependency>
         <dependency>
             <groupId>commons-fileupload</groupId>

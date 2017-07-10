@@ -28,7 +28,7 @@
 
     <name>Apache Felix Http API</name>
     <artifactId>org.apache.felix.http.api</artifactId>
-    <version>3.0.1-SNAPSHOT</version>
+    <version>3.0.1-R7-SNAPSHOT</version>
     <packaging>bundle</packaging>
 
     <scm>
