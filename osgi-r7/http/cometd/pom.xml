@@ -1,0 +1,192 @@
+<!--
+    Licensed to the Apache Software Foundation (ASF) under one
+    or more contributor license agreements.  See the NOTICE file
+    distributed with this work for additional information
+    regarding copyright ownership.  The ASF licenses this file
+    to you under the Apache License, Version 2.0 (the
+    "License"); you may not use this file except in compliance
+    with the License.  You may obtain a copy of the License at
+    
+    http://www.apache.org/licenses/LICENSE-2.0
+    
+    Unless required by applicable law or agreed to in writing,
+    software distributed under the License is distributed on an
+    "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+    KIND, either express or implied.  See the License for the
+    specific language governing permissions and limitations
+    under the License.
+-->
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+
+    <modelVersion>4.0.0</modelVersion>
+    <parent>
+        <groupId>org.apache.felix</groupId>
+        <artifactId>org.apache.felix.http.parent</artifactId>
+        <version>9</version>
+        <relativePath>../parent/pom.xml</relativePath>
+    </parent>
+
+    <name>Apache Felix Http Cometd</name>
+    <artifactId>org.apache.felix.http.cometd</artifactId>
+    <version>3.0.0-SNAPSHOT</version>
+    <packaging>jar</packaging>
+
+    <scm>
+        <connection>scm:svn:http://svn.apache.org/repos/asf/felix/trunk/http/cometd</connection>
+        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/felix/trunk/http/cometd</developerConnection>
+        <url>http://svn.apache.org/viewvc/felix/trunk/http/cometd/</url>
+    </scm>
+
+    <properties>
+        <felix.java.version>8</felix.java.version>
+    </properties>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.felix</groupId>
+                <artifactId>maven-bundle-plugin</artifactId>
+                <configuration>
+                    <instructions>
+                        <Bundle-Activator>
+                            org.apache.felix.http.cometd.internal.CometdActivator
+                        </Bundle-Activator>
+                        <Export-Package>
+                            org.apache.felix.http.cometd;version=${project.version},
+                            org.cometd.bayeux;version=${cometd.version};-split-package:=merge-first,
+                            org.cometd.bayeux.client;version=${cometd.version};-split-package:=merge-first,
+                            org.cometd.bayeux.server;version=${cometd.version};-split-package:=merge-first,
+                        </Export-Package>
+                        <Private-Package>
+                            org.apache.felix.http.base.*,
+                            org.apache.felix.http.cometd.internal,
+                            org.cometd.server.*;-split-package:=merge-first,
+                            org.cometd.common.*;-split-package:=merge-first
+                        </Private-Package>
+                        <Embed-Dependency>
+                            cometd-java-server;inline=true,
+                            cometd-java-common;inline=true,
+                            jetty-util;inline=true,
+                            jetty-util-ajax;inline=true,
+                        </Embed-Dependency>
+                        <Import-Package>
+                        	javax.imageio;resolution:=optional,
+                        	org.slf4j.*;resolution:=optional,
+                        	org.osgi.service.useradmin;resolution:=optional,
+                        	org.codehaus.jackson.map;resolution:=optional,
+                        	org.codehaus.jackson.type;resolution:=optional,
+                        	org.eclipse.jetty.continuation;version="[7.6,9)",
+                        	org.eclipse.jetty.jmx;version="[7.6,9)",
+                            *
+                        </Import-Package>
+                    </instructions>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+
+    <dependencies>
+        <dependency>
+            <groupId>org.osgi</groupId>
+            <artifactId>osgi.core</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.osgi</groupId>
+            <artifactId>osgi.cmpn</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>javax.servlet</groupId>
+            <artifactId>javax.servlet-api</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.eclipse.jetty</groupId>
+            <artifactId>jetty-util</artifactId>
+            <version>${jetty.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.eclipse.jetty</groupId>
+            <artifactId>jetty-util-ajax</artifactId>
+            <version>${jetty.version}</version>
+        </dependency>
+        <dependency>
+        	<groupId>org.cometd.java</groupId>
+        	<artifactId>cometd-java-server</artifactId>
+        	<version>${cometd.version}</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.eclipse.jetty</groupId>
+                    <artifactId>jetty-continuation</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.eclipse.jetty</groupId>
+                    <artifactId>jetty-jmx</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+        <dependency>
+        	<groupId>org.cometd.java</groupId>
+        	<artifactId>cometd-java-client</artifactId>
+        	<version>${cometd.version}</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.eclipse.jetty</groupId>
+                    <artifactId>jetty-client</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.eclipse.jetty</groupId>
+                    <artifactId>jetty-io</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.eclipse.jetty</groupId>
+                    <artifactId>jetty-http</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+        <dependency>
+        	<groupId>org.cometd.java</groupId>
+        	<artifactId>cometd-java-common</artifactId>
+        	<version>${cometd.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.cometd.java</groupId>
+            <artifactId>bayeux-api</artifactId>
+            <version>${cometd.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>org.apache.felix.http.base</artifactId>
+            <version>3.0.0</version>
+        </dependency>
+
+    <!-- The dependencies below are newer versions of the transitive 
+         Jetty dependencies pulled in by cometd. It should be able to 
+         remove these once the cometd dependencies on Jetty line up 
+         with the ones that the Felix Http Service project uses. -->
+        <dependency>
+            <groupId>org.eclipse.jetty</groupId>
+            <artifactId>jetty-client</artifactId>
+            <version>${jetty.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.eclipse.jetty</groupId>
+            <artifactId>jetty-continuation</artifactId>
+            <version>${jetty.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.eclipse.jetty</groupId>
+            <artifactId>jetty-http</artifactId>
+            <version>${jetty.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.eclipse.jetty</groupId>
+            <artifactId>jetty-io</artifactId>
+            <version>${jetty.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.eclipse.jetty</groupId>
+            <artifactId>jetty-jmx</artifactId>
+            <version>${jetty.version}</version>
+        </dependency>
+
+    </dependencies>
+</project>
