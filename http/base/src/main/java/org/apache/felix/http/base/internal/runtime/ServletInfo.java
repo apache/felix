@@ -87,26 +87,8 @@ public class ServletInfo extends WhiteboardServiceInfo<Servlet>
         this.errorPage = getStringArrayProperty(ref, HttpWhiteboardConstants.HTTP_WHITEBOARD_SERVLET_ERROR_PAGE);
         this.patterns = getStringArrayProperty(ref, HttpWhiteboardConstants.HTTP_WHITEBOARD_SERVLET_PATTERN);
         this.asyncSupported = getBooleanProperty(ref, HttpWhiteboardConstants.HTTP_WHITEBOARD_SERVLET_ASYNC_SUPPORTED);
-        if ( getBooleanProperty(ref, HttpWhiteboardConstants.HTTP_WHITEBOARD_SERVLET_MULTIPART_ENABLED) )
-        {
-            MultipartConfig cfg = null;
-            try
-            {
-                cfg = new MultipartConfig(getIntProperty(ref, HttpWhiteboardConstants.HTTP_WHITEBOARD_SERVLET_MULTIPART_FILESIZETHRESHOLD),
-                        getStringProperty(ref, HttpWhiteboardConstants.HTTP_WHITEBOARD_SERVLET_MULTIPART_LOCATION),
-                        getLongProperty(ref, HttpWhiteboardConstants.HTTP_WHITEBOARD_SERVLET_MULTIPART_MAXFILESIZE),
-                        getLongProperty(ref, HttpWhiteboardConstants.HTTP_WHITEBOARD_SERVLET_MULTIPART_MAXREQUESTSIZE));
-            }
-            catch (final IllegalArgumentException iae)
-            {
-                cfg = MultipartConfig.INVALID_CONFIG;
-            }
-            this.multipartConfig = cfg;
-        }
-        else
-        {
-            this.multipartConfig = null;
-        }
+        this.multipartConfig = null;
+
         this.initParams = getInitParams(ref, HttpWhiteboardConstants.HTTP_WHITEBOARD_SERVLET_INIT_PARAM_PREFIX);
         this.isResource = false;
         this.prefix = null;
