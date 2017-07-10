@@ -28,7 +28,7 @@
 
     <name>Apache Felix Http Base</name>
     <artifactId>org.apache.felix.http.base</artifactId>
-    <version>3.0.19-SNAPSHOT</version>
+    <version>3.0.19-R7-SNAPSHOT</version>
     <packaging>jar</packaging>
 
     <scm>
@@ -49,7 +49,7 @@
         <dependency>
             <groupId>org.apache.felix</groupId>
             <artifactId>org.apache.felix.http.api</artifactId>
-            <version>3.0.1-SNAPSHOT</version>
+            <version>3.0.1-R7-SNAPSHOT</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
