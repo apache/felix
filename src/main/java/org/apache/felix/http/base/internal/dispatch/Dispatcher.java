@@ -21,7 +21,6 @@ import java.util.Set;
 
 import javax.annotation.CheckForNull;
 import javax.servlet.FilterChain;
-import javax.servlet.FilterConfig;
 import javax.servlet.RequestDispatcher;
 import javax.servlet.ServletException;
 import javax.servlet.ServletRequest;
@@ -39,7 +38,6 @@ import org.apache.felix.http.base.internal.registry.HandlerRegistry;
 import org.apache.felix.http.base.internal.registry.PathResolution;
 import org.apache.felix.http.base.internal.registry.PerContextHandlerRegistry;
 import org.apache.felix.http.base.internal.whiteboard.WhiteboardManager;
-import org.osgi.service.http.whiteboard.Preprocessor;
 
 public final class Dispatcher
 {
@@ -87,21 +85,7 @@ public final class Dispatcher
             mgr.sessionDestroyed(session, ids);
         }
 
-        // invoke preprocessors and then dispatching
-        mgr.invokePreprocessors(req, res, new Preprocessor() {
-
-			@Override
-			public void init(final FilterConfig filterConfig) throws ServletException
-			{
-				// nothing to do
-		    }
-
-			@Override
-			public void doFilter(final ServletRequest request, final ServletResponse response, final FilterChain chain)
-			throws IOException, ServletException
-			{
-				final HttpServletRequest req = (HttpServletRequest)request;
-				final HttpServletResponse res = (HttpServletResponse)response;
+        {
 		        // get full decoded path for dispatching
 		        // we can't use req.getRequestURI() or req.getRequestURL() as these are returning the encoded path
 		        String path = req.getServletPath();
@@ -160,14 +144,7 @@ public final class Dispatcher
 		            {
 		                servletContext.getServletRequestListener().requestDestroyed(new ServletRequestEvent(servletContext, wrappedRequest));
 		            }
-		        }			}
-
-			@Override
-			public void destroy()
-			{
-				// nothing to do
-			}
-		});
-
+		        }
+		}
     }
 }
