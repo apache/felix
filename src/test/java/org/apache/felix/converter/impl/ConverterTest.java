@@ -139,6 +139,23 @@ public class ConverterTest {
         assertEquals(Double.valueOf("12.3"), converter.convert("12.3").to(Double.class));
     }
 
+    @Test
+    public void testCharAggregateToString() {
+        char[] ca = new char[] {'h', 'e', 'l', 'l', 'o'};
+        assertEquals("hello", converter.convert(ca).to(String.class));
+
+        Character[] ca2 = converter.convert(ca).to(Character[].class);
+        assertEquals("hello", converter.convert(ca2).to(String.class));
+
+//        List<Character> cl = converter.convert(ca).to(new TypeReference<List<Character>>() {});
+//        assertEquals("hello", converter.convert(cl).to(String.class));
+
+        // And back
+        assertArrayEquals(ca, converter.convert("hello").to(char[].class));
+        assertArrayEquals(ca2, converter.convert("hello").to(Character[].class));
+//        assertEquals(cl, converter.convert("hello").to(new TypeReference<List<Character>>() {}));
+    }
+
     enum TestEnum { FOO, BAR, BLAH, FALSE, X};
     enum TestEnum2 { BLAH };
     @Test
