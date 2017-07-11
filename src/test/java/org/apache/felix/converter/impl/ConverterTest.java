@@ -96,8 +96,8 @@ public class ConverterTest {
         assertEquals("" + Long.MAX_VALUE, converter.convert(Long.MAX_VALUE).to(String.class));
         assertEquals("12.3", converter.convert(12.3f).to(String.class));
         assertEquals("12.345", converter.convert(12.345d).to(String.class));
-        assertEquals(null, converter.convert(null).to(String.class));
-        assertEquals(null, converter.convert(Collections.emptyList()).to(String.class));
+        assertNull(converter.convert(null).to(String.class));
+        assertNull(converter.convert(Collections.emptyList()).to(String.class));
 
         String bistr = "999999999999999999999"; // more than Long.MAX_VALUE
         assertEquals(bistr, converter.convert(new BigInteger(bistr)).to(String.class));
@@ -125,6 +125,7 @@ public class ConverterTest {
 
         // Conversions to Class
         assertEquals(BigDecimal.class, converter.convert("java.math.BigDecimal").to(Class.class));
+        assertEquals(BigDecimal.class, converter.convert("java.math.BigDecimal").to(new TypeReference<Class<?>>() {}));
         assertNull(converter.convert(null).to(Class.class));
         assertNull(converter.convert(Collections.emptyList()).to(Class.class));
 
@@ -141,19 +142,41 @@ public class ConverterTest {
 
     @Test
     public void testCharAggregateToString() {
+        Converter c = Converters.newConverterBuilder().
+                rule(new Rule<List<Character>, String>(ConverterTest::characterListToString) {}).
+                rule(new Rule<String, List<Character>>(ConverterTest::stringToCharacterList) {}).
+                build();
+
         char[] ca = new char[] {'h', 'e', 'l', 'l', 'o'};
-        assertEquals("hello", converter.convert(ca).to(String.class));
+        assertEquals("hello", c.convert(ca).to(String.class));
 
-        Character[] ca2 = converter.convert(ca).to(Character[].class);
-        assertEquals("hello", converter.convert(ca2).to(String.class));
+        Character[] ca2 = c.convert(ca).to(Character[].class);
+        assertEquals("hello", c.convert(ca2).to(String.class));
 
-//        List<Character> cl = converter.convert(ca).to(new TypeReference<List<Character>>() {});
-//        assertEquals("hello", converter.convert(cl).to(String.class));
+        List<Character> cl = c.convert(ca).to(new TypeReference<List<Character>>() {});
+        assertEquals("hello", c.convert(cl).to(String.class));
 
         // And back
-        assertArrayEquals(ca, converter.convert("hello").to(char[].class));
-        assertArrayEquals(ca2, converter.convert("hello").to(Character[].class));
-//        assertEquals(cl, converter.convert("hello").to(new TypeReference<List<Character>>() {}));
+        assertArrayEquals(ca, c.convert("hello").to(char[].class));
+        assertArrayEquals(ca2, c.convert("hello").to(Character[].class));
+        assertEquals(cl, c.convert("hello").to(new TypeReference<List<Character>>() {}));
+    }
+
+    private static String characterListToString(List<Character> cl) {
+        StringBuilder sb = new StringBuilder(cl.size());
+        for (char c : cl) {
+            sb.append(c);
+        }
+        return sb.toString();
+    }
+
+    private static List<Character> stringToCharacterList(String s) {
+        List<Character> lc = new ArrayList<>();
+
+        for (int i=0; i<s.length(); i++) {
+            lc.add(s.charAt(i));
+        }
+        return lc;
     }
 
     enum TestEnum { FOO, BAR, BLAH, FALSE, X};

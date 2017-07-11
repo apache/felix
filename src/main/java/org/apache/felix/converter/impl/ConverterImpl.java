@@ -25,7 +25,6 @@ import java.time.OffsetTime;
 import java.time.ZonedDateTime;
 import java.util.Calendar;
 import java.util.Date;
-import java.util.List;
 import java.util.UUID;
 import java.util.regex.Pattern;
 
@@ -33,7 +32,6 @@ import org.osgi.util.converter.ConverterBuilder;
 import org.osgi.util.converter.Converters;
 import org.osgi.util.converter.Functioning;
 import org.osgi.util.converter.Rule;
-import org.osgi.util.converter.TypeReference;
 
 public class ConverterImpl implements InternalConverter {
     @Override
@@ -76,13 +74,11 @@ public class ConverterImpl implements InternalConverter {
         cb.rule(new Rule<String, UUID>(UUID::fromString) {});
         cb.rule(new Rule<String, ZonedDateTime>(ZonedDateTime::parse) {});
 
-        // Special conversions between character arrays / list and String
+        // Special conversions between character arrays and String
         cb.rule(new Rule<char[], String>(ConverterImpl::charArrayToString) {});
         cb.rule(new Rule<Character[], String>(ConverterImpl::characterArrayToString) {});
-//        cb.rule(new Rule<List<Character>, String>(ConverterImpl::characterListToString) {});
         cb.rule(new Rule<String, char[]>(ConverterImpl::stringToCharArray) {});
         cb.rule(new Rule<String, Character[]>(ConverterImpl::stringToCharacterArray) {});
-//        cb.rule(new Rule<String, List<Character>>(ConverterImpl::stringToCharacterList) {});
     }
 
     private static String charArrayToString(char[] ca) {
@@ -97,10 +93,6 @@ public class ConverterImpl implements InternalConverter {
         return charArrayToString(Converters.standardConverter().convert(ca).to(char[].class));
     }
 
-    private static String characterListToString(List<Character> cl) {
-        return charArrayToString(Converters.standardConverter().convert(cl).to(char[].class));
-    }
-
     private static char[] stringToCharArray(String s) {
         char[] ca = new char[s.length()];
 
@@ -112,10 +104,6 @@ public class ConverterImpl implements InternalConverter {
 
     private static Character[] stringToCharacterArray(String s) {
         return Converters.standardConverter().convert(stringToCharArray(s)).to(Character[].class);
-    }
-
-    private static List<Character> stringToCharacterList(String s) {
-        return Converters.standardConverter().convert(stringToCharArray(s)).to(new TypeReference<List<Character>>() {});
     }
 
     private Class<?> loadClassUnchecked(String className) {
