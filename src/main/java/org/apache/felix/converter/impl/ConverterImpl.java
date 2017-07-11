@@ -29,7 +29,6 @@ import java.util.UUID;
 import java.util.regex.Pattern;
 
 import org.osgi.util.converter.ConverterBuilder;
-import org.osgi.util.converter.Converters;
 import org.osgi.util.converter.Functioning;
 import org.osgi.util.converter.Rule;
 
@@ -75,13 +74,13 @@ public class ConverterImpl implements InternalConverter {
         cb.rule(new Rule<String, ZonedDateTime>(ZonedDateTime::parse) {});
 
         // Special conversions between character arrays and String
-        cb.rule(new Rule<char[], String>(ConverterImpl::charArrayToString) {});
-        cb.rule(new Rule<Character[], String>(ConverterImpl::characterArrayToString) {});
-        cb.rule(new Rule<String, char[]>(ConverterImpl::stringToCharArray) {});
-        cb.rule(new Rule<String, Character[]>(ConverterImpl::stringToCharacterArray) {});
+        cb.rule(new Rule<char[], String>(this::charArrayToString) {});
+        cb.rule(new Rule<Character[], String>(this::characterArrayToString) {});
+        cb.rule(new Rule<String, char[]>(this::stringToCharArray) {});
+        cb.rule(new Rule<String, Character[]>(this::stringToCharacterArray) {});
     }
 
-    private static String charArrayToString(char[] ca) {
+    private String charArrayToString(char[] ca) {
         StringBuilder sb = new StringBuilder(ca.length);
         for (char c : ca) {
             sb.append(c);
@@ -89,11 +88,11 @@ public class ConverterImpl implements InternalConverter {
         return sb.toString();
     }
 
-    private static String characterArrayToString(Character[] ca) {
-        return charArrayToString(Converters.standardConverter().convert(ca).to(char[].class));
+    private String characterArrayToString(Character[] ca) {
+        return charArrayToString(convert(ca).to(char[].class));
     }
 
-    private static char[] stringToCharArray(String s) {
+    private char[] stringToCharArray(String s) {
         char[] ca = new char[s.length()];
 
         for (int i=0; i<s.length(); i++) {
@@ -102,8 +101,8 @@ public class ConverterImpl implements InternalConverter {
         return ca;
     }
 
-    private static Character[] stringToCharacterArray(String s) {
-        return Converters.standardConverter().convert(stringToCharArray(s)).to(Character[].class);
+    private Character[] stringToCharacterArray(String s) {
+        return convert(stringToCharArray(s)).to(Character[].class);
     }
 
     private Class<?> loadClassUnchecked(String className) {
