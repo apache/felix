@@ -24,13 +24,13 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.osgi.util.converter.Converter;
-import org.osgi.util.converter.StandardConverter;
+import org.osgi.util.converter.Converters;
 import org.osgi.util.converter.TypeReference;
 
 public class TypeConverter {
 
     public static Converter getConverter() {
-        return new StandardConverter();
+        return Converters.standardConverter();
     }
 
     private final List<File> allFiles = new ArrayList<>();
