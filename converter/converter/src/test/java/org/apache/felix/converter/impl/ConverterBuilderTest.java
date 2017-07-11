@@ -34,19 +34,21 @@ import org.junit.Test;
 import org.osgi.util.converter.Converter;
 import org.osgi.util.converter.ConverterBuilder;
 import org.osgi.util.converter.ConverterFunction;
+import org.osgi.util.converter.Converters;
 import org.osgi.util.converter.Rule;
 import org.osgi.util.converter.TypeRule;
 import org.osgi.util.function.Function;
 
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
 
 public class ConverterBuilderTest {
     private Converter converter;
 
     @Before
     public void setUp() {
-        converter = new ConverterImpl();
+        converter = Converters.standardConverter();
     }
 
     @After
@@ -125,14 +127,19 @@ public class ConverterBuilderTest {
             @Override
             public Object apply(Object obj, Type type) throws Exception {
                 if (!(obj instanceof List))
-                    return null;
+                    return ConverterFunction.CANNOT_HANDLE;
+
 
                 List<?> t = (List<?>) obj;
+                if (t.size() == 0)
+                    // Empty list is converted to null
+                    return null;
+
                 if (type instanceof Class) {
                     if (Number.class.isAssignableFrom((Class<?>) type))
                         return converter.convert(t.size()).to(type);
                 }
-                return null;
+                return ConverterFunction.CANNOT_HANDLE;
             }
         };
 
@@ -144,6 +151,7 @@ public class ConverterBuilderTest {
         assertEquals(3L, (long) ca.convert(Arrays.asList("a", "b", "c")).to(Long.class));
         assertEquals(3, (long) ca.convert(Arrays.asList("a", "b", "c")).to(Integer.class));
         assertEquals("[a, b, c]", ca.convert(Arrays.asList("a", "b", "c")).to(String.class));
+        assertNull(ca.convert(Arrays.asList()).to(String.class));
     }
 
     @Test
@@ -152,14 +160,14 @@ public class ConverterBuilderTest {
             @Override
             public Object apply(Object obj, Type type) throws Exception {
                 if (!(obj instanceof List))
-                    return null;
+                    return ConverterFunction.CANNOT_HANDLE;
 
                 List<?> t = (List<?>) obj;
                 if (type instanceof Class) {
                     if (Number.class.isAssignableFrom((Class<?>) type))
                         return converter.convert(t.size()).to(type);
                 }
-                return null;
+                return ConverterFunction.CANNOT_HANDLE;
             }
         };
 
@@ -186,7 +194,7 @@ public class ConverterBuilderTest {
                 Arrays.sort(v, Collections.reverseOrder());
                 return new CopyOnWriteArrayList<>(Arrays.asList(v));
             }) {});
-        cb.rule((v,t) -> { snooped.put(v,t); return null;});
+        cb.rule((v,t) -> { snooped.put(v,t); return ConverterFunction.CANNOT_HANDLE;});
         Converter ca = cb.build();
 
         assertEquals(new ArrayList<>(Arrays.asList("c", "b", "a")), ca.convert(

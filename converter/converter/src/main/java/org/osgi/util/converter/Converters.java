@@ -21,28 +21,38 @@ import org.apache.felix.converter.impl.ConverterImpl;
 import org.apache.felix.converter.impl.InternalConverter;
 
 /**
- * The standard converter.
+ * Factory class to obtain the standard converter or a new converter builder.
  *
  * @author $Id$
  * @ThreadSafe
  */
-public class StandardConverter implements Converter {
-    private final InternalConverter converter;
+public class Converters {
+    private static final InternalConverter CONVERTER;
 
-    public StandardConverter() {
+    static {
         ConverterImpl impl = new ConverterImpl();
         ConverterBuilderImpl cb = impl.newConverterBuilder();
         impl.addStandardRules(cb);
-        converter = cb.build();
+        CONVERTER = cb.build();
     }
 
-    @Override
-    public Converting convert(Object obj) {
-        return converter.convert(obj);
+    private Converters() {
+        // Do not instantiate this factory class
     }
 
-    @Override
-    public ConverterBuilder newConverterBuilder() {
-        return converter.newConverterBuilder();
+    /**
+     * Obtain the standard converter.
+     * @return The standard converter.
+     */
+    public static Converter standardConverter() {
+        return CONVERTER;
+    }
+
+    /**
+     * Obtain a converter builder based on the standard converter.
+     * @return A new converter builder.
+     */
+    public static ConverterBuilder newConverterBuilder() {
+        return CONVERTER.newConverterBuilder();
     }
 }

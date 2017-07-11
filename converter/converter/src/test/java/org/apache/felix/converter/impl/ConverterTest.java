@@ -59,8 +59,8 @@ import org.osgi.util.converter.ConversionException;
 import org.osgi.util.converter.Converter;
 import org.osgi.util.converter.ConverterBuilder;
 import org.osgi.util.converter.ConverterFunction;
+import org.osgi.util.converter.Converters;
 import org.osgi.util.converter.Rule;
-import org.osgi.util.converter.StandardConverter;
 import org.osgi.util.converter.TypeReference;
 
 import static org.junit.Assert.assertArrayEquals;
@@ -78,7 +78,7 @@ public class ConverterTest {
 
     @Before
     public void setUp() {
-        converter = new StandardConverter();
+        converter = Converters.standardConverter();
     }
 
     @After
@@ -358,7 +358,10 @@ public class ConverterTest {
                 if ("hello".equals(obj)) {
                     return -1;
                 }
-                return null;
+                if ("goodbye".equals(obj)) {
+                    return null;
+                }
+                return ConverterFunction.CANNOT_HANDLE;
             }
         };
 
@@ -367,6 +370,14 @@ public class ConverterTest {
 
         assertEquals(new Integer(12), adapted.convert("12").to(Integer.class));
         assertEquals(new Integer(-1), adapted.convert("hello").to(Integer.class));
+        assertNull(adapted.convert("goodbye").to(Integer.class));
+
+        try {
+            adapted.convert("nothing").to(Integer.class);
+            fail("Should have thrown a Conversion Exception when converting 'hello' to a number");
+        } catch (ConversionException ce) {
+            // good
+        }
 
         // This is with the non-adapted converter
         try {
@@ -455,7 +466,7 @@ public class ConverterTest {
         Calendar cal = new GregorianCalendar(2017, 1, 13);
         Date d = cal.getTime();
 
-        Converter c = new StandardConverter();
+        Converter c = converter;
 
         String s = c.convert(d).toString();
         assertEquals(d, c.convert(s).to(Date.class));

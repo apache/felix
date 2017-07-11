@@ -29,12 +29,18 @@ import java.util.UUID;
 import java.util.regex.Pattern;
 
 import org.osgi.util.converter.ConverterBuilder;
+import org.osgi.util.converter.Functioning;
 import org.osgi.util.converter.Rule;
 
 public class ConverterImpl implements InternalConverter {
     @Override
     public InternalConverting convert(Object obj) {
         return new ConvertingImpl(this, obj);
+    }
+
+    @Override
+    public Functioning function() {
+        return new FunctioningImpl(this);
     }
 
     public void addStandardRules(ConverterBuilder cb) {
