@@ -25,7 +25,6 @@ import org.osgi.framework.Bundle;
 import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceFactory;
 import org.osgi.framework.ServiceRegistration;
-import org.osgi.service.cm.ManagedServiceFactory;
 
 public final class JettyActivator extends AbstractHttpActivator
 {
@@ -39,7 +38,7 @@ public final class JettyActivator extends AbstractHttpActivator
     protected void doStart() throws Exception
     {
         super.doStart();
-        final Dictionary<String, Object> properties = new Hashtable<String, Object>();
+        final Dictionary<String, Object> properties = new Hashtable<>();
         properties.put(Constants.SERVICE_DESCRIPTION, "Metatype provider for Jetty Http Service");
         properties.put(Constants.SERVICE_VENDOR, "The Apache Software Foundation");
         properties.put("metatype.pid", JettyService.PID);
@@ -63,7 +62,7 @@ public final class JettyActivator extends AbstractHttpActivator
         this.jetty = new JettyService(getBundleContext(), getHttpServiceController());
         this.jetty.start();
 
-        final Dictionary<String, Object> propertiesCustomizer = new Hashtable<String, Object>();
+        final Dictionary<String, Object> propertiesCustomizer = new Hashtable<>();
         propertiesCustomizer.put(Constants.SERVICE_DESCRIPTION, "Load Balancer Customizer Factory for Jetty Http Service");
         propertiesCustomizer.put(Constants.SERVICE_VENDOR, "The Apache Software Foundation");
         loadBalancerCustomizerFactoryReg = this.getBundleContext().registerService(LoadBalancerCustomizerFactory.class,

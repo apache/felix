@@ -39,7 +39,7 @@
     
     <properties>
         <felix.java.version>8</felix.java.version>
-        <jetty.version>9.3.15.v20161220</jetty.version>
+        <jetty.version>9.3.20.v20170531</jetty.version>
     </properties>
 
     <build>
@@ -47,7 +47,7 @@
             <plugin>
                 <groupId>org.apache.felix</groupId>
                 <artifactId>maven-bundle-plugin</artifactId>
-                <version>3.2.0</version>
+                <version>3.3.0</version>
                 <configuration>
                     <instructions>
                     	<X-Jetty-Version>
@@ -89,7 +89,7 @@
                             org.osgi.service.http;version="[1.2.1,1.3)",
                             org.osgi.service.http.context;version="[1.0,1.1)",
                             org.osgi.service.http.runtime;version="[1.0,1.1)",
-                            org.osgi.service.http.runtime.dto;version="[1.1,1.2)",
+                            org.osgi.service.http.runtime.dto;version="[1.0,1.1)",
                             *
                         </Import-Package>
                         <DynamicImport-Package>
@@ -188,12 +188,12 @@
         <dependency>
             <groupId>org.apache.felix</groupId>
             <artifactId>org.apache.felix.http.api</artifactId>
-            <version>3.0.1-SNAPSHOT</version>
+            <version>3.0.0</version>
         </dependency>
         <dependency>
             <groupId>org.apache.felix</groupId>
             <artifactId>org.apache.felix.http.base</artifactId>
-            <version>3.0.19-SNAPSHOT</version>
+            <version>3.0.18</version>
         </dependency>
         <dependency>
             <groupId>commons-fileupload</groupId>
