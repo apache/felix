@@ -36,6 +36,7 @@ import org.osgi.util.converter.ConverterBuilder;
 import org.osgi.util.converter.ConverterFunction;
 import org.osgi.util.converter.Converters;
 import org.osgi.util.converter.Rule;
+import org.osgi.util.converter.TypeReference;
 import org.osgi.util.converter.TypeRule;
 import org.osgi.util.function.Function;
 
@@ -198,7 +199,7 @@ public class ConverterBuilderTest {
         Converter ca = cb.build();
 
         assertEquals(new ArrayList<>(Arrays.asList("c", "b", "a")), ca.convert(
-                new String [] {"a", "b", "c"}).to(ArrayList.class));
+                new String [] {"a", "b", "c"}).to(new TypeReference<ArrayList<String>>() {}));
         assertEquals("Precondition", 0, snooped.size());
         String[] sa0 = new String [] {"a", "b", "c"};
         assertEquals(new LinkedList<>(Arrays.asList("a", "b", "c")), ca.convert(
@@ -206,7 +207,7 @@ public class ConverterBuilderTest {
         assertEquals(1, snooped.size());
         assertEquals(LinkedList.class, snooped.get(sa0));
         assertEquals(new CopyOnWriteArrayList<>(Arrays.asList("c", "b", "a")), ca.convert(
-                new String [] {"a", "b", "c"}).to(List.class));
+                new String [] {"a", "b", "c"}).to(new TypeReference<List<String>>() {}));
 
         snooped.clear();
         String[] sa = new String [] {"a", "b", "c"};
