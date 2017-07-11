@@ -27,6 +27,7 @@ import org.osgi.util.converter.Converter;
 import org.osgi.util.converter.ConverterBuilder;
 import org.osgi.util.converter.ConverterFunction;
 import org.osgi.util.converter.Converting;
+import org.osgi.util.converter.Functioning;
 import org.osgi.util.converter.TypeReference;
 
 public class AdapterImpl implements InternalConverter {
@@ -48,6 +49,11 @@ public class AdapterImpl implements InternalConverter {
         InternalConverting converting = delegate.convert(obj);
         converting.setConverter(this);
         return new ConvertingWrapper(obj, converting);
+    }
+
+    @Override
+    public Functioning function() {
+        return new FunctioningImpl(this);
     }
 
     @Override
@@ -155,7 +161,7 @@ public class AdapterImpl implements InternalConverter {
                     for (ConverterFunction cf : converters) {
                         try {
                             Object res = cf.apply(object, type);
-                            if (res != null) {
+                            if (res != ConverterFunction.CANNOT_HANDLE) {
                                 return res;
                             }
                         } catch (Exception ex) {
@@ -172,7 +178,7 @@ public class AdapterImpl implements InternalConverter {
                 for (ConverterFunction eh : errorHandlers) {
                     try {
                         Object handled = eh.apply(object, type);
-                        if (handled != null)
+                        if (handled != ConverterFunction.CANNOT_HANDLE)
                             return handled;
                     } catch (RuntimeException re) {
                         throw re;

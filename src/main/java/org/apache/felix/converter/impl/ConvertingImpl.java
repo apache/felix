@@ -47,7 +47,7 @@ import org.osgi.util.converter.Converter;
 import org.osgi.util.converter.Converting;
 import org.osgi.util.converter.TypeReference;
 
-public class ConvertingImpl implements Converting, InternalConverting {
+public class ConvertingImpl extends AbstractSpecifying<Converting> implements Converting, InternalConverting {
     private static final Map<Class<?>, Class<?>> INTERFACE_IMPLS;
     static {
         Map<Class<?>, Class<?>> m = new HashMap<>();
@@ -64,25 +64,16 @@ public class ConvertingImpl implements Converting, InternalConverting {
 
     volatile InternalConverter converter;
     private volatile Object object;
-    private volatile Object defaultValue;
-    private volatile boolean hasDefault = false;
-    private volatile boolean keysIgnoreCase = false;
     volatile Class<?> sourceClass;
-    volatile Class<?> sourceAsClass;
     private volatile Class<?> targetClass;
-    private volatile Class<?> targetAsClass;
     volatile Type[] typeArguments;
-    private volatile boolean forceCopy = false;
-    private volatile boolean sourceAsJavaBean = false;
-    private volatile boolean targetAsJavaBean = false;
-    private volatile boolean sourceAsDTO = false;
-    private volatile boolean targetAsDTO = false;
 
     ConvertingImpl(InternalConverter c, Object obj) {
         converter = c;
         object = obj;
     }
 
+    /*
     @Override
     public Converting sourceAs(Class<?> cls) {
         sourceAsClass = cls;
@@ -128,12 +119,6 @@ public class ConvertingImpl implements Converting, InternalConverting {
     }
 
     @Override
-    public Converting copy() {
-        forceCopy  = true;
-        return this;
-    }
-
-    @Override
     public Converting defaultValue(Object defVal) {
         defaultValue = defVal;
         hasDefault = true;
@@ -147,6 +132,7 @@ public class ConvertingImpl implements Converting, InternalConverting {
 
         return this;
     }
+    */
 
     @Override
     public void setConverter(Converter c) {

@@ -35,8 +35,8 @@ import org.junit.Test;
 import org.osgi.util.converter.ConversionException;
 import org.osgi.util.converter.Converter;
 import org.osgi.util.converter.ConverterBuilder;
+import org.osgi.util.converter.Converters;
 import org.osgi.util.converter.Rule;
-import org.osgi.util.converter.StandardConverter;
 import org.osgi.util.converter.TypeReference;
 
 import static org.junit.Assert.assertArrayEquals;
@@ -54,7 +54,7 @@ public class ConverterMapTest {
 
     @Before
     public void setUp() {
-        converter = new StandardConverter();
+        converter = Converters.standardConverter();
     }
 
     @After
@@ -110,7 +110,7 @@ public class ConverterMapTest {
         mb.setStartDate(d);
         mb.setEnabled(true);
 
-        ConverterBuilder cb = new StandardConverter().newConverterBuilder();
+        ConverterBuilder cb = Converters.newConverterBuilder();
         cb.rule(new Rule<Date,String>(v -> sdf.format(v)) {});
         cb.rule(new Rule<String,Date>(v -> {
             try {
