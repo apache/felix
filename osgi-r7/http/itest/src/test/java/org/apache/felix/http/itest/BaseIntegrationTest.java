@@ -247,7 +247,7 @@ public abstract class BaseIntegrationTest
 
     protected static Dictionary<String, ?> createDictionary(Object... entries)
     {
-        Dictionary<String, Object> props = new Hashtable<String, Object>();
+        Dictionary<String, Object> props = new Hashtable<>();
         for (int i = 0; i < entries.length; i += 2)
         {
             String key = (String) entries[i];
@@ -325,21 +325,21 @@ public abstract class BaseIntegrationTest
                 mavenBundle("org.apache.geronimo.specs", "geronimo-json_1.0_spec", "1.0-alpha-1").startLevel(START_LEVEL_SYSTEM_BUNDLES),
                 mavenBundle("org.apache.johnzon", "johnzon-core", "1.0.0").startLevel(START_LEVEL_SYSTEM_BUNDLES),
 
+                mavenBundle("org.apache.felix", "org.apache.felix.configadmin").version("1.8.14").startLevel(START_LEVEL_SYSTEM_BUNDLES),
                 mavenBundle("org.apache.felix", "org.apache.felix.http.servlet-api", System.getProperty("http.servlet.api.version")).startLevel(START_LEVEL_SYSTEM_BUNDLES),
                 mavenBundle("org.apache.felix", ORG_APACHE_FELIX_HTTP_JETTY, System.getProperty("http.jetty.version")).startLevel(START_LEVEL_SYSTEM_BUNDLES),
                 mavenBundle("org.apache.felix", "org.apache.felix.http.whiteboard", "3.0.0").startLevel(START_LEVEL_SYSTEM_BUNDLES),
-                mavenBundle("org.apache.felix", "org.apache.felix.configadmin").version("1.8.8"),
 
-                mavenBundle("org.apache.httpcomponents", "httpcore-osgi", "4.3.2").startLevel(START_LEVEL_SYSTEM_BUNDLES),
-                mavenBundle("org.apache.httpcomponents", "httpclient-osgi", "4.3.4").startLevel(START_LEVEL_SYSTEM_BUNDLES),
+                mavenBundle("org.apache.httpcomponents", "httpcore-osgi", "4.4.6").startLevel(START_LEVEL_SYSTEM_BUNDLES),
+                mavenBundle("org.apache.httpcomponents", "httpclient-osgi", "4.5.3").startLevel(START_LEVEL_SYSTEM_BUNDLES),
                 mavenBundle("org.mockito", "mockito-all", "1.10.19").startLevel(START_LEVEL_SYSTEM_BUNDLES),
-                mavenBundle("org.objenesis", "objenesis", "2.1").startLevel(START_LEVEL_SYSTEM_BUNDLES),
+                mavenBundle("org.objenesis", "objenesis", "2.6").startLevel(START_LEVEL_SYSTEM_BUNDLES),
 
                 junitBundles(),
                 frameworkStartLevel(START_LEVEL_TEST_BUNDLE));
     }
 
-    private final Map<String, ServiceTracker<?, ?>> trackers = new HashMap<String, ServiceTracker<?, ?>>();
+    private final Map<String, ServiceTracker<?, ?>> trackers = new HashMap<>();
 
     @Before
     public void setUp() throws Exception
