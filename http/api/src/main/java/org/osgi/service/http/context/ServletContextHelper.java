@@ -21,8 +21,10 @@ import java.net.URL;
 import java.util.Enumeration;
 import java.util.LinkedHashSet;
 import java.util.Set;
+
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+
 import org.osgi.annotation.versioning.ConsumerType;
 import org.osgi.framework.Bundle;
 import org.osgi.service.http.whiteboard.HttpWhiteboardConstants;
@@ -149,12 +151,10 @@ public abstract class ServletContextHelper {
 
 	/**
 	 * Handles security for the specified request.
-	 * 
 	 * <p>
 	 * The Http Whiteboard implementation calls this method prior to servicing
 	 * the specified request. This method controls whether the request is
 	 * processed in the normal manner or an error is returned.
-	 * 
 	 * <p>
 	 * If the request requires authentication and the {@code Authorization}
 	 * header in the request is missing or not acceptable, then this method
@@ -162,19 +162,16 @@ public abstract class ServletContextHelper {
 	 * set the status in the response object to Unauthorized(401) and return
 	 * {@code false}. See also <a href="http://www.ietf.org/rfc/rfc2617.txt">RFC
 	 * 2617: HTTP Authentication: Basic and Digest Access Authentication</a>.
-	 * 
 	 * <p>
 	 * If the request requires a secure connection and the {@code getScheme}
 	 * method in the request does not return 'https' or some other acceptable
 	 * secure protocol, then this method should set the status in the response
 	 * object to Forbidden(403) and return {@code false}.
-	 * 
 	 * <p>
 	 * When this method returns {@code false}, the Http Whiteboard
 	 * implementation will send the response back to the client, thereby
 	 * completing the request. When this method returns {@code true}, the Http
 	 * Whiteboard implementation will proceed with servicing the request.
-	 * 
 	 * <p>
 	 * If the specified request has been authenticated, this method must set the
 	 * {@link #AUTHENTICATION_TYPE} request attribute to the type of
@@ -182,27 +179,30 @@ public abstract class ServletContextHelper {
 	 * the remote user (request attributes are set using the
 	 * {@code setAttribute} method on the request). If this method does not
 	 * perform any authentication, it must not set these attributes.
-	 * 
 	 * <p>
 	 * If the authenticated user is also authorized to access certain resources,
 	 * this method must set the {@link #AUTHORIZATION} request attribute to the
 	 * {@code Authorization} object obtained from the
 	 * {@code org.osgi.service.useradmin.UserAdmin} service.
-	 * 
 	 * <p>
 	 * The servlet responsible for servicing the specified request determines
 	 * the authentication type and remote user by calling the
 	 * {@code getAuthType} and {@code getRemoteUser} methods, respectively, on
 	 * the request.
-	 * 
+	 * <p>
+	 * If there is the need to clean up resources at the end of the request, the
+	 * method {@link #finishSecurity(HttpServletRequest, HttpServletResponse)}
+	 * can be implemented. That method is only called if this method returns {@code true}.
+	 *
 	 * @param request The HTTP request.
 	 * @param response The HTTP response.
 	 * @return {@code true} if the request should be serviced, {@code false} if
 	 *         the request should not be serviced and Http Whiteboard
 	 *         implementation will send the response back to the client.
 	 * @throws java.io.IOException May be thrown by this method. If this occurs,
-	 *         the Http Whiteboard implementation will terminate the request and
-	 *         close the socket.
+	 *             the Http Whiteboard implementation will terminate the request
+	 *             and close the socket.
+	 * @see #finishSecurity(HttpServletRequest, HttpServletResponse)
 	 */
 	public boolean handleSecurity(final HttpServletRequest request,
 			final HttpServletResponse response)
@@ -211,8 +211,30 @@ public abstract class ServletContextHelper {
 	}
 
 	/**
-	 * Maps a resource name to a URL.
+	 * Finishes the security context for the specified request.
+	 * <p>
+	 * Implementations of this service can implement this method to clean up
+	 * resources which have been setup in
+	 * {@link #handleSecurity(HttpServletRequest, HttpServletResponse)}.
+	 * <p>
+	 * This method is only called if 
+	 * {@link #handleSecurity((HttpServletRequest, HttpServletResponse)} returned 
+	 * {@code true} for the specified request.
+	 * <p>
+	 * The default implementation of this method does nothing.
 	 * 
+	 * @param request The HTTP request.
+	 * @param response The HTTP response.
+	 * @since 1.1
+	 * @see #handleSecurity(HttpServletRequest, HttpServletResponse)
+	 */
+	public void finishSecurity(final HttpServletRequest request,
+			final HttpServletResponse response) {
+		// do nothing
+	}
+
+	/**
+	 * Maps a resource name to a URL.
 	 * <p>
 	 * Called by the Http Whiteboard implementation to map the specified
 	 * resource name to a URL. For servlets, the Http Whiteboard implementation
@@ -220,7 +242,6 @@ public abstract class ServletContextHelper {
 	 * {@code getResource} and {@code getResourceAsStream}. For resources, the
 	 * Http Whiteboard implementation will call this method to locate the named
 	 * resource.
-	 * 
 	 * <p>
 	 * The context can control from where resources come. For example, the
 	 * resource can be mapped to a file in the bundle's persistent storage area
