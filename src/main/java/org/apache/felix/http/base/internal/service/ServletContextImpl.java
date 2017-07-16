@@ -406,6 +406,11 @@ public class ServletContextImpl implements ExtServletContext
     }
 
     @Override
+    public void finishSecurity(HttpServletRequest req, HttpServletResponse res) {
+        // nothing to do
+    }
+
+    @Override
     public void log(Exception cause, String message)
     {
         SystemLogger.error(message, cause);
