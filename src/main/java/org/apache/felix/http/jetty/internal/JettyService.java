@@ -42,9 +42,9 @@ import javax.servlet.SessionTrackingMode;
 import org.apache.felix.http.base.internal.HttpServiceController;
 import org.apache.felix.http.base.internal.logger.SystemLogger;
 import org.eclipse.jetty.http.HttpVersion;
+import org.eclipse.jetty.io.ConnectionStatistics;
 import org.eclipse.jetty.security.HashLoginService;
 import org.eclipse.jetty.server.Connector;
-import org.eclipse.jetty.server.ConnectorStatistics;
 import org.eclipse.jetty.server.HttpConfiguration;
 import org.eclipse.jetty.server.HttpConnectionFactory;
 import org.eclipse.jetty.server.SecureRequestCustomizer;
@@ -54,6 +54,7 @@ import org.eclipse.jetty.server.SessionManager;
 import org.eclipse.jetty.server.SslConnectionFactory;
 import org.eclipse.jetty.server.handler.ContextHandlerCollection;
 import org.eclipse.jetty.server.handler.StatisticsHandler;
+import org.eclipse.jetty.server.session.SessionHandler;
 import org.eclipse.jetty.servlet.ServletContextHandler;
 import org.eclipse.jetty.servlet.ServletHolder;
 import org.eclipse.jetty.util.component.AbstractLifeCycle;
@@ -111,7 +112,7 @@ public final class JettyService extends AbstractLifeCycle.AbstractLifeCycleListe
         this.context = context;
         this.config = new JettyConfig(this.context);
         this.controller = controller;
-        this.deployments = new LinkedHashMap<String, Deployment>();
+        this.deployments = new LinkedHashMap<>();
         this.executor = Executors.newSingleThreadExecutor(new ThreadFactory()
         {
             @Override
@@ -139,13 +140,13 @@ public final class JettyService extends AbstractLifeCycle.AbstractLifeCycleListe
         startJetty();
 
         if (this.registerManagedService) {
-			final Dictionary<String, Object> props = new Hashtable<String, Object>();
+			final Dictionary<String, Object> props = new Hashtable<>();
 			props.put(Constants.SERVICE_PID, PID);
 			this.configServiceReg = this.context.registerService("org.osgi.service.cm.ManagedService",
 			        new JettyManagedService(this), props);
         }
 
-        this.eventAdmintTracker = new ServiceTracker<EventAdmin, EventAdmin>(this.context, EventAdmin.class,
+        this.eventAdmintTracker = new ServiceTracker<>(this.context, EventAdmin.class,
                 new ServiceTrackerCustomizer<EventAdmin, EventAdmin>()
         {
             @Override
@@ -171,7 +172,7 @@ public final class JettyService extends AbstractLifeCycle.AbstractLifeCycleListe
         });
         this.eventAdmintTracker.open();
 
-        this.bundleTracker = new BundleTracker<Deployment>(this.context, Bundle.ACTIVE | Bundle.STARTING,
+        this.bundleTracker = new BundleTracker<>(this.context, Bundle.ACTIVE | Bundle.STARTING,
                 new BundleTrackerCustomizer<Deployment>() {
 
             @Override
@@ -253,7 +254,7 @@ public final class JettyService extends AbstractLifeCycle.AbstractLifeCycleListe
 
     private Hashtable<String, Object> getServiceProperties()
     {
-        Hashtable<String, Object> props = new Hashtable<String, Object>();
+        Hashtable<String, Object> props = new Hashtable<>();
         // Add some important configuration properties...
         this.config.setServiceProperties(props);
         addEndpointProperties(props, null);
@@ -340,7 +341,9 @@ public final class JettyService extends AbstractLifeCycle.AbstractLifeCycleListe
 
             this.parent = new ContextHandlerCollection();
 
-            ServletContextHandler context = new ServletContextHandler(this.parent, this.config.getContextPath(), ServletContextHandler.SESSIONS);
+            ServletContextHandler context = new ServletContextHandler(this.parent,
+                    this.config.getContextPath(),
+                    ServletContextHandler.SESSIONS);
 
             configureSessionManager(context);
             this.controller.getEventDispatcher().setActive(true);
@@ -559,7 +562,7 @@ public final class JettyService extends AbstractLifeCycle.AbstractLifeCycleListe
 
         if (this.config.isRegisterMBeans())
         {
-            connector.addBean(new ConnectorStatistics());
+            connector.addBean(new ConnectionStatistics());
         }
     }
 
@@ -580,19 +583,18 @@ public final class JettyService extends AbstractLifeCycle.AbstractLifeCycleListe
         //Changed from 8.x to 9.x
         //maxIdleTime -> ServerConnector.setIdleTimeout
         //requestBufferSize -> HttpConnectionFactory.setInputBufferSize
-        //statsOn -> ServerConnector.addBean(new ConnectorStatistics());
+        //statsOn -> ServerConnector.addBean(new ConnectionStatistics());
     }
 
     private void configureSessionManager(final ServletContextHandler context)
     {
-        final SessionManager manager = context.getSessionHandler().getSessionManager();
+        final SessionHandler sessionHandler = context.getSessionHandler();
+        sessionHandler.getSessionManager().setMaxInactiveInterval(this.config.getSessionTimeout() * 60);
+        sessionHandler.getSessionManager().setSessionIdPathParameterName(this.config.getProperty(JettyConfig.FELIX_JETTY_SERVLET_SESSION_ID_PATH_PARAMETER_NAME, SessionManager.__DefaultSessionIdPathParameterName));
+        sessionHandler.getSessionManager().setCheckingRemoteSessionIdEncoding(this.config.getBooleanProperty(JettyConfig.FELIX_JETTY_SERVLET_CHECK_REMOTE_SESSION_ENCODING, true));
+        sessionHandler.getSessionManager().setSessionTrackingModes(Collections.singleton(SessionTrackingMode.COOKIE));
 
-        manager.setMaxInactiveInterval(this.config.getSessionTimeout() * 60);
-        manager.setSessionIdPathParameterName(this.config.getProperty(JettyConfig.FELIX_JETTY_SERVLET_SESSION_ID_PATH_PARAMETER_NAME, SessionManager.__DefaultSessionIdPathParameterName));
-        manager.setCheckingRemoteSessionIdEncoding(this.config.getBooleanProperty(JettyConfig.FELIX_JETTY_SERVLET_CHECK_REMOTE_SESSION_ENCODING, true));
-        manager.setSessionTrackingModes(Collections.singleton(SessionTrackingMode.COOKIE));
-
-        SessionCookieConfig cookieConfig = manager.getSessionCookieConfig();
+        final SessionCookieConfig cookieConfig = sessionHandler.getSessionManager().getSessionCookieConfig();
         cookieConfig.setName(this.config.getProperty(JettyConfig.FELIX_JETTY_SERVLET_SESSION_COOKIE_NAME, SessionManager.__DefaultSessionCookie));
         cookieConfig.setDomain(this.config.getProperty(JettyConfig.FELIX_JETTY_SERVLET_SESSION_DOMAIN, SessionManager.__DefaultSessionDomain));
         cookieConfig.setPath(this.config.getProperty(JettyConfig.FELIX_JETTY_SERVLET_SESSION_PATH, context.getContextPath()));
@@ -677,7 +679,7 @@ public final class JettyService extends AbstractLifeCycle.AbstractLifeCycleListe
 
     private List<String> getEndpoints(final Connector connector, final List<NetworkInterface> interfaces)
     {
-        final List<String> endpoints = new ArrayList<String>();
+        final List<String> endpoints = new ArrayList<>();
         for (final NetworkInterface ni : interfaces)
         {
             final Enumeration<InetAddress> ias = ni.getInetAddresses();
@@ -696,7 +698,7 @@ public final class JettyService extends AbstractLifeCycle.AbstractLifeCycleListe
 
     private void addEndpointProperties(final Hashtable<String, Object> props, Object container)
     {
-        final List<String> endpoints = new ArrayList<String>();
+        final List<String> endpoints = new ArrayList<>();
 
         final Connector[] connectors = this.server.getConnectors();
         if (connectors != null)
@@ -709,8 +711,8 @@ public final class JettyService extends AbstractLifeCycle.AbstractLifeCycleListe
                 {
                     try
                     {
-                        final List<NetworkInterface> interfaces = new ArrayList<NetworkInterface>();
-                        final List<NetworkInterface> loopBackInterfaces = new ArrayList<NetworkInterface>();
+                        final List<NetworkInterface> interfaces = new ArrayList<>();
+                        final List<NetworkInterface> loopBackInterfaces = new ArrayList<>();
                         final Enumeration<NetworkInterface> nis = NetworkInterface.getNetworkInterfaces();
                         while (nis.hasMoreElements())
                         {
@@ -817,7 +819,7 @@ public final class JettyService extends AbstractLifeCycle.AbstractLifeCycleListe
                     JettyService.this.parent.addHandler(context);
                     context.start();
 
-                    Dictionary<String, Object> props = new Hashtable<String, Object>();
+                    Dictionary<String, Object> props = new Hashtable<>();
                     props.put(WEB_SYMBOLIC_NAME, webAppBundle.getSymbolicName());
                     props.put(WEB_VERSION, webAppBundle.getVersion());
                     props.put(WEB_CONTEXT_PATH, deployment.getContextPath());
