@@ -36,7 +36,7 @@ public class Util {
 
     public static final String NS_OSGI_EXTENDER = "osgi.extender";
 
-    public static final String PROP_CONFIGURATIONS = "configurations";
+    private static final String PROP_CONFIGURATIONS = "configurations";
 
     private static final String DEFAULT_PATH = "OSGI-INF/configurator";
 

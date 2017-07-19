@@ -371,16 +371,7 @@ public class JSONUtil {
                 return null;
             }
         }
-        final Object configs = getValue(root, "configurations");
-        if ( configs == null ) {
-            // short cut, we just return false as we don't have to process this file
-            return null;
-        }
-        if ( !(configs instanceof Map) ) {
-            report.errors.add("Configurations must be a map of configurations in " + name);
-            return null;
-        }
-        return (Map<String, ?>) configs;
+        return (Map<String, ?>) getValue(root);
     }
 
     /**
