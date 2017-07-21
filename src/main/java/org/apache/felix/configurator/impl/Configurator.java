@@ -108,8 +108,9 @@ public class Configurator {
 
                         @Override
                         public void run() {
-                            processAddBundle(bundle);
-                            process();
+                            if ( processAddBundle(bundle) ) {
+                                process();
+                            }
                         }
                     });
                 }
@@ -131,9 +132,9 @@ public class Configurator {
                         @Override
                         public void run() {
                             try {
-                                processRemoveBundle(bundle.getBundleId());
-                                process();
-                                Configurator.this.state.removeConfigAdminBundleId(bundle.getBundleId());
+                                if ( processRemoveBundle(bundle.getBundleId()) ) {
+                                    process();
+                                }
                             } catch ( final IllegalStateException ise) {
                                 SystemLogger.error("Error processing bundle " + getBundleIdentity(bundle), ise);
                             }
@@ -291,22 +292,22 @@ public class Configurator {
         this.tracker.open();
     }
 
-    public void processAddBundle(final Bundle bundle) {
+    public boolean processAddBundle(final Bundle bundle) {
+        final long bundleId = bundle.getBundleId();
+        final long bundleLastModified = bundle.getLastModified();
+
+        final Long lastModified = state.getLastModified(bundleId);
+        if ( lastModified != null && lastModified.longValue() == bundleLastModified ) {
+            // no changes, nothing to do
+            return false;
+        }
+
+        BundleState config = null;
         try {
-            final long bundleId = bundle.getBundleId();
-            final long bundleLastModified = bundle.getLastModified();
-            final Long lastModified = state.getLastModified(bundleId);
-            if ( lastModified != null && lastModified.longValue() == bundleLastModified ) {
-                // no changes, nothing to do
-                return;
-            }
-            if ( lastModified != null ) {
-                processRemoveBundle(bundleId);
-            }
             final Set<String> paths = Util.isConfigurerBundle(bundle, this.bundleContext.getBundle().getBundleId());
             if ( paths != null ) {
                 final JSONUtil.Report report = new JSONUtil.Report();
-                final BundleState config = JSONUtil.readConfigurationsFromBundle(new BinUtil.ResourceProvider() {
+                config = JSONUtil.readConfigurationsFromBundle(new BinUtil.ResourceProvider() {
 
                     @Override
                     public String getIdentifier() {
@@ -334,22 +335,33 @@ public class Configurator {
                 for(final String e : report.errors) {
                     SystemLogger.error(e);
                 }
-                for(final String pid : config.getPids()) {
-                    state.addAll(pid, config.getConfigurations(pid));
-                }
             }
-            state.setLastModified(bundleId, bundleLastModified);
         } catch ( final IllegalStateException ise) {
             SystemLogger.error("Error processing bundle " + getBundleIdentity(bundle), ise);
         }
+        if ( lastModified != null ) {
+            processRemoveBundle(bundleId);
+        }
+        if ( config != null ) {
+            for(final String pid : config.getPids()) {
+                state.addAll(pid, config.getConfigurations(pid));
+            }
+            state.setLastModified(bundleId, bundleLastModified);
+            return true;
+        }
+        return lastModified != null;
     }
 
-    public void processRemoveBundle(final long bundleId) {
-        state.removeLastModified(bundleId);
-        for(final String pid : state.getPids()) {
-            final ConfigList configList = state.getConfigurations(pid);
-            configList.uninstall(bundleId);
+    public boolean processRemoveBundle(final long bundleId) {
+        if ( state.getLastModified(bundleId) != null ) {
+            state.removeLastModified(bundleId);
+            for(final String pid : state.getPids()) {
+                final ConfigList configList = state.getConfigurations(pid);
+                configList.uninstall(bundleId);
+            }
+            return true;
         }
+        return false;
     }
 
     /**
@@ -370,16 +382,20 @@ public class Configurator {
             coordination = CoordinatorUtil.getCoordination(localCoordinator);
         }
 
+        boolean retry = false;
         try {
             for(final String pid : state.getPids()) {
                 final ConfigList configList = state.getConfigurations(pid);
 
                 if ( configList.hasChanges() ) {
-                    process(configList);
-                    try {
-                        State.writeState(this.bundleContext.getDataFile(State.FILE_NAME), state);
-                    } catch ( final IOException ioe) {
-                        SystemLogger.error("Unable to persist state to " + State.FILE_NAME, ioe);
+                    if ( process(configList) ) {
+                        try {
+                            State.writeState(this.bundleContext.getDataFile(State.FILE_NAME), state);
+                        } catch ( final IOException ioe) {
+                            SystemLogger.error("Unable to persist state to " + State.FILE_NAME, ioe);
+                        }
+                    } else {
+                        retry = true;
                     }
                 }
             }
@@ -387,6 +403,23 @@ public class Configurator {
         } finally {
             if ( coordination != null ) {
                 CoordinatorUtil.endCoordination(coordination);
+            }
+        }
+        if ( !retry ) {
+            // check whether there is a stale config admin bundle id
+            boolean changed = false;
+            for(final Long bundleId : this.state.getBundleIdsUsingConfigAdmin()) {
+                if ( this.state.getLastModified(bundleId) == null ) {
+                    this.state.removeConfigAdminBundleId(bundleId);
+                    changed = true;
+                }
+            }
+            if ( changed ) {
+                try {
+                    State.writeState(this.bundleContext.getDataFile(State.FILE_NAME), state);
+                } catch ( final IOException ioe) {
+                    SystemLogger.error("Unable to persist state to " + State.FILE_NAME, ioe);
+                }
             }
         }
     }

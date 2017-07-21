@@ -26,6 +26,7 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.Serializable;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
@@ -169,5 +170,9 @@ public class State extends AbstractState implements Serializable {
     public String toString() {
         return "State [bundlesLastModified=" + bundlesLastModified +
                 ", initialHashes=" + initialHashes + "]";
+    }
+
+    public Set<Long> getBundleIdsUsingConfigAdmin() {
+        return new HashSet<>(this.bundlesConfigAdminBundleId.keySet());
     }
 }
