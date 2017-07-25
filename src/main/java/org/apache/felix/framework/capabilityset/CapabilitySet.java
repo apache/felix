@@ -346,7 +346,7 @@ public class CapabilitySet
         for (Entry<String, Object> entry : attrs.entrySet())
         {
             if (((BundleCapabilityImpl) cap).isAttributeMandatory(entry.getKey())
-                && !matchMandatoryAttrbute(entry.getKey(), sf))
+                && !matchMandatoryAttribute(entry.getKey(), sf))
             {
                 return false;
             }
@@ -354,7 +354,7 @@ public class CapabilitySet
         return true;
     }
 
-    private static boolean matchMandatoryAttrbute(String attrName, SimpleFilter sf)
+    private static boolean matchMandatoryAttribute(String attrName, SimpleFilter sf)
     {
         if ((sf.getName() != null) && sf.getName().equals(attrName))
         {
