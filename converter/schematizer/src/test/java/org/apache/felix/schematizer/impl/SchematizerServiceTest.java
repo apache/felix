@@ -17,7 +17,6 @@
 package org.apache.felix.schematizer.impl;
 
 import java.util.Map;
-import java.util.Optional;
 
 import org.apache.felix.schematizer.Node;
 import org.apache.felix.schematizer.Schema;
@@ -199,6 +198,7 @@ public class SchematizerServiceTest {
         assertNodeDTOEquals("alpha", "/embedded/alpha", false, MyEmbeddedDTO.Alpha.class, alphaNode);
     }
 
+    @SuppressWarnings( "unused" )
     @Test
     @Ignore("Probably no longer necessary...")
     public void testSchemaFromMap() {
@@ -211,6 +211,7 @@ public class SchematizerServiceTest {
 //        testSchema(s2);
     }
 
+    @SuppressWarnings( "unused" )
     private void testSchema(Schema s) {
         // Assume that the map is serialized, then deserialized "as is".
         assertNotNull(s);

@@ -29,7 +29,7 @@ import org.osgi.dto.DTO;
 import org.osgi.util.converter.ConversionException;
 import org.osgi.util.converter.Converter;
 import org.osgi.util.converter.ConverterFunction;
-import org.osgi.util.converter.StandardConverter;
+import org.osgi.util.converter.Converters;
 import org.osgi.util.converter.TargetRule;
 import org.osgi.util.converter.TypeReference;
 
@@ -42,7 +42,11 @@ public class SchemaBasedConverter<T> implements TargetRule {
 
     public SchemaBasedConverter(SchemaImpl aSchema) {
         schema = aSchema;
-        converter = new StandardConverter();
+        converter = Converters.standardConverter();
+        // TODO: how can we add the error handler??
+//                .newConverterBuilder()
+//                .errorHandler( (obj,type) -> new Exception( "Could not convert object " + obj.toString() + " of type " + type.getTypeName() ) )
+//                .build();
     }
 
     @Override
@@ -76,7 +80,13 @@ public class SchemaBasedConverter<T> implements TargetRule {
     @SuppressWarnings({ "rawtypes", "unchecked" })
     private <U extends DTO>U convertToDTO(Class<U> targetCls, Map<?,?> m, Schema schema, String contextPath) {
         try {
-            U dto = targetCls.newInstance();
+            U dto;
+
+            try {
+                dto = targetCls.newInstance();
+            } catch (Throwable t) {
+                throw new ConversionException("Cannot create instance of DTO " + targetCls + ". Bad constructor?", t);
+            }
 
             for (Map.Entry entry : m.entrySet()) {
                 try {

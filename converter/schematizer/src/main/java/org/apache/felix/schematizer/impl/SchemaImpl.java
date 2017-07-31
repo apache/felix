@@ -30,7 +30,7 @@ import org.apache.felix.schematizer.Node;
 import org.apache.felix.schematizer.NodeVisitor;
 import org.apache.felix.schematizer.Schema;
 import org.osgi.util.converter.Converter;
-import org.osgi.util.converter.StandardConverter;
+import org.osgi.util.converter.Converters;
 
 public class SchemaImpl implements Schema {
     private final String name;
@@ -104,7 +104,7 @@ public class SchemaImpl implements Schema {
 
     @Override
     public Collection<?> valuesAt(String path, Object object) {
-        final Converter converter = new StandardConverter();
+        final Converter converter = Converters.standardConverter();
         @SuppressWarnings( "unchecked" )
         final Map<String, Object> map = (Map<String, Object>)converter.convert(object).sourceAsDTO().to( Map.class );
         if (map == null || map.isEmpty())
@@ -139,7 +139,7 @@ public class SchemaImpl implements Schema {
             currentContext = pathFrom(contexts, ++currentIndex);
             for (Object o2 : l)
             {
-                final Converter converter = new StandardConverter();
+                final Converter converter = Converters.standardConverter();
                 final Map<String, Object> m = (Map<String, Object>)converter.convert(o2).sourceAsDTO().to( Map.class );
                 result.addAll( valuesAt( currentContext, m, contexts, currentIndex ) );
             }        
@@ -152,7 +152,7 @@ public class SchemaImpl implements Schema {
 
             result.addAll(valuesAt( currentContext, (Map)o, contexts, ++currentIndex));
         } else if (currentIndex < contexts.size() - 1) {
-            final Converter converter = new StandardConverter();
+            final Converter converter = Converters.standardConverter();
             final Map<String, Object> m = (Map<String, Object>)converter.convert(o).sourceAsDTO().to(Map.class);
             currentContext = pathFrom(contexts, ++currentIndex);
             result.addAll(valuesAt( currentContext, m, contexts, currentIndex ));
@@ -169,7 +169,7 @@ public class SchemaImpl implements Schema {
             return map;
 
         Node node = nodeAtPath(path);
-        Object result = new StandardConverter().convert(map).targetAsDTO().to(node.type());
+        Object result = Converters.standardConverter().convert(map).targetAsDTO().to(node.type());
         return result;
     }
 
@@ -179,7 +179,7 @@ public class SchemaImpl implements Schema {
 
         Node node = nodeAtPath(path);
         return list.stream()
-                .map( v -> new StandardConverter().convert(v).sourceAsDTO().to(node.type()))
+                .map( v -> Converters.standardConverter().convert(v).sourceAsDTO().to(node.type()))
                 .collect( Collectors.toList() );
     }
 

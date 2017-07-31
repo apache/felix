@@ -35,7 +35,7 @@ import org.osgi.framework.Bundle;
 import org.osgi.framework.ServiceFactory;
 import org.osgi.framework.ServiceRegistration;
 import org.osgi.util.converter.Converter;
-import org.osgi.util.converter.StandardConverter;
+import org.osgi.util.converter.Converters;
 import org.osgi.util.converter.TypeReference;
 
 import static org.apache.felix.schematizer.impl.Util.*;
@@ -299,7 +299,7 @@ public class SchematizerImpl implements Schematizer, ServiceFactory<Schematizer>
 //        s.visit( ex );
 //        ex.rules().stream().forEach( rule -> b.rule(rule) );
 //        return b.build();
-        return new StandardConverter()
+        return Converters
                 .newConverterBuilder()
                 .rule(new SchemaBasedConverter<Object>(schemas.get(schemaName)))
                 .build();

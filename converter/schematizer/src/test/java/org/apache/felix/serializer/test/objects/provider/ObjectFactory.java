@@ -19,11 +19,11 @@ package org.apache.felix.serializer.test.objects.provider;
 import java.util.Collection;
 
 import org.osgi.util.converter.Converter;
-import org.osgi.util.converter.StandardConverter;
+import org.osgi.util.converter.Converters;
 
 public class ObjectFactory
 {
-    private final Converter cnv = new StandardConverter();
+    private final Converter cnv = Converters.standardConverter();
 
     public ComplexTopEntity newComplexTop( String anId, String aValue, ComplexMiddleEntity aMiddle )
     {
