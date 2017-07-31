@@ -287,6 +287,7 @@ public class MultiPropertyFilterIndex implements FilterIndex, ServiceTrackerCust
 		return kvc;
 	}
 
+	@SuppressWarnings("unchecked")
 	public Object addingService(ServiceReference reference) {
 		BundleContext context;
 		synchronized (m_lock) {

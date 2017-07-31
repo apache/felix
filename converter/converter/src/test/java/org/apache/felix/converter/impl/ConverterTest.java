@@ -59,8 +59,8 @@ import org.osgi.util.converter.ConversionException;
 import org.osgi.util.converter.Converter;
 import org.osgi.util.converter.ConverterBuilder;
 import org.osgi.util.converter.ConverterFunction;
+import org.osgi.util.converter.Converters;
 import org.osgi.util.converter.Rule;
-import org.osgi.util.converter.StandardConverter;
 import org.osgi.util.converter.TypeReference;
 
 import static org.junit.Assert.assertArrayEquals;
@@ -78,7 +78,7 @@ public class ConverterTest {
 
     @Before
     public void setUp() {
-        converter = new StandardConverter();
+        converter = Converters.standardConverter();
     }
 
     @After
@@ -96,8 +96,8 @@ public class ConverterTest {
         assertEquals("" + Long.MAX_VALUE, converter.convert(Long.MAX_VALUE).to(String.class));
         assertEquals("12.3", converter.convert(12.3f).to(String.class));
         assertEquals("12.345", converter.convert(12.345d).to(String.class));
-        assertEquals(null, converter.convert(null).to(String.class));
-        assertEquals(null, converter.convert(Collections.emptyList()).to(String.class));
+        assertNull(converter.convert(null).to(String.class));
+        assertNull(converter.convert(Collections.emptyList()).to(String.class));
 
         String bistr = "999999999999999999999"; // more than Long.MAX_VALUE
         assertEquals(bistr, converter.convert(new BigInteger(bistr)).to(String.class));
@@ -114,13 +114,18 @@ public class ConverterTest {
         assertFalse(converter.convert(null).to(boolean.class));
         assertFalse(converter.convert(Collections.emptyList()).to(boolean.class));
 
-        // Converstions to integer
+        // Conversions to integer
         assertEquals(Integer.valueOf(123), converter.convert("123").to(int.class));
         assertEquals(1, (int) converter.convert(true).to(int.class));
         assertEquals(0, (int) converter.convert(false).to(int.class));
+        assertEquals(65, (int) converter.convert('A').to(int.class));
+
+        // Conversions to long
+        assertEquals(Long.valueOf(65), converter.convert('A').to(Long.class));
 
         // Conversions to Class
         assertEquals(BigDecimal.class, converter.convert("java.math.BigDecimal").to(Class.class));
+        assertEquals(BigDecimal.class, converter.convert("java.math.BigDecimal").to(new TypeReference<Class<?>>() {}));
         assertNull(converter.convert(null).to(Class.class));
         assertNull(converter.convert(Collections.emptyList()).to(Class.class));
 
@@ -129,9 +134,49 @@ public class ConverterTest {
         assertEquals('1', (char) converter.convert("123").to(Character.class));
         assertEquals('Q', (char) converter.convert(null).defaultValue('Q').to(Character.class));
         assertEquals((char) 123, (char) converter.convert(123L).to(Character.class));
+        assertEquals((char) 123, (char) converter.convert(123).to(Character.class));
         assertEquals(Byte.valueOf((byte) 123), converter.convert("123").to(Byte.class));
         assertEquals(Float.valueOf("12.3"), converter.convert("12.3").to(Float.class));
         assertEquals(Double.valueOf("12.3"), converter.convert("12.3").to(Double.class));
+    }
+
+    @Test
+    public void testCharAggregateToString() {
+        Converter c = Converters.newConverterBuilder().
+                rule(new Rule<List<Character>, String>(ConverterTest::characterListToString) {}).
+                rule(new Rule<String, List<Character>>(ConverterTest::stringToCharacterList) {}).
+                build();
+
+        char[] ca = new char[] {'h', 'e', 'l', 'l', 'o'};
+        assertEquals("hello", c.convert(ca).to(String.class));
+
+        Character[] ca2 = c.convert(ca).to(Character[].class);
+        assertEquals("hello", c.convert(ca2).to(String.class));
+
+        List<Character> cl = c.convert(ca).to(new TypeReference<List<Character>>() {});
+        assertEquals("hello", c.convert(cl).to(String.class));
+
+        // And back
+        assertArrayEquals(ca, c.convert("hello").to(char[].class));
+        assertArrayEquals(ca2, c.convert("hello").to(Character[].class));
+        assertEquals(cl, c.convert("hello").to(new TypeReference<List<Character>>() {}));
+    }
+
+    private static String characterListToString(List<Character> cl) {
+        StringBuilder sb = new StringBuilder(cl.size());
+        for (char c : cl) {
+            sb.append(c);
+        }
+        return sb.toString();
+    }
+
+    private static List<Character> stringToCharacterList(String s) {
+        List<Character> lc = new ArrayList<>();
+
+        for (int i=0; i<s.length(); i++) {
+            lc.add(s.charAt(i));
+        }
+        return lc;
     }
 
     enum TestEnum { FOO, BAR, BLAH, FALSE, X};
@@ -353,7 +398,10 @@ public class ConverterTest {
                 if ("hello".equals(obj)) {
                     return -1;
                 }
-                return null;
+                if ("goodbye".equals(obj)) {
+                    return null;
+                }
+                return ConverterFunction.CANNOT_HANDLE;
             }
         };
 
@@ -362,6 +410,14 @@ public class ConverterTest {
 
         assertEquals(new Integer(12), adapted.convert("12").to(Integer.class));
         assertEquals(new Integer(-1), adapted.convert("hello").to(Integer.class));
+        assertNull(adapted.convert("goodbye").to(Integer.class));
+
+        try {
+            adapted.convert("nothing").to(Integer.class);
+            fail("Should have thrown a Conversion Exception when converting 'hello' to a number");
+        } catch (ConversionException ce) {
+            // good
+        }
 
         // This is with the non-adapted converter
         try {
@@ -450,7 +506,7 @@ public class ConverterTest {
         Calendar cal = new GregorianCalendar(2017, 1, 13);
         Date d = cal.getTime();
 
-        Converter c = new StandardConverter();
+        Converter c = converter;
 
         String s = c.convert(d).toString();
         assertEquals(d, c.convert(s).to(Date.class));
@@ -964,6 +1020,21 @@ public class ConverterTest {
         Map<String, String> m = new HashMap<>();
         CharSequence cs = converter.convert(m).targetAs(String.class).to(CharSequence.class);
         assertEquals("{}", cs);
+    }
+
+    @SuppressWarnings("rawtypes")
+    @Test
+    public void testLongArrayToLongCollection() {
+        Long[] la = new Long[] {Long.MIN_VALUE, Long.MAX_VALUE};
+
+        List lc = converter.convert(la).to(List.class);
+
+        assertEquals(la.length, lc.size());
+
+        int i=0;
+        for (Iterator it = lc.iterator(); it.hasNext(); i++) {
+            assertEquals(la[i], it.next());
+        }
     }
 
     static class MyClass2 {

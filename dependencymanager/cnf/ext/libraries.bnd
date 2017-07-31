@@ -26,9 +26,10 @@ log=org.apache.felix.log;version=1.0.1
 ##
 # Gogo bundles
 gogo=\
-	org.apache.felix.gogo.command;version=0.14.0,\
-	org.apache.felix.gogo.runtime;version=0.12.0,\
-	org.apache.felix.gogo.shell;version=0.10.0
+	org.apache.felix.gogo.command;version=1.0.2,\
+	org.apache.felix.gogo.runtime;version=1.0.6,\
+	org.apache.felix.gogo.jline;version=1.0.5,\
+	org.jline;version=3.3.0	
  
 ##
 # Configuration Admin

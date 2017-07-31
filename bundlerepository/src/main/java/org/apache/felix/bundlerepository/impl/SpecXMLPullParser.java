@@ -49,10 +49,9 @@ public class SpecXMLPullParser
     private static final String REQUIREMENT = "requirement";
     private static final String RESOURCE = "resource";
 
-    public static RepositoryImpl parse(XmlPullParser reader, String repositoryURI) throws Exception
+    public static RepositoryImpl parse(XmlPullParser reader, URI baseUri) throws Exception
     {
         RepositoryImpl repository = new RepositoryImpl();
-        repository.setURI(repositoryURI);
         for (int i = 0, ac = reader.getAttributeCount(); i < ac; i++)
         {
             String name = reader.getAttributeName(i);
@@ -73,7 +72,7 @@ public class SpecXMLPullParser
             }
             else if (RESOURCE.equals(element))
             {
-                Resource resource = parseResource(reader, repositoryURI);
+                Resource resource = parseResource(reader, baseUri);
                 repository.addResource(resource);
             }
             else
@@ -86,7 +85,7 @@ public class SpecXMLPullParser
         return repository;
     }
 
-    private static Resource parseResource(XmlPullParser reader, String repositoryURI) throws Exception
+    private static Resource parseResource(XmlPullParser reader, URI baseUri) throws Exception
     {
         ResourceImpl resource = new ResourceImpl();
         try
@@ -97,7 +96,7 @@ public class SpecXMLPullParser
                 String element = reader.getName();
                 if (CAPABILITY.equals(element))
                 {
-                    Capability capability = parseCapability(reader, resource, repositoryURI);
+                    Capability capability = parseCapability(reader, resource, baseUri);
                     if (capability != null)
                         resource.addCapability(capability);
                 }
@@ -123,7 +122,7 @@ public class SpecXMLPullParser
         }
     }
 
-    private static Capability parseCapability(XmlPullParser reader, ResourceImpl resource, String repositoryURI) throws Exception
+    private static Capability parseCapability(XmlPullParser reader, ResourceImpl resource, URI baseUri) throws Exception
     {
         String namespace = reader.getAttributeValue(null, NAMESPACE);
         if (IdentityNamespace.IDENTITY_NAMESPACE.equals(namespace))
@@ -135,7 +134,7 @@ public class SpecXMLPullParser
         {
             if (resource.getURI() == null)
             {
-                parseContentNamespace(reader, resource, repositoryURI);
+                parseContentNamespace(reader, resource, baseUri);
                 return null;
             }
             // if the URI is already set, this is a second osgi.content capability.
@@ -189,11 +188,10 @@ public class SpecXMLPullParser
         }
     }
 
-    private static void parseContentNamespace(XmlPullParser reader, ResourceImpl resource, String repositoryURI) throws Exception
+    private static void parseContentNamespace(XmlPullParser reader, ResourceImpl resource, URI baseUri) throws Exception
     {
         Map<String, Object> attributes = new HashMap<String, Object>();
         parseAttributesDirectives(reader, attributes, new HashMap<String, String>(), CAPABILITY);
-        URI repo = URI.create(repositoryURI);
         
         for (Map.Entry<String, Object> entry : attributes.entrySet())
         {
@@ -202,9 +200,11 @@ public class SpecXMLPullParser
                 continue;
             else if (ContentNamespace.CAPABILITY_URL_ATTRIBUTE.equals(entry.getKey())) {
                 String value = (String) entry.getValue();
-                URI uri = URI.create(value); 
-                URI resourceURI = uri.isAbsolute()? uri:URI.create(repo.toString().concat(value));
-                resource.put(Resource.URI, resourceURI);
+                URI resourceUri = URI.create(value);
+                if (!resourceUri.isAbsolute()) {
+                    resourceUri = URI.create(new StringBuilder(baseUri.toString()).append(value).toString());
+                }
+                resource.put(Resource.URI, resourceUri);
             }
             else
                 resource.put(entry.getKey(), entry.getValue());

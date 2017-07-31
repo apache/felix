@@ -21,7 +21,6 @@ import static org.osgi.service.http.runtime.dto.DTOConstants.FAILURE_REASON_SHAD
 import static org.osgi.service.http.runtime.dto.DTOConstants.FAILURE_REASON_UNKNOWN;
 import static org.osgi.service.http.runtime.dto.DTOConstants.FAILURE_REASON_VALIDATION_FAILED;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -32,18 +31,11 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 import javax.annotation.Nonnull;
-import javax.servlet.FilterChain;
 import javax.servlet.ServletContext;
 import javax.servlet.ServletContextEvent;
 import javax.servlet.ServletContextListener;
-import javax.servlet.ServletException;
-import javax.servlet.ServletRequest;
-import javax.servlet.ServletResponse;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 import javax.servlet.http.HttpSessionEvent;
 
@@ -53,7 +45,6 @@ import org.apache.felix.http.base.internal.handler.FilterHandler;
 import org.apache.felix.http.base.internal.handler.HttpServiceServletHandler;
 import org.apache.felix.http.base.internal.handler.HttpSessionWrapper;
 import org.apache.felix.http.base.internal.handler.ListenerHandler;
-import org.apache.felix.http.base.internal.handler.PreprocessorHandler;
 import org.apache.felix.http.base.internal.handler.ServletHandler;
 import org.apache.felix.http.base.internal.handler.WhiteboardFilterHandler;
 import org.apache.felix.http.base.internal.handler.WhiteboardListenerHandler;
@@ -64,13 +55,11 @@ import org.apache.felix.http.base.internal.registry.HandlerRegistry;
 import org.apache.felix.http.base.internal.runtime.AbstractInfo;
 import org.apache.felix.http.base.internal.runtime.FilterInfo;
 import org.apache.felix.http.base.internal.runtime.ListenerInfo;
-import org.apache.felix.http.base.internal.runtime.PreprocessorInfo;
 import org.apache.felix.http.base.internal.runtime.ResourceInfo;
 import org.apache.felix.http.base.internal.runtime.ServletContextHelperInfo;
 import org.apache.felix.http.base.internal.runtime.ServletInfo;
 import org.apache.felix.http.base.internal.runtime.WhiteboardServiceInfo;
 import org.apache.felix.http.base.internal.runtime.dto.FailedDTOHolder;
-import org.apache.felix.http.base.internal.runtime.dto.PreprocessorDTOBuilder;
 import org.apache.felix.http.base.internal.runtime.dto.RegistryRuntime;
 import org.apache.felix.http.base.internal.runtime.dto.ServletContextDTOBuilder;
 import org.apache.felix.http.base.internal.service.HttpServiceFactory;
@@ -78,7 +67,6 @@ import org.apache.felix.http.base.internal.service.HttpServiceRuntimeImpl;
 import org.apache.felix.http.base.internal.service.ResourceServlet;
 import org.apache.felix.http.base.internal.whiteboard.tracker.FilterTracker;
 import org.apache.felix.http.base.internal.whiteboard.tracker.ListenersTracker;
-import org.apache.felix.http.base.internal.whiteboard.tracker.PreprocessorTracker;
 import org.apache.felix.http.base.internal.whiteboard.tracker.ResourceTracker;
 import org.apache.felix.http.base.internal.whiteboard.tracker.ServletContextHelperTracker;
 import org.apache.felix.http.base.internal.whiteboard.tracker.ServletTracker;
@@ -94,10 +82,8 @@ import org.osgi.service.http.context.ServletContextHelper;
 import org.osgi.service.http.runtime.HttpServiceRuntime;
 import org.osgi.service.http.runtime.HttpServiceRuntimeConstants;
 import org.osgi.service.http.runtime.dto.DTOConstants;
-import org.osgi.service.http.runtime.dto.PreprocessorDTO;
 import org.osgi.service.http.runtime.dto.ServletContextDTO;
 import org.osgi.service.http.whiteboard.HttpWhiteboardConstants;
-import org.osgi.service.http.whiteboard.Preprocessor;
 import org.osgi.util.tracker.ServiceTracker;
 
 public final class WhiteboardManager
@@ -119,8 +105,6 @@ public final class WhiteboardManager
 
     /** A map with all servlet/filter registrations, mapped by abstract info. */
     private final Map<WhiteboardServiceInfo<?>, List<WhiteboardContextHandler>> servicesMap = new HashMap<WhiteboardServiceInfo<?>, List<WhiteboardContextHandler>>();
-
-    private volatile List<PreprocessorHandler> preprocessorHandlers = Collections.emptyList();
 
     private final HandlerRegistry registry;
 
@@ -210,7 +194,6 @@ public final class WhiteboardManager
                 }, props);
         addTracker(new FilterTracker(this.httpBundleContext, this));
         addTracker(new ListenersTracker(this.httpBundleContext, this));
-        addTracker(new PreprocessorTracker(this.httpBundleContext, this));
         addTracker(new ResourceTracker(this.httpBundleContext, this));
         addTracker(new ServletContextHelperTracker(this.httpBundleContext, this));
         addTracker(new ServletTracker(this.httpBundleContext, this));
@@ -242,7 +225,6 @@ public final class WhiteboardManager
 
         this.serviceRuntime.setServiceReference(null);
 
-        this.preprocessorHandlers = Collections.emptyList();
         this.contextMap.clear();
         this.servicesMap.clear();
         this.failureStateHandler.clear();
@@ -565,7 +547,7 @@ public final class WhiteboardManager
                     final Map<String, String> props = new HashMap<String, String>();
                     props.put(HttpWhiteboardConstants.HTTP_WHITEBOARD_CONTEXT_NAME, h.getContextInfo().getName());
                     props.put(HttpWhiteboardConstants.HTTP_WHITEBOARD_CONTEXT_PATH, h.getContextInfo().getPath());
-                    props.put(HttpWhiteboardConstants.HTTP_SERVICE_CONTEXT_PROPERTY, h.getContextInfo().getName());
+                    props.put("osgi.http.whiteboard.context.httpservice", h.getContextInfo().getName());
 
                     if ( info.getContextSelectionFilter().matches(props) )
                     {
@@ -590,28 +572,6 @@ public final class WhiteboardManager
         {
             if ( info.isValid() )
             {
-                if ( info instanceof PreprocessorInfo )
-                {
-                    final PreprocessorHandler handler = new PreprocessorHandler(this.httpBundleContext,
-                            this.webContext, ((PreprocessorInfo)info));
-                    final int result = handler.init();
-                    if ( result == -1 )
-                    {
-                        synchronized ( this.preprocessorHandlers )
-                        {
-                            final List<PreprocessorHandler> newList = new ArrayList<PreprocessorHandler>(this.preprocessorHandlers);
-                            newList.add(handler);
-                            Collections.sort(newList);
-                            this.preprocessorHandlers = newList;
-                        }
-                    }
-                    else
-                    {
-                        this.failureStateHandler.addFailure(info, FAILURE_REASON_VALIDATION_FAILED);
-                    }
-                    updateRuntimeChangeCount();
-                    return true;
-                }
                 synchronized ( this.contextMap )
                 {
                     final List<WhiteboardContextHandler> handlerList = this.getMatchingContexts(info);
@@ -681,7 +641,7 @@ public final class WhiteboardManager
         		final boolean patternIsEmpty = servletInfo.getPatterns() == null || servletInfo.getPatterns().length == 0;
         		if ( !nameIsEmpty || !errorPageIsEmpty )
         		{
-        			if ( patternIsEmpty ) 
+        			if ( patternIsEmpty )
         			{
         				// no pattern, so this is valid
         				return -1;
@@ -691,7 +651,7 @@ public final class WhiteboardManager
         		// pattern is invalid, regardless of the other values
                 this.failureStateHandler.addFailure(info, HttpServiceFactory.HTTP_SERVICE_CONTEXT_SERVICE_ID, DTOConstants.FAILURE_REASON_VALIDATION_FAILED);
 
-                return DTOConstants.FAILURE_REASON_VALIDATION_FAILED;        		
+                return DTOConstants.FAILURE_REASON_VALIDATION_FAILED;
         	}
         }
 
@@ -709,27 +669,6 @@ public final class WhiteboardManager
         {
             if ( !failureStateHandler.remove(info) )
             {
-                if ( info instanceof PreprocessorInfo )
-                {
-                    synchronized ( this.preprocessorHandlers )
-                    {
-                        final List<PreprocessorHandler> newList = new ArrayList<PreprocessorHandler>(this.preprocessorHandlers);
-                        final Iterator<PreprocessorHandler> iter = newList.iterator();
-                        while ( iter.hasNext() )
-                        {
-                            final PreprocessorHandler handler = iter.next();
-                            if ( handler.getPreprocessorInfo().compareTo((PreprocessorInfo)info) == 0 )
-                            {
-                                iter.remove();
-                                this.preprocessorHandlers = newList;
-                                updateRuntimeChangeCount();
-                                return;
-                            }
-                        }
-                        // not found, nothing to do
-                    }
-                    return;
-                }
                 final List<WhiteboardContextHandler> handlerList = this.servicesMap.remove(info);
                 if ( handlerList != null )
                 {
@@ -964,60 +903,7 @@ public final class WhiteboardManager
             }
         }
 
-        final List<PreprocessorDTO> preprocessorDTOs = new ArrayList<PreprocessorDTO>();
-        final List<PreprocessorHandler> localHandlers = this.preprocessorHandlers;
-        for(final PreprocessorHandler handler : localHandlers)
-        {
-            preprocessorDTOs.add(PreprocessorDTOBuilder.build(handler.getPreprocessorInfo(), -1));
-        }
-
-        return new RegistryRuntime(failedDTOHolder, contextDTOs, preprocessorDTOs);
-    }
-
-    /**
-     * Invoke all preprocessors
-     *
-     * @param req The request
-     * @param res The response
-     * @return {@code true} to continue with dispatching, {@code false} to terminate the request.
-     * @throws IOException
-     * @throws ServletException
-     */
-    public void invokePreprocessors(final HttpServletRequest req, 
-    		final HttpServletResponse res,
-    		final Preprocessor dispatcher)
-    throws ServletException, IOException
-    {
-        final List<PreprocessorHandler> localHandlers = this.preprocessorHandlers;
-        if ( localHandlers.isEmpty() )
-        {
-        	// no preprocessors, we can directly execute
-            dispatcher.doFilter(req, res, null);
-        }
-        else
-        {
-	        final FilterChain chain = new FilterChain()
-	        {
-	        	private int index = 0;
-	
-	            @Override
-	            public void doFilter(final ServletRequest request, final ServletResponse response)
-	            throws IOException, ServletException
-	            {
-	            	if ( index == localHandlers.size() ) 
-	            	{
-	            		dispatcher.doFilter(request, response, null);
-	            	}
-	            	else 
-	            	{
-	            		final PreprocessorHandler handler = localHandlers.get(index);
-	            		index++;
-	            		handler.handle(request, response, this);
-	            	}
-	            }
-	        };
-	        chain.doFilter(req, res);
-        }
+        return new RegistryRuntime(failedDTOHolder, contextDTOs);
     }
 
     private void updateRuntimeChangeCount()

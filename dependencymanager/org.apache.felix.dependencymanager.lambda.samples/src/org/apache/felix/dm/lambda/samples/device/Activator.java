@@ -47,7 +47,7 @@ public class Activator extends DependencyManagerActivator {
         component(comp -> comp
             .impl(DeviceAccessConsumer.class)
             .withSvc(LogService.class, true)
-            .withSvc(DeviceAccess.class, device -> device.required().add(DeviceAccessConsumer::add)));       
+            .withSvc(DeviceAccess.class, svc -> svc.required().add(DeviceAccessConsumer::add)));       
     }
     
     private void createDeviceAndParameter(int id) {

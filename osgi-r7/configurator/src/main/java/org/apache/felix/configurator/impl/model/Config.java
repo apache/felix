@@ -23,9 +23,6 @@ import java.io.IOException;
 import java.io.Serializable;
 import java.util.Dictionary;
 import java.util.List;
-import java.util.Set;
-
-import org.apache.felix.configurator.impl.Util;
 
 public class Config implements Serializable, Comparable<Config> {
 
@@ -49,9 +46,6 @@ public class Config implements Serializable, Comparable<Config> {
     /** The configuration properties. */
     private final Dictionary<String, Object> properties;
 
-    /** The environments. */
-    private final Set<String> environments;
-
     /** The index within the list of configurations if several. */
     private volatile int index = 0;
 
@@ -61,13 +55,11 @@ public class Config implements Serializable, Comparable<Config> {
     private volatile List<File> files;
 
     public Config(final String pid,
-            final Set<String> environments,
             final Dictionary<String, Object> properties,
             final long bundleId,
             final int ranking,
             final ConfigPolicy policy) {
         this.pid = pid;
-        this.environments = environments;
         this.ranking = ranking;
         this.bundleId = bundleId;
         this.properties = properties;
@@ -86,7 +78,6 @@ public class Config implements Serializable, Comparable<Config> {
         out.writeInt(VERSION);
         out.writeObject(pid);
         out.writeObject(properties);
-        out.writeObject(environments);
         out.writeObject(policy.name());
         out.writeLong(bundleId);
         out.writeInt(ranking);
@@ -107,12 +98,11 @@ public class Config implements Serializable, Comparable<Config> {
         if ( version < 1 || version > VERSION ) {
             throw new ClassNotFoundException(this.getClass().getName());
         }
-        Util.setField(this, "pid", in.readObject());
-        Util.setField(this, "properties", in.readObject());
-        Util.setField(this, "environments", in.readObject());
-        Util.setField(this, "policy", ConfigPolicy.valueOf((String)in.readObject()));
-        Util.setField(this, "bundleId", in.readLong());
-        Util.setField(this, "ranking", in.readInt());
+        ReflectionUtil.setField(this, "pid", in.readObject());
+        ReflectionUtil.setField(this, "properties", in.readObject());
+        ReflectionUtil.setField(this, "policy", ConfigPolicy.valueOf((String)in.readObject()));
+        ReflectionUtil.setField(this, "bundleId", in.readLong());
+        ReflectionUtil.setField(this, "ranking", in.readInt());
         this.index = in.readInt();
         this.state = ConfigState.valueOf((String)in.readObject());
         this.files = (List<File>) in.readObject();
@@ -191,42 +181,12 @@ public class Config implements Serializable, Comparable<Config> {
         return this.properties;
     }
 
-    /**
-     * Return the set of environments
-     * @return The set of environments or {@code null}
-     */
-    public Set<String> getEnvironments() {
-        return this.environments;
-    }
-
     public void setFiles(final List<File> f) {
         this.files = f;
     }
 
     public List<File> getFiles() {
         return this.files;
-    }
-
-    /**
-     * A configuration is active if
-     * - it has no environments specified
-     * - or if the list of active environments contains at least one of the mentioned envs
-     *
-     * @param activeEnvironments The set of active environments
-     * @return {@code true} if active.
-     */
-    public boolean isActive(final Set<String> activeEnvironments) {
-        boolean result = true;
-        if ( this.environments != null ) {
-            result = false;
-            for(final String env : activeEnvironments) {
-                if ( this.environments.contains(env) ) {
-                    result = true;
-                    break;
-                }
-            }
-        }
-        return result;
     }
 
     @Override
@@ -254,7 +214,6 @@ public class Config implements Serializable, Comparable<Config> {
                 + ", index=" + index
                 + ", properties=" + properties
                 + ", policy=" + policy
-                + ", state=" + state
-                + ", environments=" + environments + "]";
+                + ", state=" + state + "]";
     }
 }

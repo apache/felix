@@ -88,3 +88,5 @@ fixuptype: ${if;${is;${gestalt;batch};batch};error;warning}
   "The bundle version ...";is:=${fixuptype},\
   "The baseline version ...";is:=${fixuptype}
 
+# Generates poms in artifacts.
+-pom: groupid = org.apache.felix

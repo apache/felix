@@ -49,7 +49,7 @@
   <distributionManagement>
     <site>
       <id>apache.website</id>
-      <url>scm:svn:https://svn.apache.org/repos/infra/websites/production/felix/content/components/${maven.site.path}</url>
+      <url>scm:svn:https://svn.apache.org/repos/asf/felix/site/trunk/content/components/${maven.site.path}</url>
     </site>
   </distributionManagement>
 

@@ -16,7 +16,9 @@
  */
 package org.apache.felix.converter.impl;
 
+import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
+import java.lang.reflect.WildcardType;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -63,6 +65,24 @@ public class ConverterBuilderImpl implements ConverterBuilder {
     public ConverterBuilder rule(TargetRule rule) {
     	Type type = rule.getTargetType();
     	getRulesList(type).add(rule.getFunction());
+
+    	if (type instanceof ParameterizedType) {
+    	    ParameterizedType pt = (ParameterizedType) type;
+
+    	    boolean containsWildCard = false;
+    	    for (Type t : pt.getActualTypeArguments()) {
+    	        if (t instanceof WildcardType) {
+    	            containsWildCard = true;
+    	            break;
+    	        }
+    	    }
+
+    	    // If the parameterized type is a wildcard (e.g. '?') then register also the raw
+    	    // type for the rule. I.e Class<?> will also be registered under bare Class.
+    	    if (containsWildCard)
+    	        getRulesList(pt.getRawType()).add(rule.getFunction());
+    	}
+
         return this;
     }
 

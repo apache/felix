@@ -71,7 +71,7 @@ public class OSGiRepositoryXMLTest extends TestCase {
     public void testIdentityCapabilityWithRelativePath() throws Exception {
         URL url = getClass().getResource("/spec_repository.xml");
         RepositoryAdminImpl repoAdmin = createRepositoryAdmin();
-        repoAdmin.addRepository(url);
+        RepositoryImpl repository = (RepositoryImpl) repoAdmin.addRepository(url);
 
         Resolver resolver = repoAdmin.resolver();
 
@@ -86,15 +86,17 @@ public class OSGiRepositoryXMLTest extends TestCase {
 
         org.apache.felix.bundlerepository.Resource[] resources = resolver.getAddedResources();
         assertNotNull(resources[0]);
-        String repostr = url.toExternalForm().substring(0, url.toExternalForm().lastIndexOf('/')+1);
-        assertEquals(repostr+"repo_files/test_file_6.jar", resources[0].getURI());
-   
+        
+        String repositoryUri = repository.getURI();
+        String baseUri = repositoryUri.substring(0, repositoryUri.lastIndexOf('/') + 1);
+        String resourceUri = new StringBuilder(baseUri).append("repo_files/test_file_6.jar").toString();
+        assertEquals(resourceUri, resources[0].getURI());
     }
 
     public void testIdentityCapabilityForZipWithRelativePath() throws Exception {
         URL url = getClass().getResource("/spec_repository.zip");
         RepositoryAdminImpl repoAdmin = createRepositoryAdmin();
-        repoAdmin.addRepository(url);
+        RepositoryImpl repository = (RepositoryImpl) repoAdmin.addRepository(url);
 
         Resolver resolver = repoAdmin.resolver();
 
@@ -109,9 +111,11 @@ public class OSGiRepositoryXMLTest extends TestCase {
 
         org.apache.felix.bundlerepository.Resource[] resources = resolver.getAddedResources();
         assertNotNull(resources[0]);
-        String repostr = url.toExternalForm().substring(0, url.toExternalForm().lastIndexOf('/')+1);
-        assertEquals("jar:"+ repostr+"spec_repository.zip!/repo_files/test_file_6.jar", resources[0].getURI());
-   
+        
+        String repositoryUri = repository.getURI();
+        String baseUri = new StringBuilder("jar:").append(repositoryUri).append("!/").toString();
+        String resourceUri = new StringBuilder(baseUri).append("repo_files/test_file_6.jar").toString();
+        assertEquals(resourceUri, resources[0].getURI());
     }
 
 

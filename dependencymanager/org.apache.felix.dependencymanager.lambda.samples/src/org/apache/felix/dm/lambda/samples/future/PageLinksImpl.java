@@ -53,7 +53,8 @@ public class PageLinksImpl implements PageLinks {
 	
 	void init(Component c) {
 	    // asynchronously download the content of the URL specified in the constructor.
-	    CompletableFuture<List<String>> futureLinks = CompletableFuture.supplyAsync(() -> download(m_url)) 
+	    CompletableFuture<List<String>> futureLinks = CompletableFuture
+	    	.supplyAsync(() -> download(m_url)) 
 	        .thenApply(this::parseLinks);	       
 
 	    // Add the future dependency so we'll be started once the CompletableFuture "futureLinks" has completed.

@@ -1,3 +1,21 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
 package test;
 
 import static org.junit.Assert.assertTrue;
@@ -13,6 +31,7 @@ import org.osgi.framework.ServiceReference;
 public class MultiPropertyFilterIndexReferencedTest {
 
 	
+	@SuppressWarnings("rawtypes")
 	@Test
 	public void noContext() {
 		MultiPropertyFilterIndex singleValueFilterIndex = new MultiPropertyFilterIndex("objectClass,!context");
@@ -38,6 +57,7 @@ public class MultiPropertyFilterIndexReferencedTest {
 	}
 	
 	
+	@SuppressWarnings("rawtypes")
 	@Test
 	public void noContextCid() {
 		MultiPropertyFilterIndex multiPropertyIndex_new = new MultiPropertyFilterIndex("objectClass,cid,!context");
@@ -72,6 +92,7 @@ public class MultiPropertyFilterIndexReferencedTest {
 	
 	
 
+	@SuppressWarnings("rawtypes")
 	@Test
 	public void singleKeyfilterIndex() {
 		MultiPropertyFilterIndex multiPropertyIndex = new MultiPropertyFilterIndex("objectClass");
@@ -110,6 +131,7 @@ public class MultiPropertyFilterIndexReferencedTest {
 		assertTrue(byClazzName.get(1).equals(ref3));
 	}
 	
+	@SuppressWarnings("rawtypes")
 	@Test
 	public void propertyIndexWithDoubleNoPermutationKeys() {
 		String filterConfig =  "objectClass,#related-concept-absoluteidentifier,#context-concept-absoluteidentifier,StoreClass";
@@ -133,6 +155,7 @@ public class MultiPropertyFilterIndexReferencedTest {
 		assertTrue(result_new.size() == 1);
 	}
 	
+	@SuppressWarnings("rawtypes")
 	@Test
 	public void propertyIndexWithDoubleMultiProperty() {
 		String filterConfig =  "objectClass,related-concept-absoluteidentifier,context-concept-absoluteidentifier,StoreClass";
@@ -158,6 +181,7 @@ public class MultiPropertyFilterIndexReferencedTest {
 	}
 	
 	
+	@SuppressWarnings("rawtypes")
 	@Test
 	public void MultiPropertyFilterIndexTypes() {
 		
@@ -189,6 +213,7 @@ public class MultiPropertyFilterIndexReferencedTest {
 		assertTrue(combi.size() == 1);
 	}
 	
+	@SuppressWarnings("rawtypes")
 	@Test
 	public void MultiPropertyFilterIndexKeyGen() {
 		String key = "(&(objectClass=org.acme.xyz.framework.internationalization.Translatable)(component-identifier=org.acme.xyz.framework.webui.engine.impl.CompoundProcessContextGroupingPanelFactory))";
@@ -212,6 +237,7 @@ public class MultiPropertyFilterIndexReferencedTest {
 	}
 	
 	
+	@SuppressWarnings("rawtypes")
 	class TestReference implements ServiceReference {
 		Properties props = new Properties();
 	

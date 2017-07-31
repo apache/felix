@@ -51,6 +51,8 @@ public class WorkerQueue implements Runnable {
                 this.tasks.add(r);
                 if ( this.backgroundThread == null ) {
                     this.backgroundThread = this.threadFactory.newThread(this);
+                    this.backgroundThread.setDaemon(true);
+                    this.backgroundThread.setName("Apache Felix Configurator Worker Thread");
                     this.backgroundThread.start();
                 }
             }

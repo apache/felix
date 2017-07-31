@@ -24,8 +24,6 @@ import java.util.Collection;
 import java.util.Map;
 import java.util.TreeMap;
 
-import org.apache.felix.configurator.impl.Util;
-
 /**
  * This object holds a sorted map of configurations
  */
@@ -62,7 +60,7 @@ public class AbstractState implements Serializable {
         if ( version < 1 || version > VERSION ) {
             throw new ClassNotFoundException(this.getClass().getName());
         }
-        Util.setField(this, "configurationsByPid", in.readObject());
+        ReflectionUtil.setField(this, "configurationsByPid", in.readObject());
     }
 
     public void add(final Config c) {

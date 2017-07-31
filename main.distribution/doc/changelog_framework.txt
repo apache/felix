@@ -1,3 +1,11 @@
+Changes from 5.6.4 to 5.6.6
+---------------------------
+
+** Bug
+    * [FELIX-5646] - Missing EE and system packages for Java 9
+    * [FELIX-5649] - Refreshing a fragment causes the framework to be restarted
+    * [FELIX-5652] - Felix Framework hangs on shutdown
+
 Changes from 5.6.2 to 5.6.4
 ---------------------------
 

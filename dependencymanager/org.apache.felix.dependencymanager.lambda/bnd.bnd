@@ -16,7 +16,7 @@
 #
 javac.source:          1.8
 javac.target:          1.8
-Bundle-Version: 1.1.0
+Bundle-Version: 1.1.1
 -buildpath: \
 	org.apache.felix.dependencymanager;version=latest,\
 	osgi.core;version=6.0,\
@@ -28,7 +28,4 @@ Export-Package: \
 -runfw: org.apache.felix.framework;version='[4.4.1,4.4.1]'
 -runee: JavaSE-1.8
 Private-Package: org.apache.felix.dm.lambda.impl
-Include-Resource: META-INF/=resources/LICENSE,\
- META-INF/=resources/NOTICE,\
- META-INF/=resources/DEPENDENCIES,\
- META-INF/=${workspace}/release/resources/changelog.txt
+Include-Resource: META-INF/=resources/

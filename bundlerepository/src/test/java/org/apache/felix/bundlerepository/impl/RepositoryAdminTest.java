@@ -24,6 +24,7 @@ import java.util.Hashtable;
 
 import junit.framework.TestCase;
 
+import org.apache.felix.bundlerepository.Repository;
 import org.apache.felix.bundlerepository.Resource;
 import org.apache.felix.utils.filter.FilterImpl;
 import org.apache.felix.utils.log.Logger;
@@ -54,6 +55,22 @@ public class RepositoryAdminTest extends TestCase
         resources = repoAdmin.discoverResources("(category*>dummy)");
         assertNotNull(resources);
         assertEquals(1, resources.length);
+    }
+    
+    public void testRemoveRepository() throws Exception {
+        URL url = getClass().getResource("/repo_for_resolvertest.xml");
+
+        RepositoryAdminImpl repoAdmin = createRepositoryAdmin();
+        Repository repository = repoAdmin.addRepository(url);
+        assertNotNull(repository);
+
+        String repositoryUri = repository.getURI();
+        assertNotNull(repositoryUri);
+
+        assertTrue(repoAdmin.removeRepository(repositoryUri));
+        for (Repository repo : repoAdmin.listRepositories()) {
+            assertNotSame(repositoryUri, repo.getURI());
+        }
     }
 
     private RepositoryAdminImpl createRepositoryAdmin() throws Exception

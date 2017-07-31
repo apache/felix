@@ -20,6 +20,7 @@ package org.apache.felix.bundlerepository.impl;
 
 import java.io.InputStream;
 import java.io.Reader;
+import java.net.URI;
 
 public abstract class RepositoryParser
 {
@@ -71,7 +72,7 @@ public abstract class RepositoryParser
     }
 
 
-    public abstract RepositoryImpl parseRepository(InputStream is, String repositoryURI) throws Exception;
+    public abstract RepositoryImpl parseRepository(InputStream is, URI baseUri) throws Exception;
 
     public abstract RepositoryImpl parseRepository(Reader r) throws Exception;
 

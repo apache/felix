@@ -21,6 +21,7 @@ package org.apache.felix.bundlerepository.impl;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.Reader;
+import java.net.URI;
 
 import org.kxml2.io.KXmlParser;
 import org.xmlpull.v1.XmlPullParser;
@@ -36,7 +37,7 @@ public class PullParser extends RepositoryParser
     {
     }
 
-    public RepositoryImpl parseRepository(InputStream is, String repositoryURI) throws Exception
+    public RepositoryImpl parseRepository(InputStream is, URI baseUri) throws Exception
     {
         XmlPullParser reader = new KXmlParser();
 
@@ -51,16 +52,15 @@ public class PullParser extends RepositoryParser
         }
 
         RepositoryImpl repo;
-        if ("http://www.osgi.org/xmlns/repository/v1.0.0".equals(reader.getNamespace()))
+        if ("http://www.osgi.org/xmlns/repository/v1.0.0".equals(reader.getNamespace())) {
             // TODO there are a bunch of other methods here that create a parser, should they be updated too?
             // at the very least they should be made namespace-aware too, so that parsing is the same no matter
             // how its initiated.
-            return SpecXMLPullParser.parse(reader, repositoryURI);
-        else
+            return SpecXMLPullParser.parse(reader, baseUri);
+        } else {
             // We're parsing the old
-            repo = parse(reader);
-            repo.setURI(repositoryURI);
-            return repo;
+            return parse(reader);
+        }
     }
 
     public RepositoryImpl parseRepository(Reader r) throws Exception

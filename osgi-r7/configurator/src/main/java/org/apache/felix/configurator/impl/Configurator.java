@@ -25,6 +25,7 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Enumeration;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
@@ -32,6 +33,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
 
+import org.apache.felix.configurator.impl.json.BinUtil;
 import org.apache.felix.configurator.impl.json.JSONUtil;
 import org.apache.felix.configurator.impl.logger.SystemLogger;
 import org.apache.felix.configurator.impl.model.BundleState;
@@ -46,6 +48,7 @@ import org.osgi.framework.BundleContext;
 import org.osgi.framework.BundleEvent;
 import org.osgi.framework.Constants;
 import org.osgi.framework.InvalidSyntaxException;
+import org.osgi.framework.ServicePermission;
 import org.osgi.framework.ServiceReference;
 import org.osgi.service.cm.Configuration;
 import org.osgi.service.cm.ConfigurationAdmin;
@@ -61,8 +64,6 @@ public class Configurator {
     private final BundleContext bundleContext;
 
     private final State state;
-
-    private final Set<String> activeEnvironments;
 
     private final org.osgi.util.tracker.BundleTracker<Bundle> tracker;
 
@@ -84,9 +85,14 @@ public class Configurator {
         this.queue = new WorkerQueue();
         this.bundleContext = bc;
         this.configAdminReferences = configAdminReferences;
-        this.activeEnvironments = Util.getActiveEnvironments(bc);
-        this.state = State.createOrReadState(bundleContext);
-        this.state.changeEnvironments(this.activeEnvironments);
+        State s = null;
+        try {
+            s = State.createOrReadState(bundleContext.getDataFile(State.FILE_NAME));
+        } catch ( final ClassNotFoundException | IOException e ) {
+            SystemLogger.error("Unable to read persisted state from " + State.FILE_NAME, e);
+            s = new State();
+        }
+        this.state = s;
         this.tracker = new org.osgi.util.tracker.BundleTracker<>(this.bundleContext,
                 Bundle.ACTIVE|Bundle.STARTING|Bundle.STOPPING|Bundle.RESOLVED|Bundle.INSTALLED,
 
@@ -102,8 +108,9 @@ public class Configurator {
 
                         @Override
                         public void run() {
-                            processAddBundle(bundle);
-                            process();
+                            if ( processAddBundle(bundle) ) {
+                                process();
+                            }
                         }
                     });
                 }
@@ -125,9 +132,9 @@ public class Configurator {
                         @Override
                         public void run() {
                             try {
-                                processRemoveBundle(bundle.getBundleId());
-                                process();
-                                Configurator.this.state.removeConfigAdminBundleId(bundle.getBundleId());
+                                if ( processRemoveBundle(bundle.getBundleId()) ) {
+                                    process();
+                                }
                             } catch ( final IllegalStateException ise) {
                                 SystemLogger.error("Error processing bundle " + getBundleIdentity(bundle), ise);
                             }
@@ -187,26 +194,26 @@ public class Configurator {
         if ( dirPath != null ) {
             final File dir = new File(dirPath);
             if ( dir.exists() && dir.isDirectory() ) {
-                Util.binDirectory = dir;
+                BinUtil.binDirectory = dir;
             } else if ( dir.exists() ) {
                 SystemLogger.error("Directory property is pointing at a file not a dir: " + dirPath + ". Using default path.");
             } else {
                 try {
                     if ( dir.mkdirs() ) {
-                        Util.binDirectory = dir;
+                        BinUtil.binDirectory = dir;
                     }
                 } catch ( final SecurityException se ) {
                     // ignore
                 }
-                if ( Util.binDirectory == null ) {
+                if ( BinUtil.binDirectory == null ) {
                     SystemLogger.error("Unable to create a directory at: " + dirPath + ". Using default path.");
                 }
             }
         }
-        if ( Util.binDirectory == null ) {
-            Util.binDirectory = this.bundleContext.getDataFile("binaries" + File.separatorChar + ".check");
-            Util.binDirectory = Util.binDirectory.getParentFile();
-            Util.binDirectory.mkdirs();
+        if ( BinUtil.binDirectory == null ) {
+            BinUtil.binDirectory = this.bundleContext.getDataFile("binaries" + File.separatorChar + ".check");
+            BinUtil.binDirectory = BinUtil.binDirectory.getParentFile();
+            BinUtil.binDirectory.mkdirs();
         }
 
         // before we start the tracker we process all available bundles and initial configuration
@@ -228,10 +235,12 @@ public class Configurator {
                     } catch (final MalformedURLException e) {
                     }
                     if ( url != null ) {
-                        final String contents = Util.getResource(urlString, url);
-                        if ( contents != null ) {
+                        try {
+                            final String contents = JSONUtil.getResource(urlString, url);
                             files.put(urlString, contents);
                             hashes.add(Util.getSHA256(contents.trim()));
+                        } catch ( final IOException ioe ) {
+                            SystemLogger.error("Unable to read " + urlString, ioe);
                         }
                     }
                 }
@@ -240,20 +249,23 @@ public class Configurator {
                 hashes.add(Util.getSHA256(initial.trim()));
                 files.put(ConfiguratorConstants.CONFIGURATOR_INITIAL, initial);
             }
-            if ( state.getInitialHashes() != null && state.getInitialHashes().equals(hashes)) {
-                if ( state.environmentsChanged() ) {
-                    state.checkEnvironments(-1);
-                }
-            } else {
+            if ( state.getInitialHashes() == null || !state.getInitialHashes().equals(hashes)) {
                 if ( state.getInitialHashes() != null ) {
                     processRemoveBundle(-1);
                 }
+                final JSONUtil.Report report = new JSONUtil.Report();
                 final List<ConfigurationFile> allFiles = new ArrayList<>();
                 for(final Map.Entry<String, String> entry : files.entrySet()) {
-                    final ConfigurationFile file = org.apache.felix.configurator.impl.json.JSONUtil.readJSON(null, entry.getKey(), null, -1, entry.getValue());
+                    final ConfigurationFile file = org.apache.felix.configurator.impl.json.JSONUtil.readJSON(null, entry.getKey(), null, -1, entry.getValue(), report);
                     if ( file != null ) {
                         allFiles.add(file);
                     }
+                }
+                for(final String w : report.warnings) {
+                    SystemLogger.warning(w);
+                }
+                for(final String e : report.errors) {
+                    SystemLogger.error(e);
                 }
                 final BundleState bState = new BundleState();
                 bState.addFiles(allFiles);
@@ -280,40 +292,76 @@ public class Configurator {
         this.tracker.open();
     }
 
-    public void processAddBundle(final Bundle bundle) {
+    public boolean processAddBundle(final Bundle bundle) {
+        final long bundleId = bundle.getBundleId();
+        final long bundleLastModified = bundle.getLastModified();
+
+        final Long lastModified = state.getLastModified(bundleId);
+        if ( lastModified != null && lastModified.longValue() == bundleLastModified ) {
+            // no changes, nothing to do
+            return false;
+        }
+
+        BundleState config = null;
         try {
-            final long bundleId = bundle.getBundleId();
-            final long bundleLastModified = bundle.getLastModified();
-            final Long lastModified = state.getLastModified(bundleId);
-            if ( lastModified != null && lastModified.longValue() == bundleLastModified ) {
-                if ( state.environmentsChanged() ) {
-                    state.checkEnvironments(bundleId);
-                }
-                // no changes, nothing to do
-                return;
-            }
-            if ( lastModified != null ) {
-                processRemoveBundle(bundleId);
-            }
             final Set<String> paths = Util.isConfigurerBundle(bundle, this.bundleContext.getBundle().getBundleId());
             if ( paths != null ) {
-                final BundleState config = JSONUtil.readConfigurationsFromBundle(bundle, paths);
-                for(final String pid : config.getPids()) {
-                    state.addAll(pid, config.getConfigurations(pid));
+                final JSONUtil.Report report = new JSONUtil.Report();
+                config = JSONUtil.readConfigurationsFromBundle(new BinUtil.ResourceProvider() {
+
+                    @Override
+                    public String getIdentifier() {
+                        return bundle.toString();
+                    }
+
+                    @Override
+                    public URL getEntry(String path) {
+                        return bundle.getEntry(path);
+                    }
+
+                    @Override
+                    public long getBundleId() {
+                        return bundle.getBundleId();
+                    }
+
+                    @Override
+                    public Enumeration<URL> findEntries(String path, String filePattern) {
+                        return bundle.findEntries(path, filePattern, false);
+                    }
+                }, paths, report);
+                for(final String w : report.warnings) {
+                    SystemLogger.warning(w);
+                }
+                for(final String e : report.errors) {
+                    SystemLogger.error(e);
                 }
             }
-            state.setLastModified(bundleId, bundleLastModified);
         } catch ( final IllegalStateException ise) {
             SystemLogger.error("Error processing bundle " + getBundleIdentity(bundle), ise);
         }
+        if ( lastModified != null ) {
+            processRemoveBundle(bundleId);
+        }
+        if ( config != null ) {
+            for(final String pid : config.getPids()) {
+                state.addAll(pid, config.getConfigurations(pid));
+            }
+            state.setLastModified(bundleId, bundleLastModified);
+            return true;
+        }
+        return lastModified != null;
     }
 
-    public void processRemoveBundle(final long bundleId) {
-        state.removeLastModified(bundleId);
-        for(final String pid : state.getPids()) {
-            final ConfigList configList = state.getConfigurations(pid);
-            configList.uninstall(bundleId);
+    public boolean processRemoveBundle(final long bundleId) {
+        if ( state.getLastModified(bundleId) != null ) {
+            state.removeLastModified(bundleId);
+            for(final String pid : state.getPids()) {
+                final ConfigList configList = state.getConfigurations(pid);
+                configList.uninstall(bundleId);
+            }
+            return true;
         }
+        return false;
     }
 
     /**
@@ -334,18 +382,44 @@ public class Configurator {
             coordination = CoordinatorUtil.getCoordination(localCoordinator);
         }
 
+        boolean retry = false;
         try {
             for(final String pid : state.getPids()) {
                 final ConfigList configList = state.getConfigurations(pid);
 
                 if ( configList.hasChanges() ) {
-                    process(configList);
-                    State.writeState(this.bundleContext, state);
+                    if ( process(configList) ) {
+                        try {
+                            State.writeState(this.bundleContext.getDataFile(State.FILE_NAME), state);
+                        } catch ( final IOException ioe) {
+                            SystemLogger.error("Unable to persist state to " + State.FILE_NAME, ioe);
+                        }
+                    } else {
+                        retry = true;
+                    }
                 }
             }
+
         } finally {
             if ( coordination != null ) {
                 CoordinatorUtil.endCoordination(coordination);
+            }
+        }
+        if ( !retry ) {
+            // check whether there is a stale config admin bundle id
+            boolean changed = false;
+            for(final Long bundleId : this.state.getBundleIdsUsingConfigAdmin()) {
+                if ( this.state.getLastModified(bundleId) == null ) {
+                    this.state.removeConfigAdminBundleId(bundleId);
+                    changed = true;
+                }
+            }
+            if ( changed ) {
+                try {
+                    State.writeState(this.bundleContext.getDataFile(State.FILE_NAME), state);
+                } catch ( final IOException ioe) {
+                    SystemLogger.error("Unable to persist state to " + State.FILE_NAME, ioe);
+                }
             }
         }
     }
@@ -360,41 +434,30 @@ public class Configurator {
         Config toDeactivate = null;
 
         for(final Config cfg : configList) {
-            final boolean canBeActive = cfg.isActive(activeEnvironments);
-
             switch ( cfg.getState() ) {
-            case INSTALL     : // activate if first found
-                if ( canBeActive && toActivate == null ) {
-                    toActivate = cfg;
-                }
-                break;
+                case INSTALL     : // activate if first found
+                    if ( toActivate == null ) {
+                        toActivate = cfg;
+                    }
+                    break;
 
-            case IGNORED     : // same as installed
-            case INSTALLED   : // check if we have to uninstall
-                if ( canBeActive ) {
+                case IGNORED     : // same as installed
+                case INSTALLED   : // check if we have to uninstall
                     if ( toActivate == null ) {
                         toActivate = cfg;
                     } else {
                         cfg.setState(ConfigState.INSTALL);
                     }
-                } else {
-                    if ( toDeactivate == null ) { // this should always be null
-                        cfg.setState(ConfigState.UNINSTALL);
-                        toDeactivate = cfg;
-                    } else {
-                        cfg.setState(ConfigState.UNINSTALLED);
+                    break;
+
+                case UNINSTALL   : // deactivate if first found (we should only find one anyway)
+                    if ( toDeactivate == null ) {
+                       toDeactivate = cfg;
                     }
-                }
-                break;
+                    break;
 
-            case UNINSTALL   : // deactivate if first found (we should only find one anyway)
-                if ( toDeactivate == null ) {
-                    toDeactivate = cfg;
-                }
-                break;
-
-            case UNINSTALLED : // nothing to do
-                break;
+                case UNINSTALLED : // nothing to do
+                    break;
             }
 
         }
@@ -467,21 +530,24 @@ public class Configurator {
         if ( configAdminServiceBundleId == null ) {
             final Bundle configBundle = cfg.getBundleId() == -1 ? this.bundleContext.getBundle() : this.bundleContext.getBundle(Constants.SYSTEM_BUNDLE_LOCATION).getBundleContext().getBundle(cfg.getBundleId());
             if ( configBundle != null ) {
-                try {
-                    final Collection<ServiceReference<ConfigurationAdmin>> refs = configBundle.getBundleContext().getServiceReferences(ConfigurationAdmin.class, null);
-                    final List<ServiceReference<ConfigurationAdmin>> sortedRefs = new ArrayList<>(refs);
-                    Collections.sort(sortedRefs);
-                    for(int i=sortedRefs.size();i>0;i--) {
-                        final ServiceReference<ConfigurationAdmin> r = sortedRefs.get(i-1);
-                        synchronized ( this.configAdminReferences ) {
-                            if ( this.configAdminReferences.contains(r) ) {
-                                configAdminServiceBundleId = r.getBundle().getBundleId();
-                                break;
+                if ( System.getSecurityManager() == null
+                     || configBundle.hasPermission( new ServicePermission(ConfigurationAdmin.class.getName(), ServicePermission.GET)) ) {
+                    try {
+                        final Collection<ServiceReference<ConfigurationAdmin>> refs = configBundle.getBundleContext().getServiceReferences(ConfigurationAdmin.class, null);
+                        final List<ServiceReference<ConfigurationAdmin>> sortedRefs = new ArrayList<>(refs);
+                        Collections.sort(sortedRefs);
+                        for(int i=sortedRefs.size();i>0;i--) {
+                            final ServiceReference<ConfigurationAdmin> r = sortedRefs.get(i-1);
+                            synchronized ( this.configAdminReferences ) {
+                                if ( this.configAdminReferences.contains(r) ) {
+                                    configAdminServiceBundleId = r.getBundle().getBundleId();
+                                    break;
+                                }
                             }
                         }
+                    } catch (final InvalidSyntaxException e) {
+                        // this can never happen as we pass {@code null} as the filter
                     }
-                } catch (final InvalidSyntaxException e) {
-                    // this can never happen as we pass {@code null} as the filter
                 }
             }
         }

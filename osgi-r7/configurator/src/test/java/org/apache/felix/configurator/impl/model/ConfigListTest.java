@@ -24,7 +24,6 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
-import java.util.Collections;
 import java.util.Iterator;
 
 import org.junit.Test;
@@ -34,9 +33,9 @@ public class ConfigListTest {
     @Test public void testReadWrite() throws Exception {
         final ConfigList list = new ConfigList();
 
-        final Config c1 = new Config("a", Collections.singleton("e1"),
+        final Config c1 = new Config("a",
                 null, 10, 0, ConfigPolicy.DEFAULT);
-        final Config c2 = new Config("a", Collections.singleton("e1"),
+        final Config c2 = new Config("a",
                 null, 10, 50, ConfigPolicy.DEFAULT);
         list.add(c1);
         list.add(c2);
@@ -55,12 +54,12 @@ public class ConfigListTest {
 
     @Test public void testRanking() {
         final ConfigList list = new ConfigList();
-        final Config c1 = new Config("a", Collections.emptySet(), null, 1,  0, ConfigPolicy.DEFAULT);
-        final Config c2 = new Config("a", Collections.emptySet(), null, 1, 10, ConfigPolicy.DEFAULT);
-        final Config c3 = new Config("a", Collections.emptySet(), null, 1,  0, ConfigPolicy.DEFAULT);
-        final Config c4 = new Config("a", Collections.emptySet(), null, 1, 50, ConfigPolicy.DEFAULT);
-        final Config c5 = new Config("a", Collections.emptySet(), null, 1, 20, ConfigPolicy.DEFAULT);
-        final Config c6 = new Config("a", Collections.emptySet(), null, 1, 10, ConfigPolicy.DEFAULT);
+        final Config c1 = new Config("a", null, 1,  0, ConfigPolicy.DEFAULT);
+        final Config c2 = new Config("a", null, 1, 10, ConfigPolicy.DEFAULT);
+        final Config c3 = new Config("a", null, 1,  0, ConfigPolicy.DEFAULT);
+        final Config c4 = new Config("a", null, 1, 50, ConfigPolicy.DEFAULT);
+        final Config c5 = new Config("a", null, 1, 20, ConfigPolicy.DEFAULT);
+        final Config c6 = new Config("a", null, 1, 10, ConfigPolicy.DEFAULT);
 
         list.add(c1);
         list.add(c2);
@@ -81,8 +80,8 @@ public class ConfigListTest {
 
     @Test public void testDifferentBundleIds() {
         final ConfigList list = new ConfigList();
-        final Config c1 = new Config("a", Collections.emptySet(), null, 2, 10, ConfigPolicy.DEFAULT);
-        final Config c2 = new Config("a", Collections.emptySet(), null, 1, 10, ConfigPolicy.DEFAULT);
+        final Config c1 = new Config("a", null, 2, 10, ConfigPolicy.DEFAULT);
+        final Config c2 = new Config("a", null, 1, 10, ConfigPolicy.DEFAULT);
 
         list.add(c1);
         list.add(c2);

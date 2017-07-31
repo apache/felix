@@ -47,7 +47,7 @@ import org.osgi.util.converter.Converter;
 import org.osgi.util.converter.Converting;
 import org.osgi.util.converter.TypeReference;
 
-public class ConvertingImpl implements Converting, InternalConverting {
+public class ConvertingImpl extends AbstractSpecifying<Converting> implements Converting, InternalConverting {
     private static final Map<Class<?>, Class<?>> INTERFACE_IMPLS;
     static {
         Map<Class<?>, Class<?>> m = new HashMap<>();
@@ -64,25 +64,16 @@ public class ConvertingImpl implements Converting, InternalConverting {
 
     volatile InternalConverter converter;
     private volatile Object object;
-    private volatile Object defaultValue;
-    private volatile boolean hasDefault = false;
-    private volatile boolean keysIgnoreCase = false;
     volatile Class<?> sourceClass;
-    volatile Class<?> sourceAsClass;
     private volatile Class<?> targetClass;
-    private volatile Class<?> targetAsClass;
     volatile Type[] typeArguments;
-    private volatile boolean forceCopy = false;
-    private volatile boolean sourceAsJavaBean = false;
-    private volatile boolean targetAsJavaBean = false;
-    private volatile boolean sourceAsDTO = false;
-    private volatile boolean targetAsDTO = false;
 
     ConvertingImpl(InternalConverter c, Object obj) {
         converter = c;
         object = obj;
     }
 
+    /*
     @Override
     public Converting sourceAs(Class<?> cls) {
         sourceAsClass = cls;
@@ -128,12 +119,6 @@ public class ConvertingImpl implements Converting, InternalConverting {
     }
 
     @Override
-    public Converting copy() {
-        forceCopy  = true;
-        return this;
-    }
-
-    @Override
     public Converting defaultValue(Object defVal) {
         defaultValue = defVal;
         hasDefault = true;
@@ -147,6 +132,7 @@ public class ConvertingImpl implements Converting, InternalConverting {
 
         return this;
     }
+    */
 
     @Override
     public void setConverter(Converter c) {
@@ -216,9 +202,11 @@ public class ConvertingImpl implements Converting, InternalConverting {
 
         // At this point we know that the target is a 'singular' type: not a map, collection or array
         if (Collection.class.isAssignableFrom(sourceClass)) {
-            return convertCollectionToSingleValue(cls);
+            return convertCollectionToSingleValue(targetAsClass);
+        } else if (object instanceof Map.Entry) {
+            return convertMapEntryToSingleValue(targetAsClass);
         } else if ((object = asBoxedArray(object)) instanceof Object[]) {
-            return convertArrayToSingleValue(cls);
+            return convertArrayToSingleValue(targetAsClass);
         }
 
         Object res2 = tryStandardMethods();
@@ -246,6 +234,30 @@ public class ConvertingImpl implements Converting, InternalConverting {
             return null;
         else
             return converter.convert(coll.iterator().next()).to(cls);
+    }
+
+    @SuppressWarnings("rawtypes")
+    private Object convertMapEntryToSingleValue(Class<?> cls) {
+        Map.Entry entry = (Map.Entry) object;
+
+        Class keyCls = entry.getKey() != null ? entry.getKey().getClass() : null;
+        Class valueCls = entry.getValue() != null ? entry.getValue().getClass() : null;
+
+        if (cls.equals(keyCls)) {
+            return converter.convert(entry.getKey()).to(cls);
+        } else if (cls.equals(valueCls)) {
+            return converter.convert(entry.getValue()).to(cls);
+        } else if (cls.isAssignableFrom(keyCls)) {
+            return converter.convert(entry.getKey()).to(cls);
+        } else if (cls.isAssignableFrom(valueCls)) {
+            return converter.convert(entry.getValue()).to(cls);
+        } else if (entry.getKey() instanceof String) {
+            return converter.convert(entry.getKey()).to(cls);
+        } else if (entry.getValue() instanceof String) {
+            return converter.convert(entry.getValue()).to(cls);
+        }
+
+        return converter.convert(converter.convert(entry.getKey()).to(String.class)).to(cls);
     }
 
     @SuppressWarnings("unchecked")
@@ -551,15 +563,8 @@ public class ConvertingImpl implements Converting, InternalConverting {
             // This is not a primitive, just return null
             return null;
         }
-        if (cls.equals(boolean.class)) {
-            return false;
-        } else if (cls.equals(long.class) ) {
-            return 0L;
-        } else if (cls.equals(double.class) ) {
-            return 0.0;
-        }
 
-        return 0;
+        return converter.convert(0).to(cls);
     }
 
     private static boolean isMapType(Class<?> cls, boolean asJavaBean) {

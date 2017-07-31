@@ -28,6 +28,7 @@ import java.util.Set;
 import org.apache.felix.framework.util.Util;
 import org.apache.felix.framework.wiring.BundleWireImpl;
 import org.osgi.framework.Bundle;
+import org.osgi.framework.namespace.HostNamespace;
 import org.osgi.framework.wiring.BundleCapability;
 import org.osgi.framework.wiring.BundleRevision;
 import org.osgi.framework.wiring.BundleRevisions;
@@ -170,7 +171,10 @@ class BundleRevisionDependencies
                 {
                     for (BundleWire bw : wiring.getRequiredWires(null))
                     {
-                        result.add(((BundleWireImpl) bw).getProvider().getBundle());
+                        if (HostNamespace.HOST_NAMESPACE.equals(bw.getCapability().getNamespace()))
+                        {
+                            result.add(bw.getProvider().getBundle());
+                        }
                     }
                 }
             }

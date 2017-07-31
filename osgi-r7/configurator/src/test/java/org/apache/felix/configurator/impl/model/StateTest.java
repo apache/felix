@@ -24,7 +24,6 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
-import java.util.Collections;
 
 import org.junit.Test;
 
@@ -33,8 +32,8 @@ public class StateTest {
     @Test public void testReadWrite() throws Exception {
         final State state = new State();
 
-        final Config c1 = new Config("a", Collections.emptySet(), null, 1,  0, ConfigPolicy.DEFAULT);
-        final Config c2 = new Config("b", Collections.emptySet(), null, 1, 10, ConfigPolicy.DEFAULT);
+        final Config c1 = new Config("a", null, 1,  0, ConfigPolicy.DEFAULT);
+        final Config c2 = new Config("b", null, 1, 10, ConfigPolicy.DEFAULT);
 
         state.add(c1);
         state.add(c2);
@@ -60,8 +59,8 @@ public class StateTest {
 
     @Test public void testDifferentPids() {
         final State state = new State();
-        final Config c1 = new Config("a", Collections.emptySet(), null, 1,  0, ConfigPolicy.DEFAULT);
-        final Config c2 = new Config("b", Collections.emptySet(), null, 1, 10, ConfigPolicy.DEFAULT);
+        final Config c1 = new Config("a", null, 1,  0, ConfigPolicy.DEFAULT);
+        final Config c2 = new Config("b", null, 1, 10, ConfigPolicy.DEFAULT);
 
         state.add(c1);
         state.add(c2);

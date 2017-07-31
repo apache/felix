@@ -49,7 +49,7 @@ public class Activator extends DependencyManagerActivator {
         aspect(DictionaryService.class, aspect -> aspect
             .impl(DictionaryAspect.class)
             .filter("(lang=en)").rank(10)
-            .withCnf(conf -> conf.update(DictionaryAspectConfiguration.class, DictionaryAspect::addWords))
+            .withCnf(cnf -> cnf.update(DictionaryAspectConfiguration.class, DictionaryAspect::addWords))
             .withSvc(LogService.class, true));
                     
         // Create the SpellChecker component. It depends on all available DictionaryService instances, possibly

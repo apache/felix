@@ -30,11 +30,9 @@ import org.osgi.service.http.runtime.HttpServiceRuntime;
 import org.osgi.service.http.runtime.dto.FailedErrorPageDTO;
 import org.osgi.service.http.runtime.dto.FailedFilterDTO;
 import org.osgi.service.http.runtime.dto.FailedListenerDTO;
-import org.osgi.service.http.runtime.dto.FailedPreprocessorDTO;
 import org.osgi.service.http.runtime.dto.FailedResourceDTO;
 import org.osgi.service.http.runtime.dto.FailedServletContextDTO;
 import org.osgi.service.http.runtime.dto.FailedServletDTO;
-import org.osgi.service.http.runtime.dto.PreprocessorDTO;
 import org.osgi.service.http.runtime.dto.RuntimeDTO;
 import org.osgi.service.http.runtime.dto.ServletContextDTO;
 
@@ -55,7 +53,6 @@ public final class RuntimeDTOBuilder
         final RuntimeDTO runtimeDTO = new RuntimeDTO();
         runtimeDTO.serviceDTO = createServiceDTO();
         runtimeDTO.servletContextDTOs = createContextDTOs();
-        runtimeDTO.preprocessorDTOs = createPreprocessorDTOs();
 
         runtimeDTO.failedErrorPageDTOs = registry.getFailedDTOHolder().failedErrorPageDTOs.toArray(new FailedErrorPageDTO[registry.getFailedDTOHolder().failedErrorPageDTOs.size()]);
         runtimeDTO.failedFilterDTOs = registry.getFailedDTOHolder().failedFilterDTOs.toArray(new FailedFilterDTO[registry.getFailedDTOHolder().failedFilterDTOs.size()]);
@@ -63,7 +60,6 @@ public final class RuntimeDTOBuilder
         runtimeDTO.failedResourceDTOs = registry.getFailedDTOHolder().failedResourceDTOs.toArray(new FailedResourceDTO[registry.getFailedDTOHolder().failedResourceDTOs.size()]);
         runtimeDTO.failedServletContextDTOs = registry.getFailedDTOHolder().failedServletContextDTOs.toArray(new FailedServletContextDTO[registry.getFailedDTOHolder().failedServletContextDTOs.size()]);
         runtimeDTO.failedServletDTOs = registry.getFailedDTOHolder().failedServletDTOs.toArray(new FailedServletDTO[registry.getFailedDTOHolder().failedServletDTOs.size()]);
-        runtimeDTO.failedPreprocessorDTOs = registry.getFailedDTOHolder().failedPreprocessorDTOs.toArray(new FailedPreprocessorDTO[registry.getFailedDTOHolder().failedPreprocessorDTOs.size()]);
 
         return runtimeDTO;
     }
@@ -101,11 +97,5 @@ public final class RuntimeDTOBuilder
     {
         final Collection<ServletContextDTO> contexts = registry.getServletContextDTOs();
         return contexts.toArray(new ServletContextDTO[contexts.size()]);
-    }
-
-    private PreprocessorDTO[] createPreprocessorDTOs()
-    {
-        final Collection<PreprocessorDTO> dtos = registry.getPreprocessorDTOs();
-        return dtos.toArray(new PreprocessorDTO[dtos.size()]);
     }
 }

@@ -15,15 +15,14 @@
  * limitations under the License.
  */
 
-This sample provides a DM Activator declaring one service consumer and a service provider. The
-ServiceConsumer is also depending on a configuration pid  (see org.apache.felix.dependencymanager.samples.hello.Configurator).
-To see logs, just type this under gogo shell:
+This sample provides a DM Activator declaring an "HelloService" on which an HelloClient component is depending on.
+The HelloClient component also optionally depends on the LogService, which is injected as a NullObject in case
+no LogService is currently available.
 
-g! log info|grep hello.annot
+Run the hello.bndrun and you should see the following output:
 
-and you should see the following logs:
-
-2016.02.01 10:12:02 INFO - Bundle: org.apache.felix.dependencymanager.lambda.samples.hello - ServiceProviderImpl.hello
-2016.02.01 10:12:02 INFO - Bundle: org.apache.felix.dependencymanager.lambda.samples.hello - ServiceConsumer.start: calling service.hello()
+Hello service starting
+HelloClient bound with HelloService.
+hello !
 
 

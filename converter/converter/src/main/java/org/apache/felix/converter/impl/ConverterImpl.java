@@ -29,12 +29,18 @@ import java.util.UUID;
 import java.util.regex.Pattern;
 
 import org.osgi.util.converter.ConverterBuilder;
+import org.osgi.util.converter.Functioning;
 import org.osgi.util.converter.Rule;
 
 public class ConverterImpl implements InternalConverter {
     @Override
     public InternalConverting convert(Object obj) {
         return new ConvertingImpl(this, obj);
+    }
+
+    @Override
+    public Functioning function() {
+        return new FunctioningImpl(this);
     }
 
     public void addStandardRules(ConverterBuilder cb) {
@@ -46,9 +52,13 @@ public class ConverterImpl implements InternalConverter {
         }) {});
         cb.rule(new Rule<Calendar,Long>(f -> f.getTime().getTime()) {});
         cb.rule(new Rule<Long,Calendar>(f -> new Calendar.Builder().setInstant(f).build()) {});
+
         cb.rule(new Rule<Character,Boolean>(c -> c.charValue() != 0) {});
         cb.rule(new Rule<Boolean,Character>(b -> b.booleanValue() ? (char) 1 : (char) 0) {});
+        cb.rule(new Rule<Character,Integer>(c -> (int) c.charValue()) {});
+        cb.rule(new Rule<Character,Long>(c -> (long) c.charValue()) {});
         cb.rule(new Rule<String,Character>(f -> f.length() > 0 ? f.charAt(0) : 0) {});
+
         cb.rule(new Rule<String,Class<?>>(this::loadClassUnchecked) {});
         cb.rule(new Rule<Date,Long>(Date::getTime) {});
         cb.rule(new Rule<Long,Date>(f -> new Date(f)) {});
@@ -62,6 +72,37 @@ public class ConverterImpl implements InternalConverter {
         cb.rule(new Rule<String, Pattern>(Pattern::compile) {});
         cb.rule(new Rule<String, UUID>(UUID::fromString) {});
         cb.rule(new Rule<String, ZonedDateTime>(ZonedDateTime::parse) {});
+
+        // Special conversions between character arrays and String
+        cb.rule(new Rule<char[], String>(this::charArrayToString) {});
+        cb.rule(new Rule<Character[], String>(this::characterArrayToString) {});
+        cb.rule(new Rule<String, char[]>(this::stringToCharArray) {});
+        cb.rule(new Rule<String, Character[]>(this::stringToCharacterArray) {});
+    }
+
+    private String charArrayToString(char[] ca) {
+        StringBuilder sb = new StringBuilder(ca.length);
+        for (char c : ca) {
+            sb.append(c);
+        }
+        return sb.toString();
+    }
+
+    private String characterArrayToString(Character[] ca) {
+        return charArrayToString(convert(ca).to(char[].class));
+    }
+
+    private char[] stringToCharArray(String s) {
+        char[] ca = new char[s.length()];
+
+        for (int i=0; i<s.length(); i++) {
+            ca[i] = s.charAt(i);
+        }
+        return ca;
+    }
+
+    private Character[] stringToCharacterArray(String s) {
+        return convert(stringToCharArray(s)).to(Character[].class);
     }
 
     private Class<?> loadClassUnchecked(String className) {

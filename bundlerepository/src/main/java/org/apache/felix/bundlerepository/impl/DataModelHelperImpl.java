@@ -91,7 +91,6 @@ public class DataModelHelperImpl implements DataModelHelper
     public Repository repository(final URL url) throws Exception
     {
         InputStream is = null;
-        BufferedReader br = null;
 
         try
         {
@@ -132,13 +131,19 @@ public class DataModelHelperImpl implements DataModelHelper
 
             if (is != null)
             {
-                String repostr = url.toExternalForm();
-                if (repostr.endsWith("zip")) {
-                    repostr = "jar:".concat(repostr).concat("!/");
-                } else if (repostr.endsWith(".xml")) {
-                    repostr = repostr.substring(0, repostr.lastIndexOf('/')+1);
+                String repositoryUri = url.toExternalForm();
+                String baseUri;
+                if (repositoryUri.endsWith(".zip")) {
+                    baseUri = new StringBuilder("jar:").append(repositoryUri).append("!/").toString();
+                } else if (repositoryUri.endsWith(".xml")) {
+                    baseUri = repositoryUri.substring(0, repositoryUri.lastIndexOf('/') + 1);
+                } else {
+                    baseUri = repositoryUri;
                 }
-                return repository(is, repostr);
+                RepositoryImpl repository = repository(is, URI.create(baseUri));
+                repository.setURI(repositoryUri);
+
+                return repository;
             }
             else
             {
@@ -162,10 +167,10 @@ public class DataModelHelperImpl implements DataModelHelper
         }
     }
 
-    public RepositoryImpl repository(InputStream is, String uri) throws Exception
+    public RepositoryImpl repository(InputStream is, URI baseURI) throws Exception
     {
         RepositoryParser parser = RepositoryParser.getParser();
-        RepositoryImpl repository = parser.parseRepository(is, uri);
+        RepositoryImpl repository = parser.parseRepository(is, baseURI);
         
         return repository;
     }

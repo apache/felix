@@ -39,15 +39,10 @@ import org.apache.felix.dm.impl.ResourceAdapterImpl;
 import org.apache.felix.dm.impl.ResourceDependencyImpl;
 import org.apache.felix.dm.impl.ServiceDependencyImpl;
 import org.apache.felix.dm.impl.TemporalServiceDependencyImpl;
-import org.apache.felix.dm.impl.index.AdapterFilterIndex;
-import org.apache.felix.dm.impl.index.AspectFilterIndex;
 import org.apache.felix.dm.impl.index.ServiceRegistryCache;
-import org.apache.felix.dm.impl.index.multiproperty.MultiPropertyFilterIndex;
+import org.apache.felix.dm.impl.index.ServiceRegistryCacheManager;
 import org.apache.felix.dm.impl.metatype.PropertyMetaDataImpl;
-import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
-import org.osgi.framework.BundleException;
-import org.osgi.framework.FrameworkUtil;
 
 /**
  * The dependency manager manages all components and their dependencies. Using 
@@ -74,41 +69,7 @@ public class DependencyManager {
     private final Logger m_logger;
     private final ConcurrentHashMap<Component, Component> m_components = new ConcurrentHashMap<>();
 
-    // service registry cache
-    private static ServiceRegistryCache m_serviceRegistryCache;
     private static final Set<WeakReference<DependencyManager>> m_dependencyManagers = new HashSet<>();
-    static {
-        try {
-	    	Bundle bundle = FrameworkUtil.getBundle(DependencyManager.class);
-	        if (bundle != null) {
-	            if (bundle.getState() != Bundle.ACTIVE) {	        
-	                bundle.start();
-	            }
-	            BundleContext bundleContext = bundle.getBundleContext();
-	            String index = bundleContext.getProperty(SERVICEREGISTRY_CACHE_INDICES);
-	            if (index != null) {
-	            	m_serviceRegistryCache = new ServiceRegistryCache(bundleContext);
-	            	m_serviceRegistryCache.open(); // TODO close it somewhere
-	            	String[] props = index.split(";");
-	            	for (int i = 0; i < props.length; i++) {
-	            		if (props[i].equals("*aspect*")) {
-	            			m_serviceRegistryCache.addFilterIndex(new AspectFilterIndex());
-	            		}
-	            		else if (props[i].equals("*adapter*")) {
-	            			m_serviceRegistryCache.addFilterIndex(new AdapterFilterIndex());
-	            		}
-	            		else {
-	            			m_serviceRegistryCache.addFilterIndex(new MultiPropertyFilterIndex(props[i]));
-	            		}
-	            	}
-	            }
-	        }
-        }
-        catch (BundleException e) {
-        	// if we cannot start ourselves, we cannot use the indices
-        	e.printStackTrace();
-        }
-    }
 
     /**
      * Creates a new dependency manager. You need to supply the
@@ -837,8 +798,9 @@ public class DependencyManager {
     }
 
     private BundleContext createContext(BundleContext context) {
-        if (m_serviceRegistryCache != null) {
-            return m_serviceRegistryCache.createBundleContextInterceptor(context);
+    	ServiceRegistryCache cache = ServiceRegistryCacheManager.getCache();
+        if (cache != null) {
+            return cache.createBundleContextInterceptor(context);
         }
         else {
             return context;

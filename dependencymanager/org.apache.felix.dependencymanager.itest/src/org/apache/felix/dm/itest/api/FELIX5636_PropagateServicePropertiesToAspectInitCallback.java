@@ -77,7 +77,7 @@ public class FELIX5636_PropagateServicePropertiesToAspectInitCallback extends Te
 	}
 	
 	public static class C {
-		void bind(X x, Map props) {
+		void bind(X x, Map<String, Object> props) {
 			System.out.println("C.bind(" + x + ", " + props);
 		}
 	}

@@ -45,7 +45,7 @@ public class Activator extends DependencyManagerActivator {
     public void init(BundleContext ctx, DependencyManager dm) throws Exception {
     	out.println("type \"log warn\" to see the logs emitted by this test.");
 
-    	// Create the Factory used to instantiate ProvuderImpl, ProviderComposite1 and ProviderComposite2
+    	// Create the Factory used to instantiate ProviderImpl, ProviderComposite1 and ProviderComposite2
         ProviderFactory factory = new ProviderFactory();
                 
         // Define the component which implementation is instantiated by the ProviderFactory.
@@ -55,9 +55,9 @@ public class Activator extends DependencyManagerActivator {
         component(comp -> comp
             .factory(factory::create, factory::getComposition)
             .withSvc(LogService.class, svc -> svc.required().add(ProviderImpl::bind).add(ProviderComposite1::bind))
-            .withCnf(conf -> conf.update(MyConfig.class, factory::updated)));
+            .withCnf(cnf -> cnf.update(MyConfig.class, factory::updated)));
                 
-        // Creates a configuration with pid name = "org.apache.felix.dependencymanager.lambda.samples.compositefactory.ProviderFactory"
+        // Creates a configuration with pid name = "org.apache.felix.dependencymanager.lambda.samples.compositefactory.MyConfig"
         component(comp -> comp.impl(Configurator.class).withSvc(ConfigurationAdmin.class, true));
     }    
 }

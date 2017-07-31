@@ -1,0 +1,188 @@
+Release Notes - Felix - Version org.apache.felix.dependencymanager-r11
+======================================================================
+
+** List of bundles being part of the release:
+    * org.apache.felix.dependencymanager; version=4.4.1
+    * org.apache.felix.dependencymanager.shell; version=4.0.6
+    * org.apache.felix.dependencymanager.runtime; version=4.0.5
+    * org.apache.felix.dependencymanager.annotation; version=4.2.1
+    * org.apache.felix.dependencymanager.lambda; version=1.1.1
+
+** Improvement
+    * [FELIX-5658] - Include poms in dm artifacts
+
+Release Notes - Felix - Version org.apache.felix.dependencymanager-r9
+======================================================================
+
+** List of bundles being part of the release:
+    * org.apache.felix.dependencymanager; version=4.4.0
+    * org.apache.felix.dependencymanager.shell; version=4.0.5
+    * org.apache.felix.dependencymanager.runtime; version=4.0.4
+    * org.apache.felix.dependencymanager.annotation; version=4.2.0
+    * org.apache.felix.dependencymanager.lambda; version=1.1.0
+
+** Bug
+    * [FELIX-5236] - Single @Property annotation on a type doesn't work
+    * [FELIX-5242] - Configuration updates may be missed when the component is restarting
+    * [FELIX-5244] - Can't inject service using a method ref on a parent class method.
+    * [FELIX-5245] - Typo in error logged when a component callback is not found.
+    * [FELIX-5268] - Service not unregistered while bundle is starting
+    * [FELIX-5273] - Wrong log when a callback is not found from component instance(s)
+    * [FELIX-5274] - remove callback fails after manually removing dynamic dependencies
+    * [FELIX-5399] - Unable to define default map or list config types
+    * [FELIX-5400] - Can't override default configuration type list value using an empty list
+    * [FELIX-5401] - Can't override default configuration type map value using an empty map
+    * [FELIX-5402] - Factory configuration adapter ignores factory method
+    * [FELIX-5411] - When you stop a component, the service references are not ungotten.
+    * [FELIX-5426] - Remove callbacks aren't called for optional dependencies in a "circular" dependency scenario
+    * [FELIX-5428] - Dependency events set not cleared when component is removed
+    * [FELIX-5429] - Aspect swap callback sometimes not called on optional dependencies
+    * [FELIX-5469] - Methodcache system size property is not used
+    * [FELIX-5471] - Ensure that unbound services are always handled synchronously
+    * [FELIX-5517] - @Inject annotation ignored when applied on ServiceRegistration
+    * [FELIX-5519] - services are not ungotten when swapped by an aspect
+    * [FELIX-5523] - required dependencies added to a started adapter (or aspect) are not injected
+
+** Improvement
+    * [FELIX-5228] - Upgrade DM With latest release of BndTools
+    * [FELIX-5237] - Configurable invocation handler should use default method values
+    * [FELIX-5346] - Start annotation not propagated to sub classes
+    * [FELIX-5355] - Allow to use properties having dots with configuration proxies
+    * [FELIX-5365] - Generate warning on service published and consumed on same interface but different bundles
+    * [FELIX-5403] - Improve the Javadoc for org.apache.felix.dm.ComponentStateListener
+    * [FELIX-5405] - Do not have org.apache.felix.dm.Logger invoke toString() of message parameters when enabled log level is not high enough 
+    * [FELIX-5406] - DM lambda fluent service properties don't support dots
+    * [FELIX-5407] - DM annotation plugin generates temp log files even if logging is disabled
+    * [FELIX-5408] - Parallel DM should not stop components asynchronously
+    * [FELIX-5467] - MultiPropertyFilterIndex is unusable when a service reference contains a lot of values for one key
+    * [FELIX-5499] - Remove usage of json.org from dependency manager
+    * [FELIX-5515] - Upgrade DM to OSGi R6 API
+    * [FELIX-5516] - Allow to not dereference services internally
+    * [FELIX-5518] - Remove all eclipse warnings in DM code
+    * [FELIX-5520] - ComponentStateListener not supported in DM lambda
+    * [FELIX-5521] - add more callback method signature in DM lambda service dependency callbacks
+    * [FELIX-5522] - Refactor aspect service implementation
+    * [FELIX-5524] - add more signatures for aspect swap callbacks
+    * [FELIX-5526] - Allow to use generic custom DM dependencies when using dm lambda.
+    * [FELIX-5531] - Document dependency callback signatures
+    * [FELIX-5532] - Swap callback is missing in @ServiceDependency annotation
+    
+** Task
+    * [FELIX-5533] - Fix a semantic versioning issue when releasing dependency manager
+
+Release Notes - Felix - Version org.apache.felix.dependencymanager-r8
+======================================================================
+
+** Bug
+    * [FELIX-5146] - Service adapters turn on autoconf even if callbacks are used
+    * [FELIX-5147] - Bundle Adapter auto configures class fields even if callbacks are used
+    * [FELIX-5153] - DM4 calls stop before ungetService() on ServiceFactory components
+    * [FELIX-5155] - Adapter/Aspect extra service dependencies injected twice if using callback instance
+    * [FELIX-5178] - Make some component parameters as volatile
+    * [FELIX-5181] - Only log info/debug if dm annotation log parameter is enabled
+    * [FELIX-5187] - No errog log when configuration dependency callback is not found
+    * [FELIX-5188] - No error log when a factory pid adapter update callback is not found
+    * [FELIX-5192] - ConfigurationDependency race condition when component is stopped
+    * [FELIX-5193] - Factory Pid Adapter race condition when component is stopped
+    * [FELIX-5200] - Factory configuration adapter not restarted
+    
+** Improvement
+    * [FELIX-5126] - Build DM using Java 8
+    * [FELIX-5164] - Add support for callback instance in Aspects
+    * [FELIX-5177] - Support injecting configuration proxies
+    * [FELIX-5180] - Support for Java8 Repeatable Properties in DM annotations.
+    * [FELIX-5182] - Cleanup DM samples
+    * [FELIX-5201] - Improve how components are displayed with gogo shell
+
+** New Feature
+    * [FELIX-4689] - Create a more fluent syntax for the dependency manager builder
+
+Release Notes - Felix - Version org.apache.felix.dependencymanager-r6
+======================================================================
+
+** Bug
+    * [FELIX-4974] - DM filter indices not enabled if the dependencymanager bundle is started first
+    * [FELIX-5045] - DM Optional callbacks may sometimes be invoked before start callback
+    * [FELIX-5046] - Gradle wrapper is not included in DM source release
+
+** Improvement
+    * [FELIX-4921] - Ensure binary equality of the same bundle between successive DM releases
+    * [FELIX-4922] - Simplify DM changelog management 
+    * [FELIX-5054] - Clean-up instance bound dependencies when component is destroyed
+    * [FELIX-5055] - Upgrade DM to BndTools 3.0.0
+    * [FELIX-5104] - Call a conf dependency callback Instance with an instantiated component
+    * [FELIX-5113] - Remove useless wrong test in ConfigurationDependencyImpl
+    * [FELIX-5114] - Schedule configuration update in Component executor synchronously
+
+Release Notes - Felix - Version  org.apache.felix.dependencymanager-r5:
+======================================================================
+
+** Bug
+    * [FELIX-4907] - ConfigurationDependency calls updated(null) when component is stopped.
+    * [FELIX-4910] - ComponentExecutorFactory does not allow to return null from getExecutorFor method.
+    * [FELIX-4913] - DM Optional callbacks may sometimes be invoked twice
+
+** Improvement
+    * [FELIX-4876] - DM Annotations bnd plugin compatibility with Bndtools 2.4.1 / 3.0.0 versions
+    * [FELIX-4877] - DM Annotations should detect service type using more method signatures.
+    * [FELIX-4915] - Skip unecessary manifest headers in DM bnd file
+    
+
+Release Notes - Felix - Version org.apache.felix.dependencymanager-r3:
+=====================================================================
+** Bug
+    * [FELIX-4858] - DependencyManager: missing createCopy method in timed service dependency
+    * [FELIX-4869] - Callbacks not invoked for dependencies that are added after the component is initialized
+
+** Improvement
+    * [FELIX-4614] - Factory create() method should have access to the component definition
+    * [FELIX-4873] - Enhance DM API to get missing and circular dependencies
+    * [FELIX-4878] - Support more signatures for Dependency callbacks
+    * [FELIX-4880] - Missing callback instance support for some adapters
+    * [FELIX-4889] - Refactor dm shell command to use the org.apache.dm.diagnostics api
+
+** Wish
+    * [FELIX-4875] - Update DM integration test with latest ConfigAdmin
+
+
+Release Notes - Felix - Version org.apache.felix.dependencymanager-r2:
+=====================================================================
+
+** Bug
+    * [FELIX-4832] - ClassCastException with autoconfig Iterable fields
+    * [FELIX-4833] - Revisit some javadocs in the DM annotations.
+
+
+Release Notes - Felix - Version org.apache.felix.dependencymanager-r1:
+======================================================================
+
+** Bug
+    * [FELIX-4304] - DependencyManager ComponentImpl should not assume all service properties are stored in a Hashtable
+    * [FELIX-4394] - Race problems in DependencyManager Configuration Dependency
+    * [FELIX-4588] - createCopy method ConfigurationDependency produces a malfunctioning clone
+    * [FELIX-4594] - Propagation from dependencies overwrites service properties
+    * [FELIX-4598] - BundleDependency can effectively track only one bundle
+    * [FELIX-4602] - TemporalServiceDependency does not properly propagate RuntimeExceptions
+    * [FELIX-4709] - Incorrect Named Dependencies are binded to the Service Instance
+
+** Improvement
+    * [FELIX-3914] - Log unsuccessful field injections
+    * [FELIX-4158] - ComponentDeclaration should give access to component information
+    * [FELIX-4667] - "top" command for the Dependency Manager Shell
+    * [FELIX-4672] - Allow callbacks to third party instance for adapters
+    * [FELIX-4673] - Log any error thrown when trying to create a null object.
+    * [FELIX-4777] - Dynamic initialization time configuration of @ConfigurationDependency 
+    * [FELIX-4805] - Deprecate DM annotation metatypes
+
+** New Feature
+    * [FELIX-4426] - Allow DM to manage collections of services
+    * [FELIX-4807] - New thread model for Dependency Manager
+
+** Wish
+    * [FELIX-2706] - Support callback delegation for Configuration Dependecies
+    * [FELIX-4600] - Cherrypicking of propagated properties
+    * [FELIX-4676] - Add Provide-Capability for DependencyManager Runtime bundle
+    * [FELIX-4680] - Add more DM ServiceDependency callback signatures
+    * [FELIX-4683] - Allow to configure the DependencyManager shell scope
+    * [FELIX-4684] - Replace DependencyManager Runtime "factorySet" by a cleaner API
+    * [FELIX-4818] - New release process for Dependency Manager

@@ -65,7 +65,7 @@ public class EventListenerTest extends BaseIntegrationTest
 {
     private Dictionary<String, Object> getListenerProps()
     {
-        final Dictionary<String, Object> props = new Hashtable<String, Object>();
+        final Dictionary<String, Object> props = new Hashtable<>();
         props.put(HttpWhiteboardConstants.HTTP_WHITEBOARD_LISTENER, "true");
 
         return props;
@@ -73,7 +73,7 @@ public class EventListenerTest extends BaseIntegrationTest
 
     private Dictionary<String, Object> getServletProps(final String pattern)
     {
-        final Dictionary<String, Object> props = new Hashtable<String, Object>();
+        final Dictionary<String, Object> props = new Hashtable<>();
         props.put(HttpWhiteboardConstants.HTTP_WHITEBOARD_SERVLET_PATTERN, pattern);
 
         return props;
@@ -480,7 +480,7 @@ public class EventListenerTest extends BaseIntegrationTest
         };
 
         // register with all contexts
-        final Dictionary<String, Object> props = new Hashtable<String, Object>();
+        final Dictionary<String, Object> props = new Hashtable<>();
         props.put(HttpWhiteboardConstants.HTTP_WHITEBOARD_LISTENER, "true");
         props.put(HttpWhiteboardConstants.HTTP_WHITEBOARD_CONTEXT_SELECT, "(" + HttpWhiteboardConstants.HTTP_WHITEBOARD_CONTEXT_NAME + "=*)");
         final ServiceRegistration<ServletRequestListener> reg = m_context.registerService(ServletRequestListener.class, listener, props);
