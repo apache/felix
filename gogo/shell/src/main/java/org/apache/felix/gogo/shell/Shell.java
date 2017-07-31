@@ -24,6 +24,7 @@ import java.net.HttpURLConnection;
 import java.net.URI;
 import java.net.URL;
 import java.net.URLConnection;
+import java.nio.Buffer;
 import java.nio.CharBuffer;
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -247,9 +248,10 @@ public class Shell
             in = new InputStreamReader(conn.getInputStream());
             while (in.read(buf) > 0)
             {
-                buf.flip();
+                // Explicit cast for compatibility with covariant return type on JDK 9's ByteBuffer
+                ((Buffer)buf).flip();
                 sb.append(buf);
-                buf.clear();
+                ((Buffer)buf).clear();
             }
         }
         finally
