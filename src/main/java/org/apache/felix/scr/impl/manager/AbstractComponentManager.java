@@ -746,7 +746,23 @@ public abstract class AbstractComponentManager<S> implements SimpleLogger, Compo
 
             if ((isImmediate() || getComponentMetadata().isFactory()))
             {
-                getServiceInternal(registrationManager.getServiceRegistration());
+                ServiceRegistration<S> serviceRegistration = registrationManager.getServiceRegistration();
+                if ( serviceRegistration != null )
+                {
+                    getActivator().enterCreate( serviceRegistration.getReference() );
+                    try
+                    {
+                        getServiceInternal( serviceRegistration );
+                    }
+                    finally
+                    {
+                        getActivator().leaveCreate( serviceRegistration.getReference() );
+                    }
+                }
+                else
+                {
+                    getServiceInternal( null );
+                }
             }
         }
         finally
@@ -870,7 +886,7 @@ public abstract class AbstractComponentManager<S> implements SimpleLogger, Compo
 
     }
 
-    private final RegistrationManager<ServiceRegistration<S>> registrationManager = new RegistrationManager<ServiceRegistration<S>>()
+    final RegistrationManager<ServiceRegistration<S>> registrationManager = new RegistrationManager<ServiceRegistration<S>>()
     {
 
         @Override
@@ -1028,6 +1044,22 @@ public abstract class AbstractComponentManager<S> implements SimpleLogger, Compo
 
     abstract <T> void invokeUnbindMethod(DependencyManager<S, T> dependencyManager, RefPair<S, T> oldRefPair,
         int trackingCount);
+
+    void notifyWaiters()
+    {
+        if ( registrationManager.getServiceRegistration() != null )
+        {
+            //see if our service has been requested but returned null....
+            ComponentActivator activator = getActivator();
+            log( LogService.LOG_DEBUG, "Notifying possible clients that service might be available with activator {0}",
+                new Object[] { activator }, null );
+            if ( activator != null )
+            {
+                activator.missingServicePresent( registrationManager.getServiceRegistration().getReference() );
+            }
+        }
+
+    }
 
     //**********************************************************************************************************
     public ComponentActivator getActivator()
