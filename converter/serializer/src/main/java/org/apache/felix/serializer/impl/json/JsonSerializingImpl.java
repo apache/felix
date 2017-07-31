@@ -81,7 +81,14 @@ public class JsonSerializingImpl implements Serializing {
             return ignoreNull ? "" : "null";
         }
 
-        if (obj instanceof Map) {
+        if (obj instanceof String) {
+            // Optimization for when the value is already a String
+            // David B.: is this ok? Or does the Converter do something else
+            //           other than just returning a String??
+            //           I noticed that a lot of calculations were going on, just
+            //           to return a String anyway.
+            return "\"" + (String)obj + "\"";
+        } else if (obj instanceof Map) {
             return encodeMap((Map) obj);
         } else if (obj instanceof Collection) {
             return encodeCollection((Collection) obj);
