@@ -20,7 +20,11 @@
 
 package org.apache.felix.scr.integration;
 
-import junit.framework.TestCase;
+import static junit.framework.Assert.assertEquals;
+import static junit.framework.Assert.assertNotNull;
+
+import java.lang.reflect.InvocationTargetException;
+
 import org.apache.felix.scr.integration.components.circular.A;
 import org.apache.felix.scr.integration.components.circular.B;
 import org.junit.Test;
@@ -30,8 +34,7 @@ import org.osgi.framework.InvalidSyntaxException;
 import org.osgi.framework.ServiceReference;
 import org.osgi.service.component.runtime.dto.ComponentConfigurationDTO;
 
-import static junit.framework.Assert.assertEquals;
-import static junit.framework.Assert.assertNotNull;
+import junit.framework.TestCase;
 
 /**
  * @version $Rev$ $Date$
@@ -273,20 +276,48 @@ public class CircularReferenceTest extends ComponentTestBase
     /**
      * A > 1.1 > B > 0..n > A Both should start (B first) and both should have references
      * @throws InvalidSyntaxException
+     * @throws InterruptedException 
+     * @throws InvocationTargetException 
      */
     @Test
-    public void test_A11_immediate_B0n_delayed_B_first() throws InvalidSyntaxException
+    public void test_A11_immediate_B0n_delayed_B_first()
+        throws InvalidSyntaxException, InvocationTargetException, InterruptedException
     {
-    	String componentNameB = "8.B.0.n.dynamic";
-        final ComponentConfigurationDTO componentB = findComponentConfigurationByName( componentNameB, ComponentConfigurationDTO.SATISFIED | ComponentConfigurationDTO.ACTIVE );
-        ServiceReference[] serviceReferencesB = bundleContext.getServiceReferences( B.class.getName(), "(service.pid=" + componentNameB + ")" );
+        String componentNameB = "8.B.0.n.dynamic";
+        String componentNameA = "8.A.1.1.static";
+        enableAndCheck( findComponentDescriptorByName( componentNameB ) );
+        enableAndCheck( findComponentDescriptorByName( componentNameA ) );
+        do_testA11_immediate_B0n_delayed( componentNameA, componentNameB );
+
+    }
+
+    @Test
+    public void test_A11_immediate_B0n_delayed_A_first()
+        throws InvalidSyntaxException, InvocationTargetException, InterruptedException
+    {
+        String componentNameB = "8.B.0.n.dynamic";
+        String componentNameA = "8.A.1.1.static";
+        enableAndCheck( findComponentDescriptorByName( componentNameA ) );
+        enableAndCheck( findComponentDescriptorByName( componentNameB ) );
+        do_testA11_immediate_B0n_delayed( componentNameA, componentNameB );
+
+    }
+
+    protected void do_testA11_immediate_B0n_delayed(String componentNameA, String componentNameB)
+        throws InvalidSyntaxException
+    {
+        final ComponentConfigurationDTO componentB = findComponentConfigurationByName( componentNameB,
+            ComponentConfigurationDTO.SATISFIED | ComponentConfigurationDTO.ACTIVE );
+        ServiceReference[] serviceReferencesB = bundleContext.getServiceReferences( B.class.getName(),
+            "(service.pid=" + componentNameB + ")" );
         TestCase.assertEquals( 1, serviceReferencesB.length );
         ServiceReference<B> serviceReferenceB = serviceReferencesB[0];
         B b = bundleContext.getService( serviceReferenceB );
 
-        String componentNameA = "8.A.1.1.static";
-        ComponentConfigurationDTO componentA = findComponentConfigurationByName( componentNameA, ComponentConfigurationDTO.SATISFIED | ComponentConfigurationDTO.ACTIVE );
-        ServiceReference[] serviceReferencesA = bundleContext.getServiceReferences( A.class.getName(), "(service.pid=" + componentNameA + ")" );
+        ComponentConfigurationDTO componentA = findComponentConfigurationByName( componentNameA,
+            ComponentConfigurationDTO.SATISFIED | ComponentConfigurationDTO.ACTIVE );
+        ServiceReference[] serviceReferencesA = bundleContext.getServiceReferences( A.class.getName(),
+            "(service.pid=" + componentNameA + ")" );
         TestCase.assertEquals( 1, serviceReferencesA.length );
         ServiceReference<A> serviceReferenceA = serviceReferencesA[0];
         A a = bundleContext.getService( serviceReferenceA );
@@ -294,7 +325,6 @@ public class CircularReferenceTest extends ComponentTestBase
         assertEquals( 1, a.getBs().size());
         delay();
         assertEquals( 1, b.getAs().size() );
-        assertNotNull( b.getAs().get(0) );
-
+        assertNotNull( b.getAs().get( 0 ) );
     }
 }

@@ -25,9 +25,6 @@ import static org.junit.Assert.assertSame;
 import java.lang.reflect.Field;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import javax.imageio.spi.ServiceRegistry;
-
-import org.apache.felix.scr.impl.helper.ComponentMethods;
 import org.apache.felix.scr.impl.inject.ComponentMethodsImpl;
 import org.apache.felix.scr.impl.manager.AbstractComponentManager.State;
 import org.apache.felix.scr.impl.metadata.ComponentMetadata;
