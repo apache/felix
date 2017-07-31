@@ -66,9 +66,26 @@
                 <configuration>
                     <instructions>
                         <Bundle-Activator>org.apache.felix.schematizer.impl.Activator</Bundle-Activator>
-                        <Private-Package>org.apache.felix.schematizer.*, org.apache.felix.serializer.impl.*,org.yaml.snakeyaml.*,org.apache.felix.utils.*</Private-Package>
-                        <Export-Package>org.apache.felix.schematizer; uses:="org.osgi.util.converter,org.osgi.util.function,org.osgi.dto,org.osgi.framework"</Export-Package>
-                        <Import-Package>org.osgi.util.converter, org.osgi.service.serializer, *</Import-Package>
+                        <Private-Package>
+                            org.apache.felix.schematizer.*,
+                            org.apache.felix.serializer.impl.*,
+                            org.yaml.snakeyaml.*,
+                            org.apache.felix.utils.*
+                        </Private-Package>
+                        <Export-Package>
+                            org.apache.felix.schematizer;
+                            uses:="org.osgi.util.converter,org.osgi.util.function,org.osgi.dto,org.osgi.framework"
+                        </Export-Package>
+                        <Import-Package>
+                            org.osgi.util.converter,
+                            org.osgi.service.serializer,
+                            *
+                        </Import-Package>
+                        <Provide-Capability>
+                            osgi.service;objectClass:List&lt;String&gt;="org.apache.felix.schematizer.Schematizer,org.osgi.service.serializer.Serializer";
+                            uses:="org.apache.felix.schematizer,org.osgi.service.serializer,org.osgi.util.converter,org.osgi.util.function"
+                        </Provide-Capability>
+                        <_sources>true</_sources>
                     </instructions>
                 </configuration>
             </plugin>

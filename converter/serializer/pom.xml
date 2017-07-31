@@ -66,9 +66,20 @@
                 <configuration>
                     <instructions>
                         <Bundle-Activator>org.apache.felix.serializer.impl.Activator</Bundle-Activator>
-                        <Private-Package>org.apache.felix.serializer.*,org.yaml.snakeyaml.*,org.apache.felix.utils.*</Private-Package>
-                        <Export-Package>org.osgi.service.serializer</Export-Package>
+                        <Private-Package>
+                            org.apache.felix.serializer.*,
+                            org.yaml.snakeyaml.*,
+                            org.apache.felix.utils.*
+                        </Private-Package>
+                        <Export-Package>
+                            org.osgi.service.serializer;-split-package:=merge-first
+                        </Export-Package>
                         <Import-Package>*</Import-Package>
+                        <Provide-Capability>
+                            osgi.service;objectClass:List&lt;String&gt;="org.osgi.service.serializer.Serializer";
+                            uses:="org.osgi.service.serializer,org.osgi.util.converter,org.osgi.util.function"
+                        </Provide-Capability>
+                        <_sources>true</_sources>
                     </instructions>
                 </configuration>
             </plugin>
