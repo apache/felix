@@ -28,13 +28,13 @@ import org.osgi.service.serializer.Deserializing;
 import org.osgi.service.serializer.Serializer;
 import org.osgi.service.serializer.Serializing;
 import org.osgi.util.converter.Converter;
-import org.osgi.util.converter.StandardConverter;
+import org.osgi.util.converter.Converters;
 import org.osgi.util.converter.TypeReference;
 
 public class JsonSerializerImpl implements Serializer {
     private final Map<String, Object> configuration = new ConcurrentHashMap<>();
     private final ThreadLocal<Boolean> threadLocal = new ThreadLocal<>();
-    private final Converter converter = new StandardConverter();
+    private final Converter converter = Converters.standardConverter();
 
     @Override
     public <T> Deserializing<T> deserialize(Class<T> cls) {

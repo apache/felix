@@ -23,7 +23,7 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.osgi.util.converter.Converter;
-import org.osgi.util.converter.StandardConverter;
+import org.osgi.util.converter.Converters;
 import org.osgi.util.converter.TypeReference;
 import org.osgi.util.converter.TypeRule;
 
@@ -34,7 +34,7 @@ public class YamlSerializerTest {
 
     @Before
     public void setUp() {
-        converter = new StandardConverter();
+        converter = Converters.standardConverter();
     }
 
     @After
