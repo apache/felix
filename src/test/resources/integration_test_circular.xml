@@ -300,7 +300,7 @@
 
     <!-- A 1.1 static delayed, B 0..n dynamic immediate. Both should start (B first) and both should have references -->
     <scr:component name="8.A.1.1.static"
-        enabled="true"
+        enabled="false"
         configuration-policy="ignore">
         <implementation class="org.apache.felix.scr.integration.components.circular.A" />
         <service>
@@ -318,7 +318,7 @@
         <property name="service.pid" value="8.A.1.1.static" />
     </scr:component>
     <scr:component name="8.B.0.n.dynamic"
-        enabled="true"
+        enabled="false"
         immediate="true"
         configuration-policy="ignore">
         <implementation class="org.apache.felix.scr.integration.components.circular.B" />

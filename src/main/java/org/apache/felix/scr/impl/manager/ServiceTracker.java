@@ -28,7 +28,6 @@ import java.util.TreeMap;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.osgi.framework.BundleContext;
-import org.osgi.framework.Constants;
 import org.osgi.framework.Filter;
 import org.osgi.framework.InvalidSyntaxException;
 import org.osgi.framework.ServiceEvent;
@@ -969,12 +968,14 @@ public class ServiceTracker<S, T, U extends ServiceEvent> {
                              */
                 }
 
-                if (adding.remove(item)) { /*
-                                             * if the item is in the process of
-                                             * being added
-                                             */
-                    if (DEBUG) {
-                        System.out.println("AbstractTracked.untrack[being added]: " + item); //$NON-NLS-1$
+                if ( adding.remove( item ) )
+                { /*
+                    * if the item is in the process of
+                    * being added
+                    */
+                    if ( DEBUG )
+                    {
+                        System.out.println( "AbstractTracked.untrack[being added]: " + item ); //$NON-NLS-1$
                     }
                     return; /*
                              * in case the item is untracked while in the process of
