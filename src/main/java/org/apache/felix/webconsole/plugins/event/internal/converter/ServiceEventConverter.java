@@ -62,7 +62,8 @@ public class ServiceEventConverter {
             }
         }
         buffer.append( ", bundle=" );
-        buffer.append( ref.getBundle().getSymbolicName() );
+        Bundle bundle = ref.getBundle();
+        buffer.append( bundle != null ? bundle.getSymbolicName() : "<unkown>" );
         buffer.append( ") " );
         final StringBuffer topic = new StringBuffer(TOPIC);
         topic.append('/');
