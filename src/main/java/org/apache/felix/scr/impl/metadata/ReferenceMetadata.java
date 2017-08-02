@@ -21,8 +21,6 @@ package org.apache.felix.scr.impl.metadata;
 import java.util.Set;
 import java.util.TreeSet;
 
-import org.apache.felix.scr.impl.helper.Logger;
-
 /**
  * Information associated to a dependency
  *
@@ -132,10 +130,10 @@ public class ReferenceMetadata
 
     // Parameter value (optional, since DS 1.4)
     private String m_parameter;
-    
+
     // Parameter index, set based on {@code m_parameter} after validation
     private Integer m_parameterIndex;
-    
+
     // Flags that store the values passed as strings
     private boolean m_isStatic = true;
     private boolean m_isOptional = false;
@@ -544,11 +542,11 @@ public class ReferenceMetadata
      * successful.
      * @return The parameter index , if no parameter is set this returns {@code -null}
      */
-    public Integer getParameterIndex() 
+    public Integer getParameterIndex()
     {
     	return m_parameterIndex;
     }
-    
+
     // Getters for boolean values that determine both policy and cardinality
 
     /**
@@ -629,7 +627,7 @@ public class ReferenceMetadata
      *  Method used to verify if the semantics of this metadata are correct
      *
      */
-    void validate(final ComponentMetadata componentMetadata, final Logger logger )
+    void validate(final ComponentMetadata componentMetadata )
     {
         final DSVersion dsVersion = componentMetadata.getDSVersion();
 
@@ -764,20 +762,20 @@ public class ReferenceMetadata
             {
             	m_parameterIndex = Integer.valueOf(m_parameter);
             }
-            catch ( final NumberFormatException nfe) 
+            catch ( final NumberFormatException nfe)
             {
                 throw componentMetadata.validationFailure( "Reference parameter is not a number: " + m_parameter );
             }
             if ( m_parameterIndex < 0 )
             {
-                throw componentMetadata.validationFailure( "Reference parameter value must be zero or higher: " + m_parameter );            	
+                throw componentMetadata.validationFailure( "Reference parameter value must be zero or higher: " + m_parameter );
             }
             // policy needs to be static
-            if ( !isStatic() ) 
+            if ( !isStatic() )
             {
-                throw componentMetadata.validationFailure( "Reference with parameter value must be static." );            	
-            	
-            }            
+                throw componentMetadata.validationFailure( "Reference with parameter value must be static." );
+
+            }
         }
         m_validated = true;
     }

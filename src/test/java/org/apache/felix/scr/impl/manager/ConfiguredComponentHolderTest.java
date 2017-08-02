@@ -24,13 +24,13 @@ import java.util.Hashtable;
 import java.util.List;
 import java.util.Map;
 
-import junit.framework.TestCase;
-
 import org.apache.felix.scr.impl.inject.ComponentMethods;
 import org.apache.felix.scr.impl.inject.ComponentMethodsImpl;
 import org.apache.felix.scr.impl.metadata.ComponentMetadata;
 import org.apache.felix.scr.impl.metadata.DSVersion;
 import org.apache.felix.scr.impl.metadata.TargetedPID;
+
+import junit.framework.TestCase;
 
 
 public class ConfiguredComponentHolderTest extends TestCase
@@ -98,7 +98,7 @@ public class ConfiguredComponentHolderTest extends TestCase
         final String name = "test.factory";
         final ComponentMetadata cm = createComponentMetadata( name );
         final TestingConfiguredComponentHolder holder = new TestingConfiguredComponentHolder( cm );
-        
+
         holder.enableComponents(false);
 
         // assert single component and no map
@@ -164,7 +164,7 @@ public class ConfiguredComponentHolderTest extends TestCase
         final ComponentMetadata metadata = new ComponentMetadata( DSVersion.DS11 );
         metadata.setName( name );
         metadata.setImplementationClassName(Object.class.getName());
-        metadata.validate(null);
+        metadata.validate();
 
         return metadata;
     }
@@ -191,11 +191,13 @@ public class ConfiguredComponentHolderTest extends TestCase
         }
 
 
+        @Override
         protected SingleComponentManager createComponentManager(boolean factoryConfiguration)
         {
             return new MockImmediateComponentManager( this );
         }
 
+        @Override
         protected ComponentMethods createComponentMethods() {
             return new ComponentMethodsImpl();
         }

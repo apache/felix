@@ -189,7 +189,7 @@ public class SingleComponentManagerTest
     public void testGetService() throws Exception {
         ComponentMetadata cm = new ComponentMetadata(DSVersion.DS13);
         cm.setImplementationClassName("foo.bar.SomeClass");
-        cm.validate(null);
+        cm.validate();
 
         @SuppressWarnings("unchecked")
         ComponentContainer<Object> cc = Mockito.mock(ComponentContainer.class);
@@ -231,7 +231,7 @@ public class SingleComponentManagerTest
     {
         ComponentMetadata cm = new ComponentMetadata(DSVersion.DS13);
         cm.setImplementationClassName("foo.bar.SomeClass");
-        cm.validate(null);
+        cm.validate();
 
         @SuppressWarnings("unchecked")
         ComponentContainer<Object> cc = Mockito.mock(ComponentContainer.class);

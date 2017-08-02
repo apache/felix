@@ -452,7 +452,7 @@ public class BundleComponentActivator implements ComponentActivator
                     }
 
                     // validate the component metadata
-                    metadata.validate( this );
+                    metadata.validate( );
 
                     // Request creation of the component manager
                     ComponentHolder<?> holder = m_componentRegistry.createComponentHolder( this, metadata );
