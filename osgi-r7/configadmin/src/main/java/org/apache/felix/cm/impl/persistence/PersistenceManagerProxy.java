@@ -57,6 +57,12 @@ public class PersistenceManagerProxy implements ExtPersistenceManager
         this.pm = pm;
     }
 
+    @Override
+    public PersistenceManager getDelegatee()
+    {
+        return pm;
+    }
+
     /**
      * Remove the configuration with the given PID. This implementation removes
      * the entry from the cache before calling the underlying persistence

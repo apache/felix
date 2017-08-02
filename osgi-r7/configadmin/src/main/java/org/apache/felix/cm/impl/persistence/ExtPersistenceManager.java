@@ -31,4 +31,6 @@ import org.apache.felix.cm.impl.SimpleFilter;
 public interface ExtPersistenceManager extends PersistenceManager
 {
     Collection<Dictionary> getDictionaries( SimpleFilter filter ) throws IOException;
+
+    PersistenceManager getDelegatee();
 }
