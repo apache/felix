@@ -410,7 +410,9 @@ public class ConvertingImpl extends AbstractSpecifying<Converting> implements Co
                 if (isCopyRequiredType(cls)) {
                     cls = getConstructableType(cls);
                 }
-                if (sourceAsDTO && DTOUtil.isDTOType(cls))
+                // NOTE (dml): I think this should be an "OR", not an "AND"
+                // TODO: confirm with some additional tests (all tests pass for now)
+                if (sourceAsDTO || DTOUtil.isDTOType(cls))
                     value = converter.convert(value).sourceAsDTO().to(cls);
                 else
                     value = converter.convert(value).to(cls);

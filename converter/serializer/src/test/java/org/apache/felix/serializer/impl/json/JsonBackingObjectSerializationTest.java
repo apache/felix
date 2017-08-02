@@ -26,9 +26,9 @@ import static org.junit.Assert.assertEquals;
 
 public class JsonBackingObjectSerializationTest {
     @Test
+    @Ignore("This test fails, but should not")
     @SuppressWarnings( "rawtypes" )
-    @Ignore("Trying to set up failing test case, but is not failing the way I intended!!")
-    public void testComplexMapSerialization() {
+    public void testComplexMapSerializationFirstUsingConversion() {
         final MyDTOishObject obj = MyDTOishObject.factory( "A", "B" );
         final Map m = Converters
                 .standardConverter()
@@ -36,12 +36,31 @@ public class JsonBackingObjectSerializationTest {
                 .sourceAsDTO()
                 .to(Map.class);
 
-        String expected = 
+        final String expected = 
                 "{\"a\":\"A\","
                 + "\"o\":XXX"
                 + "\"b\":\"B\"}";
 
-        assertEquals(expected, new JsonSerializerImpl().serialize(m).toString());
+        final String actual = new JsonSerializerImpl().serialize(m).toString();
+
+        assertEquals(expected, actual);
+    }
+
+    @Test
+    @Ignore("This test fails, which it should, but I should be able to inject a Converter -- see below")
+    public void testComplexMapSerializationWithoutUsingPreConversion() {
+        final String expected = 
+                "{\"a\":\"A\","
+                + "\"o\":XXX"
+                + "\"b\":\"B\"}";
+
+        final String actual = new JsonSerializerImpl()
+                .serialize(MyDTOishObject.factory( "A", "B" ))
+                // HELP!! I don't see how to inject a Converter that does the job!
+//                .with(Converters.standardConverter().sourceAsDTO())
+                .toString();
+
+        assertEquals(expected, actual);
     }
 
     public static class MyDTOishObject {
