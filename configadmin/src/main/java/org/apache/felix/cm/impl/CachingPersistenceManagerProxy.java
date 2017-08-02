@@ -262,4 +262,13 @@ class CachingPersistenceManagerProxy implements PersistenceManager
     {
         return new CaseInsensitiveDictionary( source );
     }
+
+    /**
+     * Checks if this proxy's wrapped {@link PersistenceManager} is equal
+     * to the given {@link PersistenceManager}.
+     * @param pm The {@link PersistenceManager} to compare to
+     */
+    boolean isProxying(PersistenceManager pm) {
+        return this.pm == pm;
+    }
 }
