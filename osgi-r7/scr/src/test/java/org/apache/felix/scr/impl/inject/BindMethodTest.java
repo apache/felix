@@ -490,7 +490,7 @@ public class BindMethodTest extends TestCase
 		ComponentMetadata metadata = new ComponentMetadata( DSVersion.DS11 );
         metadata.setName("foo");
         metadata.setImplementationClassName(Object.class.getName());
-        metadata.validate(null);
+        metadata.validate();
 		return metadata;
 	}
 

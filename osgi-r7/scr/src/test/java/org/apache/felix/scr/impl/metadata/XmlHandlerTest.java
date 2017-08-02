@@ -27,8 +27,6 @@ import java.io.StringReader;
 import java.util.Iterator;
 import java.util.List;
 
-import junit.framework.TestCase;
-
 import org.apache.felix.scr.impl.MockBundle;
 import org.apache.felix.scr.impl.MockLogger;
 import org.apache.felix.scr.impl.parser.KXml2SAXParser;
@@ -37,12 +35,15 @@ import org.apache.felix.scr.impl.xml.XmlHandler;
 import org.osgi.service.component.ComponentException;
 import org.xmlpull.v1.XmlPullParserException;
 
+import junit.framework.TestCase;
+
 
 public class XmlHandlerTest extends TestCase
 {
     private MockLogger logger;
 
 
+    @Override
     protected void setUp() throws Exception
     {
         super.setUp();
@@ -159,16 +160,16 @@ public class XmlHandlerTest extends TestCase
     {
         final List metadataList10 = readMetadata( "/components_activate_10.xml" );
         assertEquals( "Component Descriptors", 4, metadataList10.size() );
-        ComponentMetadataTest.failDS10Validation( ( ComponentMetadata ) metadataList10.get( 0 ), "activate", logger );
-        ComponentMetadataTest.failDS10Validation( ( ComponentMetadata ) metadataList10.get( 1 ), "deactivate", logger );
-        ComponentMetadataTest.failDS10Validation( ( ComponentMetadata ) metadataList10.get( 2 ), "modified", logger );
+        ComponentMetadataTest.failDS10Validation( ( ComponentMetadata ) metadataList10.get( 0 ), "activate" );
+        ComponentMetadataTest.failDS10Validation( ( ComponentMetadata ) metadataList10.get( 1 ), "deactivate" );
+        ComponentMetadataTest.failDS10Validation( ( ComponentMetadata ) metadataList10.get( 2 ), "modified" );
         ComponentMetadataTest.failDS10Validation( ( ComponentMetadata ) metadataList10.get( 3 ),
-            "configuration-policy", logger );
+            "configuration-policy" );
 
         final List metadataList11 = readMetadata( "/components_activate_11.xml" );
         assertEquals( "Component Descriptors", 1, metadataList11.size() );
         final ComponentMetadata cm11 = ( ComponentMetadata ) metadataList11.get( 0 );
-        cm11.validate( logger );
+        cm11.validate( );
         assertEquals( "DS Version 1.1", DSVersion.DS11, cm11.getDSVersion() );
         assertEquals( "Expected Activate Method set", "myactivate", cm11.getActivate() );
         assertTrue( "Activate method expected to be declared", cm11.isActivateDeclared() );
@@ -187,7 +188,7 @@ public class XmlHandlerTest extends TestCase
         final ComponentMetadata cm10 = ( ComponentMetadata ) metadataList10.get( 0 );
         try
         {
-            cm10.validate( logger );
+            cm10.validate( );
             fail( "Expected validation failure for component without name" );
         }
         catch ( ComponentException ce )
@@ -198,7 +199,7 @@ public class XmlHandlerTest extends TestCase
         final List metadataList11 = readMetadata( "/components_anonymous_11.xml" );
         assertEquals( "Component Descriptors", 1, metadataList11.size() );
         final ComponentMetadata cm11 = ( ComponentMetadata ) metadataList11.get( 0 );
-        cm11.validate( logger );
+        cm11.validate( );
         assertEquals( "Expected name equals class", cm11.getImplementationClassName(), cm11.getName() );
     }
 
@@ -210,7 +211,7 @@ public class XmlHandlerTest extends TestCase
         final ComponentMetadata cm10 = ( ComponentMetadata ) metadataList10.get( 0 );
         try
         {
-            cm10.validate( logger );
+            cm10.validate( );
             fail( "Expected validation failure for component without name" );
         }
         catch ( ComponentException ce )
@@ -221,7 +222,7 @@ public class XmlHandlerTest extends TestCase
         final List metadataList11 = readMetadata( "/components_anonymous_11.xml" );
         assertEquals( "Component Descriptors", 1, metadataList11.size() );
         final ComponentMetadata cm11 = ( ComponentMetadata ) metadataList11.get( 0 );
-        cm11.validate( logger );
+        cm11.validate( );
         assertEquals( "Expected name equals class", cm11.getImplementationClassName(), cm11.getName() );
     }
 
@@ -312,7 +313,7 @@ public class XmlHandlerTest extends TestCase
         final ComponentMetadata cm10 = ( ComponentMetadata ) metadataList10.get( 0 );
         try
         {
-            cm10.validate( logger );
+            cm10.validate( );
             fail( "Expect validation failure for duplicate implementation element" );
         }
         catch ( ComponentException ce )
@@ -329,7 +330,7 @@ public class XmlHandlerTest extends TestCase
         final ComponentMetadata cm11 = ( ComponentMetadata ) metadataList11.get( 0 );
         try
         {
-            cm11.validate( logger );
+            cm11.validate( );
             fail( "Expect validation failure for duplicate implementation element" );
         }
         catch ( ComponentException ce )
@@ -346,7 +347,7 @@ public class XmlHandlerTest extends TestCase
         final ComponentMetadata cm10 = ( ComponentMetadata ) metadataList10.get( 0 );
         try
         {
-            cm10.validate( logger );
+            cm10.validate( );
             fail( "Expect validation failure for duplicate service element" );
         }
         catch ( ComponentException ce )
@@ -363,7 +364,7 @@ public class XmlHandlerTest extends TestCase
         final ComponentMetadata cm11 = ( ComponentMetadata ) metadataList11.get( 0 );
         try
         {
-            cm11.validate( logger );
+            cm11.validate( );
             fail( "Expect validation failure for duplicate service element" );
         }
         catch ( ComponentException ce )

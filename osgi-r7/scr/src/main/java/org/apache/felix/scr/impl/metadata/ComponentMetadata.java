@@ -57,7 +57,7 @@ public class ComponentMetadata
 
 	/** If the activate method has this value, a constructor is used instead. */
 	private static final String CONSTRUCTOR_MARKER = "-init-";
-	       
+
     // the namespace code of the namespace declaring this component
     private final DSVersion m_dsVersion;
 
@@ -101,7 +101,7 @@ public class ComponentMetadata
 
     // activation fields (since DS 1.4)
     private List<String> m_activationFields;
-    
+
     // Associated properties (0..*)
     private final Map<String, Object> m_properties = new HashMap<String, Object>();
 
@@ -338,7 +338,7 @@ public class ComponentMetadata
      *
      * @param newProperty a property metadata object
      */
-	public void addFactoryProperty( PropertyMetadata newProperty ) 
+	public void addFactoryProperty( PropertyMetadata newProperty )
 	{
         if ( m_validated )
         {
@@ -439,7 +439,7 @@ public class ComponentMetadata
 
 
 
-	public void setActivationFields( final String[] fields ) 
+	public void setActivationFields( final String[] fields )
 	{
 		if ( m_validated )
 		{
@@ -628,7 +628,7 @@ public class ComponentMetadata
     {
     	return CONSTRUCTOR_MARKER.equals(m_activate);
     }
-    
+
     /**
      * Returns the names of the activation fields
      *
@@ -640,7 +640,7 @@ public class ComponentMetadata
         return m_activationFields;
     }
 
-    
+
     /**
      * Returns the name of the deactivate method
      *
@@ -720,7 +720,7 @@ public class ComponentMetadata
         return m_factoryProperties;
     }
 
-    
+
     /**
      * Returns the list of property meta data.
      * <b>Note: This method is intended for unit testing only</b>
@@ -744,7 +744,7 @@ public class ComponentMetadata
         return m_factoryPropertyMetaData;
     }
 
-    
+
     /**
      * Returns the dependency descriptors
      *
@@ -824,7 +824,7 @@ public class ComponentMetadata
 	/**
      * Method used to verify if the semantics of this metadata are correct
      */
-    public void validate( Logger logger )
+    public void validate( )
     {
         // nothing to do if already validated
         if ( m_validated )
@@ -941,9 +941,9 @@ public class ComponentMetadata
         m_propertyMetaData.clear();
 
         // Next check if the factory properties are valid (and extract property values)
-        if ( !m_dsVersion.isDS14() && !m_factoryPropertyMetaData.isEmpty() ) 
+        if ( !m_dsVersion.isDS14() && !m_factoryPropertyMetaData.isEmpty() )
         {
-            throw validationFailure( "Use of factory properties requires DS 1.4 or later namespace " );        	
+            throw validationFailure( "Use of factory properties requires DS 1.4 or later namespace " );
         }
         if ( m_dsVersion.isDS14() && isFactory() )
         {
@@ -970,7 +970,7 @@ public class ComponentMetadata
         Set<String> refs = new HashSet<String>();
         for ( ReferenceMetadata refMeta: m_references )
         {
-            refMeta.validate( this, logger );
+            refMeta.validate( this );
 
             // flag duplicates
             if ( !refs.add( refMeta.getName() ) )
@@ -1017,35 +1017,35 @@ public class ComponentMetadata
         {
             throw validationFailure( "Activation fields require version 1.4 or later");
         }
-        
+
         // constructor injection requires DS 1.4
         if ( this.isActivateConstructor() )
         {
         	if ( !m_dsVersion.isDS14() )
         	{
-                throw validationFailure( "Constructor injection requires version 1.4 or later");        		
+                throw validationFailure( "Constructor injection requires version 1.4 or later");
         	}
         	final Set<Integer> parIndexSet = new HashSet<Integer>();
-        	for(final ReferenceMetadata ref : this.m_references) 
+        	for(final ReferenceMetadata ref : this.m_references)
         	{
-        		if ( ref.getParameterIndex() != null && !parIndexSet.add(ref.getParameterIndex()) ) 
+        		if ( ref.getParameterIndex() != null && !parIndexSet.add(ref.getParameterIndex()) )
         		{
-                    throw validationFailure( "Duplicate reference for argument " + ref.getParameterIndex() + " in constructor" );        	                        
+                    throw validationFailure( "Duplicate reference for argument " + ref.getParameterIndex() + " in constructor" );
         		}
         	}
         }
         else
         {
         	// no constructor injection, check references for having a parameter index
-        	for(final ReferenceMetadata ref : this.m_references) 
+        	for(final ReferenceMetadata ref : this.m_references)
         	{
         		if ( ref.getParameterIndex() != null )
         		{
-                    throw validationFailure( "Reference must not use parameter attribute if no constructor injection is used" );        			
+                    throw validationFailure( "Reference must not use parameter attribute if no constructor injection is used" );
         		}
         	}
         }
-        
+
         if (m_dsVersion == DSVersion.DS12Felix)
         {
         	m_configurableServiceProperties = true;
