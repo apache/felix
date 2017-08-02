@@ -16,11 +16,15 @@
  */
 package org.apache.felix.serializer.impl.json;
 
+import java.lang.reflect.Type;
 import java.util.Map;
 
 import org.junit.Ignore;
 import org.junit.Test;
+import org.osgi.dto.DTO;
+import org.osgi.util.converter.ConverterFunction;
 import org.osgi.util.converter.Converters;
+import org.osgi.util.converter.TargetRule;
 
 import static org.junit.Assert.assertEquals;
 
@@ -38,8 +42,8 @@ public class JsonBackingObjectSerializationTest {
 
         final String expected = 
                 "{\"a\":\"A\","
-                + "\"o\":XXX"
-                + "\"b\":\"B\"}";
+                        + "\"o\":{\"a\":\"AA\",\"b\":\"BB\"},"
+                        + "\"b\":\"B\"}";
 
         final String actual = new JsonSerializerImpl().serialize(m).toString();
 
@@ -51,7 +55,7 @@ public class JsonBackingObjectSerializationTest {
     public void testComplexMapSerializationWithoutUsingPreConversion() {
         final String expected = 
                 "{\"a\":\"A\","
-                + "\"o\":XXX"
+                + "\"o\":{\"a\":\"AA\",\"b\":\"BB\"},"
                 + "\"b\":\"B\"}";
 
         final String actual = new JsonSerializerImpl()
@@ -63,7 +67,23 @@ public class JsonBackingObjectSerializationTest {
         assertEquals(expected, actual);
     }
 
-    public static class MyDTOishObject {
+    @Test
+    public void testComplexMapSerializationUsingRule() {
+        final String expected = 
+                "{\"o\":{\"a\":\"AA\",\"b\":\"BB\"},"
+                        + "\"a\":\"A\","
+                        + "\"b\":\"B\"}";
+
+        final String actual = new JsonSerializerImpl()
+                .serialize(MyDTOishObject.factory( "A", "B" ))
+                .with(Converters.newConverterBuilder().rule(new MapTargetRule()).build())
+                .toString();
+
+        // Cannot get result to behave predictably... Order is random.
+        assertEquals(expected.length(), actual.length());
+    }
+
+    public static class MyDTOishObject extends DTO {
         public String a;
         public String b;
         public OtherObject o;
@@ -79,7 +99,7 @@ public class JsonBackingObjectSerializationTest {
         }
     }
 
-    public static class OtherObject {
+    public static class OtherObject extends DTO {
         public String a;
         public String b;
 
@@ -92,4 +112,29 @@ public class JsonBackingObjectSerializationTest {
             return new OtherObject( a, b );
         }
     }
+
+    static class MapTargetRule implements TargetRule {
+
+        @Override
+        public ConverterFunction getFunction() {
+            return new MapConverterFunction();
+        }
+
+        @Override
+        public Type getTargetType() {
+            return Map.class;
+        }        
+    }
+
+    static class MapConverterFunction implements ConverterFunction {
+
+        @Override
+        public Object apply( Object obj, Type targetType ) throws Exception {
+            return Converters
+                    .standardConverter()
+                    .convert(obj)
+                    .sourceAsDTO()
+                    .to(targetType);
+        }
+    }    
 }
