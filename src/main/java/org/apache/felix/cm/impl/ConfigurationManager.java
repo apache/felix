@@ -763,13 +763,22 @@ public class ConfigurationManager implements BundleListener
                     PersistenceManager service = persistenceManagerTracker.getService( refs[i] );
                     if ( service != null )
                     {
-                        if ( service instanceof NotCachablePersistenceManager )
+                        // check for existing proxy
+                        final ExtPersistenceManager pmProxy = getProxyForPersistenceManager(service);
+                        if ( pmProxy != null )
                         {
-                            pmList.add( new PersistenceManagerProxy( service ) );
+                            pmList.add(pmProxy);
                         }
                         else
                         {
-                            pmList.add( new CachingPersistenceManagerProxy( service ) );
+                            if ( service instanceof NotCachablePersistenceManager )
+                            {
+                                pmList.add( new PersistenceManagerProxy( service ) );
+                            }
+                            else
+                            {
+                                pmList.add(new CachingPersistenceManagerProxy(service));
+                            }
                         }
                     }
                 }
@@ -784,6 +793,17 @@ public class ConfigurationManager implements BundleListener
         return persistenceManagers;
     }
 
+    private ExtPersistenceManager getProxyForPersistenceManager(final PersistenceManager pm)
+    {
+        if (persistenceManagers != null) {
+            for (final ExtPersistenceManager pmProxy : persistenceManagers) {
+                if (pmProxy.getDelegatee() == pm) {
+                    return pmProxy;
+                }
+            }
+        }
+        return null;
+    }
 
     private ServiceReference<ConfigurationAdmin> getServiceReference()
     {
@@ -959,7 +979,7 @@ public class ConfigurationManager implements BundleListener
      *
      * @param factoryPid The PID of the {@link Factory} to return
      * @return The existing or newly created {@link Factory}
-     * @throws IOException If an error occurrs reading the factory from
+     * @throws IOException If an error occurs reading the factory from
      *      a {@link PersistenceManager}
      */
     Factory getOrCreateFactory( String factoryPid ) throws IOException
@@ -981,7 +1001,7 @@ public class ConfigurationManager implements BundleListener
      *
      * @param factoryPid The PID of the {@link Factory} to return
      * @return The existing {@link Factory} or <code>null</code>
-     * @throws IOException If an error occurrs reading the factory from
+     * @throws IOException If an error occurs reading the factory from
      *      a {@link PersistenceManager}
      */
     Factory getFactory( String factoryPid ) throws IOException
