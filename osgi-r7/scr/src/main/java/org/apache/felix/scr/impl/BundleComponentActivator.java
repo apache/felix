@@ -431,17 +431,14 @@ public class BundleComponentActivator implements ComponentActivator
             BufferedReader in = new BufferedReader( new InputStreamReader( stream, "UTF-8" ) );
             XmlHandler handler = new XmlHandler( m_bundle, this, getConfiguration().isFactoryEnabled(),
                 getConfiguration().keepInstances() );
-            KXml2SAXParser parser;
-
-            parser = new KXml2SAXParser( in );
+            final KXml2SAXParser parser = new KXml2SAXParser( in );
 
             parser.parseXML( handler );
 
             // 112.4.2 Component descriptors may contain a single, root component element
             // or one or more component elements embedded in a larger document
-            for ( Object o : handler.getComponentMetadataList() )
+            for ( ComponentMetadata metadata : handler.getComponentMetadataList() )
             {
-                ComponentMetadata metadata = (ComponentMetadata) o;
                 ComponentRegistryKey key = null;
                 try
                 {
