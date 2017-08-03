@@ -85,7 +85,7 @@ public class NativeLibraryClauseTest extends TestCase {
         assertEquals("windowsxp", NativeLibraryClause.normalizeOSName("windowsxp"));
         assertEquals("win32", NativeLibraryClause.normalizeOSName("win32"));
     }
-    
+
     public void testgetOsNameWithAliases() {
         assertTrue(NativeLibraryClause.getOsNameWithAliases("win 32").contains("win32"));
         assertTrue(NativeLibraryClause.getOsNameWithAliases("Win*").contains("win32"));
@@ -149,20 +149,23 @@ public class NativeLibraryClauseTest extends TestCase {
         assertTrue(NativeLibraryClause.getOsNameWithAliases("windowsxp").contains("windowsxp"));
         assertTrue(NativeLibraryClause.getOsNameWithAliases("win32").contains("win32"));
     }
-    
+
     public void testNormalizeOSVersion() {
         // valid
         assertEquals("1.0.0", NativeLibraryClause.normalizeOSVersion("1"));
         assertEquals("1.2.0", NativeLibraryClause.normalizeOSVersion("1.2"));
         assertEquals("1.2.3", NativeLibraryClause.normalizeOSVersion("1.2.3"));
         assertEquals("1.2.3.qualifier", NativeLibraryClause.normalizeOSVersion("1.2.3.qualifier"));
-        
+
         // to normalize
         assertEquals("1.0.0.qualifier", NativeLibraryClause.normalizeOSVersion("1.qualifier"));
         assertEquals("1.2.0.qualifier", NativeLibraryClause.normalizeOSVersion("1.2.qualifier"));
-        
+
         assertEquals("3.13.0.39-generic", NativeLibraryClause.normalizeOSVersion("3.13.0-39-generic"));
 
         assertEquals("3.14.22.100_fc19_i686_PAE", NativeLibraryClause.normalizeOSVersion("3.14.22-100.fc19.i686.PAE"));
+        assertEquals("4.9.35", NativeLibraryClause.normalizeOSVersion("4.9.35+"));
+        assertEquals("4.9.0", NativeLibraryClause.normalizeOSVersion("4.9+"));
+        assertEquals("4.0.0", NativeLibraryClause.normalizeOSVersion("4+"));
     }
 }
