@@ -75,7 +75,7 @@ public class NativeLibraryClause
     private static final String OS_WINDOWS_VISTA = "windowsvista";
     private static final String OS_WINDOWS_XP = "windowsxp";
     private static final String OS_WIN_32 = "win32";
-    
+
     private static final String PROC_X86_64 = "x86-64";
     private static final String PROC_X86 = "x86";
     private static final String PROC_68K = "68k";
@@ -122,7 +122,7 @@ public class NativeLibraryClause
 
     /**
      * Initialize the processor and os name aliases from Felix Config.
-     * 
+     *
      * @param config
      */
     public static synchronized void initializeNativeAliases(Map configMap)
@@ -310,7 +310,7 @@ public class NativeLibraryClause
         return false;
     }
 
-    private boolean checkOSVersions(String osVersion, String[] osversions) 
+    private boolean checkOSVersions(String osVersion, String[] osversions)
         throws BundleException
     {
         Version currentOSVersion = Version.parseVersion(normalizeOSVersion(osVersion));
@@ -608,7 +608,7 @@ public class NativeLibraryClause
             {
                 os = OS_WINDOWS_10;
             }
-            
+
             return os;
         }
         else if (value.startsWith(OS_LINUX))
@@ -764,12 +764,12 @@ public class NativeLibraryClause
 
         return normalizeOSVersion(value);
     }
-    
+
     public static String normalizeOSVersion(String value)
     {
         return new Version(cleanupVersion(value)).toString();
     }
-    
+
     private static final Pattern FUZZY_VERSION = Pattern.compile( "(\\d+)(\\.(\\d+)(\\.(\\d+))?)?([^a-zA-Z0-9](.*))?",
         Pattern.DOTALL );
 
@@ -795,13 +795,13 @@ public class NativeLibraryClause
                     {
                         result.append( "." );
                         result.append( micro );
-                        if ( qualifier != null )
+                        if ( qualifier != null && qualifier.length() > 0 )
                         {
                             result.append( "." );
                             cleanupModifier( result, qualifier );
                         }
                     }
-                    else if ( qualifier != null )
+                    else if ( qualifier != null && qualifier.length() > 0)
                     {
                         result.append( ".0." );
                         cleanupModifier( result, qualifier );
@@ -811,7 +811,7 @@ public class NativeLibraryClause
                         result.append( ".0" );
                     }
                 }
-                else if ( qualifier != null )
+                else if ( qualifier != null && qualifier.length() > 0 )
                 {
                     result.append( ".0.0." );
                     cleanupModifier( result, qualifier );
