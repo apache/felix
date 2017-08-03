@@ -1022,6 +1022,22 @@ public class ConverterTest {
         assertEquals("{}", cs);
     }
 
+    @Test
+    public void testTargetAsDTO() {
+        MyDTOWithMethods expected = new MyDTOWithMethods();
+        expected.count = Count.ONE;
+        expected.ping = "pong";
+        expected.pong = 42;
+        Map m = new HashMap<>();
+        m.put("count", Count.ONE);
+        m.put("ping", "pong");
+        m.put("pong", 42);
+        MyDTOWithMethods actual = converter.convert(m).targetAsDTO().to(MyDTOWithMethods.class);
+        assertEquals(expected.count, actual.count);
+        assertEquals(expected.ping, actual.ping);
+        assertEquals(expected.pong, actual.pong);
+    }
+
     @SuppressWarnings("rawtypes")
     @Test
     public void testLongArrayToLongCollection() {

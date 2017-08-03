@@ -194,7 +194,7 @@ public class ConvertingImpl extends AbstractSpecifying<Converting> implements Co
             return convertToArray();
         } else if (Collection.class.isAssignableFrom(targetAsClass)) {
             return convertToCollection();
-        } else if (DTOUtil.isDTOType(targetAsClass)) {
+        } else if (targetAsDTO || DTOUtil.isDTOType(targetAsClass)) {
             return convertToDTO();
         } else if (isMapType(targetAsClass, targetAsJavaBean)) {
             return convertToMapType();
