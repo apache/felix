@@ -95,7 +95,7 @@ public abstract class AbstractSpecifying<T extends Specifying<T>> implements Spe
         // To avoid ambiguity, reset any instruction to targetAsJavaBean
         targetAsJavaBean = false;
         targetAsDTO = true;
-        return null;
+        return castThis();
     }
 
 }
