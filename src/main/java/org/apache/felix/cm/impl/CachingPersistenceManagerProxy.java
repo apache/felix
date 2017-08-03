@@ -67,17 +67,22 @@ class CachingPersistenceManagerProxy implements PersistenceManager
         this.pm = pm;
         this.cache = new Hashtable<String, CaseInsensitiveDictionary>();
     }
-    
+
     public boolean isNotCachablePersistenceManager() {
         return pm instanceof NotCachablePersistenceManager;
     }
 
+    public PersistenceManager getDelegatee()
+    {
+        return pm;
+    }
 
     /**
      * Remove the configuration with the given PID. This implementation removes
      * the entry from the cache before calling the underlying persistence
      * manager.
      */
+    @Override
     public void delete( String pid ) throws IOException
     {
         Lock lock = globalLock.writeLock();
@@ -99,6 +104,7 @@ class CachingPersistenceManagerProxy implements PersistenceManager
      * the existence in the cache. If not in the cache the underlying
      * persistence manager is asked.
      */
+    @Override
     public boolean exists( String pid )
     {
         Lock lock = globalLock.readLock();
@@ -124,6 +130,7 @@ class CachingPersistenceManagerProxy implements PersistenceManager
      * That is modifying the contents of a dictionary returned from this method
      * has no influence on the dictionaries stored in the cache.
      */
+    @Override
     public Enumeration getDictionaries() throws IOException
     {
         return getDictionaries( null );
@@ -200,6 +207,7 @@ class CachingPersistenceManagerProxy implements PersistenceManager
      * That is modifying the contents of a dictionary returned from this method
      * has no influence on the dictionaries stored in the cache.
      */
+    @Override
     public Dictionary load( String pid ) throws IOException
     {
         Lock lock = globalLock.readLock();
@@ -237,6 +245,7 @@ class CachingPersistenceManagerProxy implements PersistenceManager
      * is subsequent modification to the given dictionary has no influence on
      * the cached data.
      */
+    @Override
     public void store( String pid, Dictionary properties ) throws IOException
     {
         Lock lock = globalLock.writeLock();

@@ -846,7 +846,12 @@ public class ConfigurationManager implements BundleActivator, BundleListener
                     Object service = persistenceManagerTracker.getService( refs[i] );
                     if ( service != null )
                     {
-                        pmList.add( new CachingPersistenceManagerProxy( ( PersistenceManager ) service ) );
+                        CachingPersistenceManagerProxy proxy = getProxyForPersistenceManager(( PersistenceManager ) service );
+                        if ( proxy == null )
+                        {
+                            proxy = new CachingPersistenceManagerProxy( ( PersistenceManager ) service );
+                        }
+                        pmList.add( proxy );
                     }
                 }
 
@@ -860,6 +865,17 @@ public class ConfigurationManager implements BundleActivator, BundleListener
         return persistenceManagers;
     }
 
+    private CachingPersistenceManagerProxy getProxyForPersistenceManager(final PersistenceManager pm)
+    {
+        if (persistenceManagers != null) {
+            for (final CachingPersistenceManagerProxy pmProxy : persistenceManagers) {
+                if (pmProxy.getDelegatee() == pm) {
+                    return pmProxy;
+                }
+            }
+        }
+        return null;
+    }
 
     private ServiceReference getServiceReference()
     {
