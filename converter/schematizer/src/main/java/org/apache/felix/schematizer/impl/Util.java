@@ -225,7 +225,7 @@ public class Util {
     public static Map<String, NodeImpl> extractChildren(String path, Map<String, NodeImpl> allNodes) {
         final Map<String, NodeImpl> children = new HashMap<>();
         for (String key : allNodes.keySet()) {
-            String newKey = key.replace(path, "");
+            String newKey = key.replaceFirst(path, "");
             if (!newKey.substring(1).contains("/"))
                 children.put( newKey, allNodes.get(key));
         }

@@ -237,7 +237,7 @@ public class SchematizerImpl implements Schematizer, ServiceFactory<Schematizer>
                         node.add(childNodes);
                     }
                 }
-                else if (asDTO(fieldClass)) {
+                else if (asDTO(fieldClass) || Util.isDTOType(fieldClass)) {
 //                    newSchematizer.typeRules.put(path, rules);
 //                    if (!rules.containsKey(path))
 //                        newSchematizer.rule(path, path, fieldClass);
