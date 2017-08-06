@@ -28,11 +28,12 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 
+import org.apache.felix.serializer.impl.AbstractSpecifying;
 import org.osgi.service.serializer.Serializing;
 import org.osgi.util.converter.ConversionException;
 import org.osgi.util.converter.Converter;
 
-public class YamlSerializingImpl implements Serializing {
+public class YamlSerializingImpl extends AbstractSpecifying<Serializing> implements Serializing {
     private volatile Converter converter;
     private final Map<String, Object> configuration;
     private final Object object;

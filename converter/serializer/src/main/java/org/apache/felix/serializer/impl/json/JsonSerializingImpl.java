@@ -28,12 +28,13 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 
+import org.apache.felix.serializer.impl.AbstractSpecifying;
 import org.osgi.dto.DTO;
 import org.osgi.service.serializer.Serializing;
 import org.osgi.util.converter.ConversionException;
 import org.osgi.util.converter.Converter;
 
-public class JsonSerializingImpl implements Serializing {
+public class JsonSerializingImpl extends AbstractSpecifying<Serializing> implements Serializing {
     private volatile Converter converter;
     private final Map<String, Object> configuration;
     private final Object object;
@@ -92,8 +93,8 @@ public class JsonSerializingImpl implements Serializing {
             return encodeMap((Map) obj);
         } else if (obj instanceof Collection) {
             return encodeCollection((Collection) obj);
-        } else if (obj instanceof DTO) {
-            return encodeMap(converter.convert(obj).to(Map.class));
+        } else if (sourceAsDTO || obj instanceof DTO) { // TODO: Use isDTOTYPE() or instanceOf??
+            return encodeMap(converter.convert(obj).sourceAsDTO().to(Map.class));
         } else if (obj.getClass().isArray()) {
             return encodeCollection(asCollection(obj));
         } else if (obj instanceof Number) {

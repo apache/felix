@@ -21,6 +21,7 @@ import java.nio.charset.Charset;
 
 import org.osgi.annotation.versioning.ProviderType;
 import org.osgi.util.converter.Converter;
+import org.osgi.util.converter.Specifying;
 
 /**
  * Interface to specify the target of the encoding operation.
@@ -29,7 +30,7 @@ import org.osgi.util.converter.Converter;
  * @ThreadSafe
  */
 @ProviderType
-public interface Serializing {
+public interface Serializing extends Specifying<Serializing> {
 	/**
 	 * Specify that keys with a {@code null} value must not appear in the
 	 * result. If not specified {@code null} values will be included in the

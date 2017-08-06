@@ -24,6 +24,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
+import org.apache.felix.serializer.impl.AbstractSpecifying;
 import org.osgi.service.serializer.Deserializing;
 import org.osgi.service.serializer.Serializer;
 import org.osgi.service.serializer.Serializing;
@@ -61,7 +62,7 @@ public class JsonSerializerImpl implements Serializer {
         return Boolean.TRUE.equals(Boolean.parseBoolean((String) configuration.get("pretty")));
     }
 
-    private class EncodingWrapper implements Serializing {
+    private class EncodingWrapper extends AbstractSpecifying<Serializing> implements Serializing {
         private final Serializing delegate;
         private String prefix;
         private String postfix;
