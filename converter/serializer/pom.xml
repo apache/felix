@@ -79,6 +79,10 @@
                             osgi.service;objectClass:List&lt;String&gt;="org.osgi.service.serializer.Serializer";
                             uses:="org.osgi.service.serializer,org.osgi.util.converter,org.osgi.util.function"
                         </Provide-Capability>
+                        <Require-Capability>
+                            osgi.service;objectClass:List&lt;String&gt;="org.osgi.service.serializer.Converter";
+                            effective:="active"
+                        </Require-Capability>
                         <_sources>true</_sources>
                     </instructions>
                 </configuration>
