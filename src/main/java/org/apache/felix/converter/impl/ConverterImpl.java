@@ -16,14 +16,17 @@
  */
 package org.apache.felix.converter.impl;
 
+import java.lang.reflect.Method;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.UUID;
 import java.util.regex.Pattern;
 
+import org.osgi.util.converter.ConversionException;
 import org.osgi.util.converter.ConverterBuilder;
 import org.osgi.util.converter.Functioning;
 import org.osgi.util.converter.Rule;
+import org.osgi.util.converter.TypeRule;
 import org.osgi.util.function.Function;
 
 public class ConverterImpl implements InternalConverter {
@@ -156,14 +159,6 @@ public class ConverterImpl implements InternalConverter {
             }
         }) {});
 
-        // TODO
-//        cb.rule(new Rule<String, LocalDateTime>(LocalDateTime::parse) {});
-//        cb.rule(new Rule<String, LocalDate>(LocalDate::parse) {});
-//        cb.rule(new Rule<String, LocalTime>(LocalTime::parse) {});
-//        cb.rule(new Rule<String, OffsetDateTime>(OffsetDateTime::parse) {});
-//        cb.rule(new Rule<String, OffsetTime>(OffsetTime::parse) {});
-//        cb.rule(new Rule<String, ZonedDateTime>(ZonedDateTime::parse) {});
-
 //        cb.rule(new Rule<String, Pattern>(Pattern::compile) {});
         cb.rule(new Rule<String, Pattern>(new Function<String, Pattern>() {
             @Override
@@ -211,6 +206,40 @@ public class ConverterImpl implements InternalConverter {
                 return stringToCharacterArray(s);
             }
         }) {});
+
+        // TODO
+//      cb.rule(new Rule<String, LocalDateTime>(LocalDateTime::parse) {});
+        reflectiveAddRule(cb, "java.time.LocalDateTime", "parse");
+//      cb.rule(new Rule<String, LocalDate>(LocalDate::parse) {});
+        reflectiveAddRule(cb, "java.time.LocalDate", "parse");
+//      cb.rule(new Rule<String, LocalTime>(LocalTime::parse) {});
+        reflectiveAddRule(cb, "java.time.LocalTime", "parse");
+//      cb.rule(new Rule<String, OffsetDateTime>(OffsetDateTime::parse) {});
+        reflectiveAddRule(cb, "java.time.OffsetDateTime", "parse");
+//      cb.rule(new Rule<String, OffsetTime>(OffsetTime::parse) {});
+        reflectiveAddRule(cb, "java.time.OffsetTime", "parse");
+//      cb.rule(new Rule<String, ZonedDateTime>(ZonedDateTime::parse) {});
+        reflectiveAddRule(cb, "java.time.ZonedDateTime", "parse");
+    }
+
+    private void reflectiveAddRule(ConverterBuilder cb, String toClsName, String methodName) {
+        try {
+            final Class<?> toCls = getClass().getClassLoader().loadClass(toClsName);
+            final Method toMethod = toCls.getMethod(methodName, CharSequence.class);
+
+            cb.rule(new TypeRule<String, Object>(String.class, toCls, new Function<String, Object>() {
+                @Override
+                public Object apply(String f) {
+                    try {
+                        return toMethod.invoke(null, f);
+                    } catch (Exception e) {
+                        throw new ConversionException("Problem converting to " + toCls, e);
+                    }
+                }
+            }));
+        } catch (Exception ex) {
+            // Class not available, do not add rule for it
+        }
     }
 
     private String charArrayToString(char[] ca) {
