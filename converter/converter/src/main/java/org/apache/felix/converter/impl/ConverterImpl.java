@@ -17,6 +17,8 @@
 package org.apache.felix.converter.impl;
 
 import java.lang.reflect.Method;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.UUID;
@@ -30,6 +32,8 @@ import org.osgi.util.converter.TypeRule;
 import org.osgi.util.function.Function;
 
 public class ConverterImpl implements InternalConverter {
+    private final SimpleDateFormat ISO8601_DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssXXX");
+
     @Override
     public InternalConverting convert(Object obj) {
         return new ConvertingImpl(this, obj);
@@ -45,7 +49,7 @@ public class ConverterImpl implements InternalConverter {
         cb.rule(new Rule<Calendar, String>(new Function<Calendar, String>() {
             @Override
             public String apply(Calendar f) {
-                return f.getTime()./* toInstant(). */toString();
+                return ISO8601_DATE_FORMAT.format(f.getTime());
             }
         }) {});
 
@@ -57,9 +61,13 @@ public class ConverterImpl implements InternalConverter {
         cb.rule(new Rule<String, Calendar>(new Function<String, Calendar>() {
             @Override
             public Calendar apply(String f) {
-                Calendar cc = Calendar.getInstance();
-                //cc.setTime(Date.from(Instant.parse(f)));
-                return cc;
+                try {
+                    Calendar cc = Calendar.getInstance();
+                    cc.setTime(ISO8601_DATE_FORMAT.parse(f));
+                    return cc;
+                } catch (ParseException e) {
+                    throw new ConversionException("Cannot convert " + f + " to Date", e);
+                }
             }
         }) {});
 
@@ -146,8 +154,8 @@ public class ConverterImpl implements InternalConverter {
 //        cb.rule(new Rule<Date,String>(f -> f.toInstant().toString()) {});
         cb.rule(new Rule<Date, String>(new Function<Date, String>() {
             @Override
-            public String apply(Date f) {
-                return null; // f.toInstant().toString()
+            public String apply(Date d) {
+                return ISO8601_DATE_FORMAT.format(d);
             }
         }) {});
 
@@ -155,7 +163,11 @@ public class ConverterImpl implements InternalConverter {
         cb.rule(new Rule<String, Date>(new Function<String, Date>() {
             @Override
             public Date apply(String f) {
-                return null; // Date.from(Instant.parse(f))
+                try {
+                    return ISO8601_DATE_FORMAT.parse(f);
+                } catch (ParseException e) {
+                    throw new ConversionException("Cannot convert " + f + " to Date", e);
+                }
             }
         }) {});
 

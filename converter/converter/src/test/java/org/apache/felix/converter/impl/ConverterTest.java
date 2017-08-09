@@ -44,6 +44,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.TimeZone;
 import java.util.UUID;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -54,7 +55,6 @@ import org.apache.felix.converter.impl.MyDTO.Count;
 import org.apache.felix.converter.impl.MyEmbeddedDTO.Alpha;
 import org.junit.After;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.osgi.util.converter.ConversionException;
 import org.osgi.util.converter.Converter;
@@ -503,18 +503,22 @@ public class ConverterTest {
     }
 
     @Test
-    @Ignore("Code needs to be converted to Java 7")
     public void testCalendarDate() {
-        Calendar cal = new GregorianCalendar(2017, 1, 13);
+        Calendar cal = new GregorianCalendar(1971, 1, 13, 12, 37, 41);
+        TimeZone tz =TimeZone.getTimeZone("CET");
+        cal.setTimeZone(tz);
         Date d = cal.getTime();
 
         Converter c = converter;
 
         String s = c.convert(d).toString();
+        assertEquals("1971-02-13T12:37:41+01:00", s);
         assertEquals(d, c.convert(s).to(Date.class));
 
         String s2 = c.convert(cal).toString();
-        assertEquals(cal, c.convert(s2).to(Calendar.class));
+        assertEquals("1971-02-13T12:37:41+01:00", s2);
+        Calendar cal2 = c.convert(s2).to(Calendar.class);
+        assertEquals(cal.getTime(), cal2.getTime());
     }
 
     @Test
