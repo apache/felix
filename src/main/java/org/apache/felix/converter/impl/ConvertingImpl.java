@@ -78,67 +78,6 @@ public class ConvertingImpl extends AbstractSpecifying<Converting> implements Co
         object = obj;
     }
 
-    /*
-    @Override
-    public Converting sourceAs(Class<?> cls) {
-        sourceAsClass = cls;
-        return this;
-    }
-
-    @Override
-    public Converting sourceAsBean() {
-        // To avoid ambiguity, reset any instruction to sourceAsDTO
-        sourceAsDTO = false;
-        sourceAsJavaBean = true;
-        return this;
-    }
-
-    @Override
-    public Converting sourceAsDTO() {
-        // To avoid ambiguity, reset any instruction to sourceAsJavaBean
-        sourceAsJavaBean = false;
-        sourceAsDTO = true;
-        return this;
-    }
-
-    @Override
-    public Converting targetAs(Class<?> cls) {
-        targetAsClass = cls;
-        return this;
-    }
-
-    @Override
-    public Converting targetAsBean() {
-        // To avoid ambiguity, reset any instruction to targetAsDTO
-        targetAsDTO = false;
-        targetAsJavaBean = true;
-        return this;
-    }
-
-    @Override
-    public Converting targetAsDTO() {
-        // To avoid ambiguity, reset any instruction to targetAsJavaBean
-        targetAsJavaBean = false;
-        targetAsDTO = true;
-        return this;
-    }
-
-    @Override
-    public Converting defaultValue(Object defVal) {
-        defaultValue = defVal;
-        hasDefault = true;
-
-        return this;
-    }
-
-    @Override
-    public Converting keysIgnoreCase() {
-        keysIgnoreCase = true;
-
-        return this;
-    }
-    */
-
     @Override
     public void setConverter(Converter c) {
         if (c instanceof InternalConverter)
