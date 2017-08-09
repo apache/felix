@@ -172,7 +172,7 @@ class Util {
             Entry<String, Set<Method>> entry = it.next();
             boolean zeroArgFound = false;
             for (Method md : entry.getValue()) {
-                if (md.getParameterCount() == 0) {
+                if (md.getParameterTypes().length == 0) {
                     // OK found the zero-arg param
                     zeroArgFound = true;
                     break;
@@ -289,7 +289,7 @@ class Util {
         if (Modifier.isStatic(md.getModifiers()))
             return null;
 
-        if (md.getParameterCount() > 0)
+        if (md.getParameterTypes().length > 0)
             return null;
 
         return md.invoke(obj);

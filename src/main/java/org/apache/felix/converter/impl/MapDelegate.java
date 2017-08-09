@@ -24,9 +24,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.function.BiConsumer;
-import java.util.function.BiFunction;
-import java.util.function.Function;
 
 class MapDelegate<K, V> implements Map<K, V> {
     private final ConvertingImpl convertingImpl;
@@ -178,6 +175,7 @@ class MapDelegate<K, V> implements Map<K, V> {
         return delegate.hashCode();
     }
 
+    /* This doesn't work in Java 7, do we need to do anything?
     public V getOrDefault(Object key, V defaultValue) {
         return delegate.getOrDefault(key, defaultValue);
     }
@@ -233,6 +231,7 @@ class MapDelegate<K, V> implements Map<K, V> {
 
         return delegate.merge(key, value, remappingFunction);
     }
+*/
 
     private void cloneDelegate() {
         delegate = new HashMap<>(delegate);

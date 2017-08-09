@@ -59,7 +59,12 @@ public class ConvertingImpl extends AbstractSpecifying<Converting> implements Co
     }
     private static final Collection<Class<?>> NO_MAP_VIEW_TYPES;
     static {
-        NO_MAP_VIEW_TYPES = Arrays.asList(String.class);
+        // In Java 7 you apparently can't do this directly via generics
+        @SuppressWarnings("rawtypes")
+        Collection types = Collections.singleton(String.class);
+        @SuppressWarnings("unchecked")
+        Collection<Class<?>> types2 = types;
+        NO_MAP_VIEW_TYPES = types2;
     }
 
     volatile InternalConverter converter;
@@ -491,8 +496,8 @@ public class ConvertingImpl extends AbstractSpecifying<Converting> implements Co
     }
 
     @SuppressWarnings("rawtypes")
-    private Object createInterface(Class<?> sourceCls, Class<?> targetCls) {
-        Map m = mapView(object, sourceCls, converter);
+    private Object createInterface(Class<?> sourceCls, final Class<?> targetCls) {
+        final Map m = mapView(object, sourceCls, converter);
         return Proxy.newProxyInstance(targetCls.getClassLoader(), new Class[] {targetCls},
             new InvocationHandler() {
                 @Override
@@ -733,7 +738,7 @@ public class ConvertingImpl extends AbstractSpecifying<Converting> implements Co
         Map result = new HashMap();
         for (Class i : obj.getClass().getInterfaces()) {
             for (Method md : i.getMethods()) {
-                handleInterfaceMethod(obj, i, md, new HashSet<>(), result);
+                handleInterfaceMethod(obj, i, md, new HashSet<String>(), result);
             }
             if (result.size() > 0)
                 return result;
