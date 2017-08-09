@@ -18,15 +18,16 @@ package org.apache.felix.converter.impl;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Dictionary;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 import org.osgi.util.converter.ConversionException;
 
@@ -92,7 +93,12 @@ abstract class DynamicMapLikeFacade<K, V> implements Map<K, V> {
 
     @Override
     public Collection<V> values() {
-        return entrySet().stream().map(Entry::getValue).collect(Collectors.toList());
+        List<V> res = new ArrayList<>();
+
+        for (Map.Entry<K, V> entry : entrySet()) {
+            res.add(entry.getValue());
+        }
+        return res;
     }
 
     @Override
@@ -250,7 +256,7 @@ class DynamicInterfaceFacade extends DynamicMapLikeFacade<String, Object> {
         Set<Method> set = getKeys().get(key);
         for (Iterator<Method> iterator = set.iterator();iterator.hasNext();) {
             Method m = iterator.next();
-            if (m.getParameterCount() > 0)
+            if (m.getParameterTypes().length > 0)
                 continue;
             try {
                 return m.invoke(backingObject);

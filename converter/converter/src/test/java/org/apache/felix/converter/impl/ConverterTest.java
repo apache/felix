@@ -54,6 +54,7 @@ import org.apache.felix.converter.impl.MyDTO.Count;
 import org.apache.felix.converter.impl.MyEmbeddedDTO.Alpha;
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.osgi.util.converter.ConversionException;
 import org.osgi.util.converter.Converter;
@@ -448,6 +449,7 @@ public class ConverterTest {
     }
 
     @Test
+    @Ignore("Code needs to be converted to Java 7")
     public void testLocalDateTime() {
         LocalDateTime ldt = LocalDateTime.now();
         String s = converter.convert(ldt).to(String.class);
@@ -457,6 +459,7 @@ public class ConverterTest {
     }
 
     @Test
+    @Ignore("Code needs to be converted to Java 7")
     public void testLocalDate() {
         LocalDate ld = LocalDate.now();
         String s = converter.convert(ld).to(String.class);
@@ -466,6 +469,7 @@ public class ConverterTest {
     }
 
     @Test
+    @Ignore("Code needs to be converted to Java 7")
     public void testLocalTime() {
         LocalTime lt = LocalTime.now();
         String s = converter.convert(lt).to(String.class);
@@ -475,6 +479,7 @@ public class ConverterTest {
     }
 
     @Test
+    @Ignore("Code needs to be converted to Java 7")
     public void testOffsetDateTime() {
         OffsetDateTime ot = OffsetDateTime.now();
         String s = converter.convert(ot).to(String.class);
@@ -484,6 +489,7 @@ public class ConverterTest {
     }
 
     @Test
+    @Ignore("Code needs to be converted to Java 7")
     public void testOffsetTime() {
         OffsetTime ot = OffsetTime.now();
         String s = converter.convert(ot).to(String.class);
@@ -493,6 +499,7 @@ public class ConverterTest {
     }
 
     @Test
+    @Ignore("Code needs to be converted to Java 7")
     public void testZonedDateTime() {
         ZonedDateTime zdt = ZonedDateTime.now();
         String s = converter.convert(zdt).to(String.class);
@@ -502,6 +509,7 @@ public class ConverterTest {
     }
 
     @Test
+    @Ignore("Code needs to be converted to Java 7")
     public void testCalendarDate() {
         Calendar cal = new GregorianCalendar(2017, 1, 13);
         Date d = cal.getTime();

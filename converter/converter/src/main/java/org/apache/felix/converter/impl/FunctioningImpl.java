@@ -41,7 +41,7 @@ public class FunctioningImpl extends AbstractSpecifying<Functioning> implements 
     }
 
     @Override
-    public <T> Function<Object, T> to(Type type) {
+    public <T> Function<Object, T> to(final Type type) {
         return new Function<Object, T>() {
             @Override
             public T apply(Object t) {
