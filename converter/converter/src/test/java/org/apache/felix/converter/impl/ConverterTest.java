@@ -512,12 +512,25 @@ public class ConverterTest {
         Converter c = converter;
 
         String s = c.convert(d).toString();
-        assertEquals("1971-02-13T12:37:41+01:00", s);
+        assertEquals("1971-02-13T11:37:41Z", s);
         assertEquals(d, c.convert(s).to(Date.class));
 
         String s2 = c.convert(cal).toString();
-        assertEquals("1971-02-13T12:37:41+01:00", s2);
+        assertEquals("1971-02-13T11:37:41Z", s2);
         Calendar cal2 = c.convert(s2).to(Calendar.class);
+        assertEquals(cal.getTime(), cal2.getTime());
+    }
+
+    @Test
+    public void testCalendarLong() {
+        Calendar cal = new GregorianCalendar(1971, 1, 13, 12, 37, 41);
+        TimeZone tz =TimeZone.getTimeZone("UTC");
+        cal.setTimeZone(tz);
+
+        long l = converter.convert(cal).to(Long.class);
+        assertEquals(l, cal.getTimeInMillis());
+
+        Calendar cal2 = converter.convert(l).to(Calendar.class);
         assertEquals(cal.getTime(), cal2.getTime());
     }
 
