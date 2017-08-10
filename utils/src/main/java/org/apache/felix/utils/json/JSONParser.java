@@ -197,9 +197,15 @@ public class JSONParser {
         if (jsonObject.length() == 0)
             return values;
 
+        String lastParsedObject = "[START OF DOC]";
         for (String element : parseKeyValueListRaw(jsonObject)) {
-            Pair<String, Object> pair = parseKeyValue(element);
-            values.put(pair.key, pair.value);
+            try {
+                Pair<String, Object> pair = parseKeyValue(element);
+                values.put(pair.key, pair.value);
+                lastParsedObject = jsonObject;
+            } catch (Throwable t) {
+                throw new IllegalArgumentException("An error occured after: " + lastParsedObject, t);
+            }
         }
 
         return values;
