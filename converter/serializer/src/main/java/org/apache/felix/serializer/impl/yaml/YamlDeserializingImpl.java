@@ -21,20 +21,23 @@ import java.io.InputStream;
 import java.lang.reflect.Type;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
+import java.util.Map;
 import java.util.Scanner;
 
 import org.apache.felix.serializer.impl.Util;
 import org.osgi.service.serializer.Deserializing;
+import org.osgi.service.serializer.Parser;
 import org.osgi.util.converter.ConversionException;
 import org.osgi.util.converter.Converter;
-import org.yaml.snakeyaml.Yaml;
 
 public class YamlDeserializingImpl<T> implements Deserializing<T> {
     private volatile Converter converter;
+    private volatile Parser parser;
     private final Type type;
 
-    YamlDeserializingImpl(Converter c, Type cls) {
+    YamlDeserializingImpl(Converter c, Parser p, Type cls) {
         converter = c;
+        parser = p;
         type = cls;
     }
 
@@ -65,19 +68,23 @@ public class YamlDeserializingImpl<T> implements Deserializing<T> {
     @Override
     @SuppressWarnings("unchecked")
     public T from(CharSequence in) {
-        Yaml yaml = new Yaml();
-        Object res = yaml.load(in.toString());
-
+        Map<?,?> m = parser.parse(in);
         if (type instanceof Class)
-            if (res.getClass().isAssignableFrom((Class<?>) type))
-                return (T) res;
+            if (m.getClass().isAssignableFrom((Class<?>) type))
+                return (T) m;
 
-        return (T) converter.convert(res).to(type);
+        return (T) converter.convert(m).to(type);
     }
 
     @Override
     public Deserializing<T> with(Converter c) {
         converter = c;
+        return this;
+    }
+
+    @Override
+    public Deserializing<T> with(Parser p) {
+        parser = p;
         return this;
     }
 }

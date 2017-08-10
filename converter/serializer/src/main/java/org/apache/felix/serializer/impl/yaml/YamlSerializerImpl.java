@@ -21,6 +21,7 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.osgi.service.serializer.Deserializing;
+import org.osgi.service.serializer.Parser;
 import org.osgi.service.serializer.Serializer;
 import org.osgi.service.serializer.Serializing;
 import org.osgi.util.converter.Converter;
@@ -30,20 +31,21 @@ import org.osgi.util.converter.TypeReference;
 public class YamlSerializerImpl implements Serializer {
     private final Map<String, Object> configuration = new ConcurrentHashMap<>();
     private final Converter converter = Converters.standardConverter();
+    private final Parser parser = new DefaultParser();
 
     @Override
     public <T> Deserializing<T> deserialize(Class<T> cls) {
-        return new YamlDeserializingImpl<T>(converter, cls);
+        return new YamlDeserializingImpl<T>(converter, parser, cls);
     }
 
     @Override
     public <T> Deserializing<T> deserialize(TypeReference<T> ref) {
-        return new YamlDeserializingImpl<T>(converter, ref.getType());
+        return new YamlDeserializingImpl<T>(converter, parser, ref.getType());
     }
 
     @Override @SuppressWarnings("rawtypes")
     public Deserializing<?> deserialize(Type type) {
-        return new YamlDeserializingImpl(converter, type);
+        return new YamlDeserializingImpl(converter, parser, type);
     }
 
     @Override

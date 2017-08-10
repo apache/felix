@@ -26,6 +26,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.felix.serializer.impl.AbstractSpecifying;
 import org.osgi.service.serializer.Deserializing;
+import org.osgi.service.serializer.Parser;
 import org.osgi.service.serializer.Serializer;
 import org.osgi.service.serializer.Serializing;
 import org.osgi.util.converter.Converter;
@@ -36,10 +37,11 @@ public class JsonSerializerImpl implements Serializer {
     private final Map<String, Object> configuration = new ConcurrentHashMap<>();
     private final ThreadLocal<Boolean> threadLocal = new ThreadLocal<>();
     private final Converter converter = Converters.standardConverter();
+    private final Parser parser = new DefaultParser();
 
     @Override
     public <T> Deserializing<T> deserialize(Class<T> cls) {
-        return new JsonDeserializingImpl<T>(converter, cls);
+        return new JsonDeserializingImpl<T>(converter, parser, cls);
     }
 
     @Override
@@ -121,11 +123,11 @@ public class JsonSerializerImpl implements Serializer {
 
     @Override
     public <T> Deserializing<T> deserialize(TypeReference<T> ref) {
-        return new JsonDeserializingImpl<T>(converter, ref.getType());
+        return new JsonDeserializingImpl<T>(converter, parser, ref.getType());
     }
 
     @Override @SuppressWarnings("rawtypes")
     public Deserializing<?> deserialize(Type type) {
-        return new JsonDeserializingImpl(converter, type);
+        return new JsonDeserializingImpl(converter, parser, type);
     }
 }

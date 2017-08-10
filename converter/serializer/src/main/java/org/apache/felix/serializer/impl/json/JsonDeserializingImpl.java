@@ -25,25 +25,26 @@ import java.util.Map;
 import java.util.Scanner;
 
 import org.apache.felix.serializer.impl.Util;
-import org.apache.felix.utils.json.JSONParser;
 import org.osgi.service.serializer.Deserializing;
+import org.osgi.service.serializer.Parser;
 import org.osgi.util.converter.ConversionException;
 import org.osgi.util.converter.Converter;
 
 public class JsonDeserializingImpl<T> implements Deserializing<T> {
     private final Type type;
     private volatile Converter converter;
+    private volatile Parser parser;
 
-    public JsonDeserializingImpl(Converter c, Type t) {
+    public JsonDeserializingImpl(Converter c, Parser p, Type t) {
         converter = c;
+        parser = p;
         type = t;
     }
 
     @Override
     @SuppressWarnings("unchecked")
     public T from(CharSequence in) {
-        JSONParser jp = new JSONParser(in);
-        Map<?,?> m = jp.getParsed();
+        Map<?,?> m = parser.parse(in);
         if (type instanceof Class)
             if (m.getClass().isAssignableFrom((Class<?>) type))
                 return (T) m;
@@ -78,6 +79,12 @@ public class JsonDeserializingImpl<T> implements Deserializing<T> {
     @Override
     public Deserializing<T> with(Converter c) {
         converter = c;
+        return this;
+    }
+
+    @Override
+    public Deserializing<T> with(Parser p) {
+        parser = p;
         return this;
     }
 }
