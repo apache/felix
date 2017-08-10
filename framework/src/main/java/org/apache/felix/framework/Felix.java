@@ -1957,7 +1957,7 @@ public class Felix extends BundleImpl implements Framework
             {
                 throw new BundleException(
                     "Bundle " + bundle
-                    + " cannot be started, since it is either starting or stopping.");
+                    + " cannot be started: " + ex.getMessage());
             }
         }
 
@@ -2326,7 +2326,7 @@ public class Felix extends BundleImpl implements Framework
             {
                 throw new BundleException(
                     "Bundle " + bundle
-                    + " cannot be update, since we could not get a lock for it without deadlock.");
+                    + " cannot be update: " + ex.getMessage());
             }
         }
 
@@ -2337,9 +2337,12 @@ public class Felix extends BundleImpl implements Framework
             // Check if the bundle is not currently STARTING or STOPPING because if it is
             // we are in a loop where the bundle being started or stopped triggered an update
             // of itself (either directly or indirectly) which we can not handle.
-            if ((bundle.getState() & (Bundle.STARTING | Bundle.STOPPING)) != 0) 
+            if ((bundle.getState() == Bundle.STARTING && (!bundle.isDeclaredActivationPolicyUsed()
+                    || ((BundleRevisionImpl) bundle.adapt(BundleRevision.class))
+                    .getDeclaredActivationPolicy() != BundleRevisionImpl.LAZY_ACTIVATION )) ||
+                    bundle.getState() == Bundle.STOPPING)
             {
-                throw new BundleException("Bundle " + bundle
+                throw new IllegalStateException("Bundle " + bundle
                     + " cannot be update, since it is either STARTING or STOPPING.");
             }
             
@@ -2560,7 +2563,7 @@ public class Felix extends BundleImpl implements Framework
             {
                 throw new BundleException(
                     "Bundle " + bundle
-                    + " cannot be stopped since it is already stopping.");
+                    + " cannot be stopped: " + ex.getMessage());
             }
         }
 
@@ -2718,12 +2721,24 @@ public class Felix extends BundleImpl implements Framework
             {
                 throw new BundleException(
                     "Bundle " + bundle
-                    + " cannot be uninstalled since it is stopping.");
+                    + " cannot be uninstalled: " + ex.getMessage());
             }
         }
 
         try
         {
+            // Check if the bundle is not currently STARTING or STOPPING because if it is
+            // we are in a loop where the bundle being started or stopped triggered a state change
+            // of itself (either directly or indirectly) which we can not handle.
+            if ((bundle.getState() == Bundle.STARTING && (!bundle.isDeclaredActivationPolicyUsed()
+                || ((BundleRevisionImpl) bundle.adapt(BundleRevision.class))
+                .getDeclaredActivationPolicy() != BundleRevisionImpl.LAZY_ACTIVATION )) ||
+                bundle.getState() == Bundle.STOPPING)
+            {
+                throw new IllegalStateException("Bundle " + bundle
+                        + " cannot be uninstalled, since it is either STARTING or STOPPING.");
+            }
+
             // The spec says that uninstall should always succeed, so
             // catch an exception here if stop() doesn't succeed and
             // rethrow it at the end.
