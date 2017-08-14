@@ -40,6 +40,7 @@ import java.util.Set;
 import java.util.SortedMap;
 import java.util.TreeMap;
 import java.util.TreeSet;
+import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.felix.framework.cache.Content;
 import org.apache.felix.framework.cache.JarContent;
@@ -83,6 +84,8 @@ public class BundleWiringImpl implements BundleWiring
     public final static int EAGER_ACTIVATION = 0;
     public final static int LAZY_ACTIVATION = 1;
 
+    protected final static String SUN_REFLECT_GENERATED_ACCESSOR_ACCESSOR = "sun.reflect.Generated";
+
     private final Logger m_logger;
     private final Map m_configMap;
     private final StatefulResolver m_resolver;
@@ -110,6 +113,10 @@ public class BundleWiringImpl implements BundleWiring
     private final ClassLoader m_bootClassLoader;
     // Default class loader for boot delegation.
     private final static ClassLoader m_defBootClassLoader;
+
+    private volatile Map<String, BundleRevision> m_accessorLookupCache;
+
+    private volatile Set<String> m_accessorFailedLookupCache;
 
     // Statically define the default class loader for boot delegation.
     static
@@ -446,6 +453,10 @@ public class BundleWiringImpl implements BundleWiring
                 m_useLocalURLs =
                         (m_configMap.get(FelixConstants.USE_LOCALURLS_PROP) == null)
                         ? false : true;
+
+                        m_accessorLookupCache = new ConcurrentHashMap<String, BundleRevision>();
+                        m_accessorFailedLookupCache = Collections.newSetFromMap(new ConcurrentHashMap<String, Boolean>());
+
                     }
 
     private static List<List<String>> parsePkgFilters(BundleCapability cap, String filtername)
@@ -471,6 +482,14 @@ public class BundleWiringImpl implements BundleWiring
     public String toString()
     {
         return m_revision.getBundle().toString();
+    }
+
+    protected Map<String, BundleRevision> getAccessorLookupCache() {
+        return m_accessorLookupCache;
+    }
+
+    protected Set<String> getAccessorFailedLookupCache() {
+        return m_accessorFailedLookupCache;
     }
 
     public synchronized void dispose()
@@ -1466,9 +1485,22 @@ public class BundleWiringImpl implements BundleWiring
                         ? Util.getClassPackage(name)
                                 : Util.getResourcePackage(name);
 
+                        boolean accessor = name.startsWith(SUN_REFLECT_GENERATED_ACCESSOR_ACCESSOR)
+                                && getBundle().getFramework().skipGeneratedAccessorClassloading();
+
+                        //return if accessor class was not found
+                        if(accessor
+                                && getAccessorFailedLookupCache().contains(name)) {
+                            //terminate search for sun.reflect.Generated* classes if enabled with felix property
+                            //FELIX-5665 - High CPU usage on sun.reflect.Generated* class loads by log4j
+                            throw new ClassNotFoundException(name + " not found by " + this.getBundle());
+                        }
+
+
                         // Delegate any packages listed in the boot delegation
                         // property to the parent class loader.
-                        if (shouldBootDelegate(pkgName))
+                        if (shouldBootDelegate(pkgName) && !(accessor && getAccessorLookupCache().containsKey(name)
+                                && getAccessorLookupCache().get(name) != getRevision()))
                         {
                             try
                             {
@@ -1481,6 +1513,10 @@ public class BundleWiringImpl implements BundleWiring
                                         // search; otherwise, continue to look locally if not found.
                                         if (pkgName.startsWith("java.") || (result != null))
                                         {
+                                            //if this is a generated accessor class found via boot delegation, then record it as found in current bundle revision
+                                            if(accessor && result != null) {
+                                                getAccessorLookupCache().put(name, getRevision());
+                                            }
                                             return result;
                                         }
                             }
@@ -1493,6 +1529,40 @@ public class BundleWiringImpl implements BundleWiring
                                     throw ex;
                                 }
                             }
+                        }
+
+                        //load and cache accessor loads from from required and import packages
+                        if(accessor)
+                        {
+                            Collection<BundleRevision> bundleRevisions = new ArrayList<BundleRevision>();
+
+                            //if this is the first access, search all imports and required package revisions
+                            if (!getAccessorLookupCache().containsKey(name))
+                            {
+                                bundleRevisions = m_importedPkgs.values();
+                                for (List<BundleRevision> revisions : m_requiredPkgs.values()) {
+                                    bundleRevisions.addAll(revisions);
+                                }
+                            }
+                            //load from cached revision if it exists
+                            else if (getAccessorLookupCache().containsKey(name)
+                                    && !(getRevision() == getAccessorLookupCache().get(name))) {
+                                bundleRevisions.add(getAccessorLookupCache().get(name));
+                            }
+
+                            for (BundleRevision revision : bundleRevisions) {
+                                result = findLoadedClassInBundleRevision(name, revision);
+                                if (result != null) {
+                                    return result;
+                                }
+                            }
+
+                            //record failed lookup to not incur overhead for additional accesses
+                            getAccessorFailedLookupCache().add(name);
+
+                            //terminate search for sun.reflect.Generated* classes if enabled with felix property
+                            //FELIX-5665 - High CPU usage on sun.reflect.Generated* class loads by log4j
+                            throw new ClassNotFoundException(name + " not found by " + this.getBundle());
                         }
 
                         // Look in the revision's imports. Note that the search may
@@ -1557,6 +1627,20 @@ public class BundleWiringImpl implements BundleWiring
         }
 
         return result;
+    }
+
+    private Object findLoadedClassInBundleRevision(String name, BundleRevision revision) {
+        ClassLoader loader = revision.getWiring().getClassLoader();
+        if (loader != null && loader instanceof BundleClassLoader) {
+            BundleClassLoader bundleClassLoader = (BundleClassLoader) loader;
+            Object result = bundleClassLoader.findLoadedClassInternal(name);
+            if (result != null)
+            {
+                getAccessorLookupCache().put(name, revision);
+                return result;
+            }
+        }
+        return null;
     }
 
     private Object searchImports(String pkgName, String name, boolean isClass)
@@ -1636,6 +1720,8 @@ public class BundleWiringImpl implements BundleWiring
             // Ignore this since it is likely the result of a resolver hook.
         }
 
+
+
         // If the dynamic import was successful, then this initial
         // time we must directly return the result from dynamically
         // created package sources, but subsequent requests for
@@ -1643,6 +1729,16 @@ public class BundleWiringImpl implements BundleWiring
         // processed as part of normal static imports.
         if (provider != null)
         {
+
+            if (m_accessorLookupCache != null)
+            {
+                m_accessorLookupCache.clear();
+            }
+            if (m_accessorFailedLookupCache != null)
+            {
+                m_accessorFailedLookupCache.clear();
+            }
+
             // Return the class or resource.
             return (isClass)
                     ? (Object) ((BundleWiringImpl) provider.getWiring()).getClassByDelegation(name)
@@ -2590,6 +2686,10 @@ public class BundleWiringImpl implements BundleWiring
         public String toString()
         {
             return m_wiring.toString();
+        }
+
+        Class<?> findLoadedClassInternal(String name) {
+            return super.findLoadedClass(name);
         }
     }
 
