@@ -18,28 +18,12 @@
  */
 package org.apache.felix.framework;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.fail;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
-
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.lang.reflect.Constructor;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-
 import org.apache.felix.framework.BundleWiringImpl.BundleClassLoader;
 import org.apache.felix.framework.cache.Content;
 import org.junit.Test;
 import org.mockito.Mockito;
+import org.mockito.invocation.InvocationOnMock;
+import org.mockito.stubbing.Answer;
 import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.ClassWriter;
 import org.objectweb.asm.Opcodes;
@@ -52,6 +36,31 @@ import org.osgi.framework.hooks.weaving.WovenClass;
 import org.osgi.framework.hooks.weaving.WovenClassListener;
 import org.osgi.framework.wiring.BundleRevision;
 import org.osgi.framework.wiring.BundleWire;
+import org.osgi.framework.wiring.BundleWiring;
+
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.lang.reflect.Constructor;
+import java.lang.reflect.Field;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 public class BundleWiringImplTest
 {
@@ -366,6 +375,283 @@ public class BundleWiringImplTest
         assertEquals("The second state change failed the define on the class",
                 (Object)WovenClass.DEFINE_FAILED,
                 dummyWovenClassListener.stateList.get(1));
+    }
+
+    private ConcurrentHashMap<String, ClassLoader> getAccessorCache(BundleWiringImpl wiring) throws NoSuchFieldException, IllegalAccessException {
+        Field m_accessorLookupCache = BundleWiringImpl.class.getDeclaredField("m_accessorLookupCache");
+        m_accessorLookupCache.setAccessible(true);
+        return (ConcurrentHashMap<String, ClassLoader>) m_accessorLookupCache.get(wiring);
+    }
+
+    @Test
+    public void testFirstGeneratedAccessorSkipClassloading() throws Exception
+    {
+
+        String classToBeLoaded = "sun.reflect.GeneratedMethodAccessor21";
+
+        Felix mockFramework = mock(Felix.class);
+        when(mockFramework.getBootPackages()).thenReturn(new String[0]);
+
+        initializeSimpleBundleWiring();
+
+        when(bundleWiring.getBundle().getFramework()).thenReturn(mockFramework);
+
+        BundleClassLoader bundleClassLoader = createBundleClassLoader(
+                BundleClassLoader.class, bundleWiring);
+        assertNotNull(bundleClassLoader);
+
+        try {
+            bundleClassLoader.loadClass(classToBeLoaded, true);
+            fail();
+        } catch (ClassNotFoundException cnf) {
+            //this is expected
+
+            //make sure boot delegation was done before CNF was thrown
+            verify(mockFramework).getBootPackages();
+
+            //make sure the class is added to the skip class cache
+            assertEquals(getAccessorCache(bundleWiring).get(classToBeLoaded), BundleWiringImpl.CNFE_CLASS_LOADER);
+        } catch (Exception e) {
+            e.printStackTrace();
+            fail();
+        }
+    }
+
+    @SuppressWarnings("rawtypes")
+    public void initializeBundleWiringWithImportsAndRequired(Map<String, BundleRevision> importedPkgs, Map<String, List<BundleRevision>> requiredPkgs) throws Exception
+    {
+
+        mockResolver = mock(StatefulResolver.class);
+        mockRevisionImpl = mock(BundleRevisionImpl.class);
+        mockBundle = mock(BundleImpl.class);
+
+        Logger logger = new Logger();
+        Map configMap = new HashMap();
+        List<BundleRevision> fragments = new ArrayList<BundleRevision>();
+        List<BundleWire> wires = new ArrayList<BundleWire>();
+
+        when(mockRevisionImpl.getBundle()).thenReturn(mockBundle);
+        when(mockBundle.getBundleId()).thenReturn(Long.valueOf(1));
+
+        bundleWiring = new BundleWiringImpl(logger, configMap, mockResolver,
+                mockRevisionImpl, fragments, wires, importedPkgs, requiredPkgs);
+    }
+
+    @Test
+    public void testAccessorFirstLoadFailed() throws Exception
+    {
+
+        String classToBeLoaded = "sun.reflect.GeneratedMethodAccessor21";
+
+        Felix mockFramework = mock(Felix.class);
+        when(mockFramework.getBootPackages()).thenReturn(new String[0]);
+
+        Map<String, BundleRevision> importedPkgs = mock(Map.class);
+        Map<String, List<BundleRevision>> requiredPkgs = mock(Map.class);
+
+        initializeBundleWiringWithImportsAndRequired(importedPkgs, requiredPkgs);
+
+        when(bundleWiring.getBundle().getFramework()).thenReturn(mockFramework);
+
+        BundleClassLoader bundleClassLoader = createBundleClassLoader(
+                BundleClassLoader.class, bundleWiring);
+        assertNotNull(bundleClassLoader);
+
+        try {
+            bundleClassLoader.loadClass(classToBeLoaded, true);
+            fail();
+        } catch (ClassNotFoundException cnf) {
+            //this is expected
+
+            //make sure boot delegation was done before CNF was thrown
+            verify(mockFramework).getBootPackages();
+
+            //make sure imported and required pkgs are searched
+            verify(importedPkgs).values();
+            verify(requiredPkgs).values();
+
+            //make sure the class is added to the skip class cache
+            assertEquals(getAccessorCache(bundleWiring).get(classToBeLoaded), BundleWiringImpl.CNFE_CLASS_LOADER);
+        } catch (Exception e) {
+            e.printStackTrace();
+            fail();
+        }
+    }
+
+    @Test
+    public void testAccessorSubsequentLoadFailed() throws Exception
+    {
+
+        String classToBeLoaded = "sun.reflect.GeneratedMethodAccessor21";
+
+        Felix mockFramework = mock(Felix.class);
+        when(mockFramework.getBootPackages()).thenReturn(new String[0]);
+
+        Map<String, BundleRevision> importedPkgs = mock(Map.class);
+        Map<String, List<BundleRevision>> requiredPkgs = mock(Map.class);
+
+        initializeBundleWiringWithImportsAndRequired(importedPkgs, requiredPkgs);
+
+        when(bundleWiring.getBundle().getFramework()).thenReturn(mockFramework);
+
+        BundleClassLoader bundleClassLoader = createBundleClassLoader(
+                BundleClassLoader.class, bundleWiring);
+        assertNotNull(bundleClassLoader);
+
+        //first attempt to populate the cache
+        try {
+            bundleClassLoader.loadClass(classToBeLoaded, true);
+            fail();
+        } catch (ClassNotFoundException cnf) {
+            //this is expected
+        }
+
+        //now test that the subsequent class load throws CNF with out boot delegation and import/required packages
+        try {
+
+            importedPkgs = mock(Map.class);
+            requiredPkgs = mock(Map.class);
+            initializeBundleWiringWithImportsAndRequired(importedPkgs, requiredPkgs);
+            mockFramework = mock(Felix.class);
+            when(mockFramework.getBootPackages()).thenReturn(new String[0]);
+            when(bundleWiring.getBundle().getFramework()).thenReturn(mockFramework);
+            bundleClassLoader.loadClass(classToBeLoaded, true);
+            fail();
+        } catch (ClassNotFoundException cnf) {
+            //this is expected
+
+            //make sure boot delegation was not used
+            verify(mockFramework, never()).getBootPackages();
+
+            //make sure boot import and required packages were not searched
+            verify(importedPkgs, never()).values();
+            verify(requiredPkgs, never()).values();
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            fail();
+        }
+    }
+
+    private BundleRevision getBundleRevision(String classToBeLoaded, BundleClassLoader pkgBundleClassLoader, Object value) throws ClassNotFoundException {
+        BundleRevision bundleRevision = mock(BundleRevision.class);
+        BundleWiring pkgBundleWiring = mock(BundleWiring.class);
+        when(pkgBundleClassLoader.findLoadedClassInternal(classToBeLoaded)).thenAnswer(createAnswer(value));
+        when(pkgBundleClassLoader.loadClass(classToBeLoaded)).thenAnswer(createAnswer(value));
+
+        when(pkgBundleWiring.getClassLoader()).thenReturn(pkgBundleClassLoader);
+        when(bundleRevision.getWiring()).thenReturn(pkgBundleWiring);
+        return bundleRevision;
+    }
+
+    @Test
+    public void testAccessorLoadImportPackage() throws Exception
+    {
+
+        String classToBeLoaded = "sun.reflect.GeneratedMethodAccessor21";
+
+        Felix mockFramework = mock(Felix.class);
+        when(mockFramework.getBootPackages()).thenReturn(new String[0]);
+
+        Map<String, BundleRevision> importedPkgs = mock(Map.class);
+        BundleClassLoader foundClassLoader = mock(BundleClassLoader.class);
+        BundleClassLoader notFoundClassLoader = mock(BundleClassLoader.class);
+        BundleRevision bundleRevision1 = getBundleRevision(classToBeLoaded, foundClassLoader, String.class);
+        BundleRevision bundleRevision2 = getBundleRevision(classToBeLoaded, notFoundClassLoader, null);
+        Map<String, BundleRevision> importedPkgsActual = new HashMap<String, BundleRevision>();
+        importedPkgsActual.put("sun.reflect1", bundleRevision1);
+        importedPkgsActual.put("sun.reflect2", bundleRevision2);
+        when(importedPkgs.values()).thenReturn(importedPkgsActual.values());
+        Map<String, List<BundleRevision>> requiredPkgs = mock(Map.class);
+
+        initializeBundleWiringWithImportsAndRequired(importedPkgs, requiredPkgs);
+
+        when(bundleWiring.getBundle().getFramework()).thenReturn(mockFramework);
+
+        BundleClassLoader bundleClassLoader = createBundleClassLoader(
+                BundleClassLoader.class, bundleWiring);
+        assertNotNull(bundleClassLoader);
+
+        //call class load to populate the cache
+        try {
+            Object result = bundleClassLoader.loadClass(classToBeLoaded, true);
+            assertNotNull(result);
+            assertTrue(getAccessorCache(bundleWiring).containsKey(classToBeLoaded));
+            assertEquals(getAccessorCache(bundleWiring).get(classToBeLoaded), foundClassLoader);
+            verify(foundClassLoader, times(1)).findLoadedClassInternal(classToBeLoaded);
+            verify(notFoundClassLoader, never()).findLoadedClassInternal(classToBeLoaded);
+        } catch (Exception e) {
+            fail();
+        }
+
+        //now make sure subsequent class load happens from cached revision
+        Object result = bundleClassLoader.loadClass(classToBeLoaded, true);
+        assertNotNull(result);
+        //makes sure the look up cache is accessed and the class is loaded from cached revision
+        verify(foundClassLoader, times(1)).findLoadedClassInternal(classToBeLoaded);
+        verify(foundClassLoader, times(1)).loadClass(classToBeLoaded);
+        verify(notFoundClassLoader, never()).findLoadedClassInternal(classToBeLoaded);
+    }
+
+    private static <T> Answer<T> createAnswer(final T value) {
+        Answer<T> dummy = new Answer<T>() {
+            @Override
+            public T answer(InvocationOnMock invocation) throws Throwable {
+                return value;
+            }
+        };
+        return dummy;
+    }
+
+    @Test
+    public void testAccessorBootDelegate() throws Exception
+    {
+
+        String classToBeLoaded = "sun.reflect.GeneratedMethodAccessor21";
+
+        Felix mockFramework = mock(Felix.class);
+        when(mockFramework.getBootPackages()).thenReturn(new String[0]);
+
+        Map<String, BundleRevision> importedPkgs = mock(Map.class);
+        BundleRevision bundleRevision1 = mock(BundleRevision.class);
+        Map<String, BundleRevision> importedPkgsActual = new HashMap<String, BundleRevision>();
+        importedPkgsActual.put("sun.reflect1", bundleRevision1);
+        when(importedPkgs.values()).thenReturn(importedPkgsActual.values());
+        Map<String, List<BundleRevision>> requiredPkgs = mock(Map.class);
+
+        ClassLoader bootDelegateClassLoader = mock(ClassLoader.class);
+
+        when(bootDelegateClassLoader.loadClass(classToBeLoaded)).thenAnswer(createAnswer(String.class));
+
+        initializeBundleWiringWithImportsAndRequired(importedPkgs, requiredPkgs);
+
+        when(bundleWiring.getBundle().getFramework()).thenReturn(mockFramework);
+
+        Field field = bundleWiring.getClass().getDeclaredField("m_bootClassLoader");
+        field.setAccessible(true);
+        field.set(bundleWiring, bootDelegateClassLoader);
+
+        BundleClassLoader bundleClassLoader = createBundleClassLoader(
+                BundleClassLoader.class, bundleWiring);
+        assertNotNull(bundleClassLoader);
+
+        try {
+            Object result = bundleClassLoader.loadClass(classToBeLoaded, true);
+            assertNotNull(result);
+            verify(importedPkgs, never()).values();
+            verify(requiredPkgs, never()).values();
+            assertTrue(getAccessorCache(bundleWiring).containsKey(classToBeLoaded));
+            assertTrue(getAccessorCache(bundleWiring).get(classToBeLoaded) == bootDelegateClassLoader);
+        } catch (Exception e) {
+            fail();
+        }
+
+        //now make sure subsequent class loading happens from boot delegation
+        Object result = bundleClassLoader.loadClass(classToBeLoaded, true);
+        assertNotNull(result);
+        //makes sure the look up cache is accessed and the class is loaded via boot delegation
+        verify(importedPkgs, never()).values();
+        verify(requiredPkgs, never()).values();
     }
 
     @SuppressWarnings("rawtypes")
