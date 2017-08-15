@@ -18,29 +18,6 @@
  */
 package org.apache.felix.framework;
 
-import java.io.IOException;
-import java.lang.reflect.Constructor;
-import java.lang.reflect.Method;
-import java.net.MalformedURLException;
-import java.net.URL;
-import java.security.AccessController;
-import java.security.PrivilegedActionException;
-import java.security.PrivilegedExceptionAction;
-import java.security.SecureClassLoader;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Enumeration;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.SortedMap;
-import java.util.TreeMap;
-import java.util.TreeSet;
-
 import org.apache.felix.framework.cache.Content;
 import org.apache.felix.framework.cache.JarContent;
 import org.apache.felix.framework.capabilityset.SimpleFilter;
@@ -76,12 +53,45 @@ import org.osgi.resource.Requirement;
 import org.osgi.resource.Wire;
 import org.osgi.service.resolver.ResolutionException;
 
+import java.io.IOException;
+import java.lang.reflect.Constructor;
+import java.lang.reflect.Method;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.security.AccessController;
+import java.security.PrivilegedActionException;
+import java.security.PrivilegedExceptionAction;
+import java.security.SecureClassLoader;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Enumeration;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.SortedMap;
+import java.util.TreeMap;
+import java.util.TreeSet;
+import java.util.concurrent.ConcurrentHashMap;
+
 public class BundleWiringImpl implements BundleWiring
 {
     public final static int LISTRESOURCES_DEBUG = 1048576;
 
     public final static int EAGER_ACTIVATION = 0;
     public final static int LAZY_ACTIVATION = 1;
+
+    public static final ClassLoader CNFE_CLASS_LOADER = new ClassLoader()
+    {
+        @Override
+        protected Class<?> loadClass(String name, boolean resolve) throws ClassNotFoundException
+        {
+            throw new ClassNotFoundException("Unable to load class '" + name + "'");
+        }
+    };
 
     private final Logger m_logger;
     private final Map m_configMap;
@@ -150,6 +160,8 @@ public class BundleWiringImpl implements BundleWiring
 
     // Flag indicating whether this wiring has been disposed.
     private volatile boolean m_isDisposed = false;
+
+    private volatile ConcurrentHashMap<String, ClassLoader> m_accessorLookupCache;
 
     BundleWiringImpl(
             Logger logger, Map configMap, StatefulResolver resolver,
@@ -484,6 +496,7 @@ public class BundleWiringImpl implements BundleWiring
         }
         m_classLoader = null;
         m_isDisposed = true;
+        m_accessorLookupCache = null;
     }
 
     // TODO: OSGi R4.3 - This really shouldn't be public, but it is needed by the
@@ -1466,6 +1479,22 @@ public class BundleWiringImpl implements BundleWiring
                         ? Util.getClassPackage(name)
                                 : Util.getResourcePackage(name);
 
+                        boolean accessor = name.startsWith("sun.reflect.Generated");
+
+                        if (accessor)
+                        {
+                            if (m_accessorLookupCache == null)
+                            {
+                                m_accessorLookupCache = new ConcurrentHashMap<String, ClassLoader>();
+                            }
+
+                            ClassLoader loader = m_accessorLookupCache.get(name);
+                            if (loader != null)
+                            {
+                                return loader.loadClass(name);
+                            }
+                        }
+
                         // Delegate any packages listed in the boot delegation
                         // property to the parent class loader.
                         if (shouldBootDelegate(pkgName))
@@ -1481,6 +1510,10 @@ public class BundleWiringImpl implements BundleWiring
                                         // search; otherwise, continue to look locally if not found.
                                         if (pkgName.startsWith("java.") || (result != null))
                                         {
+                                            if (accessor)
+                                            {
+                                                m_accessorLookupCache.put(name, bdcl);
+                                            }
                                             return result;
                                         }
                             }
@@ -1493,6 +1526,33 @@ public class BundleWiringImpl implements BundleWiring
                                     throw ex;
                                 }
                             }
+                        }
+
+                        if (accessor)
+                        {
+                            List<Collection<BundleRevision>> allRevisions = new ArrayList<Collection<BundleRevision>>( 1 + m_requiredPkgs.size());
+                            allRevisions.add(m_importedPkgs.values());
+                            allRevisions.addAll(m_requiredPkgs.values());
+
+                            for (Collection<BundleRevision> revisions : allRevisions)
+                            {
+                                for (BundleRevision revision : revisions)
+                                {
+                                    ClassLoader loader = revision.getWiring().getClassLoader();
+                                    if (loader != null && loader instanceof BundleClassLoader)
+                                    {
+                                        BundleClassLoader bundleClassLoader = (BundleClassLoader) loader;
+                                        result = bundleClassLoader.findLoadedClassInternal(name);
+                                        if (result != null)
+                                        {
+                                            m_accessorLookupCache.put(name, bundleClassLoader);
+                                            return result;
+                                        }
+                                    }
+                                }
+                            }
+                            m_accessorLookupCache.put(name, CNFE_CLASS_LOADER);
+                            CNFE_CLASS_LOADER.loadClass(name);
                         }
 
                         // Look in the revision's imports. Note that the search may
@@ -2590,6 +2650,11 @@ public class BundleWiringImpl implements BundleWiring
         public String toString()
         {
             return m_wiring.toString();
+        }
+
+        Class<?> findLoadedClassInternal(String name)
+        {
+            return super.findLoadedClass(name);
         }
     }
 
