@@ -45,6 +45,11 @@ public class ConverterFunctionTest {
                 cf.apply(""));
         assertEquals(Integer.valueOf(999),
                 c.convert("").defaultValue(999).to(Integer.class));
+
+        assertEquals(Integer.valueOf(123),
+                cf.apply("123"));
+        assertEquals(Integer.valueOf(123),
+                c.convert("123").defaultValue(999).to(Integer.class));
     }
 
     @Test
