@@ -1,4 +1,10 @@
-Chnages from 5.6.4 to 5.6.6
+Changes from 5.6.6 to 5.6.8
+---------------------------
+
+** Improvement
+    * Update to latest framework version 5.6.8
+
+Changes from 5.6.4 to 5.6.6
 ---------------------------
 
 ** Improvement
