@@ -1,3 +1,13 @@
+Changes from 5.6.6 to 5.6.8
+---------------------------
+
+** Bug
+    * [FELIX-5672] - Cannot launch Felix on Raspberry Pi: problem with normalizeOSVersion()
+    * [FELIX-5676] - Uninstall should throw an exception if called while the bundle is starting or stopping
+
+** Improvement
+    * [FELIX-5665] - High CPU usage on sun.reflect.Generated* class loads by log4j 
+
 Changes from 5.6.4 to 5.6.6
 ---------------------------
 
