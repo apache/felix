@@ -88,7 +88,7 @@ public class JsonSerializerTest {
                 rule(new TypeRule<String, Foo>(String.class, Foo.class, v -> Foo.fsFun(v))).build();
 
         JsonSerializerImpl jsonCodec = new JsonSerializerImpl();
-        String json = jsonCodec.serialize(m).with(ca).toString();
+        String json = jsonCodec.serialize(m).convertWith(ca).toString();
 
         JSONObject jo = new JSONObject(json);
         assertEquals(1, jo.length());
@@ -97,7 +97,7 @@ public class JsonSerializerTest {
 
         // And convert back
         Map<String,Map<String,Foo>> m2 = jsonCodec.deserialize(new TypeReference<Map<String,Map<String,Foo>>>(){}).
-                with(ca).from(json);
+                convertWith(ca).from(json);
         assertEquals(m, m2);
     }
 

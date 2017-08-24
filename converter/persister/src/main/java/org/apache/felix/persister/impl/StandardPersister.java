@@ -40,7 +40,7 @@ public class StandardPersister<D> implements Persister<D> {
     @Override
     public void serialize(OutputStream out, D entity) {
         try {
-            serializer.serialize(entity).with(getConverter()).to( out );
+            serializer.serialize(entity).convertWith(getConverter()).to( out );
         } catch ( IOException e ) {
             // TODO: Handle this
             e.printStackTrace();
@@ -51,7 +51,7 @@ public class StandardPersister<D> implements Persister<D> {
     public D deserialize(InputStream in) {
       return (D)serializer
               .deserialize(dataType)
-              .with(getConverter())
+              .convertWith(getConverter())
               .from(in);
     }
 

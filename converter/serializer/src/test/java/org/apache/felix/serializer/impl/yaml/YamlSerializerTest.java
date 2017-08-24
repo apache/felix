@@ -83,14 +83,14 @@ public class YamlSerializerTest {
                 rule(new TypeRule<String, Foo>(String.class, Foo.class, v -> Foo.fsFun(v))).build();
 
         YamlSerializerImpl yamlCodec = new YamlSerializerImpl();
-        String yaml = yamlCodec.serialize(m).with(ca).toString();
+        String yaml = yamlCodec.serialize(m).convertWith(ca).toString();
 
         assertEquals("submap: \n" +
                 "  f: '<fofofo>'", yaml);
 
         // And convert back
         Map<String,Map<String,Foo>> m2 = yamlCodec.deserialize(new TypeReference<Map<String,Map<String,Foo>>>(){}).
-                with(ca).from(yaml);
+                convertWith(ca).from(yaml);
         assertEquals(m, m2);
     }
 

@@ -17,21 +17,20 @@
 package org.apache.felix.serializer.impl.yaml;
 
 import java.lang.reflect.Type;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 
 import org.osgi.service.serializer.Deserializing;
 import org.osgi.service.serializer.Parser;
 import org.osgi.service.serializer.Serializer;
 import org.osgi.service.serializer.Serializing;
+import org.osgi.service.serializer.Writer;
 import org.osgi.util.converter.Converter;
 import org.osgi.util.converter.Converters;
 import org.osgi.util.converter.TypeReference;
 
 public class YamlSerializerImpl implements Serializer {
-    private final Map<String, Object> configuration = new ConcurrentHashMap<>();
     private final Converter converter = Converters.standardConverter();
-    private final Parser parser = new DefaultParser();
+    private final Parser parser = new DefaultYamlParser();
+    private final Writer writer = new DefaultYamlWriter(converter);
 
     @Override
     public <T> Deserializing<T> deserialize(Class<T> cls) {
@@ -50,6 +49,6 @@ public class YamlSerializerImpl implements Serializer {
 
     @Override
     public Serializing serialize(Object obj) {
-        return new YamlSerializingImpl(converter, configuration, obj);
+        return new YamlSerializingImpl(converter, writer, obj);
     }
 }

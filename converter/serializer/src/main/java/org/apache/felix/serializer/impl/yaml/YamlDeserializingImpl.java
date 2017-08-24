@@ -77,13 +77,13 @@ public class YamlDeserializingImpl<T> implements Deserializing<T> {
     }
 
     @Override
-    public Deserializing<T> with(Converter c) {
+    public Deserializing<T> convertWith(Converter c) {
         converter = c;
         return this;
     }
 
     @Override
-    public Deserializing<T> with(Parser p) {
+    public Deserializing<T> parseWith(Parser p) {
         parser = p;
         return this;
     }

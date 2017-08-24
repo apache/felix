@@ -14,34 +14,37 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.felix.serializer.impl.json;
+package org.apache.felix.serializer.impl.yaml;
 
-import java.io.IOException;
 import java.io.InputStream;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.apache.felix.utils.json.JSONParser;
 import org.osgi.service.serializer.Parser;
+import org.yaml.snakeyaml.Yaml;
 
-public class DefaultParser implements Parser {
+public class DefaultYamlParser implements Parser {
 
     @Override
     public Map<String, Object> parse(InputStream in)
     {
-        try {
-            JSONParser parser = new JSONParser(in);
-            return parser.getParsed();
-        } catch (IOException e) {
-            Map<String, Object> report = new HashMap<>();
-            report.put("error", e.getMessage());
-            return report;
-        }
+        Yaml yaml = new Yaml();
+        return toMap(yaml.load(in));
     }
 
     @Override
     public Map<String, Object> parse(CharSequence in) {
-        JSONParser parser = new JSONParser(in);
-        return parser.getParsed();
+        Yaml yaml = new Yaml();
+        return toMap(yaml.load(in.toString()));
+    }
+
+    @SuppressWarnings( { "unchecked", "rawtypes" } )
+    private Map<String, Object> toMap(Object obj) {
+        if (obj instanceof Map)
+            return (Map)obj;
+
+        Map<String, Object> map = new HashMap<>();
+        map.put("parsed", obj);
+        return map;
     }
 }
