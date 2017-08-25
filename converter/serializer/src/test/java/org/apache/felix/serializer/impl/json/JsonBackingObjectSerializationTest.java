@@ -17,6 +17,7 @@
 package org.apache.felix.serializer.impl.json;
 
 import java.lang.reflect.Type;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -72,6 +73,19 @@ public class JsonBackingObjectSerializationTest {
                 .toString();
 
         assertEquals(EXPECTED, actual);
+    }
+
+    @Test
+    public void testOrderedSerialization() {
+        final JsonWriterFactory factory = new JsonWriterFactory();
+        factory.orderBy("/", Arrays.asList("b", "a", "o", "l2", "l1"));
+        factory.orderBy("/l2", Arrays.asList("b", "a"));
+        final String actual = new JsonSerializerImpl()
+                .serialize(MyDTOishObject.factory("A", "B"))
+                .writeWith(factory.newDebugWriter(Converters.standardConverter()))
+                .toString();
+
+        assertEquals(ORDERED, actual);
     }
 
     public static class MyDTOishObject extends DTO {
@@ -138,10 +152,10 @@ public class JsonBackingObjectSerializationTest {
             "  \"a\":\"A\",\n" +
             "  \"b\":\"B\",\n" +
             "  \"l1\":[\n" +
+            "    \"four\",\n" +
             "    \"one\",\n" +
-            "    \"two\",\n" +
             "    \"three\",\n" +
-            "    \"four\"\n" +
+            "    \"two\"\n" +
             "  ],\n" +
             "  \"l2\":[\n" +
             "    {\n" +
@@ -157,5 +171,31 @@ public class JsonBackingObjectSerializationTest {
             "    \"a\":\"AA\",\n" +
             "    \"b\":\"BB\"\n" +
             "  }\n" +
+            "}";
+
+    private static final String ORDERED =
+            "{\n" +
+            "  \"b\":\"B\",\n" +
+            "  \"a\":\"A\",\n" +
+            "  \"o\":{\n" +
+            "    \"a\":\"AA\",\n" +
+            "    \"b\":\"BB\"\n" +
+            "  },\n" +
+            "  \"l2\":[\n" +
+            "    {\n" +
+            "      \"b\":\"B\",\n" +
+            "      \"a\":\"A\"\n" +
+            "    },\n" +
+            "    {\n" +
+            "      \"b\":\"BB\",\n" +
+            "      \"a\":\"AA\"\n" +
+            "    }\n" +
+            "  ],\n" +
+            "  \"l1\":[\n" +
+            "    \"four\",\n" +
+            "    \"one\",\n" +
+            "    \"three\",\n" +
+            "    \"two\"\n" +
+            "  ]\n" +
             "}";
 }
