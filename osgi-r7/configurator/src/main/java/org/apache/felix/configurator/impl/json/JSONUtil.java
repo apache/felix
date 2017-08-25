@@ -39,8 +39,10 @@ import java.util.Set;
 
 import javax.json.Json;
 import javax.json.JsonArray;
+import javax.json.JsonArrayBuilder;
 import javax.json.JsonNumber;
 import javax.json.JsonObject;
+import javax.json.JsonObjectBuilder;
 import javax.json.JsonReader;
 import javax.json.JsonString;
 import javax.json.JsonStructure;
@@ -239,7 +241,14 @@ public class JSONUtil {
                         try {
                             Object convertedVal = converter.convert(pid, value, typeInfo);
                             if ( convertedVal == null ) {
-                                convertedVal = value.toString();
+                                JsonStructure json = build(value);
+                                if ( json == null ) {
+                                    convertedVal = value.toString();
+                                } else {
+                                    final StringWriter writer = new StringWriter();
+                                    Json.createWriter(writer).write(json);
+                                    convertedVal = writer.toString();
+                                }
                             }
                             properties.put(key, convertedVal);
                         } catch ( final IOException io ) {
@@ -258,6 +267,52 @@ public class JSONUtil {
             }
         }
         return configurations;
+    }
+
+    private static JsonStructure build(final Object value) {
+        if ( value instanceof List ) {
+            @SuppressWarnings("unchecked")
+            final List<Object> list = (List<Object>)value;
+            final JsonArrayBuilder builder = Json.createArrayBuilder();
+            for(final Object obj : list) {
+                if ( obj instanceof String ) {
+                    builder.add(obj.toString());
+                } else if ( obj instanceof Long ) {
+                    builder.add((Long)obj);
+                } else if ( obj instanceof Double ) {
+                    builder.add((Double)obj);
+                } else if (obj instanceof Boolean ) {
+                    builder.add((Boolean)obj);
+                } else if ( obj instanceof Map ) {
+                    builder.add(build(obj));
+                } else if ( obj instanceof List ) {
+                    builder.add(build(obj));
+                }
+
+            }
+            return builder.build();
+        } else if ( value instanceof Map ) {
+            @SuppressWarnings("unchecked")
+            final Map<String, Object> map = (Map<String, Object>)value;
+            final JsonObjectBuilder builder = Json.createObjectBuilder();
+            for(final Map.Entry<String, Object> entry : map.entrySet()) {
+                if ( entry.getValue() instanceof String ) {
+                    builder.add(entry.getKey(), entry.getValue().toString());
+                } else if ( entry.getValue() instanceof Long ) {
+                    builder.add(entry.getKey(), (Long)entry.getValue());
+                } else if ( entry.getValue() instanceof Double ) {
+                    builder.add(entry.getKey(), (Double)entry.getValue());
+                } else if ( entry.getValue() instanceof Boolean ) {
+                    builder.add(entry.getKey(), (Boolean)entry.getValue());
+                } else if ( entry.getValue() instanceof Map ) {
+                    builder.add(entry.getKey(), build(entry.getValue()));
+                } else if ( entry.getValue() instanceof List ) {
+                    builder.add(entry.getKey(), build(entry.getValue()));
+                }
+            }
+            return builder.build();
+        }
+        return null;
     }
 
     /**
