@@ -1,3 +1,9 @@
+Release Notes - Felix - Version org.apache.felix.dependencymanager-r12
+======================================================================
+
+** Bug
+    * [FELIX-5683] - getServiceProperties returns null instead of empty dictionary
+
 Release Notes - Felix - Version org.apache.felix.dependencymanager-r11
 ======================================================================
 
