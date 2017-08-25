@@ -17,13 +17,13 @@
 package org.apache.felix.persister.impl;
 
 import org.apache.felix.persister.PersisterFactory;
+import org.apache.felix.serializer.Serializer;
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceEvent;
 import org.osgi.framework.ServiceListener;
 import org.osgi.framework.ServiceReference;
 import org.osgi.framework.ServiceRegistration;
-import org.osgi.service.serializer.Serializer;
 
 public class Activator implements ServiceListener, BundleActivator {
 

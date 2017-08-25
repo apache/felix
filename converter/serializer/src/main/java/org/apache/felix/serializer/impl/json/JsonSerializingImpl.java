@@ -21,9 +21,9 @@ import java.io.OutputStream;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 
+import org.apache.felix.serializer.Serializing;
+import org.apache.felix.serializer.Writer;
 import org.apache.felix.serializer.impl.AbstractSpecifying;
-import org.osgi.service.serializer.Serializing;
-import org.osgi.service.serializer.Writer;
 import org.osgi.util.converter.ConversionException;
 import org.osgi.util.converter.Converter;
 

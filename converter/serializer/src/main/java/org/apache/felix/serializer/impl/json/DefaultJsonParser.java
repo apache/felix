@@ -21,8 +21,8 @@ import java.io.InputStream;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.apache.felix.serializer.Parser;
 import org.apache.felix.utils.json.JSONParser;
-import org.osgi.service.serializer.Parser;
 
 public class DefaultJsonParser implements Parser {
 

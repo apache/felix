@@ -24,7 +24,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.Map.Entry;
 
-import org.osgi.service.serializer.Writer;
+import org.apache.felix.serializer.Writer;
 import org.osgi.util.converter.Converter;
 
 public class DefaultYamlWriter implements Writer {

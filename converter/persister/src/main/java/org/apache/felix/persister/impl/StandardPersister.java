@@ -23,7 +23,7 @@ import java.io.OutputStream;
 import org.apache.felix.persister.Persister;
 import org.apache.felix.schematizer.Schematizer;
 import org.apache.felix.schematizer.StandardSchematizer;
-import org.osgi.service.serializer.Serializer;
+import org.apache.felix.serializer.Serializer;
 import org.osgi.util.converter.Converter;
 
 public class StandardPersister<D> implements Persister<D> {

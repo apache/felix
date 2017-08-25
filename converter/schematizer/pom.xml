@@ -78,15 +78,15 @@
                         </Export-Package>
                         <Import-Package>
                             org.osgi.util.converter,
-                            org.osgi.service.serializer,
+                            org.apache.felix.serializer,
                             *
                         </Import-Package>
                         <Provide-Capability>
-                            osgi.service;objectClass:List&lt;String&gt;="org.apache.felix.schematizer.Schematizer,org.osgi.service.serializer.Serializer";
-                            uses:="org.apache.felix.schematizer,org.osgi.service.serializer,org.osgi.util.converter,org.osgi.util.function"
+                            osgi.service;objectClass:List&lt;String&gt;="org.apache.felix.schematizer.Schematizer,org.apache.felix.serializer.Serializer";
+                            uses:="org.apache.felix.schematizer,org.apache.serializer,org.osgi.util.converter,org.osgi.util.function"
                         </Provide-Capability>
                         <Require-Capability>
-                            osgi.service;objectClass:List&lt;String&gt;="org.osgi.service.serializer.Converter";
+                            osgi.service;objectClass:List&lt;String&gt;="org.osgi.util.converter.Converter";
                             effective:="active"
                         </Require-Capability>
                         <_sources>true</_sources>

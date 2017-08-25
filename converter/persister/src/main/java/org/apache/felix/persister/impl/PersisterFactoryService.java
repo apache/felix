@@ -18,7 +18,7 @@ package org.apache.felix.persister.impl;
 
 import org.apache.felix.persister.Persister;
 import org.apache.felix.persister.PersisterFactory;
-import org.osgi.service.serializer.Serializer;
+import org.apache.felix.serializer.Serializer;
 
 public class PersisterFactoryService implements PersisterFactory {
 

@@ -17,6 +17,7 @@
 package org.apache.felix.persister.impl;
 
 
+import org.apache.felix.serializer.Serializer;
 import org.apache.felix.serializer.impl.json.JsonSerializerImpl;
 import org.apache.felix.persister.Persister;
 import org.apache.felix.persister.PersisterFactory;
@@ -28,7 +29,6 @@ import org.apache.felix.persister.test.objects.SimpleTop;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-import org.osgi.service.serializer.Serializer;
 
 import static org.junit.Assert.*;
 

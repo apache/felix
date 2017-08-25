@@ -24,9 +24,9 @@ import java.nio.charset.StandardCharsets;
 import java.util.Map;
 import java.util.Scanner;
 
+import org.apache.felix.serializer.Deserializing;
+import org.apache.felix.serializer.Parser;
 import org.apache.felix.serializer.impl.Util;
-import org.osgi.service.serializer.Deserializing;
-import org.osgi.service.serializer.Parser;
 import org.osgi.util.converter.ConversionException;
 import org.osgi.util.converter.Converter;
 

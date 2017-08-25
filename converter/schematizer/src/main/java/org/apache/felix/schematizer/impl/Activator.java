@@ -20,11 +20,11 @@ import java.util.Dictionary;
 import java.util.Hashtable;
 
 import org.apache.felix.schematizer.Schematizer;
+import org.apache.felix.serializer.Serializer;
 import org.apache.felix.serializer.impl.json.JsonSerializerImpl;
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceFactory;
-import org.osgi.service.serializer.Serializer;
 
 public class Activator implements BundleActivator {
     @Override

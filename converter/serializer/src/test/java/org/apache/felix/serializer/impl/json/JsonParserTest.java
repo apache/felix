@@ -22,9 +22,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.felix.serializer.Parser;
 import org.junit.Before;
 import org.junit.Test;
-import org.osgi.service.serializer.Parser;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;

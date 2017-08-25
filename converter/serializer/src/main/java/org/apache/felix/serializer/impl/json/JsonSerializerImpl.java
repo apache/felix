@@ -18,11 +18,11 @@ package org.apache.felix.serializer.impl.json;
 
 import java.lang.reflect.Type;
 
-import org.osgi.service.serializer.Deserializing;
-import org.osgi.service.serializer.Parser;
-import org.osgi.service.serializer.Serializer;
-import org.osgi.service.serializer.Serializing;
-import org.osgi.service.serializer.Writer;
+import org.apache.felix.serializer.Deserializing;
+import org.apache.felix.serializer.Parser;
+import org.apache.felix.serializer.Serializer;
+import org.apache.felix.serializer.Serializing;
+import org.apache.felix.serializer.Writer;
 import org.osgi.util.converter.Converter;
 import org.osgi.util.converter.Converters;
 import org.osgi.util.converter.TypeReference;

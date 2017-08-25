@@ -13,11 +13,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.osgi.service.serializer;
+package org.apache.felix.serializer;
+
+import java.io.InputStream;
+import java.util.Map;
 
 /**
- * Common interface for a writer, which can be provided by the client.
+ * Common interface for a parser, which can be provided by the client.
  */
-public interface Writer {
-    String write(Object obj);
+public interface Parser {
+    Map<String, Object> parse(InputStream in);
+    Map<String, Object> parse(CharSequence in);
 }

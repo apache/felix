@@ -19,14 +19,14 @@ package org.apache.felix.serializer.impl;
 import java.util.Dictionary;
 import java.util.Hashtable;
 
+import org.apache.felix.serializer.Serializer;
+import org.apache.felix.serializer.WriterFactory;
 import org.apache.felix.serializer.impl.json.JsonSerializerImpl;
 import org.apache.felix.serializer.impl.json.JsonWriterFactory;
 import org.apache.felix.serializer.impl.yaml.YamlSerializerImpl;
 import org.apache.felix.serializer.impl.yaml.YamlWriterFactory;
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
-import org.osgi.service.serializer.Serializer;
-import org.osgi.service.serializer.WriterFactory;
 
 public class Activator implements BundleActivator {
     @Override

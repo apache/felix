@@ -20,8 +20,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.osgi.service.serializer.Writer;
-import org.osgi.service.serializer.WriterFactory;
+import org.apache.felix.serializer.Writer;
+import org.apache.felix.serializer.WriterFactory;
 import org.osgi.util.converter.Converter;
 
 public class YamlWriterFactory implements WriterFactory, WriterFactory.YamlWriterFactory {

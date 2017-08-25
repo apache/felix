@@ -20,7 +20,7 @@ import java.io.InputStream;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.osgi.service.serializer.Parser;
+import org.apache.felix.serializer.Parser;
 import org.yaml.snakeyaml.Yaml;
 
 public class DefaultYamlParser implements Parser {

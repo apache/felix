@@ -24,8 +24,8 @@ import java.util.Map;
 import java.util.Set;
 import java.util.Map.Entry;
 
+import org.apache.felix.serializer.Writer;
 import org.osgi.dto.DTO;
-import org.osgi.service.serializer.Writer;
 import org.osgi.util.converter.Converter;
 
 public class DefaultJsonWriter implements Writer {

@@ -72,15 +72,15 @@
                             org.apache.felix.utils.*
                         </Private-Package>
                         <Export-Package>
-                            org.osgi.service.serializer;-split-package:=merge-first
+                            org.apache.felix.serializer;-split-package:=merge-first
                         </Export-Package>
                         <Import-Package>*</Import-Package>
                         <Provide-Capability>
-                            osgi.service;objectClass:List&lt;String&gt;="org.osgi.service.serializer.Serializer";
-                            uses:="org.osgi.service.serializer,org.osgi.util.converter,org.osgi.util.function"
+                            osgi.service;objectClass:List&lt;String&gt;="org.apache.felix.serializer.Serializer";
+                            uses:="org.apache.felix.serializer,org.osgi.util.converter,org.osgi.util.function"
                         </Provide-Capability>
                         <Require-Capability>
-                            osgi.service;objectClass:List&lt;String&gt;="org.osgi.service.serializer.Converter";
+                            osgi.service;objectClass:List&lt;String&gt;="org.osgi.util.converter.Converter";
                             effective:="active"
                         </Require-Capability>
                         <_sources>true</_sources>
