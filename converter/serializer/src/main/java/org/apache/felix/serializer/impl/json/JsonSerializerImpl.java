@@ -27,7 +27,7 @@ import org.osgi.util.converter.Converter;
 import org.osgi.util.converter.Converters;
 import org.osgi.util.converter.TypeReference;
 
-public class JsonSerializerImpl implements Serializer {
+public class JsonSerializerImpl implements Serializer, Serializer.JsonSerializer {
     private final Converter converter = Converters.standardConverter();
     private final Parser parser = new DefaultJsonParser();
     private final Writer writer = new DefaultJsonWriter(converter);
