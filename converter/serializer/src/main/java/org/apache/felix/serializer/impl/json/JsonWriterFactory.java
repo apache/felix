@@ -16,11 +16,22 @@
  */
 package org.apache.felix.serializer.impl.json;
 
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
 import org.osgi.service.serializer.Writer;
 import org.osgi.service.serializer.WriterFactory;
 import org.osgi.util.converter.Converter;
 
-public class JsonWriterFactory implements WriterFactory {
+public class JsonWriterFactory implements WriterFactory, WriterFactory.JsonWriterFactory {
+    private final Map<String, List<String>> orderingRules = new HashMap<>();
+
+    @Override
+    public JsonWriterFactory orderBy(String path, List<String> keyOrder) {
+        orderingRules.put(path, keyOrder);
+        return this;
+    }
 
     @Override
     public Writer newDefaultWriter(Converter c) {
@@ -29,6 +40,6 @@ public class JsonWriterFactory implements WriterFactory {
 
     @Override
     public Writer newDebugWriter(Converter c) {
-        return new DebugJsonWriter(c);
+        return new DebugJsonWriter(c, orderingRules);
     }
 }

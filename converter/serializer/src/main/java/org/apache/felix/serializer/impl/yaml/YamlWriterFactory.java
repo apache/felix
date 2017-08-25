@@ -16,11 +16,22 @@
  */
 package org.apache.felix.serializer.impl.yaml;
 
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
 import org.osgi.service.serializer.Writer;
 import org.osgi.service.serializer.WriterFactory;
 import org.osgi.util.converter.Converter;
 
-public class YamlWriterFactory implements WriterFactory {
+public class YamlWriterFactory implements WriterFactory, WriterFactory.YamlWriterFactory {
+    private final Map<String, List<String>> orderingRules = new HashMap<>();
+
+    @Override
+    public YamlWriterFactory orderBy(String path, List<String> keyOrder) {
+        orderingRules.put(path,keyOrder);
+        return this;
+    }
 
     @Override
     public Writer newDefaultWriter(Converter c) {

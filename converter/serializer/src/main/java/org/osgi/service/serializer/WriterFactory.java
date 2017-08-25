@@ -15,6 +15,8 @@
  */
 package org.osgi.service.serializer;
 
+import java.util.List;
+
 import org.osgi.annotation.versioning.ProviderType;
 import org.osgi.util.converter.Converter;
 
@@ -42,6 +44,22 @@ public interface WriterFactory {
      * @return A new writer useful for debugging
      */
     Writer newDebugWriter(Converter c);
+
+    /**
+     * Register an ordering rule for this writer.
+     * 
+     * An ordering rule causes the written json to be output in the order
+     * specified. This can be useful, for example, for debugging or when
+     * the data otherwise needs to be human consumable.
+     * 
+     * Note that only the target type is specified, so the rule will be visited 
+     * for every conversion to the target type.
+     *
+     * @param path the path where the key is located in the object graph.
+     * @param func The desired key order.
+     * @return This factory object to allow further invocations on it.
+     */
+    WriterFactory orderBy(String path, List<String> keyOrder);
 
     /**
      * A convenience means of obtaining a JsonWriterFactory without having to
