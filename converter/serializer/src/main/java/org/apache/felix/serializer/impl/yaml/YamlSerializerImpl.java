@@ -27,7 +27,7 @@ import org.osgi.util.converter.Converter;
 import org.osgi.util.converter.Converters;
 import org.osgi.util.converter.TypeReference;
 
-public class YamlSerializerImpl implements Serializer {
+public class YamlSerializerImpl implements Serializer, Serializer.YamlSerializer {
     private final Converter converter = Converters.standardConverter();
     private final Parser parser = new DefaultYamlParser();
     private final Writer writer = new DefaultYamlWriter(converter);
