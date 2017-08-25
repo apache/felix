@@ -1429,7 +1429,9 @@ public class ComponentImpl implements Component, ComponentContext, ComponentDecl
 		// Now add our component service properties, which overrides previously added propagated dependency service properties
 		addTo(properties, m_serviceProperties);
 		
-		return properties.size() == 0 ? null : properties;
+		// FELIX-5683: don't return null if no service properties available, but user passed an empty dictionary in the
+		// setInterface method.
+		return (properties.size() == 0 && m_serviceProperties == null) ? null : properties;
 	}
 
     private void addTo(Dictionary<String, Object> properties, Dictionary<?, Object> additional) {
