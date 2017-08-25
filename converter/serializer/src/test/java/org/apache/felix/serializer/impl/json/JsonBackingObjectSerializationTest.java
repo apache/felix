@@ -17,10 +17,14 @@
 package org.apache.felix.serializer.impl.json;
 
 import java.lang.reflect.Type;
+import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import org.junit.Test;
 import org.osgi.dto.DTO;
+import org.osgi.util.converter.Converter;
 import org.osgi.util.converter.ConverterFunction;
 import org.osgi.util.converter.Converters;
 import org.osgi.util.converter.TargetRule;
@@ -38,62 +42,55 @@ public class JsonBackingObjectSerializationTest {
                 .sourceAsDTO()
                 .to(Map.class);
 
-        final String expected = 
-                "{\"a\":\"A\","
-                        + "\"o\":{\"a\":\"AA\",\"b\":\"BB\"},"
-                        + "\"b\":\"B\"}";
+        final String actual = new JsonSerializerImpl()
+                .serialize(m)
+                .writeWith(new JsonWriterFactory().newDebugWriter(Converters.standardConverter()))
+                .toString();
 
-        final String actual = new JsonSerializerImpl().serialize(m).toString();
-
-        // TODO: Cannot predict order of elements for equals comparison//
-//        assertEquals(expected, actual);
+        assertEquals(EXPECTED, actual);
     }
 
     @Test
     public void testComplexMapSerializationWithoutUsingPreConversion() {
-        final String expected = 
-                "{\"a\":\"A\","
-                + "\"o\":{\"a\":\"AA\",\"b\":\"BB\"},"
-                + "\"b\":\"B\"}";
-
+        final JsonWriterFactory factory = new JsonWriterFactory();
         final String actual = new JsonSerializerImpl()
-                .serialize(MyDTOishObject.factory( "A", "B" ))
-                .sourceAsDTO()
+                .serialize(MyDTOishObject.factory("A", "B"))
+                .writeWith(factory.newDebugWriter(Converters.standardConverter()))
                 .toString();
 
-        // TODO: Cannot predict order of elements for equals comparison//
-//        assertEquals(expected, actual);
+        assertEquals(EXPECTED, actual);
     }
 
     @Test
     public void testComplexMapSerializationUsingRule() {
-        final String expected = 
-                "{\"o\":{\"a\":\"AA\",\"b\":\"BB\"},"
-                        + "\"a\":\"A\","
-                        + "\"b\":\"B\"}";
-
+        final Converter converter = Converters.newConverterBuilder().rule(new MapTargetRule()).build();
+        final JsonWriterFactory factory = new JsonWriterFactory();
         final String actual = new JsonSerializerImpl()
-                .serialize(MyDTOishObject.factory( "A", "B" ))
-                .with(Converters.newConverterBuilder().rule(new MapTargetRule()).build())
+                .serialize(MyDTOishObject.factory("A", "B"))
+                .convertWith(converter)
+                .writeWith(factory.newDebugWriter(converter))
                 .toString();
 
-        // Cannot get result to behave predictably... Order is random.
-//        assertEquals(expected.length(), actual.length());
+        assertEquals(EXPECTED, actual);
     }
 
     public static class MyDTOishObject extends DTO {
         public String a;
         public String b;
         public OtherObject o;
+        public List<String> l1;
+        public List<OtherObject> l2;
 
         public MyDTOishObject( String a, String b ) {
             this.a = a;
             this.b = b;
-            o = OtherObject.factory( a + a, b + b );
+            o = OtherObject.factory(a + a, b + b);
+            l1 = Stream.of("one", "two", "three", "four").collect(Collectors.toList());
+            l2 = Stream.of(OtherObject.factory(a, b), OtherObject.factory(a + a, b + b)).collect(Collectors.toList());
         }
 
         public static MyDTOishObject factory( String a, String b ) {
-            return new MyDTOishObject( a, b );
+            return new MyDTOishObject(a, b);
         }
     }
 
@@ -101,13 +98,13 @@ public class JsonBackingObjectSerializationTest {
         public String a;
         public String b;
 
-        public OtherObject( String a, String b ) {
+        public OtherObject(String a, String b) {
             this.a = a;
             this.b = b;
         }
 
-        public static OtherObject factory( String a, String b ) {
-            return new OtherObject( a, b );
+        public static OtherObject factory(String a, String b) {
+            return new OtherObject(a, b);
         }
     }
 
@@ -135,4 +132,30 @@ public class JsonBackingObjectSerializationTest {
                     .to(targetType);
         }
     }    
+
+    private static final String EXPECTED =
+            "{\n" +
+            "  \"a\":\"A\",\n" +
+            "  \"b\":\"B\",\n" +
+            "  \"l1\":[\n" +
+            "    \"one\",\n" +
+            "    \"two\",\n" +
+            "    \"three\",\n" +
+            "    \"four\"\n" +
+            "  ],\n" +
+            "  \"l2\":[\n" +
+            "    {\n" +
+            "      \"a\":\"A\",\n" +
+            "      \"b\":\"B\"\n" +
+            "    },\n" +
+            "    {\n" +
+            "      \"a\":\"AA\",\n" +
+            "      \"b\":\"BB\"\n" +
+            "    }\n" +
+            "  ],\n" +
+            "  \"o\":{\n" +
+            "    \"a\":\"AA\",\n" +
+            "    \"b\":\"BB\"\n" +
+            "  }\n" +
+            "}";
 }

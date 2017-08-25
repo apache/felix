@@ -20,10 +20,13 @@ import java.util.Dictionary;
 import java.util.Hashtable;
 
 import org.apache.felix.serializer.impl.json.JsonSerializerImpl;
+import org.apache.felix.serializer.impl.json.JsonWriterFactory;
 import org.apache.felix.serializer.impl.yaml.YamlSerializerImpl;
+import org.apache.felix.serializer.impl.yaml.YamlWriterFactory;
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
 import org.osgi.service.serializer.Serializer;
+import org.osgi.service.serializer.WriterFactory;
 
 public class Activator implements BundleActivator {
     @Override
@@ -32,13 +35,27 @@ public class Activator implements BundleActivator {
         jsonProps.put("mimetype", new String[] {
                 "application/json", "application/x-javascript", "text/javascript",
                 "text/x-javascript", "text/x-json" });
-        context.registerService(Serializer.class, new JsonSerializerImpl(), jsonProps);
+        context.registerService(
+                new String[]{Serializer.class.getName(), Serializer.JsonSerializer.class.getName()}, 
+                new JsonSerializerImpl(), 
+                jsonProps);
+        context.registerService(
+                new String[]{WriterFactory.class.getName(), WriterFactory.JsonWriterFactory.class.getName()}, 
+                new JsonWriterFactory(), 
+                jsonProps);
 
         Dictionary<String, Object> yamlProps = new Hashtable<>();
         yamlProps.put("mimetype", new String[] {
                 "text/yaml", "text/x-yaml", "application/yaml",
                 "application/x-yaml" });
-        context.registerService(Serializer.class, new YamlSerializerImpl(), yamlProps);
+        context.registerService(
+                new String[]{Serializer.class.getName(), Serializer.YamlSerializer.class.getName()}, 
+                new YamlSerializerImpl(), 
+                yamlProps);
+        context.registerService(
+                new String[]{WriterFactory.class.getName(), WriterFactory.YamlWriterFactory.class.getName()}, 
+                new YamlWriterFactory(), 
+                yamlProps);
     }
 
     @Override

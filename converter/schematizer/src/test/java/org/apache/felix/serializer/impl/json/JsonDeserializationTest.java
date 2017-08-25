@@ -55,10 +55,10 @@ public class JsonDeserializationTest {
         Converter c = new SchematizerImpl()
                 .schematize("MyDTO", new TypeReference<MyDTO>(){})
                 .converterFor("MyDTO");
-        String serialized = new JsonSerializerImpl().serialize(dto).with(c).toString();
+        String serialized = new JsonSerializerImpl().serialize(dto).convertWith(c).toString();
         MyDTO result = new JsonSerializerImpl()
                 .deserialize(MyDTO.class)
-                .with(c)
+                .convertWith(c)
                 .from(serialized);
 
         assertEquals(dto.ping, result.ping);
@@ -88,7 +88,7 @@ public class JsonDeserializationTest {
                 .converterFor("MyDTO");
         MyDTO2<MyEmbeddedDTO2<String>> result = new JsonSerializerImpl()
                 .deserialize(new TypeReference<MyDTO2<MyEmbeddedDTO2<String>>>(){})
-                .with(c)
+                .convertWith(c)
                 .from(serialized);
 
         assertEquals(dto.ping, result.ping);

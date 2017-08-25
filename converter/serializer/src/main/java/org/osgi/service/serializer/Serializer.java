@@ -69,4 +69,16 @@ public interface Serializer {
 	 *         operation.
 	 */
 	Serializing serialize(Object obj);
+
+    /**
+     * A convenience means of obtaining a JsonSerializer without having to
+     * configure service settings.
+     */
+    static interface JsonSerializer extends Serializer {}
+
+    /**
+     * A convenience means of obtaining a YamlWriterFactory without having to
+     * configure service settings.
+     */
+    static interface YamlSerializer extends Serializer {}
 }

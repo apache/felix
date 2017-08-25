@@ -34,7 +34,7 @@ public class JsonParserTest {
 
     @Before
     public void setup() {
-        parser = new DefaultParser();        
+        parser = new DefaultJsonParser();        
     }
 
     @Test

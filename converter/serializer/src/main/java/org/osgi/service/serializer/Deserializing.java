@@ -71,14 +71,14 @@ public interface Deserializing<T> {
 	 * @param converter The converter to use.
 	 * @return This Deserializing object to allow further invocations on it.
 	 */
-	Deserializing<T> with(Converter converter);
+	Deserializing<T> convertWith(Converter converter);
 
     /**
      * Specify the parser to be used, if an alternative to the default internal
      * parser is required.
      * 
      * @param parser the parser to use.
-     * @return This Serializing object to allow further invocations on it.
+     * @return This Deserializing object to allow further invocations on it.
      */
-	Deserializing<T> with(Parser parser);
+	Deserializing<T> parseWith(Parser parser);
 }

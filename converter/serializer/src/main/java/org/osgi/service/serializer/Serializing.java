@@ -32,24 +32,6 @@ import org.osgi.util.converter.Specifying;
 @ProviderType
 public interface Serializing extends Specifying<Serializing> {
 	/**
-	 * Specify that keys with a {@code null} value must not appear in the
-	 * result. If not specified {@code null} values will be included in the
-	 * result.
-	 *
-	 * @return This Serializing object to allow further invocations on it.
-	 */
-	Serializing ignoreNull();
-
-	/**
-	 * Specify that the encoded output should be formatted to look 'pretty',
-	 * which may make it easier for humans to read. If not specified, the
-	 * encoded output should be formatted to be compact, so save space.
-	 *
-	 * @return This Serializing object to allow further invocations on it.
-	 */
-	Serializing pretty();
-
-	/**
 	 * Use an output stream as the target of the encoding operation. UTF-8 will
 	 * be used if applicable, the character set may not apply to binary
 	 * encodings.
@@ -93,5 +75,15 @@ public interface Serializing extends Specifying<Serializing> {
 	 * @param converter The converter to use.
 	 * @return This Serializing object to allow further invocations on it.
 	 */
-	Serializing with(Converter converter);
+	Serializing convertWith(Converter converter);
+
+    /**
+     * Specify the writer to be used, if an alternative to the default internal
+     * writer is required. A selection of Writers are available via the WriterFactory,
+     * or a completely different Writer can be provided directly.
+     * 
+     * @param parser the writer to use.
+     * @return This Serializing object to allow further invocations on it.
+     */
+    Serializing writeWith(Writer writer);
 }

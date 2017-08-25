@@ -16,28 +16,21 @@
  */
 package org.apache.felix.serializer.impl.json;
 
-import java.io.IOException;
-import java.io.OutputStream;
 import java.lang.reflect.Type;
-import java.nio.charset.Charset;
-import java.nio.charset.StandardCharsets;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 
-import org.apache.felix.serializer.impl.AbstractSpecifying;
 import org.osgi.service.serializer.Deserializing;
 import org.osgi.service.serializer.Parser;
 import org.osgi.service.serializer.Serializer;
 import org.osgi.service.serializer.Serializing;
+import org.osgi.service.serializer.Writer;
 import org.osgi.util.converter.Converter;
 import org.osgi.util.converter.Converters;
 import org.osgi.util.converter.TypeReference;
 
 public class JsonSerializerImpl implements Serializer {
-    private final Map<String, Object> configuration = new ConcurrentHashMap<>();
-    private final ThreadLocal<Boolean> threadLocal = new ThreadLocal<>();
     private final Converter converter = Converters.standardConverter();
-    private final Parser parser = new DefaultParser();
+    private final Parser parser = new DefaultJsonParser();
+    private final Writer writer = new DefaultJsonWriter(converter);
 
     @Override
     public <T> Deserializing<T> deserialize(Class<T> cls) {
@@ -46,79 +39,7 @@ public class JsonSerializerImpl implements Serializer {
 
     @Override
     public Serializing serialize(Object obj) {
-        Serializing encoding = new JsonSerializingImpl(converter, configuration, obj);
-
-        if (pretty()) {
-            Boolean top = threadLocal.get();
-            if (top == null) {
-                threadLocal.set(Boolean.TRUE);
-
-                // TODO implement this properly, the following it just a dev temp thing
-                encoding = new EncodingWrapper("{}{}{}{}{}", encoding, "{}{}{}{}{}");
-            }
-        }
-        return encoding;
-    }
-
-    private boolean pretty() {
-        return Boolean.TRUE.equals(Boolean.parseBoolean((String) configuration.get("pretty")));
-    }
-
-    private class EncodingWrapper extends AbstractSpecifying<Serializing> implements Serializing {
-        private final Serializing delegate;
-        private String prefix;
-        private String postfix;
-
-        EncodingWrapper(String pre, Serializing encoding, String post) {
-            prefix = pre;
-            delegate = encoding;
-            postfix = post;
-        }
-
-        @Override
-        public void to(OutputStream os) {
-            try {
-                os.write(toString().getBytes(StandardCharsets.UTF_8));
-            } catch (IOException e) {
-                throw new RuntimeException(e);
-            }
-        }
-
-        @Override
-        public String toString() {
-            try {
-                return prefix + delegate.toString() + postfix;
-            } finally {
-                threadLocal.set(null);
-            }
-        }
-
-        @Override
-        public Serializing ignoreNull() {
-            return this;
-        }
-
-        @Override
-        public Serializing pretty() {
-            return this;
-        }
-
-        @Override
-        public void to(OutputStream out, Charset charset) {
-            // TODO Auto-generated method stub
-        }
-
-        @Override
-        public Appendable to(Appendable out) {
-            // TODO Auto-generated method stub
-            return null;
-        }
-
-        @Override
-        public Serializing with(Converter converter) {
-            delegate.with(converter);
-            return this;
-        }
+        return new JsonSerializingImpl(converter, writer, obj);
     }
 
     @Override
