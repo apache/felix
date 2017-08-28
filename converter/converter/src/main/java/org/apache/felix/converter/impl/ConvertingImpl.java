@@ -788,7 +788,7 @@ public class ConvertingImpl extends AbstractSpecifying<Converting> implements Co
         if (Map.class.isAssignableFrom(sourceCls) || (DTOUtil.isDTOType(sourceCls) && obj instanceof Map))
             return (Map<?,?>) obj;
         else if (Dictionary.class.isAssignableFrom(sourceCls))
-            return null; // TODO
+            return MapDelegate.forDictionary((Dictionary<?,?>) object, this);
         else if (DTOUtil.isDTOType(sourceCls) || sourceAsDTO)
             return createMapFromDTO(obj, converter);
         else if (sourceAsJavaBean) {
