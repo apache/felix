@@ -492,6 +492,54 @@ public class ConverterMapTest {
         assertEquals("hello", m.get("foo"));
     }
 
+    @Test
+    public void testInterfaceWithGetProperties() {
+        TestInterfaceWithGetProperties tiwgp = new TestInterfaceWithGetProperties() {
+            @Override
+            public int blah() {
+                return 99;
+            }
+
+            @Override
+            public Dictionary<String, Object> getProperties() {
+                Dictionary<String, Object> d = new TestDictionary<>();
+                d.put("hi", "ha");
+                d.put("ho", "ho");
+                return d;
+            }
+        };
+
+        @SuppressWarnings("rawtypes")
+        Map m = converter.convert(tiwgp).to(Map.class);
+        assertEquals(2, m.size());
+        assertEquals("ha", m.get("hi"));
+        assertEquals("ho", m.get("ho"));
+    }
+
+    @Test
+    public void testInterfaceWithGetPropertiesCopied() {
+        TestInterfaceWithGetProperties tiwgp = new TestInterfaceWithGetProperties() {
+            @Override
+            public int blah() {
+                return 99;
+            }
+
+            @Override
+            public Dictionary<String, Object> getProperties() {
+                Dictionary<String, Object> d = new TestDictionary<>();
+                d.put("hi", "ha");
+                d.put("ho", "ho");
+                return d;
+            }
+        };
+
+        @SuppressWarnings("rawtypes")
+        Map m = converter.convert(tiwgp).copy().to(Map.class);
+        assertEquals(2, m.size());
+        assertEquals("ha", m.get("hi"));
+        assertEquals("ho", m.get("ho"));
+    }
+
     private <K,V> Map.Entry<K,V> getMapEntry(Map<K,V> map) {
         assertEquals("This method assumes a map of size 1", 1, map.size());
         return map.entrySet().iterator().next();
@@ -502,6 +550,11 @@ public class ConverterMapTest {
         int bar();
         int bar(String def);
         Boolean za_za();
+    }
+
+    interface TestInterfaceWithGetProperties {
+        int blah();
+        Dictionary<String, Object> getProperties();
     }
 
     @interface TestAnnotation {
