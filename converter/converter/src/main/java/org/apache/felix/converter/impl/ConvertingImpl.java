@@ -375,6 +375,8 @@ public class ConvertingImpl extends AbstractSpecifying<Converting> implements Co
             return MapDelegate.forDTO(object, this);
         } else if (sourceAsJavaBean) {
             return MapDelegate.forBean(object, this);
+        } else if (hasGetProperties(sourceClass)) {
+            return null; // Handled in convertToMap()
         }
 
         // Assume it's an interface
@@ -795,10 +797,35 @@ public class ConvertingImpl extends AbstractSpecifying<Converting> implements Co
             Map<?,?> m = createMapFromBeanAccessors(obj, sourceCls);
             if (m.size() > 0)
                 return m;
+        } else if (hasGetProperties(sourceCls)) {
+            return getPropertiesDelegate(obj, sourceCls);
         } else if (typeProhibitedFromMapView(sourceCls))
             throw new ConversionException("No map view for " + obj);
 
         return createMapFromInterface(obj);
+    }
+
+    private boolean hasGetProperties(Class<?> cls) {
+        try {
+            Method m = cls.getDeclaredMethod("getProperties");
+            if (m == null)
+                m = cls.getMethod("getProperties");
+            return m != null;
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
+    private Map<?, ?> getPropertiesDelegate(Object obj, Class<?> cls) {
+        try {
+            Method m = cls.getDeclaredMethod("getProperties");
+            if (m == null)
+                m = cls.getMethod("getProperties");
+
+            return converter.convert(m.invoke(obj)).to(Map.class);
+        } catch (Exception e) {
+            return Collections.emptyMap();
+        }
     }
 
     private boolean typeProhibitedFromMapView(Class<?> sourceCls) {
