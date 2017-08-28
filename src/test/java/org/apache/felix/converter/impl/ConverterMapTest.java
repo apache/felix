@@ -475,6 +475,23 @@ public class ConverterMapTest {
         assertEquals("111", converter.convert(e1).to(Bar.class).value);
     }
 
+    @Test
+    public void testDictionaryToAnnotation() {
+        Dictionary<String, Object> dict = new TestDictionary<>();
+        dict.put("foo", "hello");
+        TestAnnotation ta = converter.convert(dict).to(TestAnnotation.class);
+        assertEquals("hello", ta.foo());
+    }
+
+    @Test
+    public void testDictionaryToMap() {
+        Dictionary<String, Object> dict = new TestDictionary<>();
+        dict.put("foo", "hello");
+        @SuppressWarnings("rawtypes")
+        Map m = converter.convert(dict).copy().to(Map.class);
+        assertEquals("hello", m.get("foo"));
+    }
+
     private <K,V> Map.Entry<K,V> getMapEntry(Map<K,V> map) {
         assertEquals("This method assumes a map of size 1", 1, map.size());
         return map.entrySet().iterator().next();
