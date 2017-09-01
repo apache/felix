@@ -69,7 +69,7 @@ import org.osgi.service.http.context.ServletContextHelper;
 @ExamReactorStrategy(PerMethod.class)
 public class SessionHandlingTest extends BaseIntegrationTest
 {
-    private List<ServiceRegistration<?>> registrations = new ArrayList<ServiceRegistration<?>>();
+    private List<ServiceRegistration<?>> registrations = new ArrayList<>();
 
     private CountDownLatch initLatch;
     private CountDownLatch destroyLatch;
@@ -82,7 +82,7 @@ public class SessionHandlingTest extends BaseIntegrationTest
 
     private void setupServlet(final String name, String[] path, int rank, final String context) throws Exception
     {
-        Dictionary<String, Object> servletProps = new Hashtable<String, Object>();
+        Dictionary<String, Object> servletProps = new Hashtable<>();
         servletProps.put(HTTP_WHITEBOARD_SERVLET_NAME, name);
         servletProps.put(HTTP_WHITEBOARD_SERVLET_PATTERN, path);
         servletProps.put(SERVICE_RANKING, rank);
@@ -109,6 +109,10 @@ public class SessionHandlingTest extends BaseIntegrationTest
                 {
                     req.getSession().invalidate();
                 }
+                if ( req.getParameter("timeout") != null )
+                {
+                    req.getSession().setMaxInactiveInterval(10);
+                }
                 final HttpSession s = req.getSession(false);
                 if ( s != null )
                 {
@@ -125,7 +129,8 @@ public class SessionHandlingTest extends BaseIntegrationTest
                 {
                     pw.println(" \"session\" : true,");
                     pw.println(" \"sessionId\" : \"" + s.getId() + "\",");
-                    pw.println(" \"value\" : \"" + s.getAttribute("value") + "\"");
+                    pw.println(" \"value\" : \"" + s.getAttribute("value") + "\",");
+                    pw.println(" \"timeout\" : \"" + s.getMaxInactiveInterval() + "\"");
                 }
                 pw.println("}");
             }
@@ -176,6 +181,7 @@ public class SessionHandlingTest extends BaseIntegrationTest
         }
 
     }
+
     @Test
     public void testSessionAttributes() throws Exception
     {
@@ -246,5 +252,53 @@ public class SessionHandlingTest extends BaseIntegrationTest
         assertTrue(json.getBoolean("session"));
         assertEquals("test2", json.getString("value"));
         assertEquals(sessionId2, json.getString("sessionId"));
+    }
+
+    @Test
+    public void testSessionTimeout() throws Exception
+    {
+        setupContext("test1", "/");
+
+        setupLatches(1);
+
+        setupServlet("foo", new String[] { "/foo" }, 1, "test1");
+
+        assertTrue(initLatch.await(5, TimeUnit.SECONDS));
+
+        RequestConfig globalConfig = RequestConfig.custom()
+                .setCookieSpec(CookieSpecs.BEST_MATCH)
+                .build();
+        final CloseableHttpClient httpclient = HttpClients.custom().setDefaultRequestConfig(globalConfig)
+                .setDefaultCookieStore(new BasicCookieStore())
+                .build();
+
+        JsonObject json;
+
+        // session should not be available
+        // check for foo servlet
+        json = getJSONResponse(httpclient, "/foo");
+        assertFalse(json.getBoolean("session"));
+
+        // create session for  context of servlet foo
+        // check session and timeout (should be 10 seconds)
+        json = getJSONResponse(httpclient, "/foo?create=true&timeout=true");
+        assertTrue(json.getBoolean("session"));
+        assertEquals("10", json.getString("timeout"));
+        final String sessionId1 = json.getString("sessionId");
+        assertNotNull(sessionId1);
+
+        // after four seconds the session should still be there
+        Thread.sleep(4000);
+
+        json = getJSONResponse(httpclient, "/foo");
+        assertTrue(json.getBoolean("session"));
+        assertEquals("10", json.getString("timeout"));
+        assertEquals(sessionId1, json.getString("sessionId"));
+
+        // wait 10 seconds, session should be gone
+        Thread.sleep(10000);
+
+        json = getJSONResponse(httpclient, "/foo");
+        assertFalse(json.getBoolean("session"));
     }
 }
