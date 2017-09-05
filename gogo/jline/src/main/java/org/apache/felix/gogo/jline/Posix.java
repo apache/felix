@@ -81,7 +81,6 @@ import org.jline.builtins.Nano;
 import org.jline.builtins.Options;
 import org.jline.builtins.Source;
 import org.jline.builtins.Source.PathSource;
-import org.jline.builtins.Source.StdInSource;
 import org.jline.builtins.TTop;
 import org.jline.terminal.Attributes;
 import org.jline.terminal.Terminal;
@@ -380,7 +379,7 @@ public class Posix {
         }
         for (String arg : opt.args()) {
             if ("-".equals(arg)) {
-                sources.add(new StdInSource());
+                sources.add(new StdInSource(process));
             } else {
                 sources.add(new PathSource(session.currentDir().resolve(arg), arg));
             }
@@ -522,7 +521,7 @@ public class Posix {
         }
         for (String arg : opt.args()) {
             if ("-".equals(arg)) {
-                sources.add(new StdInSource());
+                sources.add(new StdInSource(process));
             } else {
                 sources.add(new PathSource(session.currentDir().resolve(arg), arg));
             }
@@ -608,7 +607,7 @@ public class Posix {
                     try {
                         InputStream is;
                         if ("-".equals(name)) {
-                            is = new Source.StdInSource().read();
+                            is = new StdInSource(process).read();
                         } else {
                             path = session.currentDir().resolve(name);
                             is = Files.newInputStream(path);
@@ -925,7 +924,7 @@ public class Posix {
         }
         for (String arg : opt.args()) {
             if ("-".equals(arg)) {
-                sources.add(new StdInSource());
+                sources.add(new StdInSource(process));
             } else {
                 sources.add(new PathSource(session.currentDir().resolve(arg), arg));
             }
@@ -1584,7 +1583,7 @@ public class Posix {
         }
         for (String arg : opt.args()) {
             if ("-".equals(arg)) {
-                sources.add(new StdInSource());
+                sources.add(new StdInSource(process));
             } else {
                 sources.add(new PathSource(session.currentDir().resolve(arg), arg));
             }
@@ -2081,4 +2080,22 @@ public class Posix {
         }
     }
 
+    private static class StdInSource implements Source {
+
+        private final Process process;
+
+        StdInSource(Process process) {
+            this.process = process;
+        }
+
+        @Override
+        public String getName() {
+            return null;
+        }
+
+        @Override
+        public InputStream read() throws IOException {
+            return process.in();
+        }
+    }
 }
