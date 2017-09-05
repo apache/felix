@@ -19,6 +19,8 @@ package org.apache.felix.serializer.impl.json;
 import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -40,6 +42,16 @@ public class DefaultJsonWriter implements Writer {
     @Override
     public String write(Object obj) {
         return encode(obj);
+    }
+
+    @Override
+    public Map<String, List<String>> mapOrderingRules() {
+        return Collections.emptyMap();
+    }
+
+    @Override
+    public Map<String, Comparator<?>> arrayOrderingRules() {
+        return Collections.emptyMap();
     }
 
     @SuppressWarnings("rawtypes")

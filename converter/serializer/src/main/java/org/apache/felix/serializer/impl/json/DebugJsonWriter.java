@@ -51,6 +51,16 @@ public class DebugJsonWriter implements Writer {
         return encode(obj, "/", 0).trim();
     }
 
+    @Override
+    public Map<String, List<String>> mapOrderingRules() {
+        return mapOrderingRules;
+    }
+
+    @Override
+    public Map<String, Comparator<?>> arrayOrderingRules() {
+        return arrayOrderingRules;
+    }
+
     @SuppressWarnings("rawtypes")
     private String encode(Object obj, String path, int level) {
         if (obj == null) {

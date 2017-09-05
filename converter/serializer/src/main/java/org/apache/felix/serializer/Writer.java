@@ -15,9 +15,15 @@
  */
 package org.apache.felix.serializer;
 
+import java.util.Comparator;
+import java.util.List;
+import java.util.Map;
+
 /**
  * Common interface for a writer, which can be provided by the client.
  */
 public interface Writer {
     String write(Object obj);
+    Map<String,List<String>> mapOrderingRules();
+    Map<String,Comparator<?>> arrayOrderingRules();
 }
