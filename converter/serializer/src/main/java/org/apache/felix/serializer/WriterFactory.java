@@ -15,6 +15,7 @@
  */
 package org.apache.felix.serializer;
 
+import java.util.Comparator;
 import java.util.List;
 
 import org.osgi.annotation.versioning.ProviderType;
@@ -52,14 +53,42 @@ public interface WriterFactory {
      * specified. This can be useful, for example, for debugging or when
      * the data otherwise needs to be human consumable.
      * 
-     * Note that only the target type is specified, so the rule will be visited 
-     * for every conversion to the target type.
+     * This rule only affects map-type objects located at the given path.
      *
      * @param path the path where the key is located in the object graph.
-     * @param func The desired key order.
+     * @param keyOrder A list with the desired key order.
      * @return This factory object to allow further invocations on it.
      */
-    WriterFactory orderBy(String path, List<String> keyOrder);
+    WriterFactory orderMap(String path, List<String> keyOrder);
+
+    /**
+     * Register an ordering rule for this writer.
+     * 
+     * An ordering rule causes the written json to be output in the order
+     * specified. This can be useful, for example, for debugging or when
+     * the data otherwise needs to be human consumable.
+     * 
+     * This rule only affects array-type objects located at the given path.
+     *
+     * @param path the path where the key is located in the object graph.
+     * @return This factory object to allow further invocations on it.
+     */
+    WriterFactory orderArray(String path);
+
+    /**
+     * Register an ordering rule for this writer.
+     * 
+     * An ordering rule causes the written json to be output in the order
+     * specified. This can be useful, for example, for debugging or when
+     * the data otherwise needs to be human consumable.
+     * 
+     * This rule only affects array-type objects located at the given path.
+     *
+     * @param path the path where the key is located in the object graph.
+     * @param comparator A comparator that will be used to sort the items in the array.
+     * @return This factory object to allow further invocations on it.
+     */
+    WriterFactory orderArray(String path, Comparator<?> comparator);
 
     /**
      * A convenience means of obtaining a JsonWriterFactory without having to

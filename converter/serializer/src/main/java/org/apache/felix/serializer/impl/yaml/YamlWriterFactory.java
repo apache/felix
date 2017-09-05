@@ -16,6 +16,7 @@
  */
 package org.apache.felix.serializer.impl.yaml;
 
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -28,8 +29,18 @@ public class YamlWriterFactory implements WriterFactory, WriterFactory.YamlWrite
     private final Map<String, List<String>> orderingRules = new HashMap<>();
 
     @Override
-    public YamlWriterFactory orderBy(String path, List<String> keyOrder) {
+    public YamlWriterFactory orderMap(String path, List<String> keyOrder) {
         orderingRules.put(path,keyOrder);
+        return this;
+    }
+
+    @Override
+    public WriterFactory orderArray(String path) {
+        return this;
+    }
+
+    @Override
+    public WriterFactory orderArray(String path, Comparator<?> comparator) {
         return this;
     }
 

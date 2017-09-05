@@ -20,6 +20,7 @@ import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -34,13 +35,15 @@ import org.osgi.util.converter.Converter;
 public class DebugJsonWriter implements Writer {
 
     private Converter converter;
-    private final Map<String, List<String>> orderingRules;
+    private final Map<String, List<String>> mapOrderingRules;
+    private final Map<String, Comparator<?>> arrayOrderingRules;
     private final boolean ignoreNull = false;
     private final int indentation = 2;
 
-    public DebugJsonWriter(Converter c, Map<String,List<String>> rules) {
+    public DebugJsonWriter(Converter c, Map<String,List<String>> mapRules, Map<String, Comparator<?>> arrayRules) {
         converter = c;
-        orderingRules = rules;
+        mapOrderingRules = mapRules;
+        arrayOrderingRules = arrayRules;
     }
 
     @Override
@@ -76,8 +79,8 @@ public class DebugJsonWriter implements Writer {
 
     @SuppressWarnings( { "unchecked", "rawtypes" } )
     private Map orderMap(Map unordered, String path) {
-        Map ordered = (orderingRules.containsKey(path)) ? new LinkedHashMap<>() : new TreeMap<>();
-        List<String> keys = (orderingRules.containsKey(path)) ? orderingRules.get(path) : new ArrayList<>(unordered.keySet());
+        Map ordered = (mapOrderingRules.containsKey(path)) ? new LinkedHashMap<>() : new TreeMap<>();
+        List<String> keys = (mapOrderingRules.containsKey(path)) ? mapOrderingRules.get(path) : new ArrayList<>(unordered.keySet());
         for (String key : keys) {
             String itemPath = (path.endsWith("/")) ? path + key : path + "/" + key;
             Object value = unordered.get(key);
@@ -104,7 +107,14 @@ public class DebugJsonWriter implements Writer {
                 ordered.add(obj);
         }
 
-        try{Collections.sort(ordered);}catch (Exception e){}
+        if (arrayOrderingRules.containsKey(path)) {
+            Comparator c = arrayOrderingRules.get(path);
+            if (c == null)
+                Collections.sort(ordered);
+            else
+                Collections.sort(ordered,c);
+        }
+
         return ordered;
     }
 
@@ -142,7 +152,6 @@ public class DebugJsonWriter implements Writer {
     @SuppressWarnings({ "rawtypes", "unchecked" })
     private String encodeMap(Map m, String path, int level) {
         level++;
-//        Map orderedMap = (orderingRules.isEmpty()) ? new TreeMap<>(m) : m;
         StringBuilder sb = new StringBuilder("{\n");
         for (Entry entry : (Set<Entry>) m.entrySet()) {
             if (entry.getKey() == null || entry.getValue() == null)

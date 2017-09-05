@@ -77,12 +77,13 @@ public class JsonBackingObjectSerializationTest {
 
     @Test
     public void testOrderedSerialization() {
-        final JsonWriterFactory factory = new JsonWriterFactory();
-        factory.orderBy("/", Arrays.asList("b", "a", "o", "l2", "l1"));
-        factory.orderBy("/l2", Arrays.asList("b", "a"));
         final String actual = new JsonSerializerImpl()
                 .serialize(MyDTOishObject.factory("A", "B"))
-                .writeWith(factory.newDebugWriter(Converters.standardConverter()))
+                .writeWith(new JsonWriterFactory()
+                        .orderMap("/", Arrays.asList("b", "a", "o", "l2", "l1"))
+                        .orderMap("/l2", Arrays.asList("b", "a"))
+                        .orderArray("/l1")
+                        .newDebugWriter(Converters.standardConverter()))
                 .toString();
 
         assertEquals(ORDERED, actual);
@@ -152,10 +153,10 @@ public class JsonBackingObjectSerializationTest {
             "  \"a\":\"A\",\n" +
             "  \"b\":\"B\",\n" +
             "  \"l1\":[\n" +
-            "    \"four\",\n" +
             "    \"one\",\n" +
+            "    \"two\",\n" +
             "    \"three\",\n" +
-            "    \"two\"\n" +
+            "    \"four\"\n" +
             "  ],\n" +
             "  \"l2\":[\n" +
             "    {\n" +

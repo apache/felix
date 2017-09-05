@@ -16,6 +16,7 @@
  */
 package org.apache.felix.serializer.impl.json;
 
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -25,11 +26,24 @@ import org.apache.felix.serializer.WriterFactory;
 import org.osgi.util.converter.Converter;
 
 public class JsonWriterFactory implements WriterFactory, WriterFactory.JsonWriterFactory {
-    private final Map<String, List<String>> orderingRules = new HashMap<>();
+    private final Map<String, List<String>> mapOrderingRules = new HashMap<>();
+    private final Map<String, Comparator<?>> arrayOrderingRules = new HashMap<>();
 
     @Override
-    public JsonWriterFactory orderBy(String path, List<String> keyOrder) {
-        orderingRules.put(path, keyOrder);
+    public JsonWriterFactory orderMap(String path, List<String> keyOrder) {
+        mapOrderingRules.put(path, keyOrder);
+        return this;
+    }
+
+    @Override
+    public WriterFactory orderArray(String path) {
+        arrayOrderingRules.put(path, null);
+        return this;
+    }
+
+    @Override
+    public WriterFactory orderArray(String path, Comparator<?> comparator) {
+        arrayOrderingRules.put(path, comparator);
         return this;
     }
 
@@ -40,6 +54,6 @@ public class JsonWriterFactory implements WriterFactory, WriterFactory.JsonWrite
 
     @Override
     public Writer newDebugWriter(Converter c) {
-        return new DebugJsonWriter(c, orderingRules);
+        return new DebugJsonWriter(c, mapOrderingRules, arrayOrderingRules);
     }
 }
