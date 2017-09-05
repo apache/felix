@@ -61,6 +61,7 @@ public class ConfiguratorTest {
     @Before public void setup() throws IOException {
         bundle = mock(Bundle.class);
         when(bundle.getBundleId()).thenReturn(42L);
+        when(bundle.getState()).thenReturn(Bundle.ACTIVE);
         bundleContext = mock(BundleContext.class);
         when(bundle.getBundleContext()).thenReturn(bundleContext);
         when(bundleContext.getBundle()).thenReturn(bundle);
@@ -81,6 +82,7 @@ public class ConfiguratorTest {
         final Bundle b = mock(Bundle.class);
         when(b.getBundleId()).thenReturn(id);
         when(b.getLastModified()).thenReturn(5L);
+        when(b.getState()).thenReturn(Bundle.ACTIVE);
         final BundleWiring wiring = mock(BundleWiring.class);
         when(b.adapt(BundleWiring.class)).thenReturn(wiring);
         final BundleRequirement req = mock(BundleRequirement.class);

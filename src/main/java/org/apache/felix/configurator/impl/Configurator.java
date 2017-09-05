@@ -529,22 +529,28 @@ public class Configurator {
         Long configAdminServiceBundleId = this.state.getConfigAdminBundleId(cfg.getBundleId());
         if ( configAdminServiceBundleId == null ) {
             final Bundle configBundle = cfg.getBundleId() == -1 ? this.bundleContext.getBundle() : this.bundleContext.getBundle(Constants.SYSTEM_BUNDLE_LOCATION).getBundleContext().getBundle(cfg.getBundleId());
-            if ( configBundle != null ) {
+            if ( configBundle != null && configBundle.getState() == Bundle.ACTIVE ) {
                 if ( System.getSecurityManager() == null
                      || configBundle.hasPermission( new ServicePermission(ConfigurationAdmin.class.getName(), ServicePermission.GET)) ) {
                     try {
-                        final Collection<ServiceReference<ConfigurationAdmin>> refs = configBundle.getBundleContext().getServiceReferences(ConfigurationAdmin.class, null);
-                        final List<ServiceReference<ConfigurationAdmin>> sortedRefs = new ArrayList<>(refs);
-                        Collections.sort(sortedRefs);
-                        for(int i=sortedRefs.size();i>0;i--) {
-                            final ServiceReference<ConfigurationAdmin> r = sortedRefs.get(i-1);
-                            synchronized ( this.configAdminReferences ) {
-                                if ( this.configAdminReferences.contains(r) ) {
-                                    configAdminServiceBundleId = r.getBundle().getBundleId();
-                                    break;
+                        final BundleContext ctx = configBundle.getBundleContext();
+                        if ( ctx != null ) {
+                            final Collection<ServiceReference<ConfigurationAdmin>> refs = ctx.getServiceReferences(ConfigurationAdmin.class, null);
+                            final List<ServiceReference<ConfigurationAdmin>> sortedRefs = new ArrayList<>(refs);
+                            Collections.sort(sortedRefs);
+                            for(int i=sortedRefs.size();i>0;i--) {
+                                final ServiceReference<ConfigurationAdmin> r = sortedRefs.get(i-1);
+                                synchronized ( this.configAdminReferences ) {
+                                    if ( this.configAdminReferences.contains(r) ) {
+                                        configAdminServiceBundleId = r.getBundle().getBundleId();
+                                        break;
+                                    }
                                 }
                             }
                         }
+                    } catch ( final IllegalStateException e) {
+                        // this might happen if the config admin bundle gets deactivated while we use it
+                        // we can ignore this and retry later on
                     } catch (final InvalidSyntaxException e) {
                         // this can never happen as we pass {@code null} as the filter
                     }
