@@ -24,6 +24,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Arrays;
 import java.util.List;
 
 import static org.junit.Assert.assertEquals;
@@ -56,6 +57,52 @@ public class ExpanderTest {
             }
         };
         assertEquals("\033\033", Expander.expand("$'\\033\\u001B'", evaluate));
+    }
+
+    @Test
+    public void testSortingFlags() throws Exception {
+        Evaluate evaluate = new Evaluate() {
+            @Override
+            public Object eval(Token t) throws Exception {
+                return null;
+            }
+            @Override
+            public Object get(String key) {
+                switch (key) {
+                    case "a":
+                        return Arrays.asList(5, 3, 4, 2, 1, 3);
+                    case "b":
+                        return Arrays.asList(5, 3, 4, 2, 1, 31);
+                    case "c":
+                        return Arrays.asList("foo1", "foo02", "foo2", "foo3", "foo20", "foo23");
+                    case "d":
+                        return Arrays.asList("foo1", "foo02", "Foo2", "Foo3", "foo20", "foo23");
+                }
+                return null;
+            }
+            @Override
+            public Object put(String key, Object value) {
+                return null;
+            }
+            @Override
+            public Object expr(Token t) {
+                return null;
+            }
+            @Override
+            public Path currentDir() {
+                return null;
+            }
+        };
+
+        assertEquals("5 3 4 2 1 3", Expander.expand("${(j: :)a}", evaluate));
+        assertEquals("5 3 4 2 1", Expander.expand("${(j: :)${(u)a}}", evaluate));
+        assertEquals("3 1 2 4 3 5", Expander.expand("${(j: :)${(Oa)a}}", evaluate));
+        assertEquals("1 2 3 31 4 5", Expander.expand("${(j: :)${(i)b}}", evaluate));
+        assertEquals("1 2 3 4 5 31", Expander.expand("${(j: :)${(n)b}}", evaluate));
+        assertEquals("foo1 foo02 foo2 foo3 foo20 foo23", Expander.expand("${(j: :)${(n)c}}", evaluate));
+        assertEquals("foo23 foo20 foo3 foo2 foo02 foo1", Expander.expand("${(j: :)${(On)c}}", evaluate));
+        assertEquals("Foo2 Foo3 foo1 foo02 foo20 foo23", Expander.expand("${(j: :)${(n)d}}", evaluate));
+        assertEquals("foo1 foo02 Foo2 Foo3 foo20 foo23", Expander.expand("${(j: :)${(ni)d}}", evaluate));
     }
 
     @Test
