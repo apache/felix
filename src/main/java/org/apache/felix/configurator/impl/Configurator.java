@@ -281,7 +281,10 @@ public class Configurator {
         final Set<Long> ids = new HashSet<>();
         for(final Bundle b : bundles) {
             ids.add(b.getBundleId());
-            processAddBundle(b);
+            final int state = b.getState();
+            if ( state == Bundle.ACTIVE || state == Bundle.STARTING ) {
+                processAddBundle(b);
+            }
         }
         for(final long id : state.getKnownBundleIds()) {
             if ( !ids.contains(id) ) {
@@ -529,7 +532,9 @@ public class Configurator {
         Long configAdminServiceBundleId = this.state.getConfigAdminBundleId(cfg.getBundleId());
         if ( configAdminServiceBundleId == null ) {
             final Bundle configBundle = cfg.getBundleId() == -1 ? this.bundleContext.getBundle() : this.bundleContext.getBundle(Constants.SYSTEM_BUNDLE_LOCATION).getBundleContext().getBundle(cfg.getBundleId());
-            if ( configBundle != null && configBundle.getState() == Bundle.ACTIVE ) {
+            // we check the state again, just to be sure (to avoid race conditions)
+            if ( configBundle != null
+                 && (configBundle.getState() == Bundle.STARTING || configBundle.getState() == Bundle.ACTIVE)) {
                 if ( System.getSecurityManager() == null
                      || configBundle.hasPermission( new ServicePermission(ConfigurationAdmin.class.getName(), ServicePermission.GET)) ) {
                     try {
@@ -554,10 +559,6 @@ public class Configurator {
                     } catch (final InvalidSyntaxException e) {
                         // this can never happen as we pass {@code null} as the filter
                     }
-                }
-            } else {
-                if ( configBundle != null ) {
-                    SystemLogger.error("Bundle " + getBundleIdentity(configBundle) + " has state " + getBundleState(configBundle.getState()) + " for configuration from bundle " + cfg.getBundleId());
                 }
             }
         }
