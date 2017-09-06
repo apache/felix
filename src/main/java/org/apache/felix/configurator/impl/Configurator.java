@@ -557,7 +557,7 @@ public class Configurator {
                 }
             } else {
                 if ( configBundle != null ) {
-                    SystemLogger.error("Bundle " + configBundle.getSymbolicName() + " has state " + configBundle.getState() + " for configuration from bundle " + cfg.getBundleId());
+                    SystemLogger.error("Bundle " + configBundle.getSymbolicName() + " has state " + getBundleState(configBundle.getState()) + " for configuration from bundle " + cfg.getBundleId());
                 }
             }
         }
