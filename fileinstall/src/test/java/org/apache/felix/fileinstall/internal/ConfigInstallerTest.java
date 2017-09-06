@@ -106,6 +106,37 @@ public class ConfigInstallerTest extends TestCase {
         assertEquals("wlp3s0", loaded.get("networkInterface"));
     }
 
+    public void testTypedConfigurationFloat() throws Exception
+    {
+        File file = File.createTempFile("test", ".config");
+        try (OutputStream os = new FileOutputStream(file)) {
+            os.write("key=F\"1137191584\"\n".getBytes("UTF-8"));
+        }
+        String pid = file.getName().substring(0, file.getName().indexOf(".config"));
+
+        Capture<Dictionary<String, Object>> props = new Capture<>();
+        EasyMock.expect(mockConfigurationAdmin.listConfigurations((String) EasyMock.anyObject()))
+                .andReturn(null);
+        EasyMock.expect(mockConfigurationAdmin.getConfiguration(pid, null))
+                .andReturn(mockConfiguration);
+        EasyMock.expect(mockConfiguration.getProperties())
+                .andReturn(null);
+        EasyMock.expect(mockBundleContext.getProperty((String) EasyMock.anyObject()))
+                .andReturn(null)
+                .anyTimes();
+        mockConfiguration.update(EasyMock.capture(props));
+        EasyMock.expectLastCall();
+        EasyMock.replay(mockConfiguration, mockConfigurationAdmin, mockBundleContext);
+
+        ConfigInstaller ci = new ConfigInstaller( mockBundleContext, mockConfigurationAdmin, new FileInstall() );
+        ci.install(file);
+
+        EasyMock.verify(mockConfiguration, mockConfigurationAdmin, mockBundleContext);
+        Dictionary<String, Object> loaded = props.getValue();
+        assertNotNull(loaded);
+        assertEquals(400.333F, loaded.get("key"));
+    }
+
     public void testGetNewFactoryConfiguration() throws Exception
     {
         EasyMock.expect(mockConfigurationAdmin.listConfigurations((String) EasyMock.anyObject()))
