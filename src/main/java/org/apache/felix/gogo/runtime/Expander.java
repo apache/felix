@@ -32,6 +32,7 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.EnumSet;
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.regex.Matcher;
@@ -1702,7 +1703,7 @@ public class Expander extends BaseTokenizer
                 val = toCollection.apply(val);
                 if (val instanceof Collection)
                 {
-                    val = new ArrayList<>(new HashSet<>(asCollection(val)));
+                    val = new ArrayList<>(new LinkedHashSet<>(asCollection(val)));
                 }
             }
 
