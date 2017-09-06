@@ -555,6 +555,10 @@ public class Configurator {
                         // this can never happen as we pass {@code null} as the filter
                     }
                 }
+            } else {
+                if ( configBundle != null ) {
+                    SystemLogger.error("Bundle " + configBundle.getSymbolicName() + " has state " + configBundle.getState() + " for configuration from bundle " + cfg.getBundleId());
+                }
             }
         }
         if ( configAdminServiceBundleId == null ) {
