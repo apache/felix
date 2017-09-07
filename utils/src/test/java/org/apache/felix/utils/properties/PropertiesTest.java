@@ -340,4 +340,17 @@ public class PropertiesTest extends TestCase {
         assertEquals(Arrays.asList("#", "# List of good fruits", "#"), p1.getComments("fruits"));
         assertEquals("apple, banana, pear", p1.getProperty("fruits"));
     }
+
+    public void testSubstitution() throws IOException
+    {
+        String str = "port = 4141\n" +
+                "host = localhost\n" +
+                "url = https://${host}:${port}/service\n";
+        Properties properties = new Properties();
+        properties.load(new StringReader(str));
+        properties.put("url", "https://localhost:4141/service");
+        StringWriter sw = new StringWriter();
+        properties.save(sw);
+        assertEquals(str, sw.toString());
+    }
 }

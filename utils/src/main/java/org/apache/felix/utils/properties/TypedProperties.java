@@ -336,7 +336,7 @@ public class TypedProperties extends AbstractMap<String, Object> {
             ((DynamicMap) map).init(callback, finalSubstitution);
         }
         for (Map.Entry<String, TypedProperties> entry : properties.entrySet()) {
-            entry.getValue().storage.putAll(dynamic.get(entry.getKey()));
+            entry.getValue().storage.putAllSubstituted(dynamic.get(entry.getKey()));
         }
     }
 

@@ -99,4 +99,16 @@ public class TypedPropertiesTest extends TestCase {
         assertEquals("key = F\"1137191584\"\n", sw.toString());
     }
 
+    public void testSubstitution() throws IOException
+    {
+        String str = "port = 4141\n" +
+                     "host = localhost\n" +
+                     "url = https://${host}:${port}/service\n";
+        TypedProperties properties = new TypedProperties();
+        properties.load(new StringReader(str));
+        properties.put("url", "https://localhost:4141/service");
+        StringWriter sw = new StringWriter();
+        properties.save(sw);
+        assertEquals(str, sw.toString());
+    }
 }
