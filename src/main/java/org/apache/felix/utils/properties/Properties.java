@@ -281,6 +281,10 @@ public class Properties extends AbstractMap<String, String> {
         return old;
     }
 
+    void putAllSubstituted(Map<? extends String, ? extends String> m) {
+        storage.putAll(m);
+    }
+
     public String put(String key, List<String> commentLines, List<String> valueLines) {
         commentLines = new ArrayList<String>(commentLines);
         valueLines = new ArrayList<String>(valueLines);
