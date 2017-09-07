@@ -76,4 +76,27 @@ public class TypedPropertiesTest extends TestCase {
         assertEquals("test", p2.get("test"));
     }
 
+    public void testLoadTypedProps2() throws IOException
+    {
+        TypedProperties properties = new TypedProperties();
+        properties.load(this.getClass().getClassLoader().getResourceAsStream("typed2.properties"));
+        assertEquals("wlp3s0", properties.get("networkInterface"));
+    }
+
+    public void testLoadTypedProps3() throws IOException
+    {
+        TypedProperties properties = new TypedProperties();
+        properties.load(this.getClass().getClassLoader().getResourceAsStream("typed3.properties"));
+        assertEquals(21, properties.get("bla"));
+    }
+
+    public void testWriteTypedPropsFloat() throws IOException
+    {
+        TypedProperties properties = new TypedProperties();
+        properties.put("key", 400.333f);
+        StringWriter sw = new StringWriter();
+        properties.save(sw);
+        assertEquals("key = F\"1137191584\"\n", sw.toString());
+    }
+
 }
