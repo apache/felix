@@ -56,6 +56,7 @@ public class DSAnnotationProcessor implements AnnotationProcessor {
     /**
      * @see org.apache.felix.scrplugin.annotations.AnnotationProcessor#getName()
      */
+    @Override
     public String getName() {
         return "DS Annotation Processor";
     }
@@ -63,6 +64,7 @@ public class DSAnnotationProcessor implements AnnotationProcessor {
     /**
      * @see org.apache.felix.scrplugin.annotations.AnnotationProcessor#process(org.apache.felix.scrplugin.annotations.ScannedClass, org.apache.felix.scrplugin.description.ClassDescription)
      */
+    @Override
     public void process(final ScannedClass scannedClass,
                         final ClassDescription describedClass)
     throws SCRDescriptorFailureException, SCRDescriptorException {
@@ -107,6 +109,7 @@ public class DSAnnotationProcessor implements AnnotationProcessor {
     /**
      * @see org.apache.felix.scrplugin.annotations.AnnotationProcessor#getRanking()
      */
+    @Override
     public int getRanking() {
         return 300;
     }
@@ -236,7 +239,14 @@ public class DSAnnotationProcessor implements AnnotationProcessor {
                         ComponentConfigurationPolicy.OPTIONAL.name())));
 
         // configuration pid
-        component.setConfigurationPid(cad.getStringValue("configurationPid", null));
+	    Object configPid = cad.getValue("configurationPid");
+        if ( configPid instanceof String ) {
+            component.setConfigurationPid((String)configPid);
+        } else if ( configPid instanceof String[] && ((String[])configPid).length == 1 ) {
+            component.setConfigurationPid(((String[])configPid)[0]);
+        } else {
+            component.setConfigurationPid(null);
+        }
         component.setCreatePid(false);
 
         // no inheritance
