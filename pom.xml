@@ -28,6 +28,11 @@
     <name>Apache Felix Gogo Runtime</name>
     <artifactId>org.apache.felix.gogo.runtime</artifactId>
     <version>1.0.7-SNAPSHOT</version>
+    <scm>
+        <connection>scm:svn:http://svn.apache.org/repos/asf/felix/trunk/gogo/runtime</connection>
+        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/felix/trunk/gogo/runtime</developerConnection>
+        <url>http://svn.apache.org/repos/asf/felix/gogo/runtime</url>
+    </scm>
     <properties>
         <!-- Skip because of NPE -->
         <animal.sniffer.skip>true</animal.sniffer.skip>
