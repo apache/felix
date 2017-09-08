@@ -30,7 +30,7 @@
     <artifactId>org.apache.felix.scr.ds-annotations</artifactId>
 
     <!-- We use the same major version as the spec. -->
-    <version>1.2.9-SNAPSHOT</version>
+    <version>1.2.9-AG1</version>
     <packaging>jar</packaging>
 
     <name>Annotations for DS</name>
@@ -52,7 +52,7 @@
         <dependency>
             <groupId>org.apache.felix</groupId>
             <artifactId>org.apache.felix.scr.generator</artifactId>
-            <version>1.16.1-SNAPSHOT</version>
+            <version>1.16.0</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
