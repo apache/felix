@@ -28,6 +28,11 @@
     <name>Apache Felix Gogo JLine Shell</name>
     <artifactId>org.apache.felix.gogo.jline</artifactId>
     <version>1.0.7-SNAPSHOT</version>
+    <scm>
+        <connection>scm:svn:http://svn.apache.org/repos/asf/felix/trunk/gogo/jline</connection>
+        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/felix/trunk/gogo/jline</developerConnection>
+        <url>http://svn.apache.org/repos/asf/felix/gogo/jline</url>
+    </scm>
     <properties>
         <!-- Skip because of NPE -->
         <animal.sniffer.skip>true</animal.sniffer.skip>
