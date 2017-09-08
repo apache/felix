@@ -33,6 +33,7 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -1192,7 +1193,7 @@ public class DirectoryWatcher extends Thread implements BundleListener
     private void startAllBundles()
     {
         FrameworkStartLevel startLevelSvc = systemBundle.adapt(FrameworkStartLevel.class);
-        List<Bundle> bundles = new ArrayList<Bundle>();
+        Set<Bundle> bundles = new LinkedHashSet<>();
         for (Artifact artifact : getArtifacts()) {
             if (artifact.getBundleId() > 0) {
                 Bundle bundle = context.getBundle(artifact.getBundleId());
@@ -1211,10 +1212,10 @@ public class DirectoryWatcher extends Thread implements BundleListener
      /**
       * Starts a bundle and removes it from the Collection when successfully started.
       */
-    private void startBundles(Collection<Bundle> bundles)
+    private void startBundles(Set<Bundle> bundles)
     {
         // Check if this is the consistent set of bundles which failed previously.
-        boolean logFailures = bundles.equals(consistentlyFailingBundles);
+        boolean logFailures = !consistentlyFailingBundles.equals(bundles);
         for (Iterator<Bundle> b = bundles.iterator(); b.hasNext(); )
         {
             if (startBundle(b.next(), logFailures))
