@@ -206,6 +206,7 @@ public class ConfigInstallerTest extends TestCase {
 
     public void testSetConfiguration() throws Exception
     {
+        EasyMock.expect(mockBundleContext.getProperty(DirectoryWatcher.CONFIG_ENCODING)).andReturn(null);
         EasyMock.expect(mockBundleContext.getProperty(DirectoryWatcher.LOG_DEFAULT)).andReturn(null);
         EasyMock.expect(mockBundleContext.getProperty(DirectoryWatcher.LOG_LEVEL)).andReturn(null);
         EasyMock.expect(mockConfiguration.getProperties()).andReturn(new Hashtable<String, Object>());

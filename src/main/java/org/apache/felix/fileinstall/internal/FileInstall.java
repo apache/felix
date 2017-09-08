@@ -106,6 +106,7 @@ public class FileInstall implements BundleActivator, ServiceTrackerCustomizer
             set(ht, DirectoryWatcher.NO_INITIAL_DELAY);
             set(ht, DirectoryWatcher.DISABLE_CONFIG_SAVE);
             set(ht, DirectoryWatcher.ENABLE_CONFIG_SAVE);
+            set(ht, DirectoryWatcher.CONFIG_ENCODING);
             set(ht, DirectoryWatcher.START_LEVEL);
             set(ht, DirectoryWatcher.ACTIVE_LEVEL);
             set(ht, DirectoryWatcher.UPDATE_WITH_LISTENERS);
