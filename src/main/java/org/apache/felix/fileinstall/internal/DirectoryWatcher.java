@@ -947,14 +947,7 @@ public class DirectoryWatcher extends Thread implements BundleListener
                 URL transformed = artifact.getTransformedUrl();
                 String location = transformed.toString();
                 BufferedInputStream in = new BufferedInputStream(transformed.openStream());
-                try
-                {
-                    bundle = installOrUpdateBundle(location, in, artifact.getChecksum(), modified);
-                }
-                finally
-                {
-                    in.close();
-                }
+                bundle = installOrUpdateBundle(location, in, artifact.getChecksum(), modified);
                 artifact.setBundleId(bundle.getBundleId());
             }
             // if the listener is an artifact transformer
@@ -968,14 +961,7 @@ public class DirectoryWatcher extends Thread implements BundleListener
                 File transformed = artifact.getTransformed();
                 String location = path.toURI().normalize().toString();
                 BufferedInputStream in = new BufferedInputStream(new FileInputStream(transformed != null ? transformed : path));
-                try
-                {
-                    bundle = installOrUpdateBundle(location, in, artifact.getChecksum(), modified);
-                }
-                finally
-                {
-                    in.close();
-                }
+                bundle = installOrUpdateBundle(location, in, artifact.getChecksum(), modified);
                 artifact.setBundleId(bundle.getBundleId());
             }
             installationFailures.remove(path);
@@ -997,53 +983,62 @@ public class DirectoryWatcher extends Thread implements BundleListener
         String bundleLocation, BufferedInputStream is, long checksum, AtomicBoolean modified)
         throws IOException, BundleException
     {
-        is.mark(256 * 1024);
-        JarInputStream jar = new JarInputStream(is);
-        Manifest m = jar.getManifest();
-        if( m == null ) {
-            throw new BundleException(
-                "The bundle " + bundleLocation + " does not have a META-INF/MANIFEST.MF! "+
-                    "Make sure, META-INF and MANIFEST.MF are the first 2 entries in your JAR!");
-        }
-        String sn = m.getMainAttributes().getValue(Constants.BUNDLE_SYMBOLICNAME);
-        String vStr = m.getMainAttributes().getValue(Constants.BUNDLE_VERSION);
-        Version v = vStr == null ? Version.emptyVersion : Version.parseVersion(vStr);
-        Bundle[] bundles = context.getBundles();
-        for (Bundle b : bundles) {
-            if (b.getSymbolicName() != null && b.getSymbolicName().equals(sn)) {
-                vStr = b.getHeaders().get(Constants.BUNDLE_VERSION);
-                Version bv = vStr == null ? Version.emptyVersion : Version.parseVersion(vStr);
-                if (v.equals(bv)) {
-                    is.reset();
-                    if (Util.loadChecksum(b, context) != checksum) {
-                        log(Logger.LOG_WARNING,
-                                "A bundle with the same symbolic name ("
-                                        + sn + ") and version (" + vStr
-                                        + ") is already installed.  Updating this bundle instead.", null
-                        );
-                        stopTransient(b);
-                        Util.storeChecksum(b, checksum, context);
-                        b.update(is);
-                        modified.set(true);
+        JarInputStream jar = null;
+        try {
+            is.mark(256 * 1024);
+            jar = new JarInputStream(is);
+            Manifest m = jar.getManifest();
+            if( m == null ) {
+                throw new BundleException(
+                        "The bundle " + bundleLocation + " does not have a META-INF/MANIFEST.MF! " +
+                                "Make sure, META-INF and MANIFEST.MF are the first 2 entries in your JAR!");
+            }
+            String sn = m.getMainAttributes().getValue(Constants.BUNDLE_SYMBOLICNAME);
+            String vStr = m.getMainAttributes().getValue(Constants.BUNDLE_VERSION);
+            Version v = vStr == null ? Version.emptyVersion : Version.parseVersion(vStr);
+            Bundle[] bundles = context.getBundles();
+            for (Bundle b : bundles) {
+                if (b.getSymbolicName() != null && b.getSymbolicName().equals(sn)) {
+                    vStr = b.getHeaders().get(Constants.BUNDLE_VERSION);
+                    Version bv = vStr == null ? Version.emptyVersion : Version.parseVersion(vStr);
+                    if (v.equals(bv)) {
+                        is.reset();
+                        if (Util.loadChecksum(b, context) != checksum) {
+                            log(Logger.LOG_WARNING,
+                                    "A bundle with the same symbolic name ("
+                                            + sn + ") and version (" + vStr
+                                            + ") is already installed.  Updating this bundle instead.", null
+                            );
+                            stopTransient(b);
+                            Util.storeChecksum(b, checksum, context);
+                            b.update(is);
+                            modified.set(true);
+                        }
+                        return b;
                     }
-                    return b;
                 }
             }
-        }
-        is.reset();
-        Util.log(context, Logger.LOG_INFO, "Installing bundle " + sn
-                + " / " + v, null);
-        Bundle b = context.installBundle(bundleLocation, is);
-        Util.storeChecksum(b, checksum, context);
-        modified.set(true);
+            is.reset();
+            Util.log(context, Logger.LOG_INFO, "Installing bundle " + sn
+                    + " / " + v, null);
+            Bundle b = context.installBundle(bundleLocation, is);
+            Util.storeChecksum(b, checksum, context);
+            modified.set(true);
 
-        // Set default start level at install time, the user can override it if he wants
-        if (startLevel != 0)
-        {
-            b.adapt(BundleStartLevel.class).setStartLevel(startLevel);
+            // Set default start level at install time, the user can override it if he wants
+            if (startLevel != 0) {
+                b.adapt(BundleStartLevel.class).setStartLevel(startLevel);
+            }
+
+            return b;
         }
-        
-        return b;
+        finally
+        {
+            if (jar != null)
+            {
+                jar.close();
+            }
+        }
     }
 
     /**
