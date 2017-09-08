@@ -834,7 +834,6 @@ public class ConfigurationHandler
             {
                 case '\\':
                 case TOKEN_VAL_CLOS:
-                case ' ':
                 case TOKEN_EQ:
                     out.write( '\\' );
                     out.write( c );
