@@ -27,11 +27,11 @@
     <packaging>bundle</packaging>
     <name>Apache Felix Gogo Runtime</name>
     <artifactId>org.apache.felix.gogo.runtime</artifactId>
-    <version>1.0.7-SNAPSHOT</version>
+    <version>1.0.8</version>
     <scm>
-        <connection>scm:svn:http://svn.apache.org/repos/asf/felix/trunk/gogo/runtime</connection>
-        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/felix/trunk/gogo/runtime</developerConnection>
-        <url>http://svn.apache.org/repos/asf/felix/gogo/runtime</url>
+        <connection>scm:svn:http://svn.apache.org/repos/asf/felix/releases/org.apache.felix.gogo.runtime-1.0.8</connection>
+        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/felix/releases/org.apache.felix.gogo.runtime-1.0.8</developerConnection>
+        <url>scm:svn:https://svn.apache.org/repos/asf/felix/releases/org.apache.felix.gogo.runtime-1.0.8</url>
     </scm>
     <properties>
         <!-- Skip because of NPE -->
