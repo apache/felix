@@ -24,6 +24,7 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.StringReader;
 import java.io.StringWriter;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
@@ -111,4 +112,15 @@ public class TypedPropertiesTest extends TestCase {
         properties.save(sw);
         assertEquals(str, sw.toString());
     }
+
+    public void testWriteTypedPropsStringWithSpaces() throws IOException
+    {
+        TypedProperties properties = new TypedProperties();
+        properties.put("key", 3); // force the config to be typed
+        properties.put("key", "s 1");
+        StringWriter sw = new StringWriter();
+        properties.save(sw);
+        assertEquals("key = \"s 1\"\n", sw.toString());
+    }
+
 }
