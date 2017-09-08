@@ -131,7 +131,10 @@ public class ConfigInstaller implements ArtifactInstaller, ConfigurationListener
                 File file = fileName != null ? fromConfigKey(fileName) : null;
                 if( file != null && file.isFile() ) {
                     TypedProperties props = new TypedProperties( bundleSubstitution() );
-                    props.load( file );
+                    try (Reader r = new InputStreamReader(new FileInputStream(file), encoding()))
+                    {
+                        props.load(r);
+                    }
                     // remove "removed" properties from the cfg file
                     List<String> propertiesToRemove = new ArrayList<>();
                     for( String key : props.keySet() )
@@ -206,6 +209,12 @@ public class ConfigInstaller implements ArtifactInstaller, ConfigurationListener
         return true;
     }
 
+    String encoding()
+    {
+        String str = this.context.getProperty( DirectoryWatcher.CONFIG_ENCODING );
+        return str != null ? str : "ISO-8859-1";
+    }
+
     ConfigurationAdmin getConfigurationAdmin()
     {
         return configAdmin;
@@ -239,7 +248,10 @@ public class ConfigInstaller implements ArtifactInstaller, ConfigurationListener
                 ht.putAll(strMap);
             } else {
                 TypedProperties p = new TypedProperties( bundleSubstitution() );
-                p.load(in);
+                try (Reader r = new InputStreamReader(in, encoding()))
+                {
+                    p.load(r);
+                }
                 for (String k : p.keySet()) {
                     ht.put(k, p.get(k));
                 }

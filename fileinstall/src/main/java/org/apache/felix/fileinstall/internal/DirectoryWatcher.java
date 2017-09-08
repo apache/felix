@@ -101,6 +101,7 @@ public class DirectoryWatcher extends Thread implements BundleListener
     public final static String NO_INITIAL_DELAY = "felix.fileinstall.noInitialDelay";
     public final static String DISABLE_CONFIG_SAVE = "felix.fileinstall.disableConfigSave";
     public final static String ENABLE_CONFIG_SAVE = "felix.fileinstall.enableConfigSave";
+    public final static String CONFIG_ENCODING = "felix.fileinstall.configEncoding";
     public final static String START_LEVEL = "felix.fileinstall.start.level";
     public final static String ACTIVE_LEVEL = "felix.fileinstall.active.level";
     public final static String UPDATE_WITH_LISTENERS = "felix.fileinstall.bundles.updateWithListeners";
