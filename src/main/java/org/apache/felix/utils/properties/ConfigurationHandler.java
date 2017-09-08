@@ -479,13 +479,19 @@ public class ConfigurationHandler
 
             case TOKEN_SIMPLE_FLOAT:
             case TOKEN_PRIMITIVE_FLOAT:
-                int fBits = Integer.parseInt( readQuoted( pr ) );
-                return new Float( Float.intBitsToFloat( fBits ) );
+                String fString = readQuoted( pr );
+                if ( fString.indexOf('.') >= 0 )
+                    return Float.valueOf( fString );
+                else
+                    return Float.intBitsToFloat( Integer.parseInt( fString ) );
 
             case TOKEN_SIMPLE_DOUBLE:
             case TOKEN_PRIMITIVE_DOUBLE:
-                long dBits = Long.parseLong( readQuoted( pr ) );
-                return new Double( Double.longBitsToDouble( dBits ) );
+                String dString = readQuoted( pr );
+                if (dString.indexOf('.') >= 0 )
+                    return Double.valueOf( dString );
+                else
+                    return Double.longBitsToDouble( Long.parseLong( dString ) );
 
             case TOKEN_SIMPLE_BYTE:
             case TOKEN_PRIMITIVE_BYTE:
@@ -801,17 +807,6 @@ public class ConfigurationHandler
 
     private static void writeSimple( Writer out, Object value ) throws IOException
     {
-        if ( value instanceof Double )
-        {
-            double dVal = ( ( Double ) value ).doubleValue();
-            value = new Long( Double.doubleToRawLongBits( dVal ) );
-        }
-        else if ( value instanceof Float )
-        {
-            float fVal = ( ( Float ) value ).floatValue();
-            value = new Integer( Float.floatToRawIntBits( fVal ) );
-        }
-
         out.write( TOKEN_VAL_OPEN );
         writeQuoted( out, String.valueOf( value ) );
         out.write( TOKEN_VAL_CLOS );
