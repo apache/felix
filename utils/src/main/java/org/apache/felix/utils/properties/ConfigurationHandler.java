@@ -579,6 +579,65 @@ public class ConfigurationHandler
                 case -1: // fall through
 
                 // separator token
+                case TOKEN_VAL_CLOS:
+                    pr.unread( c );
+                    return buf.toString();
+
+                // no escaping
+                default:
+                    buf.append( ( char ) c );
+            }
+        }
+    }
+
+    private String readUnquoted( PushbackReader pr ) throws IOException
+    {
+        StringBuffer buf = new StringBuffer();
+        for ( ;; )
+        {
+            int c = read( pr );
+            switch ( c )
+            {
+                // escaped character
+                case '\\':
+                    c = read( pr );
+                    switch ( c )
+                    {
+                        // well known escapes
+                        case 'b':
+                            buf.append( '\b' );
+                            break;
+                        case 't':
+                            buf.append( '\t' );
+                            break;
+                        case 'n':
+                            buf.append( '\n' );
+                            break;
+                        case 'f':
+                            buf.append( '\f' );
+                            break;
+                        case 'r':
+                            buf.append( '\r' );
+                            break;
+                        case 'u':// need 4 characters !
+                            char[] cbuf = new char[4];
+                            if ( read( pr, cbuf ) == 4 )
+                            {
+                                c = Integer.parseInt( new String( cbuf ), 16 );
+                                buf.append( ( char ) c );
+                            }
+                            break;
+
+                        // just an escaped character, unescape
+                        default:
+                            buf.append( ( char ) c );
+                    }
+                    break;
+
+                // eof
+                case -1: // fall through
+
+                // separator token
                 case TOKEN_EQ:
                 case TOKEN_VAL_CLOS:
                     pr.unread( c );
@@ -622,7 +681,7 @@ public class ConfigurationHandler
         {
             // read the property name
             pr.unread( c );
-            tokenValue = readQuoted( pr );
+            tokenValue = readUnquoted( pr );
             return ( token = TOKEN_NAME );
         }
 
@@ -829,7 +888,6 @@ public class ConfigurationHandler
             {
                 case '\\':
                 case TOKEN_VAL_CLOS:
-                case TOKEN_EQ:
                     out.write( '\\' );
                     out.write( c );
                     break;
