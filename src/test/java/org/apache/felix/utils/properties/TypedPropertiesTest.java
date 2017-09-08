@@ -98,6 +98,13 @@ public class TypedPropertiesTest extends TestCase {
         assertEquals(400.333f, properties.get("key"));
     }
 
+    public void testReadStringWithEqual() throws IOException
+    {
+        TypedProperties properties = new TypedProperties();
+        properties.load(new StringReader("key = \"foo=bar\"\n"));
+        assertEquals("foo=bar", properties.get("key"));
+    }
+
     public void testWriteTypedPropsFloat2() throws IOException
     {
         TypedProperties properties = new TypedProperties();
