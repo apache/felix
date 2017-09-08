@@ -161,7 +161,10 @@ public class ConfigInstaller implements ArtifactInstaller, ConfigurationListener
                     {
                         props.remove(key);
                     }
-                    props.save( file );
+                    try (Writer fw = new OutputStreamWriter(new FileOutputStream(file), encoding()))
+                    {
+                        props.save( fw );
+                    }
                     // we're just writing out what's already loaded into ConfigAdmin, so
                     // update file checksum since lastModified gets updated when writing
                     fileInstall.updateChecksum(file);
