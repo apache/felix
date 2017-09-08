@@ -1,3 +1,9 @@
+Changes from 1.2.10 to 1.2.8
+----------------------------
+** Bug
+    * [FELIX-5506] - OSGi's @Component parameter configurationPid is handled incorrectly
+
+
 Changes from 1.2.8 to 1.2.4
 ---------------------------
 ** Bug
