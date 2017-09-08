@@ -94,10 +94,20 @@ public class TypedPropertiesTest extends TestCase {
     public void testWriteTypedPropsFloat() throws IOException
     {
         TypedProperties properties = new TypedProperties();
+        properties.load(new StringReader("key = F\"1137191584\"\n"));
+        assertEquals(400.333f, properties.get("key"));
+    }
+
+    public void testWriteTypedPropsFloat2() throws IOException
+    {
+        TypedProperties properties = new TypedProperties();
         properties.put("key", 400.333f);
         StringWriter sw = new StringWriter();
         properties.save(sw);
-        assertEquals("key = F\"1137191584\"\n", sw.toString());
+        assertEquals("key = F\"400.333\"\n", sw.toString());
+        properties = new TypedProperties();
+        properties.load(new StringReader(sw.toString()));
+        assertEquals(400.333f, properties.get("key"));
     }
 
     public void testSubstitution() throws IOException
