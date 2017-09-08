@@ -86,7 +86,7 @@ public class ConfigInstallerTest extends TestCase {
         Capture<Dictionary<String, Object>> props = new Capture<>();
         EasyMock.expect(mockConfigurationAdmin.listConfigurations((String) EasyMock.anyObject()))
                 .andReturn(null);
-        EasyMock.expect(mockConfigurationAdmin.getConfiguration(pid, null))
+        EasyMock.expect(mockConfigurationAdmin.getConfiguration(pid, "?"))
                 .andReturn(mockConfiguration);
         EasyMock.expect(mockConfiguration.getProperties())
                 .andReturn(null);
@@ -117,7 +117,7 @@ public class ConfigInstallerTest extends TestCase {
         Capture<Dictionary<String, Object>> props = new Capture<>();
         EasyMock.expect(mockConfigurationAdmin.listConfigurations((String) EasyMock.anyObject()))
                 .andReturn(null);
-        EasyMock.expect(mockConfigurationAdmin.getConfiguration(pid, null))
+        EasyMock.expect(mockConfigurationAdmin.getConfiguration(pid, "?"))
                 .andReturn(mockConfiguration);
         EasyMock.expect(mockConfiguration.getProperties())
                 .andReturn(null);
@@ -141,7 +141,7 @@ public class ConfigInstallerTest extends TestCase {
     {
         EasyMock.expect(mockConfigurationAdmin.listConfigurations((String) EasyMock.anyObject()))
                     .andReturn(null);
-        EasyMock.expect(mockConfigurationAdmin.createFactoryConfiguration( "pid", null ))
+        EasyMock.expect(mockConfigurationAdmin.createFactoryConfiguration( "pid", "?" ))
                     .andReturn(mockConfiguration);
         EasyMock.replay(mockConfiguration, mockConfigurationAdmin, mockBundleContext);
 
@@ -157,7 +157,7 @@ public class ConfigInstallerTest extends TestCase {
     {
         EasyMock.expect(mockConfigurationAdmin.listConfigurations((String) EasyMock.anyObject()))
                         .andReturn(null);
-        EasyMock.expect(mockConfigurationAdmin.createFactoryConfiguration( "pid", null ))
+        EasyMock.expect(mockConfigurationAdmin.createFactoryConfiguration( "pid", "?" ))
                         .andReturn(mockConfiguration);
         EasyMock.replay(mockConfiguration, mockConfigurationAdmin, mockBundleContext);
 
@@ -173,7 +173,7 @@ public class ConfigInstallerTest extends TestCase {
     {
         EasyMock.expect(mockConfigurationAdmin.listConfigurations((String) EasyMock.anyObject()))
                         .andReturn(null);
-        EasyMock.expect(mockConfigurationAdmin.getConfiguration( "pid", null ))
+        EasyMock.expect(mockConfigurationAdmin.getConfiguration( "pid", "?" ))
                         .andReturn(mockConfiguration);
         EasyMock.replay(mockConfiguration, mockConfigurationAdmin, mockBundleContext);
 
@@ -192,7 +192,7 @@ public class ConfigInstallerTest extends TestCase {
         EasyMock.expect(mockBundleContext.getProperty(DirectoryWatcher.LOG_LEVEL)).andReturn(null);
         EasyMock.expect(mockConfigurationAdmin.listConfigurations((String) EasyMock.anyObject()))
                         .andReturn(null);
-        EasyMock.expect(mockConfigurationAdmin.getConfiguration("pid", null ))
+        EasyMock.expect(mockConfigurationAdmin.getConfiguration("pid", "?" ))
                         .andReturn(mockConfiguration);
         EasyMock.replay(mockConfiguration, mockConfigurationAdmin, mockBundleContext);
 
@@ -224,7 +224,7 @@ public class ConfigInstallerTest extends TestCase {
         mockConfiguration.update(new Hashtable<String, Object>());
         EasyMock.expect(mockConfigurationAdmin.listConfigurations((String) EasyMock.anyObject()))
                         .andReturn(null);
-        EasyMock.expect(mockConfigurationAdmin.getConfiguration("firstcfg", null))
+        EasyMock.expect(mockConfigurationAdmin.getConfiguration("firstcfg", "?"))
                         .andReturn(mockConfiguration);
         EasyMock.replay(mockConfiguration, mockConfigurationAdmin, mockBundleContext);
 
