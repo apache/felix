@@ -16,46 +16,62 @@
  */
 package org.apache.felix.serializer.impl;
 
+import java.util.Arrays;
 import java.util.Dictionary;
+import java.util.HashSet;
 import java.util.Hashtable;
+import java.util.Set;
 
 import org.apache.felix.serializer.Serializer;
 import org.apache.felix.serializer.WriterFactory;
 import org.apache.felix.serializer.impl.json.JsonSerializerImpl;
-import org.apache.felix.serializer.impl.json.JsonWriterFactory;
 import org.apache.felix.serializer.impl.yaml.YamlSerializerImpl;
-import org.apache.felix.serializer.impl.yaml.YamlWriterFactory;
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
 
 public class Activator implements BundleActivator {
+    public static final String[] jsonArray = new String[] {
+            "application/json", "application/x-javascript", "text/javascript",
+            "text/x-javascript", "text/x-json" };
+    public static final Set<String> jsonSet = new HashSet<>(Arrays.asList(jsonArray));
+
+    public static final String[] yamlArray = new String[] {
+            "text/yaml", "text/x-yaml", "application/yaml",
+            "application/x-yaml" };
+    public static final Set<String> yamlSet = new HashSet<>(Arrays.asList(yamlArray));
+
+    @SuppressWarnings( { "unchecked", "rawtypes" } )
     @Override
     public void start(BundleContext context) throws Exception {
+        // JSON
         Dictionary<String, Object> jsonProps = new Hashtable<>();
-        jsonProps.put("mimetype", new String[] {
-                "application/json", "application/x-javascript", "text/javascript",
-                "text/x-javascript", "text/x-json" });
+        jsonProps.put("mimetype", jsonArray);
         context.registerService(
                 new String[]{Serializer.class.getName(), Serializer.JsonSerializer.class.getName()}, 
                 new JsonSerializerImpl(), 
                 jsonProps);
         context.registerService(
-                new String[]{WriterFactory.class.getName(), WriterFactory.JsonWriterFactory.class.getName()}, 
-                new JsonWriterFactory(), 
+                WriterFactory.JsonWriterFactory.class, 
+                new PrototypeWriterFactory(), 
                 jsonProps);
 
+        // YAML
         Dictionary<String, Object> yamlProps = new Hashtable<>();
-        yamlProps.put("mimetype", new String[] {
-                "text/yaml", "text/x-yaml", "application/yaml",
-                "application/x-yaml" });
+        yamlProps.put("mimetype", yamlArray);
         context.registerService(
                 new String[]{Serializer.class.getName(), Serializer.YamlSerializer.class.getName()}, 
                 new YamlSerializerImpl(), 
                 yamlProps);
         context.registerService(
-                new String[]{WriterFactory.class.getName(), WriterFactory.YamlWriterFactory.class.getName()}, 
-                new YamlWriterFactory(), 
+                WriterFactory.YamlWriterFactory.class, 
+                new PrototypeWriterFactory(), 
                 yamlProps);
+
+        // Not-specified (default will be JSON)
+        context.registerService(
+                WriterFactory.class, 
+                new PrototypeWriterFactory(), 
+                null);
     }
 
     @Override

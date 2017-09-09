@@ -76,7 +76,12 @@
                         </Export-Package>
                         <Import-Package>*</Import-Package>
                         <Provide-Capability>
-                            osgi.service;objectClass:List&lt;String&gt;="org.apache.felix.serializer.Serializer";
+                            osgi.service;objectClass:List&lt;String&gt;="org.apache.felix.serializer.Serializer,
+                            	org.apache.felix.serializer.Serializer$JsonSerializer,
+                            	org.apache.felix.serializer.Serializer$YamlSerializer,
+                            	org.apache.felix.serializer.WriterFactory,
+                            	org.apache.felix.serializer.WriterFactory$JsonWriterFactory,
+                            	org.apache.felix.serializer.WriterFactory$YamlWriterFactory";
                             uses:="org.apache.felix.serializer,org.osgi.util.converter,org.osgi.util.function"
                         </Provide-Capability>
                         <Require-Capability>
