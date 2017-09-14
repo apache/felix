@@ -76,6 +76,7 @@ public class ConfigurationHandler
     protected static final int TOKEN_COMMA = ',';
     protected static final int TOKEN_VAL_OPEN = '"'; // '{';
     protected static final int TOKEN_VAL_CLOS = '"'; // '}';
+    protected static final int TOKEN_SPACE = ' ';
 
     protected static final int TOKEN_COMMENT = '#';
 
@@ -342,8 +343,8 @@ public class ConfigurationHandler
      */
     private Object readValue( PushbackReader pr ) throws IOException
     {
-        // read (optional) type code
-        int type = read( pr );
+        // read past any whitespace and (optional) type code
+        int type = ignorableWhiteSpace( pr );
 
         // read value kind code if type code is not a value kinde code
         int code;
@@ -638,6 +639,7 @@ public class ConfigurationHandler
                 case -1: // fall through
 
                 // separator token
+                case TOKEN_SPACE:
                 case TOKEN_EQ:
                 case TOKEN_VAL_CLOS:
                     pr.unread( c );
