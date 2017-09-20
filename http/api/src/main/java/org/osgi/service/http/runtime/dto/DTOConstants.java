@@ -1,6 +1,6 @@
 /*
  * Copyright (c) OSGi Alliance (2012, 2017). All Rights Reserved.
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -78,35 +78,26 @@ public final class DTOConstants {
 	 * The servlet is not registered as it is configured to have multipart
 	 * enabled, but the bundle containing the servlet has no write permission to
 	 * the provided location for the uploaded files.
-	 * 
+	 *
 	 * @since 1.1
 	 */
 	public static final int	FAILURE_REASON_SERVLET_WRITE_TO_LOCATION_DENIED		= 8;
 
 	/**
 	 * The servlet is not registered as it is configured to have multipart
-	 * enabled, but the bundle containing the servlet has no read permission to
-	 * the provided location for the uploaded files.
-	 * 
-	 * @since 1.1
-	 */
-	public static final int	FAILURE_REASON_SERVLET_READ_FROM_LOCATION_DENIED	= 9;
-
-	/**
-	 * The servlet is not registered as it is configured to have multipart
 	 * enabled, but the whiteboard implementation has no write permission to the
 	 * default location for the uploaded files.
-	 * 
+	 *
 	 * @since 1.1
 	 */
-	public static final int	FAILURE_REASON_WHITEBOARD_WRITE_TO_DEFAULT_DENIED	= 10;
+	public static final int	FAILURE_REASON_WHITEBOARD_WRITE_TO_DEFAULT_DENIED	= 9;
 
 	/**
 	 * The servlet is not registered as it is configured to have multipart
 	 * enabled, but the bundle containing the servlet has no read permission to
 	 * the default location for the uploaded files.
-	 * 
+	 *
 	 * @since 1.1
 	 */
-	public static final int	FAILURE_REASON_SERVLET_READ_FROM_DEFAULT_DENIED		= 11;
+	public static final int	FAILURE_REASON_SERVLET_READ_FROM_DEFAULT_DENIED		= 10;
 }
