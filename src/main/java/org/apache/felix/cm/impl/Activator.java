@@ -26,6 +26,7 @@ import java.util.TreeMap;
 
 import org.apache.felix.cm.PersistenceManager;
 import org.apache.felix.cm.file.FilePersistenceManager;
+import org.apache.felix.cm.impl.persistence.LegacyPersistenceManagerTracker;
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
@@ -56,12 +57,20 @@ public class Activator implements BundleActivator
 {
 
     /**
-     * The name of the bundle context property defining the location for the
+     * The name of the framework context property defining the location for the
      * configuration files (value is "felix.cm.dir").
      *
      * @see #start(BundleContext)
      */
     private static final String CM_CONFIG_DIR = "felix.cm.dir";
+
+    /**
+     * The name of the framework context property defining the persistence
+     * managers to be used.
+     *
+     * @see #start(BundleContext)
+     */
+    private static final String CM_CONFIG_PMS = "felix.cm.pms";
 
     private volatile ConfigurationManager manager;
 
@@ -71,6 +80,8 @@ public class Activator implements BundleActivator
     // service tracker for optional coordinator
     @SuppressWarnings("rawtypes")
     private volatile ServiceTracker coordinatorTracker;
+
+    private volatile LegacyPersistenceManagerTracker legacyProvider;
 
     @SuppressWarnings({ "unchecked", "rawtypes" })
     @Override
@@ -90,6 +101,7 @@ public class Activator implements BundleActivator
             props.put( Constants.SERVICE_DESCRIPTION, "Platform Filesystem Persistence Manager" );
             props.put( Constants.SERVICE_VENDOR, "The Apache Software Foundation" );
             props.put( Constants.SERVICE_RANKING, new Integer( Integer.MIN_VALUE ) );
+            props.put( PersistenceManager.PROPERTY_NAME, "file");
             filepmRegistration = bundleContext.registerService( PersistenceManager.class, fpm, props );
 
             // setup dynamic configuration bindings
@@ -156,7 +168,9 @@ public class Activator implements BundleActivator
         });
         coordinatorTracker.open();
         // start configuration manager implementation
-        final ServiceReference<ConfigurationAdmin> ref = this.manager.start(dynamicBindings, bundleContext);
+        legacyProvider = new LegacyPersistenceManagerTracker();
+        legacyProvider.start(bundleContext);
+        final ServiceReference<ConfigurationAdmin> ref = this.manager.start(dynamicBindings, legacyProvider, bundleContext);
 
         // update log
         Log.logger.set(ref);
@@ -174,6 +188,12 @@ public class Activator implements BundleActivator
         {
             this.manager.stop(bundleContext);
             this.manager = null;
+        }
+
+        if ( this.legacyProvider != null )
+        {
+            legacyProvider.stop();
+            legacyProvider = null;
         }
 
         // stop coordinator tracker

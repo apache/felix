@@ -53,6 +53,11 @@ import org.osgi.annotation.versioning.ConsumerType;
 @ConsumerType
 public interface PersistenceManager
 {
+    /**
+     * Service registration property to define a unique name for the persistence manager.
+     * @since 1.2
+     */
+    String PROPERTY_NAME = "name";
 
     /**
      * Returns <code>true</code> if a persisted <code>Dictionary</code> exists

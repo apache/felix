@@ -16,10 +16,11 @@
  * specific language governing permissions and limitations
  * under the License.
  */
+package org.apache.felix.cm.impl.persistence;
 
-@org.osgi.annotation.versioning.Version("1.2.0")
-package org.apache.felix.cm;
+public interface PersistenceManagerProvider
+{
 
-
-
+    ExtPersistenceManager[] getPersistenceManagers();
+}
 
