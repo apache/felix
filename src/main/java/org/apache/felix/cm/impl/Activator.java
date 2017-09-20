@@ -66,11 +66,12 @@ public class Activator implements BundleActivator
 
     /**
      * The name of the framework context property defining the persistence
-     * managers to be used.
+     * manager to be used. If not specified, the old behaviour is used
+     * and all available pms are used
      *
      * @see #start(BundleContext)
      */
-    private static final String CM_CONFIG_PMS = "felix.cm.pms";
+    private static final String CM_CONFIG_PM = "felix.cm.pm";
 
     private volatile ConfigurationManager manager;
 
@@ -83,16 +84,7 @@ public class Activator implements BundleActivator
 
     private volatile LegacyPersistenceManagerTracker legacyProvider;
 
-    @SuppressWarnings({ "unchecked", "rawtypes" })
-    @Override
-    public void start( final BundleContext bundleContext )
-    {
-        // setup log
-        Log.logger.start(bundleContext);
-
-        // register default file persistence manager
-        // set up the location (might throw IllegalArgumentException)
-        DynamicBindings dynamicBindings = null;
+    private PersistenceManager registerFilePersistenceManager(final BundleContext bundleContext) {
         try
         {
             final FilePersistenceManager fpm = new FilePersistenceManager( bundleContext,
@@ -104,17 +96,24 @@ public class Activator implements BundleActivator
             props.put( PersistenceManager.PROPERTY_NAME, "file");
             filepmRegistration = bundleContext.registerService( PersistenceManager.class, fpm, props );
 
-            // setup dynamic configuration bindings
-            dynamicBindings = new DynamicBindings( bundleContext, fpm );
-        }
-        catch ( IOException ioe )
-        {
-            Log.logger.log( LogService.LOG_ERROR, "Failure setting up dynamic configuration bindings", ioe );
+            return fpm;
         }
         catch ( IllegalArgumentException iae )
         {
             Log.logger.log( LogService.LOG_ERROR, "Cannot create the FilePersistenceManager", iae );
         }
+        return null;
+    }
+
+    @SuppressWarnings({ "unchecked", "rawtypes" })
+    @Override
+    public void start( final BundleContext bundleContext )
+    {
+        // setup log
+        Log.logger.start(bundleContext);
+
+        // register default file persistence manager
+        final PersistenceManager fpm = registerFilePersistenceManager(bundleContext);
 
         this.manager = new ConfigurationManager();
         // start coordinator tracker
@@ -167,9 +166,30 @@ public class Activator implements BundleActivator
             }
         });
         coordinatorTracker.open();
+
+        DynamicBindings dynamicBindings = null;
+        final String configuredPM = bundleContext.getProperty(CM_CONFIG_PM);
+        if ( configuredPM == null || configuredPM.isEmpty() )
+        {
+            // set up the location (might throw IllegalArgumentException)
+            try
+            {
+                // setup dynamic configuration bindings
+                dynamicBindings = new DynamicBindings( bundleContext, fpm );
+            }
+            catch ( IOException ioe )
+            {
+                Log.logger.log( LogService.LOG_ERROR, "Failure setting up dynamic configuration bindings", ioe );
+            }
+
+            legacyProvider = new LegacyPersistenceManagerTracker();
+            legacyProvider.start(bundleContext);
+        }
+        else
+        {
+// TODO - setup tracker and only start if PM is available
+        }
         // start configuration manager implementation
-        legacyProvider = new LegacyPersistenceManagerTracker();
-        legacyProvider.start(bundleContext);
         final ServiceReference<ConfigurationAdmin> ref = this.manager.start(dynamicBindings, legacyProvider, bundleContext);
 
         // update log
