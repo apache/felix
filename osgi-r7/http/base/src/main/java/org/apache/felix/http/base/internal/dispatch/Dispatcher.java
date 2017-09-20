@@ -133,7 +133,8 @@ public final class Dispatcher
 		        final HttpServletRequest wrappedRequest = new ServletRequestWrapper(req, servletContext, requestInfo, null,
 		                pr.handler.getContextServiceId(),
 		                pr.handler.getServletInfo().isAsyncSupported(),
-		                pr.handler.getMultipartConfig());
+		                pr.handler.getMultipartConfig(),
+		                pr.handler.getMultipartSecurityContext());
 		        final FilterHandler[] filterHandlers = handlerRegistry.getFilters(pr, req.getDispatcherType(), pr.requestURI);
 
 		        try

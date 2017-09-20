@@ -28,6 +28,7 @@ import org.apache.felix.http.base.internal.context.ExtServletContext;
 import org.apache.felix.http.base.internal.dispatch.MultipartConfig;
 import org.apache.felix.http.base.internal.logger.SystemLogger;
 import org.apache.felix.http.base.internal.runtime.ServletInfo;
+import org.osgi.framework.Bundle;
 import org.osgi.service.http.runtime.dto.DTOConstants;
 
 /**
@@ -226,5 +227,10 @@ public abstract class ServletHandler implements Comparable<ServletHandler>
     public MultipartConfig getMultipartConfig()
     {
         return mpConfig;
+    }
+
+    public Bundle getMultipartSecurityContext()
+    {
+        return null;
     }
 }

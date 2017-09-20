@@ -107,7 +107,12 @@ final class ServletResponseWrapper extends HttpServletResponseWrapper
 
                         final ServletRequestWrapper reqWrapper = new ServletRequestWrapper(request,
                                 errorResolution.getContext(),
-                                requestInfo, null, errorResolution.getContextServiceId(), false, null);
+                                requestInfo,
+                                null,
+                                errorResolution.getContextServiceId(),
+                                false,
+                                null,
+                                null);
                         final FilterChain filterChain = new InvocationChain(errorResolution, filterHandlers);
                         filterChain.doFilter(reqWrapper, this);
 
