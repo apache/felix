@@ -16,13 +16,17 @@
  */
 package org.apache.felix.http.base.internal.handler;
 
+import java.io.FilePermission;
+
 import javax.servlet.Servlet;
 
 import org.apache.felix.http.base.internal.context.ExtServletContext;
 import org.apache.felix.http.base.internal.runtime.ServletInfo;
+import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceObjects;
 import org.osgi.framework.ServiceReference;
+import org.osgi.service.http.runtime.dto.DTOConstants;
 
 /**
  * Servlet handler for servlets registered through the http whiteboard.
@@ -31,18 +35,55 @@ public final class WhiteboardServletHandler extends ServletHandler
 {
     private final BundleContext bundleContext;
 
+    private final int multipartErrorCode;
+
     public WhiteboardServletHandler(final long contextServiceId,
             final ExtServletContext context,
             final ServletInfo servletInfo,
-            final BundleContext bundleContext)
+            final BundleContext bundleContext,
+            final Bundle httpWhiteboardBundle)
     {
         super(contextServiceId, context, servletInfo);
         this.bundleContext = bundleContext;
+        int errorCode = -1;
+        if ( this.getMultipartConfig() != null && System.getSecurityManager() != null )
+        {
+            final FilePermission writePerm = new FilePermission(this.getMultipartConfig().multipartLocation, "read,write");
+            if ( servletInfo.getMultipartConfig().multipartLocation == null )
+            {
+                // default location
+                if ( !httpWhiteboardBundle.hasPermission(writePerm))
+                {
+                    errorCode = DTOConstants.FAILURE_REASON_WHITEBOARD_WRITE_TO_DEFAULT_DENIED;
+                }
+                else
+                {
+                    final FilePermission readPerm = new FilePermission(this.getMultipartConfig().multipartLocation, "read");
+                    if ( !bundleContext.getBundle().hasPermission(readPerm) )
+                    {
+                        errorCode = DTOConstants.FAILURE_REASON_SERVLET_READ_FROM_DEFAULT_DENIED;
+                    }
+                }
+            }
+            else
+            {
+                // provided location
+                if ( !bundleContext.getBundle().hasPermission(writePerm) )
+                {
+                    errorCode = DTOConstants.FAILURE_REASON_SERVLET_WRITE_TO_LOCATION_DENIED;
+                }
+            }
+        }
+        multipartErrorCode = errorCode;
     }
 
     @Override
     public int init()
     {
+        if ( this.multipartErrorCode != -1 )
+        {
+            return this.multipartErrorCode;
+        }
         if ( this.useCount > 0 )
         {
             this.useCount++;
