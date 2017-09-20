@@ -32,7 +32,6 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Random;
 
-import org.apache.felix.cm.NotCachablePersistenceManager;
 import org.apache.felix.cm.PersistenceManager;
 import org.apache.felix.cm.impl.helper.BaseTracker;
 import org.apache.felix.cm.impl.helper.ConfigurationMap;
@@ -41,7 +40,7 @@ import org.apache.felix.cm.impl.helper.ManagedServiceTracker;
 import org.apache.felix.cm.impl.helper.TargetedPID;
 import org.apache.felix.cm.impl.persistence.CachingPersistenceManagerProxy;
 import org.apache.felix.cm.impl.persistence.ExtPersistenceManager;
-import org.apache.felix.cm.impl.persistence.PersistenceManagerProxy;
+import org.apache.felix.cm.impl.persistence.PersistenceManagerProvider;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.BundleEvent;
@@ -109,9 +108,6 @@ public class ConfigurationManager implements BundleListener
     // service tracker for managed service factories
     private ManagedServiceFactoryTracker managedServiceFactoryTracker;
 
-    // PersistenceManager services
-    private ServiceTracker<PersistenceManager, PersistenceManager> persistenceManagerTracker;
-
     // the thread used to schedule tasks required to run asynchronously
     private UpdateThread updateThread;
 
@@ -119,16 +115,9 @@ public class ConfigurationManager implements BundleListener
     private UpdateThread eventThread;
 
     /**
-     * The actual list of {@link PersistenceManager persistence managers} to use
-     * when looking for configuration data. This list is built from the
-     * {@link #persistenceManagerMap}, which is ordered according to the
-     * {@link RankingComparator}.
+     * The persistence manager provider
      */
-    private ExtPersistenceManager[] persistenceManagers;
-
-    // the persistenceManagerTracker.getTrackingCount when the
-    // persistenceManagers were last got
-    private int pmtCount;
+    private PersistenceManagerProvider persistenceManagerProvider;
 
     // the cache of Factory instances mapped by their factory PID
     private final HashMap<String, Factory> factories = new HashMap<String, Factory>();
@@ -159,7 +148,10 @@ public class ConfigurationManager implements BundleListener
     // Coordinator service if available
     private volatile Object coordinator;
 
-    public ServiceReference<ConfigurationAdmin> start( final DynamicBindings dynBin, BundleContext bundleContext )
+    public ServiceReference<ConfigurationAdmin> start(
+            final DynamicBindings dynBin,
+            final PersistenceManagerProvider provider,
+            final BundleContext bundleContext )
     {
         // set up some fields
         this.bundleContext = bundleContext;
@@ -183,9 +175,7 @@ public class ConfigurationManager implements BundleListener
         bundleContext.addBundleListener( this );
 
         // get all persistence managers to begin with
-        pmtCount = 1; // make sure to get the persistence managers at least once
-        persistenceManagerTracker = new ServiceTracker<PersistenceManager, PersistenceManager>( bundleContext, PersistenceManager.class.getName(), null );
-        persistenceManagerTracker.open();
+        this.persistenceManagerProvider = provider;
 
         // consider alive now (before clients use Configuration Admin
         // service registered in the next step)
@@ -247,9 +237,6 @@ public class ConfigurationManager implements BundleListener
         // consider inactive after unregistering such that during
         // unregistration the manager is still alive and can react
         isActive = false;
-
-        // don't care for PersistenceManagers any more
-        persistenceManagerTracker.close();
 
         // stop listening for events
         bundleContext.removeBundleListener( this );
@@ -493,7 +480,7 @@ public class ConfigurationManager implements BundleListener
             return config;
         }
 
-        PersistenceManager[] pmList = getPersistenceManagers();
+        PersistenceManager[] pmList = this.persistenceManagerProvider.getPersistenceManagers();
         for ( int i = 0; i < pmList.length; i++ )
         {
             if ( pmList[i].exists( pid ) )
@@ -557,7 +544,7 @@ public class ConfigurationManager implements BundleListener
 
         List<ConfigurationImpl> configList = new ArrayList<ConfigurationImpl>();
 
-        ExtPersistenceManager[] pmList = getPersistenceManagers();
+        ExtPersistenceManager[] pmList = this.persistenceManagerProvider.getPersistenceManagers();
         for ( int i = 0; i < pmList.length; i++ )
         {
             Collection<Dictionary> configs = pmList[i].getDictionaries(filter );
@@ -735,76 +722,6 @@ public class ConfigurationManager implements BundleListener
 
     // ---------- internal -----------------------------------------------------
 
-    private ExtPersistenceManager[] getPersistenceManagers()
-    {
-        int currentPmtCount = persistenceManagerTracker.getTrackingCount();
-        if ( persistenceManagers == null || currentPmtCount > pmtCount )
-        {
-
-            ExtPersistenceManager[] pm;
-
-            ServiceReference<PersistenceManager>[] refs = persistenceManagerTracker.getServiceReferences();
-            if ( refs == null || refs.length == 0 )
-            {
-                pm = new ExtPersistenceManager[0];
-            }
-            else
-            {
-                List<ExtPersistenceManager> pmList = new ArrayList<ExtPersistenceManager>();
-                // sort the references according to the cmRanking property
-                if ( refs.length > 1 )
-                {
-                    Arrays.sort( refs, RankingComparator.SRV_RANKING );
-                }
-
-                // create the service array from the sorted set of references
-                for ( int i = 0; i < refs.length; i++ )
-                {
-                    PersistenceManager service = persistenceManagerTracker.getService( refs[i] );
-                    if ( service != null )
-                    {
-                        // check for existing proxy
-                        final ExtPersistenceManager pmProxy = getProxyForPersistenceManager(service);
-                        if ( pmProxy != null )
-                        {
-                            pmList.add(pmProxy);
-                        }
-                        else
-                        {
-                            if ( service instanceof NotCachablePersistenceManager )
-                            {
-                                pmList.add( new PersistenceManagerProxy( service ) );
-                            }
-                            else
-                            {
-                                pmList.add(new CachingPersistenceManagerProxy(service));
-                            }
-                        }
-                    }
-                }
-
-                pm = pmList.toArray( new ExtPersistenceManager[pmList.size()] );
-            }
-
-            pmtCount = currentPmtCount;
-            persistenceManagers = pm;
-        }
-
-        return persistenceManagers;
-    }
-
-    private ExtPersistenceManager getProxyForPersistenceManager(final PersistenceManager pm)
-    {
-        if (persistenceManagers != null) {
-            for (final ExtPersistenceManager pmProxy : persistenceManagers) {
-                if (pmProxy.getDelegatee() == pm) {
-                    return pmProxy;
-                }
-            }
-        }
-        return null;
-    }
-
     private ServiceReference<ConfigurationAdmin> getServiceReference()
     {
         ServiceRegistration<ConfigurationAdmin> reg = configurationAdminRegistration;
@@ -917,7 +834,7 @@ public class ConfigurationManager implements BundleListener
     {
         Log.logger.log( LogService.LOG_DEBUG, "createConfiguration({0}, {1}, {2})", new Object[]
                 { pid, factoryPid, bundleLocation } );
-        return new ConfigurationImpl( this, getPersistenceManagers()[0], pid, factoryPid, bundleLocation );
+        return new ConfigurationImpl( this, this.persistenceManagerProvider.getPersistenceManagers()[0], pid, factoryPid, bundleLocation );
     }
 
 
@@ -1014,7 +931,7 @@ public class ConfigurationManager implements BundleListener
         }
 
         // try to load factory from persistence
-        PersistenceManager[] pmList = getPersistenceManagers();
+        PersistenceManager[] pmList = this.persistenceManagerProvider.getPersistenceManagers();
         for ( int i = 0; i < pmList.length; i++ )
         {
             if ( Factory.exists( pmList[i], factoryPid ) )
@@ -1035,7 +952,7 @@ public class ConfigurationManager implements BundleListener
      */
     Factory createFactory( String factoryPid )
     {
-        Factory factory = new Factory( this, getPersistenceManagers()[0], factoryPid );
+        Factory factory = new Factory( this, this.persistenceManagerProvider.getPersistenceManagers()[0], factoryPid );
         cacheFactory( factory );
         return factory;
     }

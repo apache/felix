@@ -36,6 +36,7 @@ import org.apache.felix.cm.MockPersistenceManager;
 import org.apache.felix.cm.PersistenceManager;
 import org.apache.felix.cm.impl.persistence.CachingPersistenceManagerProxy;
 import org.apache.felix.cm.impl.persistence.ExtPersistenceManager;
+import org.apache.felix.cm.impl.persistence.LegacyPersistenceManagerTracker;
 import org.apache.felix.cm.impl.persistence.PersistenceManagerProxy;
 import org.mockito.Mockito;
 import org.osgi.framework.Bundle;
@@ -84,8 +85,13 @@ public class ConfigurationManagerTest extends TestCase
         ConfigurationManager configMgr = new ConfigurationManager();
         setServiceTrackerField( configMgr, "persistenceManagerTracker" );
 
-        Field field = configMgr.getClass().getDeclaredField( "persistenceManagers" );
+        Field field1 = configMgr.getClass().getDeclaredField( "persistenceManagerProvider" );
+        field1.setAccessible( true );
+        final LegacyPersistenceManagerTracker lpmt = (LegacyPersistenceManagerTracker) field1.get(configMgr);
+
+        Field field = lpmt.getClass().getDeclaredField( "persistenceManagers" );
         field.setAccessible( true );
+
         CachingPersistenceManagerProxy[] persistenceManagers = new CachingPersistenceManagerProxy [1];
         PersistenceManager pm =new MockPersistenceManager();
         Dictionary dictionary = new Hashtable();
@@ -94,7 +100,7 @@ public class ConfigurationManagerTest extends TestCase
         pm.store( pid, dictionary );
 
         persistenceManagers[0] = new CachingPersistenceManagerProxy(pm);
-        field.set(configMgr, persistenceManagers);
+        field.set(lpmt, persistenceManagers);
 
         ConfigurationImpl[] conf = configMgr.listConfigurations(new ConfigurationAdminImpl(configMgr, null), null);
 
@@ -121,8 +127,13 @@ public class ConfigurationManagerTest extends TestCase
         ConfigurationManager configMgr = new ConfigurationManager();
         setServiceTrackerField( configMgr, "persistenceManagerTracker" );
 
-        Field field = configMgr.getClass().getDeclaredField( "persistenceManagers" );
+        Field field1 = configMgr.getClass().getDeclaredField( "persistenceManagerProvider" );
+        field1.setAccessible( true );
+        final LegacyPersistenceManagerTracker lpmt = (LegacyPersistenceManagerTracker) field1.get(configMgr);
+
+        Field field = lpmt.getClass().getDeclaredField( "persistenceManagers" );
         field.setAccessible( true );
+
         ExtPersistenceManager[] persistenceManagers = new ExtPersistenceManager[1];
         PersistenceManager pm = new MockNotCachablePersistenceManager();
         Dictionary dictionary = new Hashtable();
@@ -131,7 +142,7 @@ public class ConfigurationManagerTest extends TestCase
         pm.store( pid, dictionary );
 
         persistenceManagers[0] = new PersistenceManagerProxy(pm);
-        field.set(configMgr, persistenceManagers);
+        field.set(lpmt, persistenceManagers);
 
         ConfigurationImpl[] conf = configMgr.listConfigurations(new ConfigurationAdminImpl(configMgr, null), null);
 
@@ -467,23 +478,49 @@ public class ConfigurationManagerTest extends TestCase
             refMap.put( sref, svc );
         }
 
-        Field field = configMgr.getClass().getDeclaredField( fieldName );
-        field.setAccessible( true );
-        field.set( configMgr, new ServiceTracker( new MockBundleContext(), "", null )
+        if ( "persistenceManagerTracker".equals(fieldName) ) {
+            final LegacyPersistenceManagerTracker lpmt = new LegacyPersistenceManagerTracker();
+            Field field = lpmt.getClass().getDeclaredField( fieldName );
+            field.setAccessible( true );
+            field.set( lpmt, new ServiceTracker( new MockBundleContext(), "", null )
+            {
+                @Override
+                public ServiceReference[] getServiceReferences()
+                {
+                    return refMap.keySet().toArray( new ServiceReference[0] );
+                }
+
+                @Override
+                public Object getService(ServiceReference reference)
+                {
+                    return refMap.get( reference );
+                }
+            } );
+
+            Field field2 = configMgr.getClass().getDeclaredField( "persistenceManagerProvider" );
+            field2.setAccessible( true );
+            field2.set( configMgr, lpmt );
+        }
+        else
         {
-            @Override
-            public ServiceReference[] getServiceReferences()
+            Field field = configMgr.getClass().getDeclaredField( fieldName );
+            field.setAccessible( true );
+            field.set( configMgr, new ServiceTracker( new MockBundleContext(), "", null )
             {
-                return refMap.keySet().toArray( new ServiceReference[0] );
-            }
+                @Override
+                public ServiceReference[] getServiceReferences()
+                {
+                    return refMap.keySet().toArray( new ServiceReference[0] );
+                }
 
-            @Override
-            public Object getService(ServiceReference reference)
-            {
-                return refMap.get( reference );
-            }
-        } );
+                @Override
+                public Object getService(ServiceReference reference)
+                {
+                    return refMap.get( reference );
+                }
+            } );
 
+        }
         return refMap.keySet().toArray(new ServiceReference[0]);
     }
 }
