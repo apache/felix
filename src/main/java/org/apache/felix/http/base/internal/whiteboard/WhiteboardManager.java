@@ -32,7 +32,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 import javax.annotation.Nonnull;
 import javax.servlet.FilterChain;
@@ -681,7 +680,7 @@ public final class WhiteboardManager
         		final boolean patternIsEmpty = servletInfo.getPatterns() == null || servletInfo.getPatterns().length == 0;
         		if ( !nameIsEmpty || !errorPageIsEmpty )
         		{
-        			if ( patternIsEmpty ) 
+        			if ( patternIsEmpty )
         			{
         				// no pattern, so this is valid
         				return -1;
@@ -691,7 +690,7 @@ public final class WhiteboardManager
         		// pattern is invalid, regardless of the other values
                 this.failureStateHandler.addFailure(info, HttpServiceFactory.HTTP_SERVICE_CONTEXT_SERVICE_ID, DTOConstants.FAILURE_REASON_VALIDATION_FAILED);
 
-                return DTOConstants.FAILURE_REASON_VALIDATION_FAILED;        		
+                return DTOConstants.FAILURE_REASON_VALIDATION_FAILED;
         	}
         }
 
@@ -782,7 +781,8 @@ public final class WhiteboardManager
                         handler.getContextInfo().getServiceId(),
                         servletContext,
                         (ServletInfo)info,
-                        handler.getBundleContext());
+                        handler.getBundleContext(),
+                        this.httpBundleContext.getBundle());
                     handler.getRegistry().registerServlet(servletHandler);
                 }
             }
@@ -983,7 +983,7 @@ public final class WhiteboardManager
      * @throws IOException
      * @throws ServletException
      */
-    public void invokePreprocessors(final HttpServletRequest req, 
+    public void invokePreprocessors(final HttpServletRequest req,
     		final HttpServletResponse res,
     		final Preprocessor dispatcher)
     throws ServletException, IOException
@@ -999,16 +999,16 @@ public final class WhiteboardManager
 	        final FilterChain chain = new FilterChain()
 	        {
 	        	private int index = 0;
-	
+
 	            @Override
 	            public void doFilter(final ServletRequest request, final ServletResponse response)
 	            throws IOException, ServletException
 	            {
-	            	if ( index == localHandlers.size() ) 
+	            	if ( index == localHandlers.size() )
 	            	{
 	            		dispatcher.doFilter(request, response, null);
 	            	}
-	            	else 
+	            	else
 	            	{
 	            		final PreprocessorHandler handler = localHandlers.get(index);
 	            		index++;
