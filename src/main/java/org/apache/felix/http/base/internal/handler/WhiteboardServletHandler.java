@@ -37,6 +37,8 @@ public final class WhiteboardServletHandler extends ServletHandler
 
     private final int multipartErrorCode;
 
+    private final Bundle multipartSecurityContext;
+
     public WhiteboardServletHandler(final long contextServiceId,
             final ExtServletContext context,
             final ServletInfo servletInfo,
@@ -52,6 +54,7 @@ public final class WhiteboardServletHandler extends ServletHandler
             if ( servletInfo.getMultipartConfig().multipartLocation == null )
             {
                 // default location
+                multipartSecurityContext = httpWhiteboardBundle;
                 if ( !httpWhiteboardBundle.hasPermission(writePerm))
                 {
                     errorCode = DTOConstants.FAILURE_REASON_WHITEBOARD_WRITE_TO_DEFAULT_DENIED;
@@ -67,12 +70,17 @@ public final class WhiteboardServletHandler extends ServletHandler
             }
             else
             {
+                multipartSecurityContext = bundleContext.getBundle();
                 // provided location
                 if ( !bundleContext.getBundle().hasPermission(writePerm) )
                 {
                     errorCode = DTOConstants.FAILURE_REASON_SERVLET_WRITE_TO_LOCATION_DENIED;
                 }
             }
+        }
+        else
+        {
+            multipartSecurityContext = null;
         }
         multipartErrorCode = errorCode;
     }
@@ -125,5 +133,11 @@ public final class WhiteboardServletHandler extends ServletHandler
             }
         }
         return false;
+    }
+
+    @Override
+    public Bundle getMultipartSecurityContext()
+    {
+        return multipartSecurityContext;
     }
 }

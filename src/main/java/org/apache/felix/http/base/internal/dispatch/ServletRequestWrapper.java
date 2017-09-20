@@ -31,6 +31,7 @@ import static org.apache.felix.http.base.internal.util.UriUtils.concat;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.security.AccessControlContext;
 import java.security.AccessController;
 import java.security.PrivilegedAction;
 import java.util.ArrayList;
@@ -58,6 +59,7 @@ import org.apache.commons.fileupload.servlet.ServletFileUpload;
 import org.apache.commons.fileupload.servlet.ServletRequestContext;
 import org.apache.felix.http.base.internal.context.ExtServletContext;
 import org.apache.felix.http.base.internal.handler.HttpSessionWrapper;
+import org.osgi.framework.Bundle;
 import org.osgi.service.http.HttpContext;
 import org.osgi.service.useradmin.Authorization;
 
@@ -69,6 +71,8 @@ final class ServletRequestWrapper extends HttpServletRequestWrapper
     private final long contextId;
     private final boolean asyncSupported;
     private final MultipartConfig multipartConfig;
+    private final Bundle bundleForSecurityCheck;
+
     private Collection<Part> parts;
 
     public ServletRequestWrapper(final HttpServletRequest req,
@@ -77,7 +81,8 @@ final class ServletRequestWrapper extends HttpServletRequestWrapper
             final DispatcherType type,
             final Long contextId,
             final boolean asyncSupported,
-            final MultipartConfig multipartConfig)
+            final MultipartConfig multipartConfig,
+            final Bundle bundleForSecurityCheck)
     {
         super(req);
 
@@ -87,6 +92,7 @@ final class ServletRequestWrapper extends HttpServletRequestWrapper
         this.requestInfo = requestInfo;
         this.type = type;
         this.contextId = contextId;
+        this.bundleForSecurityCheck = bundleForSecurityCheck;
     }
 
     @Override
@@ -371,6 +377,7 @@ final class ServletRequestWrapper extends HttpServletRequestWrapper
                 }
                 else
                 {
+                    final AccessControlContext ctx = bundleForSecurityCheck.adapt(AccessControlContext.class);
                     final IOException ioe = AccessController.doPrivileged(new PrivilegedAction<IOException>()
                     {
 
@@ -387,7 +394,7 @@ final class ServletRequestWrapper extends HttpServletRequestWrapper
                             }
                             return null;
                         }
-                    });
+                    }, ctx);
                     if ( ioe != null )
                     {
                         throw ioe;
