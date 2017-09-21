@@ -112,6 +112,12 @@ public class FilePersistenceManager implements PersistenceManager
     public static final String DEFAULT_CONFIG_DIR = "config";
 
     /**
+     * The name of this persistence manager when registered in the service registry.
+     * (value is "file").
+     */
+    public static final String DEFAULT_PERSISTENCE_MANAGER_NAME = "file";
+
+    /**
      * The extension of the configuration files.
      */
     private static final String FILE_EXT = ".config";
@@ -804,7 +810,7 @@ public class FilePersistenceManager implements PersistenceManager
 
         DictionaryEnumeration()
         {
-            dirStack = new Stack<File>();
+            dirStack = new Stack<>();
             fileList = null;
             idx = 0;
 

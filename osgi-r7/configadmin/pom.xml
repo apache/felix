@@ -68,7 +68,7 @@
         in the IDE launcher. 
     -->
     <properties>
-        <felix.java.version>6</felix.java.version>
+        <felix.java.version>7</felix.java.version>
         <bundle.build.name>
             ${basedir}/target
         </bundle.build.name>

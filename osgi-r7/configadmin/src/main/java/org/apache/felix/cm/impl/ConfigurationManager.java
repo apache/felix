@@ -40,7 +40,6 @@ import org.apache.felix.cm.impl.helper.ManagedServiceTracker;
 import org.apache.felix.cm.impl.helper.TargetedPID;
 import org.apache.felix.cm.impl.persistence.CachingPersistenceManagerProxy;
 import org.apache.felix.cm.impl.persistence.ExtPersistenceManager;
-import org.apache.felix.cm.impl.persistence.PersistenceManagerProvider;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.BundleEvent;
@@ -66,8 +65,6 @@ import org.osgi.util.tracker.ServiceTracker;
  * implementation of the Configuration Admin Service Specification. As such it
  * has the following tasks:
  * <ul>
- * <li>It is a <code>BundleActivator</code> which is called when the bundle
- * is started and stopped.
  * <li>It is a <code>BundleListener</code> which gets informed when the
  * states of bundles change. Mostly this is needed to unbind any bound
  * configuration in case a bundle is uninstalled.
@@ -91,7 +88,7 @@ public class ConfigurationManager implements BundleListener
     private static Random numberGenerator;
 
     // the BundleContext of the Configuration Admin Service bundle
-    BundleContext bundleContext;
+    private final BundleContext bundleContext;
 
     // the service registration of the configuration admin
     private volatile ServiceRegistration<ConfigurationAdmin> configurationAdminRegistration;
@@ -115,16 +112,16 @@ public class ConfigurationManager implements BundleListener
     private UpdateThread eventThread;
 
     /**
-     * The persistence manager provider
+     * The persistence manager
      */
-    private PersistenceManagerProvider persistenceManagerProvider;
+    private final ExtPersistenceManager persistenceManager;
 
     // the cache of Factory instances mapped by their factory PID
-    private final HashMap<String, Factory> factories = new HashMap<String, Factory>();
+    private final HashMap<String, Factory> factories = new HashMap<>();
 
     // the cache of Configuration instances mapped by their PID
     // have this always set to prevent NPE on bundle shutdown
-    private final HashMap<String, ConfigurationImpl> configurations = new HashMap<String, ConfigurationImpl>();
+    private final HashMap<String, ConfigurationImpl> configurations = new HashMap<>();
 
     /**
      * The map of dynamic configuration bindings. This maps the
@@ -137,7 +134,7 @@ public class ConfigurationManager implements BundleListener
      * <p>
      * The map is written to persistence on each change.
      */
-    private DynamicBindings dynamicBindings;
+    private final DynamicBindings dynamicBindings;
 
     // flag indicating whether BundleChange events should be consumed (FELIX-979)
     private volatile boolean handleBundleEvents;
@@ -148,19 +145,22 @@ public class ConfigurationManager implements BundleListener
     // Coordinator service if available
     private volatile Object coordinator;
 
-    public ServiceReference<ConfigurationAdmin> start(
-            final DynamicBindings dynBin,
-            final PersistenceManagerProvider provider,
-            final BundleContext bundleContext )
+    public ConfigurationManager(final ExtPersistenceManager persistenceManager,
+            final BundleContext bundleContext)
+    throws IOException
     {
         // set up some fields
         this.bundleContext = bundleContext;
-        this.dynamicBindings = dynBin;
+        this.dynamicBindings = new DynamicBindings( bundleContext, persistenceManager );
+        this.persistenceManager = persistenceManager;
+    }
 
+    public ServiceReference<ConfigurationAdmin> start()
+    {
         // configurationlistener support
-        configurationListenerTracker = new ServiceTracker<ConfigurationListener, ConfigurationListener>( bundleContext, ConfigurationListener.class, null );
+        configurationListenerTracker = new ServiceTracker<>( bundleContext, ConfigurationListener.class, null );
         configurationListenerTracker.open();
-        syncConfigurationListenerTracker = new ServiceTracker<SynchronousConfigurationListener, SynchronousConfigurationListener>( bundleContext,
+        syncConfigurationListenerTracker = new ServiceTracker<>( bundleContext,
                 SynchronousConfigurationListener.class, null );
         syncConfigurationListenerTracker.open();
 
@@ -174,16 +174,13 @@ public class ConfigurationManager implements BundleListener
         handleBundleEvents = true;
         bundleContext.addBundleListener( this );
 
-        // get all persistence managers to begin with
-        this.persistenceManagerProvider = provider;
-
         // consider alive now (before clients use Configuration Admin
         // service registered in the next step)
         isActive = true;
 
         // create and register configuration admin - start after PM tracker ...
         ConfigurationAdminFactory caf = new ConfigurationAdminFactory( this );
-        Dictionary<String, Object> props = new Hashtable<String, Object>();
+        Dictionary<String, Object> props = new Hashtable<>();
         props.put( Constants.SERVICE_PID, "org.apache.felix.cm.ConfigurationAdmin" );
         props.put( Constants.SERVICE_DESCRIPTION, "Configuration Admin Service Specification 1.6 Implementation" );
         props.put( Constants.SERVICE_VENDOR, "The Apache Software Foundation" );
@@ -202,7 +199,7 @@ public class ConfigurationManager implements BundleListener
     }
 
 
-    public void stop( BundleContext bundleContext )
+    public void stop( )
     {
 
         // stop handling bundle events immediately
@@ -262,8 +259,6 @@ public class ConfigurationManager implements BundleListener
         {
             factories.clear();
         }
-
-        this.bundleContext = null;
     }
 
 
@@ -480,20 +475,16 @@ public class ConfigurationManager implements BundleListener
             return config;
         }
 
-        PersistenceManager[] pmList = this.persistenceManagerProvider.getPersistenceManagers();
-        for ( int i = 0; i < pmList.length; i++ )
+        if ( this.persistenceManager.exists( pid ) )
         {
-            if ( pmList[i].exists( pid ) )
-            {
-                Dictionary props = pmList[i].load( pid );
-                config = new ConfigurationImpl( this, pmList[i], props );
-                Log.logger.log( LogService.LOG_DEBUG, "Found existing configuration {0} bound to {1}", new Object[]
-                        { pid, config.getBundleLocation() } );
-                return cacheConfiguration( config );
-            }
+            final Dictionary props =this.persistenceManager.load( pid );
+            config = new ConfigurationImpl( this, this.persistenceManager, props );
+            Log.logger.log( LogService.LOG_DEBUG, "Found existing configuration {0} bound to {1}", new Object[]
+                    { pid, config.getBundleLocation() } );
+            return cacheConfiguration( config );
         }
 
-        // neither the cache nor any persistence manager has configuration
+        // neither the cache nor the persistence manager has configuration
         return null;
     }
 
@@ -542,60 +533,56 @@ public class ConfigurationManager implements BundleListener
         Log.logger.log( LogService.LOG_DEBUG, "Listing configurations matching {0}", new Object[]
                 { filterString } );
 
-        List<ConfigurationImpl> configList = new ArrayList<ConfigurationImpl>();
+        List<ConfigurationImpl> configList = new ArrayList<>();
 
-        ExtPersistenceManager[] pmList = this.persistenceManagerProvider.getPersistenceManagers();
-        for ( int i = 0; i < pmList.length; i++ )
+        Collection<Dictionary> configs = this.persistenceManager.getDictionaries(filter );
+        for(final Dictionary config : configs)
         {
-            Collection<Dictionary> configs = pmList[i].getDictionaries(filter );
-            for(final Dictionary config : configs)
+            // ignore non-Configuration dictionaries
+            final String pid = ( String ) config.get( Constants.SERVICE_PID );
+            if ( pid == null )
             {
-                // ignore non-Configuration dictionaries
-                final String pid = ( String ) config.get( Constants.SERVICE_PID );
-                if ( pid == null )
-                {
-                    continue;
-                }
+                continue;
+            }
 
-                // CM 1.4 / 104.13.2.3 Permission required
-                if ( !configurationAdmin.hasPermission( this,
-                        ( String ) config.get( ConfigurationAdmin.SERVICE_BUNDLELOCATION ) ) )
-                {
-                    Log.logger.log(
-                            LogService.LOG_DEBUG,
-                            "Omitting configuration {0}: No permission for bundle {1} on configuration bound to {2}",
-                            new Object[]
-                                    { pid, configurationAdmin.getBundle().getLocation(),
-                                            config.get( ConfigurationAdmin.SERVICE_BUNDLELOCATION ) } );
-                    continue;
-                }
+            // CM 1.4 / 104.13.2.3 Permission required
+            if ( !configurationAdmin.hasPermission( this,
+                    ( String ) config.get( ConfigurationAdmin.SERVICE_BUNDLELOCATION ) ) )
+            {
+                Log.logger.log(
+                        LogService.LOG_DEBUG,
+                        "Omitting configuration {0}: No permission for bundle {1} on configuration bound to {2}",
+                        new Object[]
+                                { pid, configurationAdmin.getBundle().getLocation(),
+                                        config.get( ConfigurationAdmin.SERVICE_BUNDLELOCATION ) } );
+                continue;
+            }
 
-                // ensure the service.pid and returned a cached config if available
-                ConfigurationImpl cfg = null;
-                if ( pmList[i] instanceof CachingPersistenceManagerProxy)
-                {
-                    cfg = getCachedConfiguration( pid );
-                    if (cfg == null) {
-                        cfg = new ConfigurationImpl(this, pmList[i], config);
-                        // add the to configurations cache if it wasn't in the cache
-                        cacheConfiguration(cfg);
-                    }
-                } else {
-                    cfg = new ConfigurationImpl( this, pmList[i], config );
+            // ensure the service.pid and returned a cached config if available
+            ConfigurationImpl cfg = null;
+            if ( this.persistenceManager instanceof CachingPersistenceManagerProxy)
+            {
+                cfg = getCachedConfiguration( pid );
+                if (cfg == null) {
+                    cfg = new ConfigurationImpl(this, this.persistenceManager, config);
+                    // add the to configurations cache if it wasn't in the cache
+                    cacheConfiguration(cfg);
                 }
+            } else {
+                cfg = new ConfigurationImpl( this, this.persistenceManager, config );
+            }
 
-                // FELIX-611: Ignore configuration objects without props
-                if ( !cfg.isNew() )
-                {
-                    Log.logger.log( LogService.LOG_DEBUG, "Adding configuration {0}", new Object[]
-                            { pid } );
-                    configList.add( cfg );
-                }
-                else
-                {
-                    Log.logger.log( LogService.LOG_DEBUG, "Omitting configuration {0}: Is new", new Object[]
-                            { pid } );
-                }
+            // FELIX-611: Ignore configuration objects without props
+            if ( !cfg.isNew() )
+            {
+                Log.logger.log( LogService.LOG_DEBUG, "Adding configuration {0}", new Object[]
+                        { pid } );
+                configList.add( cfg );
+            }
+            else
+            {
+                Log.logger.log( LogService.LOG_DEBUG, "Omitting configuration {0}: Is new", new Object[]
+                        { pid } );
             }
         }
 
@@ -834,7 +821,7 @@ public class ConfigurationManager implements BundleListener
     {
         Log.logger.log( LogService.LOG_DEBUG, "createConfiguration({0}, {1}, {2})", new Object[]
                 { pid, factoryPid, bundleLocation } );
-        return new ConfigurationImpl( this, this.persistenceManagerProvider.getPersistenceManagers()[0], pid, factoryPid, bundleLocation );
+        return new ConfigurationImpl( this, this.persistenceManager, pid, factoryPid, bundleLocation );
     }
 
 
@@ -855,7 +842,7 @@ public class ConfigurationManager implements BundleListener
      */
     List<Factory> getTargetedFactories( final String rawFactoryPid, final ServiceReference target ) throws IOException
     {
-        LinkedList<Factory> factories = new LinkedList<Factory>();
+        LinkedList<Factory> factories = new LinkedList<>();
 
         final Bundle serviceBundle = target.getBundle();
         if ( serviceBundle != null )
@@ -931,15 +918,11 @@ public class ConfigurationManager implements BundleListener
         }
 
         // try to load factory from persistence
-        PersistenceManager[] pmList = this.persistenceManagerProvider.getPersistenceManagers();
-        for ( int i = 0; i < pmList.length; i++ )
+        if ( Factory.exists( this.persistenceManager, factoryPid ) )
         {
-            if ( Factory.exists( pmList[i], factoryPid ) )
-            {
-                factory = Factory.load( this, pmList[i], factoryPid );
-                cacheFactory( factory );
-                return factory;
-            }
+            factory = Factory.load( this, this.persistenceManager, factoryPid );
+            cacheFactory( factory );
+            return factory;
         }
 
         // no existing factory
@@ -952,7 +935,7 @@ public class ConfigurationManager implements BundleListener
      */
     Factory createFactory( String factoryPid )
     {
-        Factory factory = new Factory( this, this.persistenceManagerProvider.getPersistenceManagers()[0], factoryPid );
+        Factory factory = new Factory( this, this.persistenceManager, factoryPid );
         cacheFactory( factory );
         return factory;
     }
