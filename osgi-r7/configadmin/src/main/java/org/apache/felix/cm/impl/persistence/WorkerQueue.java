@@ -30,7 +30,7 @@ public class WorkerQueue implements Runnable {
 
     private final ThreadFactory threadFactory;
 
-    private final List<Runnable> tasks = new ArrayList<Runnable>();
+    private final List<Runnable> tasks = new ArrayList<>();
 
     private volatile Thread backgroundThread;
 

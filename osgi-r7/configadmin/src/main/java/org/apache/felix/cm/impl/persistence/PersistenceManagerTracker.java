@@ -95,6 +95,7 @@ public class PersistenceManagerTracker
         if ( this.persistenceManagerTracker != null )
         {
             this.workerQueue.stop();
+            this.deactivate();
             this.persistenceManagerTracker.close();
         }
         else
@@ -124,8 +125,11 @@ public class PersistenceManagerTracker
 
     private void deactivate()
     {
-        this.configurationManager.stop();
-        this.configurationManager = null;
+        if ( this.configurationManager != null )
+        {
+            this.configurationManager.stop();
+            this.configurationManager = null;
+        }
         this.stopCoordinatorTracker();
         // update log
         Log.logger.set(null);
@@ -339,8 +343,11 @@ public class PersistenceManagerTracker
 
     private void stopCoordinatorTracker()
     {
-        this.coordinatorTracker.close();
-        this.coordinatorTracker = null;
+        if ( this.coordinatorTracker != null )
+        {
+            this.coordinatorTracker.close();
+            this.coordinatorTracker = null;
+        }
     }
 }
 
