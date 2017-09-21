@@ -19,6 +19,11 @@
 package org.apache.felix.cm.impl;
 
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
+
 import java.io.IOException;
 import java.lang.reflect.Array;
 import java.util.ArrayList;
@@ -26,15 +31,15 @@ import java.util.Collection;
 import java.util.Dictionary;
 import java.util.Hashtable;
 
-import junit.framework.TestCase;
-
 import org.apache.felix.cm.MockPersistenceManager;
 import org.apache.felix.cm.PersistenceManager;
+import org.junit.Test;
+import org.mockito.Mockito;
 import org.osgi.framework.Constants;
 import org.osgi.service.cm.Configuration;
 
 
-public class ConfigurationAdapterTest extends TestCase
+public class ConfigurationAdapterTest
 {
 
     private static final String SCALAR = "scalar";
@@ -51,13 +56,6 @@ public class ConfigurationAdapterTest extends TestCase
     private static final String TEST_LOCATION = "test:location";
 
     private final PersistenceManager pm = new MockPersistenceManager();
-    private final MockConfigurationManager configMgr = new MockConfigurationManager()
-    {
-        boolean isActive()
-        {
-            return true;
-        }
-    };
 
     {
         ARRAY_VALUE = new String[]
@@ -69,12 +67,15 @@ public class ConfigurationAdapterTest extends TestCase
 
     private Configuration getConfiguration() throws IOException
     {
+        final ConfigurationManager configMgr = Mockito.mock(ConfigurationManager.class);
+        Mockito.when(configMgr.isActive()).thenReturn(true);
+
         ConfigurationImpl cimpl = new ConfigurationImpl( configMgr, pm, TEST_PID, null, TEST_LOCATION );
         return new ConfigurationAdapter( null, cimpl );
     }
 
 
-    public void testScalar() throws IOException
+    @Test public void testScalar() throws IOException
     {
         Configuration cimpl = getConfiguration();
         Dictionary props = cimpl.getProperties();
@@ -92,7 +93,7 @@ public class ConfigurationAdapterTest extends TestCase
     }
 
 
-    public void testArray() throws IOException
+    @Test public void testArray() throws IOException
     {
         Configuration cimpl = getConfiguration();
 
@@ -127,7 +128,7 @@ public class ConfigurationAdapterTest extends TestCase
     }
 
 
-    public void testCollection() throws IOException
+    @Test public void testCollection() throws IOException
     {
         Configuration cimpl = getConfiguration();
 

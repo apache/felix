@@ -19,7 +19,11 @@
 package org.apache.felix.cm.impl;
 
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+
 import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.io.PrintStream;
 import java.lang.reflect.Field;
 import java.util.Dictionary;
@@ -35,9 +39,10 @@ import org.apache.felix.cm.MockNotCachablePersistenceManager;
 import org.apache.felix.cm.MockPersistenceManager;
 import org.apache.felix.cm.PersistenceManager;
 import org.apache.felix.cm.impl.persistence.CachingPersistenceManagerProxy;
-import org.apache.felix.cm.impl.persistence.ExtPersistenceManager;
-import org.apache.felix.cm.impl.persistence.LegacyPersistenceManagerTracker;
 import org.apache.felix.cm.impl.persistence.PersistenceManagerProxy;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
 import org.mockito.Mockito;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.Constants;
@@ -48,9 +53,7 @@ import org.osgi.service.cm.SynchronousConfigurationListener;
 import org.osgi.service.log.LogService;
 import org.osgi.util.tracker.ServiceTracker;
 
-import junit.framework.TestCase;
-
-public class ConfigurationManagerTest extends TestCase
+public class ConfigurationManagerTest
 {
 
     private PrintStream replacedStdErr;
@@ -58,11 +61,9 @@ public class ConfigurationManagerTest extends TestCase
     private ByteArrayOutputStream output;
 
 
-    @Override
-    protected void setUp() throws Exception
+    @Before
+    public void setUp() throws Exception
     {
-        super.setUp();
-
         replacedStdErr = System.err;
 
         output = new ByteArrayOutputStream();
@@ -71,43 +72,30 @@ public class ConfigurationManagerTest extends TestCase
     }
 
 
-    @Override
-    protected void tearDown() throws Exception
+    @After
+    public void tearDown() throws Exception
     {
         System.setErr( replacedStdErr );
-
-        super.tearDown();
     }
 
-    public void test_listConfigurations_cached() throws Exception
+    @Test public void test_listConfigurations_cached() throws Exception
     {
         String pid = "testDefaultPersistenceManager";
-        ConfigurationManager configMgr = new ConfigurationManager();
-        setServiceTrackerField( configMgr, "persistenceManagerTracker" );
 
-        Field field1 = configMgr.getClass().getDeclaredField( "persistenceManagerProvider" );
-        field1.setAccessible( true );
-        final LegacyPersistenceManagerTracker lpmt = (LegacyPersistenceManagerTracker) field1.get(configMgr);
-
-        Field field = lpmt.getClass().getDeclaredField( "persistenceManagers" );
-        field.setAccessible( true );
-
-        CachingPersistenceManagerProxy[] persistenceManagers = new CachingPersistenceManagerProxy [1];
         PersistenceManager pm =new MockPersistenceManager();
-        Dictionary dictionary = new Hashtable();
+        Dictionary<String, Object> dictionary = new Hashtable<String, Object>();
         dictionary.put( "property1", "value1" );
         dictionary.put( Constants.SERVICE_PID, pid );
         pm.store( pid, dictionary );
 
-        persistenceManagers[0] = new CachingPersistenceManagerProxy(pm);
-        field.set(lpmt, persistenceManagers);
+        ConfigurationManager configMgr = new ConfigurationManager(new CachingPersistenceManagerProxy(pm), null);
 
         ConfigurationImpl[] conf = configMgr.listConfigurations(new ConfigurationAdminImpl(configMgr, null), null);
 
         assertEquals(1, conf.length);
         assertEquals(2, conf[0].getProperties(true).size());
 
-        dictionary = new Hashtable();
+        dictionary = new Hashtable<String, Object>();
         dictionary.put( "property1", "value2" );
         pid = "testDefaultPersistenceManager";
         dictionary.put( Constants.SERVICE_PID, pid );
@@ -121,35 +109,23 @@ public class ConfigurationManagerTest extends TestCase
         assertEquals("value1", conf[0].getProperties(true).get("property1"));
     }
 
-    public void test_listConfigurations_notcached() throws Exception
+    @Test public void test_listConfigurations_notcached() throws Exception
     {
         String pid = "testDefaultPersistenceManager";
-        ConfigurationManager configMgr = new ConfigurationManager();
-        setServiceTrackerField( configMgr, "persistenceManagerTracker" );
-
-        Field field1 = configMgr.getClass().getDeclaredField( "persistenceManagerProvider" );
-        field1.setAccessible( true );
-        final LegacyPersistenceManagerTracker lpmt = (LegacyPersistenceManagerTracker) field1.get(configMgr);
-
-        Field field = lpmt.getClass().getDeclaredField( "persistenceManagers" );
-        field.setAccessible( true );
-
-        ExtPersistenceManager[] persistenceManagers = new ExtPersistenceManager[1];
         PersistenceManager pm = new MockNotCachablePersistenceManager();
-        Dictionary dictionary = new Hashtable();
+        Dictionary<String, Object> dictionary = new Hashtable<String, Object>();
         dictionary.put( "property1", "value1" );
         dictionary.put( Constants.SERVICE_PID, pid );
         pm.store( pid, dictionary );
 
-        persistenceManagers[0] = new PersistenceManagerProxy(pm);
-        field.set(lpmt, persistenceManagers);
+        ConfigurationManager configMgr = new ConfigurationManager(new PersistenceManagerProxy(pm), null);
 
         ConfigurationImpl[] conf = configMgr.listConfigurations(new ConfigurationAdminImpl(configMgr, null), null);
 
         assertEquals(1, conf.length);
         assertEquals(2, conf[0].getProperties(true).size());
 
-        dictionary = new Hashtable();
+        dictionary = new Hashtable<String, Object>();
         dictionary.put("property1", "valueNotCached");
         pid = "testDefaultPersistenceManager";
         dictionary.put( Constants.SERVICE_PID, pid );
@@ -163,7 +139,7 @@ public class ConfigurationManagerTest extends TestCase
         assertEquals("valueNotCached", conf[0].getProperties(true).get("property1"));
     }
 
-    public void testLogNoLogService()
+    @Test public void testLogNoLogService() throws IOException
     {
         ConfigurationManager configMgr = createConfigurationManagerAndLog( null );
 
@@ -213,10 +189,9 @@ public class ConfigurationManagerTest extends TestCase
         assertLog( configMgr, LogService.LOG_ERROR, "Error Test Message", null );
     }
 
-
     // this test always expects output since when using a LogService, the log
     // level property is ignored
-    public void testLogWithLogService()
+    @Test public void testLogWithLogService() throws IOException
     {
         LogService logService = new MockLogService();
         ConfigurationManager configMgr = createConfigurationManagerAndLog( logService );
@@ -265,10 +240,10 @@ public class ConfigurationManagerTest extends TestCase
     }
 
 
-    public void testLogSetup()
+    @Test public void testLogSetup() throws IOException
     {
         final MockBundleContext bundleContext = new MockBundleContext();
-        ConfigurationManager configMgr = createConfigurationManagerAndLog( null );
+        createConfigurationManagerAndLog( null );
 
         // ensure the configuration data goes to target
         bundleContext.setProperty( "felix.cm.dir", "target/config" );
@@ -297,7 +272,7 @@ public class ConfigurationManagerTest extends TestCase
     }
 
 
-    public void testEventsStartingBundle() throws Exception
+    @Test public void testEventsStartingBundle() throws Exception
     {
         final Set<String> result = new HashSet<String>();
 
@@ -330,7 +305,7 @@ public class ConfigurationManagerTest extends TestCase
         ServiceRegistration mockReg = Mockito.mock( ServiceRegistration.class );
         Mockito.when( mockReg.getReference() ).thenReturn( mockRef );
 
-        ConfigurationManager configMgr = new ConfigurationManager();
+        ConfigurationManager configMgr = new ConfigurationManager(new PersistenceManagerProxy(new MockPersistenceManager()), null);
 
         setServiceTrackerField( configMgr, "configurationListenerTracker" );
         ServiceReference[] refs =
@@ -441,9 +416,43 @@ public class ConfigurationManagerTest extends TestCase
     }
 
 
-    private static ConfigurationManager createConfigurationManagerAndLog( final LogService logService )
+    private static ServiceReference[] setServiceTrackerField( ConfigurationManager configMgr,
+            String fieldName, Object ... services ) throws Exception
     {
-        ConfigurationManager configMgr = new ConfigurationManager();
+        final Map<ServiceReference, Object> refMap = new HashMap<ServiceReference, Object>();
+        for ( Object svc : services )
+        {
+            ServiceReference sref = Mockito.mock( ServiceReference.class );
+            Mockito.when( sref.getProperty( "objectClass" ) ).thenReturn(new String[] { "TestService" });
+            refMap.put( sref, svc );
+        }
+
+
+        Field field = configMgr.getClass().getDeclaredField( fieldName );
+        field.setAccessible( true );
+        field.set( configMgr, new ServiceTracker( new MockBundleContext(), "", null )
+        {
+            @Override
+            public ServiceReference[] getServiceReferences()
+            {
+                return refMap.keySet().toArray( new ServiceReference[0] );
+            }
+
+            @Override
+            public Object getService(ServiceReference reference)
+            {
+                return refMap.get( reference );
+            }
+        } );
+
+        return refMap.keySet().toArray(new ServiceReference[0]);
+    }
+
+    private static ConfigurationManager createConfigurationManagerAndLog( final LogService logService )
+    throws IOException
+    {
+        final PersistenceManager pm = Mockito.mock(PersistenceManager.class);
+        ConfigurationManager configMgr = new ConfigurationManager(new CachingPersistenceManagerProxy(pm), null);
 
         try
         {
@@ -465,62 +474,5 @@ public class ConfigurationManagerTest extends TestCase
         }
 
         return configMgr;
-    }
-
-    private static ServiceReference[] setServiceTrackerField( ConfigurationManager configMgr,
-            String fieldName, Object ... services ) throws Exception
-    {
-        final Map<ServiceReference, Object> refMap = new HashMap<ServiceReference, Object>();
-        for ( Object svc : services )
-        {
-            ServiceReference sref = Mockito.mock( ServiceReference.class );
-            Mockito.when( sref.getProperty( "objectClass" ) ).thenReturn(new String[] { "TestService" });
-            refMap.put( sref, svc );
-        }
-
-        if ( "persistenceManagerTracker".equals(fieldName) ) {
-            final LegacyPersistenceManagerTracker lpmt = new LegacyPersistenceManagerTracker();
-            Field field = lpmt.getClass().getDeclaredField( fieldName );
-            field.setAccessible( true );
-            field.set( lpmt, new ServiceTracker( new MockBundleContext(), "", null )
-            {
-                @Override
-                public ServiceReference[] getServiceReferences()
-                {
-                    return refMap.keySet().toArray( new ServiceReference[0] );
-                }
-
-                @Override
-                public Object getService(ServiceReference reference)
-                {
-                    return refMap.get( reference );
-                }
-            } );
-
-            Field field2 = configMgr.getClass().getDeclaredField( "persistenceManagerProvider" );
-            field2.setAccessible( true );
-            field2.set( configMgr, lpmt );
-        }
-        else
-        {
-            Field field = configMgr.getClass().getDeclaredField( fieldName );
-            field.setAccessible( true );
-            field.set( configMgr, new ServiceTracker( new MockBundleContext(), "", null )
-            {
-                @Override
-                public ServiceReference[] getServiceReferences()
-                {
-                    return refMap.keySet().toArray( new ServiceReference[0] );
-                }
-
-                @Override
-                public Object getService(ServiceReference reference)
-                {
-                    return refMap.get( reference );
-                }
-            } );
-
-        }
-        return refMap.keySet().toArray(new ServiceReference[0]);
     }
 }
