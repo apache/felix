@@ -91,7 +91,6 @@ public class Activator implements BundleActivator
         {
             configuredPM = null;
         }
-        configuredPM = "file";
         try
         {
             this.tracker = new PersistenceManagerTracker(bundleContext, defaultPM, configuredPM);
