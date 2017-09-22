@@ -29,34 +29,30 @@ import org.osgi.service.metatype.ObjectClassDefinition;
 /**
  * The <code>ScrManagedServiceMetaTypeProvider</code> receives the Declarative
  * Services Runtime configuration (by extending the {@link ScrManagedService}
- * class but also provides a MetaType Service ObjectClassDefinition.
+ * class.
  * <p>
  * This class is instantiated in a ServiceFactory manner by the
  * {@link ScrManagedServiceServiceFactory} when the Configuration Admin service
- * implementation and API is available and if the Metatype Service API is also
- * available.
+ * implementation and API is available
  * <p>
  * Requires OSGi Metatype Service API available
  *
  * @see ScrManagedServiceServiceFactory
  */
-class ScrManagedServiceMetaTypeProvider extends ScrManagedService
-    implements MetaTypeProvider
+class ScrMetaTypeProvider implements MetaTypeProvider
 {
 
-    static ScrManagedService create(final ScrConfigurationImpl scrConfiguration)
-    {
-        return new ScrManagedServiceMetaTypeProvider(scrConfiguration);
-    }
+    private final ScrConfiguration configuration;
 
-    private ScrManagedServiceMetaTypeProvider(final ScrConfigurationImpl scrConfiguration)
+    public ScrMetaTypeProvider(final ScrConfiguration scrConfiguration)
     {
-        super(scrConfiguration);
+        this.configuration = scrConfiguration;
     }
 
     /**
      * @see org.osgi.service.metatype.MetaTypeProvider#getLocales()
      */
+    @Override
     public String[] getLocales()
     {
         return null;
@@ -65,6 +61,7 @@ class ScrManagedServiceMetaTypeProvider extends ScrManagedService
     /**
      * @see org.osgi.service.metatype.MetaTypeProvider#getObjectClassDefinition(java.lang.String, java.lang.String)
      */
+    @Override
     public ObjectClassDefinition getObjectClassDefinition( String id, String locale )
     {
         if ( !ScrConfiguration.PID.equals( id ) )
@@ -78,7 +75,7 @@ class ScrManagedServiceMetaTypeProvider extends ScrManagedService
             "Allows limiting the amount of logging information sent to the OSGi LogService."
                 + " Supported values are DEBUG, INFO, WARN, and ERROR. Default is ERROR.", AttributeDefinition.INTEGER,
             new String[]
-                { String.valueOf(this.getScrConfiguration().getLogLevel()) }, 0, new String[]
+                { String.valueOf(this.configuration.getLogLevel()) }, 0, new String[]
                 { "Debug", "Information", "Warnings", "Error" }, new String[]
                 { "4", "3", "2", "1" }));
 
@@ -90,7 +87,7 @@ class ScrManagedServiceMetaTypeProvider extends ScrManagedService
                 + " This is an Apache Felix SCR specific extension, explicitly not supported by the Declarative Services "
                 + "specification. Reliance on this feature prevent the component from being used with other Declarative "
                 + "Services implementations. The default value is false to disable this feature.", this
-                .getScrConfiguration().isFactoryEnabled()));
+                .configuration.isFactoryEnabled()));
 
         adList.add( new AttributeDefinitionImpl(
                 ScrConfiguration.PROP_DELAYED_KEEP_INSTANCES,
@@ -100,14 +97,14 @@ class ScrManagedServiceMetaTypeProvider extends ScrManagedService
                     + "if there is not used any longer. Setting this flag causes the components to not be disposed off "
                     + "and thus prevent them from being constantly recreated if often used. Examples of such components "
                     + "may be EventHandler services. The default is to dispose of unused components.", this
-                    .getScrConfiguration().keepInstances() ) );
+                    .configuration.keepInstances() ) );
 
         adList.add( new AttributeDefinitionImpl(
                 ScrConfiguration.PROP_LOCK_TIMEOUT,
                 "Lock timeout milliseconds",
                 "How long a lock is held before releasing due to suspected deadlock",
                 AttributeDefinition.LONG,
-                new String[] { String.valueOf(this.getScrConfiguration().lockTimeout())},
+                new String[] { String.valueOf(this.configuration.lockTimeout())},
                 0, null, null) );
 
         adList.add( new AttributeDefinitionImpl(
@@ -115,7 +112,7 @@ class ScrManagedServiceMetaTypeProvider extends ScrManagedService
                 "Stop timeout milliseconds",
                 "How long stopping a bundle is waited for before continuing due to suspected deadlock",
                 AttributeDefinition.LONG,
-                new String[] { String.valueOf(this.getScrConfiguration().stopTimeout())},
+                new String[] { String.valueOf(this.configuration.stopTimeout())},
                 0, null, null) );
 
         adList.add( new AttributeDefinitionImpl(
@@ -130,27 +127,32 @@ class ScrManagedServiceMetaTypeProvider extends ScrManagedService
             private final AttributeDefinition[] attrs = adList
                 .toArray(new AttributeDefinition[adList.size()]);
 
+            @Override
             public String getName()
             {
                 return "Apache Felix Declarative Service Implementation";
             }
 
+            @Override
             public InputStream getIcon(int arg0)
             {
                 return null;
             }
 
+            @Override
             public String getID()
             {
                 return ScrConfiguration.PID;
             }
 
+            @Override
             public String getDescription()
             {
                 return "Configuration for the Apache Felix Declarative Services Implementation."
                     + " This configuration overwrites configuration defined in framework properties of the same names.";
             }
 
+            @Override
             public AttributeDefinition[] getAttributeDefinitions(int filter)
             {
                 return (filter == OPTIONAL) ? null : attrs;
@@ -192,54 +194,63 @@ class ScrManagedServiceMetaTypeProvider extends ScrManagedService
         }
 
 
+        @Override
         public int getCardinality()
         {
             return cardinality;
         }
 
 
+        @Override
         public String[] getDefaultValue()
         {
             return defaultValues;
         }
 
 
+        @Override
         public String getDescription()
         {
             return description;
         }
 
 
+        @Override
         public String getID()
         {
             return id;
         }
 
 
+        @Override
         public String getName()
         {
             return name;
         }
 
 
+        @Override
         public String[] getOptionLabels()
         {
             return optionLabels;
         }
 
 
+        @Override
         public String[] getOptionValues()
         {
             return optionValues;
         }
 
 
+        @Override
         public int getType()
         {
             return type;
         }
 
 
+        @Override
         public String validate( String arg0 )
         {
             return null;
