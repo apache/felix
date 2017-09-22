@@ -16,9 +16,7 @@
  */
 package org.apache.felix.webconsole.plugins.ds.internal;
 
-import java.util.ArrayList;
 import java.util.Comparator;
-import java.util.Enumeration;
 
 import org.osgi.service.component.runtime.dto.ComponentConfigurationDTO;
 
@@ -41,24 +39,6 @@ class Util
     private Util()
     {
         // prevent instantiation
-    }
-
-    /**
-     * This method is the same as Collections#list(Enumeration). The reason to
-     * duplicate it here, is that it is missing in OSGi/Minimum execution
-     * environment.
-     *
-     * @param e the enumeration which to convert
-     * @return the list containing all enumeration entries.
-     */
-    public static final ArrayList list(Enumeration e)
-    {
-        ArrayList l = new ArrayList();
-        while (e.hasMoreElements())
-        {
-            l.add(e.nextElement());
-        }
-        return l;
     }
 
 }
