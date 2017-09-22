@@ -1,3 +1,11 @@
+Changes from 2.0.10 to 2.0.12
+-----------------------------
+** Bug
+    * [FELIX-5416] Endless loop throwing InterruptedException when shutting down framework
+    * [FELIX-5627] Class loading issues while finding fields causes an NPE
+    * [FELIX-5628] Global lock in FieldHandler.NotResolved::resolve method can cause deadlock
+
+
 Changes from 2.0.8 to 2.0.10
 ----------------------------
 ** Improvement
