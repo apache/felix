@@ -37,18 +37,14 @@ import org.apache.felix.webconsole.DefaultVariableResolver;
 import org.apache.felix.webconsole.SimpleWebConsolePlugin;
 import org.apache.felix.webconsole.WebConsoleUtil;
 import org.osgi.framework.Bundle;
+import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
-import org.osgi.framework.InvalidSyntaxException;
-import org.osgi.service.cm.Configuration;
-import org.osgi.service.cm.ConfigurationAdmin;
 import org.osgi.service.component.ComponentConstants;
 import org.osgi.service.component.runtime.ServiceComponentRuntime;
 import org.osgi.service.component.runtime.dto.ComponentConfigurationDTO;
 import org.osgi.service.component.runtime.dto.ComponentDescriptionDTO;
 import org.osgi.service.component.runtime.dto.ReferenceDTO;
 import org.osgi.service.component.runtime.dto.SatisfiedReferenceDTO;
-import org.osgi.service.metatype.MetaTypeInformation;
-import org.osgi.service.metatype.MetaTypeService;
 import org.osgi.util.promise.Promise;
 
 /**
@@ -73,11 +69,11 @@ class WebConsolePlugin extends SimpleWebConsolePlugin
 
     // needed services
     static final String SCR_SERVICE = ServiceComponentRuntime.class.getName(); //$NON-NLS-1$
-    private static final String META_TYPE_NAME = "org.osgi.service.metatype.MetaTypeService"; //$NON-NLS-1$
-    private static final String CONFIGURATION_ADMIN_NAME = "org.osgi.service.cm.ConfigurationAdmin"; //$NON-NLS-1$
 
     // templates
     private final String TEMPLATE;
+
+    private volatile ConfigurationSupport optionalSupport;
 
     /** Default constructor */
     WebConsolePlugin()
@@ -87,6 +83,26 @@ class WebConsolePlugin extends SimpleWebConsolePlugin
         // load templates
         TEMPLATE = readTemplateFile("/res/plugin.html"); //$NON-NLS-1$
     }
+
+
+    @Override
+    public void deactivate() {
+        if ( this.optionalSupport != null )
+        {
+            this.optionalSupport.close();
+            this.optionalSupport = null;
+        }
+        super.deactivate();
+    }
+
+
+    @Override
+    public void activate(final BundleContext bundleContext)
+    {
+        super.activate(bundleContext);
+        this.optionalSupport = new ConfigurationSupport(bundleContext);
+    }
+
 
     @Override
     public String getCategory()
@@ -187,6 +203,7 @@ class WebConsolePlugin extends SimpleWebConsolePlugin
     /**
      * @see org.apache.felix.webconsole.AbstractWebConsolePlugin#renderContent(javax.servlet.http.HttpServletRequest, javax.servlet.http.HttpServletResponse)
      */
+    @SuppressWarnings("unchecked")
     @Override
     protected void renderContent(HttpServletRequest request, HttpServletResponse response)
             throws IOException
@@ -266,7 +283,7 @@ class WebConsolePlugin extends SimpleWebConsolePlugin
         }
         jw.key("pid"); //$NON-NLS-1$
         jw.value(pid);
-        if (isConfigurable(
+        if (this.optionalSupport.isConfigurable(
                 this.getBundleContext().getBundle(0).getBundleContext().getBundle(desc.bundle.id),
                 configurationPid))
         {
@@ -499,74 +516,11 @@ class WebConsolePlugin extends SimpleWebConsolePlugin
         }
     }
 
-    /**
-     * Check if the component with the specified pid is
-     * configurable
-     * @param providingBundle The Bundle providing the component. This may be
-     *      theoretically be <code>null</code>.
-     * @param pid A non null pid
-     * @return <code>true</code> if the component is configurable.
-     */
-    private boolean isConfigurable(final Bundle providingBundle, final String pid)
-    {
-        // we first check if the config admin has something for this pid
-        final ConfigurationAdmin ca = this.getConfigurationAdmin();
-        if (ca != null)
-        {
-            try
-            {
-                // we use listConfigurations to not create configuration
-                // objects persistently without the user providing actual
-                // configuration
-                String filter = '(' + Constants.SERVICE_PID + '=' + pid + ')';
-                Configuration[] configs = ca.listConfigurations(filter);
-                if (configs != null && configs.length > 0)
-                {
-                    return true;
-                }
-            }
-            catch (InvalidSyntaxException ise)
-            {
-                // should print message
-            }
-            catch (IOException ioe)
-            {
-                // should print message
-            }
-        }
-        // second check is using the meta type service
-        if (providingBundle != null)
-        {
-            final MetaTypeService mts = this.getMetaTypeService();
-            if (mts != null)
-            {
-                final MetaTypeInformation mti = mts.getMetaTypeInformation(providingBundle);
-                if (mti != null)
-                {
-                    try {
-                        return mti.getObjectClassDefinition(pid, null) != null;
-                    } catch (IllegalArgumentException e) {
-                        return false;
-                    }
-                }
-            }
-        }
-        return false;
-    }
 
-    private final ConfigurationAdmin getConfigurationAdmin()
-    {
-        return (ConfigurationAdmin) getService(CONFIGURATION_ADMIN_NAME);
-    }
 
     final ServiceComponentRuntime getScrService()
     {
         return (ServiceComponentRuntime) getService(SCR_SERVICE);
-    }
-
-    private final MetaTypeService getMetaTypeService()
-    {
-        return (MetaTypeService) getService(META_TYPE_NAME);
     }
 
     private final class RequestInfo
