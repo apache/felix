@@ -69,7 +69,7 @@ class ScrMetaTypeProvider implements MetaTypeProvider
             return null;
         }
 
-        final ArrayList<AttributeDefinition> adList = new ArrayList<AttributeDefinition>();
+        final ArrayList<AttributeDefinition> adList = new ArrayList<>();
 
         adList.add(new AttributeDefinitionImpl(ScrConfiguration.PROP_LOGLEVEL, "SCR Log Level",
             "Allows limiting the amount of logging information sent to the OSGi LogService."
