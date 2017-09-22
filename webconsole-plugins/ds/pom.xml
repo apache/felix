@@ -73,10 +73,14 @@
                             {maven-resources},OSGI-INF=target/classes/OSGI-INF
                         </Include-Resource>
                         <Import-Package>
-                             org.osgi.service.cm;version="[1.2,2)",
-                             org.osgi.service.metatype;version="[1.1,2)",
-                             *
+                            org.osgi.service.cm;version="[1.2,2)";resolution:=optional,
+                            org.osgi.service.metatype;version="[1.2,2)";resolution:=optional,
+                            *
                         </Import-Package>
+                        <DynamicImport-Package>
+                            org.osgi.service.cm;version="[1.2,2)",
+                            org.osgi.service.metatype;version="[1.2,2)"
+                        </DynamicImport-Package>
                         <Embed-Dependency>
                              org.apache.felix.utils;inline=org/apache/felix/utils/json/JSONWriter**
                         </Embed-Dependency>
