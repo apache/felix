@@ -64,7 +64,7 @@
         <bundle.file.name>
             ${bundle.build.name}/${project.build.finalName}.jar
         </bundle.file.name>
-        <felix.java.version>6</felix.java.version>
+        <felix.java.version>7</felix.java.version>
         <felix.ca.version>1.9.0-SNAPSHOT</felix.ca.version>
     </properties>
     
