@@ -28,7 +28,6 @@ import org.apache.felix.scr.impl.manager.ScrConfiguration;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceRegistration;
-import org.osgi.service.cm.ManagedService;
 import org.osgi.service.log.LogService;
 
 
@@ -87,9 +86,11 @@ public class ScrConfigurationImpl implements ScrConfiguration
 
     private Boolean globalExtender;
 
-    private BundleContext bundleContext;
+    private volatile BundleContext bundleContext;
 
-    private ServiceRegistration<ManagedService> managedService;
+    private volatile ServiceRegistration<?> managedServiceRef;
+
+    private volatile ServiceRegistration<?> metatypeProviderRef;
 
     private ScrCommand scrCommand;
 
@@ -98,7 +99,6 @@ public class ScrConfigurationImpl implements ScrConfiguration
         this.activator = activator;
     }
 
-    @SuppressWarnings("unchecked")
     public void start(final BundleContext bundleContext)
     {
         this.bundleContext = bundleContext;
@@ -116,19 +116,30 @@ public class ScrConfigurationImpl implements ScrConfiguration
         // configuration may be delivered asynchronously
         configure( null, false );
 
-        managedService = ( ServiceRegistration<ManagedService> ) bundleContext.registerService("org.osgi.service.cm.ManagedService", new ScrManagedServiceServiceFactory(this, activator),
+        managedServiceRef = bundleContext.registerService("org.osgi.service.cm.ManagedService", new ScrManagedServiceServiceFactory(this),
             props);
+
+        metatypeProviderRef = bundleContext.registerService("org.osgi.service.metatype.MetaTypeProvider", new ScrMetaTypeProviderServiceFactory(this),
+                props);
     }
 
-    public void stop() {
-        if (this.managedService != null) {
-            this.managedService.unregister();
-            this.managedService = null;
+    public void stop()
+    {
+        if (this.managedServiceRef != null)
+        {
+            this.managedServiceRef.unregister();
+            this.managedServiceRef = null;
+        }
+
+        if (this.metatypeProviderRef != null)
+        {
+            this.metatypeProviderRef.unregister();
+            this.metatypeProviderRef = null;
         }
 
         this.bundleContext = null;
     }
-    
+
     public void setScrCommand(ScrCommand scrCommand)
     {
         this.scrCommand = scrCommand;
@@ -201,33 +212,39 @@ public class ScrConfigurationImpl implements ScrConfiguration
      * Returns the current log level.
      * @return
      */
+    @Override
     public int getLogLevel()
     {
         return logLevel;
     }
 
 
+    @Override
     public boolean isFactoryEnabled()
     {
         return factoryEnabled;
     }
 
 
+    @Override
     public boolean keepInstances()
     {
         return keepInstances;
     }
-    
+
+    @Override
     public boolean infoAsService()
     {
         return infoAsService;
     }
 
+    @Override
     public long lockTimeout()
     {
         return lockTimeout;
     }
 
+    @Override
     public long stopTimeout()
     {
         return stopTimeout;
@@ -254,7 +271,7 @@ public class ScrConfigurationImpl implements ScrConfiguration
     {
         return getLogLevel( bundleContext.getProperty( PROP_LOGLEVEL ) );
     }
-    
+
     private boolean getDefaultInfoAsService()
     {
         return VALUE_TRUE.equalsIgnoreCase( bundleContext.getProperty( PROP_INFO_SERVICE) );

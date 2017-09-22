@@ -18,25 +18,26 @@
  */
 package org.apache.felix.scr.impl.config;
 
+import org.apache.felix.scr.impl.manager.ScrConfiguration;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.ServiceFactory;
 import org.osgi.framework.ServiceRegistration;
 
 /**
- * The {@code ScrManagedServiceServiceFactory} is a {@code ServiceFactory} registered
- * on behalf of {@link ScrManagedService} to create a managed service instance
- * on demand once it is used by the Configuration Admin Service.
+ * The {@code ScrMetaTypeProviderServiceFactory} is a {@code ServiceFactory} registered
+ * on behalf of {@link ScrConfiguration} to create a metatype provider instance
+ * on demand once it is used by the Metatype Service.
  * <p>
- * In contrast to the {@link ScrManagedService} class, this class only requires
- * core OSGi API and thus may be instantiated without the Configuration Admin
- * actually available at the time of instantiation.
+ * In contrast to the {@link ScrMetaTypeProvider} class, this class only requires
+ * core OSGi API and thus may be instantiated without the MetaType Service API actually available
+ * at the time of instantiation.
  */
 @SuppressWarnings("rawtypes")
-public class ScrManagedServiceServiceFactory implements ServiceFactory
+public class ScrMetaTypeProviderServiceFactory implements ServiceFactory
 {
-    private final ScrConfigurationImpl scrConfiguration;
+    private final ScrConfiguration scrConfiguration;
 
-    public ScrManagedServiceServiceFactory(final ScrConfigurationImpl scrConfiguration)
+    public ScrMetaTypeProviderServiceFactory(final ScrConfiguration scrConfiguration)
     {
         this.scrConfiguration = scrConfiguration;
     }
@@ -44,7 +45,7 @@ public class ScrManagedServiceServiceFactory implements ServiceFactory
     @Override
     public Object getService(final Bundle bundle, final ServiceRegistration registration)
     {
-        return new ScrManagedService( this.scrConfiguration );
+        return new ScrMetaTypeProvider( this.scrConfiguration );
     }
 
     @Override

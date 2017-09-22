@@ -40,17 +40,13 @@ public class ScrManagedService implements ManagedService
 
     private final ScrConfigurationImpl scrConfiguration;
 
-    protected final ScrConfigurationImpl getScrConfiguration()
-    {
-        return scrConfiguration;
-    }
-
     public ScrManagedService(final ScrConfigurationImpl scrConfiguration)
     {
         this.scrConfiguration = scrConfiguration;
     }
 
-    public void updated(Dictionary<String, ?> properties) throws ConfigurationException
+    @Override
+    public void updated(final Dictionary<String, ?> properties) throws ConfigurationException
     {
         this.scrConfiguration.configure(properties, true);
     }
