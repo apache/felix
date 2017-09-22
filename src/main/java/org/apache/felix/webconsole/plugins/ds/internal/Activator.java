@@ -22,33 +22,38 @@ import java.util.Hashtable;
 import org.apache.felix.inventory.Format;
 import org.apache.felix.inventory.InventoryPrinter;
 import org.apache.felix.webconsole.SimpleWebConsolePlugin;
+import org.apache.felix.webconsole.bundleinfo.BundleInfoProvider;
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceReference;
 import org.osgi.framework.ServiceRegistration;
+import org.osgi.service.component.runtime.ServiceComponentRuntime;
 import org.osgi.util.tracker.ServiceTracker;
 import org.osgi.util.tracker.ServiceTrackerCustomizer;
 
 /**
  * Activator is the main starting class.
  */
-public class Activator implements BundleActivator, ServiceTrackerCustomizer
+public class Activator implements BundleActivator, ServiceTrackerCustomizer<ServiceComponentRuntime, ServiceComponentRuntime>
 {
 
-    private ServiceTracker tracker;
+    private ServiceTracker<ServiceComponentRuntime, ServiceComponentRuntime> tracker;
     private BundleContext context;
 
     private SimpleWebConsolePlugin plugin;
-    private ServiceRegistration printerRegistration;
-    private ServiceRegistration infoRegistration;
+
+    private ServiceRegistration<InventoryPrinter> printerRegistration;
+
+    private ServiceRegistration<BundleInfoProvider> infoRegistration;
 
     /**
      * @see org.osgi.framework.BundleActivator#start(org.osgi.framework.BundleContext)
      */
+    @SuppressWarnings({ "unchecked", "rawtypes" })
     public final void start(BundleContext context) throws Exception
     {
         this.context = context;
-        this.tracker = new ServiceTracker(context, WebConsolePlugin.SCR_SERVICE, this);
+        this.tracker = new ServiceTracker(context, ServiceComponentRuntime.class, this);
         this.tracker.open();
     }
 
@@ -69,20 +74,20 @@ public class Activator implements BundleActivator, ServiceTrackerCustomizer
      * @see org.osgi.util.tracker.ServiceTrackerCustomizer#modifiedService(org.osgi.framework.ServiceReference,
      *      java.lang.Object)
      */
-    public final void modifiedService(ServiceReference reference, Object service)
+    public final void modifiedService(final ServiceReference<ServiceComponentRuntime> reference, final ServiceComponentRuntime service)
     {/* unused */
     }
 
     /**
      * @see org.osgi.util.tracker.ServiceTrackerCustomizer#addingService(org.osgi.framework.ServiceReference)
      */
-    public final Object addingService(ServiceReference reference)
+    public final ServiceComponentRuntime addingService(final ServiceReference<ServiceComponentRuntime> reference)
     {
         SimpleWebConsolePlugin plugin = this.plugin;
         if (plugin == null)
         {
-            this.plugin = plugin = new WebConsolePlugin().register(context);
-            final Object service = context.getService(reference);
+            final ServiceComponentRuntime service = context.getService(reference);
+            this.plugin = plugin = new WebConsolePlugin(service).register(context);
 
             final Dictionary<String, Object> props = new Hashtable<String, Object>();
             final String name = "Declarative Services Components";
@@ -92,7 +97,7 @@ public class Activator implements BundleActivator, ServiceTrackerCustomizer
                     Format.TEXT.toString(),
                     Format.JSON.toString()
             });
-            printerRegistration = context.registerService(InventoryPrinter.SERVICE,
+            printerRegistration = context.registerService(InventoryPrinter.class,
                 new ComponentConfigurationPrinter(service, (WebConsolePlugin) plugin),
                 props);
 
@@ -106,7 +111,7 @@ public class Activator implements BundleActivator, ServiceTrackerCustomizer
      * @see org.osgi.util.tracker.ServiceTrackerCustomizer#removedService(org.osgi.framework.ServiceReference,
      *      java.lang.Object)
      */
-    public final void removedService(ServiceReference reference, Object service)
+    public final void removedService(final ServiceReference<ServiceComponentRuntime> reference, final ServiceComponentRuntime service)
     {
         SimpleWebConsolePlugin plugin = this.plugin;
 
@@ -116,7 +121,7 @@ public class Activator implements BundleActivator, ServiceTrackerCustomizer
             plugin.unregister();
             this.plugin = null;
             // unregister configuration printer too
-            ServiceRegistration reg = printerRegistration;
+            ServiceRegistration<?> reg = printerRegistration;
             if (reg != null)
             {
                 reg.unregister();

@@ -52,9 +52,9 @@ class ComponentConfigurationPrinter implements InventoryPrinter
     private final ServiceComponentRuntime scrService;
     private final WebConsolePlugin plugin;
 
-    ComponentConfigurationPrinter(Object scrService, WebConsolePlugin plugin)
+    ComponentConfigurationPrinter(ServiceComponentRuntime scrService, WebConsolePlugin plugin)
     {
-        this.scrService = (ServiceComponentRuntime)scrService;
+        this.scrService = scrService;
         this.plugin = plugin;
     }
 

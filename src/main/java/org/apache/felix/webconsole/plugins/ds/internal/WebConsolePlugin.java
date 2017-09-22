@@ -67,19 +67,19 @@ class WebConsolePlugin extends SimpleWebConsolePlugin
     private static final String OPERATION_DISABLE = "disable"; //$NON-NLS-1$
     //private static final String OPERATION_CONFIGURE = "configure";
 
-    // needed services
-    static final String SCR_SERVICE = ServiceComponentRuntime.class.getName(); //$NON-NLS-1$
-
     // templates
     private final String TEMPLATE;
 
     private volatile ConfigurationSupport optionalSupport;
 
+    private final ServiceComponentRuntime runtime;
+
     /** Default constructor */
-    WebConsolePlugin()
+    WebConsolePlugin(final ServiceComponentRuntime service)
     {
         super(LABEL, TITLE, CSS);
 
+        this.runtime = service;
         // load templates
         TEMPLATE = readTemplateFile("/res/plugin.html"); //$NON-NLS-1$
     }
@@ -141,13 +141,13 @@ class WebConsolePlugin extends SimpleWebConsolePlugin
             {
                 if (OPERATION_ENABLE.equals(op))
                 {
-                    wait(getScrService().enableComponent(reqInfo.component.description));
+                    wait(this.runtime.enableComponent(reqInfo.component.description));
                     reqInfo = new RequestInfo(request, false);
                     found = true;
                 }
                 else if ( OPERATION_DISABLE.equals(op) )
                 {
-                    wait(getScrService().disableComponent(reqInfo.component.description));
+                    wait(this.runtime.disableComponent(reqInfo.component.description));
                     found = true;
                 }
             }
@@ -231,42 +231,35 @@ class WebConsolePlugin extends SimpleWebConsolePlugin
         jw.object();
 
         jw.key("status"); //$NON-NLS-1$
-        if (info.scrService == null)
+        jw.value(info.configurations.size());
+        if ( !info.configurations.isEmpty() )
         {
-            jw.value(-1);
-        }
-        else
-        {
-            jw.value(info.configurations.size());
-            if ( !info.configurations.isEmpty() )
+            // render components
+            jw.key("data"); //$NON-NLS-1$
+            jw.array();
+            if (component != null)
             {
-                // render components
-                jw.key("data"); //$NON-NLS-1$
-                jw.array();
-                if (component != null)
+                if ( component.state == -1 )
                 {
-                    if ( component.state == -1 )
-                    {
-                        component(jw, component.description, null, true);
-                    }
-                    else
-                    {
-                        component(jw, component.description, component, true);
-                    }
+                    component(jw, component.description, null, true);
                 }
                 else
                 {
-                    for( final ComponentDescriptionDTO cd : info.disabled )
-                    {
-                        component(jw, cd, null, false);
-                    }
-                    for (final ComponentConfigurationDTO cfg : info.configurations)
-                    {
-                        component(jw, cfg.description, cfg, false);
-                    }
+                    component(jw, component.description, component, true);
                 }
-                jw.endArray();
             }
+            else
+            {
+                for( final ComponentDescriptionDTO cd : info.disabled )
+                {
+                    component(jw, cd, null, false);
+                }
+                for (final ComponentConfigurationDTO cfg : info.configurations)
+                {
+                    component(jw, cfg.description, cfg, false);
+                }
+            }
+            jw.endArray();
         }
 
         jw.endObject();
@@ -518,25 +511,17 @@ class WebConsolePlugin extends SimpleWebConsolePlugin
 
 
 
-    final ServiceComponentRuntime getScrService()
-    {
-        return (ServiceComponentRuntime) getService(SCR_SERVICE);
-    }
-
     private final class RequestInfo
     {
         public final String extension;
         public final ComponentConfigurationDTO component;
         public final boolean componentRequested;
-        public final ServiceComponentRuntime scrService;
         public final List<ComponentDescriptionDTO> descriptions = new ArrayList<ComponentDescriptionDTO>();
         public final List<ComponentConfigurationDTO> configurations = new ArrayList<ComponentConfigurationDTO>();
         public final List<ComponentDescriptionDTO> disabled = new ArrayList<ComponentDescriptionDTO>();
 
         protected RequestInfo(final HttpServletRequest request, final boolean checkPathInfo)
         {
-            this.scrService = getScrService();
-
             String info = request.getPathInfo();
             // remove label and starting slash
             info = info.substring(getLabel().length() + 1);
@@ -552,9 +537,7 @@ class WebConsolePlugin extends SimpleWebConsolePlugin
                 extension = "html"; //$NON-NLS-1$
             }
 
-            if ( scrService != null ) {
-                this.descriptions.addAll(scrService.getComponentDescriptionDTOs());
-            }
+            this.descriptions.addAll(runtime.getComponentDescriptionDTOs());
             if (checkPathInfo && info.length() > 1 && info.startsWith("/")) //$NON-NLS-1$
             {
                 this.componentRequested = true;
@@ -577,13 +560,13 @@ class WebConsolePlugin extends SimpleWebConsolePlugin
 
                 for(final ComponentDescriptionDTO d : this.descriptions)
                 {
-                    if ( !scrService.isComponentEnabled(d) )
+                    if ( !runtime.isComponentEnabled(d) )
                     {
                         disabled.add(d);
                     }
                     else
                     {
-                        final Collection<ComponentConfigurationDTO> configs = scrService.getComponentConfigurationDTOs(d);
+                        final Collection<ComponentConfigurationDTO> configs = runtime.getComponentConfigurationDTOs(d);
                         if ( configs.isEmpty() )
                         {
                             disabled.add(d);
@@ -607,7 +590,7 @@ class WebConsolePlugin extends SimpleWebConsolePlugin
                 final long componentId = Long.parseLong(componentIdPar);
                 for(final ComponentDescriptionDTO desc : this.descriptions)
                 {
-                    for(final ComponentConfigurationDTO cfg : this.scrService.getComponentConfigurationDTOs(desc))
+                    for(final ComponentConfigurationDTO cfg : runtime.getComponentConfigurationDTOs(desc))
                     {
                         if ( cfg.id == componentId )
                         {
@@ -666,7 +649,7 @@ class WebConsolePlugin extends SimpleWebConsolePlugin
                 {
                     if ( d.name.equals(componentName) && (bundleId == -1 || d.bundle.id == bundleId))
                     {
-                        components = scrService.getComponentConfigurationDTOs(d);
+                        components = runtime.getComponentConfigurationDTOs(d);
                         if ( components.isEmpty() )
                         {
                             final ComponentConfigurationDTO cfg = new ComponentConfigurationDTO();
