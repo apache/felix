@@ -29,6 +29,7 @@ import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceRegistration;
 import org.osgi.service.log.LogService;
+import org.osgi.service.metatype.MetaTypeProvider;
 
 
 /**
@@ -104,10 +105,10 @@ public class ScrConfigurationImpl implements ScrConfiguration
         this.bundleContext = bundleContext;
 
         // listen for Configuration Admin configuration
-        Dictionary<String, Object> props = new Hashtable<String, Object>();
-        props.put(Constants.SERVICE_PID, PID);
-        props.put(Constants.SERVICE_DESCRIPTION, "SCR Configurator");
-        props.put(Constants.SERVICE_VENDOR, "The Apache Software Foundation");
+        final Dictionary<String, Object> msProps = new Hashtable<>();
+        msProps.put(Constants.SERVICE_PID, PID);
+        msProps.put(Constants.SERVICE_DESCRIPTION, "SCR Configurator");
+        msProps.put(Constants.SERVICE_VENDOR, "The Apache Software Foundation");
 
 
         // Process configure from bundle context properties so they can be predictably
@@ -117,10 +118,15 @@ public class ScrConfigurationImpl implements ScrConfiguration
         configure( null, false );
 
         managedServiceRef = bundleContext.registerService("org.osgi.service.cm.ManagedService", new ScrManagedServiceServiceFactory(this),
-            props);
+                msProps);
+
+        final Dictionary<String, Object> mtProps = new Hashtable<>();
+        mtProps.put(MetaTypeProvider.METATYPE_PID, PID);
+        mtProps.put(Constants.SERVICE_DESCRIPTION, "SCR Configurator MetaTypeProvider");
+        mtProps.put(Constants.SERVICE_VENDOR, "The Apache Software Foundation");
 
         metatypeProviderRef = bundleContext.registerService("org.osgi.service.metatype.MetaTypeProvider", new ScrMetaTypeProviderServiceFactory(this),
-                props);
+                mtProps);
     }
 
     public void stop()
