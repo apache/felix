@@ -1,3 +1,9 @@
+Changes from 1.7.2 to 1.8.0
+---------------------------
+** Bug
+    * [FELIX-5700] - Metatype generation wrongly puts properties files into metatype directory
+
+
 Changes from 1.7.2 to 1.7.0
 ---------------------------
 ** Bug
