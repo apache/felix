@@ -1,5 +1,11 @@
-Changes from 1.1.2 to ...
--------------------------
+Changes from 1.1.4 to 1.1.6
+---------------------------
+** Bug
+    * [FELIX-5702] - All files in OSG-INF/metatype must be considered
+
+
+Changes from 1.1.2 to 1.1.4
+---------------------------
 
 ** Bug
     * [FELIX-5173] - Metatype service's BundleResources ignore properties provided by fragment bundles
