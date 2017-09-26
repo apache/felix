@@ -165,7 +165,7 @@ class MetaTypeServiceImpl implements MetaTypeService, SynchronousBundleListener
         MetaDataReader reader = new MetaDataReader();
 
         // get the descriptors, return nothing if none
-        Enumeration docs = bundle.findEntries( METATYPE_DOCUMENTS_LOCATION, "*.xml", false );
+        Enumeration docs = bundle.findEntries( METATYPE_DOCUMENTS_LOCATION, null, false );
         if ( docs == null || !docs.hasMoreElements() )
         {
             return null;
