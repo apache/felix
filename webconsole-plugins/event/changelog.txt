@@ -1,3 +1,13 @@
+Changes from 1.1.6 to 1.1.8
+---------------------------
+** Improvement
+    * [FELIX-5702] - Plugin should work without configuration admin
+
+** Bug
+    * [FELIX-5701] - metatype.properties file must not be in OSGI-INF/metatype
+    * [FELIX-5668] - Prevent Nullpointer when receiving a ServiceEvent for a service that has been already unregistered
+
+
 Changes from 1.1.4 to 1.1.6
 ---------------------------
 ** Improvement
