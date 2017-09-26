@@ -16,6 +16,7 @@
  */
 package org.apache.felix.webconsole.plugins.event.internal;
 
+import java.util.Dictionary;
 import java.util.Hashtable;
 import java.util.StringTokenizer;
 
@@ -34,11 +35,11 @@ public class PropertiesEditorSupport
 
     /**
      * Converts the properties from the request to a key-value hashtable.
-     * 
+     *
      * @param request the request to process
      * @return the converted properties
      */
-    public static final Hashtable convertProperties(HttpServletRequest request)
+    public static final Dictionary convertProperties(HttpServletRequest request)
     {
         String keys[] = request.getParameterValues("key"); //$NON-NLS-1$
         String vals[] = request.getParameterValues("val"); //$NON-NLS-1$
@@ -95,7 +96,7 @@ public class PropertiesEditorSupport
             throw new IllegalArgumentException("Unsupported type!");
         }
     }
-    
+
     private static final byte[] decodeHex(String data)
     {
         final StringTokenizer tok = new StringTokenizer(data, "[]{},;: \t"); //$NON-NLS-1$
