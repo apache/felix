@@ -39,7 +39,6 @@ import org.apache.felix.scrplugin.helper.ComponentContainerUtil.ComponentContain
 import org.apache.felix.scrplugin.helper.DescriptionContainer;
 import org.apache.felix.scrplugin.helper.MetatypeAttributeDefinition;
 import org.apache.felix.scrplugin.helper.MetatypeContainer;
-import org.osgi.service.metatype.MetaTypeService;
 import org.xml.sax.ContentHandler;
 import org.xml.sax.SAXException;
 import org.xml.sax.helpers.AttributesImpl;
@@ -52,6 +51,10 @@ import org.xml.sax.helpers.AttributesImpl;
  *
  */
 public class MetaTypeIO {
+
+    private static final String OLD_LOCATION = "OSGI-INF" + File.separatorChar + "metatype";
+    private static final String NEW_LOCATION = "OSGI-INF" + File.separatorChar + "l10n";
+    private static final String PROPS_FILE = "metatype.properties";
 
     private static final String NAMESPACE_URI_10 = "http://www.osgi.org/xmlns/metatype/v1.0.0";
     private static final String NAMESPACE_URI_12 = "http://www.osgi.org/xmlns/metatype/v1.2.0";
@@ -96,16 +99,22 @@ public class MetaTypeIO {
 
         if (components.size() > 0) {
             // check for metatype.properties
-            final File mtProps = new File(project.getClassesDirectory(), "OSGI-INF" + File.separator + "metatype" + File.separator + "metatype.properties");
+            // we used to have this in OSGI-INF/metatype, but that is actually not allowed by the spec
+            // we should break the build
+            final File oldMtProps = new File(project.getClassesDirectory(), OLD_LOCATION + File.separator + PROPS_FILE);
+            if ( oldMtProps.exists() ) {
+                throw new SCRDescriptorException("metatype properties file must be stored outside of " + OLD_LOCATION + ", move it to " + NEW_LOCATION, oldMtProps.getAbsolutePath());
+            }
+            final File mtProps = new File(project.getClassesDirectory(), NEW_LOCATION + File.separator + PROPS_FILE);
             final boolean oldStyle = mtProps.exists();
-            mtDir.mkdirs();
 
             final List<String> fileNames = new ArrayList<String>();
             final List<ComponentContainerContainer> containers = ComponentContainerUtil.split(components);
             for(final ComponentContainerContainer ccc : containers) {
+                mtDir.mkdirs();
                 final File useFile = new File(mtDir, ccc.className + ".xml");
 
-                String metatypeLocation = MetaTypeService.METATYPE_DOCUMENTS_LOCATION + "/metatype";
+                String metatypeLocation = NEW_LOCATION.replace(File.separatorChar, '/') + "/metatype";
 
                 // check if all labels and descriptions are inlined
                 boolean allInlined = true;
@@ -190,7 +199,8 @@ public class MetaTypeIO {
                     if ( metatypeProps.size() > 0 ) {
                         final int lastDot = useFile.getName().lastIndexOf(".");
                         final String baseName = useFile.getName().substring(0, lastDot);
-                        final File propsFile = new File(useFile.getParentFile(), baseName + ".properties");
+                        final File propsFile = new File(options.getOutputDirectory(), NEW_LOCATION + File.separator + baseName + ".properties");
+                        propsFile.getParentFile().mkdirs();
                         try {
                             final FileOutputStream fos = new FileOutputStream(propsFile);
                             try {
@@ -201,10 +211,10 @@ public class MetaTypeIO {
                             }
                         }
                         catch (IOException e) {
-                            throw new SCRDescriptorException("Unable to get metatype.properties", propsFile.getAbsolutePath());
+                            throw new SCRDescriptorException("Unable to create metatype.properties", propsFile.getAbsolutePath());
                         }
-                        fileNames.add(parentDir.getName() + '/' + mtDir.getName() + '/' + propsFile.getName());
-                        metatypeLocation = MetaTypeService.METATYPE_DOCUMENTS_LOCATION + '/' + baseName;
+                        fileNames.add(NEW_LOCATION.replace(File.separatorChar, '/') + propsFile.getName());
+                        metatypeLocation = NEW_LOCATION + "/" + baseName;
                     }
                 }
                 logger.info("Generating " + ccc.components.size() + " MetaType Descriptors in " + useFile);
@@ -263,23 +273,23 @@ public class MetaTypeIO {
             FileOutputStream fos = new FileOutputStream(file);
             try {
                 final ContentHandler contentHandler = IOUtils.getSerializer(fos);
-    
+
                 contentHandler.startDocument();
                 contentHandler.startPrefixMapping(PREFIX, namespace);
-    
+
                 final AttributesImpl ai = new AttributesImpl();
                 IOUtils.addAttribute(ai, "localization", localization);
-    
+
                 contentHandler.startElement(namespace, METADATA_ELEMENT, METADATA_ELEMENT_QNAME, ai);
                 IOUtils.newline(contentHandler);
-    
+
                 for(final ComponentContainer comp : components) {
                     if ( comp.getMetatypeContainer() != null ) {
                         generateOCDXML(comp.getMetatypeContainer(), contentHandler);
                         generateDesignateXML(comp.getMetatypeContainer(), contentHandler);
                     }
                 }
-    
+
                 // end wrapper element
                 contentHandler.endElement(namespace, METADATA_ELEMENT, METADATA_ELEMENT_QNAME);
                 IOUtils.newline(contentHandler);
