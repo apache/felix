@@ -37,7 +37,10 @@ import org.osgi.framework.Filter;
 import org.osgi.framework.FrameworkListener;
 import org.osgi.framework.FrameworkUtil;
 import org.osgi.framework.InvalidSyntaxException;
+import org.osgi.framework.ServiceFactory;
 import org.osgi.framework.ServiceListener;
+import org.osgi.framework.ServiceObjects;
+import org.osgi.framework.ServicePermission;
 import org.osgi.framework.ServiceReference;
 import org.osgi.framework.ServiceRegistration;
 import org.osgi.framework.hooks.service.FindHook;
@@ -162,6 +165,51 @@ class PojoSRBundleContext implements BundleContext
         return m_reg.getService(m_bundle, reference);
     }
 
+    @Override
+    public <S> ServiceObjects<S> getServiceObjects(ServiceReference<S> reference) {
+        return new ServiceObjectsImpl<S>(reference);
+    }
+
+
+    //
+    // ServiceObjects implementation
+    //
+    class ServiceObjectsImpl<S> implements ServiceObjects<S>
+    {
+        private final ServiceReference<S> m_ref;
+
+        public ServiceObjectsImpl(final ServiceReference<S> ref)
+        {
+            this.m_ref = ref;
+        }
+
+        public S getService() {
+
+            // CONCURRENCY NOTE: This is a check-then-act situation,
+            // but we ignore it since the time window is small and
+            // the result is the same as if the calling thread had
+            // won the race condition.
+
+            final Object sm = System.getSecurityManager();
+
+            if (sm != null)
+            {
+                ((SecurityManager) sm).checkPermission(new ServicePermission(m_ref, ServicePermission.GET));
+            }
+
+            return PojoSRBundleContext.this.getService(m_ref);
+        }
+
+        public void ungetService(final S srvObj)
+        {
+            PojoSRBundleContext.this.ungetService(m_ref);
+        }
+
+        public ServiceReference<S> getServiceReference()
+        {
+            return m_ref;
+        }
+    }
     public String getProperty(String key)
     {
         Object result = m_config.get(key);
@@ -334,6 +382,11 @@ class PojoSRBundleContext implements BundleContext
     public <S> ServiceRegistration<S> registerService(Class<S> clazz, S service, Dictionary<String, ?> properties)
     {
         return (ServiceRegistration<S>) registerService(clazz.getName(), service, properties);
+    }
+
+    @Override
+    public <S> ServiceRegistration<S> registerService(Class<S> clazz, ServiceFactory<S> factory, Dictionary<String, ?> properties) {
+        return (ServiceRegistration<S>) registerService(clazz.getName(), factory, properties);
     }
 
     @SuppressWarnings("unchecked")

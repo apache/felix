@@ -34,6 +34,7 @@ import org.osgi.framework.BundleContext;
 import org.osgi.framework.BundleEvent;
 import org.osgi.framework.BundleException;
 import org.osgi.framework.FrameworkEvent;
+import org.osgi.framework.FrameworkListener;
 import org.osgi.framework.ServiceReference;
 import org.osgi.framework.SynchronousBundleListener;
 import org.osgi.framework.Version;
@@ -79,6 +80,14 @@ public class PojoServiceRegistryFactoryImpl implements PojoServiceRegistryFactor
             catch (Exception ex)
             {
                 throw new BundleException("Unable to scan classpath", ex);
+            }
+        }
+
+        @Override
+        public void init(FrameworkListener... listeners) throws BundleException {
+            init();
+            for (FrameworkListener listener : listeners) {
+                m_bundle.getBundleContext().addFrameworkListener(listener);
             }
         }
 
