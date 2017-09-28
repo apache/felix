@@ -26,7 +26,7 @@ import org.osgi.service.metatype.MetaTypeProvider;
 import org.osgi.util.tracker.ServiceTracker;
 
 
-public class MetaTypeProviderTracker extends ServiceTracker
+public class MetaTypeProviderTracker extends ServiceTracker<MetaTypeProvider, MetaTypeProviderHolder>
 {
 
     final MetaTypeServiceImpl mti;
@@ -39,24 +39,27 @@ public class MetaTypeProviderTracker extends ServiceTracker
     }
 
 
-    public Object addingService( ServiceReference reference )
+    @Override
+    public MetaTypeProviderHolder addingService( ServiceReference<MetaTypeProvider> reference )
     {
-        final MetaTypeProvider provider = ( MetaTypeProvider ) this.context.getService( reference );
+        final MetaTypeProvider provider = this.context.getService( reference );
         final MetaTypeProviderHolder holder = new MetaTypeProviderHolder( reference, provider );
         mti.addService( holder );
         return holder;
     }
 
 
-    public void modifiedService( ServiceReference reference, Object service )
+    @Override
+    public void modifiedService( ServiceReference<MetaTypeProvider> reference, MetaTypeProviderHolder service )
     {
-        ( ( MetaTypeProviderHolder ) service ).update( this.mti );
+        service.update( this.mti );
     }
 
 
-    public void removedService( ServiceReference reference, Object service )
+    @Override
+    public void removedService( ServiceReference<MetaTypeProvider> reference, MetaTypeProviderHolder service )
     {
-        mti.removeService( ( MetaTypeProviderHolder ) service );
+        mti.removeService( service );
         this.context.ungetService( reference );
     }
 }

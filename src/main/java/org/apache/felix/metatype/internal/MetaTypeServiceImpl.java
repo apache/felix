@@ -37,6 +37,7 @@ import org.osgi.framework.ServiceReference;
 import org.osgi.framework.SynchronousBundleListener;
 import org.osgi.service.log.LogService;
 import org.osgi.service.metatype.MetaTypeInformation;
+import org.osgi.service.metatype.MetaTypeProvider;
 import org.osgi.service.metatype.MetaTypeService;
 
 
@@ -50,7 +51,7 @@ import org.osgi.service.metatype.MetaTypeService;
 class MetaTypeServiceImpl implements MetaTypeService, SynchronousBundleListener
 {
 
-    private final Map bundleMetaTypeInformation;
+    private final Map<Long, SoftReference<MetaTypeInformationImpl>> bundleMetaTypeInformation;
 
     private final ManagedServiceTracker managedServiceTracker;
 
@@ -64,7 +65,7 @@ class MetaTypeServiceImpl implements MetaTypeService, SynchronousBundleListener
      */
     MetaTypeServiceImpl( BundleContext bundleContext )
     {
-        this.bundleMetaTypeInformation = new ConcurrentHashMap();
+        this.bundleMetaTypeInformation = new ConcurrentHashMap<Long, SoftReference<MetaTypeInformationImpl>>();
 
         bundleContext.addBundleListener( this );
 
@@ -97,11 +98,11 @@ class MetaTypeServiceImpl implements MetaTypeService, SynchronousBundleListener
     {
         if ( event.getType() == BundleEvent.STOPPING )
         {
-            SoftReference mtir = ( SoftReference ) this.bundleMetaTypeInformation.remove( new Long( event.getBundle()
+            SoftReference<MetaTypeInformationImpl> mtir = this.bundleMetaTypeInformation.remove( new Long( event.getBundle()
                 .getBundleId() ) );
             if ( mtir != null )
             {
-                MetaTypeInformationImpl mti = ( MetaTypeInformationImpl ) mtir.get();
+                MetaTypeInformationImpl mti = mtir.get();
                 if ( mti != null )
                 {
                     mti.dispose();
@@ -165,7 +166,7 @@ class MetaTypeServiceImpl implements MetaTypeService, SynchronousBundleListener
         MetaDataReader reader = new MetaDataReader();
 
         // get the descriptors, return nothing if none
-        Enumeration docs = bundle.findEntries( METATYPE_DOCUMENTS_LOCATION, null, false );
+        Enumeration<URL> docs = bundle.findEntries( METATYPE_DOCUMENTS_LOCATION, null, false );
         if ( docs == null || !docs.hasMoreElements() )
         {
             return null;
@@ -174,7 +175,7 @@ class MetaTypeServiceImpl implements MetaTypeService, SynchronousBundleListener
         MetaTypeInformationImpl cmti = new MetaTypeInformationImpl( bundle );
         while ( docs.hasMoreElements() )
         {
-            URL doc = ( URL ) docs.nextElement();
+            URL doc = docs.nextElement();
             try
             {
                 MetaData metaData = reader.parse( doc );
@@ -185,7 +186,7 @@ class MetaTypeServiceImpl implements MetaTypeService, SynchronousBundleListener
             }
             catch ( IOException ioe )
             {
-                Activator.log( LogService.LOG_ERROR, "fromDocuments: Error accessing document " + doc, ioe );
+                Activator.log( LogService.LOG_ERROR, "fromDocuments: Error accessing document " + doc + " : " + ioe.getMessage(), null );
             }
         }
         return cmti;
@@ -269,15 +270,15 @@ class MetaTypeServiceImpl implements MetaTypeService, SynchronousBundleListener
         }
 
         // initial MetaTypeProvider
-        final ServiceReference refs[] = this.providerTracker.getServiceReferences();
+        final ServiceReference<MetaTypeProvider> refs[] = this.providerTracker.getServiceReferences();
         if ( refs != null )
         {
             for ( int i = 0; i < refs.length; i++ )
             {
-                ServiceReference ref = refs[i];
+                ServiceReference<MetaTypeProvider> ref = refs[i];
                 if ( bundle.equals( ref.getBundle() ) )
                 {
-                    final MetaTypeProviderHolder holder = ( MetaTypeProviderHolder ) this.providerTracker
+                    final MetaTypeProviderHolder holder = this.providerTracker
                         .getService( ref );
                     if ( holder.getPids() != null )
                     {
@@ -292,13 +293,13 @@ class MetaTypeServiceImpl implements MetaTypeService, SynchronousBundleListener
         }
 
         this.bundleMetaTypeInformation.put( new Long( bundle.getBundleId() ),
-            new SoftReference( mti ) );
+            new SoftReference<MetaTypeInformationImpl>( mti ) );
     }
 
 
     private MetaTypeInformationImpl getMetaTypeInformationInternal( final Bundle bundle )
     {
-        SoftReference mtir = ( SoftReference ) this.bundleMetaTypeInformation.get( new Long( bundle.getBundleId() ) );
-        return ( MetaTypeInformationImpl ) ( ( mtir == null ) ? null : mtir.get() );
+        SoftReference<MetaTypeInformationImpl> mtir = this.bundleMetaTypeInformation.get( new Long( bundle.getBundleId() ) );
+        return ( mtir == null ) ? null : mtir.get();
     }
 }
