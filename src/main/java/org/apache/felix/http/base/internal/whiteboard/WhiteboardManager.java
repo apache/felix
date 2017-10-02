@@ -782,6 +782,7 @@ public final class WhiteboardManager
                         servletContext,
                         (ServletInfo)info,
                         handler.getBundleContext(),
+                        info.getServiceReference().getBundle(),
                         this.httpBundleContext.getBundle());
                     handler.getRegistry().registerServlet(servletHandler);
                 }

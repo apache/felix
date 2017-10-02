@@ -42,11 +42,12 @@ public final class WhiteboardServletHandler extends ServletHandler
     public WhiteboardServletHandler(final long contextServiceId,
             final ExtServletContext context,
             final ServletInfo servletInfo,
-            final BundleContext bundleContext,
+            final BundleContext contextBundleContext,
+            final Bundle registeringBundle,
             final Bundle httpWhiteboardBundle)
     {
         super(contextServiceId, context, servletInfo);
-        this.bundleContext = bundleContext;
+        this.bundleContext = contextBundleContext;
         int errorCode = -1;
         if ( this.getMultipartConfig() != null && System.getSecurityManager() != null )
         {
@@ -62,7 +63,7 @@ public final class WhiteboardServletHandler extends ServletHandler
                 else
                 {
                     final FilePermission readPerm = new FilePermission(this.getMultipartConfig().multipartLocation, "read");
-                    if ( !bundleContext.getBundle().hasPermission(readPerm) )
+                    if ( !registeringBundle.hasPermission(readPerm) )
                     {
                         errorCode = DTOConstants.FAILURE_REASON_SERVLET_READ_FROM_DEFAULT_DENIED;
                     }
@@ -70,9 +71,9 @@ public final class WhiteboardServletHandler extends ServletHandler
             }
             else
             {
-                multipartSecurityContext = bundleContext.getBundle();
+                multipartSecurityContext = registeringBundle;
                 // provided location
-                if ( !bundleContext.getBundle().hasPermission(writePerm) )
+                if ( !registeringBundle.hasPermission(writePerm) )
                 {
                     errorCode = DTOConstants.FAILURE_REASON_SERVLET_WRITE_TO_LOCATION_DENIED;
                 }
