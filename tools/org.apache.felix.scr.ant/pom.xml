@@ -29,7 +29,7 @@
     <groupId>org.apache.felix</groupId>
     <artifactId>org.apache.felix.scr.ant</artifactId>
 
-    <version>1.18.1-SNAPSHOT</version>
+    <version>1.17.1-SNAPSHOT</version>
     <packaging>jar</packaging>
 
     <name>SCR Ant Task</name>
