@@ -26,13 +26,13 @@ import org.apache.maven.plugin.MojoExecutionException;
 import org.osgi.framework.Version;
 
 /**
- * Measures:
+ * The following checks are performed:
  * <ul>
- *   <li>Exports without a version
- *   <li>Import without a version (range)
- *   <li>Dynamic import without a version (range)
- *   <li>Dynamic import *
- *   <li>Export of privat looking package
+ *   <li>Exports without a version (ERROR)
+ *   <li>Import without a version (range) (WARNING)
+ *   <li>Dynamic import without a version (range) (WARNING)
+ *   <li>Dynamic import * (WARNING)
+ *   <li>Export of private looking package (WARNING)
  * </ul>
  */
 public class ImportExportCheck implements Check {

@@ -69,7 +69,10 @@ public class CheckMojo extends AbstractMojo {
     protected Mode mode;
 
     /**
-     * The configuration for the checks
+     * The configuration for the checks - currently not used
+     * The configurations can be specified as a CDATA section with an XML
+     * tree for each check. The root name of the tree is the name of the
+     * check.
      */
     @Parameter
     protected String config;

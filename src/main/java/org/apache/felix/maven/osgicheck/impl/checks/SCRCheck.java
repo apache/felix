@@ -48,10 +48,9 @@ import org.osgi.framework.Version;
 import org.osgi.service.component.ComponentException;
 
 /**
- * Measure
+ * The following checks are performed
  * <ul>
  *   <li>Immediate flag
- *   <li>Metatype (TODO)
  *   <li>Unary references should be greedy
  *   <li>References ordering (Not finished yet)
  * </ul>
@@ -91,8 +90,8 @@ public class SCRCheck implements Check {
     /**
      * Check the immediate flag
      * <ul>
-     *   <li>If a component it must not be declared (Error)
-     *   <li>If a service it should not be declared (Warning)
+     *   <li>If a component: it must not be declared (Error)
+     *   <li>If a service: it should not be declared (Warning)
      * <ul>
      * @param ctx
      * @param md
