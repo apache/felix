@@ -73,6 +73,7 @@
         <module>tools/org.apache.felix.scr.bnd</module>
         <module>tools/org.apache.felix.scr.ds-annotations</module>
         <module>tools/org.apache.felix.scr.generator</module>
+        <module>tools/osgicheck-maven-plugin</module>
 
         <module>transaction</module>
         <module>upnp</module>
