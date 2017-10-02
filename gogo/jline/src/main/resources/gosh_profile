@@ -126,7 +126,7 @@ try {
 
   complete -c gogo:cd -e
   complete -c gogo:cd -d "Change current directory"
-  complete -c gogo:cd -a '__directories'
+  complete -c gogo:cd -a 'wi = ($.commandLine wordIndex); if { %(wi==1) } { __directories } { [ ] }'
 
   complete -c gogo:sleep -e
   complete -c gogo:sleep -d "Pause execution for the specified amount of time"
