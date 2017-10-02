@@ -38,6 +38,9 @@ public class FailedServletDTO extends ServletDTO {
 	 * @see DTOConstants#FAILURE_REASON_SERVICE_NOT_GETTABLE
 	 * @see DTOConstants#FAILURE_REASON_SERVLET_CONTEXT_FAILURE
 	 * @see DTOConstants#FAILURE_REASON_SHADOWED_BY_OTHER_SERVICE
+	 * @see DTOConstants#FAILURE_REASON_SERVLET_WRITE_TO_LOCATION_DENIED
+	 * @see DTOConstants#FAILURE_REASON_WHITEBOARD_WRITE_TO_DEFAULT_DENIED
+	 * @see DTOConstants#FAILURE_REASON_SERVLET_READ_FROM_DEFAULT_DENIED
 	 */
-	public int	failureReason;
+	 public int	failureReason;
 }
