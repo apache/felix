@@ -20,9 +20,9 @@ import java.util.List;
 
 import org.apache.felix.maven.osgicheck.impl.Check;
 import org.apache.felix.maven.osgicheck.impl.CheckContext;
+import org.apache.felix.maven.osgicheck.impl.featureutil.ManifestUtil;
+import org.apache.felix.maven.osgicheck.impl.featureutil.PackageInfo;
 import org.apache.maven.plugin.MojoExecutionException;
-import org.apache.sling.feature.support.util.ManifestUtil;
-import org.apache.sling.feature.support.util.PackageInfo;
 import org.osgi.framework.Version;
 
 /**
