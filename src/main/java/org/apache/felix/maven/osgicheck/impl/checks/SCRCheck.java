@@ -149,109 +149,91 @@ public class SCRCheck implements Check {
 
                 @Override
                 public int compareTo(Bundle o) {
-                    // TODO Auto-generated method stub
                     return 0;
                 }
 
                 @Override
                 public void update(InputStream input) throws BundleException {
-                    // TODO Auto-generated method stub
-
+                    // nothing to do
                 }
 
                 @Override
                 public void update() throws BundleException {
-                    // TODO Auto-generated method stub
-
+                    // nothing to do
                 }
 
                 @Override
                 public void uninstall() throws BundleException {
-                    // TODO Auto-generated method stub
-
+                    // nothing to do
                 }
 
                 @Override
                 public void stop(int options) throws BundleException {
-                    // TODO Auto-generated method stub
-
+                    // nothing to do
                 }
 
                 @Override
                 public void stop() throws BundleException {
-                    // TODO Auto-generated method stub
-
+                    // nothing to do
                 }
 
                 @Override
                 public void start(int options) throws BundleException {
-                    // TODO Auto-generated method stub
-
+                    // nothing to do
                 }
 
                 @Override
                 public void start() throws BundleException {
-                    // TODO Auto-generated method stub
-
+                    // nothing to do
                 }
 
                 @Override
                 public Class<?> loadClass(String name) throws ClassNotFoundException {
-                    // TODO Auto-generated method stub
                     return null;
                 }
 
                 @Override
                 public boolean hasPermission(Object permission) {
-                    // TODO Auto-generated method stub
                     return false;
                 }
 
                 @Override
                 public Version getVersion() {
-                    // TODO Auto-generated method stub
                     return null;
                 }
 
                 @Override
                 public String getSymbolicName() {
-                    // TODO Auto-generated method stub
                     return null;
                 }
 
                 @Override
                 public int getState() {
-                    // TODO Auto-generated method stub
                     return 0;
                 }
 
                 @Override
                 public Map<X509Certificate, List<X509Certificate>> getSignerCertificates(int signersType) {
-                    // TODO Auto-generated method stub
                     return null;
                 }
 
                 @Override
                 public ServiceReference<?>[] getServicesInUse() {
-                    // TODO Auto-generated method stub
                     return null;
                 }
 
                 @Override
                 public Enumeration<URL> getResources(String name) throws IOException {
-                    // TODO Auto-generated method stub
                     return null;
                 }
 
                 @Override
                 public URL getResource(String name) {
-                    // TODO Auto-generated method stub
                     return null;
                 }
 
                 @Override
                 public ServiceReference<?>[] getRegisteredServices() {
-                    // TODO Auto-generated method stub
                     return null;
                 }
 
@@ -262,25 +244,21 @@ public class SCRCheck implements Check {
 
                 @Override
                 public long getLastModified() {
-                    // TODO Auto-generated method stub
                     return 0;
                 }
 
                 @Override
                 public Dictionary<String, String> getHeaders(String locale) {
-                    // TODO Auto-generated method stub
                     return null;
                 }
 
                 @Override
                 public Dictionary<String, String> getHeaders() {
-                    // TODO Auto-generated method stub
                     return null;
                 }
 
                 @Override
                 public Enumeration<String> getEntryPaths(String path) {
-                    // TODO Auto-generated method stub
                     return null;
                 }
 
@@ -295,31 +273,26 @@ public class SCRCheck implements Check {
 
                 @Override
                 public File getDataFile(String filename) {
-                    // TODO Auto-generated method stub
                     return null;
                 }
 
                 @Override
                 public long getBundleId() {
-                    // TODO Auto-generated method stub
                     return 0;
                 }
 
                 @Override
                 public BundleContext getBundleContext() {
-                    // TODO Auto-generated method stub
                     return null;
                 }
 
                 @Override
                 public Enumeration<URL> findEntries(String path, String filePattern, boolean recurse) {
-                    // TODO Auto-generated method stub
                     return null;
                 }
 
                 @Override
                 public <A> A adapt(Class<A> type) {
-                    // TODO Auto-generated method stub
                     return null;
                 }
             }, new Logger() {
@@ -327,19 +300,16 @@ public class SCRCheck implements Check {
                 @Override
                 public void log(int level, String pattern, Object[] arguments, ComponentMetadata metadata, Long componentId,
                         Throwable ex) {
-                    // TODO Auto-generated method stub
-
+                    // nothing to do
                 }
 
                 @Override
                 public void log(int level, String message, ComponentMetadata metadata, Long componentId, Throwable ex) {
-                    // TODO Auto-generated method stub
-
+                    // nothing to do
                 }
 
                 @Override
                 public boolean isLogEnabled(int level) {
-                    // TODO Auto-generated method stub
                     return false;
                 }
             }, false, false );
