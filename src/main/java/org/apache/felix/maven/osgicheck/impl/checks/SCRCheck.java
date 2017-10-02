@@ -23,6 +23,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Reader;
+import java.lang.reflect.Field;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.security.cert.X509Certificate;
@@ -95,15 +96,34 @@ public class SCRCheck implements Check {
      * <ul>
      * @param ctx
      * @param md
+     * @throws SecurityException
+     * @throws NoSuchFieldException
      */
     private void checkImmediate(final CheckContext ctx, final ComponentMetadata md) {
+        // we have to use reflection
+        Boolean immediate = null;
+        try {
+            final Field immediateField = md.getClass().getDeclaredField("m_immediate");
+            immediateField.setAccessible(true);
+            immediate = (Boolean) immediateField.get(md);
+        } catch ( final NoSuchFieldException | SecurityException | IllegalArgumentException | IllegalAccessException e) {
+            throw new RuntimeException(e);
+        }
         if ( md.getServiceMetadata() == null ) {
-            if ( md.isImmediate() ) {
-                ctx.reportError("Component " + md.getName() + " must not be declared as 'immediate'. (It's a component)");
+            if ( immediate != null ) {
+                if ( immediate.booleanValue() ) {
+                    ctx.reportError("Component " + md.getName() + " must not be declared as 'immediate'. It's a component. Remove the attribute.");
+                } else {
+                    ctx.reportError("Component " + md.getName() + " must not be declared as not 'immediate'.It's a component. Remove the attribute.");
+                }
             }
         } else {
-            if ( md.isImmediate() ) {
-                ctx.reportError("Service " + md.getName() + " should not be declared as 'immediate'.");
+            if ( immediate != null ) {
+                if ( immediate.booleanValue() ) {
+                    ctx.reportWarning("Service " + md.getName() + " should not be declared as 'immediate'.");
+                } else {
+                    ctx.reportWarning("Service " + md.getName() + " should not declare 'immediate' attribute but rather use the default.");
+                }
             }
         }
     }

@@ -55,17 +55,18 @@ import org.osgi.framework.Constants;
     )
 public class CheckMojo extends AbstractMojo {
 
-    /**
-     * Whether to skip all checking
-     */
-    @Parameter(defaultValue = "false")
-    protected boolean skipCheck;
+    public enum Mode {
+        OFF,
+        DEFAULT,
+        STRICT,
+        ERRORS_ONLY
+    }
 
     /**
-     * Whether strict checking is turned on (warnings are errors in strict mode)
+     * The mode
      */
-    @Parameter(defaultValue = "false")
-    protected boolean strictCheck;
+    @Parameter(defaultValue = "DEFAULT")
+    protected Mode mode;
 
     /**
      * The configuration for the checks
@@ -107,7 +108,7 @@ public class CheckMojo extends AbstractMojo {
     @Override
     public void execute() throws MojoExecutionException, MojoFailureException {
         if ( isOSGiProject() ) {
-            if ( !skipCheck ) {
+            if ( mode != Mode.OFF ) {
                 getLog().debug("Checking OSGi project...");
                 doExecute();
             } else {
@@ -164,6 +165,7 @@ public class CheckMojo extends AbstractMojo {
                             } else {
                                 conf = Collections.emptyMap();
                             }
+                            getLog().debug("Configuration for " + check.getName() + " : " + conf);
                         }
 
                         @Override
@@ -210,8 +212,10 @@ public class CheckMojo extends AbstractMojo {
             throw new MojoExecutionException(ioe.getMessage(), ioe);
         }
 
-        for(final String msg : warnings) {
-            getLog().warn(msg);
+        if ( mode != Mode.ERRORS_ONLY ) {
+            for(final String msg : warnings) {
+                getLog().warn(msg);
+            }
         }
         for(final String msg : errors) {
             getLog().error(msg);
@@ -220,7 +224,7 @@ public class CheckMojo extends AbstractMojo {
         if ( !errors.isEmpty() ) {
             throw new MojoExecutionException("Check detected errors. See log output for error messages.");
         }
-        if ( strictCheck && !warnings.isEmpty() ) {
+        if ( mode == Mode.STRICT && !warnings.isEmpty() ) {
             throw new MojoExecutionException("Check detected warnings and strict mode is enabled. See log output for warning messages.");
         }
     }
