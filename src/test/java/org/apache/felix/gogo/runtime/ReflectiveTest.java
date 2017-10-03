@@ -33,6 +33,15 @@ import org.junit.Test;
 public class ReflectiveTest {
 
     @Test
+    public void testDtoAccess() throws Exception {
+        InputStream in = new ByteArrayInputStream(new byte[0]);
+        OutputStream out = new ByteArrayOutputStream();
+        CommandProcessorImpl processor = new CommandProcessorImpl(null);
+        Object result = Reflective.invoke(new CommandSessionImpl(processor, in, out, out), new TheDTO("foo"), "name", Collections.emptyList());
+        assertEquals("foo", result);
+    }
+
+    @Test
     public void testArrayInvocation() throws Exception {
         assertEquals(new Object[] { 1, "ab" }, invoke("test1", Arrays.<Object>asList(1, "ab")));
         assertEquals(new String[] { "1", "ab" }, invoke("test2", Arrays.<Object>asList(1, "ab")));
@@ -101,4 +110,11 @@ public class ReflectiveTest {
         }
     }
 
+    static class TheDTO {
+        public String name;
+
+        public TheDTO(String name) {
+            this.name = name;
+        }
+    }
 }
