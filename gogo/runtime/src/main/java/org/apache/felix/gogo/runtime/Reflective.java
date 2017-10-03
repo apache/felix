@@ -20,6 +20,7 @@ package org.apache.felix.gogo.runtime;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Array;
+import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
@@ -148,6 +149,26 @@ public final class Reflective
         }
         else
         {
+            if (args.isEmpty())
+            {
+                Field[] fields;
+                if (target instanceof Class<?>)
+                {
+                    fields = ((Class<?>) target).getFields();
+                }
+                else
+                    {
+                    fields = target.getClass().getFields();
+                }
+                for (Field f : fields)
+                {
+                    String mname = f.getName().toLowerCase(Locale.ENGLISH);
+                    if (mname.equals(name))
+                    {
+                        return f.get(target);
+                    }
+                }
+            }
             ArrayList<String> list = new ArrayList<>();
             for (Class<?>[] types : possibleTypes)
             {
