@@ -239,13 +239,17 @@ public class NativeLibraryClause
         String language = (String) configMap.get(FelixConstants.FRAMEWORK_LANGUAGE);
 
         // Check library's osname.
-        if (!checkOSNames(osName, getOSNames()))
+        if ((getOSNames() != null) &&
+            (getOSNames().length > 0) &&
+            !checkOSNames(osName, getOSNames()))
         {
             return false;
         }
 
         // Check library's processor.
-        if (!checkProcessors(processorName, getProcessors()))
+        if ((getProcessors() != null) &&
+            (getProcessors().length > 0) &&
+            !checkProcessors(processorName, getProcessors()))
         {
             return false;
         }
@@ -268,7 +272,6 @@ public class NativeLibraryClause
 
         // Check library's selection-filter if specified.
         if ((getSelectionFilter() != null) &&
-            (getSelectionFilter().length() >= 0) &&
             !checkSelectionFilter(configMap, getSelectionFilter()))
         {
             return false;
