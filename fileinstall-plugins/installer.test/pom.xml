@@ -1,0 +1,229 @@
+<!--
+    Copyright (c) Intel Corporation
+    Copyright (c) 2017
+   
+    Licensed under the Apache License, Version 2.0 (the "License");
+    you may not use this file except in compliance with the License.
+    You may obtain a copy of the License at
+   
+       http://www.apache.org/licenses/LICENSE-2.0
+   
+    Unless required by applicable law or agreed to in writing, software
+    distributed under the License is distributed on an "AS IS" BASIS,
+    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    See the License for the specific language governing permissions and
+    limitations under the License.
+ -->
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+
+	<modelVersion>4.0.0</modelVersion>
+	<parent>
+		<groupId>org.apache.felix</groupId>
+		<artifactId>felix-parent</artifactId>
+		<version>3</version>
+		<relativePath>../../../pom/pom.xml</relativePath>
+	</parent>
+
+	<artifactId>org.apache.felix.fileinstall.plugins.installer.test</artifactId>
+	<version>1.0.0-SNAPSHOT</version>
+	<name>Apache Felix File Install Plugin - Artifact Installer Integration Test</name>
+	
+	<properties>
+		<felix.java.version>8</felix.java.version>
+		<felix.java.signature.artifactId>java18</felix.java.signature.artifactId>
+	</properties>
+
+	<dependencies>
+		<!-- Felix MUST be first, to come before the osgi.core libraries pulled 
+			in transitively below. Oh, Maven. -->
+		<dependency>
+			<groupId>org.apache.felix</groupId>
+			<artifactId>org.apache.felix.framework</artifactId>
+			<version>5.6.8</version>
+		</dependency>
+
+		<dependency>
+			<groupId>org.apache.felix</groupId>
+			<artifactId>org.apache.felix.fileinstall.plugins.installer</artifactId>
+			<version>${project.version}</version>
+		</dependency>
+
+		<dependency>
+			<groupId>org.apache.felix</groupId>
+			<artifactId>org.apache.felix.fileinstall.plugins.resolver</artifactId>
+			<version>${project.version}</version>
+		</dependency>
+
+		<dependency>
+			<groupId>javax.inject</groupId>
+			<artifactId>javax.inject</artifactId>
+			<version>1</version>
+		</dependency>
+		<dependency>
+			<groupId>org.ops4j.pax.exam</groupId>
+			<artifactId>pax-exam-junit4</artifactId>
+			<version>4.9.2</version>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.ops4j.pax.exam</groupId>
+			<artifactId>pax-exam-container-native</artifactId>
+			<version>4.9.2</version>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.ops4j.pax.exam</groupId>
+			<artifactId>pax-exam-link-mvn</artifactId>
+			<version>4.9.2</version>
+			<scope>test</scope>
+		</dependency>
+		
+		<dependency>
+			<groupId>org.apache.felix</groupId>
+			<artifactId>org.apache.felix.configadmin</artifactId>
+			<version>1.8.12</version>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.felix</groupId>
+			<artifactId>org.apache.felix.scr</artifactId>
+			<version>2.0.6</version>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.felix</groupId>
+			<artifactId>org.apache.felix.log</artifactId>
+			<version>1.0.1</version>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.felix</groupId>
+			<artifactId>org.apache.felix.resolver</artifactId>
+			<version>1.10.1</version>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.felix</groupId>
+			<artifactId>org.apache.felix.fileinstall</artifactId>
+			<version>3.5.4</version>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.osgi</groupId>
+			<artifactId>org.osgi.service.repository</artifactId>
+			<version>1.1.0</version>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>biz.aQute.bnd</groupId>
+			<artifactId>biz.aQute.bndlib</artifactId>
+			<version>3.4.0</version>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>biz.aQute.bnd</groupId>
+			<artifactId>biz.aQute.repository</artifactId>
+			<version>3.4.0</version>
+			<scope>test</scope>
+		</dependency>
+		
+	</dependencies>
+
+	<build>
+		<plugins>
+			<plugin>
+				<groupId>biz.aQute.bnd</groupId>
+				<artifactId>bnd-maven-plugin</artifactId>
+			</plugin>
+
+			<plugin>
+				<groupId>org.ops4j.pax.exam</groupId>
+				<artifactId>exam-maven-plugin</artifactId>
+				<version>4.9.2</version>
+				<configuration>
+					<configClass>org.apache.felix.fileinstall.plugins.installer.test.InstallerIntegrationTest</configClass>
+				</configuration>
+				<executions>
+					<execution>
+						<goals>
+							<goal>start-container</goal>
+							<goal>stop-container</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
+
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-failsafe-plugin</artifactId>
+				<version>2.12</version>
+				<executions>
+					<execution>
+						<goals>
+							<goal>integration-test</goal>
+						</goals>
+					</execution>
+				</executions>
+				<configuration>
+					<forkMode>always</forkMode>
+					<parallel>none</parallel>
+					<threadCount>1</threadCount>
+				</configuration>
+			</plugin>
+
+			<!-- Generate a dependency map, used by PAX Exam to find correct bundle versions. -->
+			<plugin>
+				<groupId>org.apache.servicemix.tooling</groupId>
+				<artifactId>depends-maven-plugin</artifactId>
+				<version>1.2</version>
+				<executions>
+					<execution>
+						<id>generate-depends-file</id>
+						<goals>
+							<goal>generate-depends-file</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin> 
+		</plugins>
+
+		<pluginManagement>
+			<plugins>
+				<!--This plugin's configuration is used to store Eclipse m2e settings only. It has no influence on the Maven build itself.-->
+				<plugin>
+					<groupId>org.eclipse.m2e</groupId>
+					<artifactId>lifecycle-mapping</artifactId>
+					<version>1.0.0</version>
+					<configuration>
+						<lifecycleMappingMetadata>
+							<pluginExecutions>
+								<pluginExecution>
+									<pluginExecutionFilter>
+										<groupId>
+											org.apache.servicemix.tooling
+										</groupId>
+										<artifactId>
+											depends-maven-plugin
+										</artifactId>
+										<versionRange>
+											[1.2,)
+										</versionRange>
+										<goals>
+											<goal>
+												generate-depends-file
+											</goal>
+										</goals>
+									</pluginExecutionFilter>
+									<action>
+										<ignore></ignore>
+									</action>
+								</pluginExecution>
+							</pluginExecutions>
+						</lifecycleMappingMetadata>
+					</configuration>
+				</plugin>
+			</plugins>
+		</pluginManagement>
+	</build>
+</project>

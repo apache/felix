@@ -1,0 +1,4 @@
+-conditionalpackage: net.jcip.annotations
+
+-exportcontents: ${packages;VERSIONED}
+ 

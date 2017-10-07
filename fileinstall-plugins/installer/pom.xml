@@ -1,0 +1,101 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+
+	<modelVersion>4.0.0</modelVersion>
+
+	<parent>
+		<groupId>org.apache.felix</groupId>
+		<artifactId>felix-parent</artifactId>
+		<version>3</version>
+		<relativePath>../../../pom/pom.xml</relativePath>
+	</parent>
+
+	<artifactId>org.apache.felix.fileinstall.plugins.installer</artifactId>
+	<name>Apache Felix File Install Installer Plugin</name>
+	<version>1.0.0-SNAPSHOT</version>
+
+	<scm>
+		<connection>scm:svn:http://svn.apache.org/repos/asf/felix/trunk/fileinstall-plugins/installer</connection>
+		<developerConnection>scm:svn:https://svn.apache.org/repos/asf/felix/trunk/fileinstall-plugins/installer</developerConnection>
+		<url>http://svn.apache.org/repos/asf/felix/fileinstall</url>
+	</scm>
+
+	<properties>
+		<felix.java.version>8</felix.java.version>
+		<felix.java.signature.artifactId>java18</felix.java.signature.artifactId>
+	</properties>
+
+	<dependencies>
+		<dependency>
+			<groupId>${project.groupId}</groupId>
+			<artifactId>org.apache.felix.fileinstall.plugins.resolver</artifactId>
+			<version>${project.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>org.osgi</groupId>
+			<artifactId>osgi.core</artifactId>
+			<version>6.0.0</version>
+			<scope>provided</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.osgi</groupId>
+			<artifactId>osgi.cmpn</artifactId>
+			<version>6.0.0</version>
+			<scope>provided</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.osgi</groupId>
+			<artifactId>osgi.annotation</artifactId>
+			<version>6.0.1</version>
+		</dependency>
+		<dependency>
+			<groupId>org.osgi</groupId>
+			<artifactId>org.osgi.service.repository</artifactId>
+			<version>1.1.0</version>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.felix</groupId>
+			<artifactId>org.apache.felix.fileinstall</artifactId>
+			<version>3.5.0</version>
+			<scope>compile</scope>
+		</dependency>
+		<!-- 
+		<dependency>
+			<groupId>org.jboss.osgi.repository</groupId>
+			<artifactId>jbosgi-repository-core</artifactId>
+			<version>6.0.1.Final</version>
+			<scope>provided</scope>
+		</dependency>
+		 -->
+		<dependency>
+			<groupId>org.apache.felix</groupId>
+			<artifactId>org.apache.felix.utils</artifactId>
+			<version>1.8.4</version>
+			<scope>provided</scope>
+		</dependency>
+		<dependency>
+			<groupId>junit</groupId>
+			<artifactId>junit</artifactId>
+		</dependency>
+	</dependencies>
+
+	<build>
+		<plugins>
+			<plugin>
+				<groupId>biz.aQute.bnd</groupId>
+				<artifactId>bnd-maven-plugin</artifactId>
+				<version>3.4.0</version>
+				<executions>
+					<execution>
+						<id>default-bnd-process</id>
+						<goals>
+							<goal>bnd-process</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
+		</plugins>
+	</build>
+
+
+</project>
