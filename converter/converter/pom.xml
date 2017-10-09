@@ -28,7 +28,7 @@
 
     <name>Apache Felix Converter</name>
     <artifactId>org.apache.felix.converter</artifactId>
-    <version>0.1.0-SNAPSHOT</version>
+    <version>0.2.0-SNAPSHOT</version>
     <packaging>jar</packaging>
 
     <scm>
@@ -90,7 +90,6 @@
                             org.osgi.util.converter,
                             *
                         </Import-Package>
-                        <!--Include-Resource>{maven-resources},OSGI-OPT/src=src/main/java</Include-Resource-->
                         <_sources>true</_sources>
                     </instructions>
                 </configuration>

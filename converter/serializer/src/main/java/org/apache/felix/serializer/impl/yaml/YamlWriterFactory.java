@@ -35,6 +35,12 @@ public class YamlWriterFactory implements WriterFactory, WriterFactory.YamlWrite
     }
 
     @Override
+    public WriterFactory orderMap(Map<String, List<String>> rules) {
+        orderingRules.putAll(rules);
+        return this;
+    }
+
+    @Override
     public WriterFactory orderArray(String path) {
         return this;
     }

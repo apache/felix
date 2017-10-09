@@ -17,6 +17,7 @@ package org.apache.felix.serializer;
 
 import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
 
 import org.osgi.annotation.versioning.ProviderType;
 import org.osgi.util.converter.Converter;
@@ -60,6 +61,23 @@ public interface WriterFactory {
      * @return This factory object to allow further invocations on it.
      */
     WriterFactory orderMap(String path, List<String> keyOrder);
+
+    /**
+     * Register multiple ordering rules for this writer.
+     * 
+     * An ordering rule causes the written json to be output in the order
+     * specified. This can be useful, for example, for debugging or when
+     * the data otherwise needs to be human consumable.
+     * 
+     * This rule only affects map-type objects located at the given path.
+     * 
+     * Each map entry is a path/keyOrder pair, the same as if calling
+     * WriterFactory.orderMap(String,List<String>).
+     *
+     * @param orderingRules the rules to be added
+     * @return This factory object to allow further invocations on it.
+     */
+    WriterFactory orderMap( Map<String, List<String>> orderingRules );
 
     /**
      * Register an ordering rule for this writer.

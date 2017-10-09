@@ -28,7 +28,7 @@
 
     <name>Apache Felix Serializer Services</name>
     <artifactId>org.apache.felix.serializer</artifactId>
-    <version>0.1.0-SNAPSHOT</version>
+    <version>0.2.0-SNAPSHOT</version>
     <packaging>jar</packaging>
 
     <scm>
@@ -84,10 +84,6 @@
                             	org.apache.felix.serializer.WriterFactory$YamlWriterFactory";
                             uses:="org.apache.felix.serializer,org.osgi.util.converter,org.osgi.util.function"
                         </Provide-Capability>
-                        <Require-Capability>
-                            osgi.service;objectClass:List&lt;String&gt;="org.osgi.util.converter.Converter";
-                            effective:="active"
-                        </Require-Capability>
                         <_sources>true</_sources>
                     </instructions>
                 </configuration>
