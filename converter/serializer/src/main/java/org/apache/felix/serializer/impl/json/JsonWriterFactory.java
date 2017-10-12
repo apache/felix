@@ -36,6 +36,12 @@ public class JsonWriterFactory implements WriterFactory, WriterFactory.JsonWrite
     }
 
     @Override
+    public WriterFactory orderMap(Map<String, List<String>> orderingRules) {
+        mapOrderingRules.putAll(orderingRules);
+        return this;
+    }
+
+    @Override
     public WriterFactory orderArray(String path) {
         arrayOrderingRules.put(path, null);
         return this;
