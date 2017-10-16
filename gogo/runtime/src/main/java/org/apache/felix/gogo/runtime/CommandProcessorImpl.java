@@ -21,8 +21,10 @@ package org.apache.felix.gogo.runtime;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.lang.reflect.Method;
+import java.nio.file.Path;
 import java.util.Collections;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
@@ -399,5 +401,15 @@ public class CommandProcessorImpl implements CommandProcessor
     public Object expr(CommandSessionImpl session, CharSequence expr)
     {
         return new Expression(expr.toString()).eval(session.variables);
+    }
+
+    public Object invoke(CommandSessionImpl session, Object target, String name, List<Object> args) throws Exception
+    {
+        return Reflective.invoke(session, target, name, args);
+    }
+
+    public Path redirect(CommandSessionImpl session, Path path, int mode)
+    {
+        return session.currentDir().resolve(path);
     }
 }

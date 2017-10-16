@@ -488,6 +488,16 @@ public class CommandSessionImpl implements CommandSession, Converter
         return processor.expr(this, expr);
     }
 
+    public Object invoke(Object target, String name, List<Object> args) throws Exception
+    {
+        return processor.invoke(this, target, name, args);
+    }
+
+    public Path redirect(Path path, int mode)
+    {
+        return processor.redirect(this, path, mode);
+    }
+
     @Override
     public List<Job> jobs()
     {

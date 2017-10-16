@@ -274,7 +274,7 @@ public class Pipe implements Callable<Result>, Process
                     Object val = Expander.expand(tok, closure);
                     for (Path p : toPaths(val))
                     {
-                        p = closure.session().currentDir().resolve(p);
+                        p = closure.session().redirect(p, WRITE);
                         Channel ch = Files.newByteChannel(p, options);
                         if (fd >= 0)
                         {
@@ -333,7 +333,7 @@ public class Pipe implements Callable<Result>, Process
                     Object val = Expander.expand(tok, closure);
                     for (Path p : toPaths(val))
                     {
-                        p = closure.session().currentDir().resolve(p);
+                        p = closure.session().redirect(p, READ + (output ? WRITE : 0));
                         Channel ch = Files.newByteChannel(p, options);
                         setStream(ch, fd, READ + (output ? WRITE : 0));
                     }

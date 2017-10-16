@@ -593,8 +593,7 @@ public class Closure implements Function, Evaluate
             {
                 if (".".equals(arg))
                 {
-                    target = Reflective.invoke(session, target,
-                        args.remove(0).toString(), args);
+                    target = invoke(target, args.remove(0).toString(), args);
                     args.clear();
                 }
                 else
@@ -608,7 +607,7 @@ public class Closure implements Function, Evaluate
                 return target;
             }
 
-            return Reflective.invoke(session, target, args.remove(0).toString(), args);
+            return invoke(target, args.remove(0).toString(), args);
         }
         else if (cmd.getClass().isArray() && values.size() == 1)
         {
@@ -618,8 +617,13 @@ public class Closure implements Function, Evaluate
         }
         else
         {
-            return Reflective.invoke(session, cmd, values.remove(0).toString(), values);
+            return invoke(cmd, values.remove(0).toString(), values);
         }
+    }
+
+    private Object invoke(Object target, String name, List<Object> args) throws Exception
+    {
+        return session.invoke(target, name, args);
     }
 
     private Object assignment(String name, Object value)
