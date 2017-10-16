@@ -1628,8 +1628,8 @@ public class Posix {
                         if (colored) {
                             applyStyle(sbl, colors, style);
                         }
-                        Matcher matcher2 = p2.matcher(line);
                         AttributedString aLine = AttributedString.fromAnsi(line);
+                        Matcher matcher2 = p2.matcher(aLine.toString());
                         int cur = 0;
                         while (matcher2.find()) {
                             int index = matcher2.start(0);
