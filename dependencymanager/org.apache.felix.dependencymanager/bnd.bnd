@@ -33,7 +33,7 @@ Export-Package:  \
 Include-Resource: META-INF/=resources/
 Import-Package: !org.junit,!org.mockito.*,*
 Bundle-Activator: org.apache.felix.dm.impl.Activator
-Bundle-Version: 4.4.1
+Bundle-Version: 4.5.0
 Bundle-Name: Apache Felix Dependency Manager
 Bundle-Description: Provides dynamic service and component dependency management
 Bundle-License: http://www.apache.org/licenses/LICENSE-2.0.txt

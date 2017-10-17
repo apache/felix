@@ -69,7 +69,7 @@ public class ServiceUtil {
      * Dump some service properties in a petty form.
      */
     public static void appendProperties(StringBuilder result, Dictionary<?, ?> properties) {
-        if (properties != null) {
+        if (properties != null && properties.size() > 0) {
             result.append("(");
             Enumeration<?> enumeration = properties.keys();
             while (enumeration.hasMoreElements()) {

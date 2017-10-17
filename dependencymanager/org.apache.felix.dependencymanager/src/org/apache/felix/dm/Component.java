@@ -172,9 +172,12 @@ public interface Component {
 	public Object[] getInstances();
 
     /**
-     * Returns the service properties associated with the component.
+     * Returns the component service properties.
+     * The returned dictionary is either empty if no service properties were defined for this component,
+     * or copy of the existing service properties associated with this component.
      * 
-     * @return the properties or <code>null</code> if there are none
+     * @return a copy of the service properties associated to this component or an empty dictionary 
+     *         if no service properties were defined for this component.
      */
 	public <K,V> Dictionary<K,V> getServiceProperties();
 
