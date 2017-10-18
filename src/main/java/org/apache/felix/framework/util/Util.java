@@ -86,7 +86,42 @@ public class Util
                     Logger.LOG_ERROR, "Unable to load any configuration properties.", ex);
             }
         }
-        return defaultProperties;
+        return initializeJPMS(defaultProperties);
+    }
+
+    private static Properties initializeJPMS(Properties properties)
+    {
+        try
+        {
+            Class<?> c_ModuleLayer = Felix.class.getClassLoader().loadClass("java.lang.ModuleLayer");
+            Class<?> c_Module = Felix.class.getClassLoader().loadClass("java.lang.Module");
+            Method m_getLayer = c_Module.getMethod("getLayer");
+            Method m_getModule = Class.class.getMethod("getModule");
+            Method m_canRead = c_Module.getMethod("canRead", c_Module);
+            Method m_getName = c_Module.getMethod("getName");
+
+            Object self = m_getModule.invoke(Felix.class);
+            Object moduleLayer = m_getLayer.invoke(self);
+
+            if (moduleLayer == null)
+            {
+                moduleLayer = c_ModuleLayer.getMethod("boot").invoke(null);
+            }
+
+            for (Object module : ((Iterable) c_ModuleLayer.getMethod("modules").invoke(moduleLayer)))
+            {
+                if ((Boolean) m_canRead.invoke(self, module))
+                {
+                    Object name = m_getName.invoke(module);
+                    properties.put("felix.detect.jpms." + name, name);
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            // Not much we can do - probably not on java9
+        }
+        return properties;
     }
 
     public static String getDefaultProperty(Logger logger, String name)
