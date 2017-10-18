@@ -27,6 +27,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
+import java.lang.reflect.Method;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLStreamHandler;
@@ -4642,6 +4643,8 @@ public class Felix extends BundleImpl implements Framework
         // if not explicitly configured.
         loadPrefixFromDefaultIfNotDefined(m_configMutableMap, defaultProperties, FelixConstants.NATIVE_OS_NAME_ALIAS_PREFIX);
         loadPrefixFromDefaultIfNotDefined(m_configMutableMap, defaultProperties, FelixConstants.NATIVE_PROC_NAME_ALIAS_PREFIX);
+        loadPrefixFromDefaultIfNotDefined(m_configMutableMap, defaultProperties, "felix.detect.jpms.");
+        loadPrefixFromDefaultIfNotDefined(m_configMutableMap, defaultProperties, "felix.jpms.");
     }
 
     private void loadFromDefaultIfNotDefined(Properties defaultProperties, String propertyName)
