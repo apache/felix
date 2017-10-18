@@ -127,19 +127,29 @@ public class BundleWiringImpl implements BundleWiring
         ClassLoader cl = null;
         try
         {
-            Constructor ctor = BundleRevisionImpl.getSecureAction().getDeclaredConstructor(
-                    SecureClassLoader.class, new Class[] { ClassLoader.class });
-            BundleRevisionImpl.getSecureAction().setAccesssible(ctor);
-            cl = (ClassLoader) BundleRevisionImpl.getSecureAction().invoke(
-                    ctor, new Object[] { null });
+            cl = (ClassLoader) BundleRevisionImpl.getSecureAction().invokeDirect(
+                    BundleRevisionImpl.getSecureAction().getMethod(ClassLoader.class, "getPlatformClassLoader", null)
+                    ,null, null);
         }
-        catch (Throwable ex)
+        catch (Throwable t)
         {
-            // On Android we get an exception if we set the parent class loader
-            // to null, so we will work around that case by setting the parent
-            // class loader to the system class loader in getClassLoader() below.
-            cl = null;
-            System.err.println("Problem creating boot delegation class loader: " + ex);
+            // Not on Java9
+            try
+            {
+                Constructor ctor = BundleRevisionImpl.getSecureAction().getDeclaredConstructor(
+                        SecureClassLoader.class, new Class[]{ClassLoader.class});
+                BundleRevisionImpl.getSecureAction().setAccesssible(ctor);
+                cl = (ClassLoader) BundleRevisionImpl.getSecureAction().invoke(
+                        ctor, new Object[]{null});
+            }
+            catch (Throwable ex)
+            {
+                // On Android we get an exception if we set the parent class loader
+                // to null, so we will work around that case by setting the parent
+                // class loader to the system class loader in getClassLoader() below.
+                cl = null;
+                System.err.println("Problem creating boot delegation class loader: " + ex);
+            }
         }
         m_defBootClassLoader = cl;
     }
