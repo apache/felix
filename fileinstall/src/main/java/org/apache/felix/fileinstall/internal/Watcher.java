@@ -187,16 +187,16 @@ public abstract class Watcher implements Closeable {
 
                 try {
                     if (kind == ENTRY_CREATE) {
-                        if (Files.isDirectory(child, NOFOLLOW_LINKS)) {
+                        if (Files.isDirectory(child)) {
 
                             // if directory is created, and watching recursively, then
                             // register it and its sub-directories
                             Files.walkFileTree(child, new FilteringFileVisitor());
-                        } else if (Files.isRegularFile(child, NOFOLLOW_LINKS)) {
+                        } else if (Files.isRegularFile(child)) {
                             scan(child);
                         }
                     } else if (kind == ENTRY_MODIFY) {
-                        if (Files.isRegularFile(child, NOFOLLOW_LINKS)) {
+                        if (Files.isRegularFile(child)) {
                             scan(child);
                         }
                     } else if (kind == ENTRY_DELETE) {
