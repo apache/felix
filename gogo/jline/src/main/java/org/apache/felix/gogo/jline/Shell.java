@@ -244,6 +244,7 @@ public class Shell {
                 "Usage: gosh [OPTIONS] [script-file [args..]]",
                 "  -c --command             pass all remaining args to sub-shell",
                 "     --nointeractive       don't start interactive session",
+                "     --nohistory           don't save the command history",
                 "     --login               login shell (same session, reads etc/gosh_profile)",
                 "  -s --noshutdown          don't shutdown framework when script completes",
                 "  -x --xtrace              echo commands before execution",
@@ -287,7 +288,9 @@ public class Shell {
         session.put("#COLUMNS", (Function) (s, arguments) -> terminal.getWidth());
         session.put("#LINES", (Function) (s, arguments) -> terminal.getHeight());
         session.put("#PWD", (Function) (s, arguments) -> s.currentDir().toString());
-        session.put(LineReader.HISTORY_FILE, Paths.get(System.getProperty("user.home"), ".gogo.history"));
+        if (!opt.isSet("nohistory")) {
+            session.put(LineReader.HISTORY_FILE, Paths.get(System.getProperty("user.home"), ".gogo.history"));
+        }
 
         if (tio != null) {
             PrintWriter writer = terminal.writer();
