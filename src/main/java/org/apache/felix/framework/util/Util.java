@@ -23,11 +23,13 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.lang.reflect.Method;
 import java.net.URL;
 import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -35,6 +37,7 @@ import java.util.Properties;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
+import org.apache.felix.framework.Felix;
 import org.apache.felix.framework.Logger;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.Constants;
@@ -123,6 +126,20 @@ public class Util
                 value = (value != null)
                     ? Util.substVars(value, currentPropertyKey, null, props): null;
                 result.put(currentPropertyKey, value);
+            }
+        }
+        return result;
+    }
+
+    public static Properties toProperties(Map map)
+    {
+        Properties result = new Properties();
+        for (Iterator iter = map.entrySet().iterator(); iter.hasNext();)
+        {
+            Entry entry = (Entry) iter.next();
+            if (entry.getKey() != null && entry.getValue() != null)
+            {
+                result.setProperty(entry.getKey().toString(), entry.getValue().toString());
             }
         }
         return result;

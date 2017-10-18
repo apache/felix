@@ -36,6 +36,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.NoSuchElementException;
+import java.util.Properties;
 import java.util.Set;
 
 import org.apache.felix.framework.cache.Content;
@@ -207,13 +208,14 @@ class ExtensionManager extends URLStreamHandler implements Content
             "org.osgi.service.startlevel.StartLevel," +
             "org.osgi.service.url.URLHandlers");
 
+        Properties configProps = Util.toProperties(m_configMap);
         // The system bundle exports framework packages as well as
         // arbitrary user-defined packages from the system class path.
         // We must construct the system bundle's export metadata.
         // Get configuration property that specifies which class path
         // packages should be exported by the system bundle.
         String syspkgs =
-            (String) m_configMap.get(FelixConstants.FRAMEWORK_SYSTEMPACKAGES);
+            (String) Util.getPropertyWithSubs(configProps, FelixConstants.FRAMEWORK_SYSTEMPACKAGES);
         // If no system packages were specified, load our default value.
         syspkgs = (syspkgs == null)
             ? Util.getDefaultProperty(logger, Constants.FRAMEWORK_SYSTEMPACKAGES)
@@ -221,9 +223,9 @@ class ExtensionManager extends URLStreamHandler implements Content
         syspkgs = (syspkgs == null) ? "" : syspkgs;
         // If any extra packages are specified, then append them.
         String pkgextra =
-            (String) m_configMap.get(FelixConstants.FRAMEWORK_SYSTEMPACKAGES_EXTRA);
+            (String) Util.getPropertyWithSubs(configProps, FelixConstants.FRAMEWORK_SYSTEMPACKAGES_EXTRA);
         syspkgs = ((pkgextra == null) || (pkgextra.trim().length() == 0))
-            ? syspkgs : syspkgs + "," + pkgextra;
+            ? syspkgs : syspkgs + (pkgextra.trim().startsWith(",") ? pkgextra : "," + pkgextra);
         m_headerMap.put(FelixConstants.BUNDLE_MANIFESTVERSION, "2");
         m_headerMap.put(FelixConstants.EXPORT_PACKAGE, syspkgs);
 
@@ -233,7 +235,7 @@ class ExtensionManager extends URLStreamHandler implements Content
         // configuration property that specifies which capabilities should
         // be provided by the system bundle.
         String syscaps =
-            (String) m_configMap.get(FelixConstants.FRAMEWORK_SYSTEMCAPABILITIES);
+            (String) Util.getPropertyWithSubs(configProps, FelixConstants.FRAMEWORK_SYSTEMCAPABILITIES);
         // If no system capabilities were specified, load our default value.
         syscaps = (syscaps == null)
             ? Util.getDefaultProperty(logger, Constants.FRAMEWORK_SYSTEMCAPABILITIES)
@@ -241,9 +243,9 @@ class ExtensionManager extends URLStreamHandler implements Content
         syscaps = (syscaps == null) ? "" : syscaps;
         // If any extra capabilities are specified, then append them.
         String capextra =
-            (String) m_configMap.get(FelixConstants.FRAMEWORK_SYSTEMCAPABILITIES_EXTRA);
+            (String) Util.getPropertyWithSubs(configProps, FelixConstants.FRAMEWORK_SYSTEMCAPABILITIES_EXTRA);
         syscaps = ((capextra == null) || (capextra.trim().length() == 0))
-            ? syscaps : syscaps + "," + capextra;
+            ? syscaps : syscaps + (capextra.trim().startsWith(",") ? capextra : "," + capextra);
         m_headerMap.put(FelixConstants.PROVIDE_CAPABILITY, syscaps);
         try
         {
