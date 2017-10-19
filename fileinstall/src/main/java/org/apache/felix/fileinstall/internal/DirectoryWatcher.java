@@ -42,6 +42,7 @@ import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.jar.JarInputStream;
 import java.util.jar.Manifest;
+import java.util.regex.Pattern;
 
 import org.apache.felix.fileinstall.ArtifactInstaller;
 import org.apache.felix.fileinstall.ArtifactListener;
@@ -810,6 +811,7 @@ public class DirectoryWatcher extends Thread implements BundleListener
         Bundle[] bundles = this.context.getBundles();
         String watchedDirPath = watchedDirectory.toURI().normalize().getPath();
         Map<File, Long> checksums = new HashMap<File, Long>();
+        Pattern filePattern = filter == null || filter.isEmpty() ? null : Pattern.compile(filter);
         for (Bundle bundle : bundles) {
             // Convert to a URI because the location of a bundle
             // is typically a URI. At least, that's the case for
@@ -855,13 +857,16 @@ public class DirectoryWatcher extends Thread implements BundleListener
             }
             final int index = path.lastIndexOf('/');
             if (index != -1 && path.startsWith(watchedDirPath)) {
-                Artifact artifact = new Artifact();
-                artifact.setBundleId(bundle.getBundleId());
-                artifact.setChecksum(Util.loadChecksum(bundle, context));
-                artifact.setListener(null);
-                artifact.setPath(new File(path));
-                setArtifact(new File(path), artifact);
-                checksums.put(new File(path), artifact.getChecksum());
+                final String fileName = path.substring(index + 1);
+                if (filePattern == null || filePattern.matcher(fileName).matches()) {
+                    Artifact artifact = new Artifact();
+                    artifact.setBundleId(bundle.getBundleId());
+                    artifact.setChecksum(Util.loadChecksum(bundle, context));
+                    artifact.setListener(null);
+                    artifact.setPath(new File(path));
+                    setArtifact(new File(path), artifact);
+                    checksums.put(new File(path), artifact.getChecksum());
+                }
             }
         }
         scanner.initialize(checksums);
