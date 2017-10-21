@@ -60,7 +60,7 @@ public class XmlHandler implements KXml2SAXHandler
     private ServiceMetadata m_currentService;
 
     // A list of component descriptors contained in the file
-    private List<ComponentMetadata> m_components = new ArrayList<ComponentMetadata>();
+    private List<ComponentMetadata> m_components = new ArrayList<>();
 
     // PropertyMetaData whose value attribute is missing, hence has element data
     private PropertyMetadata m_pendingProperty;
@@ -222,11 +222,18 @@ public class XmlHandler implements KXml2SAXHandler
                     m_currentComponent.setDelayedKeepInstances(m_globalDelayedKeepInstances || "true".equals(attributes.getAttribute(XmlConstants.NAMESPACE_URI_1_0_FELIX_EXTENSIONS, XmlConstants.ATTR_DELAYED_KEEP_INSTANCES)));
 
                     // activation-fields is optional (since DS 1.4)
-                    String activationFields = attributes.getAttribute( "activation-fields" );
+                    String activationFields = attributes.getAttribute( XmlConstants.ATTR_ACTIVATION_FIELDS );
                     if ( activationFields != null )
                     {
                         final String[] fields = activationFields.split(" ");
                         m_currentComponent.setActivationFields( fields );
+                    }
+
+                    // init is optional (since DS 1.4)
+                    String init = attributes.getAttribute( XmlConstants.ATTR_INIT );
+                    if ( init != null )
+                    {
+                        m_currentComponent.setInit( init );
                     }
 
                     // Add this component to the list

@@ -78,6 +78,7 @@ public abstract class XmlConstants
     public static final String ATTR_ENTRY = "entry";
     public static final String ATTR_FACTORY = "factory";
     public static final String ATTR_IMMEDIATE = "immediate";
+    public static final String ATTR_INIT = "init";
     public static final String ATTR_INTERFACE = "interface";
     public static final String ATTR_MODIFIED = "modified";
     public static final String ATTR_NAME = "name";
@@ -103,7 +104,7 @@ public abstract class XmlConstants
 
     static
     {
-        NAMESPACE_CODE_MAP = new HashMap<String, DSVersion>();
+        NAMESPACE_CODE_MAP = new HashMap<>();
         NAMESPACE_CODE_MAP.put( NAMESPACE_URI_EMPTY, DSVersion.DS10 );
         NAMESPACE_CODE_MAP.put( NAMESPACE_URI, DSVersion.DS10 );
         NAMESPACE_CODE_MAP.put( NAMESPACE_URI_1_1, DSVersion.DS11 );

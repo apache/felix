@@ -35,6 +35,6 @@ public interface ComponentMethods<T>
 
     ReferenceMethods getBindMethods(String refName );
 
-	ConstructorMethod<T> getConstructor();
+	ComponentConstructor<T> getConstructor();
 
 }
