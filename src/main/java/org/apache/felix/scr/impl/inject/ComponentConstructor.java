@@ -25,10 +25,10 @@ import org.apache.felix.scr.impl.manager.DependencyManager;
 
 /**
  * This object describes a constructor for a component.
- * The name ConstructorMethod has been chosen to avoid a clash with the
+ * The name ComponentConstructor has been chosen to avoid a clash with the
  * existing Constructor class.
  */
-public interface ConstructorMethod<T> {
+public interface ComponentConstructor<T> {
 
 	public class ReferencePair<S> {
 		public DependencyManager<S, ?> dependencyManager;
@@ -46,19 +46,4 @@ public interface ConstructorMethod<T> {
     		           ComponentContextImpl<T> componentContext,
     		           Map<Integer, ReferencePair<S>> parameterMap)
     throws Exception;
-
-    public ConstructorMethod<Object> DEFAULT = new ConstructorMethod<Object>() {
-
-		@Override
-		public <S> Object newInstance(Class<Object> componentClass,
-				ComponentContextImpl<Object> componentContext,
-				Map<Integer, ReferencePair<S>> parameterMap)
-				throws Exception
-		{
-            // 112.4.4 The class must be public and have a public constructor without arguments so component instances
-            // may be created by the SCR with the newInstance method on Class
-            return componentClass.newInstance();
-		}
-	};
-
 }

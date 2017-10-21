@@ -55,9 +55,6 @@ public class ComponentMetadata
     // marker value indicating duplicate service setting
     private static final ServiceMetadata SERVICE_DUPLICATE = new ServiceMetadata();
 
-	/** If the activate method has this value, a constructor is used instead. */
-	private static final String CONSTRUCTOR_MARKER = "-init-";
-
     // the namespace code of the namespace declaring this component
     private final DSVersion m_dsVersion;
 
@@ -103,28 +100,28 @@ public class ComponentMetadata
     private List<String> m_activationFields;
 
     // Associated properties (0..*)
-    private final Map<String, Object> m_properties = new HashMap<String, Object>();
+    private final Map<String, Object> m_properties = new HashMap<>();
 
     // Associated factory properties (0..*)
-    private final Map<String, Object> m_factoryProperties = new HashMap<String, Object>();
+    private final Map<String, Object> m_factoryProperties = new HashMap<>();
 
     // List of Property metadata - used while building the meta data
     // while validating the properties contained in the PropertyMetadata
     // instances are copied to the m_properties Dictionary while this
     // list will be cleared
-    private final List<PropertyMetadata> m_propertyMetaData = new ArrayList<PropertyMetadata>();
+    private final List<PropertyMetadata> m_propertyMetaData = new ArrayList<>();
 
     // List of Property metadata - used while building the meta data
     // while validating the properties contained in the PropertyMetadata
     // instances are copied to the m_factoryProperties Dictionary while this
     // list will be cleared
-    private final List<PropertyMetadata> m_factoryPropertyMetaData = new ArrayList<PropertyMetadata>();
+    private final List<PropertyMetadata> m_factoryPropertyMetaData = new ArrayList<>();
 
     // Provided services (0..1)
     private ServiceMetadata m_service;
 
     // List of service references, (required services 0..*)
-    private final List<ReferenceMetadata> m_references = new ArrayList<ReferenceMetadata>();
+    private final List<ReferenceMetadata> m_references = new ArrayList<>();
 
     private boolean m_configurableServiceProperties;
     private boolean m_persistentFactoryComponent;
@@ -133,12 +130,14 @@ public class ComponentMetadata
     private boolean m_configureWithInterfaces;
     private boolean m_delayedKeepInstances;
 
+    private String m_init;
+
     // Flag that is set once the component is verified (its properties cannot be changed)
     private boolean m_validated = false;
 
     static
     {
-        CONFIGURATION_POLICY_VALID = new TreeSet<String>();
+        CONFIGURATION_POLICY_VALID = new TreeSet<>();
         CONFIGURATION_POLICY_VALID.add( CONFIGURATION_POLICY_IGNORE );
         CONFIGURATION_POLICY_VALID.add( CONFIGURATION_POLICY_OPTIONAL );
         CONFIGURATION_POLICY_VALID.add( CONFIGURATION_POLICY_REQUIRE );
@@ -162,7 +161,7 @@ public class ComponentMetadata
         {
             return;
         }
-        m_configurationPid = new ArrayList<String>( Arrays.asList( configurationPid ) );
+        m_configurationPid = new ArrayList<>( Arrays.asList( configurationPid ) );
     }
 
     /**
@@ -441,11 +440,18 @@ public class ComponentMetadata
 
 	public void setActivationFields( final String[] fields )
 	{
-		if ( m_validated )
+		if ( !m_validated )
 		{
-			return;
+	        this.m_activationFields = new ArrayList<>( Arrays.asList( fields ) );
 		}
-		this.m_activationFields = new ArrayList<String>( Arrays.asList( fields ) );
+	}
+
+	public void setInit( final String value )
+	{
+	    if ( !m_validated )
+	    {
+	        this.m_init = value;
+	    }
 	}
 
     /////////////////////////////////////////// GETTERS //////////////////////////////////////
@@ -619,14 +625,14 @@ public class ComponentMetadata
     }
 
     /**
-     * Returns whether the activate is done through a constructor rather
-     * than a method
-     * @return {@code true} if a constructor is used
+     * Returns the number of constructor parameters (0 is default)
+     * @return The number of constructor parameters
      * @since 2.1.0 (DS 1.4)
      */
-    public boolean isActivateConstructor()
+    public int getNumberOfConstructorParameters()
     {
-    	return CONSTRUCTOR_MARKER.equals(m_activate);
+        // validate() ensures this is a valid integer
+      	return m_init == null ? 0 : Integer.valueOf(m_init);
     }
 
     /**
@@ -926,7 +932,7 @@ public class ComponentMetadata
                     m_configurationPid.set( i, getName() );
                 }
             }
-            if ( new HashSet<String>( m_configurationPid ).size() != m_configurationPid.size())
+            if ( new HashSet<>( m_configurationPid ).size() != m_configurationPid.size())
             {
                 throw validationFailure( "Duplicate pids not allowed: " + m_configurationPid );
             }
@@ -947,11 +953,11 @@ public class ComponentMetadata
         }
         if ( m_dsVersion.isDS14() && isFactory() )
         {
-        	for ( PropertyMetadata propMeta: m_factoryPropertyMetaData )
-        	{
-        		propMeta.validate( this );
-        		m_factoryProperties.put( propMeta.getName(), propMeta.getValue() );
-        	}
+        	    for ( PropertyMetadata propMeta: m_factoryPropertyMetaData )
+        	    {
+        		    propMeta.validate( this );
+        		    m_factoryProperties.put( propMeta.getName(), propMeta.getValue() );
+        	    }
         }
         // if this is not a factory, these props are ignored, so nothing else to do
         m_factoryPropertyMetaData.clear();
@@ -967,7 +973,7 @@ public class ComponentMetadata
         }
 
         // Check that the references are ok
-        Set<String> refs = new HashSet<String>();
+        Set<String> refs = new HashSet<>();
         for ( ReferenceMetadata refMeta: m_references )
         {
             refMeta.validate( this );
@@ -1019,36 +1025,56 @@ public class ComponentMetadata
         }
 
         // constructor injection requires DS 1.4
-        if ( this.isActivateConstructor() )
+        if ( this.m_init != null )
         {
-        	if ( !m_dsVersion.isDS14() )
-        	{
+            if ( !m_dsVersion.isDS14() )
+            {
                 throw validationFailure( "Constructor injection requires version 1.4 or later");
-        	}
-        	final Set<Integer> parIndexSet = new HashSet<Integer>();
-        	for(final ReferenceMetadata ref : this.m_references)
-        	{
-        		if ( ref.getParameterIndex() != null && !parIndexSet.add(ref.getParameterIndex()) )
-        		{
-                    throw validationFailure( "Duplicate reference for argument " + ref.getParameterIndex() + " in constructor" );
-        		}
-        	}
+            }
+            int constructorParameters = 0;
+            try
+            {
+                constructorParameters = Integer.valueOf(m_init);
+                if ( constructorParameters < 0)
+                {
+                    throw validationFailure( "Init parameter must have non negative value: " + m_init);
+                }
+            }
+            catch ( final NumberFormatException nfe)
+            {
+                throw validationFailure( "Init parameter is not a number: " + m_init);
+            }
+        	    final Set<Integer> parIndexSet = new HashSet<>();
+        	    for(final ReferenceMetadata ref : this.m_references)
+        	    {
+        		    if ( ref.getParameterIndex() != null )
+        		    {
+                    if ( ref.getParameterIndex() >= constructorParameters )
+                    {
+                        throw validationFailure( "Reference parameter index of " + ref.getParameterIndex().toString() + " is higher than init parameter: " + m_init);
+                    }
+        		        if ( !parIndexSet.add(ref.getParameterIndex()) )
+         		    {
+                        throw validationFailure( "Duplicate reference for argument " + ref.getParameterIndex() + " in constructor" );
+         		    }
+        		    }
+        	    }
         }
         else
         {
-        	// no constructor injection, check references for having a parameter index
-        	for(final ReferenceMetadata ref : this.m_references)
-        	{
-        		if ( ref.getParameterIndex() != null )
-        		{
+        	    // no constructor injection, check references for having a parameter index
+        	    for(final ReferenceMetadata ref : this.m_references)
+        	    {
+        		    if ( ref.getParameterIndex() != null )
+        		    {
                     throw validationFailure( "Reference must not use parameter attribute if no constructor injection is used" );
-        		}
-        	}
+        		    }
+        	    }
         }
 
         if (m_dsVersion == DSVersion.DS12Felix)
         {
-        	m_configurableServiceProperties = true;
+            m_configurableServiceProperties = true;
         }
         if ( m_configurableServiceProperties && getServiceScope() != Scope.singleton )
         {
@@ -1056,19 +1082,19 @@ public class ComponentMetadata
         }
         if (m_dsVersion.isDS13())
         {
-        	m_deleteCallsModify = true; //spec behavior as of 1.3
+        	    m_deleteCallsModify = true; //spec behavior as of 1.3
         }
         if ( !m_dsVersion.isDS13() && m_configureWithInterfaces)
         {
-        	throw validationFailure("Configuration with interfaces or annotations only possible with version 1.3 or later");
+        	    throw validationFailure("Configuration with interfaces or annotations only possible with version 1.3 or later");
         }
         if (m_dsVersion.isDS13() && m_obsoleteFactoryComponentFactory != null)
         {
-        	throw validationFailure("Configuration of component factory instances through config admin factory pids supported only through the 1.2 namespace");
+          	throw validationFailure("Configuration of component factory instances through config admin factory pids supported only through the 1.2 namespace");
         }
         if (m_persistentFactoryComponent && !isFactory())
         {
-        	throw validationFailure("Only a factory component can be a persistent factory component");
+         	throw validationFailure("Only a factory component can be a persistent factory component");
         }
 
         m_validated = true;

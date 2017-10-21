@@ -29,7 +29,7 @@ import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.felix.scr.impl.inject.ComponentMethods;
-import org.apache.felix.scr.impl.inject.ConstructorMethod;
+import org.apache.felix.scr.impl.inject.ComponentConstructor;
 import org.apache.felix.scr.impl.inject.LifecycleMethod;
 import org.apache.felix.scr.impl.inject.MethodResult;
 import org.apache.felix.scr.impl.manager.DependencyManager.OpenStatus;
@@ -75,13 +75,13 @@ public class SingleComponentManager<S> extends AbstractComponentManager<S> imple
      * The constructor receives both the activator and the metadata
      * @param componentMethods
      */
-    public SingleComponentManager( ComponentContainer<S> container, ComponentMethods componentMethods )
+    public SingleComponentManager( final ComponentContainer<S> container, final ComponentMethods componentMethods )
     {
         this(container, componentMethods, false);
     }
 
-    public SingleComponentManager( ComponentContainer<S> container, ComponentMethods componentMethods,
-            boolean factoryInstance )
+    public SingleComponentManager( final ComponentContainer<S> container, final ComponentMethods componentMethods,
+            final boolean factoryInstance )
     {
         super( container, componentMethods, factoryInstance );
     }
@@ -234,9 +234,9 @@ public class SingleComponentManager<S> extends AbstractComponentManager<S> imple
         }
 
         // bind target services
-        final List<DependencyManager.OpenStatus<S, ?>> openStatusList = new ArrayList<DependencyManager.OpenStatus<S,?>>();
+        final List<DependencyManager.OpenStatus<S, ?>> openStatusList = new ArrayList<>();
 
-        final Map<Integer, ConstructorMethod.ReferencePair<S>> paramMap = ( getComponentMetadata().isActivateConstructor() ? new HashMap<Integer, ConstructorMethod.ReferencePair<S>>() : null);
+        final Map<Integer, ComponentConstructor.ReferencePair<S>> paramMap = ( getComponentMetadata().getNumberOfConstructorParameters() > 0 ? new HashMap<Integer, ComponentConstructor.ReferencePair<S>>() : null);
         boolean failed = false;
         for ( DependencyManager<S, ?> dm : getDependencyManagers())
         {
@@ -255,7 +255,7 @@ public class SingleComponentManager<S> extends AbstractComponentManager<S> imple
             openStatusList.add(open);
             if ( dm.getReferenceMetadata().getParameterIndex() != null)
             {
-                final ConstructorMethod.ReferencePair<S> pair = new ConstructorMethod.ReferencePair<S>();
+                final ComponentConstructor.ReferencePair<S> pair = new ComponentConstructor.ReferencePair<>();
                 pair.dependencyManager = dm;
                 pair.openStatus = open;
                 paramMap.put(dm.getReferenceMetadata().getParameterIndex(), pair);
@@ -471,7 +471,7 @@ public class SingleComponentManager<S> extends AbstractComponentManager<S> imple
 
 
             // 1. Merge all the config properties
-            Map<String, Object> props = new HashMap<String, Object>();
+            Map<String, Object> props = new HashMap<>();
             if ( m_configurationProperties != null )
             {
                 props.putAll(m_configurationProperties);
@@ -481,7 +481,7 @@ public class SingleComponentManager<S> extends AbstractComponentManager<S> imple
                 props.putAll(m_factoryProperties);
                 if (getComponentMetadata().getDSVersion().isDS13() && m_factoryProperties.containsKey(Constants.SERVICE_PID))
                 {
-                    final List<String> servicePids = new ArrayList<String>();
+                    final List<String> servicePids = new ArrayList<>();
                     final Object configPropServicePids = m_configurationProperties.get(Constants.SERVICE_PID);
                     if ( configPropServicePids instanceof List )
                     {
@@ -823,7 +823,7 @@ public class SingleComponentManager<S> extends AbstractComponentManager<S> imple
      */
     private boolean servicePropertiesMatches( ServiceRegistration<S> reg, Dictionary<String, Object> props )
     {
-        Dictionary<String, Object> regProps = new Hashtable<String, Object>();
+        Dictionary<String, Object> regProps = new Hashtable<>();
         String[] keys = reg.getReference().getPropertyKeys();
         for ( int i = 0; keys != null && i < keys.length; i++ )
         {
@@ -892,7 +892,7 @@ public class SingleComponentManager<S> extends AbstractComponentManager<S> imple
         boolean success = true;
         if ( m_componentContext == null )
         {
-            ComponentContextImpl<S> componentContext = new ComponentContextImpl<S>(this, this.getBundle(), serviceRegistration);
+            ComponentContextImpl<S> componentContext = new ComponentContextImpl<>(this, this.getBundle(), serviceRegistration);
             if ( collectDependencies(componentContext))
             {
                 log( LogService.LOG_DEBUG,

@@ -146,25 +146,25 @@ public class ReferenceMetadata
 
     static
     {
-        CARDINALITY_VALID = new TreeSet<String>();
+        CARDINALITY_VALID = new TreeSet<>();
         CARDINALITY_VALID.add( CARDINALITY_0_1 );
         CARDINALITY_VALID.add( CARDINALITY_0_N );
         CARDINALITY_VALID.add( CARDINALITY_1_1 );
         CARDINALITY_VALID.add( CARDINALITY_1_N );
 
-        POLICY_VALID = new TreeSet<String>();
+        POLICY_VALID = new TreeSet<>();
         POLICY_VALID.add( POLICY_DYNAMIC );
         POLICY_VALID.add( POLICY_STATIC );
 
-        POLICY_OPTION_VALID = new TreeSet<String>();
+        POLICY_OPTION_VALID = new TreeSet<>();
         POLICY_OPTION_VALID.add( POLICY_OPTION_RELUCTANT );
         POLICY_OPTION_VALID.add( POLICY_OPTION_GREEDY );
 
-        FIELD_STRATEGY_VALID = new TreeSet<String>();
+        FIELD_STRATEGY_VALID = new TreeSet<>();
         FIELD_STRATEGY_VALID.add( FIELD_STRATEGY_REPLACE );
         FIELD_STRATEGY_VALID.add( FIELD_STRATEGY_UPDATE );
 
-        FIELD_VALUE_TYPE_VALID = new TreeSet<String>();
+        FIELD_VALUE_TYPE_VALID = new TreeSet<>();
         FIELD_VALUE_TYPE_VALID.add ( FIELD_VALUE_TYPE_PROPERTIES );
         FIELD_VALUE_TYPE_VALID.add ( FIELD_VALUE_TYPE_REFERENCE );
         FIELD_VALUE_TYPE_VALID.add ( FIELD_VALUE_TYPE_SERVICE );
@@ -679,19 +679,18 @@ public class ReferenceMetadata
         }
 
         if (m_scopeName != null) {
-        	if ( !dsVersion.isDS13() )
-        	{
-        		throw componentMetadata.validationFailure( "reference scope can be set only for DS >= 1.3");
-        	}
-        	try
-        	{
-        		m_scope = ReferenceScope.valueOf(m_scopeName);
-        	}
-        	catch (final IllegalArgumentException e)
-        	{
-        		throw componentMetadata.validationFailure( "reference scope must be 'bundle' or 'prototype' not " + m_scopeName);
-
-        	}
+        	    if ( !dsVersion.isDS13() )
+        	    {
+        		    throw componentMetadata.validationFailure( "reference scope can be set only for DS >= 1.3");
+        	    }
+            	try
+        	    {
+        		    m_scope = ReferenceScope.valueOf(m_scopeName);
+        	    }
+        	    catch (final IllegalArgumentException e)
+        	    {
+        		    throw componentMetadata.validationFailure( "reference scope must be 'bundle' or 'prototype' not " + m_scopeName);
+        	    }
         }
 
         // checks for event based injection
@@ -760,7 +759,7 @@ public class ReferenceMetadata
             }
             try
             {
-            	m_parameterIndex = Integer.valueOf(m_parameter);
+              	m_parameterIndex = Integer.valueOf(m_parameter);
             }
             catch ( final NumberFormatException nfe)
             {
