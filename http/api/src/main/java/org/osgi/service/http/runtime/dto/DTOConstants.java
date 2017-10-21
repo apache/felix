@@ -78,7 +78,7 @@ public final class DTOConstants {
 	 * The servlet is not registered as it is configured to have multipart
 	 * enabled, but the bundle containing the servlet has no write permission to
 	 * the provided location for the uploaded files.
-	 *
+	 * 
 	 * @since 1.1
 	 */
 	public static final int	FAILURE_REASON_SERVLET_WRITE_TO_LOCATION_DENIED		= 8;
@@ -87,7 +87,7 @@ public final class DTOConstants {
 	 * The servlet is not registered as it is configured to have multipart
 	 * enabled, but the whiteboard implementation has no write permission to the
 	 * default location for the uploaded files.
-	 *
+	 * 
 	 * @since 1.1
 	 */
 	public static final int	FAILURE_REASON_WHITEBOARD_WRITE_TO_DEFAULT_DENIED	= 9;
@@ -96,7 +96,7 @@ public final class DTOConstants {
 	 * The servlet is not registered as it is configured to have multipart
 	 * enabled, but the bundle containing the servlet has no read permission to
 	 * the default location for the uploaded files.
-	 *
+	 * 
 	 * @since 1.1
 	 */
 	public static final int	FAILURE_REASON_SERVLET_READ_FROM_DEFAULT_DENIED		= 10;

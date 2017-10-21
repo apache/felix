@@ -565,4 +565,20 @@ public final class HttpWhiteboardConstants {
 	 * @since 1.1
 	 */
 	public static final String	HTTP_SERVICE_CONTEXT_PROPERTY						= "osgi.http.whiteboard.context.httpservice";
+
+	/**
+	 * The name of the implementation capability for the Http Whiteboard
+	 * specification
+	 * 
+	 * @since 1.1
+	 */
+	public static final String	HTTP_WHITEBOARD_IMPLEMENTATION						= "osgi.http";
+
+	/**
+	 * The version of the implementation capability for the Http Whiteboard
+	 * specification
+	 * 
+	 * @since 1.1
+	 */
+	public static final String	HTTP_WHITEBOARD_SPECIFICATION_VERSION				= "1.1.0";
 }

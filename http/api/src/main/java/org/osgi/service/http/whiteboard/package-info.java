@@ -33,8 +33,10 @@
  * @author $Id$
  */
 
-@Version("1.1")
+@Version(HTTP_WHITEBOARD_SPECIFICATION_VERSION)
 package org.osgi.service.http.whiteboard;
+
+import static org.osgi.service.http.whiteboard.HttpWhiteboardConstants.HTTP_WHITEBOARD_SPECIFICATION_VERSION;
 
 import org.osgi.annotation.versioning.Version;
 

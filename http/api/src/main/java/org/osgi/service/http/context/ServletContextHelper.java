@@ -218,7 +218,7 @@ public abstract class ServletContextHelper {
 	 * {@link #handleSecurity(HttpServletRequest, HttpServletResponse)}.
 	 * <p>
 	 * This method is only called if 
-	 * {@link #handleSecurity((HttpServletRequest, HttpServletResponse)} returned 
+	 * {@link #handleSecurity(HttpServletRequest, HttpServletResponse)} returned 
 	 * {@code true} for the specified request.
 	 * <p>
 	 * The default implementation of this method does nothing.
