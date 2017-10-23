@@ -1,3 +1,28 @@
+Changes from 1.10.2 to 1.10.4
+----------------------------
+** Bug
+    * [FELIX-5691] - Fix whitespace handling in TypedProperties
+    * [FELIX-5692] - TypedProperties is missing a method to add a raw value
+
+Changes from 1.10.0 to 1.10.2
+----------------------------
+** Bug
+    * [FELIX-4743] - Have to escape '=' characters in quoted values in *.config files
+    * [FELIX-5145] - FileInstall writes .config files back with backslashes escaping spaces in config values
+    * [FELIX-5306] - User friendly syntax for floats and doubles in FileInstall
+    * [FELIX-5675] JSONParser needs a little bit more context when reporting an error
+    * [FELIX-5688] - TypedProperties#put method is not idempotent
+
+Changes from 1.9.0 to 1.10.0
+----------------------------
+** New Feature
+    * [FELIX-5608 New TypedProperties object to support typed properties file
+
+** Bug
+    * [FELIX-5555] JSONParser is not handling escape char properly
+    * [FELIX-5577] JSONParser is not able to parse an array as root object] 
+
+
 Changes from 1.8.6 to 1.9.0
 ---------------------------
 ** Improvement
