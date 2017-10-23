@@ -4990,11 +4990,6 @@ public class Felix extends BundleImpl implements Framework
 
             m_dependencies.removeDependents(adapt(BundleRevision.class));
 
-            if (m_extensionManager != null)
-            {
-                m_extensionManager.removeExtensions(Felix.this);
-            }
-
             // Dispose of the bundle cache.
             m_cache.release();
             m_cache = null;

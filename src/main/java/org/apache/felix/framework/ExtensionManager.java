@@ -18,28 +18,10 @@
  */
 package org.apache.felix.framework;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.net.InetAddress;
-import java.net.URL;
-import java.net.URLConnection;
-import java.net.URLStreamHandler;
-import java.security.AllPermission;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Dictionary;
-import java.util.Enumeration;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
-import java.util.NoSuchElementException;
-import java.util.Properties;
-import java.util.Set;
-
 import org.apache.felix.framework.cache.Content;
+import org.apache.felix.framework.cache.DirectoryContent;
+import org.apache.felix.framework.cache.JarContent;
+import org.apache.felix.framework.ext.ClassPathExtenderFactory;
 import org.apache.felix.framework.util.FelixConstants;
 import org.apache.felix.framework.util.ImmutableList;
 import org.apache.felix.framework.util.StringMap;
@@ -64,6 +46,27 @@ import org.osgi.framework.wiring.BundleRevision;
 import org.osgi.framework.wiring.BundleWire;
 import org.osgi.framework.wiring.BundleWiring;
 
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.URL;
+import java.security.AccessController;
+import java.security.AllPermission;
+import java.security.PrivilegedExceptionAction;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Enumeration;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.NoSuchElementException;
+import java.util.Properties;
+import java.util.ServiceLoader;
+import java.util.Set;
+
 /**
  * The ExtensionManager class is used in several ways.
  * <p>
@@ -87,49 +90,46 @@ import org.osgi.framework.wiring.BundleWiring;
 // with the parent classloader and one instance per framework instance that
 // keeps track of extension bundles and systembundle exports for that framework
 // instance.
-class ExtensionManager extends URLStreamHandler implements Content
+class ExtensionManager implements Content
 {
-    // The private instance that is added to Felix.class.getClassLoader() -
-    // will be null if extension bundles are not supported (i.e., we are not
-    // loaded by an instance of URLClassLoader)
-    static final ExtensionManager m_extensionManager;
+    static final ClassPathExtenderFactory.ClassPathExtender m_extenderFramework;
 
     static
     {
-        // pre-init the url sub-system as otherwise we don't work on gnu/classpath
-        ExtensionManager extensionManager = null;
+        ClassPathExtenderFactory.ClassPathExtender extenderFramework = null;
 
-        if (!"true".equalsIgnoreCase(Felix.m_secureAction.getSystemProperty(
-            FelixConstants.FELIX_EXTENSIONS_DISABLE, "false")))
+        if (!"true".equalsIgnoreCase(Felix.m_secureAction.getSystemProperty(FelixConstants.FELIX_EXTENSIONS_DISABLE, "false")))
         {
-            try
+            ServiceLoader<ClassPathExtenderFactory> loader = ServiceLoader.load(ClassPathExtenderFactory.class,
+                    ExtensionManager.class.getClassLoader());
+
+
+            for (Iterator<ClassPathExtenderFactory> iter = loader.iterator(); iter.hasNext() && extenderFramework == null; )
             {
-                (new URL("http://felix.extensions:9/")).openConnection();
-            }
-            catch (Throwable t)
-            {
-                // This doesn't matter much - we only need the above to init the url subsystem
+                try
+                {
+                    extenderFramework = iter.next().getExtender(ExtensionManager.class.getClassLoader());
+                }
+                catch (Throwable t)
+                {
+                    // Ignore
+                }
             }
 
-            // We use the secure action of Felix to add a new instance to the parent
-            // classloader.
             try
             {
-                extensionManager = new ExtensionManager();
-
-                Felix.m_secureAction.addURLToURLClassLoader(Felix.m_secureAction.createURL(
-                    Felix.m_secureAction.createURL(null, "http:", extensionManager),
-                    "http://felix.extensions:9/", extensionManager),
-                    Felix.class.getClassLoader());
+                if (extenderFramework == null)
+                {
+                    extenderFramework = new ClassPathExtenderFactory.DefaultClassLoaderExtender()
+                            .getExtender(ExtensionManager.class.getClassLoader());
+                }
             }
-            catch (Throwable ex)
-            {
-                // extension bundles will not be supported.
-                extensionManager = null;
+            catch (Throwable t) {
+                // Ignore
             }
         }
 
-        m_extensionManager = extensionManager;
+        m_extenderFramework = extenderFramework;
     }
 
     private final Logger m_logger;
@@ -139,10 +139,6 @@ class ExtensionManager extends URLStreamHandler implements Content
     private volatile List<BundleCapability> m_capabilities = Collections.EMPTY_LIST;
     private volatile Set<String> m_exportNames = Collections.EMPTY_SET;
     private volatile Object m_securityContext = null;
-    private final List m_extensions;
-    private volatile Bundle[] m_extensionsCache;
-    private final Set m_names;
-    private final Map m_sourceToExtensions;
     private final List<ExtensionTuple> m_extensionTuples = Collections.synchronizedList(new ArrayList<ExtensionTuple>());
 
     private static class ExtensionTuple
@@ -157,20 +153,6 @@ class ExtensionManager extends URLStreamHandler implements Content
             m_activator = activator;
             m_bundle = bundle;
         }
-
-    }
-
-    // This constructor is only used for the private instance added to the parent
-    // classloader.
-    private ExtensionManager()
-    {
-        m_logger = null;
-        m_configMap = null;
-        m_systemBundleRevision = null;
-        m_extensions = new ArrayList();
-        m_extensionsCache = new Bundle[0];
-        m_names = new HashSet();
-        m_sourceToExtensions = new HashMap();
     }
 
     /**
@@ -181,18 +163,14 @@ class ExtensionManager extends URLStreamHandler implements Content
      * instance.
      *
      * @param logger the logger to use.
-     * @param config the configuration to read properties from.
-     * @param systemBundleInfo the info to change if we need to add exports.
+     * @param configMap the configuration to read properties from.
+     * @param felix the framework.
      */
     ExtensionManager(Logger logger, Map configMap, Felix felix)
     {
         m_logger = logger;
         m_configMap = configMap;
         m_systemBundleRevision = new ExtensionManagerRevision(felix);
-        m_extensions = null;
-        m_extensionsCache = null;
-        m_names = null;
-        m_sourceToExtensions = null;
 
 // TODO: FRAMEWORK - Not all of this stuff really belongs here, probably only exports.
         // Populate system bundle header map.
@@ -415,48 +393,74 @@ class ExtensionManager extends URLStreamHandler implements Content
         // We only support classpath extensions (not bootclasspath).
         if (!Constants.EXTENSION_FRAMEWORK.equals(directive))
         {
-            throw new BundleException("Unsupported Extension Bundle type: " +
-                directive, new UnsupportedOperationException(
-                "Unsupported Extension Bundle type!"));
+           throw new BundleException("Unsupported Extension Bundle type: " +
+                    directive, new UnsupportedOperationException(
+                    "Unsupported Extension Bundle type!"));
         }
 
+        if (m_extenderFramework == null)
+        {
+            // We don't support extensions
+            m_logger.log(bundle, Logger.LOG_WARNING,
+                    "Unable to add extension bundle - Maybe ClassLoader is not supported (on java9, try --add-opens=java.base/jdk.internal.loader=ALL-UNNAMED)?");
+
+            throw new UnsupportedOperationException(
+                    "Unable to add extension bundle.");
+        }
+
+        Content content = bundle.adapt(BundleRevisionImpl.class).getContent();
+        final File file;
+        if (content instanceof JarContent)
+        {
+            file = ((JarContent) content).getFile();
+        }
+        else if (content instanceof DirectoryContent)
+        {
+            file = ((DirectoryContent) content).getFile();
+        }
+        else
+        {
+            file = null;
+        }
+        if (file == null)
+        {
+            // We don't support revision type for extension
+            m_logger.log(bundle, Logger.LOG_WARNING,
+                    "Unable to add extension bundle - wrong revision type?");
+
+            throw new UnsupportedOperationException(
+                    "Unable to add extension bundle.");
+        }
         try
         {
+            AccessController.doPrivileged(new PrivilegedExceptionAction<Void>()
+            {
+                @Override
+                public Void run() throws Exception
+                {
+                    m_extenderFramework.add(file);
+                    return null;
+                }
+            });
+
             // Merge the exported packages with the exported packages of the systembundle.
             List<BundleCapability> exports = null;
             try
             {
                 exports = ManifestParser.parseExportHeader(
-                    m_logger, m_systemBundleRevision,
-                    (String) ((BundleRevisionImpl) bundle.adapt(BundleRevisionImpl.class))
-                        .getHeaders().get(Constants.EXPORT_PACKAGE),
-                    m_systemBundleRevision.getSymbolicName(), m_systemBundleRevision.getVersion());
+                        m_logger, m_systemBundleRevision,
+                        (String) bundle.adapt(BundleRevisionImpl.class).getHeaders().get(Constants.EXPORT_PACKAGE),
+                        m_systemBundleRevision.getSymbolicName(), m_systemBundleRevision.getVersion());
                 exports = aliasSymbolicName(exports);
             }
             catch (Exception ex)
             {
                 m_logger.log(
-                    bundle,
-                    Logger.LOG_ERROR,
-                    "Error parsing extension bundle export statement: "
-                    + ((BundleRevisionImpl) bundle.adapt(BundleRevisionImpl.class))
-                        .getHeaders().get(Constants.EXPORT_PACKAGE), ex);
+                        bundle,
+                        Logger.LOG_ERROR,
+                        "Error parsing extension bundle export statement: "
+                                + bundle.adapt(BundleRevisionImpl.class).getHeaders().get(Constants.EXPORT_PACKAGE), ex);
                 return;
-            }
-
-            // Add the bundle as extension if we support extensions
-            if (m_extensionManager != null)
-            {
-                // This needs to be the private instance.
-                m_extensionManager.addExtension(felix, bundle);
-            }
-            else
-            {
-                // We don't support extensions (i.e., the parent is not an URLClassLoader).
-                m_logger.log(bundle, Logger.LOG_WARNING,
-                    "Unable to add extension bundle to FrameworkClassLoader - Maybe not an URLClassLoader?");
-                throw new UnsupportedOperationException(
-                    "Unable to add extension bundle to FrameworkClassLoader - Maybe not an URLClassLoader?");
             }
             appendCapabilities(exports);
         }
@@ -465,7 +469,7 @@ class ExtensionManager extends URLStreamHandler implements Content
             throw ex;
         }
 
-        BundleRevisionImpl bri = (BundleRevisionImpl) bundle.adapt(BundleRevisionImpl.class);
+        BundleRevisionImpl bri = bundle.adapt(BundleRevisionImpl.class);
         List<BundleRequirement> reqs = bri.getDeclaredRequirements(BundleRevision.HOST_NAMESPACE);
         List<BundleCapability> caps = getCapabilities(BundleRevision.HOST_NAMESPACE);
         BundleWire bw = new BundleWireImpl(bri, reqs.get(0), m_systemBundleRevision, caps.get(0));
@@ -598,21 +602,6 @@ class ExtensionManager extends URLStreamHandler implements Content
         m_extensionTuples.clear();
     }
 
-    /**
-     * Remove all extension registered by the given framework instance. Note, it
-     * is not possible to unregister allready loaded classes form those extensions.
-     * That is why the spec requires a JVM restart.
-     *
-     * @param felix the framework instance whose extensions need to be unregistered.
-     */
-    void removeExtensions(Felix felix)
-    {
-        if (m_extensionManager != null)
-        {
-            m_extensionManager._removeExtensions(felix);
-        }
-    }
-
     private List<BundleCapability> getCapabilities(String namespace)
     {
         List<BundleCapability> caps = m_capabilities;
@@ -690,111 +679,6 @@ class ExtensionManager extends URLStreamHandler implements Content
         m_exportNames = exportNames;
 
         return exportSB.toString();
-    }
-
-    //
-    // Classpath Extension
-    //
-
-    /*
-     * See whether any registered extension provides the class requested. If not
-     * throw an IOException.
-     */
-    public URLConnection openConnection(URL url) throws IOException
-    {
-        String path = url.getPath();
-
-        if (path.trim().equals("/"))
-        {
-            return new URLHandlersBundleURLConnection(url);
-        }
-
-        Bundle[] extensions = m_extensionsCache;
-        URL result = null;
-        for (Bundle extBundle : extensions)
-        {
-            try
-            {
-                BundleRevisionImpl bri =
-                    (BundleRevisionImpl) extBundle.adapt(BundleRevision.class);
-                if (bri != null)
-                {
-                    result = bri.getResourceLocal(path);
-                }
-            }
-            catch (Exception ex)
-            {
-                // Maybe the bundle went away, so ignore this exception.
-            }
-            if (result != null)
-            {
-                return result.openConnection();
-            }
-        }
-
-        return new URLConnection(url)
-            {
-                public void connect() throws IOException
-                {
-                    throw new IOException("Resource not provided by any extension!");
-                }
-            };
-    }
-
-    @Override
-    protected InetAddress getHostAddress(URL u)
-    {
-        // the extension URLs do not address real hosts
-        return null;
-    }
-
-    private synchronized void addExtension(Object source, Bundle extension)
-    {
-        List sourceExtensions = (List) m_sourceToExtensions.get(source);
-
-        if (sourceExtensions == null)
-        {
-            sourceExtensions = new ArrayList();
-            m_sourceToExtensions.put(source, sourceExtensions);
-        }
-
-        sourceExtensions.add(extension);
-
-        _add(extension.getSymbolicName(), extension);
-        m_extensionsCache = (Bundle[])
-                m_extensions.toArray(new Bundle[m_extensions.size()]);
-    }
-
-    private synchronized void _removeExtensions(Object source)
-    {
-        if (m_sourceToExtensions.remove(source) == null)
-        {
-            return;
-        }
-
-        m_extensions.clear();
-        m_names.clear();
-
-        for (Iterator iter = m_sourceToExtensions.values().iterator(); iter.hasNext();)
-        {
-            List extensions = (List) iter.next();
-            for (Iterator extIter = extensions.iterator(); extIter.hasNext();)
-            {
-                Bundle bundle = (Bundle) extIter.next();
-                _add(bundle.getSymbolicName(), bundle);
-            }
-            m_extensionsCache = (Bundle[])
-                m_extensions.toArray(new Bundle[m_extensions.size()]);
-        }
-    }
-
-    private void _add(String name, Bundle extension)
-    {
-        if (!m_names.contains(name))
-        {
-            m_names.add(name);
-            m_extensions.add(extension);
-        }
     }
 
     public void close()
