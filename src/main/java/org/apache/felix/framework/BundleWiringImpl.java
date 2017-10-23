@@ -1489,7 +1489,7 @@ public class BundleWiringImpl implements BundleWiring
                         ? Util.getClassPackage(name)
                                 : Util.getResourcePackage(name);
 
-                        boolean accessor = name.startsWith("sun.reflect.Generated");
+                        boolean accessor = name.startsWith("sun.reflect.Generated") || name.startsWith("jdk.internal.reflect.");
 
                         if (accessor)
                         {
@@ -1561,8 +1561,27 @@ public class BundleWiringImpl implements BundleWiring
                                     }
                                 }
                             }
-                            m_accessorLookupCache.put(name, CNFE_CLASS_LOADER);
-                            CNFE_CLASS_LOADER.loadClass(name);
+
+                            try
+                            {
+                                result = tryImplicitBootDelegation(name, isClass);
+                            }
+                            catch (Exception ex)
+                            {
+                                // Ignore, will throw using CNFE_CLASS_LOADER
+                            }
+
+                            if (result != null)
+                            {
+                                m_accessorLookupCache.put(name, BundleRevisionImpl.getSecureAction()
+                                        .getClassLoader(this.getClass()));
+                                return result;
+                            }
+                            else
+                            {
+                                m_accessorLookupCache.put(name, CNFE_CLASS_LOADER);
+                                CNFE_CLASS_LOADER.loadClass(name);
+                            }
                         }
 
                         // Look in the revision's imports. Note that the search may
@@ -1719,6 +1738,12 @@ public class BundleWiringImpl implements BundleWiring
                             : (Object) ((BundleWiringImpl) provider.getWiring()).getResourceByDelegation(name);
         }
 
+        return tryImplicitBootDelegation(name, isClass);
+    }
+
+    private Object tryImplicitBootDelegation(final String name, final boolean isClass)
+            throws ClassNotFoundException, ResourceNotFoundException
+    {
         // If implicit boot delegation is enabled, then try to guess whether
         // we should boot delegate.
         if (m_implicitBootDelegation)
