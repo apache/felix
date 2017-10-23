@@ -126,14 +126,13 @@ public interface ComponentConstants {
 
 	/**
 	 * Capability name for Service Component Runtime.
-	 * 
 	 * <p>
 	 * Used in {@code Provide-Capability} and {@code Require-Capability}
 	 * manifest headers with the {@code osgi.extender} namespace. For example:
 	 * 
 	 * <pre>
 	 * Require-Capability: osgi.extender;
-	 *  filter:="(&amp;(osgi.extender=osgi.component)(version&gt;=1.3)(!(version&gt;=2.0)))"
+	 *  filter:="(&amp;(osgi.extender=osgi.component)(version&gt;=1.4)(!(version&gt;=2.0)))"
 	 * </pre>
 	 * 
 	 * @since 1.3

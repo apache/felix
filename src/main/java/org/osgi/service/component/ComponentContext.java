@@ -100,11 +100,10 @@ public interface ComponentContext {
 	public Object[] locateServices(String name);
 
 	/**
-	 * Returns the {@code BundleContext} of the bundle which contains this
+	 * Returns the {@code BundleContext} of the bundle which declares this
 	 * component.
 	 * 
-	 * @return The {@code BundleContext} of the bundle containing this
-	 *         component.
+	 * @return The {@code BundleContext} of the bundle declares this component.
 	 */
 	public BundleContext getBundleContext();
 

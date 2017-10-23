@@ -20,6 +20,7 @@ import java.util.Collection;
 
 import org.osgi.annotation.versioning.ProviderType;
 import org.osgi.framework.Bundle;
+import org.osgi.framework.Constants;
 import org.osgi.service.component.ComponentContext;
 import org.osgi.service.component.runtime.dto.ComponentConfigurationDTO;
 import org.osgi.service.component.runtime.dto.ComponentDescriptionDTO;
@@ -31,7 +32,6 @@ import org.osgi.util.promise.Promise;
  * service components and their life cycle. The {@code ServiceComponentRuntime}
  * service allows introspection of the components managed by Service Component
  * Runtime.
- * 
  * <p>
  * This service differentiates between a {@link ComponentDescriptionDTO} and a
  * {@link ComponentConfigurationDTO}. A {@link ComponentDescriptionDTO} is a
@@ -39,7 +39,10 @@ import org.osgi.util.promise.Promise;
  * {@link ComponentConfigurationDTO} is a representation of an actual instance
  * of a declared component description parameterized by component properties.
  * <p>
- * 
+ * This service must be registered with a {@link Constants#SERVICE_CHANGECOUNT}
+ * service property that must be updated each time the SCR DTOs available from
+ * this service change.
+ * <p>
  * Access to this service requires the
  * {@code ServicePermission[ServiceComponentRuntime, GET]} permission. It is
  * intended that only administrative bundles should be granted this permission

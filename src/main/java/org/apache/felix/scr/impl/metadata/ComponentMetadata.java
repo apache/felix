@@ -1044,32 +1044,6 @@ public class ComponentMetadata
             {
                 throw validationFailure( "Init parameter is not a number: " + m_init);
             }
-        	    final Set<Integer> parIndexSet = new HashSet<>();
-        	    for(final ReferenceMetadata ref : this.m_references)
-        	    {
-        		    if ( ref.getParameterIndex() != null )
-        		    {
-                    if ( ref.getParameterIndex() >= constructorParameters )
-                    {
-                        throw validationFailure( "Reference parameter index of " + ref.getParameterIndex().toString() + " is higher than init parameter: " + m_init);
-                    }
-        		        if ( !parIndexSet.add(ref.getParameterIndex()) )
-         		    {
-                        throw validationFailure( "Duplicate reference for argument " + ref.getParameterIndex() + " in constructor" );
-         		    }
-        		    }
-        	    }
-        }
-        else
-        {
-        	    // no constructor injection, check references for having a parameter index
-        	    for(final ReferenceMetadata ref : this.m_references)
-        	    {
-        		    if ( ref.getParameterIndex() != null )
-        		    {
-                    throw validationFailure( "Reference must not use parameter attribute if no constructor injection is used" );
-        		    }
-        	    }
         }
 
         if (m_dsVersion == DSVersion.DS12Felix)

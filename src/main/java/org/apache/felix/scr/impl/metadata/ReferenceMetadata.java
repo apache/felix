@@ -769,12 +769,6 @@ public class ReferenceMetadata
             {
                 throw componentMetadata.validationFailure( "Reference parameter value must be zero or higher: " + m_parameter );
             }
-            // policy needs to be static
-            if ( !isStatic() )
-            {
-                throw componentMetadata.validationFailure( "Reference with parameter value must be static." );
-
-            }
         }
         m_validated = true;
     }
@@ -791,6 +785,7 @@ public class ReferenceMetadata
                 ", updated=" + this.getUpdated() +
                 ", field=" + this.getField() +
                 ", field-option=" + this.getFieldOption() +
-                ", field-collection-type=" + this.getFieldCollectionType();
+                ", field-collection-type=" + this.getFieldCollectionType() +
+                ", parameter=" + this.getParameterIndex();
     }
 }
