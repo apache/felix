@@ -53,6 +53,11 @@ public class DirectoryContent implements Content
         m_dir = dir;
     }
 
+    public File getFile()
+    {
+        return m_dir;
+    }
+
     public void close()
     {
         // Nothing to clean up.
