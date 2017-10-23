@@ -1,3 +1,56 @@
+Version 3.6.4
+-------------
+** Bug
+    * [FELIX-4661] - FileInstall: Property "felix.fileinstall.filter" ignored when the service start
+    * [FELIX-4740] - Bundles don't start if no BundleEvent fired after reaching start level
+    * [FELIX-4906] - Changes in symlinked bundles not detected with NIO2 WatcherScanner
+    * [FELIX-5125] - NPE in ConfigInstaller
+    * [FELIX-5686] - NPE in ConfigInstaller on ConfigDelete
+    * [FELIX-5691] - Fix whitespace handling in TypedProperties
+    * [FELIX-5692] - TypedProperties is missing a method to add a raw value
+    * [FELIX-5723] - ConfigInstaller is not deleting files in the etc directory
+
+Version 3.6.2
+-------------
+** Bug
+    * [FELIX-4416] - Ability to specify an encoding for config files
+    * [FELIX-4743] - Have to escape '=' characters in quoted values in *.config files
+    * [FELIX-5145] - FileInstall writes .config files back with backslashes escaping spaces in config values
+    * [FELIX-5306] - User friendly syntax for floats and doubles in FileInstall
+    * [FELIX-5448] - Exceptions from bundle.start() should be logged, not swallowed
+    * [FELIX-5539] - Directory Watcher leaks ZipInflater
+    * [FELIX-5689] - FileInstall always expand configuration files
+
+** Improvement
+    * [FELIX-5684] - Set multi-location for created configurations
+
+Version 3.6.0
+-------------
+** Improvement
+    * [FELIX-5609] - Full support for both untyped and typed configurations
+    * [FELIX-5610] - Files should be deleted if a configuration is deleted
+
+Version 3.5.8
+-------------
+** Bug
+    * [FELIX-5133] Remove properties that are not present in updated configuration
+
+Version 3.5.6
+-------------
+** Bug
+    * [FELIX-5133] - Removing an entry from a configuration does not remove it from the monitored file
+
+** Improvement
+    * [FELIX-5261] - FileInstall: allow comments in *.config files
+
+Version 3.5.4
+-------------
+** Bug
+    * [FELIX-4934] - Only log failures for consistently failing bundles
+    * [FELIX-5209] - [FileInstall] use framework bundle location to get framework bundle
+    * [FELIX-5217] - Fileinstall is handling removal of many files inefficiently
+    * [FELIX-5218] - Fileinstall MemoryLeak / Performance degradation in WatcherScanner
+
 Version 3.5.2
 -------------
 ** Bug
