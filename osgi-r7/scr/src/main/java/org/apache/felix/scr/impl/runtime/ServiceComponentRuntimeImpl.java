@@ -76,7 +76,7 @@ public class ServiceComponentRuntimeImpl implements ServiceComponentRuntime
             holders = componentRegistry.getComponentHolders(bundles);
         }
 
-        List<ComponentDescriptionDTO> result = new ArrayList<ComponentDescriptionDTO>(holders.size());
+        List<ComponentDescriptionDTO> result = new ArrayList<>(holders.size());
         for (ComponentHolder<?> holder: holders)
         {
             ComponentDescriptionDTO dto = holderToDescription(holder);
@@ -125,7 +125,7 @@ public class ServiceComponentRuntimeImpl implements ServiceComponentRuntime
                 return Collections.emptyList();
             }
             List<? extends ComponentManager<?>> managers = holder.getComponents();
-            List<ComponentConfigurationDTO> result = new ArrayList<ComponentConfigurationDTO>(managers.size());
+            List<ComponentConfigurationDTO> result = new ArrayList<>(managers.size());
             for (ComponentManager<?> manager: managers)
             {
                 result.add(managerToConfiguration(manager, description));
@@ -206,7 +206,7 @@ public class ServiceComponentRuntimeImpl implements ServiceComponentRuntime
         dto.unsatisfiedReferences = unsatisfiedRefManagersToDTO(manager.getReferenceManagers());
         dto.description = description;
         dto.id = manager.getId();
-        dto.properties = new HashMap<String, Object>(manager.getProperties());//TODO deep copy?
+        dto.properties = new HashMap<>(manager.getProperties());//TODO deep copy?
         dto.state = manager.getSpecState();
         if ( dto.state == ComponentConfigurationDTO.FAILED_ACTIVATION )
         {
@@ -217,7 +217,7 @@ public class ServiceComponentRuntimeImpl implements ServiceComponentRuntime
 
     private SatisfiedReferenceDTO[] satisfiedRefManagersToDTO(List<? extends ReferenceManager<?, ?>> referenceManagers)
     {
-        List<SatisfiedReferenceDTO> dtos = new ArrayList<SatisfiedReferenceDTO>();
+        List<SatisfiedReferenceDTO> dtos = new ArrayList<>();
         for (ReferenceManager<?, ?> ref: referenceManagers)
         {
             if (ref.isSatisfied())
@@ -243,7 +243,7 @@ public class ServiceComponentRuntimeImpl implements ServiceComponentRuntime
 
     private UnsatisfiedReferenceDTO[] unsatisfiedRefManagersToDTO(List<? extends ReferenceManager<?, ?>> referenceManagers)
     {
-        List<UnsatisfiedReferenceDTO> dtos = new ArrayList<UnsatisfiedReferenceDTO>();
+        List<UnsatisfiedReferenceDTO> dtos = new ArrayList<>();
         for (ReferenceManager<?, ?> ref: referenceManagers)
         {
             if (!ref.isSatisfied())
@@ -339,12 +339,13 @@ public class ServiceComponentRuntimeImpl implements ServiceComponentRuntime
         // DS 1.4
         dto.factoryProperties = m.isFactory() ? m.getFactoryProperties() : null;
         dto.activationFields = (m.getActivationFields() == null ? EMPTY : m.getActivationFields().toArray(new String[m.getActivationFields().size()]));
+        dto.init = m.getNumberOfConstructorParameters();
         return dto;
     }
 
     private Map<String, Object> deepCopy(Map<String, Object> source)
     {
-        HashMap<String, Object> result = new HashMap<String, Object>(source.size());
+        HashMap<String, Object> result = new HashMap<>(source.size());
         for (Map.Entry<String, Object> entry: source.entrySet())
         {
             result.put(entry.getKey(), convert(entry.getValue()));
@@ -355,7 +356,7 @@ public class ServiceComponentRuntimeImpl implements ServiceComponentRuntime
     private Map<String, Object> deepCopy(ServiceReference<?> source)
     {
         String[] keys = source.getPropertyKeys();
-        HashMap<String, Object> result = new HashMap<String, Object>(keys.length);
+        HashMap<String, Object> result = new HashMap<>(keys.length);
         for (int i = 0; i< keys.length; i++)
         {
             result.put(keys[i], convert(source.getProperty(keys[i])));

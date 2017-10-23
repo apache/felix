@@ -192,4 +192,15 @@ public class ComponentDescriptionDTO extends DTO {
 	 * @since 1.4
 	 */
 	public String[]				activationFields;
+
+	/**
+	 * The constructor parameter count.
+	 * <p>
+	 * This is declared in the {@code init} attribute of the {@code component}
+	 * element. This must be {@code 0} if the component description does not
+	 * declare an {@code init} attribute.
+	 * 
+	 * @since 1.4
+	 */
+	public int					init;
 }
