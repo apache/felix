@@ -90,7 +90,7 @@ public class CommandSessionImpl implements CommandSession, Converter
     protected CommandSessionImpl(CommandProcessorImpl shell, CommandSessionImpl parent)
     {
         this.currentDir = parent.currentDir;
-        this.executor = Executors.newCachedThreadPool();
+        this.executor = Executors.newCachedThreadPool(ThreadUtils.namedThreadFactory("session"));
         this.processor = shell;
         this.channels = parent.channels;
         this.in = parent.in;
