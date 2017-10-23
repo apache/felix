@@ -127,7 +127,7 @@ public class ConfigInstaller implements ArtifactInstaller, ConfigurationListener
                                             configurationEvent.getPid(),
                                             "?");
                 Dictionary dict = config.getProperties();
-                String fileName = (String) dict.get( DirectoryWatcher.FILENAME );
+                String fileName = dict != null ? (String) dict.get( DirectoryWatcher.FILENAME ) : null;
                 File file = fileName != null ? fromConfigKey(fileName) : null;
                 if( file != null && file.isFile() ) {
                     TypedProperties props = new TypedProperties( bundleSubstitution() );
