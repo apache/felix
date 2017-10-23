@@ -44,6 +44,8 @@ public class ConfigInstaller implements ArtifactInstaller, ConfigurationListener
     private final FileInstall fileInstall;
     private ServiceRegistration registration;
 
+    private Map<String, String> fileConfigurations = new HashMap<String, String>();
+
     ConfigInstaller(BundleContext context, ConfigurationAdmin configAdmin, FileInstall fileInstall)
     {
         this.context = context;
@@ -119,6 +121,8 @@ public class ConfigInstaller implements ArtifactInstaller, ConfigurationListener
             }
         }
 
+        String[] pid = new String[] { configurationEvent.getPid(), configurationEvent.getFactoryPid() };
+
         if (configurationEvent.getType() == ConfigurationEvent.CM_UPDATED)
         {
             try
@@ -128,6 +132,11 @@ public class ConfigInstaller implements ArtifactInstaller, ConfigurationListener
                                             "?");
                 Dictionary dict = config.getProperties();
                 String fileName = dict != null ? (String) dict.get( DirectoryWatcher.FILENAME ) : null;
+                if (fileName != null) {
+                    // noop for configs installed by fileinstall, but may handle cases
+                    // when user set DirectoryWatcher.FILENAME property explicitly
+                    fileConfigurations.put(pidKey(pid), fileName);
+                }
                 File file = fileName != null ? fromConfigKey(fileName) : null;
                 if( file != null && file.isFile() ) {
                     TypedProperties props = new TypedProperties( bundleSubstitution() );
@@ -179,11 +188,7 @@ public class ConfigInstaller implements ArtifactInstaller, ConfigurationListener
         if (configurationEvent.getType() == ConfigurationEvent.CM_DELETED)
         {
             try {
-                Configuration config = getConfigurationAdmin().getConfiguration(
-                        configurationEvent.getPid(),
-                        "?");
-                Dictionary dict = config.getProperties();
-                String fileName = dict != null ? (String) dict.get(DirectoryWatcher.FILENAME) : null;
+                String fileName = fileConfigurations.get(pidKey(pid));
                 File file = fileName != null ? fromConfigKey(fileName) : null;
                 if (file != null && file.isFile()) {
                     if (!file.delete()) {
@@ -276,9 +281,12 @@ public class ConfigInstaller implements ArtifactInstaller, ConfigurationListener
         	old.remove( ConfigurationAdmin.SERVICE_FACTORYPID );
         }
 
+        String fileName = toConfigKey(f);
+        fileConfigurations.put(pidKey(pid), fileName);
+
         if( !ht.equals( old ) )
         {
-            ht.put(DirectoryWatcher.FILENAME, toConfigKey(f));
+            ht.put(DirectoryWatcher.FILENAME, fileName);
             if (old == null) {
                 Util.log(context, Logger.LOG_INFO, "Creating configuration from " + pid[0]
                         + (pid[1] == null ? "" : "-" + pid[1]) + ".cfg", null);
@@ -306,10 +314,12 @@ public class ConfigInstaller implements ArtifactInstaller, ConfigurationListener
     boolean deleteConfig(File f) throws Exception
     {
         String pid[] = parsePid(f.getName());
+        String fileName = toConfigKey(f);
         Util.log(context, Logger.LOG_INFO, "Deleting configuration from " + pid[0]
                 + (pid[1] == null ? "" : "-" + pid[1]) + ".cfg", null);
-        Configuration config = getConfiguration(toConfigKey(f), pid[0], pid[1]);
+        Configuration config = getConfiguration(fileName, pid[0], pid[1]);
         config.delete();
+        fileConfigurations.remove(pidKey(pid));
         return true;
     }
 
@@ -341,6 +351,17 @@ public class ConfigInstaller implements ArtifactInstaller, ConfigurationListener
                     pid, null
                 };
         }
+    }
+
+    private String pidKey(String[] pid) {
+        if (pid != null && pid.length == 2) {
+            if (pid[1] == null) {
+                return pid[0];
+            } else {
+                return pid[0] + "-" + pid[1];
+            }
+        }
+        return null;
     }
 
     Configuration getConfiguration(String fileName, String pid, String factoryPid)
