@@ -4613,7 +4613,7 @@ public class Felix extends BundleImpl implements Framework
             System.getProperty("user.language"));
         m_configMutableMap.put(
             FelixConstants.SUPPORTS_FRAMEWORK_EXTENSION,
-            "true");
+            ExtensionManager.m_extenderFramework != null ? "true" : "false");
         m_configMutableMap.put(
             FelixConstants.SUPPORTS_FRAMEWORK_FRAGMENT,
             "true");
@@ -4622,7 +4622,7 @@ public class Felix extends BundleImpl implements Framework
             "true");
         m_configMutableMap.put(
             FelixConstants.SUPPORTS_BOOTCLASSPATH_EXTENSION,
-            "false");
+            ExtensionManager.m_extenderBoot != null ? "true" : "false");
 
         String s = null;
         s = NativeLibraryClause.normalizeOSName(System.getProperty("os.name"));

@@ -93,10 +93,12 @@ import java.util.Set;
 class ExtensionManager implements Content
 {
     static final ClassPathExtenderFactory.ClassPathExtender m_extenderFramework;
+    static final ClassPathExtenderFactory.ClassPathExtender m_extenderBoot;
 
     static
     {
         ClassPathExtenderFactory.ClassPathExtender extenderFramework = null;
+        ClassPathExtenderFactory.ClassPathExtender extenderBoot = null;
 
         if (!"true".equalsIgnoreCase(Felix.m_secureAction.getSystemProperty(FelixConstants.FELIX_EXTENSIONS_DISABLE, "false")))
         {
@@ -104,11 +106,35 @@ class ExtensionManager implements Content
                     ExtensionManager.class.getClassLoader());
 
 
-            for (Iterator<ClassPathExtenderFactory> iter = loader.iterator(); iter.hasNext() && extenderFramework == null; )
+            for (Iterator<ClassPathExtenderFactory> iter = loader.iterator();
+                 iter.hasNext() && (extenderFramework == null || extenderBoot == null); )
             {
                 try
                 {
-                    extenderFramework = iter.next().getExtender(ExtensionManager.class.getClassLoader());
+                    ClassPathExtenderFactory factory = iter.next();
+
+                    if (extenderFramework == null)
+                    {
+                        try
+                        {
+                            extenderFramework = factory.getExtender(ExtensionManager.class.getClassLoader());
+                        }
+                        catch (Throwable t)
+                        {
+                            // Ignore
+                        }
+                    }
+                    if (extenderBoot == null)
+                    {
+                        try
+                        {
+                            extenderBoot = factory.getExtender(null);
+                        }
+                        catch (Throwable t)
+                        {
+                            // Ignore
+                        }
+                    }
                 }
                 catch (Throwable t)
                 {
@@ -130,6 +156,7 @@ class ExtensionManager implements Content
         }
 
         m_extenderFramework = extenderFramework;
+        m_extenderBoot = extenderBoot;
     }
 
     private final Logger m_logger;
@@ -390,15 +417,20 @@ class ExtensionManager implements Content
             ((BundleRevisionImpl) bundle.adapt(BundleRevision.class))
                 .getHeaders().get(Constants.FRAGMENT_HOST));
 
+        final ClassPathExtenderFactory.ClassPathExtender extender;
+
+        if (m_extenderBoot != null && Constants.EXTENSION_BOOTCLASSPATH.equals(directive))
+        {
+            extender = m_extenderBoot;
+        }
         // We only support classpath extensions (not bootclasspath).
-        if (!Constants.EXTENSION_FRAMEWORK.equals(directive))
+        else if (!Constants.EXTENSION_FRAMEWORK.equals(directive))
         {
            throw new BundleException("Unsupported Extension Bundle type: " +
                     directive, new UnsupportedOperationException(
                     "Unsupported Extension Bundle type!"));
         }
-
-        if (m_extenderFramework == null)
+        else if (m_extenderFramework == null)
         {
             // We don't support extensions
             m_logger.log(bundle, Logger.LOG_WARNING,
@@ -406,6 +438,10 @@ class ExtensionManager implements Content
 
             throw new UnsupportedOperationException(
                     "Unable to add extension bundle.");
+        }
+        else
+        {
+            extender = m_extenderFramework;
         }
 
         Content content = bundle.adapt(BundleRevisionImpl.class).getContent();
@@ -433,36 +469,41 @@ class ExtensionManager implements Content
         }
         try
         {
+            // Merge the exported packages with the exported packages of the systembundle.
+            List<BundleCapability> exports = null;
+            if (Constants.EXTENSION_FRAMEWORK.equals(directive))
+            {
+                try
+                {
+                    exports = ManifestParser.parseExportHeader(
+                            m_logger, m_systemBundleRevision,
+                            (String) bundle.adapt(BundleRevisionImpl.class).getHeaders().get(Constants.EXPORT_PACKAGE),
+                            m_systemBundleRevision.getSymbolicName(), m_systemBundleRevision.getVersion());
+                    exports = aliasSymbolicName(exports);
+                }
+                catch (Exception ex)
+                {
+                    m_logger.log(
+                            bundle,
+                            Logger.LOG_ERROR,
+                            "Error parsing extension bundle export statement: "
+                                    + bundle.adapt(BundleRevisionImpl.class).getHeaders().get(Constants.EXPORT_PACKAGE), ex);
+                    return;
+                }
+            }
             AccessController.doPrivileged(new PrivilegedExceptionAction<Void>()
             {
                 @Override
                 public Void run() throws Exception
                 {
-                    m_extenderFramework.add(file);
+                    extender.add(file);
                     return null;
                 }
             });
-
-            // Merge the exported packages with the exported packages of the systembundle.
-            List<BundleCapability> exports = null;
-            try
+            if (exports != null)
             {
-                exports = ManifestParser.parseExportHeader(
-                        m_logger, m_systemBundleRevision,
-                        (String) bundle.adapt(BundleRevisionImpl.class).getHeaders().get(Constants.EXPORT_PACKAGE),
-                        m_systemBundleRevision.getSymbolicName(), m_systemBundleRevision.getVersion());
-                exports = aliasSymbolicName(exports);
+                appendCapabilities(exports);
             }
-            catch (Exception ex)
-            {
-                m_logger.log(
-                        bundle,
-                        Logger.LOG_ERROR,
-                        "Error parsing extension bundle export statement: "
-                                + bundle.adapt(BundleRevisionImpl.class).getHeaders().get(Constants.EXPORT_PACKAGE), ex);
-                return;
-            }
-            appendCapabilities(exports);
         }
         catch (Exception ex)
         {
