@@ -25,6 +25,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.felix.scr.impl.helper.SimpleLogger;
 import org.apache.felix.scr.impl.inject.field.FieldMethods;
 import org.apache.felix.scr.impl.inject.methods.ActivateMethod;
 import org.apache.felix.scr.impl.inject.methods.BindMethods;
@@ -49,10 +50,14 @@ public class ComponentMethodsImpl<T> implements ComponentMethods<T>
 
     @Override
     @SuppressWarnings({ "rawtypes", "unchecked" })
-	public synchronized void initComponentMethods( ComponentMetadata componentMetadata, Class<T> implementationObjectClass )
+	public synchronized void initComponentMethods(
+	        final ComponentMetadata componentMetadata,
+	        final Class<T> implementationObjectClass,
+	        final SimpleLogger logger)
     {
         if (m_activateMethod != null)
         {
+            // do init only once
             return;
         }
         DSVersion dsVersion = componentMetadata.getDSVersion();
@@ -98,7 +103,7 @@ public class ComponentMethodsImpl<T> implements ComponentMethods<T>
             }
         }
 
-    	    m_constructor = new ComponentConstructorImpl();
+    	    m_constructor = new ComponentConstructorImpl(componentMetadata, implementationObjectClass, logger);
     }
 
 	@Override

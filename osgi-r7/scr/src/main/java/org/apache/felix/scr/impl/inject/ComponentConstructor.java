@@ -37,13 +37,11 @@ public interface ComponentConstructor<T> {
 
 	/**
 	 * Create a new instance
-	 * @param componentClass The implementation class of the component
 	 * @param componentContext The component context
 	 * @param logger A logger
 	 * @return The instance
 	 */
-    <S> T newInstance(Class<T> componentClass,
-    		           ComponentContextImpl<T> componentContext,
+    <S> T newInstance(ComponentContextImpl<T> componentContext,
     		           Map<Integer, ReferencePair<S>> parameterMap)
     throws Exception;
 }
