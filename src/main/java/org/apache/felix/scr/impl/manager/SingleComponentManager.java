@@ -33,6 +33,7 @@ import org.apache.felix.scr.impl.inject.ComponentMethods;
 import org.apache.felix.scr.impl.inject.LifecycleMethod;
 import org.apache.felix.scr.impl.inject.MethodResult;
 import org.apache.felix.scr.impl.manager.DependencyManager.OpenStatus;
+import org.apache.felix.scr.impl.metadata.ReferenceMetadata;
 import org.apache.felix.scr.impl.metadata.TargetedPID;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.Constants;
@@ -236,7 +237,7 @@ public class SingleComponentManager<S> extends AbstractComponentManager<S> imple
         // bind target services
         final List<DependencyManager.OpenStatus<S, ?>> openStatusList = new ArrayList<>();
 
-        final Map<Integer, ComponentConstructor.ReferencePair<S>> paramMap = ( getComponentMetadata().getNumberOfConstructorParameters() > 0 ? new HashMap<Integer, ComponentConstructor.ReferencePair<S>>() : null);
+        final Map<ReferenceMetadata, ComponentConstructor.ReferencePair<S>> paramMap = ( getComponentMetadata().getNumberOfConstructorParameters() > 0 ? new HashMap<ReferenceMetadata, ComponentConstructor.ReferencePair<S>>() : null);
         boolean failed = false;
         for ( DependencyManager<S, ?> dm : getDependencyManagers())
         {
@@ -258,11 +259,7 @@ public class SingleComponentManager<S> extends AbstractComponentManager<S> imple
                 final ComponentConstructor.ReferencePair<S> pair = new ComponentConstructor.ReferencePair<>();
                 pair.dependencyManager = dm;
                 pair.openStatus = open;
-                // TODO - we need to check:
-                // dynamic -> ignore, log warning
-                // double refs for same parameter -> ignore second, log warning
-                // index higher than number of params -> ignore, log warning
-                paramMap.put(dm.getReferenceMetadata().getParameterIndex(), pair);
+                paramMap.put(dm.getReferenceMetadata(), pair);
             }
         }
 

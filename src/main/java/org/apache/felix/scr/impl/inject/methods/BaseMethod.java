@@ -263,7 +263,7 @@ public abstract class BaseMethod<P extends BaseParameter, T>
         }
 
         // assume success (also if the method is not available or accessible)
-        return MethodResult.VOID; // TODO: or null ??
+        return MethodResult.VOID;
     }
 
     protected boolean returnValue()

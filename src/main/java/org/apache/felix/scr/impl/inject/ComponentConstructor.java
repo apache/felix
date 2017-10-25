@@ -22,6 +22,7 @@ import java.util.Map;
 
 import org.apache.felix.scr.impl.manager.ComponentContextImpl;
 import org.apache.felix.scr.impl.manager.DependencyManager;
+import org.apache.felix.scr.impl.metadata.ReferenceMetadata;
 
 /**
  * This object describes a constructor for a component.
@@ -31,17 +32,19 @@ import org.apache.felix.scr.impl.manager.DependencyManager;
 public interface ComponentConstructor<T> {
 
 	public class ReferencePair<S> {
-		public DependencyManager<S, ?> dependencyManager;
+		public DependencyManager<S, ?> dependencyManager; // TODO check if we need this
 		public DependencyManager.OpenStatus<S, ?> openStatus;
     }
 
 	/**
 	 * Create a new instance
 	 * @param componentContext The component context
-	 * @param logger A logger
+	 * @param parameterMap A map of reference parameters for handling references in the
+	 *                     constructor
 	 * @return The instance
+	 * @throws Exception If anything goes wrong, like constructor can't be found etc.
 	 */
     <S> T newInstance(ComponentContextImpl<T> componentContext,
-    		           Map<Integer, ReferencePair<S>> parameterMap)
+    		           Map<ReferenceMetadata, ReferencePair<S>> parameterMap)
     throws Exception;
 }

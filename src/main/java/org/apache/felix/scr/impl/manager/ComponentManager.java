@@ -31,7 +31,6 @@ public interface ComponentManager<S> {
     int STATE_SATISFIED = ComponentConfigurationDTO.SATISFIED;
     int STATE_ACTIVE = ComponentConfigurationDTO.ACTIVE;
     int STATE_DISPOSED = 32;
-    int STATE_DISABLED = 64; //TODO????
 
     Map<String, Object> getProperties();
 
