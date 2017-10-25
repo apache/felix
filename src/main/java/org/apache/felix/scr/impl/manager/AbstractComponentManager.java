@@ -146,10 +146,10 @@ public abstract class AbstractComponentManager<S> implements SimpleLogger, Compo
      * This latch prevents concurrent enable, disable, and reconfigure.  Since the enable and disable operations may use
      * two threads and the initiating thread does not wait for the operation to complete, we can't use a regular lock.
      */
-    private final AtomicReference<Deferred<Void>> m_enabledLatchRef = new AtomicReference<Deferred<Void>>(
+    private final AtomicReference<Deferred<Void>> m_enabledLatchRef = new AtomicReference<>(
             new Deferred<Void>());
 
-    private final AtomicReference<State> state = new AtomicReference<State>(State.disabled);
+    private final AtomicReference<State> state = new AtomicReference<>(State.disabled);
 
     //service event tracking
     private int m_floor;
@@ -158,7 +158,7 @@ public abstract class AbstractComponentManager<S> implements SimpleLogger, Compo
 
     private final Lock m_missingLock = new ReentrantLock();
     private final Condition m_missingCondition = m_missingLock.newCondition();
-    private final Set<Integer> m_missing = new TreeSet<Integer>();
+    private final Set<Integer> m_missing = new TreeSet<>();
 
     protected final ReentrantReadWriteLock m_activationLock = new ReentrantReadWriteLock();
 
@@ -511,7 +511,7 @@ public abstract class AbstractComponentManager<S> implements SimpleLogger, Compo
             {
                 Thread.currentThread().interrupt();
             }
-            newEnabledLatch = new Deferred<Void>();
+            newEnabledLatch = new Deferred<>();
         }
         while (!m_enabledLatchRef.compareAndSet(enabledLatch, newEnabledLatch));
         return newEnabledLatch;
@@ -1008,7 +1008,7 @@ public abstract class AbstractComponentManager<S> implements SimpleLogger, Compo
             throw new IllegalStateException(
                     "Could not load implementation object class " + getComponentMetadata().getImplementationClassName());
         }
-        m_componentMethods.initComponentMethods(getComponentMetadata(), implementationObjectClass);
+        m_componentMethods.initComponentMethods(getComponentMetadata(), implementationObjectClass, this);
 
         for (DependencyManager<S, ?> dependencyManager : m_dependencyManagers)
         {
@@ -1164,7 +1164,7 @@ public abstract class AbstractComponentManager<S> implements SimpleLogger, Compo
 
     private List<DependencyManager<S, ?>> loadDependencyManagers(ComponentMetadata metadata)
     {
-        List<DependencyManager<S, ?>> depMgrList = new ArrayList<DependencyManager<S, ?>>(
+        List<DependencyManager<S, ?>> depMgrList = new ArrayList<>(
                 metadata.getDependencies().size());
 
         // If this component has got dependencies, create dependency managers for each one of them.
@@ -1253,7 +1253,7 @@ public abstract class AbstractComponentManager<S> implements SimpleLogger, Compo
      */
     List<DependencyManager<S, ?>> getReversedDependencyManagers()
     {
-        List<DependencyManager<S, ?>> list = new ArrayList<DependencyManager<S, ?>>(m_dependencyManagers);
+        List<DependencyManager<S, ?>> list = new ArrayList<>(m_dependencyManagers);
         Collections.reverse(list);
         return list;
     }
@@ -1334,7 +1334,7 @@ public abstract class AbstractComponentManager<S> implements SimpleLogger, Compo
     {
         if (target == null)
         {
-            target = new Hashtable<String, Object>();
+            target = new Hashtable<>();
         }
 
         if (source != null && !source.isEmpty())
@@ -1370,7 +1370,7 @@ public abstract class AbstractComponentManager<S> implements SimpleLogger, Compo
      */
     protected static Map<String, Object> copyToMap(final Dictionary<String, ?> source, final boolean allProps)
     {
-        Map<String, Object> target = new HashMap<String, Object>();
+        Map<String, Object> target = new HashMap<>();
 
         if (source != null && !source.isEmpty())
         {
@@ -1391,7 +1391,7 @@ public abstract class AbstractComponentManager<S> implements SimpleLogger, Compo
     protected static Dictionary<String, Object> copyToDictionary(final Dictionary<String, ?> source,
             final boolean allProps)
     {
-        Hashtable<String, Object> target = new Hashtable<String, Object>();
+        Hashtable<String, Object> target = new Hashtable<>();
 
         if (source != null && !source.isEmpty())
         {
@@ -1477,7 +1477,7 @@ public abstract class AbstractComponentManager<S> implements SimpleLogger, Compo
                 tracked(trackingCount);
             }
             Dictionary<String, Object> serviceProps = (methodResult.getResult() == null) ? null
-                    : new Hashtable<String, Object>(methodResult.getResult());
+                    : new Hashtable<>(methodResult.getResult());
             setServiceProperties(serviceProps);
         }
     }

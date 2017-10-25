@@ -78,7 +78,7 @@ public class BundleComponentActivator implements ComponentActivator
     private final BundleContext m_context;
 
     // This is a list of component holders that belong to a particular bundle
-    private final List<ComponentHolder<?>> m_holders = new ArrayList<ComponentHolder<?>>();
+    private final List<ComponentHolder<?>> m_holders = new ArrayList<>();
 
     // The Configuration Admin tracker providing configuration for components
     private final ServiceTracker<LogService, LogService> m_logService;
@@ -95,13 +95,13 @@ public class BundleComponentActivator implements ComponentActivator
 
     private final ConfigAdminTracker configAdminTracker;
 
-    private final Map<String, ListenerInfo> listenerMap = new HashMap<String, ListenerInfo>();
+    private final Map<String, ListenerInfo> listenerMap = new HashMap<>();
 
     private final SimpleLogger m_logger;
 
     private static class ListenerInfo implements ServiceListener
     {
-        private Map<Filter, List<ExtendedServiceListener<ExtendedServiceEvent>>> filterMap = new HashMap<Filter, List<ExtendedServiceListener<ExtendedServiceEvent>>>();
+        private Map<Filter, List<ExtendedServiceListener<ExtendedServiceEvent>>> filterMap = new HashMap<>();
 
         @Override
         public void serviceChanged(ServiceEvent event)
@@ -152,7 +152,7 @@ public class BundleComponentActivator implements ComponentActivator
 
         public synchronized void add(Filter filter, ExtendedServiceListener<ExtendedServiceEvent> listener)
         {
-            filterMap = new HashMap<Filter, List<ExtendedServiceListener<ExtendedServiceEvent>>>( filterMap );
+            filterMap = new HashMap<>( filterMap );
             List<ExtendedServiceListener<ExtendedServiceEvent>> listeners = filterMap.get( filter );
             if ( listeners == null )
             {
@@ -160,7 +160,7 @@ public class BundleComponentActivator implements ComponentActivator
             }
             else
             {
-                listeners = new ArrayList<ExtendedServiceListener<ExtendedServiceEvent>>( listeners );
+                listeners = new ArrayList<>( listeners );
                 listeners.add( listener );
             }
             filterMap.put( filter, listeners );
@@ -171,8 +171,8 @@ public class BundleComponentActivator implements ComponentActivator
             List<ExtendedServiceListener<ExtendedServiceEvent>> listeners = filterMap.get( filter );
             if ( listeners != null )
             {
-                filterMap = new HashMap<Filter, List<ExtendedServiceListener<ExtendedServiceEvent>>>( filterMap );
-                listeners = new ArrayList<ExtendedServiceListener<ExtendedServiceEvent>>( listeners );
+                filterMap = new HashMap<>( filterMap );
+                listeners = new ArrayList<>( listeners );
                 listeners.remove( listener );
                 if ( listeners.isEmpty() )
                 {
@@ -254,7 +254,7 @@ public class BundleComponentActivator implements ComponentActivator
         m_bundle = context.getBundle();
 
         // have the LogService handy (if available)
-        m_logService = new ServiceTracker<LogService, LogService>( context, Activator.LOGSERVICE_CLASS, null );
+        m_logService = new ServiceTracker<>( context, Activator.LOGSERVICE_CLASS, null );
         m_logService.open();
         m_configuration = configuration;
 
@@ -410,7 +410,7 @@ public class BundleComponentActivator implements ComponentActivator
         }
 
         // create the result list
-        List<URL> urls = new ArrayList<URL>();
+        List<URL> urls = new ArrayList<>();
         while ( entries.hasMoreElements() )
         {
             urls.add( entries.nextElement() );
@@ -781,6 +781,7 @@ public class BundleComponentActivator implements ComponentActivator
     {
         if ( isLogEnabled( level ) )
         {
+            // TODO use R7 logger if ComponentMetadata is set
             // prepend the metadata name to the message
             if ( metadata != null )
             {

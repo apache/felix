@@ -28,8 +28,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import org.apache.felix.scr.impl.inject.ComponentMethods;
 import org.apache.felix.scr.impl.inject.ComponentConstructor;
+import org.apache.felix.scr.impl.inject.ComponentMethods;
 import org.apache.felix.scr.impl.inject.LifecycleMethod;
 import org.apache.felix.scr.impl.inject.MethodResult;
 import org.apache.felix.scr.impl.manager.DependencyManager.OpenStatus;
@@ -258,6 +258,10 @@ public class SingleComponentManager<S> extends AbstractComponentManager<S> imple
                 final ComponentConstructor.ReferencePair<S> pair = new ComponentConstructor.ReferencePair<>();
                 pair.dependencyManager = dm;
                 pair.openStatus = open;
+                // TODO - we need to check:
+                // dynamic -> ignore, log warning
+                // double refs for same parameter -> ignore second, log warning
+                // index higher than number of params -> ignore, log warning
                 paramMap.put(dm.getReferenceMetadata().getParameterIndex(), pair);
             }
         }
@@ -270,7 +274,7 @@ public class SingleComponentManager<S> extends AbstractComponentManager<S> imple
                 implementationObjectClass = (Class<S>) bundle.loadClass(
                         getComponentMetadata().getImplementationClassName() )  ;
 
-                implementationObject = getComponentMethods().getConstructor().newInstance(implementationObjectClass,
+                implementationObject = getComponentMethods().getConstructor().newInstance(
                         componentContext,
                         paramMap);
 
