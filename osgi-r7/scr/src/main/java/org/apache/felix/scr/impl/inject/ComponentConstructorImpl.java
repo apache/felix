@@ -20,13 +20,16 @@ package org.apache.felix.scr.impl.inject;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import org.apache.felix.scr.impl.helper.SimpleLogger;
 import org.apache.felix.scr.impl.inject.ValueUtils.ValueType;
 import org.apache.felix.scr.impl.inject.field.FieldUtils;
 import org.apache.felix.scr.impl.manager.ComponentContextImpl;
+import org.apache.felix.scr.impl.manager.RefPair;
 import org.apache.felix.scr.impl.metadata.ComponentMetadata;
 import org.apache.felix.scr.impl.metadata.ReferenceMetadata;
 import org.osgi.service.log.LogService;
@@ -37,11 +40,12 @@ import org.osgi.service.log.LogService;
  */
 public class ComponentConstructorImpl<T> implements ComponentConstructor<T>
 {
-    private final ValueType[] paramTypes;
-    private final Field[] fields;
+    private final Field[] activationFields;
+    private final ValueType[] activationFieldTypes;
 
     private final Constructor<T> constructor;
     private final ValueType[] constructorArgTypes;
+    private final ReferenceMetadata[] constructorRefs;
 
     @SuppressWarnings("unchecked")
     public ComponentConstructorImpl(final ComponentMetadata componentMetadata,
@@ -51,36 +55,36 @@ public class ComponentConstructorImpl<T> implements ComponentConstructor<T>
         // constructor injection
         // get reference parameter map
         final Map<Integer, ReferenceMetadata> paramMap = ( componentMetadata.getNumberOfConstructorParameters() > 0 ? new HashMap<Integer, ReferenceMetadata>() : null);
-        for ( final ReferenceMetadata ref : componentMetadata.getDependencies())
+        for ( final ReferenceMetadata refMetadata : componentMetadata.getDependencies())
         {
-            if ( ref.getParameterIndex() != null )
+            if ( refMetadata.getParameterIndex() != null )
             {
-                final int index = ref.getParameterIndex();
+                final int index = refMetadata.getParameterIndex();
                 if ( index > componentMetadata.getNumberOfConstructorParameters() )
                 {
                     // if the index (starting at 0) is equal or higher than the number of constructor arguments
                     // we log a warning and ignore the reference
                     logger.log(LogService.LOG_WARNING,
                             "Ignoring reference {0} in component {1} for constructor injection. Parameter index is too high.",
-                            new Object[] { ref.getName(), componentMetadata.getName() }, null );
+                            new Object[] { refMetadata.getName(), componentMetadata.getName() }, null );
                 }
-                else if ( !ref.isStatic() )
+                else if ( !refMetadata.isStatic() )
                 {
                     // if the reference is dynamic, we log a warning and ignore the reference
                     logger.log(LogService.LOG_WARNING,
                             "Ignoring reference {0} in component {1} for constructor injection. Reference is dynamic.",
-                            new Object[] { ref.getName(), componentMetadata.getName() }, null );
+                            new Object[] { refMetadata.getName(), componentMetadata.getName() }, null );
                 }
                 else if ( paramMap.get(index) != null )
                 {
                     // duplicate reference for the same index, we log a warning and ignore the duplicates
                     logger.log(LogService.LOG_WARNING,
                             "Ignoring reference {0} in component {1} for constructor injection. Another reference has the same index.",
-                            new Object[] { ref.getName(), componentMetadata.getName() }, null );
+                            new Object[] { refMetadata.getName(), componentMetadata.getName() }, null );
                 }
                 else
                 {
-                    paramMap.put(index, ref);
+                    paramMap.put(index, refMetadata);
                 }
 
             }
@@ -89,6 +93,8 @@ public class ComponentConstructorImpl<T> implements ComponentConstructor<T>
         // Search constructor
         Constructor<T> found = null;
         ValueType[] foundTypes = null;
+        ReferenceMetadata[] foundRefs = null;
+
         final Constructor<?>[] constructors = componentClass.getConstructors();
         for(final Constructor<?> c : constructors)
         {
@@ -102,6 +108,7 @@ public class ComponentConstructorImpl<T> implements ComponentConstructor<T>
                     boolean hasFailure = false;
                     final Class<?>[] argTypes = check.getParameterTypes();
                     foundTypes = new ValueType[argTypes.length];
+                    foundRefs = new ReferenceMetadata[argTypes.length];
                     for(int i=0; i<foundTypes.length;i++)
                     {
                         final ReferenceMetadata ref = paramMap.get(i);
@@ -112,6 +119,7 @@ public class ComponentConstructorImpl<T> implements ComponentConstructor<T>
                         else
                         {
                             foundTypes[i] = ValueUtils.getReferenceValueType(componentClass, ref, argTypes[i], null, logger);
+                            foundRefs[i] = ref;
                         }
                         if ( foundTypes[i] == ValueType.ignore )
                         {
@@ -134,12 +142,13 @@ public class ComponentConstructorImpl<T> implements ComponentConstructor<T>
         }
         this.constructor = found;
         this.constructorArgTypes = foundTypes;
+        this.constructorRefs = foundRefs;
 
         // activation fields
         if ( componentMetadata.getActivationFields() != null )
         {
-            paramTypes = new ValueType[componentMetadata.getActivationFields().size()];
-            fields = new Field[paramTypes.length];
+            activationFieldTypes = new ValueType[componentMetadata.getActivationFields().size()];
+            activationFields = new Field[activationFieldTypes.length];
 
             int index = 0;
             for(final String fieldName : componentMetadata.getActivationFields() )
@@ -147,20 +156,20 @@ public class ComponentConstructorImpl<T> implements ComponentConstructor<T>
                 final FieldUtils.FieldSearchResult result = FieldUtils.searchField(componentClass, fieldName, logger);
                 if ( result == null || result.field == null )
                 {
-                    paramTypes[index] = null;
-                    fields[index] = null;
+                    activationFieldTypes[index] = null;
+                    activationFields[index] = null;
                 }
                 else
                 {
                     if ( result.usable )
                     {
-                        paramTypes[index] = ValueUtils.getValueType(result.field.getType());
-                        fields[index] = result.field;
+                        activationFieldTypes[index] = ValueUtils.getValueType(result.field.getType());
+                        activationFields[index] = result.field;
                     }
                     else
                     {
-                        paramTypes[index] = ValueType.ignore;
-                        fields[index] = null;
+                        activationFieldTypes[index] = ValueType.ignore;
+                        activationFields[index] = null;
                     }
                 }
                 index++;
@@ -168,19 +177,25 @@ public class ComponentConstructorImpl<T> implements ComponentConstructor<T>
         }
         else
         {
-            paramTypes = ValueUtils.EMPTY_VALUE_TYPES;
-            fields = null;
+            activationFieldTypes = ValueUtils.EMPTY_VALUE_TYPES;
+            activationFields = null;
         }
     }
 
     @Override
     public <S> T newInstance(final ComponentContextImpl<T> componentContext,
-            final Map<Integer, ReferencePair<S>> parameterMap)
+            final Map<ReferenceMetadata, ReferencePair<S>> parameterMap)
     throws Exception
     {
+        // no constructor -> throw
+        if ( constructor == null )
+        {
+            throw new InstantiationException("Constructor not found; Component will fail");
+        }
+
         // if we have fields and one is in state failure (type == null) we can directly throw
         int index = 0;
-        for(final ValueType t : paramTypes)
+        for(final ValueType t : activationFieldTypes)
         {
             if ( t == null )
             {
@@ -190,11 +205,6 @@ public class ComponentConstructorImpl<T> implements ComponentConstructor<T>
             index++;
         }
 
-        // constructor
-        if ( constructor == null )
-        {
-            throw new InstantiationException("Constructor not found; Component will fail");
-        }
         final Object[] args;
         if ( constructorArgTypes == null )
         {
@@ -205,33 +215,52 @@ public class ComponentConstructorImpl<T> implements ComponentConstructor<T>
             args = new Object[constructorArgTypes.length];
             for(int i=0; i<args.length; i++)
             {
-                // TODO - handle reference cardinality multiple
-                // TODO - can we assume that pair.openStatus.refs.iterator().next() always returns a value?
-                final ReferencePair<S> pair = parameterMap.get(i);
-                args[i] = ValueUtils.getValue(constructor.getDeclaringClass().getName(),
-                        constructorArgTypes[i],
-                        constructor.getParameterTypes()[i],
-                        componentContext,
-                        pair != null ? pair.openStatus.refs.iterator().next() : null);
+                final ReferenceMetadata refMetadata = this.constructorRefs[i];
+                final ReferencePair<S> pair = refMetadata == null ? null : parameterMap.get(refMetadata);
+
+                if ( refMetadata == null || !refMetadata.isMultiple())
+                {
+                    // TODO - can we assume that pair.openStatus.refs.iterator().next() always returns a value?
+                    // and is this the correct (highest?)
+                    args[i] = ValueUtils.getValue(constructor.getDeclaringClass().getName(),
+                            constructorArgTypes[i],
+                            constructor.getParameterTypes()[i],
+                            componentContext,
+                            pair != null ? pair.openStatus.refs.iterator().next() : null);
+                }
+                else
+                {
+                    // reference of cardinality multiple
+                    final List<Object> collection = new ArrayList<>();
+                    for(final RefPair<S,?> refPair : pair.openStatus.refs)
+                    {
+                        // TODO - do we need further checks?
+                        final Object value = ValueUtils.getValue(constructor.getDeclaringClass().getName(),
+                                constructorArgTypes[i],
+                                constructor.getParameterTypes()[i],
+                                componentContext,
+                                refPair);
+                        collection.add( value );
+                    }
+                    args[i] = collection;
+                }
             }
         }
         final T component = constructor.newInstance(args);
 
         // activation fields
-        for(int i = 0; i<paramTypes.length; i++)
+        for(int i = 0; i<activationFieldTypes.length; i++)
         {
-            if ( paramTypes[i] != ValueType.ignore )
+            if ( activationFieldTypes[i] != ValueType.ignore )
             {
                 final Object value = ValueUtils.getValue(constructor.getDeclaringClass().getName(),
-                        paramTypes[i],
-                        fields[i].getType(),
+                        activationFieldTypes[i],
+                        activationFields[i].getType(),
                         componentContext,
                         null); // null is ok as activation fields are not references
-                FieldUtils.setField(fields[i], component, value, componentContext.getLogger());
+                FieldUtils.setField(activationFields[i], component, value, componentContext.getLogger());
             }
         }
-
-        // TODO - add field initialization for references
 
         return component;
     }

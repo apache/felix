@@ -35,9 +35,7 @@ public class ConfigAdminTracker
     public ConfigAdminTracker(final ComponentActivator componentActivator)
     {
 
-        //TODO this assumes that there is 0 or 1 ca service visible to the bundle being extended.
-        //Is this sure to be true?
-        configAdminTracker = new ServiceTracker<ConfigurationAdmin, RegionConfigurationSupport>(
+        configAdminTracker = new ServiceTracker<>(
             componentActivator.getBundleContext(), CONFIGURATION_ADMIN,
             new ServiceTrackerCustomizer<ConfigurationAdmin, RegionConfigurationSupport>()
             {

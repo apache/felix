@@ -51,7 +51,7 @@ public class ScrMetaTypeProviderServiceFactory implements ServiceFactory
     @Override
     public void ungetService(final Bundle bundle, final ServiceRegistration registration, final Object service)
     {
-        // nothing really todo; GC will do the rest
+        // nothing really to do; GC will do the rest
     }
 
 }

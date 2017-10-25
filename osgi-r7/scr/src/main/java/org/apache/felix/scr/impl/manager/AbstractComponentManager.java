@@ -250,7 +250,6 @@ public abstract class AbstractComponentManager<S> implements SimpleLogger, Compo
             catch (InterruptedException e1)
             {
                 Thread.currentThread().interrupt();
-                //TODO is there a better exception to throw?
                 throw new IllegalStateException("Interrupted twice: Could not obtain lock");
             }
             Thread.currentThread().interrupt();
