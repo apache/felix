@@ -18,7 +18,7 @@ package org.apache.felix.converter.impl;
 
 import org.osgi.util.converter.Specifying;
 
-public abstract class AbstractSpecifying<T extends Specifying<T>> implements Specifying<T> {
+abstract class AbstractSpecifying<T extends Specifying<T>> implements Specifying<T> {
     protected volatile Object defaultValue;
     protected volatile boolean hasDefault = false;
     protected volatile boolean forceCopy = false;

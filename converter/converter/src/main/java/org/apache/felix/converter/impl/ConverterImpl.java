@@ -32,6 +32,13 @@ import org.osgi.util.converter.Rule;
 import org.osgi.util.converter.TypeRule;
 import org.osgi.util.function.Function;
 
+/**
+ * Top-level implementation of the Converter. This class contains a number of rules
+ * that cover 'special cases'. <p>
+ *
+ * Note that this class avoids lambda's and hard dependencies on Java-8 (or later) types
+ * to also work under Java 7.
+ */
 public class ConverterImpl implements InternalConverter {
     private static final SimpleDateFormat ISO8601_DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssXXX");
     static {

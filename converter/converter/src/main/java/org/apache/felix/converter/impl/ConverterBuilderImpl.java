@@ -28,7 +28,7 @@ import org.osgi.util.converter.ConverterBuilder;
 import org.osgi.util.converter.ConverterFunction;
 import org.osgi.util.converter.TargetRule;
 
-public class ConverterBuilderImpl implements ConverterBuilder {
+class ConverterBuilderImpl implements ConverterBuilder {
     private final InternalConverter adapter;
     private final Map<Type, List<ConverterFunction>> rules = new HashMap<>();
     private final List<ConverterFunction> catchAllRules = new ArrayList<>();

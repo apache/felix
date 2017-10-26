@@ -30,7 +30,7 @@ import org.osgi.util.converter.Converting;
 import org.osgi.util.converter.Functioning;
 import org.osgi.util.converter.TypeReference;
 
-public class AdapterImpl implements InternalConverter {
+class AdapterImpl implements InternalConverter {
     private final InternalConverter delegate;
     private final Map<Type, List<ConverterFunction>> typeRules;
     private final List<ConverterFunction> allRules;
