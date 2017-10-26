@@ -30,13 +30,16 @@ import org.osgi.util.converter.Converting;
 import org.osgi.util.converter.Functioning;
 import org.osgi.util.converter.TypeReference;
 
-class AdapterImpl implements InternalConverter {
+/**
+ * A custom converter wraps another converter by adding rules and/or error handlers.
+ */
+class CustomConverterImpl implements InternalConverter {
     private final InternalConverter delegate;
     private final Map<Type, List<ConverterFunction>> typeRules;
     private final List<ConverterFunction> allRules;
     private final List<ConverterFunction> errorHandlers;
 
-    AdapterImpl(InternalConverter converter, Map<Type, List<ConverterFunction>> rules,
+    CustomConverterImpl(InternalConverter converter, Map<Type, List<ConverterFunction>> rules,
             List<ConverterFunction> catchAllRules, List<ConverterFunction> errHandlers) {
         delegate = converter;
         typeRules = rules;

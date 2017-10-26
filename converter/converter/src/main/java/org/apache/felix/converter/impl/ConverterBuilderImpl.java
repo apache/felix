@@ -29,18 +29,18 @@ import org.osgi.util.converter.ConverterFunction;
 import org.osgi.util.converter.TargetRule;
 
 class ConverterBuilderImpl implements ConverterBuilder {
-    private final InternalConverter adapter;
+    private final InternalConverter converter;
     private final Map<Type, List<ConverterFunction>> rules = new HashMap<>();
     private final List<ConverterFunction> catchAllRules = new ArrayList<>();
     private final List<ConverterFunction> errorHandlers = new ArrayList<>();
 
-    public ConverterBuilderImpl(InternalConverter a) {
-        this.adapter = a;
+    public ConverterBuilderImpl(InternalConverter c) {
+        this.converter = c;
     }
 
     @Override
     public InternalConverter build() {
-        return new AdapterImpl(adapter, rules, catchAllRules, errorHandlers);
+        return new CustomConverterImpl(converter, rules, catchAllRules, errorHandlers);
     }
 
     @Override
