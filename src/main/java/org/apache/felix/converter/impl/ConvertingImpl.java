@@ -47,7 +47,7 @@ import org.osgi.util.converter.Converter;
 import org.osgi.util.converter.Converting;
 import org.osgi.util.converter.TypeReference;
 
-public class ConvertingImpl extends AbstractSpecifying<Converting> implements Converting, InternalConverting {
+class ConvertingImpl extends AbstractSpecifying<Converting> implements Converting, InternalConverting {
     private static final Map<Class<?>, Class<?>> INTERFACE_IMPLS;
     static {
         Map<Class<?>, Class<?>> m = new HashMap<>();

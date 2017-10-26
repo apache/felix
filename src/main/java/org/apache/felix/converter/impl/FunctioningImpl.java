@@ -22,10 +22,10 @@ import org.osgi.util.converter.Functioning;
 import org.osgi.util.converter.TypeReference;
 import org.osgi.util.function.Function;
 
-public class FunctioningImpl extends AbstractSpecifying<Functioning> implements Functioning {
+class FunctioningImpl extends AbstractSpecifying<Functioning> implements Functioning {
     private InternalConverter converter;
 
-    public FunctioningImpl(InternalConverter converterImpl) {
+    FunctioningImpl(InternalConverter converterImpl) {
         converter = converterImpl;
     }
 

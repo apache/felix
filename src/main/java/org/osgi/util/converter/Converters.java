@@ -16,9 +16,7 @@
  */
 package org.osgi.util.converter;
 
-import org.apache.felix.converter.impl.ConverterBuilderImpl;
 import org.apache.felix.converter.impl.ConverterImpl;
-import org.apache.felix.converter.impl.InternalConverter;
 
 /**
  * Factory class to obtain the standard converter or a new converter builder.
@@ -27,11 +25,11 @@ import org.apache.felix.converter.impl.InternalConverter;
  * @ThreadSafe
  */
 public class Converters {
-    private static final InternalConverter CONVERTER;
+    private static final Converter CONVERTER;
 
     static {
         ConverterImpl impl = new ConverterImpl();
-        ConverterBuilderImpl cb = impl.newConverterBuilder();
+        ConverterBuilder cb = impl.newConverterBuilder();
         impl.addStandardRules(cb);
         CONVERTER = cb.build();
     }

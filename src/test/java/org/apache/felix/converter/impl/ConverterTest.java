@@ -1041,6 +1041,7 @@ public class ConverterTest {
         assertEquals("{}", cs);
     }
 
+    @SuppressWarnings({ "rawtypes", "unchecked" })
     @Test
     public void testTargetAsDTO() {
         MyDTOWithMethods expected = new MyDTOWithMethods();
