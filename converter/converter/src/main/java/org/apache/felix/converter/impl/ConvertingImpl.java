@@ -533,18 +533,9 @@ public class ConvertingImpl extends AbstractSpecifying<Converting> implements Co
     }
 
     private Object trySpecialCases() {
-        // TODO some of these can probably be implemented as an adapter
-
         if (Boolean.class.equals(targetAsClass)) {
-            if (object instanceof Number) {
-                return ((Number) object).longValue() != 0;
-            } else if (object instanceof Collection && ((Collection<?>) object).size() == 0) {
-                // TODO What about arrays?
+            if (object instanceof Collection && ((Collection<?>) object).size() == 0) {
                 return Boolean.FALSE;
-            }
-        } else if (Character.class.equals(targetAsClass)) {
-            if (object instanceof Number) {
-                return Character.valueOf((char) ((Number) object).intValue());
             }
         } else if (Number.class.isAssignableFrom(targetAsClass)) {
             if (object instanceof Boolean) {
@@ -563,10 +554,6 @@ public class ConvertingImpl extends AbstractSpecifying<Converting> implements Co
                 } else if (Double.class.isAssignableFrom(targetAsClass)) {
                     return ((Number) object).doubleValue();
                 }
-            }
-        } else if (Class.class.equals(targetAsClass)) {
-            if (object instanceof Collection && ((Collection<?>) object).size() == 0) {
-                return null;
             }
         } else if (Enum.class.isAssignableFrom(targetAsClass)) {
             if (object instanceof Number) {
@@ -841,7 +828,6 @@ public class ConvertingImpl extends AbstractSpecifying<Converting> implements Co
         return Map.class.isAssignableFrom(cls) ||
                 Collection.class.isAssignableFrom(cls) ||
                 DTOUtil.isDTOType(cls) ||
-                // isJavaBean
                 cls.isArray();
     }
 

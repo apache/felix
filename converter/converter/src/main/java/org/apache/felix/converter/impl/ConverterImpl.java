@@ -203,6 +203,20 @@ public class ConverterImpl implements InternalConverter {
             }
         }) {});
 
+        cb.rule(new Rule<Number, Boolean>(new Function<Number, Boolean>() {
+            @Override
+            public Boolean apply(Number obj) {
+                return obj.longValue() != 0;
+            }
+        }) {});
+
+        cb.rule(new Rule<Number, Character>(new Function<Number, Character>() {
+            @Override
+            public Character apply(Number obj) {
+                return Character.valueOf((char) obj.intValue());
+            }
+        }) {});
+
         reflectiveAddRule(cb, "java.time.LocalDateTime", "parse");
         reflectiveAddRule(cb, "java.time.LocalDate", "parse");
         reflectiveAddRule(cb, "java.time.LocalTime", "parse");
