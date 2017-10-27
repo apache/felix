@@ -30,32 +30,32 @@ import org.osgi.service.log.LogService;
 abstract class RegistrationManager<T>
 {
     enum RegState {unregistered, registered};
-    private static class RegStateWrapper 
+    private static class RegStateWrapper
     {
         private final CountDownLatch latch = new CountDownLatch(1);
         private final RegState regState;
-        
+
         RegStateWrapper( RegState regState )
         {
             this.regState = regState;
         }
-        
+
         public RegState getRegState()
         {
             return regState;
         }
-        
+
         public CountDownLatch getLatch()
         {
             return latch;
         }
-        
+
         @Override
         public int hashCode()
         {
             return regState.hashCode();
         }
-        
+
         @Override
         public boolean equals(Object other)
         {
@@ -71,15 +71,15 @@ abstract class RegistrationManager<T>
     }
     private final Lock registrationLock = new ReentrantLock();
     //Deque, ArrayDeque if we had java 6
-    private final List<RegStateWrapper> opqueue = new ArrayList<RegStateWrapper>();
+    private final List<RegStateWrapper> opqueue = new ArrayList<>();
 
     private volatile T m_serviceRegistration;
 
     /**
-     * 
+     *
      * @param desired desired registration state
      * @param services services to register this under
-     * @return true if this request results in a state change, false if we are already in the desired state or some other thread 
+     * @return true if this request results in a state change, false if we are already in the desired state or some other thread
      * will deal with the consequences of the state change.
      */
     boolean changeRegistration( RegState desired, String[] services )
@@ -92,15 +92,13 @@ abstract class RegistrationManager<T>
             {
                 if ((desired == RegState.unregistered) == (m_serviceRegistration == null))
                 {
-                    log( LogService.LOG_DEBUG, "Already in desired state {0}", new Object[]
-                            {desired}, null );
-                    return false; 
+                    log( LogService.LOG_DEBUG, "Already in desired state {0}", null, desired);
+                    return false;
                 }
             }
             else if (opqueue.get( opqueue.size() - 1 ).getRegState() == desired)
             {
-                log( LogService.LOG_DEBUG, "Duplicate request on other thread: registration change queue {0}", new Object[]
-                        {opqueue}, null );
+                log( LogService.LOG_DEBUG, "Duplicate request on other thread: registration change queue {0}", null, opqueue);
                 rsw = opqueue.get( opqueue.size() - 1 );
                 return false; //another thread will do our work and owns the state change
             }
@@ -108,22 +106,20 @@ abstract class RegistrationManager<T>
             opqueue.add( rsw );
             if (opqueue.size() > 1)
             {
-                log( LogService.LOG_DEBUG, "Allowing other thread to process request: registration change queue {0}", new Object[]
-                        {opqueue}, null );
+                log( LogService.LOG_DEBUG, "Allowing other thread to process request: registration change queue {0}", null, opqueue);
                 return true; //some other thread will do it later but this thread owns the state change.
             }
             //we're next
             do
             {
-                log( LogService.LOG_DEBUG, "registration change queue {0}", new Object[]
-                        {opqueue}, null );
+                log( LogService.LOG_DEBUG, "registration change queue {0}", null, opqueue);;
                 RegStateWrapper next = opqueue.get( 0 );
                 T serviceRegistration = m_serviceRegistration;
                 if ( next.getRegState() == RegState.unregistered)
                 {
                     m_serviceRegistration = null;
                 }
-                    
+
                 registrationLock.unlock();
                 try
                 {
@@ -132,7 +128,7 @@ abstract class RegistrationManager<T>
                         serviceRegistration = register(services );
 
                     }
-                    else 
+                    else
                     {
                         if ( serviceRegistration != null )
                         {
@@ -140,9 +136,8 @@ abstract class RegistrationManager<T>
                         }
                         else
                         {
-                            log( LogService.LOG_ERROR, "Unexpected unregistration request with no registration present", new Object[]
-                                    {}, new Exception("Stack trace") );
-                           
+                            log( LogService.LOG_ERROR, "Unexpected unregistration request with no registration present",  new Exception("Stack trace"));
+
                         }
                     }
                 }
@@ -170,8 +165,7 @@ abstract class RegistrationManager<T>
                 {
                     if ( !rsw.getLatch().await( getTimeout(), TimeUnit.MILLISECONDS ))
                     {
-                        log( LogService.LOG_ERROR, "Timeout waiting for reg change to complete {0}", new Object[]
-                                {rsw.getRegState()}, null);
+                        log( LogService.LOG_ERROR, "Timeout waiting for reg change to complete {0}", null, rsw.getRegState());
                         reportTimeout();
                     }
                 }
@@ -181,15 +175,13 @@ abstract class RegistrationManager<T>
                     {
                         if ( !rsw.getLatch().await( getTimeout(), TimeUnit.MILLISECONDS ))
                         {
-                            log( LogService.LOG_ERROR, "Timeout waiting for reg change to complete {0}", new Object[]
-                                    {rsw.getRegState()}, null);
+                            log( LogService.LOG_ERROR, "Timeout waiting for reg change to complete {0}", null, rsw.getRegState());
                             reportTimeout();
                         }
                     }
                     catch ( InterruptedException e1 )
                     {
-                        log( LogService.LOG_ERROR, "Interrupted twice waiting for reg change to complete {0}", new Object[]
-                                {rsw.getRegState()}, null);
+                        log( LogService.LOG_ERROR, "Interrupted twice waiting for reg change to complete {0}",null, rsw.getRegState());
                     }
                     Thread.currentThread().interrupt();
                 }
@@ -197,22 +189,22 @@ abstract class RegistrationManager<T>
         }
 
     }
-    
+
     abstract T register(String[] services);
 
     abstract void postRegister(T t);
 
     abstract void unregister(T serviceRegistration);
-    
-    abstract void log( int level, String message, Object[] arguments, Throwable ex );
-    
+
+    abstract void log( int level, String message, Throwable ex, Object... arguments );
+
     abstract long getTimeout();
-    
+
     abstract void reportTimeout();
-    
+
     T getServiceRegistration()
     {
         return m_serviceRegistration;
     }
-    
+
 }

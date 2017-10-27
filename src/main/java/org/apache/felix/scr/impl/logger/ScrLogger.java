@@ -33,7 +33,7 @@ import org.osgi.util.tracker.ServiceTracker;
 public class ScrLogger implements Logger
 {
     //  name of the LogService class (this is a string to not create a reference to the class)
-    static final String LOGSERVICE_CLASS = "org.osgi.service.log.LogService";
+    private static final String LOGSERVICE_CLASS = "org.osgi.service.log.LogService";
 
     // the log service to log messages to
     private final ServiceTracker<LogService, LogService> logServiceTracker;
@@ -55,6 +55,10 @@ public class ScrLogger implements Logger
         logServiceTracker.close();
     }
 
+    protected LogService getLogService()
+    {
+        return logServiceTracker.getService();
+    }
 
     @Override
     public void log(final int level, final String pattern, final Throwable ex, final Object... arguments )
@@ -77,7 +81,7 @@ public class ScrLogger implements Logger
     {
         if ( isLogEnabled( level ) )
         {
-            final LogService logger = logServiceTracker.getService();
+            final LogService logger = getLogService();
             if ( logger == null )
             {
                 // output depending on level

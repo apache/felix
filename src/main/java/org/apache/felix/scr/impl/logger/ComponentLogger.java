@@ -18,12 +18,77 @@
  */
 package org.apache.felix.scr.impl.logger;
 
+import org.apache.felix.scr.impl.metadata.ComponentMetadata;
+
 /**
  * The <code>ComponentLogger</code> interface defines a simple API to enable some logging
  * for a component. This avoids avoids that all clients doing logging on behalf of
  * a component need to pass in things like {@code ComponentMetadata} or the component Id.
  */
-public interface ComponentLogger extends Logger
+public class ComponentLogger implements Logger
 {
-    // just a marker interface
+    private final String name;
+
+    private final BundleLogger parent;
+
+    private volatile String prefix;
+
+    public ComponentLogger(final ComponentMetadata metadata, final BundleLogger parent)
+    {
+        if ( metadata.getName() != null )
+        {
+            this.name = metadata.getName();
+        }
+        else if ( metadata.getImplementationClassName() != null )
+        {
+            this.name = "implementation class " + metadata.getImplementationClassName();
+        }
+        else
+        {
+            this.name = "UNKNOWN";
+        }
+        this.parent = parent;
+        this.setComponentId(-1);
+    }
+
+    public void setComponentId(final long id)
+    {
+        if ( id > -1 )
+        {
+            prefix = "[" + name + "(" + id + ")] : ";
+        }
+        else
+        {
+            prefix = "[" + name + "] : ";
+        }
+    }
+
+    @Override
+    public void log(final int level, final String message, final Throwable ex)
+    {
+        if ( parent.isLogEnabled(level) )
+        {
+            parent.log(level,
+                    prefix + message,
+                    ex);
+        }
+    }
+
+    @Override
+    public void log(final int level, final String pattern, final Throwable ex, final Object... arguments)
+    {
+        if ( parent.isLogEnabled(level) )
+        {
+            parent.log(level,
+                    prefix + pattern,
+                    ex,
+                    arguments);
+        }
+    }
+
+    @Override
+    public boolean isLogEnabled(final int level)
+    {
+        return parent.isLogEnabled(level);
+    }
 }

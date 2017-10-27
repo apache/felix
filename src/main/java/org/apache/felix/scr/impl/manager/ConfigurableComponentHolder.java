@@ -29,8 +29,8 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.felix.scr.impl.helper.SimpleLogger;
 import org.apache.felix.scr.impl.inject.ComponentMethods;
+import org.apache.felix.scr.impl.logger.ComponentLogger;
 import org.apache.felix.scr.impl.metadata.ComponentMetadata;
 import org.apache.felix.scr.impl.metadata.ServiceMetadata.Scope;
 import org.apache.felix.scr.impl.metadata.TargetedPID;
@@ -58,7 +58,7 @@ import org.osgi.util.promise.Promises;
  * <code>service.factoryPid</code> equals the component name.</li>
  * </ul>
  */
-public abstract class ConfigurableComponentHolder<S> implements ComponentHolder<S>, ComponentContainer<S>, SimpleLogger
+public abstract class ConfigurableComponentHolder<S> implements ComponentHolder<S>, ComponentContainer<S>
 {
 
     /**
@@ -141,11 +141,16 @@ public abstract class ConfigurableComponentHolder<S> implements ComponentHolder<
 
     private final ComponentMethods m_componentMethods;
 
-    public ConfigurableComponentHolder( final ComponentActivator activator, final ComponentMetadata metadata )
+    private final ComponentLogger logger;
+
+    public ConfigurableComponentHolder( final ComponentActivator activator,
+            final ComponentMetadata metadata,
+            final ComponentLogger logger)
     {
+        this.logger = logger;
         this.m_activator = activator;
         this.m_componentMetadata = metadata;
-        int pidCount = metadata.getConfigurationPid().size();
+        final int pidCount = metadata.getConfigurationPid().size();
         this.m_targetedPids = new TargetedPID[pidCount];
         this.m_configurations = new Dictionary[pidCount];
         this.m_changeCount = new Long[pidCount];
@@ -241,8 +246,7 @@ public abstract class ConfigurableComponentHolder<S> implements ComponentHolder<
     @Override
     public void configurationDeleted( final TargetedPID pid, TargetedPID factoryPid )
     {
-        log( LogService.LOG_DEBUG, "ImmediateComponentHolder configuration deleted for pid {0}",
-            new Object[] {pid}, null);
+        logger.log( LogService.LOG_DEBUG, "ImmediateComponentHolder configuration deleted for pid {0}", null, pid);
 
         // component to deconfigure or dispose of
         final Map<AbstractComponentManager<S>, Map<String, Object>> scms = new HashMap<>();
@@ -349,8 +353,8 @@ public abstract class ConfigurableComponentHolder<S> implements ComponentHolder<
     @Override
     public boolean configurationUpdated( TargetedPID pid, TargetedPID factoryPid, final Dictionary<String, Object> props, long changeCount )
     {
-        log( LogService.LOG_DEBUG, "ConfigurableComponentHolder configuration updated for pid {0} with properties {1} and change count {2}",
-            new Object[] {pid, props, changeCount}, null);
+        logger.log( LogService.LOG_DEBUG, "ConfigurableComponentHolder configuration updated for pid {0} with properties {1} and change count {2}", null,
+            pid, props, changeCount);
 
         // component to update or create
         final Map<AbstractComponentManager<S>, Map<String, Object>> scms = new HashMap<>();
@@ -429,19 +433,18 @@ public abstract class ConfigurableComponentHolder<S> implements ComponentHolder<
         {
             // configure the component
             entry.getKey().reconfigure(entry.getValue(), false, factoryPid);
-            log(LogService.LOG_DEBUG,
-                "ImmediateComponentHolder Finished configuring the dependency managers for component for pid {0} ",
-                new Object[] { pid }, null);
+            logger.log(LogService.LOG_DEBUG,
+                "ImmediateComponentHolder Finished configuring the dependency managers for component for pid {0} ", null,
+                pid );
             if (enable) {
                 entry.getKey().enable(false);
-                log(LogService.LOG_DEBUG,
-                    "ImmediateComponentHolder Finished enabling component for pid {0} ",
-                    new Object[] { pid }, null);
+                logger.log(LogService.LOG_DEBUG,
+                    "ImmediateComponentHolder Finished enabling component for pid {0} ", null,
+                    pid );
             } else {
-                log(LogService.LOG_DEBUG,
-                    "ImmediateComponentHolder Will not enable component for pid {0}: holder enabled state: {1}, metadata enabled: {2} ",
-                    new Object[] { pid, m_enabled,
-                    m_componentMetadata.isEnabled() }, null);
+                logger.log(LogService.LOG_DEBUG,
+                    "ImmediateComponentHolder Will not enable component for pid {0}: holder enabled state: {1}, metadata enabled: {2} ", null,
+                    pid, m_enabled, m_componentMetadata.isEnabled());
             }
         }
         return created;
@@ -496,18 +499,17 @@ public abstract class ConfigurableComponentHolder<S> implements ComponentHolder<
     private int getSingletonPidIndex(TargetedPID pid) {
         int index = m_componentMetadata.getPidIndex(pid);
         if (index == -1) {
-            log(LogService.LOG_ERROR,
-                "Unrecognized pid {0}, expected one of {1}",
-                new Object[] { pid,
-                m_componentMetadata.getConfigurationPid() },
-                null);
+            logger.log(LogService.LOG_ERROR,
+                "Unrecognized pid {0}, expected one of {1}", null,
+                 pid,
+                m_componentMetadata.getConfigurationPid() );
             throw new IllegalArgumentException("Unrecognized pid "
                 + pid);
         }
         if (m_factoryPidIndex != null && index == m_factoryPidIndex) {
-            log(LogService.LOG_ERROR,
+            logger.log(LogService.LOG_ERROR,
                 "singleton pid {0} supplied, but matches an existing factory pid at index: {1}",
-                new Object[] { pid, m_factoryPidIndex }, null);
+                null, pid, m_factoryPidIndex );
             throw new IllegalStateException(
                 "Singleton pid supplied matching a previous factory pid "
                     + pid);
@@ -519,18 +521,17 @@ public abstract class ConfigurableComponentHolder<S> implements ComponentHolder<
     private void checkFactoryPidIndex(TargetedPID factoryPid) {
         int index = m_componentMetadata.getPidIndex(factoryPid);
         if (index == -1) {
-            log(LogService.LOG_ERROR,
-                "Unrecognized factory pid {0}, expected one of {1}",
-                new Object[] { factoryPid,
-                m_componentMetadata.getConfigurationPid() },
-                null);
+            logger.log(LogService.LOG_ERROR,
+                "Unrecognized factory pid {0}, expected one of {1}", null,
+                factoryPid,
+                m_componentMetadata.getConfigurationPid() );
             throw new IllegalArgumentException(
                 "Unrecognized factory pid " + factoryPid);
         }
         if (m_configurations[index] != null) {
-            log(LogService.LOG_ERROR,
-                "factory pid {0}, but this pid is already supplied as a singleton: {1} at index {2}",
-                new Object[] { factoryPid, Arrays.asList(m_targetedPids), index }, null);
+            logger.log(LogService.LOG_ERROR,
+                "factory pid {0}, but this pid is already supplied as a singleton: {1} at index {2}", null,
+                factoryPid, Arrays.asList(m_targetedPids), index);
             throw new IllegalStateException(
                 "Factory pid supplied after all non-factory configurations supplied "
                     + factoryPid);
@@ -538,10 +539,9 @@ public abstract class ConfigurableComponentHolder<S> implements ComponentHolder<
         if (m_factoryPidIndex == null) {
             m_factoryPidIndex = index;
         } else if (index != m_factoryPidIndex) {
-            log(LogService.LOG_ERROR,
-                "factory pid {0} supplied for index {1}, but a factory pid previously supplied at index {2}",
-                new Object[] { factoryPid, index, m_factoryPidIndex },
-                null);
+            logger.log(LogService.LOG_ERROR,
+                "factory pid {0} supplied for index {1}, but a factory pid previously supplied at index {2}", null,
+                factoryPid, index, m_factoryPidIndex );
             throw new IllegalStateException(
                 "Factory pid supplied at wrong index " + factoryPid);
         }
@@ -831,35 +831,10 @@ public abstract class ConfigurableComponentHolder<S> implements ComponentHolder<
         m_singleComponent = null;
     }
 
-    @Override
-    public boolean isLogEnabled( int level )
-    {
-        ComponentActivator activator = getActivator();
-        if ( activator != null )
-        {
-            return activator.isLogEnabled( level );
-        }
-        return false;
-    }
 
     @Override
-    public void log( int level, String message, Throwable ex )
-    {
-        ComponentActivator activator = getActivator();
-        if ( activator != null )
-        {
-            activator.log( level, message, getComponentMetadata(), null, ex );
-        }
-    }
-
-    @Override
-    public void log( int level, String message, Object[] arguments, Throwable ex )
-    {
-        ComponentActivator activator = getActivator();
-        if ( activator != null )
-        {
-            activator.log( level, message, arguments, getComponentMetadata(), null, ex );
-        }
+    public ComponentLogger getLogger() {
+        return logger;
     }
 
     @Override

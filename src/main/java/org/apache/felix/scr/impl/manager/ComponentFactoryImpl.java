@@ -93,8 +93,8 @@ public class ComponentFactoryImpl<S> extends AbstractComponentManager<S> impleme
     public ComponentFactoryImpl( ComponentContainer<S> container, ComponentMethods componentMethods )
     {
         super( container, componentMethods );
-        m_componentInstances = new IdentityHashMap<SingleComponentManager<S>, SingleComponentManager<S>>();
-        m_configuration = new HashMap<String, Object>();
+        m_componentInstances = new IdentityHashMap<>();
+        m_configuration = new HashMap<>();
     }
 
 
@@ -121,8 +121,8 @@ public class ComponentFactoryImpl<S> extends AbstractComponentManager<S> impleme
     public ComponentInstance<S> newInstance( Dictionary<String, ?> dictionary )
     {
         final SingleComponentManager<S> cm = createComponentManager();
-        log( LogService.LOG_DEBUG, "Creating new instance from component factory {0} with configuration {1}",
-                new Object[] {getComponentMetadata().getName(), dictionary}, null );
+        getLogger().log( LogService.LOG_DEBUG, "Creating new instance from component factory with configuration {0}",
+                null, dictionary );
 
         cm.setFactoryProperties( dictionary );
         //configure the properties
@@ -133,7 +133,7 @@ public class ComponentFactoryImpl<S> extends AbstractComponentManager<S> impleme
         ComponentInstance<S> instance;
         if ( getComponentMetadata().isPersistentFactoryComponent() )
         {
-            instance = new ModifyComponentInstance<S>(cm);
+            instance = new ModifyComponentInstance<>(cm);
         }
         else
         {
@@ -253,7 +253,7 @@ public int hashCode()
     @Override
     public Map<String, Object> getProperties()
     {
-        Map<String, Object> props = new HashMap<String, Object>();
+        Map<String, Object> props = new HashMap<>();
 
         // add target properties of references
         List<ReferenceMetadata> depMetaData = getComponentMetadata().getDependencies();
@@ -298,7 +298,7 @@ public int hashCode()
     @Override
     public Dictionary<String, Object> getServiceProperties()
     {
-        Dictionary<String, Object> props = new Hashtable<String, Object>(getComponentMetadata().getFactoryProperties());
+        Dictionary<String, Object> props = new Hashtable<>(getComponentMetadata().getFactoryProperties());
 
         // 112.5.5 The Component Factory service must register with the following properties
         props.put( ComponentConstants.COMPONENT_NAME, getComponentMetadata().getName() );
@@ -356,7 +356,7 @@ public int hashCode()
     @Override
     public void dispose( int reason )
     {
-        List<AbstractComponentManager<S>> cms = new ArrayList<AbstractComponentManager<S>>( );
+        List<AbstractComponentManager<S>> cms = new ArrayList<>( );
         getComponentManagers( m_componentInstances, cms );
         for ( AbstractComponentManager<S> acm: cms )
         {
@@ -394,7 +394,7 @@ public int hashCode()
      */
     private SingleComponentManager<S> createComponentManager()
     {
-        return new SingleComponentManager<S>( this, getComponentMethods(), !getComponentMetadata().isPersistentFactoryComponent() );
+        return new SingleComponentManager<>( this, getComponentMethods(), !getComponentMetadata().isPersistentFactoryComponent() );
     }
 
 
@@ -425,7 +425,7 @@ public int hashCode()
 		List<SingleComponentManager<S>> cms;
 		synchronized (m_componentInstances)
         {
-            cms = new ArrayList<SingleComponentManager<S>>(m_componentInstances.keySet());
+            cms = new ArrayList<>(m_componentInstances.keySet());
         }
 		for (SingleComponentManager<S> cm: cms)
 		{

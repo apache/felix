@@ -29,18 +29,18 @@ import org.junit.Test;
 
 public class RegistrationManagerTest
 {
-    
+
     private volatile boolean fail;
-    
+
     private int n = 10;
-    private ArrayList<Thread> threads = new ArrayList<Thread>();
-    
+    private ArrayList<Thread> threads = new ArrayList<>();
+
     private TRM trm = new TRM();
-    
+
     @Test
     public void testRegistrationManager( ) throws Exception
     {
-       
+
         for (int setup = 0; setup < 1 << n; setup++ )
         {
             runTest(setup);
@@ -50,9 +50,9 @@ public class RegistrationManagerTest
             }
         }
     }
-    
+
     private void runTest(int setup) throws InterruptedException
-    {   
+    {
         final CountDownLatch done = new CountDownLatch( n );
         for (int i = 0; i < n; i++)
         {
@@ -60,19 +60,20 @@ public class RegistrationManagerTest
             final RegState change = b? RegState.registered: RegState.unregistered;
             new Thread(new Runnable() {
 
+                @Override
                 public void run()
                 {
                     trm.changeRegistration( change, null );
                 }
-                
+
             }).start();
             done.countDown();
         }
         done.await();
     }
 
-    
-    private class TRM extends RegistrationManager<Object> 
+
+    private class TRM extends RegistrationManager<Object>
     {
 
         @Override
@@ -111,7 +112,7 @@ public class RegistrationManagerTest
         }
 
         @Override
-        void log(int level, String message, Object[] arguments, Throwable ex)
+        void log(int level, String message, Throwable ex, Object... arguments)
         {
             if ( arguments != null && arguments.length == 1 && (arguments[0] instanceof ArrayList))
             {
@@ -130,7 +131,7 @@ public class RegistrationManagerTest
                     }
                 }
             }
-            
+
         }
 
         @Override
@@ -144,7 +145,7 @@ public class RegistrationManagerTest
         void reportTimeout()
         {
             // TODO Auto-generated method stub
-            
+
         }
 
     }

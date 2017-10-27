@@ -35,6 +35,7 @@ import java.util.concurrent.ConcurrentMap;
 
 import org.apache.felix.scr.impl.inject.ComponentMethods;
 import org.apache.felix.scr.impl.inject.ComponentMethodsImpl;
+import org.apache.felix.scr.impl.logger.ComponentLogger;
 import org.apache.felix.scr.impl.logger.ScrLogger;
 import org.apache.felix.scr.impl.manager.AbstractComponentManager;
 import org.apache.felix.scr.impl.manager.ComponentActivator;
@@ -433,16 +434,16 @@ public class ComponentRegistry
      * Factory method to issue {@link ComponentHolder} instances to manage
      * components described by the given component <code>metadata</code>.
      */
-    public <S> ComponentHolder<S> createComponentHolder( ComponentActivator activator, ComponentMetadata metadata )
+    public <S> ComponentHolder<S> createComponentHolder( ComponentActivator activator, ComponentMetadata metadata, ComponentLogger logger )
     {
-        return new DefaultConfigurableComponentHolder<>(activator, metadata);
+        return new DefaultConfigurableComponentHolder<>(activator, metadata, logger);
     }
 
     static class DefaultConfigurableComponentHolder<S> extends ConfigurableComponentHolder<S>
     {
-        public DefaultConfigurableComponentHolder(ComponentActivator activator, ComponentMetadata metadata)
+        public DefaultConfigurableComponentHolder(ComponentActivator activator, ComponentMetadata metadata, ComponentLogger logger)
         {
-            super(activator, metadata);
+            super(activator, metadata, logger);
         }
 
         @Override

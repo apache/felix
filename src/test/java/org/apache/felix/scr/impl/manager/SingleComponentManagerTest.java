@@ -26,6 +26,8 @@ import java.lang.reflect.Field;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.felix.scr.impl.inject.ComponentMethodsImpl;
+import org.apache.felix.scr.impl.logger.BundleLogger;
+import org.apache.felix.scr.impl.logger.ComponentLogger;
 import org.apache.felix.scr.impl.manager.AbstractComponentManager.State;
 import org.apache.felix.scr.impl.metadata.ComponentMetadata;
 import org.apache.felix.scr.impl.metadata.DSVersion;
@@ -43,29 +45,8 @@ public class SingleComponentManagerTest
 
     private ServiceRegistration serviceRegistration = Mockito.mock(ServiceRegistration.class);
     private ServiceReference serviceReference = Mockito.mock(ServiceReference.class);
+    private BundleLogger bundleLogger = Mockito.mock(BundleLogger.class);
     private ComponentActivator componentActivator = new ComponentActivator() {
-
-        @Override
-        public boolean isLogEnabled(int level)
-        {
-            // TODO Auto-generated method stub
-            return false;
-        }
-
-        @Override
-        public void log(int level, String pattern, Object[] arguments, ComponentMetadata metadata, Long componentId,
-            Throwable ex)
-        {
-            // TODO Auto-generated method stub
-
-        }
-
-        @Override
-        public void log(int level, String message, ComponentMetadata metadata, Long componentId, Throwable ex)
-        {
-            // TODO Auto-generated method stub
-
-        }
 
         @Override
         public void addServiceListener(String className, Filter filter,
@@ -183,6 +164,11 @@ public class SingleComponentManagerTest
         public void updateChangeCount() {
             // TODO Auto-generated method stub
         }
+
+        @Override
+        public BundleLogger getLogger() {
+            return bundleLogger;
+        }
     };
 
     @Test
@@ -195,6 +181,7 @@ public class SingleComponentManagerTest
         ComponentContainer<Object> cc = Mockito.mock(ComponentContainer.class);
         Mockito.when(cc.getComponentMetadata()).thenReturn(cm);
         Mockito.when(cc.getActivator()).thenReturn(componentActivator);
+        Mockito.when(cc.getLogger()).thenReturn(new ComponentLogger(cm, bundleLogger));
 
         SingleComponentManager<Object> scm = new SingleComponentManager<Object>(cc, new ComponentMethodsImpl()) {
             @Override
@@ -208,7 +195,7 @@ public class SingleComponentManagerTest
         Bundle b = Mockito.mock(Bundle.class);
         Mockito.when(b.getBundleContext()).thenReturn(bc);
 
-        ComponentContextImpl<Object> cci = new ComponentContextImpl<Object>(scm, b, null);
+        ComponentContextImpl<Object> cci = new ComponentContextImpl<>(scm, b, null);
         Object implObj = new Object();
         cci.setImplementationObject(implObj);
         cci.setImplementationAccessible(true);
@@ -237,6 +224,7 @@ public class SingleComponentManagerTest
         ComponentContainer<Object> cc = Mockito.mock(ComponentContainer.class);
         Mockito.when(cc.getComponentMetadata()).thenReturn(cm);
         Mockito.when(cc.getActivator()).thenReturn(componentActivator);
+        Mockito.when(cc.getLogger()).thenReturn(new ComponentLogger(cm, bundleLogger));
 
         SingleComponentManager<?> scm = new SingleComponentManager<Object>(cc, new ComponentMethodsImpl()) {
             @Override

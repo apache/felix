@@ -51,9 +51,6 @@ import org.osgi.service.log.LogService;
  */
 public class Activator extends AbstractExtender
 {
-    //  name of the LogService class (this is a string to not create a reference to the class)
-    static final String LOGSERVICE_CLASS = "org.osgi.service.log.LogService";
-
     // Our configuration from bundle context properties and Config Admin
     private final ScrConfigurationImpl m_configuration;
 

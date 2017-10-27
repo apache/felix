@@ -26,6 +26,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 
+import org.apache.felix.scr.impl.logger.BundleLogger;
 import org.apache.felix.scr.impl.logger.Logger;
 import org.apache.felix.scr.impl.metadata.ComponentMetadata;
 import org.apache.felix.scr.impl.metadata.DSVersion;
@@ -79,7 +80,7 @@ public class XmlHandler implements KXml2SAXHandler
 
     // creates an instance with the bundle owning the component descriptor
     // file parsed by this instance
-    public XmlHandler( Bundle bundle, Logger logger, boolean globalObsoleteFactoryComponentFactory, boolean globalDelayedKeepInstances )
+    public XmlHandler( Bundle bundle, BundleLogger logger, boolean globalObsoleteFactoryComponentFactory, boolean globalDelayedKeepInstances )
     {
         m_bundle = bundle;
         m_logger = logger;
