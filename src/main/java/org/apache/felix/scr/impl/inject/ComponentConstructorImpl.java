@@ -25,9 +25,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.felix.scr.impl.helper.SimpleLogger;
 import org.apache.felix.scr.impl.inject.ValueUtils.ValueType;
 import org.apache.felix.scr.impl.inject.field.FieldUtils;
+import org.apache.felix.scr.impl.logger.ComponentLogger;
 import org.apache.felix.scr.impl.manager.ComponentContextImpl;
 import org.apache.felix.scr.impl.manager.RefPair;
 import org.apache.felix.scr.impl.metadata.ComponentMetadata;
@@ -50,7 +50,7 @@ public class ComponentConstructorImpl<T> implements ComponentConstructor<T>
     @SuppressWarnings("unchecked")
     public ComponentConstructorImpl(final ComponentMetadata componentMetadata,
             final Class<T> componentClass,
-            final SimpleLogger logger)
+            final ComponentLogger logger)
     {
         // constructor injection
         // get reference parameter map
@@ -64,23 +64,23 @@ public class ComponentConstructorImpl<T> implements ComponentConstructor<T>
                 {
                     // if the index (starting at 0) is equal or higher than the number of constructor arguments
                     // we log a warning and ignore the reference
-                    logger.log(LogService.LOG_WARNING,
-                            "Ignoring reference {0} in component {1} for constructor injection. Parameter index is too high.",
-                            new Object[] { refMetadata.getName(), componentMetadata.getName() }, null );
+                    logger.log(LogService.LOG_ERROR,
+                            "Ignoring reference {0} for constructor injection. Parameter index is too high.", null,
+                            refMetadata.getName() );
                 }
                 else if ( !refMetadata.isStatic() )
                 {
                     // if the reference is dynamic, we log a warning and ignore the reference
-                    logger.log(LogService.LOG_WARNING,
-                            "Ignoring reference {0} in component {1} for constructor injection. Reference is dynamic.",
-                            new Object[] { refMetadata.getName(), componentMetadata.getName() }, null );
+                    logger.log(LogService.LOG_ERROR,
+                            "Ignoring reference {0} for constructor injection. Reference is dynamic.", null,
+                            refMetadata.getName() );
                 }
                 else if ( paramMap.get(index) != null )
                 {
                     // duplicate reference for the same index, we log a warning and ignore the duplicates
-                    logger.log(LogService.LOG_WARNING,
-                            "Ignoring reference {0} in component {1} for constructor injection. Another reference has the same index.",
-                            new Object[] { refMetadata.getName(), componentMetadata.getName() }, null );
+                    logger.log(LogService.LOG_ERROR,
+                            "Ignoring reference {0} for constructor injection. Another reference has the same index.", null,
+                            refMetadata.getName() );
                 }
                 else
                 {
@@ -172,6 +172,7 @@ public class ComponentConstructorImpl<T> implements ComponentConstructor<T>
                         activationFields[index] = null;
                     }
                 }
+
                 index++;
             }
         }
@@ -179,6 +180,13 @@ public class ComponentConstructorImpl<T> implements ComponentConstructor<T>
         {
             activationFieldTypes = ValueUtils.EMPTY_VALUE_TYPES;
             activationFields = null;
+        }
+
+        if ( constructor == null )
+        {
+            logger.log(LogService.LOG_ERROR,
+                    "Constructor with {0} arguments not found. Component will fail.", null,
+                    componentMetadata.getNumberOfConstructorParameters() );
         }
     }
 
@@ -190,19 +198,7 @@ public class ComponentConstructorImpl<T> implements ComponentConstructor<T>
         // no constructor -> throw
         if ( constructor == null )
         {
-            throw new InstantiationException("Constructor not found; Component will fail");
-        }
-
-        // if we have fields and one is in state failure (type == null) we can directly throw
-        int index = 0;
-        for(final ValueType t : activationFieldTypes)
-        {
-            if ( t == null )
-            {
-                throw new InstantiationException("Field " + componentContext.getComponentMetadata().getActivationFields().get(index)
-                        + " not found; Component will fail");
-            }
-            index++;
+            throw new InstantiationException("Constructor not found.");
         }
 
         final Object[] args;
@@ -251,7 +247,7 @@ public class ComponentConstructorImpl<T> implements ComponentConstructor<T>
         // activation fields
         for(int i = 0; i<activationFieldTypes.length; i++)
         {
-            if ( activationFieldTypes[i] != ValueType.ignore )
+            if ( activationFieldTypes[i] != null && activationFieldTypes[i] != ValueType.ignore )
             {
                 final Object value = ValueUtils.getValue(constructor.getDeclaringClass().getName(),
                         activationFieldTypes[i],

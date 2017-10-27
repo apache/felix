@@ -24,8 +24,8 @@ import java.lang.reflect.Modifier;
 import java.security.AccessController;
 import java.security.PrivilegedAction;
 
-import org.apache.felix.scr.impl.helper.SimpleLogger;
 import org.apache.felix.scr.impl.inject.ClassUtils;
+import org.apache.felix.scr.impl.logger.ComponentLogger;
 import org.osgi.service.log.LogService;
 
 /**
@@ -34,20 +34,20 @@ import org.osgi.service.log.LogService;
 public class FieldUtils {
 
 	/**
-	 * Return type for {@link FieldUtils#searchField(Class, String, SimpleLogger)}
+	 * Return type for {@link FieldUtils#searchField(Class, String, ComponentLogger)}
 	 */
-    public static final class FieldSearchResult 
+    public static final class FieldSearchResult
 	{
 		public final Field field;
 		public final boolean usable;
-		
+
 		public FieldSearchResult(final Field f, final boolean usable)
 		{
 			this.field = f;
 			this.usable = usable;
 		}
 	}
-	
+
     /**
      * Searches the field named {@code fieldName} in the given
      * {@code targetClass}. If the target class has no acceptable field
@@ -69,7 +69,7 @@ public class FieldUtils {
      */
     public static FieldSearchResult searchField( final Class<?> componentClass,
     		final String fieldName,
-    		final SimpleLogger logger )
+    		final ComponentLogger logger )
     {
         final ClassLoader targetClasslLoader = componentClass.getClassLoader();
         final String targetPackage = ClassUtils.getPackageName( componentClass );
@@ -79,13 +79,10 @@ public class FieldUtils {
         while (true)
         {
 
-            if ( logger.isLogEnabled( LogService.LOG_DEBUG ) )
-            {
-                logger.log( LogService.LOG_DEBUG,
-                    "Locating field " + fieldName + " in class " + theClass.getName(), null );
-            }
+            logger.log( LogService.LOG_DEBUG,
+                "Locating field {0} in class {1}", null, fieldName, theClass.getName() );
 
-            try 
+            try
             {
 	            final FieldSearchResult result = getField( componentClass, theClass, fieldName, acceptPrivate, acceptPackage, logger );
 	            if ( result != null )
@@ -95,8 +92,9 @@ public class FieldUtils {
             }
             catch ( final InvocationTargetException ex )
             {
-                logger.log( LogService.LOG_WARNING, "{0} cannot be found in component class {1}", new Object[]
-                        {fieldName, componentClass.getName()}, ex.getTargetException() );
+                logger.log( LogService.LOG_ERROR, "Field {0} cannot be found in component class {1}. The field will be ignored.",
+                        ex.getTargetException(),
+                        fieldName, componentClass.getName()  );
                 return null;
             }
 
@@ -117,9 +115,9 @@ public class FieldUtils {
             acceptPrivate = false;
         }
 
-        // nothing found 
-        logger.log( LogService.LOG_WARNING, "{0} cannot be found in component class {1}", new Object[]
-                        {fieldName, componentClass.getName()}, null );
+        // nothing found
+        logger.log( LogService.LOG_ERROR, "Field {0} cannot be found in component class {1}. The field will be ignored.", null,
+                      fieldName, componentClass.getName() );
         return new FieldSearchResult(null, false);
     }
 
@@ -147,7 +145,7 @@ public class FieldUtils {
     		final String fieldName,
             final boolean acceptPrivate,
             final boolean acceptPackage,
-            final SimpleLogger logger )
+            final ComponentLogger logger )
     throws InvocationTargetException
     {
         try
@@ -164,8 +162,7 @@ public class FieldUtils {
             // parameters
             if ( logger.isLogEnabled( LogService.LOG_DEBUG ) )
             {
-                logger.log( LogService.LOG_DEBUG, "Declared Field {0}.{1} not found", new Object[]
-                    { targetClass.getName(), fieldName }, null );
+                logger.log( LogService.LOG_DEBUG, "Declared Field {0}.{1} not found", null, targetClass.getName(), fieldName );
             }
         }
         catch ( Throwable throwable )
@@ -192,7 +189,7 @@ public class FieldUtils {
      * <p>
      * If the field is usable, this method makes the field accessible.
      * <p>
-     * If the field is not usable, a {@code FieldSearchResult} with the usable 
+     * If the field is not usable, a {@code FieldSearchResult} with the usable
      * flag set to {@code false} is returned and an error is logged with
      * the provided logger.
      *
@@ -207,7 +204,7 @@ public class FieldUtils {
     		final Field field,
             final boolean acceptPrivate,
             final boolean acceptPackage,
-            final SimpleLogger logger)
+            final ComponentLogger logger)
     {
         // check modifiers now
         final int mod = field.getModifiers();
@@ -215,8 +212,7 @@ public class FieldUtils {
         // static fields
         if ( Modifier.isStatic( mod ) )
         {
-            logger.log( LogService.LOG_ERROR, "Field {0} must not be static", new Object[]
-                    { toString(componentClass, field) }, null );
+            logger.log( LogService.LOG_ERROR, "Field {0} must not be static", null, toString(componentClass, field) );
             return new FieldSearchResult(field, false);
         }
 
@@ -249,8 +245,7 @@ public class FieldUtils {
         // else don't accept
         // the method would fit the requirements but is not acceptable
         logger.log( LogService.LOG_ERROR,
-                "findField: Suitable but non-accessible field {0}", new Object[]
-                    { toString(componentClass, field) }, null );
+                "findField: Suitable but non-accessible field {0}", null, toString(componentClass, field));
         return new FieldSearchResult(field, false);
     }
 
@@ -263,13 +258,13 @@ public class FieldUtils {
     public static String toString(final Class<?> componentClass,
     		final Field field)
     {
-    	if ( componentClass.getName().equals(field.getDeclaringClass().getName()) ) 
+    	if ( componentClass.getName().equals(field.getDeclaringClass().getName()) )
     	{
     		return field.getName() + " in component class " + componentClass.getName();
     	}
     	return field.getName() + " in class " + field.getDeclaringClass().getName() + ", subclass of component class " + componentClass.getName();
     }
-    
+
     /**
      * Make the field accessible
      * @param field The field
@@ -278,6 +273,7 @@ public class FieldUtils {
     {
         AccessController.doPrivileged( new PrivilegedAction<Object>()
         {
+            @Override
             public Object run()
             {
                 field.setAccessible( true );
@@ -293,10 +289,10 @@ public class FieldUtils {
      * @param value The value to set
      * @param logger The logger
      */
-	public static void setField( final Field f, 
+	public static void setField( final Field f,
     		final Object component,
     		final Object value,
-    		final SimpleLogger logger )
+    		final ComponentLogger logger )
     {
         try
         {
@@ -304,13 +300,11 @@ public class FieldUtils {
         }
         catch ( final IllegalArgumentException iae )
         {
-            logger.log( LogService.LOG_ERROR, "Field {0} in component {1} can't be set", new Object[]
-                    {f.getName(), component.getClass().getName()}, iae );
+            logger.log( LogService.LOG_ERROR, "Field {0} can't be set", iae, f.getName() );
         }
         catch ( final IllegalAccessException iae )
         {
-            logger.log( LogService.LOG_ERROR, "Field {0} in component {1} can't be set", new Object[]
-                    {f.getName(), component.getClass().getName()}, iae );
+            logger.log( LogService.LOG_ERROR, "Field {0} can't be set", iae, f.getName() );
         }
     }
 }

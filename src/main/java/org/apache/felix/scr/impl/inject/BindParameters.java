@@ -39,11 +39,11 @@ public class BindParameters extends BaseParameter
 
     @SuppressWarnings({ "unchecked", "rawtypes" })
     public Object getServiceObject() {
-    	return refPair.getServiceObject((ComponentContextImpl)this.getComponentContext());
+      	return refPair.getServiceObject((ComponentContextImpl)this.getComponentContext());
     }
 
     @SuppressWarnings({ "unchecked", "rawtypes" })
     public boolean getServiceObject(BundleContext context) {
-    	return refPair.getServiceObject((ComponentContextImpl)this.getComponentContext(), context);
+     	return refPair.getServiceObject((ComponentContextImpl)this.getComponentContext(), context);
     }
 }

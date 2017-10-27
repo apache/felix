@@ -30,7 +30,7 @@ import java.util.concurrent.TimeUnit;
 import org.apache.felix.scr.component.ExtComponentContext;
 import org.apache.felix.scr.impl.helper.ComponentServiceObjectsHelper;
 import org.apache.felix.scr.impl.helper.ReadOnlyDictionary;
-import org.apache.felix.scr.impl.helper.SimpleLogger;
+import org.apache.felix.scr.impl.logger.ComponentLogger;
 import org.apache.felix.scr.impl.metadata.ComponentMetadata;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
@@ -50,7 +50,7 @@ public class ComponentContextImpl<S> implements ExtComponentContext {
 
     private final EdgeInfo[] edgeInfos;
 
-    private final ComponentInstance<S> m_componentInstance = new ComponentInstanceImpl<S>(this);
+    private final ComponentInstance<S> m_componentInstance = new ComponentInstanceImpl<>(this);
 
     private final Bundle m_usingBundle;
 
@@ -67,9 +67,11 @@ public class ComponentContextImpl<S> implements ExtComponentContext {
     /** Mapping of ref pairs to value bound */
     private Map<String, Map<RefPair<?, ?>, Object>> boundValues;
 
+    private final ComponentLogger logger;
 
-
-    public ComponentContextImpl( final SingleComponentManager<S> componentManager, final Bundle usingBundle, ServiceRegistration<S> serviceRegistration )
+    public ComponentContextImpl( final SingleComponentManager<S> componentManager,
+            final Bundle usingBundle,
+            ServiceRegistration<S> serviceRegistration )
     {
         m_componentManager = componentManager;
         m_usingBundle = usingBundle;
@@ -80,9 +82,40 @@ public class ComponentContextImpl<S> implements ExtComponentContext {
             edgeInfos[i] = new EdgeInfo();
         }
         this.serviceObjectsHelper = new ComponentServiceObjectsHelper(usingBundle.getBundleContext());
+        this.logger = new ComponentLogger()
+        {
+
+            @Override
+            public void log(final int level, final String message, final Throwable ex)
+            {
+                m_componentManager.getActivator().log(level,
+                        message,
+                        m_componentManager.getComponentMetadata(),
+                        m_componentManager.getId() == 0 ? null : m_componentManager.getId(),
+                        ex);
+            }
+
+            @Override
+            public void log(final int level, final String pattern, final Throwable ex, final Object... arguments)
+            {
+                m_componentManager.getActivator().log(level,
+                        pattern,
+                        arguments,
+                        m_componentManager.getComponentMetadata(),
+                        m_componentManager.getId() == 0 ? null : m_componentManager.getId(),
+                        ex);
+            }
+
+            @Override
+            public boolean isLogEnabled(final int level)
+            {
+                return m_componentManager.getActivator().isLogEnabled(level);
+            }
+        };
     }
 
-    public void unsetServiceRegistration() {
+    public void unsetServiceRegistration()
+    {
         m_serviceRegistration = null;
     }
 
@@ -203,9 +236,9 @@ public class ComponentContextImpl<S> implements ExtComponentContext {
         return m_usingBundle;
     }
 
-    public SimpleLogger getLogger()
+    public ComponentLogger getLogger()
     {
-        return m_componentManager;
+        return this.logger;
     }
 
     @SuppressWarnings("unchecked")
@@ -219,22 +252,14 @@ public class ComponentContextImpl<S> implements ExtComponentContext {
     @Override
     public void enableComponent( String name )
     {
-        ComponentActivator activator = m_componentManager.getActivator();
-        if ( activator != null )
-        {
-            activator.enableComponent( name );
-        }
+        m_componentManager.getActivator().enableComponent( name );
     }
 
 
     @Override
     public void disableComponent( String name )
     {
-        ComponentActivator activator = m_componentManager.getActivator();
-        if ( activator != null )
-        {
-            activator.disableComponent( name );
-        }
+        m_componentManager.getActivator().disableComponent( name );
     }
 
 
@@ -316,7 +341,7 @@ public class ComponentContextImpl<S> implements ExtComponentContext {
     {
         if ( this.boundValues == null )
         {
-            this.boundValues = new HashMap<String, Map<RefPair<?,?>,Object>>();
+            this.boundValues = new HashMap<>();
         }
         Map<RefPair<?, ?>, Object> map = this.boundValues.get(key);
         if ( map == null )
@@ -329,7 +354,7 @@ public class ComponentContextImpl<S> implements ExtComponentContext {
 
     private Map<RefPair<?, ?>, Object> createNewFieldHandlerMap()
     {
-        return new TreeMap<RefPair<?,?>, Object>(
+        return new TreeMap<>(
             new Comparator<RefPair<?, ?>>()
             {
 

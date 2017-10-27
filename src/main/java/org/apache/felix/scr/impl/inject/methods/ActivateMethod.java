@@ -27,12 +27,12 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.felix.scr.impl.helper.SimpleLogger;
 import org.apache.felix.scr.impl.inject.ActivatorParameter;
 import org.apache.felix.scr.impl.inject.Annotations;
 import org.apache.felix.scr.impl.inject.ClassUtils;
 import org.apache.felix.scr.impl.inject.LifecycleMethod;
 import org.apache.felix.scr.impl.inject.MethodResult;
+import org.apache.felix.scr.impl.logger.ComponentLogger;
 import org.apache.felix.scr.impl.manager.ComponentContextImpl;
 import org.apache.felix.scr.impl.metadata.DSVersion;
 import org.osgi.service.log.LogService;
@@ -56,7 +56,10 @@ public class ActivateMethod extends BaseMethod<ActivatorParameter, Object> imple
 
 
     @Override
-    protected MethodInfo<Object> doFindMethod( Class<?> targetClass, boolean acceptPrivate, boolean acceptPackage, SimpleLogger logger )
+    protected MethodInfo<Object> doFindMethod( final Class<?> targetClass,
+            final boolean acceptPrivate,
+            final boolean acceptPackage,
+            final ComponentLogger logger )
         throws SuitableMethodNotAccessibleException, InvocationTargetException
     {
 
@@ -69,7 +72,7 @@ public class ActivateMethod extends BaseMethod<ActivatorParameter, Object> imple
                 { ClassUtils.COMPONENT_CONTEXT_CLASS }, acceptPrivate, acceptPackage, logger );
             if ( method != null )
             {
-                return new MethodInfo<Object>(method);
+                return new MethodInfo<>(method);
             }
         }
         catch ( SuitableMethodNotAccessibleException thrown )
@@ -91,7 +94,7 @@ public class ActivateMethod extends BaseMethod<ActivatorParameter, Object> imple
                     {
                         if ( accept( m, acceptPrivate, acceptPackage, returnValue() ) )
                         {
-                            return new MethodInfo<Object>(m);
+                            return new MethodInfo<>(m);
                         }
                         suitableMethodNotAccessible = true;
                     }
@@ -99,7 +102,7 @@ public class ActivateMethod extends BaseMethod<ActivatorParameter, Object> imple
                     {
                         if ( accept( m, acceptPrivate, acceptPackage, returnValue() ) )
                         {
-                            return new MethodInfo<Object>(m);
+                            return new MethodInfo<>(m);
                         }
                         suitableMethodNotAccessible = true;
                     }
@@ -107,7 +110,7 @@ public class ActivateMethod extends BaseMethod<ActivatorParameter, Object> imple
                     {
                         if ( accept( m, acceptPrivate, acceptPackage, returnValue() ) )
                         {
-                            return new MethodInfo<Object>(m);
+                            return new MethodInfo<>(m);
                         }
                         suitableMethodNotAccessible = true;
                     }
@@ -115,7 +118,7 @@ public class ActivateMethod extends BaseMethod<ActivatorParameter, Object> imple
                     {
                         if ( accept( m, acceptPrivate, acceptPackage, returnValue() ) )
                         {
-                            return new MethodInfo<Object>(m);
+                            return new MethodInfo<>(m);
                         }
                         suitableMethodNotAccessible = true;
                     }
@@ -123,7 +126,7 @@ public class ActivateMethod extends BaseMethod<ActivatorParameter, Object> imple
                     {
                         if ( accept( m, acceptPrivate, acceptPackage, returnValue() ) )
                         {
-                            return new MethodInfo<Object>(m);
+                            return new MethodInfo<>(m);
                         }
                         suitableMethodNotAccessible = true;
                     }
@@ -149,7 +152,7 @@ public class ActivateMethod extends BaseMethod<ActivatorParameter, Object> imple
                     {
                         if ( accept( m, acceptPrivate, acceptPackage, returnValue() ) )
                         {
-                            return new MethodInfo<Object>(m);
+                            return new MethodInfo<>(m);
                         }
                         suitableMethodNotAccessible = true;
                     }
@@ -159,7 +162,7 @@ public class ActivateMethod extends BaseMethod<ActivatorParameter, Object> imple
                 {
                     if ( accept( m, acceptPrivate, acceptPackage, returnValue() ) )
                     {
-                        return new MethodInfo<Object>(m);
+                        return new MethodInfo<>(m);
                     }
                     suitableMethodNotAccessible = true;
                 }
@@ -194,7 +197,7 @@ public class ActivateMethod extends BaseMethod<ActivatorParameter, Object> imple
      */
     List<Method> getSortedMethods(Class<?> targetClass)
     {
-        List<Method> result = new ArrayList<Method>();
+        List<Method> result = new ArrayList<>();
         Method[] methods = targetClass.getDeclaredMethods();
         for (Method m: methods)
         {

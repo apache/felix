@@ -28,7 +28,6 @@ import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.CopyOnWriteArraySet;
 
-import org.apache.felix.scr.impl.helper.SimpleLogger;
 import org.apache.felix.scr.impl.inject.BindParameters;
 import org.apache.felix.scr.impl.inject.ClassUtils;
 import org.apache.felix.scr.impl.inject.InitReferenceMethod;
@@ -37,6 +36,7 @@ import org.apache.felix.scr.impl.inject.ReferenceMethod;
 import org.apache.felix.scr.impl.inject.ValueUtils;
 import org.apache.felix.scr.impl.inject.ValueUtils.ValueType;
 import org.apache.felix.scr.impl.inject.field.FieldUtils.FieldSearchResult;
+import org.apache.felix.scr.impl.logger.ComponentLogger;
 import org.apache.felix.scr.impl.manager.ComponentContextImpl;
 import org.apache.felix.scr.impl.manager.RefPair;
 import org.apache.felix.scr.impl.metadata.ReferenceMetadata;
@@ -86,7 +86,7 @@ public class FieldHandler
 
 
     private boolean initField(final Object componentInstance,
-            final SimpleLogger logger )
+            final ComponentLogger logger )
     {
     	if ( valueType == ValueType.ignore )
     	{
@@ -98,7 +98,7 @@ public class FieldHandler
             {
                 if ( metadata.isReplace()  )
                 {
-                    this.setFieldValue(componentInstance, new CopyOnWriteArrayList<Object>());
+                    this.setFieldValue(componentInstance, new CopyOnWriteArrayList<>());
                 }
                 else
                 {
@@ -111,26 +111,26 @@ public class FieldHandler
                     {
                         if ( Modifier.isFinal(this.field.getModifiers()) )
                         {
-                            logger.log( LogService.LOG_ERROR, "Field {0} in component {1} must not be declared as final", new Object[]
-                                    {metadata.getField(), this.componentClass}, null );
+                            logger.log( LogService.LOG_ERROR, "Field {0} in class {1} must not be declared as final", null,
+                                    metadata.getField(), this.componentClass );
                             valueType = ValueType.ignore;
                             return true;
                         }
                         if ( fieldType != ClassUtils.LIST_CLASS && fieldType != ClassUtils.COLLECTION_CLASS )
                         {
-                            logger.log( LogService.LOG_ERROR, "Field {0} in component {1} has unsupported type {2}."+
-                                " It must be one of java.util.Collection or java.util.List.",
-                                new Object[] {metadata.getField(), this.componentClass, fieldType.getName()}, null );
+                            logger.log( LogService.LOG_ERROR, "Field {0} in class {1} has unsupported type {2}."+
+                                " It must be one of java.util.Collection or java.util.List.", null,
+                                metadata.getField(), this.componentClass, fieldType.getName() );
                             valueType = ValueType.ignore;
                             return true;
                         }
                         if ( fieldType == ClassUtils.LIST_CLASS )
                         {
-                        	this.setFieldValue(componentInstance, new CopyOnWriteArrayList<Object>());
+                        	    this.setFieldValue(componentInstance, new CopyOnWriteArrayList<>());
                         }
                         else
                         {
-                        	this.setFieldValue(componentInstance, new CopyOnWriteArraySet<Object>());
+                        	    this.setFieldValue(componentInstance, new CopyOnWriteArraySet<>());
                         }
                     }
                 }
@@ -149,8 +149,8 @@ public class FieldHandler
         {
             valueType = ValueType.ignore;
 
-            logger.log( LogService.LOG_ERROR, "Field {0} in component {1} can't be initialized.",
-                    new Object[] {metadata.getField(), this.componentClass}, ite );
+            logger.log( LogService.LOG_ERROR, "Field {0} in class {1} can't be initialized.",
+                    ite, metadata.getField(), this.componentClass );
             return false;
 
         }
@@ -159,7 +159,7 @@ public class FieldHandler
 
     private Collection<Object> getReplaceCollection(final BindParameters bp)
     {
-        final List<Object> objects = new ArrayList<Object>();
+        final List<Object> objects = new ArrayList<>();
         for(final Object val : bp.getComponentContext().getBoundValues(metadata.getName()).values())
         {
             objects.add(val);
@@ -336,13 +336,13 @@ public class FieldHandler
     private static interface State
     {
 
-        MethodResult invoke( final FieldHandler handler,
-                final METHOD_TYPE mType,
-                final Object componentInstance,
-                final BindParameters rawParameter)
+        MethodResult invoke( FieldHandler handler,
+                METHOD_TYPE mType,
+                Object componentInstance,
+                BindParameters rawParameter)
         throws InvocationTargetException;
 
-        boolean fieldExists( final FieldHandler handler, final SimpleLogger logger);
+        boolean fieldExists( FieldHandler handler, ComponentLogger logger);
     }
 
     /**
@@ -352,13 +352,12 @@ public class FieldHandler
     {
         private static final State INSTANCE = new NotResolved();
 
-        private void resolve(final FieldHandler handler, final SimpleLogger logger)
+        private void resolve(final FieldHandler handler, final ComponentLogger logger)
         {
-            logger.log( LogService.LOG_DEBUG, "getting field: {0}", new Object[]
-                    {handler.metadata.getField()}, null );
+            logger.log( LogService.LOG_DEBUG, "getting field: {0}", null, handler.metadata.getField() );
 
             // resolve the field
-        	final FieldUtils.FieldSearchResult result = FieldUtils.searchField( handler.componentClass, handler.metadata.getField(), logger );
+        	    final FieldUtils.FieldSearchResult result = FieldUtils.searchField( handler.componentClass, handler.metadata.getField(), logger );
             handler.setSearchResult(result, logger);
         }
 
@@ -374,7 +373,7 @@ public class FieldHandler
         }
 
         @Override
-        public boolean fieldExists( final FieldHandler handler, final SimpleLogger logger)
+        public boolean fieldExists( final FieldHandler handler, final ComponentLogger logger)
         {
             resolve( handler, logger );
             return handler.state.fieldExists( handler, logger );
@@ -394,13 +393,13 @@ public class FieldHandler
                 final Object componentInstance,
                 final BindParameters rawParameter)
         {
-            rawParameter.getLogger().log( LogService.LOG_ERROR, "Field [{0}] not found", new Object[]
-                { handler.metadata.getField() }, null );
+            rawParameter.getLogger().log( LogService.LOG_ERROR, "Field [{0}] not found", null,
+                handler.metadata.getField() );
             return null;
         }
 
         @Override
-        public boolean fieldExists( final FieldHandler handler, final SimpleLogger logger)
+        public boolean fieldExists( final FieldHandler handler, final ComponentLogger logger)
         {
             return false;
         }
@@ -424,26 +423,27 @@ public class FieldHandler
         }
 
         @Override
-        public boolean fieldExists( final FieldHandler handler, final SimpleLogger logger)
+        public boolean fieldExists( final FieldHandler handler, final ComponentLogger logger)
         {
             return true;
         }
     }
 
-    public boolean fieldExists( SimpleLogger logger )
+    public boolean fieldExists( ComponentLogger logger )
     {
         return this.state.fieldExists( this, logger );
     }
 
-    synchronized void setSearchResult(FieldSearchResult result, SimpleLogger logger)
+    synchronized void setSearchResult(FieldSearchResult result, ComponentLogger logger)
     {
         if (result == null)
         {
             field = null;
             valueType = null;
             state = NotFound.INSTANCE;
+            // TODO - will component really fail?
             logger.log(LogService.LOG_ERROR, "Field [{0}] not found; Component will fail",
-                new Object[] { metadata.getField() }, null);
+                    null, metadata.getField());
         }
         else
         {
@@ -459,7 +459,7 @@ public class FieldHandler
             }
             state = Resolved.INSTANCE;
             logger.log(LogService.LOG_DEBUG, "Found field: {0}",
-                new Object[] { result.field }, null);
+                null, result.field );
         }
     }
 
@@ -496,8 +496,8 @@ public class FieldHandler
             }
             catch ( final InvocationTargetException ite )
             {
-                rawParameter.getLogger().log( LogService.LOG_ERROR, "The {0} field has thrown an exception", new Object[]
-                    { handler.metadata.getField() }, ite.getCause() );
+                rawParameter.getLogger().log( LogService.LOG_ERROR, "The {0} field has thrown an exception", null,
+                    handler.metadata.getField() );
             }
 
             return methodCallFailureResult;
@@ -547,7 +547,7 @@ public class FieldHandler
         {
 
             @Override
-            public boolean init(final Object componentInstance, final SimpleLogger logger)
+            public boolean init(final Object componentInstance, final ComponentLogger logger)
             {
                 if ( fieldExists( logger ) )
                 {

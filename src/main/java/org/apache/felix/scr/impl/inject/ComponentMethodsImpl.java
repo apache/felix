@@ -25,12 +25,12 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.felix.scr.impl.helper.SimpleLogger;
 import org.apache.felix.scr.impl.inject.field.FieldMethods;
 import org.apache.felix.scr.impl.inject.methods.ActivateMethod;
 import org.apache.felix.scr.impl.inject.methods.BindMethods;
 import org.apache.felix.scr.impl.inject.methods.DeactivateMethod;
 import org.apache.felix.scr.impl.inject.methods.ModifiedMethod;
+import org.apache.felix.scr.impl.logger.ComponentLogger;
 import org.apache.felix.scr.impl.metadata.ComponentMetadata;
 import org.apache.felix.scr.impl.metadata.DSVersion;
 import org.apache.felix.scr.impl.metadata.ReferenceMetadata;
@@ -53,7 +53,7 @@ public class ComponentMethodsImpl<T> implements ComponentMethods<T>
 	public synchronized void initComponentMethods(
 	        final ComponentMetadata componentMetadata,
 	        final Class<T> implementationObjectClass,
-	        final SimpleLogger logger)
+	        final ComponentLogger logger)
     {
         if (m_activateMethod != null)
         {

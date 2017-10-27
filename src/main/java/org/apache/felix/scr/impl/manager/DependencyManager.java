@@ -414,7 +414,7 @@ public class DependencyManager<S, T> implements ReferenceManager<S, T>
             int serviceCount = 0;
             AtomicInteger trackingCount = new AtomicInteger();
             SortedMap<ServiceReference<T>, RefPair<S, T>> tracked = getTracker().getTracked(true, trackingCount);
-            List<RefPair<S, T>> failed = new ArrayList<RefPair<S, T>>();
+            List<RefPair<S, T>> failed = new ArrayList<>();
             for (RefPair<S, T> refPair : tracked.values())
             {
                 if (getServiceObject(key, m_bindMethods.getBind(), refPair))
@@ -611,7 +611,7 @@ public class DependencyManager<S, T> implements ReferenceManager<S, T>
     private class MultipleStaticReluctantCustomizer extends AbstractCustomizer
     {
 
-        private final AtomicReference<Collection<RefPair<S, T>>> refs = new AtomicReference<Collection<RefPair<S, T>>>();
+        private final AtomicReference<Collection<RefPair<S, T>>> refs = new AtomicReference<>();
         private int trackingCount;
 
         @Override
@@ -722,7 +722,7 @@ public class DependencyManager<S, T> implements ReferenceManager<S, T>
                 }
                 return cardinalitySatisfied(serviceCount);
             }
-            refs = new ArrayList<RefPair<S, T>>();
+            refs = new ArrayList<>();
             AtomicInteger trackingCount = new AtomicInteger();
             SortedMap<ServiceReference<T>, RefPair<S, T>> tracked = getTracker().getTracked(true, trackingCount);
             for (RefPair<S, T> refPair : tracked.values())
@@ -1343,15 +1343,8 @@ public class DependencyManager<S, T> implements ReferenceManager<S, T>
     {
         if (hasGetPermission())
         {
-            // component activator may be null if disposed concurrently
-            ComponentActivator bca = m_componentManager.getActivator();
-            if (bca == null)
-            {
-                return null;
-            }
-
             // get bundle context, may be null if component deactivated since getting bca
-            BundleContext bc = bca.getBundleContext();
+            BundleContext bc = m_componentManager.getActivator().getBundleContext();
             if (bc == null)
             {
                 return null;
@@ -1424,7 +1417,7 @@ public class DependencyManager<S, T> implements ReferenceManager<S, T>
     T[] getServices(ComponentContextImpl<S> key)
     {
         Collection<RefPair<S, T>> refs = m_customizer.getRefs(new AtomicInteger());
-        List<T> services = new ArrayList<T>(refs.size());
+        List<T> services = new ArrayList<>(refs.size());
         for (RefPair<S, T> ref : refs)
         {
             T service = getService(key, ref);
@@ -1445,7 +1438,7 @@ public class DependencyManager<S, T> implements ReferenceManager<S, T>
     public List<ServiceReference<?>> getServiceReferences()
     {
         Collection<RefPair<S, T>> bound = m_customizer.getRefs(new AtomicInteger());
-        List<ServiceReference<?>> result = new ArrayList<ServiceReference<?>>(bound.size());
+        List<ServiceReference<?>> result = new ArrayList<>(bound.size());
         for (RefPair<S, T> ref : bound)
         {
             result.add(ref.getRef());
@@ -1602,7 +1595,7 @@ public class DependencyManager<S, T> implements ReferenceManager<S, T>
     OpenStatus<S, T> open(ComponentContextImpl<S> componentContext, EdgeInfo edgeInfo)
     {
         int serviceCount = 0;
-        final OpenStatus<S, T> status = new OpenStatus<S, T>();
+        final OpenStatus<S, T> status = new OpenStatus<>();
         CountDownLatch openLatch;
         synchronized (m_tracker.tracked())
         {
@@ -1741,7 +1734,7 @@ public class DependencyManager<S, T> implements ReferenceManager<S, T>
             final Object componentInstance = componentContext.getImplementationObject(false);
             if (componentInstance != null)
             {
-                return m_bindMethods.getInit().init(componentInstance, m_componentManager);
+                return m_bindMethods.getInit().init(componentInstance, componentContext.getLogger());
             }
         }
         return true;
@@ -2181,7 +2174,7 @@ public class DependencyManager<S, T> implements ReferenceManager<S, T>
             new Object[] { getName(), initialActive, refMap, classFilterString, eventFilter,
                     initialReferenceFilterString },
             null);
-        ServiceTracker<T, RefPair<S, T>, ExtendedServiceEvent> tracker = new ServiceTracker<T, RefPair<S, T>, ExtendedServiceEvent>(
+        ServiceTracker<T, RefPair<S, T>, ExtendedServiceEvent> tracker = new ServiceTracker<>(
             bundleContext, m_customizer, initialActive, m_componentManager.getActivator(), eventFilter,
             classFilterString, initialReferenceFilterString);
         m_customizer.setTracker(tracker);
@@ -2256,7 +2249,7 @@ public class DependencyManager<S, T> implements ReferenceManager<S, T>
         }
         else
         {
-            refMap = new TreeMap<ServiceReference<T>, RefPair<S, T>>(Collections.reverseOrder());
+            refMap = new TreeMap<>(Collections.reverseOrder());
             m_componentManager.log(LogService.LOG_DEBUG,
                 " No existing service listener to unregister for dependency {0}", new Object[] { getName() }, null);
             trackingCount.set(-1);
@@ -2298,13 +2291,13 @@ public class DependencyManager<S, T> implements ReferenceManager<S, T>
     {
         if (m_dependencyMetadata.getScope() == ReferenceScope.bundle)
         {
-            return new SingleRefPair<S, T>(serviceReference);
+            return new SingleRefPair<>(serviceReference);
         }
         if (m_componentManager.getComponentMetadata().getServiceScope() == Scope.singleton)
         {
-            return new SinglePrototypeRefPair<S, T>(m_componentManager.getBundleContext(), serviceReference);
+            return new SinglePrototypeRefPair<>(m_componentManager.getBundleContext(), serviceReference);
         }
-        return new MultiplePrototypeRefPair<S, T>(m_componentManager.getBundleContext(), serviceReference);
+        return new MultiplePrototypeRefPair<>(m_componentManager.getBundleContext(), serviceReference);
     }
 
     private void deactivateComponentManager()

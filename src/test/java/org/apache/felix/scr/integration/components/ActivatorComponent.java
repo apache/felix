@@ -33,16 +33,16 @@ public class ActivatorComponent
     public static final String FLAG_FAIL_DEACTIVATE = "failDeactivate";
 
     public static final String FLAG_REGISTER_SERVICE = "registerService";
-    
+
     private static ActivatorComponent activatorComponent;
 
     private ServiceRegistration registration;
 
     private SimpleService simpleService;
-    
+
     public static ActivatorComponent getInstance()
     {
-    	return activatorComponent;
+    	    return activatorComponent;
     }
 
     @SuppressWarnings("unused")
@@ -58,7 +58,7 @@ public class ActivatorComponent
         }
         if ( activatorComponent != null )
         {
-        	throw new IllegalStateException( "not the only activator component");
+        	    throw new IllegalStateException( "not the only activator component");
         }
         this.activatorComponent = this;
     }

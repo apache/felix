@@ -23,6 +23,7 @@ import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceReference;
 import org.osgi.service.cm.ConfigurationAdmin;
 
+
 public interface ComponentActivator extends Logger, ExtendedServiceListenerContext<ExtendedServiceEvent> {
 
     BundleContext getBundleContext();

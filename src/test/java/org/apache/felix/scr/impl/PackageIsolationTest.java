@@ -56,6 +56,7 @@ public class PackageIsolationTest extends TestCase {
                 "org/apache/felix/scr/impl/inject",
                 "org/apache/felix/scr/impl/inject/field",
                 "org/apache/felix/scr/impl/inject/methods",
+                "org/apache/felix/scr/impl/logger",
                 "org/apache/felix/scr/impl/manager",
                 "org/apache/felix/scr/impl/metadata");
 
@@ -97,9 +98,9 @@ public class PackageIsolationTest extends TestCase {
     }
 
     public static class DependencyVisitor extends ClassVisitor {
-        Set<String> packages = new HashSet<String>();
+        Set<String> packages = new HashSet<>();
 
-        Map<String, Map<String, Integer>> groups = new HashMap<String, Map<String, Integer>>();
+        Map<String, Map<String, Integer>> groups = new HashMap<>();
 
         Map<String, Integer> current;
 
@@ -124,7 +125,7 @@ public class PackageIsolationTest extends TestCase {
             String p = getGroupKey(name);
             current = groups.get(p);
             if (current == null) {
-                current = new HashMap<String, Integer>();
+                current = new HashMap<>();
                 groups.put(p, current);
             }
 
