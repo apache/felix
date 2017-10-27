@@ -22,6 +22,7 @@ import java.io.PrintStream;
 import java.text.MessageFormat;
 
 import org.apache.felix.scr.impl.manager.ScrConfiguration;
+import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.service.log.LogService;
 import org.osgi.util.tracker.ServiceTracker;
@@ -42,10 +43,31 @@ public class ScrLogger
 
     private final String bundleId;
 
+    private static String getBundleIdentifier(final Bundle bundle)
+    {
+        final StringBuilder sb = new StringBuilder("bundle ");
+        // symbolic name might be null
+        if ( bundle.getSymbolicName() != null )
+        {
+            sb.append(bundle.getSymbolicName());
+            sb.append(':');
+            sb.append(bundle.getVersion());
+            sb.append( " (" );
+            sb.append( bundle.getBundleId() );
+            sb.append( ")" );
+        }
+        else
+        {
+            sb.append( bundle.getBundleId() );
+        }
+
+        return sb.toString();
+    }
+
     public ScrLogger(final BundleContext bundleContext, final ScrConfiguration config)
     {
         this.config = config;
-        this.bundleId = LoggerUtil.getBundleIdentifier(bundleContext.getBundle());
+        this.bundleId = getBundleIdentifier(bundleContext.getBundle());
         logServiceTracker = new ServiceTracker<>( bundleContext, LOGSERVICE_CLASS, null );
         logServiceTracker.open();
     }
@@ -76,7 +98,22 @@ public class ScrLogger
     {
         if ( isLogEnabled( level ) )
         {
-            final String message = MessageFormat.format( pattern, arguments );
+            final String message;
+            if ( arguments == null || arguments.length == 0 )
+            {
+                message = pattern;
+            }
+            else
+            {
+                for(int i=0;i<arguments.length;i++)
+                {
+                    if ( arguments[i] instanceof Bundle )
+                    {
+                        arguments[i] = getBundleIdentifier((Bundle)arguments[i]);
+                    }
+                }
+                message = MessageFormat.format( pattern, arguments );
+            }
             log( level, message, ex );
         }
     }
@@ -153,7 +190,7 @@ public class ScrLogger
             }
             else
             {
-                logger.log( level, message, ex );
+                logger.log( level, this.bundleId + " : " + message, ex );
             }
         }
     }

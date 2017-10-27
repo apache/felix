@@ -27,7 +27,6 @@ import java.util.concurrent.locks.ReentrantLock;
 
 import org.apache.felix.scr.impl.config.ScrConfigurationImpl;
 import org.apache.felix.scr.impl.inject.ClassUtils;
-import org.apache.felix.scr.impl.logger.LoggerUtil;
 import org.apache.felix.scr.impl.logger.ScrLogger;
 import org.apache.felix.scr.impl.runtime.ServiceComponentRuntimeImpl;
 import org.apache.felix.utils.extender.AbstractExtender;
@@ -257,7 +256,7 @@ public class Activator extends AbstractExtender
                 {
                     Thread.currentThread().interrupt();
                     logger.log(LogService.LOG_WARNING,  "The wait for {0} being destroyed before destruction has been interrupted.", e,
-                            LoggerUtil.getBundleIdentifier(bundle) );
+                            bundle );
                 }
                 loadComponents( ScrExtension.this.bundle );
             }
@@ -285,7 +284,7 @@ public class Activator extends AbstractExtender
                 {
                     Thread.currentThread().interrupt();
                     logger.log(LogService.LOG_WARNING,  "The wait for {0} being started before destruction has been interrupted.", e,
-                            LoggerUtil.getBundleIdentifier(bundle) );
+                            bundle );
 
                 }
                 disposeComponents( bundle );
@@ -321,8 +320,7 @@ public class Activator extends AbstractExtender
         BundleContext context = bundle.getBundleContext();
         if ( context == null )
         {
-            logger.log(LogService.LOG_DEBUG,  "Cannot get BundleContext of {0}.", null,
-                    LoggerUtil.getBundleIdentifier(bundle) );
+            logger.log(LogService.LOG_DEBUG,  "Cannot get BundleContext of {0}.", null, bundle);
 
             return;
         }
@@ -338,7 +336,7 @@ public class Activator extends AbstractExtender
                 if ( !m_bundle.adapt( BundleRevision.class ).equals( wire.getProvider() ) )
                 {
                     logger.log(LogService.LOG_DEBUG,  "{0} wired to a different extender: {1}.", null,
-                            LoggerUtil.getBundleIdentifier(bundle), LoggerUtil.getBundleIdentifier(wire.getProvider().getBundle()) );
+                            bundle, wire.getProvider().getBundle());
 
                     return;
                 }
@@ -370,7 +368,7 @@ public class Activator extends AbstractExtender
         if ( loaded )
         {
             logger.log(LogService.LOG_DEBUG,  "Components for {0} already loaded. Nothing to do.", null,
-                    LoggerUtil.getBundleIdentifier(bundle) );
+                    bundle );
 
             return;
         }
@@ -399,12 +397,11 @@ public class Activator extends AbstractExtender
             if ( e instanceof IllegalStateException && bundle.getState() != Bundle.ACTIVE )
             {
                 logger.log(LogService.LOG_DEBUG,  "{0} has been stopped while trying to activate its components. Trying again when the bundles gets started again.", e,
-                        LoggerUtil.getBundleIdentifier(bundle) );
+                        bundle );
             }
             else
             {
-                logger.log(LogService.LOG_ERROR,  "Error while loading components of {0}", e,
-                        LoggerUtil.getBundleIdentifier(bundle) );
+                logger.log(LogService.LOG_ERROR,  "Error while loading components of {0}", e, bundle);
             }
         }
     }
@@ -431,8 +428,7 @@ public class Activator extends AbstractExtender
             }
             catch ( Exception e )
             {
-                logger.log(LogService.LOG_ERROR,  "Error while disposing components of {0}", e,
-                    LoggerUtil.getBundleIdentifier(bundle) );
+                logger.log(LogService.LOG_ERROR,  "Error while disposing components of {0}", e, bundle);
             }
         }
     }
@@ -442,7 +438,14 @@ public class Activator extends AbstractExtender
     {
         if ( logger.isLogEnabled(LogService.LOG_DEBUG) )
         {
-            logger.log( LogService.LOG_DEBUG, format(bundle, msg), null );
+            if ( bundle != null )
+            {
+                logger.log( LogService.LOG_DEBUG, "{0} : " + msg, null, bundle );
+            }
+            else
+            {
+                logger.log( LogService.LOG_DEBUG, msg, null );
+            }
         }
     }
 
@@ -451,7 +454,14 @@ public class Activator extends AbstractExtender
     {
         if ( logger.isLogEnabled(LogService.LOG_WARNING) )
         {
-            logger.log( LogService.LOG_WARNING, format(bundle, msg), t );
+            if ( bundle != null )
+            {
+                logger.log( LogService.LOG_WARNING, "{0} : " + msg, t, bundle );
+            }
+            else
+            {
+                logger.log( LogService.LOG_WARNING, msg, t );
+            }
         }
     }
 
@@ -462,17 +472,5 @@ public class Activator extends AbstractExtender
         {
             logger.log( LogService.LOG_ERROR, msg, t );
         }
-    }
-
-    private String format(final Bundle bundle, final String msg)
-    {
-        if ( bundle != null )
-        {
-            final StringBuilder sb = new StringBuilder();
-            sb.append(LoggerUtil.getBundleIdentifier(bundle));
-            sb.append(": ");
-            sb.append(msg);
-        }
-        return msg;
     }
 }
