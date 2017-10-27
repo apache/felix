@@ -25,7 +25,7 @@ import org.apache.felix.scr.impl.metadata.ComponentMetadata;
  * for a component. This avoids avoids that all clients doing logging on behalf of
  * a component need to pass in things like {@code ComponentMetadata} or the component Id.
  */
-public class ComponentLogger implements Logger
+public class ComponentLogger
 {
     private final String name;
 
@@ -51,6 +51,10 @@ public class ComponentLogger implements Logger
         this.setComponentId(-1);
     }
 
+    /**
+     * Update the logger with the correct component id.
+     * @param id The component id
+     */
     public void setComponentId(final long id)
     {
         if ( id > -1 )
@@ -63,7 +67,14 @@ public class ComponentLogger implements Logger
         }
     }
 
-    @Override
+    /**
+     * Log a message using the {@code BundleLogger} and prefix the message
+     * with information about the component.
+     *
+     * @param level The log level
+     * @param message The message
+     * @param ex Optional exception
+     */
     public void log(final int level, final String message, final Throwable ex)
     {
         if ( parent.isLogEnabled(level) )
@@ -74,7 +85,15 @@ public class ComponentLogger implements Logger
         }
     }
 
-    @Override
+    /**
+     * Log a message using the {@code BundleLogger} and prefix the message
+     * with information about the component.
+     *
+     * @param level The log level
+     * @param pattern The pattern
+     * @param ex Optional exception
+     * @param arguments Optional arguments for the pattern
+     */
     public void log(final int level, final String pattern, final Throwable ex, final Object... arguments)
     {
         if ( parent.isLogEnabled(level) )
@@ -86,7 +105,10 @@ public class ComponentLogger implements Logger
         }
     }
 
-    @Override
+    /**
+     * Returns {@code true} if logging for the given level is enabled.
+     * @return If the {@code BundleLogger} returns {@code true}.
+     */
     public boolean isLogEnabled(final int level)
     {
         return parent.isLogEnabled(level);

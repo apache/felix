@@ -27,7 +27,6 @@ import java.util.Map;
 import java.util.Properties;
 
 import org.apache.felix.scr.impl.logger.BundleLogger;
-import org.apache.felix.scr.impl.logger.Logger;
 import org.apache.felix.scr.impl.metadata.ComponentMetadata;
 import org.apache.felix.scr.impl.metadata.DSVersion;
 import org.apache.felix.scr.impl.metadata.PropertyMetadata;
@@ -48,7 +47,7 @@ public class XmlHandler implements KXml2SAXHandler
     private final Bundle m_bundle;
 
     // logger for any messages
-    private final Logger m_logger;
+    private final BundleLogger m_logger;
 
     private final boolean m_globalObsoleteFactoryComponentFactory;
 
