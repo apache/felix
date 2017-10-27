@@ -30,7 +30,7 @@ import org.osgi.util.tracker.ServiceTracker;
  * This is the "global" logger used by the implementation.
  *
  */
-public class ScrLogger implements Logger
+public class ScrLogger
 {
     //  name of the LogService class (this is a string to not create a reference to the class)
     private static final String LOGSERVICE_CLASS = "org.osgi.service.log.LogService";
@@ -60,7 +60,18 @@ public class ScrLogger implements Logger
         return logServiceTracker.getService();
     }
 
-    @Override
+    /**
+     * Method to actually emit the log message. If the LogService is available,
+     * the message will be logged through the LogService. Otherwise the message
+     * is logged to stdout (or stderr in case of LOG_ERROR level messages),
+     *
+     * @param level The log level to log the message at
+     * @param pattern The {@code java.text.MessageFormat} message format
+     *      string for preparing the message
+     * @param ex An optional <code>Throwable</code> whose stack trace is written,
+     * @param arguments The format arguments for the <code>pattern</code>
+     *      string.
+     */
     public void log(final int level, final String pattern, final Throwable ex, final Object... arguments )
     {
         if ( isLogEnabled( level ) )
@@ -70,13 +81,24 @@ public class ScrLogger implements Logger
         }
     }
 
-    @Override
+    /**
+     * Returns {@code true} if logging for the given level is enabled.
+     */
     public boolean isLogEnabled(final int level)
     {
         return config.getLogLevel() >= level;
     }
 
-    @Override
+    /**
+     * Method to actually emit the log message. If the LogService is available,
+     * the message will be logged through the LogService. Otherwise the message
+     * is logged to stdout (or stderr in case of LOG_ERROR level messages),
+     *
+     * @param level The log level of the messages. This corresponds to the log
+     *          levels defined by the OSGi LogService.
+     * @param message The message to print
+     * @param ex The <code>Throwable</code> causing the message to be logged.
+     */
     public void log(final int level, final String message, final Throwable ex)
     {
         if ( isLogEnabled( level ) )
@@ -111,6 +133,7 @@ public class ScrLogger implements Logger
                 // bundle information
                 buf.append( this.bundleId );
                 buf.append(" : ");
+                buf.append(message);
 
                 final String msg = buf.toString();
 
