@@ -24,8 +24,11 @@ import java.lang.reflect.Method;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.felix.scr.impl.MockLogger;
 import org.apache.felix.scr.impl.inject.ActivatorParameter;
 import org.apache.felix.scr.impl.inject.ComponentMethodsImpl;
+import org.apache.felix.scr.impl.logger.BundleLogger;
+import org.apache.felix.scr.impl.logger.ComponentLogger;
 import org.apache.felix.scr.impl.manager.ComponentActivator;
 import org.apache.felix.scr.impl.manager.ComponentContainer;
 import org.apache.felix.scr.impl.manager.ComponentContextImpl;
@@ -301,6 +304,7 @@ public class ActivateMethodTest extends TestCase
     private ComponentContainer newContainer()
     {
         final ComponentMetadata metadata = newMetadata();
+        final BundleLogger logger = new MockLogger();
         ComponentContainer container = new ComponentContainer() {
 
             @Override
@@ -327,6 +331,10 @@ public class ActivateMethodTest extends TestCase
                 return false;
             }
 
+            @Override
+            public ComponentLogger getLogger() {
+                return new ComponentLogger(metadata, logger);
+            }
         };
         return container;
     }

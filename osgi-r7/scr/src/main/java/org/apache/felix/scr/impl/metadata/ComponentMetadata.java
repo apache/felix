@@ -28,7 +28,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
 
-import org.apache.felix.scr.impl.helper.Logger;
 import org.apache.felix.scr.impl.metadata.ServiceMetadata.Scope;
 import org.osgi.service.component.ComponentException;
 
@@ -555,7 +554,7 @@ public class ComponentMetadata
      * Returns the flag that defines the activation policy for the component.
      * <p>
      * This method may only be trusted after this instance has been validated
-     * by the {@link #validate( Logger logger )} call. Else it will either return the value
+     * by the {@link #validate( )} call. Else it will either return the value
      * of an explicitly set "immediate" attribute or return false if a service
      * element or the factory attribute is set or true otherwise. This latter
      * default value deduction may be unsafe while the descriptor has not been

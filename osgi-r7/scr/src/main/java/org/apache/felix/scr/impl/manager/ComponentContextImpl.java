@@ -67,8 +67,6 @@ public class ComponentContextImpl<S> implements ExtComponentContext {
     /** Mapping of ref pairs to value bound */
     private Map<String, Map<RefPair<?, ?>, Object>> boundValues;
 
-    private final ComponentLogger logger;
-
     public ComponentContextImpl( final SingleComponentManager<S> componentManager,
             final Bundle usingBundle,
             ServiceRegistration<S> serviceRegistration )
@@ -82,36 +80,6 @@ public class ComponentContextImpl<S> implements ExtComponentContext {
             edgeInfos[i] = new EdgeInfo();
         }
         this.serviceObjectsHelper = new ComponentServiceObjectsHelper(usingBundle.getBundleContext());
-        this.logger = new ComponentLogger()
-        {
-
-            @Override
-            public void log(final int level, final String message, final Throwable ex)
-            {
-                m_componentManager.getActivator().log(level,
-                        message,
-                        m_componentManager.getComponentMetadata(),
-                        m_componentManager.getId() == 0 ? null : m_componentManager.getId(),
-                        ex);
-            }
-
-            @Override
-            public void log(final int level, final String pattern, final Throwable ex, final Object... arguments)
-            {
-                m_componentManager.getActivator().log(level,
-                        pattern,
-                        arguments,
-                        m_componentManager.getComponentMetadata(),
-                        m_componentManager.getId() == 0 ? null : m_componentManager.getId(),
-                        ex);
-            }
-
-            @Override
-            public boolean isLogEnabled(final int level)
-            {
-                return m_componentManager.getActivator().isLogEnabled(level);
-            }
-        };
     }
 
     public void unsetServiceRegistration()
@@ -238,7 +206,7 @@ public class ComponentContextImpl<S> implements ExtComponentContext {
 
     public ComponentLogger getLogger()
     {
-        return this.logger;
+        return this.m_componentManager.getLogger();
     }
 
     @SuppressWarnings("unchecked")
@@ -304,7 +272,7 @@ public class ComponentContextImpl<S> implements ExtComponentContext {
             }
             catch ( InterruptedException e1 )
             {
-                m_componentManager.log( LogService.LOG_INFO, "Interrupted twice waiting for implementation object to become accessible", e1 );
+                m_componentManager.getLogger().log( LogService.LOG_INFO, "Interrupted twice waiting for implementation object to become accessible", e1 );
             }
             Thread.currentThread().interrupt();
             return null;

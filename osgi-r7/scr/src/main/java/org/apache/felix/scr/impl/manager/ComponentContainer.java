@@ -18,10 +18,12 @@
  */
 package org.apache.felix.scr.impl.manager;
 
+import org.apache.felix.scr.impl.logger.ComponentLogger;
 import org.apache.felix.scr.impl.metadata.ComponentMetadata;
 
 public interface ComponentContainer<S>
 {
+    ComponentLogger getLogger();
 
     /**
      * Returns the {@link ComponentActivator} owning this component

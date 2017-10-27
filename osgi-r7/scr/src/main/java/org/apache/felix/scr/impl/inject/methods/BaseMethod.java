@@ -27,7 +27,6 @@ import java.security.PrivilegedAction;
 import java.util.Arrays;
 import java.util.Map;
 
-import org.apache.felix.scr.impl.helper.SimpleLogger;
 import org.apache.felix.scr.impl.inject.BaseParameter;
 import org.apache.felix.scr.impl.inject.ClassUtils;
 import org.apache.felix.scr.impl.inject.MethodResult;
@@ -389,7 +388,7 @@ public abstract class BaseMethod<P extends BaseParameter, T>
 
     /**
      * Returns <code>true</code> if the method is acceptable to be returned from the
-     * {@link #getMethod(Class, String, Class[], boolean, boolean, SimpleLogger)} and also
+     * {@link #getMethod(Class, String, Class[], boolean, boolean, ComponentLogger)} and also
      * makes the method accessible.
      * <p>
      * This method returns <code>true</code> iff:

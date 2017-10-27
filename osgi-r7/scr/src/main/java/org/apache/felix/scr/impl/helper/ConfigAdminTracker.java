@@ -57,9 +57,9 @@ public class ConfigAdminTracker
                     }
                     catch ( final Exception ex)
                     {
-                        componentActivator.log(LogService.LOG_ERROR,
+                        componentActivator.getLogger().log(LogService.LOG_ERROR,
                                 "Configuration admin API visible to bundle " + componentActivator.getBundleContext().getBundle() +
-                                " is not the same as the Configuration Admin API visible to the SCR implementation.", null, null, ex);
+                                " is not the same as the Configuration Admin API visible to the SCR implementation.", ex);
                     }
 
                     if ( !visible )

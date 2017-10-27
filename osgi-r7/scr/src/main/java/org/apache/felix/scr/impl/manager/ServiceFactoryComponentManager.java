@@ -56,7 +56,7 @@ public class ServiceFactoryComponentManager<S> extends SingleComponentManager<S>
 
     // maintain the map of ComponentContext objects created for the
     // service instances
-    private IdentityHashMap<S, ComponentContextImpl<S>> serviceContexts = new IdentityHashMap<S, ComponentContextImpl<S>>();
+    private IdentityHashMap<S, ComponentContextImpl<S>> serviceContexts = new IdentityHashMap<>();
 
     /**
      * @param container ComponentHolder for configuration management
@@ -81,7 +81,8 @@ public class ServiceFactoryComponentManager<S> extends SingleComponentManager<S>
         for (ComponentContextImpl<S> componentContext: getComponentContexts() )
         {
             disposeImplementationObject( componentContext, reason );
-            log( LogService.LOG_DEBUG, "Unset implementation object for component {0} in deleteComponent for reason {1}", new Object[] { getName(), REASONS[ reason ] },  null );
+            getLogger().log( LogService.LOG_DEBUG, "Unset implementation object for component in deleteComponent for reason {0}",
+                    null, REASONS[ reason ] );
         }
         serviceContexts.clear();
         clearServiceProperties();
@@ -94,14 +95,14 @@ public class ServiceFactoryComponentManager<S> extends SingleComponentManager<S>
     @Override
     public S getService( Bundle bundle, ServiceRegistration<S> serviceRegistration )
     {
-        log( LogService.LOG_DEBUG, "ServiceFactory.getService()", null );
+        getLogger().log( LogService.LOG_DEBUG, "ServiceFactory.getService()", null );
 
         // When the getServiceMethod is called, the implementation object must be created
 
-        ComponentContextImpl<S> componentContext = new ComponentContextImpl<S>(this, bundle, serviceRegistration);
+        ComponentContextImpl<S> componentContext = new ComponentContextImpl<>(this, bundle, serviceRegistration);
         if (collectDependencies(componentContext) )
         {
-            log( LogService.LOG_DEBUG,
+            getLogger().log( LogService.LOG_DEBUG,
                     "getService (ServiceFactory) dependencies collected.",
                     null );
 
@@ -140,7 +141,7 @@ public class ServiceFactoryComponentManager<S> extends SingleComponentManager<S>
         {
             // log that the service factory component cannot be created (we don't
             // know why at this moment; this should already have been logged)
-            log( LogService.LOG_DEBUG, "Failed creating the component instance; see log for reason", null );
+            getLogger().log( LogService.LOG_DEBUG, "Failed creating the component instance; see log for reason", null );
             setState(previousState, State.failed);
 
         }
@@ -159,7 +160,7 @@ public class ServiceFactoryComponentManager<S> extends SingleComponentManager<S>
     @Override
     public void ungetService( Bundle bundle, ServiceRegistration<S> registration, S service )
     {
-        log( LogService.LOG_DEBUG, "ServiceFactory.ungetService()", null );
+        getLogger().log( LogService.LOG_DEBUG, "ServiceFactory.ungetService()", null );
 
         // When the ungetServiceMethod is called, the implementation object must be deactivated
         // private ComponentContext and implementation instances
@@ -185,7 +186,7 @@ public class ServiceFactoryComponentManager<S> extends SingleComponentManager<S>
     {
         synchronized ( serviceContexts )
         {
-            return new ArrayList<ComponentContextImpl<S>>( serviceContexts.values() );
+            return new ArrayList<>( serviceContexts.values() );
         }
     }
 

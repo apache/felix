@@ -21,13 +21,13 @@ package org.apache.felix.scr.impl;
 
 import java.text.MessageFormat;
 
-import org.apache.felix.scr.impl.logger.ScrLogger;
+import org.apache.felix.scr.impl.logger.BundleLogger;
 import org.mockito.Mockito;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 
 
-public class MockLogger extends ScrLogger
+public class MockLogger extends BundleLogger
 {
     static {
         final Bundle b = Mockito.mock(Bundle.class);
@@ -39,7 +39,7 @@ public class MockLogger extends ScrLogger
     private static BundleContext BUNDLE_CONTEXT;
 
     public MockLogger() {
-        super(BUNDLE_CONTEXT, null);
+        super(BUNDLE_CONTEXT, null, null);
     }
 
 

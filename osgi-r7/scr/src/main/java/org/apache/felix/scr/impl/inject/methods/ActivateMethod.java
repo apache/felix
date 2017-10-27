@@ -297,7 +297,7 @@ public class ActivateMethod extends BaseMethod<ActivatorParameter, Object> imple
     }
 
     /**
-     * @see org.apache.felix.scr.impl.inject.LifecycleMethod#invoke(java.lang.Object, org.osgi.service.component.ComponentContext, int, org.apache.felix.scr.impl.inject.MethodResult, org.apache.felix.scr.impl.helper.SimpleLogger)
+     * @see org.apache.felix.scr.impl.inject.LifecycleMethod#invoke(java.lang.Object, org.apache.felix.scr.impl.manager.ComponentContextImpl, int, org.apache.felix.scr.impl.inject.MethodResult)
      */
     @Override
     public MethodResult invoke(final Object componentInstance,
