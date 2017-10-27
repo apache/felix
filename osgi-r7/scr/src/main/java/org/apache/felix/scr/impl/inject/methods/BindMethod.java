@@ -25,10 +25,10 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import org.apache.felix.scr.impl.helper.SimpleLogger;
 import org.apache.felix.scr.impl.inject.BindParameters;
 import org.apache.felix.scr.impl.inject.ClassUtils;
 import org.apache.felix.scr.impl.inject.ValueUtils;
+import org.apache.felix.scr.impl.logger.ComponentLogger;
 import org.apache.felix.scr.impl.manager.ComponentContextImpl;
 import org.apache.felix.scr.impl.manager.RefPair;
 import org.apache.felix.scr.impl.metadata.DSVersion;
@@ -79,7 +79,7 @@ implements org.apache.felix.scr.impl.inject.ReferenceMethod
     protected MethodInfo<List<ValueUtils.ValueType>> doFindMethod( final Class<?> targetClass,
             final boolean acceptPrivate,
             final boolean acceptPackage,
-            final SimpleLogger logger )
+            final ComponentLogger logger )
                     throws SuitableMethodNotAccessibleException, InvocationTargetException
     {
         // 112.3.1 The method is searched for using the following priority
@@ -112,7 +112,7 @@ implements org.apache.felix.scr.impl.inject.ReferenceMethod
                 {
                     logger.log( LogService.LOG_DEBUG, "doFindMethod: Found Method " + method, null );
                 }
-                return new MethodInfo<List<ValueUtils.ValueType>>(method, Collections.singletonList(ValueUtils.ValueType.ref_serviceReference));
+                return new MethodInfo<>(method, Collections.singletonList(ValueUtils.ValueType.ref_serviceReference));
             }
         }
         catch ( SuitableMethodNotAccessibleException ex )
@@ -132,7 +132,7 @@ implements org.apache.felix.scr.impl.inject.ReferenceMethod
                     {
                         logger.log( LogService.LOG_DEBUG, "doFindMethod: Found Method " + method, null );
                     }
-                    return new MethodInfo<List<ValueUtils.ValueType>>(method, Collections.singletonList(ValueUtils.ValueType.ref_serviceObjects));
+                    return new MethodInfo<>(method, Collections.singletonList(ValueUtils.ValueType.ref_serviceObjects));
                 }
             }
             catch ( SuitableMethodNotAccessibleException ex )
@@ -164,7 +164,7 @@ implements org.apache.felix.scr.impl.inject.ReferenceMethod
                     {
                         logger.log( LogService.LOG_DEBUG, "doFindMethod: Found Method " + method, null );
                     }
-                    return new MethodInfo<List<ValueUtils.ValueType>>(method,
+                    return new MethodInfo<>(method,
                         Collections.singletonList(ValueUtils.ValueType.ref_serviceType));
                 }
             }
@@ -183,7 +183,7 @@ implements org.apache.felix.scr.impl.inject.ReferenceMethod
                     {
                         logger.log( LogService.LOG_DEBUG, "doFindMethod: Found Method " + method, null );
                     }
-                    return new MethodInfo<List<ValueUtils.ValueType>>(method,
+                    return new MethodInfo<>(method,
                         Collections.singletonList(ValueUtils.ValueType.ref_serviceType));
                 }
             }
@@ -204,7 +204,7 @@ implements org.apache.felix.scr.impl.inject.ReferenceMethod
                         {
                             logger.log( LogService.LOG_DEBUG, "doFindMethod: Found Method " + method, null );
                         }
-                        return new MethodInfo<List<ValueUtils.ValueType>>(method,
+                        return new MethodInfo<>(method,
                             Collections.singletonList(ValueUtils.ValueType.ref_map));
                     }
                 }
@@ -228,10 +228,10 @@ implements org.apache.felix.scr.impl.inject.ReferenceMethod
                         {
                             logger.log( LogService.LOG_DEBUG, "doFindMethod: Found Method " + method, null );
                         }
-                        List<ValueUtils.ValueType> paramTypes = new ArrayList<ValueUtils.ValueType>(2);
+                        List<ValueUtils.ValueType> paramTypes = new ArrayList<>(2);
                         paramTypes.add(ValueUtils.ValueType.ref_serviceType);
                         paramTypes.add(ValueUtils.ValueType.ref_map);
-                        return new MethodInfo<List<ValueUtils.ValueType>>(method, paramTypes);
+                        return new MethodInfo<>(method, paramTypes);
                     }
                 }
                 catch ( SuitableMethodNotAccessibleException ex )
@@ -250,10 +250,10 @@ implements org.apache.felix.scr.impl.inject.ReferenceMethod
                         {
                             logger.log( LogService.LOG_DEBUG, "doFindMethod: Found Method " + method, null );
                         }
-                        List<ValueUtils.ValueType> paramTypes = new ArrayList<ValueUtils.ValueType>(2);
+                        List<ValueUtils.ValueType> paramTypes = new ArrayList<>(2);
                         paramTypes.add(ValueUtils.ValueType.ref_serviceType);
                         paramTypes.add(ValueUtils.ValueType.ref_map);
-                        return new MethodInfo<List<ValueUtils.ValueType>>(method,
+                        return new MethodInfo<>(method,
                             paramTypes);
                     }
                 }
@@ -272,7 +272,7 @@ implements org.apache.felix.scr.impl.inject.ReferenceMethod
                         Class<?>[] parameterTypes = m.getParameterTypes();
                         boolean matches = true;
                         boolean specialMatch = true;
-                        List<ValueUtils.ValueType> paramTypes = new ArrayList<ValueUtils.ValueType>(parameterTypes.length);
+                        List<ValueUtils.ValueType> paramTypes = new ArrayList<>(parameterTypes.length);
                         for (Class<?> paramType: parameterTypes) {
                             if (paramType == ClassUtils.SERVICE_REFERENCE_CLASS)
                             {
@@ -345,7 +345,7 @@ implements org.apache.felix.scr.impl.inject.ReferenceMethod
                                 {
                                     logger.log( LogService.LOG_DEBUG, "doFindMethod: Found Method " + m, null );
                                 }
-                                return new MethodInfo<List<ValueUtils.ValueType>>(m, paramTypes);
+                                return new MethodInfo<>(m, paramTypes);
                             }
                             suitableMethodNotAccessible = true;
                         }
@@ -366,8 +366,8 @@ implements org.apache.felix.scr.impl.inject.ReferenceMethod
         if ( suitableMethodNotAccessible )
         {
             logger.log( LogService.LOG_ERROR,
-                    "doFindMethod: Suitable but non-accessible method found in class {0}", new Object[]
-                            { targetClass.getName() }, null );
+                    "doFindMethod: Suitable but non-accessible method found in class {0}",null,
+                            targetClass.getName() );
             throw new SuitableMethodNotAccessibleException();
         }
 
@@ -400,14 +400,14 @@ implements org.apache.felix.scr.impl.inject.ReferenceMethod
      * @throws InvocationTargetException If an unexpected Throwable is caught
      *      trying to find the requested method.
      */
-    private Method getServiceReferenceMethod( final Class<?> targetClass, boolean acceptPrivate, boolean acceptPackage, SimpleLogger logger )
+    private Method getServiceReferenceMethod( final Class<?> targetClass, boolean acceptPrivate, boolean acceptPackage, ComponentLogger logger )
             throws SuitableMethodNotAccessibleException, InvocationTargetException
     {
         return getMethod( targetClass, getMethodName(), new Class[]
                 { ClassUtils.SERVICE_REFERENCE_CLASS }, acceptPrivate, acceptPackage, logger );
     }
 
-    private Method getComponentObjectsMethod( final Class<?> targetClass, boolean acceptPrivate, boolean acceptPackage, SimpleLogger logger )
+    private Method getComponentObjectsMethod( final Class<?> targetClass, boolean acceptPrivate, boolean acceptPackage, ComponentLogger logger )
             throws SuitableMethodNotAccessibleException, InvocationTargetException
     {
         return getMethod(targetClass, getMethodName(),
@@ -436,7 +436,7 @@ implements org.apache.felix.scr.impl.inject.ReferenceMethod
      *      trying to find the requested method.
      */
     private Method getServiceObjectMethod( final Class<?> targetClass, final Class<?> parameterClass, boolean acceptPrivate,
-            boolean acceptPackage, SimpleLogger logger ) throws SuitableMethodNotAccessibleException, InvocationTargetException
+            boolean acceptPackage, ComponentLogger logger ) throws SuitableMethodNotAccessibleException, InvocationTargetException
     {
         return getMethod( targetClass, getMethodName(), new Class[]
                 { parameterClass }, acceptPrivate, acceptPackage, logger );
@@ -462,7 +462,7 @@ implements org.apache.felix.scr.impl.inject.ReferenceMethod
      *      found which is not accessible
      */
     private Method getServiceObjectAssignableMethod( final Class<?> targetClass, final Class<?> parameterClass,
-            boolean acceptPrivate, boolean acceptPackage, SimpleLogger logger ) throws SuitableMethodNotAccessibleException
+            boolean acceptPrivate, boolean acceptPackage, ComponentLogger logger ) throws SuitableMethodNotAccessibleException
     {
         // Get all potential bind methods
         Method candidateBindMethods[] = targetClass.getDeclaredMethods();
@@ -559,7 +559,7 @@ implements org.apache.felix.scr.impl.inject.ReferenceMethod
      *      trying to find the requested method.
      */
     private Method getServiceObjectWithMapMethod( final Class<?> targetClass, final Class<?> parameterClass,
-            boolean acceptPrivate, boolean acceptPackage, SimpleLogger logger ) throws SuitableMethodNotAccessibleException,
+            boolean acceptPrivate, boolean acceptPackage, ComponentLogger logger ) throws SuitableMethodNotAccessibleException,
     InvocationTargetException
     {
         return getMethod( targetClass, getMethodName(), new Class[]
@@ -644,7 +644,7 @@ implements org.apache.felix.scr.impl.inject.ReferenceMethod
      *      trying to find the requested method.
      */
     private Method getMapMethod( final Class<?> targetClass, final Class<?> parameterClass,
-            boolean acceptPrivate, boolean acceptPackage, SimpleLogger logger ) throws SuitableMethodNotAccessibleException,
+            boolean acceptPrivate, boolean acceptPackage, ComponentLogger logger ) throws SuitableMethodNotAccessibleException,
     InvocationTargetException
     {
         return getMethod( targetClass, getMethodName(), new Class[]

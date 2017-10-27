@@ -22,7 +22,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.felix.scr.impl.helper.SimpleLogger;
+import org.apache.felix.scr.impl.logger.ComponentLogger;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceReference;
 import org.osgi.service.component.ComponentContext;
@@ -83,14 +83,14 @@ public class ClassUtils
     public static Class<?> getClassFromComponentClassLoader(
             final Class<?> componentClass,
             final String className,
-            final SimpleLogger logger )
+            final ComponentLogger logger )
     {
         if ( logger.isLogEnabled( LogService.LOG_DEBUG ) )
         {
             logger.log(
                 LogService.LOG_DEBUG,
-                "getReferenceClass: Looking for interface class {0} through loader of {1}",
-                    new Object[] {className, componentClass.getName()}, null );
+                "getReferenceClass: Looking for interface class {0} through loader of {1}", null,
+                    className, componentClass.getName() );
         }
 
         try
@@ -107,7 +107,7 @@ public class ClassUtils
             if ( logger.isLogEnabled( LogService.LOG_DEBUG ) )
             {
                 logger.log( LogService.LOG_DEBUG,
-                    "getParameterClass: Found class {0}", new Object[] {referenceClass.getName()}, null );
+                    "getParameterClass: Found class {0}", null, referenceClass.getName() );
             }
             return referenceClass;
         }
@@ -141,14 +141,14 @@ public class ClassUtils
                             logger.log(
                                 LogService.LOG_DEBUG,
                                 "getParameterClass: Checking Bundle {0}/{1}",
-                                    new Object[] {pkg[i].getExportingBundle().getSymbolicName(), pkg[i].getExportingBundle().getBundleId()}, null );
+                                null, pkg[i].getExportingBundle().getSymbolicName(), pkg[i].getExportingBundle().getBundleId() );
                         }
 
                         Class<?> referenceClass = pkg[i].getExportingBundle().loadClass( className );
                         if ( logger.isLogEnabled( LogService.LOG_DEBUG ) )
                         {
                             logger.log( LogService.LOG_DEBUG,
-                                    "getParameterClass: Found class {0}", new Object[] {referenceClass.getName()}, null );
+                                    "getParameterClass: Found class {0}", null,referenceClass.getName() );
                         }
                         return referenceClass;
                     }
@@ -161,7 +161,7 @@ public class ClassUtils
             else if ( logger.isLogEnabled( LogService.LOG_DEBUG ) )
             {
                 logger.log( LogService.LOG_DEBUG,
-                    "getParameterClass: No bundles exporting package {0} found", new Object[] {referenceClassPackage}, null );
+                    "getParameterClass: No bundles exporting package {0} found", null, referenceClassPackage );
             }
         }
         else if ( logger.isLogEnabled( LogService.LOG_DEBUG ) )

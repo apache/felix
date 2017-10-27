@@ -18,7 +18,7 @@
  */
 package org.apache.felix.scr.impl.inject;
 
-import org.apache.felix.scr.impl.helper.SimpleLogger;
+import org.apache.felix.scr.impl.logger.ComponentLogger;
 
 /**
  * Callback for initializing the reference (field references)
@@ -31,5 +31,5 @@ public interface InitReferenceMethod
      * @param logger The logger
      * @return {@code true} if initialization succeeded
      */
-    boolean init( Object componentInstance, SimpleLogger logger );
+    boolean init( Object componentInstance, ComponentLogger logger );
 }

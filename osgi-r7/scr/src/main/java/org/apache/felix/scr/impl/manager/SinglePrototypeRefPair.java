@@ -59,7 +59,7 @@ public class SinglePrototypeRefPair<S, T> extends SingleRefPair<S, T>
             setFailed();
             key.getLogger().log(
                  LogService.LOG_WARNING,
-                 "Could not get service from serviceobjects for ref {0}", new Object[] {getRef()}, null );
+                 "Could not get service from serviceobjects for ref {0}",null, getRef() );
             return false;
         }
         if (!setServiceObject(key, service))

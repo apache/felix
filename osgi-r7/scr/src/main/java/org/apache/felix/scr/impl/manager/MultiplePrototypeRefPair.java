@@ -34,7 +34,7 @@ import org.osgi.service.log.LogService;
 public class MultiplePrototypeRefPair<S, T> extends RefPair<S, T>
 {
     private final ServiceObjects<T> serviceObjects;
-    private final ConcurrentMap<ComponentContextImpl<S>, T> instances = new ConcurrentHashMap<ComponentContextImpl<S>, T>();
+    private final ConcurrentMap<ComponentContextImpl<S>, T> instances = new ConcurrentHashMap<>();
 
     public MultiplePrototypeRefPair( BundleContext context, ServiceReference<T> ref )
     {
@@ -81,7 +81,7 @@ public class MultiplePrototypeRefPair<S, T> extends RefPair<S, T>
             setFailed();
             key.getLogger().log(
                  LogService.LOG_WARNING,
-                 "Could not get service from serviceobjects for ref {0}", new Object[] {getRef()}, null );
+                 "Could not get service from serviceobjects for ref {0}", null, getRef() );
             return false;
         }
         if (!setServiceObject(key, service))

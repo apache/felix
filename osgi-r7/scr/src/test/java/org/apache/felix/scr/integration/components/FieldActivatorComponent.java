@@ -19,6 +19,8 @@
 package org.apache.felix.scr.integration.components;
 
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 
 import org.osgi.framework.BundleContext;
@@ -45,55 +47,92 @@ public class FieldActivatorComponent
 
     private String activationTest;
 
+    private final List<String> notSetBeforeActivate = new ArrayList<>();
+
+    private final List<String> setBeforeActivate = new ArrayList<>();
+
+    public FieldActivatorComponent()
+    {
+        notSetBeforeActivate.add("bundle");
+        notSetBeforeActivate.add("context");
+        notSetBeforeActivate.add("config");
+        notSetBeforeActivate.add("annotation");
+    }
+
     @SuppressWarnings("unused")
     private void activator() {
         // everything should be set here already
-        activationTest = check();
+        check();
         activated = true;
     }
 
-    private String check()
+    private void addError(final String msg)
     {
-        if ( bundle == null ) {
-            return "bundle is null";
+        if ( activationTest == null )
+        {
+            activationTest = msg;
         }
-        if ( context == null ) {
-            return "context is null";
+        else
+        {
+            activationTest = activationTest + ", " + msg;
         }
-        if ( config == null ) {
-            return "config is null";
-        }
-        if ( annotation == null ) {
-            return "annotation is null";
-        }
-        if ( !annotation.email().equals("foo") ) {
-            return "Wrong value for annotation.email: " + annotation.email();
-        }
-        if ( annotation.port() != 80 ) {
-            return "Wrong value for annotation.port: " + annotation.port();
-        }
-        if ( annotation.test() != 0 ) {
-            return "Wrong value for annotation.test: " + annotation.test();
-        }
-        if ( !config.get("email").equals("foo") ) {
-            return "Wrong value for map.email: " + config.get("email");
-        }
-        if ( !config.get("port").equals("80") ) {
-            return "Wrong value for map.email: " + config.get("port");
-        }
-        if ( config.get("test") != null ) {
-            return "Wrong value for map.test: " + config.get("test");
-        }
-        return null;
     }
 
-    public String test() {
-        if ( !activated ) {
-            return "activate not called";
+    private void check()
+    {
+        if ( bundle != null ) {
+            notSetBeforeActivate.remove("bundle");
+            setBeforeActivate.add("bundle");
         }
-        if ( activationTest != null ) {
-            return "not set before activate: " + activationTest;
+        if ( context != null ) {
+            notSetBeforeActivate.remove("context");
+            setBeforeActivate.add("context");
         }
-        return check();
+        if ( config != null ) {
+            notSetBeforeActivate.remove("config");
+            setBeforeActivate.add("config");
+            if ( !config.get("email").equals("foo") ) {
+                addError("Wrong value for map.email: " + config.get("email"));
+            }
+            if ( !config.get("port").equals("80") ) {
+                addError("Wrong value for map.email: " + config.get("port"));
+            }
+            if ( config.get("test") != null ) {
+                addError("Wrong value for map.test: " + config.get("test"));
+            }
+        }
+        if ( annotation != null ) {
+            notSetBeforeActivate.remove("annotation");
+            setBeforeActivate.add("annotation");
+            if ( !annotation.email().equals("foo") ) {
+                addError("Wrong value for annotation.email: " + annotation.email());
+            }
+            if ( annotation.port() != 80 ) {
+                addError("Wrong value for annotation.port: " + annotation.port());
+            }
+            if ( annotation.test() != 0 ) {
+                addError("Wrong value for annotation.test: " + annotation.test());
+            }
+        }
+    }
+
+    public boolean isActivateCalled()
+    {
+        return activated;
+    }
+
+    public List<String> setBeforeActivate()
+    {
+        return setBeforeActivate;
+    }
+
+    public List<String> notSetBeforeActivate()
+    {
+        return notSetBeforeActivate;
+    }
+
+    public String additionalError()
+    {
+        return activationTest;
     }
 }

@@ -31,7 +31,7 @@ import org.osgi.service.log.LogService;
  */
 public class SingleRefPair<S, T> extends RefPair<S, T>
 {
-    private AtomicReference<T> serviceObjectRef = new AtomicReference<T>();
+    private AtomicReference<T> serviceObjectRef = new AtomicReference<>();
 
     public SingleRefPair( ServiceReference<T> ref )
     {
@@ -76,7 +76,7 @@ public class SingleRefPair<S, T> extends RefPair<S, T>
             setFailed();
             key.getLogger().log(
                  LogService.LOG_WARNING,
-                 "Could not get service from ref {0}", new Object[] {getRef()}, null );
+                 "Could not get service from ref {0}", null, getRef() );
             return false;
         }
         if (!setServiceObject(key, service))

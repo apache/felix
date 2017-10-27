@@ -136,11 +136,7 @@ public class SingleComponentManager<S> extends AbstractComponentManager<S> imple
             log( LogService.LOG_DEBUG, "Set implementation object for component {0}", new Object[] { getName() },  null );
 
             //notify that component was successfully created so any optional circular dependencies can be retried
-            ComponentActivator activator = getActivator();
-            if ( activator != null )
-            {
-                activator.missingServicePresent( getServiceReference() );
-            }
+            m_container.getActivator().missingServicePresent( getServiceReference() );
         }
         return true;
     }
@@ -276,6 +272,13 @@ public class SingleComponentManager<S> extends AbstractComponentManager<S> imple
                         paramMap);
 
             }
+            catch ( final InstantiationException ie)
+            {
+                // we don't need to log the stack trace
+                log( LogService.LOG_ERROR, "Error during instantiation of the implementation object: " + ie.getMessage(), null );
+                this.setFailureReason(ie);
+                return null;
+            }
             catch ( Throwable t )
             {
                 // failed to instantiate, return null
@@ -350,13 +353,10 @@ public class SingleComponentManager<S> extends AbstractComponentManager<S> imple
         else
         {
             componentContext.setImplementationAccessible( true );
-            ComponentActivator activator = getActivator();
-            if ( activator != null )
-            {
-                //call to leaveCreate must be done here since the change in service properties may cause a getService,
-                //so the threadLocal must be cleared first.
-                activator.leaveCreate(getServiceReference());
-            }
+            //call to leaveCreate must be done here since the change in service properties may cause a getService,
+            //so the threadLocal must be cleared first.
+            m_container.getActivator().leaveCreate(getServiceReference());
+
             //this may cause a getService as properties now match a filter.
             setServiceProperties( result, null );
         }
@@ -840,7 +840,7 @@ public class SingleComponentManager<S> extends AbstractComponentManager<S> imple
     @Override
     public S getService( Bundle bundle, ServiceRegistration<S> serviceRegistration )
     {
-        if ( getActivator().enterCreate( serviceRegistration.getReference() ) )
+        if ( m_container.getActivator().enterCreate( serviceRegistration.getReference() ) )
         {
             return null;
         }
@@ -873,7 +873,7 @@ public class SingleComponentManager<S> extends AbstractComponentManager<S> imple
             finally
             {
                 //This is backup.  Normally done in createComponent.
-                getActivator().leaveCreate(serviceRegistration.getReference());
+                m_container.getActivator().leaveCreate(serviceRegistration.getReference());
             }
 
         }

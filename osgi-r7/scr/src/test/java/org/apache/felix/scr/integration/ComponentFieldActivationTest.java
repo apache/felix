@@ -24,18 +24,12 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 import java.util.Arrays;
-import java.util.Collection;
 
 import org.apache.felix.scr.integration.components.FieldActivatorComponent;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.ops4j.pax.exam.junit.PaxExam;
-import org.osgi.framework.InvalidSyntaxException;
-import org.osgi.framework.ServiceReference;
 import org.osgi.service.component.runtime.dto.ComponentConfigurationDTO;
-
-import junit.framework.Assert;
-import junit.framework.TestCase;
 
 
 @RunWith(PaxExam.class)
@@ -66,12 +60,15 @@ public class ComponentFieldActivationTest extends ComponentTestBase
 
         FieldActivatorComponent cmp = this.getServiceFromConfiguration(cc, FieldActivatorComponent.class);
 
-        final String msg = cmp.test();
-        assertNull(msg, msg);
+        assertTrue(cmp.isActivateCalled());
+        assertTrue(cmp.notSetBeforeActivate().isEmpty());
+        assertEquals(4, cmp.setBeforeActivate().size());
+        assertNull(cmp.additionalError());
+
         disableAndCheck( cc );
     }
-
-    protected <S> void failGetServiceFromConfiguration(ComponentConfigurationDTO dto, Class<S> clazz)
+/**
+    private <S> void failGetServiceFromConfiguration(ComponentConfigurationDTO dto, Class<S> clazz)
     {
         long id = dto.id;
         String filter = "(component.id=" + id + ")";
@@ -88,7 +85,7 @@ public class ComponentFieldActivationTest extends ComponentTestBase
             TestCase.fail( e.getMessage() );
         }
     }
-
+*/
     @Test
     public void test_field_activator_failure() throws Exception
     {
@@ -98,7 +95,13 @@ public class ComponentFieldActivationTest extends ComponentTestBase
         assertEquals(1, cc.description.activationFields.length);
         assertTrue(Arrays.asList(cc.description.activationFields).contains("foo"));
 
-        this.failGetServiceFromConfiguration(cc, FieldActivatorComponent.class);
+        // we get the component, although the field does not exist!
+        FieldActivatorComponent cmp = this.getServiceFromConfiguration(cc, FieldActivatorComponent.class);
+
+        assertTrue(cmp.isActivateCalled());
+        assertTrue(cmp.setBeforeActivate().isEmpty());
+        assertEquals(4, cmp.notSetBeforeActivate().size());
+        assertNull(cmp.additionalError());
 
         disableAndCheck( cc );
     }
@@ -114,7 +117,15 @@ public class ComponentFieldActivationTest extends ComponentTestBase
         assertTrue(Arrays.asList(cc.description.activationFields).contains("context"));
         assertTrue(Arrays.asList(cc.description.activationFields).contains("foo"));
 
-        this.failGetServiceFromConfiguration(cc, FieldActivatorComponent.class);
+        // we get the component, although some fields do not exist!
+        FieldActivatorComponent cmp = this.getServiceFromConfiguration(cc, FieldActivatorComponent.class);
+
+        assertTrue(cmp.isActivateCalled());
+        assertEquals(2, cmp.setBeforeActivate().size());
+        assertTrue(cmp.setBeforeActivate().contains("bundle"));
+        assertTrue(cmp.setBeforeActivate().contains("context"));
+        assertEquals(2, cmp.notSetBeforeActivate().size());
+        assertNull(cmp.additionalError());
 
         disableAndCheck( cc );
     }
