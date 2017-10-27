@@ -29,7 +29,7 @@ import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.felix.scr.impl.ComponentRegistry;
-import org.apache.felix.scr.impl.helper.SimpleLogger;
+import org.apache.felix.scr.impl.logger.ScrLogger;
 import org.apache.felix.scr.impl.metadata.TargetedPID;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
@@ -49,7 +49,7 @@ import org.osgi.service.log.LogService;
 public abstract class RegionConfigurationSupport
 {
 
-    private final SimpleLogger logger;
+    private final ScrLogger logger;
     private final ServiceReference<ConfigurationAdmin> caReference;
     private final BundleContext caBundleContext;
     private final Long bundleId;
@@ -64,7 +64,7 @@ public abstract class RegionConfigurationSupport
      * @param bundleContext of the ConfigurationAdmin we are tracking
      * @param registry
      */
-    public RegionConfigurationSupport(SimpleLogger logger, ServiceReference<ConfigurationAdmin> reference)
+    public RegionConfigurationSupport(final ScrLogger logger, ServiceReference<ConfigurationAdmin> reference)
     {
         this.logger = logger;
         this.caReference = reference;
@@ -76,17 +76,17 @@ public abstract class RegionConfigurationSupport
     public void start()
     {
         // register as listener for configurations
-        Dictionary<String, Object> props = new Hashtable<String, Object>();
+        Dictionary<String, Object> props = new Hashtable<>();
         props.put( Constants.SERVICE_DESCRIPTION, "Declarative Services Configuration Support Listener" );
         props.put( Constants.SERVICE_VENDOR, "The Apache Software Foundation" );
 
         // If RegionConfigurationSupport *directly* implements ConfigurationListener then we get NoClassDefFoundError
         // when SCR is started without a wiring to an exporter of Config Admin API. This construction allows the
         // class loading exception to be caught and confined.
-        ConfigurationListener serviceDelegator = new ConfigurationListener() 
+        ConfigurationListener serviceDelegator = new ConfigurationListener()
         {
             @Override
-            public void configurationEvent(ConfigurationEvent event) 
+            public void configurationEvent(ConfigurationEvent event)
             {
                 RegionConfigurationSupport.this.configurationEvent(event);
             }
@@ -150,8 +150,8 @@ public abstract class RegionConfigurationSupport
                         for ( Configuration config : factory )
                         {
                             logger.log( LogService.LOG_DEBUG,
-                                "Configuring holder {0} with factory configuration {1}, change count {2}",
-                                new Object[] { holder, config, config.getChangeCount() }, null );
+                                "Configuring holder {0} with factory configuration {1}, change count {2}", null,
+                                holder, config, config.getChangeCount() );
                             if ( checkBundleLocation( config, bundleContext.getBundle() ) )
                             {
                                 long changeCount = config.getChangeCount();
@@ -172,8 +172,8 @@ public abstract class RegionConfigurationSupport
                         if ( singleton != null )
                         {
                             logger.log( LogService.LOG_DEBUG,
-                                "Configuring holder {0} with configuration {1}, change count {2}",
-                                new Object[] { holder, singleton, singleton.getChangeCount() }, null );
+                                "Configuring holder {0} with configuration {1}, change count {2}", null,
+                                holder, singleton, singleton.getChangeCount() );
                             if ( singleton != null && checkBundleLocation( singleton, bundleContext.getBundle() ) )
                             {
                                 long changeCount = singleton.getChangeCount();
@@ -236,8 +236,8 @@ public abstract class RegionConfigurationSupport
         Collection<ComponentHolder<?>> holders = getComponentHolders( factoryPid != null? factoryPid: pid );
 
         logger.log( LogService.LOG_DEBUG,
-            "configurationEvent: Handling {0} of Configuration PID={1} for component holders {2}",
-            new Object[] { getEventType( event ), pid, holders }, null );
+            "configurationEvent: Handling {0} of Configuration PID={1} for component holders {2}", null,
+            getEventType( event ), pid, holders );
 
         for ( ComponentHolder<?> componentHolder : holders )
         {
@@ -319,10 +319,9 @@ public abstract class RegionConfigurationSupport
                             if ( configInfo != null )
                             {
                                 logger.log( LogService.LOG_DEBUG,
-                                    "LocationChanged event, same targetedPID {0}, location now {1}, change count {2}",
-                                    new Object[] { targetedPid, configInfo.getBundleLocation(),
-                                            configInfo.getChangeCount() },
-                                    null );
+                                    "LocationChanged event, same targetedPID {0}, location now {1}, change count {2}", null,
+                                    targetedPid, configInfo.getBundleLocation(),
+                                            configInfo.getChangeCount() );
                                 if ( configInfo.getProps() == null )
                                 {
                                     throw new IllegalStateException( "Existing Configuration with pid " + pid
@@ -351,10 +350,9 @@ public abstract class RegionConfigurationSupport
                             if ( configInfo != null )
                             {
                                 logger.log( LogService.LOG_DEBUG,
-                                    "LocationChanged event, better targetedPID {0} compared to {1}, location now {2}, change count {3}",
-                                    new Object[] { targetedPid, oldTargetedPID, configInfo.getBundleLocation(),
-                                            configInfo.getChangeCount() },
-                                    null );
+                                    "LocationChanged event, better targetedPID {0} compared to {1}, location now {2}, change count {3}", null,
+                                     targetedPid, oldTargetedPID, configInfo.getBundleLocation(),
+                                            configInfo.getChangeCount());
                                 if ( configInfo.getProps() == null )
                                 {
                                     //location has been changed before any properties are set.  We don't care.  Wait for an updated event with the properties
@@ -377,14 +375,14 @@ public abstract class RegionConfigurationSupport
                         else
                         {
                             logger.log( LogService.LOG_DEBUG,
-                                "LocationChanged event, worse targetedPID {0} compared to {1}, do nothing",
-                                new Object[] { targetedPid, oldTargetedPID }, null );
+                                "LocationChanged event, worse targetedPID {0} compared to {1}, do nothing", null,
+                                targetedPid, oldTargetedPID  );
                         }
                         break;
                     }
                     default:
-                        logger.log( LogService.LOG_WARNING, "Unknown ConfigurationEvent type {0}",
-                            new Object[] { event.getType() }, null );
+                        logger.log( LogService.LOG_WARNING, "Unknown ConfigurationEvent type {0}", null,
+                            event.getType() );
                 }
             }
         }
@@ -468,13 +466,11 @@ public abstract class RegionConfigurationSupport
             }
             catch ( IOException e )
             {
-                logger.log( LogService.LOG_WARNING, "Failed reading configuration for pid={0}", new Object[] { pid },
-                    e );
+                logger.log( LogService.LOG_WARNING, "Failed reading configuration for pid={0}", e, pid);
             }
             catch ( InvalidSyntaxException e )
             {
-                logger.log( LogService.LOG_WARNING, "Failed reading configuration for pid={0}", new Object[] { pid },
-                    e );
+                logger.log( LogService.LOG_WARNING, "Failed reading configuration for pid={0}", e, pid);
             }
             finally
             {
@@ -502,6 +498,7 @@ public abstract class RegionConfigurationSupport
         }
         return bundleContext.registerService(ManagedService.class, new ManagedService() {
 
+            @Override
             public void updated(Dictionary<String, ?> properties) throws ConfigurationException {
                 // nothing to do
 
@@ -567,7 +564,7 @@ public abstract class RegionConfigurationSupport
         {
             return Collections.emptyList();
         }
-        Map<String, Configuration> configsByPid = new HashMap<String, Configuration>();
+        Map<String, Configuration> configsByPid = new HashMap<>();
         for ( Configuration config : configs )
         {
             if ( checkBundleLocation( config, bundle ) )
@@ -618,8 +615,8 @@ public abstract class RegionConfigurationSupport
         {
             result = configBundleLocation.equals( bundle.getLocation() );
         }
-        logger.log( LogService.LOG_DEBUG, "checkBundleLocation: location {0}, returning {1}",
-            new Object[] { configBundleLocation, result }, null );
+        logger.log( LogService.LOG_DEBUG, "checkBundleLocation: location {0}, returning {1}", null,
+            configBundleLocation, result );
         return result;
     }
 
@@ -631,13 +628,12 @@ public abstract class RegionConfigurationSupport
         }
         catch ( IOException ioe )
         {
-            logger.log( LogService.LOG_WARNING, "Problem listing configurations for filter={0}",
-                new Object[] { filter }, ioe );
+            logger.log( LogService.LOG_WARNING, "Problem listing configurations for filter={0}", ioe,
+                filter  );
         }
         catch ( InvalidSyntaxException ise )
         {
-            logger.log( LogService.LOG_ERROR, "Invalid Configuration selection filter {0}", new Object[] { filter },
-                ise );
+            logger.log( LogService.LOG_ERROR, "Invalid Configuration selection filter {0}", ise, filter);
         }
 
         // no factories in case of problems

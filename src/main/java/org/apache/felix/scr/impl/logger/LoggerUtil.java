@@ -18,12 +18,32 @@
  */
 package org.apache.felix.scr.impl.logger;
 
+import org.osgi.framework.Bundle;
+
 /**
- * The <code>ComponentLogger</code> interface defines a simple API to enable some logging
- * for a component. This avoids avoids that all clients doing logging on behalf of
- * a component need to pass in things like {@code ComponentMetadata} or the component Id.
+ * Utility for logging
  */
-public interface ComponentLogger extends Logger
+public abstract class LoggerUtil
 {
-    // just a marker interface
+
+    public static String getBundleIdentifier(final Bundle bundle)
+    {
+        final StringBuilder sb = new StringBuilder("bundle ");
+        // symbolic name might be null
+        if ( bundle.getSymbolicName() != null )
+        {
+            sb.append(bundle.getSymbolicName());
+            sb.append(':');
+            sb.append(bundle.getVersion());
+            sb.append( " (" );
+            sb.append( bundle.getBundleId() );
+            sb.append( ")" );
+        }
+        else
+        {
+            sb.append( bundle.getBundleId() );
+        }
+
+        return sb.toString();
+    }
 }
