@@ -92,14 +92,16 @@
                         <xsl:variable name="rem1" select="substring-after(text(), '/')"/>
                         <xsl:variable name="rem2" select="substring-before($rem1, '/')"/>
                         <xsl:variable name="rem3" select="substring-after($rem1, '/')"/>
-                        <xsl:call-template name="service-requirement">
-                            <xsl:with-param name="interface" select="$rem2" />
-                            <xsl:with-param name="attributes">
-                                <xsl:if test="string-length($rem3) > 0">
-                                    <xsl:value-of select="concat('filter:=&quot;', $rem3, '&quot;')"/>
-                                </xsl:if>
-                            </xsl:with-param>
-                        </xsl:call-template>
+                        <xsl:if test="true or contains($rem2, '.')">
+                            <xsl:call-template name="service-requirement">
+                                <xsl:with-param name="interface" select="$rem2" />
+                                <xsl:with-param name="attributes">
+                                    <xsl:if test="string-length($rem3) > 0">
+                                        <xsl:value-of select="concat('filter:=&quot;', $rem3, '&quot;')"/>
+                                    </xsl:if>
+                                </xsl:with-param>
+                            </xsl:call-template>
+                        </xsl:if>
                     </xsl:if>
                 </xsl:for-each>
                 <xsl:for-each select="//jpa:persistence-unit[@transaction-type='RESOURCE_LOCAL']/jpa:non-jta-data-source">
@@ -107,14 +109,16 @@
                         <xsl:variable name="rem1" select="substring-after(text(), '/')"/>
                         <xsl:variable name="rem2" select="substring-before($rem1, '/')"/>
                         <xsl:variable name="rem3" select="substring-after($rem1, '/')"/>
-                        <xsl:call-template name="service-requirement">
-                            <xsl:with-param name="interface" select="$rem2" />
-                            <xsl:with-param name="attributes">
-                                <xsl:if test="string-length($rem3) > 0">
-                                    <xsl:value-of select="concat('filter:=&quot;', $rem3, '&quot;')"/>
-                                </xsl:if>
-                            </xsl:with-param>
-                        </xsl:call-template>
+                        <xsl:if test="true or contains($rem2, '.')">
+                            <xsl:call-template name="service-requirement">
+                                <xsl:with-param name="interface" select="$rem2" />
+                                <xsl:with-param name="attributes">
+                                    <xsl:if test="string-length($rem3) > 0">
+                                        <xsl:value-of select="concat('filter:=&quot;', $rem3, '&quot;')"/>
+                                    </xsl:if>
+                                </xsl:with-param>
+                            </xsl:call-template>
+                        </xsl:if>
                     </xsl:if>
                 </xsl:for-each>
                 <xsl:for-each select="//jpa:persistence-unit[count(jpa:jta-data-source) + count(jpa:non-jta-data-source) = 0]/jpa:properties/jpa:property[@name='javax.persistence.jdbc.driver']">
