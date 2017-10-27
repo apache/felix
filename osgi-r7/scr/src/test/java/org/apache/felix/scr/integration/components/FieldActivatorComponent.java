@@ -60,7 +60,8 @@ public class FieldActivatorComponent
     }
 
     @SuppressWarnings("unused")
-    private void activator() {
+    private void activator()
+    {
         // everything should be set here already
         check();
         activated = true;
@@ -80,37 +81,47 @@ public class FieldActivatorComponent
 
     private void check()
     {
-        if ( bundle != null ) {
+        if ( bundle != null )
+        {
             notSetBeforeActivate.remove("bundle");
             setBeforeActivate.add("bundle");
         }
-        if ( context != null ) {
+        if ( context != null )
+        {
             notSetBeforeActivate.remove("context");
             setBeforeActivate.add("context");
         }
-        if ( config != null ) {
+        if ( config != null )
+        {
             notSetBeforeActivate.remove("config");
             setBeforeActivate.add("config");
-            if ( !config.get("email").equals("foo") ) {
+            if ( !config.get("email").equals("foo") )
+            {
                 addError("Wrong value for map.email: " + config.get("email"));
             }
-            if ( !config.get("port").equals("80") ) {
+            if ( !config.get("port").equals("80") )
+            {
                 addError("Wrong value for map.email: " + config.get("port"));
             }
-            if ( config.get("test") != null ) {
+            if ( config.get("test") != null )
+            {
                 addError("Wrong value for map.test: " + config.get("test"));
             }
         }
-        if ( annotation != null ) {
+        if ( annotation != null )
+        {
             notSetBeforeActivate.remove("annotation");
             setBeforeActivate.add("annotation");
-            if ( !annotation.email().equals("foo") ) {
+            if ( !annotation.email().equals("foo") )
+            {
                 addError("Wrong value for annotation.email: " + annotation.email());
             }
-            if ( annotation.port() != 80 ) {
+            if ( annotation.port() != 80 )
+            {
                 addError("Wrong value for annotation.port: " + annotation.port());
             }
-            if ( annotation.test() != 0 ) {
+            if ( annotation.test() != 0 )
+            {
                 addError("Wrong value for annotation.test: " + annotation.test());
             }
         }

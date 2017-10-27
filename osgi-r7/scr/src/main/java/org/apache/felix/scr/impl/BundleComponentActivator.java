@@ -36,7 +36,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.apache.felix.scr.impl.helper.ConfigAdminTracker;
-import org.apache.felix.scr.impl.helper.SimpleLogger;
+import org.apache.felix.scr.impl.logger.ScrLogger;
 import org.apache.felix.scr.impl.manager.AbstractComponentManager;
 import org.apache.felix.scr.impl.manager.ComponentActivator;
 import org.apache.felix.scr.impl.manager.ComponentHolder;
@@ -97,7 +97,7 @@ public class BundleComponentActivator implements ComponentActivator
 
     private final Map<String, ListenerInfo> listenerMap = new HashMap<>();
 
-    private final SimpleLogger m_logger;
+    private final ScrLogger m_logger;
 
     private static class ListenerInfo implements ServiceListener
     {
@@ -244,7 +244,12 @@ public class BundleComponentActivator implements ComponentActivator
      *
      * @throws ComponentException if any error occurrs initializing this class
      */
-    public BundleComponentActivator(SimpleLogger logger, ComponentRegistry componentRegistry, ComponentActorThread componentActor, BundleContext context, ScrConfiguration configuration) throws ComponentException
+    public BundleComponentActivator(final ScrLogger logger,
+            final ComponentRegistry componentRegistry,
+            final ComponentActorThread componentActor,
+            final BundleContext context,
+            final ScrConfiguration configuration)
+    throws ComponentException
     {
         // keep the parameters for later
         m_logger = logger;
@@ -429,7 +434,7 @@ public class BundleComponentActivator implements ComponentActivator
             stream = descriptorURL.openStream();
 
             BufferedReader in = new BufferedReader( new InputStreamReader( stream, "UTF-8" ) );
-            XmlHandler handler = new XmlHandler( m_bundle, this, getConfiguration().isFactoryEnabled(),
+            XmlHandler handler = new XmlHandler( m_bundle, this.m_logger, getConfiguration().isFactoryEnabled(),
                 getConfiguration().keepInstances() );
             final KXml2SAXParser parser = new KXml2SAXParser( in );
 

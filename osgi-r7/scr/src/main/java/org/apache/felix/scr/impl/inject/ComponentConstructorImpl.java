@@ -54,7 +54,7 @@ public class ComponentConstructorImpl<T> implements ComponentConstructor<T>
     {
         // constructor injection
         // get reference parameter map
-        final Map<Integer, ReferenceMetadata> paramMap = ( componentMetadata.getNumberOfConstructorParameters() > 0 ? new HashMap<Integer, ReferenceMetadata>() : null);
+        final Map<Integer, List<ReferenceMetadata>> paramMap = ( componentMetadata.getNumberOfConstructorParameters() > 0 ? new HashMap<Integer, List<ReferenceMetadata>>() : null);
         for ( final ReferenceMetadata refMetadata : componentMetadata.getDependencies())
         {
             if ( refMetadata.getParameterIndex() != null )
@@ -63,30 +63,25 @@ public class ComponentConstructorImpl<T> implements ComponentConstructor<T>
                 if ( index > componentMetadata.getNumberOfConstructorParameters() )
                 {
                     // if the index (starting at 0) is equal or higher than the number of constructor arguments
-                    // we log a warning and ignore the reference
+                    // we log an error and ignore the reference
                     logger.log(LogService.LOG_ERROR,
                             "Ignoring reference {0} for constructor injection. Parameter index is too high.", null,
                             refMetadata.getName() );
                 }
                 else if ( !refMetadata.isStatic() )
                 {
-                    // if the reference is dynamic, we log a warning and ignore the reference
+                    // if the reference is dynamic, we log an error and ignore the reference
                     logger.log(LogService.LOG_ERROR,
                             "Ignoring reference {0} for constructor injection. Reference is dynamic.", null,
                             refMetadata.getName() );
                 }
-                else if ( paramMap.get(index) != null )
+                List<ReferenceMetadata> list = paramMap.get(index);
+                if ( list == null )
                 {
-                    // duplicate reference for the same index, we log a warning and ignore the duplicates
-                    logger.log(LogService.LOG_ERROR,
-                            "Ignoring reference {0} for constructor injection. Another reference has the same index.", null,
-                            refMetadata.getName() );
+                    list = new ArrayList<>();
+                    paramMap.put(index, list);
                 }
-                else
-                {
-                    paramMap.put(index, refMetadata);
-                }
-
+                list.add(refMetadata);
             }
         }
 
@@ -111,16 +106,38 @@ public class ComponentConstructorImpl<T> implements ComponentConstructor<T>
                     foundRefs = new ReferenceMetadata[argTypes.length];
                     for(int i=0; i<foundTypes.length;i++)
                     {
-                        final ReferenceMetadata ref = paramMap.get(i);
-                        if ( ref == null )
+                        final List<ReferenceMetadata> refs = paramMap.get(i);
+                        if ( refs == null )
                         {
                             foundTypes[i] = ValueUtils.getValueType(argTypes[i]);
                         }
                         else
                         {
-                            foundTypes[i] = ValueUtils.getReferenceValueType(componentClass, ref, argTypes[i], null, logger);
-                            foundRefs[i] = ref;
+                            for(final ReferenceMetadata ref : refs)
+                            {
+                                final ValueType t = ValueUtils.getReferenceValueType(componentClass, ref, argTypes[i], null, logger);
+                                if ( t != null )
+                                {
+                                    foundTypes[i] = t;
+                                    foundRefs[i] = ref;
+                                    break;
+                                }
+                            }
+                            if ( foundTypes[i] == null )
+                            {
+                                foundTypes[i] = ValueType.ignore;
+                            }
+                            else
+                            {
+                                if ( refs.size() > 1 )
+                                {
+                                    logger.log(LogService.LOG_ERROR,
+                                            "Several references for constructor injection of parameter {0}. Only {1} will be used out of: {2}.", null,
+                                            i, foundRefs[i].getName(), getNames(refs) );
+                                }
+                            }
                         }
+
                         if ( foundTypes[i] == ValueType.ignore )
                         {
                             hasFailure = true;
@@ -259,5 +276,22 @@ public class ComponentConstructorImpl<T> implements ComponentConstructor<T>
         }
 
         return component;
+    }
+
+    private String getNames(final List<ReferenceMetadata> refs)
+    {
+        final StringBuilder sb = new StringBuilder();
+        for(final ReferenceMetadata refMetadata : refs)
+        {
+            if ( sb.length() == 0 )
+            {
+                sb.append(refMetadata.getName());
+            }
+            else
+            {
+                sb.append(", ").append(refMetadata.getName());
+            }
+        }
+        return sb.toString();
     }
 }

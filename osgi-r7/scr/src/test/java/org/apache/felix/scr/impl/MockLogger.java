@@ -21,37 +21,55 @@ package org.apache.felix.scr.impl;
 
 import java.text.MessageFormat;
 
-import org.apache.felix.scr.impl.helper.Logger;
-import org.apache.felix.scr.impl.metadata.ComponentMetadata;
+import org.apache.felix.scr.impl.logger.ScrLogger;
+import org.mockito.Mockito;
+import org.osgi.framework.Bundle;
+import org.osgi.framework.BundleContext;
 
 
-public class MockLogger implements Logger
+public class MockLogger extends ScrLogger
 {
-    String lastMessage;
+    static {
+        final Bundle b = Mockito.mock(Bundle.class);
+        final BundleContext bCtx = Mockito.mock(BundleContext.class);
+        Mockito.when(bCtx.getBundle()).thenReturn(b);
+        BUNDLE_CONTEXT = bCtx;
+    }
+
+    private static BundleContext BUNDLE_CONTEXT;
+
+    public MockLogger() {
+        super(BUNDLE_CONTEXT, null);
+    }
 
 
-    public boolean isLogEnabled( int level )
+    private String lastMessage;
+
+
+    @Override
+    public boolean isLogEnabled( final int level )
     {
         return true;
     }
 
-
-    public void log( int level, String pattern, Object[] arguments, ComponentMetadata metadata, Long componentId, Throwable ex )
+    @Override
+    public void log( final int level, final String pattern, final Throwable ex, final Object...arguments )
     {
         if ( isLogEnabled( level ) )
         {
-            log( level, MessageFormat.format( pattern, arguments ), metadata, null, ex );
+            log( level,  MessageFormat.format( pattern, arguments ), ex );
         }
     }
 
 
-    public void log( int level, String message, ComponentMetadata metadata, Long componentId, Throwable ex )
+    @Override
+    public void log( final int level, final String message, final Throwable ex )
     {
         lastMessage = message;
     }
 
 
-    public boolean messageContains( String value )
+    public boolean messageContains( final String value )
     {
         return lastMessage != null && lastMessage.indexOf( value ) >= 0;
     }
