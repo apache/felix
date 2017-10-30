@@ -80,10 +80,11 @@ public class ValueUtils {
         {
             return ValueType.config_map;
         }
-        else
+        else if ( typeClass.isAnnotation() )
         {
             return ValueType.config_annotation;
         }
+        return ValueType.ignore;
     }
 
     /**
@@ -178,23 +179,24 @@ public class ValueUtils {
         }
         else
         {
-            if ( ReferenceMetadata.FIELD_VALUE_TYPE_SERVICE.equals(metadata.getFieldCollectionType()) )
+            String colType = field != null ? metadata.getFieldCollectionType() : metadata.getParameterCollectionType();
+            if ( ReferenceMetadata.FIELD_VALUE_TYPE_SERVICE.equals(colType) )
             {
                 valueType = ValueType.ref_serviceType;
             }
-            else if ( ReferenceMetadata.FIELD_VALUE_TYPE_REFERENCE.equals(metadata.getFieldCollectionType()) )
+            else if ( ReferenceMetadata.FIELD_VALUE_TYPE_REFERENCE.equals(colType) )
             {
                 valueType = ValueType.ref_serviceReference;
             }
-            else if ( ReferenceMetadata.FIELD_VALUE_TYPE_SERVICEOBJECTS.equals(metadata.getFieldCollectionType()) )
+            else if ( ReferenceMetadata.FIELD_VALUE_TYPE_SERVICEOBJECTS.equals(colType) )
             {
                 valueType = ValueType.ref_serviceObjects;
             }
-            else if ( ReferenceMetadata.FIELD_VALUE_TYPE_PROPERTIES.equals(metadata.getFieldCollectionType()) )
+            else if ( ReferenceMetadata.FIELD_VALUE_TYPE_PROPERTIES.equals(colType) )
             {
                 valueType = ValueType.ref_map;
             }
-            else if ( ReferenceMetadata.FIELD_VALUE_TYPE_TUPLE.equals(metadata.getFieldCollectionType()) )
+            else if ( ReferenceMetadata.FIELD_VALUE_TYPE_TUPLE.equals(colType) )
             {
                 valueType = ValueType.ref_tuple;
             }
@@ -245,7 +247,7 @@ public class ValueUtils {
             }
         }
         // static references only allowed for replace strategy
-        if ( metadata.isStatic() && !metadata.isReplace() )
+        if ( field != null && metadata.isStatic() && !metadata.isReplace() )
         {
             logger.log( LogService.LOG_ERROR, "Update strategy for field {0} in class {1} only allowed for non static field references.", null,
                     metadata.getField(), componentClass );

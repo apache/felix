@@ -134,6 +134,9 @@ public class ReferenceMetadata
     // Parameter index, set based on {@code m_parameter} after validation
     private Integer m_parameterIndex;
 
+    // Name of the value type for the parameter (optional, since DS 1.4)
+    private String m_parameter_collection_type;
+
     // Flags that store the values passed as strings
     private boolean m_isStatic = true;
     private boolean m_isOptional = false;
@@ -397,6 +400,21 @@ public class ReferenceMetadata
 		this.m_parameter = val;
 	}
 
+    /**
+     * Setter for the parameter value type attribute
+     * DS 1.4
+     * @param valuetype the parameter value type
+     */
+    public void setParameterCollectionType( final String valuetype )
+    {
+        if ( m_validated )
+        {
+            return;
+        }
+
+        m_parameter_collection_type = valuetype;
+    }
+
     /////////////////////////////////////////////// getters ///////////////////////////////////
 
 	/**
@@ -540,11 +558,23 @@ public class ReferenceMetadata
      * This method returns the correct value only after this metadata object has been validated
      * by a call to {@link #validate(ComponentMetadata, Logger)} and the validation has been
      * successful.
+     * DS 1.4
      * @return The parameter index , if no parameter is set this returns {@code -null}
      */
     public Integer getParameterIndex()
     {
     	return m_parameterIndex;
+    }
+
+    /**
+     * Get the value type of a parameter in the component implementation class that is used to hold
+     * the reference
+     * DS 1.4
+     * @return a String with the value type for the parameter
+     */
+    public String getParameterCollectionType()
+    {
+        return m_parameter_collection_type;
     }
 
     // Getters for boolean values that determine both policy and cardinality
@@ -768,6 +798,26 @@ public class ReferenceMetadata
             if ( m_parameterIndex < 0 )
             {
                 throw componentMetadata.validationFailure( "Reference parameter value must be zero or higher: " + m_parameter );
+            }
+            // parameter value type
+            if ( !m_isMultiple )
+            {
+                // value type must not be specified for unary references
+                if ( m_parameter_collection_type != null )
+                {
+                    throw componentMetadata.validationFailure( "Parameter value type must not be set for unary constructor references." );
+                }
+            }
+            else
+            {
+                if ( m_parameter_collection_type == null )
+                {
+                    setParameterCollectionType( FIELD_VALUE_TYPE_SERVICE );
+                }
+                else if ( !FIELD_VALUE_TYPE_VALID.contains( m_parameter_collection_type ) )
+                {
+                    throw componentMetadata.validationFailure( "Parameter value type must be one of " + FIELD_VALUE_TYPE_VALID );
+                }
             }
         }
         m_validated = true;

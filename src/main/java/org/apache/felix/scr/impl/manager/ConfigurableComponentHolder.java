@@ -139,7 +139,7 @@ public abstract class ConfigurableComponentHolder<S> implements ComponentHolder<
     private volatile Promise<Void> m_enablePromise;
     private volatile Promise<Void> m_disablePromise = Promises.resolved(null);
 
-    private final ComponentMethods m_componentMethods;
+    private final ComponentMethods<S> m_componentMethods;
 
     private final ComponentLogger logger;
 
@@ -159,9 +159,9 @@ public abstract class ConfigurableComponentHolder<S> implements ComponentHolder<
         this.m_enabled = false;
     }
 
-    protected abstract ComponentMethods createComponentMethods();
+    protected abstract ComponentMethods<S> createComponentMethods();
 
-    protected ComponentMethods getComponentMethods() {
+    protected ComponentMethods<S> getComponentMethods() {
         return m_componentMethods;
     }
 

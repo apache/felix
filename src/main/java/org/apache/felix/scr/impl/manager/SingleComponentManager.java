@@ -28,14 +28,17 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import org.apache.felix.scr.impl.inject.BindParameters;
 import org.apache.felix.scr.impl.inject.ComponentConstructor;
 import org.apache.felix.scr.impl.inject.ComponentMethods;
 import org.apache.felix.scr.impl.inject.LifecycleMethod;
 import org.apache.felix.scr.impl.inject.MethodResult;
+import org.apache.felix.scr.impl.inject.ReferenceMethod;
 import org.apache.felix.scr.impl.manager.DependencyManager.OpenStatus;
 import org.apache.felix.scr.impl.metadata.ReferenceMetadata;
 import org.apache.felix.scr.impl.metadata.TargetedPID;
 import org.osgi.framework.Bundle;
+import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceFactory;
 import org.osgi.framework.ServiceReference;
@@ -76,12 +79,12 @@ public class SingleComponentManager<S> extends AbstractComponentManager<S> imple
      * The constructor receives both the activator and the metadata
      * @param componentMethods
      */
-    public SingleComponentManager( final ComponentContainer<S> container, final ComponentMethods componentMethods )
+    public SingleComponentManager( final ComponentContainer<S> container, final ComponentMethods<S> componentMethods )
     {
         this(container, componentMethods, false);
     }
 
-    public SingleComponentManager( final ComponentContainer<S> container, final ComponentMethods componentMethods,
+    public SingleComponentManager( final ComponentContainer<S> container, final ComponentMethods<S> componentMethods,
             final boolean factoryInstance )
     {
         super( container, componentMethods, factoryInstance );
@@ -217,7 +220,6 @@ public class SingleComponentManager<S> extends AbstractComponentManager<S> imple
     @SuppressWarnings("unchecked")
     protected S createImplementationObject( Bundle usingBundle, SetImplementationObject<S> setter, ComponentContextImpl<S> componentContext )
     {
-        final Class<S> implementationObjectClass;
         S implementationObject = null;
 
         // 1. Load the component implementation class
@@ -252,6 +254,33 @@ public class SingleComponentManager<S> extends AbstractComponentManager<S> imple
             openStatusList.add(open);
             if ( dm.getReferenceMetadata().getParameterIndex() != null)
             {
+                if ( !dm.bindDependency(componentContext, new ReferenceMethod() {
+
+                        @Override
+                        public <S, T> MethodResult invoke(final Object componentInstance,
+                                final BindParameters rawParameter,
+                                final MethodResult methodCallFailureResult)
+                        {
+                            // nothing to do, binding will be done in constructor
+                            return MethodResult.VOID;
+                        }
+
+                        @Override
+                        public <S, T> boolean getServiceObject(
+                                final BindParameters rawParameter,
+                                final BundleContext context)
+                        {
+                            // nothing to do, binding will be done in constructor
+                            return true;
+                        }
+                    },(OpenStatus) open) )
+                {
+                    getLogger().log( LogService.LOG_DEBUG, "Cannot create component instance due to failure to bind reference {0}",
+                            null, dm.getName()  );
+                    failed = true;
+                    break;
+                }
+
                 final ComponentConstructor.ReferencePair<S> pair = new ComponentConstructor.ReferencePair<>();
                 pair.dependencyManager = dm;
                 pair.openStatus = open;
@@ -263,10 +292,6 @@ public class SingleComponentManager<S> extends AbstractComponentManager<S> imple
         {
             try
             {
-                // 112.4.4 The class is retrieved with the loadClass method of the component's bundle
-                implementationObjectClass = (Class<S>) bundle.loadClass(
-                        getComponentMetadata().getImplementationClassName() )  ;
-
                 implementationObject = getComponentMethods().getConstructor().newInstance(
                         componentContext,
                         paramMap);
@@ -279,7 +304,7 @@ public class SingleComponentManager<S> extends AbstractComponentManager<S> imple
                 this.setFailureReason(ie);
                 return null;
             }
-            catch ( Throwable t )
+            catch ( final Throwable t )
             {
                 // failed to instantiate, return null
                 getLogger().log( LogService.LOG_ERROR, "Error during instantiation of the implementation object", t );
@@ -466,11 +491,8 @@ public class SingleComponentManager<S> extends AbstractComponentManager<S> imple
     @Override
     public Map<String, Object> getProperties()
     {
-
         if ( m_properties == null )
         {
-
-
             // 1. Merge all the config properties
             Map<String, Object> props = new HashMap<>();
             if ( m_configurationProperties != null )
@@ -595,26 +617,26 @@ public class SingleComponentManager<S> extends AbstractComponentManager<S> imple
                 }
                 else
                 {
-                    getLogger().log( LogService.LOG_DEBUG, "Not updating service registration, no change in properties", null, null );
+                    getLogger().log( LogService.LOG_DEBUG, "Not updating service registration, no change in properties", null );
                 }
             }
-            catch ( IllegalStateException ise )
+            catch ( final IllegalStateException ise )
             {
                 // service has been unregistered asynchronously, ignore
             }
-            catch ( IllegalArgumentException iae )
+            catch ( final IllegalArgumentException iae )
             {
                 getLogger().log( LogService.LOG_ERROR,
                         "Unexpected configuration property problem when updating service registration", iae );
             }
-            catch ( Throwable t )
+            catch ( final Throwable t )
             {
                 getLogger().log( LogService.LOG_ERROR, "Unexpected problem when updating service registration", t );
             }
         }
         else
         {
-            getLogger().log( LogService.LOG_DEBUG, "No service registration to update", null, null );
+            getLogger().log( LogService.LOG_DEBUG, "No service registration to update", null );
         }
     }
 
@@ -958,7 +980,7 @@ public class SingleComponentManager<S> extends AbstractComponentManager<S> imple
         {
             deleteComponent( ComponentConstants.DEACTIVATION_REASON_UNSPECIFIED );
         }
-        catch ( Throwable t )
+        catch ( final Throwable t )
         {
             getLogger().log( LogService.LOG_DEBUG, "Cannot delete incomplete component instance. Ignoring.", t );
         }
