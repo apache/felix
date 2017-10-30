@@ -43,7 +43,7 @@ public class ComponentConstructorTest extends ComponentTestBase
     static
     {
         // use different components
-        descriptorFile = "/integration_test_constructor_components.xml";
+        descriptorFile = "/integration_test_constructor.xml";
 
         // uncomment to enable debugging of this test class
         // paxRunnerVmOption = DEBUG_VM_OPTION;
@@ -61,7 +61,7 @@ public class ComponentConstructorTest extends ComponentTestBase
         ConstructorComponent cmp = this.getServiceFromConfiguration(cc, ConstructorComponent.class);
 
         final String msg = cmp.test();
-        assertNull(msg, msg);
+        assertNull(msg);
         disableAndCheck( cc );
     }
 
@@ -93,6 +93,36 @@ public class ComponentConstructorTest extends ComponentTestBase
 
         this.failGetServiceFromConfiguration(cc, ConstructorComponent.class);
 
+        disableAndCheck( cc );
+    }
+
+    @Test
+    public void test_constructor_singleRef() throws Exception
+    {
+        final String componentname = "ConstructorComponent.refsingle";
+
+        ComponentConfigurationDTO cc = getDisabledConfigurationAndEnable(componentname, ComponentConfigurationDTO.SATISFIED);
+        assertEquals(1, cc.description.init);
+
+        ConstructorComponent cmp = this.getServiceFromConfiguration(cc, ConstructorComponent.class);
+
+        final String msg = cmp.test();
+        assertNull(msg);
+        disableAndCheck( cc );
+    }
+
+    @Test
+    public void test_constructor_multiRef() throws Exception
+    {
+        final String componentname = "ConstructorComponent.refmulti";
+
+        ComponentConfigurationDTO cc = getDisabledConfigurationAndEnable(componentname, ComponentConfigurationDTO.SATISFIED);
+        assertEquals(1, cc.description.init);
+
+        ConstructorComponent cmp = this.getServiceFromConfiguration(cc, ConstructorComponent.class);
+
+        final String msg = cmp.test();
+        assertNull(msg);
         disableAndCheck( cc );
     }
 }

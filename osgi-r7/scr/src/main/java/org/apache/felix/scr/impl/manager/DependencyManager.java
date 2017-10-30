@@ -1290,7 +1290,7 @@ public class DependencyManager<S, T> implements ReferenceManager<S, T>
         return m_minCardinality == 0;
     }
 
-    private boolean cardinalitySatisfied(int serviceCount)
+    public boolean cardinalitySatisfied(int serviceCount)
     {
         return m_minCardinality <= serviceCount;
     }
@@ -1621,12 +1621,20 @@ public class DependencyManager<S, T> implements ReferenceManager<S, T>
                     null, getName());
             return false;
         }
+        final ReferenceMethod bindMethod = m_bindMethods.getBind();
+        return this.bindDependency(componentContext, bindMethod, status);
+    }
+
+    boolean bindDependency(final ComponentContextImpl<S> componentContext,
+            final ReferenceMethod bindMethod,
+            final OpenStatus<S, T> status)
+    {
         int serviceCount = 0;
-        for (RefPair<S, T> refPair : status.refs)
+        for (final RefPair<S, T> refPair : status.refs)
         {
             if (!refPair.isDeleted() && !refPair.isFailed())
             {
-                if (!doInvokeBindMethod(componentContext, refPair, status.trackingCount.get()))
+                if (!doInvokeBindMethod(componentContext, bindMethod, refPair, status.trackingCount.get()))
                 {
                     m_componentManager.getLogger().log(LogService.LOG_DEBUG,
                         "For dependency {0}, failed to invoke bind method on object {1}",
@@ -1773,7 +1781,7 @@ public class DependencyManager<S, T> implements ReferenceManager<S, T>
                 }
             }
             //edgeInfo open has been set, so binding has started.
-            return doInvokeBindMethod(componentContext, refPair, trackingCount);
+            return doInvokeBindMethod(componentContext, m_bindMethods.getBind(), refPair, trackingCount);
 
         }
         else
@@ -1785,10 +1793,11 @@ public class DependencyManager<S, T> implements ReferenceManager<S, T>
         }
     }
 
-    private boolean doInvokeBindMethod(ComponentContextImpl<S> componentContext, RefPair<S, T> refPair,
+    private boolean doInvokeBindMethod(ComponentContextImpl<S> componentContext,
+            final ReferenceMethod bindMethod,
+            RefPair<S, T> refPair,
         int trackingCount)
     {
-    	final ReferenceMethod bindMethod = m_bindMethods.getBind();
         if (!getServiceObject(componentContext, bindMethod, refPair))
         {
             m_componentManager.getLogger().log(LogService.LOG_WARNING,

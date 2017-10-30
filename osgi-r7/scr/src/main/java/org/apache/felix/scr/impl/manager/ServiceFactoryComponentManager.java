@@ -62,7 +62,7 @@ public class ServiceFactoryComponentManager<S> extends SingleComponentManager<S>
      * @param container ComponentHolder for configuration management
      * @param componentMethods
      */
-    public ServiceFactoryComponentManager( ComponentContainer<S> container, ComponentMethods componentMethods )
+    public ServiceFactoryComponentManager( ComponentContainer<S> container, ComponentMethods<S> componentMethods )
     {
         super( container, componentMethods );
     }

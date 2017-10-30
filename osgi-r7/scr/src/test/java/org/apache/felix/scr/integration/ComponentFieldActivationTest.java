@@ -67,25 +67,7 @@ public class ComponentFieldActivationTest extends ComponentTestBase
 
         disableAndCheck( cc );
     }
-/**
-    private <S> void failGetServiceFromConfiguration(ComponentConfigurationDTO dto, Class<S> clazz)
-    {
-        long id = dto.id;
-        String filter = "(component.id=" + id + ")";
-        Collection<ServiceReference<S>> srs;
-        try
-        {
-            srs = bundleContext.getServiceReferences( clazz, filter );
-            Assert.assertEquals( "Nothing for filter: " + filter, 1, srs.size() );
-            ServiceReference<S> sr = srs.iterator().next();
-            assertNull(bundleContext.getService( sr ));
-        }
-        catch ( InvalidSyntaxException e )
-        {
-            TestCase.fail( e.getMessage() );
-        }
-    }
-*/
+
     @Test
     public void test_field_activator_failure() throws Exception
     {

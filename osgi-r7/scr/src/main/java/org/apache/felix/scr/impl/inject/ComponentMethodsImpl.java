@@ -103,7 +103,7 @@ public class ComponentMethodsImpl<T> implements ComponentMethods<T>
             }
         }
 
-    	    m_constructor = new ComponentConstructorImpl(componentMetadata, implementationObjectClass, logger);
+    	    m_constructor = new ComponentConstructor(componentMetadata, implementationObjectClass, logger);
     }
 
 	@Override
