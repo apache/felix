@@ -29,6 +29,7 @@ import org.apache.felix.scr.impl.logger.ComponentLogger;
 import org.apache.felix.scr.impl.manager.ComponentContextImpl;
 import org.apache.felix.scr.impl.manager.RefPair;
 import org.apache.felix.scr.impl.metadata.ReferenceMetadata;
+import org.osgi.framework.Bundle;
 import org.osgi.framework.ServiceReference;
 import org.osgi.service.log.LogService;
 
@@ -320,8 +321,8 @@ public class ValueUtils {
         {
             Exception error = null;
             try {
-                final Method m = factory.getClass().getMethod("getLogger", new Class[] {String.class, Class.class});
-                return m.invoke(factory, new Object[] {componentType, targetType});
+                final Method m = factory.getClass().getMethod("getLogger", new Class[] {Bundle.class, String.class, Class.class});
+                return m.invoke(factory, new Object[] {componentContext.getBundleContext().getBundle(), componentType, targetType});
             } catch (NoSuchMethodException e) {
                 error = e;
             } catch (SecurityException e) {
