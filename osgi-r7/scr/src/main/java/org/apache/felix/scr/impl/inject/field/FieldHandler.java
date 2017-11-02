@@ -368,7 +368,7 @@ public class FieldHandler
                 final BindParameters rawParameter)
         throws InvocationTargetException
         {
-            resolve( handler, rawParameter.getLogger() );
+            resolve( handler, rawParameter.getComponentContext().getLogger() );
             return handler.state.invoke( handler, mType, componentInstance, rawParameter );
         }
 
@@ -393,7 +393,7 @@ public class FieldHandler
                 final Object componentInstance,
                 final BindParameters rawParameter)
         {
-            rawParameter.getLogger().log( LogService.LOG_ERROR, "Field [{0}] not found", null,
+            rawParameter.getComponentContext().getLogger().log( LogService.LOG_ERROR, "Field [{0}] not found", null,
                 handler.metadata.getField() );
             return null;
         }
@@ -496,7 +496,7 @@ public class FieldHandler
             }
             catch ( final InvocationTargetException ite )
             {
-                rawParameter.getLogger().log( LogService.LOG_ERROR, "The {0} field has thrown an exception", null,
+                rawParameter.getComponentContext().getLogger().log( LogService.LOG_ERROR, "The {0} field has thrown an exception", null,
                     handler.metadata.getField() );
             }
 
@@ -512,7 +512,7 @@ public class FieldHandler
             {
                 //??? this resolves which we need.... better way?
                 if ( rawParameter.getServiceObject() == null
-                  && handler.fieldExists( rawParameter.getLogger() )
+                  && handler.fieldExists( rawParameter.getComponentContext().getLogger() )
                   && (handler.valueType == ValueType.ref_serviceType || handler.valueType == ValueType.ref_tuple ) )
                 {
                     return rawParameter.getServiceObject(context);

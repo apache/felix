@@ -323,15 +323,7 @@ public class ValueUtils {
             try {
                 final Method m = factory.getClass().getMethod("getLogger", new Class[] {Bundle.class, String.class, Class.class});
                 return m.invoke(factory, new Object[] {componentContext.getBundleContext().getBundle(), componentType, targetType});
-            } catch (NoSuchMethodException e) {
-                error = e;
-            } catch (SecurityException e) {
-                error = e;
-            } catch (IllegalAccessException e) {
-                error = e;
-            } catch (IllegalArgumentException e) {
-                error = e;
-            } catch (InvocationTargetException e) {
+            } catch (final NoSuchMethodException | SecurityException | IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
                 error = e;
             }
             componentContext.getLogger().log( LogService.LOG_ERROR, "Unexpected error while trying to get logger.", null, error );

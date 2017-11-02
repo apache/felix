@@ -18,34 +18,58 @@
  */
 package org.apache.felix.scr.impl.logger;
 
-import org.apache.felix.scr.impl.manager.ScrConfiguration;
 import org.osgi.framework.BundleContext;
-import org.osgi.service.log.LogService;
 
 /**
- * The <code>BundleLogger</code> interface defines a simple API to enable some logging
- * for an extended bundle. This avoids avoids that all clients doing logging on behalf of
+ * The {@code BundleLogger} defines a simple API to enable some logging on behalf of
+ * an extended bundle. This avoids that all clients doing logging on behalf of
  * a component bundle need to pass in things like {@code BundleContext}.
  */
-public class BundleLogger extends ScrLogger
+public class BundleLogger extends LogServiceEnabledLogger
 {
     private final ScrLogger parent;
 
-    public BundleLogger(final BundleContext bundleContext, final ScrConfiguration config, final ScrLogger parent)
+    public BundleLogger(final BundleContext bundleContext, final ScrLogger parent)
     {
-        super(bundleContext, config);
+        super(parent.getConfiguration(), bundleContext);
         this.parent = parent;
     }
 
     @Override
-    protected LogService getLogService() {
-        // try log service of extended bundle first
-        LogService logService = super.getLogService();
-        if ( logService == null )
+    InternalLogger getDefaultLogger()
+    {
+        return new InternalLogger()
         {
-            // revert to scr log service (if available)
-            logService = parent.getLogService();
+
+            @Override
+            public void log(final int level, final String message, final Throwable ex)
+            {
+                parent.getLogger().log(level, message, ex);
+            }
+
+            @Override
+            public boolean isLogEnabled(final int level)
+            {
+                return parent.getLogger().isLogEnabled(level);
+            }
+        };
+    }
+
+    int getTrackingCount()
+    {
+        return trackingCount;
+    }
+
+    InternalLogger getLogger(final String className)
+    {
+        if ( className != null )
+        {
+            final Object logServiceSupport = this.logServiceTracker.getService();
+            if ( logServiceSupport != null )
+            {
+                return ((LogServiceSupport)logServiceSupport).getLogger(className);
+            }
         }
-        return logService;
+        return this.getLogger();
     }
 }

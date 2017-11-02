@@ -249,7 +249,7 @@ public class BundleComponentActivator implements ComponentActivator
     throws ComponentException
     {
         // create a logger on behalf of the bundle
-        this.logger = new BundleLogger(context, configuration, scrLogger);
+        this.logger = new BundleLogger(context, scrLogger);
         // keep the parameters for later
         m_componentRegistry = componentRegistry;
         m_componentActor = componentActor;

@@ -54,14 +54,10 @@ public abstract class BaseMethod<P extends BaseParameter, T>
     private volatile State m_state;
 
     protected BaseMethod( final String methodName,
-            final Class<?> componentClass, final DSVersion dsVersion, final boolean configurableServiceProperties )
-    {
-        this( methodName, methodName != null, componentClass, dsVersion, configurableServiceProperties );
-    }
-
-
-    protected BaseMethod( final String methodName,
-            final boolean methodRequired, final Class<?> componentClass, final DSVersion dsVersion, final boolean configurableServiceProperties )
+            final boolean methodRequired,
+            final Class<?> componentClass,
+            final DSVersion dsVersion,
+            final boolean configurableServiceProperties )
     {
         m_methodName = methodName;
         m_methodRequired = methodRequired;
@@ -227,23 +223,23 @@ public abstract class BaseMethod<P extends BaseParameter, T>
             if ( componentInstance != null )
             {
                 final Object[] params = getParameters(m_method, rawParameter);
-                rawParameter.getLogger().log( LogService.LOG_DEBUG, "invoking {0}: {1}: parameters {2}", null,
+                rawParameter.getComponentContext().getLogger().log( LogService.LOG_DEBUG, "invoking {0}: {1}: parameters {2}", null,
                         getMethodNamePrefix(), getMethodName(), Arrays.asList( params ) );
                 Object result = m_method.invoke(componentInstance, params);
-                rawParameter.getLogger().log( LogService.LOG_DEBUG, "invoked {0}: {1}", null,
+                rawParameter.getComponentContext().getLogger().log( LogService.LOG_DEBUG, "invoked {0}: {1}", null,
                         getMethodNamePrefix(), getMethodName() );
                 return new MethodResult((m_method.getReturnType() != Void.TYPE), (Map<String, Object>) result);
             }
             else
             {
-                rawParameter.getLogger().log( LogService.LOG_WARNING, "Method {0}: {1} cannot be called on null object",
+                rawParameter.getComponentContext().getLogger().log( LogService.LOG_WARNING, "Method {0}: {1} cannot be called on null object",
                         null,
                                 getMethodNamePrefix(), getMethodName() );
             }
         }
         catch ( IllegalStateException ise )
         {
-            rawParameter.getLogger().log( LogService.LOG_DEBUG, ise.getMessage(), null );
+            rawParameter.getComponentContext().getLogger().log( LogService.LOG_DEBUG, ise.getMessage(), null );
             return null;
         }
         catch ( IllegalAccessException ex )
@@ -251,7 +247,7 @@ public abstract class BaseMethod<P extends BaseParameter, T>
             // 112.3.1 If the method is not is not declared protected or
             // public, SCR must log an error message with the log service,
             // if present, and ignore the method
-            rawParameter.getLogger().log( LogService.LOG_DEBUG, "Method {0} cannot be called", ex,
+            rawParameter.getComponentContext().getLogger().log( LogService.LOG_DEBUG, "Method {0} cannot be called", ex,
                     getMethodName() );
         }
         catch ( InvocationTargetException ex )
@@ -515,7 +511,7 @@ public abstract class BaseMethod<P extends BaseParameter, T>
         }
         catch ( InvocationTargetException ite )
         {
-            rawParameter.getLogger().log( LogService.LOG_ERROR, "The {0} method has thrown an exception", ite.getCause(),
+            rawParameter.getComponentContext().getLogger().log( LogService.LOG_ERROR, "The {0} method has thrown an exception", ite.getCause(),
                     getMethodName() );
             if ( methodCallFailureResult != null && methodCallFailureResult.getResult() != null )
             {
@@ -619,7 +615,7 @@ public abstract class BaseMethod<P extends BaseParameter, T>
         public <P extends BaseParameter, T> MethodResult invoke( final BaseMethod<P, T> baseMethod, final Object componentInstance, final P rawParameter )
                 throws InvocationTargetException
         {
-            resolve( baseMethod, rawParameter.getLogger() );
+            resolve( baseMethod, rawParameter.getComponentContext().getLogger() );
             return baseMethod.getState().invoke( baseMethod, componentInstance, rawParameter );
         }
 
@@ -643,7 +639,7 @@ public abstract class BaseMethod<P extends BaseParameter, T>
             // 112.3.1 If the method is not found , SCR must log an error
             // message with the log service, if present, and ignore the
             // method
-            rawParameter.getLogger().log( LogService.LOG_ERROR, "{0} method [{1}] not found", null,
+            rawParameter.getComponentContext().getLogger().log( LogService.LOG_ERROR, "{0} method [{1}] not found", null,
                     baseMethod.getMethodNamePrefix(), baseMethod.getMethodName() );
             return null;
         }
