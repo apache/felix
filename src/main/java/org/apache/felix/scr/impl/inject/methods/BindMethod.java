@@ -38,7 +38,6 @@ import org.osgi.service.log.LogService;
 
 /**
  * Component method to be invoked on service (un)binding.
- * @param <S>
  */
 public class BindMethod extends BaseMethod<BindParameters, List<ValueUtils.ValueType>>
 implements org.apache.felix.scr.impl.inject.ReferenceMethod
@@ -48,11 +47,13 @@ implements org.apache.felix.scr.impl.inject.ReferenceMethod
     //initialized for cases where there is no method.
     private volatile List<ValueUtils.ValueType> m_paramTypes = Collections.emptyList();
 
-
     public BindMethod( final String methodName,
-            final Class<?> componentClass, final String referenceClassName, final DSVersion dsVersion, final boolean configurableServiceProperties )
+            final Class<?> componentClass,
+            final String referenceClassName,
+            final DSVersion dsVersion,
+            final boolean configurableServiceProperties )
     {
-        super( methodName, componentClass, dsVersion, configurableServiceProperties );
+        super( methodName, methodName != null, componentClass, dsVersion, configurableServiceProperties );
         m_referenceClassName = referenceClassName;
     }
 

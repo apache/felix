@@ -1,14 +1,16 @@
-Changes from 2.0.12 to 2.1.0
-----------------------------
+Changes in 2.1.0
+----------------
 ** Improvement
-    * [FELIX-5458] Improved ConfigurationPlugin Support (OSGi R7)
+    * [FELIX-5354] Implement Declarative Service Updates for OSGi R7
     * [FELIX-5454] Service properties for ComponentFactory (OSGi R7)
+    * [FELIX-5455] Constructor Injection (OSGi R7)
     * [FELIX-5456] Field injection of component activation objects (OSGi R7)
     * [FELIX-5457] Logger support (OSGi R7)
-    * [FELIX-5456] DTO Updates (OSGi R7)
+    * [FELIX-5458] Improved ConfigurationPlugin Support (OSGi R7)
+    * [FELIX-5460] DTO Updates (OSGi R7)
+    * [FELIX-5557] Updates to section 112.8.2.2 Coercing Component Property Values (OSGi R7)
     * [FELIX-5559] Add change count property to runtime service (OSGi R7)
     * [FELIX-5590] Add support for single value annotations and new key mapping (OSGi R7)
-    * [FELIX-5557] Updates to section 112.8.2.2 Coercing Component Property Values
     * [FELIX-5695] Use Java 7 as base version
     * [FELIX-5696] Separate metatype provider from managed service
 ** Bug

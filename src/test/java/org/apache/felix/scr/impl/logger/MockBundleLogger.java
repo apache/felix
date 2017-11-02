@@ -16,30 +16,20 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.felix.scr.impl;
+package org.apache.felix.scr.impl.logger;
 
 
 import java.text.MessageFormat;
 
-import org.apache.felix.scr.impl.logger.BundleLogger;
-import org.mockito.Mockito;
-import org.osgi.framework.Bundle;
-import org.osgi.framework.BundleContext;
+import org.apache.felix.scr.impl.MockBundle;
+import org.apache.felix.scr.impl.MockBundleContext;
 
 
-public class MockLogger extends BundleLogger
+public class MockBundleLogger extends BundleLogger
 {
-    static {
-        final Bundle b = Mockito.mock(Bundle.class);
-        final BundleContext bCtx = Mockito.mock(BundleContext.class);
-        Mockito.when(bCtx.getBundle()).thenReturn(b);
-        BUNDLE_CONTEXT = bCtx;
-    }
-
-    private static BundleContext BUNDLE_CONTEXT;
-
-    public MockLogger() {
-        super(BUNDLE_CONTEXT, null, null);
+    public MockBundleLogger()
+    {
+        super(new MockBundleContext(new MockBundle()), new MockScrLogger());
     }
 
 
@@ -49,7 +39,7 @@ public class MockLogger extends BundleLogger
     @Override
     public boolean isLogEnabled( final int level )
     {
-        return true;
+        return level == 1;
     }
 
     @Override

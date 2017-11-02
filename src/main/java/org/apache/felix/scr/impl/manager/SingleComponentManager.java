@@ -28,8 +28,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import org.apache.felix.scr.impl.inject.BindParameters;
-import org.apache.felix.scr.impl.inject.ComponentConstructor;
 import org.apache.felix.scr.impl.inject.ComponentMethods;
 import org.apache.felix.scr.impl.inject.LifecycleMethod;
 import org.apache.felix.scr.impl.inject.MethodResult;
@@ -38,7 +36,6 @@ import org.apache.felix.scr.impl.manager.DependencyManager.OpenStatus;
 import org.apache.felix.scr.impl.metadata.ReferenceMetadata;
 import org.apache.felix.scr.impl.metadata.TargetedPID;
 import org.osgi.framework.Bundle;
-import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceFactory;
 import org.osgi.framework.ServiceReference;
@@ -235,7 +232,7 @@ public class SingleComponentManager<S> extends AbstractComponentManager<S> imple
         // bind target services
         final List<DependencyManager.OpenStatus<S, ?>> openStatusList = new ArrayList<>();
 
-        final Map<ReferenceMetadata, ComponentConstructor.ReferencePair<S>> paramMap = ( getComponentMetadata().getNumberOfConstructorParameters() > 0 ? new HashMap<ReferenceMetadata, ComponentConstructor.ReferencePair<S>>() : null);
+        final Map<ReferenceMetadata, DependencyManager.OpenStatus<S, ?>> paramMap = ( getComponentMetadata().getNumberOfConstructorParameters() > 0 ? new HashMap<ReferenceMetadata, DependencyManager.OpenStatus<S, ?>>() : null);
         boolean failed = false;
         for ( DependencyManager<S, ?> dm : getDependencyManagers())
         {
@@ -254,26 +251,7 @@ public class SingleComponentManager<S> extends AbstractComponentManager<S> imple
             openStatusList.add(open);
             if ( dm.getReferenceMetadata().getParameterIndex() != null)
             {
-                if ( !dm.bindDependency(componentContext, new ReferenceMethod() {
-
-                        @Override
-                        public <S, T> MethodResult invoke(final Object componentInstance,
-                                final BindParameters rawParameter,
-                                final MethodResult methodCallFailureResult)
-                        {
-                            // nothing to do, binding will be done in constructor
-                            return MethodResult.VOID;
-                        }
-
-                        @Override
-                        public <S, T> boolean getServiceObject(
-                                final BindParameters rawParameter,
-                                final BundleContext context)
-                        {
-                            // nothing to do, binding will be done in constructor
-                            return true;
-                        }
-                    },(OpenStatus) open) )
+                if ( !dm.bindDependency(componentContext, ReferenceMethod.NOPReferenceMethod, (OpenStatus) open) )
                 {
                     getLogger().log( LogService.LOG_DEBUG, "Cannot create component instance due to failure to bind reference {0}",
                             null, dm.getName()  );
@@ -281,10 +259,7 @@ public class SingleComponentManager<S> extends AbstractComponentManager<S> imple
                     break;
                 }
 
-                final ComponentConstructor.ReferencePair<S> pair = new ComponentConstructor.ReferencePair<>();
-                pair.dependencyManager = dm;
-                pair.openStatus = open;
-                paramMap.put(dm.getReferenceMetadata(), pair);
+                paramMap.put(dm.getReferenceMetadata(), open);
             }
         }
 

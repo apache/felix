@@ -16,22 +16,27 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.felix.scr.impl.inject;
+package org.apache.felix.scr.impl.logger;
 
-import org.apache.felix.scr.impl.manager.ComponentContextImpl;
+import org.apache.felix.scr.impl.metadata.ComponentMetadata;
+import org.apache.felix.scr.impl.metadata.DSVersion;
 
-public abstract class BaseParameter
+public class MockComponentLogger extends ComponentLogger
 {
-    private final ComponentContextImpl<?> m_componentContext;
-
-    public BaseParameter( ComponentContextImpl<?> componentContext )
+    public MockComponentLogger()
     {
-        this.m_componentContext = componentContext;
+        super(new ComponentMetadata(DSVersion.DS14), new MockBundleLogger());
     }
 
-
-    public ComponentContextImpl<?> getComponentContext()
+    @Override
+    public void log(final int level, final String pattern, final Throwable ex, final Object... arguments)
     {
-        return m_componentContext;
+        // ignore
+    }
+
+    @Override
+    public void log(final int level, final String message, final Throwable ex)
+    {
+        // ignore
     }
 }

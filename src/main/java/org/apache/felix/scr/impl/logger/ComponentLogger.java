@@ -21,20 +21,26 @@ package org.apache.felix.scr.impl.logger;
 import org.apache.felix.scr.impl.metadata.ComponentMetadata;
 
 /**
- * The <code>ComponentLogger</code> interface defines a simple API to enable some logging
- * for a component. This avoids avoids that all clients doing logging on behalf of
- * a component need to pass in things like {@code ComponentMetadata} or the component Id.
+ * The {@code ComponentLogger} is the logger to be used to log on behalf of a component.
+ * This avoids avoids that all clients doing logging on behalf of a component need to
+ * pass in things like {@code ComponentMetadata} or the component Id.
  */
-public class ComponentLogger
+public class ComponentLogger extends AbstractLogger
 {
     private final String name;
 
+    private final String className;
+
     private final BundleLogger parent;
 
-    private volatile String prefix;
+    private volatile int trackingCount = -3;
+
+    private volatile InternalLogger currentLogger;
 
     public ComponentLogger(final ComponentMetadata metadata, final BundleLogger parent)
     {
+        super(parent.getConfiguration(), ""); // we set the prefix later
+        this.parent = parent;
         if ( metadata.getName() != null )
         {
             this.name = metadata.getName();
@@ -47,7 +53,14 @@ public class ComponentLogger
         {
             this.name = "UNKNOWN";
         }
-        this.parent = parent;
+        if ( metadata.getImplementationClassName() != null )
+        {
+            this.className = metadata.getImplementationClassName();
+        }
+        else
+        {
+            this.className = null;
+        }
         this.setComponentId(-1);
     }
 
@@ -59,58 +72,23 @@ public class ComponentLogger
     {
         if ( id > -1 )
         {
-            prefix = "[" + name + "(" + id + ")] : ";
+            this.setPrefix(this.parent.getPrefix() + "[" + name + "(" + id + ")] : ");
         }
         else
         {
-            prefix = "[" + name + "] : ";
+            this.setPrefix(this.parent.getPrefix() + "[" + name + "] : ");
         }
     }
 
-    /**
-     * Log a message using the {@code BundleLogger} and prefix the message
-     * with information about the component.
-     *
-     * @param level The log level
-     * @param message The message
-     * @param ex Optional exception
-     */
-    public void log(final int level, final String message, final Throwable ex)
+    @Override
+    InternalLogger getLogger()
     {
-        if ( parent.isLogEnabled(level) )
+        if ( this.trackingCount < this.parent.getTrackingCount() )
         {
-            parent.log(level,
-                    prefix + message,
-                    ex);
+            this.currentLogger = this.parent.getLogger(this.className);
+            this.trackingCount = this.parent.getTrackingCount();
         }
+        return currentLogger;
     }
 
-    /**
-     * Log a message using the {@code BundleLogger} and prefix the message
-     * with information about the component.
-     *
-     * @param level The log level
-     * @param pattern The pattern
-     * @param ex Optional exception
-     * @param arguments Optional arguments for the pattern
-     */
-    public void log(final int level, final String pattern, final Throwable ex, final Object... arguments)
-    {
-        if ( parent.isLogEnabled(level) )
-        {
-            parent.log(level,
-                    prefix + pattern,
-                    ex,
-                    arguments);
-        }
-    }
-
-    /**
-     * Returns {@code true} if logging for the given level is enabled.
-     * @return If the {@code BundleLogger} returns {@code true}.
-     */
-    public boolean isLogEnabled(final int level)
-    {
-        return parent.isLogEnabled(level);
-    }
 }

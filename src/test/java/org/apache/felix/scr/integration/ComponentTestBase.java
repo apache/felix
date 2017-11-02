@@ -138,7 +138,7 @@ public abstract class ComponentTestBase
 
     static
     {
-        theConfig = new Hashtable<String, Object>();
+        theConfig = new Hashtable<>();
         theConfig.put( PROP_NAME, PROP_NAME );
     }
 
@@ -196,10 +196,10 @@ public abstract class ComponentTestBase
         bundleContext.addFrameworkListener( log );
         bundleContext.registerService( LogService.class.getName(), log, null );
 
-        scrTracker = new ServiceTracker<ServiceComponentRuntime, ServiceComponentRuntime>( bundleContext,
+        scrTracker = new ServiceTracker<>( bundleContext,
                 ServiceComponentRuntime.class, null );
         scrTracker.open();
-        configAdminTracker = new ServiceTracker<ConfigurationAdmin, ConfigurationAdmin>( bundleContext,
+        configAdminTracker = new ServiceTracker<>( bundleContext,
                 ConfigurationAdmin.class, null );
         configAdminTracker.open();
 
@@ -301,7 +301,7 @@ public abstract class ComponentTestBase
         return findComponentConfigurationByName( bundle, name, expected );
     }
 
-    static final Map<Integer, String> STATES = new HashMap<Integer, String>();
+    static final Map<Integer, String> STATES = new HashMap<>();
 
     static
     {
@@ -609,7 +609,7 @@ public abstract class ComponentTestBase
     protected ComponentInstance createFactoryComponentInstance(final String componentfactory)
             throws InvalidSyntaxException
     {
-        Hashtable<String, String> props = new Hashtable<String, String>();
+        Hashtable<String, String> props = new Hashtable<>();
         props.put( PROP_NAME_FACTORY, PROP_NAME_FACTORY );
 
         return createFactoryComponentInstance( componentfactory, props );
@@ -840,7 +840,7 @@ public abstract class ComponentTestBase
         private final static PrintStream m_out = new PrintStream(
                 new BufferedOutputStream( new FileOutputStream( FileDescriptor.err ), 128 ) );
         private final List<String> m_warnings = Collections.synchronizedList( new ArrayList<String>() );
-        private LinkedBlockingQueue<LogEntry> m_logQueue = new LinkedBlockingQueue<LogEntry>();
+        private LinkedBlockingQueue<LogEntry> m_logQueue = new LinkedBlockingQueue<>();
         private volatile Thread m_logThread;
         private volatile PrintStream m_realOut;
         private volatile PrintStream m_realErr;

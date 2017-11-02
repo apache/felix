@@ -96,7 +96,7 @@ public class Activator extends AbstractExtender
         m_context = context;
         m_bundle = context.getBundle();
         // require the log service
-        logger = new ScrLogger(m_context, m_configuration);
+        logger = new ScrLogger(m_configuration, m_context);
         // set bundle context for PackageAdmin tracker
         ClassUtils.setBundleContext( context );
         // get the configuration

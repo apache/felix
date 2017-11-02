@@ -46,6 +46,8 @@ public class SingleComponentManagerTest
     private ServiceRegistration serviceRegistration = Mockito.mock(ServiceRegistration.class);
     private ServiceReference serviceReference = Mockito.mock(ServiceReference.class);
     private BundleLogger bundleLogger = Mockito.mock(BundleLogger.class);
+    private ComponentLogger componentLogger = Mockito.mock(ComponentLogger.class);
+
     private ComponentActivator componentActivator = new ComponentActivator() {
 
         @Override
@@ -181,7 +183,7 @@ public class SingleComponentManagerTest
         ComponentContainer<Object> cc = Mockito.mock(ComponentContainer.class);
         Mockito.when(cc.getComponentMetadata()).thenReturn(cm);
         Mockito.when(cc.getActivator()).thenReturn(componentActivator);
-        Mockito.when(cc.getLogger()).thenReturn(new ComponentLogger(cm, bundleLogger));
+        Mockito.when(cc.getLogger()).thenReturn(componentLogger);
 
         SingleComponentManager<Object> scm = new SingleComponentManager<Object>(cc, new ComponentMethodsImpl()) {
             @Override
@@ -224,7 +226,7 @@ public class SingleComponentManagerTest
         ComponentContainer<Object> cc = Mockito.mock(ComponentContainer.class);
         Mockito.when(cc.getComponentMetadata()).thenReturn(cm);
         Mockito.when(cc.getActivator()).thenReturn(componentActivator);
-        Mockito.when(cc.getLogger()).thenReturn(new ComponentLogger(cm, bundleLogger));
+        Mockito.when(cc.getLogger()).thenReturn(componentLogger);
 
         SingleComponentManager<?> scm = new SingleComponentManager<Object>(cc, new ComponentMethodsImpl()) {
             @Override

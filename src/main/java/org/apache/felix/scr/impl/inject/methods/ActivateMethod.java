@@ -312,7 +312,7 @@ public class ActivateMethod extends BaseMethod<ActivatorParameter, Object> imple
     		final ActivatorParameter rawParameter,
     		final MethodResult methodCallFailureResult)
     {
-        if (methodExists( rawParameter.getLogger() ))
+        if (methodExists( rawParameter.getComponentContext().getLogger() ))
         {
             return super.invoke(componentInstance, rawParameter, methodCallFailureResult );
         }

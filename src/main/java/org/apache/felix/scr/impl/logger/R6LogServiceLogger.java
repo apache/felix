@@ -16,22 +16,32 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.felix.scr.impl.inject;
+package org.apache.felix.scr.impl.logger;
 
-import org.apache.felix.scr.impl.manager.ComponentContextImpl;
+import org.osgi.service.log.LogService;
 
-public abstract class BaseParameter
+/**
+ * This is a logger based on the R6 LogService.
+ */
+class R6LogServiceLogger implements InternalLogger
 {
-    private final ComponentContextImpl<?> m_componentContext;
+    private final LogService logService;
 
-    public BaseParameter( ComponentContextImpl<?> componentContext )
+    public R6LogServiceLogger(final LogService logService)
     {
-        this.m_componentContext = componentContext;
+        this.logService = logService;
     }
 
-
-    public ComponentContextImpl<?> getComponentContext()
+    @Override
+    public boolean isLogEnabled(final int level)
     {
-        return m_componentContext;
+        return true;
+    }
+
+    @SuppressWarnings("deprecation")
+    @Override
+    public void log(final int level, final String message, final Throwable ex)
+    {
+        this.logService.log(level, message, ex);
     }
 }

@@ -28,7 +28,7 @@ import java.util.Iterator;
 import java.util.List;
 
 import org.apache.felix.scr.impl.MockBundle;
-import org.apache.felix.scr.impl.MockLogger;
+import org.apache.felix.scr.impl.logger.MockBundleLogger;
 import org.apache.felix.scr.impl.parser.KXml2SAXParser;
 import org.apache.felix.scr.impl.parser.ParseException;
 import org.apache.felix.scr.impl.xml.XmlHandler;
@@ -40,7 +40,7 @@ import junit.framework.TestCase;
 
 public class XmlHandlerTest extends TestCase
 {
-    private MockLogger logger;
+    private MockBundleLogger logger;
 
 
     @Override
@@ -48,7 +48,7 @@ public class XmlHandlerTest extends TestCase
     {
         super.setUp();
 
-        logger = new MockLogger();
+        logger = new MockBundleLogger();
     }
 
 

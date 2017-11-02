@@ -41,12 +41,6 @@ import org.osgi.service.log.LogService;
  */
 public class ComponentConstructor<S>
 {
-    public static class ReferencePair<S>
-    {
-        public DependencyManager<S, ?> dependencyManager; // TODO check if we need this
-        public DependencyManager.OpenStatus<S, ?> openStatus;
-    }
-
     private final Field[] activationFields;
     private final ValueType[] activationFieldTypes;
 
@@ -239,7 +233,7 @@ public class ComponentConstructor<S>
      * @throws Exception If anything goes wrong, like constructor can't be found etc.
      */
     public <T> S newInstance(final ComponentContextImpl<S> componentContext,
-            final Map<ReferenceMetadata, ReferencePair<S>> parameterMap)
+            final Map<ReferenceMetadata, DependencyManager.OpenStatus<S, ?>> parameterMap)
     throws Exception
     {
         // no constructor -> throw
@@ -259,7 +253,7 @@ public class ComponentConstructor<S>
             for(int i=0; i<args.length; i++)
             {
                 final ReferenceMetadata refMetadata = this.constructorRefs[i];
-                final ReferencePair<S> pair = refMetadata == null ? null : parameterMap.get(refMetadata);
+                final DependencyManager.OpenStatus<S, ?> status = refMetadata == null ? null : parameterMap.get(refMetadata);
 
                 if ( refMetadata == null )
                 {
@@ -273,7 +267,7 @@ public class ComponentConstructor<S>
                 {
                     final List<Object> refs = refMetadata.isMultiple() ? new ArrayList<>() : null;
                     Object ref = null;
-                    for(final RefPair<S, ?> refPair : pair.openStatus.refs)
+                    for(final RefPair<S, ?> refPair : status.refs)
                     {
                         if ( !refPair.isDeleted() && !refPair.isFailed() )
                         {

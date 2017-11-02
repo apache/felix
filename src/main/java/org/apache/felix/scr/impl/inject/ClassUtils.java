@@ -220,7 +220,7 @@ public class ClassUtils
      * Returns the name of the package to which the class belongs or an
      * empty string if the class is in the default package.
      */
-    public static String getPackageName( Class<?> clazz )
+    public static String getPackageName( final Class<?> clazz )
     {
         String name = clazz.getName();
         int dot = name.lastIndexOf( '.' );

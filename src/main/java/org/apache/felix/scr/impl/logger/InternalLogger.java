@@ -16,22 +16,11 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.felix.scr.impl.inject;
+package org.apache.felix.scr.impl.logger;
 
-import org.apache.felix.scr.impl.manager.ComponentContextImpl;
+interface InternalLogger {
 
-public abstract class BaseParameter
-{
-    private final ComponentContextImpl<?> m_componentContext;
+    void log(int level, String message, Throwable exception);
 
-    public BaseParameter( ComponentContextImpl<?> componentContext )
-    {
-        this.m_componentContext = componentContext;
-    }
-
-
-    public ComponentContextImpl<?> getComponentContext()
-    {
-        return m_componentContext;
-    }
+    boolean isLogEnabled(int level);
 }

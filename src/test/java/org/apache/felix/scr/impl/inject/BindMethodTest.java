@@ -20,10 +20,9 @@ package org.apache.felix.scr.impl.inject;
 
 
 import org.apache.felix.scr.impl.MockBundle;
-import org.apache.felix.scr.impl.MockLogger;
 import org.apache.felix.scr.impl.inject.methods.BindMethod;
-import org.apache.felix.scr.impl.logger.BundleLogger;
 import org.apache.felix.scr.impl.logger.ComponentLogger;
+import org.apache.felix.scr.impl.logger.MockComponentLogger;
 import org.apache.felix.scr.impl.manager.ComponentActivator;
 import org.apache.felix.scr.impl.manager.ComponentContainer;
 import org.apache.felix.scr.impl.manager.ComponentContextImpl;
@@ -462,7 +461,6 @@ public class BindMethodTest extends TestCase
     {
         final ComponentActivator activator = Mockito.mock(ComponentActivator.class);
         final ComponentMetadata metadata = newMetadata();
-        final BundleLogger logger = new MockLogger();
         ComponentContainer container = new ComponentContainer() {
 
             @Override
@@ -489,7 +487,7 @@ public class BindMethodTest extends TestCase
 
             @Override
             public ComponentLogger getLogger() {
-                return new ComponentLogger(metadata, logger);
+                return new MockComponentLogger();
             }
         };
         return container;
