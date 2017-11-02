@@ -117,6 +117,7 @@ public class ReferenceMetadata
     private String m_field_option;
 
     // Name of the value type for the field (optional, since DS 1.3)
+    // Since 1.4 also used for the parameter collection type (constructor)
     private String m_field_collection_type;
 
     // Policy attribute (optional, default = static)
@@ -132,10 +133,8 @@ public class ReferenceMetadata
     private String m_parameter;
 
     // Parameter index, set based on {@code m_parameter} after validation
+    // (optional, since DS 1.4)
     private Integer m_parameterIndex;
-
-    // Name of the value type for the parameter (optional, since DS 1.4)
-    private String m_parameter_collection_type;
 
     // Flags that store the values passed as strings
     private boolean m_isStatic = true;
@@ -400,21 +399,6 @@ public class ReferenceMetadata
 		this.m_parameter = val;
 	}
 
-    /**
-     * Setter for the parameter value type attribute
-     * DS 1.4
-     * @param valuetype the parameter value type
-     */
-    public void setParameterCollectionType( final String valuetype )
-    {
-        if ( m_validated )
-        {
-            return;
-        }
-
-        m_parameter_collection_type = valuetype;
-    }
-
     /////////////////////////////////////////////// getters ///////////////////////////////////
 
 	/**
@@ -574,7 +558,7 @@ public class ReferenceMetadata
      */
     public String getParameterCollectionType()
     {
-        return m_parameter_collection_type;
+        return m_field_collection_type;
     }
 
     // Getters for boolean values that determine both policy and cardinality
@@ -803,20 +787,20 @@ public class ReferenceMetadata
             if ( !m_isMultiple )
             {
                 // value type must not be specified for unary references
-                if ( m_parameter_collection_type != null )
+                if ( m_field_collection_type != null )
                 {
-                    throw componentMetadata.validationFailure( "Parameter value type must not be set for unary constructor references." );
+                    throw componentMetadata.validationFailure( "Collection value type must not be set for unary constructor references." );
                 }
             }
             else
             {
-                if ( m_parameter_collection_type == null )
+                if ( m_field_collection_type == null )
                 {
-                    setParameterCollectionType( FIELD_VALUE_TYPE_SERVICE );
+                    setFieldCollectionType( FIELD_VALUE_TYPE_SERVICE );
                 }
-                else if ( !FIELD_VALUE_TYPE_VALID.contains( m_parameter_collection_type ) )
+                else if ( !FIELD_VALUE_TYPE_VALID.contains( m_field_collection_type ) )
                 {
-                    throw componentMetadata.validationFailure( "Parameter value type must be one of " + FIELD_VALUE_TYPE_VALID );
+                    throw componentMetadata.validationFailure( "Collection value type must be one of " + FIELD_VALUE_TYPE_VALID );
                 }
             }
         }

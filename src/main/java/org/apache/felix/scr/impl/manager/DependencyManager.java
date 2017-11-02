@@ -94,8 +94,8 @@ public class DependencyManager<S, T> implements ReferenceManager<S, T>
         // dump the reference information if DEBUG is enabled
         if (m_componentManager.getLogger().isLogEnabled(LogService.LOG_DEBUG))
         {
-            m_componentManager.getLogger().log(LogService.LOG_DEBUG, "Dependency Manager created " + dependency.getDebugInfo(),
-                null);
+            m_componentManager.getLogger().log(LogService.LOG_DEBUG, "Dependency Manager created {0}",
+                null, dependency.getDebugInfo());
         }
     }
 
