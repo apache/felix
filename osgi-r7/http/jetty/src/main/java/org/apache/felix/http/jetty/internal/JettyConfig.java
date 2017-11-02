@@ -22,6 +22,7 @@ import java.security.KeyStore;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Dictionary;
+import java.util.Enumeration;
 import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.List;
@@ -164,6 +165,8 @@ public final class JettyConfig
     /** Felix specific property to set HTTP instance name. */
     public static final String FELIX_HTTP_SERVICE_NAME = "org.apache.felix.http.name";
 
+    /** Felix specific property to define custom properties for the http runtime service. */
+    public static final String FELIX_CUSTOM_HTTP_RUNTIME_PROPERTY_PREFIX = "org.apache.felix.http.runtime.init.";
 
     private static String validateContextPath(String ctxPath)
     {
@@ -437,6 +440,20 @@ public final class JettyConfig
         {
 			props.put(FELIX_HTTP_SERVICE_NAME, getHttpServiceName());
         }
+        addCustomServiceProperties(props);
+    }
+
+    private void addCustomServiceProperties(final Hashtable<String, Object> props)
+    {
+        final Enumeration<String> keys = this.config.keys();
+        while(keys.hasMoreElements())
+        {
+            final String key = keys.nextElement();
+            if (key.startsWith(FELIX_CUSTOM_HTTP_RUNTIME_PROPERTY_PREFIX))
+            {
+                props.put(key.substring(FELIX_CUSTOM_HTTP_RUNTIME_PROPERTY_PREFIX.length()), this.config.get(key));
+            }
+        }
     }
 
     /**
@@ -608,7 +625,7 @@ public final class JettyConfig
         else if (value instanceof String[])
         {
             final String[] stringArr = (String[]) value;
-            final List<String> list = new ArrayList<String>();
+            final List<String> list = new ArrayList<>();
             for (final String stringVal : stringArr)
             {
                 if (stringVal.trim().length() > 0)
@@ -623,7 +640,7 @@ public final class JettyConfig
         }
         else if (value instanceof Collection)
         {
-            final ArrayList<String> conv = new ArrayList<String>();
+            final ArrayList<String> conv = new ArrayList<>();
             for (Iterator<?> vi = ((Collection<?>) value).iterator(); vi.hasNext();)
             {
                 Object object = vi.next();
