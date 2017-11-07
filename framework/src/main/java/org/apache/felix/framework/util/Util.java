@@ -116,6 +116,7 @@ public class Util
                     properties.put("felix.detect.jpms." + name, name);
                 }
             }
+            properties.put("felix.detect.jpms", "jpms");
         }
         catch (Exception ex)
         {
