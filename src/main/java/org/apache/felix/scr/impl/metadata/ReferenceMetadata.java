@@ -118,7 +118,7 @@ public class ReferenceMetadata
 
     // Name of the value type for the field (optional, since DS 1.3)
     // Since 1.4 also used for the parameter collection type (constructor)
-    private String m_field_collection_type;
+    private String m_collection_type;
 
     // Policy attribute (optional, default = static)
     private String m_policy;
@@ -375,7 +375,7 @@ public class ReferenceMetadata
             return;
         }
 
-        m_field_collection_type = valuetype;
+        m_collection_type = valuetype;
     }
 
     public void setScope(String scopeName) {
@@ -534,7 +534,7 @@ public class ReferenceMetadata
      */
     public String getFieldCollectionType()
     {
-        return m_field_collection_type;
+        return m_collection_type;
     }
 
     /**
@@ -558,7 +558,7 @@ public class ReferenceMetadata
      */
     public String getParameterCollectionType()
     {
-        return m_field_collection_type;
+        return m_collection_type;
     }
 
     // Getters for boolean values that determine both policy and cardinality
@@ -746,18 +746,19 @@ public class ReferenceMetadata
             if ( !m_isMultiple )
             {
                 // value type must not be specified for unary references
-                if ( m_field_collection_type != null )
+                if ( m_collection_type != null )
                 {
-                    throw componentMetadata.validationFailure( "Field value type must not be set for unary field references." );
+                    // spec says to ignore this
+                    this.m_collection_type = null;
                 }
             }
             else
             {
-                if ( m_field_collection_type == null )
+                if ( m_collection_type == null )
                 {
                     setFieldCollectionType( FIELD_VALUE_TYPE_SERVICE );
                 }
-                else if ( !FIELD_VALUE_TYPE_VALID.contains( m_field_collection_type ) )
+                else if ( !FIELD_VALUE_TYPE_VALID.contains( m_collection_type ) )
                 {
                     throw componentMetadata.validationFailure( "Field value type must be one of " + FIELD_VALUE_TYPE_VALID );
                 }
@@ -787,18 +788,19 @@ public class ReferenceMetadata
             if ( !m_isMultiple )
             {
                 // value type must not be specified for unary references
-                if ( m_field_collection_type != null )
+                if ( m_collection_type != null )
                 {
-                    throw componentMetadata.validationFailure( "Collection value type must not be set for unary constructor references." );
+                    // spec says to ignore this
+                    this.m_collection_type = null;
                 }
             }
             else
             {
-                if ( m_field_collection_type == null )
+                if ( m_collection_type == null )
                 {
                     setFieldCollectionType( FIELD_VALUE_TYPE_SERVICE );
                 }
-                else if ( !FIELD_VALUE_TYPE_VALID.contains( m_field_collection_type ) )
+                else if ( !FIELD_VALUE_TYPE_VALID.contains( m_collection_type ) )
                 {
                     throw componentMetadata.validationFailure( "Collection value type must be one of " + FIELD_VALUE_TYPE_VALID );
                 }
@@ -819,7 +821,7 @@ public class ReferenceMetadata
                 ", updated=" + this.getUpdated() +
                 ", field=" + this.getField() +
                 ", field-option=" + this.getFieldOption() +
-                ", field-collection-type=" + this.getFieldCollectionType() +
+                ", collection-type=" + this.getFieldCollectionType() +
                 ", parameter=" + this.getParameterIndex();
     }
 }
