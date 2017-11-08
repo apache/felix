@@ -214,7 +214,7 @@ public class MetaTypeIO {
                             throw new SCRDescriptorException("Unable to create metatype.properties", propsFile.getAbsolutePath());
                         }
                         fileNames.add(NEW_LOCATION.replace(File.separatorChar, '/') + propsFile.getName());
-                        metatypeLocation = NEW_LOCATION + "/" + baseName;
+                        metatypeLocation = NEW_LOCATION.replace(File.separatorChar, '/') + "/" + baseName;
                     }
                 }
                 logger.info("Generating " + ccc.components.size() + " MetaType Descriptors in " + useFile);
