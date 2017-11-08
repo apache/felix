@@ -273,8 +273,9 @@ public class SCRDescriptorGenerator {
                     }
                     ClassModifier.addMethods(container.getClassDescription().getDescribedClass().getName(),
                                     name,
-                                    ref.getField().getName(),
                                     type,
+                                    ref.getField().getName(),
+                                    ref.getField().getType().getName(),
                                     createBind,
                                     createUnbind,
                                     this.project.getClassLoader(),
