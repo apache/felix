@@ -208,7 +208,11 @@ public class ClassScanner {
             try {
                 classReader = new ClassReader(input);
             } finally {
-                input.close();
+                if(input != null) {
+                    input.close();
+                } else {
+                    log.warn("Could not open InputStream for: " + pathToClassFile);
+                }
             }
             final ClassNode classNode = new ClassNode();
             classReader.accept(classNode, SKIP_CODE | SKIP_DEBUG | SKIP_FRAMES);
