@@ -1,3 +1,11 @@
+Changes from 1.17.0 to 1.18.0
+-----------------------------
+** Bug
+    * [FELIX-5464] - java.lang.NullPointerException at org.apache.felix.scrplugin.helper.ClassScanner.processClass(ClassScanner.java:207)
+    * [FELIX-5729] - NoSuchFieldError when @Reference referenceInterface type different than field type
+    * [FELIX-5730] - Different separators in localization attribute
+
+
 Changes from 1.16.0 to 1.17.0
 -----------------------------
 ** Bug
