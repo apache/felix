@@ -28,7 +28,7 @@
 
     <name>Apache Felix Http Jetty</name>
     <artifactId>org.apache.felix.http.jetty</artifactId>
-    <version>3.4.5-R7-SNAPSHOT</version>
+    <version>3.4.7-R7-SNAPSHOT</version>
     <packaging>jar</packaging>
     
     <scm>
