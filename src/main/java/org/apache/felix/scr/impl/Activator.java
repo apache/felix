@@ -29,8 +29,6 @@ import org.apache.felix.scr.impl.config.ScrConfigurationImpl;
 import org.apache.felix.scr.impl.inject.ClassUtils;
 import org.apache.felix.scr.impl.logger.ScrLogger;
 import org.apache.felix.scr.impl.runtime.ServiceComponentRuntimeImpl;
-import org.apache.felix.utils.extender.AbstractExtender;
-import org.apache.felix.utils.extender.Extension;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
@@ -80,7 +78,6 @@ public class Activator extends AbstractExtender
     public Activator()
     {
         m_configuration = new ScrConfigurationImpl( this );
-        setSynchronous( true );
     }
 
     /**
@@ -225,12 +222,12 @@ public class Activator extends AbstractExtender
     //---------- Component Management -----------------------------------------
 
     @Override
-    protected Extension doCreateExtension(final Bundle bundle) throws Exception
+    protected ScrExtension doCreateExtension(final Bundle bundle) throws Exception
     {
         return new ScrExtension( bundle );
     }
 
-    protected class ScrExtension implements Extension
+    protected class ScrExtension
     {
 
         private final Bundle bundle;
@@ -241,7 +238,6 @@ public class Activator extends AbstractExtender
             this.bundle = bundle;
         }
 
-        @Override
         public void start()
         {
             boolean acquired = false;
@@ -269,7 +265,6 @@ public class Activator extends AbstractExtender
             }
         }
 
-        @Override
         public void destroy()
         {
             boolean acquired = false;
@@ -462,15 +457,6 @@ public class Activator extends AbstractExtender
             {
                 logger.log( LogService.LOG_WARNING, msg, t );
             }
-        }
-    }
-
-    @Override
-    protected void error(final String msg, final Throwable t)
-    {
-        if ( logger.isLogEnabled(LogService.LOG_ERROR) )
-        {
-            logger.log( LogService.LOG_ERROR, msg, t );
         }
     }
 }
