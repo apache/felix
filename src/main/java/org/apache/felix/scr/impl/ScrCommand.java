@@ -58,6 +58,7 @@ public class ScrCommand implements ScrInfo
 
     private static final Comparator<ComponentDescriptionDTO> DESCRIPTION_COMP = new Comparator<ComponentDescriptionDTO>()
     {
+        @Override
         public int compare(final ComponentDescriptionDTO c1, final ComponentDescriptionDTO c2)
         {
             final long bundleId1 = c1.bundle.id;
@@ -85,6 +86,7 @@ public class ScrCommand implements ScrInfo
 
     private static final Comparator<ComponentConfigurationDTO> CONFIGURATION_COMP = new Comparator<ComponentConfigurationDTO>()
     {
+        @Override
         public int compare(final ComponentConfigurationDTO c1, final ComponentConfigurationDTO c2)
         {
             return Long.signum(c1.id - c2.id);
@@ -195,9 +197,52 @@ public class ScrCommand implements ScrInfo
         }
     }
 
+    /**
+     * Returns <code>true</code> if the <code>bundle</code> is to be considered
+     * active from the perspective of declarative services.
+     * <p>
+     * As of R4.1 a bundle may have lazy activation policy which means a bundle
+     * remains in the STARTING state until a class is loaded from that bundle
+     * (unless that class is declared to not cause the bundle to start). And
+     * thus for DS 1.1 this means components are to be loaded for lazily started
+     * bundles being in the STARTING state (after the LAZY_ACTIVATION event) has
+     * been sent.  Hence DS must consider a bundle active when it is really
+     * active and when it is a lazily activated bundle in the STARTING state.
+     *
+     * @param bundle The bundle check
+     * @return <code>true</code> if <code>bundle</code> is not <code>null</code>
+     *          and the bundle is either active or has lazy activation policy
+     *          and is in the starting state.
+     *
+     * @see <a href="https://issues.apache.org/jira/browse/FELIX-1666">FELIX-1666</a>
+     */
+    private static boolean isBundleActive( final Bundle bundle )
+    {
+        if ( bundle != null )
+        {
+            if ( bundle.getState() == Bundle.ACTIVE )
+            {
+                return true;
+            }
+
+            if ( bundle.getState() == Bundle.STARTING )
+            {
+                // according to the spec the activationPolicy header is only
+                // set to request a bundle to be lazily activated. So in this
+                // simple check we just verify the header is set to assume
+                // the bundle is considered a lazily activated bundle
+                return bundle.getHeaders("").get(Constants.BUNDLE_ACTIVATIONPOLICY) != null;
+            }
+        }
+
+        // fall back: bundle is not considered active
+        return false;
+    }
+
     /* (non-Javadoc)
      * @see org.apache.felix.scr.impl.ScrInfo#list(java.lang.String, java.io.PrintStream, java.io.PrintStream)
      */
+    @Override
     public void list(final String bundleIdentifier, final PrintWriter out)
     {
         final List<ComponentDescriptionDTO> descriptions = new ArrayList<ComponentDescriptionDTO>();
@@ -228,7 +273,7 @@ public class ScrCommand implements ScrInfo
             {
                 throw new IllegalArgumentException("Missing bundle with ID " + bundleIdentifier);
             }
-            if (ComponentRegistry.isBundleActive(bundle))
+            if (isBundleActive(bundle))
             {
                 descriptions.addAll(scrService.getComponentDescriptionDTOs(bundle));
                 if (descriptions.isEmpty())
@@ -287,6 +332,7 @@ public class ScrCommand implements ScrInfo
     /**
      * @see org.apache.felix.scr.impl.ScrInfo#info(java.lang.String, java.io.PrintStream, java.io.PrintStream)
      */
+    @Override
     public void info(final String componentId, final PrintWriter out)
     {
         final Result result = getComponentsFromArg(componentId, false);
@@ -402,7 +448,7 @@ public class ScrCommand implements ScrInfo
             	{
             		out.println("  (No Component Configurations)");
             	}
-            	else 
+            	else
             	{
             		for (final ComponentConfigurationDTO cc: componentConfigurationDTOs)
             		{
@@ -546,6 +592,7 @@ public class ScrCommand implements ScrInfo
     /**
      * @see org.apache.felix.scr.impl.ScrInfo#config(java.io.PrintStream)
      */
+    @Override
     public void config(final PrintWriter out)
     {
         out.print("Log Level: ");
