@@ -1,3 +1,12 @@
+Changes from 5.6.8 to 5.6.10
+----------------------------
+
+** Improvement
+    * Update to latest framework and main version 5.6.10
+    * Update to latest gogo runtime 1.0.10
+    * Update to latest gogo.jline 1.0.10
+    * Update to latest jline 3.5.1
+
 Changes from 5.6.6 to 5.6.8
 ---------------------------
 
