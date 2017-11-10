@@ -31,10 +31,10 @@
   <properties>
     <dollar>$</dollar>
     <framework.version>5.6.8</framework.version>
-    <gogo.runtime.version>1.0.6</gogo.runtime.version>
-    <gogo.jline.shell.version>1.0.6</gogo.jline.shell.version>
+    <gogo.runtime.version>1.0.10</gogo.runtime.version>
+    <gogo.jline.shell.version>1.0.10</gogo.jline.shell.version>
     <gogo.command.version>1.0.2</gogo.command.version>
-    <jline.version>3.3.0</jline.version>
+    <jline.version>3.5.1</jline.version>
     <obr.version>2.0.10</obr.version>
     <jansi.version>1.16</jansi.version>
   </properties>
