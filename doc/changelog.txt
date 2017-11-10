@@ -1,3 +1,23 @@
+Changes from 5.6.8 to 5.6.10
+----------------------------
+
+** Bug
+    * [FELIX-5707] - Bundle-NativeCode header should not require osname and processor parameter to be present to match
+    * [FELIX-5709] - PackageAdmin getHosts should only return hosts required via HOST_NAMESPACE.
+
+** Improvement
+    * [FELIX-5710] - Improve Java9 support
+
+** Sub-task
+    * [FELIX-5717] - Define proper package lists for java9 modules
+    * [FELIX-5718] - Autodetect modules available
+    * [FELIX-5719] - Extend property substitution to user defined FRAMEWORK_SYSTEMPACKAGES_EXTRA and FRAMEWORK_SYSTEMPACKAGES properties for java9 module expansion.
+    * [FELIX-5720] - Use PlatformClassLoader as boot classloader on java9
+    * [FELIX-5721] - Make javafx packages available by default on java9 if they are there
+    * [FELIX-5725] - Cache generated reflection classes for jdk.internal.reflect like we do for sun.reflect.
+    * [FELIX-5727] - Allow extension bundles when loaded with the PlattformClassLoader
+    * [FELIX-5742] - Provide java9 system bundle exports for jpms jre
+
 Changes from 5.6.6 to 5.6.8
 ---------------------------
 
