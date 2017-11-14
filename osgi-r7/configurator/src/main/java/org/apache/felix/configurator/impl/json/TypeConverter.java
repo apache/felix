@@ -20,17 +20,90 @@ package org.apache.felix.configurator.impl.json;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.StringWriter;
+import java.lang.reflect.Type;
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+
+import javax.json.Json;
+import javax.json.JsonStructure;
 
 import org.osgi.util.converter.Converter;
+import org.osgi.util.converter.ConverterFunction;
 import org.osgi.util.converter.Converters;
+import org.osgi.util.converter.TargetRule;
 import org.osgi.util.converter.TypeReference;
 
 public class TypeConverter {
 
     public static Converter getConverter() {
-        return Converters.standardConverter();
+        return Converters.standardConverter().newConverterBuilder().rule(new TargetRule() {
+
+            @Override
+            public Type getTargetType() {
+                return String.class;
+            }
+
+            @Override
+            public ConverterFunction getFunction() {
+                return new ConverterFunction() {
+
+                    @Override
+                    public Object apply(final Object obj, final Type targetType) throws Exception {
+                        if ( obj instanceof Map || obj instanceof List ) {
+                            final JsonStructure json = JSONUtil.build(obj);
+                            final StringWriter w = new StringWriter();
+                            Json.createWriter(w).write(json);
+                            return w.toString();
+                        }
+                        return CANNOT_HANDLE;
+                    }
+                };
+            }
+        }).build();
+    }
+
+    private static final Map<String, Class<?>> TYPE_MAP = new HashMap<>();
+    static {
+        // scalar types and primitive types
+        TYPE_MAP.put("String", String.class);
+        TYPE_MAP.put("Integer", Integer.class);
+        TYPE_MAP.put("int", Integer.class);
+        TYPE_MAP.put("Long", Long.class);
+        TYPE_MAP.put("long", Long.class);
+        TYPE_MAP.put("Float", Float.class);
+        TYPE_MAP.put("float", Float.class);
+        TYPE_MAP.put("Double", Double.class);
+        TYPE_MAP.put("double", Double.class);
+        TYPE_MAP.put("Byte", Byte.class);
+        TYPE_MAP.put("byte", Byte.class);
+        TYPE_MAP.put("Short", Short.class);
+        TYPE_MAP.put("short", Short.class);
+        TYPE_MAP.put("Character", Character.class);
+        TYPE_MAP.put("char", Character.class);
+        TYPE_MAP.put("Boolean", Boolean.class);
+        TYPE_MAP.put("boolean", Boolean.class);
+         // array of scalar types and primitive types
+        TYPE_MAP.put("String[]", String[].class);
+        TYPE_MAP.put("Integer[]", Integer[].class);
+        TYPE_MAP.put("int[]", int[].class);
+        TYPE_MAP.put("Long[]", Long[].class);
+        TYPE_MAP.put("long[]", long[].class);
+        TYPE_MAP.put("Float[]", Float[].class);
+        TYPE_MAP.put("float[]", float[].class);
+        TYPE_MAP.put("Double[]", Double[].class);
+        TYPE_MAP.put("double[]", double[].class);
+        TYPE_MAP.put("Byte[]", Byte[].class);
+        TYPE_MAP.put("byte[]", byte[].class);
+        TYPE_MAP.put("Short[]", Short[].class);
+        TYPE_MAP.put("short[]", short[].class);
+        TYPE_MAP.put("Boolean[]", Boolean[].class);
+        TYPE_MAP.put("boolean[]", boolean[].class);
+        TYPE_MAP.put("Character[]", Character[].class);
+        TYPE_MAP.put("char[]", char[].class);
     }
 
     private final List<File> allFiles = new ArrayList<>();
@@ -79,15 +152,19 @@ public class TypeConverter {
                     return new String[0];
                 }
                 final Object firstObject = list.get(0);
-                if ( firstObject instanceof String ) {
-                    return getConverter().convert(list).defaultValue(null).to(String[].class);
-                } else if ( firstObject instanceof Boolean ) {
-                    return getConverter().convert(list).defaultValue(null).to(Boolean[].class);
-                } else if ( firstObject instanceof Long || firstObject instanceof Integer ) {
-                    return getConverter().convert(list).defaultValue(null).to(Long[].class);
+                Object convertedValue = null;
+                if ( firstObject instanceof Boolean ) {
+                    convertedValue = getConverter().convert(list).defaultValue(null).to(Boolean[].class);
+                } else if ( firstObject instanceof Long || firstObject instanceof Integer || firstObject instanceof Byte || firstObject instanceof Short ) {
+                    convertedValue =  getConverter().convert(list).defaultValue(null).to(Long[].class);
                 } else if ( firstObject instanceof Double || firstObject instanceof Float ) {
-                    return getConverter().convert(list).defaultValue(null).to(Double[].class);
+                    convertedValue =  getConverter().convert(list).defaultValue(null).to(Double[].class);
                 }
+                if ( convertedValue == null ) {
+                    // convert to String (TODO)
+                    convertedValue = getConverter().convert(list).defaultValue(null).to(String[].class);
+                }
+                return convertedValue;
             }
             return null;
         }
@@ -148,87 +225,9 @@ public class TypeConverter {
             return filePaths;
         }
 
-        // scalar types and primitive types
-        if ( "String".equals(typeInfo) ) {
-            return getConverter().convert(value).defaultValue(null).to(String.class);
-
-        } else if ( "Integer".equals(typeInfo) || "int".equals(typeInfo) ) {
-            return getConverter().convert(value).defaultValue(null).to(Integer.class);
-
-        } else if ( "Long".equals(typeInfo) || "long".equals(typeInfo) ) {
-            return getConverter().convert(value).defaultValue(null).to(Long.class);
-
-        } else if ( "Float".equals(typeInfo) || "float".equals(typeInfo) ) {
-            return getConverter().convert(value).defaultValue(null).to(Float.class);
-
-        } else if ( "Double".equals(typeInfo) || "double".equals(typeInfo) ) {
-            return getConverter().convert(value).defaultValue(null).to(Double.class);
-
-        } else if ( "Byte".equals(typeInfo) || "byte".equals(typeInfo) ) {
-            return getConverter().convert(value).defaultValue(null).to(Byte.class);
-
-        } else if ( "Short".equals(typeInfo) || "short".equals(typeInfo) ) {
-            return getConverter().convert(value).defaultValue(null).to(Short.class);
-
-        } else if ( "Character".equals(typeInfo) || "char".equals(typeInfo) ) {
-            return getConverter().convert(value).defaultValue(null).to(Character.class);
-
-        } else if ( "Boolean".equals(typeInfo) || "boolean".equals(typeInfo) ) {
-            return getConverter().convert(value).defaultValue(null).to(Boolean.class);
-
-        }
-
-        // array of scalar types and primitive types
-        if ( "String[]".equals(typeInfo) ) {
-            return getConverter().convert(value).defaultValue(null).to(String[].class);
-
-        } else if ( "Integer[]".equals(typeInfo) ) {
-            return getConverter().convert(value).defaultValue(null).to(Integer[].class);
-
-        } else if ( "int[]".equals(typeInfo) ) {
-            return getConverter().convert(value).defaultValue(null).to(int[].class);
-
-        } else if ( "Long[]".equals(typeInfo) ) {
-            return getConverter().convert(value).defaultValue(null).to(Long[].class);
-
-        } else if ( "long[]".equals(typeInfo) ) {
-            return getConverter().convert(value).defaultValue(null).to(long[].class);
-
-        } else if ( "Float[]".equals(typeInfo)  ) {
-            return getConverter().convert(value).defaultValue(null).to(Float[].class);
-
-        } else if ( "float[]".equals(typeInfo)  ) {
-            return getConverter().convert(value).defaultValue(null).to(float[].class);
-
-        } else if ( "Double[]".equals(typeInfo)  ) {
-            return getConverter().convert(value).defaultValue(null).to(Double[].class);
-
-        } else if ( "double[]".equals(typeInfo)  ) {
-            return getConverter().convert(value).defaultValue(null).to(double[].class);
-
-        } else if ( "Byte[]".equals(typeInfo) ) {
-            return getConverter().convert(value).defaultValue(null).to(Byte[].class);
-
-        } else if ( "byte[]".equals(typeInfo) ) {
-            return getConverter().convert(value).defaultValue(null).to(byte[].class);
-
-        } else if ( "Short[]".equals(typeInfo)  ) {
-            return getConverter().convert(value).defaultValue(null).to(Short[].class);
-
-        } else if ( "short[]".equals(typeInfo)  ) {
-            return getConverter().convert(value).defaultValue(null).to(short[].class);
-
-        } else if ( "Character[]".equals(typeInfo) ) {
-            return getConverter().convert(value).defaultValue(null).to(Character[].class);
-
-        } else if ( "char[]".equals(typeInfo) ) {
-            return getConverter().convert(value).defaultValue(null).to(char[].class);
-
-        } else if ( "Boolean[]".equals(typeInfo) ) {
-            return getConverter().convert(value).defaultValue(null).to(Boolean[].class);
-
-        } else if ( "boolean[]".equals(typeInfo) ) {
-            return getConverter().convert(value).defaultValue(null).to(boolean[].class);
+        final Class<?> typeClass = TYPE_MAP.get(typeInfo);
+        if ( typeClass != null ) {
+            return getConverter().convert(value).defaultValue(null).to(typeClass);
         }
 
         // Collections of scalar types
@@ -258,6 +257,30 @@ public class TypeConverter {
 
         } else if ( "Collection<Boolean>".equals(typeInfo) ) {
             return getConverter().convert(value).defaultValue(null).to(new TypeReference<List<Boolean>>() {});
+        } else if ( "Collection".equals(typeInfo) ) {
+            if ( value instanceof List ) {
+                @SuppressWarnings("unchecked")
+                final List<Object> list = (List<Object>)value;
+                if ( list.isEmpty() ) {
+                    return new String[0];
+                }
+                final Object firstObject = list.get(0);
+                Object convertedValue = null;
+                if ( firstObject instanceof Boolean ) {
+                    convertedValue = getConverter().convert(list).defaultValue(null).to(new TypeReference<List<Boolean>>() {});
+                } else if ( firstObject instanceof Long || firstObject instanceof Integer || firstObject instanceof Byte || firstObject instanceof Short) {
+                    convertedValue = getConverter().convert(list).defaultValue(null).to(new TypeReference<List<Long>>() {});
+                } else if ( firstObject instanceof Double || firstObject instanceof Float ) {
+                    convertedValue = getConverter().convert(list).defaultValue(null).to(new TypeReference<List<Double>>() {});
+                }
+                if ( convertedValue == null ) {
+
+                    // convert to String (TODO)
+                    convertedValue = getConverter().convert(list).defaultValue(null).to(new TypeReference<List<String>>() {});
+                }
+                return convertedValue;
+            }
+            return getConverter().convert(value).defaultValue(null).to(Collection.class);
         }
 
         // unknown type - ignore configuration
