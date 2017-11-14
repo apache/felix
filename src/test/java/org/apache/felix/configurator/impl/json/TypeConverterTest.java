@@ -19,6 +19,7 @@
 package org.apache.felix.configurator.impl.json;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
@@ -26,11 +27,10 @@ import static org.junit.Assert.assertTrue;
 import java.io.IOException;
 import java.lang.reflect.Array;
 import java.util.Collection;
+import java.util.Iterator;
 
 import javax.json.JsonObject;
 
-import org.apache.felix.configurator.impl.json.JSONUtil;
-import org.apache.felix.configurator.impl.json.TypeConverter;
 import org.junit.Test;
 
 public class TypeConverterTest {
@@ -249,5 +249,76 @@ public class TypeConverterTest {
 
         assertTrue(converter.convert(null, JSONUtil.getValue(properties, "boolean.array"), "Collection<Boolean>") instanceof Collection<?>);
         assertTrue(((Collection<Boolean>)converter.convert(null, JSONUtil.getValue(properties, "boolean.array"), "Collection<Boolean>")).iterator().next() instanceof Boolean);
+    }
+
+    private Object getConverted(final String propName, final String typeInfo) throws Exception {
+        final TypeConverter converter = new TypeConverter(null);
+        final JsonObject config = JSONUtil.parseJSON("a",
+                JSONUtilTest.readJSON("json/complex-types.json"),
+                new JSONUtil.Report());
+        final JsonObject properties = (JsonObject)config.get("config");
+
+        final Object value = JSONUtil.getValue(properties, propName);
+        assertNotNull(value);
+        final Object converted = JSONUtil.getTypedValue(converter, null, value, typeInfo);
+        assertNotNull(converted);
+
+        return converted;
+    }
+
+    @SuppressWarnings("unchecked")
+    @Test public void testUntypedLongCollection() throws Exception {
+        final Object converted = getConverted("untyped", "Collection");
+        assertTrue(converted instanceof Collection<?>);
+        final Iterator<Object> iter = ((Collection<Object>)converted).iterator();
+        assertEquals(1L, iter.next());
+        assertEquals(2L, iter.next());
+        assertEquals(3L, iter.next());
+        assertFalse(iter.hasNext());
+    }
+
+    @SuppressWarnings("unchecked")
+    @Test public void testUntypedMixedCollection() throws Exception {
+        // an untyped collection is tried to be converted to the type
+        // of the first item in the list. If that fails, String is used.
+        final Object converted = getConverted("untyped_mixed", "Collection");
+        assertTrue(converted instanceof Collection<?>);
+        final Iterator<Object> iter = ((Collection<Object>)converted).iterator();
+        assertEquals("1", iter.next());
+        assertEquals("two", iter.next());
+        assertEquals("3", iter.next());
+        assertFalse(iter.hasNext());
+    }
+
+    @SuppressWarnings("unchecked")
+    @Test public void testEmptyTypedCollection() throws Exception {
+        final Object converted = getConverted("empty", "Collection<Integer>");
+        assertTrue(converted instanceof Collection<?>);
+        final Iterator<Object> iter = ((Collection<Object>)converted).iterator();
+        assertFalse(iter.hasNext());
+    }
+
+    @Test public void testObjectArray() throws Exception {
+        final Object converted = getConverted("objects_array", null);
+        assertTrue(converted.getClass().isArray());
+        final String[] vals = (String[])converted;
+        assertEquals(2, vals.length);
+        assertTrue(vals[0] instanceof String);
+        assertTrue(vals[1] instanceof String);
+        assertEquals("{\"foo\":1}", vals[0]);
+        assertEquals("{\"foo\":2}", vals[1]);
+    }
+
+    @Test public void testMixedObjectArray() throws Exception {
+        final Object converted = getConverted("objects_array_mixed", null);
+        assertTrue(converted.getClass().isArray());
+        final String[] vals = (String[])converted;
+        assertEquals(3, vals.length);
+        assertTrue(vals[0] instanceof String);
+        assertTrue(vals[1] instanceof String);
+        assertTrue(vals[2] instanceof String);
+        assertEquals("2", vals[0]);
+        assertEquals("{\"foo\":1}", vals[1]);
+        assertEquals("{\"foo\":2}", vals[2]);
     }
 }

@@ -239,17 +239,8 @@ public class JSONUtil {
                         }
                     } else {
                         try {
-                            Object convertedVal = converter.convert(pid, value, typeInfo);
-                            if ( convertedVal == null ) {
-                                JsonStructure json = build(value);
-                                if ( json == null ) {
-                                    convertedVal = value.toString();
-                                } else {
-                                    final StringWriter writer = new StringWriter();
-                                    Json.createWriter(writer).write(json);
-                                    convertedVal = writer.toString();
-                                }
-                            }
+
+                            final Object convertedVal = getTypedValue(converter, pid, value, typeInfo);
                             properties.put(key, convertedVal);
                         } catch ( final IOException io ) {
                             report.errors.add("Invalid value/type for configuration in '" + identifier + "' : " + pid + " - " + mapKey + " : " + io.getMessage());
@@ -269,7 +260,7 @@ public class JSONUtil {
         return configurations;
     }
 
-    private static JsonStructure build(final Object value) {
+    public static JsonStructure build(final Object value) {
         if ( value instanceof List ) {
             @SuppressWarnings("unchecked")
             final List<Object> list = (List<Object>)value;
@@ -396,6 +387,36 @@ public class JSONUtil {
                            return map;
         }
         return null;
+    }
+
+    public static Object getTypedValue(final TypeConverter converter,
+            final String pid,
+            final Object value,
+            final String typeInfo) throws IOException {
+        Object convertedVal = converter.convert(pid, value, typeInfo);
+        if ( convertedVal == null ) {
+            if ( typeInfo != null ) {
+                throw new IOException("Unable to convert to type " + typeInfo);
+            }
+            JsonStructure json = build(value);
+            if ( json == null ) {
+                convertedVal = value.toString();
+            } else {
+                // JSON Structure, this will result in a String or in an array of Strings
+                if ( json.getValueType() == ValueType.ARRAY ) {
+                    final JsonArray arr = (JsonArray)json;
+                    final String[] val = new String[arr.size()];
+                    for(int i=0;i<val.length;i++) {
+                        val[i] = TypeConverter.getConverter().convert(arr.get(i)).to(String.class);
+                    }
+                    convertedVal = val;
+
+                } else {
+                    convertedVal = TypeConverter.getConverter().convert(value).to(String.class);
+                }
+            }
+        }
+        return convertedVal;
     }
 
     /**

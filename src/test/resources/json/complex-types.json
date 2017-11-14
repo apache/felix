@@ -1,0 +1,16 @@
+{
+  "config" : {
+    "untyped" : [1,2,3],
+    "untyped_mixed" : [1,"two",3],
+    "empty" : [],
+    "objects_array" : [
+       {"foo":1},
+       {"foo":2}      
+    ],
+    "objects_array_mixed" : [
+       2,
+       {"foo":1},       
+       {"foo":2}      
+    ]
+  }
+}
