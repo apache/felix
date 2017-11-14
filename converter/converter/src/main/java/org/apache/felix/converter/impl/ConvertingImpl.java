@@ -240,16 +240,16 @@ class ConvertingImpl extends AbstractSpecifying<Converting> implements Convertin
 
         for (Object o : cv) {
             if (targetElementType != null) {
-                InternalConverting converting = converter.convert(o);
-                if (hasDefault) {
-                    // TODO this needs to be done more generally
-                    converting.defaultValue(defaultValue);
+                try {
+                    o = converter.convert(o).to(targetElementType);
+                } catch (ConversionException ce) {
+                    if (hasDefault) {
+                        return (T) defaultValue;
+                    }
                 }
-                o = converting.to(targetElementType);
             }
 
-            if (!(o == null && cv.size() == 1))
-                instance.add(o);
+            instance.add(o);
         }
 
         return (T) instance;
