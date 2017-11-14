@@ -44,14 +44,7 @@ import org.apache.felix.http.base.internal.logger.SystemLogger;
 import org.eclipse.jetty.http.HttpVersion;
 import org.eclipse.jetty.io.ConnectionStatistics;
 import org.eclipse.jetty.security.HashLoginService;
-import org.eclipse.jetty.server.Connector;
-import org.eclipse.jetty.server.HttpConfiguration;
-import org.eclipse.jetty.server.HttpConnectionFactory;
-import org.eclipse.jetty.server.SecureRequestCustomizer;
-import org.eclipse.jetty.server.Server;
-import org.eclipse.jetty.server.ServerConnector;
-import org.eclipse.jetty.server.SessionManager;
-import org.eclipse.jetty.server.SslConnectionFactory;
+import org.eclipse.jetty.server.*;
 import org.eclipse.jetty.server.handler.ContextHandlerCollection;
 import org.eclipse.jetty.server.handler.StatisticsHandler;
 import org.eclipse.jetty.server.session.SessionHandler;
@@ -62,12 +55,7 @@ import org.eclipse.jetty.util.component.LifeCycle;
 import org.eclipse.jetty.util.ssl.SslContextFactory;
 import org.eclipse.jetty.util.thread.QueuedThreadPool;
 import org.eclipse.jetty.util.thread.ThreadPool;
-import org.osgi.framework.Bundle;
-import org.osgi.framework.BundleContext;
-import org.osgi.framework.BundleEvent;
-import org.osgi.framework.Constants;
-import org.osgi.framework.ServiceReference;
-import org.osgi.framework.ServiceRegistration;
+import org.osgi.framework.*;
 import org.osgi.service.event.Event;
 import org.osgi.service.event.EventAdmin;
 import org.osgi.service.http.runtime.HttpServiceRuntimeConstants;
@@ -101,10 +89,14 @@ public final class JettyService extends AbstractLifeCycle.AbstractLifeCycleListe
     private volatile BundleTracker<Deployment> bundleTracker;
     private volatile ServiceTracker<EventAdmin, EventAdmin> eventAdmintTracker;
     private volatile ConnectorFactoryTracker connectorTracker;
+    private volatile RequestLogTracker requestLogTracker;
+    private volatile LogServiceRequestLog osgiRequestLog;
+    private volatile FileRequestLog fileRequestLog;
     private volatile LoadBalancerCustomizerFactoryTracker loadBalancerCustomizerTracker;
     private volatile CustomizerWrapper customizerWrapper;
     private volatile EventAdmin eventAdmin;
     private boolean registerManagedService = true;
+
 
     public JettyService(final BundleContext context,
             final HttpServiceController controller)
@@ -292,6 +284,22 @@ public final class JettyService extends AbstractLifeCycle.AbstractLifeCycleListe
             this.controller.getEventDispatcher().setActive(false);
             this.controller.unregister();
 
+            if (this.fileRequestLog != null)
+            {
+                this.fileRequestLog.stop();
+                this.fileRequestLog = null;
+            }
+            if (this.osgiRequestLog != null)
+            {
+                this.osgiRequestLog.unregister();
+                this.osgiRequestLog = null;
+            }
+            if (this.requestLogTracker != null)
+            {
+                this.requestLogTracker.close();
+                this.requestLogTracker = null;
+            }
+
             if (this.connectorTracker != null)
             {
                 this.connectorTracker.close();
@@ -412,6 +420,26 @@ public final class JettyService extends AbstractLifeCycle.AbstractLifeCycleListe
             {
                 this.stopJetty();
                 SystemLogger.error("Jetty stopped (no connectors available)", null);
+            }
+
+            try {
+                this.requestLogTracker = new RequestLogTracker(this.context, this.config.getRequestLogFilter());
+                this.requestLogTracker.open();
+                this.server.setRequestLog(requestLogTracker);
+            } catch (InvalidSyntaxException e) {
+                SystemLogger.error("Invalid filter syntax in request log tracker", e);
+            }
+
+            if (this.config.isRequestLogOSGiEnabled()) {
+                this.osgiRequestLog = new LogServiceRequestLog(this.config);
+                this.osgiRequestLog.register(this.context);
+                SystemLogger.info("Directing Jetty request logs to the OSGi Log Service");
+            }
+
+            if (this.config.getRequestLogFilePath() != null && !this.config.getRequestLogFilePath().isEmpty()) {
+                this.fileRequestLog = new FileRequestLog(config);
+                this.fileRequestLog.start(this.context);
+                SystemLogger.info("Directing Jetty request logs to " + this.config.getRequestLogFilePath());
             }
         }
         else
