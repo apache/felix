@@ -155,7 +155,7 @@ class ConvertingImpl extends AbstractSpecifying<Converting> implements Convertin
         if (res2 != null) {
             return res2;
         } else {
-            if (defaultValue != null)
+            if (hasDefault)
                 return converter.convert(defaultValue).sourceAs(sourceAsClass).targetAs(targetAsClass).to(targetClass);
             else
                 throw new ConversionException("Cannot convert " + object + " to " + targetAsClass);

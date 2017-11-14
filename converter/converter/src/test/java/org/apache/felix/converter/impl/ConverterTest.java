@@ -348,6 +348,7 @@ public class ConverterTest {
     public void testExceptionDefaultValue() {
         assertEquals(42, (int) converter.convert("haha").defaultValue(42).to(int.class));
         assertEquals(999, (int) converter.convert("haha").defaultValue(999).to(int.class));
+        assertNull(converter.convert("haha").defaultValue(null).to(int.class));
         try {
             converter.convert("haha").to(int.class);
             fail("Should have thrown an exception");
