@@ -539,6 +539,7 @@ public class ConverterTest {
         long l = converter.convert(null).defaultValue("12").to(Long.class);
         assertEquals(12L, l);
         assertNull(converter.convert("haha").defaultValue(null).to(Integer.class));
+        assertEquals(0, converter.convert("test").defaultValue(null).to(new TypeReference<List<Long>>() {}).size());
     }
 
     @Test
