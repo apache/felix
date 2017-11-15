@@ -298,6 +298,14 @@ public class TypeConverterTest {
         assertFalse(iter.hasNext());
     }
 
+    @SuppressWarnings("unchecked")
+    @Test public void testEmptyUntypedCollection() throws Exception {
+        final Object converted = getConverted("empty", "Collection");
+        assertTrue(converted instanceof Collection<?>);
+        final Iterator<Object> iter = ((Collection<Object>)converted).iterator();
+        assertFalse(iter.hasNext());
+    }
+
     @Test public void testObjectArray() throws Exception {
         final Object converted = getConverted("objects_array", null);
         assertTrue(converted.getClass().isArray());

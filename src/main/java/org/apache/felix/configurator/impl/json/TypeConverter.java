@@ -24,6 +24,7 @@ import java.io.StringWriter;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -262,7 +263,7 @@ public class TypeConverter {
                 @SuppressWarnings("unchecked")
                 final List<Object> list = (List<Object>)value;
                 if ( list.isEmpty() ) {
-                    return new String[0];
+                    return Collections.EMPTY_LIST;
                 }
                 final Object firstObject = list.get(0);
                 Object convertedValue = null;
