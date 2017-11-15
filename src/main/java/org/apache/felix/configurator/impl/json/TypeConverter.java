@@ -162,7 +162,6 @@ public class TypeConverter {
                     convertedValue =  getConverter().convert(list).defaultValue(null).to(Double[].class);
                 }
                 if ( convertedValue == null ) {
-                    // convert to String (TODO)
                     convertedValue = getConverter().convert(list).defaultValue(null).to(String[].class);
                 }
                 return convertedValue;
@@ -275,8 +274,6 @@ public class TypeConverter {
                     convertedValue = getConverter().convert(list).defaultValue(null).to(new TypeReference<List<Double>>() {});
                 }
                 if ( convertedValue == null ) {
-
-                    // convert to String (TODO)
                     convertedValue = getConverter().convert(list).defaultValue(null).to(new TypeReference<List<String>>() {});
                 }
                 return convertedValue;
