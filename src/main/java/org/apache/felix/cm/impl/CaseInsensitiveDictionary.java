@@ -312,7 +312,7 @@ public class CaseInsensitiveDictionary extends Dictionary<String, Object>
             Collection collection = ( Collection ) value;
             if ( collection.isEmpty() )
             {
-                value = Collections.EMPTY_LIST;
+                return Collections.EMPTY_LIST;
             }
             else
             {
