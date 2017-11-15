@@ -9,6 +9,8 @@ Changes in 1.9.0
     * [FELIX-5293] - Improved ConfigurationPlugin Support (OSGi R7)
     * [FELIX-5468] - Refactor persistence handling
     * [FELIX-5695] - Use Java 7 as base version
+** Bug
+    * [FELIX-5745] - Empty collections should be allowed as property value
 
 
 Changes from 1.8.14 to 1.8.16
