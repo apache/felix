@@ -42,5 +42,5 @@ public class FailedServletDTO extends ServletDTO {
 	 * @see DTOConstants#FAILURE_REASON_WHITEBOARD_WRITE_TO_DEFAULT_DENIED
 	 * @see DTOConstants#FAILURE_REASON_SERVLET_READ_FROM_DEFAULT_DENIED
 	 */
-	 public int	failureReason;
+	public int	failureReason;
 }
