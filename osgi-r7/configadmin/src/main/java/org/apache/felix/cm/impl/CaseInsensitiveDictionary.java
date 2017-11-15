@@ -51,7 +51,7 @@ public class CaseInsensitiveDictionary extends Dictionary<String, Object>
 
     public CaseInsensitiveDictionary()
     {
-        internalMap = new TreeMap<String, Object>( CASE_INSENSITIVE_ORDER );
+        internalMap = new TreeMap<>( CASE_INSENSITIVE_ORDER );
     }
 
 
@@ -59,11 +59,11 @@ public class CaseInsensitiveDictionary extends Dictionary<String, Object>
     {
         if ( props instanceof CaseInsensitiveDictionary)
         {
-            internalMap = new TreeMap<String, Object>( ((CaseInsensitiveDictionary) props).internalMap );
+            internalMap = new TreeMap<>( ((CaseInsensitiveDictionary) props).internalMap );
         }
         else if ( props != null )
         {
-            internalMap = new TreeMap<String, Object>( CASE_INSENSITIVE_ORDER );
+            internalMap = new TreeMap<>( CASE_INSENSITIVE_ORDER );
             Enumeration keys = props.keys();
             while ( keys.hasMoreElements() )
             {
@@ -88,7 +88,7 @@ public class CaseInsensitiveDictionary extends Dictionary<String, Object>
         }
         else
         {
-            internalMap = new TreeMap<String, Object>( CASE_INSENSITIVE_ORDER );
+            internalMap = new TreeMap<>( CASE_INSENSITIVE_ORDER );
         }
     }
 
@@ -97,7 +97,7 @@ public class CaseInsensitiveDictionary extends Dictionary<String, Object>
     {
         if ( deepCopy )
         {
-            internalMap = new TreeMap<String, Object>( CASE_INSENSITIVE_ORDER );
+            internalMap = new TreeMap<>( CASE_INSENSITIVE_ORDER );
             for( Map.Entry<String, Object> entry : props.internalMap.entrySet() )
             {
                 Object value = entry.getValue();
@@ -117,14 +117,14 @@ public class CaseInsensitiveDictionary extends Dictionary<String, Object>
                     // Vector. And even though we accept Collection nowadays
                     // there might be clients out there still written against
                     // R4 and R4.1 spec expecting Vector
-                    value = new Vector<Object>( ( Collection ) value );
+                    value = new Vector<>( ( Collection ) value );
                 }
                 internalMap.put( entry.getKey(), value );
             }
         }
         else
         {
-            internalMap = new TreeMap<String, Object>( props.internalMap );
+            internalMap = new TreeMap<>( props.internalMap );
         }
     }
 
@@ -273,7 +273,7 @@ public class CaseInsensitiveDictionary extends Dictionary<String, Object>
     }
 
 
-    private static final Set<Class> KNOWN = new HashSet<Class>(Arrays.<Class>asList(
+    private static final Set<Class> KNOWN = new HashSet<>(Arrays.<Class>asList(
             String.class, Integer.class, Long.class, Float.class,
             Double.class, Byte.class, Short.class, Character.class,
             Boolean.class));
@@ -312,29 +312,31 @@ public class CaseInsensitiveDictionary extends Dictionary<String, Object>
             Collection collection = ( Collection ) value;
             if ( collection.isEmpty() )
             {
-                throw new IllegalArgumentException( "Collection must not be empty" );
+                value = Collections.EMPTY_LIST;
             }
-
-            // ensure all elements have the same type and to internal list
-            Collection<Object> internalValue = new ArrayList<Object>( collection.size() );
-            type = null;
-            for ( Object el : collection )
+            else
             {
-                if ( el == null )
+                // ensure all elements have the same type and to internal list
+                Collection<Object> internalValue = new ArrayList<>( collection.size() );
+                type = null;
+                for ( Object el : collection )
                 {
-                    throw new IllegalArgumentException( "Collection must not contain null elements" );
+                    if ( el == null )
+                    {
+                        throw new IllegalArgumentException( "Collection must not contain null elements" );
+                    }
+                    if ( type == null )
+                    {
+                        type = el.getClass();
+                    }
+                    else if ( type != el.getClass() )
+                    {
+                        throw new IllegalArgumentException( "Collection element types must not be mixed" );
+                    }
+                    internalValue.add( el );
                 }
-                if ( type == null )
-                {
-                    type = el.getClass();
-                }
-                else if ( type != el.getClass() )
-                {
-                    throw new IllegalArgumentException( "Collection element types must not be mixed" );
-                }
-                internalValue.add( el );
+                value = internalValue;
             }
-            value = internalValue;
         }
         else
         {
@@ -495,6 +497,7 @@ public class CaseInsensitiveDictionary extends Dictionary<String, Object>
     private static class CaseInsensitiveComparator implements Comparator<String>
     {
 
+        @Override
         public int compare(String s1, String s2)
         {
             int n1 = s1.length();
