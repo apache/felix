@@ -1,5 +1,5 @@
 /*
- * Copyright (c) OSGi Alliance (2010, 2016). All Rights Reserved.
+ * Copyright (c) OSGi Alliance (2010, 2017). All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -33,7 +33,7 @@
  * @author $Id$
  */
 
-@Version("1.6")
+@Version(ConfigurationConstants.CONFIGURATION_ADMIN_SPECIFICATION_VERSION)
 package org.osgi.service.cm;
 
 import org.osgi.annotation.versioning.Version;

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) OSGi Alliance (2001, 2016). All Rights Reserved.
+ * Copyright (c) OSGi Alliance (2001, 2017). All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -99,6 +99,9 @@ import org.osgi.annotation.versioning.ConsumerType;
  * dictionary, this is the configuration that is bound to the location of the
  * registering bundle. However, when security is on, a Managed Service can have
  * Configuration Permission to also be updated for other locations.
+ * <p>
+ * If a Managed Service is registered without the {@code service.pid} property,
+ * it will be ignored.
  *
  * @author $Id$
  * @ThreadSafe

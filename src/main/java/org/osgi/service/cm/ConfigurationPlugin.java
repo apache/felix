@@ -101,10 +101,12 @@ public interface ConfigurationPlugin {
 	 * <p>
 	 * This method should not modify the properties unless the
 	 * {@code service.cmRanking} of this plugin is in the range
-	 * {@code 0 <= service.cmRanking <= 1000}.
+	 * {@code 0 <= service.cmRanking <= 1000}. Any modification 
+	 * from this plugin is ignored.
 	 * <p>
 	 * If this method throws any {@code Exception}, the Configuration Admin
-	 * service must catch it and should log it.
+	 * service must catch it and should log it. Any modifications made by the
+	 * plugin before the exception is thrown are applied.
 	 *
 	 * <p>
 	 * A Configuration Plugin will only be called for properties from

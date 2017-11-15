@@ -87,6 +87,9 @@ import org.osgi.annotation.versioning.ConsumerType;
  *     ...
  *   }
  * </pre>
+ * <p>
+ * If a {@code ManagedServiceFactory} is registered without the {@code service.pid} 
+ * property, it will be ignored.
  *
  * @author $Id$
  * @ThreadSafe
