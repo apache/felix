@@ -16,7 +16,6 @@
  */
 package org.apache.felix.configurator.impl;
 
-import org.apache.felix.configurator.impl.logger.LogServiceLogger;
 import org.apache.felix.configurator.impl.logger.SystemLogger;
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
@@ -27,15 +26,12 @@ import org.osgi.framework.BundleContext;
  */
 public class Activator implements BundleActivator {
 
-    private volatile LogServiceLogger logger;
-
     private volatile ServicesListener listener;
 
     @Override
     public final void start(final BundleContext context)
     throws Exception {
-        this.logger = new LogServiceLogger(context);
-        SystemLogger.setLogService(this.logger);
+        SystemLogger.init(context);
 
         listener = new ServicesListener(context);
     }
@@ -47,6 +43,6 @@ public class Activator implements BundleActivator {
             listener.deactivate();
             listener = null;
         }
-        this.logger.close();
+        SystemLogger.destroy();
     }
 }

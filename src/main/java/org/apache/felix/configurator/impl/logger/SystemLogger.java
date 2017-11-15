@@ -18,41 +18,56 @@
  */
 package org.apache.felix.configurator.impl.logger;
 
+import org.osgi.framework.BundleContext;
 import org.osgi.service.log.LogService;
 
 public final class SystemLogger {
 
-    private static volatile LogService LOGGER = new ConsoleLogger();
+    private static volatile LogServiceEnabledLogger LOGGER;
 
-    public static void setLogService(final LogService service) {
-        LOGGER = service == null ? new ConsoleLogger() : service;
+    public static void init(final BundleContext bundleContext) {
+        LOGGER = new LogServiceEnabledLogger(bundleContext);
+    }
+
+    public static void destroy() {
+        if ( LOGGER != null ) {
+            LOGGER.close();
+            LOGGER = null;
+        }
+    }
+
+    private static void log(final int level, final String message, final Throwable cause) {
+        final LogServiceEnabledLogger l = LOGGER;
+        if ( l != null ) {
+            l.log(level, message, cause);
+        }
     }
 
     public static void debug(final String message) {
-        LOGGER.log(LogService.LOG_DEBUG, message);
+        log(LogService.LOG_DEBUG, message, null);
     }
 
     public static void debug(final String message, final Throwable cause) {
-        LOGGER.log(LogService.LOG_DEBUG, message, cause);
+        log(LogService.LOG_DEBUG, message, cause);
     }
 
     public static void info(final String message) {
-        LOGGER.log(LogService.LOG_INFO, message);
+        log(LogService.LOG_INFO, message, null);
     }
 
     public static void warning(final String message) {
-        LOGGER.log(LogService.LOG_WARNING, message);
+        log(LogService.LOG_WARNING, message, null);
     }
 
     public static void warning(final String message, final Throwable cause) {
-        LOGGER.log(LogService.LOG_WARNING, message, cause);
+        log(LogService.LOG_WARNING, message, cause);
     }
 
     public static void error(final String message) {
-        LOGGER.log(LogService.LOG_ERROR, message);
+        log(LogService.LOG_ERROR, message, null);
     }
 
     public static void error(final String message, final Throwable cause) {
-        LOGGER.log(LogService.LOG_ERROR, message, cause);
+        log(LogService.LOG_ERROR, message, cause);
     }
 }
