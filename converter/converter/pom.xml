@@ -28,7 +28,7 @@
 
     <name>Apache Felix Converter</name>
     <artifactId>org.apache.felix.converter</artifactId>
-    <version>0.2.0-SNAPSHOT</version>
+    <version>0.3.0-SNAPSHOT</version>
     <packaging>jar</packaging>
 
     <scm>
@@ -75,22 +75,15 @@
                 </executions>
                 <configuration>
                     <instructions>
-                        <Private-Package>
-                            org.apache.felix.converter.impl.*,
-                            org.apache.felix.utils.*
-                        </Private-Package>
                         <Export-Package>
-                            org.apache.felix.converter.dto,
                             org.osgi.util.function,
                             org.osgi.util.converter;-split-package:=merge-first
                         </Export-Package>
                         <Import-Package>
-                            !org.apache.felix.converter.dto,
                             org.osgi.util.function,
                             org.osgi.util.converter,
                             *
                         </Import-Package>
-                        <_sources>true</_sources>
                     </instructions>
                 </configuration>
             </plugin>

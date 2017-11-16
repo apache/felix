@@ -17,38 +17,15 @@
 package org.osgi.util.converter;
 
 /**
- * Factory class to obtain the standard converter or a new converter builder.
- *
- * @author $Id$
- * @ThreadSafe
+ * This interface is the same as the {@link Converting} interface with the addition
+ * that the current converter (which may include custom rules) can be set on it.
+ * This allows the converter to be re-entrant and use itself for sub-conversions if
+ * applicable.
  */
-public class Converters {
-    private static final Converter CONVERTER;
-
-    static {
-        ConverterImpl impl = new ConverterImpl();
-        ConverterBuilder cb = impl.newConverterBuilder();
-        impl.addStandardRules(cb);
-        CONVERTER = cb.build();
-    }
-
-    private Converters() {
-        // Do not instantiate this factory class
-    }
-
+interface InternalConverting extends Converting {
     /**
-     * Obtain the standard converter.
-     * @return The standard converter.
+     * Set the current converter.
+     * @param c The current converter.
      */
-    public static Converter standardConverter() {
-        return CONVERTER;
-    }
-
-    /**
-     * Obtain a converter builder based on the standard converter.
-     * @return A new converter builder.
-     */
-    public static ConverterBuilder newConverterBuilder() {
-        return CONVERTER.newConverterBuilder();
-    }
+    void setConverter(Converter c);
 }
