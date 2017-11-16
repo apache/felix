@@ -890,6 +890,17 @@ public class ConverterTest {
     }
 
     @Test
+    public void testLiveMapFromDTO2() {
+        MyDTO9 dto = new MyDTO9();
+        dto.key1 = "value1";
+        dto.key2 = "value2";
+
+        Map<Character, Character> m = converter.convert(dto).to(new TypeReference<Map<Character, Character>>() {});
+        assertEquals(1, m.size());
+        assertEquals('v', (char) m.get('k'));
+    }
+
+    @Test
     public void testLiveMapFromDictionary() throws URISyntaxException {
         URI testURI = new URI("http://foo");
         Hashtable<String, Object> d = new Hashtable<>();

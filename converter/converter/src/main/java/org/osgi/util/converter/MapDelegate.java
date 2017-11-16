@@ -25,6 +25,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+/**
+ * @author $Id: 12cb021a8b0bff80df438cdb40cefaa04be26437 $
+ */
 class MapDelegate<K, V> implements Map<K, V> {
     private final ConvertingImpl convertingImpl;
     Map<K, V> delegate;
@@ -54,8 +57,17 @@ class MapDelegate<K, V> implements Map<K, V> {
         return new MapDelegate<>(converting, new DynamicInterfaceFacade(obj, converting));
     }
 
+    @Override
     public int size() {
-        return delegate.size();
+        // Need to convert the entire map to get the size
+        Set<Object> keys = new HashSet<>();
+
+        Set<K> ks = delegate.keySet();
+        for (K key : ks) {
+            keys.add(getConvertedKey(key));
+        }
+
+        return keys.size();
     }
 
     public boolean isEmpty() {
@@ -85,10 +97,14 @@ class MapDelegate<K, V> implements Map<K, V> {
         if (val == null)
             return null;
         else
-            return (V) getConvertedValue(key, val);
+			return (V) getConvertedValue(val);
     }
 
-    private Object getConvertedValue(Object key, Object val) {
+	private Object getConvertedKey(Object key) {
+		return convertingImpl.convertMapKey(key);
+	}
+
+	private Object getConvertedValue(Object val) {
         return convertingImpl.convertMapValue(val);
     }
 
@@ -161,7 +177,7 @@ class MapDelegate<K, V> implements Map<K, V> {
         Set<Map.Entry<K,V>> result = new HashSet<>();
         for (Map.Entry<?,?> entry : delegate.entrySet()) {
             K key = (K) findConvertedKey(internalKeySet(), entry.getKey());
-            V val = (V) getConvertedValue(key, entry.getValue());
+			V val = (V) getConvertedValue(entry.getValue());
             result.add(new MapEntry<K,V>(key, val));
         }
         return result;
