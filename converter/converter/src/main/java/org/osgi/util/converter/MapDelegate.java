@@ -70,41 +70,45 @@ class MapDelegate<K, V> implements Map<K, V> {
         return keys.size();
     }
 
+    @Override
     public boolean isEmpty() {
         return delegate.isEmpty();
     }
 
+    @Override
     public boolean containsKey(Object key) {
-        return delegate.containsKey(key);
+        return keySet().contains(key);
     }
 
+    @Override
     public boolean containsValue(Object value) {
-        return delegate.containsValue(value);
+        return values().contains(value);
     }
 
+    @Override
     @SuppressWarnings("unchecked")
     public V get(Object key) {
         V val = null;
-        if (keySet().contains(key)) {
+        if (internalKeySet().contains(key)) {
             val = delegate.get(key);
         }
 
         if (val == null) {
-            key = findConvertedKey(keySet(), key);
+            key = findConvertedKey(internalKeySet(), key);
             val = delegate.get(key);
         }
 
         if (val == null)
             return null;
         else
-			return (V) getConvertedValue(val);
+            return (V) getConvertedValue(val);
     }
 
-	private Object getConvertedKey(Object key) {
-		return convertingImpl.convertMapKey(key);
-	}
+    private Object getConvertedKey(Object key) {
+        return convertingImpl.convertMapKey(key);
+    }
 
-	private Object getConvertedValue(Object val) {
+    private Object getConvertedValue(Object val) {
         return convertingImpl.convertMapValue(val);
     }
 
@@ -118,33 +122,32 @@ class MapDelegate<K, V> implements Map<K, V> {
             Object c = convertingImpl.converter.convert(k).to(key.getClass());
             if (c != null && c.equals(key))
                 return k;
-
-//          Maybe the other way around too?
-//            Object c2 = facade.convertingImpl.converter.convert(key).to(k.getClass());
-//            if (c2 != null && c2.equals(key))
-//                return c2;
         }
         return key;
     }
 
+    @Override
     public V put(K key, V value) {
         cloneDelegate();
 
         return delegate.put(key, value);
     }
 
+    @Override
     public V remove(Object key) {
         cloneDelegate();
 
         return delegate.remove(key);
     }
 
-    public void putAll(Map<? extends K, ? extends V> m) {
+    @Override
+    public void putAll(Map< ? extends K, ? extends V> m) {
         cloneDelegate();
 
         delegate.putAll(m);
     }
 
+    @Override
     public void clear() {
         delegate = new HashMap<>();
     }
@@ -153,17 +156,17 @@ class MapDelegate<K, V> implements Map<K, V> {
         return delegate.keySet();
     }
 
+    @SuppressWarnings("unchecked")
+    @Override
     public Set<K> keySet() {
         Set<K> keys = new HashSet<>();
-        Set<K> internalKeys = internalKeySet();
-        for (Object key : internalKeys) {
-            @SuppressWarnings("unchecked")
-            K k = (K) findConvertedKey(internalKeys, key);
-            keys.add(k);
+        for (Object key : internalKeySet()) {
+            keys.add((K) getConvertedKey(key));
         }
         return keys;
     }
 
+    @Override
     public Collection<V> values() {
         List<V> values = new ArrayList<>();
         for (Map.Entry<K,V> entry : entrySet()) {
@@ -172,82 +175,27 @@ class MapDelegate<K, V> implements Map<K, V> {
         return values;
     }
 
+    @Override
     @SuppressWarnings("unchecked")
     public Set<java.util.Map.Entry<K, V>> entrySet() {
         Set<Map.Entry<K,V>> result = new HashSet<>();
         for (Map.Entry<?,?> entry : delegate.entrySet()) {
             K key = (K) findConvertedKey(internalKeySet(), entry.getKey());
-			V val = (V) getConvertedValue(entry.getValue());
+            V val = (V) getConvertedValue(entry.getValue());
             result.add(new MapEntry<K,V>(key, val));
         }
         return result;
     }
 
+    @Override
     public boolean equals(Object o) {
         return delegate.equals(o);
     }
 
+    @Override
     public int hashCode() {
         return delegate.hashCode();
     }
-
-    /* This doesn't work in Java 7, do we need to do anything?
-    public V getOrDefault(Object key, V defaultValue) {
-        return delegate.getOrDefault(key, defaultValue);
-    }
-
-    public void forEach(BiConsumer<? super K, ? super V> action) {
-        delegate.forEach(action);
-    }
-
-    public void replaceAll(BiFunction<? super K, ? super V, ? extends V> function) {
-        cloneDelegate();
-
-        delegate.replaceAll(function);
-    }
-
-    public V putIfAbsent(K key, V value) {
-        cloneDelegate();
-
-        return delegate.putIfAbsent(key, value);
-    }
-
-    public boolean remove(Object key, Object value) {
-        cloneDelegate();
-
-        return delegate.remove(key, value);
-    }
-
-    public boolean replace(K key, V oldValue, V newValue) {
-        cloneDelegate();
-
-        return delegate.replace(key, oldValue, newValue);
-    }
-
-    public V replace(K key, V value) {
-        cloneDelegate();
-
-        return delegate.replace(key, value);
-    }
-
-    public V computeIfAbsent(K key, Function<? super K, ? extends V> mappingFunction) {
-        return delegate.computeIfAbsent(key, mappingFunction);
-    }
-
-    public V computeIfPresent(K key, BiFunction<? super K, ? super V, ? extends V> remappingFunction) {
-        return delegate.computeIfPresent(key, remappingFunction);
-    }
-
-    public V compute(K key, BiFunction<? super K, ? super V, ? extends V> remappingFunction) {
-        return delegate.compute(key, remappingFunction);
-    }
-
-    public V merge(K key, V value, BiFunction<? super V, ? super V, ? extends V> remappingFunction) {
-        cloneDelegate();
-
-        return delegate.merge(key, value, remappingFunction);
-    }
-*/
 
     private void cloneDelegate() {
         delegate = new HashMap<>(delegate);
