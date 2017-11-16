@@ -31,8 +31,10 @@ import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
+import java.util.Deque;
 import java.util.GregorianCalendar;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -43,9 +45,16 @@ import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.NavigableMap;
+import java.util.NavigableSet;
+import java.util.Queue;
 import java.util.Set;
+import java.util.SortedMap;
+import java.util.SortedSet;
 import java.util.TimeZone;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.ConcurrentNavigableMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -830,6 +839,45 @@ public class ConverterTest {
         // And convert back
         Map<String, String> m2 = converter.convert(dto).to(new TypeReference<Map<String,String>>() {});
         assertEquals(new HashMap<String,String>(m), new HashMap<String,String>(m2));
+    }
+
+    @Test
+    public void testCollectionInterfaceMapping() {
+        Collection<?> coll = converter.convert("test").to(Collection.class);
+        assertEquals("test", coll.iterator().next());
+
+        List<?> list = converter.convert("test").copy().to(List.class);
+        assertEquals("test", list.iterator().next());
+
+        Set<?> set = converter.convert("test").to(Set.class);
+        assertEquals("test", set.iterator().next());
+
+        NavigableSet<?> ns = converter.convert("test").to(NavigableSet.class);
+        assertEquals("test", ns.iterator().next());
+
+        SortedSet<?> ss = converter.convert("test").to(SortedSet.class);
+        assertEquals("test", ss.iterator().next());
+
+        Queue<?> q = converter.convert("test").to(Queue.class);
+        assertEquals("test", q.iterator().next());
+
+        Deque<?> dq = converter.convert("test").to(Deque.class);
+        assertEquals("test", dq.iterator().next());
+
+        Map<?,?> m = converter.convert(Collections.singletonMap("x", "y")).copy().to(Map.class);
+        assertEquals("y", m.get("x"));
+
+        ConcurrentMap<?,?> cm = converter.convert(Collections.singletonMap("x", "y")).copy().to(ConcurrentMap.class);
+        assertEquals("y", cm.get("x"));
+
+        ConcurrentNavigableMap<?,?> cnm = converter.convert(Collections.singletonMap("x", "y")).copy().to(ConcurrentNavigableMap.class);
+        assertEquals("y", cnm.get("x"));
+
+        NavigableMap<?,?> nm = converter.convert(Collections.singletonMap("x", "y")).copy().to(NavigableMap.class);
+        assertEquals("y", nm.get("x"));
+
+        SortedMap<?,?> sm = converter.convert(Collections.singletonMap("x", "y")).copy().to(SortedMap.class);
+        assertEquals("y", sm.get("x"));
     }
 
     @SuppressWarnings("unchecked")

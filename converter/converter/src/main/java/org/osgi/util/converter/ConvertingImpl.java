@@ -29,6 +29,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Deque;
 import java.util.Dictionary;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -36,22 +37,47 @@ import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.NavigableMap;
+import java.util.NavigableSet;
+import java.util.Queue;
 import java.util.Set;
+import java.util.SortedMap;
+import java.util.SortedSet;
+import java.util.TreeMap;
+import java.util.TreeSet;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.ConcurrentNavigableMap;
+import java.util.concurrent.ConcurrentSkipListMap;
 
 /**
- * @author $Id: d83ff45e4ee09ebafe6704e71cc66c53d75583dd $
+ * @author $Id: 6f9d6ee446aafb1de4c8f52537248a3180965f54 $
  */
 class ConvertingImpl extends AbstractSpecifying<Converting> implements Converting, InternalConverting {
     private static final Map<Class<?>, Class<?>> INTERFACE_IMPLS;
     static {
         Map<Class<?>, Class<?>> m = new HashMap<>();
         m.put(Collection.class, ArrayList.class);
+        // Lists
         m.put(List.class, ArrayList.class);
+        // Sets
         m.put(Set.class, LinkedHashSet.class); // preserves insertion order
+        m.put(NavigableSet.class, TreeSet.class);
+        m.put(SortedSet.class, TreeSet.class);
+        // Maps
         m.put(Map.class, LinkedHashMap.class); // preserves insertion order
+        m.put(ConcurrentMap.class, ConcurrentHashMap.class);
+        m.put(ConcurrentNavigableMap.class, ConcurrentSkipListMap.class);
+        m.put(NavigableMap.class, TreeMap.class);
+        m.put(SortedMap.class, TreeMap.class);
+        // Queues
+        m.put(Queue.class, LinkedList.class);
+        m.put(Deque.class, LinkedList.class);
+
         INTERFACE_IMPLS = Collections.unmodifiableMap(m);
     }
     private static final Collection<Class<?>> NO_MAP_VIEW_TYPES;
@@ -332,6 +358,7 @@ class ConvertingImpl extends AbstractSpecifying<Converting> implements Convertin
         for (Map.Entry entry : (Set<Entry>) m.entrySet()) {
             Object key = entry.getKey();
             Object value = entry.getValue();
+            key = convertMapKey(key);
             value = convertMapValue(value);
             instance.put(key, value);
         }
@@ -339,39 +366,39 @@ class ConvertingImpl extends AbstractSpecifying<Converting> implements Convertin
         return instance;
     }
 
-	Object convertMapKey(Object key) {
-		return convertMapElement(key, 0);
-	}
+    Object convertMapKey(Object key) {
+        return convertMapElement(key, 0);
+    }
 
     Object convertMapValue(Object value) {
-		return convertMapElement(value, 1);
-	}
+        return convertMapElement(value, 1);
+    }
 
-	private Object convertMapElement(Object element, int typeIdx) {
-		Type targetType = null;
-		if (typeArguments != null && typeArguments.length > typeIdx) {
-			targetType = typeArguments[typeIdx];
-		}
+    private Object convertMapElement(Object element, int typeIdx) {
+        Type targetType = null;
+        if (typeArguments != null && typeArguments.length > typeIdx) {
+            targetType = typeArguments[typeIdx];
+        }
 
-		if (element != null) {
-			if (targetType != null) {
-				element = converter.convert(element).to(targetType);
-			} else {
-				Class< ? > cls = element.getClass();
-				if (isCopyRequiredType(cls)) {
-					cls = getConstructableType(cls);
-				}
+        if (element != null) {
+            if (targetType != null) {
+                element = converter.convert(element).to(targetType);
+            } else {
+                Class< ? > cls = element.getClass();
+                if (isCopyRequiredType(cls)) {
+                    cls = getConstructableType(cls);
+                }
 
-				if (sourceAsDTO || DTOUtil.isDTOType(cls))
-					element = converter.convert(element).sourceAsDTO().to(cls);
-				else
-					element = converter.convert(element).to(cls);
-			}
-		}
-		return element;
-	}
+                if (sourceAsDTO || DTOUtil.isDTOType(cls))
+                    element = converter.convert(element).sourceAsDTO().to(cls);
+                else
+                    element = converter.convert(element).to(cls);
+            }
+        }
+        return element;
+    }
 
-	@SuppressWarnings({ "unchecked", "rawtypes" })
+    @SuppressWarnings({ "unchecked", "rawtypes" })
     private Map convertToMapDelegate() {
         if (Map.class.isAssignableFrom(sourceClass)) {
             return MapDelegate.forMap((Map) object, this);
@@ -386,7 +413,10 @@ class ConvertingImpl extends AbstractSpecifying<Converting> implements Convertin
         }
 
         // Assume it's an interface
-        return MapDelegate.forInterface(object, this);
+        if (object.getClass().getInterfaces().length > 0) {
+            return MapDelegate.forInterface(object, this);
+        }
+        return null;
     }
 
     @SuppressWarnings("rawtypes")
@@ -456,7 +486,8 @@ class ConvertingImpl extends AbstractSpecifying<Converting> implements Convertin
         final Map m = mapView(object, sourceCls, converter);
         return Proxy.newProxyInstance(targetCls.getClassLoader(), new Class[] {targetCls},
             new InvocationHandler() {
-                @Override
+                    @SuppressWarnings("boxing")
+                    @Override
                 public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
                     Class<?> mdDecl = method.getDeclaringClass();
                     if (mdDecl.equals(Object.class))
@@ -512,7 +543,8 @@ class ConvertingImpl extends AbstractSpecifying<Converting> implements Convertin
             });
     }
 
-    private Object handleNull(Class<?> cls) {
+    @SuppressWarnings("boxing")
+    private Object handleNull(Class< ? > cls) {
         if (hasDefault)
             return converter.convert(defaultValue).to(cls);
 
@@ -544,6 +576,7 @@ class ConvertingImpl extends AbstractSpecifying<Converting> implements Convertin
             return Dictionary.class.isAssignableFrom(cls);
     }
 
+    @SuppressWarnings("boxing")
     private Object trySpecialCases() {
         if (Boolean.class.equals(targetAsClass)) {
             if (object instanceof Collection && ((Collection<?>) object).size() == 0) {
@@ -610,6 +643,7 @@ class ConvertingImpl extends AbstractSpecifying<Converting> implements Convertin
                 Constructor<?> ctr = targetAsClass.getConstructor(String.class);
                 return (T) ctr.newInstance(object.toString());
             } catch (Exception e2) {
+                // Ignore
             }
         }
         return null;
@@ -662,16 +696,16 @@ class ConvertingImpl extends AbstractSpecifying<Converting> implements Convertin
     }
 
     @SuppressWarnings("rawtypes")
-    private Map createMapFromDTO(Object obj, InternalConverter converter) {
+    private Map createMapFromDTO(Object obj, InternalConverter ic) {
         Set<String> handledFields = new HashSet<>();
 
         Map result = new HashMap();
         // Do we need 'declaredfields'? We only need to look at the public ones...
         for (Field f : obj.getClass().getDeclaredFields()) {
-            handleDTOField(obj, f, handledFields, result, converter);
+            handleDTOField(obj, f, handledFields, result, ic);
         }
         for (Field f : obj.getClass().getFields()) {
-            handleDTOField(obj, f, handledFields, result, converter);
+            handleDTOField(obj, f, handledFields, result, ic);
         }
         return result;
     }
@@ -689,7 +723,9 @@ class ConvertingImpl extends AbstractSpecifying<Converting> implements Convertin
         throw new ConversionException("Cannot be converted to map: " + obj);
     }
 
-    private static Object createMapOrCollection(Class<?> cls, int initialSize) {
+    @SuppressWarnings("boxing")
+    private static Object createMapOrCollection(Class< ? > cls,
+            int initialSize) {
         try {
             Constructor<?> ctor = cls.getConstructor(int.class);
             return ctor.newInstance(initialSize);
@@ -735,7 +771,7 @@ class ConvertingImpl extends AbstractSpecifying<Converting> implements Convertin
 
     @SuppressWarnings({ "rawtypes", "unchecked" })
     private void handleDTOField(Object obj, Field field, Set<String> handledFields, Map result,
-            InternalConverter converter) {
+            InternalConverter ic) {
         String fn = Util.getDTOKey(field);
         if (fn == null)
             return;
@@ -748,6 +784,7 @@ class ConvertingImpl extends AbstractSpecifying<Converting> implements Convertin
             result.put(fn, fVal);
             handledFields.add(fn);
         } catch (Exception e) {
+            // Ignore
         }
     }
 
@@ -764,6 +801,7 @@ class ConvertingImpl extends AbstractSpecifying<Converting> implements Convertin
             res.put(bp, md.invoke(obj));
             invokedMethods.add(bp);
         } catch (Exception e) {
+            // Ignore
         }
     }
 
@@ -785,16 +823,17 @@ class ConvertingImpl extends AbstractSpecifying<Converting> implements Convertin
             res.put(propName, r);
             invokedMethods.add(mn);
         } catch (Exception e) {
+            // Ignore
         }
     }
 
-    private Map<?,?> mapView(Object obj, Class<?> sourceCls, InternalConverter converter) {
+    private Map<?,?> mapView(Object obj, Class<?> sourceCls, InternalConverter ic) {
         if (Map.class.isAssignableFrom(sourceCls) || (DTOUtil.isDTOType(sourceCls) && obj instanceof Map))
             return (Map<?,?>) obj;
         else if (Dictionary.class.isAssignableFrom(sourceCls))
             return MapDelegate.forDictionary((Dictionary<?,?>) object, this);
         else if (DTOUtil.isDTOType(sourceCls) || sourceAsDTO)
-            return createMapFromDTO(obj, converter);
+            return createMapFromDTO(obj, ic);
         else if (sourceAsJavaBean) {
             Map<?,?> m = createMapFromBeanAccessors(obj, sourceCls);
             if (m.size() > 0)
