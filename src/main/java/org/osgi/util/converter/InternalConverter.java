@@ -16,39 +16,21 @@
  */
 package org.osgi.util.converter;
 
+import org.osgi.util.converter.Converter;
+
 /**
- * Factory class to obtain the standard converter or a new converter builder.
- *
- * @author $Id$
- * @ThreadSafe
+ * This interface specifies a {@link #convert(Object)} method that
+ * returns an {@link InternalConverting} rather than a normal Converting
+ * instance.
  */
-public class Converters {
-    private static final Converter CONVERTER;
-
-    static {
-        ConverterImpl impl = new ConverterImpl();
-        ConverterBuilder cb = impl.newConverterBuilder();
-        impl.addStandardRules(cb);
-        CONVERTER = cb.build();
-    }
-
-    private Converters() {
-        // Do not instantiate this factory class
-    }
-
+interface InternalConverter extends Converter {
     /**
-     * Obtain the standard converter.
-     * @return The standard converter.
+     * Start a conversion for the given object. This method overrides the
+     * {@link Converter#convert(Object)} method with a co-variant return type.
+     *
+     * @param obj The object that should be converted.
+     * @return An {@link InternalConverting} object to complete the conversion.
      */
-    public static Converter standardConverter() {
-        return CONVERTER;
-    }
-
-    /**
-     * Obtain a converter builder based on the standard converter.
-     * @return A new converter builder.
-     */
-    public static ConverterBuilder newConverterBuilder() {
-        return CONVERTER.newConverterBuilder();
-    }
+    @Override
+    InternalConverting convert(Object obj);
 }
