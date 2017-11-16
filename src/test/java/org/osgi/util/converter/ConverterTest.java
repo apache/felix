@@ -898,6 +898,11 @@ public class ConverterTest {
         Map<Character, Character> m = converter.convert(dto).to(new TypeReference<Map<Character, Character>>() {});
         assertEquals(1, m.size());
         assertEquals('v', (char) m.get('k'));
+
+        assertTrue(m.containsKey('k'));
+        assertFalse(m.containsKey("key1"));
+        assertTrue(m.containsValue('v'));
+        assertFalse(m.containsValue("value1"));
     }
 
     @Test
