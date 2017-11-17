@@ -58,33 +58,40 @@ import java.util.concurrent.ConcurrentSkipListMap;
  * @author $Id: 6f9d6ee446aafb1de4c8f52537248a3180965f54 $
  */
 class ConvertingImpl extends AbstractSpecifying<Converting> implements Converting, InternalConverting {
-    private static final Map<Class<?>, Class<?>> INTERFACE_IMPLS;
+    private static final Map<Class< ? >,Class< ? >> INTERFACE_IMPLS;
+    // Interfaces with no methods are also not considered
+    private static final Collection<Class< ? >>     NO_MAP_VIEW_TYPES;
     static {
-        Map<Class<?>, Class<?>> m = new HashMap<>();
-        m.put(Collection.class, ArrayList.class);
-        // Lists
-        m.put(List.class, ArrayList.class);
-        // Sets
-        m.put(Set.class, LinkedHashSet.class); // preserves insertion order
-        m.put(NavigableSet.class, TreeSet.class);
-        m.put(SortedSet.class, TreeSet.class);
-        // Maps
-        m.put(Map.class, LinkedHashMap.class); // preserves insertion order
-        m.put(ConcurrentMap.class, ConcurrentHashMap.class);
-        m.put(ConcurrentNavigableMap.class, ConcurrentSkipListMap.class);
-        m.put(NavigableMap.class, TreeMap.class);
-        m.put(SortedMap.class, TreeMap.class);
-        // Queues
-        m.put(Queue.class, LinkedList.class);
-        m.put(Deque.class, LinkedList.class);
 
-        INTERFACE_IMPLS = Collections.unmodifiableMap(m);
+        Map<Class< ? >,Class< ? >> cim = new HashMap<>();
+        cim.put(Collection.class, ArrayList.class);
+        // Lists
+        cim.put(List.class, ArrayList.class);
+        // Sets
+        cim.put(Set.class, LinkedHashSet.class); // preserves insertion order
+        cim.put(NavigableSet.class, TreeSet.class);
+        cim.put(SortedSet.class, TreeSet.class);
+        // Queues
+        cim.put(Queue.class, LinkedList.class);
+        cim.put(Deque.class, LinkedList.class);
+
+        Map<Class< ? >,Class< ? >> iim = new HashMap<>(cim);
+        // Maps
+        iim.put(Map.class, LinkedHashMap.class); // preserves insertion order
+        iim.put(ConcurrentMap.class, ConcurrentHashMap.class);
+        iim.put(ConcurrentNavigableMap.class,
+                ConcurrentSkipListMap.class);
+        iim.put(NavigableMap.class, TreeMap.class);
+        iim.put(SortedMap.class, TreeMap.class);
+
+        Set<Class< ? >> nmv = new HashSet<>(cim.keySet());
+        nmv.addAll(Arrays.<Class< ? >> asList(String.class, Class.class,
+                Comparable.class, CharSequence.class, Map.Entry.class));
+
+        INTERFACE_IMPLS = Collections.unmodifiableMap(iim);
+        NO_MAP_VIEW_TYPES = Collections.unmodifiableSet(nmv);
     }
 
-    // Interfaces with no methods are also not considered
-    private static final Collection<Class< ? >> NO_MAP_VIEW_TYPES   = Arrays
-            .<Class< ? >> asList(String.class, Class.class, Comparable.class,
-                    CharSequence.class, Map.Entry.class);
 
     volatile InternalConverter                  converter;
     private volatile Object object;
