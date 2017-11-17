@@ -28,7 +28,7 @@ class DTOUtil {
         // Do not instantiate. This is a utility class.
     }
 
-	static boolean isDTOType(Class< ? > cls) {
+    static boolean isDTOType(Class< ? > cls) {
         try {
             cls.getDeclaredConstructor();
         } catch (NoSuchMethodException | SecurityException e) {
@@ -50,19 +50,14 @@ class DTOUtil {
             }
         }
 
-        for (Field f : cls.getDeclaredFields()) {
-            int modifiers = f.getModifiers();
-            if (Modifier.isStatic(modifiers)) {
-                // ignore static fields
-                continue;
-            }
+        /*
+         * for (Field f : cls.getDeclaredFields()) { int modifiers =
+         * f.getModifiers(); if (Modifier.isStatic(modifiers)) { // ignore
+         * static fields continue; } if (!Modifier.isPublic(modifiers)) { return
+         * false; } }
+         */
 
-            if (!Modifier.isPublic(modifiers)) {
-                return false;
-            }
-        }
-
-		boolean foundField = false;
+        boolean foundField = false;
         for (Field f : cls.getFields()) {
             int modifiers = f.getModifiers();
             if (Modifier.isStatic(modifiers)) {
@@ -73,8 +68,8 @@ class DTOUtil {
             if (!Modifier.isPublic(modifiers)) {
                 return false;
             }
-			foundField = true;
+            foundField = true;
         }
-		return foundField;
+        return foundField;
     }
 }

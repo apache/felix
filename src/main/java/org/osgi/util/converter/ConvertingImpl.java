@@ -80,15 +80,11 @@ class ConvertingImpl extends AbstractSpecifying<Converting> implements Convertin
 
         INTERFACE_IMPLS = Collections.unmodifiableMap(m);
     }
-    private static final Collection<Class<?>> NO_MAP_VIEW_TYPES;
-    static {
-        // In Java 7 you apparently can't do this directly via generics
-        @SuppressWarnings("rawtypes")
-        Collection types = Collections.singleton(String.class);
-        @SuppressWarnings("unchecked")
-        Collection<Class<?>> types2 = types;
-        NO_MAP_VIEW_TYPES = types2;
-    }
+
+    // Interfaces with no methods are also not considered
+    private static final Collection<Class< ? >>     NO_MAP_VIEW_TYPES   =
+            Arrays.<Class< ? >> asList(String.class, Class.class, Comparable.class,
+                    CharSequence.class, Map.Entry.class);
 
     volatile InternalConverter  converter;
     private volatile Object object;
@@ -169,7 +165,7 @@ class ConvertingImpl extends AbstractSpecifying<Converting> implements Convertin
         if (Collection.class.isAssignableFrom(sourceClass)) {
             return convertCollectionToSingleValue(targetAsClass);
         } else if (isMapType(sourceClass, sourceAsJavaBean)) {
-                return convertMapToSingleValue(targetAsClass);
+            return convertMapToSingleValue(targetAsClass);
         } else if (object instanceof Map.Entry) {
             return convertMapEntryToSingleValue(targetAsClass);
         } else if ((object = asBoxedArray(object)) instanceof Object[]) {
@@ -409,7 +405,9 @@ class ConvertingImpl extends AbstractSpecifying<Converting> implements Convertin
         return element;
     }
 
-    @SuppressWarnings({ "unchecked", "rawtypes" })
+    @SuppressWarnings({
+            "unchecked", "rawtypes"
+    })
     private Map convertToMapDelegate() {
         if (Map.class.isAssignableFrom(sourceClass)) {
             return MapDelegate.forMap((Map) object, this);
@@ -434,6 +432,11 @@ class ConvertingImpl extends AbstractSpecifying<Converting> implements Convertin
 
     @SuppressWarnings("rawtypes")
     private Object convertToMapType() {
+        if (!sourceAsDTO && !isMapType(sourceClass, sourceAsJavaBean)) {
+            throw new ConversionException(
+                    "Cannot convert " + object + " to " + targetAsClass);
+        }
+
         if (Map.class.equals(targetClass) && !forceCopy) {
             Map res = convertToMapDelegate();
             if (res != null)
@@ -489,8 +492,7 @@ class ConvertingImpl extends AbstractSpecifying<Converting> implements Convertin
 
                 Class<?> setterType = setter.getParameterTypes()[0];
                 String key = propName.toString();
-                Object val = m
-                        .get(Util.unMangleName(prefix, key));
+                Object val = m.get(Util.unMangleName(prefix, key));
                 setter.invoke(res, converter.convert(val).to(setterType));
             }
             return res;
@@ -595,7 +597,7 @@ class ConvertingImpl extends AbstractSpecifying<Converting> implements Convertin
         // All interface types that are not Collections are treated as maps
         if (Map.class.isAssignableFrom(cls))
             return true;
-        else if (cls.isInterface() && !Collection.class.isAssignableFrom(cls))
+        else if (getInterfaces(cls).size() > 0)
             return true;
         else if (DTOUtil.isDTOType(cls))
             return true;
@@ -740,8 +742,7 @@ class ConvertingImpl extends AbstractSpecifying<Converting> implements Convertin
     }
 
     @SuppressWarnings("rawtypes")
-    private static Map createMapFromInterface(Object obj,
-            Class< ? > srcCls) {
+    private static Map createMapFromInterface(Object obj, Class< ? > srcCls) {
         Map result = new HashMap();
 
         for (Class i : getInterfaces(srcCls)) {
@@ -802,6 +803,23 @@ class ConvertingImpl extends AbstractSpecifying<Converting> implements Convertin
 
     // Returns an ordered set
     private static Set<Class< ? >> getInterfaces(Class< ? > cls) {
+        if (NO_MAP_VIEW_TYPES.contains(cls))
+            return Collections.emptySet();
+
+        Set<Class< ? >> interfaces = getInterfaces0(cls);
+        for (Iterator<Class< ? >> it = interfaces.iterator(); it.hasNext();) {
+            Class< ? > intf = it.next();
+            if (intf.getDeclaredMethods().length == 0)
+                it.remove();
+        }
+
+        interfaces.removeAll(NO_MAP_VIEW_TYPES);
+
+        return interfaces;
+    }
+
+    // Returns an ordered set
+    private static Set<Class< ? >> getInterfaces0(Class< ? > cls) {
         if (cls == null)
             return Collections.emptySet();
 
@@ -888,9 +906,7 @@ class ConvertingImpl extends AbstractSpecifying<Converting> implements Convertin
                 return m;
         } else if (hasGetProperties(sourceCls)) {
             return getPropertiesDelegate(obj, sourceCls);
-        } else if (typeProhibitedFromMapView(sourceCls))
-            throw new ConversionException("No map view for " + obj);
-
+        }
         return createMapFromInterface(obj, sourceClass);
     }
 
@@ -915,10 +931,6 @@ class ConvertingImpl extends AbstractSpecifying<Converting> implements Convertin
         } catch (Exception e) {
             return Collections.emptyMap();
         }
-    }
-
-    private boolean typeProhibitedFromMapView(Class<?> sourceCls) {
-        return NO_MAP_VIEW_TYPES.contains(sourceCls);
     }
 
     private static boolean isCopyRequiredType(Class<?> cls) {

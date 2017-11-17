@@ -219,18 +219,18 @@ public class ConverterImpl implements InternalConverter {
             }
         }) {});
 
-        reflectiveAddRule(cb, "java.time.LocalDateTime", "parse");
-        reflectiveAddRule(cb, "java.time.LocalDate", "parse");
-        reflectiveAddRule(cb, "java.time.LocalTime", "parse");
-        reflectiveAddRule(cb, "java.time.OffsetDateTime", "parse");
-        reflectiveAddRule(cb, "java.time.OffsetTime", "parse");
-        reflectiveAddRule(cb, "java.time.ZonedDateTime", "parse");
+        reflectiveAddJavaTimeRule(cb, "java.time.LocalDateTime");
+        reflectiveAddJavaTimeRule(cb, "java.time.LocalDate");
+        reflectiveAddJavaTimeRule(cb, "java.time.LocalTime");
+        reflectiveAddJavaTimeRule(cb, "java.time.OffsetDateTime");
+        reflectiveAddJavaTimeRule(cb, "java.time.OffsetTime");
+        reflectiveAddJavaTimeRule(cb, "java.time.ZonedDateTime");
     }
 
-    private void reflectiveAddRule(ConverterBuilder cb, String toClsName, String methodName) {
+    private void reflectiveAddJavaTimeRule(ConverterBuilder cb, String timeClsName) {
         try {
-            final Class<?> toCls = getClass().getClassLoader().loadClass(toClsName);
-            final Method toMethod = toCls.getMethod(methodName, CharSequence.class);
+            final Class<?> toCls = getClass().getClassLoader().loadClass(timeClsName);
+            final Method toMethod = toCls.getMethod("parse", CharSequence.class);
 
             cb.rule(new TypeRule<String, Object>(String.class, toCls, new Function<String, Object>() {
                 @Override
@@ -240,6 +240,12 @@ public class ConverterImpl implements InternalConverter {
                     } catch (Exception e) {
                         throw new ConversionException("Problem converting to " + toCls, e);
                     }
+                }
+            }));
+            cb.rule(new TypeRule<Object, String>(toCls, String.class, new Function<Object, String>() {
+                @Override
+                public String apply(Object t) {
+                    return t.toString();
                 }
             }));
         } catch (Exception ex) {
