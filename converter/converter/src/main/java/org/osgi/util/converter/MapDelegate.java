@@ -26,7 +26,7 @@ import java.util.Map;
 import java.util.Set;
 
 /**
- * @author $Id: 12cb021a8b0bff80df438cdb40cefaa04be26437 $
+ * @author $Id: 0e4f8c8087d4556f2f4ab68f7c293ca5330b56bc $
  */
 class MapDelegate<K, V> implements Map<K, V> {
     private final ConvertingImpl convertingImpl;
@@ -37,8 +37,10 @@ class MapDelegate<K, V> implements Map<K, V> {
         delegate = del;
     }
 
-    static MapDelegate<String, Object> forBean(Object b, ConvertingImpl converting) {
-        return new MapDelegate<>(converting, new DynamicBeanFacade(b, converting));
+    static MapDelegate<String,Object> forBean(Object b, Class< ? > beanClass,
+            ConvertingImpl converting) {
+        return new MapDelegate<>(converting,
+                new DynamicBeanFacade(b, beanClass, converting));
     }
 
     static <K, V> Map<K, V> forMap(Map<K, V> m, ConvertingImpl converting) {
@@ -49,12 +51,16 @@ class MapDelegate<K, V> implements Map<K, V> {
         return new MapDelegate<>(converting, new DynamicDictionaryFacade<>(d, converting));
     }
 
-    static MapDelegate<String, Object> forDTO(Object obj, ConvertingImpl converting) {
-        return new MapDelegate<>(converting, new DynamicDTOFacade(obj, converting));
+    static MapDelegate<String,Object> forDTO(Object obj, Class< ? > dtoClass,
+            ConvertingImpl converting) {
+        return new MapDelegate<>(converting,
+                new DynamicDTOFacade(obj, dtoClass, converting));
     }
 
-    static MapDelegate<String, Object> forInterface(Object obj, ConvertingImpl converting) {
-        return new MapDelegate<>(converting, new DynamicInterfaceFacade(obj, converting));
+    static MapDelegate<String,Object> forInterface(Object obj, Class< ? > intf,
+            ConvertingImpl converting) {
+        return new MapDelegate<>(converting,
+                new DynamicInterfaceFacade(obj, intf, converting));
     }
 
     @Override
