@@ -29,6 +29,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+/**
+ * @author $Id: ebf418b754027f4d4a245dfd223ebced321e884a $
+ */
 abstract class DynamicMapLikeFacade<K, V> implements Map<K, V> {
     protected final ConvertingImpl convertingImpl;
 
@@ -137,10 +140,13 @@ abstract class DynamicMapLikeFacade<K, V> implements Map<K, V> {
 class DynamicBeanFacade extends DynamicMapLikeFacade<String,Object> {
     private Map <String, Method> keys = null;
     private final Object backingObject;
+	private final Class< ? >	beanClass;
 
-    DynamicBeanFacade(Object backingObject, ConvertingImpl convertingImpl) {
+	DynamicBeanFacade(Object backingObject, Class< ? > beanClass,
+			ConvertingImpl convertingImpl) {
         super(convertingImpl);
         this.backingObject = backingObject;
+		this.beanClass = beanClass;
     }
 
     @Override
@@ -160,7 +166,7 @@ class DynamicBeanFacade extends DynamicMapLikeFacade<String,Object> {
 
     private Map<String, Method> getKeys() {
         if (keys == null)
-            keys = Util.getBeanKeys(convertingImpl.sourceClass);
+			keys = Util.getBeanKeys(beanClass);
 
         return keys;
     }
@@ -208,10 +214,13 @@ class DynamicMapFacade<K,V> extends DynamicMapLikeFacade<K,V> {
 class DynamicDTOFacade extends DynamicMapLikeFacade<String, Object> {
     private Map <String, Field> keys = null;
     private final Object backingObject;
+	private final Class< ? >	dtoClass;
 
-    DynamicDTOFacade(Object backingObject, ConvertingImpl converting) {
+	DynamicDTOFacade(Object backingObject, Class< ? > dtoClass,
+			ConvertingImpl converting) {
         super(converting);
         this.backingObject = backingObject;
+		this.dtoClass = dtoClass;
     }
 
     @Override
@@ -234,7 +243,7 @@ class DynamicDTOFacade extends DynamicMapLikeFacade<String, Object> {
 
     private Map<String, Field> getKeys() {
         if (keys == null)
-            keys = Util.getDTOKeys(convertingImpl.sourceClass);
+			keys = Util.getDTOKeys(dtoClass);
 
         return keys;
     }
@@ -243,15 +252,20 @@ class DynamicDTOFacade extends DynamicMapLikeFacade<String, Object> {
 class DynamicInterfaceFacade extends DynamicMapLikeFacade<String, Object> {
     private Map <String, Set<Method>> keys = null;
     private final Object backingObject;
+	private final Class< ? >		theInterface;
 
-    DynamicInterfaceFacade(Object backingObject, ConvertingImpl convertingImpl) {
+	DynamicInterfaceFacade(Object backingObject, Class< ? > intf,
+			ConvertingImpl convertingImpl) {
         super(convertingImpl);
         this.backingObject = backingObject;
+		this.theInterface = intf;
     }
 
     @Override
     public Object get(Object key) {
         Set<Method> set = getKeys().get(key);
+		if (set == null)
+			return null;
         for (Iterator<Method> iterator = set.iterator();iterator.hasNext();) {
             Method m = iterator.next();
             if (m.getParameterTypes().length > 0)
@@ -274,7 +288,7 @@ class DynamicInterfaceFacade extends DynamicMapLikeFacade<String, Object> {
 
     private Map<String, Set<Method>> getKeys() {
         if (keys == null)
-            keys = Util.getInterfaceKeys(convertingImpl.sourceClass, backingObject);
+			keys = Util.getInterfaceKeys(theInterface, backingObject);
 
         return keys;
     }

@@ -90,11 +90,11 @@ class ConvertingImpl extends AbstractSpecifying<Converting> implements Convertin
         NO_MAP_VIEW_TYPES = types2;
     }
 
-    volatile InternalConverter converter;
+    volatile InternalConverter  converter;
     private volatile Object object;
-    volatile Class<?> sourceClass;
+    private volatile Class< ? > sourceClass;
     private volatile Class<?> targetClass;
-    volatile Type[] typeArguments;
+    private volatile Type[]     typeArguments;
 
     ConvertingImpl(InternalConverter c, Object obj) {
         converter = c;
@@ -405,16 +405,18 @@ class ConvertingImpl extends AbstractSpecifying<Converting> implements Convertin
         } else if (Dictionary.class.isAssignableFrom(sourceClass)) {
             return MapDelegate.forDictionary((Dictionary) object, this);
         } else if (DTOUtil.isDTOType(sourceClass) || sourceAsDTO) {
-            return MapDelegate.forDTO(object, this);
+            return MapDelegate.forDTO(object, sourceClass, this);
         } else if (sourceAsJavaBean) {
-            return MapDelegate.forBean(object, this);
+            return MapDelegate.forBean(object, sourceClass, this);
         } else if (hasGetProperties(sourceClass)) {
             return null; // Handled in convertToMap()
         }
 
         // Assume it's an interface
-        if (object.getClass().getInterfaces().length > 0) {
-            return MapDelegate.forInterface(object, this);
+        Set<Class< ? >> interfaces = getInterfaces(sourceClass);
+        if (interfaces.size() > 0) {
+            return MapDelegate.forInterface(object,
+                    interfaces.iterator().next(), this);
         }
         return null;
     }
@@ -453,7 +455,8 @@ class ConvertingImpl extends AbstractSpecifying<Converting> implements Convertin
                 return null;
             }
 
-            @Override
+                    @SuppressWarnings("synthetic-access")
+                    @Override
             public Type[] getActualTypeArguments() {
                 return typeArguments;
             }
@@ -483,7 +486,14 @@ class ConvertingImpl extends AbstractSpecifying<Converting> implements Convertin
 
     @SuppressWarnings("rawtypes")
     private Object createInterface(Class<?> sourceCls, final Class<?> targetCls) {
-        final Map m = mapView(object, sourceCls, converter);
+        InternalConverting ic = converter.convert(object);
+        ic.sourceAs(sourceAsClass);
+        if (sourceAsDTO)
+            ic.sourceAsDTO();
+        if (sourceAsJavaBean)
+            ic.sourceAsBean();
+        final Map m = ic.to(Map.class);
+
         return Proxy.newProxyInstance(targetCls.getClassLoader(), new Class[] {targetCls},
             new InvocationHandler() {
                     @SuppressWarnings("boxing")
@@ -530,12 +540,15 @@ class ConvertingImpl extends AbstractSpecifying<Converting> implements Convertin
                             val = method.getDefaultValue();
                         }
 
-                        if (val == null && args != null && args.length == 1) {
-                            val = args[0];
+                        if (val == null) {
+                            if (args != null && args.length == 1) {
+                                    val = args[0];
+                                } else {
+                                    throw new ConversionException(
+                                            "No value for property: "
+                                                    + propName);
+                                }
                         }
-
-                        if (val == null)
-                            throw new ConversionException("No value for property: " + propName);
                     }
 
                     return converter.convert(val).to(targetType);
@@ -711,9 +724,11 @@ class ConvertingImpl extends AbstractSpecifying<Converting> implements Convertin
     }
 
     @SuppressWarnings("rawtypes")
-    private static Map createMapFromInterface(Object obj) {
+    private static Map createMapFromInterface(Object obj,
+            Class< ? > srcCls) {
         Map result = new HashMap();
-        for (Class i : obj.getClass().getInterfaces()) {
+
+        for (Class i : getInterfaces(srcCls)) {
             for (Method md : i.getMethods()) {
                 handleInterfaceMethod(obj, i, md, new HashSet<String>(), result);
             }
@@ -767,6 +782,23 @@ class ConvertingImpl extends AbstractSpecifying<Converting> implements Convertin
         } while (!Object.class.equals(cls));
 
         return null;
+    }
+
+    // Returns an ordered set
+    private static Set<Class< ? >> getInterfaces(Class< ? > cls) {
+        if (cls == null)
+            return Collections.emptySet();
+
+        Set<Class< ? >> classes = new LinkedHashSet<>();
+        if (cls.isInterface()) {
+            classes.add(cls);
+        } else {
+            classes.addAll(Arrays.asList(cls.getInterfaces()));
+        }
+
+        classes.addAll(getInterfaces(cls.getSuperclass()));
+
+        return classes;
     }
 
     @SuppressWarnings({ "rawtypes", "unchecked" })
@@ -843,7 +875,7 @@ class ConvertingImpl extends AbstractSpecifying<Converting> implements Convertin
         } else if (typeProhibitedFromMapView(sourceCls))
             throw new ConversionException("No map view for " + obj);
 
-        return createMapFromInterface(obj);
+        return createMapFromInterface(obj, sourceClass);
     }
 
     private boolean hasGetProperties(Class<?> cls) {
