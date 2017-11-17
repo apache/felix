@@ -168,6 +168,8 @@ class ConvertingImpl extends AbstractSpecifying<Converting> implements Convertin
         // At this point we know that the target is a 'singular' type: not a map, collection or array
         if (Collection.class.isAssignableFrom(sourceClass)) {
             return convertCollectionToSingleValue(targetAsClass);
+        } else if (isMapType(sourceClass, sourceAsJavaBean)) {
+                return convertMapToSingleValue(targetAsClass);
         } else if (object instanceof Map.Entry) {
             return convertMapEntryToSingleValue(targetAsClass);
         } else if ((object = asBoxedArray(object)) instanceof Object[]) {
@@ -185,7 +187,7 @@ class ConvertingImpl extends AbstractSpecifying<Converting> implements Convertin
         }
     }
 
-    private Object convertArrayToSingleValue(Class<?> cls) {
+    private Object convertArrayToSingleValue(Class< ? > cls) {
         Object[] arr = (Object[]) object;
         if (arr.length == 0)
             return null;
@@ -199,6 +201,15 @@ class ConvertingImpl extends AbstractSpecifying<Converting> implements Convertin
             return null;
         else
             return converter.convert(coll.iterator().next()).to(cls);
+    }
+
+    private Object convertMapToSingleValue(Class< ? > cls) {
+        Map< ? , ? > m = mapView(object, sourceClass, converter);
+        if (m.size() > 0) {
+            return converter.convert(m.entrySet().iterator().next()).to(cls);
+        } else {
+            return null;
+        }
     }
 
     @SuppressWarnings("rawtypes")

@@ -1095,7 +1095,12 @@ public class ConverterTest {
     public void testTargetAsString() {
         Map<String, String> m = new HashMap<>();
         CharSequence cs = converter.convert(m).targetAs(String.class).to(CharSequence.class);
-        assertEquals("{}", cs);
+        assertNull(cs);
+
+        Map<String, String> m2 = new HashMap<>();
+        m2.put("Hi", "there");
+        CharSequence cs2 = converter.convert(m2).targetAs(String.class).to(CharSequence.class);
+        assertEquals("Hi", cs2);
     }
 
     @SuppressWarnings({ "rawtypes", "unchecked" })
