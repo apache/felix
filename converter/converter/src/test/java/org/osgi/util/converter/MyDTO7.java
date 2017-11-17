@@ -26,4 +26,6 @@ public class MyDTO7 {
     public String three___prop;
     public String four_$__prop;
     public String five_$_prop;
+    public short six$_$prop;
+    public double seven$$_$prop;
 }

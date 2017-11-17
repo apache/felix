@@ -126,7 +126,8 @@ class Util {
         if (propStr.length() > 1)
             propName.append(propStr.substring(1));
 
-        return propName.toString();
+		return unMangleName(
+				getPrefix(md.getDeclaringClass()), propName.toString());
     }
 
 
@@ -326,6 +327,7 @@ class Util {
 
         String res = key.replace("_", "__");
         res = res.replace("$", "$$");
+		res = res.replace("-", "$_$");
         res = res.replaceAll("[.]([._])", "_\\$$1");
         res = res.replace('.', '_');
         // TODO handle Java keywords
@@ -333,10 +335,12 @@ class Util {
     }
 
     static String unMangleName(String prefix, String key) {
-        String res = key.replaceAll("_\\$", ".");
+		String res = key;
+		res = res.replace("$$", "\b"); // park double dollar as backspace char
+		res = res.replace("$_$", "-");
+		res = res.replaceAll("_\\$", ".");
         res = res.replace("__", "\f"); // park double underscore as formfeed char
         res = res.replace('_', '.');
-        res = res.replace("$$", "\b"); // park double dollar as backspace char
         res = res.replace("$", "");
         res = res.replace('\f', '_');  // convert formfeed char back to single underscore
         res = res.replace('\b', '$');  // convert backspace char back go dollar
