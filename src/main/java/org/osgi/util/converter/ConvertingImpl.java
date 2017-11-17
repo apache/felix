@@ -82,15 +82,15 @@ class ConvertingImpl extends AbstractSpecifying<Converting> implements Convertin
     }
 
     // Interfaces with no methods are also not considered
-    private static final Collection<Class< ? >>     NO_MAP_VIEW_TYPES   =
-            Arrays.<Class< ? >> asList(String.class, Class.class, Comparable.class,
+    private static final Collection<Class< ? >> NO_MAP_VIEW_TYPES   = Arrays
+            .<Class< ? >> asList(String.class, Class.class, Comparable.class,
                     CharSequence.class, Map.Entry.class);
 
-    volatile InternalConverter  converter;
+    volatile InternalConverter                  converter;
     private volatile Object object;
-    private volatile Class< ? > sourceClass;
+    private volatile Class< ? >                 sourceClass;
     private volatile Class<?> targetClass;
-    private volatile Type[]     typeArguments;
+    private volatile Type[]                     typeArguments;
 
     ConvertingImpl(InternalConverter c, Object obj) {
         converter = c;
@@ -157,14 +157,14 @@ class ConvertingImpl extends AbstractSpecifying<Converting> implements Convertin
             return convertToArray();
         } else if (Collection.class.isAssignableFrom(targetAsClass)) {
             return convertToCollection();
-        } else if (targetAsDTO || targetAsJavaBean || isMapType(targetAsClass, targetAsJavaBean)) {
+        } else if (isMapType(targetAsClass, targetAsJavaBean, targetAsDTO)) {
             return convertToMapType();
         }
 
         // At this point we know that the target is a 'singular' type: not a map, collection or array
         if (Collection.class.isAssignableFrom(sourceClass)) {
             return convertCollectionToSingleValue(targetAsClass);
-        } else if (isMapType(sourceClass, sourceAsJavaBean)) {
+        } else if (isMapType(sourceClass, sourceAsJavaBean, sourceAsDTO)) {
             return convertMapToSingleValue(targetAsClass);
         } else if (object instanceof Map.Entry) {
             return convertMapEntryToSingleValue(targetAsClass);
@@ -234,7 +234,7 @@ class ConvertingImpl extends AbstractSpecifying<Converting> implements Convertin
 
     @SuppressWarnings("unchecked")
     private <T> T convertToArray() {
-        Collection<?> collectionView = collectionView(object);
+        Collection< ? > collectionView = collectionView();
         Iterator<?> itertor = collectionView.iterator();
         try {
             Object array = Array.newInstance(targetAsClass.getComponentType(), collectionView.size());
@@ -251,7 +251,7 @@ class ConvertingImpl extends AbstractSpecifying<Converting> implements Convertin
 
     @SuppressWarnings({ "unchecked", "rawtypes" })
     private <T> T convertToCollection() {
-        Collection<?> cv = collectionView(object);
+        Collection< ? > cv = collectionView();
         Class<?> targetElementType = null;
         if (typeArguments != null && typeArguments.length > 0 && typeArguments[0] instanceof Class) {
             targetElementType = (Class<?>) typeArguments[0];
@@ -432,7 +432,7 @@ class ConvertingImpl extends AbstractSpecifying<Converting> implements Convertin
 
     @SuppressWarnings("rawtypes")
     private Object convertToMapType() {
-        if (!sourceAsDTO && !isMapType(sourceClass, sourceAsJavaBean)) {
+        if (!isMapType(sourceClass, sourceAsJavaBean, sourceAsDTO)) {
             throw new ConversionException(
                     "Cannot convert " + object + " to " + targetAsClass);
         }
@@ -593,7 +593,11 @@ class ConvertingImpl extends AbstractSpecifying<Converting> implements Convertin
         return converter.convert(0).to(cls);
     }
 
-    private static boolean isMapType(Class<?> cls, boolean asJavaBean) {
+    private static boolean isMapType(Class< ? > cls, boolean asJavaBean,
+            boolean asDTO) {
+        if (asDTO)
+            return true;
+
         // All interface types that are not Collections are treated as maps
         if (Map.class.isAssignableFrom(cls))
             return true;
@@ -680,22 +684,24 @@ class ConvertingImpl extends AbstractSpecifying<Converting> implements Convertin
         return null;
     }
 
-    private static Collection<?> collectionView(Object obj) {
-        if (obj == null)
+    private Collection< ? > collectionView() {
+        if (object == null)
             return null;
 
-        Collection<?> c = asCollection(obj);
+        Collection< ? > c = asCollection();
         if (c == null)
-            return Collections.singleton(obj);
+            return Collections.singleton(object);
         else
             return c;
     }
 
-    private static Collection<?> asCollection(Object obj) {
-        if (obj instanceof Collection)
-            return (Collection<?>) obj;
-        else if ((obj = asBoxedArray(obj)) instanceof Object[])
-            return Arrays.asList((Object[]) obj);
+    private Collection< ? > asCollection() {
+        if (object instanceof Collection)
+            return (Collection< ? >) object;
+        else if ((object = asBoxedArray(object)) instanceof Object[])
+            return Arrays.asList((Object[]) object);
+        else if (isMapType(sourceClass, sourceAsJavaBean, sourceAsDTO))
+            return mapView(object, sourceClass, converter).entrySet();
         else
             return null;
     }
