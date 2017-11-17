@@ -824,6 +824,8 @@ public class ConverterTest {
         m.put("three_.prop", "hi ha ho");
         m.put("four._prop", "");
         m.put("five..prop", "test");
+        m.put("six-prop", "987");
+        m.put("seven$.prop", "3.141");
 
         MyDTO7 dto = converter.convert(m).to(MyDTO7.class);
         assertEquals("test123", dto.org_osgi_framework_uuid);
@@ -835,6 +837,8 @@ public class ConverterTest {
         assertEquals("hi ha ho", dto.three___prop);
         assertEquals("", dto.four_$__prop);
         assertEquals("test", dto.five_$_prop);
+        assertEquals((short) 987, dto.six$_$prop);
+        dto.seven$$_$prop = 3.141;
 
         // And convert back
         Map<String, String> m2 = converter.convert(dto).to(new TypeReference<Map<String,String>>() {});

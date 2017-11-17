@@ -436,9 +436,9 @@ class ConvertingImpl extends AbstractSpecifying<Converting> implements Convertin
         else if (targetAsDTO || DTOUtil.isDTOType(targetAsClass))
             return convertToDTO(sourceClass, targetAsClass);
         else if (targetAsClass.isInterface())
-            return createInterface(sourceClass, targetAsClass);
+            return convertToInterface(sourceClass, targetAsClass);
         else if (targetAsJavaBean)
-            return createJavaBean(sourceClass, targetAsClass);
+            return convertToJavaBean(sourceClass, targetAsClass);
         throw new ConversionException("Cannot convert " + object + " to " + targetAsClass);
     }
 
@@ -463,7 +463,9 @@ class ConvertingImpl extends AbstractSpecifying<Converting> implements Convertin
         }));
     }
 
-    private Object createJavaBean(Class<?> sourceCls, Class<?> targetCls) {
+    private Object convertToJavaBean(Class<?> sourceCls, Class<?> targetCls) {
+        String prefix = Util.getPrefix(targetCls);
+
         @SuppressWarnings("rawtypes")
         Map m = mapView(object, sourceCls, converter);
         try {
@@ -475,7 +477,10 @@ class ConvertingImpl extends AbstractSpecifying<Converting> implements Convertin
                     propName.append(setterName.substring(4));
 
                 Class<?> setterType = setter.getParameterTypes()[0];
-                setter.invoke(res, converter.convert(m.get(propName.toString())).to(setterType));
+                String key = propName.toString();
+                Object val = m
+                        .get(Util.unMangleName(prefix, key));
+                setter.invoke(res, converter.convert(val).to(setterType));
             }
             return res;
         } catch (Exception e) {
@@ -485,7 +490,7 @@ class ConvertingImpl extends AbstractSpecifying<Converting> implements Convertin
     }
 
     @SuppressWarnings("rawtypes")
-    private Object createInterface(Class<?> sourceCls, final Class<?> targetCls) {
+    private Object convertToInterface(Class<?> sourceCls, final Class<?> targetCls) {
         InternalConverting ic = converter.convert(object);
         ic.sourceAs(sourceAsClass);
         if (sourceAsDTO)
