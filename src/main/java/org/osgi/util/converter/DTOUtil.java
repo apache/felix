@@ -20,12 +20,15 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 
+/**
+ * @author $Id: 10c7e7fc24b4365c3e536ed781683fd2327c167c $
+ */
 class DTOUtil {
     private DTOUtil() {
         // Do not instantiate. This is a utility class.
     }
 
-    public static boolean isDTOType(Class<?> cls) {
+	static boolean isDTOType(Class< ? > cls) {
         try {
             cls.getDeclaredConstructor();
         } catch (NoSuchMethodException | SecurityException e) {
@@ -59,6 +62,7 @@ class DTOUtil {
             }
         }
 
+		boolean foundField = false;
         for (Field f : cls.getFields()) {
             int modifiers = f.getModifiers();
             if (Modifier.isStatic(modifiers)) {
@@ -69,7 +73,8 @@ class DTOUtil {
             if (!Modifier.isPublic(modifiers)) {
                 return false;
             }
+			foundField = true;
         }
-        return true;
+		return foundField;
     }
 }

@@ -387,7 +387,7 @@ public class ConverterMapTest {
                     if (entry.getKey().contains("password"))
                         entry.setValue("xxx");
                 }
-                return converter.convert(cm).to(String.class);
+                return cm.toString();
             }) {}).
             build();
         assertEquals("{foo=bar, password=xxx}", c.convert(m).to(String.class));
