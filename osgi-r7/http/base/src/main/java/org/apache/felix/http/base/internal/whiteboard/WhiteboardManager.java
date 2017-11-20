@@ -666,32 +666,36 @@ public final class WhiteboardManager
     {
         if ( h.getContextInfo().getServiceId() == HttpServiceFactory.HTTP_SERVICE_CONTEXT_SERVICE_ID )
         {
-        	if ( info instanceof ResourceInfo )
-        	{
+            // In order to be compatible with the implementation of the http service 1.0
+            // we need still support servlet/resource registrations not using the
+            // 1.1 HTTP_SERVICE_CONTEXT_PROPERTY property. (contains is not the best check but
+            // it should do the trick)
+          	if ( info instanceof ResourceInfo && info.getContextSelection().contains(HttpWhiteboardConstants.HTTP_SERVICE_CONTEXT_PROPERTY))
+        	    {
                 this.failureStateHandler.addFailure(info, HttpServiceFactory.HTTP_SERVICE_CONTEXT_SERVICE_ID, DTOConstants.FAILURE_REASON_VALIDATION_FAILED);
 
                 return DTOConstants.FAILURE_REASON_VALIDATION_FAILED;
             }
-        	else if ( info instanceof ServletInfo )
-        	{
-        		final ServletInfo servletInfo = (ServletInfo)info;
-        		final boolean nameIsEmpty = servletInfo.getName() == null || servletInfo.getName().isEmpty();
-        		final boolean errorPageIsEmpty = servletInfo.getErrorPage() == null || servletInfo.getErrorPage().length == 0;
-        		final boolean patternIsEmpty = servletInfo.getPatterns() == null || servletInfo.getPatterns().length == 0;
-        		if ( !nameIsEmpty || !errorPageIsEmpty )
-        		{
-        			if ( patternIsEmpty )
-        			{
-        				// no pattern, so this is valid
-        				return -1;
-        			}
-        		}
+        	    else if ( info instanceof ServletInfo && info.getContextSelection().contains(HttpWhiteboardConstants.HTTP_SERVICE_CONTEXT_PROPERTY))
+        	    {
+        		    final ServletInfo servletInfo = (ServletInfo)info;
+        		    final boolean nameIsEmpty = servletInfo.getName() == null || servletInfo.getName().isEmpty();
+        		    final boolean errorPageIsEmpty = servletInfo.getErrorPage() == null || servletInfo.getErrorPage().length == 0;
+        		    final boolean patternIsEmpty = servletInfo.getPatterns() == null || servletInfo.getPatterns().length == 0;
+        		    if ( !nameIsEmpty || !errorPageIsEmpty )
+        		    {
+        			    if ( patternIsEmpty )
+        			    {
+        				    // no pattern, so this is valid
+        				    return -1;
+        			    }
+        		    }
 
-        		// pattern is invalid, regardless of the other values
-                this.failureStateHandler.addFailure(info, HttpServiceFactory.HTTP_SERVICE_CONTEXT_SERVICE_ID, DTOConstants.FAILURE_REASON_VALIDATION_FAILED);
+    		        // pattern is invalid, regardless of the other values
+    		        this.failureStateHandler.addFailure(info, HttpServiceFactory.HTTP_SERVICE_CONTEXT_SERVICE_ID, DTOConstants.FAILURE_REASON_VALIDATION_FAILED);
 
-                return DTOConstants.FAILURE_REASON_VALIDATION_FAILED;
-        	}
+    		        return DTOConstants.FAILURE_REASON_VALIDATION_FAILED;
+        	    }
         }
 
         return -1;
