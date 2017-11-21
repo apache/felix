@@ -67,6 +67,7 @@ import org.osgi.framework.BundleContext;
 import org.osgi.framework.BundleEvent;
 import org.osgi.framework.Constants;
 import org.osgi.framework.InvalidSyntaxException;
+import org.osgi.framework.ServiceFactory;
 import org.osgi.framework.ServiceReference;
 import org.osgi.framework.ServiceRegistration;
 import org.osgi.service.http.runtime.HttpServiceRuntimeConstants;
@@ -144,8 +145,24 @@ public final class JettyService extends AbstractLifeCycle.AbstractLifeCycleListe
         if (this.registerManagedService) {
 			final Dictionary<String, Object> props = new Hashtable<>();
 			props.put(Constants.SERVICE_PID, PID);
+	        props.put(Constants.SERVICE_VENDOR, "The Apache Software Foundation");
+	        props.put(Constants.SERVICE_DESCRIPTION, "Managed Service for the Jetty Http Service");
 			this.configServiceReg = this.context.registerService("org.osgi.service.cm.ManagedService",
-			        new JettyManagedService(this), props);
+	                new ServiceFactory()
+	                {
+
+	                    @Override
+	                    public Object getService(final Bundle bundle, final ServiceRegistration registration)
+	                    {
+	                        return new JettyManagedService(JettyService.this);
+	                    }
+
+	                    @Override
+	                    public void ungetService(Bundle bundle, ServiceRegistration registration, Object service)
+	                    {
+	                        // nothing to do
+	                    }
+	                }, props);
         }
 
         // we use the class name as a String to make the dependency on event admin optional

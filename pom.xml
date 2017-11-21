@@ -82,7 +82,7 @@
                             org.ietf.jgss;resolution:=optional,
                             org.mortbay.log;resolution:=optional;version="[6.1,7)",
                             org.mortbay.util.ajax;resolution:=optional;version="[6.1,7)",
-                            org.osgi.service.cm;version="[1.3,2)",                        	
+                            org.osgi.service.cm;resolution:=optional;version="[1.3,2)",                        	
                             org.osgi.service.event;resolution:=optional;version="[1.2,2)",
                             org.osgi.service.log;resolution:=optional;version="[1.3,2)",
                             org.osgi.service.metatype;resolution:=optional;version="[1.1,2)",
@@ -95,6 +95,7 @@
                             *
                         </Import-Package>
                         <DynamicImport-Package>
+                            org.osgi.service.cm;version="[1.3,2)",                         
                             org.osgi.service.event;version="[1.2,2)",
                             org.osgi.service.log;version="[1.3,2)",
                             org.osgi.service.metatype;version="[1.1,2)"
