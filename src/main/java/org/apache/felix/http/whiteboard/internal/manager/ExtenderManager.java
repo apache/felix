@@ -289,7 +289,7 @@ public final class ExtenderManager
         }
 
         final Dictionary<String, Object> props = new Hashtable<>();
-        props.put(org.osgi.service.http.whiteboard.HttpWhiteboardConstants.HTTP_WHITEBOARD_FILTER_PATTERN, pattern);
+        props.put(org.osgi.service.http.whiteboard.HttpWhiteboardConstants.HTTP_WHITEBOARD_FILTER_REGEX, pattern);
         props.put(MARKER, "true");
         this.addHttpContextSelect(ref, props);
         this.addInitParams(ref, org.osgi.service.http.whiteboard.HttpWhiteboardConstants.HTTP_WHITEBOARD_SERVLET_INIT_PARAM_PREFIX, props);
