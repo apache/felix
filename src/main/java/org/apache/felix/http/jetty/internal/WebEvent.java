@@ -16,21 +16,22 @@
  */
 package org.apache.felix.http.jetty.internal;
 
-import org.osgi.framework.Bundle;
-import org.osgi.service.event.Event;
-import org.osgi.service.event.EventConstants;
-
 import java.util.Dictionary;
 import java.util.Hashtable;
+
+import org.osgi.framework.Bundle;
+import org.osgi.service.event.Event;
+import org.osgi.service.event.EventAdmin;
+import org.osgi.service.event.EventConstants;
 
 public abstract class WebEvent
 {
     private static final String TOPIC_WEB_EVENT = "org/osgi/service/web";
-    private static final String TOPIC_DEPLOYING = TOPIC_WEB_EVENT + "/DEPLOYING";
-    private static final String TOPIC_DEPLOYED = TOPIC_WEB_EVENT + "/DEPLOYED";
-    private static final String TOPIC_UNDEPLOYING = TOPIC_WEB_EVENT + "/UNDEPLOYING";
-    private static final String TOPIC_UNDEPLOYED = TOPIC_WEB_EVENT + "/UNDEPLOYED";
-    private static final String TOPIC_FAILED = TOPIC_WEB_EVENT + "/FAILED";
+    public static final String TOPIC_DEPLOYING = TOPIC_WEB_EVENT + "/DEPLOYING";
+    public static final String TOPIC_DEPLOYED = TOPIC_WEB_EVENT + "/DEPLOYED";
+    public static final String TOPIC_UNDEPLOYING = TOPIC_WEB_EVENT + "/UNDEPLOYING";
+    public static final String TOPIC_UNDEPLOYED = TOPIC_WEB_EVENT + "/UNDEPLOYED";
+    public static final String TOPIC_FAILED = TOPIC_WEB_EVENT + "/FAILED";
 
     private static final String CONTEXT_PATH = "context.path";
     private static final String EXCEPTION = "exception";
@@ -44,29 +45,30 @@ public abstract class WebEvent
 
     private static final String HEADER_WEB_CONTEXT_PATH = "Web-ContextPath";
 
-    static Event DEPLOYING(Bundle webAppBundle, Bundle extenderBundle)
+    private static Dictionary<String, Object> createBaseProperties(final Bundle webAppBundle, final Bundle extenderBundle)
     {
-        return new Event(TOPIC_DEPLOYING, createBaseProperties(webAppBundle, extenderBundle));
+        Dictionary<String, Object> props = new Hashtable<>();
+        props.put(EventConstants.BUNDLE_SYMBOLICNAME, webAppBundle.getSymbolicName());
+        props.put(EventConstants.BUNDLE_ID, webAppBundle.getBundleId());
+        props.put(EventConstants.BUNDLE, webAppBundle);
+        props.put(EventConstants.BUNDLE_VERSION, webAppBundle.getVersion());
+        props.put(CONTEXT_PATH, webAppBundle.getHeaders().get(HEADER_WEB_CONTEXT_PATH));
+        props.put(EventConstants.TIMESTAMP, System.currentTimeMillis());
+        props.put(EXTENDER_BUNDLE, extenderBundle);
+        props.put(EXTENDER_BUNDLE_ID, extenderBundle.getBundleId());
+        props.put(EXTENDER_BUNDLE_SYMBOLICNAME, extenderBundle.getSymbolicName());
+        props.put(EXTENDER_BUNDLE_VERSION, extenderBundle.getVersion());
+        return props;
     }
 
-    static Event DEPLOYED(Bundle webAppBundle, Bundle extenderBundle)
-    {
-        return new Event(TOPIC_DEPLOYED, createBaseProperties(webAppBundle, extenderBundle));
-    }
-
-    static Event UNDEPLOYING(Bundle webAppBundle, Bundle extenderBundle)
-    {
-        return new Event(TOPIC_UNDEPLOYING, createBaseProperties(webAppBundle, extenderBundle));
-    }
-
-    static Event UNDEPLOYED(Bundle webAppBundle, Bundle extenderBundle)
-    {
-        return new Event(TOPIC_UNDEPLOYED, createBaseProperties(webAppBundle, extenderBundle));
-    }
-
-    static Event FAILED(Bundle webAppBundle, Bundle extenderBundle, Throwable exception, String collision, Long collisionBundles)
-    {
-        Dictionary<String, Object> props = createBaseProperties(webAppBundle, extenderBundle);
+    public static void postEvent(final Object eventAdmin,
+            final String topic,
+            final Bundle webAppBundle,
+            final Bundle extenderBundle,
+            final Throwable exception,
+            final String collision,
+            final Long collisionBundles) {
+        final Dictionary<String, Object> props = createBaseProperties(webAppBundle, extenderBundle);
         if (exception != null)
         {
             props.put(EXCEPTION, exception);
@@ -79,22 +81,7 @@ public abstract class WebEvent
         {
             props.put(COLLISION_BUNDLES, collisionBundles);
         }
-        return new Event(TOPIC_FAILED, props);
-    }
-
-    private static Dictionary<String, Object> createBaseProperties(Bundle webAppBundle, Bundle extenderBundle)
-    {
-        Dictionary<String, Object> props = new Hashtable<String, Object>();
-        props.put(EventConstants.BUNDLE_SYMBOLICNAME, webAppBundle.getSymbolicName());
-        props.put(EventConstants.BUNDLE_ID, webAppBundle.getBundleId());
-        props.put(EventConstants.BUNDLE, webAppBundle);
-        props.put(EventConstants.BUNDLE_VERSION, webAppBundle.getVersion());
-        props.put(CONTEXT_PATH, webAppBundle.getHeaders().get(HEADER_WEB_CONTEXT_PATH));
-        props.put(EventConstants.TIMESTAMP, System.currentTimeMillis());
-        props.put(EXTENDER_BUNDLE, extenderBundle);
-        props.put(EXTENDER_BUNDLE_ID, extenderBundle.getBundleId());
-        props.put(EXTENDER_BUNDLE_SYMBOLICNAME, extenderBundle.getSymbolicName());
-        props.put(EXTENDER_BUNDLE_VERSION, extenderBundle.getVersion());
-        return props;
+        final Event event = new Event(topic, props);
+        ((EventAdmin)eventAdmin).postEvent(event);
     }
 }
