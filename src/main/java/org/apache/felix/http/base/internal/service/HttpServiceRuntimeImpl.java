@@ -44,8 +44,8 @@ public final class HttpServiceRuntimeImpl implements HttpServiceRuntime
     private static final String PROP_CHANGECOUNT = "service.changecount";
 
     private static final String PROP_CHANGECOUNTDELAY = "org.apache.felix.http.whiteboard.changecount.delay";
-    
-    private volatile Hashtable<String, Object> attributes = new Hashtable<String, Object>();
+
+    private volatile Hashtable<String, Object> attributes = new Hashtable<>();
 
     private final HandlerRegistry registry;
     private final WhiteboardManager contextManager;
@@ -57,7 +57,7 @@ public final class HttpServiceRuntimeImpl implements HttpServiceRuntime
     private volatile Timer timer;
 
     private final long updateChangeCountDelay;
-    
+
     public HttpServiceRuntimeImpl(HandlerRegistry registry,
             WhiteboardManager contextManager,
             BundleContext bundleContext)
@@ -66,13 +66,13 @@ public final class HttpServiceRuntimeImpl implements HttpServiceRuntime
         this.contextManager = contextManager;
         final Object val = bundleContext.getProperty(PROP_CHANGECOUNTDELAY);
         long value = 2000L;
-        if ( val != null ) 
+        if ( val != null )
         {
-        	try 
+        	try
         	{
         		value = Long.parseLong(val.toString());
-        	} 
-        	catch ( final NumberFormatException nfe) 
+        	}
+        	catch ( final NumberFormatException nfe)
         	{
         		// ignore
         	}
@@ -100,14 +100,14 @@ public final class HttpServiceRuntimeImpl implements HttpServiceRuntime
 
     public synchronized void setAttribute(String name, Object value)
     {
-        Hashtable<String, Object> newAttributes = new Hashtable<String, Object>(attributes);
+        Hashtable<String, Object> newAttributes = new Hashtable<>(attributes);
         newAttributes.put(name, value);
         attributes = newAttributes;
     }
 
     public synchronized void setAllAttributes(Dictionary<String, Object> newAttributes)
     {
-        Hashtable<String, Object> replacement = new Hashtable<String, Object>();
+        Hashtable<String, Object> replacement = new Hashtable<>();
         for (String key : list(newAttributes.keys()))
         {
             replacement.put(key, newAttributes.get(key));
@@ -142,23 +142,30 @@ public final class HttpServiceRuntimeImpl implements HttpServiceRuntime
                     this.timer = new Timer();
                 }
             }
-            if ( this.updateChangeCountDelay == 0L ) 
+            if ( this.updateChangeCountDelay == 0L )
             {
                 reg.setProperties(getAttributes());
-            } 
-            else 
+            }
+            else
             {
 	            timer.schedule(new TimerTask()
 	            {
-	
+
 	                @Override
-	                public void run() 
+	                public void run()
 	                {
 	                    synchronized ( HttpServiceRuntimeImpl.this )
 	                    {
 	                        if ( changeCount == count )
 	                        {
-	                            reg.setProperties(getAttributes());
+	                            try
+	                            {
+	                                reg.setProperties(getAttributes());
+	                            }
+	                            catch ( final IllegalStateException ise)
+	                            {
+	                                // we ignore this as this might happen on shutdown
+	                            }
 	                            timer.cancel();
 	                            timer = null;
 	                        }
