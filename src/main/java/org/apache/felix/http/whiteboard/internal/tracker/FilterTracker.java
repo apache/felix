@@ -24,6 +24,7 @@ import org.osgi.framework.BundleContext;
 import org.osgi.framework.InvalidSyntaxException;
 import org.osgi.framework.ServiceReference;
 
+@SuppressWarnings("deprecation")
 public final class FilterTracker
     extends AbstractTracker<Filter>
 {
@@ -54,14 +55,7 @@ public final class FilterTracker
     protected void added(final Filter service, final ServiceReference<Filter> ref)
     {
         logDeprecationWarning("Filter", service, ref);
-        this.manager.add(service, ref);
-    }
-
-    @Override
-    protected void modified(final Filter service, final ServiceReference<Filter> ref)
-    {
-        removed(service, ref);
-        added(service, ref);
+        this.manager.addFilter(service, ref);
     }
 
     @Override

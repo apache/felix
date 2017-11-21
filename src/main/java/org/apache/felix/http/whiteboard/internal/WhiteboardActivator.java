@@ -23,6 +23,7 @@ import org.apache.felix.http.base.internal.logger.SystemLogger;
 import org.apache.felix.http.whiteboard.internal.manager.ExtenderManager;
 import org.apache.felix.http.whiteboard.internal.tracker.FilterTracker;
 import org.apache.felix.http.whiteboard.internal.tracker.HttpContextTracker;
+import org.apache.felix.http.whiteboard.internal.tracker.ListenersTracker;
 import org.apache.felix.http.whiteboard.internal.tracker.ServletTracker;
 import org.osgi.util.tracker.ServiceTracker;
 
@@ -39,6 +40,7 @@ public final class WhiteboardActivator
         addTracker(new HttpContextTracker(getBundleContext(), manager));
         addTracker(new FilterTracker(getBundleContext(), manager));
         addTracker(new ServletTracker(getBundleContext(), manager));
+        addTracker(new ListenersTracker(getBundleContext(), manager));
 
         SystemLogger.info("Apachde Felix Http Whiteboard Service started");
     }
