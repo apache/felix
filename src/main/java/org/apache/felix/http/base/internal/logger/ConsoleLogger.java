@@ -18,50 +18,64 @@
  */
 package org.apache.felix.http.base.internal.logger;
 
-import org.osgi.framework.ServiceReference;
 import java.io.PrintStream;
 
-public final class ConsoleLogger
-    extends AbstractLogger
+import org.osgi.service.log.LogService;
+
+public final class ConsoleLogger implements InternalLogger
 {
-    private final PrintStream out;
-
-    public ConsoleLogger()
+    @Override
+    public void log(final int level, final String message, final Throwable ex)
     {
-        this(System.out);
+        if ( isLogEnabled(level) )
+        {
+            // output depending on level
+            final PrintStream out = ( level == LogService.LOG_ERROR )? System.err: System.out;
+
+            // level as a string
+            final StringBuilder buf = new StringBuilder();
+            switch (level)
+            {
+                case ( LogService.LOG_DEBUG ):
+                    buf.append( "[DEBUG] " );
+                    break;
+                case ( LogService.LOG_INFO ):
+                    buf.append( "[INFO] " );
+                    break;
+                case ( LogService.LOG_WARNING ):
+                    buf.append( "[WARN] " );
+                    break;
+                case ( LogService.LOG_ERROR ):
+                    buf.append( "[ERROR] " );
+                    break;
+                default:
+                    buf.append( "UNK  : " );
+                    break;
+            }
+
+            buf.append(message);
+
+            final String msg = buf.toString();
+
+            if ( ex == null )
+            {
+                out.println(msg);
+            }
+            else
+            {
+                // keep the message and the stacktrace together
+                synchronized ( out )
+                {
+                    out.println( msg );
+                    ex.printStackTrace( out );
+                }
+            }
+        }
     }
 
-    public ConsoleLogger(PrintStream out)
+    @Override
+    public boolean isLogEnabled(final int level)
     {
-        this.out = out;
-    }
-
-    public void log(ServiceReference ref, int level, String message, Throwable cause)
-    {
-        StringBuffer str = new StringBuffer();
-        switch (level) {
-            case LOG_DEBUG:
-                str.append("[DEBUG] ");
-                break;
-            case LOG_INFO:
-                str.append("[INFO] ");
-                break;
-            case LOG_WARNING:
-                str.append("[WARNING] ");
-                break;
-            case LOG_ERROR:
-                str.append("[ERROR] ");
-                break;
-        }
-
-        if (ref != null) {
-            str.append("(").append(ref.toString()).append(") ");
-        }
-
-        str.append(message);
-        this.out.println(str.toString());
-        if (cause != null) {
-            cause.printStackTrace(this.out);
-        }
+        return true;
     }
 }

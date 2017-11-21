@@ -18,51 +18,59 @@
  */
 package org.apache.felix.http.base.internal.logger;
 
+import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceReference;
 import org.osgi.service.log.LogService;
 
 public final class SystemLogger
 {
-    private final static LogService NOP = new NopLogger();
-    private static LogService LOGGER;
+    private static volatile LogServiceEnabledLogger LOGGER;
 
-    public static void setLogService(LogService service)
-    {
-        LOGGER = service;
+    public static void init(final BundleContext bundleContext) {
+        LOGGER = new LogServiceEnabledLogger(bundleContext);
     }
 
-    private static LogService getLogger()
-    {
-        return LOGGER != null ? LOGGER : NOP;
+    public static void destroy() {
+        if ( LOGGER != null ) {
+            LOGGER.close();
+            LOGGER = null;
+        }
     }
 
-    public static void debug(String message)
-    {
-        getLogger().log(LogService.LOG_DEBUG, message);
+    private static void log(final int level, final String message, final Throwable cause) {
+        final LogServiceEnabledLogger l = LOGGER;
+        if ( l != null ) {
+            l.log(level, message, cause);
+        }
     }
 
-    public static void debug(String message, Throwable cause)
+    public static void debug(final String message)
     {
-        getLogger().log(LogService.LOG_DEBUG, message, cause);
+        log(LogService.LOG_DEBUG, message, null);
     }
 
-    public static void info(String message)
+    public static void debug(final String message, final Throwable cause)
     {
-        getLogger().log(LogService.LOG_INFO, message);
+        log(LogService.LOG_DEBUG, message, cause);
     }
 
-    public static void warning(String message, Throwable cause)
+    public static void info(final String message)
     {
-        getLogger().log(LogService.LOG_WARNING, message, cause);
+        log(LogService.LOG_INFO, message, null);
     }
 
-    public static void error(String message, Throwable cause)
+    public static void warning(final String message, final Throwable cause)
     {
-        getLogger().log(LogService.LOG_ERROR, message, cause);
+        log(LogService.LOG_WARNING, message, cause);
     }
 
-    public static void error(ServiceReference<?> ref, String message, Throwable cause)
+    public static void error(final String message, final Throwable cause)
     {
-        getLogger().log(ref, LogService.LOG_ERROR, message, cause);
+        log(LogService.LOG_ERROR, message, cause);
+    }
+
+    public static void error(final ServiceReference<?> ref, final String message, final Throwable cause)
+    {
+        log(LogService.LOG_ERROR, message, cause);
     }
 }

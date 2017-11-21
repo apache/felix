@@ -16,7 +16,6 @@
  */
 package org.apache.felix.http.base.internal;
 
-import org.apache.felix.http.base.internal.logger.LogServiceLogger;
 import org.apache.felix.http.base.internal.logger.SystemLogger;
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
@@ -24,8 +23,7 @@ import org.osgi.framework.BundleContext;
 public abstract class AbstractActivator
     implements BundleActivator
 {
-    private BundleContext context;
-    private LogServiceLogger logger;
+    private volatile BundleContext context;
 
     protected final BundleContext getBundleContext()
     {
@@ -33,21 +31,20 @@ public abstract class AbstractActivator
     }
 
     @Override
-    public final void start(BundleContext context)
+    public final void start(final BundleContext context)
         throws Exception
     {
         this.context = context;
-        this.logger = new LogServiceLogger(context);
-        SystemLogger.setLogService(this.logger);
+        SystemLogger.init(context);
         doStart();
     }
 
     @Override
-    public final void stop(BundleContext context)
+    public final void stop(final BundleContext context)
         throws Exception
     {
         doStop();
-        this.logger.close();
+        SystemLogger.destroy();
     }
 
     protected abstract void doStart()
