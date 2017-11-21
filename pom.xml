@@ -37,6 +37,10 @@
         <url>http://svn.apache.org/viewvc/felix/trunk/http/base/</url>
     </scm>
 
+    <properties>
+        <felix.java.version>7</felix.java.version>
+    </properties>
+
     <dependencies>
         <dependency>
             <groupId>javax.servlet</groupId>

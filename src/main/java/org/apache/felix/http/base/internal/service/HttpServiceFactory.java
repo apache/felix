@@ -21,9 +21,7 @@ import java.util.Hashtable;
 import javax.annotation.Nonnull;
 import javax.servlet.ServletContext;
 
-import org.apache.felix.http.api.ExtHttpService;
 import org.apache.felix.http.base.internal.registry.HandlerRegistry;
-import org.apache.felix.http.base.internal.service.listener.AbstractListenerManager;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
@@ -67,13 +65,12 @@ public final class HttpServiceFactory
     private final BundleContext bundleContext;
     private final boolean sharedContextAttributes;
 
-    private final Hashtable<String, Object> httpServiceProps = new Hashtable<String, Object>();
+    private final Hashtable<String, Object> httpServiceProps = new Hashtable<>();
     private volatile ServletContext context;
-    private volatile ServiceRegistration<?> httpServiceReg;
+    private volatile ServiceRegistration<HttpService> httpServiceReg;
 
     private final HandlerRegistry handlerRegistry;
     private volatile SharedHttpServiceImpl sharedHttpService;
-    private volatile AbstractListenerManager listenerManager;
 
 
     public HttpServiceFactory(final BundleContext bundleContext,
@@ -98,16 +95,11 @@ public final class HttpServiceFactory
         }
 
         this.context = context;
-        this.listenerManager = new AbstractListenerManager(bundleContext,
-                handlerRegistry
-                    .getRegistry(HTTP_SERVICE_CONTEXT_SERVICE_ID).getEventListenerRegistry());
-        this.listenerManager.open();
 
         this.sharedHttpService = new SharedHttpServiceImpl(handlerRegistry);
 
-        final String[] ifaces = new String[] { HttpService.class.getName(), ExtHttpService.class.getName() };
         this.active = true;
-        this.httpServiceReg = bundleContext.registerService(ifaces, this, this.httpServiceProps);
+        this.httpServiceReg = bundleContext.registerService(HttpService.class, this, this.httpServiceProps);
     }
 
     public void stop()
@@ -122,12 +114,6 @@ public final class HttpServiceFactory
 
         this.context = null;
         this.sharedHttpService = null;
-
-        if ( this.listenerManager != null )
-        {
-            this.listenerManager.close();
-            this.listenerManager = null;
-        }
 
         this.httpServiceProps.clear();
     }

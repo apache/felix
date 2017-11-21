@@ -23,6 +23,7 @@ import static org.osgi.service.http.runtime.dto.DTOConstants.FAILURE_REASON_SHAD
 import static org.osgi.service.http.runtime.dto.DTOConstants.FAILURE_REASON_UNKNOWN;
 import static org.osgi.service.http.runtime.dto.DTOConstants.FAILURE_REASON_VALIDATION_FAILED;
 
+import java.lang.reflect.Array;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
@@ -33,15 +34,16 @@ import org.apache.felix.http.base.internal.logger.SystemLogger;
 import org.apache.felix.http.base.internal.runtime.AbstractInfo;
 import org.apache.felix.http.base.internal.runtime.dto.FailedDTOHolder;
 import org.osgi.framework.Bundle;
+import org.osgi.framework.ServiceReference;
 
 public class FailureStateHandler {
 
     private static final class FailureStatus
     {
-        public final Map<Integer, Set<Long>> reasonToContextsMapping = new ConcurrentHashMap<Integer, Set<Long>>();
+        public final Map<Integer, Set<Long>> reasonToContextsMapping = new ConcurrentHashMap<>();
     }
 
-    private final Map<AbstractInfo<?>, FailureStatus> serviceFailures = new ConcurrentHashMap<AbstractInfo<?>, FailureStatus>();
+    private final Map<AbstractInfo<?>, FailureStatus> serviceFailures = new ConcurrentHashMap<>();
 
     /**
      * Remove all failures.
@@ -70,13 +72,72 @@ public class FailureStateHandler {
     {
     	final String type = info.getClass().getSimpleName().substring(0, info.getClass().getSimpleName().length() - 4);
         final String serviceInfo;
-        if ( info.getServiceReference() == null ) {
+        final ServiceReference<?> ref = info.getServiceReference();
+        if ( ref == null ) {
             serviceInfo = "with id " + String.valueOf(info.getServiceId());
         } else {
-        	final Bundle bundle = info.getServiceReference().getBundle();
-            serviceInfo = String.valueOf(info.getServiceId()) +
-                   " (bundle " + (bundle == null ? "<uninstalled>" : bundle.getSymbolicName())
-                    + " reference " + info.getServiceReference() + ")";
+        	    final Bundle bundle = ref.getBundle();
+        	    final StringBuilder ib = new StringBuilder();
+        	    ib.append(String.valueOf(info.getServiceId()));
+        	    ib.append(" (bundle ");
+        	    if ( bundle == null )
+        	    {
+        	        ib.append("<uninstalled>");
+        	    }
+        	    else
+        	    {
+        	        ib.append(bundle.getBundleId());
+        	        if ( bundle.getSymbolicName() != null )
+        	        {
+        	            ib.append(" : ");
+        	            ib.append(bundle.getSymbolicName());
+        	            ib.append(":");
+        	            ib.append(bundle.getVersion());
+        	        }
+        	    }
+        	    ib.append(" reference=");
+        	    ib.append(ref);
+        	    ib.append(" properties={");
+        	    boolean first = true;
+        	    for(final String name : ref.getPropertyKeys())
+        	    {
+        	        if ( first )
+        	        {
+        	            first = false;
+        	        }
+        	        else
+        	        {
+                        ib.append(", ");
+        	        }
+        	        final Object val = ref.getProperty(name);
+        	        ib.append(name);
+        	        ib.append("=");
+        	        if ( val.getClass().isArray() )
+        	        {
+        	            boolean fa = true;
+        	            ib.append('[');
+        	            for(int i=0;i<Array.getLength(val);i++)
+        	            {
+        	                if ( fa )
+        	                {
+        	                    fa = false;
+        	                }
+        	                else
+        	                {
+        	                    ib.append(", ");
+        	                }
+        	                ib.append(Array.get(val, i));
+        	            }
+                    ib.append(']');
+        	        }
+        	        else
+        	        {
+        	            ib.append(val);
+        	        }
+        	    }
+        	    ib.append("})");
+
+        	    serviceInfo = ib.toString();
         }
         if ( reason == FAILURE_REASON_NO_SERVLET_CONTEXT_MATCHING )
         {
@@ -117,11 +178,11 @@ public class FailureStateHandler {
         Set<Long> contexts = status.reasonToContextsMapping.get(reason);
         if ( contexts == null )
         {
-            contexts = new HashSet<Long>();
+            contexts = new HashSet<>();
         }
         else
         {
-            contexts = new HashSet<Long>(contexts);
+            contexts = new HashSet<>(contexts);
         }
         contexts.add(contextId);
         status.reasonToContextsMapping.put(reason, contexts);
@@ -156,7 +217,7 @@ public class FailureStateHandler {
                     }
                     else
                     {
-                        final Set<Long> set = new HashSet<Long>(entry.getValue());
+                        final Set<Long> set = new HashSet<>(entry.getValue());
                         set.remove(contextId);
                         entry.setValue(set);
                     }
