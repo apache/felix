@@ -127,8 +127,8 @@ public class RequestDispatchTest extends BaseIntegrationTest
         assertContent("FORWARD\n", createURL("/test/foo?bar=qux&quu"));
         assertContent("FORWARD\n", createURL("/forward/bar?quu=qux"));
 
-        unregister(forward);
-        unregister(servlet);
+        unregister("/forward");
+        unregister("/test");
 
         assertTrue(destroyLatch.await(5, TimeUnit.SECONDS));
     }
@@ -195,7 +195,7 @@ public class RequestDispatchTest extends BaseIntegrationTest
 
         assertContent("FORWARD\n", createURL("/test/foo?bar=qux&quu"));
 
-        unregister(servlet);
+        unregister("/test");
 
         assertTrue(destroyLatch.await(5, TimeUnit.SECONDS));
     }
@@ -271,8 +271,8 @@ public class RequestDispatchTest extends BaseIntegrationTest
         assertContent("BEFORE\nINCLUDE\nAFTER\n", createURL("/test/foo?bar=qux&quu"));
         assertContent("INCLUDE\n", createURL("/include/bar?quu=qux"));
 
-        unregister(include);
-        unregister(servlet);
+        unregister("/include");
+        unregister("/test");
 
         assertTrue(destroyLatch.await(5, TimeUnit.SECONDS));
     }
@@ -339,7 +339,7 @@ public class RequestDispatchTest extends BaseIntegrationTest
 
         assertContent("BEFORE\nINCLUDE\nAFTER\n", createURL("/test/foo?bar=qux&quu"));
 
-        unregister(servlet);
+        unregister("/test");
 
         assertTrue(destroyLatch.await(5, TimeUnit.SECONDS));
     }
@@ -432,8 +432,8 @@ public class RequestDispatchTest extends BaseIntegrationTest
         assertContent("FORWARD\n", createURL("/context/test/foo?bar=qux&quu"));
         assertContent("FORWARD\n", createURL("/context/forward/bar?quu=qux"));
 
-        unregister(forward);
-        unregister(servlet);
+        unregister("/forward");
+        unregister("/test");
 
         assertTrue(destroyLatch.await(5, TimeUnit.SECONDS));
     }
@@ -508,8 +508,8 @@ public class RequestDispatchTest extends BaseIntegrationTest
         assertContent("BEFORE\nINCLUDE\nAFTER\n", createURL("/context/test/foo?bar=qux&quu"));
         assertContent("INCLUDE\n", createURL("/context/include/bar?quu=qux"));
 
-        unregister(include);
-        unregister(servlet);
+        unregister("/include");
+        unregister("/test");
 
         assertTrue(destroyLatch.await(5, TimeUnit.SECONDS));
     }

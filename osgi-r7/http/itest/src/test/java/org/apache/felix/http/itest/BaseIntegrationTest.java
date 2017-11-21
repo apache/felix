@@ -57,7 +57,6 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import org.apache.felix.http.api.ExtHttpService;
 import org.junit.After;
 import org.junit.Before;
 import org.ops4j.pax.exam.Configuration;
@@ -328,7 +327,7 @@ public abstract class BaseIntegrationTest
                 mavenBundle("org.apache.felix", "org.apache.felix.configadmin").version("1.8.14").startLevel(START_LEVEL_SYSTEM_BUNDLES),
                 mavenBundle("org.apache.felix", "org.apache.felix.http.servlet-api", System.getProperty("http.servlet.api.version")).startLevel(START_LEVEL_SYSTEM_BUNDLES),
                 mavenBundle("org.apache.felix", ORG_APACHE_FELIX_HTTP_JETTY, System.getProperty("http.jetty.version")).startLevel(START_LEVEL_SYSTEM_BUNDLES),
-                mavenBundle("org.apache.felix", "org.apache.felix.http.whiteboard", "3.0.0").startLevel(START_LEVEL_SYSTEM_BUNDLES),
+                mavenBundle("org.apache.felix", "org.apache.felix.http.whiteboard", "3.0.1-SNAPSHOT").startLevel(START_LEVEL_SYSTEM_BUNDLES),
 
                 mavenBundle("org.apache.httpcomponents", "httpcore-osgi", "4.4.6").startLevel(START_LEVEL_SYSTEM_BUNDLES),
                 mavenBundle("org.apache.httpcomponents", "httpclient-osgi", "4.5.3").startLevel(START_LEVEL_SYSTEM_BUNDLES),
@@ -450,11 +449,6 @@ public abstract class BaseIntegrationTest
         return null;
     }
 
-    protected ExtHttpService getExtHttpService()
-    {
-        return getService(ExtHttpService.class.getName());
-    }
-
     protected Bundle getHttpJettyBundle()
     {
         Bundle b = findBundle(ORG_APACHE_FELIX_HTTP_JETTY);
@@ -488,16 +482,6 @@ public abstract class BaseIntegrationTest
         return (T) tracker.getService();
     }
 
-    protected void register(String pattern, Filter filter) throws ServletException, NamespaceException
-    {
-        register(pattern, filter, null);
-    }
-
-    protected void register(String pattern, Filter servlet, HttpContext context) throws ServletException, NamespaceException
-    {
-        getExtHttpService().registerFilter(servlet, pattern, null, 0, context);
-    }
-
     protected void register(String alias, Servlet servlet) throws ServletException, NamespaceException
     {
         register(alias, servlet, null);
@@ -515,21 +499,12 @@ public abstract class BaseIntegrationTest
 
     protected void register(String alias, String name, HttpContext context) throws ServletException, NamespaceException
     {
-        getExtHttpService().registerResources(alias, name, context);
+        getHttpService().registerResources(alias, name, context);
     }
 
-    protected void unregister(Filter filter) throws ServletException, NamespaceException
-    {
-        getExtHttpService().unregisterFilter(filter);
-    }
-
-    protected void unregister(Servlet servlet) throws ServletException, NamespaceException
-    {
-        getExtHttpService().unregisterServlet(servlet);
-    }
 
     protected void unregister(String alias) throws ServletException, NamespaceException
     {
-        getExtHttpService().unregister(alias);
+        getHttpService().unregister(alias);
     }
 }

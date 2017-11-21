@@ -100,7 +100,7 @@ public class ResourceTest extends BaseIntegrationTest
         assertResponseCode(SC_OK, testHtmlURL);
         assertResponseCode(SC_OK, testURL);
 
-        unregister(servlet);
+        unregister("/test");
 
         assertTrue(destroyLatch.await(5, TimeUnit.SECONDS));
 

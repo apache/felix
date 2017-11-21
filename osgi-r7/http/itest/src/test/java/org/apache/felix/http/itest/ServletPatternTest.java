@@ -57,7 +57,7 @@ import org.osgi.service.http.context.ServletContextHelper;
 @ExamReactorStrategy(PerMethod.class)
 public class ServletPatternTest extends BaseIntegrationTest
 {
-    private List<ServiceRegistration<?>> registrations = new ArrayList<ServiceRegistration<?>>();
+    private List<ServiceRegistration<?>> registrations = new ArrayList<>();
 
     private CountDownLatch initLatch;
     private CountDownLatch destroyLatch;
@@ -70,7 +70,7 @@ public class ServletPatternTest extends BaseIntegrationTest
 
     public void setupServlet(final String name, String[] path, int rank, String context) throws Exception
     {
-        Dictionary<String, Object> servletProps = new Hashtable<String, Object>();
+        Dictionary<String, Object> servletProps = new Hashtable<>();
         servletProps.put(HTTP_WHITEBOARD_SERVLET_NAME, name);
         servletProps.put(HTTP_WHITEBOARD_SERVLET_PATTERN, path);
         servletProps.put(SERVICE_RANKING, rank);
@@ -168,7 +168,7 @@ public class ServletPatternTest extends BaseIntegrationTest
         }
         finally
         {
-            unregister(httpServiceServlet);
+            unregister("/test/foo");
         }
     }
 
@@ -197,7 +197,7 @@ public class ServletPatternTest extends BaseIntegrationTest
         assertTrue(initLatch.await(5, TimeUnit.SECONDS));
         assertContent("lowRankServlet", createURL("/foo"));
 
-        Dictionary<String, Object> resourceProps = new Hashtable<String, Object>();
+        Dictionary<String, Object> resourceProps = new Hashtable<>();
         String highRankPattern[] = { "/foo" };
         resourceProps.put(HTTP_WHITEBOARD_RESOURCE_PATTERN, highRankPattern);
         resourceProps.put(HTTP_WHITEBOARD_RESOURCE_PREFIX, "/resource/test.html");

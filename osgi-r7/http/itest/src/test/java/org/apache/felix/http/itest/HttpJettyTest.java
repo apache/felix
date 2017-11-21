@@ -18,10 +18,8 @@
  */
 package org.apache.felix.http.itest;
 
-import static javax.servlet.http.HttpServletResponse.SC_FORBIDDEN;
 import static javax.servlet.http.HttpServletResponse.SC_NOT_FOUND;
 import static javax.servlet.http.HttpServletResponse.SC_OK;
-import static javax.servlet.http.HttpServletResponse.SC_PAYMENT_REQUIRED;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
@@ -36,10 +34,7 @@ import java.util.Dictionary;
 import java.util.Hashtable;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicLong;
 
-import javax.servlet.Filter;
-import javax.servlet.FilterChain;
 import javax.servlet.Servlet;
 import javax.servlet.ServletConfig;
 import javax.servlet.ServletContext;
@@ -167,188 +162,11 @@ public class HttpJettyTest extends BaseIntegrationTest
 
         assertResponseCode(SC_OK, testURL);
 
-        unregister(servlet);
+        unregister("/foo");
 
         assertTrue(destroyLatch.await(5, TimeUnit.SECONDS));
 
         assertResponseCode(SC_NOT_FOUND, testURL);
-    }
-
-    /**
-     * Tests that we can register servlets and filters together.
-     */
-    @Test
-    public void testHandleMultipleRegistrationsOk() throws Exception
-    {
-        CountDownLatch initLatch = new CountDownLatch(3);
-        CountDownLatch destroyLatch = new CountDownLatch(3);
-
-        TestServlet servlet1 = new TestServlet(initLatch, destroyLatch)
-        {
-            private static final long serialVersionUID = 1L;
-
-            final AtomicLong m_count = new AtomicLong();
-
-            @Override
-            protected void service(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException
-            {
-                resp.setStatus(SC_OK);
-                resp.getWriter().printf("1.%d", m_count.incrementAndGet());
-                resp.flushBuffer();
-            }
-        };
-
-        TestServlet servlet2 = new TestServlet(initLatch, destroyLatch)
-        {
-            private static final long serialVersionUID = 1L;
-
-            final AtomicLong m_count = new AtomicLong();
-
-            @Override
-            protected void service(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException
-            {
-                resp.setStatus(SC_OK);
-                resp.getWriter().printf("2.%d", m_count.incrementAndGet());
-                resp.flushBuffer();
-            }
-        };
-
-        TestFilter filter = new TestFilter(initLatch, destroyLatch)
-        {
-            @Override
-            protected void filter(HttpServletRequest req, HttpServletResponse resp, FilterChain chain) throws IOException, ServletException
-            {
-                String param = req.getParameter("param");
-                if ("forbidden".equals(param))
-                {
-                    resp.reset();
-                    resp.sendError(SC_FORBIDDEN);
-                    resp.flushBuffer();
-                }
-                else
-                {
-                    chain.doFilter(req, resp);
-                }
-            }
-        };
-
-        register("/test/1", servlet1);
-        register("/test/2", servlet2);
-        register("/test/.*", filter);
-
-        assertTrue(initLatch.await(5, TimeUnit.SECONDS));
-
-        assertContent("1.1", createURL("/test/1"));
-        assertContent("2.1", createURL("/test/2"));
-        assertContent("2.2", createURL("/test/2"));
-        assertContent("1.2", createURL("/test/1"));
-        assertContent("2.3", createURL("/test/2"));
-
-        assertResponseCode(SC_FORBIDDEN, createURL("/test/2?param=forbidden"));
-        assertResponseCode(SC_NOT_FOUND, createURL("/test?param=not_recognized"));
-
-        assertContent("2.4", createURL("/test/2"));
-        assertContent("1.3", createURL("/test/1"));
-
-        assertResponseCode(SC_NOT_FOUND, createURL("/test?param=forbidden"));
-
-        unregister(servlet1);
-        unregister(servlet2);
-        unregister(filter);
-
-        assertTrue(destroyLatch.await(5, TimeUnit.SECONDS));
-    }
-
-    /**
-     * Test case for FELIX-3988, handling security constraints in {@link Filter}s.
-     */
-    @Test
-    public void testHandleSecurityInFilterOk() throws Exception
-    {
-        CountDownLatch initLatch = new CountDownLatch(2);
-        CountDownLatch destroyLatch = new CountDownLatch(2);
-
-        HttpContext context = new HttpContext()
-        {
-            @Override
-            public String getMimeType(String name)
-            {
-                return null;
-            }
-
-            @Override
-            public URL getResource(String name)
-            {
-                return null;
-            }
-
-            @Override
-            public boolean handleSecurity(HttpServletRequest request, HttpServletResponse response) throws IOException
-            {
-                if (request.getParameter("setStatus") != null)
-                {
-                    response.setStatus(SC_PAYMENT_REQUIRED);
-                }
-                else if (request.getParameter("sendError") != null)
-                {
-                    response.sendError(SC_PAYMENT_REQUIRED);
-                }
-                else if (request.getParameter("commit") != null)
-                {
-                    if (!response.isCommitted())
-                    {
-                        response.getWriter().append("Not allowed!");
-                        response.flushBuffer();
-                    }
-                }
-                return false;
-            }
-        };
-
-        TestFilter filter = new TestFilter(initLatch, destroyLatch);
-        TestServlet servlet = new TestServlet(initLatch, destroyLatch);
-
-        register("/foo", servlet, context);
-        register("/.*", filter, context);
-
-        URL url1 = createURL("/foo");
-        URL url2 = createURL("/foo?sendError=true");
-        URL url3 = createURL("/foo?setStatus=true");
-        URL url4 = createURL("/foo?commit=true");
-
-        assertTrue(initLatch.await(5, TimeUnit.SECONDS));
-
-        assertResponseCode(SC_FORBIDDEN, url1);
-        assertResponseCode(SC_PAYMENT_REQUIRED, url2);
-        assertResponseCode(SC_PAYMENT_REQUIRED, url3);
-        assertContent(SC_OK, "Not allowed!", url4);
-
-        unregister(filter);
-        unregister(servlet);
-
-        assertTrue(destroyLatch.await(5, TimeUnit.SECONDS));
-
-        assertResponseCode(SC_NOT_FOUND, url1);
-    }
-
-    /**
-     * Tests that we can register a filter with Jetty and that its lifecycle is correctly controlled.
-     */
-    @Test
-    public void testRegisterFilterLifecycleOk() throws Exception
-    {
-        CountDownLatch initLatch = new CountDownLatch(1);
-        CountDownLatch destroyLatch = new CountDownLatch(1);
-
-        TestFilter filter = new TestFilter(initLatch, destroyLatch);
-
-        register("/test", filter);
-
-        assertTrue(initLatch.await(5, TimeUnit.SECONDS));
-
-        unregister(filter);
-
-        assertTrue(destroyLatch.await(5, TimeUnit.SECONDS));
     }
 
     /**
@@ -366,7 +184,7 @@ public class HttpJettyTest extends BaseIntegrationTest
 
         assertTrue(initLatch.await(5, TimeUnit.SECONDS));
 
-        unregister(servlet);
+        unregister("/test");
 
         assertTrue(destroyLatch.await(5, TimeUnit.SECONDS));
     }
@@ -401,7 +219,7 @@ public class HttpJettyTest extends BaseIntegrationTest
 
         assertTrue(initLatch.await(5, TimeUnit.SECONDS));
 
-        unregister(servlet);
+        unregister("/initTest");
     }
 
     @Test
@@ -474,7 +292,7 @@ public class HttpJettyTest extends BaseIntegrationTest
 
         assertResponseCode(SC_OK, testURL);
 
-        unregister(servlet);
+        unregister("/foo");
 
         assertTrue(destroyLatch.await(5, TimeUnit.SECONDS));
 

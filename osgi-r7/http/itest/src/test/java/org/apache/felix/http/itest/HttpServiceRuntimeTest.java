@@ -1147,7 +1147,7 @@ public class HttpServiceRuntimeTest extends BaseIntegrationTest
         final RequestInfoDTO infoDTO = serviceRuntime.calculateRequestInfoDTO("/pathcollision");
         assertEquals(httpServiceContext.serviceId, infoDTO.servletDTO.servletContextId);
 
-        unregister(testServlet);
+        unregister("/pathcollision");
         awaitServiceRegistration(destroyLatch);
 
         runtimeDTO = serviceRuntime.getRuntimeDTO();

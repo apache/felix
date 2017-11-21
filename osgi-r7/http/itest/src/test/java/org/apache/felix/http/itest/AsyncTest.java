@@ -100,7 +100,7 @@ public class AsyncTest extends BaseIntegrationTest
 
         assertContent("Hello Async world!", createURL("/test"));
 
-        unregister(servlet);
+        unregister("/test");
 
         assertTrue(destroyLatch.await(5, TimeUnit.SECONDS));
 
@@ -163,7 +163,7 @@ public class AsyncTest extends BaseIntegrationTest
 
         assertContent("Hello Async world!", createURL("/test"));
 
-        unregister(servlet);
+        unregister("/test");
 
         assertTrue(destroyLatch.await(5, TimeUnit.SECONDS));
 
