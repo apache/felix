@@ -17,10 +17,7 @@
  * under the License.
  */
 
-/**
- * @see: @TODO ref to whiteboard page on felix.apache.org
- */
-@Version("1.0")
+@Version("1.0.1")
 package org.apache.felix.http.whiteboard;
 
 import org.osgi.annotation.versioning.Version;
