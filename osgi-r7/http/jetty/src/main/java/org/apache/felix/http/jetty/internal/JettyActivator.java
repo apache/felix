@@ -32,7 +32,7 @@ public final class JettyActivator extends AbstractHttpActivator
 
     private ServiceRegistration<?> metatypeReg;
     private ServiceRegistration<LoadBalancerCustomizerFactory> loadBalancerCustomizerFactoryReg;
-    private JettyManagedServiceFactory jettyServiceFactory;
+    private ServiceRegistration<?> jettyServiceFactoryReg;
 
     @Override
     protected void doStart() throws Exception
@@ -85,7 +85,30 @@ public final class JettyActivator extends AbstractHttpActivator
                     }
                 }, propertiesCustomizer);
 
-        this.jettyServiceFactory = new JettyManagedServiceFactory(this.getBundleContext());
+        final Dictionary<String, Object> factoryProps = new Hashtable<>();
+        factoryProps.put(Constants.SERVICE_PID, JettyService.PID);
+        factoryProps.put(Constants.SERVICE_VENDOR, "The Apache Software Foundation");
+        factoryProps.put(Constants.SERVICE_DESCRIPTION, "Managed Service Factory for the Jetty Http Service");
+        this.jettyServiceFactoryReg = this.getBundleContext().registerService("org.osgi.service.cm.ManagedServiceFactory",
+                new ServiceFactory()
+                {
+
+                    @Override
+                    public Object getService(final Bundle bundle,
+                            final ServiceRegistration registration)
+                    {
+                        return new JettyManagedServiceFactory(getBundleContext());
+                    }
+
+                    @Override
+                    public void ungetService(final Bundle bundle,
+                            final ServiceRegistration registration,
+                            final Object service)
+                    {
+                        ((JettyManagedServiceFactory)service).stop();
+                    }
+                }, factoryProps);
+
     }
 
     @Override
@@ -102,10 +125,10 @@ public final class JettyActivator extends AbstractHttpActivator
             loadBalancerCustomizerFactoryReg.unregister();
             loadBalancerCustomizerFactoryReg = null;
         }
-        if ( jettyServiceFactory != null )
+        if ( jettyServiceFactoryReg != null )
         {
-            jettyServiceFactory.stop();
-            jettyServiceFactory = null;
+            jettyServiceFactoryReg.unregister();
+            jettyServiceFactoryReg = null;
         }
 
         super.doStop();

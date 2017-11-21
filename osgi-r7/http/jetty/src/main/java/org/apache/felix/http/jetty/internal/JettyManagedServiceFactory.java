@@ -21,14 +21,11 @@ package org.apache.felix.http.jetty.internal;
 import java.util.Dictionary;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Hashtable;
 import java.util.Map;
 import java.util.Set;
 
 import org.apache.felix.http.base.internal.logger.SystemLogger;
 import org.osgi.framework.BundleContext;
-import org.osgi.framework.Constants;
-import org.osgi.framework.ServiceRegistration;
 import org.osgi.service.cm.ConfigurationException;
 import org.osgi.service.cm.ManagedServiceFactory;
 
@@ -36,22 +33,15 @@ public class JettyManagedServiceFactory implements ManagedServiceFactory
 {
 	private final Map<String, JettyServiceStarter> services = new HashMap<>();
 	private final BundleContext context;
-	private final ServiceRegistration<?> serviceReg;
 
 	JettyManagedServiceFactory(final BundleContext context)
 	{
 		this.context = context;
-
-		final Dictionary<String, Object> props = new Hashtable<String, Object>();
-        props.put(Constants.SERVICE_PID, JettyService.PID);
-        this.serviceReg = context.registerService(ManagedServiceFactory.class.getName(), this, props);
 	}
 
 	public synchronized void stop()
 	{
-		this.serviceReg.unregister();
-
-		Set<String> pids = new HashSet<>(services.keySet());
+		final Set<String> pids = new HashSet<>(services.keySet());
 		for (final String pid : pids)
 		{
 			deleted(pid);
