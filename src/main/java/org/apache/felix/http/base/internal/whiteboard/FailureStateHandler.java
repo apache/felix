@@ -23,7 +23,6 @@ import static org.osgi.service.http.runtime.dto.DTOConstants.FAILURE_REASON_SHAD
 import static org.osgi.service.http.runtime.dto.DTOConstants.FAILURE_REASON_UNKNOWN;
 import static org.osgi.service.http.runtime.dto.DTOConstants.FAILURE_REASON_VALIDATION_FAILED;
 
-import java.lang.reflect.Array;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
@@ -33,7 +32,6 @@ import java.util.concurrent.ConcurrentHashMap;
 import org.apache.felix.http.base.internal.logger.SystemLogger;
 import org.apache.felix.http.base.internal.runtime.AbstractInfo;
 import org.apache.felix.http.base.internal.runtime.dto.FailedDTOHolder;
-import org.osgi.framework.Bundle;
 import org.osgi.framework.ServiceReference;
 
 public class FailureStateHandler {
@@ -70,102 +68,41 @@ public class FailureStateHandler {
 
     public void addFailure(final AbstractInfo<?> info, final long contextId, final int reason, final Exception ex)
     {
-    	final String type = info.getClass().getSimpleName().substring(0, info.getClass().getSimpleName().length() - 4);
+        final String type = info.getClass().getSimpleName().substring(0, info.getClass().getSimpleName().length() - 4);
         final String serviceInfo;
         final ServiceReference<?> ref = info.getServiceReference();
         if ( ref == null ) {
-            serviceInfo = "with id " + String.valueOf(info.getServiceId());
+            serviceInfo = " with id " + String.valueOf(info.getServiceId());
         } else {
-        	    final Bundle bundle = ref.getBundle();
-        	    final StringBuilder ib = new StringBuilder();
-        	    ib.append(String.valueOf(info.getServiceId()));
-        	    ib.append(" (bundle ");
-        	    if ( bundle == null )
-        	    {
-        	        ib.append("<uninstalled>");
-        	    }
-        	    else
-        	    {
-        	        ib.append(bundle.getBundleId());
-        	        if ( bundle.getSymbolicName() != null )
-        	        {
-        	            ib.append(" : ");
-        	            ib.append(bundle.getSymbolicName());
-        	            ib.append(":");
-        	            ib.append(bundle.getVersion());
-        	        }
-        	    }
-        	    ib.append(" reference=");
-        	    ib.append(ref);
-        	    ib.append(" properties={");
-        	    boolean first = true;
-        	    for(final String name : ref.getPropertyKeys())
-        	    {
-        	        if ( first )
-        	        {
-        	            first = false;
-        	        }
-        	        else
-        	        {
-                        ib.append(", ");
-        	        }
-        	        final Object val = ref.getProperty(name);
-        	        ib.append(name);
-        	        ib.append("=");
-        	        if ( val.getClass().isArray() )
-        	        {
-        	            boolean fa = true;
-        	            ib.append('[');
-        	            for(int i=0;i<Array.getLength(val);i++)
-        	            {
-        	                if ( fa )
-        	                {
-        	                    fa = false;
-        	                }
-        	                else
-        	                {
-        	                    ib.append(", ");
-        	                }
-        	                ib.append(Array.get(val, i));
-        	            }
-                    ib.append(']');
-        	        }
-        	        else
-        	        {
-        	            ib.append(val);
-        	        }
-        	    }
-        	    ib.append("})");
-
-        	    serviceInfo = ib.toString();
+            serviceInfo = "";
         }
         if ( reason == FAILURE_REASON_NO_SERVLET_CONTEXT_MATCHING )
         {
-            SystemLogger.debug("Ignoring unmatching " + type + " service " + serviceInfo);
+            SystemLogger.debug(ref, "Ignoring unmatching " + type + " service" + serviceInfo);
         }
         else if ( reason == FAILURE_REASON_SHADOWED_BY_OTHER_SERVICE )
         {
-            SystemLogger.debug("Ignoring shadowed " + type + " service " + serviceInfo);
+            SystemLogger.debug(ref, "Ignoring shadowed " + type + " service" + serviceInfo);
         }
         else if ( reason == FAILURE_REASON_SERVICE_NOT_GETTABLE )
         {
-            SystemLogger.error("Ignoring ungettable " + type + " service " + serviceInfo, ex);
+            SystemLogger.error(ref, "Ignoring ungettable " + type + " service" + serviceInfo, ex);
         }
         else if ( reason == FAILURE_REASON_VALIDATION_FAILED )
         {
-            SystemLogger.debug("Ignoring invalid " + type + " service " + serviceInfo);
+            SystemLogger.debug(ref, "Ignoring invalid " + type + " service" + serviceInfo);
         }
         else if ( reason == FAILURE_REASON_NO_SERVLET_CONTEXT_MATCHING )
         {
-            SystemLogger.debug("Ignoring unmatched " + type + " service " + serviceInfo);
+            SystemLogger.debug(ref, "Ignoring unmatched " + type + " service" + serviceInfo);
         }
         else if ( reason == FAILURE_REASON_SERVLET_CONTEXT_FAILURE )
         {
-            SystemLogger.debug("Servlet context " + String.valueOf(contextId) + " failure: Ignoring " + type + " service " + serviceInfo);
+            SystemLogger.debug(ref,  "Servlet context " + String.valueOf(contextId) + " failure: Ignoring " + type + " service" + serviceInfo);
         }
         else if ( reason == FAILURE_REASON_UNKNOWN)
         {
-            SystemLogger.error("Exception while registering " + type + " service " + serviceInfo, ex);
+            SystemLogger.error(ref, "Exception while registering " + type + " service" + serviceInfo, ex);
         }
 
         FailureStatus status = serviceFailures.get(info);
