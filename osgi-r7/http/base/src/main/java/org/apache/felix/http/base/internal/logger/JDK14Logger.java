@@ -21,75 +21,54 @@ package org.apache.felix.http.base.internal.logger;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import org.osgi.framework.BundleContext;
-import org.osgi.framework.ServiceReference;
+import org.osgi.service.log.LogService;
 
 /**
  * Logger based on Java Logging API.
- *
  */
-public final class JDK14Logger
-    extends AbstractLogger
+public final class JDK14Logger implements InternalLogger
 {
-    private final Logger defaultLogger = Logger.getLogger(LogServiceLogger.class.getName());
-    private final Level defaultLevel = Level.OFF;
-    private BundleContext context;
+    private final Logger logger = Logger.getLogger("org.apache.felix.http");
 
-    public JDK14Logger(BundleContext context)
+    private Level getLevel(final int level)
     {
-        this.context = context;
+        Level logLevel;
+        switch (level)
+        {
+            case LogService.LOG_DEBUG:
+                logLevel = Level.FINE;
+                break;
+            case LogService.LOG_INFO:
+                logLevel = Level.INFO;
+                break;
+            case LogService.LOG_WARNING:
+                logLevel = Level.WARNING;
+                break;
+            case LogService.LOG_ERROR:
+                logLevel = Level.SEVERE;
+                break;
+            default: logLevel = Level.FINE;
+        }
+        return logLevel;
     }
 
     @Override
-    public void log(ServiceReference ref, int level, String message, Throwable cause)
+    public boolean isLogEnabled(final int level) {
+        return this.logger.isLoggable(getLevel(level));
+    }
+
+    @Override
+    public void log(final int level, final String message, final Throwable exception)
     {
-        Object service = null;
-        Class clazz = null;
-        Logger logger = null;
+        final Level logLevel = getLevel(level);
 
-        if(ref != null)
+        if (exception != null)
         {
-            service = context.getService(ref);
-        }
-
-        if(service != null)
-        {
-            clazz = service.getClass();
-        }
-
-        if(clazz != null)
-        {
-            logger = Logger.getLogger(clazz.getName());
+            this.logger.log(logLevel, message, exception);
         }
         else
         {
-            logger = defaultLogger;
-        }
-
-        Level logLevel = defaultLevel;
-        switch (level)
-        {
-            case LOG_DEBUG:
-                logLevel = Level.FINE;
-                break;
-            case LOG_INFO:
-                logLevel = Level.INFO;
-                break;
-            case LOG_WARNING:
-                logLevel = Level.WARNING;
-                break;
-            case LOG_ERROR:
-                logLevel = Level.SEVERE;
-                break;
-        }
-
-        if (cause != null)
-        {
-            logger.log(logLevel, message, cause);
-        }
-        else
-        {
-            logger.log(logLevel, message);
+            this.logger.log(logLevel, message);
         }
     }
 }

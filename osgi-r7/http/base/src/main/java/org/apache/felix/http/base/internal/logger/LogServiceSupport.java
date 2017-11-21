@@ -18,13 +18,23 @@
  */
 package org.apache.felix.http.base.internal.logger;
 
-import org.osgi.framework.ServiceReference;
+import org.osgi.service.log.LogService;
 
-public final class NopLogger
-    extends AbstractLogger
+/**
+ * This is a logger based on the LogService.
+ */
+class LogServiceSupport
 {
-    public void log(ServiceReference ref, int level, String message, Throwable cause)
+
+    private final LogService logService;
+
+    public LogServiceSupport(final Object logService)
     {
-        // Do nothing
+        this.logService = (LogService) logService;
+    }
+
+    InternalLogger getLogger()
+    {
+        return new R6LogServiceLogger(this.logService);
     }
 }
