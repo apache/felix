@@ -18,7 +18,6 @@ package org.apache.felix.http.whiteboard.internal.tracker;
 
 import javax.servlet.Servlet;
 
-import org.apache.felix.http.base.internal.logger.SystemLogger;
 import org.apache.felix.http.whiteboard.HttpWhiteboardConstants;
 import org.apache.felix.http.whiteboard.internal.manager.ExtenderManager;
 import org.osgi.framework.BundleContext;
@@ -45,30 +44,28 @@ public final class ServletTracker
         return null; // we never get here - and if we get an NPE which is fine
     }
 
-    public ServletTracker(BundleContext context, ExtenderManager manager)
+    public ServletTracker(final BundleContext context, final ExtenderManager manager)
     {
         super(context, createFilter(context));
         this.manager = manager;
     }
 
     @Override
-    protected void added(Servlet service, ServiceReference ref)
+    protected void added(final Servlet service, final ServiceReference<Servlet> ref)
     {
-        SystemLogger.warning("Deprecation warning: " +
-                "Servlet registered through Apache Felix whiteboard service: " + ref +
-                ". Please change your code to the OSGi Http Whiteboard Service.", null);
+        logDeprecationWarning("Servlet", service, ref);
         this.manager.add(service, ref);
     }
 
     @Override
-    protected void modified(Servlet service, ServiceReference ref)
+    protected void modified(final Servlet service, final ServiceReference<Servlet> ref)
     {
         removed(service, ref);
         added(service, ref);
     }
 
     @Override
-    protected void removed(Servlet service, ServiceReference ref)
+    protected void removed(final Servlet service, final ServiceReference<Servlet> ref)
     {
         this.manager.removeServlet(ref);
     }

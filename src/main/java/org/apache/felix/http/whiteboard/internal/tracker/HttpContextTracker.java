@@ -16,7 +16,6 @@
  */
 package org.apache.felix.http.whiteboard.internal.tracker;
 
-import org.apache.felix.http.base.internal.logger.SystemLogger;
 import org.apache.felix.http.whiteboard.internal.manager.ExtenderManager;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceReference;
@@ -27,32 +26,29 @@ public final class HttpContextTracker
 {
     private final ExtenderManager manager;
 
-    public HttpContextTracker(BundleContext context, ExtenderManager manager)
+    public HttpContextTracker(final BundleContext context, final ExtenderManager manager)
     {
         super(context, HttpContext.class);
         this.manager = manager;
     }
 
     @Override
-    protected void added(HttpContext service, ServiceReference ref)
+    protected void added(final HttpContext service, final ServiceReference<HttpContext> ref)
     {
-        SystemLogger.warning("Deprecation warning: " +
-                "HttpContext registered through Apache Felix whiteboard service: " + ref +
-                ". Please change your code to the OSGi Http Whiteboard Service.", null);
-
+        this.logDeprecationWarning("HttpContext", service, ref);
         this.manager.add(service, ref);
     }
 
     @Override
-    protected void modified(HttpContext service, ServiceReference ref)
+    protected void modified(final HttpContext service, final ServiceReference<HttpContext> ref)
     {
         removed(service, ref);
         added(service, ref);
     }
 
     @Override
-    protected void removed(HttpContext service, ServiceReference ref)
+    protected void removed(final HttpContext service, final ServiceReference<HttpContext> ref)
     {
-        this.manager.remove(service);
+        this.manager.remove(ref);
     }
 }

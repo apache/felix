@@ -16,51 +16,65 @@
  */
 package org.apache.felix.http.whiteboard.internal.tracker;
 
+import org.apache.felix.http.base.internal.logger.SystemLogger;
 import org.osgi.framework.BundleContext;
+import org.osgi.framework.Constants;
 import org.osgi.framework.Filter;
 import org.osgi.framework.ServiceReference;
 import org.osgi.util.tracker.ServiceTracker;
 
 public abstract class AbstractTracker<T>
-    extends ServiceTracker
+    extends ServiceTracker<T, T>
 {
-    public AbstractTracker(BundleContext context, Filter filter)
+    public AbstractTracker(final BundleContext context, final Filter filter)
     {
         super(context, filter, null);
     }
 
-    public AbstractTracker(BundleContext context, Class clazz)
+    public AbstractTracker(final BundleContext context, final Class<T> clazz)
     {
         super(context, clazz.getName(), null);
     }
 
-    @Override
-    @SuppressWarnings("unchecked")
-    public final Object addingService(ServiceReference ref)
+    protected void logDeprecationWarning(final String id, final T service, final ServiceReference<T> ref)
     {
-        T service = (T)super.addingService(ref);
+        SystemLogger.warning("Deprecation warning: " +
+                    id + " registered through Apache Felix whiteboard service: " + getInfo(service, ref) +
+                    ". Please change your code to use the OSGi Http Whiteboard Service.", null);
+    }
+
+    private String getInfo(final T service, final ServiceReference<T> ref)
+    {
+        return "Service " + ref.getProperty(Constants.SERVICE_PID) + " from bundle "
+                + ref.getBundle().getBundleId()
+                + (ref.getBundle().getSymbolicName() != null ? ref.getBundle().getSymbolicName() + ":" + ref.getBundle().getVersion() : "")
+                + " class " + service.getClass();
+    }
+
+    @Override
+    public final T addingService(final ServiceReference<T> ref)
+    {
+        T service = super.addingService(ref);
         added(service, ref);
         return service;
     }
 
     @Override
-    @SuppressWarnings("unchecked")
-    public final void modifiedService(ServiceReference ref, Object service)
+    public final void modifiedService(final ServiceReference<T> ref, T service)
     {
-        modified( (T)service, ref);
+        modified( service, ref);
     }
 
     @Override
-    @SuppressWarnings("unchecked")
-    public final void removedService(ServiceReference ref, Object service)
+    public final void removedService(final ServiceReference<T> ref, T service)
     {
         super.removedService(ref, service);
-        removed((T) service, ref);
+        removed(service, ref);
     }
 
-    protected abstract void modified(T service, ServiceReference ref);
+    protected abstract void modified(T service, ServiceReference<T> ref);
 
-    protected abstract void added(T service, ServiceReference ref);
+    protected abstract void added(T service, ServiceReference<T> ref);
 
-    protected abstract void removed(T service, ServiceReference ref);
+    protected abstract void removed(T service, ServiceReference<T> ref);
 }
