@@ -24,6 +24,7 @@ package org.apache.felix.http.whiteboard;
  *
  * @since Http Whiteboard Bundle 2.3.0
  */
+@Deprecated
 public class HttpWhiteboardConstants
 {
 
