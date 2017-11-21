@@ -18,15 +18,23 @@ package org.apache.felix.http.whiteboard.internal.manager;
 
 import java.io.IOException;
 import java.net.URL;
+import java.util.ArrayList;
 import java.util.Dictionary;
+import java.util.EventListener;
 import java.util.Hashtable;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 import javax.servlet.Filter;
 import javax.servlet.Servlet;
+import javax.servlet.ServletContextAttributeListener;
+import javax.servlet.ServletRequestAttributeListener;
+import javax.servlet.ServletRequestListener;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSessionAttributeListener;
+import javax.servlet.http.HttpSessionListener;
 
 import org.apache.felix.http.base.internal.logger.SystemLogger;
 import org.apache.felix.http.whiteboard.HttpWhiteboardConstants;
@@ -36,6 +44,7 @@ import org.osgi.framework.ServiceRegistration;
 import org.osgi.service.http.HttpContext;
 import org.osgi.service.http.context.ServletContextHelper;
 
+@SuppressWarnings("deprecation")
 public final class ExtenderManager
 {
     private static final String MARKER = "org.apache.felix.http.whiteboard";
@@ -43,7 +52,8 @@ public final class ExtenderManager
     public enum Type {
         CONTEXT,
         FILTER,
-        SERVLET
+        SERVLET,
+        LISTENERS
     }
 
     private final Map<String, ServiceRegistration<?>> registrations = new ConcurrentHashMap<>();
@@ -112,28 +122,7 @@ public final class ExtenderManager
         return false;
     }
 
-    /**
-     * Get the boolean property.
-     * @param ref The service reference
-     * @param key The name of the property
-     * @param int default value
-     * @return The value of the int property. Returns the default value as default
-     */
-    private int getIntProperty(final ServiceReference<?> ref, final String key, final int defValue)
-    {
-        final Object value = ref.getProperty(key);
-        if (value == null) {
-            return defValue;
-        }
-
-        try {
-            return Integer.parseInt(value.toString());
-        } catch (final Exception e) {
-            return defValue;
-        }
-    }
-
-    /**
+   /**
      * Add the init parameters
      * @param ref The service reference
      * @param prefix The prefix to use
@@ -191,6 +180,12 @@ public final class ExtenderManager
             select.append("))");
             props.put(org.osgi.service.http.whiteboard.HttpWhiteboardConstants.HTTP_WHITEBOARD_CONTEXT_SELECT, select.toString());
         }
+        else
+        {
+            props.put(org.osgi.service.http.whiteboard.HttpWhiteboardConstants.HTTP_WHITEBOARD_CONTEXT_SELECT,
+                    "(" + org.osgi.service.http.whiteboard.HttpWhiteboardConstants.HTTP_WHITEBOARD_CONTEXT_NAME
+                    + "=org.osgi.service.http)");
+        }
     }
 
     /**
@@ -224,7 +219,7 @@ public final class ExtenderManager
      * @param service The HttpContext
      * @param ref The service reference
      */
-    public void add(final HttpContext service, final ServiceReference<HttpContext> ref)
+    public void addHttpContext(final HttpContext service, final ServiceReference<HttpContext> ref)
     {
         final String contextId = getStringProperty(ref, HttpWhiteboardConstants.CONTEXT_ID);
         if (contextId != null && !contextId.isEmpty())
@@ -273,7 +268,7 @@ public final class ExtenderManager
      * Remove a HttpContext
      * @param ref The service reference
      */
-    public void remove(final ServiceReference<HttpContext> ref)
+    public void removeHttpContext(final ServiceReference<HttpContext> ref)
     {
         this.removeServiceRegistration(Type.CONTEXT, ref);
     }
@@ -283,7 +278,7 @@ public final class ExtenderManager
      * @param service The filter
      * @param ref The filter reference
      */
-    public void add(final Filter service, final ServiceReference<Filter> ref)
+    public void addFilter(final Filter service, final ServiceReference<Filter> ref)
     {
         final String pattern = getStringProperty(ref, HttpWhiteboardConstants.PATTERN);
 
@@ -312,7 +307,7 @@ public final class ExtenderManager
      * @param service The servlet
      * @param ref The service reference
      */
-    public void add(final Servlet service, final ServiceReference<Servlet> ref)
+    public void addServlet(final Servlet service, final ServiceReference<Servlet> ref)
     {
         final String alias = getStringProperty(ref, HttpWhiteboardConstants.ALIAS);
         if (alias == null || alias.isEmpty() || !alias.startsWith("/"))
@@ -337,6 +332,49 @@ public final class ExtenderManager
     }
 
     /**
+     * Add listeners
+     * @param service The service
+     * @param ref The service reference
+     */
+    public void addListeners(final EventListener service, ServiceReference<EventListener> ref)
+    {
+        final Dictionary<String, Object> props = new Hashtable<>();
+        final List<String> names = new ArrayList<>();
+        if ( service instanceof HttpSessionAttributeListener)
+        {
+            names.add(HttpSessionAttributeListener.class.getName());
+        }
+        if ( service instanceof HttpSessionListener)
+        {
+            names.add(HttpSessionListener.class.getName());
+        }
+        if ( service instanceof ServletContextAttributeListener)
+        {
+            names.add(ServletContextAttributeListener.class.getName());
+        }
+        if ( service instanceof ServletRequestAttributeListener)
+        {
+            names.add(ServletRequestAttributeListener.class.getName());
+        }
+        if ( service instanceof ServletRequestListener)
+        {
+            names.add(ServletRequestListener.class.getName());
+        }
+
+        props.put(MARKER, "true");
+        props.put(org.osgi.service.http.whiteboard.HttpWhiteboardConstants.HTTP_WHITEBOARD_LISTENER, "true");
+        this.addHttpContextSelect(ref, props);
+        this.addServiceRanking(ref, props);
+
+        final ServiceRegistration<?> reg = ref.getBundle().getBundleContext().registerService(
+                names.toArray(new String[names.size()]),
+                service,
+                props);
+        this.putServiceRegistration(Type.LISTENERS, ref, reg);
+    }
+
+
+    /**
      * Remove a filter
      * @param ref The filter reference
      */
@@ -352,5 +390,14 @@ public final class ExtenderManager
     public void removeServlet(final ServiceReference<Servlet> ref)
     {
         this.removeServiceRegistration(Type.SERVLET, ref);
+    }
+
+    /**
+     * Remove a listener
+     * @param ref The service reference
+     */
+    public void removeListeners(final ServiceReference<EventListener> ref)
+    {
+        this.removeServiceRegistration(Type.LISTENERS, ref);
     }
 }

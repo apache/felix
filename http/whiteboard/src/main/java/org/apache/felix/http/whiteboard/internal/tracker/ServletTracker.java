@@ -24,6 +24,7 @@ import org.osgi.framework.BundleContext;
 import org.osgi.framework.InvalidSyntaxException;
 import org.osgi.framework.ServiceReference;
 
+@SuppressWarnings("deprecation")
 public final class ServletTracker
     extends AbstractTracker<Servlet>
 {
@@ -54,17 +55,10 @@ public final class ServletTracker
     protected void added(final Servlet service, final ServiceReference<Servlet> ref)
     {
         logDeprecationWarning("Servlet", service, ref);
-        this.manager.add(service, ref);
+        this.manager.addServlet(service, ref);
     }
 
-    @Override
-    protected void modified(final Servlet service, final ServiceReference<Servlet> ref)
-    {
-        removed(service, ref);
-        added(service, ref);
-    }
-
-    @Override
+   @Override
     protected void removed(final Servlet service, final ServiceReference<Servlet> ref)
     {
         this.manager.removeServlet(ref);

@@ -36,19 +36,12 @@ public final class HttpContextTracker
     protected void added(final HttpContext service, final ServiceReference<HttpContext> ref)
     {
         this.logDeprecationWarning("HttpContext", service, ref);
-        this.manager.add(service, ref);
-    }
-
-    @Override
-    protected void modified(final HttpContext service, final ServiceReference<HttpContext> ref)
-    {
-        removed(service, ref);
-        added(service, ref);
+        this.manager.addHttpContext(service, ref);
     }
 
     @Override
     protected void removed(final HttpContext service, final ServiceReference<HttpContext> ref)
     {
-        this.manager.remove(ref);
+        this.manager.removeHttpContext(ref);
     }
 }

@@ -62,7 +62,8 @@ public abstract class AbstractTracker<T>
     @Override
     public final void modifiedService(final ServiceReference<T> ref, T service)
     {
-        modified( service, ref);
+        removed(service, ref);
+        added(service, ref);
     }
 
     @Override
@@ -71,8 +72,6 @@ public abstract class AbstractTracker<T>
         super.removedService(ref, service);
         removed(service, ref);
     }
-
-    protected abstract void modified(T service, ServiceReference<T> ref);
 
     protected abstract void added(T service, ServiceReference<T> ref);
 
