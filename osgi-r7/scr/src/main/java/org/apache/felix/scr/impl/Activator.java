@@ -123,8 +123,14 @@ public class Activator extends AbstractExtender
             }
             catch ( final Exception e )
             {
-                logger.log(LogService.LOG_ERROR,  "Exception stopping during restart", e);
+                // logger might be null
+                if ( logger != null )
+                {
+                    logger.log(LogService.LOG_ERROR,  "Exception stopping during restart", e);
+                }
             }
+            // reinstantiate logger
+            logger = new ScrLogger(m_configuration, m_context);
         }
         try
         {
