@@ -57,7 +57,7 @@
                             org.osgi.service.cm;version="[1.2,2)"
                         </DynamicImport-Package>
                         <Require-Capability>
-                            osgi.implementation;filter:="(&amp;(osgi.implementation=osgi.http)(version=1.0))"
+                            osgi.implementation;filter:="(&amp;(osgi.implementation=osgi.http)(version&gt;=1.0)(!(version&gt;=2.0)))"
                         </Require-Capability>
                     </instructions>
                 </configuration>
