@@ -19,7 +19,7 @@ package org.osgi.util.converter;
 /**
  * Factory class to obtain the standard converter or a new converter builder.
  *
- * @author $Id$
+ * @author $Id: c61242e5e5e8201691228ec642f5c900d7107a60 $
  * @ThreadSafe
  */
 public class Converters {

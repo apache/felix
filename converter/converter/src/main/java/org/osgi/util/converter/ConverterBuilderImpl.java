@@ -24,6 +24,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * @author $Id: e13e1ab6e75b979602b6611c48a4ea66a20551b0 $
+ */
 class ConverterBuilderImpl implements ConverterBuilder {
     private final InternalConverter converter;
     private final Map<Type, List<ConverterFunction>> rules = new HashMap<>();

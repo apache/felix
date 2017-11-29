@@ -34,7 +34,7 @@ import org.osgi.util.function.Function;
  * Note that this class avoids lambda's and hard dependencies on Java-8 (or later) types
  * to also work under Java 7.
  */
-public class ConverterImpl implements InternalConverter {
+class ConverterImpl implements InternalConverter {
     private static final SimpleDateFormat ISO8601_DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssXXX");
     static {
         ISO8601_DATE_FORMAT.setTimeZone(TimeZone.getTimeZone("UTC"));
@@ -50,7 +50,7 @@ public class ConverterImpl implements InternalConverter {
         return new FunctioningImpl(this);
     }
 
-    public void addStandardRules(ConverterBuilder cb) {
+	void addStandardRules(ConverterBuilder cb) {
         // Not written using lambda's because this code needs to run with Java 7
         cb.rule(new Rule<Calendar, String>(new Function<Calendar, String>() {
             @Override
@@ -219,18 +219,21 @@ public class ConverterImpl implements InternalConverter {
             }
         }) {});
 
-        reflectiveAddJavaTimeRule(cb, "java.time.LocalDateTime");
-        reflectiveAddJavaTimeRule(cb, "java.time.LocalDate");
-        reflectiveAddJavaTimeRule(cb, "java.time.LocalTime");
-        reflectiveAddJavaTimeRule(cb, "java.time.OffsetDateTime");
-        reflectiveAddJavaTimeRule(cb, "java.time.OffsetTime");
-        reflectiveAddJavaTimeRule(cb, "java.time.ZonedDateTime");
+		reflectiveAddJavaTimeRule(cb, "java.time.LocalDateTime");
+		reflectiveAddJavaTimeRule(cb, "java.time.LocalDate");
+		reflectiveAddJavaTimeRule(cb, "java.time.LocalTime");
+		reflectiveAddJavaTimeRule(cb, "java.time.OffsetDateTime");
+		reflectiveAddJavaTimeRule(cb, "java.time.OffsetTime");
+		reflectiveAddJavaTimeRule(cb, "java.time.ZonedDateTime");
     }
 
-    private void reflectiveAddJavaTimeRule(ConverterBuilder cb, String timeClsName) {
+	private void reflectiveAddJavaTimeRule(ConverterBuilder cb,
+			String timeClsName) {
         try {
-            final Class<?> toCls = getClass().getClassLoader().loadClass(timeClsName);
-            final Method toMethod = toCls.getMethod("parse", CharSequence.class);
+			final Class< ? > toCls = getClass().getClassLoader()
+					.loadClass(timeClsName);
+			final Method toMethod = toCls.getMethod("parse",
+					CharSequence.class);
 
             cb.rule(new TypeRule<String, Object>(String.class, toCls, new Function<String, Object>() {
                 @Override
@@ -242,12 +245,13 @@ public class ConverterImpl implements InternalConverter {
                     }
                 }
             }));
-            cb.rule(new TypeRule<Object, String>(toCls, String.class, new Function<Object, String>() {
-                @Override
-                public String apply(Object t) {
-                    return t.toString();
-                }
-            }));
+			cb.rule(new TypeRule<Object,String>(toCls, String.class,
+					new Function<Object,String>() {
+						@Override
+						public String apply(Object t) {
+							return t.toString();
+						}
+					}));
         } catch (Exception ex) {
             // Class not available, do not add rule for it
         }
