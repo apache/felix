@@ -268,12 +268,12 @@ class ConvertingImpl extends AbstractSpecifying<Converting> implements Convertin
 	private Collection< ? > convertToCollectionDelegate() {
 		if (forceCopy)
 			return null;
-		
+
 		if (List.class.equals(targetClass) || Collection.class.equals(targetClass)) {
 			if (sourceClass.isArray()) {
 				return ListDelegate.forArray(object, this);
 			} else if (Collection.class.isAssignableFrom(sourceClass)) {
-				return ListDelegate.forCollection((Collection) object, this);
+				return ListDelegate.forCollection((Collection<?>) object, this);
 			}
 		} else if (Set.class.equals(targetClass)) {
 			if (sourceClass.isArray()) {
@@ -281,13 +281,14 @@ class ConvertingImpl extends AbstractSpecifying<Converting> implements Convertin
 						.forCollection(ListDelegate.forArray(object, this),
 								this);
 			} else if (Collection.class.isAssignableFrom(sourceClass)) {
-				return SetDelegate.forCollection((Collection) object, this);
+				return SetDelegate.forCollection((Collection<?>) object, this);
 			}
 		}
 		return null;
 	}
 
-	private <T> T convertToCollection() {
+	@SuppressWarnings({ "rawtypes", "unchecked" })
+    private <T> T convertToCollection() {
 		Collection< ? > cv = collectionView();
         Class<?> targetElementType = null;
         if (typeArguments != null && typeArguments.length > 0 && typeArguments[0] instanceof Class) {
