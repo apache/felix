@@ -55,49 +55,49 @@ import java.util.concurrent.ConcurrentNavigableMap;
 import java.util.concurrent.ConcurrentSkipListMap;
 
 /**
- * @author $Id: 6f9d6ee446aafb1de4c8f52537248a3180965f54 $
+ * @author $Id: 0316415f23407ff80f745182a0422f3542488008 $
  */
 class ConvertingImpl extends AbstractSpecifying<Converting> implements Converting, InternalConverting {
-    private static final Map<Class< ? >,Class< ? >> INTERFACE_IMPLS;
-    // Interfaces with no methods are also not considered
-    private static final Collection<Class< ? >>     NO_MAP_VIEW_TYPES;
+	private static final Map<Class< ? >,Class< ? >>	INTERFACE_IMPLS;
+	// Interfaces with no methods are also not considered
+	private static final Collection<Class< ? >>		NO_MAP_VIEW_TYPES;
     static {
 
-        Map<Class< ? >,Class< ? >> cim = new HashMap<>();
-        cim.put(Collection.class, ArrayList.class);
-        // Lists
-        cim.put(List.class, ArrayList.class);
-        // Sets
-        cim.put(Set.class, LinkedHashSet.class); // preserves insertion order
-        cim.put(NavigableSet.class, TreeSet.class);
-        cim.put(SortedSet.class, TreeSet.class);
-        // Queues
-        cim.put(Queue.class, LinkedList.class);
-        cim.put(Deque.class, LinkedList.class);
+		Map<Class< ? >,Class< ? >> cim = new HashMap<>();
+		cim.put(Collection.class, ArrayList.class);
+		// Lists
+		cim.put(List.class, ArrayList.class);
+		// Sets
+		cim.put(Set.class, LinkedHashSet.class); // preserves insertion order
+		cim.put(NavigableSet.class, TreeSet.class);
+		cim.put(SortedSet.class, TreeSet.class);
+		// Queues
+		cim.put(Queue.class, LinkedList.class);
+		cim.put(Deque.class, LinkedList.class);
 
-        Map<Class< ? >,Class< ? >> iim = new HashMap<>(cim);
-        // Maps
-        iim.put(Map.class, LinkedHashMap.class); // preserves insertion order
-        iim.put(ConcurrentMap.class, ConcurrentHashMap.class);
-        iim.put(ConcurrentNavigableMap.class,
-                ConcurrentSkipListMap.class);
-        iim.put(NavigableMap.class, TreeMap.class);
-        iim.put(SortedMap.class, TreeMap.class);
+		Map<Class< ? >,Class< ? >> iim = new HashMap<>(cim);
+		// Maps
+		iim.put(Map.class, LinkedHashMap.class); // preserves insertion order
+		iim.put(ConcurrentMap.class, ConcurrentHashMap.class);
+		iim.put(ConcurrentNavigableMap.class,
+				ConcurrentSkipListMap.class);
+		iim.put(NavigableMap.class, TreeMap.class);
+		iim.put(SortedMap.class, TreeMap.class);
 
-        Set<Class< ? >> nmv = new HashSet<>(cim.keySet());
-        nmv.addAll(Arrays.<Class< ? >> asList(String.class, Class.class,
-                Comparable.class, CharSequence.class, Map.Entry.class));
+		Set<Class< ? >> nmv = new HashSet<>(cim.keySet());
+		nmv.addAll(Arrays.<Class< ? >> asList(String.class, Class.class,
+				Comparable.class, CharSequence.class, Map.Entry.class));
 
-        INTERFACE_IMPLS = Collections.unmodifiableMap(iim);
-        NO_MAP_VIEW_TYPES = Collections.unmodifiableSet(nmv);
+		INTERFACE_IMPLS = Collections.unmodifiableMap(iim);
+		NO_MAP_VIEW_TYPES = Collections.unmodifiableSet(nmv);
     }
 
 
-    volatile InternalConverter                  converter;
+	volatile InternalConverter					converter;
     private volatile Object object;
-    private volatile Class< ? >                 sourceClass;
+	private volatile Class< ? >					sourceClass;
     private volatile Class<?> targetClass;
-    private volatile Type[]                     typeArguments;
+	private volatile Type[]						typeArguments;
 
     ConvertingImpl(InternalConverter c, Object obj) {
         converter = c;
@@ -163,16 +163,16 @@ class ConvertingImpl extends AbstractSpecifying<Converting> implements Convertin
         if (targetAsClass.isArray()) {
             return convertToArray();
         } else if (Collection.class.isAssignableFrom(targetAsClass)) {
-            return convertToCollection();
-        } else if (isMapType(targetAsClass, targetAsJavaBean, targetAsDTO)) {
+            return convertToCollectionType();
+		} else if (isMapType(targetAsClass, targetAsJavaBean, targetAsDTO)) {
             return convertToMapType();
         }
 
         // At this point we know that the target is a 'singular' type: not a map, collection or array
         if (Collection.class.isAssignableFrom(sourceClass)) {
             return convertCollectionToSingleValue(targetAsClass);
-        } else if (isMapType(sourceClass, sourceAsJavaBean, sourceAsDTO)) {
-            return convertMapToSingleValue(targetAsClass);
+		} else if (isMapType(sourceClass, sourceAsJavaBean, sourceAsDTO)) {
+			return convertMapToSingleValue(targetAsClass);
         } else if (object instanceof Map.Entry) {
             return convertMapEntryToSingleValue(targetAsClass);
         } else if ((object = asBoxedArray(object)) instanceof Object[]) {
@@ -190,7 +190,7 @@ class ConvertingImpl extends AbstractSpecifying<Converting> implements Convertin
         }
     }
 
-    private Object convertArrayToSingleValue(Class< ? > cls) {
+	private Object convertArrayToSingleValue(Class< ? > cls) {
         Object[] arr = (Object[]) object;
         if (arr.length == 0)
             return null;
@@ -206,14 +206,14 @@ class ConvertingImpl extends AbstractSpecifying<Converting> implements Convertin
             return converter.convert(coll.iterator().next()).to(cls);
     }
 
-    private Object convertMapToSingleValue(Class< ? > cls) {
-        Map< ? , ? > m = mapView(object, sourceClass, converter);
-        if (m.size() > 0) {
-            return converter.convert(m.entrySet().iterator().next()).to(cls);
-        } else {
-            return null;
-        }
-    }
+	private Object convertMapToSingleValue(Class< ? > cls) {
+		Map< ? , ? > m = mapView(object, sourceClass, converter);
+		if (m.size() > 0) {
+			return converter.convert(m.entrySet().iterator().next()).to(cls);
+		} else {
+			return null;
+		}
+	}
 
     @SuppressWarnings("rawtypes")
     private Object convertMapEntryToSingleValue(Class<?> cls) {
@@ -241,7 +241,7 @@ class ConvertingImpl extends AbstractSpecifying<Converting> implements Convertin
 
     @SuppressWarnings("unchecked")
     private <T> T convertToArray() {
-        Collection< ? > collectionView = collectionView();
+		Collection< ? > collectionView = collectionView();
         Iterator<?> itertor = collectionView.iterator();
         try {
             Object array = Array.newInstance(targetAsClass.getComponentType(), collectionView.size());
@@ -256,9 +256,39 @@ class ConvertingImpl extends AbstractSpecifying<Converting> implements Convertin
         }
     }
 
-    @SuppressWarnings({ "unchecked", "rawtypes" })
-    private <T> T convertToCollection() {
-        Collection< ? > cv = collectionView();
+	@SuppressWarnings("unchecked")
+    private <T> T convertToCollectionType() {
+		Collection< ? > res = convertToCollectionDelegate();
+		if (res != null)
+			return (T) res;
+
+		return convertToCollection();
+	}
+
+	private Collection< ? > convertToCollectionDelegate() {
+		if (forceCopy)
+			return null;
+		
+		if (List.class.equals(targetClass) || Collection.class.equals(targetClass)) {
+			if (sourceClass.isArray()) {
+				return ListDelegate.forArray(object, this);
+			} else if (Collection.class.isAssignableFrom(sourceClass)) {
+				return ListDelegate.forCollection((Collection) object, this);
+			}
+		} else if (Set.class.equals(targetClass)) {
+			if (sourceClass.isArray()) {
+				return SetDelegate
+						.forCollection(ListDelegate.forArray(object, this),
+								this);
+			} else if (Collection.class.isAssignableFrom(sourceClass)) {
+				return SetDelegate.forCollection((Collection) object, this);
+			}
+		}
+		return null;
+	}
+
+	private <T> T convertToCollection() {
+		Collection< ? > cv = collectionView();
         Class<?> targetElementType = null;
         if (typeArguments != null && typeArguments.length > 0 && typeArguments[0] instanceof Class) {
             targetElementType = (Class<?>) typeArguments[0];
@@ -372,7 +402,7 @@ class ConvertingImpl extends AbstractSpecifying<Converting> implements Convertin
         for (Map.Entry entry : (Set<Entry>) m.entrySet()) {
             Object key = entry.getKey();
             Object value = entry.getValue();
-            key = convertMapKey(key);
+			key = convertMapKey(key);
             value = convertMapValue(value);
             instance.put(key, value);
         }
@@ -380,69 +410,93 @@ class ConvertingImpl extends AbstractSpecifying<Converting> implements Convertin
         return instance;
     }
 
-    Object convertMapKey(Object key) {
-        return convertMapElement(key, 0);
-    }
+	Object convertCollectionValue(Object element) {
+		Type targetType = null;
+		if (typeArguments != null && typeArguments.length > 0) {
+			targetType = typeArguments[0];
+		}
+
+		if (element != null) {
+			if (targetType != null) {
+				element = converter.convert(element).to(targetType);
+			} else {
+				Class< ? > cls = element.getClass();
+				if (isCopyRequiredType(cls)) {
+					cls = getConstructableType(cls);
+				}
+
+				if (sourceAsDTO || DTOUtil.isDTOType(cls))
+					element = converter.convert(element).sourceAsDTO().to(cls);
+				else
+					element = converter.convert(element).to(cls);
+			}
+		}
+		return element;
+	}
+
+	Object convertMapKey(Object key) {
+		return convertMapElement(key, 0);
+	}
 
     Object convertMapValue(Object value) {
-        return convertMapElement(value, 1);
-    }
+		return convertMapElement(value, 1);
+	}
 
-    private Object convertMapElement(Object element, int typeIdx) {
-        Type targetType = null;
-        if (typeArguments != null && typeArguments.length > typeIdx) {
-            targetType = typeArguments[typeIdx];
-        }
+	private Object convertMapElement(Object element, int typeIdx) {
+		Type targetType = null;
+		if (typeArguments != null && typeArguments.length > typeIdx) {
+			targetType = typeArguments[typeIdx];
+		}
 
-        if (element != null) {
-            if (targetType != null) {
-                element = converter.convert(element).to(targetType);
-            } else {
-                Class< ? > cls = element.getClass();
-                if (isCopyRequiredType(cls)) {
-                    cls = getConstructableType(cls);
-                }
+		if (element != null) {
+			if (targetType != null) {
+				element = converter.convert(element).to(targetType);
+			} else {
+				Class< ? > cls = element.getClass();
+				if (isCopyRequiredType(cls)) {
+					cls = getConstructableType(cls);
+				}
 
-                if (sourceAsDTO || DTOUtil.isDTOType(cls))
-                    element = converter.convert(element).sourceAsDTO().to(cls);
-                else
-                    element = converter.convert(element).to(cls);
-            }
-        }
-        return element;
-    }
+				if (sourceAsDTO || DTOUtil.isDTOType(cls))
+					element = converter.convert(element).sourceAsDTO().to(cls);
+				else
+					element = converter.convert(element).to(cls);
+			}
+		}
+		return element;
+	}
 
-    @SuppressWarnings({
-            "unchecked", "rawtypes"
-    })
+	@SuppressWarnings({
+			"unchecked", "rawtypes"
+	})
     private Map convertToMapDelegate() {
         if (Map.class.isAssignableFrom(sourceClass)) {
             return MapDelegate.forMap((Map) object, this);
         } else if (Dictionary.class.isAssignableFrom(sourceClass)) {
             return MapDelegate.forDictionary((Dictionary) object, this);
         } else if (DTOUtil.isDTOType(sourceClass) || sourceAsDTO) {
-            return MapDelegate.forDTO(object, sourceClass, this);
+			return MapDelegate.forDTO(object, sourceClass, this);
         } else if (sourceAsJavaBean) {
-            return MapDelegate.forBean(object, sourceClass, this);
+			return MapDelegate.forBean(object, sourceClass, this);
         } else if (hasGetProperties(sourceClass)) {
             return null; // Handled in convertToMap()
         }
 
         // Assume it's an interface
-        Set<Class< ? >> interfaces = getInterfaces(sourceClass);
-        if (interfaces.size() > 0) {
-            return MapDelegate.forInterface(object,
-                    interfaces.iterator().next(), this);
-        }
-        return null;
+		Set<Class< ? >> interfaces = getInterfaces(sourceClass);
+		if (interfaces.size() > 0) {
+			return MapDelegate.forInterface(object,
+					interfaces.iterator().next(), this);
+		}
+		return null;
     }
 
     @SuppressWarnings("rawtypes")
     private Object convertToMapType() {
-        if (!isMapType(sourceClass, sourceAsJavaBean, sourceAsDTO)) {
-            throw new ConversionException(
-                    "Cannot convert " + object + " to " + targetAsClass);
-        }
+		if (!isMapType(sourceClass, sourceAsJavaBean, sourceAsDTO)) {
+			throw new ConversionException(
+					"Cannot convert " + object + " to " + targetAsClass);
+		}
 
         if (Map.class.equals(targetClass) && !forceCopy) {
             Map res = convertToMapDelegate();
@@ -476,8 +530,8 @@ class ConvertingImpl extends AbstractSpecifying<Converting> implements Convertin
                 return null;
             }
 
-                    @SuppressWarnings("synthetic-access")
-                    @Override
+					@SuppressWarnings("synthetic-access")
+					@Override
             public Type[] getActualTypeArguments() {
                 return typeArguments;
             }
@@ -485,7 +539,7 @@ class ConvertingImpl extends AbstractSpecifying<Converting> implements Convertin
     }
 
     private Object convertToJavaBean(Class<?> sourceCls, Class<?> targetCls) {
-        String prefix = Util.getPrefix(targetCls);
+		String prefix = Util.getPrefix(targetCls);
 
         @SuppressWarnings("rawtypes")
         Map m = mapView(object, sourceCls, converter);
@@ -498,9 +552,9 @@ class ConvertingImpl extends AbstractSpecifying<Converting> implements Convertin
                     propName.append(setterName.substring(4));
 
                 Class<?> setterType = setter.getParameterTypes()[0];
-                String key = propName.toString();
-                Object val = m.get(Util.unMangleName(prefix, key));
-                setter.invoke(res, converter.convert(val).to(setterType));
+				String key = propName.toString();
+				Object val = m.get(Util.unMangleName(prefix, key));
+				setter.invoke(res, converter.convert(val).to(setterType));
             }
             return res;
         } catch (Exception e) {
@@ -511,18 +565,18 @@ class ConvertingImpl extends AbstractSpecifying<Converting> implements Convertin
 
     @SuppressWarnings("rawtypes")
     private Object convertToInterface(Class<?> sourceCls, final Class<?> targetCls) {
-        InternalConverting ic = converter.convert(object);
-        ic.sourceAs(sourceAsClass);
-        if (sourceAsDTO)
-            ic.sourceAsDTO();
-        if (sourceAsJavaBean)
-            ic.sourceAsBean();
-        final Map m = ic.to(Map.class);
+		InternalConverting ic = converter.convert(object);
+		ic.sourceAs(sourceAsClass);
+		if (sourceAsDTO)
+			ic.sourceAsDTO();
+		if (sourceAsJavaBean)
+			ic.sourceAsBean();
+		final Map m = ic.to(Map.class);
 
         return Proxy.newProxyInstance(targetCls.getClassLoader(), new Class[] {targetCls},
             new InvocationHandler() {
-                    @SuppressWarnings("boxing")
-                    @Override
+					@SuppressWarnings("boxing")
+					@Override
                 public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
                     Class<?> mdDecl = method.getDeclaringClass();
                     if (mdDecl.equals(Object.class))
@@ -567,12 +621,12 @@ class ConvertingImpl extends AbstractSpecifying<Converting> implements Convertin
 
                         if (val == null) {
                             if (args != null && args.length == 1) {
-                                    val = args[0];
-                                } else {
-                                    throw new ConversionException(
-                                            "No value for property: "
-                                                    + propName);
-                                }
+									val = args[0];
+								} else {
+									throw new ConversionException(
+											"No value for property: "
+													+ propName);
+								}
                         }
                     }
 
@@ -581,8 +635,8 @@ class ConvertingImpl extends AbstractSpecifying<Converting> implements Convertin
             });
     }
 
-    @SuppressWarnings("boxing")
-    private Object handleNull(Class< ? > cls) {
+	@SuppressWarnings("boxing")
+	private Object handleNull(Class< ? > cls) {
         if (hasDefault)
             return converter.convert(defaultValue).to(cls);
 
@@ -600,15 +654,15 @@ class ConvertingImpl extends AbstractSpecifying<Converting> implements Convertin
         return converter.convert(0).to(cls);
     }
 
-    private static boolean isMapType(Class< ? > cls, boolean asJavaBean,
-            boolean asDTO) {
-        if (asDTO)
-            return true;
+	private static boolean isMapType(Class< ? > cls, boolean asJavaBean,
+			boolean asDTO) {
+		if (asDTO)
+			return true;
 
         // All interface types that are not Collections are treated as maps
         if (Map.class.isAssignableFrom(cls))
             return true;
-        else if (getInterfaces(cls).size() > 0)
+		else if (getInterfaces(cls).size() > 0)
             return true;
         else if (DTOUtil.isDTOType(cls))
             return true;
@@ -618,8 +672,8 @@ class ConvertingImpl extends AbstractSpecifying<Converting> implements Convertin
             return Dictionary.class.isAssignableFrom(cls);
     }
 
-    @SuppressWarnings("boxing")
-    private Object trySpecialCases() {
+	@SuppressWarnings("boxing")
+	private Object trySpecialCases() {
         if (Boolean.class.equals(targetAsClass)) {
             if (object instanceof Collection && ((Collection<?>) object).size() == 0) {
                 return Boolean.FALSE;
@@ -685,31 +739,31 @@ class ConvertingImpl extends AbstractSpecifying<Converting> implements Convertin
                 Constructor<?> ctr = targetAsClass.getConstructor(String.class);
                 return (T) ctr.newInstance(object.toString());
             } catch (Exception e2) {
-                // Ignore
+				// Ignore
             }
         }
         return null;
     }
 
-    private Collection< ? > collectionView() {
-        if (object == null)
+	private Collection< ? > collectionView() {
+		if (object == null)
             return null;
 
-        Collection< ? > c = asCollection();
+		Collection< ? > c = asCollection();
         if (c == null)
-            return Collections.singleton(object);
+			return Collections.singleton(object);
         else
             return c;
     }
 
-    private Collection< ? > asCollection() {
-        if (object instanceof Collection)
-            return (Collection< ? >) object;
-        else if ((object = asBoxedArray(object)) instanceof Object[])
-            return Arrays.asList((Object[]) object);
-        else if (isMapType(sourceClass, sourceAsJavaBean, sourceAsDTO))
-            return mapView(object, sourceClass, converter).entrySet();
-        else
+	private Collection< ? > asCollection() {
+		if (object instanceof Collection)
+			return (Collection< ? >) object;
+		else if ((object = asBoxedArray(object)) instanceof Object[])
+			return Arrays.asList((Object[]) object);
+		else if (isMapType(sourceClass, sourceAsJavaBean, sourceAsDTO))
+			return mapView(object, sourceClass, converter).entrySet();
+		else
             return null;
     }
 
@@ -755,10 +809,10 @@ class ConvertingImpl extends AbstractSpecifying<Converting> implements Convertin
     }
 
     @SuppressWarnings("rawtypes")
-    private static Map createMapFromInterface(Object obj, Class< ? > srcCls) {
+	private static Map createMapFromInterface(Object obj, Class< ? > srcCls) {
         Map result = new HashMap();
 
-        for (Class i : getInterfaces(srcCls)) {
+		for (Class i : getInterfaces(srcCls)) {
             for (Method md : i.getMethods()) {
                 handleInterfaceMethod(obj, i, md, new HashSet<String>(), result);
             }
@@ -768,9 +822,9 @@ class ConvertingImpl extends AbstractSpecifying<Converting> implements Convertin
         throw new ConversionException("Cannot be converted to map: " + obj);
     }
 
-    @SuppressWarnings("boxing")
-    private static Object createMapOrCollection(Class< ? > cls,
-            int initialSize) {
+	@SuppressWarnings("boxing")
+	private static Object createMapOrCollection(Class< ? > cls,
+			int initialSize) {
         try {
             Constructor<?> ctor = cls.getConstructor(int.class);
             return ctor.newInstance(initialSize);
@@ -814,39 +868,39 @@ class ConvertingImpl extends AbstractSpecifying<Converting> implements Convertin
         return null;
     }
 
-    // Returns an ordered set
-    private static Set<Class< ? >> getInterfaces(Class< ? > cls) {
-        if (NO_MAP_VIEW_TYPES.contains(cls))
-            return Collections.emptySet();
+	// Returns an ordered set
+	private static Set<Class< ? >> getInterfaces(Class< ? > cls) {
+		if (NO_MAP_VIEW_TYPES.contains(cls))
+			return Collections.emptySet();
 
-        Set<Class< ? >> interfaces = getInterfaces0(cls);
-        for (Iterator<Class< ? >> it = interfaces.iterator(); it.hasNext();) {
-            Class< ? > intf = it.next();
-            if (intf.getDeclaredMethods().length == 0)
-                it.remove();
-        }
+		Set<Class< ? >> interfaces = getInterfaces0(cls);
+		for (Iterator<Class< ? >> it = interfaces.iterator(); it.hasNext();) {
+			Class< ? > intf = it.next();
+			if (intf.getDeclaredMethods().length == 0)
+				it.remove();
+		}
 
-        interfaces.removeAll(NO_MAP_VIEW_TYPES);
+		interfaces.removeAll(NO_MAP_VIEW_TYPES);
 
-        return interfaces;
-    }
+		return interfaces;
+	}
 
-    // Returns an ordered set
-    private static Set<Class< ? >> getInterfaces0(Class< ? > cls) {
-        if (cls == null)
-            return Collections.emptySet();
+	// Returns an ordered set
+	private static Set<Class< ? >> getInterfaces0(Class< ? > cls) {
+		if (cls == null)
+			return Collections.emptySet();
 
-        Set<Class< ? >> classes = new LinkedHashSet<>();
-        if (cls.isInterface()) {
-            classes.add(cls);
-        } else {
-            classes.addAll(Arrays.asList(cls.getInterfaces()));
-        }
+		Set<Class< ? >> classes = new LinkedHashSet<>();
+		if (cls.isInterface()) {
+			classes.add(cls);
+		} else {
+			classes.addAll(Arrays.asList(cls.getInterfaces()));
+		}
 
-        classes.addAll(getInterfaces(cls.getSuperclass()));
+		classes.addAll(getInterfaces(cls.getSuperclass()));
 
-        return classes;
-    }
+		return classes;
+	}
 
     @SuppressWarnings({ "rawtypes", "unchecked" })
     private void handleDTOField(Object obj, Field field, Set<String> handledFields, Map result,
@@ -863,7 +917,7 @@ class ConvertingImpl extends AbstractSpecifying<Converting> implements Convertin
             result.put(fn, fVal);
             handledFields.add(fn);
         } catch (Exception e) {
-            // Ignore
+			// Ignore
         }
     }
 
@@ -880,7 +934,7 @@ class ConvertingImpl extends AbstractSpecifying<Converting> implements Convertin
             res.put(bp, md.invoke(obj));
             invokedMethods.add(bp);
         } catch (Exception e) {
-            // Ignore
+			// Ignore
         }
     }
 
@@ -902,7 +956,7 @@ class ConvertingImpl extends AbstractSpecifying<Converting> implements Convertin
             res.put(propName, r);
             invokedMethods.add(mn);
         } catch (Exception e) {
-            // Ignore
+			// Ignore
         }
     }
 
@@ -919,8 +973,8 @@ class ConvertingImpl extends AbstractSpecifying<Converting> implements Convertin
                 return m;
         } else if (hasGetProperties(sourceCls)) {
             return getPropertiesDelegate(obj, sourceCls);
-        }
-        return createMapFromInterface(obj, sourceClass);
+		}
+		return createMapFromInterface(obj, sourceClass);
     }
 
     private boolean hasGetProperties(Class<?> cls) {

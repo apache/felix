@@ -16,6 +16,9 @@
  */
 package org.osgi.util.converter;
 
+/**
+ * @author $Id: 86baf5c8bc1ae985fde13ffda43f4c8a28657211 $
+ */
 abstract class AbstractSpecifying<T extends Specifying<T>> implements Specifying<T> {
     protected volatile Object defaultValue;
     protected volatile boolean hasDefault = false;

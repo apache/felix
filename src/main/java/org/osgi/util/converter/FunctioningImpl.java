@@ -20,6 +20,9 @@ import java.lang.reflect.Type;
 
 import org.osgi.util.function.Function;
 
+/**
+ * @author $Id: bbac24ccf55921dd04c219987d75ec0ebb16484a $
+ */
 class FunctioningImpl extends AbstractSpecifying<Functioning> implements Functioning {
     private InternalConverter converter;
 

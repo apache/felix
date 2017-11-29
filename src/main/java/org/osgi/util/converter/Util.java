@@ -33,6 +33,9 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 
+/**
+ * @author $Id$
+ */
 class Util {
     private static final Map<Class<?>, Class<?>> boxedClasses;
     static {
