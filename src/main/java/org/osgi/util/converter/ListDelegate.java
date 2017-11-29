@@ -33,16 +33,17 @@ class ListDelegate<T> implements List<T> {
 	private volatile boolean	cloned;
 	private final ConvertingImpl	convertingImpl;
 
-	static <T> List<T> forArray(Object arr, ConvertingImpl converting) {
-		return new ListDelegate(new ArrayDelegate(arr), converting);
+	@SuppressWarnings({ "unchecked", "rawtypes" })
+    static <T> List<T> forArray(Object arr, ConvertingImpl converting) {
+		return new ListDelegate<T>(new ArrayDelegate(arr), converting);
 	}
 
 	static <T> List<T> forCollection(Collection<T> object,
 			ConvertingImpl converting) {
 		if (object instanceof List) {
-			return new ListDelegate((List<T>) object, converting);
+			return new ListDelegate<T>((List<T>) object, converting);
 		}
-		return new ListDelegate(new CollectionDelegate(object), converting);
+        return new ListDelegate<T>(new CollectionDelegate<>(object), converting);
 	}
 
 	private ListDelegate(List<T> del, ConvertingImpl conv) {
@@ -51,13 +52,13 @@ class ListDelegate<T> implements List<T> {
 	}
 
 	// Whenever a modification is made, the delegate is cloned and detached.
-	private void cloneDelegate() {
+	@SuppressWarnings("unchecked")
+    private void cloneDelegate() {
 		if (cloned) {
 			return;
 		} else {
 			cloned = true;
-			// delegate = new ArrayList<>(delegate);
-			delegate = new ArrayList(Arrays.asList(toArray()));
+			delegate = new ArrayList<T>((List<T>) Arrays.asList(toArray()));
 		}
 	}
 
@@ -202,12 +203,14 @@ class ListDelegate<T> implements List<T> {
 		return delegate.lastIndexOf(o);
 	}
 
-	@Override
+	@SuppressWarnings("unchecked")
+    @Override
 	public ListIterator<T> listIterator() {
 		return (ListIterator<T>) Arrays.asList(toArray()).listIterator();
 	}
 
-	@Override
+	@SuppressWarnings("unchecked")
+    @Override
 	public ListIterator<T> listIterator(int index) {
 		return (ListIterator<T>) Arrays.asList(toArray()).listIterator(index);
 	}
