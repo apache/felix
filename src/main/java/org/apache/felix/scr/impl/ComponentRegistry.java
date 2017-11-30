@@ -720,23 +720,23 @@ public class ComponentRegistry
                 {
                     this.timer = new Timer();
                 }
-            }
-            timer.schedule(new TimerTask()
-            {
+                timer.schedule(new TimerTask()
+                {
 
-                @Override
-                public void run() {
-                    synchronized ( changeCountLock )
-                    {
-                        if ( changeCount == count )
+                    @Override
+                    public void run() {
+                        synchronized ( changeCountLock )
                         {
-                            registration.setProperties(getServiceRegistrationProperties());
-                            timer.cancel();
-                            timer = null;
+                            if ( changeCount == count )
+                            {
+                                registration.setProperties(getServiceRegistrationProperties());
+                                timer.cancel();
+                                timer = null;
+                            }
                         }
                     }
-                }
-            }, 5000L);
+                }, 5000L);
+            }
         }
     }
 }
