@@ -131,6 +131,7 @@ public final class HttpServiceRuntimeImpl implements HttpServiceRuntime
     {
         if ( reg != null )
         {
+            boolean setProps = false;
             final long count;
             synchronized ( this )
             {
@@ -141,37 +142,40 @@ public final class HttpServiceRuntimeImpl implements HttpServiceRuntime
                 {
                     this.timer = new Timer();
                 }
-            }
-            if ( this.updateChangeCountDelay == 0L )
-            {
-                reg.setProperties(getAttributes());
-            }
-            else
-            {
-	            timer.schedule(new TimerTask()
-	            {
+                if ( this.updateChangeCountDelay == 0L )
+                {
+                    setProps = true;
+                }
+                else
+                {
+                    timer.schedule(new TimerTask()
+                    {
 
-	                @Override
-	                public void run()
-	                {
-	                    synchronized ( HttpServiceRuntimeImpl.this )
-	                    {
-	                        if ( changeCount == count )
-	                        {
-	                            try
-	                            {
-	                                reg.setProperties(getAttributes());
-	                            }
-	                            catch ( final IllegalStateException ise)
-	                            {
-	                                // we ignore this as this might happen on shutdown
-	                            }
-	                            timer.cancel();
-	                            timer = null;
-	                        }
-	                    }
-	                }
-	            }, this.updateChangeCountDelay);
+                        @Override
+                        public void run()
+                        {
+                            synchronized ( HttpServiceRuntimeImpl.this )
+                            {
+                                if ( changeCount == count )
+                                {
+                                    try
+                                    {
+                                        reg.setProperties(getAttributes());
+                                    }
+                                    catch ( final IllegalStateException ise)
+                                    {
+                                        // we ignore this as this might happen on shutdown
+                                    }
+                                    timer.cancel();
+                                    timer = null;
+                                }
+                            }
+                        }
+                    }, this.updateChangeCountDelay);
+                }
+            }
+            if ( setProps ) {
+                reg.setProperties(getAttributes());
             }
         }
     }
