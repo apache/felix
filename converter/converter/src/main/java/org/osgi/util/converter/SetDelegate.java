@@ -198,6 +198,10 @@ class SetDelegate<T> implements Set<T> {
 			Object obj = delegateIterator.next();
 			return (T) convertingImpl.convertCollectionValue(obj);
 		}
-	}
 
+		@Override
+		public void remove() {
+			throw new UnsupportedOperationException("remove");
+		}
+	}
 }
