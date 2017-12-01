@@ -25,15 +25,15 @@ import org.osgi.annotation.versioning.ConsumerType;
  * <P>
  * This interface can also be used to register a custom error handler.
  *
- * @author $Id: 60a17aadcd05222bc5aa57bb77d44e6364ef645d $
+ * @author $Id: 98afbf4376ad2866c36a4a0e13eb41ebe4feb463 $
  */
 @ConsumerType
 public interface ConverterFunction {
-    /**
-     * Special object to indicate that a custom converter rule or error
-     * handler cannot handle the conversion.
-     */
-    static final Object CANNOT_HANDLE = new Object();
+	/**
+	 * Special object to indicate that a custom converter rule or error handler
+	 * cannot handle the conversion.
+	 */
+	static final Object CANNOT_HANDLE = new Object();
 
 	/**
 	 * Convert the object into the target type.
@@ -42,13 +42,12 @@ public interface ConverterFunction {
 	 *            {@code null} as the convert function will not be invoked for
 	 *            null values.
 	 * @param targetType The target type.
-	 * @return The conversion result or {@link #CANNOT_HANDLE} to indicate that the
-	 *         convert function cannot handle this conversion. In this case the
-	 *         next matching rule or parent converter will be given a
+	 * @return The conversion result or {@link #CANNOT_HANDLE} to indicate that
+	 *         the convert function cannot handle this conversion. In this case
+	 *         the next matching rule or parent converter will be given a
 	 *         opportunity to convert.
 	 * @throws Exception the operation can throw an exception if the conversion
 	 *             can not be performed due to incompatible types.
 	 */
-	Object apply(Object obj, Type targetType)
-			throws Exception;
+	Object apply(Object obj, Type targetType) throws Exception;
 }

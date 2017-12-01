@@ -26,15 +26,17 @@ import java.util.List;
 import java.util.ListIterator;
 
 /**
- * @author $Id$
+ * @author $Id: 00fe25f8131cd1d8f1296a82ff3f06f99d2fd7f2 $
  */
 class ListDelegate<T> implements List<T> {
-	private volatile List<T> delegate;
-	private volatile boolean	cloned;
+	private volatile List<T>		delegate;
+	private volatile boolean		cloned;
 	private final ConvertingImpl	convertingImpl;
 
-	@SuppressWarnings({ "unchecked", "rawtypes" })
-    static <T> List<T> forArray(Object arr, ConvertingImpl converting) {
+	@SuppressWarnings({
+			"unchecked", "rawtypes"
+	})
+	static <T> List<T> forArray(Object arr, ConvertingImpl converting) {
 		return new ListDelegate<T>(new ArrayDelegate(arr), converting);
 	}
 
@@ -43,7 +45,8 @@ class ListDelegate<T> implements List<T> {
 		if (object instanceof List) {
 			return new ListDelegate<T>((List<T>) object, converting);
 		}
-        return new ListDelegate<T>(new CollectionDelegate<>(object), converting);
+		return new ListDelegate<T>(new CollectionDelegate<>(object),
+				converting);
 	}
 
 	private ListDelegate(List<T> del, ConvertingImpl conv) {
@@ -53,7 +56,7 @@ class ListDelegate<T> implements List<T> {
 
 	// Whenever a modification is made, the delegate is cloned and detached.
 	@SuppressWarnings("unchecked")
-    private void cloneDelegate() {
+	private void cloneDelegate() {
 		if (cloned) {
 			return;
 		} else {
@@ -168,8 +171,7 @@ class ListDelegate<T> implements List<T> {
 	@SuppressWarnings("unchecked")
 	@Override
 	public T get(int index) {
-		return (T) convertingImpl
-				.convertCollectionValue(delegate.get(index));
+		return (T) convertingImpl.convertCollectionValue(delegate.get(index));
 	}
 
 	@Override
@@ -204,13 +206,13 @@ class ListDelegate<T> implements List<T> {
 	}
 
 	@SuppressWarnings("unchecked")
-    @Override
+	@Override
 	public ListIterator<T> listIterator() {
 		return (ListIterator<T>) Arrays.asList(toArray()).listIterator();
 	}
 
 	@SuppressWarnings("unchecked")
-    @Override
+	@Override
 	public ListIterator<T> listIterator(int index) {
 		return (ListIterator<T>) Arrays.asList(toArray()).listIterator(index);
 	}
@@ -233,7 +235,7 @@ class ListDelegate<T> implements List<T> {
 		if (!(obj instanceof List))
 			return false;
 
-		List<?> l1 = new ArrayList<>(this);
+		List< ? > l1 = new ArrayList<>(this);
 		List< ? > l2 = new ArrayList<>((List< ? >) obj);
 		return l1.equals(l2);
 	}

@@ -20,7 +20,7 @@ import java.util.Collection;
 import java.util.List;
 
 /**
- * @author $Id$
+ * @author $Id: e71af7f75c634bd77b2c8ea6da52fe4788760e99 $
  */
 class CollectionDelegate<T> extends AbstractCollectionDelegate<T>
 		implements List<T> {
@@ -29,7 +29,7 @@ class CollectionDelegate<T> extends AbstractCollectionDelegate<T>
 	CollectionDelegate(Collection<T> coll) {
 		delegate = coll;
 	}
-	
+
 	@Override
 	public int size() {
 		return delegate.size();

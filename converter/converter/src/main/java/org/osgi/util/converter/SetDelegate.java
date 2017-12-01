@@ -26,14 +26,14 @@ import java.util.List;
 import java.util.Set;
 
 /**
- * @author $Id$
+ * @author $Id: 333c6155d3db040217e9ed0085c31f28b9d37105 $
  */
 class SetDelegate<T> implements Set<T> {
 	private volatile Set<T>			delegate;
 	private volatile boolean		cloned;
 	private final ConvertingImpl	convertingImpl;
 
-    static <T> Set<T> forCollection(Collection<T> collection,
+	static <T> Set<T> forCollection(Collection<T> collection,
 			ConvertingImpl converting) {
 		if (collection instanceof Set) {
 			return new SetDelegate<T>((Set<T>) collection, converting);

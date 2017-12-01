@@ -20,60 +20,61 @@ import java.lang.reflect.Type;
 import org.osgi.util.function.Function;
 
 /**
- * Rule implementation that works by passing in type arguments rather than subclassing.
- * The rule supports specifying both <em>from</em> and
- * <em>to</em> types. Filtering on the <em>from</em> by the {@code Rule}
- * implementation. Filtering on the <em>to</em> is done by the converter
- * customization mechanism.
+ * Rule implementation that works by passing in type arguments rather than
+ * subclassing. The rule supports specifying both <em>from</em> and <em>to</em>
+ * types. Filtering on the <em>from</em> by the {@code Rule} implementation.
+ * Filtering on the <em>to</em> is done by the converter customization
+ * mechanism.
  *
- * @author $Id: c0eeb7d740d96567bf72dfffdf5a038c60d8a3a4 $
- *
+ * @author $Id: f4dddce75f9727cc952f0926bb5e8b6c71d864cb $
  * @param <F> The type to convert from.
- * @param <T> The type to convert to. */
+ * @param <T> The type to convert to.
+ */
 public class TypeRule<F, T> implements TargetRule {
 	private final ConverterFunction	function;
-    private final Type toType;
+	private final Type				toType;
 
-    /**
-     * Create an instance based on source, target types and a conversion function.
-     *
-     * @param from The type to convert from.
-     * @param to The type to convert to.
-     * @param func The conversion function to use.
-     */
-    public TypeRule(Type from, Type to, Function<F,T> func) {
-        function = getFunction(from, func);
-        toType = to;
-    }
+	/**
+	 * Create an instance based on source, target types and a conversion
+	 * function.
+	 *
+	 * @param from The type to convert from.
+	 * @param to The type to convert to.
+	 * @param func The conversion function to use.
+	 */
+	public TypeRule(Type from, Type to, Function<F,T> func) {
+		function = getFunction(from, func);
+		toType = to;
+	}
 
 	private static <F, T> ConverterFunction getFunction(final Type from,
 			final Function<F,T> func) {
 		return new ConverterFunction() {
-            @Override
-            @SuppressWarnings("unchecked")
-            public Object apply(Object obj, Type targetType) throws Exception {
-                if (from instanceof Class) {
-                    Class<?> cls = (Class<?>) from;
-                    if (cls.isInstance(obj)) {
-                        T res = func.apply((F) obj);
-                        if (res != null)
-                            return res;
-                        else
-                            return ConverterFunction.CANNOT_HANDLE;
-                    }
-                }
-                return ConverterFunction.CANNOT_HANDLE;
-            }
-        };
-    }
+			@Override
+			@SuppressWarnings("unchecked")
+			public Object apply(Object obj, Type targetType) throws Exception {
+				if (from instanceof Class) {
+					Class< ? > cls = (Class< ? >) from;
+					if (cls.isInstance(obj)) {
+						T res = func.apply((F) obj);
+						if (res != null)
+							return res;
+						else
+							return ConverterFunction.CANNOT_HANDLE;
+					}
+				}
+				return ConverterFunction.CANNOT_HANDLE;
+			}
+		};
+	}
 
-    @Override
+	@Override
 	public ConverterFunction getFunction() {
-        return function;
-    }
+		return function;
+	}
 
-    @Override
-    public Type getTargetType() {
-        return toType;
-    }
+	@Override
+	public Type getTargetType() {
+		return toType;
+	}
 }
