@@ -345,18 +345,48 @@ class Util {
 	}
 
 	static String unMangleName(String prefix, String key) {
-		String res = key;
-		res = res.replace("$$", "\b"); // park double dollar as backspace char
-		res = res.replace("$_$", "-");
-		res = res.replaceAll("_\\$", ".");
-		res = res.replace("__", "\f"); // park double underscore as formfeed
-										// char
-		res = res.replace('_', '.');
-		res = res.replace("$", "");
-		res = res.replace('\f', '_'); // convert formfeed char back to single
-										// underscore
-		res = res.replace('\b', '$'); // convert backspace char back go dollar
 		// TODO handle Java keywords
-		return prefix + res;
+		return prefix + mangleMethodName(key);
+	}
+
+	static String mangleMethodName(String id) {
+		char[] array = id.toCharArray();
+		int out = 0;
+
+		boolean changed = false;
+		for (int i = 0; i < array.length; i++) {
+			if (match("$$", array, i) || match("__", array, i)) {
+				array[out++] = array[i++];
+				changed = true;
+			} else if (match("$_$", array, i)) {
+				array[out++] = '-';
+				i += 2;
+			} else {
+				char c = array[i];
+				if (c == '_') {
+					array[out++] = '.';
+					changed = true;
+				} else if (c == '$') {
+					changed = true;
+				} else {
+					array[out++] = c;
+				}
+			}
+		}
+		if (id.length() != out || changed)
+			return new String(array, 0, out);
+
+		return id;
+	}
+
+	private static boolean match(String pattern, char[] array, int i) {
+		for (int j = 0; j < pattern.length(); j++, i++) {
+			if (i >= array.length)
+				return false;
+
+			if (pattern.charAt(j) != array[i])
+				return false;
+		}
+		return true;
 	}
 }
