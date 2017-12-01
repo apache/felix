@@ -22,12 +22,12 @@ import org.osgi.annotation.versioning.ProviderType;
 /**
  * A builder to create a new converter with modified behaviour based on an
  * existing converter. The modified behaviour is specified by providing rules
- * and/or conversion functions. If multiple rules match they will be visited
- * in sequence of registration. If a rule's function returns {@code null} the
- * next ruld found will be visited. If none of the rules can handle the
- * conversion, the original converter will be used to perform the conversion.
+ * and/or conversion functions. If multiple rules match they will be visited in
+ * sequence of registration. If a rule's function returns {@code null} the next
+ * ruld found will be visited. If none of the rules can handle the conversion,
+ * the original converter will be used to perform the conversion.
  *
- * @author $Id: 7b467a98fd2cd5107f5a546780abfae21d067a53 $
+ * @author $Id: 6552ff889a7b2648b0eb57307d4fd6eac4b0ed19 $
  */
 @ProviderType
 public interface ConverterBuilder {
@@ -47,11 +47,11 @@ public interface ConverterBuilder {
 	 * the failed conversion.
 	 *
 	 * @param func The function to be used to handle errors.
-     * @return This converter builder for further building.
+	 * @return This converter builder for further building.
 	 */
 	ConverterBuilder errorHandler(ConverterFunction func);
 
-    /**
+	/**
 	 * Register a conversion rule for this converter. Note that only the target
 	 * type is specified, so the rule will be visited for every conversion to
 	 * the target type.
@@ -62,15 +62,15 @@ public interface ConverterBuilder {
 	 */
 	ConverterBuilder rule(Type type, ConverterFunction func);
 
-    /**
-     * Register a conversion rule for this converter.
-     *
-     * @param rule A rule implementation.
-     * @return This converter builder for further building.
-     */
+	/**
+	 * Register a conversion rule for this converter.
+	 *
+	 * @param rule A rule implementation.
+	 * @return This converter builder for further building.
+	 */
 	ConverterBuilder rule(TargetRule rule);
 
-    /**
+	/**
 	 * Register a catch-all rule, will be called of no other rule matches.
 	 *
 	 * @param func The function that will handle the conversion.

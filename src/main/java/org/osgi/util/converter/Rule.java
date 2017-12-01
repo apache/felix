@@ -20,65 +20,66 @@ import java.lang.reflect.Type;
 
 import org.osgi.util.function.Function;
 
-/** A rule implementation that works by capturing the type arguments via
- * subclassing. The rule supports specifying both <em>from</em> and
- * <em>to</em> types. Filtering on the <em>from</em> by the {@code Rule}
- * implementation. Filtering on the <em>to</em> is done by the converter
- * customization mechanism.
+/**
+ * A rule implementation that works by capturing the type arguments via
+ * subclassing. The rule supports specifying both <em>from</em> and <em>to</em>
+ * types. Filtering on the <em>from</em> by the {@code Rule} implementation.
+ * Filtering on the <em>to</em> is done by the converter customization
+ * mechanism.
  *
- * @author $Id: fe695b76abeeb5597341ce74a4178b8943606140 $
- *
+ * @author $Id: 35bc96ab6d4d749835e55f3e073a8efdf8e648c6 $
  * @param <F> The type to convert from.
  * @param <T> The type to convert to.
  */
 public abstract class Rule<F, T> implements TargetRule {
 	private final ConverterFunction function;
 
-    /**
-     * Create an instance with a conversion function.
-     * @param func The conversion function to use.
-     */
-    public Rule(Function<F,T> func) {
-        function = getGenericFunction(func);
-    }
+	/**
+	 * Create an instance with a conversion function.
+	 * 
+	 * @param func The conversion function to use.
+	 */
+	public Rule(Function<F,T> func) {
+		function = getGenericFunction(func);
+	}
 
 	private ConverterFunction getGenericFunction(final Function<F,T> func) {
 		return new ConverterFunction() {
-            @Override
-            @SuppressWarnings("unchecked")
+			@Override
+			@SuppressWarnings("unchecked")
 			public Object apply(Object obj, Type targetType) throws Exception {
-                Rule<?,?> r = Rule.this;
-                Type type = ((ParameterizedType) r.getClass().getGenericSuperclass())
-                        .getActualTypeArguments()[0];
+				Rule< ? , ? > r = Rule.this;
+				Type type = ((ParameterizedType) r.getClass()
+						.getGenericSuperclass()).getActualTypeArguments()[0];
 
-                if (type instanceof ParameterizedType) {
-                    type = ((ParameterizedType) type).getRawType();
-                }
+				if (type instanceof ParameterizedType) {
+					type = ((ParameterizedType) type).getRawType();
+				}
 
-                Class<?> cls = null;
-                if (type instanceof Class) {
-                    cls = ((Class<?>) type);
-                } else {
-                    return ConverterFunction.CANNOT_HANDLE;
-                }
+				Class< ? > cls = null;
+				if (type instanceof Class) {
+					cls = ((Class< ? >) type);
+				} else {
+					return ConverterFunction.CANNOT_HANDLE;
+				}
 
-                if (cls.isInstance(obj)) {
-                    return func.apply((F) obj);
-                }
-                return ConverterFunction.CANNOT_HANDLE;
-            }
-        };
-    }
+				if (cls.isInstance(obj)) {
+					return func.apply((F) obj);
+				}
+				return ConverterFunction.CANNOT_HANDLE;
+			}
+		};
+	}
 
-    @Override
+	@Override
 	public ConverterFunction getFunction() {
-        return function;
-    }
+		return function;
+	}
 
-    @Override
-    public Type getTargetType() {
-        Type type = ((ParameterizedType) getClass().getGenericSuperclass())
-                .getActualTypeArguments()[1];
-        return type;
-    }
+	@Override
+	public Type getTargetType() {
+		Type type = ((ParameterizedType) getClass().getGenericSuperclass())
+				.getActualTypeArguments()[1];
+		return type;
+	}
 }

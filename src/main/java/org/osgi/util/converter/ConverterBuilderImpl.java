@@ -25,72 +25,75 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * @author $Id: e13e1ab6e75b979602b6611c48a4ea66a20551b0 $
+ * @author $Id: 79f077e03220b00fa0aa224e712bd7f6fe06bea9 $
  */
 class ConverterBuilderImpl implements ConverterBuilder {
-    private final InternalConverter converter;
-    private final Map<Type, List<ConverterFunction>> rules = new HashMap<>();
-    private final List<ConverterFunction> catchAllRules = new ArrayList<>();
-    private final List<ConverterFunction> errorHandlers = new ArrayList<>();
+	private final InternalConverter					converter;
+	private final Map<Type,List<ConverterFunction>>	rules			= new HashMap<>();
+	private final List<ConverterFunction>			catchAllRules	= new ArrayList<>();
+	private final List<ConverterFunction>			errorHandlers	= new ArrayList<>();
 
-    public ConverterBuilderImpl(InternalConverter c) {
-        this.converter = c;
-    }
+	public ConverterBuilderImpl(InternalConverter c) {
+		this.converter = c;
+	}
 
-    @Override
-    public InternalConverter build() {
-        return new CustomConverterImpl(converter, rules, catchAllRules, errorHandlers);
-    }
+	@Override
+	public InternalConverter build() {
+		return new CustomConverterImpl(converter, rules, catchAllRules,
+				errorHandlers);
+	}
 
-    @Override
-    public ConverterBuilder errorHandler(ConverterFunction func) {
-        errorHandlers.add(func);
-        return this;
-    }
+	@Override
+	public ConverterBuilder errorHandler(ConverterFunction func) {
+		errorHandlers.add(func);
+		return this;
+	}
 
-    @Override
-    public ConverterBuilder rule(ConverterFunction func) {
-    	catchAllRules.add(func);
-        return this;
-    }
+	@Override
+	public ConverterBuilder rule(ConverterFunction func) {
+		catchAllRules.add(func);
+		return this;
+	}
 
-    @Override
-    public ConverterBuilder rule(Type t, ConverterFunction func) {
-    	getRulesList(t).add(func);
-    	return this;
-    }
+	@Override
+	public ConverterBuilder rule(Type t, ConverterFunction func) {
+		getRulesList(t).add(func);
+		return this;
+	}
 
-    @Override
-    public ConverterBuilder rule(TargetRule rule) {
-    	Type type = rule.getTargetType();
-    	getRulesList(type).add(rule.getFunction());
+	@Override
+	public ConverterBuilder rule(TargetRule rule) {
+		Type type = rule.getTargetType();
+		getRulesList(type).add(rule.getFunction());
 
-    	if (type instanceof ParameterizedType) {
-    	    ParameterizedType pt = (ParameterizedType) type;
+		if (type instanceof ParameterizedType) {
+			ParameterizedType pt = (ParameterizedType) type;
 
-    	    boolean containsWildCard = false;
-    	    for (Type t : pt.getActualTypeArguments()) {
-    	        if (t instanceof WildcardType) {
-    	            containsWildCard = true;
-    	            break;
-    	        }
-    	    }
+			boolean containsWildCard = false;
+			for (Type t : pt.getActualTypeArguments()) {
+				if (t instanceof WildcardType) {
+					containsWildCard = true;
+					break;
+				}
+			}
 
-    	    // If the parameterized type is a wildcard (e.g. '?') then register also the raw
-    	    // type for the rule. I.e Class<?> will also be registered under bare Class.
-    	    if (containsWildCard)
-    	        getRulesList(pt.getRawType()).add(rule.getFunction());
-    	}
+			// If the parameterized type is a wildcard (e.g. '?') then register
+			// also the raw
+			// type for the rule. I.e Class<?> will also be registered under
+			// bare Class.
+			if (containsWildCard)
+				getRulesList(pt.getRawType()).add(rule.getFunction());
+		}
 
-        return this;
-    }
+		return this;
+	}
 
-    private List<ConverterFunction> getRulesList(Type type) {
-        List<ConverterFunction> l = rules.get(type);
-    	if (l == null) {
-    		l = new ArrayList<>();
-    		rules.put(type, l);
-    	}
-        return l;
-    }
+	private List<ConverterFunction> getRulesList(Type type) {
+		List<ConverterFunction> l = rules.get(type);
+		if (l == null) {
+			l = new ArrayList<>();
+			rules.put(type, l);
+		}
+		return l;
+	}
 }

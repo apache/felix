@@ -20,19 +20,21 @@ import java.lang.reflect.Type;
 /**
  * Interface for custom conversion rules.
  *
- * @author $Id: f028e2a4b4e3f0c9a1ddb14655998e46fa856b37 $
+ * @author $Id: fce423615615d7b3928c07de5ccaefb82b03aaaf $
  */
 public interface TargetRule {
-    /**
-     * The function to perform the conversion.
-     * @return The function.
-     */
+	/**
+	 * The function to perform the conversion.
+	 * 
+	 * @return The function.
+	 */
 	ConverterFunction getFunction();
 
-    /**
-     * The target type of this rule. The conversion function is invoked for each conversion to the target type.
-     *
-     * @return The target type.
-     */
-    Type getTargetType();
+	/**
+	 * The target type of this rule. The conversion function is invoked for each
+	 * conversion to the target type.
+	 *
+	 * @return The target type.
+	 */
+	Type getTargetType();
 }

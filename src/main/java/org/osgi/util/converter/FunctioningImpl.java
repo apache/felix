@@ -21,48 +21,58 @@ import java.lang.reflect.Type;
 import org.osgi.util.function.Function;
 
 /**
- * @author $Id: bbac24ccf55921dd04c219987d75ec0ebb16484a $
+ * @author $Id: 04bd934c71fcf7b89f513a3538a3369e08002710 $
  */
-class FunctioningImpl extends AbstractSpecifying<Functioning> implements Functioning {
-    private InternalConverter converter;
+class FunctioningImpl extends AbstractSpecifying<Functioning>
+		implements Functioning {
+	private InternalConverter converter;
 
-    FunctioningImpl(InternalConverter converterImpl) {
-        converter = converterImpl;
-    }
+	FunctioningImpl(InternalConverter converterImpl) {
+		converter = converterImpl;
+	}
 
-    @Override
-    public <T> Function<Object, T> to(Class<T> cls) {
-        Type type = cls;
-        return to(type);
-    }
+	@Override
+	public <T> Function<Object,T> to(Class<T> cls) {
+		Type type = cls;
+		return to(type);
+	}
 
-    @Override
-    public <T> Function<Object, T> to(TypeReference<T> ref) {
-        return to(ref.getType());
-    }
+	@Override
+	public <T> Function<Object,T> to(TypeReference<T> ref) {
+		return to(ref.getType());
+	}
 
-    @Override
-    public <T> Function<Object, T> to(final Type type) {
-        return new Function<Object, T>() {
-            @Override
-            public T apply(Object t) {
-                InternalConverting ic = converter.convert(t);
-                return applyModifiers(ic).to(type);
-            }
-        };
-    }
+	@Override
+	public <T> Function<Object,T> to(final Type type) {
+		return new Function<Object,T>() {
+			@Override
+			public T apply(Object t) {
+				InternalConverting ic = converter.convert(t);
+				return applyModifiers(ic).to(type);
+			}
+		};
+	}
 
-    InternalConverting applyModifiers(InternalConverting ic) {
-        if (hasDefault) ic.defaultValue(defaultValue);
-        if (forceCopy) ic.copy();
-        if (keysIgnoreCase) ic.keysIgnoreCase();
-        if (sourceAsClass != null) ic.sourceAs(sourceAsClass);
-        if (sourceAsDTO) ic.sourceAsDTO();
-        if (sourceAsJavaBean) ic.sourceAsBean();
-        if (targetAsClass != null) ic.targetAs(targetAsClass);
-        if (targetAsDTO) ic.targetAsBean();
-        if (targetAsJavaBean) ic.targetAsBean();
+	InternalConverting applyModifiers(InternalConverting ic) {
+		if (hasDefault)
+			ic.defaultValue(defaultValue);
+		if (forceCopy)
+			ic.copy();
+		if (keysIgnoreCase)
+			ic.keysIgnoreCase();
+		if (sourceAsClass != null)
+			ic.sourceAs(sourceAsClass);
+		if (sourceAsDTO)
+			ic.sourceAsDTO();
+		if (sourceAsJavaBean)
+			ic.sourceAsBean();
+		if (targetAsClass != null)
+			ic.targetAs(targetAsClass);
+		if (targetAsDTO)
+			ic.targetAsBean();
+		if (targetAsJavaBean)
+			ic.targetAsBean();
 
-        return ic;
-    }
+		return ic;
+	}
 }

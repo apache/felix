@@ -21,96 +21,96 @@ import org.osgi.annotation.versioning.ProviderType;
  * This is the base interface for the {@link Converting} and {@link Functioning}
  * interfaces and defines the common modifiers that can be applied to these.
  *
- * @author $Id: e6c20609b4db17a7e45b59975e0c3c6eae9f243a $
+ * @author $Id: 044fea824d1b280a2d267c1221781f3037e7dcd2 $
  * @NotThreadSafe
  */
 @ProviderType
 public interface Specifying<T extends Specifying<T>> {
-    /**
-     * Always return a fully populated copy of the object, however if the object
-     * is an immutable built-in scalar such as String or Long, then a copy is
-     * not needed. By default a wrapped object is returned by the converter if
-     * possible.
-     *
-     * @return The current {@code Converting} object so that additional calls
-     *         can be chained.
-     */
-    T copy();
+	/**
+	 * Always return a fully populated copy of the object, however if the object
+	 * is an immutable built-in scalar such as String or Long, then a copy is
+	 * not needed. By default a wrapped object is returned by the converter if
+	 * possible.
+	 *
+	 * @return The current {@code Converting} object so that additional calls
+	 *         can be chained.
+	 */
+	T copy();
 
-    /**
-     * The default value to use when the object cannot be converted or in case
-     * of conversion from a {@code null} value.
-     *
-     * @param defVal The default value.
-     * @return The current {@code Converting} object so that additional calls
-     *         can be chained.
-     */
-    T defaultValue(Object defVal);
+	/**
+	 * The default value to use when the object cannot be converted or in case
+	 * of conversion from a {@code null} value.
+	 *
+	 * @param defVal The default value.
+	 * @return The current {@code Converting} object so that additional calls
+	 *         can be chained.
+	 */
+	T defaultValue(Object defVal);
 
-    /**
-     * When converting between map-like types use case-insensitive mapping of
-     * keys.
-     *
-     * @return The current {@code Converting} object so that additional calls
-     *         can be chained.
-     */
-    T keysIgnoreCase();
+	/**
+	 * When converting between map-like types use case-insensitive mapping of
+	 * keys.
+	 *
+	 * @return The current {@code Converting} object so that additional calls
+	 *         can be chained.
+	 */
+	T keysIgnoreCase();
 
-    /**
-     * Treat the source object as the specified class. This can be used to
-     * disambiguate a type if it implements multiple interfaces or extends
-     * multiple classes.
-     *
-     * @param cls The class to treat the object as.
-     * @return The current {@code Converting} object so that additional calls
-     *         can be chained.
-     */
-    T sourceAs(Class< ? > cls);
+	/**
+	 * Treat the source object as the specified class. This can be used to
+	 * disambiguate a type if it implements multiple interfaces or extends
+	 * multiple classes.
+	 *
+	 * @param cls The class to treat the object as.
+	 * @return The current {@code Converting} object so that additional calls
+	 *         can be chained.
+	 */
+	T sourceAs(Class< ? > cls);
 
-    /**
-     * Treat the source object as a JavaBean. By default objects will not be
-     * treated as JavaBeans, this has to be specified using this method.
-     *
-     * @return The current {@code Converting} object so that additional calls
-     *         can be chained.
-     */
-    T sourceAsBean();
+	/**
+	 * Treat the source object as a JavaBean. By default objects will not be
+	 * treated as JavaBeans, this has to be specified using this method.
+	 *
+	 * @return The current {@code Converting} object so that additional calls
+	 *         can be chained.
+	 */
+	T sourceAsBean();
 
-    /**
-     * Treat the source object as a DTO even if the source object has methods or
-     * is otherwise not recognised as a DTO.
-     *
-     * @return The current {@code Converting} object so that additional calls
-     *         can be chained.
-     */
-    T sourceAsDTO();
+	/**
+	 * Treat the source object as a DTO even if the source object has methods or
+	 * is otherwise not recognised as a DTO.
+	 *
+	 * @return The current {@code Converting} object so that additional calls
+	 *         can be chained.
+	 */
+	T sourceAsDTO();
 
-    /**
-     * Treat the target object as the specified class. This can be used to
-     * disambiguate a type if it implements multiple interfaces or extends
-     * multiple classes.
-     *
-     * @param cls The class to treat the object as.
-     * @return The current {@code Converting} object so that additional calls
-     *         can be chained.
-     */
-    T targetAs(Class< ? > cls);
+	/**
+	 * Treat the target object as the specified class. This can be used to
+	 * disambiguate a type if it implements multiple interfaces or extends
+	 * multiple classes.
+	 *
+	 * @param cls The class to treat the object as.
+	 * @return The current {@code Converting} object so that additional calls
+	 *         can be chained.
+	 */
+	T targetAs(Class< ? > cls);
 
-    /**
-     * Treat the target object as a JavaBean. By default objects will not be
-     * treated as JavaBeans, this has to be specified using this method.
-     *
-     * @return The current {@code Converting} object so that additional calls
-     *         can be chained.
-     */
-    T targetAsBean();
+	/**
+	 * Treat the target object as a JavaBean. By default objects will not be
+	 * treated as JavaBeans, this has to be specified using this method.
+	 *
+	 * @return The current {@code Converting} object so that additional calls
+	 *         can be chained.
+	 */
+	T targetAsBean();
 
-    /**
-     * Treat the target object as a DTO even if it has methods or is otherwise
-     * not recognized as a DTO.
-     *
-     * @return The current {@code Converting} object so that additional calls
-     *         can be chained.
-     */
-    T targetAsDTO();
+	/**
+	 * Treat the target object as a DTO even if it has methods or is otherwise
+	 * not recognized as a DTO.
+	 *
+	 * @return The current {@code Converting} object so that additional calls
+	 *         can be chained.
+	 */
+	T targetAsDTO();
 }

@@ -17,15 +17,16 @@
 package org.osgi.util.converter;
 
 /**
- * This interface is the same as the {@link Converting} interface with the addition
- * that the current converter (which may include custom rules) can be set on it.
- * This allows the converter to be re-entrant and use itself for sub-conversions if
- * applicable.
+ * This interface is the same as the {@link Converting} interface with the
+ * addition that the current converter (which may include custom rules) can be
+ * set on it. This allows the converter to be re-entrant and use itself for
+ * sub-conversions if applicable.
  */
 interface InternalConverting extends Converting {
-    /**
-     * Set the current converter.
-     * @param c The current converter.
-     */
-    void setConverter(Converter c);
+	/**
+	 * Set the current converter.
+	 * 
+	 * @param c The current converter.
+	 */
+	void setConverter(Converter c);
 }

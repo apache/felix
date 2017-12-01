@@ -26,45 +26,48 @@ import java.util.Map;
 import java.util.Set;
 
 /**
- * @author $Id: 935220b2f53a4f2cf970d3a704c03611ddd753fd $
+ * @author $Id: c44f62dbfe9e3d7353f470d44d003eafa5f3f88d $
  */
-class MapDelegate<K, V> implements Map<K, V> {
+class MapDelegate<K, V> implements Map<K,V> {
 	// not synchronized. Worst that can happen is that cloning is done more than
 	// once, which is harmless.
 	private volatile boolean		cloned	= false;
-    private final ConvertingImpl convertingImpl;
-    Map<K, V> delegate;
+	private final ConvertingImpl	convertingImpl;
+	Map<K,V>						delegate;
 
-    private MapDelegate(ConvertingImpl converting, Map<K, V> del) {
-        convertingImpl = converting;
-        delegate = del;
-    }
+	private MapDelegate(ConvertingImpl converting, Map<K,V> del) {
+		convertingImpl = converting;
+		delegate = del;
+	}
 
 	static MapDelegate<String,Object> forBean(Object b, Class< ? > beanClass,
 			ConvertingImpl converting) {
 		return new MapDelegate<>(converting,
 				new DynamicBeanFacade(b, beanClass, converting));
-    }
+	}
 
-    static <K, V> Map<K, V> forMap(Map<K, V> m, ConvertingImpl converting) {
-        return new MapDelegate<>(converting, new DynamicMapFacade<>(m, converting));
-    }
+	static <K, V> Map<K,V> forMap(Map<K,V> m, ConvertingImpl converting) {
+		return new MapDelegate<>(converting,
+				new DynamicMapFacade<>(m, converting));
+	}
 
-    static <K, V> MapDelegate<K, V> forDictionary(Dictionary<K, V> d, ConvertingImpl converting) {
-        return new MapDelegate<>(converting, new DynamicDictionaryFacade<>(d, converting));
-    }
+	static <K, V> MapDelegate<K,V> forDictionary(Dictionary<K,V> d,
+			ConvertingImpl converting) {
+		return new MapDelegate<>(converting,
+				new DynamicDictionaryFacade<>(d, converting));
+	}
 
 	static MapDelegate<String,Object> forDTO(Object obj, Class< ? > dtoClass,
 			ConvertingImpl converting) {
 		return new MapDelegate<>(converting,
 				new DynamicDTOFacade(obj, dtoClass, converting));
-    }
+	}
 
 	static MapDelegate<String,Object> forInterface(Object obj, Class< ? > intf,
 			ConvertingImpl converting) {
 		return new MapDelegate<>(converting,
 				new DynamicInterfaceFacade(obj, intf, converting));
-    }
+	}
 
 	@Override
 	public int size() {
@@ -76,173 +79,173 @@ class MapDelegate<K, V> implements Map<K, V> {
 			keys.add(getConvertedKey(key));
 		}
 
-        return keys.size();
-    }
+		return keys.size();
+	}
 
 	@Override
 	public boolean isEmpty() {
-        return delegate.isEmpty();
-    }
+		return delegate.isEmpty();
+	}
 
 	@Override
 	public boolean containsKey(Object key) {
 		return keySet().contains(key);
-    }
+	}
 
 	@Override
 	public boolean containsValue(Object value) {
 		return values().contains(value);
-    }
+	}
 
 	@Override
 	@SuppressWarnings("unchecked")
-    public V get(Object key) {
-        V val = null;
+	public V get(Object key) {
+		V val = null;
 		if (internalKeySet().contains(key)) {
-            val = delegate.get(key);
-        }
+			val = delegate.get(key);
+		}
 
-        if (val == null) {
+		if (val == null) {
 			key = findConvertedKey(internalKeySet(), key);
 			val = delegate.get(key);
-        }
+		}
 
-        if (val == null)
-            return null;
-        else
+		if (val == null)
+			return null;
+		else
 			return (V) getConvertedValue(val);
-    }
+	}
 
 	private Object getConvertedKey(Object key) {
 		return convertingImpl.convertMapKey(key);
 	}
 
 	private Object getConvertedValue(Object val) {
-        return convertingImpl.convertMapValue(val);
-    }
+		return convertingImpl.convertMapValue(val);
+	}
 
-    private Object findConvertedKey(Set<?> keySet, Object key) {
-        for (Object k : keySet) {
-            if (key.equals(k))
-                return k;
-        }
+	private Object findConvertedKey(Set< ? > keySet, Object key) {
+		for (Object k : keySet) {
+			if (key.equals(k))
+				return k;
+		}
 
-        for (Object k : keySet) {
-            Object c = convertingImpl.converter.convert(k).to(key.getClass());
-            if (c != null && c.equals(key))
-                return k;
-        }
-        return key;
-    }
+		for (Object k : keySet) {
+			Object c = convertingImpl.converter.convert(k).to(key.getClass());
+			if (c != null && c.equals(key))
+				return k;
+		}
+		return key;
+	}
 
 	@Override
 	public V put(K key, V value) {
-        cloneDelegate();
+		cloneDelegate();
 
-        return delegate.put(key, value);
-    }
+		return delegate.put(key, value);
+	}
 
 	@Override
 	public V remove(Object key) {
-        cloneDelegate();
+		cloneDelegate();
 
-        return delegate.remove(key);
-    }
+		return delegate.remove(key);
+	}
 
 	@Override
 	public void putAll(Map< ? extends K, ? extends V> m) {
-        cloneDelegate();
+		cloneDelegate();
 
-        delegate.putAll(m);
-    }
+		delegate.putAll(m);
+	}
 
 	@Override
 	public void clear() {
 		cloned = true;
-        delegate = new HashMap<>();
-    }
+		delegate = new HashMap<>();
+	}
 
-    private Set<K> internalKeySet() {
-        return delegate.keySet();
-    }
+	private Set<K> internalKeySet() {
+		return delegate.keySet();
+	}
 
 	@SuppressWarnings("unchecked")
 	@Override
 	public Set<K> keySet() {
-        Set<K> keys = new HashSet<>();
+		Set<K> keys = new HashSet<>();
 		for (Object key : internalKeySet()) {
 			keys.add((K) getConvertedKey(key));
-        }
-        return keys;
-    }
+		}
+		return keys;
+	}
 
 	@Override
 	public Collection<V> values() {
-        List<V> values = new ArrayList<>();
-        for (Map.Entry<K,V> entry : entrySet()) {
-            values.add(entry.getValue());
-        }
-        return values;
-    }
+		List<V> values = new ArrayList<>();
+		for (Map.Entry<K,V> entry : entrySet()) {
+			values.add(entry.getValue());
+		}
+		return values;
+	}
 
 	@Override
 	@SuppressWarnings("unchecked")
-    public Set<java.util.Map.Entry<K, V>> entrySet() {
-        Set<Map.Entry<K,V>> result = new HashSet<>();
-        for (Map.Entry<?,?> entry : delegate.entrySet()) {
-            K key = (K) findConvertedKey(internalKeySet(), entry.getKey());
+	public Set<java.util.Map.Entry<K,V>> entrySet() {
+		Set<Map.Entry<K,V>> result = new HashSet<>();
+		for (Map.Entry< ? , ? > entry : delegate.entrySet()) {
+			K key = (K) findConvertedKey(internalKeySet(), entry.getKey());
 			V val = (V) getConvertedValue(entry.getValue());
-            result.add(new MapEntry<K,V>(key, val));
-        }
-        return result;
-    }
+			result.add(new MapEntry<K,V>(key, val));
+		}
+		return result;
+	}
 
 	@Override
 	public boolean equals(Object o) {
-        return delegate.equals(o);
-    }
+		return delegate.equals(o);
+	}
 
 	@Override
 	public int hashCode() {
-        return delegate.hashCode();
-    }
+		return delegate.hashCode();
+	}
 
-    private void cloneDelegate() {
+	private void cloneDelegate() {
 		if (cloned) {
 			return;
 		} else {
 			cloned = true;
 			delegate = new HashMap<>(delegate);
 		}
-    }
+	}
 
-    @Override
-    public String toString() {
-        return delegate.toString();
-    }
+	@Override
+	public String toString() {
+		return delegate.toString();
+	}
 
-    static class MapEntry<K,V> implements Map.Entry<K,V> {
-        private final K key;
-        private final V value;
+	static class MapEntry<K, V> implements Map.Entry<K,V> {
+		private final K	key;
+		private final V	value;
 
-        MapEntry(K k, V v) {
-            key = k;
-            value = v;
-        }
+		MapEntry(K k, V v) {
+			key = k;
+			value = v;
+		}
 
-        @Override
-        public K getKey() {
-            return key;
-        }
+		@Override
+		public K getKey() {
+			return key;
+		}
 
-        @Override
-        public V getValue() {
-            return value;
-        }
+		@Override
+		public V getValue() {
+			return value;
+		}
 
-        @Override
-        public V setValue(V value) {
-            throw new UnsupportedOperationException();
-        }
-    }
+		@Override
+		public V setValue(V value) {
+			throw new UnsupportedOperationException();
+		}
+	}
 }

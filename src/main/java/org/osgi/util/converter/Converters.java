@@ -19,36 +19,38 @@ package org.osgi.util.converter;
 /**
  * Factory class to obtain the standard converter or a new converter builder.
  *
- * @author $Id: c61242e5e5e8201691228ec642f5c900d7107a60 $
+ * @author $Id: 366f18dc114b2ad7692c8b4d82577244a54bf227 $
  * @ThreadSafe
  */
 public class Converters {
-    private static final Converter CONVERTER;
+	private static final Converter CONVERTER;
 
-    static {
-        ConverterImpl impl = new ConverterImpl();
-        ConverterBuilder cb = impl.newConverterBuilder();
-        impl.addStandardRules(cb);
-        CONVERTER = cb.build();
-    }
+	static {
+		ConverterImpl impl = new ConverterImpl();
+		ConverterBuilder cb = impl.newConverterBuilder();
+		impl.addStandardRules(cb);
+		CONVERTER = cb.build();
+	}
 
-    private Converters() {
-        // Do not instantiate this factory class
-    }
+	private Converters() {
+		// Do not instantiate this factory class
+	}
 
-    /**
-     * Obtain the standard converter.
-     * @return The standard converter.
-     */
-    public static Converter standardConverter() {
-        return CONVERTER;
-    }
+	/**
+	 * Obtain the standard converter.
+	 * 
+	 * @return The standard converter.
+	 */
+	public static Converter standardConverter() {
+		return CONVERTER;
+	}
 
-    /**
-     * Obtain a converter builder based on the standard converter.
-     * @return A new converter builder.
-     */
-    public static ConverterBuilder newConverterBuilder() {
-        return CONVERTER.newConverterBuilder();
-    }
+	/**
+	 * Obtain a converter builder based on the standard converter.
+	 * 
+	 * @return A new converter builder.
+	 */
+	public static ConverterBuilder newConverterBuilder() {
+		return CONVERTER.newConverterBuilder();
+	}
 }

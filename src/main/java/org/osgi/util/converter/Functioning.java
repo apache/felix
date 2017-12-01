@@ -21,46 +21,45 @@ import org.osgi.annotation.versioning.ProviderType;
 import org.osgi.util.function.Function;
 
 /**
- * This interface is used to specify the target function to perform
- * conversions. This function can be used multiple times.
- * A {@link Functioning} instance can be obtained via the
- * {@link Converter}.
+ * This interface is used to specify the target function to perform conversions.
+ * This function can be used multiple times. A {@link Functioning} instance can
+ * be obtained via the {@link Converter}.
  *
- * @author $Id: 83db128a496153440bbe5c347e3de9a83dca7c59 $
+ * @author $Id: 94afaa71ea94e8679296a808faf94601a7102d66 $
  * @NotThreadSafe
  */
 @ProviderType
 public interface Functioning extends Specifying<Functioning> {
-    /**
-     * Specify the target object type for the conversion as a class object.
-     *
-     * @param cls The class to convert to.
-     * @return A function that can perform the conversion.
-     */
-    <T> Function<Object, T> to(Class<T> cls);
+	/**
+	 * Specify the target object type for the conversion as a class object.
+	 *
+	 * @param cls The class to convert to.
+	 * @return A function that can perform the conversion.
+	 */
+	<T> Function<Object,T> to(Class<T> cls);
 
-    /**
-     * Specify the target object type as a Java Reflection Type object.
-     *
-     * @param type A Type object to represent the target type to be converted
-     *            to.
-     * @return A function that can perform the conversion.
-     */
-    <T> Function<Object, T> to(Type type);
+	/**
+	 * Specify the target object type as a Java Reflection Type object.
+	 *
+	 * @param type A Type object to represent the target type to be converted
+	 *            to.
+	 * @return A function that can perform the conversion.
+	 */
+	<T> Function<Object,T> to(Type type);
 
-    /**
-     * Specify the target object type as a {@link TypeReference}. If the target
-     * class carries generics information a TypeReference should be used as this
-     * preserves the generic information whereas a Class object has this
-     * information erased. Example use:
-     *
-     * <pre>
-     * List&lt;String&gt; result = converter.function()
-     *      .to(new TypeReference&lt;List&lt;String&gt;&gt;() {});
-     * </pre>
-     *
-     * @param ref A type reference to the object being converted to.
-     * @return A function that can perform the conversion.
-     */
-    <T> Function<Object, T> to(TypeReference<T> ref);
+	/**
+	 * Specify the target object type as a {@link TypeReference}. If the target
+	 * class carries generics information a TypeReference should be used as this
+	 * preserves the generic information whereas a Class object has this
+	 * information erased. Example use:
+	 *
+	 * <pre>
+	 * List&lt;String&gt; result = converter.function()
+	 * 		.to(new TypeReference&lt;List&lt;String&gt;&gt;() {});
+	 * </pre>
+	 *
+	 * @param ref A type reference to the object being converted to.
+	 * @return A function that can perform the conversion.
+	 */
+	<T> Function<Object,T> to(TypeReference<T> ref);
 }
