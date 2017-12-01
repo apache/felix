@@ -131,23 +131,22 @@ public final class HttpServiceRuntimeImpl implements HttpServiceRuntime
     {
         if ( reg != null )
         {
-            boolean setProps = false;
-            final long count;
+            boolean setPropsDirectly = false;
             synchronized ( this )
             {
                 this.changeCount++;
-                count = this.changeCount;
+                final long count = this.changeCount;
                 this.setAttribute(PROP_CHANGECOUNT, this.changeCount);
-                if ( this.updateChangeCountDelay > 0 && this.timer == null )
+                if ( this.updateChangeCountDelay <= 0L )
                 {
-                    this.timer = new Timer();
-                }
-                if ( this.updateChangeCountDelay == 0L )
-                {
-                    setProps = true;
+                    setPropsDirectly = true;
                 }
                 else
                 {
+                    if ( this.timer == null )
+                    {
+                        this.timer = new Timer();
+                    }
                     timer.schedule(new TimerTask()
                     {
 
@@ -174,8 +173,16 @@ public final class HttpServiceRuntimeImpl implements HttpServiceRuntime
                     }, this.updateChangeCountDelay);
                 }
             }
-            if ( setProps ) {
-                reg.setProperties(getAttributes());
+            if ( setPropsDirectly )
+            {
+                try
+                {
+                    reg.setProperties(getAttributes());
+                }
+                catch ( final IllegalStateException ise)
+                {
+                    // we ignore this as this might happen on shutdown
+                }
             }
         }
     }
