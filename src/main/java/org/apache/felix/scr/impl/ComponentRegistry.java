@@ -728,7 +728,14 @@ public class ComponentRegistry
                         {
                             if ( changeCount == count )
                             {
-                                registration.setProperties(getServiceRegistrationProperties());
+                                try
+                                {
+                                    registration.setProperties(getServiceRegistrationProperties());
+                                }
+                                catch ( final IllegalStateException ise)
+                                {
+                                    // we ignore this as this might happen on shutdown
+                                }
                                 timer.cancel();
                                 timer = null;
                             }
