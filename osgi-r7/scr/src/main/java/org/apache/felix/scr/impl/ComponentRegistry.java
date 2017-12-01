@@ -711,11 +711,10 @@ public class ComponentRegistry
     {
         if ( registration != null )
         {
-            final long count;
             synchronized ( changeCountLock )
             {
                 this.changeCount++;
-                count = this.changeCount;
+                final long count = this.changeCount;
                 if ( this.timer == null )
                 {
                     this.timer = new Timer();
