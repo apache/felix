@@ -23,7 +23,6 @@ import java.io.IOException;
 import java.io.StringWriter;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -153,13 +152,22 @@ public class TypeConverter {
                     return new String[0];
                 }
                 final Object firstObject = list.get(0);
+                boolean hasListOrMap = false;
+                for(final Object v : list) {
+                    if ( v instanceof List || v instanceof Map ) {
+                        hasListOrMap = true;
+                        break;
+                    }
+                }
                 Object convertedValue = null;
-                if ( firstObject instanceof Boolean ) {
-                    convertedValue = getConverter().convert(list).defaultValue(null).to(Boolean[].class);
-                } else if ( firstObject instanceof Long || firstObject instanceof Integer || firstObject instanceof Byte || firstObject instanceof Short ) {
-                    convertedValue =  getConverter().convert(list).defaultValue(null).to(Long[].class);
-                } else if ( firstObject instanceof Double || firstObject instanceof Float ) {
-                    convertedValue =  getConverter().convert(list).defaultValue(null).to(Double[].class);
+                if ( !hasListOrMap ) {
+                    if ( firstObject instanceof Boolean ) {
+                        convertedValue = getConverter().convert(list).defaultValue(null).to(Boolean[].class);
+                    } else if ( firstObject instanceof Long || firstObject instanceof Integer || firstObject instanceof Byte || firstObject instanceof Short ) {
+                        convertedValue =  getConverter().convert(list).defaultValue(null).to(Long[].class);
+                    } else if ( firstObject instanceof Double || firstObject instanceof Float ) {
+                        convertedValue =  getConverter().convert(list).defaultValue(null).to(Double[].class);
+                    }
                 }
                 if ( convertedValue == null ) {
                     convertedValue = getConverter().convert(list).defaultValue(null).to(String[].class);
@@ -232,31 +240,31 @@ public class TypeConverter {
 
         // Collections of scalar types
         if ( "Collection<String>".equals(typeInfo) ) {
-            return getConverter().convert(value).defaultValue(null).to(new TypeReference<List<String>>() {});
+            return getConverter().convert(value).defaultValue(null).to(new TypeReference<ArrayList<String>>() {});
 
         } else if ( "Collection<Integer>".equals(typeInfo) ) {
-            return getConverter().convert(value).defaultValue(null).to(new TypeReference<List<Integer>>() {});
+            return getConverter().convert(value).defaultValue(null).to(new TypeReference<ArrayList<Integer>>() {});
 
         } else if ( "Collection<Long>".equals(typeInfo) ) {
-            return getConverter().convert(value).defaultValue(null).to(new TypeReference<List<Long>>() {});
+            return getConverter().convert(value).defaultValue(null).to(new TypeReference<ArrayList<Long>>() {});
 
         } else if ( "Collection<Float>".equals(typeInfo)  ) {
-            return getConverter().convert(value).defaultValue(null).to(new TypeReference<List<Float>>() {});
+            return getConverter().convert(value).defaultValue(null).to(new TypeReference<ArrayList<Float>>() {});
 
         } else if ( "Collection<Double>".equals(typeInfo)  ) {
-            return getConverter().convert(value).defaultValue(null).to(new TypeReference<List<Double>>() {});
+            return getConverter().convert(value).defaultValue(null).to(new TypeReference<ArrayList<Double>>() {});
 
         } else if ( "Collection<Byte>".equals(typeInfo) ) {
-            return getConverter().convert(value).defaultValue(null).to(new TypeReference<List<Byte>>() {});
+            return getConverter().convert(value).defaultValue(null).to(new TypeReference<ArrayList<Byte>>() {});
 
         } else if ( "Collection<Short>".equals(typeInfo)  ) {
-            return getConverter().convert(value).defaultValue(null).to(new TypeReference<List<Short>>() {});
+            return getConverter().convert(value).defaultValue(null).to(new TypeReference<ArrayList<Short>>() {});
 
         } else if ( "Collection<Character>".equals(typeInfo) ) {
-            return getConverter().convert(value).defaultValue(null).to(new TypeReference<List<Character>>() {});
+            return getConverter().convert(value).defaultValue(null).to(new TypeReference<ArrayList<Character>>() {});
 
         } else if ( "Collection<Boolean>".equals(typeInfo) ) {
-            return getConverter().convert(value).defaultValue(null).to(new TypeReference<List<Boolean>>() {});
+            return getConverter().convert(value).defaultValue(null).to(new TypeReference<ArrayList<Boolean>>() {});
         } else if ( "Collection".equals(typeInfo) ) {
             if ( value instanceof List ) {
                 @SuppressWarnings("unchecked")
@@ -265,20 +273,29 @@ public class TypeConverter {
                     return Collections.EMPTY_LIST;
                 }
                 final Object firstObject = list.get(0);
+                boolean hasListOrMap = false;
+                for(final Object v : list) {
+                    if ( v instanceof List || v instanceof Map ) {
+                        hasListOrMap = true;
+                        break;
+                    }
+                }
                 Object convertedValue = null;
-                if ( firstObject instanceof Boolean ) {
-                    convertedValue = getConverter().convert(list).defaultValue(null).to(new TypeReference<List<Boolean>>() {});
-                } else if ( firstObject instanceof Long || firstObject instanceof Integer || firstObject instanceof Byte || firstObject instanceof Short) {
-                    convertedValue = getConverter().convert(list).defaultValue(null).to(new TypeReference<List<Long>>() {});
-                } else if ( firstObject instanceof Double || firstObject instanceof Float ) {
-                    convertedValue = getConverter().convert(list).defaultValue(null).to(new TypeReference<List<Double>>() {});
+                if ( !hasListOrMap ) {
+                    if ( firstObject instanceof Boolean ) {
+                        convertedValue = getConverter().convert(list).defaultValue(null).to(new TypeReference<ArrayList<Boolean>>() {});
+                    } else if ( firstObject instanceof Long || firstObject instanceof Integer || firstObject instanceof Byte || firstObject instanceof Short) {
+                        convertedValue = getConverter().convert(list).defaultValue(null).to(new TypeReference<ArrayList<Long>>() {});
+                    } else if ( firstObject instanceof Double || firstObject instanceof Float ) {
+                        convertedValue = getConverter().convert(list).defaultValue(null).to(new TypeReference<ArrayList<Double>>() {});
+                    }
                 }
                 if ( convertedValue == null ) {
                     convertedValue = getConverter().convert(list).defaultValue(null).to(new TypeReference<List<String>>() {});
                 }
                 return convertedValue;
             }
-            return getConverter().convert(value).defaultValue(null).to(Collection.class);
+            return getConverter().convert(value).defaultValue(null).to(ArrayList.class);
         }
 
         // unknown type - ignore configuration
