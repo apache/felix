@@ -1,3 +1,11 @@
+Changes in 1.0.6
+----------------
+** Bug
+    * [FELIX-5755] - Servlet API should be optional
+** Task
+    * [FELIX-5756] - Update project to latest parent pom
+
+
 Changes in 1.0.4
 ----------------
 ** Bug
