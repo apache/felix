@@ -22,7 +22,7 @@
     <parent>
         <groupId>org.apache.felix</groupId>
         <artifactId>felix-parent</artifactId>
-        <version>2.1</version>
+        <version>4</version>
         <relativePath>../pom/pom.xml</relativePath>
     </parent>
 
@@ -41,36 +41,6 @@
 
     <build>
         <plugins>
-            <!-- Make sure to not use non Java 1.4 API -->
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-compiler-plugin</artifactId>
-                <configuration>
-                    <source>1.4</source>
-                    <target>1.4</target>
-                </configuration>
-            </plugin>
-            <plugin>
-                <groupId>org.codehaus.mojo</groupId>
-                <artifactId>animal-sniffer-maven-plugin</artifactId>
-                <version>1.7</version>
-                <configuration>
-                    <signature>
-                        <groupId>org.codehaus.mojo.signature</groupId>
-                        <artifactId>java14</artifactId>
-                        <version>1.0</version>
-                    </signature>
-                </configuration>
-                <executions>
-                    <execution>
-                        <phase>test</phase>
-                        <goals>
-                            <goal>check</goal>
-                        </goals>
-                    </execution>
-                </executions>
-            </plugin>
-        
             <plugin>
                 <artifactId>maven-javadoc-plugin</artifactId>
                 <configuration>
@@ -82,7 +52,7 @@
             <plugin>
                 <groupId>org.apache.felix</groupId>
                 <artifactId>maven-bundle-plugin</artifactId>
-                <version>2.3.7</version>
+                <version>3.3.0</version>
                 <extensions>true</extensions>
                     <configuration>
                     <instructions>
@@ -93,8 +63,13 @@
                         <Bundle-Activator>
                             org.apache.felix.inventory.impl.Activator
                         </Bundle-Activator>
+                        <Import-Package>
+                            javax.servlet;resolution:=optional,
+                            javax.servlet.http;resolution:=optional,
+                            *
+                        </Import-Package>
                         <Export-Package>
-                            org.apache.felix.inventory;version=1.0.0
+                            org.apache.felix.inventory
                         </Export-Package>
                         <DynamicImport-Package>
                             javax.servlet, javax.servlet.http
@@ -108,14 +83,20 @@
     <dependencies>
         <dependency>
             <groupId>org.osgi</groupId>
-            <artifactId>org.osgi.core</artifactId>
-            <version>4.2.0</version>
+            <artifactId>osgi.annotation</artifactId>
+            <version>6.0.1</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>org.osgi</groupId>
-            <artifactId>org.osgi.compendium</artifactId>
-            <version>4.2.0</version>
+            <artifactId>osgi.core</artifactId>
+            <version>6.0.0</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.osgi</groupId>
+            <artifactId>org.osgi.service.log</artifactId>
+            <version>1.3.0</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
@@ -127,8 +108,6 @@
         <dependency>
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>
-            <version>4.10</version>
-            <scope>test</scope>
         </dependency>
     </dependencies>
 </project>

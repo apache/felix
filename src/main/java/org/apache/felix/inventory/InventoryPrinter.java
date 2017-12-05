@@ -20,6 +20,8 @@ package org.apache.felix.inventory;
 
 import java.io.PrintWriter;
 
+import org.osgi.annotation.versioning.ConsumerType;
+
 /**
  * The <code>InventoryPrinter</code> is a service interface to be
  * implemented by providers which want to hook into the display of the
@@ -34,6 +36,7 @@ import java.io.PrintWriter;
  * <li>{@link #WEBCONSOLE} - whether to confine the printer to the Web Console</li>
  * </ul>
  */
+@ConsumerType
 public interface InventoryPrinter
 {
 

@@ -21,6 +21,8 @@ package org.apache.felix.inventory;
 import java.io.IOException;
 import java.util.zip.ZipOutputStream;
 
+import org.osgi.annotation.versioning.ConsumerType;
+
 /**
  * This is an optional extension of the {@link InventoryPrinter}.
  * If a inventory printer implements this interface, the printer
@@ -32,6 +34,7 @@ import java.util.zip.ZipOutputStream;
  * When writing output to a ZIP file, this method is called if the
  * {@link InventoryPrinter} service implements this interface.
  */
+@ConsumerType
 public interface ZipAttachmentProvider
 {
 

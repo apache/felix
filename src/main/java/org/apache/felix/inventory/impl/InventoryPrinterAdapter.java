@@ -19,12 +19,17 @@ package org.apache.felix.inventory.impl;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.Comparator;
+import java.util.Dictionary;
+import java.util.Hashtable;
 import java.util.zip.ZipOutputStream;
 
-import org.apache.felix.inventory.InventoryPrinter;
 import org.apache.felix.inventory.Format;
+import org.apache.felix.inventory.InventoryPrinter;
 import org.apache.felix.inventory.ZipAttachmentProvider;
+import org.apache.felix.inventory.impl.webconsole.ConsoleConstants;
+import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
+import org.osgi.framework.ServiceFactory;
 import org.osgi.framework.ServiceRegistration;
 
 /**
@@ -72,7 +77,24 @@ public class InventoryPrinterAdapter implements InventoryPrinterHandler, Compara
             final Object value = this.description.getServiceReference().getProperty(InventoryPrinter.WEBCONSOLE);
             if (value == null || !"false".equalsIgnoreCase(value.toString()))
             {
-                this.registration = WebConsolePlugin.register(context, manager, this.description);
+                final Dictionary props = new Hashtable();
+                props.put(ConsoleConstants.PLUGIN_LABEL, "status-" + this.description.getName());
+                props.put(ConsoleConstants.PLUGIN_TITLE, this.description.getTitle());
+                props.put(ConsoleConstants.PLUGIN_CATEGORY, ConsoleConstants.WEB_CONSOLE_CATEGORY);
+                this.registration = context.registerService(ConsoleConstants.INTERFACE_SERVLET, new ServiceFactory()
+                {
+
+                    public void ungetService(final Bundle bundle, final ServiceRegistration registration, final Object service)
+                    {
+                        // nothing to do
+                    }
+
+                    public Object getService(final Bundle bundle, final ServiceRegistration registration)
+                    {
+                        return new WebConsolePlugin(manager, description.getName());
+                    }
+
+                }, props);
             }
         }
     }
