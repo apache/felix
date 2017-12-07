@@ -37,7 +37,7 @@ public class ConverterCollectionsTest {
     public void testLiveBackingList() {
         List<Integer> l = Arrays.asList(9, 8, 7);
         Converter converter = Converters.standardConverter();
-        List<Short> sl = converter.convert(l)
+        List<Short> sl = converter.convert(l).view()
                 .to(new TypeReference<List<Short>>() {});
 
         assertEquals(Short.valueOf((short) 9), sl.get(0));
@@ -51,9 +51,9 @@ public class ConverterCollectionsTest {
         assertEquals(Short.valueOf((short) 7), sl.get(2));
         assertEquals(3, sl.size());
 
-        List<Short> sl2 = converter.convert(l)
+        List<Short> sl2 = converter.convert(l).view()
                 .to(new TypeReference<List<Short>>() {});
-        List<Short> sl3 = converter.convert(l)
+        List<Short> sl3 = converter.convert(l).view()
                 .to(new TypeReference<List<Short>>() {});
         sl3.add(Short.valueOf((short) 6));
 
@@ -70,7 +70,7 @@ public class ConverterCollectionsTest {
                 9l, 8l
         };
 
-        List<Integer> l = Converters.standardConverter().convert(a).to(
+        List<Integer> l = Converters.standardConverter().convert(a).view().to(
                 new TypeReference<List<Integer>>() {});
         a[0] = 7l;
         l.addAll(Arrays.asList(7, 6));
@@ -84,7 +84,7 @@ public class ConverterCollectionsTest {
                 9l, 8l
         };
 
-        List<Integer> l = Converters.standardConverter().convert(a).to(
+        List<Integer> l = Converters.standardConverter().convert(a).view().to(
                 new TypeReference<List<Integer>>() {});
         l.addAll(1, Arrays.asList(7, 6));
         a[0] = 1l;
@@ -97,7 +97,7 @@ public class ConverterCollectionsTest {
                 9l, 8l
         };
 
-        List<Integer> l = Converters.standardConverter().convert(a).to(
+        List<Integer> l = Converters.standardConverter().convert(a).view().to(
                 new TypeReference<List<Integer>>() {});
         l.removeAll(Collections.singleton(8));
         a[0] = 1l;
@@ -110,7 +110,7 @@ public class ConverterCollectionsTest {
                 9l, 8l
         };
 
-        List<Integer> l = Converters.standardConverter().convert(a).to(
+        List<Integer> l = Converters.standardConverter().convert(a).view().to(
                 new TypeReference<List<Integer>>() {});
         l.retainAll(Collections.singleton(8));
         a[1] = 1l;
@@ -123,7 +123,7 @@ public class ConverterCollectionsTest {
                 9l, 8l
         };
 
-        List<Integer> l = Converters.standardConverter().convert(a).to(
+        List<Integer> l = Converters.standardConverter().convert(a).view().to(
                 new TypeReference<List<Integer>>() {});
         l.clear();
         l.add(10);
@@ -137,7 +137,7 @@ public class ConverterCollectionsTest {
                 9l, 8l
         };
 
-        List<Integer> l = Converters.standardConverter().convert(a).to(
+        List<Integer> l = Converters.standardConverter().convert(a).view().to(
                 new TypeReference<List<Integer>>() {});
         l.add(10);
         a[0] = 1l;
@@ -150,7 +150,7 @@ public class ConverterCollectionsTest {
                 9l, 8l
         };
 
-        List<Integer> l = Converters.standardConverter().convert(a).to(
+        List<Integer> l = Converters.standardConverter().convert(a).view().to(
                 new TypeReference<List<Integer>>() {});
         l.add(0, 10);
         a[0] = 1l;
@@ -163,7 +163,7 @@ public class ConverterCollectionsTest {
                 9l, 8l
         };
 
-        List<Integer> l = Converters.standardConverter().convert(a).to(
+        List<Integer> l = Converters.standardConverter().convert(a).view().to(
                 new TypeReference<List<Integer>>() {});
         assertEquals(Integer.valueOf(8), l.remove(1));
         a[0] = 1l;
@@ -174,7 +174,7 @@ public class ConverterCollectionsTest {
     public void testLiveBackingCollection() {
         Set<String> s = new LinkedHashSet<>(Arrays.asList("yo", "yo", "ma"));
         Converter converter = Converters.standardConverter();
-        List<String> sl = converter.convert(s)
+        List<String> sl = converter.convert(s).view()
                 .to(new TypeReference<List<String>>() {});
 
         assertEquals("yo", sl.get(0));
@@ -205,7 +205,7 @@ public class ConverterCollectionsTest {
     @Test
     public void testLiveBackingEmptyCollection() {
         Set<Long> s = Collections.emptySet();
-        Collection< ? > l = Converters.standardConverter().convert(s).to(
+        Collection< ? > l = Converters.standardConverter().convert(s).view().to(
                 Collection.class);
         assertTrue(l.isEmpty());
         assertEquals(0, l.size());
@@ -219,7 +219,7 @@ public class ConverterCollectionsTest {
         };
 
         @SuppressWarnings("rawtypes")
-        List l = converter.convert(arr).to(List.class);
+        List l = converter.convert(arr).view().to(List.class);
         assertEquals(2, l.size());
         assertFalse(l.isEmpty());
         assertEquals(1, l.get(0));
@@ -241,7 +241,7 @@ public class ConverterCollectionsTest {
         Object[] oa = new Object[] {
                 "hi", null, 'x'
         };
-        List< ? > l = Converters.standardConverter().convert(oa).to(List.class);
+        List< ? > l = Converters.standardConverter().convert(oa).view().to(List.class);
         assertTrue(l.contains("hi"));
         assertTrue(l.contains(null));
         assertTrue(l.contains('x'));
@@ -268,7 +268,7 @@ public class ConverterCollectionsTest {
                 "yo", "ho", "yo", null, "yo"
         };
 
-        List<String> l = Converters.standardConverter().convert(sa).to(
+        List<String> l = Converters.standardConverter().convert(sa).view().to(
                 new TypeReference<List<String>>() {});
         Object[] oa1 = l.toArray();
         String[] sa1 = l.toArray(new String[] {});
@@ -303,7 +303,7 @@ public class ConverterCollectionsTest {
     @Test
     public void testLiveBackingArray0() {
         Converter converter = Converters.standardConverter();
-        List< ? > l = converter.convert(new double[] {}).to(List.class);
+        List< ? > l = converter.convert(new double[] {}).view().to(List.class);
         assertTrue(l.isEmpty());
         assertEquals(0, l.size());
     }
@@ -314,7 +314,7 @@ public class ConverterCollectionsTest {
         Integer[] arr = new Integer[] {1, 2};
 
         @SuppressWarnings("rawtypes")
-        List l = converter.convert(arr).to(List.class);
+        List l = converter.convert(arr).view().to(List.class);
         assertEquals(1, l.get(0));
         assertEquals(2, l.get(1));
 
@@ -329,7 +329,7 @@ public class ConverterCollectionsTest {
         Converter converter = Converters.standardConverter();
         Integer[] arr = new Integer[] {1, 2};
 
-        List<Long> l = converter.convert(arr).to(new TypeReference<List<Long>>() {});
+        List<Long> l = converter.convert(arr).view().to(new TypeReference<List<Long>>() {});
         assertTrue(l.contains(Long.valueOf(2)));
         assertTrue(
                 l.containsAll(Arrays.asList(Long.valueOf(2), Long.valueOf(1))));
@@ -359,7 +359,7 @@ public class ConverterCollectionsTest {
                 1, 2
         };
 
-        List<Long> l = converter.convert(arr)
+        List<Long> l = converter.convert(arr).view()
                 .to(new TypeReference<List<Long>>() {});
         assertTrue(l.remove(Long.valueOf(1)));
         arr[1] = Integer.valueOf(3);
@@ -372,7 +372,7 @@ public class ConverterCollectionsTest {
                 'a', 'b', 'c'
         };
 
-        Set<Character> s = Converters.standardConverter().convert(ca).to(
+        Set<Character> s = Converters.standardConverter().convert(ca).view().to(
                 new TypeReference<Set<Character>>() {});
         assertTrue(s.containsAll(Arrays.asList(Character.valueOf('a'),
                 Character.valueOf('b'), Character.valueOf('c'))));
@@ -387,7 +387,7 @@ public class ConverterCollectionsTest {
         List<Double> l = new ArrayList<>();
         l.add(3.1415);
 
-        Set<Float> s = Converters.standardConverter().convert(l).to(
+        Set<Float> s = Converters.standardConverter().convert(l).view().to(
                 new TypeReference<Set<Float>>() {});
         Float f1 = Float.valueOf(3.1415f);
         Float f2 = Float.valueOf(1.0f);
@@ -421,7 +421,7 @@ public class ConverterCollectionsTest {
         List<String> l = new ArrayList<>();
         l.addAll(Arrays.asList("hi", "there"));
 
-        Set<String> s = Converters.standardConverter().convert(l).to(
+        Set<String> s = Converters.standardConverter().convert(l).view().to(
                 new TypeReference<Set<String>>() {});
         l.set(0, "ho");
 
@@ -432,9 +432,9 @@ public class ConverterCollectionsTest {
         assertEquals(Arrays.asList("ho", "there", null, null),
                 Arrays.asList(sa2));
 
-        Set<String> s2 = Converters.standardConverter().convert(l).to(
+        Set<String> s2 = Converters.standardConverter().convert(l).view().to(
                 new TypeReference<Set<String>>() {});
-        Set<String> s3 = Converters.standardConverter().convert(l).to(
+        Set<String> s3 = Converters.standardConverter().convert(l).view().to(
                 new TypeReference<Set<String>>() {});
         s3.add("!!");
         assertEquals(s.hashCode(), s2.hashCode());
@@ -449,7 +449,7 @@ public class ConverterCollectionsTest {
         List<String> l = new ArrayList<>();
         l.addAll(Arrays.asList("hi", "there"));
 
-        Set<CharSequence> s = Converters.standardConverter().convert(l).to(
+        Set<CharSequence> s = Converters.standardConverter().convert(l).view().to(
                 new TypeReference<Set<CharSequence>>() {});
         assertTrue(s.containsAll(Arrays.asList("there", "hi")));
         s.clear();
@@ -463,7 +463,7 @@ public class ConverterCollectionsTest {
         List<String> l = new ArrayList<>();
         l.addAll(Arrays.asList("hi", "there"));
 
-        Set<CharSequence> s = Converters.standardConverter().convert(l).to(
+        Set<CharSequence> s = Converters.standardConverter().convert(l).view().to(
                 new TypeReference<Set<CharSequence>>() {});
         s.remove("yo");
         l.set(0, "xxx"); // Should not have an effect since 'remove' was called
@@ -478,7 +478,7 @@ public class ConverterCollectionsTest {
         List<String> l = new ArrayList<>();
         l.addAll(Arrays.asList("hi", "there"));
 
-        Set<CharSequence> s = Converters.standardConverter().convert(l).to(
+        Set<CharSequence> s = Converters.standardConverter().convert(l).view().to(
                 new TypeReference<Set<CharSequence>>() {});
         assertFalse(s.addAll(Collections.singleton("there")));
         assertTrue(s.addAll(Arrays.asList("there", "!!")));
@@ -491,7 +491,7 @@ public class ConverterCollectionsTest {
         List<String> l = new ArrayList<>();
         l.addAll(Arrays.asList("hi", "there"));
 
-        Set<CharSequence> s = Converters.standardConverter().convert(l).to(
+        Set<CharSequence> s = Converters.standardConverter().convert(l).view().to(
                 new TypeReference<Set<CharSequence>>() {});
         assertFalse(s.removeAll(Collections.singleton("yo")));
         l.remove("hi");
@@ -505,7 +505,7 @@ public class ConverterCollectionsTest {
         List<String> l = new ArrayList<>();
         l.addAll(Arrays.asList("hi", "there"));
 
-        Set<CharSequence> s = Converters.standardConverter().convert(l).to(
+        Set<CharSequence> s = Converters.standardConverter().convert(l).view().to(
                 new TypeReference<Set<CharSequence>>() {});
 
         assertTrue(s.retainAll(Arrays.asList("hi", "!!")));
