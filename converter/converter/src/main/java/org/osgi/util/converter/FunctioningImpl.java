@@ -56,8 +56,8 @@ class FunctioningImpl extends AbstractSpecifying<Functioning>
 	InternalConverting applyModifiers(InternalConverting ic) {
 		if (hasDefault)
 			ic.defaultValue(defaultValue);
-		if (forceCopy)
-			ic.copy();
+		if (liveView)
+			ic.view();
 		if (keysIgnoreCase)
 			ic.keysIgnoreCase();
 		if (sourceAsClass != null)

@@ -23,7 +23,7 @@ abstract class AbstractSpecifying<T extends Specifying<T>>
 		implements Specifying<T> {
 	protected volatile Object		defaultValue;
 	protected volatile boolean		hasDefault			= false;
-	protected volatile boolean		forceCopy			= false;
+	protected volatile boolean		liveView			= false;
 	protected volatile boolean		keysIgnoreCase		= false;
 	protected volatile Class< ? >	sourceAsClass;
 	protected volatile boolean		sourceAsDTO			= false;
@@ -35,12 +35,6 @@ abstract class AbstractSpecifying<T extends Specifying<T>>
 	@SuppressWarnings("unchecked")
 	private T castThis() {
 		return (T) this;
-	}
-
-	@Override
-	public T copy() {
-		forceCopy = true;
-		return castThis();
 	}
 
 	@Override
@@ -100,4 +94,9 @@ abstract class AbstractSpecifying<T extends Specifying<T>>
 		return castThis();
 	}
 
+	@Override
+	public T view() {
+		liveView = true;
+		return castThis();
+	}
 }

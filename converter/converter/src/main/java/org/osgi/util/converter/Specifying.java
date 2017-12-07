@@ -21,22 +21,12 @@ import org.osgi.annotation.versioning.ProviderType;
  * This is the base interface for the {@link Converting} and {@link Functioning}
  * interfaces and defines the common modifiers that can be applied to these.
  *
+ * @param <T> Either {@link Converting} or {@link Specifying}.
  * @author $Id: 044fea824d1b280a2d267c1221781f3037e7dcd2 $
  * @NotThreadSafe
  */
 @ProviderType
 public interface Specifying<T extends Specifying<T>> {
-	/**
-	 * Always return a fully populated copy of the object, however if the object
-	 * is an immutable built-in scalar such as String or Long, then a copy is
-	 * not needed. By default a wrapped object is returned by the converter if
-	 * possible.
-	 *
-	 * @return The current {@code Converting} object so that additional calls
-	 *         can be chained.
-	 */
-	T copy();
-
 	/**
 	 * The default value to use when the object cannot be converted or in case
 	 * of conversion from a {@code null} value.
@@ -107,10 +97,25 @@ public interface Specifying<T extends Specifying<T>> {
 
 	/**
 	 * Treat the target object as a DTO even if it has methods or is otherwise
-	 * not recognized as a DTO.
+	 * not recognised as a DTO.
 	 *
 	 * @return The current {@code Converting} object so that additional calls
 	 *         can be chained.
 	 */
 	T targetAsDTO();
+
+	/**
+	 * Return a live view over the backing object that reflects any changes to
+	 * the original object. This is only possible with conversions to
+	 * {@link java.util.Map}, {@link java.util.Collection},
+	 * {@link java.util.List} and {@link java.util.Set}. The live view object
+	 * will cease to be live as soon as modifications are made to it. Note that
+	 * conversions to an interface or annotation will always produce a live view
+	 * that cannot be modified. This modifier has no effect with conversions to
+	 * other types.
+	 *
+	 * @return The current {@code Converting} object so that additional calls
+	 *         can be chained.
+	 */
+	T view();
 }

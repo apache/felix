@@ -35,7 +35,7 @@ import org.osgi.util.function.Function;
  * later) types to also work under Java 7.
  */
 class ConverterImpl implements InternalConverter {
-	private static final SimpleDateFormat ISO8601_DATE_FORMAT = new SimpleDateFormat(
+	static final SimpleDateFormat ISO8601_DATE_FORMAT = new SimpleDateFormat(
 			"yyyy-MM-dd'T'HH:mm:ssXXX");
 	static {
 		ISO8601_DATE_FORMAT.setTimeZone(TimeZone.getTimeZone("UTC"));

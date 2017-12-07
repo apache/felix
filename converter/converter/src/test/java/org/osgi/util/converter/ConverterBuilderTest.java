@@ -30,6 +30,7 @@ import java.util.stream.Stream;
 
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.osgi.util.function.Function;
 
@@ -94,6 +95,21 @@ public class ConverterBuilderTest {
                 new TypeRule<String,Integer>(String.class, Integer.class, s -> s.length())).build();
         assertEquals(5, (int) ca2.convert("Hello").to(Integer.class));
         assertEquals(Long.valueOf(-1), ca2.convert("Hello").to(Long.class));
+    }
+
+    @Test @Ignore
+    public void testConvertToBaseArray() {
+        // TODO
+    }
+
+    @Test @Ignore
+    public void testThrowExceptionInCustomConverter() {
+        // TODO
+    }
+
+    @Test @Ignore
+    public void testMixedListToNumberCase() {
+        // TODO
     }
 
     @Test

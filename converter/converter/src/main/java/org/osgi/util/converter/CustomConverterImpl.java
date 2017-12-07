@@ -71,8 +71,8 @@ class CustomConverterImpl implements InternalConverter {
 		}
 
 		@Override
-		public Converting copy() {
-			del.copy();
+		public Converting view() {
+			del.view();
 			return this;
 		}
 

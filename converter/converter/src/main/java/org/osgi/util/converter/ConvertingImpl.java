@@ -22,6 +22,7 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Proxy;
 import java.lang.reflect.Type;
@@ -55,7 +56,7 @@ import java.util.concurrent.ConcurrentNavigableMap;
 import java.util.concurrent.ConcurrentSkipListMap;
 
 /**
- * @author $Id: 9fcd9a61a6412c8af9ef8526e3d4d71ba0dd5435 $
+ * @author $Id: e9cdafec6d5f56c5e5a6bfa5bf013d0e9518b292 $
  */
 class ConvertingImpl extends AbstractSpecifying<Converting>
 		implements Converting, InternalConverting {
@@ -278,7 +279,7 @@ class ConvertingImpl extends AbstractSpecifying<Converting>
 	}
 
 	private Collection< ? > convertToCollectionDelegate() {
-		if (forceCopy)
+		if (!liveView)
 			return null;
 
 		if (List.class.equals(targetClass)
@@ -352,12 +353,13 @@ class ConvertingImpl extends AbstractSpecifying<Converting>
 
 			T dto = (T) targetClass.newInstance();
 
+			List<String> names = getNames(targetAsClass);
 			for (Map.Entry entry : (Set<Map.Entry>) m.entrySet()) {
 				Object key = entry.getKey();
 				if (key == null)
 					continue;
 
-				String fieldName = Util.mangleName(prefix, key.toString());
+				String fieldName = Util.mangleName(prefix, key.toString(), names);
 				if (fieldName == null)
 					continue;
 
@@ -407,6 +409,23 @@ class ConvertingImpl extends AbstractSpecifying<Converting>
 			throw new ConversionException("Cannot create DTO " + targetClass,
 					e);
 		}
+	}
+
+	private List<String> getNames(Class< ? > cls) {
+		List<String> names = new ArrayList<>();
+		for (Field field : cls.getDeclaredFields()) {
+			int modifiers = field.getModifiers();
+			if (Modifier.isStatic(modifiers))
+				continue;
+			if (!Modifier.isPublic(modifiers))
+				continue;
+
+			String name = field.getName();
+			if (!names.contains(name))
+				names.add(name);
+
+		}
+		return names;
 	}
 
 	@SuppressWarnings({
@@ -524,7 +543,7 @@ class ConvertingImpl extends AbstractSpecifying<Converting>
 					"Cannot convert " + object + " to " + targetAsClass);
 		}
 
-		if (Map.class.equals(targetClass) && !forceCopy) {
+		if (Map.class.equals(targetClass) && liveView) {
 			Map res = convertToMapDelegate();
 			if (res != null)
 				return res;
@@ -602,7 +621,7 @@ class ConvertingImpl extends AbstractSpecifying<Converting>
 	private Object convertToInterface(Class< ? > sourceCls,
 			final Class< ? > targetCls) {
 		InternalConverting ic = converter.convert(object);
-		ic.sourceAs(sourceAsClass);
+		ic.sourceAs(sourceAsClass).view();
 		if (sourceAsDTO)
 			ic.sourceAsDTO();
 		if (sourceAsJavaBean)

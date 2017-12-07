@@ -57,6 +57,6 @@ public class UtilTest {
     }
 
     private void assertMangle(String methodName, String key) {
-        assertEquals(Util.mangleMethodName(methodName), key);
+        assertEquals(Util.unMangleName(methodName), key);
     }
 }

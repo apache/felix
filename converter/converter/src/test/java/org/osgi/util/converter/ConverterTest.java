@@ -850,7 +850,7 @@ public class ConverterTest {
         Collection<?> coll = converter.convert("test").to(Collection.class);
         assertEquals("test", coll.iterator().next());
 
-        List<?> list = converter.convert("test").copy().to(List.class);
+        List<?> list = converter.convert("test").to(List.class);
         assertEquals("test", list.iterator().next());
 
         Set<?> set = converter.convert("test").to(Set.class);
@@ -868,19 +868,19 @@ public class ConverterTest {
         Deque<?> dq = converter.convert("test").to(Deque.class);
         assertEquals("test", dq.iterator().next());
 
-        Map<?,?> m = converter.convert(Collections.singletonMap("x", "y")).copy().to(Map.class);
+        Map<?,?> m = converter.convert(Collections.singletonMap("x", "y")).to(Map.class);
         assertEquals("y", m.get("x"));
 
-        ConcurrentMap<?,?> cm = converter.convert(Collections.singletonMap("x", "y")).copy().to(ConcurrentMap.class);
+        ConcurrentMap<?,?> cm = converter.convert(Collections.singletonMap("x", "y")).to(ConcurrentMap.class);
         assertEquals("y", cm.get("x"));
 
-        ConcurrentNavigableMap<?,?> cnm = converter.convert(Collections.singletonMap("x", "y")).copy().to(ConcurrentNavigableMap.class);
+        ConcurrentNavigableMap<?,?> cnm = converter.convert(Collections.singletonMap("x", "y")).to(ConcurrentNavigableMap.class);
         assertEquals("y", cnm.get("x"));
 
-        NavigableMap<?,?> nm = converter.convert(Collections.singletonMap("x", "y")).copy().to(NavigableMap.class);
+        NavigableMap<?,?> nm = converter.convert(Collections.singletonMap("x", "y")).to(NavigableMap.class);
         assertEquals("y", nm.get("x"));
 
-        SortedMap<?,?> sm = converter.convert(Collections.singletonMap("x", "y")).copy().to(SortedMap.class);
+        SortedMap<?,?> sm = converter.convert(Collections.singletonMap("x", "y")).to(SortedMap.class);
         assertEquals("y", sm.get("x"));
     }
 
@@ -898,7 +898,7 @@ public class ConverterTest {
         };
 
         @SuppressWarnings("rawtypes")
-        Map m = converter.convert(intf).to(Map.class);
+        Map m = converter.convert(intf).view().to(Map.class);
         assertEquals(51, m.get("value"));
 
         val[0] = 52;
@@ -922,7 +922,7 @@ public class ConverterTest {
         myDTO.pong = 42L;
 
         @SuppressWarnings("rawtypes")
-        Map m = converter.convert(myDTO).to(Map.class);
+        Map m = converter.convert(myDTO).view().to(Map.class);
         assertEquals(42L, m.get("pong"));
 
         myDTO.ping = "Ping!";
@@ -942,7 +942,7 @@ public class ConverterTest {
     }
 
     @Test
-    public void testLiveMapFromDTO2() {
+    public void testMapFromDTO() {
         MyDTO9 dto = new MyDTO9();
         dto.key1 = "value1";
         dto.key2 = "value2";
@@ -963,7 +963,7 @@ public class ConverterTest {
         Hashtable<String, Object> d = new Hashtable<>();
         d.put("test", testURI);
 
-        Map<String, Object> m = converter.convert(d).to(new TypeReference<Map<String, Object>>(){});
+        Map<String, Object> m = converter.convert(d).view().to(new TypeReference<Map<String, Object>>(){});
         assertEquals(testURI, m.get("test"));
 
         URI testURI2 = new URI("http://bar");
@@ -979,7 +979,7 @@ public class ConverterTest {
         s.put("true", "123");
         s.put("false", "456");
 
-        Map<Boolean, Short> m = converter.convert(s).to(new TypeReference<Map<Boolean, Short>>(){});
+        Map<Boolean, Short> m = converter.convert(s).view().to(new TypeReference<Map<Boolean, Short>>(){});
         assertEquals(Short.valueOf("123"), m.get(Boolean.TRUE));
         assertEquals(Short.valueOf("456"), m.get(Boolean.FALSE));
 
@@ -995,7 +995,7 @@ public class ConverterTest {
         MyBean mb = new MyBean();
         mb.beanVal = "" + Long.MAX_VALUE;
 
-        Map<SomeEnum, Long> m = converter.convert(mb).sourceAsBean().to(new TypeReference<Map<SomeEnum, Long>>(){});
+        Map<SomeEnum, Long> m = converter.convert(mb).sourceAsBean().view().to(new TypeReference<Map<SomeEnum, Long>>(){});
         assertEquals(1, m.size());
         assertEquals(Long.valueOf(Long.MAX_VALUE), m.get(SomeEnum.VALUE));
 
