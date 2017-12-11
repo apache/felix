@@ -700,6 +700,9 @@ public class BundlePlugin extends AbstractMojo
             // update BND instructions to add included Maven resources
             includeMavenResources(currentProject, builder, getLog());
 
+            // Fixup error messages
+            includeJava9Fixups(currentProject, builder, getLog());
+
             // calculate default export/private settings based on sources
             addLocalPackages(outputDirectory, builder);
 
@@ -2154,4 +2157,29 @@ public class BundlePlugin extends AbstractMojo
             analyzer.setProperty( Analyzer.SOURCEPATH, mavenSourcePaths.toString() );
         }
     }
+
+    /**
+     * Downgrade the message "Classes found in the wrong directory" to a warning. This allows the plugin
+     * to process a multi-release JAR (see JEP 238, http://openjdk.java.net/jeps/238).
+     * 
+     * Note that the version-specific paths will NOT be visible at runtime nor processed by bnd for
+     * imported packages etc. This will not be possible until a runtime solution for multi-release
+     * JARs exists in OSGi. This fix only allows these JARs to be processed at all and to be usable on
+     * Java 8 (and below), and also on Java 9 where the version-specific customizations are optional.
+     */
+    protected static void includeJava9Fixups( MavenProject currentProject, Analyzer analyzer, Log log )
+    {
+        final String fixupClassesInWrongDir = "Classes found in the wrong directory;"
+            + Analyzer.FIXUPMESSAGES_IS_DIRECTIVE
+            + Analyzer.FIXUPMESSAGES_IS_WARNING;
+
+        String fixups = analyzer.getProperty(Analyzer.FIXUPMESSAGES);
+        if (fixups != null) {
+            fixups += "," + fixupClassesInWrongDir;
+        } else {
+            fixups = fixupClassesInWrongDir;
+        }
+        analyzer.setProperty(Analyzer.FIXUPMESSAGES, fixups);
+    }
+
 }
