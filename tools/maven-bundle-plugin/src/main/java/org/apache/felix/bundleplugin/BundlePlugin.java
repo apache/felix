@@ -701,7 +701,7 @@ public class BundlePlugin extends AbstractMojo
             includeMavenResources(currentProject, builder, getLog());
 
             // Fixup error messages
-            includeJava9Fixups(currentProject, builder, getLog());
+            includeJava9Fixups(currentProject, builder);
 
             // calculate default export/private settings based on sources
             addLocalPackages(outputDirectory, builder);
@@ -2167,17 +2167,20 @@ public class BundlePlugin extends AbstractMojo
      * JARs exists in OSGi. This fix only allows these JARs to be processed at all and to be usable on
      * Java 8 (and below), and also on Java 9 where the version-specific customizations are optional.
      */
-    protected static void includeJava9Fixups( MavenProject currentProject, Analyzer analyzer, Log log )
+    protected static void includeJava9Fixups(MavenProject currentProject, Analyzer analyzer)
     {
-        final String fixupClassesInWrongDir = "Classes found in the wrong directory;"
+        final String classesInWrongDirError = "Classes found in the wrong directory";
+        final String newFixup = "Classes found in the wrong directory;"
             + Analyzer.FIXUPMESSAGES_IS_DIRECTIVE + "="
             + Analyzer.FIXUPMESSAGES_IS_WARNING;
 
         String fixups = analyzer.getProperty(Analyzer.FIXUPMESSAGES);
-        if (fixups != null) {
-            fixups += "," + fixupClassesInWrongDir;
+        if (fixups != null && !fixups.isEmpty()) {
+            if (!fixups.contains(classesInWrongDirError)) {
+                fixups += "," + newFixup;
+            }
         } else {
-            fixups = fixupClassesInWrongDir;
+            fixups = newFixup;
         }
         analyzer.setProperty(Analyzer.FIXUPMESSAGES, fixups);
     }
