@@ -2170,7 +2170,7 @@ public class BundlePlugin extends AbstractMojo
     protected static void includeJava9Fixups( MavenProject currentProject, Analyzer analyzer, Log log )
     {
         final String fixupClassesInWrongDir = "Classes found in the wrong directory;"
-            + Analyzer.FIXUPMESSAGES_IS_DIRECTIVE
+            + Analyzer.FIXUPMESSAGES_IS_DIRECTIVE + "="
             + Analyzer.FIXUPMESSAGES_IS_WARNING;
 
         String fixups = analyzer.getProperty(Analyzer.FIXUPMESSAGES);
