@@ -402,4 +402,24 @@ public class BundlePluginTest extends AbstractBundlePluginTest
         File file = new File( getBasedir(), "target" + File.separatorChar + "test.props" );
         builder.getProperties().store( new FileOutputStream( file ), "TEST" );
     }
+
+    public void testIncludeJava9Fixups() {
+        Builder analyzer = new Builder();
+
+        MavenProject project = getMavenProjectStub();
+        BundlePlugin.includeJava9Fixups(project, analyzer);
+
+        assertEquals("Classes found in the wrong directory;is:=warning", analyzer.get("-fixupmessages"));
+    }
+
+    public void testOverrideJava9Fixups() {
+        Builder analyzer = new Builder();
+
+        MavenProject project = getMavenProjectStub();
+        analyzer.set("-fixupmessages", "Classes found in the wrong directory;is:=error");
+        BundlePlugin.includeJava9Fixups(project, analyzer);
+
+        assertEquals("Classes found in the wrong directory;is:=error", analyzer.get("-fixupmessages"));
+    }
+
 }
