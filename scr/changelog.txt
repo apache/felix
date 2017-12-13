@@ -1,3 +1,11 @@
+Changes from 2.0.12 to 2.0.14
+-----------------------------
+** Bug
+    * [FELIX-5618] - Cycles in DS depending on bundle order
+    * [FELIX-5704] - SCR can't be wired to recent gogo-runtime versions
+    * [FELIX-5739] - Strange behaviour with Lazy-ActivationPolicy and autostart
+
+
 Changes from 2.0.10 to 2.0.12
 -----------------------------
 ** Bug
