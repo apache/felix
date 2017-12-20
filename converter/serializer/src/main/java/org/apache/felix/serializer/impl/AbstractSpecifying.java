@@ -35,11 +35,11 @@ public abstract class AbstractSpecifying<T extends Specifying<T>> implements Spe
         return (T) this;
     }
 
-    @Override
-    public T copy() {
-        forceCopy  = true;
-        return castThis();
-    }
+//    @Override
+//    public T copy() {
+//        forceCopy  = true;
+//        return castThis();
+//    }
 
     @Override
     public T defaultValue(Object defVal) {
@@ -97,5 +97,4 @@ public abstract class AbstractSpecifying<T extends Specifying<T>> implements Spe
         targetAsDTO = true;
         return castThis();
     }
-
 }

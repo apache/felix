@@ -81,4 +81,11 @@ public class JsonSerializingImpl extends AbstractSpecifying<Serializing> impleme
         writer = w;
         return this;
     }
+
+    // TODO: what is intended here??
+    @Override
+    public Serializing view()
+    {
+        return null;
+    }
 }
