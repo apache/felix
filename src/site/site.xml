@@ -29,8 +29,8 @@ under the License.
     <menu name="Overview">
       <item name="Introduction" href="index.html"/>
       <item name="Goals" href="plugin-info.html"/>
-      <item name="Wiki" href="https://cwiki.apache.org/confluence/display/FELIX/Apache+Felix+Maven+Bundle+Plugin+%28BND%29"/>
-      <item name="FAQ" href="https://cwiki.apache.org/confluence/display/FELIX/Apache+Felix+Bundle+Plugin+FAQ"/>
+      <item name="Documentation" href="http://felix.apache.org/documentation/subprojects/apache-felix-maven-bundle-plugin-bnd.html"/>
+      <item name="FAQ" href="http://felix.apache.org/documentation/faqs/apache-felix-bundle-plugin-faq.html"/>
       <item name="Release Notes" href="jira-report.html"/>
     </menu>
     <menu ref="reports"/>
