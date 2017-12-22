@@ -58,20 +58,23 @@ Maven Bundle Plugin
 
   * {{{./ant-mojo.html}bundle:ant}} Generate Ant script to create the bundle. (you should run ant:ant first)
 
-  []
+  * {{{./verify-mojo.html}bundle:verify}}  Verifies OSGi bundle metadata contains valid entries.
+
+  * {{{./baseline-mojo.html}bundle:baseline}} BND Baseline check between two bundles.
+
+  * {{{./baseline-report-mojo.html}bundle:baseline-report}} BND Baseline report.
 
 * Usage
 
-  General instructions on how to use the Maven Bundle Plugin can be found on the
-  {{{http://felix.apache.org/site/apache-felix-maven-bundle-plugin-bnd.html}wiki page}}.
-  Some more specific use cases are described in the examples given below.
+  General instructions on how to use the Maven Bundle Plugin can be found here:
+  {{{http://felix.apache.org/documentation/subprojects/apache-felix-maven-bundle-plugin-bnd.html}Apache Felix Maven Bundle Plugin (BND)}}.
 
   In case you still have questions regarding the plugin's usage, please have a look at the
-  {{{http://felix.apache.org/site/apache-felix-bundle-plugin-faq.html}FAQ}} and feel
-  free to contact the {{{http://felix.apache.org/site/mailinglists.html}user mailing list}}.
+  {{{http://felix.apache.org/documentation/faqs/apache-felix-bundle-plugin-faq.html}FAQ}} and feel
+  free to contact the {{{http://felix.apache.org/mailinglists.html}user mailing list}}.
   The posts to the mailing list are archived and could
   already contain the answer to your question as part of an older thread. Hence, it is also worth browsing/searching
-  the {{{http://www.mail-archive.com/users@felix.apache.org/}mail archive}}.
+  the {{{https://lists.apache.org/list.html?users@felix.apache.org}mail archive}}.
 
   If you feel like the plugin is missing a feature or has a defect, you can fill a feature request or bug report in our
   {{{./issue-tracking.html}issue tracker}}. When creating a new issue, please provide a comprehensive description of your
@@ -79,12 +82,4 @@ Maven Bundle Plugin
   entire debug logs, POMs or most preferably little demo projects attached to the issue are very much appreciated.
   Of course, patches are welcome, too. Contributors can check out the project from our
   {{{./source-repository.html}source repository}} and will find supplementary information in the
-  {{{http://felix.apache.org/site/development.html}Apache Felix developers guide}}. 
-
-* Examples
-
-  To provide you with better understanding on some usages of the Maven Bundle Plugin,
-  you can take a look into the following examples:
-
-  * Examples coming soon!
-
+  {{{http://felix.apache.org/documentation/development.html}Apache Felix developers guide}}. 
