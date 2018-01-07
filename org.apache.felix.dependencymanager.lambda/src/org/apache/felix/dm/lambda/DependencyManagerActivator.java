@@ -112,6 +112,7 @@ public abstract class DependencyManagerActivator implements BundleActivator {
     @Override
     public void stop(BundleContext context) throws Exception {
         destroy();
+        m_manager.clear();
     }
 
     /**
