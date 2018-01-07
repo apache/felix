@@ -30,14 +30,12 @@
 	org.apache.felix.dependencymanager.lambda;version=latest,\
 	biz.aQute.junit;version=1.3.0,\
 	org.apache.felix.gogo.runtime;version=1.0.6
+	
 -runee: JavaSE-1.8
 -runfw: org.apache.felix.framework;version='[5.2.0,5.2.0]'
 -runvm: -ea
 Bundle-Version: 0.0.0.${tstamp}
-Private-Package:  \
-	org.apache.felix.dm.lambda.itest
-Test-Cases:  \
-	${classes;CONCRETE;EXTENDS;junit.framework.TestCase}
+Test-Cases:  ${classes;CONCRETE;EXTENDS;junit.framework.TestCase}
 javac.source:          1.8
 javac.target:          1.8
 -tester: biz.aQute.junit
@@ -54,3 +52,4 @@ javac.target:          1.8
 -releaserepo: 
 -baseline: 
 
+-sub: *.bnd
