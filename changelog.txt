@@ -14,9 +14,16 @@ Changes in 2.1.0
     * [FELIX-5695] Use Java 7 as base version
     * [FELIX-5696] Separate metatype provider from managed service
 ** Bug
-    * [FELIX-5704] SCR can't be wired to recent gogo-runtime versions
     * [FELIX-5507] ConfigurationAdmin might not be visible to SCR implementation
     * [FELIX-5543] Component property types must implement java.lang.annotation.Annotation methods properly
+
+
+Changes from 2.0.12 to 2.0.14
+-----------------------------
+** Bug
+    * [FELIX-5618] - Cycles in DS depending on bundle order
+    * [FELIX-5704] - SCR can't be wired to recent gogo-runtime versions
+    * [FELIX-5739] - Strange behaviour with Lazy-ActivationPolicy and autostart
 
 
 Changes from 2.0.10 to 2.0.12
