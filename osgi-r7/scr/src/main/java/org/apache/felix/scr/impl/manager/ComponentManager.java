@@ -21,6 +21,7 @@ package org.apache.felix.scr.impl.manager;
 import java.util.List;
 import java.util.Map;
 
+import org.osgi.framework.ServiceReference;
 import org.osgi.service.component.runtime.dto.ComponentConfigurationDTO;
 
 
@@ -41,5 +42,7 @@ public interface ComponentManager<S> {
     String getFailureReason();
 
     List<? extends ReferenceManager<S, ?>> getReferenceManagers();
+
+    ServiceReference<S> getRegisteredServiceReference();
 
 }

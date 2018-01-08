@@ -340,13 +340,6 @@ public int hashCode()
     //---------- Component interface
 
 
-    public ComponentInstance getComponentInstance()
-    {
-        // a ComponentFactory is not a real component and as such does
-        // not have a ComponentInstance
-        return null;
-    }
-
     /**
      * Disposes off all components ever created by this component holder. This
      * method is called if either the Declarative Services runtime is stopping
