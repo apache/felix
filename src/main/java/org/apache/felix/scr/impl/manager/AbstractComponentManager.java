@@ -1422,4 +1422,9 @@ public abstract class AbstractComponentManager<S> implements ComponentManager<S>
 
     public abstract void getComponentManagers(List<AbstractComponentManager<S>> cms);
 
+    @Override
+    public ServiceReference<S> getRegisteredServiceReference()
+    {
+        return null;
+    }
 }

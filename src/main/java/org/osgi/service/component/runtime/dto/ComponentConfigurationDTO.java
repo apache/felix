@@ -19,6 +19,7 @@ package org.osgi.service.component.runtime.dto;
 import java.util.Map;
 
 import org.osgi.dto.DTO;
+import org.osgi.framework.dto.ServiceReferenceDTO;
 import org.osgi.service.component.ComponentContext;
 
 /**
@@ -147,4 +148,14 @@ public class ComponentConfigurationDTO extends DTO {
 	 * @since 1.4
 	 */
 	public String						failure;
+
+	/**
+	 * The registered service of the component configuration.
+	 * <p>
+	 * This must be non-{@code null} if the component configuration is
+	 * registered as a service. Otherwise it must be {@code null}.
+	 * 
+	 * @since 1.4
+	 */
+	public ServiceReferenceDTO			service;
 }

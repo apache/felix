@@ -174,8 +174,8 @@ public class ComponentDescriptionDTO extends DTO {
 	 * The factory properties.
 	 * <p>
 	 * These are declared in the component description by the
-	 * {@code factoryProperty} and {@code factoryProperties} elements. This must
-	 * be {@code null} if the component description is not declared as a
+	 * {@code factory-property} and {@code factory-properties} elements. This
+	 * must be {@code null} if the component description is not declared as a
 	 * {@link #factory factory component}.
 	 * 
 	 * @since 1.4

@@ -212,6 +212,10 @@ public class ServiceComponentRuntimeImpl implements ServiceComponentRuntime
         {
             dto.failure = manager.getFailureReason();
         }
+        else if ( dto.state == ComponentConfigurationDTO.ACTIVE )
+        {
+            dto.service = serviceReferenceToDTO(manager.getRegisteredServiceReference());
+        }
         return dto;
     }
 
