@@ -2004,17 +2004,45 @@ public class DependencyManager<S, T> implements ReferenceManager<S, T>
             }
         }
         m_target = target;
+
+        // three filters are created:
+        // classFilter = filters only on the service interface
+        // eventFilter = filters only on the provided target and service scope (if prototype required)
+        // initialReferenceFilter = classFilter & eventFilter
+
+        // classFilter
+        // "(" + Constants.OBJECTCLASS + "=" + m_dependencyMetadata.getInterface() + ")"
+        final StringBuilder classFilterSB = new StringBuilder();
+        classFilterSB.append(OBJECTCLASS_CLAUSE);
+        classFilterSB.append(m_dependencyMetadata.getInterface());
+        classFilterSB.append(')');
+        final String classFilterString = classFilterSB.toString();
+
+        // eventFilter
+        String eventFilterString;
+        if (m_target != null
+            && m_dependencyMetadata.getScope() == ReferenceScope.prototype_required)
+        {
+            final StringBuilder sb = new StringBuilder("(&").append(PROTOTYPE_SCOPE_CLAUSE).append(m_target).append(")");
+            eventFilterString = sb.toString();
+        }
+        else if ( m_dependencyMetadata.getScope() == ReferenceScope.prototype_required )
+        {
+            eventFilterString = PROTOTYPE_SCOPE_CLAUSE;
+        }
+        else
+        {
+            eventFilterString = m_target;
+        }
+
+        // initialReferenceFilter
         final boolean multipleExpr = m_target != null
-            || m_dependencyMetadata.getScope() == ReferenceScope.prototype_required;
-        final boolean allExpr = m_target != null
-            && m_dependencyMetadata.getScope() == ReferenceScope.prototype_required;
+                || m_dependencyMetadata.getScope() == ReferenceScope.prototype_required;
         final StringBuilder initialReferenceFilterSB = new StringBuilder();
         if (multipleExpr)
         {
             initialReferenceFilterSB.append("(&");
         }
-        // "(" + Constants.OBJECTCLASS + "=" + m_dependencyMetadata.getInterface() + ")"
-        String classFilterString = OBJECTCLASS_CLAUSE + m_dependencyMetadata.getInterface() + ")";
         initialReferenceFilterSB.append(classFilterString);
 
         // if reference scope is prototype_required, we simply add
@@ -2034,16 +2062,6 @@ public class DependencyManager<S, T> implements ReferenceManager<S, T>
             initialReferenceFilterSB.append(')');
         }
         String initialReferenceFilterString = initialReferenceFilterSB.toString();
-        String eventFilterString;
-        if (allExpr)
-        {
-            StringBuilder sb = new StringBuilder("(&").append(PROTOTYPE_SCOPE_CLAUSE).append(m_target).append(")");
-            eventFilterString = sb.toString();
-        }
-        else
-        {
-            eventFilterString = m_target;
-        }
 
         final ServiceTracker<T, RefPair<S, T>, ExtendedServiceEvent> oldTracker = m_tracker;
         AtomicInteger trackingCount = new AtomicInteger();
