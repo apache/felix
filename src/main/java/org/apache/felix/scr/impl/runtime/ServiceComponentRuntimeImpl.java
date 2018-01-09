@@ -199,15 +199,16 @@ public class ServiceComponentRuntimeImpl implements ServiceComponentRuntime
         }
     }
 
-    private ComponentConfigurationDTO managerToConfiguration(ComponentManager<?> manager, ComponentDescriptionDTO description)
+    private ComponentConfigurationDTO managerToConfiguration(final ComponentManager<?> manager, final ComponentDescriptionDTO description)
     {
-        ComponentConfigurationDTO dto = new ComponentConfigurationDTO();
+        final ComponentConfigurationDTO dto = new ComponentConfigurationDTO();
         dto.satisfiedReferences = satisfiedRefManagersToDTO(manager.getReferenceManagers());
         dto.unsatisfiedReferences = unsatisfiedRefManagersToDTO(manager.getReferenceManagers());
         dto.description = description;
         dto.id = manager.getId();
         dto.properties = new HashMap<>(manager.getProperties());//TODO deep copy?
         dto.state = manager.getSpecState();
+        // DS 1.4
         if ( dto.state == ComponentConfigurationDTO.FAILED_ACTIVATION )
         {
             dto.failure = manager.getFailureReason();
