@@ -750,6 +750,63 @@ public class ConverterTest {
     }
 
     @Test
+    public void testMapToDTOWithGenerics() {
+    	    Map<String, Object> dto = new HashMap<>();
+    	
+        dto.put("longList", Arrays.asList((short)999, "1000"));
+        
+        Map<String, Object> dtoMap = new LinkedHashMap<>();
+        dto.put("dtoMap", dtoMap);
+
+        Map<String, Object> subDTO1 = new HashMap<>();
+        subDTO1.put("charSet", new HashSet<>(Arrays.asList("foo", (int) 'o', 'o')));
+        dtoMap.put("zzz", subDTO1);
+
+        Map<String, Object> subDTO2 = new HashMap<>();
+        subDTO2.put("charSet", new HashSet<>(Arrays.asList('b', 'a', 'r')));
+        dtoMap.put("aaa", subDTO2);
+
+        MyDTO2 converted = converter.convert(dto).to(MyDTO2.class);
+
+        assertEquals(Arrays.asList(999L, 1000L), converted.longList);
+        Map<String, MyDTO3> nestedMap = converted.dtoMap;
+
+        // Check iteration order is preserved by iterating
+        int i=0;
+        for (Iterator<Map.Entry<String, MyDTO3>> it = nestedMap.entrySet().iterator(); it.hasNext(); i++) {
+            Map.Entry<String, MyDTO3> entry = it.next();
+            switch (i) {
+            case 0:
+                assertEquals("zzz", entry.getKey());
+                MyDTO3 dto1 = entry.getValue();
+                assertEquals(new HashSet<Character>(Arrays.asList('f', 'o')), dto1.charSet);
+                break;
+            case 1:
+                assertEquals("aaa", entry.getKey());
+                MyDTO3 dto2 = entry.getValue();
+                assertEquals(new HashSet<Character>(Arrays.asList('b', 'a', 'r')), dto2.charSet);
+                break;
+            default:
+                fail("Unexpected number of elements on map");
+            }
+        }
+    }
+
+    @Test
+    public void testMapToDTOWithGenericVariables() {
+    	    	Map<String, Object> dto = new HashMap<>();
+    	    	dto.put("set", new HashSet<>(Arrays.asList("foo", (int) 'o', 'o')));
+    	    	dto.put("raw", "1234");
+    	    	dto.put("array", Arrays.asList("foo", (int) 'o', 'o'));
+    	    	
+    	    	MyGenericDTOWithVariables<Character> converted = 
+    	    			converter.convert(dto).to(new TypeReference<MyGenericDTOWithVariables<Character>>() {});
+    	    	assertEquals(Character.valueOf('1'), converted.raw);
+    	    	assertArrayEquals(new Character[] {'f', 'o', 'o'}, converted.array);
+    	    	assertEquals(new HashSet<Character>(Arrays.asList('f', 'o')), converted.set);
+    }
+    
+    @Test
     public void testMapToDTOWithSurplusMapFiels() {
         Map<String, String> m = new HashMap<>();
         m.put("foo", "bar");
@@ -1133,6 +1190,29 @@ public class ConverterTest {
         for (Iterator it = lc.iterator(); it.hasNext(); i++) {
             assertEquals(la[i], it.next());
         }
+    }
+    
+    @Test
+    public void testMapToInterfaceWithGenerics() {
+    	    Map<String, Object> dto = new HashMap<>();
+        dto.put("charSet", new HashSet<>(Arrays.asList("foo", (int) 'o', 'o')));
+
+        MyGenericInterface converted = converter.convert(dto).to(MyGenericInterface.class);
+        assertEquals(new HashSet<Character>(Arrays.asList('f', 'o')), converted.charSet());
+    }
+
+    @Test
+    public void testMapToInterfaceWithGenericVariables() {
+	    	Map<String, Object> dto = new HashMap<>();
+	    	dto.put("set", new HashSet<>(Arrays.asList("foo", (int) 'o', 'o')));
+	    	dto.put("raw", "1234");
+	    	dto.put("array", Arrays.asList("foo", (int) 'o', 'o'));
+	    	
+	    	MyGenericInterfaceWithVariables<Character> converted = 
+	    			converter.convert(dto).to(new TypeReference<MyGenericInterfaceWithVariables<Character>>() {});
+	    	assertEquals(Character.valueOf('1'), converted.raw());
+	    	assertArrayEquals(new Character[] {'f', 'o', 'o'}, converted.array());
+	    	assertEquals(new HashSet<Character>(Arrays.asList('f', 'o')), converted.set());
     }
 
     static class MyClass2 {
