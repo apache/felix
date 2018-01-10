@@ -1,10 +1,9 @@
 /*
- * Licensed to the Apache Software Foundation (ASF) under one or more
- * contributor license agreements.  See the NOTICE file distributed with
- * this work for additional information regarding copyright ownership.
- * The ASF licenses this file to You under the Apache License, Version 2.0
- * (the "License"); you may not use this file except in compliance with
- * the License.  You may obtain a copy of the License at
+ * Copyright (c) OSGi Alliance (2017). All Rights Reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *      http://www.apache.org/licenses/LICENSE-2.0
  *
@@ -14,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package org.osgi.util.converter;
 
 import java.lang.annotation.Annotation;
@@ -35,7 +35,7 @@ import java.util.Map.Entry;
 import java.util.Set;
 
 /**
- * @author $Id: 2189d1a98d7949a40331f809dfd73064bf8afdc7 $
+ * @author $Id$
  */
 class Util {
 	private static final Map<Class< ? >,Class< ? >> boxedClasses;
@@ -217,7 +217,7 @@ class Util {
 		return toSingleElementAnnotationKey(ann.getSimpleName());
 	}
 
-	private static Class< ? > getAnnotationType(Class< ? > intf, Object obj) {
+	static Class< ? > getAnnotationType(Class< ? > intf, Object obj) {
 		try {
 			Method md = intf.getMethod("annotationType");
 			Object res = md.invoke(obj);
@@ -229,7 +229,7 @@ class Util {
 		return null;
 	}
 
-	private static String toSingleElementAnnotationKey(String simpleName) {
+	static String toSingleElementAnnotationKey(String simpleName) {
 		StringBuilder sb = new StringBuilder();
 
 		boolean capitalSeen = true;

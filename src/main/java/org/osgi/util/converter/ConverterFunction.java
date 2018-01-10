@@ -25,7 +25,7 @@ import org.osgi.annotation.versioning.ConsumerType;
  * <P>
  * This interface can also be used to register a custom error handler.
  *
- * @author $Id: 98afbf4376ad2866c36a4a0e13eb41ebe4feb463 $
+ * @author $Id$
  */
 @ConsumerType
 public interface ConverterFunction {

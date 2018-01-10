@@ -20,12 +20,12 @@ import java.lang.reflect.Type;
 /**
  * Interface for custom conversion rules.
  *
- * @author $Id: fce423615615d7b3928c07de5ccaefb82b03aaaf $
+ * @author $Id$
  */
 public interface TargetRule {
 	/**
 	 * The function to perform the conversion.
-	 * 
+	 *
 	 * @return The function.
 	 */
 	ConverterFunction getFunction();

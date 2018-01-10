@@ -1,5 +1,5 @@
 /*
- * Copyright (c) OSGi Alliance (2015, 2016). All Rights Reserved.
+ * Copyright (c) OSGi Alliance (2015, 2017). All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -34,7 +34,7 @@ import org.osgi.annotation.versioning.ConsumerType;
  * </pre>
  *
  * @param <T> The target type for the conversion.
- * @author $Id: 1ea7d4297e6ed805ce147d32614f23bb9145b24c $
+ * @author $Id$
  * @Immutable
  */
 @ConsumerType
