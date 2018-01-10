@@ -19,8 +19,8 @@ package org.osgi.util.converter;
  * This Runtime Exception is thrown when an object is requested to be converted
  * but the conversion cannot be done. For example when the String "test" is to
  * be converted into a Long.
- * 
- * @author $Id: c4201fffc3047352cace93e18839741a256877b1 $
+ *
+ * @author $Id$
  */
 public class ConversionException extends RuntimeException {
 	private static final long serialVersionUID = 1L;

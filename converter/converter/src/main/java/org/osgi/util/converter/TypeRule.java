@@ -26,7 +26,7 @@ import org.osgi.util.function.Function;
  * Filtering on the <em>to</em> is done by the converter customization
  * mechanism.
  *
- * @author $Id: f4dddce75f9727cc952f0926bb5e8b6c71d864cb $
+ * @author $Id$
  * @param <F> The type to convert from.
  * @param <T> The type to convert to.
  */

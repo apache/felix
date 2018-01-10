@@ -58,7 +58,7 @@ import java.util.concurrent.ConcurrentNavigableMap;
 import java.util.concurrent.ConcurrentSkipListMap;
 
 /**
- * @author $Id: e9cdafec6d5f56c5e5a6bfa5bf013d0e9518b292 $
+ * @author $Id$
  */
 class ConvertingImpl extends AbstractSpecifying<Converting>
 		implements Converting, InternalConverting {
@@ -100,6 +100,7 @@ class ConvertingImpl extends AbstractSpecifying<Converting>
 	private volatile Class< ? >	sourceClass;
 	private volatile Class< ? >	targetClass;
 	private volatile Type[]		typeArguments;
+	private volatile Type		targetType;
 
 	ConvertingImpl(InternalConverter c, Object obj) {
 		converter = c;
@@ -148,12 +149,13 @@ class ConvertingImpl extends AbstractSpecifying<Converting>
 				cls = (Class< ? >) rt;
 			else if (rt instanceof ParameterizedType) {
 				Type rt2 = ((ParameterizedType) rt).getRawType();
-				if(rt2 instanceof Class) {
+				if (rt2 instanceof Class) {
 					cls = (Class< ? >) rt2;
 				}
 			}
-				
+
 		}
+		targetType = type;
 		if (cls == null)
 			return null;
 
@@ -176,9 +178,11 @@ class ConvertingImpl extends AbstractSpecifying<Converting>
 			return res;
 
 		if (targetAsClass.isArray()) {
-			return convertToArray(targetAsClass.getComponentType(), targetAsClass.getComponentType());
+			return convertToArray(targetAsClass.getComponentType(),
+					targetAsClass.getComponentType());
 		} else if (type instanceof GenericArrayType) {
-			return convertToArray(targetAsClass, ((GenericArrayType)type).getGenericComponentType());
+			return convertToArray(targetAsClass,
+					((GenericArrayType) type).getGenericComponentType());
 		} else if (Collection.class.isAssignableFrom(targetAsClass)) {
 			return convertToCollectionType();
 		} else if (isMapType(targetAsClass, targetAsJavaBean, targetAsDTO)) {
@@ -266,7 +270,7 @@ class ConvertingImpl extends AbstractSpecifying<Converting>
 	}
 
 	@SuppressWarnings("unchecked")
-	private <T> T convertToArray(Class<?> componentClz, Type componentType) {
+	private <T> T convertToArray(Class< ? > componentClz, Type componentType) {
 		Collection< ? > collectionView = collectionView();
 		Iterator< ? > itertor = collectionView.iterator();
 		try {
@@ -430,12 +434,13 @@ class ConvertingImpl extends AbstractSpecifying<Converting>
 	}
 
 	private Type reifyType(Type genericType) {
-		
-		if(genericType instanceof TypeVariable) {
-			String name = ((TypeVariable<?>) genericType).getName();
+
+		if (genericType instanceof TypeVariable) {
+			String name = ((TypeVariable< ? >) genericType).getName();
 			for (int i = 0; i < targetAsClass.getTypeParameters().length; i++) {
-				TypeVariable<?> typeVariable = targetAsClass.getTypeParameters()[i];
-				if(typeVariable.getName().equals(name)) {
+				TypeVariable< ? > typeVariable = targetAsClass
+						.getTypeParameters()[i];
+				if (typeVariable.getName().equals(name)) {
 					genericType = typeArguments[i];
 					break;
 				}
@@ -445,28 +450,29 @@ class ConvertingImpl extends AbstractSpecifying<Converting>
 			Type[] parameters = parameterizedType.getActualTypeArguments();
 			boolean useCopy = false;
 			final Type[] copiedParameters = new Type[parameters.length];
-			
-			for(int i = 0; i < parameters.length; i++) {
+
+			for (int i = 0; i < parameters.length; i++) {
 				copiedParameters[i] = reifyType(parameters[i]);
 				useCopy |= copiedParameters[i] != parameters[i];
 			}
-			
-			if(useCopy) {
+
+			if (useCopy) {
 				genericType = new ParameterizedType() {
-					
+
 					@Override
 					public Type getRawType() {
 						return parameterizedType.getRawType();
 					}
-					
+
 					@Override
 					public Type getOwnerType() {
 						return parameterizedType.getOwnerType();
 					}
-					
+
 					@Override
 					public Type[] getActualTypeArguments() {
-						return Arrays.copyOf(copiedParameters, copiedParameters.length);
+						return Arrays.copyOf(copiedParameters,
+								copiedParameters.length);
 					}
 				};
 			}
@@ -474,10 +480,10 @@ class ConvertingImpl extends AbstractSpecifying<Converting>
 			GenericArrayType type = (GenericArrayType) genericType;
 			Type genericComponentType = type.getGenericComponentType();
 			final Type reifiedType = reifyType(genericComponentType);
-			
-			if(reifiedType != genericComponentType) {
+
+			if (reifiedType != genericComponentType) {
 				genericType = new GenericArrayType() {
-					
+
 					@Override
 					public Type getGenericComponentType() {
 						return reifiedType;
@@ -485,7 +491,7 @@ class ConvertingImpl extends AbstractSpecifying<Converting>
 				};
 			}
 		}
-		
+
 		return genericType;
 	}
 
@@ -864,6 +870,29 @@ class ConvertingImpl extends AbstractSpecifying<Converting>
 					}
 				}
 			}
+		} else if (Annotation.class.isAssignableFrom(sourceClass)) {
+			// Special treatment for marker annotations
+			for (Method m : sourceClass.getDeclaredMethods()) {
+				try {
+					if (Annotation.class.getMethod(m.getName(),
+							m.getParameterTypes()).getReturnType().equals(
+									m.getReturnType()))
+						// this is a base annotation method
+						continue;
+				} catch (Exception ex) {
+					// Method not found, not a marker annotation
+				}
+				return null;
+			}
+
+			Class< ? > ann = Util.getAnnotationType(sourceClass, object);
+			String key = Util.toSingleElementAnnotationKey(
+					ann.getSimpleName());
+			return converter
+					.convert(Collections.singletonMap(key, Boolean.TRUE))
+					.targetAs(targetAsClass)
+					.to(targetType);
+
 		}
 		return null;
 	}

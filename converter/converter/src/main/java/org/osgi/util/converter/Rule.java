@@ -27,7 +27,7 @@ import org.osgi.util.function.Function;
  * Filtering on the <em>to</em> is done by the converter customization
  * mechanism.
  *
- * @author $Id: 35bc96ab6d4d749835e55f3e073a8efdf8e648c6 $
+ * @author $Id$
  * @param <F> The type to convert from.
  * @param <T> The type to convert to.
  */
@@ -36,7 +36,7 @@ public abstract class Rule<F, T> implements TargetRule {
 
 	/**
 	 * Create an instance with a conversion function.
-	 * 
+	 *
 	 * @param func The conversion function to use.
 	 */
 	public Rule(Function<F,T> func) {

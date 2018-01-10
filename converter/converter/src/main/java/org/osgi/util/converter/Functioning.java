@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package org.osgi.util.converter;
 
 import java.lang.reflect.Type;
@@ -25,7 +26,7 @@ import org.osgi.util.function.Function;
  * This function can be used multiple times. A {@link Functioning} instance can
  * be obtained via the {@link Converter}.
  *
- * @author $Id: 94afaa71ea94e8679296a808faf94601a7102d66 $
+ * @author $Id$
  * @NotThreadSafe
  */
 @ProviderType

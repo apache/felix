@@ -1,10 +1,9 @@
 /*
- * Licensed to the Apache Software Foundation (ASF) under one or more
- * contributor license agreements.  See the NOTICE file distributed with
- * this work for additional information regarding copyright ownership.
- * The ASF licenses this file to You under the Apache License, Version 2.0
- * (the "License"); you may not use this file except in compliance with
- * the License.  You may obtain a copy of the License at
+ * Copyright (c) OSGi Alliance (2017). All Rights Reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *      http://www.apache.org/licenses/LICENSE-2.0
  *
@@ -14,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package org.osgi.util.converter;
 
 import java.lang.reflect.Method;
@@ -33,6 +33,8 @@ import org.osgi.util.function.Function;
  * <p>
  * Note that this class avoids lambda's and hard dependencies on Java-8 (or
  * later) types to also work under Java 7.
+ *
+ * @author $Id$
  */
 class ConverterImpl implements InternalConverter {
 	static final SimpleDateFormat ISO8601_DATE_FORMAT = new SimpleDateFormat(

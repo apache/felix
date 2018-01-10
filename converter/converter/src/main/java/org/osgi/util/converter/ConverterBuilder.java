@@ -1,5 +1,5 @@
 /*
- * Copyright (c) OSGi Alliance (2017). All Rights Reserved.
+ * Copyright (c) OSGi Alliance (2017, 2018). All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,14 +20,14 @@ import java.lang.reflect.Type;
 import org.osgi.annotation.versioning.ProviderType;
 
 /**
- * A builder to create a new converter with modified behaviour based on an
- * existing converter. The modified behaviour is specified by providing rules
+ * A builder to create a new converter with modified behavior based on an
+ * existing converter. The modified behavior is specified by providing rules
  * and/or conversion functions. If multiple rules match they will be visited in
  * sequence of registration. If a rule's function returns {@code null} the next
- * ruld found will be visited. If none of the rules can handle the conversion,
+ * rule found will be visited. If none of the rules can handle the conversion,
  * the original converter will be used to perform the conversion.
  *
- * @author $Id: 6552ff889a7b2648b0eb57307d4fd6eac4b0ed19 $
+ * @author $Id$
  */
 @ProviderType
 public interface ConverterBuilder {

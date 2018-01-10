@@ -1,5 +1,5 @@
 /*
- * Copyright (c) OSGi Alliance (2017). All Rights Reserved.
+ * Copyright (c) OSGi Alliance (2017, 2018). All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,7 +22,7 @@ import org.osgi.annotation.versioning.ProviderType;
  * interfaces and defines the common modifiers that can be applied to these.
  *
  * @param <T> Either {@link Converting} or {@link Specifying}.
- * @author $Id: 044fea824d1b280a2d267c1221781f3037e7dcd2 $
+ * @author $Id$
  * @NotThreadSafe
  */
 @ProviderType
@@ -68,7 +68,7 @@ public interface Specifying<T extends Specifying<T>> {
 
 	/**
 	 * Treat the source object as a DTO even if the source object has methods or
-	 * is otherwise not recognised as a DTO.
+	 * is otherwise not recognized as a DTO.
 	 *
 	 * @return The current {@code Converting} object so that additional calls
 	 *         can be chained.
@@ -97,7 +97,7 @@ public interface Specifying<T extends Specifying<T>> {
 
 	/**
 	 * Treat the target object as a DTO even if it has methods or is otherwise
-	 * not recognised as a DTO.
+	 * not recognized as a DTO.
 	 *
 	 * @return The current {@code Converting} object so that additional calls
 	 *         can be chained.
