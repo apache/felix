@@ -712,8 +712,12 @@ class ConvertingImpl extends AbstractSpecifying<Converting>
 			ic.sourceAsBean();
 		final Map m = ic.to(Map.class);
 
-		return Proxy.newProxyInstance(targetCls.getClassLoader(), new Class[] {
-				targetCls
+		return createProxy(targetCls, m);
+	}
+
+	private Object createProxy(final Class< ? > cls, final Map< ? , ? > data) {
+		return Proxy.newProxyInstance(cls.getClassLoader(), new Class[] {
+				cls
 		}, new InvocationHandler() {
 			@SuppressWarnings("boxing")
 			@Override
@@ -727,40 +731,40 @@ class ConvertingImpl extends AbstractSpecifying<Converting>
 						case "hashCode" :
 							return System.identityHashCode(proxy);
 						case "toString" :
-							return "Proxy for " + targetCls;
+							return "Proxy for " + cls;
 						default :
 							throw new UnsupportedOperationException("Method "
 									+ method + " not supported on proxy for "
-									+ targetCls);
+									+ cls);
 					}
 				if (mdDecl.equals(Annotation.class)) {
 					if ("annotationType".equals(method.getName())
 							&& method.getParameterTypes().length == 0) {
-						return targetCls;
+						return cls;
 					}
 				}
 
 				String propName = Util.getInterfacePropertyName(method,
-						Util.getSingleElementAnnotationKey(targetCls, proxy),
+						Util.getSingleElementAnnotationKey(cls, proxy),
 						proxy);
 				if (propName == null)
 					return null;
 
-				Object val = m.get(propName);
+				Object val = data.get(propName);
 				if (val == null && keysIgnoreCase) {
 					// try in a case-insensitive way
-					for (Iterator it = m.keySet().iterator(); it.hasNext()
+					for (Iterator it = data.keySet().iterator(); it.hasNext()
 							&& val == null;) {
 						String k = it.next().toString();
 						if (propName.equalsIgnoreCase(k)) {
-							val = m.get(k);
+							val = data.get(k);
 						}
 					}
 				}
 
 				// If no value is available take the default if specified
 				if (val == null) {
-					if (targetCls.isAnnotation()) {
+					if (cls.isAnnotation()) {
 						val = method.getDefaultValue();
 					}
 
@@ -870,31 +874,49 @@ class ConvertingImpl extends AbstractSpecifying<Converting>
 					}
 				}
 			}
-		} else if (Annotation.class.isAssignableFrom(sourceClass)) {
+		} else if (Annotation.class.isAssignableFrom(sourceClass)
+				&& isMarkerAnnotation(sourceClass)) {
 			// Special treatment for marker annotations
-			for (Method m : sourceClass.getDeclaredMethods()) {
-				try {
-					if (Annotation.class.getMethod(m.getName(),
-							m.getParameterTypes()).getReturnType().equals(
-									m.getReturnType()))
-						// this is a base annotation method
-						continue;
-				} catch (Exception ex) {
-					// Method not found, not a marker annotation
-				}
-				return null;
-			}
-
 			Class< ? > ann = Util.getAnnotationType(sourceClass, object);
-			String key = Util.toSingleElementAnnotationKey(
-					ann.getSimpleName());
+			String key = Util.toSingleElementAnnotationKey(ann.getSimpleName());
 			return converter
 					.convert(Collections.singletonMap(key, Boolean.TRUE))
 					.targetAs(targetAsClass)
 					.to(targetType);
-
+		} else if (Annotation.class.isAssignableFrom(targetAsClass)
+				&& isMarkerAnnotation(targetAsClass)) {
+			Map<String,Boolean> representation = Converters.standardConverter()
+					.convert(object)
+					.to(new TypeReference<Map<String,Boolean>>() {
+						/* empty subclass */
+					});
+			if (Boolean.TRUE.equals(
+					representation.get(Util.toSingleElementAnnotationKey(
+							targetAsClass.getSimpleName())))) {
+				return createProxy(targetClass, Collections.emptyMap());
+			} else {
+				throw new ConversionException("Cannot convert " + object
+						+ " to marker annotation " + targetAsClass);
+			}
 		}
 		return null;
+	}
+
+	private boolean isMarkerAnnotation(Class< ? > annClass) {
+		for (Method m : annClass.getDeclaredMethods()) {
+			try {
+				if (Annotation.class
+						.getMethod(m.getName(), m.getParameterTypes())
+						.getReturnType()
+						.equals(m.getReturnType()))
+					// this is a base annotation method
+					continue;
+			} catch (Exception ex) {
+				// Method not found, not a marker annotation
+			}
+			return false;
+		}
+		return true;
 	}
 
 	@SuppressWarnings("unchecked")
