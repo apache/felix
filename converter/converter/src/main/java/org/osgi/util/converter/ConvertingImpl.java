@@ -433,7 +433,7 @@ class ConvertingImpl extends AbstractSpecifying<Converting>
 		}
 	}
 
-	private Type reifyType(Type genericType) {
+	Type reifyType(Type genericType) {
 
 		if (genericType instanceof TypeVariable) {
 			String name = ((TypeVariable< ? >) genericType).getName();
@@ -540,14 +540,14 @@ class ConvertingImpl extends AbstractSpecifying<Converting>
 	}
 
 	Object convertCollectionValue(Object element) {
-		Type targetType = null;
+		Type type = null;
 		if (typeArguments != null && typeArguments.length > 0) {
-			targetType = typeArguments[0];
+			type = typeArguments[0];
 		}
 
 		if (element != null) {
-			if (targetType != null) {
-				element = converter.convert(element).to(targetType);
+			if (type != null) {
+				element = converter.convert(element).to(type);
 			} else {
 				Class< ? > cls = element.getClass();
 				if (isCopyRequiredType(cls)) {
@@ -572,14 +572,14 @@ class ConvertingImpl extends AbstractSpecifying<Converting>
 	}
 
 	private Object convertMapElement(Object element, int typeIdx) {
-		Type targetType = null;
+		Type type = null;
 		if (typeArguments != null && typeArguments.length > typeIdx) {
-			targetType = typeArguments[typeIdx];
+			type = typeArguments[typeIdx];
 		}
 
 		if (element != null) {
-			if (targetType != null) {
-				element = converter.convert(element).to(targetType);
+			if (type != null) {
+				element = converter.convert(element).to(type);
 			} else {
 				Class< ? > cls = element.getClass();
 				if (isCopyRequiredType(cls)) {
@@ -753,7 +753,8 @@ class ConvertingImpl extends AbstractSpecifying<Converting>
 				Object val = data.get(propName);
 				if (val == null && keysIgnoreCase) {
 					// try in a case-insensitive way
-					for (Iterator it = data.keySet().iterator(); it.hasNext()
+					for (Iterator< ? > it = data.keySet().iterator(); it
+							.hasNext()
 							&& val == null;) {
 						String k = it.next().toString();
 						if (propName.equalsIgnoreCase(k)) {

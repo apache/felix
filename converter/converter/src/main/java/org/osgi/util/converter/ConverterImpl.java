@@ -60,7 +60,9 @@ class ConverterImpl implements InternalConverter {
 			public String apply(Calendar f) {
 				return ISO8601_DATE_FORMAT.format(f.getTime());
 			}
-		}) {});
+		}) {
+			// empty subclass to capture generics
+		});
 
 		cb.rule(new Rule<String,Calendar>(new Function<String,Calendar>() {
 			@Override
@@ -74,14 +76,18 @@ class ConverterImpl implements InternalConverter {
 							"Cannot convert " + f + " to Date", e);
 				}
 			}
-		}) {});
+		}) {
+			// empty subclass to capture generics
+		});
 
 		cb.rule(new Rule<Calendar,Long>(new Function<Calendar,Long>() {
 			@Override
 			public Long apply(Calendar f) {
 				return f.getTime().getTime();
 			}
-		}) {});
+		}) {
+			// empty subclass to capture generics
+		});
 
 		cb.rule(new Rule<Long,Calendar>(new Function<Long,Calendar>() {
 			@Override
@@ -90,70 +96,90 @@ class ConverterImpl implements InternalConverter {
 				c.setTimeInMillis(f);
 				return c;
 			}
-		}) {});
+		}) {
+			// empty subclass to capture generics
+		});
 
 		cb.rule(new Rule<Character,Boolean>(new Function<Character,Boolean>() {
 			@Override
 			public Boolean apply(Character c) {
 				return c.charValue() != 0;
 			}
-		}) {});
+		}) {
+			// empty subclass to capture generics
+		});
 
 		cb.rule(new Rule<Boolean,Character>(new Function<Boolean,Character>() {
 			@Override
 			public Character apply(Boolean b) {
 				return b.booleanValue() ? (char) 1 : (char) 0;
 			}
-		}) {});
+		}) {
+			// empty subclass to capture generics
+		});
 
 		cb.rule(new Rule<Character,Integer>(new Function<Character,Integer>() {
 			@Override
 			public Integer apply(Character c) {
 				return (int) c.charValue();
 			}
-		}) {});
+		}) {
+			// empty subclass to capture generics
+		});
 
 		cb.rule(new Rule<Character,Long>(new Function<Character,Long>() {
 			@Override
 			public Long apply(Character c) {
 				return (long) c.charValue();
 			}
-		}) {});
+		}) {
+			// empty subclass to capture generics
+		});
 
 		cb.rule(new Rule<String,Character>(new Function<String,Character>() {
 			@Override
 			public Character apply(String f) {
 				return f.length() > 0 ? f.charAt(0) : 0;
 			}
-		}) {});
+		}) {
+			// empty subclass to capture generics
+		});
 
 		cb.rule(new Rule<String,Class< ? >>(new Function<String,Class< ? >>() {
 			@Override
 			public Class< ? > apply(String cn) {
 				return loadClassUnchecked(cn);
 			}
-		}) {});
+		}) {
+			// empty subclass to capture generics
+		});
 
 		cb.rule(new Rule<Date,Long>(new Function<Date,Long>() {
 			@Override
 			public Long apply(Date d) {
 				return d.getTime();
 			}
-		}) {});
+		}) {
+			// empty subclass to capture generics
+		});
 
 		cb.rule(new Rule<Long,Date>(new Function<Long,Date>() {
 			@Override
 			public Date apply(Long f) {
 				return new Date(f);
 			}
-		}) {});
+		}) {
+			// empty subclass to capture generics
+		});
 
 		cb.rule(new Rule<Date,String>(new Function<Date,String>() {
 			@Override
 			public String apply(Date d) {
 				return ISO8601_DATE_FORMAT.format(d);
 			}
-		}) {});
+		}) {
+			// empty subclass to capture generics
+		});
 
 		cb.rule(new Rule<String,Date>(new Function<String,Date>() {
 			@Override
@@ -165,21 +191,27 @@ class ConverterImpl implements InternalConverter {
 							"Cannot convert " + f + " to Date", e);
 				}
 			}
-		}) {});
+		}) {
+			// empty subclass to capture generics
+		});
 
 		cb.rule(new Rule<String,Pattern>(new Function<String,Pattern>() {
 			@Override
 			public Pattern apply(String ps) {
 				return Pattern.compile(ps);
 			}
-		}) {});
+		}) {
+			// empty subclass to capture generics
+		});
 
 		cb.rule(new Rule<String,UUID>(new Function<String,UUID>() {
 			@Override
 			public UUID apply(String uuid) {
 				return UUID.fromString(uuid);
 			}
-		}) {});
+		}) {
+			// empty subclass to capture generics
+		});
 
 		// Special conversions between character arrays and String
 		cb.rule(new Rule<char[],String>(new Function<char[],String>() {
@@ -187,7 +219,9 @@ class ConverterImpl implements InternalConverter {
 			public String apply(char[] ca) {
 				return charArrayToString(ca);
 			}
-		}) {});
+		}) {
+			// empty subclass to capture generics
+		});
 
 		cb.rule(new Rule<Character[],String>(
 				new Function<Character[],String>() {
@@ -195,14 +229,18 @@ class ConverterImpl implements InternalConverter {
 					public String apply(Character[] ca) {
 						return characterArrayToString(ca);
 					}
-				}) {});
+				}) {
+			// empty subclass to capture generics
+		});
 
 		cb.rule(new Rule<String,char[]>(new Function<String,char[]>() {
 			@Override
 			public char[] apply(String s) {
 				return stringToCharArray(s);
 			}
-		}) {});
+		}) {
+			// empty subclass to capture generics
+		});
 
 		cb.rule(new Rule<String,Character[]>(
 				new Function<String,Character[]>() {
@@ -210,21 +248,27 @@ class ConverterImpl implements InternalConverter {
 					public Character[] apply(String s) {
 						return stringToCharacterArray(s);
 					}
-				}) {});
+				}) {
+			// empty subclass to capture generics
+		});
 
 		cb.rule(new Rule<Number,Boolean>(new Function<Number,Boolean>() {
 			@Override
 			public Boolean apply(Number obj) {
 				return obj.longValue() != 0;
 			}
-		}) {});
+		}) {
+			// empty subclass to capture generics
+		});
 
 		cb.rule(new Rule<Number,Character>(new Function<Number,Character>() {
 			@Override
 			public Character apply(Number obj) {
 				return Character.valueOf((char) obj.intValue());
 			}
-		}) {});
+		}) {
+			// empty subclass to capture generics
+		});
 
 		reflectiveAddJavaTimeRule(cb, "java.time.LocalDateTime");
 		reflectiveAddJavaTimeRule(cb, "java.time.LocalDate");
@@ -266,7 +310,7 @@ class ConverterImpl implements InternalConverter {
 		}
 	}
 
-	private String charArrayToString(char[] ca) {
+	String charArrayToString(char[] ca) {
 		StringBuilder sb = new StringBuilder(ca.length);
 		for (char c : ca) {
 			sb.append(c);
@@ -274,11 +318,11 @@ class ConverterImpl implements InternalConverter {
 		return sb.toString();
 	}
 
-	private String characterArrayToString(Character[] ca) {
+	String characterArrayToString(Character[] ca) {
 		return charArrayToString(convert(ca).to(char[].class));
 	}
 
-	private char[] stringToCharArray(String s) {
+	char[] stringToCharArray(String s) {
 		char[] ca = new char[s.length()];
 
 		for (int i = 0; i < s.length(); i++) {
@@ -287,11 +331,11 @@ class ConverterImpl implements InternalConverter {
 		return ca;
 	}
 
-	private Character[] stringToCharacterArray(String s) {
+	Character[] stringToCharacterArray(String s) {
 		return convert(stringToCharArray(s)).to(Character[].class);
 	}
 
-	private Class< ? > loadClassUnchecked(String className) {
+	Class< ? > loadClassUnchecked(String className) {
 		try {
 			return getClass().getClassLoader().loadClass(className);
 		} catch (ClassNotFoundException e) {

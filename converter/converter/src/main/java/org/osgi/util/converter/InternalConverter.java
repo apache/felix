@@ -17,19 +17,11 @@
 package org.osgi.util.converter;
 
 /**
- * This interface specifies a {@link #convert(Object)} method that returns an
- * {@link InternalConverting} rather than a normal Converting instance.
- *
  * @author $Id$
  */
 interface InternalConverter extends Converter {
-	/**
-	 * Start a conversion for the given object. This method overrides the
-	 * {@link Converter#convert(Object)} method with a co-variant return type.
-	 *
-	 * @param obj The object that should be converted.
-	 * @return An {@link InternalConverting} object to complete the conversion.
-	 */
+	// This interface specifies a convert(Object) method that returns an
+	// InternalConverting rather than a normal Converting instance.
 	@Override
 	InternalConverting convert(Object obj);
 }
