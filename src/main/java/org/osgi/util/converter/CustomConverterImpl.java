@@ -30,9 +30,9 @@ import java.util.Map;
  */
 class CustomConverterImpl implements InternalConverter {
 	private final InternalConverter					delegate;
-	private final Map<Type,List<ConverterFunction>>	typeRules;
-	private final List<ConverterFunction>			allRules;
-	private final List<ConverterFunction>			errorHandlers;
+	final Map<Type,List<ConverterFunction>>	typeRules;
+	final List<ConverterFunction>			allRules;
+	final List<ConverterFunction>			errorHandlers;
 
 	CustomConverterImpl(InternalConverter converter,
 			Map<Type,List<ConverterFunction>> rules,

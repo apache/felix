@@ -25,7 +25,7 @@ import org.osgi.util.function.Function;
  */
 class FunctioningImpl extends AbstractSpecifying<Functioning>
 		implements Functioning {
-	private InternalConverter converter;
+	InternalConverter converter;
 
 	FunctioningImpl(InternalConverter converterImpl) {
 		converter = converterImpl;
