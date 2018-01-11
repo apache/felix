@@ -1,0 +1,206 @@
+Changes from 1.18.0 to 1.19.0
+-----------------------------
+** Bug
+    * [FELIX-5464] - java.lang.NullPointerException at org.apache.felix.scrplugin.helper.ClassScanner.processClass(ClassScanner.java:207)
+    * [FELIX-5729] - NoSuchFieldError when @Reference referenceInterface type different than field type
+    * [FELIX-5730] - Different separators in localization attribute
+    * [FELIX-5771] - Metatype generation via bnd plugin creates incorrect file names
+
+
+Changes from 1.17.0 to 1.18.0
+-----------------------------
+** Bug
+    * [FELIX-5700] - Metatype generation wrongly puts properties files into metatype directory
+
+
+Changes from 1.17.0 to 1.16.0
+---------------------------
+** Bug
+    * [FELIX-5451] - Input/Output streams not properly closed in org.apache.felix.scr.generator
+    * [FELIX-5452] - SCR bnd plugin fails when embedding jars with optional/excluded dependencies
+
+
+Changes from 1.16.0 to 1.15.0
+-----------------------------
+** Improvement
+    * [FELIX-5373] - Improve failure message when enabling metatype and using no or private properties only
+** Bug
+    * [FELIX-5304] - SERVICE_PID property should not be created
+    * [FELIX-5328] - NoClassDefFound not wrapped in the ClassScanner
+    * [FELIX-5345] - Incorrect encoding in metatype props file
+
+
+Changes from 1.15.0 to 1.14.0
+-----------------------------
+** Bug
+    * [FELIX-5118] - Exception when running on jdk9-ea
+
+
+Changes from 1.14.0 to 1.13.0
+-----------------------------
+** Improvement
+    * [FELIX-4773] - Generated service component xml does not conform to XSD
+** Bug
+    * [FELIX-4861] - Metatype generation should fail if there is no configuration property
+    * [FELIX-4622] - Regression: SCR spec version detection incorrect for activate method
+    * [FELIX-4774] - Support for @Reference annotation with unbind method "-"
+
+
+Changes from 1.13.0 to 1.11.0
+-----------------------------
+** Improvement
+    * [FELIX-4586] - A field must be volatile if methods are generated for a dynamic reference
+** Bug
+    * [FELIX-4296] - Cannot deactivate service interface detection in DS annotations
+    * [FELIX-4587] - Update method is not verified
+
+
+Changes from 1.11.0 to 1.10.0
+-----------------------------
+** Improvement
+    * [FELIX-4461] - Update to ASM 5 for Java 8 compatibility
+
+
+Changes from 1.10.0 to 1.9.0
+----------------------------
+** Improvement
+    * [FELIX-4378] - Generate a metatype properties file if label/description are missing on @Component or @Property
+** Bug
+    * [FELIX-4379] - Properties, references and services from inherited classes are only used if the class has the component annotation
+    * [FELIX-4383] - Metatype generation should use component name (and not classname)
+    * [FELIX-4441] - The default value is not escaped correctly.
+    * [FELIX-4442] - Lifecycle methods with wrong arguments should be treated as an error
+
+
+Changes from 1.9.0 to 1.8.0
+---------------------------
+** Improvement
+    * [FELIX-4249] - Make the default error location 1,1 instead of 0,0
+** Bug
+    * [FELIX-4192] - SCR Generator fails with a NPE in case a class level Reference doesn't define a referenceInterface
+    * [FELIX-4010] - SCR Plugin aborts when scanning a Java 8 class file
+
+
+Changes from 1.8.0 to 1.7.0
+---------------------------
+** Improvement
+    * [FELIX-4175] - scr.ant task does not provide scanClasses option
+    * [FELIX-4101] - Create metatype.properties file when description and label are inlined
+    * [FELIX-4126] - Discontinue creation of single XML descriptor files 
+    * [FELIX-4170] - Deprecate inheritance of component descriptors
+
+
+Changes from 1.7.0 to 1.6.0
+---------------------------
+** Bug
+    * [FELIX-4058] - PropertyType password has a wrong type (passwort)
+
+
+Changes from 1.6.0 to 1.5.0
+---------------------------
+** Improvement
+    * [FELIX-4033] - Issue warning messages for redundant SCR annotation combinations and an error for declaring the service.id property
+    * [FELIX-4035] - Issue warning messages when metatype is be created, but no properties are defined
+** Bug
+    * [FELIX-4030] - Generated metatype file contains all metatype infos
+    * [FELIX-3542] - Escape property values used as Metatype default values
+
+
+Changes from 1.5.0 to 1.4.0
+----------------------------
+** Bug
+    * [FELIX-3917] - bind/unbind methods are not generated
+
+Changes from 1.4.0 to 1.3.0
+----------------------------
+** Improvement
+    * [FELIX-3794] - Use DS specification version per component
+    * [FELIX-3636] - Using @Service without @Component should log a warning
+    * [FELIX-2929] - Read @Property from interfaces of types annotated with @Component
+    * [FELIX-3169] - Add support for new PASSWORD attribute type of Metatype service
+    * [FELIX-3886] - Improve error message for empty *.java-File
+
+** Task
+    * [FELIX-3867] - Drop support for JDK 1.4 completely
+
+** Bug
+    * [FELIX-3815] - Maven SCR Plugin does not correctly set specVersion to 1.1 if bind method with two parameters are used (OSGi Comp 4.2 $112.3.1)
+    * [FELIX-3858] - Service descriptor written in wrong encoding
+    * [FELIX-3232] - SCR annotations @Activate @Deactivate @Modified in outer classes also affect nested classes, annotations in nested classes are ignored 
+
+
+Changes from 1.3.0 to 1.2.0
+---------------------------
+** Improvement
+    * [FELIX-3641] - Option to generate separate descriptor files
+    
+** Bug
+    * [FELIX-3788] - specVersion incorrectly determined, depends on class order
+    * [FELIX-3568] - java.lang.VerifyError from bundles compiled with maven-scr-plugin (java 7)
+    * [FELIX-3739] - scr-plugin: "Annotated method {0} not found"
+    * [FELIX-3793] - Property of type Character must use unicode value
+    * [FELIX-3653] - Define the "@Reference" annotation on class level without a "referenceInterface" parameter.
+
+
+Changes from 1.1.4 to 1.2.0
+---------------------------
+
+** Task
+    * [FELIX-3225] - Drop javadoc annotation support
+    * [FELIX-3552] - Implement new features of DS 1.2
+    * [FELIX-3550] - Reimplement the SCR Generator
+
+** Bug
+    * [FELIX-3571] - "Comparison method violates general contract!" error in maven-scr-plugin
+    * [FELIX-3510] - Non java files will be processed
+    * [FELIX-3269] - @Property is not properly parsed.
+    * [FELIX-3189] - Mixing full-qualified Reference annotations and imported one results in no References exported to seviceComponents.xml
+    * [FELIX-3606] - SCR Plugin: build failure on wildcard imports (e.g. java.util.*)
+    * [FELIX-3234] - @Property annotation raises exceptions on longValue=0L use 
+
+** Improvement
+    * [FELIX-3509] - Undocumented features "strictMode", "parseJavadoc" and "processAnnotations"
+    * [FELIX-2689] - Upgrade Descriptor generator to new parent POM and adapt legal files
+
+
+Changes from 1.1.2 to 1.1.4
+---------------------------
+
+** Bug
+    * [FELIX-2963] - scr annotations @Activate @Deactivate @Modified are not detected with class inheritance
+    * [FELIX-3117] - NullPointerException when not implementing interface that is defined with @Service
+    * [FELIX-3136] - Endless loop: JavaClassDescriptorManager.getJavaClassDescription()
+    * [FELIX-3113] - NPE in multi-module Maven project
+
+
+Changes from 1.1.0 to 1.1.2
+---------------------------
+
+** Bug
+    * [FELIX-2978] - Lookup reference policy does not work for inherited components
+    * [FELIX-2945] - SCR plugin: Parsing of "options" for property tag broken for java annotations
+    * [FELIX-2906] - @Property(cardinality=Integer.MAX_Int, ...) causes java.lang.NumberFormatException
+
+** Improvement
+    * [FELIX-2492] - scr plugin: using src annotations causes NoClassDefFoundError and other errors
+    * [FELIX-2908] - Use same mechanism to get single annotation values as for multiple annotation values
+
+
+Changes from 1.0.0 to 1.1.0
+---------------------------
+
+** Bug
+    * [FELIX-2704] - @Property(cardinality=Integer.MAX_Int, ...) causes java.lang.NumberFormatException
+    * [FELIX-2835] - SCR plugin: Parsing of "options" for property tag broken for javadoc annotations
+    * [FELIX-2731] - NPE while scanning sources with QDox
+    * [FELIX-2876] - <reference> element not generated when name is missing
+
+** Improvement
+    * [FELIX-2853] - Deprecate javadoc tags
+    * [FELIX-2753] - Support array of classes for @Service annotation
+    * [FELIX-2874] - Add new scopes to SlingFilter annotation and use new property names
+    * [FELIX-2838] - Allow classes to be specifed as values for the @Property annotation
+    * [FELIX-2863] - Warnings and error messages contain @scr.* if annotations are used
+    * [FELIX-2690] - Add changelog.txt to SCR/Metatype generation modules
+
+
