@@ -23,7 +23,7 @@ import java.util.Dictionary;
 import java.util.Hashtable;
 
 import org.apache.felix.scr.impl.Activator;
-import org.apache.felix.scr.impl.ScrCommand;
+import org.apache.felix.scr.impl.ComponentCommands;
 import org.apache.felix.scr.impl.manager.ScrConfiguration;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
@@ -93,7 +93,7 @@ public class ScrConfigurationImpl implements ScrConfiguration
 
     private volatile ServiceRegistration<?> metatypeProviderRef;
 
-    private ScrCommand scrCommand;
+    private ComponentCommands scrCommand;
 
     public ScrConfigurationImpl(Activator activator )
     {
@@ -146,10 +146,10 @@ public class ScrConfigurationImpl implements ScrConfiguration
         this.bundleContext = null;
     }
 
-    public void setScrCommand(ScrCommand scrCommand)
+    public void setScrCommand(ComponentCommands scrCommand)
     {
         this.scrCommand = scrCommand;
-        scrCommand.update(infoAsService());
+        scrCommand.updateProvideScrInfoService(infoAsService());
     }
 
     // Called from the ScrManagedService.updated method to reconfigure
@@ -203,7 +203,7 @@ public class ScrConfigurationImpl implements ScrConfiguration
             }
             if ( scrCommand != null )
             {
-                scrCommand.update( infoAsService() );
+                scrCommand.updateProvideScrInfoService( infoAsService() );
             }
             oldGlobalExtender = this.globalExtender;
             this.globalExtender = newGlobalExtender;
@@ -256,6 +256,7 @@ public class ScrConfigurationImpl implements ScrConfiguration
         return stopTimeout;
     }
 
+    @Override
     public boolean globalExtender()
     {
         return globalExtender;

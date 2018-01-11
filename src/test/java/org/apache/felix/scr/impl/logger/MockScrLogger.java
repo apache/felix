@@ -67,6 +67,11 @@ public class MockScrLogger extends ScrLogger
             {
                 return LogService.LOG_ERROR;
             }
+
+            @Override
+            public boolean globalExtender() {
+                return false;
+            }
         }, new MockBundleContext(new MockBundle()));
     }
 }

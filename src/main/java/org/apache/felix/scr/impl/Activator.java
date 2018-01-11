@@ -29,6 +29,7 @@ import org.apache.felix.scr.impl.config.ScrConfigurationImpl;
 import org.apache.felix.scr.impl.inject.ClassUtils;
 import org.apache.felix.scr.impl.logger.ScrLogger;
 import org.apache.felix.scr.impl.runtime.ServiceComponentRuntimeImpl;
+import org.apache.felix.service.command.Converter;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
@@ -73,7 +74,7 @@ public class Activator extends AbstractExtender
 
     private ServiceRegistration<ServiceComponentRuntime> m_runtime_reg;
 
-    private ScrCommand m_scrCommand;
+    private ComponentCommands m_componentCommands;
 
     public Activator()
     {
@@ -171,8 +172,9 @@ public class Activator extends AbstractExtender
 
         super.doStart();
 
-        m_scrCommand = ScrCommand.register( m_context, runtime, m_configuration );
-        m_configuration.setScrCommand( m_scrCommand );
+        m_componentCommands = new ComponentCommands(m_context, runtime, m_configuration);
+        m_componentCommands.register();
+        m_componentCommands.updateProvideScrInfoService(m_configuration.infoAsService());
     }
 
     @Override
@@ -193,10 +195,9 @@ public class Activator extends AbstractExtender
         // stop tracking
         super.doStop();
 
-        if ( m_scrCommand != null )
+        if ( m_componentCommands != null )
         {
-            m_scrCommand.unregister();
-            m_scrCommand = null;
+            m_componentCommands.unregister();
         }
         if ( m_runtime_reg != null )
         {
