@@ -1,3 +1,12 @@
+Changes from 1.25.0 to 1.26.0
+-----------------------------
+** Bug
+    * [FELIX-5464] - java.lang.NullPointerException at org.apache.felix.scrplugin.helper.ClassScanner.processClass(ClassScanner.java:207)
+    * [FELIX-5729] - NoSuchFieldError when @Reference referenceInterface type different than field type
+    * [FELIX-5730] - Different separators in localization attribute
+    * [FELIX-5771] - Metatype generation via bnd plugin creates incorrect file names
+
+
 Changes from 1.24.0 to 1.25.0
 -----------------------------
 ** Bug
