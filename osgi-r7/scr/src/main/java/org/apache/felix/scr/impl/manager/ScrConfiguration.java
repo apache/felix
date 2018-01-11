@@ -75,11 +75,17 @@ public interface ScrConfiguration
 
 
     boolean keepInstances();
-    
+
+    @Deprecated
     boolean infoAsService();
 
     long lockTimeout();
 
     long stopTimeout();
+
+    /**
+     * @since 2.1
+     */
+    boolean globalExtender();
 
 }

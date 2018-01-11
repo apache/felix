@@ -54,8 +54,9 @@ import java.util.concurrent.LinkedBlockingQueue;
 
 import javax.inject.Inject;
 
-import org.apache.felix.scr.impl.ScrCommand;
+import org.apache.felix.scr.impl.ComponentCommands;
 import org.apache.felix.scr.integration.components.SimpleComponent;
+import org.apache.felix.service.command.Converter;
 import org.junit.After;
 import org.junit.Before;
 import org.ops4j.pax.exam.Configuration;
@@ -724,13 +725,12 @@ public abstract class ComponentTestBase
 
     //Code copied from ScrCommand to make it easier to find out what your test components are actually doing.
     //    @Test
-    public void testDescription()
-    {
+    public void testDescription() throws Exception {
         PrintStream out = System.out;
         info( new PrintWriter( out ) );
     }
 
-    private static class InfoWriter extends ScrCommand
+    private static class InfoWriter extends ComponentCommands
     {
 
         protected InfoWriter(ServiceComponentRuntime scrService)
@@ -740,14 +740,14 @@ public abstract class ComponentTestBase
 
     }
 
-    void info(PrintWriter out)
-    {
+    void info(PrintWriter out) throws Exception {
         ServiceComponentRuntime scr = scrTracker.getService();
         if ( scr == null )
         {
             TestCase.fail( "no ServiceComponentRuntime" );
         }
-        new InfoWriter( scr ).list( null, out );
+        InfoWriter iw = new InfoWriter(scr);
+        out.print(iw.format(iw.list(), Converter.LINE));
     }
 
     protected boolean isAtLeastR5()
