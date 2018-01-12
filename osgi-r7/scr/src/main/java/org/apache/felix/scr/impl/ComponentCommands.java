@@ -490,7 +490,7 @@ public class ComponentCommands {
             builder.append(MessageFormat.format(" {0,choice,0#(no active bindings)|1#(1 binding):|1<({0} bindings):}", bindings.length));
             for (ServiceReferenceDTO svcDto : bindings) {
                 Bundle provider = context.getBundle(svcDto.bundle);
-                builder.append(String.format("%n" + INDENT_1 + "  * Bound to [%d] from bundle %d (%s:%s), props: ", svcDto.id, svcDto.bundle, provider.getSymbolicName(), provider.getVersion()));
+                builder.append(String.format("%n" + INDENT_1 + "  * Bound to [%d] from bundle %d (%s:%s)", svcDto.id, svcDto.bundle, provider.getSymbolicName(), provider.getVersion()));
             }
         }
     }
