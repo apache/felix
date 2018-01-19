@@ -35,6 +35,7 @@ import java.util.TreeMap;
 
 import org.apache.felix.configurator.impl.json.BinUtil;
 import org.apache.felix.configurator.impl.json.JSONUtil;
+import org.apache.felix.configurator.impl.json.TypeConverter;
 import org.apache.felix.configurator.impl.logger.SystemLogger;
 import org.apache.felix.configurator.impl.model.BundleState;
 import org.apache.felix.configurator.impl.model.Config;
@@ -253,10 +254,11 @@ public class Configurator {
                 if ( state.getInitialHashes() != null ) {
                     processRemoveBundle(-1);
                 }
+                final TypeConverter converter = new TypeConverter(null);
                 final JSONUtil.Report report = new JSONUtil.Report();
                 final List<ConfigurationFile> allFiles = new ArrayList<>();
                 for(final Map.Entry<String, String> entry : files.entrySet()) {
-                    final ConfigurationFile file = org.apache.felix.configurator.impl.json.JSONUtil.readJSON(null, entry.getKey(), null, -1, entry.getValue(), report);
+                    final ConfigurationFile file = org.apache.felix.configurator.impl.json.JSONUtil.readJSON(converter, entry.getKey(), null, -1, entry.getValue(), report);
                     if ( file != null ) {
                         allFiles.add(file);
                     }
