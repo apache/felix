@@ -190,7 +190,9 @@ public class JSONUtil {
         final List<Config> configurations = new ArrayList<>();
         for(final Map.Entry<String, ?> entry : configs.entrySet()) {
             if ( ! (entry.getValue() instanceof Map) ) {
-                report.errors.add("Ignoring configuration in '" + identifier + "' (not a configuration) : " + entry.getKey());
+            	    if ( !entry.getKey().startsWith(INTERNAL_PREFIX) ) {
+            	    	    report.errors.add("Ignoring configuration in '" + identifier + "' (not a configuration) : " + entry.getKey());
+            	    }
             } else {
                 @SuppressWarnings("unchecked")
                 final Map<String, ?> mainMap = (Map<String, ?>)entry.getValue();
