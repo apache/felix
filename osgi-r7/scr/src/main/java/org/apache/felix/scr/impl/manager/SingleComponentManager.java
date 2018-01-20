@@ -33,6 +33,7 @@ import org.apache.felix.scr.impl.inject.LifecycleMethod;
 import org.apache.felix.scr.impl.inject.MethodResult;
 import org.apache.felix.scr.impl.inject.ReferenceMethod;
 import org.apache.felix.scr.impl.manager.DependencyManager.OpenStatus;
+import org.apache.felix.scr.impl.metadata.DSVersion;
 import org.apache.felix.scr.impl.metadata.ReferenceMetadata;
 import org.apache.felix.scr.impl.metadata.TargetedPID;
 import org.osgi.framework.Bundle;
@@ -561,12 +562,6 @@ public class SingleComponentManager<S> extends AbstractComponentManager<S> imple
         return super.getServiceProperties();
     }
 
-    final ServiceRegistration<S> getServiceRegistration()
-    {
-        return m_componentContext == null? null: m_componentContext.getServiceRegistration();
-    }
-
-
     final ServiceReference<S> getServiceReference()
     {
         ServiceRegistration<S> reg = getServiceRegistration();
@@ -575,6 +570,16 @@ public class SingleComponentManager<S> extends AbstractComponentManager<S> imple
             return reg.getReference();
         }
         return null;
+    }
+
+    @Override
+    protected ServiceRegistration<S> getServiceRegistration()
+    {
+        if ( getComponentMetadata().getDSVersion() == DSVersion.DS12Felix )
+        {
+            return m_componentContext != null ? m_componentContext.getServiceRegistration() : null;
+        }
+        return super.getServiceRegistration();
     }
 
     private void updateServiceRegistration()

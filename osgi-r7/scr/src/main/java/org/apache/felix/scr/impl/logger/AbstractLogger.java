@@ -106,7 +106,7 @@ public abstract class AbstractLogger
     {
         if ( isLogEnabled( level ) )
         {
-            getLogger().log(level, prefix.concat(message), ex);
+            getLogger().log(level, prefix.concat(" ").concat(message), ex);
         }
     }
 
