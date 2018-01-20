@@ -446,6 +446,7 @@ public abstract class AbstractComponentManager<S> implements SimpleLogger, Compo
 
                 long count = taskCounter.incrementAndGet();
 
+                @Override
                 public void run()
                 {
                     try
@@ -537,6 +538,7 @@ public abstract class AbstractComponentManager<S> implements SimpleLogger, Compo
 
                 long count = taskCounter.incrementAndGet();
 
+                @Override
                 public void run()
                 {
                     try
@@ -591,6 +593,7 @@ public abstract class AbstractComponentManager<S> implements SimpleLogger, Compo
 
     //---------- Component interface ------------------------------------------
 
+    @Override
     public long getId()
     {
         return m_componentId;
@@ -969,6 +972,11 @@ public abstract class AbstractComponentManager<S> implements SimpleLogger, Compo
         return true;
     }
 
+    protected ServiceRegistration<S> getServiceRegistration()
+    {
+        return registrationManager.getServiceRegistration();
+    }
+
     AtomicInteger getTrackingCount()
     {
         return m_trackingCount;
@@ -1085,6 +1093,7 @@ public abstract class AbstractComponentManager<S> implements SimpleLogger, Compo
     /**
      * Returns <code>true</code> if logging for the given level is enabled.
      */
+    @Override
     public boolean isLogEnabled(int level)
     {
         ComponentActivator activator = getActivator();
@@ -1095,6 +1104,7 @@ public abstract class AbstractComponentManager<S> implements SimpleLogger, Compo
         return false;
     }
 
+    @Override
     public void log(int level, String message, Throwable ex)
     {
         ComponentActivator activator = getActivator();
@@ -1104,6 +1114,7 @@ public abstract class AbstractComponentManager<S> implements SimpleLogger, Compo
         }
     }
 
+    @Override
     public void log(int level, String message, Object[] arguments, Throwable ex)
     {
         ComponentActivator activator = getActivator();
@@ -1227,6 +1238,7 @@ public abstract class AbstractComponentManager<S> implements SimpleLogger, Compo
         return m_dependencyManagers;
     }
 
+    @Override
     public List<? extends ReferenceManager<S, ?>> getReferenceManagers()
     {
         return m_dependencyManagers;
@@ -1279,6 +1291,7 @@ public abstract class AbstractComponentManager<S> implements SimpleLogger, Compo
     /* (non-Javadoc)
      * @see org.apache.felix.scr.impl.manager.ComponentManager#getProperties()
      */
+    @Override
     public abstract Map<String, Object> getProperties();
 
     public abstract void setServiceProperties(Dictionary<String, ?> serviceProperties);
@@ -1401,6 +1414,7 @@ public abstract class AbstractComponentManager<S> implements SimpleLogger, Compo
         return m_container.getComponentMetadata();
     }
 
+    @Override
     public int getSpecState()
     {
         return getState().getSpecState();

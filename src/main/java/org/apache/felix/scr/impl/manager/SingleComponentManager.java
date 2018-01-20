@@ -30,6 +30,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import org.apache.felix.scr.impl.helper.ComponentMethod;
 import org.apache.felix.scr.impl.helper.ComponentMethods;
 import org.apache.felix.scr.impl.helper.MethodResult;
+import org.apache.felix.scr.impl.metadata.DSVersion;
 import org.apache.felix.scr.impl.metadata.TargetedPID;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.Constants;
@@ -108,12 +109,14 @@ public class SingleComponentManager<S> extends AbstractComponentManager<S> imple
         {
             S tmpComponent = createImplementationObject( null, new SetImplementationObject<S>()
             {
+                @Override
                 public void presetComponentContext( ComponentContextImpl<S> componentContext )
                 {
                     m_componentContext = componentContext;
                 }
 
 
+                @Override
                 public void resetImplementationObject( S implementationObject )
                 {
                     m_componentContext = null;
@@ -515,7 +518,7 @@ public class SingleComponentManager<S> extends AbstractComponentManager<S> imple
         if (m_componentContext != null)
         {
             m_componentContext.unsetServiceRegistration();
-        }        
+        }
     }
 
     @Override
@@ -528,9 +531,14 @@ public class SingleComponentManager<S> extends AbstractComponentManager<S> imple
         return super.getServiceProperties();
     }
 
-    final ServiceRegistration<S> getServiceRegistration()
+    @Override
+    protected ServiceRegistration<S> getServiceRegistration()
     {
-        return m_componentContext == null? null: m_componentContext.getServiceRegistration();
+        if ( getComponentMetadata().getDSVersion() == DSVersion.DS12Felix )
+        {
+            return m_componentContext != null ? m_componentContext.getServiceRegistration() : null;
+        }
+        return super.getServiceRegistration();
     }
 
 
@@ -801,6 +809,7 @@ public class SingleComponentManager<S> extends AbstractComponentManager<S> imple
         return regProps.equals( props );
     }
 
+    @Override
     public S getService( Bundle bundle, ServiceRegistration<S> serviceRegistration )
     {
         if ( getActivator().enterCreate( serviceRegistration.getReference() ) )
@@ -838,7 +847,7 @@ public class SingleComponentManager<S> extends AbstractComponentManager<S> imple
                 //This is backup.  Normally done in createComponent.
                 getActivator().leaveCreate(serviceRegistration.getReference());
             }
-            
+
         }
         finally
         {
@@ -930,6 +939,7 @@ public class SingleComponentManager<S> extends AbstractComponentManager<S> imple
 
     }
 
+    @Override
     public void ungetService( Bundle bundle, ServiceRegistration<S> serviceRegistration, S o )
     {
         obtainStateLock( );
