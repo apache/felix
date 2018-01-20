@@ -856,6 +856,7 @@ public abstract class AbstractComponentManager<S> implements ComponentManager<S>
         return this;
     }
 
+
     ComponentMethods<S> getComponentMethods()
     {
         return m_componentMethods;
@@ -953,6 +954,11 @@ public abstract class AbstractComponentManager<S> implements ComponentManager<S>
             return registrationManager.changeRegistration(RegistrationManager.RegState.unregistered, services);
         }
         return true;
+    }
+
+    protected ServiceRegistration<S> getServiceRegistration()
+    {
+        return registrationManager.getServiceRegistration();
     }
 
     AtomicInteger getTrackingCount()
