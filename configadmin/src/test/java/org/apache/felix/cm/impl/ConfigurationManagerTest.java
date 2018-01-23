@@ -384,11 +384,7 @@ public class ConfigurationManagerTest extends TestCase
 
             @Override
             void schedule(Runnable update) {
-                try {
                 update.run();
-                } catch ( Throwable t) {
-                    t.printStackTrace();
-                }
             }
         });
 
