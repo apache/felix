@@ -30,30 +30,38 @@ import java.util.Map;
 public class MockNotCachablePersistenceManager implements NotCachablePersistenceManager
 {
 
-    private final Map configs = new HashMap();
+    private final Map<String, Dictionary> configs = new HashMap<String, Dictionary>();
 
+    public Map<String, Dictionary> getStored()
+    {
+        return configs;
+    }
 
+    @Override
     public void delete( String pid )
     {
         configs.remove( pid );
     }
 
 
+    @Override
     public boolean exists( String pid )
     {
         return configs.containsKey( pid );
     }
 
 
+    @Override
     public Enumeration getDictionaries()
     {
         return Collections.enumeration( configs.values() );
     }
 
 
+    @Override
     public Dictionary load( String pid ) throws IOException
     {
-        Dictionary config = ( Dictionary ) configs.get( pid );
+        Dictionary config = configs.get( pid );
         if ( config != null )
         {
             return config;
@@ -63,6 +71,7 @@ public class MockNotCachablePersistenceManager implements NotCachablePersistence
     }
 
 
+    @Override
     public void store( String pid, Dictionary properties )
     {
         configs.put( pid, properties );

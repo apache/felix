@@ -148,7 +148,7 @@ class CachingPersistenceManagerProxy implements PersistenceManager
                 fullyLoaded = false;
             }
             // if not fully loaded, call back to the underlying persistence
-            // manager and cach all dictionaries whose service.pid is set
+            // manager and cache all dictionaries whose service.pid is set
             if ( !fullyLoaded )
             {
                 lock.unlock();
