@@ -28,11 +28,13 @@ import java.util.HashSet;
 import java.util.Hashtable;
 import java.util.Map;
 import java.util.Set;
+
 import org.apache.felix.cm.MockBundleContext;
 import org.apache.felix.cm.MockLogService;
 import org.apache.felix.cm.MockNotCachablePersistenceManager;
 import org.apache.felix.cm.MockPersistenceManager;
 import org.apache.felix.cm.PersistenceManager;
+import org.apache.felix.cm.impl.helper.ManagedServiceFactoryTracker;
 import org.mockito.Mockito;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.Constants;
@@ -42,6 +44,7 @@ import org.osgi.service.cm.ConfigurationEvent;
 import org.osgi.service.cm.SynchronousConfigurationListener;
 import org.osgi.service.log.LogService;
 import org.osgi.util.tracker.ServiceTracker;
+
 import junit.framework.TestCase;
 
 public class ConfigurationManagerTest extends TestCase
@@ -77,11 +80,11 @@ public class ConfigurationManagerTest extends TestCase
         String pid = "testDefaultPersistenceManager";
         ConfigurationManager configMgr = new ConfigurationManager();
         setServiceTrackerField( configMgr, "persistenceManagerTracker" );
-        
+
         Field field = configMgr.getClass().getDeclaredField( "persistenceManagers" );
         field.setAccessible( true );
         CachingPersistenceManagerProxy[] persistenceManagers = new CachingPersistenceManagerProxy [1];
-        PersistenceManager pm =new MockPersistenceManager(); 
+        PersistenceManager pm =new MockPersistenceManager();
         Dictionary dictionary = new Hashtable();
         dictionary.put( "property1", "value1" );
         dictionary.put( Constants.SERVICE_PID, pid );
@@ -89,36 +92,36 @@ public class ConfigurationManagerTest extends TestCase
 
         persistenceManagers[0] = new CachingPersistenceManagerProxy(pm);
         field.set(configMgr, persistenceManagers);
-        
+
         ConfigurationImpl[] conf = configMgr.listConfigurations(new ConfigurationAdminImpl(configMgr, null), null);
-        
+
         assertEquals(1, conf.length);
         assertEquals(2, conf[0].getProperties(true).size());
-        
+
         dictionary = new Hashtable();
         dictionary.put( "property1", "value2" );
         pid = "testDefaultPersistenceManager";
         dictionary.put( Constants.SERVICE_PID, pid );
         pm.store( pid, dictionary );
- 
+
         conf = configMgr.listConfigurations(new ConfigurationAdminImpl(configMgr, null), null);
         assertEquals(1, conf.length);
         assertEquals(2, conf[0].getProperties(true).size());
 
         // verify that the property in the configurations cache was used
         assertEquals("value1", conf[0].getProperties(true).get("property1"));
-    }    
-    
+    }
+
     public void test_listConfigurations_notcached() throws Exception
     {
-        String pid = "testDefaultPersistenceManager";         
+        String pid = "testDefaultPersistenceManager";
         ConfigurationManager configMgr = new ConfigurationManager();
         setServiceTrackerField( configMgr, "persistenceManagerTracker" );
-        
+
         Field field = configMgr.getClass().getDeclaredField( "persistenceManagers" );
         field.setAccessible( true );
         CachingPersistenceManagerProxy[] persistenceManagers = new CachingPersistenceManagerProxy[1];
-        PersistenceManager pm =new MockNotCachablePersistenceManager(); 
+        PersistenceManager pm =new MockNotCachablePersistenceManager();
         Dictionary dictionary = new Hashtable();
         dictionary.put( "property1", "value1" );
         dictionary.put( Constants.SERVICE_PID, pid );
@@ -126,18 +129,18 @@ public class ConfigurationManagerTest extends TestCase
 
         persistenceManagers[0] = new CachingPersistenceManagerProxy(pm);
         field.set(configMgr, persistenceManagers);
-        
+
         ConfigurationImpl[] conf = configMgr.listConfigurations(new ConfigurationAdminImpl(configMgr, null), null);
-        
+
         assertEquals(1, conf.length);
         assertEquals(2, conf[0].getProperties(true).size());
-        
+
         dictionary = new Hashtable();
         dictionary.put("property1", "valueNotCached");
         pid = "testDefaultPersistenceManager";
         dictionary.put( Constants.SERVICE_PID, pid );
         pm.store( pid, dictionary );
- 
+
         conf = configMgr.listConfigurations(new ConfigurationAdminImpl(configMgr, null), null);
         assertEquals(1, conf.length);
         assertEquals(2, conf[0].getProperties(true).size());
@@ -354,6 +357,70 @@ public class ConfigurationManagerTest extends TestCase
 
         assertEquals("Both listeners should have been called, both in the STARTING and ACTIVE state, but not in the STOPPING state",
                 2, result.size());
+    }
+
+    public void test_factoryConfigurationCleanup() throws Exception
+    {
+        final ConfigurationManager configMgr = new ConfigurationManager();
+        final Field bcField = configMgr.getClass().getDeclaredField("bundleContext");
+        bcField.setAccessible(true);
+        bcField.set(configMgr, new MockBundleContext());
+        setServiceTrackerField( configMgr, "persistenceManagerTracker" );
+        setServiceTrackerField( configMgr, "logTracker" );
+        setServiceTrackerField( configMgr, "configurationListenerTracker" );
+        setServiceTrackerField( configMgr, "syncConfigurationListenerTracker" );
+
+        final Field mstField = configMgr.getClass().getDeclaredField("managedServiceFactoryTracker");
+        mstField.setAccessible(true);
+        mstField.set( configMgr, new ManagedServiceFactoryTracker(configMgr) {
+
+            @Override
+            public void open() {
+            }
+        });
+        final Field utField = configMgr.getClass().getDeclaredField( "updateThread" );
+        utField.setAccessible( true );
+        utField.set( configMgr, new UpdateThread( configMgr, null, "Test updater" ) {
+
+            @Override
+            void schedule(Runnable update) {
+                try {
+                update.run();
+                } catch ( Throwable t) {
+                    t.printStackTrace();
+                }
+            }
+        });
+
+        Field field = configMgr.getClass().getDeclaredField( "persistenceManagers" );
+        field.setAccessible( true );
+        CachingPersistenceManagerProxy[] persistenceManagers = new CachingPersistenceManagerProxy[1];
+        MockNotCachablePersistenceManager pm = new MockNotCachablePersistenceManager();
+
+        persistenceManagers[0] = new CachingPersistenceManagerProxy(pm);
+        field.set(configMgr, persistenceManagers);
+
+        final String factoryPid = "my.factory";
+        final Dictionary<String, Object> props = new Hashtable<String, Object>();
+        props.put("hello", "world");
+
+        final ConfigurationImpl c1 = configMgr.createFactoryConfiguration(factoryPid, null);
+        c1.update(props);
+        final ConfigurationImpl c2 = configMgr.createFactoryConfiguration(factoryPid, null);
+        c2.update(props);
+        final ConfigurationImpl c3 = configMgr.createFactoryConfiguration(factoryPid, null);
+        c3.update(props);
+
+        assertEquals(4, pm.getStored().size());
+
+        c1.delete();
+        assertEquals(3, pm.getStored().size());
+
+        c2.delete();
+        assertEquals(2, pm.getStored().size());
+
+        c3.delete();
+        assertEquals(0, pm.getStored().size());
     }
 
     private void assertNoLog( ConfigurationManager configMgr, int level, String message, Throwable t )
