@@ -70,7 +70,7 @@ public class CachingPersistenceManagerProxy implements ExtPersistenceManager
     public CachingPersistenceManagerProxy( final PersistenceManager pm )
     {
         this.pm = pm;
-        this.cache = new Hashtable<String, CaseInsensitiveDictionary>();
+        this.cache = new Hashtable<>();
     }
 
     @Override
@@ -125,7 +125,7 @@ public class CachingPersistenceManagerProxy implements ExtPersistenceManager
     /**
      * Returns an <code>Enumeration</code> of <code>Dictionary</code> objects
      * representing the configurations stored in the underlying persistence
-     * managers. The dictionaries returned are garanteed to contain the
+     * managers. The dictionaries returned are guaranteed to contain the
      * <code>service.pid</code> property.
      * <p>
      * Note, that each call to this method will return new dictionary objects.
@@ -178,7 +178,7 @@ public class CachingPersistenceManagerProxy implements ExtPersistenceManager
             }
 
             // Deep copy the configuration to avoid any threading issue
-            final List<Dictionary> configs = new ArrayList<Dictionary>();
+            final List<Dictionary> configs = new ArrayList<>();
             for (final Dictionary d : cache.values())
             {
                 if ( d.get( Constants.SERVICE_PID ) != null && ( filter == null || filter.matches( d ) ) )

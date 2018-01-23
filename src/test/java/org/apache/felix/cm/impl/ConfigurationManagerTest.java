@@ -38,6 +38,7 @@ import org.apache.felix.cm.MockLogService;
 import org.apache.felix.cm.MockNotCachablePersistenceManager;
 import org.apache.felix.cm.MockPersistenceManager;
 import org.apache.felix.cm.PersistenceManager;
+import org.apache.felix.cm.impl.helper.ManagedServiceFactoryTracker;
 import org.apache.felix.cm.impl.persistence.CachingPersistenceManagerProxy;
 import org.apache.felix.cm.impl.persistence.PersistenceManagerProxy;
 import org.junit.After;
@@ -83,7 +84,7 @@ public class ConfigurationManagerTest
         String pid = "testDefaultPersistenceManager";
 
         PersistenceManager pm =new MockPersistenceManager();
-        Dictionary<String, Object> dictionary = new Hashtable<String, Object>();
+        Dictionary<String, Object> dictionary = new Hashtable<>();
         dictionary.put( "property1", "value1" );
         dictionary.put( Constants.SERVICE_PID, pid );
         pm.store( pid, dictionary );
@@ -95,7 +96,7 @@ public class ConfigurationManagerTest
         assertEquals(1, conf.length);
         assertEquals(2, conf[0].getProperties(true).size());
 
-        dictionary = new Hashtable<String, Object>();
+        dictionary = new Hashtable<>();
         dictionary.put( "property1", "value2" );
         pid = "testDefaultPersistenceManager";
         dictionary.put( Constants.SERVICE_PID, pid );
@@ -113,7 +114,7 @@ public class ConfigurationManagerTest
     {
         String pid = "testDefaultPersistenceManager";
         PersistenceManager pm = new MockNotCachablePersistenceManager();
-        Dictionary<String, Object> dictionary = new Hashtable<String, Object>();
+        Dictionary<String, Object> dictionary = new Hashtable<>();
         dictionary.put( "property1", "value1" );
         dictionary.put( Constants.SERVICE_PID, pid );
         pm.store( pid, dictionary );
@@ -125,7 +126,7 @@ public class ConfigurationManagerTest
         assertEquals(1, conf.length);
         assertEquals(2, conf[0].getProperties(true).size());
 
-        dictionary = new Hashtable<String, Object>();
+        dictionary = new Hashtable<>();
         dictionary.put("property1", "valueNotCached");
         pid = "testDefaultPersistenceManager";
         dictionary.put( Constants.SERVICE_PID, pid );
@@ -274,7 +275,7 @@ public class ConfigurationManagerTest
 
     @Test public void testEventsStartingBundle() throws Exception
     {
-        final Set<String> result = new HashSet<String>();
+        final Set<String> result = new HashSet<>();
 
         SynchronousConfigurationListener syncListener1 = new SynchronousConfigurationListener()
         {
@@ -338,13 +339,67 @@ public class ConfigurationManagerTest
         utField.setAccessible( true );
         utField.set( configMgr, new UpdateThread( null, "Test updater" ));
 
-        Dictionary<String, Object> props = new Hashtable<String, Object>();
+        Dictionary<String, Object> props = new Hashtable<>();
         props.put( Constants.SERVICE_PID, "org.acme.testpid" );
         ConfigurationImpl config = new ConfigurationImpl( configMgr, new MockPersistenceManager(), props );
         configMgr.updated( config, true );
 
         assertEquals("Both listeners should have been called, both in the STARTING and ACTIVE state, but not in the STOPPING state",
                 2, result.size());
+    }
+
+    public void test_factoryConfigurationCleanup() throws Exception
+    {
+        MockNotCachablePersistenceManager pm = new MockNotCachablePersistenceManager();
+        ConfigurationManager configMgr = new ConfigurationManager(new CachingPersistenceManagerProxy(pm), null);
+
+        final Field bcField = configMgr.getClass().getDeclaredField("bundleContext");
+        bcField.setAccessible(true);
+        bcField.set(configMgr, new MockBundleContext());
+        setServiceTrackerField( configMgr, "persistenceManagerTracker" );
+        setServiceTrackerField( configMgr, "logTracker" );
+        setServiceTrackerField( configMgr, "configurationListenerTracker" );
+        setServiceTrackerField( configMgr, "syncConfigurationListenerTracker" );
+
+        final Field mstField = configMgr.getClass().getDeclaredField("managedServiceFactoryTracker");
+        mstField.setAccessible(true);
+        mstField.set( configMgr, new ManagedServiceFactoryTracker(configMgr) {
+
+            @Override
+            public void open() {
+            }
+        });
+        final Field utField = configMgr.getClass().getDeclaredField( "updateThread" );
+        utField.setAccessible( true );
+        utField.set( configMgr, new UpdateThread( null, "Test updater" ) {
+
+            @Override
+            void schedule(Runnable update) {
+                update.run();
+            }
+        });
+
+        final String factoryPid = "my.factory";
+        final Dictionary<String, Object> props = new Hashtable<>();
+        props.put("hello", "world");
+
+        final ConfigurationImpl c1 = configMgr.createFactoryConfiguration(factoryPid, null);
+        c1.update(props);
+        final ConfigurationImpl c2 = configMgr.createFactoryConfiguration(factoryPid, null);
+        c2.update(props);
+        final ConfigurationImpl c3 = configMgr.createFactoryConfiguration(factoryPid, null);
+        c3.update(props);
+
+        assertEquals(4, pm.getStored().size());
+
+        c1.delete();
+        assertEquals(3, pm.getStored().size());
+
+        c2.delete();
+        assertEquals(2, pm.getStored().size());
+
+        c3.delete();
+        assertEquals(0, pm.getStored().size());
     }
 
     private void assertNoLog( ConfigurationManager configMgr, int level, String message, Throwable t )
@@ -419,7 +474,7 @@ public class ConfigurationManagerTest
     private static ServiceReference[] setServiceTrackerField( ConfigurationManager configMgr,
             String fieldName, Object ... services ) throws Exception
     {
-        final Map<ServiceReference, Object> refMap = new HashMap<ServiceReference, Object>();
+        final Map<ServiceReference, Object> refMap = new HashMap<>();
         for ( Object svc : services )
         {
             ServiceReference sref = Mockito.mock( ServiceReference.class );
