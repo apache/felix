@@ -53,12 +53,11 @@ import org.apache.felix.configurator.impl.model.BundleState;
 import org.apache.felix.configurator.impl.model.Config;
 import org.apache.felix.configurator.impl.model.ConfigPolicy;
 import org.apache.felix.configurator.impl.model.ConfigurationFile;
+import org.osgi.service.configurator.ConfiguratorConstants;
 
 public class JSONUtil {
 
     private static final String INTERNAL_PREFIX = ":configurator:";
-
-    private static final String PROP_VERSION = INTERNAL_PREFIX + "resource-version";
 
     private static final String PROP_RANKING = "ranking";
 
@@ -161,7 +160,7 @@ public class JSONUtil {
             final Report report) {
         final String identifier = (url == null ? name : url.toString());
         final JsonObject json = parseJSON(name, contents, report);
-        final Map<String, ?> configs = verifyJSON(name, json, report);
+        final Map<String, ?> configs = verifyJSON(name, json, url != null, report);
         if ( configs != null ) {
             final List<Config> list = readConfigurationsJSON(converter, bundleId, identifier, configs, report);
             if ( !list.isEmpty() ) {
@@ -431,21 +430,44 @@ public class JSONUtil {
     @SuppressWarnings("unchecked")
     public static Map<String, ?> verifyJSON(final String name,
             final JsonObject root,
+            final boolean bundleResource,
             final Report report) {
         if ( root == null ) {
             return null;
         }
-        final Object version = getValue(root, PROP_VERSION);
+        final Object version = getValue(root, ConfiguratorConstants.PROPERTY_RESOURCE_VERSION);
         if ( version != null ) {
 
             final int v = TypeConverter.getConverter().convert(version).defaultValue(-1).to(Integer.class);
             if ( v == -1 ) {
-                report.errors.add("Invalid version information in " + name + " : " + version);
+                report.errors.add("Invalid resource version information in " + name + " : " + version);
                 return null;
             }
             // we only support version 1
             if ( v != 1 ) {
-                report.errors.add("Invalid version number in " + name + " : " + version);
+                report.errors.add("Invalid resource version number in " + name + " : " + version);
+                return null;
+            }
+        }
+        if ( !bundleResource) {
+            // if this is not a bundle resource
+            // then version and symbolic name must be set
+            final Object rsrcVersion = getValue(root, ConfiguratorConstants.PROPERTY_VERSION);
+            if ( rsrcVersion == null ) {
+                report.errors.add("Missing version information in " + name);
+                return null;
+            }
+            if ( !(rsrcVersion instanceof String) ) {
+                report.errors.add("Invalid version information in " + name + " : " + rsrcVersion);
+                return null;
+            }
+            final Object rsrcName = getValue(root, ConfiguratorConstants.PROPERTY_SYMBOLIC_NAME);
+            if ( rsrcName == null ) {
+                report.errors.add("Missing symbolic name information in " + name);
+                return null;
+            }
+            if ( !(rsrcName instanceof String) ) {
+                report.errors.add("Invalid symbolic name information in " + name + " : " + rsrcName);
                 return null;
             }
         }
