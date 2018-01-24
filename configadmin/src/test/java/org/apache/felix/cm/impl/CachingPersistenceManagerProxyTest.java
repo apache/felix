@@ -27,7 +27,6 @@ import java.util.List;
 import org.apache.felix.cm.MockNotCachablePersistenceManager;
 import org.apache.felix.cm.MockPersistenceManager;
 import org.apache.felix.cm.PersistenceManager;
-
 import org.osgi.framework.Constants;
 
 import junit.framework.TestCase;
@@ -95,7 +94,7 @@ public class CachingPersistenceManagerProxyTest extends TestCase
 
         dictionaries = cpm.getDictionaries( filter );
         list = Collections.list( dictionaries );
-        assertEquals(0, list.size());
+        assertEquals(1, list.size());
     }
 
 }

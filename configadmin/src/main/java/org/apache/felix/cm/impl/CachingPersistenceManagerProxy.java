@@ -22,7 +22,11 @@ package org.apache.felix.cm.impl;
 import java.io.IOException;
 import java.util.Dictionary;
 import java.util.Enumeration;
-import java.util.Hashtable;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.Vector;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReadWriteLock;
@@ -31,6 +35,7 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 import org.apache.felix.cm.NotCachablePersistenceManager;
 import org.apache.felix.cm.PersistenceManager;
 import org.osgi.framework.Constants;
+import org.osgi.service.cm.ConfigurationAdmin;
 
 
 /**
@@ -41,13 +46,14 @@ import org.osgi.framework.Constants;
  */
 class CachingPersistenceManagerProxy implements PersistenceManager
 {
-    /** the actual PersistenceManager */
+
+    /** The actual PersistenceManager */
     private final PersistenceManager pm;
 
-    /** cached dictionaries */
-    private final Hashtable<String, CaseInsensitiveDictionary> cache;
+    /** Cached dictionaries */
+    private final Map<String, CaseInsensitiveDictionary> cache = new HashMap<String, CaseInsensitiveDictionary>();
 
-    /** protecting lock */
+    /** Protecting lock */
     private final ReadWriteLock globalLock = new ReentrantReadWriteLock();
 
     /**
@@ -55,8 +61,10 @@ class CachingPersistenceManagerProxy implements PersistenceManager
      * and the cache is complete with respect to the contents of the underlying
      * persistence manager.
      */
-    private boolean fullyLoaded;
+    private volatile boolean fullyLoaded;
 
+    /** Factory configuration cache. */
+    private final Map<String, Set<String>> factoryConfigCache = new HashMap<String, Set<String>>();
 
     /**
      * Creates a new caching layer for the given actual {@link PersistenceManager}.
@@ -65,7 +73,6 @@ class CachingPersistenceManagerProxy implements PersistenceManager
     public CachingPersistenceManagerProxy( final PersistenceManager pm )
     {
         this.pm = pm;
-        this.cache = new Hashtable<String, CaseInsensitiveDictionary>();
     }
 
     public boolean isNotCachablePersistenceManager() {
@@ -83,13 +90,29 @@ class CachingPersistenceManagerProxy implements PersistenceManager
      * manager.
      */
     @Override
-    public void delete( String pid ) throws IOException
+    public void delete( final String pid ) throws IOException
     {
         Lock lock = globalLock.writeLock();
         try
         {
             lock.lock();
-            cache.remove( pid );
+            final Dictionary props = cache.remove( pid );
+            if ( props != null )
+            {
+                final String factoryPid = (String)props.get(ConfigurationAdmin.SERVICE_FACTORYPID);
+                if ( factoryPid != null )
+                {
+                    final Set<String> factoryPids = this.factoryConfigCache.get(factoryPid);
+                    if ( factoryPids != null )
+                    {
+                        factoryPids.remove(pid);
+                        if ( factoryPids.isEmpty() )
+                        {
+                            this.factoryConfigCache.remove(factoryPid);
+                        }
+                    }
+                }
+            }
             pm.delete(pid);
         }
         finally
@@ -105,7 +128,7 @@ class CachingPersistenceManagerProxy implements PersistenceManager
      * persistence manager is asked.
      */
     @Override
-    public boolean exists( String pid )
+    public boolean exists( final String pid )
     {
         Lock lock = globalLock.readLock();
         try
@@ -123,7 +146,7 @@ class CachingPersistenceManagerProxy implements PersistenceManager
     /**
      * Returns an <code>Enumeration</code> of <code>Dictionary</code> objects
      * representing the configurations stored in the underlying persistence
-     * managers. The dictionaries returned are garanteed to contain the
+     * managers. The dictionaries returned are guaranteed to contain the
      * <code>service.pid</code> property.
      * <p>
      * Note, that each call to this method will return new dictionary objects.
@@ -134,6 +157,26 @@ class CachingPersistenceManagerProxy implements PersistenceManager
     public Enumeration getDictionaries() throws IOException
     {
         return getDictionaries( null );
+    }
+
+    private final void cache(final Dictionary props)
+    {
+        final String pid = (String) props.get( Constants.SERVICE_PID );
+        if ( pid != null && !cache.containsKey(pid) )
+        {
+            cache.put( pid, copy( props ) );
+            final String factoryPid = (String)props.get(ConfigurationAdmin.SERVICE_FACTORYPID);
+            if ( factoryPid != null )
+            {
+                Set<String> factoryPids = this.factoryConfigCache.get(factoryPid);
+                if ( factoryPids == null )
+                {
+                    factoryPids = new HashSet<String>();
+                    this.factoryConfigCache.put(factoryPid, factoryPids);
+                }
+                factoryPids.add(pid);
+            }
+        }
     }
 
     public Enumeration getDictionaries( SimpleFilter filter ) throws IOException
@@ -160,20 +203,7 @@ class CachingPersistenceManagerProxy implements PersistenceManager
                     while ( fromPm.hasMoreElements() )
                     {
                         Dictionary next = (Dictionary) fromPm.nextElement();
-                        String pid = (String) next.get( Constants.SERVICE_PID );
-                        if ( pid != null )
-                        {
-                            cache.put( pid, copy( next ) );
-                        }
-                        else
-                        {
-                            pid = (String) next.get( Factory.FACTORY_PID );
-                            if ( pid != null )
-                            {
-                                pid = Factory.factoryPidToIdentifier( pid );
-                                cache.put( pid, copy( next ) );
-                            }
-                        }
+                        this.cache(next);
                     }
                     this.fullyLoaded = true;
                 }
@@ -199,7 +229,7 @@ class CachingPersistenceManagerProxy implements PersistenceManager
 
     /**
      * Returns the dictionary for the given PID or <code>null</code> if no
-     * such dictionary is stored by the underyling persistence manager. This
+     * such dictionary is stored by the underlying persistence manager. This
      * method caches the returned dictionary for future use after retrieving
      * if from the persistence manager.
      * <p>
@@ -208,7 +238,7 @@ class CachingPersistenceManagerProxy implements PersistenceManager
      * has no influence on the dictionaries stored in the cache.
      */
     @Override
-    public Dictionary load( String pid ) throws IOException
+    public Dictionary load( final String pid ) throws IOException
     {
         Lock lock = globalLock.readLock();
         try
@@ -223,11 +253,15 @@ class CachingPersistenceManagerProxy implements PersistenceManager
                 loaded = cache.get( pid );
                 if ( loaded == null )
                 {
-                    loaded = pm.load( pid );
-                    cache.put( pid, copy( loaded ) );
+                    loaded = pm.load(pid);
+                    if ( loaded != null )
+                    {
+                        this.cache(loaded);
+                    }
                 }
+
             }
-            return copy( loaded );
+            return loaded == null ? null : copy( loaded );
         }
         finally
         {
@@ -246,14 +280,15 @@ class CachingPersistenceManagerProxy implements PersistenceManager
      * the cached data.
      */
     @Override
-    public void store( String pid, Dictionary properties ) throws IOException
+    public void store( final String pid, final Dictionary properties ) throws IOException
     {
-        Lock lock = globalLock.writeLock();
+        final Lock lock = globalLock.writeLock();
         try
         {
             lock.lock();
             pm.store( pid, properties );
-            cache.put( pid, copy( properties ) );
+            this.cache.remove(pid);
+            this.cache(properties);
         }
         finally
         {
@@ -261,6 +296,46 @@ class CachingPersistenceManagerProxy implements PersistenceManager
         }
     }
 
+    public void getFactoryConfigurationPids(final List<String> targetedFactoryPids, final Set<String> pids)
+    throws IOException
+    {
+        Lock lock = globalLock.readLock();
+        try
+        {
+            lock.lock();
+            if ( !this.fullyLoaded )
+            {
+                lock.unlock();
+                lock = globalLock.writeLock();
+                lock.lock();
+                if ( !this.fullyLoaded )
+                {
+                    final Enumeration fromPm = pm.getDictionaries();
+                    while ( fromPm.hasMoreElements() )
+                    {
+                        Dictionary next = (Dictionary) fromPm.nextElement();
+                        this.cache(next);
+                    }
+                    this.fullyLoaded = true;
+                }
+                lock.unlock();
+                lock = globalLock.readLock();
+                lock.lock();
+            }
+            for(final String targetFactoryPid : targetedFactoryPids)
+            {
+                final Set<String> cachedPids = this.factoryConfigCache.get(targetFactoryPid);
+                if ( cachedPids != null )
+                {
+                    pids.addAll(cachedPids);
+                }
+            }
+        }
+        finally
+        {
+            lock.unlock();
+        }
+    }
 
     /**
      * Creates and returns a copy of the given dictionary. This method simply
