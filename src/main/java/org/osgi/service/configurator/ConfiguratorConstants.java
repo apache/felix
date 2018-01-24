@@ -1,6 +1,6 @@
 /*
  * Copyright (c) OSGi Alliance (2017). All Rights Reserved.
- *
+ * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -18,7 +18,7 @@ package org.osgi.service.configurator;
 
 /**
  * Defines standard constants for the Configurator services.
- *
+ * 
  * @author $Id$
  */
 public final class ConfiguratorConstants {
@@ -54,30 +54,38 @@ public final class ConfiguratorConstants {
 
 	/**
 	 * Prefix to mark properties as input for the Configurator when processing a
-	 * configuration.
+	 * configuration resource.
 	 */
 	public static final String	PROPERTY_PREFIX			= ":configurator:";
 
 	/**
-	 * Global property in the configuration JSON specifying the version of the
-	 * JSON format.
+	 * Global property in the configuration resource specifying the version of
+	 * the resource format.
 	 * <p>
 	 * Currently only version {@code 1} is defined for the JSON format and
 	 * therefore the only allowed value is {@code 1} for this property. If this
 	 * property is not specified, {@code 1} is assumed.
 	 */
-	public static final String	PROPERTY_JSON_VERSION	= PROPERTY_PREFIX
-			+ "json-version";
+	public static final String	PROPERTY_RESOURCE_VERSION	= PROPERTY_PREFIX
+			+ "resource-version";
 
 	/**
-	 * Configuration property holding the optional information about the
-	 * environments where the configuration applies.
-	 * <p>
-	 * The value of this property must either be of type {@code String} or {code
-	 * String[]}.
+	 * Global property in the configuration resource specifying the symbolic
+	 * name of the configuration resource. If not specified the symbolic name of
+	 * the bundle containing the resource is used. Mandatory for configuration
+	 * resources that do not reside in a bundle
 	 */
-	public static final String	PROPERTY_ENVIRONMENTS	= PROPERTY_PREFIX
-			+ "environments";
+	public static final String	PROPERTY_SYMBOLIC_NAME		= PROPERTY_PREFIX
+			+ "symbolic-name";
+
+	/**
+	 * Global property in the configuration resource specifying the version of
+	 * the resource. If not specified the version of the bundle containing the
+	 * resource is used. Mandatory for configuration resources that do not
+	 * reside in a bundle.
+	 */
+	public static final String	PROPERTY_VERSION			= PROPERTY_PREFIX
+			+ "version";
 
 	/**
 	 * Configuration property for the configuration ranking.
@@ -91,7 +99,7 @@ public final class ConfiguratorConstants {
 	 * Configuration property for the configuration policy.
 	 * <p>
 	 * Allowed values are {@link #POLICY_DEFAULT} and {@link #POLICY_FORCE}
-	 *
+	 * 
 	 * @see #POLICY_DEFAULT
 	 * @see #POLICY_FORCE
 	 */
@@ -100,14 +108,14 @@ public final class ConfiguratorConstants {
 
 	/**
 	 * Value for defining the default policy.
-	 *
+	 * 
 	 * @see #PROPERTY_POLICY
 	 */
 	public static final String	POLICY_DEFAULT			= "default";
 
 	/**
 	 * Value for defining the force policy.
-	 *
+	 * 
 	 * @see #PROPERTY_POLICY
 	 */
 	public static final String	POLICY_FORCE			= "force";
