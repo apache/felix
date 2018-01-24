@@ -35,6 +35,7 @@ import org.apache.felix.cm.PersistenceManager;
 import org.apache.felix.cm.impl.CaseInsensitiveDictionary;
 import org.apache.felix.cm.impl.SimpleFilter;
 import org.osgi.framework.Constants;
+import org.osgi.service.cm.ConfigurationAdmin;
 
 /**
  * The <code>PersistenceManagerProxy</code> proxies a persistence
@@ -69,7 +70,7 @@ public class PersistenceManagerProxy implements ExtPersistenceManager
      * manager.
      */
     @Override
-    public void delete( String pid ) throws IOException
+    public void delete( final String pid ) throws IOException
     {
         Lock lock = globalLock.writeLock();
         try
@@ -127,8 +128,8 @@ public class PersistenceManagerProxy implements ExtPersistenceManager
         Lock lock = globalLock.readLock();
         try
         {
-            final Set<String> pids = new HashSet<String>();
-            final List<Dictionary> result = new ArrayList<Dictionary>();
+            final Set<String> pids = new HashSet<>();
+            final List<Dictionary> result = new ArrayList<>();
 
             lock.lock();
             Enumeration fromPm = pm.getDictionaries();
@@ -206,4 +207,41 @@ public class PersistenceManagerProxy implements ExtPersistenceManager
             lock.unlock();
         }
     }
+
+    @Override
+    public Set<String> getFactoryConfigurationPids(List<String> targetedFactoryPids) throws IOException {
+        final Set<String> pids = new HashSet<>();
+        Lock lock = globalLock.readLock();
+        try
+        {
+            lock.lock();
+            final Enumeration fromPm = pm.getDictionaries();
+            while ( fromPm.hasMoreElements() )
+            {
+                final Dictionary next = (Dictionary) fromPm.nextElement();
+                final String pid = (String)next.get(Constants.SERVICE_PID);
+                if ( pid != null )
+                {
+                    final String factoryPid = (String)next.get(ConfigurationAdmin.SERVICE_FACTORYPID);
+                    if ( factoryPid != null )
+                    {
+                        for(final String targetFactoryPid : targetedFactoryPids)
+                        {
+                            if ( targetedFactoryPids.equals(factoryPid) )
+                            {
+                                pids.add(pid);
+                                break;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        finally
+        {
+            lock.unlock();
+        }
+        return pids;
+    }
+
 }
