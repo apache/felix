@@ -139,7 +139,7 @@ public class ConfigurationManagerTest extends TestCase
         dictionary.put("property1", "valueNotCached");
         pid = "testDefaultPersistenceManager";
         dictionary.put( Constants.SERVICE_PID, pid );
-        pm.store( pid, dictionary );
+        persistenceManagers[0].store( pid, dictionary );
 
         conf = configMgr.listConfigurations(new ConfigurationAdminImpl(configMgr, null), null);
         assertEquals(1, conf.length);
@@ -407,13 +407,13 @@ public class ConfigurationManagerTest extends TestCase
         final ConfigurationImpl c3 = configMgr.createFactoryConfiguration(factoryPid, null);
         c3.update(props);
 
-        assertEquals(4, pm.getStored().size());
-
-        c1.delete();
         assertEquals(3, pm.getStored().size());
 
-        c2.delete();
+        c1.delete();
         assertEquals(2, pm.getStored().size());
+
+        c2.delete();
+        assertEquals(1, pm.getStored().size());
 
         c3.delete();
         assertEquals(0, pm.getStored().size());

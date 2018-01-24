@@ -383,12 +383,6 @@ public class ConfigurationImpl extends ConfigurationBase
             // finally assign the configuration for use
             configure( newProperties );
 
-            // if this is a factory configuration, update the factory with
-            // do this only after configuring with current properties such
-            // that a concurrently registered ManagedServiceFactory service
-            // does not receive a new/unusable configuration
-            updateFactory();
-
             // update the service and fire an CM_UPDATED event
             getConfigurationManager().updated( this, true );
         }
@@ -463,39 +457,6 @@ public class ConfigurationImpl extends ConfigurationBase
         setAutoProperties( props, true );
         props.put( CONFIGURATION_NEW, Boolean.TRUE );
         getPersistenceManager().store( getPidString(), props );
-    }
-
-
-    /**
-     * Makes sure the configuration is added to the {@link Factory} (and
-     * the factory be stored if updated) if this is a factory
-     * configuration.
-     *
-     * @throws IOException If an error occurrs storing the {@link Factory}
-     */
-    private void updateFactory() throws IOException {
-        String factoryPid = getFactoryPidString();
-        if ( factoryPid != null )
-        {
-            Factory factory = getConfigurationManager().getOrCreateFactory( factoryPid );
-            synchronized (factory) {
-                if ( factory.addPID( getPidString() ) )
-                {
-                    // only write back if the pid was not already registered
-                    // with the factory
-                    try
-                    {
-                        factory.store();
-                    }
-                    catch ( IOException ioe )
-                    {
-                        getConfigurationManager().log( LogService.LOG_ERROR,
-                            "Failure storing factory {0} with new configuration {1}", new Object[]
-                                { factoryPid, getPidString(), ioe } );
-                    }
-                }
-            }
-        }
     }
 
 
