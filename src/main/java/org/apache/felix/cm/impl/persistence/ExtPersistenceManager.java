@@ -21,6 +21,8 @@ package org.apache.felix.cm.impl.persistence;
 import java.io.IOException;
 import java.util.Collection;
 import java.util.Dictionary;
+import java.util.List;
+import java.util.Set;
 
 import org.apache.felix.cm.PersistenceManager;
 import org.apache.felix.cm.impl.SimpleFilter;
@@ -31,6 +33,9 @@ import org.apache.felix.cm.impl.SimpleFilter;
 public interface ExtPersistenceManager extends PersistenceManager
 {
     Collection<Dictionary> getDictionaries( SimpleFilter filter ) throws IOException;
+
+    Set<String> getFactoryConfigurationPids( List<String> targetedFactoryPids )
+    throws IOException;
 
     PersistenceManager getDelegatee();
 }

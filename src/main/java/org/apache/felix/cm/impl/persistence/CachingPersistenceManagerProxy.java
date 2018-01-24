@@ -25,17 +25,20 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Dictionary;
 import java.util.Enumeration;
-import java.util.Hashtable;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import org.apache.felix.cm.PersistenceManager;
 import org.apache.felix.cm.impl.CaseInsensitiveDictionary;
-import org.apache.felix.cm.impl.Factory;
 import org.apache.felix.cm.impl.SimpleFilter;
 import org.osgi.framework.Constants;
+import org.osgi.service.cm.ConfigurationAdmin;
 
 
 /**
@@ -46,13 +49,14 @@ import org.osgi.framework.Constants;
  */
 public class CachingPersistenceManagerProxy implements ExtPersistenceManager
 {
-    /** the actual PersistenceManager */
+
+    /** The actual PersistenceManager */
     private final PersistenceManager pm;
 
-    /** cached dictionaries */
-    private final Hashtable<String, CaseInsensitiveDictionary> cache;
+    /** Cached dictionaries */
+    private final Map<String, CaseInsensitiveDictionary> cache = new HashMap<>();
 
-    /** protecting lock */
+    /** Protecting lock */
     private final ReadWriteLock globalLock = new ReentrantReadWriteLock();
 
     /**
@@ -62,6 +66,8 @@ public class CachingPersistenceManagerProxy implements ExtPersistenceManager
      */
     private volatile boolean fullyLoaded;
 
+    /** Factory configuration cache. */
+    private final Map<String, Set<String>> factoryConfigCache = new HashMap<>();
 
     /**
      * Creates a new caching layer for the given actual {@link PersistenceManager}.
@@ -70,7 +76,6 @@ public class CachingPersistenceManagerProxy implements ExtPersistenceManager
     public CachingPersistenceManagerProxy( final PersistenceManager pm )
     {
         this.pm = pm;
-        this.cache = new Hashtable<>();
     }
 
     @Override
@@ -91,7 +96,23 @@ public class CachingPersistenceManagerProxy implements ExtPersistenceManager
         try
         {
             lock.lock();
-            cache.remove( pid );
+            final Dictionary props = cache.remove( pid );
+            if ( props != null )
+            {
+                final String factoryPid = (String)props.get(ConfigurationAdmin.SERVICE_FACTORYPID);
+                if ( factoryPid != null )
+                {
+                    final Set<String> factoryPids = this.factoryConfigCache.get(factoryPid);
+                    if ( factoryPids != null )
+                    {
+                        factoryPids.remove(pid);
+                        if ( factoryPids.isEmpty() )
+                        {
+                            this.factoryConfigCache.remove(factoryPid);
+                        }
+                    }
+                }
+            }
             pm.delete(pid);
         }
         finally
@@ -138,6 +159,33 @@ public class CachingPersistenceManagerProxy implements ExtPersistenceManager
         return Collections.enumeration(getDictionaries( null ));
     }
 
+    private final CaseInsensitiveDictionary cache(final Dictionary props)
+    {
+        final String pid = (String) props.get( Constants.SERVICE_PID );
+        CaseInsensitiveDictionary dict = null;
+        if ( pid != null )
+        {
+            dict = cache.get(pid);
+            if ( dict == null )
+            {
+                dict = new CaseInsensitiveDictionary(props);
+                cache.put( pid, dict );
+                final String factoryPid = (String)props.get(ConfigurationAdmin.SERVICE_FACTORYPID);
+                if ( factoryPid != null )
+                {
+                    Set<String> factoryPids = this.factoryConfigCache.get(factoryPid);
+                    if ( factoryPids == null )
+                    {
+                        factoryPids = new HashSet<>();
+                        this.factoryConfigCache.put(factoryPid, factoryPids);
+                    }
+                    factoryPids.add(pid);
+                }
+            }
+        }
+        return dict;
+    }
+
     @Override
     public Collection<Dictionary> getDictionaries( final SimpleFilter filter ) throws IOException
     {
@@ -146,7 +194,7 @@ public class CachingPersistenceManagerProxy implements ExtPersistenceManager
         {
             lock.lock();
             // if not fully loaded, call back to the underlying persistence
-            // manager and cach all dictionaries whose service.pid is set
+            // manager and cache all dictionaries whose service.pid is set
             if ( !fullyLoaded )
             {
                 lock.unlock();
@@ -158,20 +206,7 @@ public class CachingPersistenceManagerProxy implements ExtPersistenceManager
                     while ( fromPm.hasMoreElements() )
                     {
                         Dictionary next = (Dictionary) fromPm.nextElement();
-                        String pid = (String) next.get( Constants.SERVICE_PID );
-                        if ( pid != null )
-                        {
-                            cache.put( pid, new CaseInsensitiveDictionary( next ) );
-                        }
-                        else
-                        {
-                            pid = (String) next.get( Factory.FACTORY_PID );
-                            if ( pid != null )
-                            {
-                                pid = Factory.factoryPidToIdentifier( pid );
-                                cache.put( pid, new CaseInsensitiveDictionary( next ) );
-                            }
-                        }
+                        this.cache(next);
                     }
                     this.fullyLoaded = true;
                 }
@@ -224,12 +259,11 @@ public class CachingPersistenceManagerProxy implements ExtPersistenceManager
                     final Dictionary props = pm.load( pid );
                     if ( props != null )
                     {
-                        loaded = new CaseInsensitiveDictionary( props );
-                        cache.put( pid, loaded );
+                        loaded = this.cache(props);
                     }
                 }
             }
-            return new CaseInsensitiveDictionary(loaded);
+            return loaded == null ? null : new CaseInsensitiveDictionary(loaded);
         }
         finally
         {
@@ -250,16 +284,61 @@ public class CachingPersistenceManagerProxy implements ExtPersistenceManager
     @Override
     public void store( final String pid, final Dictionary properties ) throws IOException
     {
-        Lock lock = globalLock.writeLock();
+        final Lock lock = globalLock.writeLock();
         try
         {
             lock.lock();
             pm.store( pid, properties );
-            cache.put( pid,  new CaseInsensitiveDictionary( properties ) );
+            this.cache.remove(pid);
+            this.cache(properties);
         }
         finally
         {
             lock.unlock();
         }
+    }
+
+    @Override
+    public Set<String> getFactoryConfigurationPids(final List<String> targetedFactoryPids )
+    throws IOException
+    {
+        final Set<String> pids = new HashSet<>();
+        Lock lock = globalLock.readLock();
+        try
+        {
+            lock.lock();
+            if ( !this.fullyLoaded )
+            {
+                lock.unlock();
+                lock = globalLock.writeLock();
+                lock.lock();
+                if ( !this.fullyLoaded )
+                {
+                    final Enumeration fromPm = pm.getDictionaries();
+                    while ( fromPm.hasMoreElements() )
+                    {
+                        Dictionary next = (Dictionary) fromPm.nextElement();
+                        this.cache(next);
+                    }
+                    this.fullyLoaded = true;
+                }
+                lock.unlock();
+                lock = globalLock.readLock();
+                lock.lock();
+            }
+            for(final String targetFactoryPid : targetedFactoryPids)
+            {
+                final Set<String> cachedPids = this.factoryConfigCache.get(targetFactoryPid);
+                if ( cachedPids != null )
+                {
+                    pids.addAll(cachedPids);
+                }
+            }
+        }
+        finally
+        {
+            lock.unlock();
+        }
+        return pids;
     }
 }

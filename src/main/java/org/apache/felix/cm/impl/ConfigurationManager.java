@@ -27,10 +27,10 @@ import java.util.Collection;
 import java.util.Dictionary;
 import java.util.HashMap;
 import java.util.Hashtable;
-import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Random;
+import java.util.Set;
 
 import org.apache.felix.cm.PersistenceManager;
 import org.apache.felix.cm.impl.helper.BaseTracker;
@@ -116,9 +116,6 @@ public class ConfigurationManager implements BundleListener
      */
     private final ExtPersistenceManager persistenceManager;
 
-    // the cache of Factory instances mapped by their factory PID
-    private final HashMap<String, Factory> factories = new HashMap<>();
-
     // the cache of Configuration instances mapped by their PID
     // have this always set to prevent NPE on bundle shutdown
     private final HashMap<String, ConfigurationImpl> configurations = new HashMap<>();
@@ -151,7 +148,7 @@ public class ConfigurationManager implements BundleListener
     {
         // set up some fields
         this.bundleContext = bundleContext;
-        this.dynamicBindings = new DynamicBindings( bundleContext, persistenceManager );
+        this.dynamicBindings = new DynamicBindings( bundleContext, persistenceManager.getDelegatee() );
         this.persistenceManager = persistenceManager;
     }
 
@@ -253,12 +250,6 @@ public class ConfigurationManager implements BundleListener
         {
             configurations.clear();
         }
-
-        // just ensure the factory cache is empty
-        synchronized ( factories )
-        {
-            factories.clear();
-        }
     }
 
 
@@ -318,33 +309,6 @@ public class ConfigurationManager implements BundleListener
         synchronized ( configurations )
         {
             configurations.remove( configuration.getPidString() );
-        }
-    }
-
-
-    Factory getCachedFactory( String factoryPid )
-    {
-        synchronized ( factories )
-        {
-            return factories.get( factoryPid );
-        }
-    }
-
-
-    Factory[] getCachedFactories()
-    {
-        synchronized ( factories )
-        {
-            return factories.values().toArray( new Factory[factories.size()] );
-        }
-    }
-
-
-    void cacheFactory( Factory factory )
-    {
-        synchronized ( factories )
-        {
-            factories.put( factory.getFactoryPidString(), factory );
         }
     }
 
@@ -477,7 +441,7 @@ public class ConfigurationManager implements BundleListener
 
         if ( this.persistenceManager.exists( pid ) )
         {
-            final Dictionary props =this.persistenceManager.load( pid );
+            final Dictionary props = this.persistenceManager.load( pid );
             config = new ConfigurationImpl( this, this.persistenceManager, props );
             Log.logger.log( LogService.LOG_DEBUG, "Found existing configuration {0} bound to {1}", new Object[]
                     { pid, config.getBundleLocation() } );
@@ -830,116 +794,38 @@ public class ConfigurationManager implements BundleListener
      * Configuration Admin 1.5 specification for targeted PIDs (Section
      * 104.3.2)
      *
-     * @param rawFactoryPid The raw factory PID without any targetting.
+     * @param rawFactoryPid The raw factory PID without any targettng.
      * @param target The <code>ServiceReference</code> of the service to
      *      be supplied with targeted configuration.
      * @return A list of {@link Factory} instances as listed above. This
      *      list will always at least include an instance for the
      *      <code>rawFactoryPid</code>. Other instances are only included
      *      if existing.
-     * @throws IOException If an error occurrs reading any of the
+     * @throws IOException If an error occurs reading any of the
      *      {@link Factory} instances from persistence
      */
-    List<Factory> getTargetedFactories( final String rawFactoryPid, final ServiceReference target ) throws IOException
+    List<String> getTargetedFactories( final String rawFactoryPid, final ServiceReference target ) throws IOException
     {
-        LinkedList<Factory> factories = new LinkedList<>();
+        List<String> factories = new LinkedList<>();
 
         final Bundle serviceBundle = target.getBundle();
         if ( serviceBundle != null )
         {
             final StringBuilder targetedPid = new StringBuilder( rawFactoryPid );
-            factories.add( getOrCreateFactory( targetedPid.toString() ) );
+            factories.add( targetedPid.toString() );
 
             targetedPid.append( '|' ).append( serviceBundle.getSymbolicName() );
-            Factory f = getFactory( targetedPid.toString() );
-            if ( f != null )
-            {
-                factories.add( 0, f );
-            }
+            factories.add( 0, targetedPid.toString() );
 
             targetedPid.append( '|' ).append( serviceBundle.getVersion().toString() );
-            f = getFactory( targetedPid.toString() );
-            if ( f != null )
-            {
-                factories.add( 0, f );
-            }
+            factories.add( 0, targetedPid.toString() );
 
             targetedPid.append( '|' ).append( serviceBundle.getLocation() );
-            f = getFactory( targetedPid.toString() );
-            if ( f != null )
-            {
-                factories.add( 0, f );
-            }
+            factories.add( 0, targetedPid.toString() );
         }
 
         return factories;
     }
-
-
-    /**
-     * Gets the factory with the exact identifier from the cached or from
-     * the persistence managers. If no factory exists already one is
-     * created and cached.
-     *
-     * @param factoryPid The PID of the {@link Factory} to return
-     * @return The existing or newly created {@link Factory}
-     * @throws IOException If an error occurs reading the factory from
-     *      a {@link PersistenceManager}
-     */
-    Factory getOrCreateFactory( String factoryPid ) throws IOException
-    {
-        Factory factory = getFactory( factoryPid );
-        if ( factory != null )
-        {
-            return factory;
-        }
-
-        return createFactory( factoryPid );
-    }
-
-
-    /**
-     * Gets the factory with the exact identifier from the cached or from
-     * the persistence managers. If no factory exists <code>null</code>
-     * is returned.
-     *
-     * @param factoryPid The PID of the {@link Factory} to return
-     * @return The existing {@link Factory} or <code>null</code>
-     * @throws IOException If an error occurs reading the factory from
-     *      a {@link PersistenceManager}
-     */
-    Factory getFactory( String factoryPid ) throws IOException
-    {
-        // check for cached factory
-        Factory factory = getCachedFactory( factoryPid );
-        if ( factory != null )
-        {
-            return factory;
-        }
-
-        // try to load factory from persistence
-        if ( Factory.exists( this.persistenceManager, factoryPid ) )
-        {
-            factory = Factory.load( this, this.persistenceManager, factoryPid );
-            cacheFactory( factory );
-            return factory;
-        }
-
-        // no existing factory
-        return null;
-    }
-
-
-    /**
-     * Creates a new factory with the given <code>factoryPid</code>.
-     */
-    Factory createFactory( String factoryPid )
-    {
-        Factory factory = new Factory( this, this.persistenceManager, factoryPid );
-        cacheFactory( factory );
-        return factory;
-    }
-
 
     /**
      * Calls the registered configuration plugins on the given configuration
@@ -1248,72 +1134,46 @@ public class ConfigurationManager implements BundleListener
             for ( String factoryPid : this.factoryPids )
             {
 
-                List<Factory> factories = null;
                 try
                 {
-                    factories = getTargetedFactories( factoryPid, sr );
-                    for ( Factory factory : factories )
+                    final List<String> targetedFactoryPids = getTargetedFactories( factoryPid, sr );
+                    final Set<String> pids = persistenceManager.getFactoryConfigurationPids(targetedFactoryPids);
+                    for ( final String pid : pids )
                     {
-                        synchronized (factory) {
-                            for ( Iterator<String> pi = factory.getPIDs().iterator(); pi.hasNext(); )
-                            {
-                                final String pid = pi.next();
-                                ConfigurationImpl cfg;
-                                try
-                                {
-                                    cfg = getConfiguration( pid );
-                                }
-                                catch ( IOException ioe )
-                                {
-                                    Log.logger.log( LogService.LOG_ERROR, "Error loading configuration for {0}", new Object[]
-                                            { pid, ioe } );
-                                    continue;
-                                }
-
-                                // sanity check on the configuration
-                                if ( cfg == null )
-                                {
-                                    Log.logger.log( LogService.LOG_ERROR,
-                                            "Configuration {0} referred to by factory {1} does not exist", new Object[]
-                                                    { pid, factoryPid } );
-                                    factory.removePID( pid );
-                                    factory.storeSilently();
-                                    continue;
-                                }
-                                else if ( cfg.isNew() )
-                                {
-                                    // Configuration has just been created but not yet updated
-                                    // we currently just ignore it and have the update mechanism
-                                    // provide the configuration to the ManagedServiceFactory
-                                    // As of FELIX-612 (not storing new factory configurations)
-                                    // this should not happen. We keep this for added stability
-                                    // but raise the logging level to error.
-                                    Log.logger.log( LogService.LOG_ERROR, "Ignoring new configuration pid={0}", new Object[]
-                                            { pid } );
-                                    continue;
-                                }
-
-                                /*
-                                 * this code would catch targeted factory PIDs;
-                                 * since this is not expected any way, we can
-                                 * leave this out
-                                 */
-                                /*
-                                else if ( !factoryPid.equals( cfg.getFactoryPid() ) )
-                                {
-                                    log( LogService.LOG_ERROR,
-                                        "Configuration {0} referred to by factory {1} seems to belong to factory {2}",
-                                        new Object[]
-                                            { pid, factoryPid, cfg.getFactoryPid() } );
-                                    factory.removePID( pid );
-                                    factory.storeSilently();
-                                    continue;
-                                }
-                                 */
-
-                                provide( factoryPid, cfg );
-                            }
+                        ConfigurationImpl cfg;
+                        try
+                        {
+                            cfg = getConfiguration( pid );
                         }
+                        catch ( IOException ioe )
+                        {
+                            Log.logger.log( LogService.LOG_ERROR, "Error loading configuration for {0}", new Object[]
+                                    { pid, ioe } );
+                            continue;
+                        }
+
+                        // sanity check on the configuration
+                        if ( cfg == null )
+                        {
+                            Log.logger.log( LogService.LOG_ERROR,
+                                    "Configuration {0} referred to by factory {1} does not exist", new Object[]
+                                            { pid, factoryPid } );
+                            continue;
+                        }
+                        else if ( cfg.isNew() )
+                        {
+                            // Configuration has just been created but not yet updated
+                            // we currently just ignore it and have the update mechanism
+                            // provide the configuration to the ManagedServiceFactory
+                            // As of FELIX-612 (not storing new factory configurations)
+                            // this should not happen. We keep this for added stability
+                            // but raise the logging level to error.
+                            Log.logger.log( LogService.LOG_ERROR, "Ignoring new configuration pid={0}", new Object[]
+                                    { pid } );
+                            continue;
+                        }
+
+                        provide( factoryPid, cfg );
                     }
                 }
                 catch ( IOException ioe )
@@ -1608,26 +1468,6 @@ public class ConfigurationManager implements BundleListener
                                 new Object[]
                                         { config.getPid(), sr, configLocation } );
                     }
-                }
-            }
-
-            final TargetedPID factoryPid = config.getFactoryPid();
-            if ( factoryPid != null )
-            {
-                // remove the pid from the factory
-                final String pid = config.getPidString();
-                try
-                {
-                    Factory factory = getOrCreateFactory( factoryPid.toString() );
-                    synchronized (factory) {
-                        factory.removePID( pid );
-                        factory.store();
-                    }
-                }
-                catch ( IOException ioe )
-                {
-                    Log.logger.log( LogService.LOG_ERROR, "Failed removing {0} from the factory {1}", new Object[]
-                            { pid, factoryPid, ioe } );
                 }
             }
         }
