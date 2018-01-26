@@ -58,7 +58,9 @@ class ConverterImpl implements InternalConverter {
 		cb.rule(new Rule<Calendar,String>(new Function<Calendar,String>() {
 			@Override
 			public String apply(Calendar f) {
-				return ISO8601_DATE_FORMAT.format(f.getTime());
+				synchronized (ISO8601_DATE_FORMAT) {
+					return ISO8601_DATE_FORMAT.format(f.getTime());
+				}
 			}
 		}) {
 			// empty subclass to capture generics
@@ -68,9 +70,11 @@ class ConverterImpl implements InternalConverter {
 			@Override
 			public Calendar apply(String f) {
 				try {
-					Calendar cc = Calendar.getInstance();
-					cc.setTime(ISO8601_DATE_FORMAT.parse(f));
-					return cc;
+					synchronized (ISO8601_DATE_FORMAT) {
+						Calendar cc = Calendar.getInstance();
+						cc.setTime(ISO8601_DATE_FORMAT.parse(f));
+						return cc;
+					}
 				} catch (ParseException e) {
 					throw new ConversionException(
 							"Cannot convert " + f + " to Date", e);
@@ -83,7 +87,7 @@ class ConverterImpl implements InternalConverter {
 		cb.rule(new Rule<Calendar,Long>(new Function<Calendar,Long>() {
 			@Override
 			public Long apply(Calendar f) {
-				return f.getTime().getTime();
+				return Long.valueOf(f.getTime().getTime());
 			}
 		}) {
 			// empty subclass to capture generics
@@ -93,7 +97,7 @@ class ConverterImpl implements InternalConverter {
 			@Override
 			public Calendar apply(Long f) {
 				Calendar c = Calendar.getInstance();
-				c.setTimeInMillis(f);
+				c.setTimeInMillis(f.longValue());
 				return c;
 			}
 		}) {
@@ -103,7 +107,7 @@ class ConverterImpl implements InternalConverter {
 		cb.rule(new Rule<Character,Boolean>(new Function<Character,Boolean>() {
 			@Override
 			public Boolean apply(Character c) {
-				return c.charValue() != 0;
+				return Boolean.valueOf(c.charValue() != 0);
 			}
 		}) {
 			// empty subclass to capture generics
@@ -112,7 +116,8 @@ class ConverterImpl implements InternalConverter {
 		cb.rule(new Rule<Boolean,Character>(new Function<Boolean,Character>() {
 			@Override
 			public Character apply(Boolean b) {
-				return b.booleanValue() ? (char) 1 : (char) 0;
+				return Character
+						.valueOf(b.booleanValue() ? (char) 1 : (char) 0);
 			}
 		}) {
 			// empty subclass to capture generics
@@ -121,7 +126,7 @@ class ConverterImpl implements InternalConverter {
 		cb.rule(new Rule<Character,Integer>(new Function<Character,Integer>() {
 			@Override
 			public Integer apply(Character c) {
-				return (int) c.charValue();
+				return Integer.valueOf(c.charValue());
 			}
 		}) {
 			// empty subclass to capture generics
@@ -130,7 +135,7 @@ class ConverterImpl implements InternalConverter {
 		cb.rule(new Rule<Character,Long>(new Function<Character,Long>() {
 			@Override
 			public Long apply(Character c) {
-				return (long) c.charValue();
+				return Long.valueOf(c.charValue());
 			}
 		}) {
 			// empty subclass to capture generics
@@ -139,7 +144,8 @@ class ConverterImpl implements InternalConverter {
 		cb.rule(new Rule<String,Character>(new Function<String,Character>() {
 			@Override
 			public Character apply(String f) {
-				return f.length() > 0 ? f.charAt(0) : 0;
+				return Character
+						.valueOf(f.length() > 0 ? f.charAt(0) : (char) 0);
 			}
 		}) {
 			// empty subclass to capture generics
@@ -157,7 +163,7 @@ class ConverterImpl implements InternalConverter {
 		cb.rule(new Rule<Date,Long>(new Function<Date,Long>() {
 			@Override
 			public Long apply(Date d) {
-				return d.getTime();
+				return Long.valueOf(d.getTime());
 			}
 		}) {
 			// empty subclass to capture generics
@@ -166,7 +172,7 @@ class ConverterImpl implements InternalConverter {
 		cb.rule(new Rule<Long,Date>(new Function<Long,Date>() {
 			@Override
 			public Date apply(Long f) {
-				return new Date(f);
+				return new Date(f.longValue());
 			}
 		}) {
 			// empty subclass to capture generics
@@ -175,7 +181,9 @@ class ConverterImpl implements InternalConverter {
 		cb.rule(new Rule<Date,String>(new Function<Date,String>() {
 			@Override
 			public String apply(Date d) {
-				return ISO8601_DATE_FORMAT.format(d);
+				synchronized (ISO8601_DATE_FORMAT) {
+					return ISO8601_DATE_FORMAT.format(d);
+				}
 			}
 		}) {
 			// empty subclass to capture generics
@@ -185,7 +193,9 @@ class ConverterImpl implements InternalConverter {
 			@Override
 			public Date apply(String f) {
 				try {
-					return ISO8601_DATE_FORMAT.parse(f);
+					synchronized (ISO8601_DATE_FORMAT) {
+						return ISO8601_DATE_FORMAT.parse(f);
+					}
 				} catch (ParseException e) {
 					throw new ConversionException(
 							"Cannot convert " + f + " to Date", e);
@@ -255,7 +265,7 @@ class ConverterImpl implements InternalConverter {
 		cb.rule(new Rule<Number,Boolean>(new Function<Number,Boolean>() {
 			@Override
 			public Boolean apply(Number obj) {
-				return obj.longValue() != 0;
+				return Boolean.valueOf(obj.longValue() != 0);
 			}
 		}) {
 			// empty subclass to capture generics
