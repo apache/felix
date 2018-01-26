@@ -49,12 +49,14 @@ public final class WhiteboardServletHandler extends ServletHandler
         super(contextServiceId, context, servletInfo);
         this.bundleContext = contextBundleContext;
         int errorCode = -1;
+        // if multipart upload is enabled and a security manager is active
+        // we need to check permissions
         if ( this.getMultipartConfig() != null && System.getSecurityManager() != null )
         {
-            final FilePermission writePerm = new FilePermission(this.getMultipartConfig().multipartLocation, "read,write");
+            final FilePermission writePerm = new FilePermission(this.getMultipartConfig().multipartLocation, "read,write,delete");
             if ( servletInfo.getMultipartConfig().multipartLocation == null )
             {
-                // default location
+                // Default location, whiteboard need writePerm, using bundle read perm
                 multipartSecurityContext = httpWhiteboardBundle;
                 if ( !httpWhiteboardBundle.hasPermission(writePerm))
                 {
@@ -72,10 +74,14 @@ public final class WhiteboardServletHandler extends ServletHandler
             else
             {
                 multipartSecurityContext = registeringBundle;
-                // provided location
+                // Provided location, whiteboard and using bundle need write perm
                 if ( !registeringBundle.hasPermission(writePerm) )
                 {
                     errorCode = DTOConstants.FAILURE_REASON_SERVLET_WRITE_TO_LOCATION_DENIED;
+                }
+                if ( !httpWhiteboardBundle.hasPermission(writePerm) )
+                {
+                    errorCode = DTOConstants.FAILURE_REASON_WHITEBOARD_WRITE_TO_LOCATION_DENIED;
                 }
             }
         }
