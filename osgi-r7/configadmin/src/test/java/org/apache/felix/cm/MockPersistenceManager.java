@@ -18,7 +18,6 @@
  */
 package org.apache.felix.cm;
 
-
 import java.io.IOException;
 import java.util.Collections;
 import java.util.Dictionary;
@@ -26,34 +25,32 @@ import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Map;
 
-
 public class MockPersistenceManager implements PersistenceManager
 {
+    private final Map<String, Dictionary<String, Object>> configs = new HashMap<>();
 
-    private final Map configs = new HashMap();
-
-
-    public void delete( String pid )
+    @Override
+    public void delete( final String pid )
     {
         configs.remove( pid );
     }
 
-
-    public boolean exists( String pid )
+    @Override
+    public boolean exists( final String pid )
     {
         return configs.containsKey( pid );
     }
 
-
+    @Override
     public Enumeration getDictionaries()
     {
         return Collections.enumeration( configs.values() );
     }
 
-
-    public Dictionary load( String pid ) throws IOException
+    @Override
+    public Dictionary load( final String pid ) throws IOException
     {
-        Dictionary config = ( Dictionary ) configs.get( pid );
+        Dictionary config = configs.get( pid );
         if ( config != null )
         {
             return config;
@@ -62,10 +59,9 @@ public class MockPersistenceManager implements PersistenceManager
         throw new IOException( "No such configuration: " + pid );
     }
 
-
+    @Override
     public void store( String pid, Dictionary properties )
     {
         configs.put( pid, properties );
     }
-
 }
