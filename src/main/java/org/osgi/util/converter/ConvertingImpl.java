@@ -419,7 +419,8 @@ class ConvertingImpl extends AbstractSpecifying<Converting>
 						val = converter.convert(val).sourceAsDTO().to(
 								f.getType());
 					else {
-						Type genericType = reifyType(f.getGenericType());
+						Type genericType = reifyType(f.getGenericType(),
+								targetAsClass, typeArguments);
 						val = converter.convert(val).to(genericType);
 					}
 					f.set(dto, val);
@@ -433,31 +434,55 @@ class ConvertingImpl extends AbstractSpecifying<Converting>
 		}
 	}
 
-	Type reifyType(Type genericType) {
+	static Type reifyType(Type typeToReify, Class< ? > ownerClass,
+			Type[] typeArgs) {
 
-		if (genericType instanceof TypeVariable) {
-			String name = ((TypeVariable< ? >) genericType).getName();
-			for (int i = 0; i < targetAsClass.getTypeParameters().length; i++) {
-				TypeVariable< ? > typeVariable = targetAsClass
+		if (typeToReify instanceof TypeVariable) {
+			String name = ((TypeVariable< ? >) typeToReify).getName();
+			for (int i = 0; i < ownerClass.getTypeParameters().length; i++) {
+				TypeVariable< ? > typeVariable = ownerClass
 						.getTypeParameters()[i];
 				if (typeVariable.getName().equals(name)) {
-					genericType = typeArguments[i];
-					break;
+					return typeArgs[i];
 				}
 			}
-		} else if (genericType instanceof ParameterizedType) {
-			final ParameterizedType parameterizedType = (ParameterizedType) genericType;
+
+			// The direct type variable wasn't found, maybe it was already
+			// bound in this class.
+
+			Type currentType = ownerClass;
+			while (currentType != null) {
+				if (currentType instanceof Class) {
+					currentType = ((Class< ? >) currentType)
+							.getGenericSuperclass();
+				} else if (currentType instanceof ParameterizedType) {
+					currentType = ((ParameterizedType) currentType)
+							.getRawType();
+				}
+
+				if (currentType instanceof ParameterizedType) {
+					ParameterizedType pt = (ParameterizedType) currentType;
+					Type rawType = pt.getRawType();
+					if (rawType instanceof Class) {
+						return reifyType(typeToReify, (Class< ? >) rawType,
+								pt.getActualTypeArguments());
+					}
+				}
+			}
+		} else if (typeToReify instanceof ParameterizedType) {
+			final ParameterizedType parameterizedType = (ParameterizedType) typeToReify;
 			Type[] parameters = parameterizedType.getActualTypeArguments();
 			boolean useCopy = false;
 			final Type[] copiedParameters = new Type[parameters.length];
 
 			for (int i = 0; i < parameters.length; i++) {
-				copiedParameters[i] = reifyType(parameters[i]);
+				copiedParameters[i] = reifyType(parameters[i], ownerClass,
+						typeArgs);
 				useCopy |= copiedParameters[i] != parameters[i];
 			}
 
 			if (useCopy) {
-				genericType = new ParameterizedType() {
+				return new ParameterizedType() {
 
 					@Override
 					public Type getRawType() {
@@ -476,13 +501,14 @@ class ConvertingImpl extends AbstractSpecifying<Converting>
 					}
 				};
 			}
-		} else if (genericType instanceof GenericArrayType) {
-			GenericArrayType type = (GenericArrayType) genericType;
+		} else if (typeToReify instanceof GenericArrayType) {
+			GenericArrayType type = (GenericArrayType) typeToReify;
 			Type genericComponentType = type.getGenericComponentType();
-			final Type reifiedType = reifyType(genericComponentType);
+			final Type reifiedType = reifyType(genericComponentType, ownerClass,
+					typeArgs);
 
 			if (reifiedType != genericComponentType) {
-				genericType = new GenericArrayType() {
+				return new GenericArrayType() {
 
 					@Override
 					public Type getGenericComponentType() {
@@ -492,7 +518,7 @@ class ConvertingImpl extends AbstractSpecifying<Converting>
 			}
 		}
 
-		return genericType;
+		return typeToReify;
 	}
 
 	private List<String> getNames(Class< ? > cls) {
@@ -779,7 +805,9 @@ class ConvertingImpl extends AbstractSpecifying<Converting>
 					}
 				}
 
-				Type genericType = reifyType(method.getGenericReturnType());
+				@SuppressWarnings("synthetic-access")
+				Type genericType = reifyType(method.getGenericReturnType(),
+						targetAsClass, typeArguments);
 				return converter.convert(val).to(genericType);
 			}
 		});
