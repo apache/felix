@@ -36,10 +36,10 @@ class ConfigurationAdminFactory implements ServiceFactory<ConfigurationAdmin>
 
     // The configuration manager to which the configuration admin instances
     // delegate most of their work
-    private ConfigurationManager configurationManager;
+    private final ConfigurationManager configurationManager;
 
 
-    ConfigurationAdminFactory( ConfigurationManager configurationManager )
+    ConfigurationAdminFactory( final ConfigurationManager configurationManager )
     {
         this.configurationManager = configurationManager;
     }
@@ -50,7 +50,7 @@ class ConfigurationAdminFactory implements ServiceFactory<ConfigurationAdmin>
      * the given bundle.
      */
     @Override
-    public ConfigurationAdmin getService( Bundle bundle, ServiceRegistration<ConfigurationAdmin> registration )
+    public ConfigurationAdmin getService( final Bundle bundle, final ServiceRegistration<ConfigurationAdmin> registration )
     {
         return new ConfigurationAdminImpl( configurationManager, bundle );
     }
@@ -61,7 +61,7 @@ class ConfigurationAdminFactory implements ServiceFactory<ConfigurationAdmin>
      * given bundle has no use of it any more.
      */
     @Override
-    public void ungetService( Bundle bundle, ServiceRegistration<ConfigurationAdmin> registration, ConfigurationAdmin service )
+    public void ungetService( final Bundle bundle, final ServiceRegistration<ConfigurationAdmin> registration, final ConfigurationAdmin service )
     {
         ( ( ConfigurationAdminImpl ) service ).dispose();
     }
