@@ -29,14 +29,16 @@ public class MockComponentLogger extends ComponentLogger
     }
 
     @Override
-    public void log(final int level, final String pattern, final Throwable ex, final Object... arguments)
+    public boolean log(final int level, final String pattern, final Throwable ex, final Object... arguments)
     {
         // ignore
+        return true;
     }
 
     @Override
-    public void log(final int level, final String message, final Throwable ex)
+    public boolean log(final int level, final String message, final Throwable ex)
     {
         // ignore
+        return true;
     }
 }

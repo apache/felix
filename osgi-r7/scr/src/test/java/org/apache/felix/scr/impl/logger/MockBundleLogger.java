@@ -43,19 +43,21 @@ public class MockBundleLogger extends BundleLogger
     }
 
     @Override
-    public void log( final int level, final String pattern, final Throwable ex, final Object...arguments )
+    public boolean log( final int level, final String pattern, final Throwable ex, final Object...arguments )
     {
         if ( isLogEnabled( level ) )
         {
             log( level,  MessageFormat.format( pattern, arguments ), ex );
         }
+        return true;
     }
 
 
     @Override
-    public void log( final int level, final String message, final Throwable ex )
+    public boolean log( final int level, final String message, final Throwable ex )
     {
         lastMessage = message;
+        return true;
     }
 
 

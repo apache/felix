@@ -72,4 +72,22 @@ public class BundleLogger extends LogServiceEnabledLogger
         }
         return this.getLogger();
     }
+
+    @Override
+    public boolean log(final int level, final String pattern, final Throwable ex, final Object... arguments) {
+        // delegate to parent if not logging
+        if ( !super.log(level, pattern, ex, arguments) ) {
+            return this.parent.log(level, pattern, ex, arguments);
+        }
+        return false;
+    }
+
+    @Override
+    public boolean log(final int level, final String message, final Throwable ex) {
+        // delegate to parent if not logging
+        if ( !super.log(level, message, ex) ) {
+            return this.parent.log(level, message, ex);
+        }
+        return false;
+    }
 }
