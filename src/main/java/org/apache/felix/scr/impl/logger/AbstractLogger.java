@@ -84,12 +84,14 @@ public abstract class AbstractLogger
      * @param arguments The format arguments for the <code>pattern</code>
      *      string.
      */
-    public void log(final int level, final String pattern, final Throwable ex, final Object... arguments )
+    public boolean log(final int level, final String pattern, final Throwable ex, final Object... arguments )
     {
         if ( isLogEnabled( level ) )
         {
             getLogger().log(level, format(pattern, arguments), ex);
+            return true;
         }
+        return false;
     }
 
     /**
@@ -102,12 +104,14 @@ public abstract class AbstractLogger
      * @param message The message to print
      * @param ex The <code>Throwable</code> causing the message to be logged.
      */
-    public void log(final int level, final String message, final Throwable ex)
+    public boolean log(final int level, final String message, final Throwable ex)
     {
         if ( isLogEnabled( level ) )
         {
             getLogger().log(level, prefix.concat(" ").concat(message), ex);
+            return true;
         }
+        return false;
     }
 
     static String getBundleIdentifier(final Bundle bundle)
