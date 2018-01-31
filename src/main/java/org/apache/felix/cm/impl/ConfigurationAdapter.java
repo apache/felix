@@ -22,6 +22,7 @@ package org.apache.felix.cm.impl;
 import java.io.IOException;
 import java.util.Dictionary;
 import java.util.EnumSet;
+import java.util.Set;
 
 import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceReference;
@@ -241,7 +242,7 @@ public class ConfigurationAdapter implements Configuration
      * @see org.osgi.service.cm.Configuration#getAttributes()
      */
     @Override
-    public EnumSet<ConfigurationAttribute> getAttributes()
+    public Set<ConfigurationAttribute> getAttributes()
     {
         checkDeleted();
         if ( delegatee.isLocked() )
