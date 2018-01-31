@@ -1,5 +1,5 @@
 /*
- * Copyright (c) OSGi Alliance (2017). All Rights Reserved.
+ * Copyright (c) OSGi Alliance (2017, 2018). All Rights Reserved.
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -119,4 +119,14 @@ public final class ConfiguratorConstants {
 	 * @see #PROPERTY_POLICY
 	 */
 	public static final String	POLICY_FORCE			= "force";
+
+	/**
+	 * The name of the extender capability attribute for the Configurator
+	 */
+	public static final String	CONFIGURATOR_EXTENDER_NAME			= "osgi.configurator";
+
+	/**
+	 * The version of the extender capability for the Configurator specification
+	 */
+	public static final String	CONFIGURATOR_SPECIFICATION_VERSION	= "1.0";
 }

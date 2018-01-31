@@ -15,7 +15,7 @@
  */
 
 /**
- * Configurator Package Version 1.1.
+ * Configurator Package Version 1.0.
  * <p>
  * Bundles wishing to use this package must list the package in the
  * Import-Package header of the bundle's manifest. This package has two types of
