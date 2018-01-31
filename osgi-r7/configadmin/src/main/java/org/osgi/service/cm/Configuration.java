@@ -1,5 +1,5 @@
 /*
- * Copyright (c) OSGi Alliance (2001, 2017). All Rights Reserved.
+ * Copyright (c) OSGi Alliance (2001, 2018). All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,7 +18,7 @@ package org.osgi.service.cm;
 
 import java.io.IOException;
 import java.util.Dictionary;
-import java.util.EnumSet;
+import java.util.Set;
 
 import org.osgi.annotation.versioning.ProviderType;
 import org.osgi.framework.Filter;
@@ -80,7 +80,7 @@ public interface Configuration {
 		/**
 		 * The configuration is read only.
 		 */
-		READ_ONLY
+		READ_ONLY;
 	}
 
 	/**
@@ -336,7 +336,7 @@ public interface Configuration {
 	 * @throws IllegalStateException If this configuration has been deleted.
 	 * @since 1.6
 	 */
-	public EnumSet<ConfigurationAttribute> getAttributes();
+	public Set<ConfigurationAttribute> getAttributes();
 
 	/**
 	 * Remove attributes from this configuration.

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) OSGi Alliance (2001, 2017). All Rights Reserved.
+ * Copyright (c) OSGi Alliance (2001, 2018). All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -243,7 +243,7 @@ public interface ConfigurationAdmin {
 	 * Get an existing or new {@code Configuration} object from the persistent
 	 * store. The PID for this {@code Configuration} object is generated from
 	 * the provided factory PID and the name by starting with the factory PID
-	 * appending the character ~ (tilde) and then appending the name.
+	 * appending a tilde ({@code '~'} &#92;u007E), and then appending the name.
 	 * <p>
 	 * If a {@code Configuration} with this PID already exists in Configuration
 	 * Admin service return it. The location parameter is ignored in this case
@@ -279,9 +279,10 @@ public interface ConfigurationAdmin {
 	 * Get an existing or new {@code Configuration} object from the persistent
 	 * store. The PID for this {@code Configuration} object is generated from
 	 * the provided factory PID and the name by starting with the factory PID
-	 * appending the character ~ (tilde) and then appending the name. If the
-	 * {@code Configuration} object for this PID does not exist, create a new
-	 * {@code Configuration} object for that PID, where properties are
+	 * appending a tilde ({@code '~'} &#92;u007E), and then appending the name.
+	 * <p>
+	 * If a {@code Configuration} object for this PID does not exist, create a
+	 * new {@code Configuration} object for that PID, where properties are
 	 * {@code null}. Bind its location to the calling bundle's location.
 	 * <p>
 	 * Otherwise, if the location of the existing {@code Configuration} object
