@@ -56,7 +56,10 @@ public final class BridgeActivator extends AbstractHttpActivator
             serviceRegProps.put(HttpServiceRuntimeConstants.HTTP_SERVICE_ENDPOINT,
                     getBundleContext().getProperty(FELIX_HTTP_SERVICE_ENDPOINTS));
         }
-
+        else
+        {
+            serviceRegProps.put(HttpServiceRuntimeConstants.HTTP_SERVICE_ENDPOINT, "/");
+        }
         final Servlet dispatcherServlet = this.getHttpServiceController().createDispatcherServlet();
         final Object servlet = new HttpServlet()
         {
