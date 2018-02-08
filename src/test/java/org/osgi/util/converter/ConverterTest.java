@@ -63,6 +63,7 @@ import java.util.stream.Stream;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.osgi.framework.Version;
 import org.osgi.util.converter.MyDTO.Count;
 import org.osgi.util.converter.MyEmbeddedDTO.Alpha;
 
@@ -87,6 +88,15 @@ public class ConverterTest {
     @After
     public void tearDown() {
         converter = null;
+    }
+
+    @Test
+    public void testVersion() {
+        Version v =new Version(1,2,3,"qualifier");
+        Converter c = Converters.standardConverter();
+        String s = c.convert(v).to(String.class);
+        Version v2 = c.convert(s).to(Version.class);
+        assertEquals(v, v2);
     }
 
     @Test
@@ -752,9 +762,9 @@ public class ConverterTest {
     @Test
     public void testMapToDTOWithGenerics() {
     	    Map<String, Object> dto = new HashMap<>();
-    	
+
         dto.put("longList", Arrays.asList((short)999, "1000"));
-        
+
         Map<String, Object> dtoMap = new LinkedHashMap<>();
         dto.put("dtoMap", dtoMap);
 
@@ -798,14 +808,14 @@ public class ConverterTest {
     	    	dto.put("set", new HashSet<>(Arrays.asList("foo", (int) 'o', 'o')));
     	    	dto.put("raw", "1234");
     	    	dto.put("array", Arrays.asList("foo", (int) 'o', 'o'));
-    	    	
-    	    	MyGenericDTOWithVariables<Character> converted = 
+
+    	    	MyGenericDTOWithVariables<Character> converted =
     	    			converter.convert(dto).to(new TypeReference<MyGenericDTOWithVariables<Character>>() {});
     	    	assertEquals(Character.valueOf('1'), converted.raw);
     	    	assertArrayEquals(new Character[] {'f', 'o', 'o'}, converted.array);
     	    	assertEquals(new HashSet<Character>(Arrays.asList('f', 'o')), converted.set);
     }
-    
+
     @Test
     public void testMapToDTOWithSurplusMapFiels() {
         Map<String, String> m = new HashMap<>();
@@ -1191,7 +1201,7 @@ public class ConverterTest {
             assertEquals(la[i], it.next());
         }
     }
-    
+
     @Test
     public void testMapToInterfaceWithGenerics() {
     	    Map<String, Object> dto = new HashMap<>();
@@ -1207,8 +1217,8 @@ public class ConverterTest {
 	    	dto.put("set", new HashSet<>(Arrays.asList("foo", (int) 'o', 'o')));
 	    	dto.put("raw", "1234");
 	    	dto.put("array", Arrays.asList("foo", (int) 'o', 'o'));
-	    	
-	    	MyGenericInterfaceWithVariables<Character> converted = 
+
+	    	MyGenericInterfaceWithVariables<Character> converted =
 	    			converter.convert(dto).to(new TypeReference<MyGenericInterfaceWithVariables<Character>>() {});
 	    	assertEquals(Character.valueOf('1'), converted.raw());
 	    	assertArrayEquals(new Character[] {'f', 'o', 'o'}, converted.array());
