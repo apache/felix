@@ -24,8 +24,8 @@ package org.apache.felix.http.sslfilter.internal;
 interface SslFilterConstants
 {
     /**
-     * If there is an SSL certificate associated with the request, it must be exposed by the servlet container to the 
-     * servlet programmer as an array of objects of type java.security.cert.X509Certificate and accessible via a 
+     * If there is an SSL certificate associated with the request, it must be exposed by the servlet container to the
+     * servlet programmer as an array of objects of type java.security.cert.X509Certificate and accessible via a
      * ServletRequest attribute of <tt>javax.servlet.request.X509Certificate</tt>.
      * <p>
      * The order of this array is defined as being in ascending order of trust. The first certificate in the chain is
@@ -38,7 +38,7 @@ interface SslFilterConstants
      */
     String HDR_X_FORWARDED_PROTO = "X-Forwarded-Proto";
     /**
-     * De-facto header used to inform what port the forwarded client used to connect to the proxy, such as "433".
+     * De-facto header used to inform what port the forwarded client used to connect to the proxy, such as "443".
      */
     String HDR_X_FORWARDED_PORT = "X-Forwarded-Port";
     /**
