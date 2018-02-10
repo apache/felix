@@ -56,7 +56,7 @@ class ConfigMetaTypeProvider implements MetaTypeProvider
             return null;
         }
 
-        final ArrayList<AttributeDefinition> adList = new ArrayList<AttributeDefinition>();
+        final ArrayList<AttributeDefinition> adList = new ArrayList<>();
 
         adList.add(new AttributeDefinitionImpl(JettyConfig.FELIX_HOST,
                 "Host Name",
@@ -91,8 +91,8 @@ class ConfigMetaTypeProvider implements MetaTypeProvider
 
         adList.add(new AttributeDefinitionImpl(JettyConfig.HTTPS_PORT,
                 "HTTPS Port",
-                "Port to listen on for HTTPS requests. Defaults to 433.",
-                433,
+                "Port to listen on for HTTPS requests. Defaults to 443.",
+                443,
                 bundle.getBundleContext().getProperty(JettyConfig.HTTPS_PORT)));
 
         adList.add(new AttributeDefinitionImpl(JettyConfig.FELIX_KEYSTORE,
