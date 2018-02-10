@@ -95,7 +95,7 @@ public class JettyConfigTest
         props.put("org.osgi.service.http.port.secure", "*");
         this.config.update(props);
         assertTrue(this.config.getHttpPort() != 8080);
-        assertTrue(this.config.getHttpsPort() != 433);
+        assertTrue(this.config.getHttpsPort() != 443);
     }
 
     @Test public void testGetRandomPortZero() throws Exception
