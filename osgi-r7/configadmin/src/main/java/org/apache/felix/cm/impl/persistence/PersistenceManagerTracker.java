@@ -125,12 +125,12 @@ public class PersistenceManagerTracker
 
     private void deactivate()
     {
+        this.stopCoordinatorTracker();
         if ( this.configurationManager != null )
         {
             this.configurationManager.stop();
             this.configurationManager = null;
         }
-        this.stopCoordinatorTracker();
         // update log
         Log.logger.set(null);
     }
