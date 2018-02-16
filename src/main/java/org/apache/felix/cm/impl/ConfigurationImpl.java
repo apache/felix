@@ -557,7 +557,10 @@ public class ConfigurationImpl
         {
             props.put(PROPERTY_LOCKED, this.locked);
         }
-
+        else
+        {
+            props.remove(PROPERTY_LOCKED);
+        }
         // only store now, if this is not a new configuration
         persistenceManager.store( getPidString(), props );
     }
@@ -663,6 +666,7 @@ public class ConfigurationImpl
         {
             properties.remove( ConfigurationAdmin.SERVICE_BUNDLELOCATION );
         }
+        properties.remove( PROPERTY_LOCKED );
     }
 
 
@@ -671,6 +675,7 @@ public class ConfigurationImpl
         replaceProperty( properties, Constants.SERVICE_PID, pid );
         replaceProperty( properties, ConfigurationAdmin.SERVICE_FACTORYPID, factoryPid );
         properties.remove( ConfigurationAdmin.SERVICE_BUNDLELOCATION );
+        properties.remove( PROPERTY_LOCKED );
     }
 
 
