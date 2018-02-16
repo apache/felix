@@ -29,7 +29,6 @@ import org.apache.felix.scr.impl.config.ScrConfigurationImpl;
 import org.apache.felix.scr.impl.inject.ClassUtils;
 import org.apache.felix.scr.impl.logger.ScrLogger;
 import org.apache.felix.scr.impl.runtime.ServiceComponentRuntimeImpl;
-import org.apache.felix.service.command.Converter;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
