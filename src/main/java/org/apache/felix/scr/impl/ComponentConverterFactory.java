@@ -19,12 +19,9 @@
 package org.apache.felix.scr.impl;
 
 import org.apache.felix.service.command.Converter;
-import org.osgi.framework.*;
-import org.osgi.service.component.runtime.dto.ComponentConfigurationDTO;
-import org.osgi.service.component.runtime.dto.ComponentDescriptionDTO;
-
-import java.util.Dictionary;
-import java.util.Hashtable;
+import org.osgi.framework.Bundle;
+import org.osgi.framework.ServiceFactory;
+import org.osgi.framework.ServiceRegistration;
 
 /**
  * This class registers as a Converter service using ServiceFactory to avoid class-load errors when the Converter

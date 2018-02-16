@@ -18,26 +18,48 @@
  */
 package org.apache.felix.scr.impl;
 
+import java.text.MessageFormat;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.Dictionary;
+import java.util.HashMap;
+import java.util.Hashtable;
+import java.util.Iterator;
+import java.util.LinkedHashMap;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.SortedMap;
+import java.util.TreeMap;
+
 import org.apache.felix.scr.impl.manager.ScrConfiguration;
 import org.apache.felix.scr.info.ScrInfo;
 import org.apache.felix.service.command.Converter;
 import org.apache.felix.service.command.Descriptor;
-import org.osgi.framework.*;
+import org.osgi.framework.Bundle;
+import org.osgi.framework.BundleContext;
+import org.osgi.framework.Constants;
+import org.osgi.framework.InvalidSyntaxException;
+import org.osgi.framework.ServiceReference;
+import org.osgi.framework.ServiceRegistration;
 import org.osgi.framework.dto.ServiceReferenceDTO;
 import org.osgi.service.component.ComponentConstants;
 import org.osgi.service.component.ComponentFactory;
 import org.osgi.service.component.runtime.ServiceComponentRuntime;
-import org.osgi.service.component.runtime.dto.*;
-
-import java.text.MessageFormat;
-import java.util.*;
+import org.osgi.service.component.runtime.dto.ComponentConfigurationDTO;
+import org.osgi.service.component.runtime.dto.ComponentDescriptionDTO;
+import org.osgi.service.component.runtime.dto.ReferenceDTO;
+import org.osgi.service.component.runtime.dto.SatisfiedReferenceDTO;
+import org.osgi.service.component.runtime.dto.UnsatisfiedReferenceDTO;
 
 public class ComponentCommands {
 
     private static final String INDENT_1 = "  ";
     private static final String INDENT_2 = INDENT_1 + INDENT_1;
     private static final String INDENT_3 = INDENT_2 + INDENT_1;
-    private static final String INDENT_4 = INDENT_3 + INDENT_1;
 
     private final BundleContext context;
     private final ServiceComponentRuntime scr;
