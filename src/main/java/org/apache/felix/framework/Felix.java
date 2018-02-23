@@ -4639,6 +4639,8 @@ public class Felix extends BundleImpl implements Framework
         // if not explicitly configured.
         loadFromDefaultIfNotDefined(defaultProperties, Constants.FRAMEWORK_EXECUTIONENVIRONMENT);
 
+        loadFromDefaultIfNotDefined(defaultProperties, Constants.FRAMEWORK_SYSTEMPACKAGES);
+
         // Set supported native capabilities to default value,
         // if not explicitly configured.
         loadPrefixFromDefaultIfNotDefined(m_configMutableMap, defaultProperties, FelixConstants.NATIVE_OS_NAME_ALIAS_PREFIX);
