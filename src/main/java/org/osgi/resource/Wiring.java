@@ -1,5 +1,5 @@
 /*
- * Copyright (c) OSGi Alliance (2011, 2013). All Rights Reserved.
+ * Copyright (c) OSGi Alliance (2011, 2016). All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,6 +17,7 @@
 package org.osgi.resource;
 
 import java.util.List;
+
 import org.osgi.annotation.versioning.ConsumerType;
 
 /**
@@ -29,7 +30,7 @@ import org.osgi.annotation.versioning.ConsumerType;
  * always return the same result.
  * 
  * @ThreadSafe
- * @author $Id: 935272fa914a9cc0020549c43a3857acad2c45cc $
+ * @author $Id: 7cb1384266be355d3e727b55e789d36a88299cf6 $
  */
 @ConsumerType
 public interface Wiring {
@@ -75,22 +76,20 @@ public interface Wiring {
 
 	/**
 	 * Returns the requirements of this wiring.
-	 * 
 	 * <p>
 	 * Only requirements considered by the resolver are returned. For example,
 	 * requirements with {@link Namespace#REQUIREMENT_EFFECTIVE_DIRECTIVE
 	 * effective} directive not equal to {@link Namespace#EFFECTIVE_RESOLVE
 	 * resolve} are not returned.
-	 * 
 	 * <p>
 	 * A wiring for a non-fragment resource has a subset of the declared
 	 * requirements from the resource and all attached fragment resources. Not
 	 * all declared requirements may be present since some may be discarded. For
-	 * example, if a package is declared to be optionally imported and is not
-	 * actually imported, the requirement must be discarded.
+	 * example, if a package is declared to be both exported and imported, only
+	 * one is selected and the other is discarded.
 	 * 
 	 * @param namespace The namespace of the requirements to return or
-	 *        {@code null} to return the requirements from all namespaces.
+	 *            {@code null} to return the requirements from all namespaces.
 	 * @return A list containing a snapshot of the {@link Requirement}s, or an
 	 *         empty list if this wiring uses no requirements in the specified
 	 *         namespace. For a given namespace, the list contains the

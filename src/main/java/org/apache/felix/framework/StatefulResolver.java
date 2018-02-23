@@ -578,7 +578,7 @@ class StatefulResolver
                                 BundleRevision.PACKAGE_NAMESPACE,
                                 Collections.EMPTY_MAP,
                                 attrs);
-                        List<BundleCapability> candidates = findProvidersInternal(record, req, false, true);
+                        final List<BundleCapability> candidates = findProvidersInternal(record, req, false, true);
 
                         // Try to find a dynamic requirement that matches the capabilities.
                         BundleRequirementImpl dynReq = null;
@@ -619,15 +619,22 @@ class StatefulResolver
                             candidates.clear();
                         }
 
-                        wireMap = m_resolver.resolve(
+                        Map<Resource, Wiring> wirings = getWirings();
+
+                        wireMap = wirings.containsKey(revision) ? m_resolver.resolveDynamic(
                             new ResolveContextImpl(
                                 this,
-                                getWirings(),
+                                    wirings,
                                 record,
                                 Collections.<BundleRevision>emptyList(),
                                 Collections.<BundleRevision>emptyList(),
-                                getFragments()),
-                            revision, dynReq, new ArrayList<Capability>(candidates));
+                                getFragments()) {
+                                @Override
+                                public List<Capability> findProviders(Requirement br) {
+                                    return (List) candidates;
+                                }
+                            },
+                            revision.getWiring(), dynReq) : Collections.<Resource, List<Wire>>emptyMap();
                     }
                     catch (ResolutionException ex)
                     {

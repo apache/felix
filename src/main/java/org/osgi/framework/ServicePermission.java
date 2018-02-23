@@ -1,5 +1,5 @@
 /*
- * Copyright (c) OSGi Alliance (2000, 2013). All Rights Reserved.
+ * Copyright (c) OSGi Alliance (2000, 2017). All Rights Reserved.
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -51,7 +51,7 @@ import java.util.Set;
  * to get the specific service.
  * 
  * @ThreadSafe
- * @author $Id: ff7fc46dd623c0a09b49965048dd6faa2b111b39 $
+ * @author $Id: 8db61d0b1cadd57ab173cba677b6bfb353680800 $
  */
 
 public final class ServicePermission extends BasicPermission {
@@ -207,7 +207,7 @@ public final class ServicePermission extends BasicPermission {
 		if (reference == null) {
 			throw new IllegalArgumentException("reference must not be null");
 		}
-		StringBuffer sb = new StringBuffer("(" + Constants.SERVICE_ID + "=");
+		StringBuilder sb = new StringBuilder("(" + Constants.SERVICE_ID + "=");
 		sb.append(reference.getProperty(Constants.SERVICE_ID));
 		sb.append(")");
 		return sb.toString();
@@ -350,9 +350,7 @@ public final class ServicePermission extends BasicPermission {
 		try {
 			return FrameworkUtil.createFilter(filterString);
 		} catch (InvalidSyntaxException e) {
-			IllegalArgumentException iae = new IllegalArgumentException("invalid filter");
-			iae.initCause(e);
-			throw iae;
+			throw new IllegalArgumentException("invalid filter", e);
 		}
 	}
 
@@ -443,7 +441,7 @@ public final class ServicePermission extends BasicPermission {
 	public String getActions() {
 		String result = actions;
 		if (result == null) {
-			StringBuffer sb = new StringBuffer();
+			StringBuilder sb = new StringBuilder();
 			boolean comma = false;
 
 			int mask = action_mask;
@@ -562,8 +560,9 @@ public final class ServicePermission extends BasicPermission {
 		final Bundle bundle = service.getBundle();
 		if (bundle != null) {
 			AccessController.doPrivileged(new PrivilegedAction<Void>() {
+				@Override
 				public Void run() {
-					props.put("id", new Long(bundle.getBundleId()));
+					props.put("id", Long.valueOf(bundle.getBundleId()));
 					props.put("location", bundle.getLocation());
 					String name = bundle.getSymbolicName();
 					if (name != null) {
@@ -607,6 +606,7 @@ public final class ServicePermission extends BasicPermission {
 			return service.getProperty(key);
 		}
 
+		@Override
 		public Set<Map.Entry<String, Object>> entrySet() {
 			if (entries != null) {
 				return entries;
@@ -632,14 +632,17 @@ public final class ServicePermission extends BasicPermission {
 				this.v = value;
 			}
 
+			@Override
 			public String getKey() {
 				return k;
 			}
 
+			@Override
 			public Object getValue() {
 				return v;
 			}
 
+			@Override
 			public Object setValue(Object value) {
 				throw new UnsupportedOperationException();
 			}

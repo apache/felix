@@ -1,5 +1,5 @@
 /*
- * Copyright (c) OSGi Alliance (2001, 2013). All Rights Reserved.
+ * Copyright (c) OSGi Alliance (2001, 2015). All Rights Reserved.
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -59,9 +59,10 @@ import org.osgi.annotation.versioning.ConsumerType;
  * @since 1.1
  * @see BundleEvent
  * @ThreadSafe
- * @author $Id: 6b50c6c9d8b8b091928495eb036552773284b13a $
+ * @author $Id: e1555f69b0cba5d9d8b6ad51add3d9e02827ef66 $
  */
 @ConsumerType
+@FunctionalInterface
 public interface SynchronousBundleListener extends BundleListener {
 	// This is a marker interface
 }

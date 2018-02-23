@@ -1,5 +1,5 @@
 /*
- * Copyright (c) OSGi Alliance (2012, 2014). All Rights Reserved.
+ * Copyright (c) OSGi Alliance (2012, 2016). All Rights Reserved.
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,27 +15,25 @@
  */
 
 /**
- * OSGi Data Transfer Object Framework Wiring Package Version 1.2.
- * 
+ * OSGi Data Transfer Object Framework Wiring Package Version 1.3.
  * <p>
  * Bundles wishing to use this package must list the package in the
  * Import-Package header of the bundle's manifest. This package has two types of
  * users: the consumers that use the API in this package and the providers that
  * implement the API in this package.
- * 
  * <p>
  * Example import for consumers using the API in this package:
  * <p>
- * {@code  Import-Package: org.osgi.framework.wiring.dto; version="[1.2,2.0)"}
+ * {@code  Import-Package: org.osgi.framework.wiring.dto; version="[1.3,2.0)"}
  * <p>
  * Example import for providers implementing the API in this package:
  * <p>
- * {@code  Import-Package: org.osgi.framework.wiring.dto; version="[1.2,1.3)"}
+ * {@code  Import-Package: org.osgi.framework.wiring.dto; version="[1.3,1.4)"}
  * 
  * @author $Id$
  */
 
-@Version("1.2")
+@Version("1.3")
 package org.osgi.framework.wiring.dto;
 
 import org.osgi.annotation.versioning.Version;

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) OSGi Alliance (2011, 2013). All Rights Reserved.
+ * Copyright (c) OSGi Alliance (2011, 2015). All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,7 +23,7 @@ import org.osgi.resource.Wire;
  * A wire connecting a {@link BundleCapability} to a {@link BundleRequirement}.
  * 
  * @ThreadSafe
- * @author $Id: f51255c8510d4b513dc2bb70c2274d9c51e9b9e5 $
+ * @author $Id: 9877055d8ebbe52b82ec16b876d4491a47a106ef $
  */
 @ProviderType
 public interface BundleWire extends Wire {
@@ -32,6 +32,7 @@ public interface BundleWire extends Wire {
 	 * 
 	 * @return The {@link BundleCapability} for this wire.
 	 */
+	@Override
 	BundleCapability getCapability();
 
 	/**
@@ -39,6 +40,7 @@ public interface BundleWire extends Wire {
 	 * 
 	 * @return The {@link BundleRequirement} for this wire.
 	 */
+	@Override
 	BundleRequirement getRequirement();
 
 	/**
@@ -87,6 +89,7 @@ public interface BundleWire extends Wire {
 	 * @return The resource providing the capability.
 	 * @since 1.1
 	 */
+	@Override
 	BundleRevision getProvider();
 
 	/**
@@ -104,6 +107,6 @@ public interface BundleWire extends Wire {
 	 * @return The resource who requires the capability.
 	 * @since 1.1
 	 */
+	@Override
 	BundleRevision getRequirer();
-
 }

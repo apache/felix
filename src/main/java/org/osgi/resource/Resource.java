@@ -1,5 +1,5 @@
 /*
- * Copyright (c) OSGi Alliance (2011, 2013). All Rights Reserved.
+ * Copyright (c) OSGi Alliance (2011, 2015). All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -30,7 +30,7 @@ import org.osgi.annotation.versioning.ConsumerType;
  * always return the same result.
  * 
  * @ThreadSafe
- * @author $Id: c7b6462fb53b38ac3071d7ba73af9dad2af6b9ce $
+ * @author $Id: 6f13a1b536b116eebb255285b958d889db733939 $
  */
 @ConsumerType
 public interface Resource {
@@ -73,6 +73,7 @@ public interface Resource {
 	 * @return {@code true} if this {@code Resource} is equal to the other
 	 *         object; {@code false} otherwise.
 	 */
+	@Override
 	boolean equals(Object obj);
 
 	/**
@@ -80,5 +81,6 @@ public interface Resource {
 	 * 
 	 * @return The hashCode of this {@code Resource}.
 	 */
+	@Override
 	int hashCode();
 }

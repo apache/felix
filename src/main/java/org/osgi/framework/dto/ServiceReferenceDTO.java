@@ -26,7 +26,7 @@ import org.osgi.framework.ServiceReference;
  * 
  * <p>
  * {@code ServiceReferenceDTO}s for all registered services can be obtained from
- * a {@link FrameworkDTO}. An installed Bundle can be adapted to provide a
+ * a {@link FrameworkDTO}. A started Bundle can be adapted to provide a
  * {@code ServiceReferenceDTO[]} of the services registered by the Bundle. A
  * {@code ServiceReferenceDTO} obtained from a framework must convert service
  * property values which are not valid value types for DTOs to type

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) OSGi Alliance (2005, 2013). All Rights Reserved.
+ * Copyright (c) OSGi Alliance (2005, 2015). All Rights Reserved.
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -54,9 +54,10 @@ import org.osgi.annotation.versioning.ConsumerType;
  * @see ServicePermission
  * @ThreadSafe
  * @since 1.3
- * @author $Id: fc2039183bb7c2117c182949118bb4cdd3b2e6c2 $
+ * @author $Id: 7eba8b2b69fd8e68b793fd09611b6efdc6fdd73c $
  */
 @ConsumerType
+@FunctionalInterface
 public interface AllServiceListener extends ServiceListener {
 	// This is a marker interface
 }
