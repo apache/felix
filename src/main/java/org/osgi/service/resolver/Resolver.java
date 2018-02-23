@@ -1,5 +1,5 @@
 /*
- * Copyright (c) OSGi Alliance (2006, 2016). All Rights Reserved.
+ * Copyright (c) OSGi Alliance (2006, 2017). All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -36,7 +36,7 @@ import org.osgi.resource.Wiring;
  * by the caller.
  * 
  * @ThreadSafe
- * @author $Id: 555f3cd1543e7a2c3492a71d74dcf728668265b6 $
+ * @author $Id: 86bff007315e1e3c03eca6aaacdcfa379be9ddea $
  */
 @ProviderType
 public interface Resolver {
@@ -77,13 +77,15 @@ public interface Resolver {
 	Map<Resource, List<Wire>> resolve(ResolveContext context) throws ResolutionException;
 
 	/**
-	 * Resolves a given dynamic requirement dynamically for the given host
-	 * wiring using the given resolve context and return any new resources and
-	 * wires to the caller.
+	 * Resolves a given requirement dynamically for the given host wiring using
+	 * the given resolve context and return any new resources and wires to the
+	 * caller.
 	 * <p>
 	 * The requirement must be a {@link Wiring#getResourceRequirements(String)
 	 * requirement} of the wiring and must use the
-	 * {@link PackageNamespace#PACKAGE_NAMESPACE package} namespace.
+	 * {@link PackageNamespace#PACKAGE_NAMESPACE package} namespace with a
+	 * {@link Namespace#REQUIREMENT_RESOLUTION_DIRECTIVE resolution} of type
+	 * {@link PackageNamespace#RESOLUTION_DYNAMIC dynamic}.
 	 * <p>
 	 * The resolve context is not asked for
 	 * {@link ResolveContext#getMandatoryResources() mandatory} resources or for
