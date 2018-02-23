@@ -905,6 +905,14 @@ public class ResolverTest
         resolver.resolve(rci);
     }
 
+    @Test
+    public void testScenario18() throws Exception
+    {
+        ResolveContext rci = populateScenario18();
+        ResolverImpl resolver = new ResolverImpl(new Logger(Logger.LOG_DEBUG), 1);
+        resolver.resolve(rci);
+    }
+
     private ResolveContext populateScenario17(boolean realSubstitute,
         boolean felixResolveContext, boolean existingWirings)
     {
@@ -997,6 +1005,91 @@ public class ResolverTest
             return new ResolveContextImpl(wirings, candMap, mandatory,
                 Collections.<Resource> emptyList());
         }
+    }
+
+    private ResolveContext populateScenario18()
+    {
+        Map<Requirement, List<Capability>> candMap = new HashMap<Requirement, List<Capability>>();
+
+        ResourceImpl core1 = new ResourceImpl("core1");
+        Capability core1_pkgCap1 = addCap(core1, PackageNamespace.PACKAGE_NAMESPACE,
+            "corepkg1");
+        Capability core1_pkgCap2 = addCap(core1, PackageNamespace.PACKAGE_NAMESPACE,
+            "corepkg2", "corepkg1");
+        Capability core1_pkgCap3 = addCap(core1, PackageNamespace.PACKAGE_NAMESPACE,
+            "corepkg3", "corepkg2");
+
+        ResourceImpl core2 = new ResourceImpl("core2");
+        Capability core2_pkgCap1 = addCap(core2, PackageNamespace.PACKAGE_NAMESPACE,
+            "corepkg1");
+        Capability core2_pkgCap2 = addCap(core2, PackageNamespace.PACKAGE_NAMESPACE,
+            "corepkg2", "corepkg1");
+        Capability core2_pkgCap3 = addCap(core2, PackageNamespace.PACKAGE_NAMESPACE,
+            "corepkg3", "corepkg2");
+        Requirement core2_pkgReq1 = addReq(core2, PackageNamespace.PACKAGE_NAMESPACE,
+            "corepkg1");
+        Requirement core2_pkgReq2 = addReq(core2, PackageNamespace.PACKAGE_NAMESPACE,
+            "corepkg2");
+        Requirement core2_pkgReq3 = addReq(core2, PackageNamespace.PACKAGE_NAMESPACE,
+            "corepkg3");
+
+        ResourceImpl core3 = new ResourceImpl("core3");
+        Capability core3_pkgCap1 = addCap(core3, PackageNamespace.PACKAGE_NAMESPACE,
+            "corepkg1");
+        Capability core3_pkgCap2 = addCap(core3, PackageNamespace.PACKAGE_NAMESPACE,
+            "corepkg2", "corepkg1");
+        Capability core3_pkgCap3 = addCap(core3, PackageNamespace.PACKAGE_NAMESPACE,
+            "corepkg3", "corepkg2");
+        Requirement core3_pkgReq1 = addReq(core3, PackageNamespace.PACKAGE_NAMESPACE,
+            "corepkg1");
+        Requirement core3_pkgReq2 = addReq(core3, PackageNamespace.PACKAGE_NAMESPACE,
+            "corepkg2");
+        Requirement core3_pkgReq3 = addReq(core3, PackageNamespace.PACKAGE_NAMESPACE,
+            "corepkg3");
+
+        ResourceImpl client1 = new ResourceImpl("client1");
+        Capability client1_pkgCap = addCap(client1, PackageNamespace.PACKAGE_NAMESPACE,
+            "clientpkg1", "corepkg3");
+        Requirement client1_pkgReq1 = addReq(client1, PackageNamespace.PACKAGE_NAMESPACE,
+            "corepkg3");
+
+        ResourceImpl client2 = new ResourceImpl("client2");
+        Capability client2_pkgCap = addCap(client2, PackageNamespace.PACKAGE_NAMESPACE,
+            "clientpkg1", "corepkg3");
+        Requirement client2_pkgReq1 = addReq(client2, PackageNamespace.PACKAGE_NAMESPACE,
+            "corepkg3");
+
+        ResourceImpl bundle1 = new ResourceImpl("bundle1");
+        Requirement bundle1_pkgReq1 = addReq(bundle1, PackageNamespace.PACKAGE_NAMESPACE,
+            "corepkg1");
+        Requirement bundle1_pkgReq2 = addReq(bundle1, PackageNamespace.PACKAGE_NAMESPACE,
+            "clientpkg1");
+
+        ResourceImpl bundle2 = new ResourceImpl("bundle2");
+        Requirement bundle2_pkgReq1 = addReq(bundle2, PackageNamespace.PACKAGE_NAMESPACE,
+            "corepkg1");
+
+        candMap.put(core2_pkgReq1, Arrays.asList(core3_pkgCap1, core2_pkgCap1));
+        candMap.put(core2_pkgReq2, Arrays.asList(core3_pkgCap2, core2_pkgCap2));
+        candMap.put(core2_pkgReq3, Arrays.asList(core3_pkgCap3, core2_pkgCap3));
+
+        candMap.put(core3_pkgReq1, Arrays.asList(core3_pkgCap1, core2_pkgCap1));
+        candMap.put(core3_pkgReq2, Arrays.asList(core3_pkgCap2, core2_pkgCap2));
+        candMap.put(core3_pkgReq3, Arrays.asList(core3_pkgCap3, core2_pkgCap3));
+
+        candMap.put(client1_pkgReq1,
+            Arrays.asList(core3_pkgCap3, core2_pkgCap3, core1_pkgCap3));
+        candMap.put(client2_pkgReq1, Arrays.asList(core3_pkgCap3));
+
+        candMap.put(bundle1_pkgReq1, Arrays.asList(core1_pkgCap1));
+        candMap.put(bundle1_pkgReq2, Arrays.asList(client1_pkgCap));
+
+        candMap.put(bundle2_pkgReq1, Arrays.asList(core3_pkgCap1));
+
+        Collection<Resource> mandatory = Arrays.<Resource> asList(core1, core2, core3,
+            client1, client2, bundle1, bundle2);
+        return new ResolveContextImpl(Collections.<Resource, Wiring> emptyMap(), candMap,
+            mandatory, Collections.<Resource> emptyList());
     }
 
     private static String getResourceName(Resource r)
