@@ -20,8 +20,8 @@
   <parent>
     <groupId>org.apache.felix</groupId>
     <artifactId>felix-parent</artifactId>
-    <version>3</version>
-    <relativePath>../pom/pom.xml</relativePath>
+    <version>4</version>
+    <relativePath>../../pom/pom.xml</relativePath>
   </parent>
   <modelVersion>4.0.0</modelVersion>
   <packaging>bundle</packaging>
@@ -49,10 +49,10 @@
           <instructions>
             <Bundle-SymbolicName>org.apache.felix.framework</Bundle-SymbolicName>
             <Bundle-Name>Apache Felix Framework</Bundle-Name>
-            <Bundle-Description>OSGi R6 framework implementation.</Bundle-Description>
+            <Bundle-Description>OSGi R7 framework implementation.</Bundle-Description>
             <Bundle-Vendor>The Apache Software Foundation</Bundle-Vendor>
             <Export-Package>
-                org.osgi.framework.*;-split-package:=merge-first,
+                org.osgi.framework.*;-split-package:=first,
                 org.osgi.resource;-split-package:=first,
                 org.osgi.resource.dto;-split-package:=first,                
                 org.osgi.service.packageadmin;-split-package:=first,
@@ -60,7 +60,7 @@
 	            org.osgi.service.url;-split-package:=first,
                 org.osgi.service.resolver,
                 org.osgi.util.tracker;-split-package:=first,
-                org.osgi.dto
+                org.osgi.dto;-split-package:=first
             </Export-Package>
             <Private-Package>org.apache.felix.framework.*, org.apache.felix.resolver.*</Private-Package>
             <Import-Package>!*</Import-Package>
@@ -109,6 +109,10 @@
                 <failOnError>false</failOnError>
             </configuration>
       </plugin>
+        <plugin>
+            <groupId>org.codehaus.mojo</groupId>
+            <artifactId>animal-sniffer-maven-plugin</artifactId>
+        </plugin>
     </plugins>
     <resources>
       <resource>
@@ -129,6 +133,12 @@
        <artifactId>org.apache.felix.resolver</artifactId>
        <version>1.2.0-SNAPSHOT</version>
        <scope>provided</scope>
+        <exclusions>
+            <exclusion>
+                <groupId>org.osgi</groupId>
+                <artifactId>org.osgi.core</artifactId>
+            </exclusion>
+        </exclusions>
     </dependency>
     <dependency>
         <groupId>org.ow2.asm</groupId>
