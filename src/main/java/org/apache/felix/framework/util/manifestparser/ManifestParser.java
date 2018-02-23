@@ -338,22 +338,17 @@ public class ManifestParser
                     VersionRange.parse(v.toString()));
             }
 
-            // Verify java.* is not imported, nor any duplicate imports.
+            // Verify no duplicate imports.
             for (String pkgName : clause.m_paths)
             {
                 if (!dupeSet.contains(pkgName))
                 {
-                    // Verify that java.* packages are not imported.
-                    if (pkgName.startsWith("java."))
-                    {
-                        throw new BundleException(
-                            "Importing java.* packages not allowed: " + pkgName);
-                    }
+
                     // The character "." has no meaning in the OSGi spec except
                     // when placed on the bundle class path. Some people, however,
                     // mistakenly think it means the default package when imported
                     // or exported. This is not correct. It is invalid.
-                    else if (pkgName.equals("."))
+                    if (pkgName.equals("."))
                     {
                         throw new BundleException("Imporing '.' is invalid.");
                     }
@@ -531,16 +526,10 @@ public class ManifestParser
                     VersionRange.parse(v.toString()));
             }
 
-            // Dynamic imports can have duplicates, so verify that java.*
-            // packages are not imported.
+            // Dynamic imports can have duplicates, verify that no partial package name wild carding is used
             for (String pkgName : clause.m_paths)
             {
-                if (pkgName.startsWith("java."))
-                {
-                    throw new BundleException(
-                        "Dynamically importing java.* packages not allowed: " + pkgName);
-                }
-                else if (!pkgName.equals("*") && pkgName.endsWith("*") && !pkgName.endsWith(".*"))
+                if (!pkgName.equals("*") && pkgName.endsWith("*") && !pkgName.endsWith(".*"))
                 {
                     throw new BundleException(
                         "Partial package name wild carding is not allowed: " + pkgName);
@@ -849,18 +838,17 @@ public class ManifestParser
         String mv, String bsn, Version bv)
         throws BundleException
     {
-        // Verify that "java.*" packages are not exported.
         for (ParsedHeaderClause clause : clauses)
         {
             // Verify that the named package has not already been declared.
             for (String pkgName : clause.m_paths)
             {
-                // Verify that java.* packages are not exported.
-                if (pkgName.startsWith("java."))
+                // Verify that java.* packages are not exported (except from the system bundle).
+                if (!FelixConstants.SYSTEM_BUNDLE_SYMBOLICNAME.equals(bsn) && pkgName.startsWith("java."))
                 {
                     throw new BundleException(
                         "Exporting java.* packages not allowed: "
-                        + pkgName);
+                        + pkgName, BundleException.MANIFEST_ERROR);
                 }
                 // The character "." has no meaning in the OSGi spec except
                 // when placed on the bundle class path. Some people, however,

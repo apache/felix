@@ -35,6 +35,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Properties;
 import java.util.Set;
+import java.util.TreeSet;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.felix.framework.Felix;
@@ -108,14 +109,32 @@ public class Util
                 moduleLayer = c_ModuleLayer.getMethod("boot").invoke(null);
             }
 
+            Set<String> javaExports = new TreeSet<String>();
             for (Object module : ((Iterable) c_ModuleLayer.getMethod("modules").invoke(moduleLayer)))
             {
                 if ((Boolean) m_canRead.invoke(self, module))
                 {
                     Object name = m_getName.invoke(module);
                     properties.put("felix.detect.jpms." + name, name);
+                    for (String export : (Iterable<String>) c_Module.getMethod("getPackages").invoke(module))
+                    {
+                        if (export.startsWith("java.") && (Boolean) c_Module.getMethod("isExported", String.class, c_Module).invoke(module, export, self))
+                        {
+                            javaExports.add(export);
+                        }
+                    }
                 }
             }
+
+            if (!javaExports.isEmpty())
+            {
+                StringBuilder builder = new StringBuilder();
+                for (String export : javaExports) {
+                    builder.append(',').append(export);
+                }
+                properties.put("felix.detect.jpms.java", builder.toString());
+            }
+
             properties.put("felix.detect.jpms", "jpms");
         }
         catch (Exception ex)
