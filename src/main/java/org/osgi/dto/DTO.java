@@ -1,5 +1,5 @@
 /*
- * Copyright (c) OSGi Alliance (2012, 2014). All Rights Reserved.
+ * Copyright (c) OSGi Alliance (2012, 2017). All Rights Reserved.
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -26,13 +26,11 @@ import java.util.Set;
 
 /**
  * Super type for Data Transfer Objects.
- * 
  * <p>
  * A Data Transfer Object (DTO) is easily serializable having only public fields
- * of primitive types and their wrapper classes, Strings, and DTOs. List, Set,
- * Map and array aggregates may also be used. The aggregates must only hold
- * objects of the listed types or aggregates.
- * 
+ * of primitive types and their wrapper classes, Strings, enums, Version, and
+ * DTOs. List, Set, Map, and array aggregates may also be used. The aggregates
+ * must only hold objects of the listed types or aggregates.
  * <p>
  * The object graph from a Data Transfer Object must be a tree to simplify
  * serialization and deserialization.
@@ -120,6 +118,12 @@ public abstract class DTO {
         if (value instanceof Number || value instanceof Boolean) {
             return result.append(value.toString());
         }
+		if (value instanceof Enum) {
+			return appendString(result, ((Enum< ? >) value).name());
+		}
+		if ("org.osgi.framework.Version".equals(value.getClass().getName())) {
+			return appendString(result, value.toString());
+		}
 
         // Complex types
         final String path = objectRefs.get(value);

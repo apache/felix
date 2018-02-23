@@ -1,5 +1,5 @@
 /*
- * Copyright (c) OSGi Alliance (2010, 2013). All Rights Reserved.
+ * Copyright (c) OSGi Alliance (2010, 2015). All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -26,7 +26,7 @@ import org.osgi.resource.Capability;
  * revision}.
  * 
  * @ThreadSafe
- * @author $Id: 834fb5779fb3c1b1b16ab25ffa4ab97a131b1262 $
+ * @author $Id: b4eb0df09a8354afdb46f013926f81f70f817f43 $
  */
 @ProviderType
 public interface BundleCapability extends Capability {
@@ -43,6 +43,7 @@ public interface BundleCapability extends Capability {
 	 * 
 	 * @return The namespace of this capability.
 	 */
+	@Override
 	String getNamespace();
 
 	/**
@@ -57,6 +58,7 @@ public interface BundleCapability extends Capability {
 	 *         this capability, or an empty map if this capability has no
 	 *         directives.
 	 */
+	@Override
 	Map<String, String> getDirectives();
 
 	/**
@@ -66,6 +68,7 @@ public interface BundleCapability extends Capability {
 	 *         this capability, or an empty map if this capability has no
 	 *         attributes.
 	 */
+	@Override
 	Map<String, Object> getAttributes();
 
 	/**
@@ -77,5 +80,6 @@ public interface BundleCapability extends Capability {
 	 * @return The resource declaring this capability.
 	 * @since 1.1
 	 */
+	@Override
 	BundleRevision getResource();
 }

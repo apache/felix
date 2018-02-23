@@ -28,8 +28,7 @@ import java.util.Set;
 
 import org.apache.felix.framework.StatefulResolver.ResolverHookRecord;
 import org.apache.felix.framework.resolver.CandidateComparator;
-import org.apache.felix.resolver.FelixResolveContext;
-import org.apache.felix.resolver.ResolverImpl;
+import org.apache.felix.framework.util.Util;
 import org.osgi.framework.namespace.HostNamespace;
 import org.osgi.framework.namespace.PackageNamespace;
 import org.osgi.framework.wiring.BundleCapability;
@@ -46,7 +45,7 @@ import org.osgi.service.resolver.ResolveContext;
 /**
  * 
  */
-public class ResolveContextImpl extends ResolveContext implements FelixResolveContext
+public class ResolveContextImpl extends ResolveContext
 {
     private final StatefulResolver m_state;
     private final Map<Resource, Wiring> m_wirings;
@@ -127,7 +126,7 @@ public class ResolveContextImpl extends ResolveContext implements FelixResolveCo
     }
 
 	@Override
-	public Collection<Wire> getSubstitutionWires(Wiring wiring) {
+	public List<Wire> getSubstitutionWires(Wiring wiring) {
 		// TODO: this is calculating information that probably has been calculated 
 		// already or at least could be calculated quicker taking into account the
 		// current state. We need to revisit this.
@@ -156,7 +155,7 @@ public class ResolveContextImpl extends ResolveContext implements FelixResolveCo
                 }
             }
         }
-        Collection<Wire> substitutionWires = new ArrayList<Wire>();
+        List<Wire> substitutionWires = new ArrayList<Wire>();
         for (Wire wire : wiring.getRequiredResourceWires(null))
         {
             if (PackageNamespace.PACKAGE_NAMESPACE.equals(
@@ -171,4 +170,15 @@ public class ResolveContextImpl extends ResolveContext implements FelixResolveCo
         }
         return substitutionWires;
 	}
+
+    @Override
+    public Collection<Resource> findRelatedResources(Resource resource) {
+        return !Util.isFragment(resource) ? getOndemandResources(resource) : Collections.<Resource>emptyList();
+    }
+
+    @Override
+    public void onCancel(Runnable callback) {
+        // TODO: implement session cancel
+        super.onCancel(callback);
+    }
 }

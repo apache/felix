@@ -1,5 +1,5 @@
 /*
- * Copyright (c) OSGi Alliance (2011, 2013). All Rights Reserved.
+ * Copyright (c) OSGi Alliance (2011, 2016). All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -32,7 +32,7 @@ import java.util.StringTokenizer;
  * 
  * @since 1.7
  * @Immutable
- * @author $Id: 1f5fa660a1a42e83371fe0d2c61ae79ce1cb1710 $
+ * @author $Id: cc407ff6fb1d5252b61a033924e63b751880f580 $
  */
 
 public class VersionRange {
@@ -170,9 +170,8 @@ public class VersionRange {
 				}
 			}
 		} catch (NoSuchElementException e) {
-			IllegalArgumentException iae = new IllegalArgumentException("invalid range \"" + range + "\": invalid format");
-			iae.initCause(e);
-			throw iae;
+			throw new IllegalArgumentException(
+					"invalid range \"" + range + "\": invalid format", e);
 		}
 
 		leftClosed = closedLeft;
@@ -193,9 +192,8 @@ public class VersionRange {
 		try {
 			return Version.valueOf(version);
 		} catch (IllegalArgumentException e) {
-			IllegalArgumentException iae = new IllegalArgumentException("invalid range \"" + range + "\": " + e.getMessage());
-			iae.initCause(e);
-			throw iae;
+			throw new IllegalArgumentException(
+					"invalid range \"" + range + "\": " + e.getMessage(), e);
 		}
 	}
 
@@ -385,12 +383,13 @@ public class VersionRange {
 		}
 		String leftVersion = left.toString();
 		if (right == null) {
-			StringBuffer result = new StringBuffer(leftVersion.length() + 1);
+			StringBuilder result = new StringBuilder(leftVersion.length() + 1);
 			result.append(left.toString0());
 			return versionRangeString = result.toString();
 		}
 		String rightVerion = right.toString();
-		StringBuffer result = new StringBuffer(leftVersion.length() + rightVerion.length() + 5);
+		StringBuilder result = new StringBuilder(
+				leftVersion.length() + rightVerion.length() + 5);
 		result.append(leftClosed ? LEFT_CLOSED : LEFT_OPEN);
 		result.append(left.toString0());
 		result.append(ENDPOINT_DELIMITER);
@@ -475,7 +474,7 @@ public class VersionRange {
 			}
 		}
 
-		StringBuffer result = new StringBuffer(128);
+		StringBuilder result = new StringBuilder(128);
 		final boolean needPresence = !leftClosed && ((right == null) || !rightClosed);
 		final boolean multipleTerms = needPresence || (right != null);
 		if (multipleTerms) {
