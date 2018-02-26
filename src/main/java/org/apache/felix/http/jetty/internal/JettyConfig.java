@@ -162,6 +162,9 @@ public final class JettyConfig
     /**  Felix specific property to configure session max age */
     public static final String FELIX_JETTY_SERVLET_SESSION_MAX_AGE = "org.eclipse.jetty.servlet.MaxAge";
 
+    /** Felix specific property to configure session scavenging interval in Seconds */
+    public static final String FELIX_JETTY_SESSION_SCAVENGING_INTERVAL = "org.eclipse.jetty.servlet.SessionScavengingInterval";
+
     /** Felix specific property to set HTTP instance name. */
     public static final String FELIX_HTTP_SERVICE_NAME = "org.apache.felix.http.name";
 
@@ -333,6 +336,16 @@ public final class JettyConfig
         return parseInt(getProperty(name, null), defValue);
     }
 
+    /**
+     * Returns the named generic configuration property from the
+     * configuration or the bundle context. If neither property is defined
+     * return the defValue.
+     */
+    public long getLongProperty(String name, long defValue)
+    {
+        return parseLong(getProperty(name, null), defValue);
+    }
+
     public String getKeyPassword()
     {
         return getProperty(FELIX_KEYSTORE_KEY_PASSWORD, this.context.getProperty(OSCAR_KEYSTORE_KEY_PASSWORD));
@@ -471,7 +484,7 @@ public final class JettyConfig
     }
 
     public String getRequestLogFilter() {
-        return (String) getProperty(FELIX_HTTP_REQUEST_LOG_FILTER, null);
+        return getProperty(FELIX_HTTP_REQUEST_LOG_FILTER, null);
     }
 
     public boolean isRequestLogOSGiEnabled() {
@@ -487,11 +500,11 @@ public final class JettyConfig
     }
 
     public String getRequestLogFilePath() {
-        return (String) getProperty(FELIX_HTTP_REQUEST_LOG_FILE_PATH, null);
+        return getProperty(FELIX_HTTP_REQUEST_LOG_FILE_PATH, null);
     }
 
     public String getRequestLogFileServiceName() {
-        return (String) getProperty(FELIX_HTTP_REQUEST_LOG_FILE_SERVICE_NAME, "file");
+        return getProperty(FELIX_HTTP_REQUEST_LOG_FILE_SERVICE_NAME, "file");
     }
 
     public boolean isRequestLogFileAsync() {
@@ -507,7 +520,7 @@ public final class JettyConfig
     }
 
     public String getRequestLogFilenameDateFormat() {
-        return (String) getProperty(FELIX_HTTP_REQUEST_LOG_FILE_FILENAME_DATE_FORMAT, null);
+        return getProperty(FELIX_HTTP_REQUEST_LOG_FILE_FILENAME_DATE_FORMAT, null);
     }
 
     public boolean isRequestLogFileExtended() {
@@ -774,4 +787,15 @@ public final class JettyConfig
         }
     }
 
+    private long parseLong(String value, long dflt)
+    {
+        try
+        {
+            return Long.parseLong(value);
+        }
+        catch (NumberFormatException e)
+        {
+            return dflt;
+        }
+    }
 }
