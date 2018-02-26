@@ -314,6 +314,8 @@ public abstract class BaseIntegrationTest
                         ),
                 //            CoreOptions.vmOption("-Xrunjdwp:transport=dt_socket,server=y,suspend=y,address=8787"),
 
+                // scavenge sessions every 10 seconds (10 minutes is default in 9.4.x)
+                systemProperty("org.eclipse.jetty.servlet.SessionScavengingInterval").value("10"),
                 mavenBundle("org.slf4j", "slf4j-api", "1.7.5"),
                 mavenBundle("org.slf4j", "jcl-over-slf4j", "1.7.5"),
                 mavenBundle("org.slf4j", "log4j-over-slf4j", "1.7.5"),

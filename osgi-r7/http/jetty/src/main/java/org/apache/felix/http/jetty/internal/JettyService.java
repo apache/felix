@@ -50,10 +50,10 @@ import org.eclipse.jetty.server.HttpConnectionFactory;
 import org.eclipse.jetty.server.SecureRequestCustomizer;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.ServerConnector;
-import org.eclipse.jetty.server.SessionManager;
 import org.eclipse.jetty.server.SslConnectionFactory;
 import org.eclipse.jetty.server.handler.ContextHandlerCollection;
 import org.eclipse.jetty.server.handler.StatisticsHandler;
+import org.eclipse.jetty.server.session.HouseKeeper;
 import org.eclipse.jetty.server.session.SessionHandler;
 import org.eclipse.jetty.servlet.ServletContextHandler;
 import org.eclipse.jetty.servlet.ServletHolder;
@@ -385,6 +385,7 @@ public final class JettyService extends AbstractLifeCycle.AbstractLifeCycleListe
             this.controller.getEventDispatcher().setActive(true);
             context.addEventListener(controller.getEventDispatcher());
             context.getSessionHandler().addEventListener(controller.getEventDispatcher());
+
             final ServletHolder holder = new ServletHolder(this.controller.createDispatcherServlet());
             holder.setAsyncSupported(true);
             context.addServlet(holder, "/*");
@@ -399,6 +400,11 @@ public final class JettyService extends AbstractLifeCycle.AbstractLifeCycleListe
 
             this.server.setHandler(this.parent);
             this.server.start();
+
+            // session id manager is only available after server is started
+            context.getSessionHandler().getSessionIdManager().getSessionHouseKeeper().setIntervalSec(
+                    this.config.getLongProperty(JettyConfig.FELIX_JETTY_SESSION_SCAVENGING_INTERVAL,
+                            HouseKeeper.DEFAULT_PERIOD_MS / 1000L));
 
             if (this.config.isProxyLoadBalancerConnection())
             {
@@ -635,24 +641,19 @@ public final class JettyService extends AbstractLifeCycle.AbstractLifeCycleListe
         config.setSendXPoweredBy(this.config.isSendServerHeader());
 
         connFactory.setInputBufferSize(this.config.getRequestBufferSize());
-
-        //Changed from 8.x to 9.x
-        //maxIdleTime -> ServerConnector.setIdleTimeout
-        //requestBufferSize -> HttpConnectionFactory.setInputBufferSize
-        //statsOn -> ServerConnector.addBean(new ConnectionStatistics());
     }
 
-    private void configureSessionManager(final ServletContextHandler context)
+    private void configureSessionManager(final ServletContextHandler context) throws Exception
     {
         final SessionHandler sessionHandler = context.getSessionHandler();
-        sessionHandler.getSessionManager().setMaxInactiveInterval(this.config.getSessionTimeout() * 60);
-        sessionHandler.getSessionManager().setSessionIdPathParameterName(this.config.getProperty(JettyConfig.FELIX_JETTY_SERVLET_SESSION_ID_PATH_PARAMETER_NAME, SessionManager.__DefaultSessionIdPathParameterName));
-        sessionHandler.getSessionManager().setCheckingRemoteSessionIdEncoding(this.config.getBooleanProperty(JettyConfig.FELIX_JETTY_SERVLET_CHECK_REMOTE_SESSION_ENCODING, true));
-        sessionHandler.getSessionManager().setSessionTrackingModes(Collections.singleton(SessionTrackingMode.COOKIE));
+        sessionHandler.setMaxInactiveInterval(this.config.getSessionTimeout() * 60);
+        sessionHandler.setSessionIdPathParameterName(this.config.getProperty(JettyConfig.FELIX_JETTY_SERVLET_SESSION_ID_PATH_PARAMETER_NAME, SessionHandler.__DefaultSessionIdPathParameterName));
+        sessionHandler.setCheckingRemoteSessionIdEncoding(this.config.getBooleanProperty(JettyConfig.FELIX_JETTY_SERVLET_CHECK_REMOTE_SESSION_ENCODING, true));
+        sessionHandler.setSessionTrackingModes(Collections.singleton(SessionTrackingMode.COOKIE));
 
-        final SessionCookieConfig cookieConfig = sessionHandler.getSessionManager().getSessionCookieConfig();
-        cookieConfig.setName(this.config.getProperty(JettyConfig.FELIX_JETTY_SERVLET_SESSION_COOKIE_NAME, SessionManager.__DefaultSessionCookie));
-        cookieConfig.setDomain(this.config.getProperty(JettyConfig.FELIX_JETTY_SERVLET_SESSION_DOMAIN, SessionManager.__DefaultSessionDomain));
+        final SessionCookieConfig cookieConfig = sessionHandler.getSessionCookieConfig();
+        cookieConfig.setName(this.config.getProperty(JettyConfig.FELIX_JETTY_SERVLET_SESSION_COOKIE_NAME, SessionHandler.__DefaultSessionCookie));
+        cookieConfig.setDomain(this.config.getProperty(JettyConfig.FELIX_JETTY_SERVLET_SESSION_DOMAIN, SessionHandler.__DefaultSessionDomain));
         cookieConfig.setPath(this.config.getProperty(JettyConfig.FELIX_JETTY_SERVLET_SESSION_PATH, context.getContextPath()));
         cookieConfig.setMaxAge(this.config.getIntProperty(JettyConfig.FELIX_JETTY_SERVLET_SESSION_MAX_AGE, -1));
         cookieConfig.setHttpOnly(this.config.getBooleanProperty(JettyConfig.FELIX_JETTY_SESSION_COOKIE_HTTP_ONLY, true));
