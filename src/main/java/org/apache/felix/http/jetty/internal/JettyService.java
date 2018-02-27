@@ -108,10 +108,13 @@ public final class JettyService extends AbstractLifeCycle.AbstractLifeCycleListe
     private volatile CustomizerWrapper customizerWrapper;
     private boolean registerManagedService = true;
     private volatile Object eventAdmin;
+    private final String jettyVersion;
 
     public JettyService(final BundleContext context,
             final HttpServiceController controller)
     {
+        this.jettyVersion = fixJettyVersion(context);
+
         this.context = context;
         this.config = new JettyConfig(this.context);
         this.controller = controller;
@@ -363,7 +366,6 @@ public final class JettyService extends AbstractLifeCycle.AbstractLifeCycleListe
     {
         if (this.config.isUseHttp() || this.config.isUseHttps())
         {
-            final String version = fixJettyVersion();
 
             final int threadPoolMax = this.config.getThreadPoolMax();
             if (threadPoolMax >= 0) {
@@ -413,7 +415,7 @@ public final class JettyService extends AbstractLifeCycle.AbstractLifeCycleListe
                 this.loadBalancerCustomizerTracker.open();
             }
 
-            final StringBuilder message = new StringBuilder("Started Jetty ").append(version).append(" at port(s)");
+            final StringBuilder message = new StringBuilder("Started Jetty ").append(this.jettyVersion).append(" at port(s)");
             if (this.config.isUseHttp() && initializeHttp())
             {
                 message.append(" HTTP:").append(this.config.getHttpPort());
@@ -482,10 +484,10 @@ public final class JettyService extends AbstractLifeCycle.AbstractLifeCycleListe
         }
     }
 
-    private String fixJettyVersion()
+    private static String fixJettyVersion(final BundleContext ctx)
     {
         // FELIX-4311: report the real version of Jetty...
-        Dictionary<String, String> headers = this.context.getBundle().getHeaders();
+        final Dictionary<String, String> headers = ctx.getBundle().getHeaders();
         String version = headers.get("X-Jetty-Version");
         if (version != null)
         {
