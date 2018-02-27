@@ -16,16 +16,15 @@
  */
 package org.apache.felix.http.jetty.internal;
 
+import java.io.IOException;
+import java.util.Dictionary;
+import java.util.Hashtable;
+
 import org.apache.felix.http.base.internal.logger.SystemLogger;
 import org.eclipse.jetty.server.AbstractNCSARequestLog;
 import org.eclipse.jetty.server.RequestLog;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceRegistration;
-
-import java.io.IOException;
-import java.util.Dictionary;
-import java.util.Hashtable;
-import java.util.concurrent.atomic.AtomicReference;
 
 /**
  * A RequestLog that logs to the OSGi LogService when present. Not registered by default.
@@ -36,16 +35,12 @@ class LogServiceRequestLog extends AbstractNCSARequestLog {
     public static final String DEFAULT_NAME = "osgi";
     public static final String PREFIX = "REQUEST: ";
 
-    private static final int DEFAULT_LOG_LEVEL = 3; // LogService.LOG_INFO
-
-    private final int logLevel;
     private final String serviceName;
 
     private ServiceRegistration<RequestLog> registration;
 
     LogServiceRequestLog(JettyConfig config) {
         this.serviceName = config.getRequestLogOSGiServiceName();
-        this.logLevel = config.getRequestLogOSGiLevel();
     }
 
     public synchronized void register(BundleContext context) throws IllegalStateException {
