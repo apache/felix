@@ -56,6 +56,7 @@ public class State extends AbstractState implements Serializable {
     throws IOException {
         out.writeInt(VERSION);
         out.writeObject(bundlesLastModified);
+        out.writeObject(bundlesConfigAdminBundleId);
         out.writeObject(initialHashes);
     }
 
@@ -72,6 +73,7 @@ public class State extends AbstractState implements Serializable {
             throw new ClassNotFoundException(this.getClass().getName());
         }
         ReflectionUtil.setField(this, "bundlesLastModified", in.readObject());
+        ReflectionUtil.setField(this, "bundlesConfigAdminBundleId", in.readObject());
         initialHashes = (Set<String>) in.readObject();
     }
 
@@ -169,7 +171,8 @@ public class State extends AbstractState implements Serializable {
     @Override
     public String toString() {
         return "State [bundlesLastModified=" + bundlesLastModified +
-                ", initialHashes=" + initialHashes + "]";
+                ", initialHashes=" + initialHashes +
+                ", bundlesConfigAdminBundleId=" + bundlesConfigAdminBundleId + "]";
     }
 
     public Set<Long> getBundleIdsUsingConfigAdmin() {
