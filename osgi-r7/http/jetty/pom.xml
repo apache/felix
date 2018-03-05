@@ -64,12 +64,20 @@
                             org.osgi.service.http.runtime,
                             org.osgi.service.http.runtime.dto,
                             org.osgi.service.http.whiteboard,
-        					org.eclipse.jetty.*;-split-package:=merge-first;version=${version;===;${jetty.version}},
+                            !org.eclipse.jetty,
+                            !org.eclipse.jetty.security.authentication,
+                            !org.eclipse.jetty.util.log.jmx,
+                            !org.eclipse.jetty.version,
+                            org.eclipse.jetty.*,
                             org.apache.felix.http.jetty
                         </Export-Package>
                         <Private-Package>
                             org.apache.felix.http.base.*,
-                            org.apache.felix.http.jetty.*
+                            org.apache.felix.http.jetty.*,
+                            org.eclipse.jetty,
+                            org.eclipse.jetty.security.authentication,
+                            org.eclipse.jetty.util.log.jmx,
+                            org.eclipse.jetty.version
                         </Private-Package>
                         <Conditional-Package>
                             org.apache.commons.*
@@ -79,8 +87,6 @@
                             javax.sql;resolution:=optional,
                             org.slf4j.*;resolution:=optional,
                             org.ietf.jgss;resolution:=optional,
-                            org.mortbay.log;resolution:=optional;version="[6.1,7)",
-                            org.mortbay.util.ajax;resolution:=optional;version="[6.1,7)",
                             org.osgi.service.cm;resolution:=optional;version="[1.3,2)",                        	
                             org.osgi.service.event;resolution:=optional;version="[1.2,2)",
                             org.osgi.service.log;resolution:=optional;version="[1.3,2)",
@@ -208,12 +214,12 @@
         <dependency>
             <groupId>commons-fileupload</groupId>
             <artifactId>commons-fileupload</artifactId>
-            <version>1.3.2</version>
+            <version>1.3.3</version>
         </dependency>
         <dependency>
             <groupId>commons-io</groupId>
             <artifactId>commons-io</artifactId>
-            <version>2.5</version>
+            <version>2.6</version>
         </dependency>
   <!-- Testing -->
         <dependency>
