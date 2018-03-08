@@ -24,11 +24,13 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.apache.felix.resolver.ResolverImpl.PermutationType;
 import org.apache.felix.resolver.ResolverImpl.ResolveSession;
+import org.apache.felix.resolver.reason.ReasonException;
 import org.apache.felix.resolver.util.*;
 import org.osgi.framework.Version;
 import org.osgi.framework.namespace.*;
 import org.osgi.resource.*;
 import org.osgi.service.resolver.HostedCapability;
+import org.osgi.service.resolver.ResolutionException;
 import org.osgi.service.resolver.ResolveContext;
 
 class Candidates
@@ -1276,6 +1278,11 @@ class Candidates
             return Collections.singleton(requirement);
         }
 
+        @Override
+        public ResolutionException toException() {
+            return new ReasonException(ReasonException.Reason.DynamicImport, getMessage(), null, getUnresolvedRequirements());
+        }
+
     }
 
     static class FragmentNotSelectedError extends ResolutionError {
@@ -1288,6 +1295,16 @@ class Candidates
 
         public String getMessage() {
             return "Fragment was not selected for attachment: " + resource;
+        }
+
+        @Override
+        public Collection<Requirement> getUnresolvedRequirements() {
+            return resource.getRequirements(HostNamespace.HOST_NAMESPACE);
+        }
+
+        @Override
+        public ResolutionException toException() {
+            return new ReasonException(ReasonException.Reason.FragmentNotSelected, getMessage(), null, getUnresolvedRequirements());
         }
 
     }
@@ -1318,6 +1335,12 @@ class Candidates
 
         public Collection<Requirement> getUnresolvedRequirements() {
             return Collections.singleton(requirement);
+        }
+
+        @Override
+        public ResolutionException toException() {
+            return new ReasonException(
+                ReasonException.Reason.MissingRequirement, getMessage(), cause != null ? cause.toException() : null, getUnresolvedRequirements());
         }
 
     }
