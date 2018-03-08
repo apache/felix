@@ -68,13 +68,14 @@
         <configuration>
           <instructions>
             <_sources>true</_sources>
-            <_sourcepath>${build.sourceDirectory}</_sourcepath>
-            <Bundle-SymbolicName>${pom.artifactId}</Bundle-SymbolicName>
+            <_sourcepath>${project.build.sourceDirectory}</_sourcepath>
+            <Bundle-SymbolicName>${project.artifactId}</Bundle-SymbolicName>
             <Bundle-Activator>
               org.apache.felix.resolver.Activator
             </Bundle-Activator>
             <Private-Package>org.apache.*</Private-Package>
             <Export-Package>
+              org.apache.felix.resolver.reason,
               org.osgi.service.resolver.*;provide:=true
             </Export-Package>
             <Import-Package>

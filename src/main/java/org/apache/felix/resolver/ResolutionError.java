@@ -38,9 +38,7 @@ public abstract class ResolutionError {
         return Collections.emptyList();
     }
 
-    public ResolutionException toException() {
-        return new ResolutionException(getMessage(), null, getUnresolvedRequirements());
-    }
+    public abstract ResolutionException toException();
 
     @Override
     public String toString() {
