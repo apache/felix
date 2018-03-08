@@ -95,5 +95,8 @@
         <module>webconsole-plugins/upnp</module>
         <module>webconsole-plugins/useradmin</module>
         <module>wireadmin</module>
+        <module>fileinstall-plugins/resolver</module>
+        <module>fileinstall-plugins/installer</module>
+        <module>fileinstall-plugins/installer.test</module>
     </modules>
 </project>

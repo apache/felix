@@ -1,0 +1,6 @@
+-exportcontents: org.apache.felix.fileinstall.plugins.installer
+-conditionalpackage:\
+	org.apache.felix.utils.manifest,\
+	org.jboss.osgi.repository.*,\
+	aQute.lib.*,\
+	aQute.libg.*
