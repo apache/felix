@@ -25,6 +25,7 @@ import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 
+import org.apache.felix.resolver.reason.ReasonException;
 import org.apache.felix.resolver.util.ArrayMap;
 import org.apache.felix.resolver.util.CandidateSelector;
 import org.apache.felix.resolver.util.OpenHashMap;
@@ -2436,6 +2437,11 @@ public class ResolverImpl implements Resolver
             }
 
             return cap;
+        }
+
+        @Override
+        public ResolutionException toException() {
+            return new ReasonException(ReasonException.Reason.UseConstraint, getMessage(), null, getUnresolvedRequirements());
         }
     }
 
