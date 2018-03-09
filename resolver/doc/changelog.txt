@@ -1,3 +1,9 @@
+1.16.0
+------
+
+** Improvement
+    * [FELIX-5782] - allow resolver errors to be introspected
+
 1.14.0
 ------
 
