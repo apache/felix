@@ -66,13 +66,17 @@
         <extensions>true</extensions>
         <configuration>
           <instructions>
-            <Export-Package>org.osgi.service.log</Export-Package>
-            <Bundle-SymbolicName>${artifactId}</Bundle-SymbolicName>
-            <Private-Package>${pom.artifactId}</Private-Package>
-            <Bundle-Activator>${pom.artifactId}.Activator</Bundle-Activator>
-            <Import-Package>org.apache.felix.service.command, org.osgi.framework; version="[1.5,2.0)", org.osgi.framework.wiring; resolution:=optional, *</Import-Package>
+            <Bundle-SymbolicName>${project.artifactId}</Bundle-SymbolicName>
+            <Bundle-Activator>${project.artifactId}.Activator</Bundle-Activator>
+            <Private-Package>${project.artifactId}.*</Private-Package>
+            <Export-Package/>
+            <!-- keep compatibility with OSGi core 4.2  requires to accept org.osgi.framework 1.5 version -->
+            <Import-Package>
+              org.osgi.framework;version="[1.5,2)",
+              org.osgi.service.log.*;resolution:=optional,
+              *
+            </Import-Package>
             <Include-Resource>{maven-resources},META-INF/LICENSE=LICENSE,META-INF/NOTICE=NOTICE,META-INF/DEPENDENCIES=DEPENDENCIES</Include-Resource>
-            <DynamicImport-Package>org.apache.felix.bundlerepository, org.apache.felix.bundlerepository.*</DynamicImport-Package>
           </instructions>
         </configuration>
       </plugin>

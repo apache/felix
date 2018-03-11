@@ -57,6 +57,19 @@ import org.osgi.service.startlevel.StartLevel;
 @SuppressWarnings("deprecation")
 public class Basic
 {
+    private static final boolean IS_LOG_SERVICE_PRESENT;
+
+    static {
+        boolean isLogServiceBundlePresent = false;
+        try {
+            LogService.class.getName();
+            isLogServiceBundlePresent = true;
+        } catch (Throwable t) {
+            // ignore
+        }
+        IS_LOG_SERVICE_PRESENT = isLogServiceBundlePresent;
+    }
+
     private final BundleContext m_bc;
 
     public Basic(BundleContext bc)
@@ -551,6 +564,11 @@ public class Basic
     public void log(@Descriptor("maximum number of entries") int maxEntries,
         @Descriptor("minimum log level [ debug | info | warn | error ]") String logLevel)
     {
+        if(!IS_LOG_SERVICE_PRESENT) {
+            System.out.println("Log service bundle is unavailable.");
+            return;
+        }
+
         // Keep track of service references.
         List<ServiceReference<?>> refs = new ArrayList<ServiceReference<?>>();
 
