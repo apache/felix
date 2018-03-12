@@ -18,39 +18,6 @@
  */
 package org.apache.felix.framework;
 
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.OutputStream;
-import java.io.OutputStreamWriter;
-import java.lang.reflect.Method;
-import java.net.MalformedURLException;
-import java.net.URL;
-import java.net.URLStreamHandler;
-import java.security.AccessControlException;
-import java.security.Permission;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Dictionary;
-import java.util.Enumeration;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Properties;
-import java.util.Set;
-import java.util.SortedSet;
-import java.util.StringTokenizer;
-import java.util.TreeMap;
-import java.util.TreeSet;
-import java.util.WeakHashMap;
-
 import org.apache.felix.framework.BundleWiringImpl.BundleClassLoader;
 import org.apache.felix.framework.ServiceRegistry.ServiceRegistryCallbacks;
 import org.apache.felix.framework.cache.BundleArchive;
@@ -102,6 +69,39 @@ import org.osgi.framework.wiring.FrameworkWiring;
 import org.osgi.resource.Requirement;
 import org.osgi.service.packageadmin.ExportedPackage;
 import org.osgi.service.resolver.ResolutionException;
+
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.OutputStream;
+import java.io.OutputStreamWriter;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.net.URLStreamHandler;
+import java.security.AccessControlException;
+import java.security.Permission;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Dictionary;
+import java.util.Enumeration;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Properties;
+import java.util.Set;
+import java.util.SortedSet;
+import java.util.StringTokenizer;
+import java.util.TreeMap;
+import java.util.TreeSet;
+import java.util.WeakHashMap;
 
 public class Felix extends BundleImpl implements Framework
 {
@@ -354,6 +354,12 @@ public class Felix extends BundleImpl implements Framework
                 m_configMutableMap.put(entry.getKey().toString(), entry.getValue());
             }
         }
+
+
+        // Get any system bundle activators.
+        m_activatorList = (List) m_configMutableMap.remove(FelixConstants.SYSTEMBUNDLE_ACTIVATORS_PROP);
+        m_activatorList = (m_activatorList == null) ? new ArrayList() : new ArrayList(m_activatorList);
+
         m_configMap = createUnmodifiableMap(m_configMutableMap);
 
         // Create logger with appropriate log level. Even though the
@@ -673,10 +679,6 @@ public class Felix extends BundleImpl implements Framework
                 m_configMutableMap.put(
                     FelixConstants.FRAMEWORK_UUID,
                     Util.randomUUID());
-
-                // Get any system bundle activators.
-                m_activatorList = (List) m_configMutableMap.get(FelixConstants.SYSTEMBUNDLE_ACTIVATORS_PROP);
-                m_activatorList = (m_activatorList == null) ? new ArrayList() : new ArrayList(m_activatorList);
 
                 // Initialize event dispatcher.
                 m_dispatcher.startDispatching();
@@ -2823,46 +2825,57 @@ public class Felix extends BundleImpl implements Framework
         {
             // Populate a set of refresh candidates. This also includes any bundles that this bundle
             // is wired to but have previously been uninstalled.
-            List<Bundle> refreshCandidates = new ArrayList<Bundle>();
-            refreshCandidates.add(bundle); // Add this bundle first, so that it gets refreshed first
-            BundleRevisions bundleRevisions = bundle.adapt(BundleRevisions.class);
-            if (bundleRevisions != null)
-            {
-                for (BundleRevision br : bundleRevisions.getRevisions())
-                {
-                    BundleWiring bw = br.getWiring();
-                    if (bw != null)
-                    {
-                        for (BundleWire wire : bw.getRequiredWires(null))
-                        {
-                            Bundle b = wire.getProvider().getBundle();
-                            if (Bundle.UNINSTALLED == b.getState() && !refreshCandidates.contains(b))
-                                refreshCandidates.add(b);
-                        }
-                    }
-                }
-            }
+            Set<Bundle> refreshCandidates = addUninstalled(bundle, new LinkedHashSet<Bundle>());
 
             try
             {
+                // First see if we can throw away the complete graph
+                Set<Bundle> dependent = new HashSet<Bundle>();
                 for (Bundle b : refreshCandidates)
                 {
-                    // If the bundle is not used by anyone, then garbage
-                    // collect it now.
-                    if (!m_dependencies.hasDependents(b))
+                    populateDependentGraph(b, dependent);
+                }
+
+                if (refreshCandidates.containsAll(dependent))
+                {
+                    try
                     {
-                        try
-                        {
-                            List<Bundle> list = Collections.singletonList(b);
-                            refreshPackages(list, null);
-                        }
-                        catch (Exception ex)
-                        {
-                            m_logger.log(b,
-                                Logger.LOG_ERROR,
-                                "Unable to immediately garbage collect the bundle.", ex);
-                        }
+                        refreshPackages(refreshCandidates, null);
                     }
+                    catch (Exception ex)
+                    {
+                        m_logger.log(this, Logger.LOG_ERROR, "Unable to immediately garbage collect bundles.", ex);
+                    }
+                }
+                // Otherwise, try to remove one candidate at a time
+                else
+                {
+                    boolean progress;
+                    do
+                    {
+                        // The idea is to keep trying as long as we make progress (ie., managed to gc a bundle)
+                        progress = false;
+                        for (Iterator<Bundle> iter = refreshCandidates.iterator(); iter.hasNext();)
+                        {
+                            Bundle b = iter.next();
+                            // If the bundle is not used by anyone, then garbage
+                            // collect it now.
+                            if (!m_dependencies.hasDependents(b))
+                            {
+                                iter.remove();
+                                try
+                                {
+                                    List<Bundle> list = Collections.singletonList(b);
+                                    refreshPackages(list, null);
+                                    progress = true;
+                                }
+                                catch (Exception ex)
+                                {
+                                    m_logger.log(b, Logger.LOG_ERROR, "Unable to immediately garbage collect the bundle.", ex);
+                                }
+                            }
+                        }
+                    } while (progress);
                 }
             }
             finally
@@ -2871,6 +2884,37 @@ public class Felix extends BundleImpl implements Framework
                 releaseGlobalLock();
             }
         }
+    }
+
+    private Set<Bundle> addUninstalled(Bundle bundle, Set<Bundle> refreshCandidates)
+    {
+        refreshCandidates.add(bundle); // Add this bundle first, so that it gets refreshed first
+        BundleRevisions bundleRevisions = bundle.adapt(BundleRevisions.class);
+        if (bundleRevisions != null)
+        {
+            for (BundleRevision br : bundleRevisions.getRevisions())
+            {
+                BundleWiring bw = br.getWiring();
+                if (bw != null)
+                {
+                    for (BundleWire wire : bw.getRequiredWires(null))
+                    {
+                        Bundle b = wire.getProvider().getBundle();
+                        if (b.getState() == Bundle.UNINSTALLED && !refreshCandidates.contains(b))
+                            refreshCandidates = addUninstalled(b, refreshCandidates);
+                    }
+                }
+            }
+        }
+        Set<Bundle> dependent = populateDependentGraph(bundle, new HashSet<Bundle>());
+        for (Bundle b : dependent)
+        {
+            if (b.getState() == Bundle.UNINSTALLED && !refreshCandidates.contains(b))
+            {
+                refreshCandidates = addUninstalled(b, refreshCandidates);
+            }
+        }
+        return refreshCandidates;
     }
 
     //
@@ -2887,9 +2931,9 @@ public class Felix extends BundleImpl implements Framework
     String getProperty(String key)
     {
         // First, check the config properties.
-        String val = (String) m_configMap.get(key);
+        Object val = m_configMap.get(key);
         // If not found, then try the system properties.
-        return (val == null) ? System.getProperty(key) : val;
+        return !(val instanceof String) ? System.getProperty(key) : (String) val;
     }
 
     private Bundle reloadBundle(BundleArchive ba)
@@ -4375,7 +4419,7 @@ public class Felix extends BundleImpl implements Framework
     }
 
     // Calls to this method must have the global lock.
-    private void populateDependentGraph(BundleImpl exporter, Set<Bundle> set)
+    private Set<Bundle> populateDependentGraph(Bundle exporter, Set<Bundle> set)
     {
         // Get all dependent bundles of this bundle.
         Set<Bundle> dependents = m_dependencies.getDependentBundles(exporter);
@@ -4390,10 +4434,11 @@ public class Felix extends BundleImpl implements Framework
                     // Add each dependent bundle to set.
                     set.add(b);
                     // Now recurse into each bundle to get its dependents.
-                    populateDependentGraph((BundleImpl) b, set);
+                    set = populateDependentGraph((BundleImpl) b, set);
                 }
             }
         }
+        return set;
     }
 
     Collection<Bundle> getRemovalPendingBundles()
