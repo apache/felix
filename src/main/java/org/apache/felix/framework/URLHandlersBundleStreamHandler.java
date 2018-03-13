@@ -55,7 +55,7 @@ class URLHandlersBundleStreamHandler extends URLStreamHandler
             return new URLHandlersBundleURLConnection(url, m_framework);
         }
 
-        Object framework = URLHandlers.getFrameworkFromContext();
+        Object framework = URLHandlers.getFrameworkFromContext(Util.getFrameworkUUIDFromURL(url.getHost()));
 
         if (framework != null)
         {
@@ -130,14 +130,14 @@ class URLHandlersBundleStreamHandler extends URLStreamHandler
             Object framework = m_framework;
             if (framework == null)
             {
-                framework = URLHandlers.getFrameworkFromContext();
+                framework = URLHandlers.getFrameworkFromContext(Util.getFrameworkUUIDFromURL(u.getHost()));
                 if (!(framework instanceof Felix))
                 {
                     return false;
                 }
             }
             Felix felix = (Felix) framework;
-            long bundleId = Util.getBundleIdFromRevisionId(u.getHost());
+            long bundleId = Util.getBundleIdFromRevisionId(Util.getRevisionIdFromURL(u.getHost()));
             Bundle bundle = felix.getBundle(bundleId);
             if (bundle != null)
             {
