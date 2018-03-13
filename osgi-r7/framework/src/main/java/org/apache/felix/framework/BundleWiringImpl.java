@@ -1094,8 +1094,8 @@ public class BundleWiringImpl implements BundleWiring
         {
             return BundleRevisionImpl.getSecureAction().createURL(null,
                     FelixConstants.BUNDLE_URL_PROTOCOL + "://" +
-                            m_revision.getId() + ":" + port + path,
-                            getBundle().getFramework().getBundleStreamHandler());
+                    getBundle().getFramework()._getProperty(Constants.FRAMEWORK_UUID) + "_" + m_revision.getId() + ":" + port + path,
+                    getBundle().getFramework().getBundleStreamHandler());
         }
         catch (MalformedURLException ex)
         {

@@ -2936,6 +2936,14 @@ public class Felix extends BundleImpl implements Framework
         return !(val instanceof String) ? System.getProperty(key) : (String) val;
     }
 
+    String _getProperty(String key)
+    {
+        // First, check the config properties.
+        Object val = m_configMap.get(key);
+        // If not found, then try the system properties.
+        return !(val instanceof String) ? m_secureAction.getSystemProperty(key, null) : (String) val;
+    }
+
     private Bundle reloadBundle(BundleArchive ba)
         throws BundleException
     {
