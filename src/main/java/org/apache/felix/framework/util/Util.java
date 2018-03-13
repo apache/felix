@@ -910,4 +910,34 @@ public class Util
         V result = map.putIfAbsent(key, value);
         return result != null ? result : value;
     }
+
+    public static String getFrameworkUUIDFromURL(String host)
+    {
+        if (host != null)
+        {
+            int idx = host.indexOf('_');
+            if (idx > 0)
+            {
+                return host.substring(0, idx);
+            }
+        }
+        return null;
+    }
+
+    public static String getRevisionIdFromURL(String host)
+    {
+        if (host != null)
+        {
+            int idx = host.indexOf('_');
+            if (idx > 0 && idx < host.length())
+            {
+                return host.substring(idx + 1);
+            }
+            else
+            {
+                return host;
+            }
+        }
+        return null;
+    }
 }
