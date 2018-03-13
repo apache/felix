@@ -1485,138 +1485,135 @@ public class BundleWiringImpl implements BundleWiring
             try
             {
                 // Get the package of the target class/resource.
-                String pkgName = (isClass)
-                        ? Util.getClassPackage(name)
-                                : Util.getResourcePackage(name);
+                String pkgName = (isClass) ? Util.getClassPackage(name) : Util.getResourcePackage(name);
 
-                        boolean accessor = name.startsWith("sun.reflect.Generated") || name.startsWith("jdk.internal.reflect.");
+                boolean accessor = name.startsWith("sun.reflect.Generated") || name.startsWith("jdk.internal.reflect.");
 
-                        if (accessor)
+                if (accessor)
+                {
+                    if (m_accessorLookupCache == null)
+                    {
+                        m_accessorLookupCache = new ConcurrentHashMap<String, ClassLoader>();
+                    }
+
+                    ClassLoader loader = m_accessorLookupCache.get(name);
+                    if (loader != null)
+                    {
+                        return loader.loadClass(name);
+                    }
+                }
+
+                // Delegate any packages listed in the boot delegation
+                // property to the parent class loader.
+                if (shouldBootDelegate(pkgName))
+                {
+                    try
+                    {
+                        // Get the appropriate class loader for delegation.
+                        ClassLoader bdcl = getBootDelegationClassLoader();
+                        result = (isClass) ? (Object) bdcl.loadClass(name) : (Object) bdcl.getResource(name);
+
+                        // If this is a java.* package, then always terminate the
+                        // search; otherwise, continue to look locally if not found.
+                        if (pkgName.startsWith("java.") || (result != null))
                         {
-                            if (m_accessorLookupCache == null)
+                            if (accessor)
                             {
-                                m_accessorLookupCache = new ConcurrentHashMap<String, ClassLoader>();
+                                m_accessorLookupCache.put(name, bdcl);
                             }
-
-                            ClassLoader loader = m_accessorLookupCache.get(name);
-                            if (loader != null)
-                            {
-                                return loader.loadClass(name);
-                            }
+                            return result;
                         }
-
-                        // Delegate any packages listed in the boot delegation
-                        // property to the parent class loader.
-                        if (shouldBootDelegate(pkgName))
+                    }
+                    catch (ClassNotFoundException ex)
+                    {
+                        // If this is a java.* package, then always terminate the
+                        // search; otherwise, continue to look locally if not found.
+                        if (pkgName.startsWith("java."))
                         {
-                            try
+                            throw ex;
+                        }
+                    }
+                }
+
+                if (accessor)
+                {
+                    List<Collection<BundleRevision>> allRevisions = new ArrayList<Collection<BundleRevision>>( 1 + m_requiredPkgs.size());
+                    allRevisions.add(m_importedPkgs.values());
+                    allRevisions.addAll(m_requiredPkgs.values());
+
+                    for (Collection<BundleRevision> revisions : allRevisions)
+                    {
+                        for (BundleRevision revision : revisions)
+                        {
+                            ClassLoader loader = revision.getWiring().getClassLoader();
+                            if (loader != null && loader instanceof BundleClassLoader)
                             {
-                                // Get the appropriate class loader for delegation.
-                                ClassLoader bdcl = getBootDelegationClassLoader();
-                                result = (isClass)
-                                        ? (Object) bdcl.loadClass(name)
-                                                : (Object) bdcl.getResource(name);
-                                        // If this is a java.* package, then always terminate the
-                                        // search; otherwise, continue to look locally if not found.
-                                        if (pkgName.startsWith("java.") || (result != null))
-                                        {
-                                            if (accessor)
-                                            {
-                                                m_accessorLookupCache.put(name, bdcl);
-                                            }
-                                            return result;
-                                        }
-                            }
-                            catch (ClassNotFoundException ex)
-                            {
-                                // If this is a java.* package, then always terminate the
-                                // search; otherwise, continue to look locally if not found.
-                                if (pkgName.startsWith("java."))
+                                BundleClassLoader bundleClassLoader = (BundleClassLoader) loader;
+                                result = bundleClassLoader.findLoadedClassInternal(name);
+                                if (result != null)
                                 {
-                                    throw ex;
+                                    m_accessorLookupCache.put(name, bundleClassLoader);
+                                    return result;
                                 }
                             }
                         }
+                    }
 
-                        if (accessor)
+                    try
+                    {
+                        result = tryImplicitBootDelegation(name, isClass);
+                    }
+                    catch (Exception ex)
+                    {
+                        // Ignore, will throw using CNFE_CLASS_LOADER
+                    }
+
+                    if (result != null)
+                    {
+                        m_accessorLookupCache.put(name, BundleRevisionImpl.getSecureAction()
+                                .getClassLoader(this.getClass()));
+                        return result;
+                    }
+                    else
+                    {
+                        m_accessorLookupCache.put(name, CNFE_CLASS_LOADER);
+                        CNFE_CLASS_LOADER.loadClass(name);
+                    }
+                }
+
+                // Look in the revision's imports. Note that the search may
+                // be aborted if this method throws an exception, otherwise
+                // it continues if a null is returned.
+                result = searchImports(pkgName, name, isClass);
+
+                // If not found, try the revision's own class path.
+                if (result == null)
+                {
+                    if (isClass)
+                    {
+                        ClassLoader cl = getClassLoaderInternal();
+                        if (cl == null)
                         {
-                            List<Collection<BundleRevision>> allRevisions = new ArrayList<Collection<BundleRevision>>( 1 + m_requiredPkgs.size());
-                            allRevisions.add(m_importedPkgs.values());
-                            allRevisions.addAll(m_requiredPkgs.values());
-
-                            for (Collection<BundleRevision> revisions : allRevisions)
-                            {
-                                for (BundleRevision revision : revisions)
-                                {
-                                    ClassLoader loader = revision.getWiring().getClassLoader();
-                                    if (loader != null && loader instanceof BundleClassLoader)
-                                    {
-                                        BundleClassLoader bundleClassLoader = (BundleClassLoader) loader;
-                                        result = bundleClassLoader.findLoadedClassInternal(name);
-                                        if (result != null)
-                                        {
-                                            m_accessorLookupCache.put(name, bundleClassLoader);
-                                            return result;
-                                        }
-                                    }
-                                }
-                            }
-
-                            try
-                            {
-                                result = tryImplicitBootDelegation(name, isClass);
-                            }
-                            catch (Exception ex)
-                            {
-                                // Ignore, will throw using CNFE_CLASS_LOADER
-                            }
-
-                            if (result != null)
-                            {
-                                m_accessorLookupCache.put(name, BundleRevisionImpl.getSecureAction()
-                                        .getClassLoader(this.getClass()));
-                                return result;
-                            }
-                            else
-                            {
-                                m_accessorLookupCache.put(name, CNFE_CLASS_LOADER);
-                                CNFE_CLASS_LOADER.loadClass(name);
-                            }
+                            throw new ClassNotFoundException(
+                                    "Unable to load class '"
+                                            + name
+                                            + "' because the bundle wiring for "
+                                            + m_revision.getSymbolicName()
+                                            + " is no longer valid.");
                         }
+                        result = ((BundleClassLoader) cl).findClass(name);
+                    }
+                    else
+                    {
+                        result = m_revision.getResourceLocal(name);
+                    }
 
-                        // Look in the revision's imports. Note that the search may
-                        // be aborted if this method throws an exception, otherwise
-                        // it continues if a null is returned.
-                        result = searchImports(pkgName, name, isClass);
-
-                        // If not found, try the revision's own class path.
-                        if (result == null)
-                        {
-                            if (isClass)
-                            {
-                                ClassLoader cl = getClassLoaderInternal();
-                                if (cl == null)
-                                {
-                                    throw new ClassNotFoundException(
-                                            "Unable to load class '"
-                                                    + name
-                                                    + "' because the bundle wiring for "
-                                                    + m_revision.getSymbolicName()
-                                                    + " is no longer valid.");
-                                }
-                                result = ((BundleClassLoader) cl).findClass(name);
-                            }
-                            else
-                            {
-                                result = m_revision.getResourceLocal(name);
-                            }
-
-                            // If still not found, then try the revision's dynamic imports.
-                            if (result == null)
-                            {
-                                result = searchDynamicImports(pkgName, name, isClass);
-                            }
-                        }
+                    // If still not found, then try the revision's dynamic imports.
+                    if (result == null)
+                    {
+                        result = searchDynamicImports(pkgName, name, isClass);
+                    }
+                }
             }
             finally
             {
@@ -1657,21 +1654,21 @@ public class BundleWiringImpl implements BundleWiring
         {
             // If we find the class or resource, then return it.
             Object result = (isClass)
-                    ? (Object) ((BundleWiringImpl) provider.getWiring()).getClassByDelegation(name)
-                            : (Object) ((BundleWiringImpl) provider.getWiring()).getResourceByDelegation(name);
-                    if (result != null)
-                    {
-                        return result;
-                    }
+                ? (Object) ((BundleWiringImpl) provider.getWiring()).getClassByDelegation(name)
+                        : (Object) ((BundleWiringImpl) provider.getWiring()).getResourceByDelegation(name);
+                if (result != null)
+                {
+                    return result;
+                }
 
-                    // If no class or resource was found, then we must throw an exception
-                    // since the provider of this package did not contain the
-                    // requested class and imported packages are atomic.
-                    if (isClass)
-                    {
-                        throw new ClassNotFoundException(name);
-                    }
-                    throw new ResourceNotFoundException(name);
+                // If no class or resource was found, then we must throw an exception
+                // since the provider of this package did not contain the
+                // requested class and imported packages are atomic.
+                if (isClass)
+                {
+                    throw new ClassNotFoundException(name);
+                }
+                throw new ResourceNotFoundException(name);
         }
 
         // Check if the package is required.
@@ -1684,12 +1681,12 @@ public class BundleWiringImpl implements BundleWiring
                 try
                 {
                     Object result = (isClass)
-                            ? (Object) ((BundleWiringImpl) p.getWiring()).getClassByDelegation(name)
-                                    : (Object) ((BundleWiringImpl) p.getWiring()).getResourceByDelegation(name);
-                            if (result != null)
-                            {
-                                return result;
-                            }
+                        ? (Object) ((BundleWiringImpl) p.getWiring()).getClassByDelegation(name)
+                                : (Object) ((BundleWiringImpl) p.getWiring()).getResourceByDelegation(name);
+                        if (result != null)
+                        {
+                            return result;
+                        }
                 }
                 catch (ClassNotFoundException ex)
                 {
@@ -1773,15 +1770,15 @@ public class BundleWiringImpl implements BundleWiring
                 if (System.getSecurityManager() != null)
                 {
                     return AccessController
-                            .doPrivileged(new PrivilegedExceptionAction()
+                        .doPrivileged(new PrivilegedExceptionAction()
+                        {
+                            @Override
+                            public Object run() throws Exception
                             {
-                                @Override
-                                public Object run() throws Exception
-                                {
-                                    return doImplicitBootDelegation(classes, name,
-                                            isClass);
-                                }
-                            });
+                                return doImplicitBootDelegation(classes, name,
+                                        isClass);
+                            }
+                        });
                 }
                 else
                 {
