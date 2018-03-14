@@ -478,8 +478,7 @@ class URLHandlers implements URLStreamHandlerFactory, ContentHandlerFactory
         // allowed to deal with it.
         if (protocol.equals(FelixConstants.BUNDLE_URL_PROTOCOL))
         {
-            return addToCache(m_streamHandlerCache, protocol,
-                new URLHandlersBundleStreamHandler(m_secureAction));
+            return new URLHandlersBundleStreamHandler(getFrameworkFromContext(), m_secureAction);
         }
 
         handler = getBuiltInStreamHandler(protocol,

@@ -420,7 +420,7 @@ public class Felix extends BundleImpl implements Framework
         m_securityDefaultPolicy = "true".equals(getProperty(FelixConstants.SECURITY_DEFAULT_POLICY));
 
         // Create default bundle stream handler.
-        m_bundleStreamHandler = new URLHandlersBundleStreamHandler(this);
+        m_bundleStreamHandler = new URLHandlersBundleStreamHandler(this, m_secureAction);
 
         // Create service registry.
         m_registry = new ServiceRegistry(m_logger, new ServiceRegistryCallbacks() {
