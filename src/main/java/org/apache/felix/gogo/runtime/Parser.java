@@ -211,11 +211,15 @@ public class Parser
                     return new Program(whole(tokens, start), tokens);
                 }
             }
-            if (Token.eq("}", t) || Token.eq(")", t))
+            if (Token.eq("}", t) || Token.eq(")", t) || Token.eq("]", t))
             {
                 if (pipes != null)
                 {
                     throw new EOFError(t.line, t.column, "unexpected token '" + t + "' while looking for a statement after |", getMissing("pipe"), "0");
+                }
+                else if (stack.isEmpty())
+                {
+                    throw new SyntaxError(t.line, t.column, "unexpected token '" + t + "'");
                 }
                 else
                 {
