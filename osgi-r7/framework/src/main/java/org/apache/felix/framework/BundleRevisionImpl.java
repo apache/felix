@@ -18,19 +18,9 @@
  */
 package org.apache.felix.framework;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.net.MalformedURLException;
-import java.net.URL;
-import java.security.ProtectionDomain;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Enumeration;
-import java.util.List;
-import java.util.Map;
-
 import org.apache.felix.framework.cache.Content;
 import org.apache.felix.framework.util.FelixConstants;
+import org.apache.felix.framework.util.MultiReleaseContent;
 import org.apache.felix.framework.util.SecureAction;
 import org.apache.felix.framework.util.Util;
 import org.apache.felix.framework.util.manifestparser.ManifestParser;
@@ -45,6 +35,17 @@ import org.osgi.framework.wiring.BundleWiring;
 import org.osgi.resource.Capability;
 import org.osgi.resource.Requirement;
 import org.osgi.resource.Resource;
+
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.security.ProtectionDomain;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Enumeration;
+import java.util.List;
+import java.util.Map;
 
 public class BundleRevisionImpl implements BundleRevision, Resource
 {
@@ -423,7 +424,8 @@ public class BundleRevisionImpl implements BundleRevision, Resource
             // Check for the bundle itself on the class path.
             if (classPathStrings.get(i).equals(FelixConstants.CLASS_PATH_DOT))
             {
-                localContentList.add(content);
+                localContentList.add(MultiReleaseContent.wrap(
+                    getBundle().getFramework()._getProperty("java.specification.version"), content));
             }
             else
             {
@@ -447,7 +449,8 @@ public class BundleRevisionImpl implements BundleRevision, Resource
                 // class path content list.
                 if (embeddedContent != null)
                 {
-                    localContentList.add(embeddedContent);
+                    localContentList.add(MultiReleaseContent.wrap(
+                        getBundle().getFramework()._getProperty("java.specification.version"),embeddedContent));
                 }
                 else
                 {
@@ -465,7 +468,8 @@ public class BundleRevisionImpl implements BundleRevision, Resource
         // "." by default, as per the spec.
         if (localContentList.isEmpty())
         {
-            localContentList.add(content);
+            localContentList.add(MultiReleaseContent.wrap(
+                getBundle().getFramework()._getProperty("java.specification.version"),content));
         }
 
         // Now add the local contents to the global content list and return it.
@@ -479,7 +483,7 @@ public class BundleRevisionImpl implements BundleRevision, Resource
 
         // Remove leading slash, if present, but special case
         // "/" so that it returns a root URL...this isn't very
-        // clean or meaninful, but the Spring guys want it.
+        // clean or meaningful, but the Spring guys want it.
         if (name.equals("/"))
         {
             // Just pick a class path index since it doesn't really matter.

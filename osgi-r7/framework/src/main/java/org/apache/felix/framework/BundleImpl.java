@@ -18,25 +18,6 @@
  */
 package org.apache.felix.framework;
 
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
-import java.net.URL;
-import java.security.AccessControlContext;
-import java.security.ProtectionDomain;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Dictionary;
-import java.util.Enumeration;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Locale;
-import java.util.Map;
-import java.util.Properties;
-import java.util.Set;
-import java.util.StringTokenizer;
-
 import org.apache.felix.framework.cache.BundleArchive;
 import org.apache.felix.framework.util.SecurityManagerEx;
 import org.apache.felix.framework.util.ShrinkableCollection;
@@ -59,6 +40,25 @@ import org.osgi.framework.wiring.BundleRevision;
 import org.osgi.framework.wiring.BundleRevisions;
 import org.osgi.framework.wiring.BundleWire;
 import org.osgi.framework.wiring.BundleWiring;
+
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.URL;
+import java.security.AccessControlContext;
+import java.security.ProtectionDomain;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Dictionary;
+import java.util.Enumeration;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+import java.util.Properties;
+import java.util.Set;
+import java.util.StringTokenizer;
 
 class BundleImpl implements Bundle, BundleRevisions
 {
@@ -1271,7 +1271,8 @@ class BundleImpl implements Bundle, BundleRevisions
     {
         // Get and parse the manifest from the most recent revision and
         // create an associated revision object for it.
-        Map headerMap = m_archive.getCurrentRevision().getManifestHeader();
+        Map headerMap = Util.getMultiReleaseAwareManifestHeaders(
+            getFramework()._getProperty("java.specification.version"), m_archive.getCurrentRevision());
 
         // Create the bundle revision instance.
         BundleRevisionImpl revision = new BundleRevisionImpl(
