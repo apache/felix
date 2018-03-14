@@ -18,15 +18,22 @@
  */
 package org.apache.felix.framework.cache;
 
-import java.io.*;
-import java.net.MalformedURLException;
-import java.net.URL;
-import java.util.*;
 import org.apache.felix.framework.Logger;
 import org.apache.felix.framework.util.FelixConstants;
 import org.apache.felix.framework.util.Util;
 import org.apache.felix.framework.util.WeakZipFileFactory;
 import org.osgi.framework.Constants;
+
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.util.Enumeration;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.NoSuchElementException;
+import java.util.Properties;
 
 public class DirectoryContent implements Content
 {
@@ -96,43 +103,19 @@ public class DirectoryContent implements Content
         }
 
         // Get the embedded resource.
-        InputStream is = null;
-        ByteArrayOutputStream baos = null;
 
+        File file = new File(m_dir, name);
         try
         {
-            is = new BufferedInputStream(
-                BundleCache.getSecureAction().getFileInputStream(new File(m_dir, name)));
-            baos = new ByteArrayOutputStream(BUFSIZE);
-            byte[] buf = new byte[BUFSIZE];
-            int n = 0;
-            while ((n = is.read(buf, 0, buf.length)) >= 0)
-            {
-                baos.write(buf, 0, n);
-            }
-            return baos.toByteArray();
 
+            return BundleCache.read(BundleCache.getSecureAction().getFileInputStream(file), file.length());
         }
         catch (Exception ex)
         {
+            m_logger.log(
+                Logger.LOG_ERROR,
+                "DirectoryContent: Unable to read bytes for file " + name + " from file " + file.getAbsolutePath(), ex);
             return null;
-        }
-        finally
-        {
-            try
-            {
-                if (baos != null) baos.close();
-            }
-            catch (Exception ex)
-            {
-            }
-            try
-            {
-                if (is != null) is.close();
-            }
-            catch (Exception ex)
-            {
-            }
         }
     }
 
@@ -144,7 +127,18 @@ public class DirectoryContent implements Content
             name = name.substring(1);
         }
 
-        return BundleCache.getSecureAction().getFileInputStream(new File(m_dir, name));
+        File file = new File(m_dir, name);
+        try
+        {
+            return BundleCache.getSecureAction().getFileInputStream(file);
+        }
+        catch (Exception ex)
+        {
+            m_logger.log(
+                Logger.LOG_ERROR,
+                "DirectoryContent: Unable to create inputstream for file " + name + " from file " + file.getAbsolutePath(), ex);
+            return null;
+        }
     }
 
     public URL getEntryAsURL(String name)
@@ -272,13 +266,7 @@ public class DirectoryContent implements Content
 
                         try
                         {
-                            is = new BufferedInputStream(
-                                BundleCache.getSecureAction().getFileInputStream(entryFile),
-                                BundleCache.BUFSIZE);
-                            if (is == null)
-                            {
-                                throw new IOException("No input stream: " + entryName);
-                            }
+                            is = BundleCache.getSecureAction().getFileInputStream(entryFile);
 
                             // Create the file.
                             BundleCache.copyStreamToFile(is, libFile);
@@ -304,17 +292,6 @@ public class DirectoryContent implements Content
                             m_logger.log(
                                 Logger.LOG_ERROR,
                                 "Extracting native library.", ex);
-                        }
-                        finally
-                        {
-                            try
-                            {
-                                if (is != null) is.close();
-                            }
-                            catch (IOException ex)
-                            {
-                                // Not much we can do.
-                            }
                         }
                     }
                 }
