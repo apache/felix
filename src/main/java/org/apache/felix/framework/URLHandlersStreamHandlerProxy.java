@@ -101,7 +101,7 @@ public class URLHandlersStreamHandlerProxy extends URLStreamHandler
         }
         catch (Exception ex)
         {
-            throw new RuntimeException(ex.getMessage());
+            throw new RuntimeException(ex.getMessage(), ex);
         }
 
         Method open_connection_proxy = null;
@@ -168,7 +168,7 @@ public class URLHandlersStreamHandlerProxy extends URLStreamHandler
         }
         catch (Exception ex)
         {
-            throw new IllegalStateException("Stream handler unavailable due to: " + ex.getMessage());
+            throw new IllegalStateException("Stream handler unavailable due to: " + ex.getMessage(), ex);
         }
     }
 
@@ -189,7 +189,7 @@ public class URLHandlersStreamHandlerProxy extends URLStreamHandler
         }
         catch (Exception ex)
         {
-            throw new IllegalStateException("Stream handler unavailable due to: " + ex.getMessage());
+            throw new IllegalStateException("Stream handler unavailable due to: " + ex.getMessage(), ex);
         }
     }
 
@@ -211,7 +211,7 @@ public class URLHandlersStreamHandlerProxy extends URLStreamHandler
         }
         catch (Exception ex)
         {
-            throw new IllegalStateException("Stream handler unavailable due to: " + ex.getMessage());
+            throw new IllegalStateException("Stream handler unavailable due to: " + ex.getMessage(), ex);
         }
     }
 
@@ -233,7 +233,7 @@ public class URLHandlersStreamHandlerProxy extends URLStreamHandler
         }
         catch (Exception ex)
         {
-            throw new IllegalStateException("Stream handler unavailable due to: " + ex.getMessage());
+            throw new IllegalStateException("Stream handler unavailable due to: " + ex.getMessage(), ex);
         }
     }
 
@@ -255,7 +255,7 @@ public class URLHandlersStreamHandlerProxy extends URLStreamHandler
         }
         catch (Exception ex)
         {
-            throw new IllegalStateException("Stream handler unavailable due to: " + ex.getMessage());
+            throw new IllegalStateException("Stream handler unavailable due to: " + ex.getMessage(), ex);
         }
     }
 
@@ -308,7 +308,7 @@ public class URLHandlersStreamHandlerProxy extends URLStreamHandler
         }
         catch (Exception ex)
         {
-            throw new IllegalStateException("Stream handler unavailable due to: " + ex.getMessage());
+            throw new IllegalStateException("Stream handler unavailable due to: " + ex.getMessage(), ex);
         }
     }
 
@@ -343,7 +343,7 @@ public class URLHandlersStreamHandlerProxy extends URLStreamHandler
                 {
                     throw (IOException) e;
                 }
-                throw new IOException(e.getMessage());
+                throw new IOException(e.getMessage(), e);
             }
         }
         try
@@ -356,7 +356,7 @@ public class URLHandlersStreamHandlerProxy extends URLStreamHandler
             {
                 throw (IOException) ex;
             }
-            throw new IllegalStateException("Stream handler unavailable due to: " + ex.getMessage());
+            throw new IllegalStateException("Stream handler unavailable due to: " + ex.getMessage(), ex);
         }
     }
 
@@ -428,7 +428,7 @@ public class URLHandlersStreamHandlerProxy extends URLStreamHandler
             }
             catch (Exception ex)
             {
-                throw new IllegalStateException("Stream handler unavailable due to: " + ex.getMessage());
+                throw new IllegalStateException("Stream handler unavailable due to: " + ex.getMessage(), ex);
             }
         }
     }
@@ -452,7 +452,7 @@ public class URLHandlersStreamHandlerProxy extends URLStreamHandler
         }
         catch (Exception ex)
         {
-            throw new IllegalStateException("Stream handler unavailable due to: " + ex.getMessage());
+            throw new IllegalStateException("Stream handler unavailable due to: " + ex.getMessage(), ex);
         }
     }
 
@@ -514,7 +514,7 @@ public class URLHandlersStreamHandlerProxy extends URLStreamHandler
                }
                else
                {
-                   throw new IllegalStateException("Unknown throwable: " + t);
+                   throw new IllegalStateException("Unknown throwable: " + t, t);
                }
             }
         }
@@ -551,7 +551,7 @@ public class URLHandlersStreamHandlerProxy extends URLStreamHandler
         }
         catch (Exception ex)
         {
-            throw new IllegalStateException("Stream handler unavailable due to: " + ex.getMessage());
+            throw new IllegalStateException("Stream handler unavailable due to: " + ex.getMessage(), ex);
         }
     }
 
