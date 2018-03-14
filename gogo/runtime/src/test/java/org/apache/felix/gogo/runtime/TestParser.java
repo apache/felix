@@ -456,6 +456,26 @@ public class TestParser extends AbstractParserTest
     }
 
     @Test
+    public void testClosingSquareBracket()
+    {
+        expectSyntaxError("{ a } }");
+        expectSyntaxError("a }");
+        expectSyntaxError("}");
+        expectSyntaxError("{ a } ]");
+        expectSyntaxError("a ]");
+        expectSyntaxError("]");
+    }
+
+    private void expectSyntaxError(String txt) {
+        try {
+            new Parser(txt).program();
+            fail("Expected a SyntaxError to be thrown");
+        } catch (SyntaxError e) {
+            // ok
+        }
+    }
+
+    @Test
     public void testSimpleValue()
     {
         Program p = new Parser(
