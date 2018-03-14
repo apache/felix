@@ -18,8 +18,24 @@
  */
 package org.apache.felix.framework.util;
 
+import org.apache.felix.framework.Felix;
+import org.apache.felix.framework.Logger;
+import org.apache.felix.framework.cache.BundleArchiveRevision;
+import org.apache.felix.framework.cache.BundleCache;
+import org.osgi.framework.Bundle;
+import org.osgi.framework.Constants;
+import org.osgi.framework.ServiceReference;
+import org.osgi.framework.Version;
+import org.osgi.framework.wiring.BundleCapability;
+import org.osgi.framework.wiring.BundleRequirement;
+import org.osgi.framework.wiring.BundleRevision;
+import org.osgi.framework.wiring.BundleWire;
+import org.osgi.framework.wiring.BundleWiring;
+import org.osgi.resource.Resource;
+
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -37,18 +53,6 @@ import java.util.Properties;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.concurrent.ConcurrentHashMap;
-
-import org.apache.felix.framework.Felix;
-import org.apache.felix.framework.Logger;
-import org.osgi.framework.Bundle;
-import org.osgi.framework.Constants;
-import org.osgi.framework.ServiceReference;
-import org.osgi.framework.wiring.BundleCapability;
-import org.osgi.framework.wiring.BundleRequirement;
-import org.osgi.framework.wiring.BundleRevision;
-import org.osgi.framework.wiring.BundleWire;
-import org.osgi.framework.wiring.BundleWiring;
-import org.osgi.resource.Resource;
 
 public class Util
 {
@@ -939,5 +943,39 @@ public class Util
             }
         }
         return null;
+    }
+
+    public static Map<String, Object> getMultiReleaseAwareManifestHeaders(String version, BundleArchiveRevision revision) throws Exception
+    {
+        Map<String, Object> manifest = revision.getManifestHeader();
+        if (manifest == null)
+        {
+            throw new FileNotFoundException("META-INF/MANIFEST.MF");
+        }
+        if ("true".equals(manifest.get("Multi-Release")))
+        {
+            for (int major = Version.parseVersion(version).getMajor(); major >= 9; major--)
+            {
+                byte[] versionManifestInput = revision.getContent()
+                    .getEntryAsBytes("META-INF/versions/" + major + "/OSGI-INF/MANIFEST.MF");
+
+                if (versionManifestInput != null)
+                {
+                    Map<String, Object> versionManifest = BundleCache.getMainAttributes(
+                        new StringMap(), new ByteArrayInputStream(versionManifestInput), versionManifestInput.length);
+
+                    if (versionManifest.get(Constants.IMPORT_PACKAGE) != null)
+                    {
+                        manifest.put(Constants.IMPORT_PACKAGE, versionManifest.get(Constants.IMPORT_PACKAGE));
+                    }
+                    if (versionManifest.get(Constants.REQUIRE_CAPABILITY) != null)
+                    {
+                        manifest.put(Constants.REQUIRE_CAPABILITY, versionManifest.get(Constants.REQUIRE_CAPABILITY));
+                    }
+                    break;
+                }
+            }
+        }
+        return manifest;
     }
 }
