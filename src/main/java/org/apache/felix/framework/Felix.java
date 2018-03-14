@@ -57,6 +57,7 @@ import org.osgi.framework.ServiceListener;
 import org.osgi.framework.ServicePermission;
 import org.osgi.framework.ServiceReference;
 import org.osgi.framework.ServiceRegistration;
+import org.osgi.framework.Version;
 import org.osgi.framework.launch.Framework;
 import org.osgi.framework.namespace.HostNamespace;
 import org.osgi.framework.startlevel.FrameworkStartLevel;
@@ -73,12 +74,15 @@ import org.osgi.service.resolver.ResolutionException;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
+import java.io.PrintWriter;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLStreamHandler;
@@ -768,6 +772,8 @@ public class Felix extends BundleImpl implements Framework
                 setActivator(new SystemBundleActivator());
                 setBundleContext(new BundleContextImpl(m_logger, this, this));
 
+                boolean javaVersionChanged = handleJavaVersionChange();
+
                 // Now load all cached bundles.
                 for (int i = 0; (archives != null) && (i < archives.length); i++)
                 {
@@ -791,7 +797,7 @@ public class Felix extends BundleImpl implements Framework
                         else
                         {
                             // Install the cached bundle.
-                            reloadBundle(archives[i]);
+                            reloadBundle(archives[i], javaVersionChanged);
                         }
                     }
                     catch (Exception ex)
@@ -925,6 +931,89 @@ public class Felix extends BundleImpl implements Framework
                 }
             }
         }
+    }
+
+    private boolean handleJavaVersionChange()
+    {
+        File dataFile = getDataFile(this, "last.java.version");
+
+        int currentVersion = 8;
+        try
+        {
+            currentVersion = Version.parseVersion(_getProperty("java.specification.version")).getMajor();
+        }
+        catch (Exception ignore)
+        {
+            getLogger().log(this, Logger.LOG_WARNING, "Unable to parse current java version", ignore);
+        }
+
+        if (currentVersion < 8)
+        {
+            currentVersion = 8;
+        }
+
+        int lastVersion = 8;
+        if (dataFile.isFile())
+        {
+            BufferedReader input = null;
+            try
+            {
+                input = new BufferedReader(new InputStreamReader(new FileInputStream(dataFile), "UTF-8"));
+                lastVersion = Version.parseVersion(input.readLine()).getMajor();
+            }
+            catch (Exception ignore)
+            {
+                getLogger().log(this, Logger.LOG_WARNING, "Unable to parse last java version", ignore);
+            }
+            finally
+            {
+                if (input != null)
+                {
+                    try
+                    {
+                        input.close();
+                    }
+                    catch (Exception ignore)
+                    {
+
+                    }
+                }
+            }
+        }
+
+        if (lastVersion < 8)
+        {
+            lastVersion = 8;
+        }
+
+        PrintWriter output = null;
+
+        try
+        {
+            output = new PrintWriter(new OutputStreamWriter(
+                new FileOutputStream(getDataFile(this, "last.java.version")), "UTF-8"));
+            output.println(Integer.toString(currentVersion));
+            output.flush();
+        }
+        catch (Exception ignore)
+        {
+            getLogger().log(this, Logger.LOG_WARNING, "Unable to persist current java version", ignore);
+        }
+        finally
+        {
+            if (output != null)
+            {
+                try
+                {
+                    output.close();
+                }
+                catch (Exception ignore)
+                {
+
+                }
+            }
+        }
+        return currentVersion != lastVersion;
     }
 
     void setBundleProtectionDomain(BundleRevisionImpl revisionImpl) throws Exception
@@ -2944,7 +3033,7 @@ public class Felix extends BundleImpl implements Framework
         return !(val instanceof String) ? m_secureAction.getSystemProperty(key, null) : (String) val;
     }
 
-    private Bundle reloadBundle(BundleArchive ba)
+    private Bundle reloadBundle(BundleArchive ba, boolean updateMulti)
         throws BundleException
     {
         BundleImpl bundle = null;
@@ -2980,6 +3069,21 @@ public class Felix extends BundleImpl implements Framework
             try
             {
                 bundle = new BundleImpl(this, null, ba);
+
+                if (updateMulti)
+                {
+                    try
+                    {
+                        if ("true".equals(bundle.adapt(BundleRevisionImpl.class).getHeaders().get("Multi-Release")))
+                        {
+                            ba.setLastModified(System.currentTimeMillis());
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        getLogger().log(this, Logger.LOG_WARNING, "Unable to update multi-release bundle last modified", ex);
+                    }
+                }
 
                 // Extensions are handled as a special case.
                 if (bundle.isExtension())
