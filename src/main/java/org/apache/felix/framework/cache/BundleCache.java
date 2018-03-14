@@ -18,15 +18,22 @@
  */
 package org.apache.felix.framework.cache;
 
-import java.io.*;
-import java.nio.channels.FileChannel;
-import java.nio.channels.FileLock;
-import java.util.*;
-
 import org.apache.felix.framework.Logger;
 import org.apache.felix.framework.util.SecureAction;
 import org.apache.felix.framework.util.WeakZipFileFactory;
 import org.osgi.framework.Constants;
+
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.lang.ref.SoftReference;
+import java.nio.channels.FileChannel;
+import java.nio.channels.FileLock;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 
 /**
  * <p>
@@ -83,8 +90,8 @@ public class BundleCache
     // TODO: CACHE - This should eventually be removed along with the code
     //       supporting the old multi-file bundle cache format.
     public static final String CACHE_SINGLEBUNDLEFILE_PROP = "felix.cache.singlebundlefile";
-
-    protected static transient int BUFSIZE = 4096;
+    private static final ThreadLocal m_defaultBuffer = new ThreadLocal();
+    private static volatile int DEFAULT_BUFFER = 1024 * 64;
 
     private static transient final String CACHE_DIR_NAME = "felix-cache";
     private static transient final String CACHE_ROOTDIR_DEFAULT = ".";
@@ -182,6 +189,187 @@ public class BundleCache
         }
     }
 
+    // Parse the main attributes of the manifest of the given jarfile.
+    // The idea is to not open the jar file as a java.util.jarfile but
+    // read the mainfest from the zipfile directly and parse it manually
+    // to use less memory and be faster.
+    //
+    // @return the given map for convenience
+    public static Map<String, Object> getMainAttributes(Map<String, Object> headers, InputStream inputStream, long size) throws Exception
+    {
+        if (size > 0)
+        {
+            return getMainAttributes(headers, inputStream, (int) (size < Integer.MAX_VALUE ? size : Integer.MAX_VALUE));
+        }
+        else
+        {
+            return headers;
+        }
+    }
+
+    static byte[] read(InputStream input, long size) throws Exception
+    {
+        return read(input, size <= Integer.MAX_VALUE ? (int) size : Integer.MAX_VALUE);
+    }
+
+    static byte[] read(InputStream input, int size) throws Exception
+    {
+        if (size <= 0)
+        {
+            return new byte[0];
+        }
+
+        byte[] result = new byte[size];
+
+        Exception exception = null;
+        try
+        {
+            for (int i = input.read(result, 0, size); i != -1 && i < size; i += input.read(result, i, size - i))
+            {
+
+            }
+        }
+        catch (Exception ex)
+        {
+            exception = ex;
+        }
+        finally
+        {
+            try
+            {
+                input.close();
+            }
+            catch (Exception ex)
+            {
+                throw exception != null ? exception : ex;
+            }
+        }
+
+        return result;
+    }
+
+    public static Map<String, Object> getMainAttributes(Map<String, Object> headers, InputStream inputStream, int size) throws Exception
+    {
+        if (size <= 0)
+        {
+            inputStream.close();
+            return headers;
+        }
+
+        // Get the buffer for this thread if there is one already otherwise,
+        // create one of size DEFAULT_BUFFER (64K) if the manifest is less
+        // than 64k or of the size of the manifest.
+        SoftReference ref = (SoftReference) m_defaultBuffer.get();
+        byte[] bytes = null;
+        if (ref != null)
+        {
+            bytes = (byte[]) ref.get();
+        }
+
+        if (bytes == null)
+        {
+            bytes = new byte[size + 1 > DEFAULT_BUFFER ? size + 1 : DEFAULT_BUFFER];
+            m_defaultBuffer.set(new SoftReference(bytes));
+        }
+        else if (size + 1 > bytes.length)
+        {
+            bytes = new byte[size + 1];
+            m_defaultBuffer.set(new SoftReference(bytes));
+        }
+
+        // Now read in the manifest in one go into the bytes array.
+        // The InputStream should be already buffered and can handle up to 64K buffers in one go.
+        try
+        {
+            int i = inputStream.read(bytes);
+            while (i < size)
+            {
+                i += inputStream.read(bytes, i, bytes.length - i);
+            }
+        }
+        finally
+        {
+            inputStream.close();
+        }
+
+        // Force a new line at the end of the manifest to deal with broken manifest without any line-ending
+        bytes[size++] = '\n';
+
+        // Now parse the main attributes. The idea is to do that
+        // without creating new byte arrays. Therefore, we read through
+        // the manifest bytes inside the bytes array and write them back into
+        // the same array unless we don't need them (e.g., \r\n and \n are skipped).
+        // That allows us to create the strings from the bytes array without the skipped
+        // chars. We stop as soon as we see a blank line as that denotes that the main
+        // attributes part is finished.
+        String key = null;
+        int last = 0;
+        int current = 0;
+        for (int i = 0; i < size; i++)
+        {
+            // skip \r and \n if it is followed by another \n
+            // (we catch the blank line case in the next iteration)
+            if (bytes[i] == '\r')
+            {
+                if ((i + 1 < size) && (bytes[i + 1] == '\n'))
+                {
+                    continue;
+                }
+            }
+            if (bytes[i] == '\n')
+            {
+                if ((i + 1 < size) && (bytes[i + 1] == ' '))
+                {
+                    i++;
+                    continue;
+                }
+            }
+            // If we don't have a key yet and see the first : we parse it as the key
+            // and skip the :<blank> that follows it.
+            if ((key == null) && (bytes[i] == ':'))
+            {
+                key = new String(bytes, last, (current - last), "UTF-8");
+                if ((i + 1 < size) && (bytes[i + 1] == ' '))
+                {
+                    last = current + 1;
+                    continue;
+                }
+                else
+                {
+                    throw new Exception("Manifest error: Missing space separator - " + key);
+                }
+            }
+            // if we are at the end of a line
+            if (bytes[i] == '\n')
+            {
+                // and it is a blank line stop parsing (main attributes are done)
+                if ((last == current) && (key == null))
+                {
+                    break;
+                }
+                // Otherwise, parse the value and add it to the map (we throw an
+                // exception if we don't have a key or the key already exist.
+                String value = new String(bytes, last, (current - last), "UTF-8");
+                if (key == null)
+                {
+                    throw new Exception("Manifest error: Missing attribute name - " + value);
+                }
+                else if (headers.put(key.intern(), value) != null)
+                {
+                    throw new Exception("Manifest error: Duplicate attribute name - " + key);
+                }
+                last = current;
+                key = null;
+            }
+            else
+            {
+                // write back the byte if it needs to be included in the key or the value.
+                bytes[current++] = bytes[i];
+            }
+        }
+        return headers;
+    }
+
     public synchronized void release()
     {
         if (m_lock != null)
@@ -222,7 +410,7 @@ public class BundleCache
             String sBufSize = (String) m_configMap.get(CACHE_BUFSIZE_PROP);
             if (sBufSize != null)
             {
-                BUFSIZE = Integer.parseInt(sBufSize);
+                DEFAULT_BUFFER = Integer.parseInt(sBufSize);
             }
         }
         catch (NumberFormatException ne)
@@ -346,23 +534,41 @@ public class BundleCache
     static void copyStreamToFile(InputStream is, File outputFile)
         throws IOException
     {
+        // Get the buffer for this thread if there is one already otherwise,
+        // create one of size DEFAULT_BUFFER
+        SoftReference ref = (SoftReference) m_defaultBuffer.get();
+        byte[] bytes = null;
+        if (ref != null)
+        {
+            bytes = (byte[]) ref.get();
+        }
+
+        if (bytes == null)
+        {
+            bytes = new byte[DEFAULT_BUFFER];
+            m_defaultBuffer.set(new SoftReference(bytes));
+        }
+
         OutputStream os = null;
 
         try
         {
             os = getSecureAction().getFileOutputStream(outputFile);
-            os = new BufferedOutputStream(os, BUFSIZE);
-            byte[] b = new byte[BUFSIZE];
-            int len = 0;
-            while ((len = is.read(b)) != -1)
+            for (int i = is.read(bytes);i != -1; i = is.read(bytes))
             {
-                os.write(b, 0, len);
+                os.write(bytes, 0, i);
             }
         }
         finally
         {
-            if (is != null) is.close();
-            if (os != null) os.close();
+            try
+            {
+                if (is != null) is.close();
+            }
+            finally
+            {
+                if (os != null) os.close();
+            }
         }
     }
 

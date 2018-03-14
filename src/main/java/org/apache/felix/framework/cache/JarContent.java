@@ -18,8 +18,13 @@
  */
 package org.apache.felix.framework.cache;
 
-import java.io.BufferedInputStream;
-import java.io.ByteArrayOutputStream;
+import org.apache.felix.framework.Logger;
+import org.apache.felix.framework.util.FelixConstants;
+import org.apache.felix.framework.util.Util;
+import org.apache.felix.framework.util.WeakZipFileFactory;
+import org.apache.felix.framework.util.WeakZipFileFactory.WeakZipFile;
+import org.osgi.framework.Constants;
+
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -30,16 +35,9 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
 import java.util.zip.ZipEntry;
-import org.apache.felix.framework.Logger;
-import org.apache.felix.framework.util.FelixConstants;
-import org.apache.felix.framework.util.Util;
-import org.apache.felix.framework.util.WeakZipFileFactory;
-import org.apache.felix.framework.util.WeakZipFileFactory.WeakZipFile;
-import org.osgi.framework.Constants;
 
 public class JarContent implements Content
 {
-    private static final int BUFSIZE = 4096;
     private static final transient String EMBEDDED_DIRECTORY = "-embedded";
     private static final transient String LIBRARY_DIRECTORY = "-lib";
 
@@ -131,9 +129,6 @@ public class JarContent implements Content
     public byte[] getEntryAsBytes(String name) throws IllegalStateException
     {
         // Get the embedded resource.
-        InputStream is = null;
-        ByteArrayOutputStream baos = null;
-
         try
         {
             ZipEntry ze = m_zipFile.getEntry(name);
@@ -141,19 +136,8 @@ public class JarContent implements Content
             {
                 return null;
             }
-            is = m_zipFile.getInputStream(ze);
-            if (is == null)
-            {
-                return null;
-            }
-            baos = new ByteArrayOutputStream(BUFSIZE);
-            byte[] buf = new byte[BUFSIZE];
-            int n = 0;
-            while ((n = is.read(buf, 0, buf.length)) >= 0)
-            {
-                baos.write(buf, 0, n);
-            }
-            return baos.toByteArray();
+
+            return BundleCache.read(m_zipFile.getInputStream(ze), ze.getSize());
 
         }
         catch (Exception ex)
@@ -162,23 +146,6 @@ public class JarContent implements Content
                 Logger.LOG_ERROR,
                 "JarContent: Unable to read bytes for file " + name + " in ZIP file " + m_file.getAbsolutePath(), ex);
             return null;
-        }
-        finally
-        {
-            try
-            {
-                if (baos != null) baos.close();
-            }
-            catch (Exception ex)
-            {
-            }
-            try
-            {
-                if (is != null) is.close();
-            }
-            catch (Exception ex)
-            {
-            }
         }
     }
 
@@ -348,20 +315,10 @@ public class JarContent implements Content
                     }
                     else
                     {
-                        InputStream is = null;
-
                         try
                         {
-                            is = new BufferedInputStream(
-                                m_zipFile.getInputStream(ze),
-                                BundleCache.BUFSIZE);
-                            if (is == null)
-                            {
-                                throw new IOException("No input stream: " + entryName);
-                            }
-
                             // Create the file.
-                            BundleCache.copyStreamToFile(is, libFile);
+                            BundleCache.copyStreamToFile(m_zipFile.getInputStream(ze), libFile);
 
                             // Perform exec permission command on extracted library
                             // if one is configured.
@@ -398,17 +355,6 @@ public class JarContent implements Content
                                 Logger.LOG_ERROR,
                                 "Extracting native library.", ex);
                         }
-                        finally
-                        {
-                            try
-                            {
-                                if (is != null) is.close();
-                            }
-                            catch (IOException ex)
-                            {
-                                // Not much we can do.
-                            }
-                        }
                     }
                 }
                 else
@@ -435,7 +381,6 @@ public class JarContent implements Content
     /**
      * This method extracts an embedded JAR file from the bundle's
      * JAR file.
-     * @param id the identifier of the bundle that owns the embedded JAR file.
      * @param jarPath the path to the embedded JAR file inside the bundle JAR file.
     **/
     private void extractEmbeddedJar(String jarPath)
@@ -453,44 +398,30 @@ public class JarContent implements Content
 
         if (!BundleCache.getSecureAction().fileExists(jarFile))
         {
-            InputStream is = null;
-            try
+            // Make sure class path entry is a JAR file.
+            ZipEntry ze = m_zipFile.getEntry(jarPath);
+            if (ze == null)
             {
-                // Make sure class path entry is a JAR file.
-                ZipEntry ze = m_zipFile.getEntry(jarPath);
-                if (ze == null)
-                {
-                    return;
-                }
-                // If the zip entry is a directory, then ignore it since
-                // we don't need to extact it; otherwise, it points to an
-                // embedded JAR file, so extract it.
-                else if (!ze.isDirectory())
-                {
-                    // Make sure that the embedded JAR's parent directory exists;
-                    // it may be in a sub-directory.
-                    File jarDir = jarFile.getParentFile();
-                    if (!BundleCache.getSecureAction().fileExists(jarDir))
-                    {
-                        if (!BundleCache.getSecureAction().mkdirs(jarDir))
-                        {
-                            throw new IOException("Unable to create embedded JAR directory.");
-                        }
-                    }
-
-                    // Extract embedded JAR into its directory.
-                    is = new BufferedInputStream(m_zipFile.getInputStream(ze), BundleCache.BUFSIZE);
-                    if (is == null)
-                    {
-                        throw new IOException("No input stream: " + jarPath);
-                    }
-                    // Copy the file.
-                    BundleCache.copyStreamToFile(is, jarFile);
-                }
+                return;
             }
-            finally
+            // If the zip entry is a directory, then ignore it since
+            // we don't need to extact it; otherwise, it points to an
+            // embedded JAR file, so extract it.
+            else if (!ze.isDirectory())
             {
-                if (is != null) is.close();
+                // Make sure that the embedded JAR's parent directory exists;
+                // it may be in a sub-directory.
+                File jarDir = jarFile.getParentFile();
+                if (!BundleCache.getSecureAction().fileExists(jarDir))
+                {
+                    if (!BundleCache.getSecureAction().mkdirs(jarDir))
+                    {
+                        throw new IOException("Unable to create embedded JAR directory.");
+                    }
+                }
+
+                // Extract embedded JAR into its directory.
+                BundleCache.copyStreamToFile(m_zipFile.getInputStream(ze), jarFile);
             }
         }
     }
