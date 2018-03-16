@@ -812,8 +812,9 @@ public class ManifestParser
                         + "' namespace.");
                 }
                 
-                if(path.startsWith(NativeNamespace.NATIVE_NAMESPACE) && (owner == null ||
-                        !FelixConstants.SYSTEM_BUNDLE_SYMBOLICNAME.equals(owner.getSymbolicName())))
+                if((path.startsWith(ExecutionEnvironmentNamespace.EXECUTION_ENVIRONMENT_NAMESPACE) ||
+                    path.startsWith(NativeNamespace.NATIVE_NAMESPACE)) && (owner == null ||
+                    !FelixConstants.SYSTEM_BUNDLE_SYMBOLICNAME.equals(owner.getSymbolicName())))
                 {
                     throw new BundleException("Only System Bundle can use Provide-Capability for '"
                             + path
