@@ -30,6 +30,7 @@ import org.apache.felix.framework.util.manifestparser.ManifestParser;
 import org.apache.felix.framework.util.manifestparser.NativeLibrary;
 import org.apache.felix.framework.util.manifestparser.NativeLibraryClause;
 import org.apache.felix.framework.wiring.BundleCapabilityImpl;
+import org.apache.felix.framework.wiring.BundleRequirementImpl;
 import org.apache.felix.framework.wiring.BundleWireImpl;
 import org.osgi.framework.AdminPermission;
 import org.osgi.framework.Bundle;
@@ -39,6 +40,7 @@ import org.osgi.framework.BundleException;
 import org.osgi.framework.Constants;
 import org.osgi.framework.FrameworkEvent;
 import org.osgi.framework.Version;
+import org.osgi.framework.namespace.ExecutionEnvironmentNamespace;
 import org.osgi.framework.namespace.NativeNamespace;
 import org.osgi.framework.wiring.BundleCapability;
 import org.osgi.framework.wiring.BundleRequirement;
@@ -59,6 +61,7 @@ import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -66,6 +69,7 @@ import java.util.NoSuchElementException;
 import java.util.Properties;
 import java.util.ServiceLoader;
 import java.util.Set;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 /**
  * The ExtensionManager class is used in several ways.
@@ -162,11 +166,15 @@ class ExtensionManager implements Content
     private final Logger m_logger;
     private final Map m_configMap;
     private final Map m_headerMap = new StringMap();
+    private final Map m_originalHeaderMap = new StringMap();
     private final BundleRevisionImpl m_systemBundleRevision;
     private volatile List<BundleCapability> m_capabilities = Collections.EMPTY_LIST;
     private volatile Set<String> m_exportNames = Collections.EMPTY_SET;
     private volatile Object m_securityContext = null;
     private final List<ExtensionTuple> m_extensionTuples = Collections.synchronizedList(new ArrayList<ExtensionTuple>());
+
+    private final List<BundleRevisionImpl> m_resolvedExtensions = new CopyOnWriteArrayList<BundleRevisionImpl>();
+    private final List<BundleRevisionImpl> m_unresolvedExtensions = new CopyOnWriteArrayList<BundleRevisionImpl>();
 
     private static class ExtensionTuple
     {
@@ -256,11 +264,12 @@ class ExtensionManager implements Content
         syscaps = ((capextra == null) || (capextra.trim().length() == 0))
             ? syscaps : syscaps + (capextra.trim().startsWith(",") ? capextra : "," + capextra);
         m_headerMap.put(FelixConstants.PROVIDE_CAPABILITY, syscaps);
+        m_originalHeaderMap.putAll(m_headerMap);
         try
         {
             ManifestParser mp = new ManifestParser(
                 m_logger, m_configMap, m_systemBundleRevision, m_headerMap);
-            List<BundleCapability> caps = aliasSymbolicName(mp.getCapabilities());
+            List<BundleCapability> caps = ManifestParser.aliasSymbolicName(mp.getCapabilities(), m_systemBundleRevision);
             caps.add(buildNativeCapabilites());
             appendCapabilities(caps);
         }
@@ -307,81 +316,9 @@ class ExtensionManager implements Content
         return new BundleCapabilityImpl(getRevision(), NativeNamespace.NATIVE_NAMESPACE, Collections.<String, String> emptyMap(), attributes);
     }
 
-    private static List<BundleCapability> aliasSymbolicName(List<BundleCapability> caps)
-    {
-        if (caps == null)
-        {
-            return new ArrayList<BundleCapability>(0);
-        }
-
-        List<BundleCapability> aliasCaps = new ArrayList<BundleCapability>(caps);
-
-        String[] aliases = {
-            FelixConstants.SYSTEM_BUNDLE_SYMBOLICNAME,
-            Constants.SYSTEM_BUNDLE_SYMBOLICNAME };
-
-        for (int capIdx = 0; capIdx < aliasCaps.size(); capIdx++)
-        {
-            BundleCapability cap = aliasCaps.get(capIdx);
-
-            // Need to alias bundle and host capabilities.
-            if (cap.getNamespace().equals(BundleRevision.BUNDLE_NAMESPACE)
-                || cap.getNamespace().equals(BundleRevision.HOST_NAMESPACE))
-            {
-                // Make a copy of the attribute array.
-                Map<String, Object> aliasAttrs =
-                    new HashMap<String, Object>(cap.getAttributes());
-                // Add the aliased value.
-                aliasAttrs.put(cap.getNamespace(), aliases);
-                // Create the aliased capability to replace the old capability.
-                cap = new BundleCapabilityImpl(
-                    cap.getRevision(),
-                    cap.getNamespace(),
-                    cap.getDirectives(),
-                    aliasAttrs);
-                aliasCaps.set(capIdx, cap);
-            }
-
-            // Further, search attributes for bundle symbolic name and alias it too.
-            for (Entry<String, Object> entry : cap.getAttributes().entrySet())
-            {
-                // If there is a bundle symbolic name attribute, add the
-                // standard alias as a value.
-                if (entry.getKey().equalsIgnoreCase(Constants.BUNDLE_SYMBOLICNAME_ATTRIBUTE))
-                {
-                    // Make a copy of the attribute array.
-                    Map<String, Object> aliasAttrs =
-                        new HashMap<String, Object>(cap.getAttributes());
-                    // Add the aliased value.
-                    aliasAttrs.put(Constants.BUNDLE_SYMBOLICNAME_ATTRIBUTE, aliases);
-                    // Create the aliased capability to replace the old capability.
-                    aliasCaps.set(capIdx, new BundleCapabilityImpl(
-                        cap.getRevision(),
-                        cap.getNamespace(),
-                        cap.getDirectives(),
-                        aliasAttrs));
-                    // Continue with the next capability.
-                    break;
-                }
-            }
-        }
-
-        return aliasCaps;
-    }
-
     public BundleRevisionImpl getRevision()
     {
         return m_systemBundleRevision;
-    }
-
-    public Object getSecurityContext()
-    {
-        return m_securityContext;
-    }
-
-    public synchronized void setSecurityContext(Object securityContext)
-    {
-        m_securityContext = securityContext;
     }
 
     /**
@@ -398,8 +335,7 @@ class ExtensionManager implements Content
      *          AdminPermission.EXTENSIONLIFECYCLE and security is enabled.
      * @throws Exception in case something goes wrong.
      */
-    synchronized void addExtensionBundle(Felix felix, BundleImpl bundle)
-        throws SecurityException, BundleException, Exception
+    synchronized void addExtensionBundle(Felix felix, BundleImpl bundle) throws Exception
     {
         Object sm = System.getSecurityManager();
         if (sm != null)
@@ -419,29 +355,20 @@ class ExtensionManager implements Content
 
         final ClassPathExtenderFactory.ClassPathExtender extender;
 
-        if (m_extenderBoot != null && Constants.EXTENSION_BOOTCLASSPATH.equals(directive))
-        {
-            extender = m_extenderBoot;
-        }
-        // We only support classpath extensions (not bootclasspath).
-        else if (!Constants.EXTENSION_FRAMEWORK.equals(directive))
+        if (!Constants.EXTENSION_FRAMEWORK.equals(directive))
         {
            throw new BundleException("Unsupported Extension Bundle type: " +
-                    directive, new UnsupportedOperationException(
-                    "Unsupported Extension Bundle type!"));
+                directive, new UnsupportedOperationException(
+                "Unsupported Extension Bundle type!"));
         }
         else if (m_extenderFramework == null)
         {
             // We don't support extensions
             m_logger.log(bundle, Logger.LOG_WARNING,
-                    "Unable to add extension bundle - Maybe ClassLoader is not supported (on java9, try --add-opens=java.base/jdk.internal.loader=ALL-UNNAMED)?");
+                "Unable to add extension bundle - Maybe ClassLoader is not supported (on java9, try --add-opens=java.base/jdk.internal.loader=ALL-UNNAMED)?");
 
             throw new UnsupportedOperationException(
-                    "Unable to add extension bundle.");
-        }
-        else
-        {
-            extender = m_extenderFramework;
+                "Unable to add extension bundle.");
         }
 
         Content content = bundle.adapt(BundleRevisionImpl.class).getContent();
@@ -467,73 +394,153 @@ class ExtensionManager implements Content
             throw new UnsupportedOperationException(
                     "Unable to add extension bundle.");
         }
+
+        BundleRevisionImpl bri = bundle.adapt(BundleRevisionImpl.class);
+
+        bri.resolve(null);
+
+        m_unresolvedExtensions.add(bri);
+    }
+
+    public void removeExtensionBundles(Felix felix)
+    {
+        m_resolvedExtensions.clear();
+        m_unresolvedExtensions.clear();
+        m_headerMap.clear();
+        m_headerMap.putAll(m_originalHeaderMap);
         try
         {
-            // Merge the exported packages with the exported packages of the systembundle.
-            List<BundleCapability> exports = null;
-            if (Constants.EXTENSION_FRAMEWORK.equals(directive))
-            {
-                try
-                {
-                    exports = ManifestParser.parseExportHeader(
-                            m_logger, m_systemBundleRevision,
-                            (String) bundle.adapt(BundleRevisionImpl.class).getHeaders().get(Constants.EXPORT_PACKAGE),
-                            m_systemBundleRevision.getSymbolicName(), m_systemBundleRevision.getVersion());
-                    exports = aliasSymbolicName(exports);
-                }
-                catch (Exception ex)
-                {
-                    m_logger.log(
-                            bundle,
-                            Logger.LOG_ERROR,
-                            "Error parsing extension bundle export statement: "
-                                    + bundle.adapt(BundleRevisionImpl.class).getHeaders().get(Constants.EXPORT_PACKAGE), ex);
-                    return;
-                }
-            }
-            AccessController.doPrivileged(new PrivilegedExceptionAction<Void>()
-            {
-                @Override
-                public Void run() throws Exception
-                {
-                    extender.add(file);
-                    return null;
-                }
-            });
-            if (exports != null)
-            {
-                appendCapabilities(exports);
-            }
+            ManifestParser mp = new ManifestParser(
+                    m_logger, m_configMap, m_systemBundleRevision, m_headerMap);
+            List<BundleCapability> caps = ManifestParser.aliasSymbolicName(mp.getCapabilities(), m_systemBundleRevision);
+            caps.add(buildNativeCapabilites());
+            appendCapabilities(caps);
         }
         catch (Exception ex)
         {
-            throw ex;
+            m_capabilities = Collections.EMPTY_LIST;
+            m_logger.log(
+                    Logger.LOG_ERROR,
+                    "Error parsing system bundle export statement", ex);
+        }
+    }
+
+    public List<Bundle> resolveExtensionBundles(Felix felix)
+    {
+        if (m_unresolvedExtensions.isEmpty())
+        {
+            return Collections.emptyList();
         }
 
-        BundleRevisionImpl bri = bundle.adapt(BundleRevisionImpl.class);
-        List<BundleRequirement> reqs = bri.getDeclaredRequirements(BundleRevision.HOST_NAMESPACE);
-        List<BundleCapability> caps = getCapabilities(BundleRevision.HOST_NAMESPACE);
-        BundleWire bw = new BundleWireImpl(bri, reqs.get(0), m_systemBundleRevision, caps.get(0));
-        bri.resolve(
-            new BundleWiringImpl(
-                m_logger,
-                m_configMap,
-                null,
-                bri,
-                null,
-                Collections.singletonList(bw),
-                Collections.EMPTY_MAP,
-                Collections.EMPTY_MAP));
-        felix.getDependencies().addDependent(bw);
-        felix.setBundleStateAndNotify(bundle, Bundle.RESOLVED);
+        // Collect all resolved extensions and the highest version of unresolved that are not already resolved bsn
+        List<BundleRevisionImpl> extensions = new ArrayList<BundleRevisionImpl>(m_resolvedExtensions);
+
+        outer : for (BundleRevisionImpl revision : m_unresolvedExtensions)
+        {
+            if (revision.getWiring() == null) {
+                for (BundleRevisionImpl existing : extensions)
+                {
+                    if (existing.getSymbolicName().equals(revision.getSymbolicName()))
+                    {
+                        continue outer;
+                    }
+                }
+                for (BundleRevisionImpl other : m_unresolvedExtensions)
+                {
+                    if ((revision != other) && (revision.getSymbolicName().equals(other.getSymbolicName())) &&
+                        revision.getVersion().compareTo(other.getVersion()) < 0)
+                    {
+                        continue outer;
+                    }
+                }
+
+                extensions.add(revision);
+            }
+        }
+
+        Map<BundleRevisionImpl, List<BundleWire>> wirings = findResolvableExtensions(extensions);
+
+        List<Bundle> result = new ArrayList<Bundle>();
+
+        for (Map.Entry<BundleRevisionImpl, List<BundleWire>> entry : wirings.entrySet())
+        {
+            BundleRevisionImpl revision = entry.getKey();
+
+            m_unresolvedExtensions.remove(revision);
+            m_resolvedExtensions.add(revision);
+
+            BundleWire wire = new BundleWireImpl(revision,
+                revision.getDeclaredRequirements(BundleRevision.HOST_NAMESPACE).get(0),
+                m_systemBundleRevision, getCapabilities(BundleRevision.HOST_NAMESPACE).get(0));
+
+            try
+            {
+                revision.resolve(new BundleWiringImpl(m_logger, m_configMap, null, revision, null,
+                    Collections.singletonList(wire), Collections.EMPTY_MAP, Collections.EMPTY_MAP));
+            }
+            catch (Exception ex)
+            {
+                m_logger.log(revision.getBundle(), Logger.LOG_ERROR,
+                        "Error resolving extension bundle : " + revision.getBundle(), ex);
+            }
+
+            felix.getDependencies().addDependent(wire);
+
+            appendCapabilities(entry.getKey().getDeclaredExtensionCapabilities(null));
+            for (BundleWire w : entry.getValue())
+            {
+                if (!w.getRequirement().getNamespace().equals(BundleRevision.HOST_NAMESPACE) &&
+                    !w.getRequirement().getNamespace().equals(BundleRevision.PACKAGE_NAMESPACE))
+                {
+                    ((BundleWiringImpl) w.getRequirer().getWiring()).addDynamicWire(w);
+                    felix.getDependencies().addDependent(w);
+                }
+            }
+
+            final File f;
+            Content revisionContent = revision.getContent();
+            if (revisionContent instanceof JarContent)
+            {
+                f = ((JarContent) revisionContent).getFile();
+            }
+            else
+            {
+                f = ((DirectoryContent) revisionContent).getFile();
+            }
+            try
+            {
+                AccessController.doPrivileged(new PrivilegedExceptionAction<Void>()
+                {
+                    @Override
+                    public Void run() throws Exception {
+                        m_extenderFramework.add(f);
+                        return null;
+                    }
+                });
+            }
+            catch (Exception ex)
+            {
+                m_logger.log(revision.getBundle(), Logger.LOG_ERROR,
+                    "Error adding extension bundle to framework classloader: " + revision.getBundle(), ex);
+            }
+
+            felix.setBundleStateAndNotify(revision.getBundle(), Bundle.RESOLVED);
+            result.add(revision.getBundle());
+        }
+
+        if (!wirings.isEmpty())
+        {
+            felix.getResolver().addRevision(getRevision());
+        }
+
+        return result;
     }
 
     /**
-     * This is a Felix specific extension mechanism that allows extension bundles
-     * to have activators and be started via this method.
+     * Start extension bundles that hasve an activator
      *
      * @param felix the framework instance the extension bundle is installed in.
-     * @param bundle the extension bundle to start if it has a Felix specific activator.
+     * @param bundle the extension bundle to start if it has a an extension bundle activator.
      */
     void startExtensionBundle(Felix felix, BundleImpl bundle)
     {
@@ -553,7 +560,7 @@ class ExtensionManager implements Content
             {
 // TODO: SECURITY - Should this consider security?
                 BundleActivator activator = (BundleActivator)
-                    felix.getClass().getClassLoader().loadClass(
+                    Felix.m_secureAction.getClassLoader(felix.getClass()).loadClass(
                         activatorClass.trim()).newInstance();
 
                 BundleContext context = felix._getBundleContext();
@@ -643,6 +650,85 @@ class ExtensionManager implements Content
         m_extensionTuples.clear();
     }
 
+    private Map<BundleRevisionImpl, List<BundleWire>> findResolvableExtensions(List<BundleRevisionImpl> extensions)
+    {
+        // The idea is to loop through the extensions and try to resolve all unresolved extension. If we can't resolve
+        // a given extension, we will call the method again with the extension in question removed.
+        Map<BundleRevisionImpl, List<BundleWire>> wires = new LinkedHashMap<BundleRevisionImpl, List<BundleWire>>();
+
+        for (BundleRevisionImpl bri : extensions)
+        {
+            // Ignore resolved extensions
+            if (bri.getWiring() == null)
+            {
+                List<BundleWire> wi = new ArrayList<BundleWire>();
+                boolean resolved = true;
+                outer: for (BundleRequirement req : bri.getDeclaredRequirements(null))
+                {
+                    // first see if we can resolve from the system bundle
+                    for (BundleCapability cap : getCapabilities(req.getNamespace()))
+                    {
+                        if (req.matches(cap))
+                        {
+                            // we can, create the wire but in the case of an ee requirement, make it from the extension
+                            wi.add(new BundleWireImpl(
+                                    req.getNamespace().equals(ExecutionEnvironmentNamespace.EXECUTION_ENVIRONMENT_NAMESPACE) ?
+                                            bri : m_systemBundleRevision, req, m_systemBundleRevision, cap));
+
+                            continue outer;
+                        }
+                    }
+
+                    // now loop through the other extensions
+                    for (BundleRevisionImpl extension : extensions)
+                    {
+                        // check the caps that will be lifted to the system bundle
+                        for (BundleCapability cap : extension.getDeclaredExtensionCapabilities(req.getNamespace()))
+                        {
+                            if (req.matches(cap))
+                            {
+                                // we could use a yet unresolved extension (resolved one are implicitly checked by the
+                                // system bundle loop above as they would be attached.
+                                wi.add(new BundleWireImpl(m_systemBundleRevision, req, m_systemBundleRevision, cap));
+                                continue outer;
+                            }
+                        }
+
+                        // now check the caps that will not be lifted (i.e., identity)
+                        for (BundleCapability cap : extension.getDeclaredCapabilities(req.getNamespace()))
+                        {
+                            if (req.matches(cap))
+                            {
+                                // it was identity - hence, use the extension itself as provider
+                                wi.add(new BundleWireImpl(m_systemBundleRevision, req, extension, cap));
+                                continue outer;
+                            }
+                        }
+                    }
+                    // we couldn't find a provider - was it optional?
+                    if (!((BundleRequirementImpl)req).isOptional())
+                    {
+                        resolved = false;
+                        break;
+                    }
+                }
+                if(resolved)
+                {
+                    wires.put(bri, wi);
+                }
+                else
+                {
+                    // we failed to resolve this extension - try again without it. Yes, this throws away the work done
+                    // up to this point
+                    List<BundleRevisionImpl> next = new ArrayList<BundleRevisionImpl>(extensions);
+                    next.remove(bri);
+                    return next.isEmpty() ? Collections.EMPTY_MAP : findResolvableExtensions(next);
+                }
+            }
+        }
+        return wires;
+    }
+
     private List<BundleCapability> getCapabilities(String namespace)
     {
         List<BundleCapability> caps = m_capabilities;
@@ -663,8 +749,7 @@ class ExtensionManager implements Content
 
     private synchronized void appendCapabilities(List<BundleCapability> caps)
     {
-        List<BundleCapability> newCaps =
-            new ArrayList<BundleCapability>(m_capabilities.size() + caps.size());
+        List<BundleCapability> newCaps = new ArrayList<BundleCapability>(m_capabilities.size() + caps.size());
         newCaps.addAll(m_capabilities);
         newCaps.addAll(caps);
         m_capabilities = ImmutableList.newInstance(newCaps);

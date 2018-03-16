@@ -18,16 +18,6 @@
  */
 package org.apache.felix.framework.util.manifestparser;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
-import java.util.Set;
-
 import org.apache.felix.framework.BundleRevisionImpl;
 import org.apache.felix.framework.Logger;
 import org.apache.felix.framework.capabilityset.SimpleFilter;
@@ -46,6 +36,16 @@ import org.osgi.framework.wiring.BundleCapability;
 import org.osgi.framework.wiring.BundleRequirement;
 import org.osgi.framework.wiring.BundleRevision;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Set;
+
 public class ManifestParser
 {
     private static final String BUNDLE_LICENSE_HEADER = "Bundle-License"; // No constant defined by OSGi...
@@ -60,6 +60,7 @@ public class ManifestParser
     private volatile String m_bundleSymbolicName;
     private volatile Version m_bundleVersion;
     private volatile List<BundleCapability> m_capabilities;
+    private volatile List<BundleCapability> m_extensionCapabilities;
     private volatile List<BundleRequirement> m_requirements;
     private volatile List<NativeLibraryClause> m_libraryClauses;
     private volatile boolean m_libraryHeadersOptional = false;
@@ -157,6 +158,8 @@ public class ManifestParser
                 "R4 bundle manifests must include bundle symbolic name.");
         }
 
+        m_isExtension = checkExtensionBundle(headerMap);
+
         //
         // Parse Fragment-Host.
         //
@@ -222,7 +225,7 @@ public class ManifestParser
 
         List<ParsedHeaderClause> provideClauses =
             parseStandardHeader((String) headerMap.get(Constants.PROVIDE_CAPABILITY));
-        exportClauses = normalizeCapabilityClauses(
+        provideClauses = normalizeCapabilityClauses(
             logger, provideClauses, getManifestVersion());
         List<BundleCapability> provideCaps = convertProvideCapabilities(provideClauses, owner);
 
@@ -281,8 +284,19 @@ public class ManifestParser
         m_capabilities = new ArrayList<BundleCapability>(
              capList.size() + exportCaps.size() + provideCaps.size());
         m_capabilities.addAll(capList);
-        m_capabilities.addAll(exportCaps);
-        m_capabilities.addAll(provideCaps);
+
+        if (m_isExtension)
+        {
+            m_extensionCapabilities = new ArrayList<BundleCapability>();
+            m_extensionCapabilities.addAll(exportCaps);
+            m_extensionCapabilities.addAll(provideCaps);
+        }
+        else
+        {
+            m_extensionCapabilities = Collections.EMPTY_LIST;
+            m_capabilities.addAll(exportCaps);
+            m_capabilities.addAll(provideCaps);
+        }
 
         //
         // Parse activation policy.
@@ -291,8 +305,6 @@ public class ManifestParser
         // This sets m_activationPolicy, m_includedPolicyClasses, and
         // m_excludedPolicyClasses.
         parseActivationPolicy(headerMap);
-
-        m_isExtension = checkExtensionBundle(headerMap);
     }
 
     private static List<ParsedHeaderClause> normalizeImportClauses(
@@ -1038,11 +1050,6 @@ public class ManifestParser
         return m_requirements;
     }
 
-    public List<NativeLibraryClause> getLibraryClauses()
-    {
-        return m_libraryClauses;
-    }
-
     /**
      * <p>
      * This method returns the selected native library metadata from
@@ -1351,8 +1358,7 @@ public class ManifestParser
                 throw new BundleException(
                     "Extension bundle must have either 'extension:=framework' or 'extension:=bootclasspath'");
             }
-            if (headerMap.containsKey(Constants.IMPORT_PACKAGE) ||
-                headerMap.containsKey(Constants.REQUIRE_BUNDLE) ||
+            if (headerMap.containsKey(Constants.REQUIRE_BUNDLE) ||
                 headerMap.containsKey(Constants.BUNDLE_NATIVECODE) ||
                 headerMap.containsKey(Constants.DYNAMICIMPORT_PACKAGE) ||
                 headerMap.containsKey(Constants.BUNDLE_ACTIVATOR))
@@ -1555,24 +1561,6 @@ public class ManifestParser
         return reqs;
     }
 
-    public static List<BundleCapability> parseExportHeader(
-        Logger logger, BundleRevision owner, String header, String bsn, Version bv)
-    {
-
-        List<BundleCapability> caps = null;
-        try
-        {
-            List<ParsedHeaderClause> exportClauses = parseStandardHeader(header);
-            exportClauses = normalizeExportClauses(logger, exportClauses, "2", bsn, bv);
-            caps = convertExports(exportClauses, owner);
-        }
-        catch (BundleException ex)
-        {
-            caps = null;
-        }
-        return caps;
-    }
-
     private static List<BundleRequirement> parseBreeHeader(String header, BundleRevision owner)
     {
         List<String> filters = new ArrayList<String>();
@@ -1686,7 +1674,8 @@ public class ManifestParser
         }
     }
 
-    private static String getBreeVersionClause(Version ver) {
+    private static String getBreeVersionClause(Version ver)
+    {
         if (ver == null)
             return null;
 
@@ -2149,5 +2138,72 @@ public class ManifestParser
         }
 
         return libList;
+    }
+
+    public static List<BundleCapability> aliasSymbolicName(List<BundleCapability> caps, BundleRevision owner)
+    {
+        if (caps == null)
+        {
+            return new ArrayList<BundleCapability>(0);
+        }
+
+        List<BundleCapability> aliasCaps = new ArrayList<BundleCapability>(caps);
+
+        String[] aliases = {
+                FelixConstants.SYSTEM_BUNDLE_SYMBOLICNAME,
+                Constants.SYSTEM_BUNDLE_SYMBOLICNAME };
+
+        for (int capIdx = 0; capIdx < aliasCaps.size(); capIdx++)
+        {
+            BundleCapability cap = aliasCaps.get(capIdx);
+
+            // Need to alias bundle and host capabilities.
+            if (cap.getNamespace().equals(BundleRevision.BUNDLE_NAMESPACE)
+                    || cap.getNamespace().equals(BundleRevision.HOST_NAMESPACE))
+            {
+                // Make a copy of the attribute array.
+                Map<String, Object> aliasAttrs =
+                        new HashMap<String, Object>(cap.getAttributes());
+                // Add the aliased value.
+                aliasAttrs.put(cap.getNamespace(), aliases);
+                // Create the aliased capability to replace the old capability.
+                cap = new BundleCapabilityImpl(
+                        owner,
+                        cap.getNamespace(),
+                        cap.getDirectives(),
+                        aliasAttrs);
+                aliasCaps.set(capIdx, cap);
+            }
+
+            // Further, search attributes for bundle symbolic name and alias it too.
+            for (Entry<String, Object> entry : cap.getAttributes().entrySet())
+            {
+                // If there is a bundle symbolic name attribute, add the
+                // standard alias as a value.
+                if (entry.getKey().equalsIgnoreCase(Constants.BUNDLE_SYMBOLICNAME_ATTRIBUTE))
+                {
+                    // Make a copy of the attribute array.
+                    Map<String, Object> aliasAttrs =
+                            new HashMap<String, Object>(cap.getAttributes());
+                    // Add the aliased value.
+                    aliasAttrs.put(Constants.BUNDLE_SYMBOLICNAME_ATTRIBUTE, aliases);
+                    // Create the aliased capability to replace the old capability.
+                    aliasCaps.set(capIdx, new BundleCapabilityImpl(
+                            owner,
+                            cap.getNamespace(),
+                            cap.getDirectives(),
+                            aliasAttrs));
+                    // Continue with the next capability.
+                    break;
+                }
+            }
+        }
+
+        return aliasCaps;
+    }
+
+    public List<BundleCapability> getExtensionCapabilites()
+    {
+        return m_extensionCapabilities;
     }
 }

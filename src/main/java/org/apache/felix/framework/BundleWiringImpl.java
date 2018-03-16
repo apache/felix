@@ -174,13 +174,12 @@ public class BundleWiringImpl implements BundleWiring
     private volatile ConcurrentHashMap<String, ClassLoader> m_accessorLookupCache;
 
     BundleWiringImpl(
-            Logger logger, Map configMap, StatefulResolver resolver,
-            BundleRevisionImpl revision, List<BundleRevision> fragments,
-            List<BundleWire> wires,
-            Map<String, BundleRevision> importedPkgs,
-            Map<String, List<BundleRevision>> requiredPkgs)
-                    throws Exception
-                    {
+        Logger logger, Map configMap, StatefulResolver resolver,
+        BundleRevisionImpl revision, List<BundleRevision> fragments,
+        List<BundleWire> wires,
+        Map<String, BundleRevision> importedPkgs,
+        Map<String, List<BundleRevision>> requiredPkgs) throws Exception
+    {
         m_logger = logger;
         m_configMap = configMap;
         m_resolver = resolver;
@@ -423,52 +422,50 @@ public class BundleWiringImpl implements BundleWiring
         List<NativeLibrary> libList = (m_revision.getDeclaredNativeLibraries() == null)
                 ? new ArrayList<NativeLibrary>()
                         : new ArrayList<NativeLibrary>(m_revision.getDeclaredNativeLibraries());
-                for (int fragIdx = 0;
-                        (m_fragments != null) && (fragIdx < m_fragments.size());
-                        fragIdx++)
+        for (int fragIdx = 0;
+                (m_fragments != null) && (fragIdx < m_fragments.size());
+                fragIdx++)
+        {
+            List<NativeLibrary> libs =
+                    ((BundleRevisionImpl) m_fragments.get(fragIdx))
+                    .getDeclaredNativeLibraries();
+            for (int reqIdx = 0;
+                    (libs != null) && (reqIdx < libs.size());
+                    reqIdx++)
+            {
+                libList.add(libs.get(reqIdx));
+            }
+        }
+        // We need to return null here if we don't have any libraries, since a
+        // zero-length array is used to indicate that matching native libraries
+        // could not be found when resolving the bundle.
+        m_resolvedNativeLibs = (libList.isEmpty()) ? null : ImmutableList.newInstance(libList);
+
+        ClassLoader bootLoader = m_defBootClassLoader;
+        if (revision.getBundle().getBundleId() != 0)
+        {
+            Object map = m_configMap.get(FelixConstants.BOOT_CLASSLOADERS_PROP);
+            if (map instanceof Map)
+            {
+                Object l = ((Map) map).get(m_revision.getBundle());
+                if (l instanceof ClassLoader)
                 {
-                    List<NativeLibrary> libs =
-                            ((BundleRevisionImpl) m_fragments.get(fragIdx))
-                            .getDeclaredNativeLibraries();
-                    for (int reqIdx = 0;
-                            (libs != null) && (reqIdx < libs.size());
-                            reqIdx++)
-                    {
-                        libList.add(libs.get(reqIdx));
-                    }
+                    bootLoader = (ClassLoader) l;
                 }
-                // We need to return null here if we don't have any libraries, since a
-                // zero-length array is used to indicate that matching native libraries
-                // could not be found when resolving the bundle.
-                m_resolvedNativeLibs = (libList.isEmpty())
-                        ? null
-                                : ImmutableList.newInstance(libList);
+            }
+        }
+        m_bootClassLoader = bootLoader;
 
-                ClassLoader bootLoader = m_defBootClassLoader;
-                if (revision.getBundle().getBundleId() != 0)
-                {
-                    Object map = m_configMap.get(FelixConstants.BOOT_CLASSLOADERS_PROP);
-                    if (map instanceof Map)
-                    {
-                        Object l = ((Map) map).get(m_revision.getBundle());
-                        if (l instanceof ClassLoader)
-                        {
-                            bootLoader = (ClassLoader) l;
-                        }
-                    }
-                }
-                m_bootClassLoader = bootLoader;
+        m_implicitBootDelegation =
+            (m_configMap.get(FelixConstants.IMPLICIT_BOOT_DELEGATION_PROP) == null)
+            || Boolean.valueOf(
+                    (String) m_configMap.get(
+                            FelixConstants.IMPLICIT_BOOT_DELEGATION_PROP)).booleanValue();
 
-                m_implicitBootDelegation =
-                        (m_configMap.get(FelixConstants.IMPLICIT_BOOT_DELEGATION_PROP) == null)
-                        || Boolean.valueOf(
-                                (String) m_configMap.get(
-                                        FelixConstants.IMPLICIT_BOOT_DELEGATION_PROP)).booleanValue();
-
-                m_useLocalURLs =
-                        (m_configMap.get(FelixConstants.USE_LOCALURLS_PROP) == null)
-                        ? false : true;
-                    }
+        m_useLocalURLs =
+                (m_configMap.get(FelixConstants.USE_LOCALURLS_PROP) == null)
+                ? false : true;
+    }
 
     private static List<List<String>> parsePkgFilters(BundleCapability cap, String filtername)
     {
@@ -672,18 +669,22 @@ public class BundleWiringImpl implements BundleWiring
         // Make new wires list.
         List<BundleWire> wires = new ArrayList<BundleWire>(m_wires);
         wires.add(wire);
-        // Make new imported package map.
-        Map<String, BundleRevision> importedPkgs =
-                new HashMap<String, BundleRevision>(m_importedPkgs);
-        importedPkgs.put(
-                (String) wire.getCapability().getAttributes().get(BundleRevision.PACKAGE_NAMESPACE),
-                wire.getProviderWiring().getRevision());
+        if (wire.getCapability().getAttributes().get(BundleRevision.PACKAGE_NAMESPACE) != null)
+        {
+            // Make new imported package map.
+            Map<String, BundleRevision> importedPkgs =
+                    new HashMap<String, BundleRevision>(m_importedPkgs);
+            importedPkgs.put(
+                    (String) wire.getCapability().getAttributes().get(BundleRevision.PACKAGE_NAMESPACE),
+                    wire.getProviderWiring().getRevision());
+
+            m_importedPkgs = importedPkgs;
+        }
         // Update associated member values.
         // Technically, there is a window here where readers won't see
         // both values updates at the same time, but it seems unlikely
         // to cause any issues.
         m_wires = ImmutableList.newInstance(wires);
-        m_importedPkgs = importedPkgs;
     }
 
     @Override

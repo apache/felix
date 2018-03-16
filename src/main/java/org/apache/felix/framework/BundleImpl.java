@@ -1228,14 +1228,11 @@ class BundleImpl implements Bundle, BundleRevisions
 
     synchronized boolean rollbackRevise() throws Exception
     {
-        boolean isExtension = isExtension();
         BundleRevision br = m_revisions.remove(0);
-        if (!isExtension)
-        {
-            // Since revising a bundle adds a revision to the global
-            // state, we must remove it from the global state on rollback.
-            getFramework().getResolver().removeRevision(br);
-        }
+        // Since revising a bundle adds a revision to the global
+        // state, we must remove it from the global state on rollback.
+        getFramework().getResolver().removeRevision(br);
+
         return m_archive.rollbackRevise();
     }
 
@@ -1257,14 +1254,9 @@ class BundleImpl implements Bundle, BundleRevisions
             throw ex;
         }
 
-        // TODO: REFACTOR - consider nulling capabilities for extension bundles
-        // so we don't need this check anymore.
-        if (!isExtension())
-        {
-            // Now that the revision is added to the bundle, we can update
-            // the resolver's state to be aware of any new capabilities.
-            getFramework().getResolver().addRevision(revision);
-        }
+        /// Now that the revision is added to the bundle, we can update
+        // the resolver's state to be aware of any new capabilities.
+        getFramework().getResolver().addRevision(revision);
     }
 
     private BundleRevisionImpl createRevision(boolean isUpdate) throws Exception
