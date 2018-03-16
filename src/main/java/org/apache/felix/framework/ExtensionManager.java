@@ -175,6 +175,7 @@ class ExtensionManager implements Content
 
     private final List<BundleRevisionImpl> m_resolvedExtensions = new CopyOnWriteArrayList<BundleRevisionImpl>();
     private final List<BundleRevisionImpl> m_unresolvedExtensions = new CopyOnWriteArrayList<BundleRevisionImpl>();
+    private final List<BundleRevisionImpl> m_failedExtensions = new CopyOnWriteArrayList<BundleRevisionImpl>();
 
     private static class ExtensionTuple
     {
@@ -399,6 +400,9 @@ class ExtensionManager implements Content
 
         bri.resolve(null);
 
+        // we have to try again for all previously failed extensions because maybe they can now resolve.
+        m_unresolvedExtensions.addAll(m_failedExtensions);
+        m_failedExtensions.clear();
         m_unresolvedExtensions.add(bri);
     }
 
@@ -406,6 +410,7 @@ class ExtensionManager implements Content
     {
         m_resolvedExtensions.clear();
         m_unresolvedExtensions.clear();
+        m_failedExtensions.clear();
         m_headerMap.clear();
         m_headerMap.putAll(m_originalHeaderMap);
         try
@@ -432,33 +437,40 @@ class ExtensionManager implements Content
             return Collections.emptyList();
         }
 
-        // Collect all resolved extensions and the highest version of unresolved that are not already resolved bsn
-        List<BundleRevisionImpl> extensions = new ArrayList<BundleRevisionImpl>(m_resolvedExtensions);
+        // Collect the highest version of unresolved that are not already resolved by bsn
+        List<BundleRevisionImpl> extensions = new ArrayList<BundleRevisionImpl>();
+        // Collect the unresolved that where filtered out as alternatives in case the highest version doesn't resolve
+        List<BundleRevisionImpl> alt = new ArrayList<BundleRevisionImpl>();
 
         outer : for (BundleRevisionImpl revision : m_unresolvedExtensions)
         {
-            if (revision.getWiring() == null) {
-                for (BundleRevisionImpl existing : extensions)
+            // Already resolved by bsn?
+            for (BundleRevisionImpl existing : m_resolvedExtensions)
+            {
+                if (existing.getSymbolicName().equals(revision.getSymbolicName()))
                 {
-                    if (existing.getSymbolicName().equals(revision.getSymbolicName()))
-                    {
-                        continue outer;
-                    }
+                    // Then ignore it
+                    continue outer;
                 }
-                for (BundleRevisionImpl other : m_unresolvedExtensions)
-                {
-                    if ((revision != other) && (revision.getSymbolicName().equals(other.getSymbolicName())) &&
-                        revision.getVersion().compareTo(other.getVersion()) < 0)
-                    {
-                        continue outer;
-                    }
-                }
-
-                extensions.add(revision);
             }
+            // Otherwise, does a higher version exist by bsn?
+            for (BundleRevisionImpl other : m_unresolvedExtensions)
+            {
+                if ((revision != other) && (revision.getSymbolicName().equals(other.getSymbolicName())) &&
+                    revision.getVersion().compareTo(other.getVersion()) < 0)
+                {
+                    // Add this one to alternatives and filter it
+                    alt.add(revision);
+                    continue outer;
+                }
+            }
+
+            // no higher version and not resolved yet by bsn - try to resolve it
+            extensions.add(revision);
         }
 
-        Map<BundleRevisionImpl, List<BundleWire>> wirings = findResolvableExtensions(extensions);
+        // This will return all resolvable revisions with the wires they need
+        Map<BundleRevisionImpl, List<BundleWire>> wirings = findResolvableExtensions(extensions, alt);
 
         List<Bundle> result = new ArrayList<Bundle>();
 
@@ -466,6 +478,7 @@ class ExtensionManager implements Content
         {
             BundleRevisionImpl revision = entry.getKey();
 
+            // move this revision from unresolved to resolved
             m_unresolvedExtensions.remove(revision);
             m_resolvedExtensions.add(revision);
 
@@ -527,6 +540,10 @@ class ExtensionManager implements Content
             felix.setBundleStateAndNotify(revision.getBundle(), Bundle.RESOLVED);
             result.add(revision.getBundle());
         }
+
+        // at this point, all revisions left in unresolved are not resolvable
+        m_failedExtensions.addAll(m_unresolvedExtensions);
+        m_unresolvedExtensions.clear();
 
         if (!wirings.isEmpty())
         {
@@ -650,80 +667,115 @@ class ExtensionManager implements Content
         m_extensionTuples.clear();
     }
 
-    private Map<BundleRevisionImpl, List<BundleWire>> findResolvableExtensions(List<BundleRevisionImpl> extensions)
+    private Map<BundleRevisionImpl, List<BundleWire>> findResolvableExtensions(List<BundleRevisionImpl> extensions, List<BundleRevisionImpl> alt)
     {
         // The idea is to loop through the extensions and try to resolve all unresolved extension. If we can't resolve
-        // a given extension, we will call the method again with the extension in question removed.
+        // a given extension, we will call the method again with the extension in question removed or replaced if there
+        // is a replacement for it in alt.
+        // This resolve doesn't take into account that maybe a revision could be resolved with a revision from alt but
+        // not with the current extensions. In that case, it will be removed (assuming the current extension can be resolved)
+        // in other words, it will prefer to resolve the highest version of each extension over install order
         Map<BundleRevisionImpl, List<BundleWire>> wires = new LinkedHashMap<BundleRevisionImpl, List<BundleWire>>();
 
         for (BundleRevisionImpl bri : extensions)
         {
-            // Ignore resolved extensions
-            if (bri.getWiring() == null)
+            List<BundleWire> wi = new ArrayList<BundleWire>();
+            boolean resolved = true;
+            outer: for (BundleRequirement req : bri.getDeclaredRequirements(null))
             {
-                List<BundleWire> wi = new ArrayList<BundleWire>();
-                boolean resolved = true;
-                outer: for (BundleRequirement req : bri.getDeclaredRequirements(null))
+                // first see if we can resolve from the system bundle
+                for (BundleCapability cap : getCapabilities(req.getNamespace()))
                 {
-                    // first see if we can resolve from the system bundle
-                    for (BundleCapability cap : getCapabilities(req.getNamespace()))
+                    if (req.matches(cap))
+                    {
+                        // we can, create the wire but in the case of an ee requirement, make it from the extension
+                        wi.add(new BundleWireImpl(
+                                req.getNamespace().equals(ExecutionEnvironmentNamespace.EXECUTION_ENVIRONMENT_NAMESPACE) ?
+                                        bri : m_systemBundleRevision, req, m_systemBundleRevision, cap));
+
+                        continue outer;
+                    }
+                }
+
+                // now loop through the resolved extensions
+                for (BundleRevisionImpl extension : m_resolvedExtensions)
+                {
+                    // and check the caps that will not be lifted (i.e., identity)
+                    for (BundleCapability cap : extension.getDeclaredCapabilities(req.getNamespace()))
                     {
                         if (req.matches(cap))
                         {
-                            // we can, create the wire but in the case of an ee requirement, make it from the extension
-                            wi.add(new BundleWireImpl(
-                                    req.getNamespace().equals(ExecutionEnvironmentNamespace.EXECUTION_ENVIRONMENT_NAMESPACE) ?
-                                            bri : m_systemBundleRevision, req, m_systemBundleRevision, cap));
-
+                            // it was identity - hence, use the extension itself as provider
+                            wi.add(new BundleWireImpl(m_systemBundleRevision, req, extension, cap));
                             continue outer;
                         }
                     }
-
-                    // now loop through the other extensions
-                    for (BundleRevisionImpl extension : extensions)
+                }
+                // now loop through the other extensions
+                for (BundleRevisionImpl extension : extensions)
+                {
+                    // check the caps that will be lifted to the system bundle
+                    for (BundleCapability cap : extension.getDeclaredExtensionCapabilities(req.getNamespace()))
                     {
-                        // check the caps that will be lifted to the system bundle
-                        for (BundleCapability cap : extension.getDeclaredExtensionCapabilities(req.getNamespace()))
+                        if (req.matches(cap))
                         {
-                            if (req.matches(cap))
-                            {
-                                // we could use a yet unresolved extension (resolved one are implicitly checked by the
-                                // system bundle loop above as they would be attached.
-                                wi.add(new BundleWireImpl(m_systemBundleRevision, req, m_systemBundleRevision, cap));
-                                continue outer;
-                            }
-                        }
-
-                        // now check the caps that will not be lifted (i.e., identity)
-                        for (BundleCapability cap : extension.getDeclaredCapabilities(req.getNamespace()))
-                        {
-                            if (req.matches(cap))
-                            {
-                                // it was identity - hence, use the extension itself as provider
-                                wi.add(new BundleWireImpl(m_systemBundleRevision, req, extension, cap));
-                                continue outer;
-                            }
+                            // we can use a yet unresolved extension (resolved one are implicitly checked by the
+                            // system bundle loop above as they would be attached.
+                            wi.add(new BundleWireImpl(m_systemBundleRevision, req, m_systemBundleRevision, cap));
+                            continue outer;
                         }
                     }
-                    // we couldn't find a provider - was it optional?
-                    if (!((BundleRequirementImpl)req).isOptional())
+                    // and check the caps that will not be lifted (i.e., identity)
+                    for (BundleCapability cap : extension.getDeclaredCapabilities(req.getNamespace()))
                     {
-                        resolved = false;
+                        if (req.matches(cap))
+                        {
+                            // it was identity - hence, use the extension itself as provider
+                            wi.add(new BundleWireImpl(m_systemBundleRevision, req, extension, cap));
+                            continue outer;
+                        }
+                    }
+                }
+                // we couldn't find a provider - was it optional?
+                if (!((BundleRequirementImpl)req).isOptional())
+                {
+                    resolved = false;
+                    break;
+                }
+            }
+            if(resolved)
+            {
+                wires.put(bri, wi);
+            }
+            else
+            {
+                // we failed to resolve this extension - try again without it. Yes, this throws away the work done
+                // up to this point
+                List<BundleRevisionImpl> next = new ArrayList<BundleRevisionImpl>(extensions);
+                List<BundleRevisionImpl> nextAlt = new ArrayList<BundleRevisionImpl>();
+
+                outer : for (BundleRevisionImpl replacement : alt)
+                {
+                    if (bri.getSymbolicName().equals(replacement.getSymbolicName()))
+                    {
+                        for (BundleRevisionImpl other : alt)
+                        {
+                            if ((replacement != other) && (replacement.getSymbolicName().equals(other.getSymbolicName())) &&
+                                    replacement.getVersion().compareTo(other.getVersion()) < 0)
+                            {
+                                nextAlt.add(replacement);
+                                continue outer;
+                            }
+                        }
+                        next.set(next.indexOf(bri), replacement);
                         break;
                     }
+                    nextAlt.add(replacement);
                 }
-                if(resolved)
-                {
-                    wires.put(bri, wi);
-                }
-                else
-                {
-                    // we failed to resolve this extension - try again without it. Yes, this throws away the work done
-                    // up to this point
-                    List<BundleRevisionImpl> next = new ArrayList<BundleRevisionImpl>(extensions);
-                    next.remove(bri);
-                    return next.isEmpty() ? Collections.EMPTY_MAP : findResolvableExtensions(next);
-                }
+                
+                next.remove(bri);
+
+                return next.isEmpty() ? Collections.EMPTY_MAP : findResolvableExtensions(next, nextAlt);
             }
         }
         return wires;
