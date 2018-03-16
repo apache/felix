@@ -821,6 +821,11 @@ public class Felix extends BundleImpl implements Framework
                     }
                 }
 
+                for (Bundle extension : m_extensionManager.resolveExtensionBundles(this))
+                {
+                    m_extensionManager.startExtensionBundle(this, (BundleImpl) extension);
+                }
+
                 // Now that we have loaded all cached bundles and have determined the
                 // max bundle ID of cached bundles, we need to try to load the next
                 // bundle ID from persistent storage. In case of failure, we should
@@ -1268,6 +1273,52 @@ public class Felix extends BundleImpl implements Framework
                     catch (BundleException ex)
                     {
                         m_logger.log(Logger.LOG_WARNING, "Exception restarting framework.", ex);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    m_logger.log(Logger.LOG_WARNING, "Cannot update an inactive framework.");
+                }
+            }
+        }).start();
+    }
+
+    private void stopRefresh() throws BundleException
+    {
+        Object sm = System.getSecurityManager();
+
+        if (sm != null)
+        {
+            ((SecurityManager) sm).checkPermission(new AdminPermission(this,
+                    AdminPermission.EXECUTE));
+        }
+
+
+        // Stop the framework on a separate thread.
+        new Thread(new Runnable() {
+            @Override
+            public void run()
+            {
+                try
+                {
+                    // First acquire the system bundle lock to verify the state.
+                    acquireBundleLock(Felix.this, Bundle.STARTING | Bundle.ACTIVE);
+                    // Set the reason for the shutdown.
+                    m_shutdownGate.setMessage(
+                            new FrameworkEvent(FrameworkEvent.STOPPED_SYSTEM_REFRESHED, Felix.this, null));
+                    // Record the state and stop the system bundle.
+                    int oldState = Felix.this.getState();
+                    try
+                    {
+                        stop();
+                    }
+                    catch (BundleException ex)
+                    {
+                        m_logger.log(Logger.LOG_WARNING, "Exception stopping framework.", ex);
+                    }
+                    finally
+                    {
+                        releaseBundleLock(Felix.this);
                     }
                 }
                 catch (Exception ex)
@@ -2494,10 +2545,6 @@ public class Felix extends BundleImpl implements Framework
                         if (!wasExtension && bundle.isExtension())
                         {
                             m_extensionManager.addExtensionBundle(this, bundle);
-// TODO: REFACTOR - Perhaps we could move this into extension manager.
-                            m_resolver.addRevision(m_extensionManager.getRevision());
-// TODO: REFACTOR - Not clear why this is here. We should look at all of these steps more closely.
-                            setBundleStateAndNotify(bundle, Bundle.RESOLVED);
                         }
                         else if (wasExtension)
                         {
@@ -2542,9 +2589,10 @@ public class Felix extends BundleImpl implements Framework
                 {
                     setBundleStateAndNotify(bundle, Bundle.INSTALLED);
                 }
-                else
+
+                for (Bundle extension : m_extensionManager.resolveExtensionBundles(this))
                 {
-                    m_extensionManager.startExtensionBundle(this, bundle);
+                    m_extensionManager.startExtensionBundle(this, (BundleImpl) extension);
                 }
 
                 fireBundleEvent(BundleEvent.UNRESOLVED, bundle);
@@ -3089,7 +3137,6 @@ public class Felix extends BundleImpl implements Framework
                 if (bundle.isExtension())
                 {
                     m_extensionManager.addExtensionBundle(this, bundle);
-                    m_resolver.addRevision(m_extensionManager.getRevision());
                 }
 
                 // Use a copy-on-write approach to add the bundle
@@ -3122,11 +3169,6 @@ public class Felix extends BundleImpl implements Framework
             {
                 throw new BundleException("Could not create bundle object.", ex);
             }
-        }
-
-        if (bundle.isExtension())
-        {
-            m_extensionManager.startExtensionBundle(this, bundle);
         }
 
         return bundle;
@@ -3215,7 +3257,6 @@ public class Felix extends BundleImpl implements Framework
                     else
                     {
                         m_extensionManager.addExtensionBundle(this, bundle);
-                        m_resolver.addRevision(m_extensionManager.getRevision());
                     }
                 }
                 catch (Throwable ex)
@@ -3278,9 +3319,9 @@ public class Felix extends BundleImpl implements Framework
                     releaseGlobalLock();
                 }
 
-                if (bundle.isExtension())
+                for (Bundle extension : m_extensionManager.resolveExtensionBundles(this))
                 {
-                    m_extensionManager.startExtensionBundle(this, bundle);
+                    m_extensionManager.startExtensionBundle(this, (BundleImpl) extension);
                 }
             }
         }
@@ -4381,6 +4422,7 @@ public class Felix extends BundleImpl implements Framework
         try
         {
             boolean restart = false;
+            boolean extensionBundle = false;
 
             Bundle systemBundle = this;
 
@@ -4391,9 +4433,14 @@ public class Felix extends BundleImpl implements Framework
             {
                 for (Bundle b : bundles)
                 {
-                    if ((systemBundle == b) || ((BundleImpl) b).isExtension())
+                    if (systemBundle == b)
                     {
                         restart = true;
+                    }
+                    else if (((BundleImpl) b).isExtension())
+                    {
+                        restart = true;
+                        extensionBundle = true;
                         break;
                     }
                 }
@@ -4450,13 +4497,25 @@ public class Felix extends BundleImpl implements Framework
                 }
                 else
                 {
-                    try
+                    if (!extensionBundle)
                     {
-                        update();
+                        try
+                        {
+                            update();
+                        }
+                        catch (BundleException ex) {
+                            m_logger.log(Logger.LOG_ERROR, "Framework restart error.", ex);
+                        }
                     }
-                    catch (BundleException ex)
+                    else
                     {
-                        m_logger.log(Logger.LOG_ERROR, "Framework restart error.", ex);
+                        try
+                        {
+                            stopRefresh();
+                        }
+                        catch (BundleException ex) {
+                            m_logger.log(Logger.LOG_ERROR, "Framework stop error.", ex);
+                        }
                     }
                 }
             }
@@ -5147,6 +5206,7 @@ public class Felix extends BundleImpl implements Framework
                 m_securityManager = null;
             }
 
+            m_extensionManager.removeExtensionBundles(Felix.this);
             m_dependencies.removeDependents(adapt(BundleRevision.class));
 
             // Dispose of the bundle cache.
