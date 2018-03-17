@@ -287,7 +287,7 @@ class ServiceRegistrationImpl implements ServiceRegistration
                     ungetFactoryUnchecked(relBundle, svcObj);
                 }
             }
-            catch (Exception ex)
+            catch (Throwable ex)
             {
                 m_registry.getLogger().log(
                     m_bundle,
