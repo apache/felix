@@ -69,7 +69,7 @@ import org.osgi.service.http.context.ServletContextHelper;
 @ExamReactorStrategy(PerMethod.class)
 public class SessionHandlingTest extends BaseIntegrationTest
 {
-    private List<ServiceRegistration<?>> registrations = new ArrayList<ServiceRegistration<?>>();
+    private List<ServiceRegistration<?>> registrations = new ArrayList<>();
 
     private CountDownLatch initLatch;
     private CountDownLatch destroyLatch;
@@ -82,7 +82,7 @@ public class SessionHandlingTest extends BaseIntegrationTest
 
     private void setupServlet(final String name, String[] path, int rank, final String context) throws Exception
     {
-        Dictionary<String, Object> servletProps = new Hashtable<String, Object>();
+        Dictionary<String, Object> servletProps = new Hashtable<>();
         servletProps.put(HTTP_WHITEBOARD_SERVLET_NAME, name);
         servletProps.put(HTTP_WHITEBOARD_SERVLET_PATTERN, path);
         servletProps.put(SERVICE_RANKING, rank);
@@ -125,7 +125,8 @@ public class SessionHandlingTest extends BaseIntegrationTest
                 {
                     pw.println(" \"session\" : true,");
                     pw.println(" \"sessionId\" : \"" + s.getId() + "\",");
-                    pw.println(" \"value\" : \"" + s.getAttribute("value") + "\"");
+                    pw.println(" \"value\" : \"" + s.getAttribute("value") + "\",");
+                    pw.println(" \"hashCode\" : \"" + s.hashCode() + "\"");
                 }
                 pw.println("}");
             }
@@ -214,6 +215,8 @@ public class SessionHandlingTest extends BaseIntegrationTest
         assertEquals("test1", json.getString("value"));
         final String sessionId1 = json.getString("sessionId");
         assertNotNull(sessionId1);
+        final String hashCode1 = json.getString("hashCode");
+        assertNotNull(hashCode1);
 
         // check session for servlet bar (= no session)
         json = getJSONResponse(httpclient, "/bar");
@@ -230,7 +233,9 @@ public class SessionHandlingTest extends BaseIntegrationTest
         assertEquals("test2", json.getString("value"));
         final String sessionId2 = json.getString("sessionId");
         assertNotNull(sessionId2);
-        assertFalse(sessionId1.equals(sessionId2));
+        final String hashCode2 = json.getString("hashCode");
+        assertNotNull(hashCode2);
+        assertFalse(hashCode2.equals(hashCode1));
 
         // and context foo is untouched
         json = getJSONResponse(httpclient, "/foo");
