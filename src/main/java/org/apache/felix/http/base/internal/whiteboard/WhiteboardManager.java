@@ -109,15 +109,15 @@ public final class WhiteboardManager
 
     private final HttpServiceRuntimeImpl serviceRuntime;
 
-    private final List<ServiceTracker<?, ?>> trackers = new ArrayList<ServiceTracker<?, ?>>();
+    private final List<ServiceTracker<?, ?>> trackers = new ArrayList<>();
 
     private final HttpServicePlugin plugin;
 
     /** A map containing all servlet context registrations. Mapped by context name */
-    private final Map<String, List<WhiteboardContextHandler>> contextMap = new HashMap<String, List<WhiteboardContextHandler>>();
+    private final Map<String, List<WhiteboardContextHandler>> contextMap = new HashMap<>();
 
     /** A map with all servlet/filter registrations, mapped by abstract info. */
-    private final Map<WhiteboardServiceInfo<?>, List<WhiteboardContextHandler>> servicesMap = new HashMap<WhiteboardServiceInfo<?>, List<WhiteboardContextHandler>>();
+    private final Map<WhiteboardServiceInfo<?>, List<WhiteboardContextHandler>> servicesMap = new HashMap<>();
 
     private volatile List<PreprocessorHandler> preprocessorHandlers = Collections.emptyList();
 
@@ -169,7 +169,7 @@ public final class WhiteboardManager
 
 
         // add context for http service
-        final List<WhiteboardContextHandler> list = new ArrayList<WhiteboardContextHandler>();
+        final List<WhiteboardContextHandler> list = new ArrayList<>();
         final ServletContextHelperInfo info = new ServletContextHelperInfo(Integer.MAX_VALUE,
                 HttpServiceFactory.HTTP_SERVICE_CONTEXT_SERVICE_ID,
                 HttpServiceFactory.HTTP_SERVICE_CONTEXT_NAME, "/", null);
@@ -178,7 +178,7 @@ public final class WhiteboardManager
         this.contextMap.put(HttpServiceFactory.HTTP_SERVICE_CONTEXT_NAME, list);
 
         // add default context
-        final Dictionary<String, Object> props = new Hashtable<String, Object>();
+        final Dictionary<String, Object> props = new Hashtable<>();
         props.put(HttpWhiteboardConstants.HTTP_WHITEBOARD_CONTEXT_NAME, HttpWhiteboardConstants.HTTP_WHITEBOARD_DEFAULT_CONTEXT_NAME);
         props.put(HttpWhiteboardConstants.HTTP_WHITEBOARD_CONTEXT_PATH, "/");
         props.put(Constants.SERVICE_RANKING, Integer.MIN_VALUE);
@@ -281,7 +281,7 @@ public final class WhiteboardManager
      * @param oldSessionId The old session id
      * @param contextIds The context ids using that session
      */
-    public void sessionIdChanged(@Nonnull final HttpSessionEvent event, String oldSessionId, final Set<Long> contextIds)
+    public void sessionIdChanged(@Nonnull final HttpSessionEvent event, @Nonnull final String oldSessionId, @Nonnull final Set<Long> contextIds)
     {
         for(final Long contextId : contextIds)
         {
@@ -306,7 +306,7 @@ public final class WhiteboardManager
             return false;
         }
 
-        final List<WhiteboardServiceInfo<?>> services = new ArrayList<WhiteboardServiceInfo<?>>();
+        final List<WhiteboardServiceInfo<?>> services = new ArrayList<>();
         for(final Map.Entry<WhiteboardServiceInfo<?>, List<WhiteboardContextHandler>> entry : this.servicesMap.entrySet())
         {
             final WhiteboardServiceInfo<?> info = entry.getKey();
@@ -354,7 +354,7 @@ public final class WhiteboardManager
     private void deactivate(final WhiteboardContextHandler handler)
     {
         // services except context listeners first
-        final List<WhiteboardServiceInfo<?>> listeners = new ArrayList<WhiteboardServiceInfo<?>>();
+        final List<WhiteboardServiceInfo<?>> listeners = new ArrayList<>();
         final Iterator<Map.Entry<WhiteboardServiceInfo<?>, List<WhiteboardContextHandler>>> i = this.servicesMap.entrySet().iterator();
         while ( i.hasNext() )
         {
@@ -411,7 +411,7 @@ public final class WhiteboardManager
                     List<WhiteboardContextHandler> handlerList = this.contextMap.get(info.getName());
                     if ( handlerList == null )
                     {
-                        handlerList = new ArrayList<WhiteboardContextHandler>();
+                        handlerList = new ArrayList<>();
                     }
                     final boolean activate = handlerList.isEmpty() || handlerList.get(0).compareTo(handler) > 0;
                     if ( activate )
@@ -527,7 +527,7 @@ public final class WhiteboardManager
      */
     private List<WhiteboardContextHandler> getMatchingContexts(final WhiteboardServiceInfo<?> info)
     {
-        final List<WhiteboardContextHandler> result = new ArrayList<WhiteboardContextHandler>();
+        final List<WhiteboardContextHandler> result = new ArrayList<>();
         for(final List<WhiteboardContextHandler> handlerList : this.contextMap.values())
         {
             final WhiteboardContextHandler h = handlerList.get(0);
@@ -561,7 +561,7 @@ public final class WhiteboardManager
                 }
                 else
                 {
-                    final Map<String, String> props = new HashMap<String, String>();
+                    final Map<String, String> props = new HashMap<>();
                     props.put(HttpWhiteboardConstants.HTTP_WHITEBOARD_CONTEXT_NAME, h.getContextInfo().getName());
                     props.put(HttpWhiteboardConstants.HTTP_WHITEBOARD_CONTEXT_PATH, h.getContextInfo().getPath());
                     props.put(HttpWhiteboardConstants.HTTP_SERVICE_CONTEXT_PROPERTY, h.getContextInfo().getName());
@@ -598,7 +598,7 @@ public final class WhiteboardManager
                     {
                         synchronized ( this.preprocessorHandlers )
                         {
-                            final List<PreprocessorHandler> newList = new ArrayList<PreprocessorHandler>(this.preprocessorHandlers);
+                            final List<PreprocessorHandler> newList = new ArrayList<>(this.preprocessorHandlers);
                             newList.add(handler);
                             Collections.sort(newList);
                             this.preprocessorHandlers = newList;
@@ -716,7 +716,7 @@ public final class WhiteboardManager
                 {
                     synchronized ( this.preprocessorHandlers )
                     {
-                        final List<PreprocessorHandler> newList = new ArrayList<PreprocessorHandler>(this.preprocessorHandlers);
+                        final List<PreprocessorHandler> newList = new ArrayList<>(this.preprocessorHandlers);
                         final Iterator<PreprocessorHandler> iter = newList.iterator();
                         while ( iter.hasNext() )
                         {
@@ -942,10 +942,10 @@ public final class WhiteboardManager
     {
         final FailedDTOHolder failedDTOHolder = new FailedDTOHolder();
 
-        final Collection<ServletContextDTO> contextDTOs = new ArrayList<ServletContextDTO>();
+        final Collection<ServletContextDTO> contextDTOs = new ArrayList<>();
 
         // get sort list of context handlers
-        final List<WhiteboardContextHandler> contextHandlerList = new ArrayList<WhiteboardContextHandler>();
+        final List<WhiteboardContextHandler> contextHandlerList = new ArrayList<>();
         synchronized ( this.contextMap )
         {
             for (final List<WhiteboardContextHandler> list : this.contextMap.values())
@@ -969,7 +969,7 @@ public final class WhiteboardManager
             }
         }
 
-        final List<PreprocessorDTO> preprocessorDTOs = new ArrayList<PreprocessorDTO>();
+        final List<PreprocessorDTO> preprocessorDTOs = new ArrayList<>();
         final List<PreprocessorHandler> localHandlers = this.preprocessorHandlers;
         for(final PreprocessorHandler handler : localHandlers)
         {
