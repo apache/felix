@@ -31,7 +31,6 @@ import java.net.URL;
 import java.util.Arrays;
 import java.util.Enumeration;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
@@ -84,6 +83,15 @@ public class BundleCacheTest extends TestCase
 
         createJar(archiveFile, new File(archiveFile, "inner/i+?äö \\§$%nner.jar"));
 
+        Manifest manifest = new Manifest();
+        manifest.getMainAttributes().putValue("foo", "bar");
+        manifest.getMainAttributes().putValue("Manifest-Version", "v1");
+
+        File mf = new File(archiveFile, "META-INF/MANIFEST.MF");
+        mf.getParentFile().mkdirs();
+        FileOutputStream output = new FileOutputStream(mf);
+        manifest.write(output);
+        output.close();
         jarFile = new File(filesDir, "bundle1.jar");
         createJar(archiveFile, jarFile);
     }
@@ -118,24 +126,46 @@ public class BundleCacheTest extends TestCase
 
         testRevision(archive);
 
+        String nativeLib = archive.getCurrentRevision().getContent().getEntryAsNativeLibrary("file1");
+
+        assertNotNull(nativeLib);
+        assertTrue(new File(nativeLib).isFile());
+
         archive.revise(location, file != null ? new FileInputStream(file) : null);
 
         assertEquals(Long.valueOf(1), archive.getCurrentRevisionNumber());
 
         testRevision(archive);
 
+        String nativeLib2 = archive.getCurrentRevision().getContent().getEntryAsNativeLibrary("file1");
+
+        assertNotNull(nativeLib2);
+        assertTrue(new File(nativeLib).isFile());
+        assertTrue(new File(nativeLib2).isFile());
+
         archive.purge();
 
         assertEquals(Long.valueOf(1), archive.getCurrentRevisionNumber());
 
         testRevision(archive);
+
+        String nativeLib3 = archive.getCurrentRevision().getContent().getEntryAsNativeLibrary("file1");
+
+        assertNotNull(nativeLib3);
+        assertNotSame(nativeLib, nativeLib2);
+        assertNotSame(nativeLib2, nativeLib3);
+        assertFalse(new File(nativeLib).isFile());
+        assertTrue(new File(nativeLib2).isFile());
+        assertTrue(new File(nativeLib3).isFile());
     }
 
     private void testRevision(BundleArchive archive) throws Exception
     {
         BundleArchiveRevision revision = archive.getCurrentRevision();
         assertNotNull(revision);
-        perRevision(revision.getContent(),  new TreeSet<String>(Arrays.asList("file1", "inner/", "inner/empty/", "inner/file1", "inner/i+?äö \\§$%nner.jar")));
+        assertNotNull(revision.getManifestHeader());
+        assertEquals("bar", revision.getManifestHeader().get("foo"));
+        perRevision(revision.getContent(),  new TreeSet<String>(Arrays.asList("META-INF/", "META-INF/MANIFEST.MF", "file1", "inner/", "inner/empty/", "inner/file1", "inner/i+?äö \\§$%nner.jar")));
         perRevision(revision.getContent().getEntryAsContent("inner"),  new TreeSet<String>(Arrays.asList("file1", "empty/", "i+?äö \\§$%nner.jar")));
         assertNull(revision.getContent().getEntryAsContent("inner/inner"));
         assertNotNull(revision.getContent().getEntryAsContent("inner/empty/"));
@@ -190,6 +220,11 @@ public class BundleCacheTest extends TestCase
         assertEquals("file1", new String(entry,  0 , j, "UTF-8"));
         assertNull(content.getEntryAsURL("foo"));
         assertNull(content.getEntryAsURL("foo/bar"));
+
+        assertNull(content.getEntryAsNativeLibrary("blub"));
+        String nativeLib = content.getEntryAsNativeLibrary("file1");
+        assertNotNull(nativeLib);
+        assertTrue(new File(nativeLib).isFile());
         content.close();
     }
 
@@ -254,17 +289,20 @@ public class BundleCacheTest extends TestCase
             {
                 for (File file : children)
                 {
-                    String next = path + file.getName();
-                    if (file.isDirectory())
+                    if (!file.getName().equals("MANIFEST.MF"))
                     {
-                        next += "/";
+                        String next = path + file.getName();
+                        if (file.isDirectory())
+                        {
+                            next += "/";
+                        }
+                        output.putNextEntry(new ZipEntry(next));
+                        if (file.isDirectory())
+                        {
+                            output.closeEntry();
+                        }
+                        writeRecursive(file, next, output);
                     }
-                    output.putNextEntry(new ZipEntry(next));
-                    if (file.isDirectory())
-                    {
-                        output.closeEntry();
-                    }
-                    writeRecursive(file, next, output);
                 }
             }
         }
