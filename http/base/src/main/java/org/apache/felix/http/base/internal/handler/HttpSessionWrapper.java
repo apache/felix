@@ -273,7 +273,7 @@ public class HttpSessionWrapper implements HttpSession
     public String getId()
     {
         this.checkInvalid();
-        return this.delegate.getId() + "-" + this.sessionId;
+        return this.delegate.getId();
     }
 
     @Override
@@ -471,7 +471,7 @@ public class HttpSessionWrapper implements HttpSession
     @Override
     public int hashCode()
     {
-        return this.getId().hashCode();
+        return this.getId().concat(this.sessionId).hashCode();
     }
 
     @Override
@@ -486,6 +486,6 @@ public class HttpSessionWrapper implements HttpSession
             return false;
         }
         final HttpSessionWrapper other = (HttpSessionWrapper) obj;
-        return other.getId().equals(this.getId());
+        return other.getId().concat(other.sessionId).equals(this.getId().concat(this.sessionId));
     }
 }

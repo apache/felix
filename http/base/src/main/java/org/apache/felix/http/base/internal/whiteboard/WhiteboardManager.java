@@ -264,7 +264,7 @@ public final class WhiteboardManager
      * @param oldSessionId The old session id
      * @param contextIds The context ids using that session
      */
-    public void sessionIdChanged(@Nonnull final HttpSessionEvent event, String oldSessionId, final Set<Long> contextIds)
+    public void sessionIdChanged(@Nonnull final HttpSessionEvent event, final String oldSessionId, final Set<Long> contextIds)
     {
         for(final Long contextId : contextIds)
         {

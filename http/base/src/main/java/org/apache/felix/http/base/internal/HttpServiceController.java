@@ -101,7 +101,7 @@ public final class HttpServiceController
         return new HttpSessionIdListener() {
 
             @Override
-            public void sessionIdChanged(final HttpSessionEvent event, String oldSessionId) {
+            public void sessionIdChanged(final HttpSessionEvent event, final String oldSessionId) {
                 whiteboardManager.sessionIdChanged(event, oldSessionId, HttpSessionWrapper.getSessionContextIds(event.getSession()));
             }
         };
