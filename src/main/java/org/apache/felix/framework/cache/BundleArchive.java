@@ -706,7 +706,9 @@ public class BundleArchive
 
         // Record whether the current revision has native libraries, which
         // we'll use later to determine if we need to rename its directory.
-        boolean hasNativeLibs = getCurrentRevision().getManifestHeader()
+        Map<String, Object> headers = getCurrentRevision().getManifestHeader();
+
+        boolean hasNativeLibs = headers != null && getCurrentRevision().getManifestHeader()
             .containsKey(Constants.BUNDLE_NATIVECODE);
 
         // Close all revisions and then delete all but the current revision.

@@ -143,7 +143,7 @@ public class BundleCache
         locking = (locking == null)
             ? Boolean.TRUE.toString()
             : locking.toString().toLowerCase();
-        if (((String) locking).equals(Boolean.TRUE.toString()))
+        if (locking.equals(Boolean.TRUE.toString()))
         {
             File lockFile = new File(cacheDir, CACHE_LOCK_NAME);
             FileChannel fc = null;

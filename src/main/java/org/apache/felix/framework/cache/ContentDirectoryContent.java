@@ -57,7 +57,8 @@ public class ContentDirectoryContent implements Content
 
     public Enumeration<String> getEntries()
     {
-        return new EntriesEnumeration(m_content.getEntries(), m_rootPath);
+        Enumeration<String> result = new EntriesEnumeration(m_content.getEntries(), m_rootPath);
+        return result.hasMoreElements() ? result : null;
     }
 
     public byte[] getEntryAsBytes(String name) throws IllegalStateException

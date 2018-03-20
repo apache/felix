@@ -29,8 +29,12 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Enumeration;
 import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Properties;
@@ -148,11 +152,18 @@ public class DirectoryContent implements Content
             name = name.substring(1);
         }
 
-        try
+        if (hasEntry(name))
         {
-            return BundleCache.getSecureAction().toURI(new File(m_dir, name)).toURL();
+            try
+            {
+                return BundleCache.getSecureAction().toURI(new File(m_dir, name)).toURL();
+            }
+            catch (MalformedURLException e)
+            {
+                return null;
+            }
         }
-        catch (MalformedURLException e)
+        else
         {
             return null;
         }
@@ -356,18 +367,21 @@ public class DirectoryContent implements Content
         {
             File[] children = BundleCache.getSecureAction().listDirectory(dir);
             File[] combined = children;
-            for (int i = 0; i < children.length; i++)
+            if (children != null)
             {
-                if (BundleCache.getSecureAction().isFileDirectory(children[i]))
+                for (int i = 0; i < children.length; i++)
                 {
-                    File[] grandchildren = listFilesRecursive(children[i]);
-                    if (grandchildren.length > 0)
+                    if (BundleCache.getSecureAction().isFileDirectory(children[i]))
                     {
-                        File[] tmp = new File[combined.length + grandchildren.length];
-                        System.arraycopy(combined, 0, tmp, 0, combined.length);
-                        System.arraycopy(
-                            grandchildren, 0, tmp, combined.length, grandchildren.length);
-                        combined = tmp;
+                        File[] grandchildren = listFilesRecursive(children[i]);
+                        if (grandchildren != null && grandchildren.length > 0)
+                        {
+                            File[] tmp = new File[combined.length + grandchildren.length];
+                            System.arraycopy(combined, 0, tmp, 0, combined.length);
+                            System.arraycopy(
+                                grandchildren, 0, tmp, combined.length, grandchildren.length);
+                            combined = tmp;
+                        }
                     }
                 }
             }

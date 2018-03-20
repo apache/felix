@@ -178,11 +178,18 @@ public class JarContent implements Content
 
     public URL getEntryAsURL(String name)
     {
-        try
+        if (hasEntry(name))
         {
-            return new URL("jar:" + m_file.toURI().toURL().toExternalForm() + "!/" + name);
+            try
+            {
+                return new URL("jar:" + m_file.toURI().toURL().toExternalForm() + "!/" + name);
+            }
+            catch (MalformedURLException e)
+            {
+                return null;
+            }
         }
-        catch (MalformedURLException e)
+        else
         {
             return null;
         }
