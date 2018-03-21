@@ -76,6 +76,7 @@ public class DefaultThreadPool
                     thread.setPriority( Thread.NORM_PRIORITY );
                     thread.setDaemon( true );
 
+                    thread.setName("EventAdminAsyncThread #" + threadCounter.getAndIncrement());
                     return thread;
                 }
             };
