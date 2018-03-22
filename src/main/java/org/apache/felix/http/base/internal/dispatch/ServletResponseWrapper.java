@@ -109,7 +109,6 @@ final class ServletResponseWrapper extends HttpServletResponseWrapper
                                 errorResolution.getContext(),
                                 requestInfo,
                                 null,
-                                errorResolution.getContextServiceId(),
                                 false,
                                 null,
                                 null);

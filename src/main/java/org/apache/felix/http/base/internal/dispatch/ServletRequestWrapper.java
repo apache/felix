@@ -68,7 +68,6 @@ final class ServletRequestWrapper extends HttpServletRequestWrapper
     private final DispatcherType type;
     private final RequestInfo requestInfo;
     private final ExtServletContext servletContext;
-    private final long contextId;
     private final boolean asyncSupported;
     private final MultipartConfig multipartConfig;
     private final Bundle bundleForSecurityCheck;
@@ -79,7 +78,6 @@ final class ServletRequestWrapper extends HttpServletRequestWrapper
             final ExtServletContext servletContext,
             final RequestInfo requestInfo,
             final DispatcherType type,
-            final Long contextId,
             final boolean asyncSupported,
             final MultipartConfig multipartConfig,
             final Bundle bundleForSecurityCheck)
@@ -91,7 +89,6 @@ final class ServletRequestWrapper extends HttpServletRequestWrapper
         this.servletContext = servletContext;
         this.requestInfo = requestInfo;
         this.type = type;
-        this.contextId = contextId;
         this.bundleForSecurityCheck = bundleForSecurityCheck;
     }
 
@@ -263,11 +260,11 @@ final class ServletRequestWrapper extends HttpServletRequestWrapper
             return null;
         }
         // check if internal session is available
-        if ( !create && !HttpSessionWrapper.hasSession(this.contextId, session) )
+        if ( !create && !HttpSessionWrapper.hasSession(this.servletContext.getServletContextName(), session) )
         {
             return null;
         }
-        return new HttpSessionWrapper(this.contextId, session, this.servletContext, false);
+        return new HttpSessionWrapper(session, this.servletContext, false);
     }
 
     @Override
@@ -429,7 +426,7 @@ final class ServletRequestWrapper extends HttpServletRequestWrapper
         {
             throw new IOException("Error parsing multipart request", fue);
         }
-        parts = new ArrayList<Part>();
+        parts = new ArrayList<>();
         for(final FileItem item : items)
         {
             parts.add(new Part() {
@@ -496,7 +493,7 @@ final class ServletRequestWrapper extends HttpServletRequestWrapper
                 @Override
                 public Collection<String> getHeaders(String name)
                 {
-                    final List<String> values = new ArrayList<String>();
+                    final List<String> values = new ArrayList<>();
                     final Iterator<String> iter = item.getHeaders().getHeaders(name);
                     while ( iter.hasNext() )
                     {
@@ -508,7 +505,7 @@ final class ServletRequestWrapper extends HttpServletRequestWrapper
                 @Override
                 public Collection<String> getHeaderNames()
                 {
-                    final List<String> names = new ArrayList<String>();
+                    final List<String> names = new ArrayList<>();
                     final Iterator<String> iter = item.getHeaders().getHeaderNames();
                     while ( iter.hasNext() )
                     {

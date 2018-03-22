@@ -19,13 +19,15 @@
 
 package org.apache.felix.http.base.internal.handler;
 
-import static org.mockito.Mockito.*;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
+import static org.mockito.Matchers.eq;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Set;
-
-import static org.junit.Assert.*;
 
 import javax.servlet.http.HttpSession;
 
@@ -38,33 +40,33 @@ public class HttpSessionWrapperTest
 {
 
     /**
-     * FELIX-5175 - sessions are incorrectly destroyed / destroyed too soon. 
+     * FELIX-5175 - sessions are incorrectly destroyed / destroyed too soon.
      */
     @Test
     public void testSessionTimeout() throws Exception
     {
-        Set<Long> ids;
+        Set<String> names;
 
-        long sessionID = 123;
+        String contextName = "default";
         long now = System.currentTimeMillis();
 
-        HttpSession session = createMockSession(sessionID, now, 1);
+        HttpSession session = createMockSession(contextName, now, 1);
 
-        ids = HttpSessionWrapper.getExpiredSessionContextIds(session);
-        assertTrue("Session should NOT be destroyed!", ids.isEmpty());
+        names = HttpSessionWrapper.getExpiredSessionContextNames(session);
+        assertTrue("Session should NOT be destroyed!", names.isEmpty());
 
         // Pretend we've accessed this session two seconds ago, which should imply it is timed out...
-        session = createMockSession(sessionID, now - 2000L, 1);
+        session = createMockSession(contextName, now - 2000L, 1);
 
-        ids = HttpSessionWrapper.getExpiredSessionContextIds(session);
-        assertFalse("Session should be destroyed!", ids.isEmpty());
-        assertTrue(ids.contains(sessionID));
+        names = HttpSessionWrapper.getExpiredSessionContextNames(session);
+        assertFalse("Session should be destroyed!", names.isEmpty());
+        assertTrue(names.contains(contextName));
     }
 
-    private HttpSession createMockSession(long sessionId, long lastAccessed, int maxInactive)
+    private HttpSession createMockSession(String sessionName, long lastAccessed, int maxInactive)
     {
-        String attrLastAccessed = String.format("org.apache.felix.http.session.context.lastaccessed.%d", sessionId);
-        String attrMaxInactive = String.format("org.apache.felix.http.session.context.maxinactive.%d", sessionId);
+        String attrLastAccessed = String.format("org.apache.felix.http.session.context.lastaccessed.%s", sessionName);
+        String attrMaxInactive = String.format("org.apache.felix.http.session.context.maxinactive.%s", sessionName);
 
         HttpSession session = mock(HttpSession.class);
         when(session.getAttributeNames()).thenReturn(Collections.enumeration(Arrays.asList(attrLastAccessed)));
