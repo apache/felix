@@ -160,10 +160,7 @@ public class HttpSessionWrapper implements HttpSession
             session.setAttribute(ATTR_CREATED + this.sessionId, this.created);
             session.setAttribute(ATTR_MAX_INACTIVE + this.sessionId, this.maxTimeout);
 
-            if ( context.getHttpSessionListener() != null )
-            {
-                context.getHttpSessionListener().sessionCreated(new HttpSessionEvent(this));
-            }
+            context.getHttpSessionListener().sessionCreated(new HttpSessionEvent(this));
         }
         else
         {
@@ -311,9 +308,7 @@ public class HttpSessionWrapper implements HttpSession
         this.checkInvalid();
 
         // session listener must be called before the session is invalidated
-        if (context.getHttpSessionListener() != null) {
-            context.getHttpSessionListener().sessionDestroyed(new HttpSessionEvent(this));
-        }
+        context.getHttpSessionListener().sessionDestroyed(new HttpSessionEvent(this));
 
         this.delegate.removeAttribute(ATTR_CREATED + this.sessionId);
         this.delegate.removeAttribute(ATTR_LAST_ACCESSED + this.sessionId);
