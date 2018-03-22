@@ -425,7 +425,6 @@ public class SharedServletContextImpl implements ServletContext
         return this.context.getSessionCookieConfig();
     }
 
-    @SuppressWarnings("deprecation")
     @Override
     public void log(final Exception cause, final String message)
     {

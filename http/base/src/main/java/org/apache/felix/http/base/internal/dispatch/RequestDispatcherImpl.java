@@ -64,7 +64,6 @@ public final class RequestDispatcherImpl implements RequestDispatcher
                     this.resolution.handler.getContext(),
                     this.requestInfo,
                     DispatcherType.FORWARD,
-                    this.resolution.handler.getContextServiceId(),
                     this.resolution.handler.getServletInfo().isAsyncSupported(),
                     this.resolution.handler.getMultipartConfig());
             final String requestURI = UriUtils.concat(this.requestInfo.servletPath, this.requestInfo.pathInfo);
@@ -101,7 +100,6 @@ public final class RequestDispatcherImpl implements RequestDispatcher
                 this.resolution.handler.getContext(),
                 this.requestInfo,
                 DispatcherType.INCLUDE,
-                this.resolution.handler.getContextServiceId(),
                 this.resolution.handler.getServletInfo().isAsyncSupported(),
                 this.resolution.handler.getMultipartConfig());
         final String requestURI = UriUtils.concat(this.requestInfo.servletPath, this.requestInfo.pathInfo);

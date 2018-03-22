@@ -81,8 +81,8 @@ public final class Dispatcher
         final HttpSession session = req.getSession(false);
         if ( session != null )
         {
-            final Set<Long> ids = HttpSessionWrapper.getExpiredSessionContextIds(session);
-            mgr.sessionDestroyed(session, ids);
+            final Set<String> names = HttpSessionWrapper.getExpiredSessionContextNames(session);
+            mgr.sessionDestroyed(session, names);
         }
 
         {
@@ -115,7 +115,6 @@ public final class Dispatcher
 		        final RequestInfo requestInfo = new RequestInfo(pr.servletPath, pr.pathInfo, null, req.getRequestURI());
 
 		        final HttpServletRequest wrappedRequest = new ServletRequestWrapper(req, servletContext, requestInfo, null,
-		                pr.handler.getContextServiceId(),
 		                pr.handler.getServletInfo().isAsyncSupported(),
 		                pr.handler.getMultipartConfig());
 		        final FilterHandler[] filterHandlers = handlerRegistry.getFilters(pr, req.getDispatcherType(), pr.requestURI);

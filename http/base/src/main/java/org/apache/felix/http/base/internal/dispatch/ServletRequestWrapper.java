@@ -64,7 +64,6 @@ final class ServletRequestWrapper extends HttpServletRequestWrapper
     private final DispatcherType type;
     private final RequestInfo requestInfo;
     private final ExtServletContext servletContext;
-    private final long contextId;
     private final boolean asyncSupported;
     private final MultipartConfig multipartConfig;
     private Collection<Part> parts;
@@ -73,7 +72,6 @@ final class ServletRequestWrapper extends HttpServletRequestWrapper
             ExtServletContext servletContext,
             RequestInfo requestInfo,
             DispatcherType type,
-            final Long contextId,
             final boolean asyncSupported,
             final MultipartConfig multipartConfig)
     {
@@ -84,7 +82,6 @@ final class ServletRequestWrapper extends HttpServletRequestWrapper
         this.servletContext = servletContext;
         this.requestInfo = requestInfo;
         this.type = type;
-        this.contextId = contextId;
     }
 
     @Override
@@ -255,11 +252,11 @@ final class ServletRequestWrapper extends HttpServletRequestWrapper
             return null;
         }
         // check if internal session is available
-        if ( !create && !HttpSessionWrapper.hasSession(this.contextId, session) )
+        if ( !create && !HttpSessionWrapper.hasSession(this.servletContext.getServletContextName(), session) )
         {
             return null;
         }
-        return new HttpSessionWrapper(this.contextId, session, this.servletContext, false);
+        return new HttpSessionWrapper(session, this.servletContext, false);
     }
 
     @Override

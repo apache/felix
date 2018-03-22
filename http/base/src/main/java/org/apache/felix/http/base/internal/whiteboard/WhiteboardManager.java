@@ -244,15 +244,15 @@ public final class WhiteboardManager
         this.webContext = null;
     }
 
-    public void sessionDestroyed(@Nonnull final HttpSession session, final Set<Long> contextIds)
+    public void sessionDestroyed(@Nonnull final HttpSession session, final Set<String> contextNames)
     {
-        for(final Long contextId : contextIds)
+        for(final String contextName : contextNames)
         {
-            final WhiteboardContextHandler handler = this.getContextHandler(contextId);
+            final WhiteboardContextHandler handler = this.getContextHandler(contextName);
             if ( handler != null )
             {
                 final ExtServletContext context = handler.getServletContext(this.httpBundleContext.getBundle());
-                new HttpSessionWrapper(contextId, session, context, true).invalidate();
+                new HttpSessionWrapper(session, context, true).invalidate();
                 handler.ungetServletContext(this.httpBundleContext.getBundle());
             }
         }
@@ -264,11 +264,11 @@ public final class WhiteboardManager
      * @param oldSessionId The old session id
      * @param contextIds The context ids using that session
      */
-    public void sessionIdChanged(@Nonnull final HttpSessionEvent event, final String oldSessionId, final Set<Long> contextIds)
+    public void sessionIdChanged(@Nonnull final HttpSessionEvent event, final String oldSessionId, final Set<String> contextNames)
     {
-        for(final Long contextId : contextIds)
+        for(final String contextName : contextNames)
         {
-            final WhiteboardContextHandler handler = this.getContextHandler(contextId);
+            final WhiteboardContextHandler handler = this.getContextHandler(contextName);
             if ( handler != null )
             {
                 handler.getRegistry().getEventListenerRegistry().sessionIdChanged(event, oldSessionId);
@@ -856,14 +856,14 @@ public final class WhiteboardManager
         return true;
     }
 
-    private WhiteboardContextHandler getContextHandler(final Long contextId)
+    private WhiteboardContextHandler getContextHandler(final String name)
     {
         synchronized ( this.contextMap )
         {
             for(final List<WhiteboardContextHandler> handlerList : this.contextMap.values())
             {
                 final WhiteboardContextHandler h = handlerList.get(0);
-                if ( h.getContextInfo().getServiceId() == contextId )
+                if ( h.getContextInfo().getName().equals(name) )
                 {
                     return h;
                 }

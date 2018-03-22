@@ -87,21 +87,20 @@ public class HttpSessionWrapper implements HttpSession
      */
     private final boolean isNew;
 
-    public static boolean hasSession(final long contextId, final HttpSession session)
+    public static boolean hasSession(final String contextName, final HttpSession session)
     {
-        final String sessionId = String.valueOf(contextId);
-        return session.getAttribute(ATTR_CREATED + sessionId) != null;
+        return session.getAttribute(ATTR_CREATED.concat(contextName)) != null;
     }
 
-    public static Set<Long> getExpiredSessionContextIds(final HttpSession session)
+    public static Set<String> getExpiredSessionContextNames(final HttpSession session)
     {
         final long now = System.currentTimeMillis();
 
-        final Set<Long> ids = new HashSet<Long>();
-        final Enumeration<String> names = session.getAttributeNames();
-        while (names.hasMoreElements())
+        final Set<String> names = new HashSet<String>();
+        final Enumeration<String> attrNames = session.getAttributeNames();
+        while (attrNames.hasMoreElements())
         {
-            final String name = names.nextElement();
+            final String name = attrNames.nextElement();
             if (name.startsWith(ATTR_LAST_ACCESSED))
             {
                 final String id = name.substring(ATTR_LAST_ACCESSED.length());
@@ -111,77 +110,72 @@ public class HttpSessionWrapper implements HttpSession
 
                 if ((maxTimeout > 0) && (lastAccess + maxTimeout) < now)
                 {
-                    ids.add(Long.valueOf(id));
+                    names.add(id);
                 }
             }
         }
-        return ids;
+        return names;
     }
 
-    public static Set<Long> getSessionContextIds(final HttpSession session)
+    /**
+     * Get the names of all contexts using a session.
+     * @param session The underlying session
+     * @return The set of names
+     */
+    public static Set<String> getSessionContextNames(final HttpSession session)
     {
-        final Set<Long> ids = new HashSet<Long>();
-        final Enumeration<String> names = session.getAttributeNames();
-        while (names.hasMoreElements())
+        final Set<String> names = new HashSet<String>();
+        final Enumeration<String> attrNames = session.getAttributeNames();
+        while (attrNames.hasMoreElements())
         {
-            final String name = names.nextElement();
+            final String name = attrNames.nextElement();
             if (name.startsWith(ATTR_LAST_ACCESSED))
             {
                 final String id = name.substring(ATTR_LAST_ACCESSED.length());
-                ids.add(Long.valueOf(id));
+                names.add(id);
             }
         }
-        return ids;
+        return names;
     }
 
     /**
      * Creates a new {@link HttpSessionWrapper} instance.
      */
-    public HttpSessionWrapper(final long contextId,
-            final HttpSession session,
+    public HttpSessionWrapper(final HttpSession session,
             final ExtServletContext context,
             final boolean terminate)
     {
         this.delegate = session;
         this.context = context;
-        this.sessionId = String.valueOf(contextId);
+        this.sessionId = context.getServletContextName();
         this.keyPrefix = ATTR_PREFIX + this.sessionId + ".";
 
-        if ( this.keyPrefix != null )
+        final long now = System.currentTimeMillis();
+        if ( session.getAttribute(ATTR_CREATED + this.sessionId) == null )
         {
-            final long now = System.currentTimeMillis();
-            if ( session.getAttribute(ATTR_CREATED + this.sessionId) == null )
-            {
-                this.created = now;
-                this.maxTimeout = session.getMaxInactiveInterval();
-                this.isNew = true;
+            this.created = now;
+            this.maxTimeout = session.getMaxInactiveInterval();
+            this.isNew = true;
 
-                session.setAttribute(ATTR_CREATED + this.sessionId, this.created);
-                session.setAttribute(ATTR_MAX_INACTIVE + this.sessionId, this.maxTimeout);
+            session.setAttribute(ATTR_CREATED + this.sessionId, this.created);
+            session.setAttribute(ATTR_MAX_INACTIVE + this.sessionId, this.maxTimeout);
 
-                if ( context.getHttpSessionListener() != null )
-                {
-                    context.getHttpSessionListener().sessionCreated(new HttpSessionEvent(this));
-                }
-            }
-            else
+            if ( context.getHttpSessionListener() != null )
             {
-                this.created = (Long)session.getAttribute(ATTR_CREATED + this.sessionId);
-                this.maxTimeout = (Integer)session.getAttribute(ATTR_MAX_INACTIVE + this.sessionId);
-                this.isNew = false;
-            }
-
-            this.lastAccessed = now;
-            if ( !terminate )
-            {
-                session.setAttribute(ATTR_LAST_ACCESSED + this.sessionId, this.lastAccessed);
+                context.getHttpSessionListener().sessionCreated(new HttpSessionEvent(this));
             }
         }
         else
         {
-            this.isNew = session.isNew();
-            this.lastAccessed = session.getLastAccessedTime();
-            this.created = session.getCreationTime();
+            this.created = (Long)session.getAttribute(ATTR_CREATED + this.sessionId);
+            this.maxTimeout = (Integer)session.getAttribute(ATTR_MAX_INACTIVE + this.sessionId);
+            this.isNew = false;
+        }
+
+        this.lastAccessed = now;
+        if ( !terminate )
+        {
+            session.setAttribute(ATTR_LAST_ACCESSED + this.sessionId, this.lastAccessed);
         }
     }
 
@@ -190,7 +184,7 @@ public class HttpSessionWrapper implements HttpSession
      */
     private String getKey(final String name)
     {
-        return this.keyPrefix == null ? name : this.keyPrefix.concat(name);
+        return this.keyPrefix.concat(name);
     }
 
     /**
@@ -231,10 +225,6 @@ public class HttpSessionWrapper implements HttpSession
                 while ( e.hasMoreElements() )
                 {
                     final String name = e.nextElement();
-                    if ( keyPrefix == null && !name.startsWith(PREFIX) )
-                    {
-                        return name;
-                    }
                     if ( name.startsWith(keyPrefix))
                     {
                         return name.substring(keyPrefix.length());
@@ -325,26 +315,22 @@ public class HttpSessionWrapper implements HttpSession
             context.getHttpSessionListener().sessionDestroyed(new HttpSessionEvent(this));
         }
 
-        if ( this.keyPrefix != null )
+        this.delegate.removeAttribute(ATTR_CREATED + this.sessionId);
+        this.delegate.removeAttribute(ATTR_LAST_ACCESSED + this.sessionId);
+        this.delegate.removeAttribute(ATTR_MAX_INACTIVE + this.sessionId);
+
+        final Enumeration<String> names = this.delegate.getAttributeNames();
+        while ( names.hasMoreElements() )
         {
-            this.delegate.removeAttribute(ATTR_CREATED + this.sessionId);
-            this.delegate.removeAttribute(ATTR_LAST_ACCESSED + this.sessionId);
-            this.delegate.removeAttribute(ATTR_MAX_INACTIVE + this.sessionId);
+            final String name = names.nextElement();
 
-            final Enumeration<String> names = this.delegate.getAttributeNames();
-            while ( names.hasMoreElements() )
-            {
-                final String name = names.nextElement();
-
-                if ( name.startsWith(this.keyPrefix) ) {
-                    this.removeAttribute(name.substring(this.keyPrefix.length()));
-                }
+            if ( name.startsWith(this.keyPrefix) ) {
+                this.removeAttribute(name.substring(this.keyPrefix.length()));
             }
         }
 
         // if the session is empty we can invalidate
-        final Enumeration<String> names = this.delegate.getAttributeNames();
-        if ( !names.hasMoreElements() )
+        if ( !this.delegate.getAttributeNames().hasMoreElements() )
         {
             this.delegate.invalidate();
         }
@@ -373,7 +359,7 @@ public class HttpSessionWrapper implements HttpSession
         if ( oldValue != null )
         {
             this.delegate.removeAttribute(this.getKey(name));
-            if ( this.keyPrefix != null && oldValue instanceof HttpSessionBindingListener )
+            if ( oldValue instanceof HttpSessionBindingListener )
             {
                 ((HttpSessionBindingListener)oldValue).valueUnbound(new HttpSessionBindingEvent(this, name));
             }
@@ -402,7 +388,7 @@ public class HttpSessionWrapper implements HttpSession
 
         final Object oldValue = this.getAttribute(name);
         // wrap http session binding listener to avoid container calling it!
-        if ( this.keyPrefix != null && value instanceof HttpSessionBindingListener )
+        if ( value instanceof HttpSessionBindingListener )
         {
             this.delegate.setAttribute(this.getKey(name),
                     new SessionBindingValueListenerWrapper((HttpSessionBindingListener)value));
@@ -411,7 +397,7 @@ public class HttpSessionWrapper implements HttpSession
         {
             this.delegate.setAttribute(this.getKey(name), value);
         }
-        if ( this.keyPrefix != null && value instanceof HttpSessionBindingListener )
+        if ( value instanceof HttpSessionBindingListener )
         {
             ((HttpSessionBindingListener)value).valueBound(new HttpSessionBindingEvent(this, name));
         }
@@ -436,11 +422,8 @@ public class HttpSessionWrapper implements HttpSession
         {
             this.delegate.setMaxInactiveInterval(interval);
         }
-        if ( this.keyPrefix != null )
-        {
-            this.maxTimeout = interval;
-            this.delegate.setAttribute(ATTR_MAX_INACTIVE + this.sessionId, interval);
-        }
+        this.maxTimeout = interval;
+        this.delegate.setAttribute(ATTR_MAX_INACTIVE + this.sessionId, interval);
     }
 
     @Override
