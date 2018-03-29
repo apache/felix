@@ -148,31 +148,33 @@ public class HttpSessionWrapper implements HttpSession
         this.delegate = session;
         this.context = context;
         this.sessionId = context.getServletContextName();
-        this.keyPrefix = ATTR_PREFIX + this.sessionId + ".";
+        this.keyPrefix = ATTR_PREFIX.concat(this.sessionId).concat(".");
+
+        final String createdAttrName = ATTR_CREATED.concat(this.sessionId);
 
         final long now = System.currentTimeMillis();
-        if ( session.getAttribute(ATTR_CREATED + this.sessionId) == null )
+        if ( session.getAttribute(createdAttrName) == null )
         {
             this.created = now;
             this.maxTimeout = session.getMaxInactiveInterval();
             this.isNew = true;
 
-            session.setAttribute(ATTR_CREATED + this.sessionId, this.created);
-            session.setAttribute(ATTR_MAX_INACTIVE + this.sessionId, this.maxTimeout);
+            session.setAttribute(createdAttrName, this.created);
+            session.setAttribute(ATTR_MAX_INACTIVE.concat(this.sessionId), this.maxTimeout);
 
             context.getHttpSessionListener().sessionCreated(new HttpSessionEvent(this));
         }
         else
         {
-            this.created = (Long)session.getAttribute(ATTR_CREATED + this.sessionId);
-            this.maxTimeout = (Integer)session.getAttribute(ATTR_MAX_INACTIVE + this.sessionId);
+            this.created = (Long)session.getAttribute(createdAttrName);
+            this.maxTimeout = (Integer)session.getAttribute(ATTR_MAX_INACTIVE.concat(this.sessionId));
             this.isNew = false;
         }
 
         this.lastAccessed = now;
         if ( !terminate )
         {
-            session.setAttribute(ATTR_LAST_ACCESSED + this.sessionId, this.lastAccessed);
+            session.setAttribute(ATTR_LAST_ACCESSED.concat(this.sessionId), this.lastAccessed);
         }
     }
 
@@ -314,6 +316,7 @@ public class HttpSessionWrapper implements HttpSession
         this.delegate.removeAttribute(ATTR_LAST_ACCESSED + this.sessionId);
         this.delegate.removeAttribute(ATTR_MAX_INACTIVE + this.sessionId);
 
+        // remove all attributes belonging to this session
         final Enumeration<String> names = this.delegate.getAttributeNames();
         while ( names.hasMoreElements() )
         {
@@ -322,12 +325,6 @@ public class HttpSessionWrapper implements HttpSession
             if ( name.startsWith(this.keyPrefix) ) {
                 this.removeAttribute(name.substring(this.keyPrefix.length()));
             }
-        }
-
-        // if the session is empty we can invalidate
-        if ( !this.delegate.getAttributeNames().hasMoreElements() )
-        {
-            this.delegate.invalidate();
         }
 
         this.isInvalid = true;
