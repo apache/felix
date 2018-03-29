@@ -382,10 +382,6 @@ public class ServiceTracker implements ServiceTrackerCustomizer {
 					/* set tracked with the initial references */
 					t.setInitial(references);
 					
-					// only actually schedules the actions for execution within this synchronized block,
-					// but do the actual execution afterwards.
-					t.trackInitial(); 
-
 				}
 				catch (InvalidSyntaxException e) {
 					throw new RuntimeException(
@@ -396,7 +392,11 @@ public class ServiceTracker implements ServiceTrackerCustomizer {
 			tracked = t;
 		}
 		/* Call tracked outside of synchronized region */
-		// just trigger the executor
+
+		// schedule trackInitial call: this method will invoke "addingService" customizer callbacks, but will schedule other customizer callbacks (added/modified/removed).
+		t.getExecutor().schedule(() -> t.trackInitial());
+		
+		// Just trigger the execution of everything, but serially.
 		t.getExecutor().execute();
 	}
 

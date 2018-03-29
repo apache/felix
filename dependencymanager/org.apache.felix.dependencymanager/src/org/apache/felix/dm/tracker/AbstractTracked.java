@@ -185,17 +185,11 @@ abstract class AbstractTracked {
 					continue; /* skip this item */
 				}
 				adding.add(item);
-				final AbstractCustomizerActionSet actionSet = trackAdding(item, null);
-				m_executor.schedule(new Runnable() {
-
-					@Override
-					public void run() {
-						actionSet.execute();
-						
-					}
-					
-				});
 			}
+			
+			final AbstractCustomizerActionSet actionSet = trackAdding(item, null);
+			m_executor.schedule(() -> actionSet.execute());
+			
 			if (DEBUG) {
 				System.out.println("AbstractTracked.trackInitial: " + item); //$NON-NLS-1$
 			}
