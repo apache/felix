@@ -317,6 +317,7 @@ public class HttpSessionWrapper implements HttpSession
         this.delegate.removeAttribute(ATTR_LAST_ACCESSED + this.sessionId);
         this.delegate.removeAttribute(ATTR_MAX_INACTIVE + this.sessionId);
 
+        // remove all attributes belonging to this session
         final Enumeration<String> names = this.delegate.getAttributeNames();
         while ( names.hasMoreElements() )
         {
@@ -325,12 +326,6 @@ public class HttpSessionWrapper implements HttpSession
             if ( name.startsWith(this.keyPrefix) ) {
                 this.removeAttribute(name.substring(this.keyPrefix.length()));
             }
-        }
-
-        // if the session is empty we can invalidate
-        if ( !this.delegate.getAttributeNames().hasMoreElements() )
-        {
-            this.delegate.invalidate();
         }
 
         this.isInvalid = true;
