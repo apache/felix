@@ -50,6 +50,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Properties;
+import java.util.Random;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.concurrent.ConcurrentHashMap;
@@ -91,10 +92,62 @@ public class Util
                     Logger.LOG_ERROR, "Unable to load any configuration properties.", ex);
             }
         }
-        return initializeJPMS(defaultProperties);
+        return defaultProperties;
     }
 
-    private static Properties initializeJPMS(Properties properties)
+    public static void initializeJPMSEE(String javaVersion, Properties properties, Logger logger)
+    {
+        try
+        {
+            Version version = new Version(javaVersion);
+
+            if (version.getMajor() >= 9)
+            {
+                StringBuilder eecap = new StringBuilder(", osgi.ee; osgi.ee=\"OSGi/Minimum\"; version:List<Version>=\"1.0,1.1,1.2\",osgi.ee; osgi.ee=\"JavaSE\"; version:List<Version>=\"1.0,1.1,1.2,1.3,1.4,1.5,1.6,1.7,1.8,9");
+                for (int i = 10; i <= version.getMajor();i++)
+                {
+                    eecap.append(',').append(Integer.toString(version.getMajor()));
+                }
+                eecap.append("\",osgi.ee; osgi.ee=\"JavaSE/compact1\"; version:List<Version>=\"1.8,9");
+                for (int i = 10; i <= version.getMajor();i++)
+                {
+                    eecap.append(',').append(Integer.toString(version.getMajor()));
+                }
+                eecap.append("\",osgi.ee; osgi.ee=\"JavaSE/compact2\"; version:List<Version>=\"1.8,9");
+                for (int i = 10; i <= version.getMajor();i++)
+                {
+                    eecap.append(',').append(Integer.toString(version.getMajor()));
+                }
+                eecap.append("\",osgi.ee; osgi.ee=\"JavaSE/compact3\"; version:List<Version>=\"1.8,9");
+                for (int i = 10; i <= version.getMajor();i++)
+                {
+                    eecap.append(',').append(Integer.toString(version.getMajor()));
+                }
+                eecap.append("\"");
+
+                StringBuilder ee = new StringBuilder();
+
+                for (int i = version.getMajor(); i > 9;i--)
+                {
+                    ee.append("JavaSE-").append(Integer.toString(i)).append(',');
+                }
+
+                ee.append("JavaSE-9,JavaSE-1.8,JavaSE-1.7,JavaSE-1.6,J2SE-1.5,J2SE-1.4,J2SE-1.3,J2SE-1.2,JRE-1.1,JRE-1.0,OSGi/Minimum-1.2,OSGi/Minimum-1.1,OSGi/Minimum-1.0");
+
+                properties.put("ee-jpms", ee.toString());
+
+                properties.put("eecap-jpms", eecap.toString());
+            }
+
+            properties.put("felix.detect.java.version", String.format("0.0.0.JavaSE_%03d_%03d", version.getMajor(), version.getMinor()));
+        }
+        catch (Exception ex)
+        {
+            logger.log(Logger.LOG_ERROR, "Exception parsing java version", ex);
+        }
+    }
+
+    public static void initializeJPMS(Properties properties)
     {
         try
         {
@@ -134,7 +187,7 @@ public class Util
             {
                 StringBuilder builder = new StringBuilder();
                 for (String export : javaExports) {
-                    builder.append(',').append(export);
+                    builder.append(',').append(export).append(";version=\"${felix.detect.java.version}\"");
                 }
                 properties.put("felix.detect.jpms.java", builder.toString());
             }
@@ -145,14 +198,6 @@ public class Util
         {
             // Not much we can do - probably not on java9
         }
-        return properties;
-    }
-
-    public static String getDefaultProperty(Logger logger, String name)
-    {
-        Properties props = loadDefaultProperties(logger);
-        // Perform variable substitution for property.
-        return getPropertyWithSubs(props, name);
     }
 
     public static String getPropertyWithSubs(Properties props, String name)
@@ -164,13 +209,7 @@ public class Util
         return value;
     }
 
-    public static Map<String, String> getDefaultPropertiesWithPrefix(Logger logger, String prefix)
-    {
-        Properties props = loadDefaultProperties(logger);
-        return getDefaultPropertiesWithPrefix(props, prefix);
-    }
-
-    public static Map<String, String> getDefaultPropertiesWithPrefix(Properties props, String prefix)
+    public static Map<String, String> getPropertiesWithPrefix(Properties props, String prefix)
     {
         Map<String, String> result = new HashMap<String, String>();
 
@@ -323,7 +362,7 @@ public class Util
      * loaders of any interfaces it implements and the class loaders of
      * all super classes.
      * </p>
-     * @param svcObj the class that is the root of the search.
+     * @param clazz the class that is the root of the search.
      * @param name the name of the class to load.
      * @return the loaded class or <tt>null</tt> if it could not be
      *         loaded.
@@ -757,7 +796,7 @@ public class Util
     /**
      * Checks if the provided module definition declares a fragment host.
      *
-     * @param module the module to check
+     * @param revision the module to check
      * @return <code>true</code> if the module declares a fragment host, <code>false</code>
      *      otherwise.
      */

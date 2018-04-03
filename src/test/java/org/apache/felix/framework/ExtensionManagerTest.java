@@ -26,11 +26,17 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.security.SecureRandom;
 import java.util.Arrays;
-import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Properties;
+import java.util.Random;
+import java.util.Set;
+import java.util.concurrent.TimeUnit;
 import java.util.jar.JarOutputStream;
 import java.util.jar.Manifest;
 import java.util.zip.ZipEntry;
@@ -84,6 +90,7 @@ public class ExtensionManagerTest {
         configMap.put(FelixConstants.FRAMEWORK_OS_VERSION, "6.3");
         configMap.put(FelixConstants.NATIVE_OS_NAME_ALIAS_PREFIX + ".windows8", "windows 8,win32");
         configMap.put(FelixConstants.NATIVE_PROC_NAME_ALIAS_PREFIX + ".x86-64", "amd64,em64t,x86_64");
+        configMap.put(FelixConstants.FRAMEWORK_SYSTEMPACKAGES, "foo");
         NativeLibraryClause.initializeNativeAliases(configMap);
         ExtensionManager extensionManager = new ExtensionManager(logger,
                 configMap, null);
