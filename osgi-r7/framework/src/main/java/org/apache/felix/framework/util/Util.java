@@ -850,11 +850,18 @@ public class Util
      *
      * @return an UUID instance.
      */
-    public static String randomUUID() {
-        byte[] data;
-        // lock on the class to protect lazy init
-        SecureRandom rng = new SecureRandom();
-        rng.nextBytes(data = new byte[16]);
+    public static String randomUUID(boolean secure) {
+        byte[] data = new byte[16];
+        if (secure)
+        {
+            SecureRandom rng = new SecureRandom();
+            rng.nextBytes(data);
+        }
+        else
+        {
+            Random rng = new Random();
+            rng.nextBytes(data);
+        }
         long mostSigBits = (data[0] & 0xFFL) << 56;
         mostSigBits |= (data[1] & 0xFFL) << 48;
         mostSigBits |= (data[2] & 0xFFL) << 40;
