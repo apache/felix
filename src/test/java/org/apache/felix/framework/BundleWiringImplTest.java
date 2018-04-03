@@ -46,6 +46,7 @@ import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -558,7 +559,7 @@ public class BundleWiringImplTest
         BundleClassLoader notFoundClassLoader = mock(BundleClassLoader.class);
         BundleRevision bundleRevision1 = getBundleRevision(classToBeLoaded, foundClassLoader, String.class);
         BundleRevision bundleRevision2 = getBundleRevision(classToBeLoaded, notFoundClassLoader, null);
-        Map<String, BundleRevision> importedPkgsActual = new HashMap<String, BundleRevision>();
+        Map<String, BundleRevision> importedPkgsActual = new LinkedHashMap<String, BundleRevision>();
         importedPkgsActual.put("sun.reflect1", bundleRevision1);
         importedPkgsActual.put("sun.reflect2", bundleRevision2);
         when(importedPkgs.values()).thenReturn(importedPkgsActual.values());
