@@ -24,6 +24,7 @@ import org.apache.felix.framework.cache.JarContent;
 import org.apache.felix.framework.ext.ClassPathExtenderFactory;
 import org.apache.felix.framework.util.FelixConstants;
 import org.apache.felix.framework.util.ImmutableList;
+import org.apache.felix.framework.util.ImmutableMap;
 import org.apache.felix.framework.util.StringMap;
 import org.apache.felix.framework.util.Util;
 import org.apache.felix.framework.util.manifestparser.ManifestParser;
@@ -72,28 +73,9 @@ import java.util.Set;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 /**
- * The ExtensionManager class is used in several ways.
- * <p>
- * First, a private instance is added (as URL with the instance as
- * URLStreamHandler) to the classloader that loaded the class.
- * It is assumed that this is an instance of URLClassloader (if not extension
- * bundles will not work). Subsequently, extension bundles can be managed by
- * instances of this class (their will be one instance per framework instance).
- * </p>
- * <p>
- * Second, it is used as module definition of the systembundle. Added extension
- * bundles with exported packages will contribute their exports to the
- * systembundle export.
- * </p>
- * <p>
- * Third, it is used as content loader of the systembundle. Added extension
+ * The ExtensionManager class is used as content loader of the systembundle. Added extension
  * bundles exports will be available via this loader.
- * </p>
  */
-// The general approach is to have one private static instance that we register
-// with the parent classloader and one instance per framework instance that
-// keeps track of extension bundles and systembundle exports for that framework
-// instance.
 class ExtensionManager implements Content
 {
     static final ClassPathExtenderFactory.ClassPathExtender m_extenderFramework;
@@ -107,7 +89,7 @@ class ExtensionManager implements Content
         if (!"true".equalsIgnoreCase(Felix.m_secureAction.getSystemProperty(FelixConstants.FELIX_EXTENSIONS_DISABLE, "false")))
         {
             ServiceLoader<ClassPathExtenderFactory> loader = ServiceLoader.load(ClassPathExtenderFactory.class,
-                    ExtensionManager.class.getClassLoader());
+                ExtensionManager.class.getClassLoader());
 
 
             for (Iterator<ClassPathExtenderFactory> iter = loader.iterator();
@@ -170,7 +152,6 @@ class ExtensionManager implements Content
     private final BundleRevisionImpl m_systemBundleRevision;
     private volatile List<BundleCapability> m_capabilities = Collections.EMPTY_LIST;
     private volatile Set<String> m_exportNames = Collections.EMPTY_SET;
-    private volatile Object m_securityContext = null;
     private final List<ExtensionTuple> m_extensionTuples = Collections.synchronizedList(new ArrayList<ExtensionTuple>());
 
     private final List<BundleRevisionImpl> m_resolvedExtensions = new CopyOnWriteArrayList<BundleRevisionImpl>();
@@ -232,18 +213,18 @@ class ExtensionManager implements Content
             "true".equalsIgnoreCase(configProps.getProperty(FelixConstants.USE_PROPERTY_SUBSTITUTION_IN_SYSTEMPACKAGES)) ?
                 Util.getPropertyWithSubs(configProps, FelixConstants.FRAMEWORK_SYSTEMPACKAGES) :
                 configProps.getProperty(FelixConstants.FRAMEWORK_SYSTEMPACKAGES);
-        // If no system packages were specified, load our default value.
-        syspkgs = (syspkgs == null)
-            ? Util.getDefaultProperty(logger, Constants.FRAMEWORK_SYSTEMPACKAGES)
-            : syspkgs;
+
         syspkgs = (syspkgs == null) ? "" : syspkgs;
+
         // If any extra packages are specified, then append them.
         String pkgextra =
             "true".equalsIgnoreCase(configProps.getProperty(FelixConstants.USE_PROPERTY_SUBSTITUTION_IN_SYSTEMPACKAGES)) ?
                 Util.getPropertyWithSubs(configProps, FelixConstants.FRAMEWORK_SYSTEMPACKAGES_EXTRA) :
                 configProps.getProperty(FelixConstants.FRAMEWORK_SYSTEMPACKAGES_EXTRA);
+
         syspkgs = ((pkgextra == null) || (pkgextra.trim().length() == 0))
             ? syspkgs : syspkgs + (pkgextra.trim().startsWith(",") ? pkgextra : "," + pkgextra);
+
         m_headerMap.put(FelixConstants.BUNDLE_MANIFESTVERSION, "2");
         m_headerMap.put(FelixConstants.EXPORT_PACKAGE, syspkgs);
 
@@ -252,16 +233,12 @@ class ExtensionManager implements Content
         // construct the system bundle's capabilitie metadata. Get the
         // configuration property that specifies which capabilities should
         // be provided by the system bundle.
-        String syscaps =
-            (String) Util.getPropertyWithSubs(configProps, FelixConstants.FRAMEWORK_SYSTEMCAPABILITIES);
-        // If no system capabilities were specified, load our default value.
-        syscaps = (syscaps == null)
-            ? Util.getDefaultProperty(logger, Constants.FRAMEWORK_SYSTEMCAPABILITIES)
-            : syscaps;
+        String syscaps = Util.getPropertyWithSubs(configProps, Constants.FRAMEWORK_SYSTEMCAPABILITIES);
+
         syscaps = (syscaps == null) ? "" : syscaps;
+
         // If any extra capabilities are specified, then append them.
-        String capextra =
-            (String) Util.getPropertyWithSubs(configProps, FelixConstants.FRAMEWORK_SYSTEMCAPABILITIES_EXTRA);
+        String capextra = Util.getPropertyWithSubs(configProps, Constants.FRAMEWORK_SYSTEMCAPABILITIES_EXTRA);
         syscaps = ((capextra == null) || (capextra.trim().length() == 0))
             ? syscaps : syscaps + (capextra.trim().startsWith(",") ? capextra : "," + capextra);
         m_headerMap.put(FelixConstants.PROVIDE_CAPABILITY, syscaps);
@@ -328,7 +305,6 @@ class ExtensionManager implements Content
      * exports of this instance. Subsequently, they are available form the
      * instance in it's role as content loader.
      *
-     * @param felix the framework instance the given extension bundle comes from.
      * @param bundle the extension bundle to add.
      * @throws BundleException if extension bundles are not supported or this is
      *          not a framework extension.
@@ -336,7 +312,7 @@ class ExtensionManager implements Content
      *          AdminPermission.EXTENSIONLIFECYCLE and security is enabled.
      * @throws Exception in case something goes wrong.
      */
-    synchronized void addExtensionBundle(Felix felix, BundleImpl bundle) throws Exception
+    void addExtensionBundle(BundleImpl bundle) throws Exception
     {
         Object sm = System.getSecurityManager();
         if (sm != null)
@@ -354,8 +330,6 @@ class ExtensionManager implements Content
             ((BundleRevisionImpl) bundle.adapt(BundleRevision.class))
                 .getHeaders().get(Constants.FRAGMENT_HOST));
 
-        final ClassPathExtenderFactory.ClassPathExtender extender;
-
         if (!Constants.EXTENSION_FRAMEWORK.equals(directive))
         {
            throw new BundleException("Unsupported Extension Bundle type: " +
@@ -366,7 +340,8 @@ class ExtensionManager implements Content
         {
             // We don't support extensions
             m_logger.log(bundle, Logger.LOG_WARNING,
-                "Unable to add extension bundle - Maybe ClassLoader is not supported (on java9, try --add-opens=java.base/jdk.internal.loader=ALL-UNNAMED)?");
+                "Unable to add extension bundle - Maybe ClassLoader is not supported " +
+                        "(on java9, try --add-opens=java.base/jdk.internal.loader=ALL-UNNAMED)?");
 
             throw new UnsupportedOperationException(
                 "Unable to add extension bundle.");
@@ -406,7 +381,7 @@ class ExtensionManager implements Content
         m_unresolvedExtensions.add(bri);
     }
 
-    public void removeExtensionBundles(Felix felix)
+    public synchronized void removeExtensionBundles()
     {
         m_resolvedExtensions.clear();
         m_unresolvedExtensions.clear();
@@ -430,7 +405,7 @@ class ExtensionManager implements Content
         }
     }
 
-    public List<Bundle> resolveExtensionBundles(Felix felix)
+    public synchronized List<Bundle> resolveExtensionBundles(Felix felix)
     {
         if (m_unresolvedExtensions.isEmpty())
         {
@@ -554,7 +529,7 @@ class ExtensionManager implements Content
     }
 
     /**
-     * Start extension bundles that hasve an activator
+     * Start extension bundle if it has an activator
      *
      * @param felix the framework instance the extension bundle is installed in.
      * @param bundle the extension bundle to start if it has a an extension bundle activator.
@@ -799,21 +774,20 @@ class ExtensionManager implements Content
         return result;
     }
 
-    private synchronized void appendCapabilities(List<BundleCapability> caps)
+    private void appendCapabilities(List<BundleCapability> caps)
     {
         List<BundleCapability> newCaps = new ArrayList<BundleCapability>(m_capabilities.size() + caps.size());
         newCaps.addAll(m_capabilities);
         newCaps.addAll(caps);
         m_capabilities = ImmutableList.newInstance(newCaps);
-        m_headerMap.put(Constants.EXPORT_PACKAGE, convertCapabilitiesToHeaders(m_headerMap));
+        m_headerMap.put(Constants.EXPORT_PACKAGE, convertCapabilitiesToHeaders(newCaps));
     }
 
-    private String convertCapabilitiesToHeaders(Map headers)
+    private String convertCapabilitiesToHeaders(List<BundleCapability> caps)
     {
         StringBuffer exportSB = new StringBuffer("");
         Set<String> exportNames = new HashSet<String>();
 
-        List<BundleCapability> caps = m_capabilities;
         for (BundleCapability cap : caps)
         {
             if (cap.getNamespace().equals(BundleRevision.PACKAGE_NAMESPACE))
@@ -928,10 +902,7 @@ class ExtensionManager implements Content
         @Override
         public Map getHeaders()
         {
-            synchronized (ExtensionManager.this)
-            {
-                return m_headerMap;
-            }
+            return ImmutableMap.newInstance(m_headerMap);
         }
 
         @Override

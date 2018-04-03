@@ -71,4 +71,5 @@ public interface FelixConstants extends org.osgi.framework.Constants
     String FELIX_EXTENSION_ACTIVATOR = "Felix-Activator";
     String SECURITY_DEFAULT_POLICY = "felix.security.defaultpolicy";
     String FELIX_EXTENSIONS_DISABLE = "felix.extensions.disable";
+    String FRAMEWORK_UUID_SECURE = "felix.uuid.secure";
 }

@@ -1615,8 +1615,6 @@ public class Felix extends BundleImpl implements Framework
      *        bundles.
      * @throws java.lang.IllegalArgumentException If the specified start
      *         level is not greater than zero.
-     * @throws java.security.SecurityException If the caller does not
-     *         have <tt>AdminPermission</tt>.
     **/
     void setInitialBundleStartLevel(int startLevel)
     {
@@ -1656,8 +1654,6 @@ public class Felix extends BundleImpl implements Framework
      * @throws java.lang.IllegalArgumentException If the specified
      *          bundle is the system bundle or if the bundle has been
      *          uninstalled.
-     * @throws java.security.SecurityException If the caller does not
-     *          have <tt>AdminPermission</tt>.
     **/
     void setBundleStartLevel(Bundle bundle, int startLevel)
     {
@@ -2544,7 +2540,7 @@ public class Felix extends BundleImpl implements Framework
                         // then attach the extension
                         if (!wasExtension && bundle.isExtension())
                         {
-                            m_extensionManager.addExtensionBundle(this, bundle);
+                            m_extensionManager.addExtensionBundle(bundle);
                         }
                         else if (wasExtension)
                         {
@@ -3136,7 +3132,7 @@ public class Felix extends BundleImpl implements Framework
                 // Extensions are handled as a special case.
                 if (bundle.isExtension())
                 {
-                    m_extensionManager.addExtensionBundle(this, bundle);
+                    m_extensionManager.addExtensionBundle(bundle);
                 }
 
                 // Use a copy-on-write approach to add the bundle
@@ -3256,7 +3252,7 @@ public class Felix extends BundleImpl implements Framework
                     }
                     else
                     {
-                        m_extensionManager.addExtensionBundle(this, bundle);
+                        m_extensionManager.addExtensionBundle(bundle);
                     }
                 }
                 catch (Throwable ex)
@@ -4804,7 +4800,7 @@ public class Felix extends BundleImpl implements Framework
      * Fires service events.
      *
      * @param event The service event to fire.
-     * @param reg The service registration associated with the service object.
+     * @param oldProps The old props of the service.
     **/
     private void fireServiceEvent(ServiceEvent event, Dictionary oldProps)
     {
@@ -4851,11 +4847,35 @@ public class Felix extends BundleImpl implements Framework
             FelixConstants.FELIX_VERSION_PROPERTY, getFrameworkVersion());
 
         Properties defaultProperties = Util.loadDefaultProperties(m_logger);
+
+        Util.initializeJPMS(defaultProperties);
+
+        Util.initializeJPMSEE(_getProperty("java.specification.version"), defaultProperties, m_logger);
+
         // Set supported execution environments to default value,
         // if not explicitly configured.
         loadFromDefaultIfNotDefined(defaultProperties, Constants.FRAMEWORK_EXECUTIONENVIRONMENT);
 
-        loadFromDefaultIfNotDefined(defaultProperties, Constants.FRAMEWORK_SYSTEMPACKAGES);
+        String sysprops = _getProperty(Constants.FRAMEWORK_SYSTEMPACKAGES);
+        if(sysprops != null && "true".equalsIgnoreCase(_getProperty(FelixConstants.USE_PROPERTY_SUBSTITUTION_IN_SYSTEMPACKAGES)) )
+        {
+            defaultProperties.put(Constants.FRAMEWORK_SYSTEMPACKAGES, sysprops);
+            m_configMutableMap.put(Constants.FRAMEWORK_SYSTEMPACKAGES, Util.getPropertyWithSubs(defaultProperties, Constants.FRAMEWORK_SYSTEMPACKAGES));
+        }
+        else if (sysprops == null)
+        {
+            m_configMutableMap.put(Constants.FRAMEWORK_SYSTEMPACKAGES, Util.getPropertyWithSubs(defaultProperties, Constants.FRAMEWORK_SYSTEMPACKAGES));
+        }
+
+        String syscaps = _getProperty(Constants.FRAMEWORK_SYSTEMCAPABILITIES);
+        if(syscaps == null)
+        {
+            m_configMutableMap.put(Constants.FRAMEWORK_SYSTEMCAPABILITIES, Util.getPropertyWithSubs(defaultProperties, Constants.FRAMEWORK_SYSTEMCAPABILITIES));
+        }
+
+        loadFromDefaultIfNotDefined(defaultProperties, "ee-jpms");
+        loadFromDefaultIfNotDefined(defaultProperties, "eecap-jpms");
+        loadFromDefaultIfNotDefined(defaultProperties, "felix.detect.java.version");
 
         // Set supported native capabilities to default value,
         // if not explicitly configured.
@@ -4870,7 +4890,7 @@ public class Felix extends BundleImpl implements Framework
         String s;
         if (!getConfig().containsKey(propertyName))
         {
-            s = Util.getDefaultProperty(m_logger, propertyName);
+            s = Util.getPropertyWithSubs(defaultProperties, propertyName);
             if (s != null)
             {
                 m_configMutableMap.put(propertyName, s);
@@ -4880,7 +4900,7 @@ public class Felix extends BundleImpl implements Framework
 
     private void loadPrefixFromDefaultIfNotDefined(Map configMap, Properties defaultProperties, String prefix)
     {
-        Map<String, String> defaultPropsWithPrefix = Util.getDefaultPropertiesWithPrefix(defaultProperties, prefix);
+        Map<String, String> defaultPropsWithPrefix = Util.getPropertiesWithPrefix(defaultProperties, prefix);
 
         for(String currentDefaultProperty: defaultPropsWithPrefix.keySet())
         {
@@ -5206,7 +5226,7 @@ public class Felix extends BundleImpl implements Framework
                 m_securityManager = null;
             }
 
-            m_extensionManager.removeExtensionBundles(Felix.this);
+            m_extensionManager.removeExtensionBundles();
             m_dependencies.removeDependents(adapt(BundleRevision.class));
 
             // Dispose of the bundle cache.
