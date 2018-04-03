@@ -682,7 +682,7 @@ public class Felix extends BundleImpl implements Framework
                 // Spec says we get a new UUID for each invocation of init().
                 m_configMutableMap.put(
                     FelixConstants.FRAMEWORK_UUID,
-                    Util.randomUUID());
+                    Util.randomUUID("true".equalsIgnoreCase(_getProperty(FelixConstants.FRAMEWORK_UUID_SECURE))));
 
                 // Initialize event dispatcher.
                 m_dispatcher.startDispatching();
