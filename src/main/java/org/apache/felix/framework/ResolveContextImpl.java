@@ -81,7 +81,22 @@ public class ResolveContextImpl extends ResolveContext
 
     public Collection<Resource> getOndemandResources(Resource host)
     {
-        return new ArrayList<Resource>(m_ondemand);
+        List<Resource> result = new ArrayList<Resource>();
+        for (BundleRevision revision : m_ondemand)
+        {
+            for (BundleRequirement req : ((BundleRevisionImpl) revision).getDeclaredRequirements(BundleRevision.HOST_NAMESPACE))
+            {
+                for (Capability cap : host.getCapabilities(BundleRevision.HOST_NAMESPACE))
+                {
+                    if (req.matches((BundleCapability) cap))
+                    {
+                        result.add(revision);
+                        break;
+                    }
+                }
+            }
+        }
+        return result;
     }
 
     @Override
