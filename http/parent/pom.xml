@@ -69,7 +69,6 @@
                         <instructions>
                             <Bundle-SymbolicName>${project.artifactId}</Bundle-SymbolicName>
                             <Bundle-Version>${project.version}</Bundle-Version>
-                            <Implementation-URL>https://felix.apache.org/documentation/subprojects/apache-felix-http-service.html</Implementation-URL>
                         </instructions>                        
                     </configuration>
                 </plugin>
