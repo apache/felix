@@ -21,7 +21,7 @@ package org.apache.felix.http.base.internal.handler;
 
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
-import static org.mockito.Matchers.eq;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -96,26 +96,26 @@ public class HttpSessionWrapperTest
         when(containerSession.getAttribute(Mockito.anyString())).thenAnswer(new Answer<Object>() {
             @Override
             public Object answer(InvocationOnMock invocation) throws Throwable {
-                return attributes.get(invocation.getArgumentAt(0, String.class));
+                return attributes.get(invocation.getArgument(0));
             }
         });
         when(containerSession.getAttribute(Mockito.anyString())).thenAnswer(new Answer<Object>() {
             @Override
             public Object answer(InvocationOnMock invocation) throws Throwable {
-                return attributes.get(invocation.getArgumentAt(0, String.class));
+                return attributes.get(invocation.getArgument(0));
             }
         });
         Mockito.doAnswer(new Answer<Object>() {
             @Override
             public Object answer(InvocationOnMock invocation) throws Throwable {
-                attributes.put(invocation.getArgumentAt(0, String.class), invocation.getArgumentAt(1, Object.class));
+                attributes.put((String)invocation.getArgument(0), invocation.getArgument(1));
                 return null;
             }
         }).when(containerSession).setAttribute(Mockito.anyString(), Mockito.any());
         Mockito.doAnswer(new Answer<Object>() {
             @Override
             public Object answer(InvocationOnMock invocation) throws Throwable {
-                attributes.remove(invocation.getArgumentAt(0, String.class));
+                attributes.remove(invocation.getArgument(0));
                 return null;
             }
         }).when(containerSession).removeAttribute(Mockito.anyString());
