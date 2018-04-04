@@ -22,13 +22,14 @@
     <parent>
         <groupId>org.apache</groupId>
         <artifactId>apache</artifactId>
-        <version>17</version>
+        <version>19</version>
         <relativePath />
     </parent>
 
     <groupId>org.apache.felix</groupId>
     <artifactId>felix-parent</artifactId>
     <packaging>pom</packaging>
+
     <name>Apache Felix</name>
     <version>5-SNAPSHOT</version>
     <url>http://felix.apache.org/</url>
@@ -36,18 +37,19 @@
     <description>Apache Felix is a community effort to implement the OSGi Framework and Service platform and other interesting OSGi-related technologies.</description>
 
     <prerequisites>
-        <maven>3.0.5</maven>
+        <maven>3.5.0</maven>
     </prerequisites>
 
     <properties>
         <sourceReleaseAssemblyDescriptor>source-release-zip-tar</sourceReleaseAssemblyDescriptor>
 
         <!-- Default Java VM and API compatibility -->
-        <felix.java.version>5</felix.java.version>
-        <felix.java.signature.groupId>org.codehaus.mojo.signature</felix.java.signature.groupId>
+        <felix.java.version>7</felix.java.version>
         
         <!-- Default settings for the site plugins -->
         <site.javadoc.exclude>*.impl:*.internal:</site.javadoc.exclude>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
     </properties>
 
     <issueManagement>
@@ -99,51 +101,18 @@
         </pluginRepository>
     </pluginRepositories>
 
-    <dependencyManagement>
-    <dependencies>
-        <dependency>
-            <groupId>junit</groupId>
-            <artifactId>junit</artifactId>
-            <version>4.12</version>
-        </dependency>
-        <dependency>
-            <groupId>org.easymock</groupId>
-            <artifactId>easymock</artifactId>
-            <version>3.4</version>
-        </dependency>
-        <dependency>
-            <groupId>org.mockito</groupId>
-            <artifactId>mockito-all</artifactId>
-            <version>1.10.19</version>
-        </dependency>
-    </dependencies>
-    </dependencyManagement>
-
-    <!-- definitions for testing -->
-    <dependencies>
-        <dependency>
-            <groupId>junit</groupId>
-            <artifactId>junit</artifactId>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.easymock</groupId>
-            <artifactId>easymock</artifactId>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.mockito</groupId>
-            <artifactId>mockito-all</artifactId>
-            <scope>test</scope>
-        </dependency>
-    </dependencies>
     <build>
         <pluginManagement>
             <plugins>
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-enforcer-plugin</artifactId>
+                    <version>3.0.0-M1</version>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-project-info-reports-plugin</artifactId>
-                    <version>2.8</version>
+                    <version>2.9</version>
                 </plugin>
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
@@ -158,45 +127,24 @@
                 <plugin>
                     <groupId>org.apache.rat</groupId>
                     <artifactId>apache-rat-plugin</artifactId>
-                    <version>0.11</version>
+                    <version>0.12</version>
                 </plugin>
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-javadoc-plugin</artifactId>
-                    <version>2.10.3</version>
+                    <version>2.10.4</version>
                 </plugin>
                 <plugin>
                     <groupId>org.codehaus.mojo</groupId>
                     <artifactId>animal-sniffer-maven-plugin</artifactId>
-                    <version>1.14</version>
-    	            <configuration>
+                    <version>1.15</version>
+                    <configuration>
                         <signature>
-                            <groupId>${felix.java.signature.groupId}</groupId>
-                            <artifactId>${felix.java.signature.artifactId}</artifactId>
-                            <version>${felix.java.signature.version}</version>
+                            <groupId>org.codehaus.mojo.signature</groupId>
+                            <artifactId>java1${felix.java.version}</artifactId>
+                            <version>1.0</version>
                         </signature>
                     </configuration>
-                </plugin>
-                <plugin>
-                    <groupId>org.apache.maven.plugins</groupId>
-                    <artifactId>maven-antrun-plugin</artifactId>
-                    <version>1.8</version>
-                    <dependencies>
-                        <!-- declare dependencies here rather than where needed to
-                             circumvent http://jira.codehaus.org/browse/MANTRUN-51
-                        -->
-                        <dependency>
-                            <groupId>org.apache.ant</groupId>
-                            <artifactId>ant-apache-regexp</artifactId>
-                            <version>1.7.1</version>
-                            <scope>runtime</scope>
-                        </dependency>
-                        <dependency>
-                            <groupId>jakarta-regexp</groupId>
-                            <artifactId>jakarta-regexp</artifactId>
-                            <version>1.4</version>
-                        </dependency>
-                    </dependencies>
                 </plugin>
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
@@ -213,54 +161,41 @@
         <plugins>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-antrun-plugin</artifactId>
+                <artifactId>maven-enforcer-plugin</artifactId>
                 <executions>
-                    <execution>
-                        <id>set-bundle-required-execution-environment</id>
+                     <execution>
+                        <id>enforce-property-values</id>
                         <goals>
-                            <goal>run</goal>
+                          <goal>enforce</goal>
                         </goals>
-                        <phase>initialize</phase>
                         <configuration>
-                            <exportAntProperties>true</exportAntProperties>
-                            <target>
-                                <script language="javascript"> <![CDATA[
-                                    var System = java.lang.System;
-                                    var skipAnimalSniffer = false;
-                                    var animalSnifferSignaturesVersion = "1.0";
-                                    var animalSnifferSignaturesArtifactId = "java13-sun";
-
-                                    var felixJavaVersion = System.getProperty("felix.java.version");
-                                    if (!felixJavaVersion) {
-                                        felixJavaVersion = project.getProperty("felix.java.version");
-                                    }
-
-                                    if (felixJavaVersion == "4") {
-                                        animalSnifferSignaturesArtifactId = "java14-sun";
-                                    } else if (felixJavaVersion == "5") {
-                                        animalSnifferSignaturesArtifactId = "java15";
-                                    } else if (felixJavaVersion == "6") {
-                                        animalSnifferSignaturesArtifactId = "java16";
-										animalSnifferSignaturesVersion = "1.1";
-                                    } else if (felixJavaVersion == "7") {
-                                        animalSnifferSignaturesArtifactId = "java17";
-	                                } else if ( felixJavaVersion == "8") {
-                                        // there are no published signatures for Java 1.8, so skip execution. However, we also need a valid
-                                        // artifact in the signature, so fallback to the 1.7 signatures and skip checking entirely
-                                        // see also https://github.com/mojohaus/animal-sniffer/issues/1
-                                        animalSnifferSignaturesArtifactId = "java17";
-	                                    skipAnimalSniffer = true;
-	                                } else if ( felixJavaVersion != "3") {
-                                        System.out.println("Unsupported felix.java.version=" + felixJavaVersion + "; must be 3, 4, 5, 6, 7 or 8.");
-                                        throw "felix.java.version must be 3, 4, 5, 6, 7 or 8";
-                                    }
-	                                System.out.println("Using felix.java.version=" + felixJavaVersion);
-                                    project.setProperty("felix.bree", "JavaSE-1." + felixJavaVersion);
-                                    project.setProperty("felix.animal.sniffer.skip", skipAnimalSniffer);
-                                    project.setProperty("felix.java.signature.version", animalSnifferSignaturesVersion);
-                                    project.setProperty("felix.java.signature.artifactId", animalSnifferSignaturesArtifactId);
-                                ]]></script>
-                            </target>
+                          <rules>
+                            <requireProperty>
+                              <property>felix.java.version</property>
+                              <regex>[6-9]</regex>
+                              <regexMessage>The property "felix.java.version" may only have one of the following values: 6, 7, 8 or 9.</regexMessage>
+                            </requireProperty>
+                          </rules>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>enforce-java</id>
+                        <goals>
+                            <goal>enforce</goal>
+                        </goals>
+                        <configuration>
+                            <rules>
+                                <!-- Require Java 7 or higher for building (as bnd since version 3.0 is built with Java 7) -->
+                                <requireJavaVersion>
+                                    <message>
+                                        Apache Felix must be compiled with Java 7 or higher
+                                    </message>
+                                    <version>1.7.0</version>
+                                </requireJavaVersion>
+                                <requireMavenVersion>
+                                    <version>3.5.0</version>
+                                </requireMavenVersion>
+                            </rules>
                         </configuration>
                     </execution>
                 </executions>
@@ -270,14 +205,6 @@
                 <artifactId>maven-javadoc-plugin</artifactId>
                 <configuration>
                     <excludePackageNames>${site.javadoc.exclude}</excludePackageNames>
-                </configuration>
-            </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-compiler-plugin</artifactId>
-                <configuration>
-                    <source>1.${felix.java.version}</source>
-                    <target>1.${felix.java.version}</target>
                 </configuration>
             </plugin>
            <plugin>
@@ -303,18 +230,6 @@
                         <exclude>**/*.json</exclude>
                     </excludes>
                 </configuration>
-            </plugin>
-             <plugin>
-                <groupId>org.codehaus.mojo</groupId>
-                <artifactId>animal-sniffer-maven-plugin</artifactId>
-                <executions>
-                    <execution>
-                        <phase>test</phase>
-                        <goals>
-                            <goal>check</goal>
-                        </goals>
-                    </execution>
-                </executions>
             </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
@@ -360,6 +275,58 @@
     </build>
 
     <profiles>
+        <profile>
+            <id>jdk8-or-lower</id>
+            <activation>
+                <!-- syntax according to http://maven.apache.org/enforcer/enforcer-rules/versionRanges.html -->
+                <jdk>(,9)</jdk>
+            </activation>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-compiler-plugin</artifactId>
+                        <configuration>
+                            <source>1.${felix.java.version}</source>
+                            <target>1.${felix.java.version}</target>
+                        </configuration>
+                    </plugin>
+                    <plugin>
+                        <groupId>org.codehaus.mojo</groupId>
+                        <artifactId>animal-sniffer-maven-plugin</artifactId>
+                        <executions>
+                            <execution>
+                                <goals>
+                                    <goal>check</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                     </plugin>
+                </plugins>
+            </build>
+        </profile>
+        <profile>
+            <id>jdk9-or-higher</id>
+            <activation>
+                <!-- syntax according to http://maven.apache.org/enforcer/enforcer-rules/versionRanges.html -->
+                <jdk>[9,)</jdk>
+            </activation>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-compiler-plugin</artifactId>
+                        <configuration>
+                            <!-- 
+                            release sets API classpath, source and target, see 
+                            https://docs.oracle.com/javase/9/tools/javac.htm#GUID-AEEC9F07-CB49-4E96-8BC7-BCC2C7F725C9__GUID-D343F6B4-3FDD-43A8-AD24-43DD70214471 
+                            and http://openjdk.java.net/jeps/247 -->
+                            <release>${felix.java.version}</release>
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
         <!-- This plugin's configuration is used to store Eclipse m2e settings only. It has no influence on the Maven build itself. -->
         <profile>
             <id>only-eclipse</id>
