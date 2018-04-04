@@ -27,9 +27,11 @@
     </parent>
 
     <name>Apache Felix Http Jetty</name>
+    <description>This is an implementation of the OSGi Http Service and the OSGi Http Whiteboard Specification</description>
+
     <artifactId>org.apache.felix.http.jetty</artifactId>
     <version>3.4.7-R7-SNAPSHOT</version>
-    <packaging>jar</packaging>
+    <packaging>bundle</packaging>
     
     <scm>
         <connection>scm:svn:http://svn.apache.org/repos/asf/felix/trunk/http/jetty</connection>
@@ -49,6 +51,7 @@
             <plugin>
                 <groupId>org.apache.felix</groupId>
                 <artifactId>maven-bundle-plugin</artifactId>
+                <extensions>true</extensions>
                 <configuration>
                     <instructions>
                     	<X-Jetty-Version>
