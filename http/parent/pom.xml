@@ -23,7 +23,7 @@
     <parent>
         <groupId>org.apache.felix</groupId>
         <artifactId>felix-parent</artifactId>
-        <version>4</version>
+        <version>5-SNAPSHOT</version>
         <relativePath>../../pom/pom.xml</relativePath>
     </parent>
 
@@ -32,24 +32,9 @@
     <version>10-SNAPSHOT</version>
     <packaging>pom</packaging>
 
-    <prerequisites>
-        <maven>3.0.5</maven>
-    </prerequisites>
 
     <properties>
-        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    	<jetty.version>9.3.8.v20160314</jetty.version>
-    	<cometd.version>3.0.8</cometd.version>
     	<servlet.version>3.1.0</servlet.version>
-        <!--
-            Java API and class file compliance. This property supports
-            one of three values:
-              - 6: Java 6 (default)
-              - 7: Java 7 
-            Using anything else causes the set-bundle-required-execution-environment
-            to fail the build with an exception
-        -->
-        <felix.java.version>6</felix.java.version>
     </properties>
 
     <scm>
@@ -64,7 +49,7 @@
                 <plugin>
                     <groupId>org.apache.felix</groupId>
                     <artifactId>maven-bundle-plugin</artifactId>
-                    <version>2.5.3</version>
+                    <version>3.5.0</version>
                     <executions>
                       <execution>
                         <id>bundle</id>
@@ -84,7 +69,7 @@
                         <instructions>
                             <Bundle-SymbolicName>${project.artifactId}</Bundle-SymbolicName>
                             <Bundle-Version>${project.version}</Bundle-Version>
-                            <Bundle-RequiredExecutionEnvironment>${felix.bree}</Bundle-RequiredExecutionEnvironment>
+                            <Implementation-URL>https://felix.apache.org/documentation/subprojects/apache-felix-http-service.html</Implementation-URL>
                         </instructions>                        
                     </configuration>
                 </plugin>
@@ -94,13 +79,37 @@
 
     <dependencies>
         <dependency>
+            <groupId>com.google.code.findbugs</groupId>
+            <artifactId>jsr305</artifactId>
+        </dependency>
+        <dependency>
             <groupId>org.osgi</groupId>
             <artifactId>osgi.annotation</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+        </dependency>
+        <dependency>
+	        <groupId>org.mockito</groupId>
+            <artifactId>mockito-core</artifactId>
         </dependency>
     </dependencies>
 
     <dependencyManagement>
         <dependencies>
+            <dependency>
+                <groupId>com.google.code.findbugs</groupId>
+                <artifactId>jsr305</artifactId>
+                <version>3.0.2</version>
+                <scope>provided</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.osgi</groupId>
+                <artifactId>osgi.annotation</artifactId>
+                <version>6.0.1</version>
+                <scope>provided</scope>
+            </dependency>        
             <dependency>
                 <groupId>javax.servlet</groupId>
                 <artifactId>javax.servlet-api</artifactId>
@@ -114,17 +123,17 @@
                 <scope>provided</scope>
             </dependency>
             <dependency>
-                <groupId>org.osgi</groupId>
-                <artifactId>osgi.cmpn</artifactId>
-                <version>6.0.0</version>
-                <scope>provided</scope>
+                <groupId>junit</groupId>
+                <artifactId>junit</artifactId>
+                <version>4.12</version>
+                <scope>test</scope>
             </dependency>
             <dependency>
-                <groupId>org.osgi</groupId>
-                <artifactId>osgi.annotation</artifactId>
-                <version>6.0.1</version>
-                <scope>provided</scope>
-            </dependency>        
+                <groupId>org.mockito</groupId>
+                <artifactId>mockito-core</artifactId>
+                <version>2.17.0</version>
+                <scope>test</scope>
+            </dependency>
         </dependencies>
     </dependencyManagement>
 </project>

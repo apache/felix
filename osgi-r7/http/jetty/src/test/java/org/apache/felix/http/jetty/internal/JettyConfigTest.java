@@ -16,8 +16,6 @@
  */
 package org.apache.felix.http.jetty.internal;
 
-import static org.easymock.EasyMock.createNiceMock;
-import static org.easymock.EasyMock.replay;
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -28,6 +26,7 @@ import java.util.List;
 
 import org.junit.Before;
 import org.junit.Test;
+import org.mockito.Mockito;
 import org.osgi.framework.BundleContext;
 
 /**
@@ -153,8 +152,7 @@ public class JettyConfigTest
     @Before
     public void setUp()
     {
-        this.context = createNiceMock(BundleContext.class);
-        replay(this.context);
+        this.context = Mockito.mock(BundleContext.class);
         this.config = new JettyConfig(this.context);
     }
 }
