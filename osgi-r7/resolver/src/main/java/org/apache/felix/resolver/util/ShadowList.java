@@ -71,6 +71,10 @@ public class ShadowList extends CandidateSelector
     public void replace(Capability origCap, Capability c) {
         checkModifiable();
         int idx = unmodifiable.indexOf(origCap);
+        if (idx == -1)
+        {
+            throw new IllegalArgumentException("Cannot replace " + origCap + " with " + c + " in list size " + unmodifiable.size() + ": no such element");
+        }
         unmodifiable.set(idx, c);
     }
 }
