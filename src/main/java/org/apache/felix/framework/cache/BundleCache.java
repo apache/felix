@@ -87,9 +87,6 @@ public class BundleCache
     public static final String CACHE_ROOTDIR_PROP = "felix.cache.rootdir";
     public static final String CACHE_LOCKING_PROP = "felix.cache.locking";
     public static final String CACHE_FILELIMIT_PROP = "felix.cache.filelimit";
-    // TODO: CACHE - This should eventually be removed along with the code
-    //       supporting the old multi-file bundle cache format.
-    public static final String CACHE_SINGLEBUNDLEFILE_PROP = "felix.cache.singlebundlefile";
     private static final ThreadLocal m_defaultBuffer = new ThreadLocal();
     private static volatile int DEFAULT_BUFFER = 1024 * 64;
 
