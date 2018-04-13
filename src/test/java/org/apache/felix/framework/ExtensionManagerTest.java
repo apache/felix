@@ -18,31 +18,9 @@
  */
 package org.apache.felix.framework;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
-
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.security.SecureRandom;
-import java.util.Arrays;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Properties;
-import java.util.Random;
-import java.util.Set;
-import java.util.concurrent.TimeUnit;
-import java.util.jar.JarOutputStream;
-import java.util.jar.Manifest;
-import java.util.zip.ZipEntry;
-
 import org.apache.felix.framework.util.FelixConstants;
 import org.apache.felix.framework.util.manifestparser.NativeLibraryClause;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.osgi.framework.BundleActivator;
@@ -52,6 +30,22 @@ import org.osgi.framework.Version;
 import org.osgi.framework.launch.Framework;
 import org.osgi.framework.namespace.NativeNamespace;
 import org.osgi.framework.wiring.BundleCapability;
+
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.jar.JarOutputStream;
+import java.util.jar.Manifest;
+import java.util.zip.ZipEntry;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 /**
  *
@@ -64,12 +58,28 @@ public class ExtensionManagerTest {
 
     @Before
     public void setUp() throws Exception {
-        String path = "/" + getClass().getName().replace('.', '/') + ".class";
-        String url = getClass().getResource(path).getFile();
-        String baseDir = url.substring(0, url.length() - path.length());
-        String rndStr = Long.toString(System.nanoTime(), Character.MAX_RADIX);
-        rndStr = rndStr.substring(rndStr.length() - 6, rndStr.length() - 1);
-        testDir = new File(baseDir, getClass().getSimpleName() + "_" + rndStr);
+        testDir = File.createTempFile("felix-temp", ".dir");
+        assertTrue("precondition", testDir.delete());
+        assertTrue("precondition", testDir.mkdirs());
+
+    }
+
+    @After
+    public void tearDown() throws Exception
+    {
+        deleteDir(testDir);
+    }
+
+    private static void deleteDir(File root) throws IOException
+    {
+        if (root.isDirectory())
+        {
+            for (File file : root.listFiles())
+            {
+                deleteDir(file);
+            }
+        }
+        assertTrue(root.delete());
     }
 
     /**
@@ -92,10 +102,10 @@ public class ExtensionManagerTest {
         configMap.put(FelixConstants.NATIVE_PROC_NAME_ALIAS_PREFIX + ".x86-64", "amd64,em64t,x86_64");
         configMap.put(FelixConstants.FRAMEWORK_SYSTEMPACKAGES, "foo");
         NativeLibraryClause.initializeNativeAliases(configMap);
-        ExtensionManager extensionManager = new ExtensionManager(logger,
-                configMap, null);
+        ExtensionManager extensionManager = new ExtensionManager(configMap, logger, null);
+
         BundleCapability nativeBundleCapability = extensionManager
-                .buildNativeCapabilites();
+                .buildNativeCapabilites(extensionManager.getRevision(), configMap);
         assertEquals(
                 "Native Language should be same as framework Language",
                 "en",
@@ -147,6 +157,35 @@ public class ExtensionManagerTest {
 
         framework.waitForStop(10000);
         assertEquals("startstop", activatorCalls.toString());
+    }
+
+    @Test
+    public void testSystemBundleHeaders() throws Exception
+    {
+        File cacheDir = new File(testDir, "cache");
+        cacheDir.mkdirs();
+        String cache = cacheDir.getAbsolutePath();
+
+        Map<String, Object> params = new HashMap<String, Object>();
+        params.put("felix.cache.profiledir", cache);
+        params.put("felix.cache.dir", cache);
+        params.put(Constants.FRAMEWORK_STORAGE, cache);
+
+        Framework framework = new Felix(params);
+        framework.init();
+        framework.start();
+
+        Version version = new Version(System.getProperty("java.specification.version"));
+        String versionString;
+        if (version.getMajor() < 9)
+        {
+            versionString = String.format("0.0.0.JavaSE_001_%03d", version.getMinor() > 6 ? version.getMinor() : 6);
+        }
+        else
+        {
+            versionString = String.format("0.0.0.JavaSE_%03d", version.getMajor());
+        }
+        assert(framework.getHeaders().get(Constants.EXPORT_PACKAGE).contains("java.lang; version=\"" + versionString + "\""));
     }
 
     private File createExtensionBundle() throws IOException {
