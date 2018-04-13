@@ -18,11 +18,13 @@
  */
 package org.apache.felix.framework.capabilityset;
 
+import org.osgi.framework.Version;
+import org.osgi.framework.VersionRange;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
-import org.apache.felix.framework.util.VersionRange;
 
 public class SimpleFilter
 {
@@ -565,12 +567,12 @@ loop:   for (int i = 0; i < len; i++)
             if (entry.getValue() instanceof VersionRange)
             {
                 VersionRange vr = (VersionRange) entry.getValue();
-                if (vr.isFloorInclusive())
+                if (vr.getLeftType() == VersionRange.LEFT_CLOSED)
                 {
                     filters.add(
                         new SimpleFilter(
                             entry.getKey(),
-                            vr.getFloor().toString(),
+                            vr.getLeft().toString(),
                             SimpleFilter.GTE));
                 }
                 else
@@ -580,19 +582,19 @@ loop:   for (int i = 0; i < len; i++)
                     ((List) not.getValue()).add(
                         new SimpleFilter(
                             entry.getKey(),
-                            vr.getFloor().toString(),
+                            vr.getLeft().toString(),
                             SimpleFilter.LTE));
                     filters.add(not);
                 }
 
-                if (vr.getCeiling() != null)
+                if (vr.getRight() != null)
                 {
-                    if (vr.isCeilingInclusive())
+                    if (vr.getRightType() == VersionRange.RIGHT_CLOSED)
                     {
                         filters.add(
                             new SimpleFilter(
                                 entry.getKey(),
-                                vr.getCeiling().toString(),
+                                vr.getRight().toString(),
                                 SimpleFilter.LTE));
                     }
                     else
@@ -602,7 +604,7 @@ loop:   for (int i = 0; i < len; i++)
                         ((List) not.getValue()).add(
                             new SimpleFilter(
                                 entry.getKey(),
-                                vr.getCeiling().toString(),
+                                vr.getRight().toString(),
                                 SimpleFilter.GTE));
                         filters.add(not);
                     }
