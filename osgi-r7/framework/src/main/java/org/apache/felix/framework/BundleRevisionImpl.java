@@ -71,9 +71,9 @@ public class BundleRevisionImpl implements BundleRevision, Resource
 
     private final BundleImpl m_bundle;
 
-    private Content m_content;
-    private List<Content> m_contentPath;
-    private ProtectionDomain m_protectionDomain = null;
+    private volatile Content m_content;
+    private volatile List<Content> m_contentPath;
+    private volatile ProtectionDomain m_protectionDomain = null;
     private final static SecureAction m_secureAction = new SecureAction();
 
     // Bundle wiring when resolved.
@@ -341,12 +341,12 @@ public class BundleRevisionImpl implements BundleRevision, Resource
         }
     }
 
-    public synchronized void setProtectionDomain(ProtectionDomain pd)
+    public void setProtectionDomain(ProtectionDomain pd)
     {
         m_protectionDomain = pd;
     }
 
-    public synchronized ProtectionDomain getProtectionDomain()
+    public ProtectionDomain getProtectionDomain()
     {
         return m_protectionDomain;
     }
@@ -355,17 +355,17 @@ public class BundleRevisionImpl implements BundleRevision, Resource
     // Content access methods.
     //
 
-    public synchronized Content getContent()
+    public Content getContent()
     {
         return m_content;
     }
 
-    synchronized void resetContent(Content content)
+    void resetContent(Content content)
     {
         m_content = content;
     }
 
-    synchronized List<Content> getContentPath()
+    List<Content> getContentPath()
     {
         if (m_contentPath == null)
         {
@@ -382,8 +382,12 @@ public class BundleRevisionImpl implements BundleRevision, Resource
         return m_contentPath;
     }
 
-    private List<Content> initializeContentPath() throws Exception
+    private synchronized List<Content> initializeContentPath() throws Exception
     {
+        if (m_contentPath != null)
+        {
+            return m_contentPath;
+        }
         List<Content> contentList = new ArrayList();
         calculateContentPath(this, getContent(), contentList, true);
 

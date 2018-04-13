@@ -84,7 +84,7 @@ public class ResolveContextImpl extends ResolveContext
         List<Resource> result = new ArrayList<Resource>();
         for (BundleRevision revision : m_ondemand)
         {
-            for (BundleRequirement req : ((BundleRevisionImpl) revision).getDeclaredRequirements(BundleRevision.HOST_NAMESPACE))
+            for (BundleRequirement req : revision.getDeclaredRequirements(BundleRevision.HOST_NAMESPACE))
             {
                 for (Capability cap : host.getCapabilities(BundleRevision.HOST_NAMESPACE))
                 {
@@ -146,41 +146,27 @@ public class ResolveContextImpl extends ResolveContext
 		// already or at least could be calculated quicker taking into account the
 		// current state. We need to revisit this.
 		Set<String> exportNames = new HashSet<String>();
-        for (Capability cap : wiring.getResource().getCapabilities(null))
+        for (Capability cap : wiring.getResource().getCapabilities(PackageNamespace.PACKAGE_NAMESPACE))
         {
-            if (PackageNamespace.PACKAGE_NAMESPACE.equals(cap.getNamespace()))
-            {
-                exportNames.add(
-                    (String) cap.getAttributes().get(PackageNamespace.PACKAGE_NAMESPACE));
-            }
+            exportNames.add(
+                (String) cap.getAttributes().get(PackageNamespace.PACKAGE_NAMESPACE));
         }
         // Add fragment exports
-        for (Wire wire : wiring.getProvidedResourceWires(null))
+        for (Wire wire : wiring.getProvidedResourceWires(HostNamespace.HOST_NAMESPACE))
         {
-            if (HostNamespace.HOST_NAMESPACE.equals(wire.getCapability().getNamespace()))
+            for (Capability cap : wire.getRequirement().getResource().getCapabilities(
+                PackageNamespace.PACKAGE_NAMESPACE))
             {
-                for (Capability cap : wire.getRequirement().getResource().getCapabilities(
-                    null))
-                {
-                    if (PackageNamespace.PACKAGE_NAMESPACE.equals(cap.getNamespace()))
-                    {
-                        exportNames.add((String) cap.getAttributes().get(
-                            PackageNamespace.PACKAGE_NAMESPACE));
-                    }
-                }
+                exportNames.add((String) cap.getAttributes().get(
+                    PackageNamespace.PACKAGE_NAMESPACE));
             }
         }
         List<Wire> substitutionWires = new ArrayList<Wire>();
-        for (Wire wire : wiring.getRequiredResourceWires(null))
+        for (Wire wire : wiring.getRequiredResourceWires(PackageNamespace.PACKAGE_NAMESPACE))
         {
-            if (PackageNamespace.PACKAGE_NAMESPACE.equals(
-                wire.getCapability().getNamespace()))
+            if (exportNames.contains(wire.getCapability().getAttributes().get(PackageNamespace.PACKAGE_NAMESPACE)))
             {
-                if (exportNames.contains(wire.getCapability().getAttributes().get(
-                    PackageNamespace.PACKAGE_NAMESPACE)))
-                {
-                    substitutionWires.add(wire);
-                }
+                substitutionWires.add(wire);
             }
         }
         return substitutionWires;
