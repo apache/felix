@@ -497,26 +497,24 @@ public class BundleCache
 
         // If the system bundle directory exists, then we don't
         // need to initialize since it has already been done.
-        if (!getSecureAction().fileExists(sbDir))
+        if (!getSecureAction().fileExists(sbDir) && !getSecureAction().mkdirs(sbDir) && !getSecureAction().fileExists(sbDir))
         {
-            // Create system bundle directory, if it does not exist.
-            if (!getSecureAction().mkdirs(sbDir))
-            {
-                m_logger.log(
-                    Logger.LOG_ERROR,
-                    "Unable to create system bundle directory.");
-                throw new IOException("Unable to create system bundle directory.");
-            }
+            m_logger.log(
+                Logger.LOG_ERROR,
+                "Unable to create system bundle directory.");
+            throw new IOException("Unable to create system bundle directory.");
         }
 
-        // Do some sanity checking.
-        if ((fileName.length() > 0) && (fileName.charAt(0) == File.separatorChar))
-            throw new IllegalArgumentException("The data file path must be relative, not absolute.");
-        else if (fileName.indexOf("..") >= 0)
-            throw new IllegalArgumentException("The data file path cannot contain a reference to the \"..\" directory.");
+        File dataFile = new File(sbDir, fileName);
 
-        // Return the data file.
-        return new File(sbDir, fileName);
+        String dataFilePath = BundleCache.getSecureAction().getCanonicalPath(dataFile);
+        String dataDirPath = BundleCache.getSecureAction().getCanonicalPath(sbDir);
+        if (!dataFilePath.equals(dataDirPath) && !dataFilePath.startsWith(dataDirPath + File.separatorChar))
+        {
+            throw new IllegalArgumentException("The data file must be inside the data dir.");
+        }
+
+        return dataFile;
     }
 
     //

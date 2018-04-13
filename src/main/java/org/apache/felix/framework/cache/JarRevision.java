@@ -105,7 +105,7 @@ class JarRevision extends BundleArchiveRevision
         return manifest;
     }
 
-    public synchronized Content getContent() throws Exception
+    public Content getContent() throws Exception
     {
         return new JarContent(getLogger(), getConfig(), m_zipFactory,
             this, getRevisionRootDir(), m_bundleFile, m_zipFile);
