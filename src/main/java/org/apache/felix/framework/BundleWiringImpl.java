@@ -30,6 +30,7 @@ import org.apache.felix.framework.util.Util;
 import org.apache.felix.framework.util.manifestparser.ManifestParser;
 import org.apache.felix.framework.util.manifestparser.NativeLibrary;
 import org.apache.felix.framework.wiring.BundleRequirementImpl;
+import org.codehaus.mojo.animal_sniffer.IgnoreJRERequirement;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleException;
 import org.osgi.framework.BundleReference;
@@ -59,6 +60,7 @@ import java.lang.reflect.Method;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.security.AccessController;
+import java.security.PrivilegedAction;
 import java.security.PrivilegedActionException;
 import java.security.PrivilegedExceptionAction;
 import java.security.SecureClassLoader;
@@ -114,7 +116,7 @@ public class BundleWiringImpl implements BundleWiring
 
     private volatile List<BundleRequirement> m_wovenReqs = null;
 
-    private BundleClassLoader m_classLoader;
+    private volatile BundleClassLoader m_classLoader;
 
     // Bundle-specific class loader for boot delegation.
     private final ClassLoader m_bootClassLoader;
@@ -538,7 +540,7 @@ public class BundleWiringImpl implements BundleWiring
     }
 
     @Override
-    public synchronized boolean isInUse()
+    public boolean isInUse()
     {
         return !m_isDisposed;
     }
@@ -706,32 +708,39 @@ public class BundleWiringImpl implements BundleWiring
         {
             return null;
         }
+
         return getClassLoaderInternal();
     }
 
-    private synchronized ClassLoader getClassLoaderInternal()
+    private ClassLoader getClassLoaderInternal()
+    {
+        ClassLoader classLoader = m_classLoader;
+        if (m_classLoader != null)
+        {
+            return classLoader;
+        }
+        else
+        {
+            return _getClassLoaderInternal();
+        }
+    }
+
+    private synchronized ClassLoader _getClassLoaderInternal()
     {
         // Only try to create the class loader if the bundle
         // is not disposed.
         if (!m_isDisposed && (m_classLoader == null))
         {
-            Class clazz = BundleClassLoader.class;
-
-            // Use SecureAction to create the class loader if security is
-            // enabled; otherwise, create it directly.
-            try
-            {
-                Constructor ctor = BundleRevisionImpl.getSecureAction()
-                        .getConstructor(clazz, new Class[] { BundleWiringImpl.class, ClassLoader.class, Logger.class });
-                m_classLoader = (BundleClassLoader)
-                        BundleRevisionImpl.getSecureAction().invoke(ctor,
-                                new Object[] { this, determineParentClassLoader(), m_logger });
-            }
-            catch (Exception ex)
-            {
-                throw new RuntimeException("Unable to create module class loader: "
-                        + ex.getMessage() + " [" + ex.getClass().getName() + "]");
-            }
+            m_classLoader = BundleRevisionImpl.getSecureAction().run(
+                new PrivilegedAction<BundleClassLoader>()
+                {
+                    @Override
+                    public BundleClassLoader run()
+                    {
+                        return new BundleClassLoader(BundleWiringImpl.this, determineParentClassLoader(), m_logger);
+                    }
+                }
+            );
         }
         return m_classLoader;
     }
@@ -762,9 +771,8 @@ public class BundleWiringImpl implements BundleWiring
     // Thread local to detect class loading cycles.
     private final ThreadLocal m_listResourcesCycleCheck = new ThreadLocal();
 
-    // TODO: OSGi R4.3 - Should this be synchronized or should we take a snapshot?
     @Override
-    public synchronized Collection<String> listResources(
+    public Collection<String> listResources(
             String path, String filePattern, int options)
     {
         // Implementation note: If you enable the DEBUG option for
@@ -817,7 +825,7 @@ public class BundleWiringImpl implements BundleWiring
         return resources;
     }
 
-    private Collection<ResourceSource> listResourcesInternal(
+    private synchronized Collection<ResourceSource> listResourcesInternal(
             String path, List<String> pattern, int options)
     {
         if (isInUse())
@@ -1331,13 +1339,15 @@ public class BundleWiringImpl implements BundleWiring
         return result;
     }
 
-    synchronized ClassLoader getBootDelegationClassLoader()
+    ClassLoader getBootDelegationClassLoader()
     {
+        ClassLoader loader = m_classLoader;
         // Get the appropriate class loader for delegation.
-        ClassLoader parent = (m_classLoader == null)
-                ? determineParentClassLoader() :
-                    BundleRevisionImpl.getSecureAction().getParentClassLoader(m_classLoader);
-                return (parent == null) ? m_bootClassLoader : parent;
+        ClassLoader parent = (loader == null) ?
+            determineParentClassLoader() :
+            BundleRevisionImpl.getSecureAction().getParentClassLoader(loader);
+
+        return (parent == null) ? m_bootClassLoader : parent;
     }
 
     private static final Constructor m_dexFileClassConstructor;
@@ -1962,35 +1972,22 @@ public class BundleWiringImpl implements BundleWiring
 
         static
         {
+            m_isParallel = registerAsParallel();
+        }
+
+        @IgnoreJRERequirement
+        private static boolean registerAsParallel()
+        {
             boolean registered = false;
             try
             {
-                Method method = BundleRevisionImpl.getSecureAction()
-                        .getDeclaredMethod(ClassLoader.class, "registerAsParallelCapable", null);
-
-                BundleRevisionImpl.getSecureAction().setAccesssible(method);
-
-                registered = ((Boolean) method.invoke(null)).booleanValue();
+                registered = ClassLoader.registerAsParallelCapable();
             }
             catch (Throwable th)
             {
                 // This is OK on older java versions
             }
-
-            m_isParallel = registered;
-            try
-            {
-                Method method = BundleRevisionImpl.getSecureAction()
-                        .getDeclaredMethod(ClassLoader.class, "registerAsParallelCapable", null);
-
-                BundleRevisionImpl.getSecureAction().setAccesssible(method);
-
-                method.invoke(null);
-            }
-            catch (Throwable th)
-            {
-                // This is OK on older java versions
-            }
+            return registered;
         }
 
         // Flag used to determine if a class has been loaded from this class
@@ -2001,7 +1998,7 @@ public class BundleWiringImpl implements BundleWiring
         private Object[][] m_cachedLibs = new Object[0][];
         private static final int LIBNAME_IDX = 0;
         private static final int LIBPATH_IDX = 1;
-        private final Map<String, Thread> m_classLocks = new HashMap<String, Thread>();
+        private final ConcurrentHashMap<String, Thread> m_classLocks = new ConcurrentHashMap<String, Thread>();
         private final BundleWiringImpl m_wiring;
         private final Logger m_logger;
 
@@ -2035,14 +2032,7 @@ public class BundleWiringImpl implements BundleWiring
         protected Class loadClass(String name, boolean resolve)
                 throws ClassNotFoundException
         {
-            Class clazz;
-
-            // Make sure the class was not already loaded.
-            Object lock = (isParallel()) ? m_classLocks : this;
-            synchronized (lock)
-            {
-                clazz = findLoadedClass(name);
-            }
+            Class clazz = findLoadedClass(name);
 
             if (clazz == null)
             {
@@ -2085,26 +2075,26 @@ public class BundleWiringImpl implements BundleWiring
         @Override
         protected Class findClass(String name) throws ClassNotFoundException
         {
-            Class clazz = null;
-
-            // Do a quick check to try to avoid searching for classes on a
-            // disposed class loader, which will avoid some odd exception.
-            // This won't prevent all weird exception, since the wiring could
-            // still get disposed of after this check, but it will prevent
-            // some, perhaps.
-            if (m_wiring.m_isDisposed)
-            {
-                throw new ClassNotFoundException(
-                        "Unable to load class '"
-                                + name
-                                + "' because the bundle wiring for "
-                                + m_wiring.m_revision.getSymbolicName()
-                                + " is no longer valid.");
-            }
+            Class clazz = findLoadedClass(name);
 
             // Search for class in bundle revision.
             if (clazz == null)
             {
+                // Do a quick check to try to avoid searching for classes on a
+                // disposed class loader, which will avoid some odd exception.
+                // This won't prevent all weird exception, since the wiring could
+                // still get disposed of after this check, but it will prevent
+                // some, perhaps.
+                if (m_wiring.m_isDisposed)
+                {
+                    throw new ClassNotFoundException(
+                        "Unable to load class '"
+                            + name
+                            + "' because the bundle wiring for "
+                            + m_wiring.m_revision.getSymbolicName()
+                            + " is no longer valid.");
+                }
+
                 String actual = name.replace('.', '/') + ".class";
 
                 byte[] bytes = null;
@@ -2159,42 +2149,15 @@ public class BundleWiringImpl implements BundleWiring
                             throw e;
                         }
                     }
-                    // Before we actually attempt to define the class, grab
-                    // the lock for this class loader and make sure than no
-                    // other thread has defined this class in the meantime.
-                    Object lock = (isParallel()) ? m_classLocks : this;
-                    synchronized (lock)
-                    {
-                        Thread me = Thread.currentThread();
-                        while (m_classLocks.containsKey(name) && (m_classLocks.get(name) != me))
-                        {
-                            try
-                            {
-                                lock.wait();
-                            }
-                            catch (InterruptedException e)
-                            {
-                                // TODO: WHAT TO DO HERE?
-                                throw new RuntimeException(e);
-                            }
-                        }
-                        // Lock released, try loading class.
-                        clazz = findLoadedClass(name);
-                        if (clazz == null)
-                        {
-                            // Not found, we should try load it.
-                            m_classLocks.put(name, me);
-                        }
-                    }
 
                     try
                     {
-                        clazz = defineClass(felix, wovenClassListeners, wci, name,
-                                clazz, bytes, content, pkgName, lock);
+                        clazz = isParallel() ? defineClassParallel(name, felix, wovenClassListeners, wci, bytes, content, pkgName) :
+                            defineClassNotParallel(name, felix, wovenClassListeners, wci, bytes, content, pkgName);
                     }
                     catch (ClassFormatError e)
                     {
-                        if(wci != null)
+                        if (wci != null)
                         {
                             wci.setState(WovenClass.DEFINE_FAILED);
                             callWovenClassListeners(felix, wovenClassListeners, wci);
@@ -2236,206 +2199,245 @@ public class BundleWiringImpl implements BundleWiring
             return clazz;
         }
 
-        Class defineClass(Felix felix,
-                Set<ServiceReference<WovenClassListener>> wovenClassListeners,
-                WovenClassImpl wci, String name, Class clazz, byte[] bytes,
-                Content content, String pkgName, Object lock)
-                        throws ClassFormatError
+        Class defineClassParallel(String name, Felix felix, Set<ServiceReference<WovenClassListener>> wovenClassListeners, WovenClassImpl wci, byte[] bytes,
+            Content content, String pkgName) throws ClassFormatError
         {
+            Class clazz = null;
 
-            try
+            Thread me = Thread.currentThread();
+
+            while (clazz == null && m_classLocks.putIfAbsent(name, me) != me)
             {
-                if (clazz == null)
-                {
-                    // If we have a woven class then get the class bytes from
-                    // it since they may have changed.
-                    // NOTE: We are taking a snapshot of these values and
-                    // are not preventing a malbehaving weaving hook from
-                    // modifying them after the fact. The price of preventing
-                    // this isn't worth it, since they can already wreck
-                    // havoc via weaving anyway. However, we do pass the
-                    // snapshot values into the woven class when we mark it
-                    // as complete so that it will refect the actual values
-                    // we used to define the class.
-                    if (wci != null)
-                    {
-                        bytes = wci._getBytes();
-                        List<String> wovenImports = wci.getDynamicImportsInternal();
-
-                        // Try to add any woven dynamic imports, since they
-                        // could potentially be needed when defining the class.
-                        List<BundleRequirement> allWovenReqs =
-                                new ArrayList<BundleRequirement>();
-                        for (String s : wovenImports)
-                        {
-                            try
-                            {
-                                List<BundleRequirement> wovenReqs =
-                                        ManifestParser.parseDynamicImportHeader(
-                                                m_logger, m_wiring.m_revision, s);
-                                allWovenReqs.addAll(wovenReqs);
-                            }
-                            catch (BundleException ex)
-                            {
-                                // There should be no exception here
-                                // since we checked syntax before adding
-                                // dynamic import strings to list.
-                            }
-                        }
-                        // Add the dynamic requirements.
-                        if (!allWovenReqs.isEmpty())
-                        {
-                            // Check for duplicate woven imports.
-                            // First grab existing woven imports, if any.
-                            Set<String> filters = new HashSet<String>();
-                            if (m_wiring.m_wovenReqs != null)
-                            {
-                                for (BundleRequirement req : m_wiring.m_wovenReqs)
-                                {
-                                    filters.add(
-                                            ((BundleRequirementImpl) req)
-                                            .getFilter().toString());
-                                }
-                            }
-                            // Then check new woven imports for duplicates
-                            // against existing and self.
-                            int idx = allWovenReqs.size();
-                            while (idx < allWovenReqs.size())
-                            {
-                                BundleRequirement wovenReq = allWovenReqs.get(idx);
-                                String filter = ((BundleRequirementImpl)
-                                        wovenReq).getFilter().toString();
-                                if (!filters.contains(filter))
-                                {
-                                    filters.add(filter);
-                                    idx++;
-                                }
-                                else
-                                {
-                                    allWovenReqs.remove(idx);
-                                }
-                            }
-                            // Merge existing with new imports, if any.
-                            if (!allWovenReqs.isEmpty())
-                            {
-                                if (m_wiring.m_wovenReqs != null)
-                                {
-                                    allWovenReqs.addAll(0, m_wiring.m_wovenReqs);
-                                }
-                                m_wiring.m_wovenReqs = allWovenReqs;
-                            }
-                        }
-                    }
-
-                    int activationPolicy =
-                            getBundle().isDeclaredActivationPolicyUsed()
-                            ? getBundle()
-                                    .adapt(BundleRevisionImpl.class).getDeclaredActivationPolicy()
-                                    : EAGER_ACTIVATION;
-
-                                    // If the revision is using deferred activation, then if
-                                    // we load this class from this revision we need to activate
-                                    // the bundle before returning the class. We will short
-                                    // circuit the trigger matching if the trigger is already
-                                    // tripped.
-                                    boolean isTriggerClass = m_isActivationTriggered
-                                            ? false : m_wiring.m_revision.isActivationTrigger(pkgName);
-                                    if (!m_isActivationTriggered
-                                            && isTriggerClass
-                                            && (activationPolicy == BundleRevisionImpl.LAZY_ACTIVATION)
-                                            && (getBundle().getState() == Bundle.STARTING))
-                                    {
-                                        List deferredList = (List) m_deferredActivation.get();
-                                        if (deferredList == null)
-                                        {
-                                            deferredList = new ArrayList();
-                                            m_deferredActivation.set(deferredList);
-                                        }
-                                        deferredList.add(new Object[] { name, getBundle() });
-                                    }
-                                    // We need to try to define a Package object for the class
-                                    // before we call defineClass() if we haven't already
-                                    // created it.
-                                    if (pkgName.length() > 0)
-                                    {
-                                        if (getPackage(pkgName) == null)
-                                        {
-                                            Object[] params = definePackage(pkgName);
-
-                                            // This is a harmless check-then-act situation,
-                                            // where threads might be racing to create different
-                                            // classes in the same package, so catch and ignore
-                                            // any IAEs that may occur.
-                                            try
-                                            {
-                                                definePackage(
-                                                        pkgName,
-                                                        (String) params[0],
-                                                        (String) params[1],
-                                                        (String) params[2],
-                                                        (String) params[3],
-                                                        (String) params[4],
-                                                        (String) params[5],
-                                                        null);
-                                            }
-                                            catch (IllegalArgumentException ex)
-                                            {
-                                                // Ignore.
-                                            }
-                                        }
-                                    }
-
-                                    // If we can load the class from a dex file do so
-                                    if (content instanceof JarContent)
-                                    {
-                                        try
-                                        {
-                                            clazz = getDexFileClass((JarContent) content, name, this);
-                                        }
-                                        catch (Exception ex)
-                                        {
-                                            // Looks like we can't
-                                        }
-                                    }
-
-                                    if (clazz == null)
-                                    {
-                                        // If we have a security context, then use it to
-                                        // define the class with it for security purposes,
-                                        // otherwise define the class without a protection domain.
-                                        if (m_wiring.m_revision.getProtectionDomain() != null)
-                                        {
-                                            clazz = defineClass(name, bytes, 0, bytes.length,
-                                                    m_wiring.m_revision.getProtectionDomain());
-                                        }
-                                        else
-                                        {
-                                            clazz = defineClass(name, bytes, 0, bytes.length);
-                                        }
-                                        if(wci != null)
-                                        {
-                                            wci.completeDefine(clazz);
-                                            wci.setState(WovenClass.DEFINED);
-                                            callWovenClassListeners(felix, wovenClassListeners, wci);
-                                        }
-                                    }
-
-                                    // At this point if we have a trigger class, then the deferred
-                                    // activation trigger has tripped.
-                                    if (!m_isActivationTriggered && isTriggerClass && (clazz != null))
-                                    {
-                                        m_isActivationTriggered = true;
-                                    }
-                }
+                clazz = findLoadedClass(name);
             }
-            finally
+
+            if (clazz == null)
             {
-                synchronized (lock)
+                try
+                {
+                    clazz = findLoadedClass(name);
+                    if (clazz == null)
+                    {
+                        clazz = defineClass(felix, wovenClassListeners, wci, name,
+                            bytes, content, pkgName);
+                    }
+                }
+                finally
                 {
                     m_classLocks.remove(name);
-                    lock.notifyAll();
                 }
             }
+            return clazz;
+        }
+
+        Class defineClassNotParallel(String name, Felix felix, Set<ServiceReference<WovenClassListener>> wovenClassListeners, WovenClassImpl wci, byte[] bytes,
+            Content content, String pkgName) throws ClassFormatError
+        {
+            Class clazz = findLoadedClass(name);
+
+            if (clazz == null)
+            {
+                synchronized (m_classLocks)
+                {
+                    clazz = findLoadedClass(name);
+                    if (clazz == null)
+                    {
+                        clazz = defineClass(felix, wovenClassListeners, wci, name,
+                            bytes, content, pkgName);
+                    }
+                }
+            }
+            return clazz;
+        }
+
+        Class defineClass(Felix felix,
+            Set<ServiceReference<WovenClassListener>> wovenClassListeners,
+            WovenClassImpl wci, String name, byte[] bytes, Content content, String pkgName)
+            throws ClassFormatError
+        {
+            // If we have a woven class then get the class bytes from
+            // it since they may have changed.
+            // NOTE: We are taking a snapshot of these values and
+            // are not preventing a malbehaving weaving hook from
+            // modifying them after the fact. The price of preventing
+            // this isn't worth it, since they can already wreck
+            // havoc via weaving anyway. However, we do pass the
+            // snapshot values into the woven class when we mark it
+            // as complete so that it will refect the actual values
+            // we used to define the class.
+            if (wci != null)
+            {
+                bytes = wci._getBytes();
+                List<String> wovenImports = wci.getDynamicImportsInternal();
+
+                // Try to add any woven dynamic imports, since they
+                // could potentially be needed when defining the class.
+                List<BundleRequirement> allWovenReqs =
+                    new ArrayList<BundleRequirement>();
+                for (String s : wovenImports)
+                {
+                    try
+                    {
+                        List<BundleRequirement> wovenReqs =
+                            ManifestParser.parseDynamicImportHeader(
+                                m_logger, m_wiring.m_revision, s);
+                        allWovenReqs.addAll(wovenReqs);
+                    }
+                    catch (BundleException ex)
+                    {
+                        // There should be no exception here
+                        // since we checked syntax before adding
+                        // dynamic import strings to list.
+                    }
+                }
+                // Add the dynamic requirements.
+                if (!allWovenReqs.isEmpty())
+                {
+                    // Check for duplicate woven imports.
+                    // First grab existing woven imports, if any.
+                    Set<String> filters = new HashSet<String>();
+                    if (m_wiring.m_wovenReqs != null)
+                    {
+                        for (BundleRequirement req : m_wiring.m_wovenReqs)
+                        {
+                            filters.add(
+                                ((BundleRequirementImpl) req)
+                                    .getFilter().toString());
+                        }
+                    }
+                    // Then check new woven imports for duplicates
+                    // against existing and self.
+                    int idx = allWovenReqs.size();
+                    while (idx < allWovenReqs.size())
+                    {
+                        BundleRequirement wovenReq = allWovenReqs.get(idx);
+                        String filter = ((BundleRequirementImpl)
+                            wovenReq).getFilter().toString();
+                        if (!filters.contains(filter))
+                        {
+                            filters.add(filter);
+                            idx++;
+                        }
+                        else
+                        {
+                            allWovenReqs.remove(idx);
+                        }
+                    }
+                    // Merge existing with new imports, if any.
+                    if (!allWovenReqs.isEmpty())
+                    {
+                        if (m_wiring.m_wovenReqs != null)
+                        {
+                            allWovenReqs.addAll(0, m_wiring.m_wovenReqs);
+                        }
+                        m_wiring.m_wovenReqs = allWovenReqs;
+                    }
+                }
+            }
+
+            int activationPolicy =
+                getBundle().isDeclaredActivationPolicyUsed()
+                    ? getBundle()
+                    .adapt(BundleRevisionImpl.class).getDeclaredActivationPolicy()
+                    : EAGER_ACTIVATION;
+
+            // If the revision is using deferred activation, then if
+            // we load this class from this revision we need to activate
+            // the bundle before returning the class. We will short
+            // circuit the trigger matching if the trigger is already
+            // tripped.
+            boolean isTriggerClass = m_isActivationTriggered
+                ? false : m_wiring.m_revision.isActivationTrigger(pkgName);
+
+            if (!m_isActivationTriggered
+                && isTriggerClass
+                && (activationPolicy == BundleRevisionImpl.LAZY_ACTIVATION)
+                && (getBundle().getState() == Bundle.STARTING))
+            {
+                List deferredList = (List) m_deferredActivation.get();
+                if (deferredList == null)
+                {
+                    deferredList = new ArrayList();
+                    m_deferredActivation.set(deferredList);
+                }
+                deferredList.add(new Object[]{name, getBundle()});
+            }
+            // We need to try to define a Package object for the class
+            // before we call defineClass() if we haven't already
+            // created it.
+            if (pkgName.length() > 0)
+            {
+                if (getPackage(pkgName) == null)
+                {
+                    Object[] params = definePackage(pkgName);
+
+                    // This is a harmless check-then-act situation,
+                    // where threads might be racing to create different
+                    // classes in the same package, so catch and ignore
+                    // any IAEs that may occur.
+                    try
+                    {
+                        definePackage(
+                            pkgName,
+                            (String) params[0],
+                            (String) params[1],
+                            (String) params[2],
+                            (String) params[3],
+                            (String) params[4],
+                            (String) params[5],
+                            null);
+                    }
+                    catch (IllegalArgumentException ex)
+                    {
+                        // Ignore.
+                    }
+                }
+            }
+
+            Class clazz = null;
+
+            // If we can load the class from a dex file do so
+            if (content instanceof JarContent)
+            {
+                try
+                {
+                    clazz = getDexFileClass((JarContent) content, name, this);
+                }
+                catch (Exception ex)
+                {
+                    // Looks like we can't
+                }
+            }
+
+            if (clazz == null)
+            {
+                // If we have a security context, then use it to
+                // define the class with it for security purposes,
+                // otherwise define the class without a protection domain.
+                if (m_wiring.m_revision.getProtectionDomain() != null)
+                {
+                    clazz = defineClass(name, bytes, 0, bytes.length,
+                        m_wiring.m_revision.getProtectionDomain());
+                }
+                else
+                {
+                    clazz = defineClass(name, bytes, 0, bytes.length);
+                }
+                if (wci != null)
+                {
+                    wci.completeDefine(clazz);
+                    wci.setState(WovenClass.DEFINED);
+                    callWovenClassListeners(felix, wovenClassListeners, wci);
+                }
+            }
+
+            // At this point if we have a trigger class, then the deferred
+            // activation trigger has tripped.
+            if (!m_isActivationTriggered && isTriggerClass && (clazz != null))
+            {
+                m_isActivationTriggered = true;
+            }
+
             return clazz;
         }
 
