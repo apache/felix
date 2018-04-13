@@ -120,7 +120,7 @@ public class JarContent implements Content
     public Enumeration<String> getEntries()
     {
         // Wrap entries enumeration to filter non-matching entries.
-        Enumeration<String> e = new EntriesEnumeration(m_zipFile.entries());
+        Enumeration<String> e = m_zipFile.names();
 
         // Spec says to return null if there are no entries.
         return (e.hasMoreElements()) ? e : null;
@@ -430,26 +430,6 @@ public class JarContent implements Content
                 // Extract embedded JAR into its directory.
                 BundleCache.copyStreamToFile(m_zipFile.getInputStream(ze), jarFile);
             }
-        }
-    }
-
-    private static class EntriesEnumeration implements Enumeration<String>
-    {
-        private final Enumeration m_enumeration;
-
-        public EntriesEnumeration(Enumeration enumeration)
-        {
-            m_enumeration = enumeration;
-        }
-
-        public boolean hasMoreElements()
-        {
-            return m_enumeration.hasMoreElements();
-        }
-
-        public String nextElement()
-        {
-            return ((ZipEntry) m_enumeration.nextElement()).getName();
         }
     }
 

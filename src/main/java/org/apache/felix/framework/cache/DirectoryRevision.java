@@ -67,14 +67,14 @@ class DirectoryRevision extends BundleArchiveRevision
         }
     }
 
-    public synchronized Map<String, Object> getManifestHeader()
+    public Map<String, Object> getManifestHeader()
         throws Exception
     {
         File manifest = new File(m_refDir, "META-INF/MANIFEST.MF");
         return manifest.isFile() ? BundleCache.getMainAttributes(new StringMap(), BundleCache.getSecureAction().getFileInputStream(manifest), manifest.length()) : null;
     }
 
-    public synchronized Content getContent() throws Exception
+    public Content getContent() throws Exception
     {
         return new DirectoryContent(getLogger(), getConfig(), m_zipFactory,
             this, getRevisionRootDir(), m_refDir);
