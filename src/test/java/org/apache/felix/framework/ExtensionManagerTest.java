@@ -102,7 +102,7 @@ public class ExtensionManagerTest {
         configMap.put(FelixConstants.NATIVE_PROC_NAME_ALIAS_PREFIX + ".x86-64", "amd64,em64t,x86_64");
         configMap.put(FelixConstants.FRAMEWORK_SYSTEMPACKAGES, "foo");
         NativeLibraryClause.initializeNativeAliases(configMap);
-        ExtensionManager extensionManager = new ExtensionManager(configMap, logger, null);
+        ExtensionManager extensionManager = new ExtensionManager(logger, configMap, null);
 
         BundleCapability nativeBundleCapability = extensionManager
                 .buildNativeCapabilites(extensionManager.getRevision(), configMap);
