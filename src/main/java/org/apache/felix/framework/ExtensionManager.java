@@ -22,6 +22,7 @@ import org.apache.felix.framework.cache.Content;
 import org.apache.felix.framework.cache.DirectoryContent;
 import org.apache.felix.framework.cache.JarContent;
 import org.apache.felix.framework.ext.ClassPathExtenderFactory;
+import org.apache.felix.framework.util.ClassParser;
 import org.apache.felix.framework.util.FelixConstants;
 import org.apache.felix.framework.util.ImmutableList;
 import org.apache.felix.framework.util.ImmutableMap;
@@ -33,6 +34,7 @@ import org.apache.felix.framework.util.manifestparser.NativeLibraryClause;
 import org.apache.felix.framework.wiring.BundleCapabilityImpl;
 import org.apache.felix.framework.wiring.BundleRequirementImpl;
 import org.apache.felix.framework.wiring.BundleWireImpl;
+import org.codehaus.mojo.animal_sniffer.IgnoreJRERequirement;
 import org.osgi.framework.AdminPermission;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleActivator;
@@ -50,13 +52,20 @@ import org.osgi.framework.wiring.BundleWire;
 import org.osgi.framework.wiring.BundleWiring;
 
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.OutputStream;
+import java.io.OutputStreamWriter;
+import java.net.URI;
 import java.net.URL;
 import java.security.AccessController;
 import java.security.AllPermission;
 import java.security.PrivilegedExceptionAction;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Enumeration;
 import java.util.HashMap;
@@ -70,6 +79,10 @@ import java.util.NoSuchElementException;
 import java.util.Properties;
 import java.util.ServiceLoader;
 import java.util.Set;
+import java.util.SortedMap;
+import java.util.SortedSet;
+import java.util.TreeMap;
+import java.util.TreeSet;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 /**
@@ -146,12 +159,8 @@ class ExtensionManager implements Content
     }
 
     private final Logger m_logger;
-    private final Map m_configMap;
-    private final Map m_headerMap = new StringMap();
-    private final Map m_originalHeaderMap = new StringMap();
-    private final BundleRevisionImpl m_systemBundleRevision;
-    private volatile List<BundleCapability> m_capabilities = Collections.EMPTY_LIST;
-    private volatile Set<String> m_exportNames = Collections.EMPTY_SET;
+    private volatile ExtensionManagerRevision m_systemBundleRevision;
+
     private final List<ExtensionTuple> m_extensionTuples = Collections.synchronizedList(new ArrayList<ExtensionTuple>());
 
     private final List<BundleRevisionImpl> m_resolvedExtensions = new CopyOnWriteArrayList<BundleRevisionImpl>();
@@ -180,96 +189,23 @@ class ExtensionManager implements Content
      * instance.
      *
      * @param logger the logger to use.
-     * @param configMap the configuration to read properties from.
-     * @param felix the framework.
      */
     ExtensionManager(Logger logger, Map configMap, Felix felix)
     {
         m_logger = logger;
-        m_configMap = configMap;
-        m_systemBundleRevision = new ExtensionManagerRevision(felix);
 
-// TODO: FRAMEWORK - Not all of this stuff really belongs here, probably only exports.
-        // Populate system bundle header map.
-        m_headerMap.put(FelixConstants.BUNDLE_VERSION,
-            m_configMap.get(FelixConstants.FELIX_VERSION_PROPERTY));
-        m_headerMap.put(FelixConstants.BUNDLE_SYMBOLICNAME,
-            FelixConstants.SYSTEM_BUNDLE_SYMBOLICNAME);
-        m_headerMap.put(FelixConstants.BUNDLE_NAME, "System Bundle");
-        m_headerMap.put(FelixConstants.BUNDLE_DESCRIPTION,
-            "This bundle is system specific; it implements various system services.");
-        m_headerMap.put(FelixConstants.EXPORT_SERVICE,
-            "org.osgi.service.packageadmin.PackageAdmin," +
-            "org.osgi.service.startlevel.StartLevel," +
-            "org.osgi.service.url.URLHandlers");
-
-        Properties configProps = Util.toProperties(m_configMap);
-        // The system bundle exports framework packages as well as
-        // arbitrary user-defined packages from the system class path.
-        // We must construct the system bundle's export metadata.
-        // Get configuration property that specifies which class path
-        // packages should be exported by the system bundle.
-        String syspkgs =
-            "true".equalsIgnoreCase(configProps.getProperty(FelixConstants.USE_PROPERTY_SUBSTITUTION_IN_SYSTEMPACKAGES)) ?
-                Util.getPropertyWithSubs(configProps, FelixConstants.FRAMEWORK_SYSTEMPACKAGES) :
-                configProps.getProperty(FelixConstants.FRAMEWORK_SYSTEMPACKAGES);
-
-        syspkgs = (syspkgs == null) ? "" : syspkgs;
-
-        // If any extra packages are specified, then append them.
-        String pkgextra =
-            "true".equalsIgnoreCase(configProps.getProperty(FelixConstants.USE_PROPERTY_SUBSTITUTION_IN_SYSTEMPACKAGES)) ?
-                Util.getPropertyWithSubs(configProps, FelixConstants.FRAMEWORK_SYSTEMPACKAGES_EXTRA) :
-                configProps.getProperty(FelixConstants.FRAMEWORK_SYSTEMPACKAGES_EXTRA);
-
-        syspkgs = ((pkgextra == null) || (pkgextra.trim().length() == 0))
-            ? syspkgs : syspkgs + (pkgextra.trim().startsWith(",") ? pkgextra : "," + pkgextra);
-
-        m_headerMap.put(FelixConstants.BUNDLE_MANIFESTVERSION, "2");
-        m_headerMap.put(FelixConstants.EXPORT_PACKAGE, syspkgs);
-
-        // The system bundle alsp provides framework generic capabilities
-        // as well as arbitrary user-defined generic capabilities. We must
-        // construct the system bundle's capabilitie metadata. Get the
-        // configuration property that specifies which capabilities should
-        // be provided by the system bundle.
-        String syscaps = Util.getPropertyWithSubs(configProps, Constants.FRAMEWORK_SYSTEMCAPABILITIES);
-
-        syscaps = (syscaps == null) ? "" : syscaps;
-
-        // If any extra capabilities are specified, then append them.
-        String capextra = Util.getPropertyWithSubs(configProps, Constants.FRAMEWORK_SYSTEMCAPABILITIES_EXTRA);
-        syscaps = ((capextra == null) || (capextra.trim().length() == 0))
-            ? syscaps : syscaps + (capextra.trim().startsWith(",") ? capextra : "," + capextra);
-        m_headerMap.put(FelixConstants.PROVIDE_CAPABILITY, syscaps);
-        m_originalHeaderMap.putAll(m_headerMap);
-        try
-        {
-            ManifestParser mp = new ManifestParser(
-                m_logger, m_configMap, m_systemBundleRevision, m_headerMap);
-            List<BundleCapability> caps = ManifestParser.aliasSymbolicName(mp.getCapabilities(), m_systemBundleRevision);
-            caps.add(buildNativeCapabilites());
-            appendCapabilities(caps);
-        }
-        catch (Exception ex)
-        {
-            m_capabilities = Collections.EMPTY_LIST;
-            m_logger.log(
-                Logger.LOG_ERROR,
-                "Error parsing system bundle export statement: "
-                + syspkgs, ex);
-        }
+        m_systemBundleRevision = new ExtensionManagerRevision(configMap, felix);
     }
 
-    protected BundleCapability buildNativeCapabilites() {
-        String osArchitecture = (String)m_configMap.get(FelixConstants.FRAMEWORK_PROCESSOR);
-        String osName = (String)m_configMap.get(FelixConstants.FRAMEWORK_OS_NAME);
-        String osVersion = (String)m_configMap.get(FelixConstants.FRAMEWORK_OS_VERSION);
-        String userLang = (String)m_configMap.get(FelixConstants.FRAMEWORK_LANGUAGE);
+    protected BundleCapability buildNativeCapabilites(BundleRevisionImpl revision, Map configMap) {
+        String osArchitecture = (String) configMap.get(FelixConstants.FRAMEWORK_PROCESSOR);
+        String osName = (String) configMap.get(FelixConstants.FRAMEWORK_OS_NAME);
+        String osVersion = (String) configMap.get(FelixConstants.FRAMEWORK_OS_VERSION);
+        String userLang = (String) configMap.get(FelixConstants.FRAMEWORK_LANGUAGE);
         Map<String, Object> attributes = new HashMap<String, Object>();
-        
+
         //Add all startup properties so we can match selection-filters
-        attributes.putAll(m_configMap);
+        attributes.putAll(configMap);
 
         if( osArchitecture != null )
         {
@@ -291,7 +227,134 @@ class ExtensionManager implements Content
             attributes.put(NativeNamespace.CAPABILITY_LANGUAGE_ATTRIBUTE, userLang);
         }
 
-        return new BundleCapabilityImpl(getRevision(), NativeNamespace.NATIVE_NAMESPACE, Collections.<String, String> emptyMap(), attributes);
+        return new BundleCapabilityImpl(revision, NativeNamespace.NATIVE_NAMESPACE, Collections.<String, String> emptyMap(), attributes);
+    }
+
+    @IgnoreJRERequirement
+    void updateRevision(Felix felix, Map configMap)
+    {
+        Map config = new HashMap(configMap);
+        Properties defaultProperties = Util.loadDefaultProperties(m_logger);
+
+        Util.initializeJPMSEE(felix._getProperty("java.specification.version"), defaultProperties, m_logger);
+
+        String sysprops = felix._getProperty(Constants.FRAMEWORK_SYSTEMPACKAGES);
+
+        final Map<String, Set<String>> exports = Util.initializeJPMS(defaultProperties);
+
+        if (exports != null && (sysprops == null || "true".equalsIgnoreCase(felix._getProperty(FelixConstants.USE_PROPERTY_SUBSTITUTION_IN_SYSTEMPACKAGES))))
+        {
+            java.nio.file.FileSystem fs = java.nio.file.FileSystems.getFileSystem(URI.create("jrt:/"));
+            final ClassParser classParser = new ClassParser();
+            final Set<String> imports = new HashSet<String>();
+            for (Set<String> moduleImport : exports.values())
+            {
+                for (String pkg : moduleImport)
+                {
+                    if (!pkg.startsWith("java."))
+                    {
+                        imports.add(pkg);
+                    }
+                }
+            }
+            for (final String moduleKey : exports.keySet())
+            {
+                int idx = moduleKey.indexOf("@");
+                String module = idx == -1 ? moduleKey : moduleKey.substring(0, idx);
+                if (felix._getProperty(module) == null && !exports.get(moduleKey).isEmpty() && defaultProperties.getProperty(module) == null)
+                {
+                    final SortedMap<String, SortedSet<String>> referred = new TreeMap<String, SortedSet<String>>();
+                    if ("true".equalsIgnoreCase(felix._getProperty(FelixConstants.CALCULATE_SYSTEMPACKAGES_USES)))
+                    {
+                        try
+                        {
+                            Properties cachedProps = new Properties();
+                            File modulesDir = felix.getDataFile(felix, "modules");
+                            modulesDir.mkdirs();
+                            File cached = new File(modulesDir, moduleKey + ".properties");
+                            if (cached.isFile())
+                            {
+                                FileInputStream input = new FileInputStream(cached);
+                                cachedProps.load(new InputStreamReader(input, "UTF-8"));
+                                input.close();
+                                for (Enumeration<?> keys = cachedProps.propertyNames(); keys.hasMoreElements();)
+                                {
+                                    String pkg = (String) keys.nextElement();
+                                    referred.put(pkg, new TreeSet<String>(Arrays.asList(cachedProps.getProperty(pkg).split(","))));
+                                }
+                            }
+                            else
+                            {
+                                java.nio.file.Path path = fs.getPath("modules", module.substring("felix.jpms.".length()));
+                                java.nio.file.Files.walkFileTree(path, (java.nio.file.FileVisitor) Felix.class.getClassLoader().loadClass("org.apache.felix.framework.util.ClassFileVisitor")
+                                    .getConstructor(Set.class, Set.class, ClassParser.class, SortedMap.class).newInstance(imports, exports.get(moduleKey), classParser, referred));
+                                for (String pkg : referred.keySet())
+                                {
+                                    SortedSet<String> uses = referred.get(pkg);
+                                    if (uses != null && !uses.isEmpty())
+                                    {
+                                        cachedProps.setProperty(pkg, String.join(",", uses));
+                                    }
+                                }
+                                OutputStream output = new FileOutputStream(cached);
+                                cachedProps.store(new OutputStreamWriter(output, "UTF-8"), null);
+                                output.close();
+                            }
+                        }
+                        catch (Throwable e)
+                        {
+                            m_logger.log(Logger.LOG_WARNING, "Exception calculating JPMS module exports", e);
+                        }
+                    }
+
+                    String pkgs = "";
+
+                    for (String pkg : exports.get(moduleKey))
+                    {
+                        pkgs += "," + pkg;
+                        SortedSet<String> uses = referred.get(pkg);
+                        if (uses != null && !uses.isEmpty())
+                        {
+                            pkgs += ";uses:=\"";
+                            String sep = "";
+                            for (String u : uses)
+                            {
+                                pkgs += sep + u;
+                                sep = ",";
+                            }
+                            pkgs += "\"";
+                        }
+                        pkgs += ";version=\"" + defaultProperties.getProperty("felix.detect.java.version") + "\"";
+                    }
+                    defaultProperties.put(module, pkgs);
+                }
+            }
+        }
+        if(sysprops != null && "true".equalsIgnoreCase(felix._getProperty(FelixConstants.USE_PROPERTY_SUBSTITUTION_IN_SYSTEMPACKAGES)) )
+        {
+            defaultProperties.put(Constants.FRAMEWORK_SYSTEMPACKAGES, sysprops);
+            config.put(Constants.FRAMEWORK_SYSTEMPACKAGES, Util.getPropertyWithSubs(defaultProperties, Constants.FRAMEWORK_SYSTEMPACKAGES));
+        }
+        else if (sysprops == null)
+        {
+            config.put(Constants.FRAMEWORK_SYSTEMPACKAGES, Util.getPropertyWithSubs(defaultProperties, Constants.FRAMEWORK_SYSTEMPACKAGES));
+        }
+
+        String syscaps = felix._getProperty(Constants.FRAMEWORK_SYSTEMCAPABILITIES);
+        if(syscaps == null)
+        {
+            config.put(Constants.FRAMEWORK_SYSTEMCAPABILITIES, Util.getPropertyWithSubs(defaultProperties, Constants.FRAMEWORK_SYSTEMCAPABILITIES));
+        }
+
+        for (Map.Entry entry : defaultProperties.entrySet())
+        {
+            if (!config.containsKey(entry.getKey()))
+            {
+                config.put(entry.getKey(), entry.getValue());
+            }
+        }
+
+        m_systemBundleRevision.update(config);
     }
 
     public BundleRevisionImpl getRevision()
@@ -381,30 +444,6 @@ class ExtensionManager implements Content
         m_unresolvedExtensions.add(bri);
     }
 
-    public synchronized void removeExtensionBundles()
-    {
-        m_resolvedExtensions.clear();
-        m_unresolvedExtensions.clear();
-        m_failedExtensions.clear();
-        m_headerMap.clear();
-        m_headerMap.putAll(m_originalHeaderMap);
-        try
-        {
-            ManifestParser mp = new ManifestParser(
-                    m_logger, m_configMap, m_systemBundleRevision, m_headerMap);
-            List<BundleCapability> caps = ManifestParser.aliasSymbolicName(mp.getCapabilities(), m_systemBundleRevision);
-            caps.add(buildNativeCapabilites());
-            appendCapabilities(caps);
-        }
-        catch (Exception ex)
-        {
-            m_capabilities = Collections.EMPTY_LIST;
-            m_logger.log(
-                    Logger.LOG_ERROR,
-                    "Error parsing system bundle export statement", ex);
-        }
-    }
-
     public synchronized List<Bundle> resolveExtensionBundles(Felix felix)
     {
         if (m_unresolvedExtensions.isEmpty())
@@ -459,11 +498,11 @@ class ExtensionManager implements Content
 
             BundleWire wire = new BundleWireImpl(revision,
                 revision.getDeclaredRequirements(BundleRevision.HOST_NAMESPACE).get(0),
-                m_systemBundleRevision, getCapabilities(BundleRevision.HOST_NAMESPACE).get(0));
+                m_systemBundleRevision,  m_systemBundleRevision.getWiring().getCapabilities(BundleRevision.HOST_NAMESPACE).get(0));
 
             try
             {
-                revision.resolve(new BundleWiringImpl(m_logger, m_configMap, null, revision, null,
+                revision.resolve(new BundleWiringImpl(m_logger, m_systemBundleRevision.m_configMap, null, revision, null,
                     Collections.singletonList(wire), Collections.EMPTY_MAP, Collections.EMPTY_MAP));
             }
             catch (Exception ex)
@@ -474,7 +513,7 @@ class ExtensionManager implements Content
 
             felix.getDependencies().addDependent(wire);
 
-            appendCapabilities(entry.getKey().getDeclaredExtensionCapabilities(null));
+            m_systemBundleRevision.appendCapabilities(entry.getKey().getDeclaredExtensionCapabilities(null));
             for (BundleWire w : entry.getValue())
             {
                 if (!w.getRequirement().getNamespace().equals(BundleRevision.HOST_NAMESPACE) &&
@@ -642,6 +681,13 @@ class ExtensionManager implements Content
         m_extensionTuples.clear();
     }
 
+    public synchronized void removeExtensionBundles()
+    {
+        m_resolvedExtensions.clear();
+        m_unresolvedExtensions.clear();
+        m_failedExtensions.clear();
+    }
+
     private Map<BundleRevisionImpl, List<BundleWire>> findResolvableExtensions(List<BundleRevisionImpl> extensions, List<BundleRevisionImpl> alt)
     {
         // The idea is to loop through the extensions and try to resolve all unresolved extension. If we can't resolve
@@ -659,7 +705,7 @@ class ExtensionManager implements Content
             outer: for (BundleRequirement req : bri.getDeclaredRequirements(null))
             {
                 // first see if we can resolve from the system bundle
-                for (BundleCapability cap : getCapabilities(req.getNamespace()))
+                for (BundleCapability cap : m_systemBundleRevision.getWiring().getCapabilities(req.getNamespace()))
                 {
                     if (req.matches(cap))
                     {
@@ -756,83 +802,6 @@ class ExtensionManager implements Content
         return wires;
     }
 
-    private List<BundleCapability> getCapabilities(String namespace)
-    {
-        List<BundleCapability> caps = m_capabilities;
-        List<BundleCapability> result = caps;
-        if (namespace != null)
-        {
-            result = new ArrayList<BundleCapability>();
-            for (BundleCapability cap : caps)
-            {
-                if (cap.getNamespace().equals(namespace))
-                {
-                    result.add(cap);
-                }
-            }
-        }
-        return result;
-    }
-
-    private void appendCapabilities(List<BundleCapability> caps)
-    {
-        List<BundleCapability> newCaps = new ArrayList<BundleCapability>(m_capabilities.size() + caps.size());
-        newCaps.addAll(m_capabilities);
-        newCaps.addAll(caps);
-        m_capabilities = ImmutableList.newInstance(newCaps);
-        m_headerMap.put(Constants.EXPORT_PACKAGE, convertCapabilitiesToHeaders(newCaps));
-    }
-
-    private String convertCapabilitiesToHeaders(List<BundleCapability> caps)
-    {
-        StringBuffer exportSB = new StringBuffer("");
-        Set<String> exportNames = new HashSet<String>();
-
-        for (BundleCapability cap : caps)
-        {
-            if (cap.getNamespace().equals(BundleRevision.PACKAGE_NAMESPACE))
-            {
-                // Add a comma separate if there is an existing package.
-                if (exportSB.length() > 0)
-                {
-                    exportSB.append(", ");
-                }
-
-                // Append exported package information.
-                exportSB.append(cap.getAttributes().get(BundleRevision.PACKAGE_NAMESPACE));
-                for (Entry<String, String> entry : cap.getDirectives().entrySet())
-                {
-                    exportSB.append("; ");
-                    exportSB.append(entry.getKey());
-                    exportSB.append(":=\"");
-                    exportSB.append(entry.getValue());
-                    exportSB.append("\"");
-                }
-                for (Entry<String, Object> entry : cap.getAttributes().entrySet())
-                {
-                    if (!entry.getKey().equals(BundleRevision.PACKAGE_NAMESPACE)
-                        && !entry.getKey().equals(Constants.BUNDLE_SYMBOLICNAME_ATTRIBUTE)
-                        && !entry.getKey().equals(Constants.BUNDLE_VERSION_ATTRIBUTE))
-                    {
-                        exportSB.append("; ");
-                        exportSB.append(entry.getKey());
-                        exportSB.append("=\"");
-                        exportSB.append(entry.getValue());
-                        exportSB.append("\"");
-                    }
-                }
-
-                // Remember exported packages.
-                exportNames.add(
-                    (String) cap.getAttributes().get(BundleRevision.PACKAGE_NAMESPACE));
-            }
-        }
-
-        m_exportNames = exportNames;
-
-        return exportSB.toString();
-    }
-
     public void close()
     {
         // Do nothing on close, since we have nothing open.
@@ -889,14 +858,173 @@ class ExtensionManager implements Content
 
     class ExtensionManagerRevision extends BundleRevisionImpl
     {
-        private final Version m_version;
+        private volatile Map m_configMap;
+        private final Map m_headerMap = new StringMap();
+        private volatile List<BundleCapability> m_capabilities = Collections.EMPTY_LIST;
+        private volatile Set<String> m_exportNames = Collections.EMPTY_SET;
+        private volatile Version m_version;
         private volatile BundleWiring m_wiring;
 
-        ExtensionManagerRevision(Felix felix)
+        ExtensionManagerRevision(Map configMap, Felix felix)
         {
             super(felix, "0");
-            m_version = new Version((String)
+
+            m_configMap = configMap;
+
+// TODO: FRAMEWORK - Not all of this stuff really belongs here
+            // Populate system bundle header map.
+            m_headerMap.put(FelixConstants.BUNDLE_VERSION,
                 m_configMap.get(FelixConstants.FELIX_VERSION_PROPERTY));
+            m_headerMap.put(FelixConstants.BUNDLE_SYMBOLICNAME,
+                FelixConstants.SYSTEM_BUNDLE_SYMBOLICNAME);
+            m_headerMap.put(FelixConstants.BUNDLE_NAME, "System Bundle");
+            m_headerMap.put(FelixConstants.BUNDLE_DESCRIPTION,
+                "This bundle is system specific; it implements various system services.");
+            m_headerMap.put(FelixConstants.EXPORT_SERVICE,
+                "org.osgi.service.packageadmin.PackageAdmin," +
+                    "org.osgi.service.startlevel.StartLevel," +
+                    "org.osgi.service.url.URLHandlers");
+
+
+            m_headerMap.put(FelixConstants.BUNDLE_MANIFESTVERSION, "2");
+
+
+            m_version = new Version((String) m_configMap.get(FelixConstants.FELIX_VERSION_PROPERTY));
+
+            try
+            {
+                ManifestParser mp = new ManifestParser(
+                    m_logger, m_configMap, this, m_headerMap);
+                List<BundleCapability> caps = ManifestParser.aliasSymbolicName(mp.getCapabilities(), this);
+                caps.add(buildNativeCapabilites(this, m_configMap));
+                appendCapabilities(caps);
+            }
+            catch (Exception ex)
+            {
+                m_capabilities = Collections.EMPTY_LIST;
+                m_logger.log(
+                    Logger.LOG_ERROR,
+                    "Error parsing system bundle statement", ex);
+            }
+        }
+
+        private void update(Map configMap)
+        {
+            Properties configProps = Util.toProperties(configMap);
+            // The system bundle exports framework packages as well as
+            // arbitrary user-defined packages from the system class path.
+            // We must construct the system bundle's export metadata.
+            // Get configuration property that specifies which class path
+            // packages should be exported by the system bundle.
+            String syspkgs =
+                "true".equalsIgnoreCase(configProps.getProperty(FelixConstants.USE_PROPERTY_SUBSTITUTION_IN_SYSTEMPACKAGES)) ?
+                    Util.getPropertyWithSubs(configProps, FelixConstants.FRAMEWORK_SYSTEMPACKAGES) :
+                    configProps.getProperty(FelixConstants.FRAMEWORK_SYSTEMPACKAGES);
+
+            syspkgs = (syspkgs == null) ? "" : syspkgs;
+
+            // If any extra packages are specified, then append them.
+            String pkgextra =
+                "true".equalsIgnoreCase(configProps.getProperty(FelixConstants.USE_PROPERTY_SUBSTITUTION_IN_SYSTEMPACKAGES)) ?
+                    Util.getPropertyWithSubs(configProps, FelixConstants.FRAMEWORK_SYSTEMPACKAGES_EXTRA) :
+                    configProps.getProperty(FelixConstants.FRAMEWORK_SYSTEMPACKAGES_EXTRA);
+
+            syspkgs = ((pkgextra == null) || (pkgextra.trim().length() == 0))
+                ? syspkgs : syspkgs + (pkgextra.trim().startsWith(",") ? pkgextra : "," + pkgextra);
+
+            m_headerMap.put(FelixConstants.EXPORT_PACKAGE, syspkgs);
+
+            // The system bundle alsp provides framework generic capabilities
+            // as well as arbitrary user-defined generic capabilities. We must
+            // construct the system bundle's capabilitie metadata. Get the
+            // configuration property that specifies which capabilities should
+            // be provided by the system bundle.
+            String syscaps = Util.getPropertyWithSubs(configProps, Constants.FRAMEWORK_SYSTEMCAPABILITIES);
+
+            syscaps = (syscaps == null) ? "" : syscaps;
+
+            // If any extra capabilities are specified, then append them.
+            String capextra = Util.getPropertyWithSubs(configProps, Constants.FRAMEWORK_SYSTEMCAPABILITIES_EXTRA);
+            syscaps = ((capextra == null) || (capextra.trim().length() == 0))
+                ? syscaps : syscaps + (capextra.trim().startsWith(",") ? capextra : "," + capextra);
+
+            m_headerMap.put(FelixConstants.PROVIDE_CAPABILITY, syscaps);
+
+            try
+            {
+                ManifestParser mp = new ManifestParser(
+                    m_logger, m_configMap, this, m_headerMap);
+                List<BundleCapability> caps = ManifestParser.aliasSymbolicName(mp.getCapabilities(), this);
+                caps.add(buildNativeCapabilites(this, m_configMap));
+                m_capabilities = Collections.EMPTY_LIST;
+                appendCapabilities(caps);
+            }
+            catch (Exception ex)
+            {
+                m_capabilities = Collections.EMPTY_LIST;
+                m_logger.log(
+                    Logger.LOG_ERROR,
+                    "Error parsing system bundle statement.", ex);
+            }
+        }
+
+        private void appendCapabilities(List<BundleCapability> caps)
+        {
+            List<BundleCapability> newCaps = new ArrayList<BundleCapability>(m_capabilities.size() + caps.size());
+            newCaps.addAll(m_capabilities);
+            newCaps.addAll(caps);
+            m_capabilities = ImmutableList.newInstance(newCaps);
+            m_headerMap.put(Constants.EXPORT_PACKAGE, convertCapabilitiesToHeaders(newCaps));
+        }
+
+        private String convertCapabilitiesToHeaders(List<BundleCapability> caps)
+        {
+            StringBuffer exportSB = new StringBuffer("");
+            Set<String> exportNames = new HashSet<String>();
+
+            for (BundleCapability cap : caps)
+            {
+                if (cap.getNamespace().equals(BundleRevision.PACKAGE_NAMESPACE))
+                {
+                    // Add a comma separate if there is an existing package.
+                    if (exportSB.length() > 0)
+                    {
+                        exportSB.append(", ");
+                    }
+
+                    // Append exported package information.
+                    exportSB.append(cap.getAttributes().get(BundleRevision.PACKAGE_NAMESPACE));
+                    for (Entry<String, String> entry : cap.getDirectives().entrySet())
+                    {
+                        exportSB.append("; ");
+                        exportSB.append(entry.getKey());
+                        exportSB.append(":=\"");
+                        exportSB.append(entry.getValue());
+                        exportSB.append("\"");
+                    }
+                    for (Entry<String, Object> entry : cap.getAttributes().entrySet())
+                    {
+                        if (!entry.getKey().equals(BundleRevision.PACKAGE_NAMESPACE)
+                            && !entry.getKey().equals(Constants.BUNDLE_SYMBOLICNAME_ATTRIBUTE)
+                            && !entry.getKey().equals(Constants.BUNDLE_VERSION_ATTRIBUTE))
+                        {
+                            exportSB.append("; ");
+                            exportSB.append(entry.getKey());
+                            exportSB.append("=\"");
+                            exportSB.append(entry.getValue());
+                            exportSB.append("\"");
+                        }
+                    }
+
+                    // Remember exported packages.
+                    exportNames.add(
+                        (String) cap.getAttributes().get(BundleRevision.PACKAGE_NAMESPACE));
+                }
+            }
+
+            m_exportNames = exportNames;
+
+            return exportSB.toString();
         }
 
         @Override
@@ -908,7 +1036,24 @@ class ExtensionManager implements Content
         @Override
         public List<BundleCapability> getDeclaredCapabilities(String namespace)
         {
-            return ExtensionManager.this.getCapabilities(namespace);
+            List<BundleCapability> caps = m_capabilities;
+            List<BundleCapability> result;
+            if (namespace != null)
+            {
+                result = new ArrayList<BundleCapability>();
+                for (BundleCapability cap : caps)
+                {
+                    if (cap.getNamespace().equals(namespace))
+                    {
+                        result.add(cap);
+                    }
+                }
+            }
+            else
+            {
+                result = new ArrayList<BundleCapability>(m_capabilities);
+            }
+            return result;
         }
 
         @Override
@@ -1000,7 +1145,7 @@ class ExtensionManager implements Content
         @Override
         public List<BundleCapability> getCapabilities(String namespace)
         {
-            return ExtensionManager.this.getCapabilities(namespace);
+            return m_systemBundleRevision.getDeclaredCapabilities(namespace);
         }
 
         @Override
@@ -1040,7 +1185,7 @@ class ExtensionManager implements Content
             }
             if (clazz == null)
             {
-                if (!m_exportNames.contains(Util.getClassPackage(name)))
+                if (!m_systemBundleRevision.m_exportNames.contains(Util.getClassPackage(name)))
                 {
                     throw new ClassNotFoundException(name);
                 }

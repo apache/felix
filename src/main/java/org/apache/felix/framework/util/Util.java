@@ -45,6 +45,7 @@ import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -52,6 +53,8 @@ import java.util.Map.Entry;
 import java.util.Properties;
 import java.util.Random;
 import java.util.Set;
+import java.util.SortedMap;
+import java.util.SortedSet;
 import java.util.TreeSet;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -139,7 +142,16 @@ public class Util
                 properties.put("eecap-jpms", eecap.toString());
             }
 
-            properties.put("felix.detect.java.version", String.format("0.0.0.JavaSE_%03d_%03d", version.getMajor(), version.getMinor()));
+            properties.put("felix.detect.java.specification.version", version.getMajor() < 9 ? ("1." + (version.getMinor() > 6 ? version.getMinor() : 6)) : Integer.toString(version.getMajor()));
+
+            if (version.getMajor() < 9)
+            {
+                properties.put("felix.detect.java.version", String.format("0.0.0.JavaSE_001_%03d", version.getMinor() > 6 ? version.getMinor() : 6));
+            }
+            else
+            {
+                properties.put("felix.detect.java.version", String.format("0.0.0.JavaSE_%03d", version.getMajor()));
+            }
         }
         catch (Exception ex)
         {
@@ -147,12 +159,15 @@ public class Util
         }
     }
 
-    public static void initializeJPMS(Properties properties)
+    public static Map<String, Set<String>> initializeJPMS(Properties properties)
     {
+        Map<String,Set<String>> exports = null;
         try
         {
             Class<?> c_ModuleLayer = Felix.class.getClassLoader().loadClass("java.lang.ModuleLayer");
             Class<?> c_Module = Felix.class.getClassLoader().loadClass("java.lang.Module");
+            Class<?> c_Descriptor = Felix.class.getClassLoader().loadClass("java.lang.module.ModuleDescriptor");
+            Class<?> c_Exports = Felix.class.getClassLoader().loadClass("java.lang.module.ModuleDescriptor$Exports");
             Method m_getLayer = c_Module.getMethod("getLayer");
             Method m_getModule = Class.class.getMethod("getModule");
             Method m_canRead = c_Module.getMethod("canRead", c_Module);
@@ -166,38 +181,45 @@ public class Util
                 moduleLayer = c_ModuleLayer.getMethod("boot").invoke(null);
             }
 
-            Set<String> javaExports = new TreeSet<String>();
+            Set<String> modules = new TreeSet<String>();
+            exports = new HashMap<String, Set<String>>();
             for (Object module : ((Iterable) c_ModuleLayer.getMethod("modules").invoke(moduleLayer)))
             {
                 if ((Boolean) m_canRead.invoke(self, module))
                 {
                     Object name = m_getName.invoke(module);
                     properties.put("felix.detect.jpms." + name, name);
-                    for (String export : (Iterable<String>) c_Module.getMethod("getPackages").invoke(module))
+                    modules.add("felix.jpms." + name);
+                    Set<String> pkgs = new HashSet<String>();
+
+                    Object descriptor = c_Module.getMethod("getDescriptor").invoke(module);
+
+                    for (Object export :((Set) c_Descriptor.getMethod("exports").invoke(descriptor)))
                     {
-                        if (export.startsWith("java.") && (Boolean) c_Module.getMethod("isExported", String.class, c_Module).invoke(module, export, self))
+                        if (((Set) c_Exports.getMethod("targets").invoke(export)).isEmpty())
                         {
-                            javaExports.add(export);
+                            pkgs.add((String) c_Exports.getMethod("source").invoke(export));
                         }
+                    }
+                    if (!pkgs.isEmpty())
+                    {
+                        exports.put("felix.jpms." + c_Descriptor.getMethod("toNameAndVersion").invoke(descriptor), pkgs);
                     }
                 }
             }
 
-            if (!javaExports.isEmpty())
-            {
-                StringBuilder builder = new StringBuilder();
-                for (String export : javaExports) {
-                    builder.append(',').append(export).append(";version=\"${felix.detect.java.version}\"");
-                }
-                properties.put("felix.detect.jpms.java", builder.toString());
-            }
-
             properties.put("felix.detect.jpms", "jpms");
+            String modulesString = "";
+            for (String module : modules) {
+                modulesString += "${" + module + "}";
+            }
+            properties.put("jre-jpms", modulesString);
         }
         catch (Exception ex)
         {
             // Not much we can do - probably not on java9
         }
+        return exports;
     }
 
     public static String getPropertyWithSubs(Properties props, String name)
@@ -468,7 +490,7 @@ public class Util
     public static List<BundleRequirement> getDynamicRequirements(
         List<BundleRequirement> reqs)
     {
-        List<BundleRequirement> result = new ArrayList<BundleRequirement>();
+        List<BundleRequirement> result = null;
         if (reqs != null)
         {
             for (BundleRequirement req : reqs)
@@ -476,6 +498,10 @@ public class Util
                 String resolution = req.getDirectives().get(Constants.RESOLUTION_DIRECTIVE);
                 if ((resolution != null) && resolution.equals("dynamic"))
                 {
+                    if (result == null)
+                    {
+                        result = new ArrayList<BundleRequirement>();
+                    }
                     result.add(req);
                 }
             }
