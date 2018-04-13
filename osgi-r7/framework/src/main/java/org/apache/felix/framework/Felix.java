@@ -437,6 +437,7 @@ public class Felix extends BundleImpl implements Framework
         // Create the extension manager, which we will use as the
         // revision for the system bundle.
         m_extensionManager = new ExtensionManager(m_logger, m_configMap, this);
+
         try
         {
             addRevision(m_extensionManager.getRevision());
@@ -445,7 +446,7 @@ public class Felix extends BundleImpl implements Framework
         {
             // This should not throw an exception, but if so, lets convert it to
             // a runtime exception.
-            throw new RuntimeException(ex.getMessage());
+            throw new RuntimeException("Exception creating system bundle revision", ex);
         }
 
         // Create event dispatcher.
@@ -734,6 +735,25 @@ public class Felix extends BundleImpl implements Framework
                 maps[LOCATION_MAP_IDX].put(_getLocation(), this);
                 maps[IDENTIFIER_MAP_IDX].put(new Long(0), this);
                 m_installedBundles = maps;
+
+
+                try
+                {
+                    getResolver().removeRevision(m_extensionManager.getRevision());
+                    m_extensionManager.removeExtensionBundles();
+                    m_extensionManager.updateRevision(this, m_configMap);
+                    if (!m_configMutableMap.containsKey(Constants.FRAMEWORK_SYSTEMPACKAGES))
+                    {
+                        m_configMutableMap.put(Constants.FRAMEWORK_SYSTEMPACKAGES, m_extensionManager.getRevision().getHeaders().get(Constants.EXPORT_PACKAGE));
+                    }
+                    getResolver().addRevision(m_extensionManager.getRevision());
+                }
+                catch (Exception ex)
+                {
+                    // This should not throw an exception, but if so, lets convert it to
+                    // a runtime exception.
+                    throw new BundleException("Exception creating system bundle revision", ex);
+                }
 
                 // Manually resolve the system bundle, which will cause its
                 // state to be set to RESOLVED.
@@ -4848,41 +4868,16 @@ public class Felix extends BundleImpl implements Framework
 
         Properties defaultProperties = Util.loadDefaultProperties(m_logger);
 
-        Util.initializeJPMS(defaultProperties);
-
         Util.initializeJPMSEE(_getProperty("java.specification.version"), defaultProperties, m_logger);
 
         // Set supported execution environments to default value,
         // if not explicitly configured.
         loadFromDefaultIfNotDefined(defaultProperties, Constants.FRAMEWORK_EXECUTIONENVIRONMENT);
 
-        String sysprops = _getProperty(Constants.FRAMEWORK_SYSTEMPACKAGES);
-        if(sysprops != null && "true".equalsIgnoreCase(_getProperty(FelixConstants.USE_PROPERTY_SUBSTITUTION_IN_SYSTEMPACKAGES)) )
-        {
-            defaultProperties.put(Constants.FRAMEWORK_SYSTEMPACKAGES, sysprops);
-            m_configMutableMap.put(Constants.FRAMEWORK_SYSTEMPACKAGES, Util.getPropertyWithSubs(defaultProperties, Constants.FRAMEWORK_SYSTEMPACKAGES));
-        }
-        else if (sysprops == null)
-        {
-            m_configMutableMap.put(Constants.FRAMEWORK_SYSTEMPACKAGES, Util.getPropertyWithSubs(defaultProperties, Constants.FRAMEWORK_SYSTEMPACKAGES));
-        }
-
-        String syscaps = _getProperty(Constants.FRAMEWORK_SYSTEMCAPABILITIES);
-        if(syscaps == null)
-        {
-            m_configMutableMap.put(Constants.FRAMEWORK_SYSTEMCAPABILITIES, Util.getPropertyWithSubs(defaultProperties, Constants.FRAMEWORK_SYSTEMCAPABILITIES));
-        }
-
-        loadFromDefaultIfNotDefined(defaultProperties, "ee-jpms");
-        loadFromDefaultIfNotDefined(defaultProperties, "eecap-jpms");
-        loadFromDefaultIfNotDefined(defaultProperties, "felix.detect.java.version");
-
         // Set supported native capabilities to default value,
         // if not explicitly configured.
         loadPrefixFromDefaultIfNotDefined(m_configMutableMap, defaultProperties, FelixConstants.NATIVE_OS_NAME_ALIAS_PREFIX);
         loadPrefixFromDefaultIfNotDefined(m_configMutableMap, defaultProperties, FelixConstants.NATIVE_PROC_NAME_ALIAS_PREFIX);
-        loadPrefixFromDefaultIfNotDefined(m_configMutableMap, defaultProperties, "felix.detect.jpms.");
-        loadPrefixFromDefaultIfNotDefined(m_configMutableMap, defaultProperties, "felix.jpms.");
     }
 
     private void loadFromDefaultIfNotDefined(Properties defaultProperties, String propertyName)
@@ -5226,7 +5221,6 @@ public class Felix extends BundleImpl implements Framework
                 m_securityManager = null;
             }
 
-            m_extensionManager.removeExtensionBundles();
             m_dependencies.removeDependents(adapt(BundleRevision.class));
 
             // Dispose of the bundle cache.
