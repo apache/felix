@@ -20,6 +20,7 @@ package org.apache.felix.framework;
 
 import org.apache.felix.framework.BundleWiringImpl.BundleClassLoader;
 import org.apache.felix.framework.cache.Content;
+import org.junit.Assert;
 import org.junit.Test;
 import org.mockito.Mockito;
 import org.mockito.invocation.InvocationOnMock;
@@ -44,6 +45,7 @@ import java.io.InputStream;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
@@ -51,8 +53,16 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Semaphore;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
@@ -655,6 +665,440 @@ public class BundleWiringImplTest
         verify(requiredPkgs, never()).values();
     }
 
+    @Test
+    public void testParallelClassload() throws Exception
+    {
+
+
+        Felix mockFramework = mock(Felix.class);
+        HookRegistry hReg = mock(HookRegistry.class);
+        Mockito.when(mockFramework.getHookRegistry()).thenReturn(hReg);
+        Content mockContent = mock(Content.class);
+        final Class testClass = TestClassSuper.class;
+        final String testClassName = testClass.getName();
+        final String testClassAsPath = testClassName.replace('.', '/') + ".class";
+        byte[] testClassBytes = createTestClassBytes(testClass, testClassAsPath);
+
+        final Class testClass2 = TestClassChild.class;
+        final String testClassName2 = testClass2.getName();
+        final String testClassAsPath2 = testClassName2.replace('.', '/') + ".class";
+        byte[] testClassBytes2 = createTestClassBytes(testClass2, testClassAsPath2);
+
+        final Class testClass3 = TestClass.class;
+        final String testClassName3 = testClass3.getName();
+        final String testClassAsPath3 = testClassName3.replace('.', '/') + ".class";
+        byte[] testClassBytes3 = createTestClassBytes(testClass3, testClassAsPath3);
+
+        List<Content> contentPath = new ArrayList<Content>();
+        contentPath.add(mockContent);
+        BundleWiringImpl bundleWiring;
+
+        StatefulResolver mockResolver;
+
+        BundleRevisionImpl mockRevisionImpl;
+
+        BundleImpl mockBundle;
+
+        mockResolver = mock(StatefulResolver.class);
+        mockRevisionImpl = mock(BundleRevisionImpl.class);
+        mockBundle = mock(BundleImpl.class);
+
+        Logger logger = new Logger();
+        Map configMap = new HashMap();
+        List<BundleRevision> fragments = new ArrayList<BundleRevision>();
+        List<BundleWire> wires = new ArrayList<BundleWire>();
+        Map<String, BundleRevision> importedPkgs = new HashMap<String, BundleRevision>();
+        Map<String, List<BundleRevision>> requiredPkgs = new HashMap<String, List<BundleRevision>>();
+
+        when(mockRevisionImpl.getBundle()).thenReturn(mockBundle);
+        when(mockBundle.getBundleId()).thenReturn(Long.valueOf(1));
+
+        bundleWiring = new BundleWiringImpl(logger, configMap, mockResolver,
+            mockRevisionImpl, fragments, wires, importedPkgs, requiredPkgs);
+
+        when(mockBundle.getFramework()).thenReturn(mockFramework);
+        when(mockFramework.getBootPackages()).thenReturn(new String[0]);
+
+        when(mockRevisionImpl.getContentPath()).thenReturn(contentPath);
+        when(mockContent.getEntryAsBytes(testClassAsPath)).thenReturn(
+            testClassBytes);
+        when(mockContent.getEntryAsBytes(testClassAsPath2)).thenReturn(
+            testClassBytes2);
+        when(mockContent.getEntryAsBytes(testClassAsPath3)).thenReturn(
+            testClassBytes3);
+
+
+        final TestBundleClassLoader bundleClassLoader = createBundleClassLoader(
+            TestBundleClassLoader.class, bundleWiring);
+        assertNotNull(bundleClassLoader);
+
+        Field m_classLoader = bundleWiring.getClass().getDeclaredField("m_classLoader");
+        m_classLoader.setAccessible(true);
+        m_classLoader.set(bundleWiring, bundleClassLoader);
+
+        assertTrue(bundleClassLoader.isParallel());
+
+        final AtomicInteger loaded = new AtomicInteger();
+        new Thread() {
+            public void run() {
+                try
+                {
+                    loaded.set(bundleClassLoader.findClass(testClassName2) != null ? 1 : 2);
+                }
+                catch (Exception e)
+                {
+                    e.printStackTrace();
+                    loaded.set(3);
+                }
+            }
+        }.start();
+
+        while (bundleClassLoader.m_gate.getQueueLength() == 0)
+        {
+            Thread.sleep(1);
+        }
+
+        final AtomicInteger loaded2 = new AtomicInteger();
+        new Thread() {
+            public void run() {
+                try
+                {
+                    loaded2.set(bundleClassLoader.findClass(testClassName3) != null ? 1 : 2);
+                }
+                catch (ClassNotFoundException e)
+                {
+                    e.printStackTrace();
+                    loaded2.set(3);
+                }
+            }
+        }.start();
+
+        while (loaded2.get() == 0)
+        {
+            Thread.sleep(1);
+        }
+
+        assertEquals(0, loaded.get());
+        assertEquals(1, bundleClassLoader.m_gate.getQueueLength());
+
+        loaded2.set(0);
+        Thread tester = new Thread() {
+            public void run() {
+                try
+                {
+                    loaded2.set(bundleClassLoader.findClass(testClassName2) != null ? 1 : 2);
+                }
+                catch (ClassNotFoundException e)
+                {
+                    e.printStackTrace();
+                    loaded2.set(3);
+                }
+            }
+        };
+        tester.start();
+
+        Thread.sleep(100);
+
+        assertEquals(0, loaded2.get());
+        assertEquals(1, bundleClassLoader.m_gate.getQueueLength());
+
+        bundleClassLoader.m_gate.release();
+
+
+        while (loaded.get() == 0)
+        {
+            Thread.sleep(1);
+        }
+
+        assertEquals(1, loaded.get());
+
+        while (loaded2.get() == 0)
+        {
+            Thread.sleep(1);
+        }
+        assertEquals(1, loaded2.get());
+    }
+
+    @Test
+    public void testClassloadStress() throws Exception
+    {
+        ExecutorService executors = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors() * 4);
+        final List<Throwable> exceptionsNP = Collections.synchronizedList(new ArrayList<Throwable>());
+        final List<Throwable> exceptionsP = Collections.synchronizedList(new ArrayList<Throwable>());
+
+        for (int i = 0; i < 100; i++) {
+            executors.submit(i % 2 == 0 ? new Runnable()
+            {
+                @Override
+                public void run()
+                {
+                    try
+                    {
+                        testNotParallelClassload();
+                    }
+                    catch (Throwable e)
+                    {
+                        exceptionsNP.add(e);
+                    }
+                }
+            } : new Runnable()
+            {
+                @Override
+                public void run()
+                {
+                    try
+                    {
+                        testParallelClassload();
+                    }
+                    catch (Throwable e)
+                    {
+                        exceptionsP.add(e);
+                    }
+                }
+            });
+        }
+        executors.shutdown();
+        executors.awaitTermination(10, TimeUnit.MINUTES);
+        assertTrue(exceptionsNP.toString(), exceptionsNP.isEmpty());
+        assertTrue(exceptionsP.toString(), exceptionsP.isEmpty());
+    }
+
+    @Test
+    public void testNotParallelClassload() throws Exception
+    {
+
+        Felix mockFramework = mock(Felix.class);
+        HookRegistry hReg = mock(HookRegistry.class);
+        Mockito.when(mockFramework.getHookRegistry()).thenReturn(hReg);
+        Content mockContent = mock(Content.class);
+        final Class testClass = TestClassSuper.class;
+        final String testClassName = testClass.getName();
+        final String testClassAsPath = testClassName.replace('.', '/') + ".class";
+        byte[] testClassBytes = createTestClassBytes(testClass, testClassAsPath);
+
+        final Class testClass2 = TestClassChild.class;
+        final String testClassName2 = testClass2.getName();
+        final String testClassAsPath2 = testClassName2.replace('.', '/') + ".class";
+        byte[] testClassBytes2 = createTestClassBytes(testClass2, testClassAsPath2);
+
+        final Class testClass3 = TestClass.class;
+        final String testClassName3 = testClass3.getName();
+        final String testClassAsPath3 = testClassName3.replace('.', '/') + ".class";
+        byte[] testClassBytes3 = createTestClassBytes(testClass3, testClassAsPath3);
+
+        List<Content> contentPath = new ArrayList<Content>();
+        contentPath.add(mockContent);
+        BundleWiringImpl bundleWiring;
+
+        StatefulResolver mockResolver;
+
+        BundleRevisionImpl mockRevisionImpl;
+
+        BundleImpl mockBundle;
+
+        mockResolver = mock(StatefulResolver.class);
+        mockRevisionImpl = mock(BundleRevisionImpl.class);
+        mockBundle = mock(BundleImpl.class);
+
+        Logger logger = new Logger();
+        Map configMap = new HashMap();
+        List<BundleRevision> fragments = new ArrayList<BundleRevision>();
+        List<BundleWire> wires = new ArrayList<BundleWire>();
+        Map<String, BundleRevision> importedPkgs = new HashMap<String, BundleRevision>();
+        Map<String, List<BundleRevision>> requiredPkgs = new HashMap<String, List<BundleRevision>>();
+
+        when(mockRevisionImpl.getBundle()).thenReturn(mockBundle);
+        when(mockBundle.getBundleId()).thenReturn(Long.valueOf(1));
+
+        bundleWiring = new BundleWiringImpl(logger, configMap, mockResolver,
+            mockRevisionImpl, fragments, wires, importedPkgs, requiredPkgs);
+
+        when(mockBundle.getFramework()).thenReturn(mockFramework);
+        when(mockFramework.getBootPackages()).thenReturn(new String[0]);
+
+        when(mockRevisionImpl.getContentPath()).thenReturn(contentPath);
+        when(mockContent.getEntryAsBytes(testClassAsPath)).thenReturn(
+            testClassBytes);
+        when(mockContent.getEntryAsBytes(testClassAsPath2)).thenReturn(
+            testClassBytes2);
+        when(mockContent.getEntryAsBytes(testClassAsPath3)).thenReturn(
+            testClassBytes3);
+
+
+        final TestBundleClassLoader2 bundleClassLoader = createBundleClassLoader(
+            TestBundleClassLoader2.class, bundleWiring);
+        assertNotNull(bundleClassLoader);
+
+        Field m_classLoader = bundleWiring.getClass().getDeclaredField("m_classLoader");
+        m_classLoader.setAccessible(true);
+        m_classLoader.set(bundleWiring, bundleClassLoader);
+
+        assertFalse(bundleClassLoader.isParallel());
+
+        final AtomicInteger loaded = new AtomicInteger();
+        new Thread() {
+            public void run() {
+                try
+                {
+                    loaded.set(bundleClassLoader.findClass(testClassName2) != null ? 1 : 2);
+                }
+                catch (Exception e)
+                {
+                    e.printStackTrace();
+                    loaded.set(3);
+                }
+            }
+        }.start();
+
+        while (bundleClassLoader.m_gate.getQueueLength() == 0)
+        {
+            Thread.sleep(1);
+        }
+
+        final AtomicInteger loaded2 = new AtomicInteger();
+        new Thread() {
+            public void run() {
+                try
+                {
+                    loaded2.set(bundleClassLoader.findClass(testClassName3) != null ? 1 : 2);
+                }
+                catch (ClassNotFoundException e)
+                {
+                    e.printStackTrace();
+                    loaded2.set(3);
+                }
+            }
+        }.start();
+
+        Thread.sleep(100);
+
+        assertEquals(0, loaded.get());
+        assertEquals(0, loaded2.get());
+        assertEquals(1, bundleClassLoader.m_gate.getQueueLength());
+
+        final AtomicInteger loaded3 = new AtomicInteger();
+        Thread tester = new Thread() {
+            public void run() {
+                try
+                {
+                    loaded3.set(bundleClassLoader.findClass(testClassName2) != null ? 1 : 2);
+                }
+                catch (ClassNotFoundException e)
+                {
+                    e.printStackTrace();
+                    loaded3.set(3);
+                }
+            }
+        };
+        tester.start();
+
+        Thread.sleep(100);
+
+        assertEquals(0, loaded3.get());
+        assertEquals(0, loaded2.get());
+
+        assertEquals(0, loaded.get());
+        assertEquals(1, bundleClassLoader.m_gate.getQueueLength());
+
+        bundleClassLoader.m_gate.release();
+
+
+        while (loaded.get() == 0)
+        {
+            Thread.sleep(1);
+        }
+
+        assertEquals(1, loaded.get());
+
+        while (loaded2.get() == 0)
+        {
+            Thread.sleep(1);
+        }
+        assertEquals(1, loaded2.get());
+
+        while (loaded3.get() == 0)
+        {
+            Thread.sleep(1);
+        }
+        assertEquals(1, loaded3.get());
+    }
+
+    private static class TestBundleClassLoader extends BundleClassLoader
+    {
+        static {
+            ClassLoader.registerAsParallelCapable();
+        }
+
+        Semaphore m_gate = new Semaphore(0);
+        public TestBundleClassLoader(BundleWiringImpl wiring, ClassLoader parent, Logger logger)
+        {
+            super(wiring, parent, logger);
+        }
+
+        @Override
+        protected Class loadClass(String name, boolean resolve) throws ClassNotFoundException
+        {
+            if (name.startsWith("java"))
+            {
+                return getClass().getClassLoader().loadClass(name);
+            }
+            return super.loadClass(name, resolve);
+        }
+
+        @Override
+        protected Class findClass(String name) throws ClassNotFoundException
+        {
+            if (name.startsWith("java"))
+            {
+                return getClass().getClassLoader().loadClass(name);
+            }
+            if (name.equals(TestClassSuper.class.getName()))
+            {
+                m_gate.acquireUninterruptibly();
+            }
+            return super.findClass(name);
+        }
+    }
+
+    private static class TestBundleClassLoader2 extends BundleClassLoader
+    {
+        Semaphore m_gate = new Semaphore(0);
+        public TestBundleClassLoader2(BundleWiringImpl wiring, ClassLoader parent, Logger logger)
+        {
+            super(wiring, parent, logger);
+        }
+
+        @Override
+        protected Class loadClass(String name, boolean resolve) throws ClassNotFoundException
+        {
+            if (name.startsWith("java"))
+            {
+                return getClass().getClassLoader().loadClass(name);
+            }
+            return super.loadClass(name, resolve);
+        }
+
+        @Override
+        protected Class findClass(String name) throws ClassNotFoundException
+        {
+            if (name.startsWith("java"))
+            {
+                return getClass().getClassLoader().loadClass(name);
+            }
+            if (name.equals(TestClassSuper.class.getName()))
+            {
+                m_gate.acquireUninterruptibly();
+            }
+            return super.findClass(name);
+        }
+
+        @Override
+        protected boolean isParallel()
+        {
+            return false;
+        }
+    }
+
     @SuppressWarnings("rawtypes")
     private byte[] createTestClassBytes(Class testClass, String testClassAsPath)
             throws IOException
@@ -673,8 +1117,8 @@ public class BundleWiringImplTest
     }
 
     @SuppressWarnings("rawtypes")
-    private BundleClassLoader createBundleClassLoader(
-            Class bundleClassLoaderClass, BundleWiringImpl bundleWiring)
+    private <T> T createBundleClassLoader(
+            Class<T> bundleClassLoaderClass, BundleWiringImpl bundleWiring)
                     throws Exception
     {
         Logger logger = new Logger();
@@ -682,7 +1126,8 @@ public class BundleWiringImplTest
                 bundleClassLoaderClass,
                 new Class[] { BundleWiringImpl.class, ClassLoader.class,
                         Logger.class });
-        BundleClassLoader bundleClassLoader = (BundleClassLoader) BundleRevisionImpl
+        BundleRevisionImpl.getSecureAction().setAccesssible(ctor);
+        T bundleClassLoader = (T) BundleRevisionImpl
                 .getSecureAction().invoke(
                         ctor,
                         new Object[] { bundleWiring,
@@ -693,6 +1138,16 @@ public class BundleWiringImplTest
     class TestClass
     {
         // An empty test class to weave.
+    }
+
+    class TestClassSuper
+    {
+        // An empty test class to weave.
+    }
+
+    class TestClassChild extends TestClassSuper
+    {
+
     }
 
     class GoodDummyWovenHook implements WeavingHook
