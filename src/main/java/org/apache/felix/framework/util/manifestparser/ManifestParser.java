@@ -22,12 +22,12 @@ import org.apache.felix.framework.BundleRevisionImpl;
 import org.apache.felix.framework.Logger;
 import org.apache.felix.framework.capabilityset.SimpleFilter;
 import org.apache.felix.framework.util.FelixConstants;
-import org.apache.felix.framework.util.VersionRange;
 import org.apache.felix.framework.wiring.BundleCapabilityImpl;
 import org.apache.felix.framework.wiring.BundleRequirementImpl;
 import org.osgi.framework.BundleException;
 import org.osgi.framework.Constants;
 import org.osgi.framework.Version;
+import org.osgi.framework.VersionRange;
 import org.osgi.framework.namespace.BundleNamespace;
 import org.osgi.framework.namespace.ExecutionEnvironmentNamespace;
 import org.osgi.framework.namespace.IdentityNamespace;
@@ -338,7 +338,7 @@ public class ManifestParser
                 v = (v == null) ? sv : v;
                 clause.m_attrs.put(
                     Constants.VERSION_ATTRIBUTE,
-                    VersionRange.parse(v.toString()));
+                    new VersionRange(v.toString()));
             }
 
             // If bundle version is specified, then convert its type to VersionRange.
@@ -347,7 +347,7 @@ public class ManifestParser
             {
                 clause.m_attrs.put(
                     Constants.BUNDLE_VERSION_ATTRIBUTE,
-                    VersionRange.parse(v.toString()));
+                    new VersionRange(v.toString()));
             }
 
             // Verify no duplicate imports.
@@ -396,7 +396,7 @@ public class ManifestParser
                     // R3 package requirements should only have version attributes.
                     Object pkgVersion = clause.m_attrs.get(BundleCapabilityImpl.VERSION_ATTR);
                     pkgVersion = (pkgVersion == null)
-                        ? new VersionRange(Version.emptyVersion, true, null, true)
+                        ? new VersionRange(VersionRange.LEFT_CLOSED, Version.emptyVersion, null, VersionRange.RIGHT_CLOSED)
                         : pkgVersion;
                     for (Entry<String, Object> entry : clause.m_attrs.entrySet())
                     {
@@ -526,7 +526,7 @@ public class ManifestParser
                 v = (v == null) ? sv : v;
                 clause.m_attrs.put(
                     Constants.VERSION_ATTRIBUTE,
-                    VersionRange.parse(v.toString()));
+                    new VersionRange(v.toString()));
             }
 
             // If bundle version is specified, then convert its type to VersionRange.
@@ -535,7 +535,7 @@ public class ManifestParser
             {
                 clause.m_attrs.put(
                     Constants.BUNDLE_VERSION_ATTRIBUTE,
-                    VersionRange.parse(v.toString()));
+                    new VersionRange(v.toString()));
             }
 
             // Dynamic imports can have duplicates, verify that no partial package name wild carding is used
@@ -1190,10 +1190,10 @@ public class ManifestParser
             }
             for (int k = 0; (osversions != null) && (k < osversions.length); k++)
             {
-                VersionRange range = VersionRange.parse(osversions[k]);
-                if ((range.getFloor()).compareTo(osVersionRangeMaxFloor) >= 0)
+                VersionRange range = new VersionRange(osversions[k]);
+                if ((range.getLeft()).compareTo(osVersionRangeMaxFloor) >= 0)
                 {
-                    osVersionRangeMaxFloor = range.getFloor();
+                    osVersionRangeMaxFloor = range.getLeft();
                 }
             }
         }
@@ -1214,8 +1214,8 @@ public class ManifestParser
                 String[] osversions = ((NativeLibraryClause) clauseList.get(index)).getOSVersions();
                 for (int k = 0; k < osversions.length; k++)
                 {
-                    VersionRange range = VersionRange.parse(osversions[k]);
-                    if ((range.getFloor()).compareTo(osVersionRangeMaxFloor) >= 0)
+                    VersionRange range = new VersionRange(osversions[k]);
+                    if ((range.getLeft()).compareTo(osVersionRangeMaxFloor) >= 0)
                     {
                         selection.add("" + indexList.get(i));
                     }
@@ -1297,7 +1297,7 @@ public class ManifestParser
                 {
                     attrs.put(
                         Constants.VERSION_ATTRIBUTE,
-                        VersionRange.parse(version.toString()));
+                        new VersionRange(version.toString()));
                 }
 
                 List<String> paths = new ArrayList<String>();
@@ -1510,7 +1510,7 @@ public class ManifestParser
                 {
                     clauses.get(0).m_attrs.put(
                         Constants.BUNDLE_VERSION_ATTRIBUTE,
-                        VersionRange.parse(value.toString()));
+                        new VersionRange(value.toString()));
                 }
 
                 // Note that we use a linked hash map here to ensure the
@@ -1700,7 +1700,7 @@ public class ManifestParser
                 {
                     clause.m_attrs.put(
                         Constants.BUNDLE_VERSION_ATTRIBUTE,
-                        VersionRange.parse(value.toString()));
+                        new VersionRange(value.toString()));
                 }
             }
         }
