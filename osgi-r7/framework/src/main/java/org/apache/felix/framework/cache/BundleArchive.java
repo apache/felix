@@ -63,7 +63,6 @@ import org.osgi.framework.Constants;
  * will be copied. Currently, reference URLs can only refer to "file:" targets.
  * </p>
  * @see org.apache.felix.framework.cache.BundleCache
- * @see org.apache.felix.framework.cache.BundleRevision
 **/
 public class BundleArchive
 {
@@ -382,33 +381,28 @@ public class BundleArchive
      * @return a <tt>File</tt> object corresponding to the specified file name.
      * @throws Exception if any error occurs.
     **/
-    public synchronized File getDataFile(String fileName) throws Exception
+    public File getDataFile(String fileName) throws Exception
     {
-        // Do some sanity checking.
-        if ((fileName.length() > 0) && (fileName.charAt(0) == File.separatorChar))
-        {
-            throw new IllegalArgumentException(
-                "The data file path must be relative, not absolute.");
-        }
-        else if (fileName.indexOf("..") >= 0)
-        {
-            throw new IllegalArgumentException(
-                "The data file path cannot contain a reference to the \"..\" directory.");
-        }
-
         // Get bundle data directory.
         File dataDir = new File(m_archiveRootDir, DATA_DIRECTORY);
+
         // Create the data directory if necessary.
-        if (!BundleCache.getSecureAction().fileExists(dataDir))
+        if (!BundleCache.getSecureAction().fileExists(dataDir) && !BundleCache.getSecureAction().mkdirs(dataDir) && !BundleCache.getSecureAction().fileExists(dataDir))
         {
-            if (!BundleCache.getSecureAction().mkdir(dataDir))
-            {
-                throw new IOException("Unable to create bundle data directory.");
-            }
+            throw new IOException("Unable to create bundle data directory.");
+        }
+
+        File dataFile = new File(dataDir, fileName);
+
+        String dataFilePath = BundleCache.getSecureAction().getCanonicalPath(dataFile);
+        String dataDirPath = BundleCache.getSecureAction().getCanonicalPath(dataDir);
+        if (!dataFilePath.equals(dataDirPath) && !dataFilePath.startsWith(dataDirPath + File.separatorChar))
+        {
+            throw new IllegalArgumentException("The data file must be inside the data dir.");
         }
 
         // Return the data file.
-        return new File(dataDir, fileName);
+        return dataFile;
     }
 
     /**
