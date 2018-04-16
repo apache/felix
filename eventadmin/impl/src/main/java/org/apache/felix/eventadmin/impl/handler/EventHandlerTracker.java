@@ -18,7 +18,6 @@
  */
 package org.apache.felix.eventadmin.impl.handler;
 
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
@@ -27,6 +26,7 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 
+import org.apache.felix.eventadmin.impl.util.Matchers;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceReference;
 import org.osgi.service.event.Event;
@@ -61,9 +61,9 @@ public class EventHandlerTracker extends ServiceTracker<EventHandler, EventHandl
 		super(context, EventHandler.class.getName(), null);
 
 		// we start with empty collections
-		this.matchingAllEvents = new CopyOnWriteArrayList<EventHandlerProxy>();
-		this.matchingTopic = new ConcurrentHashMap<String, List<EventHandlerProxy>>();
-		this.matchingPrefixTopic = new ConcurrentHashMap<String, List<EventHandlerProxy>>();
+		this.matchingAllEvents = new CopyOnWriteArrayList<>();
+		this.matchingTopic = new ConcurrentHashMap<>();
+		this.matchingPrefixTopic = new ConcurrentHashMap<>();
 	}
 
     /**
@@ -71,38 +71,7 @@ public class EventHandlerTracker extends ServiceTracker<EventHandler, EventHandl
      * @param ignoreTimeout
      */
     public void update(final String[] ignoreTimeout, final boolean requireTopic) {
-        final Matcher[] ignoreTimeoutMatcher;
-        if ( ignoreTimeout == null || ignoreTimeout.length == 0 )
-        {
-            ignoreTimeoutMatcher = null;
-        }
-        else
-        {
-            ignoreTimeoutMatcher = new Matcher[ignoreTimeout.length];
-            for(int i=0;i<ignoreTimeout.length;i++)
-            {
-                String value = ignoreTimeout[i];
-                if ( value != null )
-                {
-                    value = value.trim();
-                }
-                if ( value != null && value.length() > 0 )
-                {
-                    if ( value.endsWith(".") )
-                    {
-                        ignoreTimeoutMatcher[i] = new PackageMatcher(value.substring(0, value.length() - 1));
-                    }
-                    else if ( value.endsWith("*") )
-                    {
-                        ignoreTimeoutMatcher[i] = new SubPackageMatcher(value.substring(0, value.length() - 1));
-                    }
-                    else
-                    {
-                        ignoreTimeoutMatcher[i] = new ClassMatcher(value);
-                    }
-                }
-            }
-        }
+        final Matchers.Matcher[] ignoreTimeoutMatcher = Matchers.createPackageMatchers(ignoreTimeout);
         this.handlerContext = new HandlerContext(this.context, ignoreTimeoutMatcher, requireTopic);
     }
 
@@ -146,7 +115,7 @@ public class EventHandlerTracker extends ServiceTracker<EventHandler, EventHandl
             {
                 return;
             }
-            proxies = new CopyOnWriteArrayList<EventHandlerProxy>();
+            proxies = new CopyOnWriteArrayList<>();
             proxyListMap.put(key, proxies);
         }
 
@@ -231,7 +200,7 @@ public class EventHandlerTracker extends ServiceTracker<EventHandler, EventHandl
 	public Collection<EventHandlerProxy> getHandlers(final Event event) {
 	    final String topic = event.getTopic();
 
-		final Set<EventHandlerProxy> handlers = new HashSet<EventHandlerProxy>();
+		final Set<EventHandlerProxy> handlers = new HashSet<>();
 
 		// Add all handlers matching everything
         this.checkHandlerAndAdd(handlers, this.matchingAllEvents, event);
@@ -275,125 +244,6 @@ public class EventHandlerTracker extends ServiceTracker<EventHandler, EventHandl
 	    }
 	}
 
-	static Matcher[] createMatchers(final String[] config)
-	{
-        final Matcher[] matchers;
-        if ( config == null || config.length == 0 )
-        {
-            matchers = null;
-        }
-        else
-        {
-            final List<Matcher> list = new ArrayList<EventHandlerTracker.Matcher>();
-            for(int i=0;i<config.length;i++)
-            {
-                String value = config[i];
-                if ( value != null )
-                {
-                    value = value.trim();
-                }
-                if ( value != null && value.length() > 0 )
-                {
-                    if ( value.endsWith(".") )
-                    {
-                        list.add(new PackageMatcher(value.substring(0, value.length() - 1)));
-                    }
-                    else if ( value.endsWith("*") )
-                    {
-                        if ( value.equals("*") )
-                        {
-                            return new Matcher[] {new MatcherAll()};
-                        }
-                        list.add(new SubPackageMatcher(value.substring(0, value.length() - 1)));
-                    }
-                    else
-                    {
-                        list.add(new ClassMatcher(value));
-                    }
-                }
-            }
-            if ( list.size() > 0 )
-            {
-                matchers = list.toArray(new Matcher[list.size()]);
-            }
-            else
-            {
-                matchers = null;
-            }
-        }
-        return matchers;
-	}
-
-    /**
-     * The matcher interface for checking if timeout handling
-     * is disabled for the handler.
-     * Matching is based on the class name of the event handler.
-     */
-    static interface Matcher
-    {
-        boolean match(String className);
-    }
-
-    /** Match all. */
-    private static final class MatcherAll implements Matcher
-    {
-        @Override
-        public boolean match(final String className)
-        {
-            return true;
-        }
-    }
-
-    /** Match a package. */
-    private static final class PackageMatcher implements Matcher
-    {
-        private final String m_packageName;
-
-        public PackageMatcher(final String name)
-        {
-            m_packageName = name;
-        }
-        @Override
-        public boolean match(final String className)
-        {
-            final int pos = className.lastIndexOf('.');
-            return pos > -1 && className.substring(0, pos).equals(m_packageName);
-        }
-    }
-
-    /** Match a package or sub package. */
-    private static final class SubPackageMatcher implements Matcher
-    {
-        private final String m_packageName;
-
-        public SubPackageMatcher(final String name)
-        {
-            m_packageName = name + '.';
-        }
-        @Override
-        public boolean match(final String className)
-        {
-            final int pos = className.lastIndexOf('.');
-            return pos > -1 && className.substring(0, pos + 1).startsWith(m_packageName);
-        }
-    }
-
-    /** Match a class name. */
-    private static final class ClassMatcher implements Matcher
-    {
-        private final String m_className;
-
-        public ClassMatcher(final String name)
-        {
-            m_className = name;
-        }
-        @Override
-        public boolean match(final String className)
-        {
-            return m_className.equals(className);
-        }
-    }
-
     /**
      * The context object passed to the proxies.
      */
@@ -403,13 +253,13 @@ public class EventHandlerTracker extends ServiceTracker<EventHandler, EventHandl
         public final BundleContext bundleContext;
 
         /** The matchers for ignore timeout handling. */
-        public final Matcher[] ignoreTimeoutMatcher;
+        public final Matchers.Matcher[] ignoreTimeoutMatcher;
 
         /** Is a topic required. */
         public final boolean requireTopic;
 
         public HandlerContext(final BundleContext bundleContext,
-                final Matcher[] ignoreTimeoutMatcher,
+                final Matchers.Matcher[] ignoreTimeoutMatcher,
                 final boolean   requireTopic)
         {
             this.bundleContext = bundleContext;

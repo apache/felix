@@ -4,6 +4,8 @@ Changes in 1.5.0
     * [FELIX-5733] - Update implementation to EventAdmin 1.4 (R7)
 ** Improvement
     * [FELIX-5813] - EventAdmin async threads should be named
+** Bug
+    * [FELIX-5738] - EventAdmin IgnoreTopic config. property doesn't support wildcards
 
 
 Changes from 1.4.6 to 1.4.8
