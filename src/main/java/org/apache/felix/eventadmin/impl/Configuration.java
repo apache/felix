@@ -21,7 +21,6 @@ package org.apache.felix.eventadmin.impl;
 import java.security.AccessControlContext;
 import java.security.AccessController;
 import java.security.PrivilegedAction;
-
 import java.util.Dictionary;
 import java.util.Hashtable;
 import java.util.StringTokenizer;
@@ -205,7 +204,7 @@ public class Configuration
                     interfaceNames = new String[] {ManagedService.class.getName(), MetaTypeProvider.class.getName()};
                     service = enhancedService;
                 }
-                Dictionary<String, Object> props = new Hashtable<String, Object>();
+                Dictionary<String, Object> props = new Hashtable<>();
                 props.put( Constants.SERVICE_PID, PID );
                 m_managedServiceReg = m_bundleContext.registerService( interfaceNames, service, props );
             }
@@ -335,7 +334,7 @@ public class Configuration
         {
             m_threadPoolSize = getIntProperty(PROP_THREAD_POOL_SIZE, config.get(PROP_THREAD_POOL_SIZE), 20, 2);
             m_asyncToSyncThreadRatio = getDoubleProperty(
-                	PROP_ASYNC_TO_SYNC_THREAD_RATIO, m_bundleContext.getProperty(PROP_ASYNC_TO_SYNC_THREAD_RATIO), 0.5, 0.0);
+                	PROP_ASYNC_TO_SYNC_THREAD_RATIO, config.get(PROP_ASYNC_TO_SYNC_THREAD_RATIO), 0.5, 0.0);
             m_timeout = getIntProperty(PROP_TIMEOUT, config.get(PROP_TIMEOUT), 5000, Integer.MIN_VALUE);
             m_requireTopic = getBooleanProperty(config.get(PROP_REQUIRE_TOPIC), true);
             m_ignoreTimeout = null;
