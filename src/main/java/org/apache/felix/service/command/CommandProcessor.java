@@ -32,7 +32,7 @@ public interface CommandProcessor
      * The scope of commands provided by this service. This name can be used to distinguish
      * between different command providers with the same function names.
      */
-    final static String COMMAND_SCOPE = "osgi.command.scope";
+    String COMMAND_SCOPE = "osgi.command.scope";
 
     /**
      * A list of method names that may be called for this command provider. A
@@ -42,7 +42,7 @@ public interface CommandProcessor
      * Help information for the command may be supplied with a space as
      * separation.
      */
-    final static String COMMAND_FUNCTION = "osgi.command.function";
+    String COMMAND_FUNCTION = "osgi.command.function";
 
     /**
      * Create a new command session associated with IO streams.

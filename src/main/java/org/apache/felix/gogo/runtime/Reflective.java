@@ -40,14 +40,14 @@ public final class Reflective
     public final static Object NO_MATCH = new Object();
     public final static String MAIN = "_main";
     public final static Set<String> KEYWORDS = new HashSet<>(
-        Arrays.asList(new String[] { "abstract", "continue", "for", "new", "switch",
+        Arrays.asList("abstract", "continue", "for", "new", "switch",
                 "assert", "default", "goto", "package", "synchronized", "boolean", "do",
                 "if", "private", "this", "break", "double", "implements", "protected",
                 "throw", "byte", "else", "import", "public", "throws", "case", "enum",
                 "instanceof", "return", "transient", "catch", "extends", "int", "short",
                 "try", "char", "final", "interface", "static", "void", "class",
                 "finally", "long", "strictfp", "volatile", "const", "float", "native",
-                "super", "while" }));
+                "super", "while"));
 
     /**
      * invokes the named method on the given target using the supplied args,

@@ -30,7 +30,7 @@ import static org.junit.Assert.assertTrue;
 public class GlobPathMatcherTest {
 
     @Test
-    public void isMatchWithCaseSensitiveWithDefaultPathSeparator() throws Exception {
+    public void isMatchWithCaseSensitiveWithDefaultPathSeparator() {
 
         final Builder.Matcher pathMatcher = new Builder().build();
 
@@ -143,7 +143,7 @@ public class GlobPathMatcherTest {
     }
 
     @Test
-    public void isMatchWithCustomSeparator() throws Exception {
+    public void isMatchWithCustomSeparator() {
         final Builder.Matcher pathMatcher = new Builder().withPathSeparator(".").build();
 
         assertTrue(pathMatcher.isMatch(".foo.bar.**", ".foo.bar"));
@@ -182,7 +182,7 @@ public class GlobPathMatcherTest {
     }
 
     @Test
-    public void isMatchWithIgnoreCase() throws Exception {
+    public void isMatchWithIgnoreCase() {
         final Builder.Matcher pathMatcher = new Builder().withIgnoreCase().build();
 
         assertTrue(pathMatcher.isMatch("/foo/bar/**", "/FoO/baR"));
@@ -200,7 +200,7 @@ public class GlobPathMatcherTest {
     }
 
     @Test
-    public void isMatchWithIgnoreCaseWithCustomPathSeparator() throws Exception {
+    public void isMatchWithIgnoreCaseWithCustomPathSeparator() {
         final Builder.Matcher pathMatcher = new Builder()
                 .withIgnoreCase()
                 .withPathSeparator(".").build();

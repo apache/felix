@@ -27,7 +27,7 @@ import java.lang.annotation.Target;
 @Target({ElementType.PARAMETER})
 public @interface Parameter
 {
-    static final String UNSPECIFIED = "org.apache.felix.service.command.unspecified.parameter";
+    String UNSPECIFIED = "org.apache.felix.service.command.unspecified.parameter";
 
     /**
      * Parameter name and aliases which must start with the hyphen character.

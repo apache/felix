@@ -143,7 +143,7 @@ public class Pipe implements Callable<Result>, Process
     private static final int READ = 1;
     private static final int WRITE = 2;
 
-    private void setStream(Channel ch, int fd, int readWrite) throws IOException {
+    private void setStream(Channel ch, int fd, int readWrite) {
         if ((readWrite & (READ | WRITE)) == 0) {
             throw new IllegalArgumentException("Should specify READ and/or WRITE");
         }
@@ -221,7 +221,7 @@ public class Pipe implements Callable<Result>, Process
     }
 
     @Override
-    public Result call() throws Exception {
+    public Result call() {
         Thread thread = Thread.currentThread();
         String name = thread.getName();
         try {
@@ -348,8 +348,7 @@ public class Pipe implements Callable<Result>, Process
                         int index = 0;
                         boolean nl = true;
                         @Override
-                        public int read() throws IOException
-                        {
+                        public int read() {
                             if (nl && stripLeadingTabs)
                             {
                                 while (index < bytes.length && bytes[index] == '\t')

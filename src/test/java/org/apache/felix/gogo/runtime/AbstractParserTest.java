@@ -36,7 +36,7 @@ public abstract class AbstractParserTest {
     private PrintStream serr;
 
     @Before
-    public void setUp() throws Exception {
+    public void setUp() {
         sin = new NoCloseInputStream(System.in);
         sout = new NoClosePrintStream(System.out);
         serr = new NoClosePrintStream(System.err);
@@ -45,7 +45,7 @@ public abstract class AbstractParserTest {
     }
 
     @After
-    public void tearDown() throws Exception {
+    public void tearDown() {
         threadIO.stop();
     }
 
@@ -60,7 +60,7 @@ public abstract class AbstractParserTest {
             super(in);
         }
         @Override
-        public void close() throws IOException {
+        public void close() {
         }
     }
 

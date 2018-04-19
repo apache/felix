@@ -36,7 +36,7 @@ public class ExpanderTest {
     public void testOctalAndHex() throws Exception {
         Evaluate evaluate = new Evaluate() {
             @Override
-            public Object eval(Token t) throws Exception {
+            public Object eval(Token t) {
                 return null;
             }
             @Override
@@ -63,7 +63,7 @@ public class ExpanderTest {
     public void testSortingFlags() throws Exception {
         Evaluate evaluate = new Evaluate() {
             @Override
-            public Object eval(Token t) throws Exception {
+            public Object eval(Token t) {
                 return null;
             }
             @Override
@@ -110,7 +110,7 @@ public class ExpanderTest {
         final Path testdir = Paths.get(".").toAbsolutePath().resolve("target/testdir").normalize();
         Evaluate evaluate = new Evaluate() {
             @Override
-            public Object eval(Token t) throws Exception {
+            public Object eval(Token t) {
                 return null;
             }
             @Override
