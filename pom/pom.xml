@@ -31,7 +31,7 @@
     <packaging>pom</packaging>
 
     <name>Apache Felix</name>
-    <version>5-SNAPSHOT</version>
+    <version>5</version>
     <url>http://felix.apache.org/</url>
     <inceptionYear>2006</inceptionYear>
     <description>Apache Felix is a community effort to implement the OSGi Framework and Service platform and other interesting OSGi-related technologies.</description>
@@ -75,9 +75,9 @@
     </mailingLists>
 
     <scm>
-        <connection>scm:svn:http://svn.apache.org/repos/asf/felix/trunk/pom</connection>
-        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/felix/trunk/pom</developerConnection>
-        <url>http://svn.apache.org/viewvc/felix/trunk/pom/?root=Apache-SVN</url>
+        <connection>scm:svn:http://svn.apache.org/repos/asf/felix/releases/felix-parent-5</connection>
+        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/felix/releases/felix-parent-5</developerConnection>
+        <url>http://svn.apache.org/viewvc/felix/releases/?root=Apache-SVN/felix-parent-5</url>
     </scm>
 
     <distributionManagement>
