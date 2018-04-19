@@ -18,14 +18,15 @@
  */
 package org.apache.felix.gogo.jline;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import org.apache.felix.gogo.runtime.Parser.Program;
 import org.apache.felix.gogo.runtime.Token;
-import org.jline.reader.ParsedLine;
+import org.jline.reader.CompletingParsedLine;
 
-public class ParsedLineImpl implements ParsedLine {
+import java.util.ArrayList;
+import java.util.List;
+import java.util.function.Predicate;
+
+public class ParsedLineImpl implements CompletingParsedLine {
 
     private final Program program;
     private final String source;
@@ -33,6 +34,8 @@ public class ParsedLineImpl implements ParsedLine {
     private final List<String> tokens;
     private final int wordIndex;
     private final int wordCursor;
+    private final CharSequence rawWord;
+    private final int rawWordCursor;
 
     public ParsedLineImpl(Program program, Token line, int cursor, List<Token> tokens) {
         this.program = program;
@@ -40,7 +43,7 @@ public class ParsedLineImpl implements ParsedLine {
         this.cursor = cursor - line.start();
         this.tokens = new ArrayList<>();
         for (Token token : tokens) {
-            this.tokens.add(token.toString());
+            this.tokens.add(unquote(token, null).toString());
         }
         int wi = tokens.size();
         int wc = 0;
@@ -62,9 +65,16 @@ public class ParsedLineImpl implements ParsedLine {
         }
         if (wi == tokens.size()) {
             this.tokens.add("");
+            rawWord = "";
+            wordCursor = 0;
+        } else {
+            rawWord = tokens.get(wi);
+            int[] c = new int[] { wc };
+            unquote(rawWord, c);
+            wordCursor = c[0];
         }
         wordIndex = wi;
-        wordCursor = wc;
+        rawWordCursor = wc;
     }
 
     public String word() {
@@ -94,4 +104,99 @@ public class ParsedLineImpl implements ParsedLine {
     public Program program() {
         return program;
     }
+
+    public int rawWordCursor() {
+        return rawWordCursor;
+    }
+
+    public int rawWordLength() {
+        return rawWord.length();
+    }
+
+    public CharSequence escape(CharSequence str, boolean complete) {
+        StringBuilder sb = new StringBuilder(str);
+        Predicate<Character> needToBeEscaped;
+        char quote = 0;
+        char first = rawWord.length() > 0 ? rawWord.charAt(0) : 0;
+        if (first == '\'') {
+            quote = '\'';
+            needToBeEscaped = i -> i == '\'';
+        } else if (first == '"') {
+            quote = '"';
+            needToBeEscaped = i -> i == '"';
+        } else {
+            needToBeEscaped = i -> i == ' ' || i == '\t';
+        }
+        for (int i = 0; i < sb.length(); i++) {
+            if (needToBeEscaped.test(str.charAt(i))) {
+                sb.insert(i++, '\\');
+            }
+        }
+        if (quote != 0) {
+            sb.insert(0, quote);
+            if (complete) {
+                sb.append(quote);
+            }
+        }
+        return sb;
+    }
+
+    private CharSequence unquote(CharSequence arg, int[] cursor) {
+        boolean hasEscape = false;
+        for (int i = 0; i < arg.length(); i++) {
+            int c = arg.charAt(i);
+            if (c == '\\' || c == '"' || c == '\'') {
+                hasEscape = true;
+                break;
+            }
+        }
+        if (!hasEscape) {
+            return arg;
+        }
+        boolean singleQuoted = false;
+        boolean doubleQuoted = false;
+        boolean escaped = false;
+        StringBuilder buf = new StringBuilder(arg.length());
+        for (int i = 0; i < arg.length(); i++) {
+            if (cursor != null && cursor[0] == i) {
+                cursor[0] = buf.length();
+                cursor = null;
+            }
+            char c = arg.charAt(i);
+            if (doubleQuoted && escaped) {
+                if (c != '"' && c != '\\' && c != '$' && c != '%') {
+                    buf.append('\\');
+                }
+                buf.append(c);
+                escaped = false;
+            } else if (escaped) {
+                buf.append(c);
+                escaped = false;
+            } else if (singleQuoted) {
+                if (c == '\'') {
+                    singleQuoted = false;
+                } else {
+                    buf.append(c);
+                }
+            } else if (doubleQuoted) {
+                if (c == '\\') {
+                    escaped = true;
+                } else if (c == '\"') {
+                    doubleQuoted = false;
+                } else {
+                    buf.append(c);
+                }
+            } else if (c == '\\') {
+                escaped = true;
+            } else if (c == '\'') {
+                singleQuoted = true;
+            } else if (c == '"') {
+                doubleQuoted = true;
+            } else {
+                buf.append(c);
+            }
+        }
+        return buf.toString();
+    }
+
 }
