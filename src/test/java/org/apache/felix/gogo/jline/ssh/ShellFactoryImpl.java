@@ -116,21 +116,19 @@ public class ShellFactoryImpl implements Factory<Command> {
 
         public void start(final Environment env) throws IOException {
             try {
-                new Thread() {
-                    public void run() {
-                        try {
-                            ShellImpl.this.run(env);
-                        } catch (Throwable t) {
-                            t.printStackTrace();
-                        }
+                new Thread(() -> {
+                    try {
+                        ShellImpl.this.run(env);
+                    } catch (Throwable t) {
+                        t.printStackTrace();
                     }
-                }.start();
+                }).start();
             } catch (Exception e) {
-                throw (IOException) new IOException("Unable to start shell").initCause(e);
+                throw (IOException) new IOException("Unable to start shell", e);
             }
         }
 
-        public void run(Environment env) throws Exception {
+        public void run(Environment env) {
             try {
                 Terminal terminal = TerminalBuilder.builder()
                         .name("gogo")
@@ -250,7 +248,7 @@ public class ShellFactoryImpl implements Factory<Command> {
                     }
 
                     @Override
-                    public void exit() throws Exception {
+                    public void exit() {
                         destroy();
                     }
                 };

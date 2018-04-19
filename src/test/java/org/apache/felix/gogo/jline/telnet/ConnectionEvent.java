@@ -130,7 +130,7 @@ public class ConnectionEvent {
          * Defines the connection geometry event type.
          * It occurs when the connection sent a NAWS.
          */
-        CONNECTION_TERMINAL_GEOMETRY_CHANGED;
+        CONNECTION_TERMINAL_GEOMETRY_CHANGED
     }
 
 

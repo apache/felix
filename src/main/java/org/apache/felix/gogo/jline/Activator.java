@@ -57,7 +57,7 @@ public class Activator implements BundleActivator, SingleServiceListener {
         this.commandProcessorTracker.open();
     }
 
-    public void stop(BundleContext context) throws Exception {
+    public void stop(BundleContext context) {
         Iterator<ServiceRegistration<?>> iterator = regs.iterator();
         while (iterator.hasNext()) {
             ServiceRegistration reg = iterator.next();

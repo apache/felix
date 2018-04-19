@@ -87,8 +87,8 @@ public abstract class ConnectionManager implements Runnable {
 
     public ConnectionManager() {
         threadGroup = new ThreadGroup(toString() + "Connections");
-        closedConnections = new Stack<Connection>();
-        openConnections = Collections.synchronizedList(new ArrayList<Connection>(100));
+        closedConnections = new Stack<>();
+        openConnections = Collections.synchronizedList(new ArrayList<>(100));
     }
 
     public ConnectionManager(int con, int timew, int timedis, int hoke, ConnectionFilter filter, String lsh, boolean lm) {
@@ -150,7 +150,7 @@ public abstract class ConnectionManager implements Runnable {
      *         <tt>InetAddress</tt>.
      */
     public Connection[] getConnectionsByAdddress(InetAddress addr) {
-        ArrayList<Connection> l = new ArrayList<Connection>();
+        ArrayList<Connection> l = new ArrayList<>();
         synchronized (openConnections) {
             for (Connection connection : openConnections) {
                 if (connection.getConnectionData().getInetAddress().equals(addr)) {

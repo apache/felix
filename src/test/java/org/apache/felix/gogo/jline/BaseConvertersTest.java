@@ -32,7 +32,7 @@ public class BaseConvertersTest {
     public void testFunctionProxy() throws Exception {
         Function function = new Function() {
             @Override
-            public Object execute(CommandSession session, List<Object> arguments) throws Exception {
+            public Object execute(CommandSession session, List<Object> arguments) {
                 return "Hello ";
             }
             public String toString() {

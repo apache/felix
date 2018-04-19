@@ -57,12 +57,12 @@ public class Main {
                 register(processor, shell, Shell.functions);
                 InputStream in = new FilterInputStream(terminal.input()) {
                     @Override
-                    public void close() throws IOException {
+                    public void close() {
                     }
                 };
                 OutputStream out = new FilterOutputStream(terminal.output()) {
                     @Override
-                    public void close() throws IOException {
+                    public void close() {
                     }
                 };
                 CommandSession session = processor.createSession(in, out, out);
@@ -102,7 +102,7 @@ public class Main {
             return System.getProperty(name);
         }
 
-        public void exit() throws Exception {
+        public void exit() {
             System.exit(0);
         }
     }

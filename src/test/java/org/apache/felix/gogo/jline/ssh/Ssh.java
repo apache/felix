@@ -102,7 +102,7 @@ public class Ssh {
         server.setHost(ip);
         server.setShellFactory(new ShellFactoryImpl(processor));
         server.setCommandFactory(new ScpCommandFactory.Builder().withDelegate(new ShellCommandFactory(processor)).build());
-        server.setSubsystemFactories(Collections.<NamedFactory<Command>>singletonList(
+        server.setSubsystemFactories(Collections.singletonList(
                 new SftpSubsystemFactory.Builder().build()
         ));
         server.setKeyPairProvider(new SimpleGeneratorHostKeyProvider());

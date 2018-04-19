@@ -356,11 +356,7 @@ public class TelnetIO {
 
         out.write(b);
 
-        if (b == 13) {
-            crFlag = true;
-        } else {
-            crFlag = false;
-        }
+        crFlag = b == 13;
     }//write(byte)
 
     /**
@@ -783,7 +779,7 @@ public class TelnetIO {
         /* First switch on the Negotiation Option */
                 case WILL:
                     if (supported(buf[1]) && isEnabled(buf[1])) {
-                        ;// do nothing
+                        // do nothing
                     } else {
                         if (waitDOreply(buf[1]) && supported(buf[1])) {
                             enable(buf[1]);
@@ -810,7 +806,7 @@ public class TelnetIO {
                     break;
                 case DO:
                     if (supported(buf[1]) && isEnabled(buf[1])) {
-                        ; // do nothing
+                        // do nothing
                     } else {
                         if (waitWILLreply(buf[1]) && supported(buf[1])) {
                             enable(buf[1]);
@@ -855,14 +851,12 @@ public class TelnetIO {
                                 handleNEWENV();
                                 break;
                             default:
-                                ;
                         }
                     } else {
                         //do nothing
                     }
                     break;
                 default:
-                    ;
             }//switch
         }//parse
 
@@ -1302,7 +1296,7 @@ public class TelnetIO {
                         }
                         break;
                     case -1:
-                        return (new String("default"));
+                        return "default";
                     default:
                 }
                 if (cont) {
@@ -1365,25 +1359,13 @@ public class TelnetIO {
         private void enable(int i) throws IOException {
             switch (i) {
                 case SUPGA:
-                    if (DO_SUPGA) {
-                        DO_SUPGA = false;
-                    } else {
-                        DO_SUPGA = true;
-                    }
+                    DO_SUPGA = !DO_SUPGA;
                     break;
                 case ECHO:
-                    if (DO_ECHO) {
-                        DO_ECHO = false;
-                    } else {
-                        DO_ECHO = true;
-                    }
+                    DO_ECHO = !DO_ECHO;
                     break;
                 case NAWS:
-                    if (DO_NAWS) {
-                        DO_NAWS = false;
-                    } else {
-                        DO_NAWS = true;
-                    }
+                    DO_NAWS = !DO_NAWS;
                     break;
                 case TTYPE:
                     if (DO_TTYPE) {

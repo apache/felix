@@ -104,7 +104,7 @@ public class ConnectionData {
         terminalGeometry[0] = 80;    //width
         terminalGeometry[1] = 25;    //height
         negotiatedTerminalType = "default";
-        environment = new HashMap<String, String>(20);
+        environment = new HashMap<>(20);
         //this will stamp the first activity for validity :)
         activity();
     }//ConnectionData
@@ -410,35 +410,50 @@ public class ConnectionData {
         String country = getHostName();
         try {
             country = country.substring(country.lastIndexOf(".") + 1);
-            if (country.equals("at")) {
-                locale = new Locale("de", "AT");
-            } else if (country.equals("de")) {
-                locale = new Locale("de", "DE");
-            } else if (country.equals("mx")) {
-                locale = new Locale("es", "MX");
-            } else if (country.equals("es")) {
-                locale = new Locale("es", "ES");
-            } else if (country.equals("it")) {
-                locale = Locale.ITALY;
-            } else if (country.equals("fr")) {
-                locale = Locale.FRANCE;
-            } else if (country.equals("uk")) {
-                locale = new Locale("en", "GB");
-            } else if (country.equals("arpa")) {
-                locale = Locale.US;
-            } else if (country.equals("com")) {
-                locale = Locale.US;
-            } else if (country.equals("edu")) {
-                locale = Locale.US;
-            } else if (country.equals("gov")) {
-                locale = Locale.US;
-            } else if (country.equals("org")) {
-                locale = Locale.US;
-            } else if (country.equals("mil")) {
-                locale = Locale.US;
-            } else {
-                //default to english
-                locale = Locale.ENGLISH;
+            switch (country) {
+                case "at":
+                    locale = new Locale("de", "AT");
+                    break;
+                case "de":
+                    locale = new Locale("de", "DE");
+                    break;
+                case "mx":
+                    locale = new Locale("es", "MX");
+                    break;
+                case "es":
+                    locale = new Locale("es", "ES");
+                    break;
+                case "it":
+                    locale = Locale.ITALY;
+                    break;
+                case "fr":
+                    locale = Locale.FRANCE;
+                    break;
+                case "uk":
+                    locale = new Locale("en", "GB");
+                    break;
+                case "arpa":
+                    locale = Locale.US;
+                    break;
+                case "com":
+                    locale = Locale.US;
+                    break;
+                case "edu":
+                    locale = Locale.US;
+                    break;
+                case "gov":
+                    locale = Locale.US;
+                    break;
+                case "org":
+                    locale = Locale.US;
+                    break;
+                case "mil":
+                    locale = Locale.US;
+                    break;
+                default:
+                    //default to english
+                    locale = Locale.ENGLISH;
+                    break;
             }
         } catch (Exception ex) {
             //default to english

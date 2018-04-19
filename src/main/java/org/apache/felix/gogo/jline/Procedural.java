@@ -162,7 +162,7 @@ public class Procedural {
             } catch (BreakException b) {
                 break;
             } catch (ContinueException c) {
-                continue;
+                // Ignore
             }
         }
 
@@ -317,7 +317,7 @@ public class Procedural {
                     cause = (Throwable) opt.argObjects().get(1);
                 }
             }
-            throw new ThrownException(new Exception(message).initCause(cause));
+            throw new ThrownException(new Exception(message, cause));
         }
     }
 
@@ -453,7 +453,7 @@ public class Procedural {
             } catch (BreakException b) {
                 break;
             } catch (ContinueException c) {
-                continue;
+                // Ignore
             }
         }
         return null;
@@ -512,7 +512,7 @@ public class Procedural {
             } catch (BreakException e) {
                 break;
             } catch (ContinueException c) {
-                continue;
+                // Ignore
             }
         }
         return null;
@@ -560,10 +560,7 @@ public class Procedural {
         if ("".equals(result))
             return false;
 
-        if ("0".equals(result))
-            return false;
-
-        return true;
+        return !"0".equals(result);
     }
 
     private void checkInterrupt() throws InterruptedException {

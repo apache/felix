@@ -86,7 +86,7 @@ public class Parser implements org.jline.reader.Parser {
             return new ParsedLineImpl(program, statement, cursor, statement.tokens());
         } else {
             // TODO:
-            return new ParsedLineImpl(program, program, cursor, Collections.<Token>singletonList(program));
+            return new ParsedLineImpl(program, program, cursor, Collections.singletonList(program));
         }
     }
 

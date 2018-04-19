@@ -104,7 +104,7 @@ public abstract class Connection
         connectionData = cd;
         //init the connection listeners for events
         //(there should actually be only one or two)
-        listeners = new CopyOnWriteArrayList<ConnectionListener>();
+        listeners = new CopyOnWriteArrayList<>();
         dead = false;
     }//constructor
 
@@ -152,9 +152,7 @@ public abstract class Connection
      * resources.<br>
      */
     public synchronized void close() {
-        if (dead) {
-            return;
-        } else {
+        if (!dead) {
             try {
                 //connection dead
                 dead = true;
