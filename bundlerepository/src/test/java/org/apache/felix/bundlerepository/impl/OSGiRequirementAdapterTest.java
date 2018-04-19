@@ -23,6 +23,7 @@ import java.util.Map;
 
 import junit.framework.TestCase;
 
+import org.apache.felix.utils.capabilities.RequirementImpl;
 import org.osgi.resource.Requirement;
 
 public class OSGiRequirementAdapterTest extends TestCase
@@ -37,7 +38,7 @@ public class OSGiRequirementAdapterTest extends TestCase
         dirs.put("resolution", "optional");
         dirs.put("test", "test");
 
-        Requirement req = new OSGiRequirementImpl("osgi.wiring.package", attrs, dirs);
+        Requirement req = new RequirementImpl("osgi.wiring.package", attrs, dirs);
         OSGiRequirementAdapter adapter = new OSGiRequirementAdapter(req);
 
         assertEquals("(package=y)", adapter.getFilter());

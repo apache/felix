@@ -35,6 +35,7 @@ import java.util.concurrent.Callable;
 import org.apache.felix.bundlerepository.RepositoryAdmin;
 import org.apache.felix.bundlerepository.Resource;
 import org.apache.felix.bundlerepository.impl.LazyHashMap.LazyValue;
+import org.apache.felix.utils.capabilities.CapabilityImpl;
 import org.osgi.framework.Filter;
 import org.osgi.framework.FrameworkUtil;
 import org.osgi.framework.namespace.IdentityNamespace;
@@ -119,7 +120,7 @@ class OSGiRepositoryImpl implements Repository
         caps.add(idCap);
     }
 
-    static OSGiCapabilityImpl newOSGiIdentityCapability(org.apache.felix.bundlerepository.Resource res)
+    static CapabilityImpl newOSGiIdentityCapability(org.apache.felix.bundlerepository.Resource res)
     {
         @SuppressWarnings("unchecked")
         Map<String, Object> idAttrs = new HashMap<String, Object>(res.getProperties());
@@ -130,10 +131,10 @@ class OSGiRepositoryImpl implements Repository
         if (idAttrs.get(IdentityNamespace.CAPABILITY_TYPE_ATTRIBUTE) == null)
             idAttrs.put(IdentityNamespace.CAPABILITY_TYPE_ATTRIBUTE, IdentityNamespace.TYPE_BUNDLE);
 
-        return new OSGiCapabilityImpl(IdentityNamespace.IDENTITY_NAMESPACE, idAttrs, Collections.<String, String> emptyMap());
+        return new CapabilityImpl(IdentityNamespace.IDENTITY_NAMESPACE, idAttrs, Collections.<String, String> emptyMap());
     }
 
-    static OSGiCapabilityImpl newOSGiContentCapability(Resource resource)
+    static CapabilityImpl newOSGiContentCapability(Resource resource)
     {
         final String uri = resource.getURI();
         LazyValue<String, Object> lazyValue =
@@ -154,7 +155,7 @@ class OSGiRepositoryImpl implements Repository
         contentAttrs.put(ContentNamespace.CAPABILITY_MIME_ATTRIBUTE, mime);
         contentAttrs.put(ContentNamespace.CAPABILITY_SIZE_ATTRIBUTE, resource.getSize());
         contentAttrs.put(ContentNamespace.CAPABILITY_URL_ATTRIBUTE, uri);
-        return new OSGiCapabilityImpl(ContentNamespace.CONTENT_NAMESPACE, contentAttrs, Collections.<String, String> emptyMap());
+        return new CapabilityImpl(ContentNamespace.CONTENT_NAMESPACE, contentAttrs, Collections.<String, String> emptyMap());
     }
 
     static String getSHA256(String uri) throws IOException, NoSuchAlgorithmException // TODO find a good place for this
