@@ -24,9 +24,28 @@
 
 # General bundle permissions
 (java.util.PropertyPermission "configurator.*" "read")
-(org.osgi.framework.ServicePermission "org.osgi.service.cm.Configuration" "get")
+(org.osgi.framework.ServicePermission "org.osgi.service.cm.ConfigurationAdmin" "get")
 (org.osgi.framework.ServicePermission "org.osgi.service.coordinator.Coordinator" "get")
 (org.osgi.framework.ServicePermission "org.osgi.service.log.LogService" "get")
+
+# Permission to provide osgi.extender capability
+(org.osgi.framework.CapabilityPermission "osgi.extender" "provide")
+
+# Permission to adapt Bundle to BundleWiring
+(org.osgi.framework.AdaptPermission "(adaptClass=org.osgi.framework.wiring.BundleWiring)" "adapt")
+
+# We need permissions for ourselves (e.g. to add a BundleListener)
+(org.osgi.framework.AdminPermission "(name=org.apache.felix.configurator)" "resource,metadata,class,context,listener")
+
+# We need access to the resources, context and metadata of other bundles 
+# to process configuration files and apply the config on their behalve
+(org.osgi.framework.AdminPermission "(name=*)" "metadata,context,resource")
+
+# Johnzon needs this to read properties
+(java.util.PropertyPermission "org.apache.johnzon.*" "read")
+
+# Embedded Converter needs this to check whether something is a DTO 
+(java.lang.RuntimePermission "accessDeclaredMembers")
 
 # Manage configurations
 (org.osgi.service.cm.ConfigurationPermission "*" "configure")

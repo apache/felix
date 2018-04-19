@@ -53,6 +53,7 @@ import org.apache.felix.configurator.impl.model.BundleState;
 import org.apache.felix.configurator.impl.model.Config;
 import org.apache.felix.configurator.impl.model.ConfigPolicy;
 import org.apache.felix.configurator.impl.model.ConfigurationFile;
+import org.apache.johnzon.core.JsonProviderImpl;
 import org.osgi.service.configurator.ConfiguratorConstants;
 
 public class JSONUtil {
@@ -327,19 +328,13 @@ public class JSONUtil {
             report.errors.add("Invalid JSON from " + name);
             return null;
         }
-        // Jonhzon uses TCCL
-        final ClassLoader oldCL = Thread.currentThread().getContextClassLoader();
-        try {
-            Thread.currentThread().setContextClassLoader(JSONUtil.class.getClassLoader());
-            try (final JsonReader reader = Json.createReader(new StringReader(contents)) ) {
-                final JsonStructure obj = reader.read();
-                if ( obj != null && obj.getValueType() == ValueType.OBJECT ) {
-                    return (JsonObject)obj;
-                }
-                report.errors.add("Invalid JSON from " + name);
+        // Jonhzon is packaged in, so we can just use the impl type to avoid ClassLoader mess
+        try (final JsonReader reader = new JsonProviderImpl().createReader(new StringReader(contents)) ) {
+            final JsonStructure obj = reader.read();
+            if ( obj != null && obj.getValueType() == ValueType.OBJECT ) {
+                return (JsonObject)obj;
             }
-        } finally {
-            Thread.currentThread().setContextClassLoader(oldCL);
+            report.errors.add("Invalid JSON from " + name);
         }
         return null;
     }
