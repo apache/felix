@@ -1,3 +1,16 @@
+Changes from 4 to 5
+-------------------
+** Improvement
+    * [FELIX-5820] - Update to latest Apache parent pom
+                     Set java min version to 7
+                     Reduce supported java versions to 6, 7, 8, 9 (drop 4, 5, add 8, 9)
+                     Add missing encoding properties
+                     Remove dependency management of testing dependencies
+                     Update versions of plugins
+                     Use enforcer plugin to enforce maven and min java version
+                     Remove calculation of BREE header
+
+
 Changes from 3 to 4
 -------------------
 ** Improvement
