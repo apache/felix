@@ -147,8 +147,8 @@ public class Files
 
     public static List<String> parseSubstring(String value)
     {
-        List<String> pieces = new ArrayList();
-        StringBuffer ss = new StringBuffer();
+        List<String> pieces = new ArrayList<>();
+        StringBuilder ss = new StringBuilder();
         // int kind = SIMPLE; // assume until proven otherwise
         boolean wasStar = false; // indicates last piece was a star
         boolean leftstar = false; // track if the initial piece is a star
@@ -265,14 +265,7 @@ loop:   for (int i = 0; i < len; i++)
             // string ends with it.
             if (i == len - 1)
             {
-                if (s.endsWith(piece))
-                {
-                    result = true;
-                }
-                else
-                {
-                    result = false;
-                }
+                result = s.endsWith(piece);
                 break loop;
             }
 

@@ -96,7 +96,7 @@ public class Inspect42
         {
             if (separatorNeeded)
             {
-                System.out.println("");
+                System.out.println();
             }
             String title = b + " provides:";
             System.out.println(title);
@@ -138,7 +138,7 @@ public class Inspect42
         {
             if (separatorNeeded)
             {
-                System.out.println("");
+                System.out.println();
             }
             String title = b + " requires:";
             System.out.println(title);
@@ -176,7 +176,7 @@ public class Inspect42
         boolean matches = false;
 
         // Keep track of service references.
-        List<ServiceReference<?>> refs = new ArrayList<ServiceReference<?>>();
+        List<ServiceReference<?>> refs = new ArrayList<>();
 
         // Fragments cannot export packages.
         if (!isFragment(b))
@@ -243,7 +243,7 @@ public class Inspect42
         boolean matches = false;
 
         // Keep track of service references.
-        List<ServiceReference<?>> refs = new ArrayList<ServiceReference<?>>();
+        List<ServiceReference<?>> refs = new ArrayList<>();
 
         // Fragments cannot import packages.
         if (!isFragment(b))
@@ -299,7 +299,7 @@ public class Inspect42
         boolean matches = false;
 
         // Keep track of service references.
-        List<ServiceReference<?>> refs = new ArrayList<ServiceReference<?>>();
+        List<ServiceReference<?>> refs = new ArrayList<>();
 
         // Fragments cannot be required.
         if (!isFragment(b))
@@ -372,7 +372,7 @@ public class Inspect42
         boolean matches = false;
 
         // Keep track of service references.
-        List<ServiceReference<?>> refs = new ArrayList<ServiceReference<?>>();
+        List<ServiceReference<?>> refs = new ArrayList<>();
 
         // Fragments cannot require bundles.
         if (!isFragment(b))
@@ -422,7 +422,7 @@ public class Inspect42
         boolean matches = false;
 
         // Keep track of service references.
-        List<ServiceReference<?>> refs = new ArrayList<ServiceReference<?>>();
+        List<ServiceReference<?>> refs = new ArrayList<>();
 
         // Get package admin service.
         PackageAdmin pa = Util.getService(bc, PackageAdmin.class, refs);
@@ -481,7 +481,7 @@ public class Inspect42
         boolean matches = false;
 
         // Keep track of service references.
-        List<ServiceReference<?>> refs = new ArrayList<ServiceReference<?>>();
+        List<ServiceReference<?>> refs = new ArrayList<>();
 
         // Get package admin service.
         PackageAdmin pa = Util.getService(bc, PackageAdmin.class, refs);

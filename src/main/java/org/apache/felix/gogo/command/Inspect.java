@@ -95,7 +95,7 @@ public class Inspect
         {
             if (separatorNeeded)
             {
-                System.out.println("");
+                System.out.println();
             }
 
             // Print out any matching generic capabilities.
@@ -194,7 +194,7 @@ public class Inspect
     {
         // Aggregate matching capabilities.
         Map<BundleCapability, List<BundleWire>> map =
-            new HashMap<BundleCapability, List<BundleWire>>();
+                new HashMap<>();
         for (BundleWire wire : wires)
         {
             if (matchNamespace(namespace, wire.getCapability().getNamespace()))
@@ -202,7 +202,7 @@ public class Inspect
                 List<BundleWire> dependents = map.get(wire.getCapability());
                 if (dependents == null)
                 {
-                    dependents = new ArrayList<BundleWire>();
+                    dependents = new ArrayList<>();
                     map.put(wire.getCapability(), dependents);
                 }
                 dependents.add(wire);
@@ -270,7 +270,7 @@ public class Inspect
         {
             if (separatorNeeded)
             {
-                System.out.println("");
+                System.out.println();
             }
 
             // Print out any matching generic requirements.
@@ -369,7 +369,7 @@ public class Inspect
     {
         // Aggregate matching capabilities.
         Map<BundleRequirement, List<BundleWire>> map =
-            new HashMap<BundleRequirement, List<BundleWire>>();
+                new HashMap<>();
         for (BundleWire wire : wires)
         {
             if (matchNamespace(namespace, wire.getRequirement().getNamespace()))
@@ -377,7 +377,7 @@ public class Inspect
                 List<BundleWire> providers = map.get(wire.getRequirement());
                 if (providers == null)
                 {
-                    providers = new ArrayList<BundleWire>();
+                    providers = new ArrayList<>();
                     map.put(wire.getRequirement(), providers);
                 }
                 providers.add(wire);

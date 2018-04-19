@@ -25,10 +25,9 @@ import org.osgi.util.tracker.ServiceTracker;
 
 public class Activator implements BundleActivator
 {
-    public void start(BundleContext bc) throws Exception
-    {
+    public void start(BundleContext bc) {
         BundleContext systemBundleContext = bc.getBundle(0).getBundleContext();
-        Hashtable props = new Hashtable();
+        Hashtable<String, Object> props = new Hashtable<>();
         props.put("osgi.command.scope", "felix");
         props.put("osgi.command.function", new String[] {
             "bundlelevel", "frameworklevel", "headers",
@@ -60,7 +59,6 @@ public class Activator implements BundleActivator
             Files.class.getName(), new Files(bc), props);
     }
 
-    public void stop(BundleContext bc) throws Exception
-    {
+    public void stop(BundleContext bc) {
     }
 }
