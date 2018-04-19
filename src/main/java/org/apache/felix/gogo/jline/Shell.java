@@ -471,7 +471,7 @@ public class Shell {
                         if (stopping.get()) {
                             break;
                         }
-                        reader.readLine(prompt, rprompt, null, null);
+                        reader.readLine(prompt, rprompt, (Character) null, null);
                     } finally {
                         reading.set(false);
                     }
@@ -501,7 +501,11 @@ public class Shell {
                 } catch (UserInterruptException e) {
                     // continue;
                 } catch (EndOfFileException e) {
-                    reader.getHistory().save();
+                    try {
+                        reader.getHistory().save();
+                    } catch (IOException e1) {
+                        // ignore
+                    }
                     break;
                 }
             }
