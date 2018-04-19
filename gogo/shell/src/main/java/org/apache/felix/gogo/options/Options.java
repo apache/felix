@@ -98,12 +98,12 @@ public class Options implements Option
 
     private final Map<String, Boolean> unmodifiableOptSet;
     private final Map<String, Object> unmodifiableOptArg;
-    private final Map<String, Boolean> optSet = new HashMap<String, Boolean>();
-    private final Map<String, Object> optArg = new HashMap<String, Object>();
+    private final Map<String, Boolean> optSet = new HashMap<>();
+    private final Map<String, Object> optArg = new HashMap<>();
 
-    private final Map<String, String> optName = new HashMap<String, String>();
-    private final Map<String, String> optAlias = new HashMap<String, String>();
-    private final List<Object> xargs = new ArrayList<Object>();
+    private final Map<String, String> optName = new HashMap<>();
+    private final Map<String, String> optAlias = new HashMap<>();
+    private final List<Object> xargs = new ArrayList<>();
     private List<String> args = null;
 
     private static final String UNKNOWN = "unknown";
@@ -185,7 +185,7 @@ public class Options implements Option
 
         if (arg instanceof String)
         { // default value
-            list = new ArrayList<Object>();
+            list = new ArrayList<>();
             if (!"".equals(arg))
             {
                 list.add(arg);
@@ -201,7 +201,7 @@ public class Options implements Option
 
     public List<String> getList(String name)
     {
-        ArrayList<String> list = new ArrayList<String>();
+        ArrayList<String> list = new ArrayList<>();
         for (Object o : getObjectList(name))
         {
             try
@@ -224,7 +224,7 @@ public class Options implements Option
 
         if (arg instanceof String)
         { // default value
-            list = new ArrayList<Object>();
+            list = new ArrayList<>();
             optArg.put(name, list);
         }
         else
@@ -273,7 +273,7 @@ public class Options implements Option
     {
         if (args == null)
         {
-            args = new ArrayList<String>();
+            args = new ArrayList<>();
             for (Object arg : xargs)
             {
                 args.add(arg == null ? "null" : arg.toString());
@@ -330,14 +330,14 @@ public class Options implements Option
         }
         else
         {
-            ArrayList<String> list = new ArrayList<String>();
+            ArrayList<String> list = new ArrayList<>();
             list.addAll(Arrays.asList(spec));
             list.addAll(Arrays.asList(gspec != null ? gspec : gopt.gspec));
             this.spec = list.toArray(new String[0]);
         }
 
-        Map<String, Boolean> myOptSet = new HashMap<String, Boolean>();
-        Map<String, Object> myOptArg = new HashMap<String, Object>();
+        Map<String, Boolean> myOptSet = new HashMap<>();
+        Map<String, Object> myOptArg = new HashMap<>();
 
         parseSpec(myOptSet, myOptArg);
 
@@ -452,7 +452,7 @@ public class Options implements Option
         return parse(argv, false);
     }
 
-    public Option parse(List<? extends Object> argv)
+    public Option parse(List<?> argv)
     {
         return parse(argv, false);
     }
@@ -466,12 +466,10 @@ public class Options implements Option
         return parse(Arrays.asList(argv), skipArg0);
     }
 
-    public Option parse(List<? extends Object> argv, boolean skipArg0)
+    public Option parse(List<?> argv, boolean skipArg0)
     {
         reset();
-        List<Object> args = new ArrayList<Object>();
-        args.addAll(Arrays.asList(defArgs));
-
+        List<Object> args = new ArrayList<>(Arrays.asList(defArgs));
         for (Object arg : argv)
         {
             if (skipArg0)
@@ -522,7 +520,7 @@ public class Options implements Option
                     int eq = arg.indexOf("=");
                     String value = (eq == -1) ? null : arg.substring(eq + 1);
                     String name = arg.substring(2, ((eq == -1) ? arg.length() : eq));
-                    List<String> names = new ArrayList<String>();
+                    List<String> names = new ArrayList<>();
 
                     if (optSet.containsKey(name))
                     {

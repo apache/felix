@@ -96,7 +96,7 @@ public class Telnet {
         }
     }
 
-    private void start(CommandSession session) throws IOException {
+    private void start(CommandSession session) {
         ConnectionManager connectionManager = new ConnectionManager(1000, 5 * 60 * 1000, 5 * 60 * 1000, 60 * 1000, null, null, false) {
             @Override
             protected Connection createConnection(ThreadGroup threadGroup, ConnectionData newCD) {
@@ -175,7 +175,7 @@ public class Telnet {
                                 return System.getProperty(name);
                             }
                             @Override
-                            public void exit() throws Exception {
+                            public void exit() {
                                 close();
                             }
                         };
@@ -183,7 +183,7 @@ public class Telnet {
                     }
 
                     @Override
-                    protected void doClose() throws Exception {
+                    protected void doClose() {
                         telnetIO.closeOutput();
                         telnetIO.closeInput();
                     }
@@ -195,7 +195,7 @@ public class Telnet {
         portListener.start();
     }
 
-    private void stop() throws IOException {
+    private void stop() {
         portListener.stop();
         portListener = null;
     }

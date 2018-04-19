@@ -35,11 +35,11 @@ public class TestParser3 extends AbstractParserTest
         c.addCommand("echo", this);
 
         assertEquals("10d", c.execute("echo %(2*(3+2))d"));
-        assertEquals(3l, c.execute("%(1+2)"));
+        assertEquals(3L, c.execute("%(1+2)"));
 
-        c.set("a", 2l);
-        assertEquals(3l, c.execute("%(a+=1)"));
-        assertEquals(3l, c.get("a"));
+        c.set("a", 2L);
+        assertEquals(3L, c.execute("%(a+=1)"));
+        assertEquals(3L, c.get("a"));
     }
 
     public CharSequence echo(Object args[])

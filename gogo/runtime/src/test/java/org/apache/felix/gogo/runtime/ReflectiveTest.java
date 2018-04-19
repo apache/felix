@@ -43,11 +43,11 @@ public class ReflectiveTest {
 
     @Test
     public void testArrayInvocation() throws Exception {
-        assertEquals(new Object[] { 1, "ab" }, invoke("test1", Arrays.<Object>asList(1, "ab")));
-        assertEquals(new String[] { "1", "ab" }, invoke("test2", Arrays.<Object>asList(1, "ab")));
+        assertEquals(new Object[] { 1, "ab" }, invoke("test1", Arrays.asList(1, "ab")));
+        assertEquals(new String[] { "1", "ab" }, invoke("test2", Arrays.asList(1, "ab")));
 
         assertEquals(new Object[] { Arrays.asList(1, 2), "ab" }, invoke("test1", Arrays.asList(Arrays.asList(1, 2), "ab")));
-        assertEquals(new Object[] { new Object[] { 1, 2 }, "ab" }, invoke("test1", Arrays.<Object>asList(new Object[] { 1, 2 }, "ab")));
+        assertEquals(new Object[] { new Object[] { 1, 2 }, "ab" }, invoke("test1", Arrays.asList(new Object[] { 1, 2 }, "ab")));
     }
 
     @Test
@@ -57,16 +57,16 @@ public class ReflectiveTest {
         CommandProcessorImpl processor = new CommandProcessorImpl(null);
         Converter conv = new Converter() {
             @Override
-            public Object convert(Class<?> desiredType, Object in) throws Exception {
+            public Object convert(Class<?> desiredType, Object in) {
                 return null;
             }
             @Override
-            public CharSequence format(Object target, int level, Converter escape) throws Exception {
+            public CharSequence format(Object target, int level, Converter escape) {
                 return null;
             }
         };
         Reflective.invoke(new CommandSessionImpl(processor, in, out, out), processor, "addConverter",
-                Collections.<Object>singletonList(conv));
+                Collections.singletonList(conv));
     }
 
     static class Target {

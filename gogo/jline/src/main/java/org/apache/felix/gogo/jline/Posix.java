@@ -998,7 +998,7 @@ public class Posix {
         List<String> sortFields = opt.getList("key");
 
         char sep = (separator == null || separator.length() == 0) ? '\0' : separator.charAt(0);
-        Collections.sort(lines, new SortComparator(caseInsensitive, reverse, ignoreBlanks, numeric, sep, sortFields));
+        lines.sort(new SortComparator(caseInsensitive, reverse, ignoreBlanks, numeric, sep, sortFields));
         String last = null;
         for (String s : lines) {
             if (!unique || last == null || !s.equals(last)) {
@@ -1254,7 +1254,7 @@ public class Posix {
                     try {
                         Map<String, Object> ta = Files.readAttributes(path, view + ":*",
                                 getLinkOptions(opt.isSet("L")));
-                        ta.entrySet().forEach(e -> attrs.putIfAbsent(e.getKey(), e.getValue()));
+                        ta.forEach(attrs::putIfAbsent);
                     } catch (IOException e) {
                         // Ignore
                     }
@@ -1333,7 +1333,7 @@ public class Posix {
             if (expanded.size() > 1) {
                 out.println(currentDir.relativize(path).toString() + ":");
             }
-            display.accept(Stream.concat(Arrays.asList(".", "..").stream().map(path::resolve), Files.list(path))
+            display.accept(Stream.concat(Stream.of(".", "..").map(path::resolve), Files.list(path))
                             .filter(filter)
                             .map(p -> new PathEntry(p, path))
                             .sorted()
@@ -2100,7 +2100,7 @@ public class Posix {
         }
 
         @Override
-        public InputStream read() throws IOException {
+        public InputStream read() {
             return process.in();
         }
     }

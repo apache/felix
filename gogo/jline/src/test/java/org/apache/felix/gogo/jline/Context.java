@@ -58,7 +58,7 @@ public class Context extends CommandProcessorImpl
             return System.getProperty(name);
         }
 
-        public void exit() throws Exception {
+        public void exit() {
             System.exit(0);
         }
     }

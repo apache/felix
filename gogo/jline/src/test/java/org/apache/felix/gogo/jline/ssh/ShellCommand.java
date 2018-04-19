@@ -80,7 +80,7 @@ public class ShellCommand implements Command, Runnable, SessionAware {
         this.session = session;
     }
 
-    public void start(final Environment env) throws IOException {
+    public void start(final Environment env) {
         this.env = env;
         new Thread(this).start();
     }
@@ -117,10 +117,8 @@ public class ShellCommand implements Command, Runnable, SessionAware {
 
     private void executeScript(String scriptFileName, CommandSession session) {
         if (scriptFileName != null) {
-            Reader r = null;
-            try {
-                File scriptFile = new File(scriptFileName);
-                r = new InputStreamReader(new FileInputStream(scriptFile));
+            File scriptFile = new File(scriptFileName);
+            try (Reader r = new InputStreamReader(new FileInputStream(scriptFile))) {
                 CharArrayWriter w = new CharArrayWriter();
                 int n;
                 char[] buf = new char[8192];
@@ -130,15 +128,8 @@ public class ShellCommand implements Command, Runnable, SessionAware {
                 session.execute(new String(w.toCharArray()));
             } catch (Exception e) {
                 LOGGER.log(Level.FINE, "Error in initialization script", e);
-            } finally {
-                if (r != null) {
-                    try {
-                        r.close();
-                    } catch (IOException e) {
-                        // Ignore
-                    }
-                }
             }
+            // Ignore
         }
     }
 

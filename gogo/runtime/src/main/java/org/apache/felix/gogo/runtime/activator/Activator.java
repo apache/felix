@@ -124,8 +124,7 @@ public class Activator implements BundleActivator
         listenerTracker.open();
     }
 
-    public void stop(BundleContext context) throws Exception
-    {
+    public void stop(BundleContext context) {
         processorRegistration.unregister();
         threadioRegistration.unregister();
         commandTracker.close();

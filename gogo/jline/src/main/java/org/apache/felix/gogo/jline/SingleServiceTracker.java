@@ -35,18 +35,18 @@ import org.osgi.framework.ServiceReference;
 //This is from aries util
 public final class SingleServiceTracker<T> implements ServiceListener {
 
-    public static interface SingleServiceListener {
-        public void serviceFound();
+    public interface SingleServiceListener {
+        void serviceFound();
 
-        public void serviceLost();
+        void serviceLost();
 
-        public void serviceReplaced();
+        void serviceReplaced();
     }
 
     private final BundleContext ctx;
     private final String className;
-    private final AtomicReference<T> service = new AtomicReference<T>();
-    private final AtomicReference<ServiceReference> ref = new AtomicReference<ServiceReference>();
+    private final AtomicReference<T> service = new AtomicReference<>();
+    private final AtomicReference<ServiceReference> ref = new AtomicReference<>();
     private final AtomicBoolean open = new AtomicBoolean(false);
     private final SingleServiceListener serviceListener;
     private final String filterString;
@@ -121,7 +121,7 @@ public final class SingleServiceTracker<T> implements ServiceListener {
                     clear = false;
 
                     // We do the unget out of the lock so we don't exit this class while holding a lock.
-                    if (!!!update(original, refs[0], service)) {
+                    if (!update(original, refs[0], service)) {
                         ctx.ungetService(refs[0]);
                     }
                 }

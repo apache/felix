@@ -149,7 +149,7 @@ public class Posix
                 {
                     line++;
                     Matcher matcher = pattern.matcher(s);
-                    if (!(matcher.find() ^ !opt.isSet("invert-match")))
+                    if (matcher.find() == !opt.isSet("invert-match"))
                     {
                         match = true;
                         if (opt.isSet("quiet"))
@@ -183,14 +183,9 @@ public class Posix
 
     public static void copy(URI source, OutputStream out) throws IOException
     {
-        InputStream in = source.toURL().openStream();
-        try
+        try (InputStream in = source.toURL().openStream())
         {
             copy(in, out);
-        }
-        finally
-        {
-            in.close();
         }
     }
 

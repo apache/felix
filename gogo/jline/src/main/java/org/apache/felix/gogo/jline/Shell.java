@@ -299,13 +299,13 @@ public class Shell {
                 public void write(int b) throws IOException {
                     write(new byte[]{(byte) b}, 0, 1);
                 }
-                public void write(byte b[], int off, int len) throws IOException {
+                public void write(byte b[], int off, int len) {
                     writer.write(new String(b, off, len));
                 }
-                public void flush() throws IOException {
+                public void flush() {
                     writer.flush();
                 }
-                public void close() throws IOException {
+                public void close() {
                     writer.close();
                 }
             });

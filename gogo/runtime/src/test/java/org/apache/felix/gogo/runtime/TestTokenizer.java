@@ -56,8 +56,7 @@ public class TestTokenizer
     {
         evaluate = new Evaluate()
         {
-            public Object eval(Token t) throws Exception
-            {
+            public Object eval(Token t) {
                 throw new UnsupportedOperationException("eval not implemented.");
             }
 
@@ -118,8 +117,7 @@ public class TestTokenizer
     }
 
     // hello world
-    private void testHello(CharSequence text) throws Exception
-    {
+    private void testHello(CharSequence text) {
         Tokenizer t = new Tokenizer(text);
         assertEquals("hello", t.next().toString());
         assertEquals("world", t.next().toString());
@@ -134,8 +132,7 @@ public class TestTokenizer
     }
 
     // 'single quote' "double quote"
-    private void testString(CharSequence text) throws Exception
-    {
+    private void testString(CharSequence text) {
         Tokenizer t = new Tokenizer(text);
         assertEquals("'single $quote'", t.next().toString());
         assertEquals("\"double $quote\"", t.next().toString());
@@ -155,8 +152,7 @@ public class TestTokenizer
     //
     // x = {echo $args};
     //
-    private void testClosure2(CharSequence text) throws Exception
-    {
+    private void testClosure2(CharSequence text) {
         Tokenizer t = new Tokenizer(text);
         assertEquals("x", t.next().toString());
         assertEquals("=", t.next().toString());
@@ -170,8 +166,7 @@ public class TestTokenizer
         assertEquals(null, t.next());
     }
 
-    private void token1(CharSequence text) throws Exception
-    {
+    private void token1(CharSequence text) {
         Tokenizer t = new Tokenizer(text);
         assertEquals("{", t.next().toString());
         assertEquals("echo", t.next().toString());
@@ -481,8 +476,7 @@ public class TestTokenizer
     }
 
     @Test
-    public void testParser() throws Exception
-    {
+    public void testParser() {
         new Parser("// comment\n" + "a=\"who's there?\"; ps -ef;\n" + "ls | \n grep y\n").program();
         String p1 = "a=1 \\$b=2 c={closure}\n";
         new Parser(p1).program();
@@ -547,7 +541,7 @@ public class TestTokenizer
     }
 
     @Test
-    public void testHereDocMissing() throws Exception {
+    public void testHereDocMissing() {
         try {
             new Parser("a <<").statement();
             fail("Expected exception");

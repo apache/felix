@@ -31,10 +31,11 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.EnumSet;
-import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.function.BiFunction;
+import java.util.function.Function;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
@@ -42,14 +43,6 @@ import java.util.regex.PatternSyntaxException;
 @SuppressWarnings("fallthrough")
 public class Expander extends BaseTokenizer
 {
-
-    private interface Function<T, R> {
-        R apply(T t);
-    }
-    private interface BiFunction<T, U, R> {
-        R apply(T t, U u);
-    }
-
 
     /**
      * expand variables, quotes and escapes in word.
@@ -467,7 +460,7 @@ public class Expander extends BaseTokenizer
                 // If there's no splitting comma, expand with the braces
                 if (generators.size() < 2)
                 {
-                    generators = Collections.<CharSequence>singletonList(part.toString());
+                    generators = Collections.singletonList(part.toString());
                 }
             }
             else
@@ -648,14 +641,12 @@ public class Expander extends BaseTokenizer
                     }
 
                     @Override
-                    public FileVisitResult visitFileFailed(Path file, IOException exc) throws IOException
-                    {
+                    public FileVisitResult visitFileFailed(Path file, IOException exc) {
                         return FileVisitResult.CONTINUE;
                     }
 
                     @Override
-                    public FileVisitResult postVisitDirectory(Path dir, IOException exc) throws IOException
-                    {
+                    public FileVisitResult postVisitDirectory(Path dir, IOException exc) {
                         return FileVisitResult.CONTINUE;
                     }
                 });
@@ -1230,39 +1221,31 @@ public class Expander extends BaseTokenizer
             // Map to List conversion
             final boolean _flagk = flagk;
             final boolean _flagv = flagv;
-            final Function<Object, Object> toCollection = new Function<Object, Object>() {
-                @Override
-                public Object apply(Object v) {
-                    return v instanceof Map
-                            ? toList(asMap(v), _flagk, _flagv)
-                            : v != null && v.getClass().isArray()
-                            ? Arrays.asList((Object[]) v)
-                            : v;
-                }
-            };
+            final Function<Object, Object> toCollection = v -> v instanceof Map
+                    ? toList(asMap(v), _flagk, _flagv)
+                    : v != null && v.getClass().isArray()
+                    ? Arrays.asList((Object[]) v)
+                    : v;
 
             //
             // String transformations
             //
-            final BiFunction<Function<String, String>, Object, Object> stringApplyer = new BiFunction<Function<String,String>, Object, Object>() {
-                @Override
-                public Object apply(Function<String, String> func, Object v) {
-                    v = toCollection.apply(v);
-                    if (v instanceof Collection)
-                    {
-                        List<String> l = new ArrayList<String>();
-                        for (Object i : asCollection(v)) {
-                            l.add(func.apply(String.valueOf(i)));
-                        }
-                        return l;
+            final BiFunction<Function<String, String>, Object, Object> stringApplyer = (func, v) -> {
+                v = toCollection.apply(v);
+                if (v instanceof Collection)
+                {
+                    List<String> l = new ArrayList<>();
+                    for (Object i : asCollection(v)) {
+                        l.add(func.apply(String.valueOf(i)));
                     }
-                    else if (v != null)
-                    {
-                        return func.apply(v.toString());
-                    }
-                    else {
-                        return null;
-                    }
+                    return l;
+                }
+                else if (v != null)
+                {
+                    return func.apply(v.toString());
+                }
+                else {
+                    return null;
                 }
             };
 
@@ -1573,12 +1556,7 @@ public class Expander extends BaseTokenizer
             // Character evaluation
             if (flagSharp)
             {
-                val = stringApplyer.apply(new Function<String, String>() {
-                    @Override
-                    public String apply(String s) {
-                        return sharp(s);
-                    }
-                }, val);
+                val = stringApplyer.apply(this::sharp, val);
             }
 
             // Length
@@ -1623,7 +1601,6 @@ public class Expander extends BaseTokenizer
             // Simple word splitting
             if (flags != null)
             {
-                String _flags = flags;
                 val = toCollection.apply(val);
                 if (!(val instanceof Collection))
                 {
@@ -1631,7 +1608,7 @@ public class Expander extends BaseTokenizer
                 }
                 List<String> l = new ArrayList<>();
                 for (Object i : asCollection(val)) {
-                    Collections.addAll(l, String.valueOf(i).split(_flags));
+                    Collections.addAll(l, String.valueOf(i).split(flags));
                 }
                 val = l;
             }
@@ -1639,62 +1616,32 @@ public class Expander extends BaseTokenizer
             // Case modification
             if (flagC)
             {
-                val = stringApplyer.apply(new Function<String, String>() {
-                    @Override
-                    public String apply(String s) {
-                        return toCamelCase(s);
-                    }
-                }, val);
+                val = stringApplyer.apply(this::toCamelCase, val);
             }
             else if (flagL)
             {
-                val = stringApplyer.apply(new Function<String, String>() {
-                    @Override
-                    public String apply(String s) {
-                        return s.toLowerCase();
-                    }
-                }, val);
+                val = stringApplyer.apply(String::toLowerCase, val);
             }
             else if (flagU)
             {
-                val = stringApplyer.apply(new Function<String, String>() {
-                    @Override
-                    public String apply(String s) {
-                        return s.toUpperCase();
-                    }
-                }, val);
+                val = stringApplyer.apply(String::toUpperCase, val);
             }
 
             // Visibility enhancement
             if (flagV)
             {
-                val = stringApplyer.apply(new Function<String, String>() {
-                    @Override
-                    public String apply(String s) {
-                        return visible(s);
-                    }
-                }, val);
+                val = stringApplyer.apply(this::visible, val);
             }
 
             // Quote
             if (flagq != 0)
             {
                 final int _flagq = flagq;
-                val = stringApplyer.apply(new Function<String, String>() {
-                    @Override
-                    public String apply(String s) {
-                        return quote(s, _flagq);
-                    }
-                }, val);
+                val = stringApplyer.apply(s -> quote(s, _flagq), val);
                 inQuote = true;
             }
             else if (flagQ) {
-                val = stringApplyer.apply(new Function<String, String>() {
-                    @Override
-                    public String apply(String s) {
-                        return unquote(s);
-                    }
-                }, val);
+                val = stringApplyer.apply(this::unquote, val);
             }
 
             // Uniqueness
@@ -1721,12 +1668,7 @@ public class Expander extends BaseTokenizer
                         for (Object i : asCollection(val)) {
                             l.add(String.valueOf(i));
                         }
-                        Collections.sort(l, new Comparator<String>() {
-                            @Override
-                            public int compare(String s1, String s2) {
-                                return numericCompare(s1, s2, _flagi);
-                            }
-                        });
+                        l.sort((s1, s2) -> numericCompare(s1, s2, _flagi));
                         list = (List) l;
                     }
                     else if (flaga)
@@ -1735,17 +1677,12 @@ public class Expander extends BaseTokenizer
                     }
                     else
                     {
-                        Comparator<String> comparator = flagi ? String.CASE_INSENSITIVE_ORDER : new Comparator<String>() {
-                            @Override
-                            public int compare(String o1, String o2) {
-                                return o1.compareTo(o2);
-                            }
-                        };
+                        Comparator<String> comparator = flagi ? String.CASE_INSENSITIVE_ORDER : String::compareTo;
                         List<String> l = new ArrayList<>();
                         for (Object i : asCollection(val)) {
                             l.add(String.valueOf(i));
                         }
-                        Collections.sort(l, comparator);
+                        l.sort(comparator);
                         list = (List) l;
                     }
                     if (flagO)
@@ -1891,30 +1828,30 @@ public class Expander extends BaseTokenizer
             for (int i = 0; i < s.length(); i++)
             {
                 char ch = s.charAt(i);
-                if (ch < 32 || ch >= 127)
+                switch (ch)
                 {
-                    buf.append("\\").append(Integer.toOctalString(ch));
-                }
-                else
-                {
-                    switch (ch)
-                    {
-                        case '\n':
-                            buf.append("\\n");
-                            break;
-                        case '\t':
-                            buf.append("\\t");
-                            break;
-                        case '\r':
-                            buf.append("\\r");
-                            break;
-                        case '\'':
-                            buf.append("\\'");
-                            break;
-                        default:
+                    case '\n':
+                        buf.append("\\n");
+                        break;
+                    case '\t':
+                        buf.append("\\t");
+                        break;
+                    case '\r':
+                        buf.append("\\r");
+                        break;
+                    case '\'':
+                        buf.append("\\'");
+                        break;
+                    default:
+                        if (ch < 32 || ch >= 127)
+                        {
+                            buf.append("\\").append(Integer.toOctalString(ch));
+                        }
+                        else
+                            {
                             buf.append(ch);
-                            break;
-                    }
+                        }
+                        break;
                 }
             }
             buf.append("'");
@@ -2202,8 +2139,7 @@ public class Expander extends BaseTokenizer
             {
                 inQuote = true;
                 getch();
-                Object val = getName(closing);
-                return val;
+                return getName(closing);
             }
             finally
             {
@@ -2244,8 +2180,7 @@ public class Expander extends BaseTokenizer
         return expandPattern(sub).toString();
     }
 
-    private CharSequence findUntil(CharSequence text, int start, String closing) throws Exception
-    {
+    private CharSequence findUntil(CharSequence text, int start, String closing) {
         int braces = 0;
         boolean escaped = false;
         boolean doubleQuoted = false;

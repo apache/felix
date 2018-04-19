@@ -45,13 +45,10 @@ public class TestParser extends AbstractParserTest
     int beentheredonethat = 0;
 
     @Test
-    public void testError() throws Exception {
+    public void testError() {
         Context context = new Context();
-        context.addCommand("gogo", new Function() {
-            @Override
-            public Object execute(CommandSession session, List<Object> arguments) throws Exception {
-                throw new Error(arguments.get(0).toString());
-            }
+        context.addCommand("gogo", (Function) (session, arguments) -> {
+            throw new Error(arguments.get(0).toString());
         }, "error");
         try {
             context.execute("error bar");
@@ -511,7 +508,7 @@ public class TestParser extends AbstractParserTest
     void each(CommandSession session, Collection<Object> list, Function closure)
         throws Exception
     {
-        List<Object> args = new ArrayList<Object>();
+        List<Object> args = new ArrayList<>();
         args.add(null);
         for (Object x : list)
         {

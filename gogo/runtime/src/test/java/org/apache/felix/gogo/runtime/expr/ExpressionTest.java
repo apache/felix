@@ -30,31 +30,31 @@ public class ExpressionTest {
     @Test
     public void testExpr() {
 
-        Map<String, Object> variables = new HashMap<String, Object>();
+        Map<String, Object> variables = new HashMap<>();
         variables.put("a", 2d);
-        variables.put("b", 5l);
-        variables.put("c", 1l);
-        variables.put("d", 2l);
+        variables.put("b", 5L);
+        variables.put("c", 1L);
+        variables.put("d", 2L);
         variables.put("s", " foo ");
         variables.put("t", "bar");
 
-        Assert.assertEquals(4l, new Expression("c+=1, d+=2").eval(variables));
+        Assert.assertEquals(4L, new Expression("c+=1, d+=2").eval(variables));
 
         Assert.assertEquals(" foo ", new Expression("\" foo \"").eval());
         Assert.assertEquals(" foo bar", new Expression("s + t").eval(variables));
-        Assert.assertEquals(1l, new Expression("s < t").eval(variables));
-        Assert.assertEquals(1l, new Expression("s > t || t == \"bar\"").eval(variables));
+        Assert.assertEquals(1L, new Expression("s < t").eval(variables));
+        Assert.assertEquals(1L, new Expression("s > t || t == \"bar\"").eval(variables));
 
-        Assert.assertEquals(3l, new Expression("a += 1").eval(variables));
-        Assert.assertEquals(3l, variables.get("a"));
+        Assert.assertEquals(3L, new Expression("a += 1").eval(variables));
+        Assert.assertEquals(3L, variables.get("a"));
 
-        Assert.assertEquals(30l, new Expression("10 + 20 | 30").eval());
+        Assert.assertEquals(30L, new Expression("10 + 20 | 30").eval());
 
-        Assert.assertEquals(8l, new Expression("a + b").eval(variables));
-        Assert.assertEquals(3l, new Expression("if(a < b, a, b)").eval(variables));
+        Assert.assertEquals(8L, new Expression("a + b").eval(variables));
+        Assert.assertEquals(3L, new Expression("if(a < b, a, b)").eval(variables));
 
-        Assert.assertEquals(16l, new Expression("2 + 2 << 2").eval());
-        Assert.assertEquals(8l, new Expression("2 | 2 << 2").eval());
+        Assert.assertEquals(16L, new Expression("2 + 2 << 2").eval());
+        Assert.assertEquals(8L, new Expression("2 | 2 << 2").eval());
     }
 
 }

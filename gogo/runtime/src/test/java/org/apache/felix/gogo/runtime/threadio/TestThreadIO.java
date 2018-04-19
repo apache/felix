@@ -39,7 +39,7 @@ public class TestThreadIO {
     {
         ThreadIOImpl tio = new ThreadIOImpl();
         tio.start();
-        List<ByteArrayOutputStream> list = new ArrayList<ByteArrayOutputStream>();
+        List<ByteArrayOutputStream> list = new ArrayList<>();
         for (int i = 0; i < 10; i++)
         {
             ByteArrayOutputStream out = new ByteArrayOutputStream();

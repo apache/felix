@@ -68,7 +68,7 @@ public class Basic
     public void bundlelevel(@Descriptor("bundle to query") Bundle bundle)
     {
         // Keep track of service references.
-        List<ServiceReference<?>> refs = new ArrayList<ServiceReference<?>>();
+        List<ServiceReference<?>> refs = new ArrayList<>();
 
         // Get start level service.
         StartLevel sl = Util.getService(m_bc, StartLevel.class, refs);
@@ -98,7 +98,7 @@ public class Basic
         @Descriptor("target identifiers") Bundle[] bundles)
     {
         // Keep track of service references.
-        List<ServiceReference<?>> refs = new ArrayList<ServiceReference<?>>();
+        List<ServiceReference<?>> refs = new ArrayList<>();
 
         // Get start level service.
         StartLevel sl = Util.getService(m_bc, StartLevel.class, refs);
@@ -153,7 +153,7 @@ public class Basic
     public void frameworklevel()
     {
         // Keep track of service references.
-        List<ServiceReference<?>> refs = new ArrayList<ServiceReference<?>>();
+        List<ServiceReference<?>> refs = new ArrayList<>();
 
         // Get start level service.
         StartLevel sl = Util.getService(m_bc, StartLevel.class, refs);
@@ -169,7 +169,7 @@ public class Basic
     public void frameworklevel(@Descriptor("target start level") int level)
     {
         // Keep track of service references.
-        List<ServiceReference<?>> refs = new ArrayList<ServiceReference<?>>();
+        List<ServiceReference<?>> refs = new ArrayList<>();
 
         // Get start level service.
         StartLevel sl = Util.getService(m_bc, StartLevel.class, refs);
@@ -259,11 +259,11 @@ public class Basic
 
                 // Get flags and options.
                 Class<?>[] paramTypes = m.getParameterTypes();
-                Map<String, Parameter> flags = new TreeMap<String, Parameter>();
-                Map<String, String> flagDescs = new TreeMap<String, String>();
-                Map<String, Parameter> options = new TreeMap<String, Parameter>();
-                Map<String, String> optionDescs = new TreeMap<String, String>();
-                List<String> params = new ArrayList<String>();
+                Map<String, Parameter> flags = new TreeMap<>();
+                Map<String, String> flagDescs = new TreeMap<>();
+                Map<String, Parameter> options = new TreeMap<>();
+                Map<String, String> optionDescs = new TreeMap<>();
+                List<String> params = new ArrayList<>();
                 Annotation[][] anns = m.getParameterAnnotations();
                 for (int paramIdx = 0; paramIdx < anns.length; paramIdx++)
                 {
@@ -376,7 +376,7 @@ public class Basic
             // This should never happen.
         }
 
-        Map<String, List<Method>> commands = new TreeMap<String, List<Method>>();
+        Map<String, List<Method>> commands = new TreeMap<>();
 
         for (ServiceReference<?> ref : refs)
         {
@@ -426,7 +426,7 @@ public class Basic
     public void install(@Descriptor("command session")CommandSession session,
                         @Descriptor("target URLs") String[] urls) throws IOException
     {
-        StringBuffer sb = new StringBuffer();
+        StringBuilder sb = new StringBuilder();
 
         for (String url : urls)
         {
@@ -491,7 +491,7 @@ public class Basic
         @Descriptor("subtring matched against name or symbolic name") String pattern)
     {
         // Keep track of service references.
-        List<ServiceReference<?>> refs = new ArrayList<ServiceReference<?>>();
+        List<ServiceReference<?>> refs = new ArrayList<>();
 
         // Get start level service.
         StartLevel sl = Util.getService(m_bc, StartLevel.class, refs);
@@ -500,7 +500,7 @@ public class Basic
             System.out.println("Start Level service is unavailable.");
         }
 
-        List<Bundle> found = new ArrayList<Bundle>();
+        List<Bundle> found = new ArrayList<>();
 
         if (pattern == null)
         {
@@ -509,14 +509,10 @@ public class Basic
         else
         {
             Bundle[] bundles = m_bc.getBundles();
-
-            for (int i = 0; i < bundles.length; i++)
-            {
-                Bundle bundle = bundles[i];
-                String name = (String) bundle.getHeaders().get(Constants.BUNDLE_NAME);
+            for (Bundle bundle : bundles) {
+                String name = bundle.getHeaders().get(Constants.BUNDLE_NAME);
                 if (matchBundleName(bundle.getSymbolicName(), pattern)
-                    || matchBundleName(name, pattern))
-                {
+                        || matchBundleName(name, pattern)) {
                     found.add(bundle);
                 }
             }
@@ -524,7 +520,7 @@ public class Basic
 
         if (found.size() > 0)
         {
-            printBundleList((Bundle[]) found.toArray(new Bundle[found.size()]), sl,
+            printBundleList(found.toArray(new Bundle[found.size()]), sl,
                 showLoc, showSymbolic, showUpdate);
         }
         else
@@ -552,7 +548,7 @@ public class Basic
         @Descriptor("minimum log level [ debug | info | warn | error ]") String logLevel)
     {
         // Keep track of service references.
-        List<ServiceReference<?>> refs = new ArrayList<ServiceReference<?>>();
+        List<ServiceReference<?>> refs = new ArrayList<>();
 
         // Get start level service.
         LogReaderService lrs = Util.getService(m_bc, LogReaderService.class, refs);
@@ -570,7 +566,7 @@ public class Basic
             int index = 0;
             while (entries.hasMoreElements() && (maxEntries < 0 || index < maxEntries))
             {
-                LogEntry entry = (LogEntry) entries.nextElement();
+                LogEntry entry = entries.nextElement();
                 if (entry.getLevel() <= minLevel)
                 {
                     display(entry);
@@ -586,7 +582,7 @@ public class Basic
     {
         SimpleDateFormat sdf = new SimpleDateFormat("yyyy.MM.dd HH:mm:ss");
 
-        StringBuffer buffer = new StringBuffer();
+        StringBuilder buffer = new StringBuilder();
         buffer.append(sdf.format(new Date(entry.getTime()))).append(" ");
         buffer.append(logLevelAsString(entry.getLevel())).append(" - ");
         buffer.append("Bundle: ").append(entry.getBundle().getSymbolicName());
@@ -650,7 +646,7 @@ public class Basic
         }
 
         // Keep track of service references.
-        List<ServiceReference<?>> refs = new ArrayList<ServiceReference<?>>();
+        List<ServiceReference<?>> refs = new ArrayList<>();
 
         // Get package admin service.
         PackageAdmin pa = Util.getService(m_bc, PackageAdmin.class, refs);
@@ -659,7 +655,7 @@ public class Basic
             System.out.println("Package Admin service is unavailable.");
         }
 
-        pa.refreshPackages((bundles == null) ? null : bundles);
+        pa.refreshPackages(bundles);
 
         Util.ungetServices(m_bc, refs);
     }
@@ -674,7 +670,7 @@ public class Basic
         }
 
         // Keep track of service references.
-        List<ServiceReference<?>> refs = new ArrayList<ServiceReference<?>>();
+        List<ServiceReference<?>> refs = new ArrayList<>();
 
         // Get package admin service.
         PackageAdmin pa = Util.getService(m_bc, PackageAdmin.class, refs);
@@ -999,7 +995,7 @@ public class Basic
         for (Bundle bundle : bundles)
         {
             // Get the bundle name or location.
-            String name = (String) bundle.getHeaders().get(Constants.BUNDLE_NAME);
+            String name = bundle.getHeaders().get(Constants.BUNDLE_NAME);
             // If there is no name, then default to symbolic name.
             name = (name == null) ? bundle.getSymbolicName() : name;
             // If there is no symbolic name, resort to location.
@@ -1018,7 +1014,7 @@ public class Basic
             }
             else if (showUpdate)
             {
-                name = (String) bundle.getHeaders().get(Constants.BUNDLE_UPDATELOCATION);
+                name = bundle.getHeaders().get(Constants.BUNDLE_UPDATELOCATION);
                 name = (name == null) ? bundle.getLocation() : name;
             }
 

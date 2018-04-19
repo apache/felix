@@ -241,10 +241,8 @@ public class Shell
 
         URLConnection conn = script.toURL().openConnection();
 
-        InputStreamReader in = null;
-        try
+        try (InputStreamReader in = new InputStreamReader(conn.getInputStream()))
         {
-            in = new InputStreamReader(conn.getInputStream());
             while (in.read(buf) > 0)
             {
                 buf.flip();
@@ -257,10 +255,6 @@ public class Shell
             if (conn instanceof HttpURLConnection)
             {
                 ((HttpURLConnection) conn).disconnect();
-            }
-            if (in != null)
-            {
-                in.close();
             }
         }
 
@@ -294,7 +288,7 @@ public class Shell
     public String[] history()
     {
         Iterator<String> history = this.history.getHistory();
-        List<String> lines = new ArrayList<String>();
+        List<String> lines = new ArrayList<>();
         for (int i = 1; history.hasNext(); i++)
         {
             lines.add(String.format("%5d  %s", i, history.next()));

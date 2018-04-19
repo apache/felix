@@ -26,6 +26,7 @@ import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.InvalidSyntaxException;
 import org.osgi.framework.ServiceReference;
+import org.osgi.framework.startlevel.BundleStartLevel;
 import org.osgi.service.startlevel.StartLevel;
 
 public class Converters extends BaseConverters {
@@ -37,19 +38,7 @@ public class Converters extends BaseConverters {
 
     private CharSequence print(Bundle bundle) {
         // [ ID ] [STATE      ] [ SL ] symname
-        StartLevel sl = null;
-        ServiceReference ref = context.getServiceReference(StartLevel.class.getName());
-        if (ref != null) {
-            sl = (StartLevel) context.getService(ref);
-        }
-
-        if (sl == null) {
-            return String.format("%5d|%-11s|%s (%s)", bundle.getBundleId(),
-                    getState(bundle), bundle.getSymbolicName(), bundle.getVersion());
-        }
-
-        int level = sl.getBundleStartLevel(bundle);
-        context.ungetService(ref);
+        int level = bundle.adapt(BundleStartLevel.class).getStartLevel();
 
         return String.format("%5d|%-11s|%5d|%s (%s)", bundle.getBundleId(),
                 getState(bundle), level, bundle.getSymbolicName(), bundle.getVersion());
@@ -75,7 +64,7 @@ public class Converters extends BaseConverters {
         StringBuilder sb = new StringBuilder();
         String del = "";
         for (String s : list) {
-            sb.append(del + getShortName(s));
+            sb.append(del).append(getShortName(s));
             del = " | ";
         }
         return sb;

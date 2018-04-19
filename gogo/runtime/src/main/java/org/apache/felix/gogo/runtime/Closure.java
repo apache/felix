@@ -549,8 +549,7 @@ public class Closure implements Function, Evaluate
         }
     }
 
-    private boolean bareword(Token t, Object v) throws Exception
-    {
+    private boolean bareword(Token t, Object v) {
         return v instanceof CharSequence && Token.eq(t, (CharSequence) v);
     }
 

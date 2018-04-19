@@ -50,7 +50,7 @@ public class Util
     {
         if (bundle != null)
         {
-            String name = (String) bundle.getHeaders().get(Constants.BUNDLE_NAME);
+            String name = bundle.getHeaders().get(Constants.BUNDLE_NAME);
             return (name == null)
                 ? "Bundle " + Long.toString(bundle.getBundleId())
                 : name + " (" + Long.toString(bundle.getBundleId()) + ")";
@@ -90,7 +90,7 @@ public class Util
                     {
                         m_sb.append(", ");
                     }
-                    m_sb.append(array[i].toString());
+                    m_sb.append(array[i]);
                 }
                 return m_sb.toString();
             }
@@ -112,11 +112,11 @@ public class Util
             }
             else if (obj instanceof Double)
             {
-                return ((Double) obj).toString();
+                return obj.toString();
             }
             else if (obj instanceof Float)
             {
-                return ((Float) obj).toString();
+                return obj.toString();
             }
             else if (obj == null)
             {
@@ -138,7 +138,7 @@ public class Util
         {
             return null;
         }
-        T t = (T) bc.getService(ref);
+        T t = bc.getService(ref);
         if (t != null)
         {
             refs.add(ref);
@@ -326,8 +326,8 @@ public class Util
 
     public static List<String> parseSubstring(String value)
     {
-        List<String> pieces = new ArrayList<String>();
-        StringBuffer ss = new StringBuffer();
+        List<String> pieces = new ArrayList<>();
+        StringBuilder ss = new StringBuilder();
         // int kind = SIMPLE; // assume until proven otherwise
         boolean wasStar = false; // indicates last piece was a star
         boolean leftstar = false; // track if the initial piece is a star
@@ -414,7 +414,7 @@ loop:   for (;;)
 
     public static String unparseSubstring(List<String> pieces)
     {
-        StringBuffer sb = new StringBuffer();
+        StringBuilder sb = new StringBuilder();
         for (int i = 0; i < pieces.size(); i++)
         {
             if (i > 0)
@@ -468,14 +468,7 @@ loop:   for (int i = 0; i < len; i++)
             // string ends with it.
             if (i == len - 1)
             {
-                if (s.endsWith(piece))
-                {
-                    result = true;
-                }
-                else
-                {
-                    result = false;
-                }
+                result = s.endsWith(piece);
                 break loop;
             }
 
