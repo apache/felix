@@ -18,6 +18,7 @@
  */
 package org.apache.felix.gogo.jline;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
@@ -32,7 +33,7 @@ public class Parser implements org.jline.reader.Parser {
 
     public ParsedLine parse(String line, int cursor, ParseContext context) throws org.jline.reader.SyntaxError {
         try {
-            return doParse(line, cursor);
+            return doParse(line, cursor, context);
         } catch (EOFError e) {
             throw new org.jline.reader.EOFError(e.line(), e.column(), e.getMessage(), e.missing());
         } catch (SyntaxError e) {
@@ -40,10 +41,24 @@ public class Parser implements org.jline.reader.Parser {
         }
     }
 
-    private ParsedLine doParse(CharSequence line, int cursor) throws SyntaxError {
-        org.apache.felix.gogo.runtime.Parser parser = new org.apache.felix.gogo.runtime.Parser(line);
-        Program program = parser.program();
-        List<Statement> statements = parser.statements();
+    private ParsedLine doParse(String line, int cursor, ParseContext parseContext) throws SyntaxError {
+        Program program = null;
+        List<Statement> statements = null;
+        String repaired = line;
+        while (program == null) {
+            try {
+                org.apache.felix.gogo.runtime.Parser parser = new org.apache.felix.gogo.runtime.Parser(repaired);
+                program = parser.program();
+                statements = parser.statements();
+            } catch (EOFError e) {
+                // Make sure we don't loop forever
+                if (parseContext == ParseContext.COMPLETE && repaired.length() < line.length() + 1024) {
+                    repaired = repaired + " " + e.repair();
+                } else {
+                    throw e;
+                }
+            }
+        }
         // Find corresponding statement
         Statement statement = null;
         for (int i = statements.size() - 1; i >= 0; i--) {
@@ -60,7 +75,14 @@ public class Parser implements org.jline.reader.Parser {
                 break;
             }
         }
-        if (statement != null) {
+        if (statement != null && statement.tokens() != null && !statement.tokens().isEmpty()) {
+            if (repaired != line) {
+                Token stmt = statement.subSequence(0, line.length() - statement.start());
+                List<Token> tokens = new ArrayList<>(statement.tokens());
+                Token last = tokens.get(tokens.size() - 1);
+                tokens.set(tokens.size() - 1, last.subSequence(0, line.length() - last.start()));
+                return new ParsedLineImpl(program, stmt, cursor, tokens);
+            }
             return new ParsedLineImpl(program, statement, cursor, statement.tokens());
         } else {
             // TODO:
