@@ -18,11 +18,6 @@
  */
 package org.apache.felix.utils.properties;
 
-import java.io.File;
-import java.io.InputStream;
-import java.util.Properties;
-import java.util.Dictionary;
-
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.BundleException;
@@ -33,6 +28,12 @@ import org.osgi.framework.InvalidSyntaxException;
 import org.osgi.framework.ServiceListener;
 import org.osgi.framework.ServiceReference;
 import org.osgi.framework.ServiceRegistration;
+
+import java.io.File;
+import java.io.InputStream;
+import java.util.Collection;
+import java.util.Dictionary;
+import java.util.Properties;
 
 public class MockBundleContext implements BundleContext {
     private Properties properties = new Properties();
@@ -129,6 +130,22 @@ public class MockBundleContext implements BundleContext {
     }
 
     public Filter createFilter(String s) throws InvalidSyntaxException {
+        throw new UnsupportedOperationException();
+    }
+
+    public <S> ServiceRegistration<S> registerService(Class<S> clazz, S service, Dictionary<String, ?> properties) {
+        throw new UnsupportedOperationException();
+    }
+
+    public <S> ServiceReference<S> getServiceReference(Class<S> clazz) {
+        throw new UnsupportedOperationException();
+    }
+
+    public <S> Collection<ServiceReference<S>> getServiceReferences(Class<S> clazz, String filter) throws InvalidSyntaxException {
+        throw new UnsupportedOperationException();
+    }
+
+    public Bundle getBundle(String location) {
         throw new UnsupportedOperationException();
     }
 }

@@ -19,6 +19,12 @@
 package org.apache.felix.utils.filter;
 
 
+import org.apache.felix.utils.version.VersionTable;
+import org.osgi.framework.Filter;
+import org.osgi.framework.InvalidSyntaxException;
+import org.osgi.framework.ServiceReference;
+import org.osgi.framework.Version;
+
 import java.lang.reflect.AccessibleObject;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
@@ -35,12 +41,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.StringTokenizer;
-
-import org.apache.felix.utils.version.VersionTable;
-import org.osgi.framework.Filter;
-import org.osgi.framework.InvalidSyntaxException;
-import org.osgi.framework.ServiceReference;
-import org.osgi.framework.Version;
 
 /**
  * This filter implementation is based on the official OSGi filter with additional
@@ -113,7 +113,7 @@ public class FilterImpl implements Filter {
                 if (value instanceof String) {
                     conv = VersionTable.getVersion((String) value);
                 } else if (value instanceof Version) {
-                    conv = (Version) value;
+                    conv = value;
                 }
             }
         } catch (Throwable t) {
@@ -187,6 +187,22 @@ public class FilterImpl implements Filter {
      */
     public boolean matchCase(Map map) {
         return match0(map);
+    }
+
+    /**
+     * Filter using a {@code Map}. This {@code Filter} is executed using the
+     * specified {@code Map}'s keys and values. The keys are looked up in a
+     * normal manner respecting case.
+     *
+     * @param map The {@code Map} whose key/value pairs are used in the match.
+     *        Maps with {@code null} key or values are not supported. A
+     *        {@code null} value is considered not present to the filter.
+     * @return {@code true} if the {@code Map}'s values match this filter;
+     *         {@code false} otherwise.
+     * @since 1.6
+     */
+    public boolean matches(Map<String, ?> map) {
+        return matchCase(map);
     }
 
     /**
@@ -582,17 +598,17 @@ public class FilterImpl implements Filter {
             return compare_ObjectArray(operation, (Object[]) value1, value2);
         }
         if (value1 instanceof Version) {
-            if (converted != null) {
+            if (converted instanceof Version) {
                 switch (operation) {
                     case APPROX :
                     case EQUAL : {
-                        return ((Version) value1).compareTo(converted) == 0;
+                        return ((Version) value1).compareTo((Version) converted) == 0;
                     }
                     case GREATER: {
-                        return ((Version) value1).compareTo(converted) >= 0;
+                        return ((Version) value1).compareTo((Version) converted) >= 0;
                     }
                     case LESS: {
-                        return ((Version) value1).compareTo(converted) <= 0;
+                        return ((Version) value1).compareTo((Version) converted) <= 0;
                     }
                 }
             } else {
