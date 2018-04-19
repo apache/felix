@@ -32,8 +32,8 @@ public class Procedural
     public List<Object> each(CommandSession session, Collection<Object> list,
         Function closure) throws Exception
     {
-        List<Object> args = new ArrayList<Object>();
-        List<Object> results = new ArrayList<Object>();
+        List<Object> args = new ArrayList<>();
+        List<Object> results = new ArrayList<>();
         args.add(null);
 
         for (Object x : list)
@@ -97,8 +97,7 @@ public class Procedural
             throw new IllegalArgumentException("exception not set or not Throwable.");
     }
 
-    public Object _try(CommandSession session, Function func) throws Exception
-    {
+    public Object _try(CommandSession session, Function func) {
         try
         {
             return func.execute(session, null);
@@ -150,7 +149,7 @@ public class Procedural
             return false;
 
         if (result instanceof Boolean)
-            return ((Boolean) result).booleanValue();
+            return (Boolean) result;
 
         if (result instanceof Number)
         {
@@ -161,10 +160,7 @@ public class Procedural
         if ("".equals(result))
             return false;
 
-        if ("0".equals(result))
-            return false;
-
-        return true;
+        return !"0".equals(result);
     }
     
     private void checkInterrupt() throws InterruptedException

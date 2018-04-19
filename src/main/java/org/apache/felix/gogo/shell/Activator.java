@@ -52,22 +52,20 @@ public class Activator implements BundleActivator
 
     public Activator()
     {
-        regs = new HashSet<ServiceRegistration>();
+        regs = new HashSet<>();
     }
 
-    public void start(BundleContext context) throws Exception
-    {
+    public void start(BundleContext context) {
         this.context = context;
         this.commandProcessorTracker = createCommandProcessorTracker();
         this.commandProcessorTracker.open();
     }
 
-    public void stop(BundleContext context) throws Exception
-    {
-        Set<ServiceRegistration> currentRegs = new HashSet<ServiceRegistration>();
+    public void stop(BundleContext context) {
+        Set<ServiceRegistration> currentRegs;
         synchronized (regs)
         {
-            currentRegs.addAll(regs);
+            currentRegs = new HashSet<>(regs);
             regs.clear();
         }
 
@@ -81,20 +79,20 @@ public class Activator implements BundleActivator
         stopShell();
     }
 
-    private ServiceTracker createCommandProcessorTracker()
+    private ServiceTracker<CommandProcessor, CommandProcessor> createCommandProcessorTracker()
     {
-        return new ServiceTracker(context, CommandProcessor.class.getName(), null)
+        return new ServiceTracker<CommandProcessor, CommandProcessor>(context, CommandProcessor.class, null)
         {
             @Override
-            public Object addingService(ServiceReference reference)
+            public CommandProcessor addingService(ServiceReference<CommandProcessor> reference)
             {
-                CommandProcessor processor = (CommandProcessor) super.addingService(reference);
+                CommandProcessor processor = super.addingService(reference);
                 startShell(context, processor);
                 return processor;
             }
 
             @Override
-            public void removedService(ServiceReference reference, Object service)
+            public void removedService(ServiceReference<CommandProcessor> reference, CommandProcessor service)
             {
                 stopShell();
                 super.removedService(reference, service);
@@ -104,10 +102,10 @@ public class Activator implements BundleActivator
 
     private void startShell(BundleContext context, CommandProcessor processor)
     {
-        Dictionary<String, Object> dict = new Hashtable<String, Object>();
+        Dictionary<String, Object> dict = new Hashtable<>();
         dict.put(CommandProcessor.COMMAND_SCOPE, "gogo");
 
-        Set<ServiceRegistration> currentRegs = new HashSet<ServiceRegistration>();
+        Set<ServiceRegistration> currentRegs = new HashSet<>();
 
         // register converters
         currentRegs.add(context.registerService(Converter.class.getName(), new Converters(context.getBundle(0).getBundleContext()), null));
@@ -137,13 +135,7 @@ public class Activator implements BundleActivator
         }
 
         // start shell on a separate thread...
-        executor = Executors.newSingleThreadExecutor(new ThreadFactory()
-        {
-            public Thread newThread(Runnable runnable)
-            {
-                return new Thread(runnable, "Gogo shell");
-            }
-        });
+        executor = Executors.newSingleThreadExecutor(runnable -> new Thread(runnable, "Gogo shell"));
         shellJob = new StartShellJob(context, processor);
         executor.submit(shellJob);
     }

@@ -139,31 +139,27 @@ public class Telnet implements Runnable
                 final CommandSession session = processor.createSession(
                     socket.getInputStream(), out, out);
 
-                Thread handler = new Thread()
-                {
-                    public void run()
+                Thread handler = new Thread(() -> {
+                    try
                     {
+                        session.execute("gosh --login --noshutdown");
+                    }
+                    catch (Exception e)
+                    {
+                        e.printStackTrace();
+                    }
+                    finally
+                    {
+                        session.close();
                         try
                         {
-                            session.execute("gosh --login --noshutdown");
+                            socket.close();
                         }
-                        catch (Exception e)
+                        catch (IOException e)
                         {
-                            e.printStackTrace();
-                        }
-                        finally
-                        {
-                            session.close();
-                            try
-                            {
-                                socket.close();
-                            }
-                            catch (IOException e)
-                            {
-                            }
                         }
                     }
-                };
+                });
                 handler.start();
             }
         }
