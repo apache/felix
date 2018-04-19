@@ -18,11 +18,14 @@
  */
 package org.apache.felix.utils.filter;
 
+import junit.framework.TestCase;
+
+import org.osgi.framework.InvalidSyntaxException;
+import org.osgi.framework.Version;
+
+import java.util.Collections;
 import java.util.Dictionary;
 import java.util.Hashtable;
-
-import junit.framework.TestCase;
-import org.osgi.framework.Version;
 
 public class FilterImplTest extends TestCase
 {
@@ -121,4 +124,12 @@ public class FilterImplTest extends TestCase
         assertFalse(filterImpl.matchCase(dict));
     }
 
+    public void testMatches() throws InvalidSyntaxException {
+        FilterImpl filterImpl = FilterImpl.newInstance("(foo=bar)");
+
+        assertTrue(filterImpl.matches(
+                Collections.singletonMap("foo", "bar")));
+        assertFalse("The matches operation should be case-sensitive",
+                filterImpl.matches(Collections.singletonMap("FOO", "bar")));
+    }
 }
