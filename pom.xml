@@ -20,7 +20,7 @@
     <parent>
         <groupId>org.apache.felix</groupId>
         <artifactId>gogo-parent</artifactId>
-        <version>2</version>
+        <version>3-SNAPSHOT</version>
         <relativePath>../gogo-parent/pom.xml</relativePath>
     </parent>
     <modelVersion>4.0.0</modelVersion>
@@ -33,11 +33,6 @@
         <developerConnection>scm:svn:https://svn.apache.org/repos/asf/felix/trunk/gogo/runtime</developerConnection>
         <url>http://svn.apache.org/repos/asf/felix/gogo/runtime</url>
     </scm>
-    <properties>
-        <!-- Skip because of NPE -->
-        <animal.sniffer.skip>true</animal.sniffer.skip>
-        <felix.java.version>8</felix.java.version>
-    </properties>
     <dependencies>
         <dependency>
             <groupId>org.osgi</groupId>
