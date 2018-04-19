@@ -722,12 +722,7 @@ public class Builtin {
             type = "";
             suffix = "";
         }
-        String col = Posix.getLsColorMap(session).get(type);
-        if (col != null && !col.isEmpty()) {
-            return "\033[" + col + "m" + path.getFileName().toString() + "\033[m" + suffix;
-        } else {
-            return path.getFileName().toString() + suffix;
-        }
+        return Posix.applyStyle(path.getFileName().toString(), Posix.getLsColorMap(session), type) + suffix;
 
     }
 

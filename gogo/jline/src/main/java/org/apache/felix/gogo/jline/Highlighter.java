@@ -201,10 +201,7 @@ public class Highlighter extends DefaultHighlighter {
     }
 
     private void applyStyle(AttributedStringBuilder sb, Map<String, String> colors, Type type) {
-        String col = colors.get(type.color);
-        if (col != null && !col.isEmpty()) {
-            sb.appendAnsi("\033[" + col + "m");
-        }
+        Posix.applyStyle(sb, colors, type.color);
     }
 
     enum Type {
