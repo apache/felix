@@ -155,7 +155,7 @@ class OSGiRepositoryImpl implements Repository
         contentAttrs.put(ContentNamespace.CAPABILITY_MIME_ATTRIBUTE, mime);
         contentAttrs.put(ContentNamespace.CAPABILITY_SIZE_ATTRIBUTE, resource.getSize());
         contentAttrs.put(ContentNamespace.CAPABILITY_URL_ATTRIBUTE, uri);
-        return new CapabilityImpl(ContentNamespace.CONTENT_NAMESPACE, contentAttrs, Collections.<String, String> emptyMap());
+        return new ContentCapabilityImpl(contentAttrs);
     }
 
     static String getSHA256(String uri) throws IOException, NoSuchAlgorithmException // TODO find a good place for this
@@ -179,5 +179,21 @@ class OSGiRepositoryImpl implements Repository
             sb.append(String.format("%02x", b));
         }
         return sb.toString();
+    }
+
+    // This capability variant does not take a private copy of the capabilities so that it
+    // can lazily compute the content hash.
+    private static class ContentCapabilityImpl extends CapabilityImpl implements Capability {
+        private final Map<String, Object> contentAttributes;
+
+        public ContentCapabilityImpl(Map<String, Object> contentAttrs) {
+            super(ContentNamespace.CONTENT_NAMESPACE, null, null);
+            contentAttributes = Collections.unmodifiableMap(contentAttrs);
+        }
+
+        @Override
+        public Map<String, Object> getAttributes() {
+            return contentAttributes;
+        }
     }
 }
