@@ -14,7 +14,7 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-package org.apache.felix.utils.capabilities;
+package org.apache.felix.utils.resource;
 
 import org.osgi.resource.Namespace;
 import org.osgi.resource.Requirement;

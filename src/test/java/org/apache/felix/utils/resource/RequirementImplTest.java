@@ -16,10 +16,11 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.felix.utils.capabilities;
+package org.apache.felix.utils.resource;
 
 import junit.framework.TestCase;
 
+import org.apache.felix.utils.resource.RequirementImpl;
 import org.mockito.Mockito;
 import org.osgi.resource.Resource;
 
@@ -48,8 +49,7 @@ public class RequirementImplTest extends TestCase {
         RequirementImpl r1 = new RequirementImpl("org.foo.bar", attrs, dirs, res);
         assertEquals(res, r1.getResource());
 
-        RequirementImpl r2 = new RequirementImpl("org.foo.bar", attrs, dirs);
-        r2.setResource(res);
+        RequirementImpl r2 = new RequirementImpl("org.foo.bar", attrs, dirs, res);
         assertEquals(r1, r2);
         assertEquals(r1.hashCode(), r2.hashCode());
 
@@ -71,16 +71,17 @@ public class RequirementImplTest extends TestCase {
     }
 
     public void testCopyRequirement() {
+        Resource res = Mockito.mock(Resource.class);
         RequirementImpl r = new RequirementImpl("x.y.z",
                 Collections.<String, Object>singletonMap("a", 123),
                 Collections.<String, String>singletonMap("x", "y"),
-                Mockito.mock(Resource.class));
+                res);
 
         Resource res2 = Mockito.mock(Resource.class);
         RequirementImpl r2 = new RequirementImpl(res2, r);
         assertFalse("Should not be equal, the resources are different", r.equals(r2));
 
-        r.setResource(res2);
-        assertEquals(r, r2);
+        RequirementImpl r3 = new RequirementImpl(res, r);
+        assertEquals(r, r3);
     }
 }
