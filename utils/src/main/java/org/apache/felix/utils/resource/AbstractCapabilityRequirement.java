@@ -38,7 +38,7 @@ abstract class AbstractCapabilityRequirement {
     protected final Map<String, Object> attributes;
 
     AbstractCapabilityRequirement(final Resource res, final String ns, final Map<String, String> dirs, final Map<String, Object> attrs) {
-        resource = Objects.requireNonNull(res, "Resource must not be null.");
+        resource = res;
         namespace = Objects.requireNonNull(ns, "Namespace must not be null.");
         directives = StringArrayMap.reduceMemory(dirs);
         attributes = StringArrayMap.reduceMemory(attrs);

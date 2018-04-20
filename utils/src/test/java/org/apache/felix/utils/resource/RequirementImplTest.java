@@ -33,12 +33,12 @@ public class RequirementImplTest extends TestCase {
     public void testRequirement() {
         Map<String, Object> attrs = Collections.<String,Object>singletonMap("foo", "bar");
         Map<String, String> dirs = Collections.emptyMap();
-        RequirementImpl r = new RequirementImpl(Mockito.mock(Resource.class),"org.foo.bar", dirs, attrs);
+        RequirementImpl r = new RequirementImpl(null, "org.foo.bar", dirs, attrs);
 
         assertEquals("org.foo.bar", r.getNamespace());
         assertEquals(attrs, r.getAttributes());
         assertEquals(dirs, r.getDirectives());
-        assertNotNull(r.getResource());
+        assertNull(r.getResource());
     }
 
     public void testRequirementEqualsHashcode() {
