@@ -16,6 +16,8 @@
  */
 package org.apache.felix.utils.resource;
 
+import org.osgi.framework.Constants;
+import org.osgi.resource.Capability;
 import org.osgi.resource.Namespace;
 import org.osgi.resource.Requirement;
 import org.osgi.resource.Resource;
@@ -27,26 +29,19 @@ import java.util.Map;
  * Implementation of the OSGi Requirement interface.
  */
 public class RequirementImpl extends AbstractCapabilityRequirement implements Requirement {
-    /**
-     * Create a requirement that is not associated with a resource.
-     * @param res The resource associated with the requirement.
-     * @param ns The namespace of the requirement.
-     * @param attrs The attributes of the requirement.
-     * @param dirs The directives of the requirement.
-     */
-    public RequirementImpl(String ns, Map<String, Object> attrs, Map<String, String> dirs) {
-        this(ns, attrs, dirs, null);
-    }
+
+    private final SimpleFilter filter;
+    private final boolean optional;
 
     /**
      * Create a requirement.
+     * @param res The resource associated with the requirement.
      * @param ns The namespace of the requirement.
      * @param attrs The attributes of the requirement.
      * @param dirs The directives of the requirement.
-     * @param res The resource associated with the requirement.
      */
-    public RequirementImpl(String ns, Map<String, Object> attrs, Map<String, String> dirs, Resource res) {
-        super(ns, attrs, dirs, res);
+    public RequirementImpl(Resource res, String ns, Map<String, String> dirs, Map<String, Object> attrs) {
+        this(res, ns, dirs, attrs, null);
     }
 
     /**
@@ -54,14 +49,16 @@ public class RequirementImpl extends AbstractCapabilityRequirement implements Re
       *
       * This is a convenience method that creates a requirement with
       * an empty attributes map and a single 'filter' directive.
+     * @param res The resource associated with the requirement.
       * @param ns The namespace for the requirement.
       * @param filter The filter.
       */
-     public RequirementImpl(String ns, String filter)
+     public RequirementImpl(Resource res, String ns, String filter)
      {
-         this(ns, Collections.<String, Object>emptyMap(),
-             filter == null ? Collections.<String, String> emptyMap() :
-             Collections.singletonMap(Namespace.REQUIREMENT_FILTER_DIRECTIVE, filter));
+         this(res, ns,
+             filter == null ? Collections.<String, String>emptyMap() :
+             Collections.singletonMap(Namespace.REQUIREMENT_FILTER_DIRECTIVE, filter),
+             null);
      }
 
     /**
@@ -71,6 +68,26 @@ public class RequirementImpl extends AbstractCapabilityRequirement implements Re
      * @param resource The resource to be associated with the requirement
      */
     public RequirementImpl(Resource resource, Requirement requirement) {
-        this(requirement.getNamespace(), requirement.getAttributes(), requirement.getDirectives(), resource);
+        this(resource, requirement.getNamespace(), requirement.getDirectives(), requirement.getAttributes());
     }
+
+    public RequirementImpl(Resource resource, String path, Map<String, String> dirs, Map<String, Object> attrs, SimpleFilter sf) {
+        super(resource, path, dirs, attrs);
+        this.filter = sf != null ? sf : SimpleFilter.convert(attributes);
+        // Find resolution import directives.
+        this.optional = Constants.RESOLUTION_OPTIONAL.equals(directives.get(Constants.RESOLUTION_DIRECTIVE));
+    }
+
+    public boolean matches(Capability cap) {
+        return CapabilitySet.matches(cap, getFilter());
+    }
+
+    public boolean isOptional() {
+        return optional;
+    }
+
+    public SimpleFilter getFilter() {
+        return filter;
+    }
+
 }
