@@ -14,7 +14,7 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-package org.apache.felix.utils.capabilities;
+package org.apache.felix.utils.resource;
 
 import org.osgi.resource.Resource;
 
@@ -28,7 +28,7 @@ abstract class AbstractCapabilityRequirement {
     private final String namespace;
 
     /** Optional resource. */
-    private volatile Resource resource;
+    private final Resource resource;
 
     /** Optional attributes. Never null. */
     private final Map<String, Object> attributes;
@@ -80,15 +80,6 @@ abstract class AbstractCapabilityRequirement {
      */
     public Resource getResource() {
         return resource;
-    }
-
-    /**
-     * Set the resource associated with this requirement.
-     *
-     * @param res The resource.
-     */
-    public void setResource(Resource res) {
-        resource = res;
     }
 
     @Override

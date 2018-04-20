@@ -16,10 +16,11 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.felix.utils.capabilities;
+package org.apache.felix.utils.resource;
 
 import junit.framework.TestCase;
 
+import org.apache.felix.utils.resource.CapabilityImpl;
 import org.mockito.Mockito;
 import org.osgi.resource.Resource;
 
@@ -48,8 +49,7 @@ public class CapabilityImplTest extends TestCase {
         CapabilityImpl c1 = new CapabilityImpl("org.foo.bar", attrs, dirs, res);
         assertEquals(res, c1.getResource());
 
-        CapabilityImpl c2 = new CapabilityImpl("org.foo.bar", attrs, dirs);
-        c2.setResource(res);
+        CapabilityImpl c2 = new CapabilityImpl("org.foo.bar", attrs, dirs, res);
         assertEquals(c1, c2);
         assertEquals(c1.hashCode(), c2.hashCode());
 
@@ -59,16 +59,17 @@ public class CapabilityImplTest extends TestCase {
     }
 
     public void testCopyCapability() {
+        Resource res = Mockito.mock(Resource.class);
         CapabilityImpl c = new CapabilityImpl("x.y.z",
                 Collections.<String, Object>singletonMap("a", 123),
                 Collections.<String, String>singletonMap("x", "y"),
-                Mockito.mock(Resource.class));
+                res);
 
         Resource res2 = Mockito.mock(Resource.class);
         CapabilityImpl c2 = new CapabilityImpl(res2, c);
         assertFalse("Should not be equal, the resources are different", c.equals(c2));
 
-        c.setResource(res2);
-        assertEquals(c, c2);
+        CapabilityImpl c3 = new CapabilityImpl(res, c);
+        assertEquals(c, c3);
     }
 }
