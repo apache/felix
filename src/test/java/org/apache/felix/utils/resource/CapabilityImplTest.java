@@ -32,7 +32,6 @@ import static org.junit.Assert.assertNotEquals;
 public class CapabilityImplTest extends TestCase {
 
     public void testCapability() {
-        Resource res = new ResourceImpl();
         Map<String, Object> attrs = Collections.<String,Object>singletonMap("foo", "bar");
         Map<String, String> dirs = Collections.emptyMap();
         CapabilityImpl c = new CapabilityImpl(Mockito.mock(Resource.class), "org.foo.bar", dirs, attrs);
