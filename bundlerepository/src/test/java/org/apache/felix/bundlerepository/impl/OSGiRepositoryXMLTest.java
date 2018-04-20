@@ -30,8 +30,8 @@ import java.util.Map.Entry;
 import junit.framework.TestCase;
 
 import org.apache.felix.bundlerepository.Resolver;
-import org.apache.felix.utils.capabilities.RequirementImpl;
 import org.apache.felix.utils.log.Logger;
+import org.apache.felix.utils.resource.RequirementImpl;
 import org.mockito.Mockito;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;

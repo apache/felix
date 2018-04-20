@@ -33,15 +33,15 @@ import java.util.Map;
 import java.util.concurrent.Callable;
 
 import org.apache.felix.bundlerepository.RepositoryAdmin;
-import org.apache.felix.bundlerepository.Resource;
 import org.apache.felix.bundlerepository.impl.LazyHashMap.LazyValue;
-import org.apache.felix.utils.capabilities.CapabilityImpl;
+import org.apache.felix.utils.resource.CapabilityImpl;
 import org.osgi.framework.Filter;
 import org.osgi.framework.FrameworkUtil;
 import org.osgi.framework.namespace.IdentityNamespace;
 import org.osgi.resource.Capability;
 import org.osgi.resource.Namespace;
 import org.osgi.resource.Requirement;
+import org.osgi.resource.Resource;
 import org.osgi.service.repository.ContentNamespace;
 import org.osgi.service.repository.Repository;
 
@@ -120,7 +120,8 @@ class OSGiRepositoryImpl implements Repository
         caps.add(idCap);
     }
 
-    static CapabilityImpl newOSGiIdentityCapability(org.apache.felix.bundlerepository.Resource res)
+    static CapabilityImpl newOSGiIdentityCapability(org.apache.felix.bundlerepository.Resource res,
+            org.osgi.resource.Resource targetResource)
     {
         @SuppressWarnings("unchecked")
         Map<String, Object> idAttrs = new HashMap<String, Object>(res.getProperties());
@@ -131,10 +132,11 @@ class OSGiRepositoryImpl implements Repository
         if (idAttrs.get(IdentityNamespace.CAPABILITY_TYPE_ATTRIBUTE) == null)
             idAttrs.put(IdentityNamespace.CAPABILITY_TYPE_ATTRIBUTE, IdentityNamespace.TYPE_BUNDLE);
 
-        return new CapabilityImpl(IdentityNamespace.IDENTITY_NAMESPACE, idAttrs, Collections.<String, String> emptyMap());
+        return new CapabilityImpl(IdentityNamespace.IDENTITY_NAMESPACE, idAttrs, Collections.<String, String> emptyMap(), targetResource);
     }
 
-    static CapabilityImpl newOSGiContentCapability(Resource resource)
+    static CapabilityImpl newOSGiContentCapability(org.apache.felix.bundlerepository.Resource resource,
+            org.osgi.resource.Resource targetResource)
     {
         final String uri = resource.getURI();
         LazyValue<String, Object> lazyValue =
@@ -155,7 +157,7 @@ class OSGiRepositoryImpl implements Repository
         contentAttrs.put(ContentNamespace.CAPABILITY_MIME_ATTRIBUTE, mime);
         contentAttrs.put(ContentNamespace.CAPABILITY_SIZE_ATTRIBUTE, resource.getSize());
         contentAttrs.put(ContentNamespace.CAPABILITY_URL_ATTRIBUTE, uri);
-        return new ContentCapabilityImpl(contentAttrs);
+        return new ContentCapabilityImpl(contentAttrs, targetResource);
     }
 
     static String getSHA256(String uri) throws IOException, NoSuchAlgorithmException // TODO find a good place for this
@@ -186,8 +188,8 @@ class OSGiRepositoryImpl implements Repository
     private static class ContentCapabilityImpl extends CapabilityImpl implements Capability {
         private final Map<String, Object> contentAttributes;
 
-        public ContentCapabilityImpl(Map<String, Object> contentAttrs) {
-            super(ContentNamespace.CONTENT_NAMESPACE, null, null);
+        public ContentCapabilityImpl(Map<String, Object> contentAttrs, Resource targetResource) {
+            super(ContentNamespace.CONTENT_NAMESPACE, null, null, targetResource);
             contentAttributes = Collections.unmodifiableMap(contentAttrs);
         }
 

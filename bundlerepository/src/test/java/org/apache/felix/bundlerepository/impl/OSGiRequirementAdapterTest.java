@@ -23,7 +23,7 @@ import java.util.Map;
 
 import junit.framework.TestCase;
 
-import org.apache.felix.utils.capabilities.RequirementImpl;
+import org.apache.felix.utils.resource.RequirementImpl;
 import org.osgi.resource.Requirement;
 
 public class OSGiRequirementAdapterTest extends TestCase

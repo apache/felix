@@ -22,9 +22,9 @@ import junit.framework.TestCase;
 
 import org.apache.felix.bundlerepository.Reason;
 import org.apache.felix.bundlerepository.Resolver;
-import org.apache.felix.utils.capabilities.CapabilityImpl;
-import org.apache.felix.utils.capabilities.RequirementImpl;
 import org.apache.felix.utils.log.Logger;
+import org.apache.felix.utils.resource.CapabilityImpl;
+import org.apache.felix.utils.resource.RequirementImpl;
 import org.mockito.Mockito;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
