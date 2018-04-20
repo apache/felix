@@ -20,7 +20,6 @@ package org.apache.felix.utils.resource;
 
 import junit.framework.TestCase;
 
-import org.apache.felix.utils.resource.RequirementImpl;
 import org.mockito.Mockito;
 import org.osgi.resource.Resource;
 
@@ -28,16 +27,18 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
+import static org.junit.Assert.assertNotEquals;
+
 public class RequirementImplTest extends TestCase {
     public void testRequirement() {
         Map<String, Object> attrs = Collections.<String,Object>singletonMap("foo", "bar");
         Map<String, String> dirs = Collections.emptyMap();
-        RequirementImpl r = new RequirementImpl("org.foo.bar", attrs, dirs);
+        RequirementImpl r = new RequirementImpl(Mockito.mock(Resource.class),"org.foo.bar", dirs, attrs);
 
         assertEquals("org.foo.bar", r.getNamespace());
         assertEquals(attrs, r.getAttributes());
         assertEquals(dirs, r.getDirectives());
-        assertNull(r.getResource());
+        assertNotNull(r.getResource());
     }
 
     public void testRequirementEqualsHashcode() {
@@ -46,42 +47,43 @@ public class RequirementImplTest extends TestCase {
         attrs.put("la", "la");
         Map<String, String> dirs = Collections.singletonMap("a", "b");
         Resource res = Mockito.mock(Resource.class);
-        RequirementImpl r1 = new RequirementImpl("org.foo.bar", attrs, dirs, res);
+        RequirementImpl r1 = new RequirementImpl(res, "org.foo.bar", dirs, attrs);
         assertEquals(res, r1.getResource());
 
-        RequirementImpl r2 = new RequirementImpl("org.foo.bar", attrs, dirs, res);
+        RequirementImpl r2 = new RequirementImpl(res, "org.foo.bar", dirs, attrs);
         assertEquals(r1, r2);
         assertEquals(r1.hashCode(), r2.hashCode());
 
-        RequirementImpl r3 = new RequirementImpl("org.foo.bar2", attrs, dirs, res);
-        assertFalse(r1.equals(r3));
-        assertFalse(r1.hashCode() == r3.hashCode());
+        RequirementImpl r3 = new RequirementImpl(res, "org.foo.bar2", dirs, attrs);
+        assertNotEquals(r1, r3);
+        assertNotEquals(r1.hashCode(), r3.hashCode());
     }
 
     public void testRequirementFilter() {
-        RequirementImpl r = new RequirementImpl("lala", "(x=y)");
+        RequirementImpl r = new RequirementImpl(Mockito.mock(Resource.class), "lala", "(x=y)");
         assertEquals("lala", r.getNamespace());
         assertEquals(0, r.getAttributes().size());
         assertEquals(Collections.singletonMap("filter", "(x=y)"), r.getDirectives());
 
-        RequirementImpl r2 = new RequirementImpl("lala", null);
+        RequirementImpl r2 = new RequirementImpl(Mockito.mock(Resource.class), "lala", null);
         assertEquals("lala", r2.getNamespace());
         assertEquals(0, r2.getAttributes().size());
         assertEquals(0, r2.getDirectives().size());
     }
 
     public void testCopyRequirement() {
-        Resource res = Mockito.mock(Resource.class);
-        RequirementImpl r = new RequirementImpl("x.y.z",
-                Collections.<String, Object>singletonMap("a", 123),
+        Resource res1 = Mockito.mock(Resource.class);
+
+        RequirementImpl r = new RequirementImpl(res1,
+                "x.y.z",
                 Collections.<String, String>singletonMap("x", "y"),
-                res);
+                Collections.<String, Object>singletonMap("a", 123));
 
         Resource res2 = Mockito.mock(Resource.class);
         RequirementImpl r2 = new RequirementImpl(res2, r);
-        assertFalse("Should not be equal, the resources are different", r.equals(r2));
+        assertNotEquals("Should not be equal, the resources are different", r, r2);
 
-        RequirementImpl r3 = new RequirementImpl(res, r);
+        RequirementImpl r3 = new RequirementImpl(res1, r);
         assertEquals(r, r3);
     }
 }

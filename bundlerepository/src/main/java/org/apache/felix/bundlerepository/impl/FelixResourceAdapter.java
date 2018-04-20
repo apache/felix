@@ -42,12 +42,12 @@ public class FelixResourceAdapter implements Resource, RepositoryContent
 
         if (namespace == null || namespace.equals(IdentityNamespace.IDENTITY_NAMESPACE))
         {
-            CapabilityImpl c = OSGiRepositoryImpl.newOSGiIdentityCapability(resource, this);
+            CapabilityImpl c = OSGiRepositoryImpl.newOSGiIdentityCapability(this, resource);
             result.add(c);
         }
         if (namespace == null || namespace.equals(ContentNamespace.CONTENT_NAMESPACE))
         {
-            CapabilityImpl c = OSGiRepositoryImpl.newOSGiContentCapability(resource, this);
+            CapabilityImpl c = OSGiRepositoryImpl.newOSGiContentCapability(this, resource);
             result.add(c);
         }
 

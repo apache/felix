@@ -51,7 +51,8 @@ public class OSGiRepositoryXMLTest extends TestCase {
         repoAdmin.addRepository(url);
 
         Repository repo = new OSGiRepositoryImpl(repoAdmin);
-        Requirement req = new RequirementImpl("osgi.identity",
+        Requirement req = new RequirementImpl(Mockito.mock(Resource.class),
+                "osgi.identity",
                 "(osgi.identity=cdi-subsystem)");
 
         Map<Requirement, Collection<Capability>> result = repo
@@ -126,7 +127,8 @@ public class OSGiRepositoryXMLTest extends TestCase {
         repoAdmin.addRepository(url);
 
         Repository repo = new OSGiRepositoryImpl(repoAdmin);
-        Requirement req = new RequirementImpl("osgi.identity",
+        Requirement req = new RequirementImpl(Mockito.mock(Resource.class),
+                "osgi.identity",
                 "(license=http://www.opensource.org/licenses/mytestlicense)");
 
         Map<Requirement, Collection<Capability>> result = repo
@@ -145,7 +147,7 @@ public class OSGiRepositoryXMLTest extends TestCase {
         repoAdmin.addRepository(url);
 
         Repository repo = new OSGiRepositoryImpl(repoAdmin);
-        Requirement req = new RequirementImpl("foo", "(bar=toast)");
+        Requirement req = new RequirementImpl(Mockito.mock(Resource.class),"foo", "(bar=toast)");
 
         Map<Requirement, Collection<Capability>> result = repo
                 .findProviders(Collections.singleton(req));

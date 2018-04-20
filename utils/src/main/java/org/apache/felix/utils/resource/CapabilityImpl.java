@@ -16,35 +16,50 @@
  */
 package org.apache.felix.utils.resource;
 
+import org.osgi.framework.Constants;
 import org.osgi.resource.Capability;
 import org.osgi.resource.Resource;
 
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * Implementation of the OSGi Capability interface.
  */
 public class CapabilityImpl extends AbstractCapabilityRequirement implements Capability {
-    /**
-     * Create a capability that is not associated with a resource.
-     * @param res The resource associated with the capability. May be null.
-     * @param ns The namespace of the capability.
-     * @param attrs The attributes of the capability.
-     * @param dirs The directives of the capability.
-     */
-    public CapabilityImpl(String ns, Map<String, Object> attrs, Map<String, String> dirs) {
-        this(ns, attrs, dirs, null);
-    }
+
+    protected final Set<String> mandatory;
 
     /**
      * Create a capability.
+     * @param res The resource associated with the capability.
      * @param ns The namespace of the capability.
      * @param attrs The attributes of the capability.
      * @param dirs The directives of the capability.
-     * @param res The resource associated with the capability. May be null.
      */
-    public CapabilityImpl(String ns, Map<String, Object> attrs, Map<String, String> dirs, Resource res) {
-        super(ns, attrs, dirs, res);
+    public CapabilityImpl(Resource res, String ns, Map<String, String> dirs, Map<String, Object> attrs) {
+        super(res, ns, dirs, attrs);
+
+        // Handle mandatory directive
+        Set<String> mandatory = Collections.emptySet();
+        String value = this.directives.get(Constants.MANDATORY_DIRECTIVE);
+        if (value != null) {
+            List<String> names = ResourceBuilder.parseDelimitedString(value, ",");
+            mandatory = new HashSet<>(names.size());
+            for (String name : names) {
+                // If attribute exists, then record it as mandatory.
+                if (this.attributes.containsKey(name)) {
+                    mandatory.add(name);
+                    // Otherwise, report an error.
+                } else {
+                    throw new IllegalArgumentException("Mandatory attribute '" + name + "' does not exist.");
+                }
+            }
+        }
+        this.mandatory = mandatory;
     }
 
     /**
@@ -54,6 +69,10 @@ public class CapabilityImpl extends AbstractCapabilityRequirement implements Cap
      * @param resource The resource to be associated with the capability
      */
     public CapabilityImpl(Resource resource, Capability capability) {
-        this(capability.getNamespace(), capability.getAttributes(), capability.getDirectives(), resource);
+        this(resource, capability.getNamespace(), capability.getDirectives(), capability.getAttributes());
+    }
+
+    public boolean isAttributeMandatory(String name) {
+        return !mandatory.isEmpty() && mandatory.contains(name);
     }
 }

@@ -58,7 +58,7 @@ public class OSGiRepositoryImplTest extends TestCase
         repoAdmin.addRepository(url);
 
         Repository repo = new OSGiRepositoryImpl(repoAdmin);
-        Requirement req = new RequirementImpl("osgi.identity", null);
+        Requirement req = new RequirementImpl(Mockito.mock(Resource.class), "osgi.identity", null);
 
         Map<Requirement, Collection<Capability>> result = repo.findProviders(Collections.singleton(req));
         assertEquals(1, result.size());
@@ -117,7 +117,7 @@ public class OSGiRepositoryImplTest extends TestCase
         repoAdmin.addRepository(url);
 
         Repository repo = new OSGiRepositoryImpl(repoAdmin);
-        Requirement req = new RequirementImpl("osgi.identity", "(osgi.identity=test_file_2)");
+        Requirement req = new RequirementImpl(Mockito.mock(Resource.class), "osgi.identity", "(osgi.identity=test_file_2)");
 
         Map<Requirement, Collection<Capability>> result = repo.findProviders(Collections.singleton(req));
         assertEquals(1, result.size());
@@ -137,7 +137,7 @@ public class OSGiRepositoryImplTest extends TestCase
         repoAdmin.addRepository(url);
 
         Repository repo = new OSGiRepositoryImpl(repoAdmin);
-        Requirement req = new RequirementImpl("foo", "(someKey=someOtherVal)");
+        Requirement req = new RequirementImpl(Mockito.mock(Resource.class), "foo", "(someKey=someOtherVal)");
 
         Map<Requirement, Collection<Capability>> result = repo.findProviders(Collections.singleton(req));
         assertEquals(1, result.size());
@@ -157,7 +157,7 @@ public class OSGiRepositoryImplTest extends TestCase
         repoAdmin.addRepository(url);
 
         Repository repo = new OSGiRepositoryImpl(repoAdmin);
-        Requirement req = new RequirementImpl("foo", "(someKey=*)");
+        Requirement req = new RequirementImpl(Mockito.mock(Resource.class), "foo", "(someKey=*)");
 
         Map<Requirement, Collection<Capability>> result = repo.findProviders(Collections.singleton(req));
         assertEquals(1, result.size());
@@ -181,7 +181,7 @@ public class OSGiRepositoryImplTest extends TestCase
         repoAdmin.addRepository(url);
 
         Repository repo = new OSGiRepositoryImpl(repoAdmin);
-        Requirement req = new RequirementImpl("osgi.wiring.package",
+        Requirement req = new RequirementImpl(Mockito.mock(Resource.class), "osgi.wiring.package",
                 "(&(osgi.wiring.package=org.apache.commons.logging)(version>=1.0.1)(!(version>=2)))");
 
         Map<Requirement, Collection<Capability>> result = repo.findProviders(Collections.singleton(req));
@@ -230,12 +230,12 @@ public class OSGiRepositoryImplTest extends TestCase
 
         BundleRevision br = Mockito.mock(BundleRevision.class);
         Mockito.when(sysBundle.adapt(BundleRevision.class)).thenReturn(br);
-        Capability cap1 = new CapabilityImpl("some.system.cap",
-                Collections.<String, Object>singletonMap("sys.cap", "something"),
-                Collections.singletonMap("x", "y"));
-        Capability cap2 = new CapabilityImpl("some.system.cap",
-                Collections.<String, Object>singletonMap("sys.cap", "somethingelse"),
-                Collections.<String, String>emptyMap());
+        Capability cap1 = new CapabilityImpl(Mockito.mock(Resource.class), "some.system.cap",
+                Collections.singletonMap("x", "y"),
+                Collections.<String, Object>singletonMap("sys.cap", "something"));
+        Capability cap2 = new CapabilityImpl(Mockito.mock(Resource.class), "some.system.cap",
+                Collections.<String, String>emptyMap(),
+                Collections.<String, Object>singletonMap("sys.cap", "somethingelse"));
         Mockito.when(br.getCapabilities(null)).thenReturn(Arrays.asList(cap1, cap2));
 
         BundleContext bc = Mockito.mock(BundleContext.class);

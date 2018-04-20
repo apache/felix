@@ -16,38 +16,32 @@
  */
 package org.apache.felix.utils.resource;
 
+import org.apache.felix.utils.collections.StringArrayMap;
+import org.osgi.framework.Version;
 import org.osgi.resource.Resource;
 
-import java.util.Collections;
-import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 
 abstract class AbstractCapabilityRequirement {
 
+    /** The resource. Required. */
+    protected final Resource resource;
+
     /** The namespace. Required. */
-    private final String namespace;
-
-    /** Optional resource. */
-    private final Resource resource;
+    protected final String namespace;
 
     /** Optional attributes. Never null. */
-    private final Map<String, Object> attributes;
+    protected final Map<String, String> directives;
 
     /** Optional attributes. Never null. */
-    private final Map<String, String> directives;
+    protected final Map<String, Object> attributes;
 
-    AbstractCapabilityRequirement(final String ns, final Map<String, Object> attrs, final Map<String, String> dirs, final Resource res) {
-        if ( ns == null ) {
-            throw new IllegalArgumentException("Namespace must not be null.");
-        }
-        namespace = ns;
-        attributes = attrs == null
-                ? Collections.<String, Object>emptyMap()
-                : Collections.unmodifiableMap(new HashMap<String, Object>(attrs));
-        directives = dirs == null
-                ? Collections.<String,String>emptyMap()
-                : Collections.unmodifiableMap(new HashMap<String,String>(dirs));
-                resource = res;
+    AbstractCapabilityRequirement(final Resource res, final String ns, final Map<String, String> dirs, final Map<String, Object> attrs) {
+        resource = Objects.requireNonNull(res, "Resource must not be null.");
+        namespace = Objects.requireNonNull(ns, "Namespace must not be null.");
+        directives = StringArrayMap.reduceMemory(dirs);
+        attributes = StringArrayMap.reduceMemory(attrs);
     }
 
     /**
@@ -82,45 +76,98 @@ abstract class AbstractCapabilityRequirement {
         return resource;
     }
 
+
     @Override
-    public int hashCode() {
-        final int prime = 31;
-        int result = 1;
-        result = prime * result + attributes.hashCode();
-        result = prime * result + directives.hashCode();
-        result = prime * result + namespace.hashCode();
-
-        if (resource != null)
-            result = prime * result + resource.hashCode();
-
-        return result;
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        AbstractCapabilityRequirement that = (AbstractCapabilityRequirement) o;
+        return Objects.equals(resource, that.resource) &&
+                Objects.equals(namespace, that.namespace) &&
+                Objects.equals(attributes, that.attributes) &&
+                Objects.equals(directives, that.directives);
     }
 
     @Override
-    public boolean equals(Object obj) {
-        if (this == obj)
-            return true;
-        if (obj == null)
-            return false;
-        if (getClass() != obj.getClass())
-            return false;
-        AbstractCapabilityRequirement other = (AbstractCapabilityRequirement) obj;
-        if (!namespace.equals(other.namespace))
-            return false;
-        if (!attributes.equals(other.attributes))
-            return false;
-        if (!directives.equals(other.directives))
-            return false;
-        if (resource == null) {
-            return other.resource == null;
-        } else {
-            return resource.equals(other.resource);
-        }
+    public int hashCode() {
+        return Objects.hash(resource, namespace, attributes, directives);
     }
 
     @Override
     public String toString() {
-        return getClass().getSimpleName() + " [resource=" + resource + ", namespace=" + namespace + ", attributes=" + attributes
-                + ", directives=" + directives + "]";
+        return toString(getResource(), getNamespace(), getAttributes(), getDirectives());
+    }
+
+    public static String toString(Resource res, String namespace, Map<String, Object> attrs, Map<String, String> dirs) {
+        StringBuilder sb = new StringBuilder();
+        if (res != null) {
+            sb.append("[").append(res).append("] ");
+        }
+        sb.append(namespace);
+        for (String key : attrs.keySet()) {
+            sb.append("; ");
+            append(sb, key, attrs.get(key), true);
+        }
+        for (String key : dirs.keySet()) {
+            sb.append("; ");
+            append(sb, key, dirs.get(key), false);
+        }
+        return sb.toString();
+    }
+
+    private static void append(StringBuilder sb, String key, Object val, boolean attribute) {
+        sb.append(key);
+        if (val instanceof Version) {
+            sb.append(":Version=");
+            sb.append(val);
+        } else if (val instanceof Long) {
+            sb.append(":Long=");
+            sb.append(val);
+        } else if (val instanceof Double) {
+            sb.append(":Double=");
+            sb.append(val);
+        } else if (val instanceof Iterable) {
+            Iterable<?> it = (Iterable<?>) val;
+            String scalar = null;
+            for (Object o : it) {
+                String ts;
+                if (o instanceof String) {
+                    ts = "String";
+                } else if (o instanceof Long) {
+                    ts = "Long";
+                } else if (o instanceof Double) {
+                    ts = "Double";
+                } else if (o instanceof Version) {
+                    ts = "Version";
+                } else {
+                    throw new IllegalArgumentException("Unsupported scalar type: " + o);
+                }
+                if (scalar == null) {
+                    scalar = ts;
+                } else if (!scalar.equals(ts)) {
+                    throw new IllegalArgumentException("Unconsistent list type for attribute " + key);
+                }
+            }
+            sb.append(":List<").append(scalar).append(">=");
+            sb.append("\"");
+            boolean first = true;
+            for (Object o : it) {
+                if (first) {
+                    first = false;
+                } else {
+                    sb.append(",");
+                }
+                sb.append(o.toString().replace("\"", "\\\"").replace(",", "\\,"));
+            }
+            sb.append("\"");
+        } else {
+            sb.append(attribute ? "=" : ":=");
+            String s = val.toString();
+            if (s.matches("[0-9a-zA-Z_\\-.]*")) {
+                sb.append(s);
+            } else {
+                sb.append("\"").append(s.replace("\"", "\\\\")).append("\"");
+            }
+        }
     }
 }

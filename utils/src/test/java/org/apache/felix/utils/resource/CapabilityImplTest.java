@@ -20,7 +20,6 @@ package org.apache.felix.utils.resource;
 
 import junit.framework.TestCase;
 
-import org.apache.felix.utils.resource.CapabilityImpl;
 import org.mockito.Mockito;
 import org.osgi.resource.Resource;
 
@@ -28,46 +27,49 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
+import static org.junit.Assert.assertNotEquals;
+
 public class CapabilityImplTest extends TestCase {
+
     public void testCapability() {
+        Resource res = new ResourceImpl();
         Map<String, Object> attrs = Collections.<String,Object>singletonMap("foo", "bar");
         Map<String, String> dirs = Collections.emptyMap();
-        CapabilityImpl c = new CapabilityImpl("org.foo.bar", attrs, dirs);
+        CapabilityImpl c = new CapabilityImpl(Mockito.mock(Resource.class), "org.foo.bar", dirs, attrs);
 
         assertEquals("org.foo.bar", c.getNamespace());
         assertEquals(attrs, c.getAttributes());
         assertEquals(dirs, c.getDirectives());
-        assertNull(c.getResource());
+        assertNotNull(c.getResource());
     }
 
     public void testCapabilityEqualsHashcode() {
-        Map<String, Object> attrs = new HashMap<String, Object>();
+        Map<String, Object> attrs = new HashMap<>();
         attrs.put("ding", "dong");
         attrs.put("la", "la");
         Map<String, String> dirs = Collections.singletonMap("a", "b");
         Resource res = Mockito.mock(Resource.class);
-        CapabilityImpl c1 = new CapabilityImpl("org.foo.bar", attrs, dirs, res);
+        CapabilityImpl c1 = new CapabilityImpl(res, "org.foo.bar", dirs, attrs);
         assertEquals(res, c1.getResource());
 
-        CapabilityImpl c2 = new CapabilityImpl("org.foo.bar", attrs, dirs, res);
+        CapabilityImpl c2 = new CapabilityImpl(res, "org.foo.bar", dirs, attrs);
         assertEquals(c1, c2);
         assertEquals(c1.hashCode(), c2.hashCode());
 
-        CapabilityImpl c3 = new CapabilityImpl("org.foo.bar2", attrs, dirs, res);
-        assertFalse(c1.equals(c3));
+        CapabilityImpl c3 = new CapabilityImpl(res, "org.foo.bar2", dirs, attrs);
+        assertNotEquals(c1, c3);
         assertFalse(c1.hashCode() == c3.hashCode());
     }
 
     public void testCopyCapability() {
         Resource res = Mockito.mock(Resource.class);
-        CapabilityImpl c = new CapabilityImpl("x.y.z",
-                Collections.<String, Object>singletonMap("a", 123),
+        CapabilityImpl c = new CapabilityImpl(res, "x.y.z",
                 Collections.<String, String>singletonMap("x", "y"),
-                res);
+                Collections.<String, Object>singletonMap("a", 123));
 
         Resource res2 = Mockito.mock(Resource.class);
         CapabilityImpl c2 = new CapabilityImpl(res2, c);
-        assertFalse("Should not be equal, the resources are different", c.equals(c2));
+        assertNotEquals("Should not be equal, the resources are different", c, c2);
 
         CapabilityImpl c3 = new CapabilityImpl(res, c);
         assertEquals(c, c3);

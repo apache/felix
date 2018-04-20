@@ -21,41 +21,39 @@ package org.apache.felix.bundlerepository.impl;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.Callable;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import junit.framework.TestCase;
+import org.apache.felix.bundlerepository.impl.LazyStringMap.LazyValue;
 
-import org.apache.felix.bundlerepository.impl.LazyHashMap.LazyValue;
-
-public class LazyHashMapTest extends TestCase
+public class LazyStringMapTest extends TestCase
 {
     public void testLazyHashMap() {
         final AtomicInteger lv1Computed = new AtomicInteger(0);
-        LazyValue<String, Long> lv1 = new LazyValue<String, Long>("42", new Callable<Long>()
-        {
-            public Long call() throws Exception
-            {
+        LazyValue<Long> lv1 = new LazyValue<Long>() {
+            public Long compute() {
                 lv1Computed.incrementAndGet();
                 return 24L;
             }
-        });
+        };
 
         final AtomicInteger lv2Computed = new AtomicInteger(0);
-        LazyValue<String, Long> lv2 = new LazyValue<String, Long>("zero", new Callable<Long>()
-        {
-            public Long call() throws Exception
-            {
+        LazyValue<Long> lv2 = new LazyValue<Long>() {
+            public Long compute() {
                 lv2Computed.incrementAndGet();
                 return 0L;
             }
-        });
+        };
 
-        Collection<LazyValue<String, Long>> lazyValues = new ArrayList<LazyHashMap.LazyValue<String,Long>>();
+        Collection<LazyValue<Long>> lazyValues = new ArrayList<LazyValue<Long>>();
         lazyValues.add(lv1);
         lazyValues.add(lv2);
-        HashMap<String, Long> lhm = new LazyHashMap<String, Long>(lazyValues);
+        LazyStringMap<Long> lhm = new LazyStringMap<Long>();
         lhm.put("1", 2L);
+        lhm.putLazy("42", lv1);
+        lhm.putLazy("zero", lv2);
 
         assertEquals(new Long(2L), lhm.get("1"));
         assertEquals("No computation should have happened yet", 0, lv1Computed.get());

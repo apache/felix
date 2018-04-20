@@ -36,17 +36,21 @@
         <url>http://svn.apache.org/repos/asf/felix/utils</url>
     </scm>
 
+    <properties>
+        <felix.java.version>7</felix.java.version>
+    </properties>
+
     <dependencies>
         <dependency>
             <groupId>org.osgi</groupId>
-            <artifactId>org.osgi.core</artifactId>
+            <artifactId>osgi.core</artifactId>
             <version>5.0.0</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>org.osgi</groupId>
-            <artifactId>org.osgi.compendium</artifactId>
-            <version>4.2.0</version>
+            <artifactId>osgi.cmpn</artifactId>
+            <version>5.0.0</version>
             <scope>provided</scope>
         </dependency>
     </dependencies>
@@ -60,6 +64,13 @@
                         <!-- Exclude all JSON files -->
                         <exclude>doc/*</exclude>
                     </excludes>
+                </configuration>
+            </plugin>
+            <plugin>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <configuration>
+                    <source>1.7</source>
+                    <target>1.7</target>
                 </configuration>
             </plugin>
         </plugins>
