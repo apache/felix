@@ -69,4 +69,18 @@ public class RequirementImplTest extends TestCase {
         assertEquals(0, r2.getAttributes().size());
         assertEquals(0, r2.getDirectives().size());
     }
+
+    public void testCopyRequirement() {
+        RequirementImpl r = new RequirementImpl("x.y.z",
+                Collections.<String, Object>singletonMap("a", 123),
+                Collections.<String, String>singletonMap("x", "y"),
+                Mockito.mock(Resource.class));
+
+        Resource res2 = Mockito.mock(Resource.class);
+        RequirementImpl r2 = new RequirementImpl(res2, r);
+        assertFalse("Should not be equal, the resources are different", r.equals(r2));
+
+        r.setResource(res2);
+        assertEquals(r, r2);
+    }
 }

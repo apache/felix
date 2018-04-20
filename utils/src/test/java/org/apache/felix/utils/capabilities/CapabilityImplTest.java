@@ -57,4 +57,18 @@ public class CapabilityImplTest extends TestCase {
         assertFalse(c1.equals(c3));
         assertFalse(c1.hashCode() == c3.hashCode());
     }
+
+    public void testCopyCapability() {
+        CapabilityImpl c = new CapabilityImpl("x.y.z",
+                Collections.<String, Object>singletonMap("a", 123),
+                Collections.<String, String>singletonMap("x", "y"),
+                Mockito.mock(Resource.class));
+
+        Resource res2 = Mockito.mock(Resource.class);
+        CapabilityImpl c2 = new CapabilityImpl(res2, c);
+        assertFalse("Should not be equal, the resources are different", c.equals(c2));
+
+        c.setResource(res2);
+        assertEquals(c, c2);
+    }
 }
