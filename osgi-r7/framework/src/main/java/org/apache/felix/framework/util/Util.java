@@ -53,8 +53,6 @@ import java.util.Map.Entry;
 import java.util.Properties;
 import java.util.Random;
 import java.util.Set;
-import java.util.SortedMap;
-import java.util.SortedSet;
 import java.util.TreeSet;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -458,33 +456,6 @@ public class Util
             }
         }
         return allow;
-    }
-
-    /**
-     * Returns all the capabilities from a module that has a specified namespace.
-     *
-     * @param br    module providing capabilities
-     * @param namespace capability namespace
-     * @return array of matching capabilities or empty if none found
-     */
-    public static List<BundleCapability> getCapabilityByNamespace(
-        BundleRevision br, String namespace)
-    {
-        final List<BundleCapability> matching = new ArrayList();
-        final List<BundleCapability> caps = (br.getWiring() != null)
-            ? br.getWiring().getCapabilities(null)
-            : br.getDeclaredCapabilities(null);
-        if (caps != null)
-        {
-            for (BundleCapability cap : caps)
-            {
-                if (cap.getNamespace().equals(namespace))
-                {
-                    matching.add(cap);
-                }
-            }
-        }
-        return matching;
     }
 
     public static List<BundleRequirement> getDynamicRequirements(
@@ -1049,5 +1020,18 @@ public class Util
             }
         }
         return manifest;
+    }
+
+    private static final List EMPTY_LIST = Collections.unmodifiableList(Collections.EMPTY_LIST);
+    private static final Map EMPTY_MAP = Collections.unmodifiableMap(Collections.EMPTY_MAP);
+
+    public static <T> List<T> newImmutableList(List<T> list)
+    {
+        return list == null || list.isEmpty() ? EMPTY_LIST : Collections.unmodifiableList(list);
+    }
+
+    public static <K,V> Map<K,V> newImmutableMap(Map<K,V> map)
+    {
+        return map == null || map.isEmpty() ? EMPTY_MAP : Collections.unmodifiableMap(map);
     }
 }

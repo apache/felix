@@ -24,8 +24,6 @@ import org.apache.felix.framework.cache.JarContent;
 import org.apache.felix.framework.ext.ClassPathExtenderFactory;
 import org.apache.felix.framework.util.ClassParser;
 import org.apache.felix.framework.util.FelixConstants;
-import org.apache.felix.framework.util.ImmutableList;
-import org.apache.felix.framework.util.ImmutableMap;
 import org.apache.felix.framework.util.StringMap;
 import org.apache.felix.framework.util.Util;
 import org.apache.felix.framework.util.manifestparser.ManifestParser;
@@ -973,7 +971,7 @@ class ExtensionManager implements Content
             List<BundleCapability> newCaps = new ArrayList<BundleCapability>(m_capabilities.size() + caps.size());
             newCaps.addAll(m_capabilities);
             newCaps.addAll(caps);
-            m_capabilities = ImmutableList.newInstance(newCaps);
+            m_capabilities = Util.newImmutableList(newCaps);
             m_headerMap.put(Constants.EXPORT_PACKAGE, convertCapabilitiesToHeaders(newCaps));
         }
 
@@ -1030,7 +1028,7 @@ class ExtensionManager implements Content
         @Override
         public Map getHeaders()
         {
-            return ImmutableMap.newInstance(m_headerMap);
+            return Util.newImmutableMap(m_headerMap);
         }
 
         @Override
