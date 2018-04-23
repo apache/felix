@@ -23,7 +23,6 @@ import org.osgi.annotation.versioning.ProviderType;
  *
  * @param <T> Either {@link Converting} or {@link Specifying}.
  * @author $Id$
- * @NotThreadSafe
  */
 @ProviderType
 public interface Specifying<T extends Specifying<T>> {

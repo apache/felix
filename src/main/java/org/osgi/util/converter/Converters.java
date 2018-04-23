@@ -20,7 +20,6 @@ package org.osgi.util.converter;
  * Factory class to obtain the standard converter or a new converter builder.
  *
  * @author $Id$
- * @ThreadSafe
  */
 public class Converters {
 	private static final Converter CONVERTER;
