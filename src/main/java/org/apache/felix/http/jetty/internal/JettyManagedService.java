@@ -20,12 +20,9 @@ package org.apache.felix.http.jetty.internal;
 
 import java.util.Dictionary;
 
-import org.osgi.framework.Bundle;
-import org.osgi.framework.ServiceFactory;
-import org.osgi.framework.ServiceRegistration;
 import org.osgi.service.cm.ManagedService;
 
-public class JettyManagedService implements ServiceFactory<ManagedService>
+public class JettyManagedService implements ManagedService
 {
 
     private final JettyService jettyService;
@@ -36,22 +33,8 @@ public class JettyManagedService implements ServiceFactory<ManagedService>
     }
 
     @Override
-    public ManagedService getService(Bundle bundle, ServiceRegistration<ManagedService> registration)
+    public void updated(Dictionary<String, ?> properties)
     {
-        return new ManagedService()
-        {
-            @Override
-            public void updated(Dictionary<String, ?> properties)
-            {
-                jettyService.updated(properties);
-            }
-        };
+        jettyService.updated(properties);
     }
-
-    @Override
-    public void ungetService(Bundle bundle, ServiceRegistration<ManagedService> registration, ManagedService service)
-    {
-        // just have the reference dropped, nothing to cleanup
-    }
-
 }

@@ -21,6 +21,7 @@ package org.apache.felix.http.jetty.internal;
 import java.io.InputStream;
 import java.util.ArrayList;
 
+import org.eclipse.jetty.server.session.HouseKeeper;
 import org.osgi.framework.Bundle;
 import org.osgi.service.metatype.AttributeDefinition;
 import org.osgi.service.metatype.MetaTypeProvider;
@@ -56,7 +57,7 @@ class ConfigMetaTypeProvider implements MetaTypeProvider
             return null;
         }
 
-        final ArrayList<AttributeDefinition> adList = new ArrayList<AttributeDefinition>();
+        final ArrayList<AttributeDefinition> adList = new ArrayList<>();
 
         adList.add(new AttributeDefinitionImpl(JettyConfig.FELIX_HOST,
                 "Host Name",
@@ -91,8 +92,8 @@ class ConfigMetaTypeProvider implements MetaTypeProvider
 
         adList.add(new AttributeDefinitionImpl(JettyConfig.HTTPS_PORT,
                 "HTTPS Port",
-                "Port to listen on for HTTPS requests. Defaults to 433.",
-                433,
+                "Port to listen on for HTTPS requests. Defaults to 443.",
+                443,
                 bundle.getBundleContext().getProperty(JettyConfig.HTTPS_PORT)));
 
         adList.add(new AttributeDefinitionImpl(JettyConfig.FELIX_KEYSTORE,
@@ -315,6 +316,12 @@ class ConfigMetaTypeProvider implements MetaTypeProvider
                 -1,
                 bundle.getBundleContext().getProperty(JettyConfig.FELIX_JETTY_SERVLET_SESSION_MAX_AGE)));
 
+        adList.add(new AttributeDefinitionImpl(JettyConfig.FELIX_JETTY_SERVLET_SESSION_MAX_AGE,
+                "Session Scavenging Interval",
+                "Interval of session scavenging in seconds. Default is " + String.valueOf(HouseKeeper.DEFAULT_PERIOD_MS / 1000),
+                HouseKeeper.DEFAULT_PERIOD_MS / 1000,
+                bundle.getBundleContext().getProperty(JettyConfig.FELIX_JETTY_SESSION_SCAVENGING_INTERVAL)));
+
         adList.add(new AttributeDefinitionImpl(JettyConfig.FELIX_HTTP_SERVICE_NAME,
                 "HTTP Service Name",
                 "HTTP Service Name used in service filter to target specific HTTP instance. Default is null.",
@@ -384,6 +391,12 @@ class ConfigMetaTypeProvider implements MetaTypeProvider
         AttributeDefinitionImpl( final String id, final String name, final String description, final String defaultValue, final String overrideValue )
         {
             this( id, name, description, STRING, defaultValue == null ? null : new String[] { defaultValue }, 0, null, null, overrideValue == null ? null : new String[] { overrideValue } );
+        }
+
+        AttributeDefinitionImpl( final String id, final String name, final String description, final long defaultValue, final String overrideValue )
+        {
+            this( id, name, description, LONG, new String[]
+                { String.valueOf(defaultValue) }, 0, null, null, overrideValue == null ? null : new String[] { overrideValue } );
         }
 
         AttributeDefinitionImpl( final String id, final String name, final String description, final int defaultValue, final String overrideValue )

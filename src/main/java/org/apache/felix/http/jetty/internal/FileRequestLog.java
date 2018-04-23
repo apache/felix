@@ -16,18 +16,19 @@
  */
 package org.apache.felix.http.jetty.internal;
 
-import org.apache.felix.http.base.internal.logger.SystemLogger;
-import org.eclipse.jetty.server.*;
-import org.osgi.framework.BundleContext;
-import org.osgi.framework.ServiceRegistration;
-
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
-import java.nio.file.attribute.PosixFilePermission;
 import java.nio.file.attribute.PosixFilePermissions;
 import java.util.Dictionary;
 import java.util.Hashtable;
+
+import org.apache.felix.http.base.internal.logger.SystemLogger;
+import org.eclipse.jetty.server.AsyncNCSARequestLog;
+import org.eclipse.jetty.server.NCSARequestLog;
+import org.eclipse.jetty.server.RequestLog;
+import org.osgi.framework.BundleContext;
+import org.osgi.framework.ServiceRegistration;
 
 class FileRequestLog {
 
