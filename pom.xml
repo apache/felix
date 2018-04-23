@@ -50,8 +50,11 @@
                             org.apache.felix.http.bridge.internal.BridgeActivator
                         </Bundle-Activator>
                         <Export-Package>
-                            org.apache.felix.http.api,
-                            org.osgi.service.http.*;-split-package:=merge-first
+                            org.osgi.service.http,
+                            org.osgi.service.http.context,
+                            org.osgi.service.http.runtime,
+                            org.osgi.service.http.runtime.dto,
+                            org.osgi.service.http.whiteboard
                         </Export-Package>
                         <Private-Package>
                             org.apache.felix.http.base.*,
@@ -86,9 +89,16 @@
             <artifactId>osgi.core</artifactId>
         </dependency>
         <dependency>
-            <groupId>org.apache.felix</groupId>
-            <artifactId>org.apache.felix.http.api</artifactId>
-            <version>3.0.1-R7-SNAPSHOT</version>
+            <groupId>org.osgi</groupId>
+            <artifactId>org.osgi.service.http</artifactId>
+            <version>1.2.1</version>
+           <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.osgi</groupId>
+            <artifactId>org.osgi.service.http.whiteboard</artifactId>
+            <version>1.1.0</version>
+            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>commons-fileupload</groupId>
