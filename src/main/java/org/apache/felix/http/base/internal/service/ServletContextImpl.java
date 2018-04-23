@@ -318,7 +318,7 @@ public class ServletContextImpl implements ExtServletContext
             return null;
         }
 
-        Set<String> set = new HashSet<String>();
+        Set<String> set = new HashSet<>();
         while (paths.hasMoreElements())
         {
             set.add(paths.nextElement());
@@ -342,7 +342,7 @@ public class ServletContextImpl implements ExtServletContext
     @Override
     public String getServletContextName()
     {
-        return this.context.getServletContextName();
+        return HttpServiceFactory.HTTP_SERVICE_CONTEXT_NAME;
     }
 
     @Override
@@ -403,6 +403,11 @@ public class ServletContextImpl implements ExtServletContext
     public boolean handleSecurity(HttpServletRequest req, HttpServletResponse res) throws IOException
     {
         return this.httpContext.handleSecurity(req, res);
+    }
+
+    @Override
+    public void finishSecurity(HttpServletRequest req, HttpServletResponse res) {
+        // nothing to do
     }
 
     @Override

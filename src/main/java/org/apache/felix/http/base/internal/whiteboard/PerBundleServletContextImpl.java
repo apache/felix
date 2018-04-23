@@ -82,6 +82,12 @@ public class PerBundleServletContextImpl implements ExtServletContext {
     }
 
     @Override
+    public void finishSecurity(HttpServletRequest req, HttpServletResponse res)
+    {
+        this.contextHelper.finishSecurity(req, res);
+    }
+
+    @Override
     public HttpSessionListener getHttpSessionListener()
     {
         return this.eventListenerRegistry;

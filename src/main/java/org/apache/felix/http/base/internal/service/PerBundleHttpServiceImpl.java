@@ -20,37 +20,31 @@ import java.util.Dictionary;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
 
-import javax.servlet.Filter;
 import javax.servlet.Servlet;
 import javax.servlet.ServletContext;
 import javax.servlet.ServletException;
 
-import org.apache.felix.http.api.ExtHttpService;
 import org.apache.felix.http.base.internal.context.ExtServletContext;
-import org.apache.felix.http.base.internal.handler.FilterHandler;
-import org.apache.felix.http.base.internal.handler.HttpServiceFilterHandler;
 import org.apache.felix.http.base.internal.logger.SystemLogger;
-import org.apache.felix.http.base.internal.runtime.FilterInfo;
 import org.apache.felix.http.base.internal.runtime.ServletInfo;
 import org.apache.felix.http.base.internal.util.PatternUtil;
 import org.osgi.framework.Bundle;
 import org.osgi.service.http.HttpContext;
+import org.osgi.service.http.HttpService;
 import org.osgi.service.http.NamespaceException;
 
 /**
- * This implementation of the {@link ExtHttpService} implements the front end
+ * This implementation of the {@link HttpService} implements the front end
  * used by client bundles. It performs the validity checks and passes the
  * real operation to the shared http service.
  */
-public final class PerBundleHttpServiceImpl implements ExtHttpService
+public final class PerBundleHttpServiceImpl implements HttpService
 {
     private final Bundle bundle;
-    private final Set<Servlet> localServlets = new HashSet<Servlet>();
-    private final Set<FilterHandler> localFilters = new HashSet<FilterHandler>();
+    private final Set<Servlet> localServlets = new HashSet<>();
     private final ServletContextManager contextManager;
     private final SharedHttpServiceImpl sharedHttpService;
 
@@ -80,56 +74,6 @@ public final class PerBundleHttpServiceImpl implements ExtHttpService
     public HttpContext createDefaultHttpContext()
     {
         return new DefaultHttpContext(this.bundle);
-    }
-
-    /**
-     * @see org.apache.felix.http.api.ExtHttpService#registerFilter(javax.servlet.Filter, java.lang.String, java.util.Dictionary, int, org.osgi.service.http.HttpContext)
-     */
-    @Override
-    public void registerFilter(final Filter filter,
-            final String pattern,
-            final Dictionary initParams,
-            final int ranking,
-            final HttpContext context)
-    throws ServletException
-    {
-        if (filter == null)
-        {
-            throw new IllegalArgumentException("Filter must not be null");
-        }
-
-        final Map<String, String> paramMap = new HashMap<String, String>();
-        if (initParams != null && initParams.size() > 0)
-        {
-            Enumeration e = initParams.keys();
-            while (e.hasMoreElements())
-            {
-                Object key = e.nextElement();
-                Object value = initParams.get(key);
-
-                if ((key instanceof String) && (value instanceof String))
-                {
-                    paramMap.put((String) key, (String) value);
-                }
-            }
-        }
-
-        final FilterInfo filterInfo = new FilterInfo(String.format("%s_%d", filter.getClass(), this.hashCode()), pattern, ranking, paramMap);
-        if (!filterInfo.isValid())
-        {
-            throw new ServletException("Invalid registration information for filter.");
-        }
-
-        final ExtServletContext httpContext = getServletContext(context);
-        final FilterHandler holder = new HttpServiceFilterHandler(httpContext, filterInfo, filter);
-
-        if ( this.sharedHttpService.registerFilter(holder) )
-        {
-            synchronized ( this.localFilters )
-            {
-                this.localFilters.add(holder);
-            }
-        }
     }
 
     /**
@@ -174,7 +118,7 @@ public final class PerBundleHttpServiceImpl implements ExtHttpService
             throw new IllegalArgumentException("Malformed servlet alias [" + alias + "]");
         }
 
-        final Map<String, String> paramMap = new HashMap<String, String>();
+        final Map<String, String> paramMap = new HashMap<>();
         if (initParams != null && initParams.size() > 0)
         {
             Enumeration e = initParams.keys();
@@ -238,40 +182,14 @@ public final class PerBundleHttpServiceImpl implements ExtHttpService
 
     public void unregisterAll()
     {
-        final Set<Servlet> servlets = new HashSet<Servlet>(this.localServlets);
+        final Set<Servlet> servlets = new HashSet<>(this.localServlets);
         for (final Servlet servlet : servlets)
         {
-            unregisterServlet(servlet, false);
-        }
-
-        final Set<FilterHandler> filters = new HashSet<FilterHandler>(this.localFilters);
-        for (final FilterHandler holder : filters)
-        {
-            this.sharedHttpService.unregisterFilter(holder, false);
+            unregisterServlet(servlet);
         }
     }
 
-    /**
-     * Old whiteboard support
-     * @see org.apache.felix.http.api.ExtHttpService#unregisterFilter(javax.servlet.Filter)
-     */
-    @Override
-    public void unregisterFilter(final Filter filter)
-    {
-        this.unregisterFilter(filter, true);
-    }
-
-    /**
-     * Old whiteboard support
-     * @see org.apache.felix.http.api.ExtHttpService#unregisterServlet(javax.servlet.Servlet)
-     */
-    @Override
-    public void unregisterServlet(final Servlet servlet)
-    {
-        this.unregisterServlet(servlet, true);
-    }
-
-    private void unregisterServlet(final Servlet servlet, final boolean destroy)
+    private void unregisterServlet(final Servlet servlet)
     {
         if (servlet != null)
         {
@@ -279,7 +197,7 @@ public final class PerBundleHttpServiceImpl implements ExtHttpService
             {
                 this.localServlets.remove(servlet);
             }
-            this.sharedHttpService.unregisterServlet(servlet, destroy);
+            this.sharedHttpService.unregisterServlet(servlet);
         }
     }
 
@@ -291,27 +209,6 @@ public final class PerBundleHttpServiceImpl implements ExtHttpService
         }
 
         return this.contextManager.getServletContext(context);
-    }
-
-    private void unregisterFilter(final Filter filter, final boolean destroy)
-    {
-        if (filter != null)
-        {
-            synchronized ( this.localFilters )
-            {
-                final Iterator<FilterHandler> i = this.localFilters.iterator();
-                while ( i.hasNext() )
-                {
-                    final FilterHandler h = i.next();
-                    if ( h.getFilter() == filter )
-                    {
-                        this.sharedHttpService.unregisterFilter(h, destroy);
-                        i.remove();
-                        break;
-                    }
-                }
-            }
-        }
     }
 
     private boolean isNameValid(final String name)

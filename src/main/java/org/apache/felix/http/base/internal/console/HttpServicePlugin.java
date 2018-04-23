@@ -84,8 +84,8 @@ public class HttpServicePlugin extends HttpServlet
 
     public void register()
     {
-        Dictionary<String, Object> props = new Hashtable<String, Object>();
-        props.put(Constants.SERVICE_VENDOR, "Apache Software Foundation");
+        final Dictionary<String, Object> props = new Hashtable<>();
+        props.put(Constants.SERVICE_VENDOR, "The Apache Software Foundation");
         props.put(Constants.SERVICE_DESCRIPTION, "HTTP Service Web Console Plugin");
         props.put("felix.webconsole.label", "httpservice");
         props.put("felix.webconsole.title", "HTTP Service");
@@ -511,7 +511,7 @@ public class HttpServicePlugin extends HttpServlet
                 sb.append("${link#}\n");
             }
 
-            final List<String> patterns = new ArrayList<String>();
+            final List<String> patterns = new ArrayList<>();
             patterns.addAll(Arrays.asList(filter.patterns));
             patterns.addAll(Arrays.asList(filter.regexs));
             for(final String name : filter.servletNames)
@@ -578,7 +578,7 @@ public class HttpServicePlugin extends HttpServlet
                 sb.append("${link#}\n");
             }
 
-            final List<String> patterns = new ArrayList<String>();
+            final List<String> patterns = new ArrayList<>();
             patterns.addAll(Arrays.asList(filter.patterns));
             patterns.addAll(Arrays.asList(filter.regexs));
             for(final String name : filter.servletNames)
@@ -1050,7 +1050,7 @@ public class HttpServicePlugin extends HttpServlet
                 pw.println("Filters");
                 for (final FilterDTO filter : ctxDto.filterDTOs)
                 {
-                    final List<String> patterns = new ArrayList<String>();
+                    final List<String> patterns = new ArrayList<>();
                     patterns.addAll(Arrays.asList(filter.patterns));
                     patterns.addAll(Arrays.asList(filter.regexs));
                     for(final String name : filter.servletNames)
@@ -1110,7 +1110,7 @@ public class HttpServicePlugin extends HttpServlet
                 pw.println("Error Pages");
                 for (final ErrorPageDTO ep : ctxDto.errorPageDTOs)
                 {
-                    final List<String> patterns = new ArrayList<String>();
+                    final List<String> patterns = new ArrayList<>();
                     for(final long p : ep.errorCodes)
                     {
                         patterns.add(String.valueOf(p));
@@ -1213,7 +1213,7 @@ public class HttpServicePlugin extends HttpServlet
             pw.println("Failed Filters");
             for (final FailedFilterDTO filter : dto.failedFilterDTOs)
             {
-                final List<String> patterns = new ArrayList<String>();
+                final List<String> patterns = new ArrayList<>();
                 patterns.addAll(Arrays.asList(filter.patterns));
                 patterns.addAll(Arrays.asList(filter.regexs));
                 for(final String name : filter.servletNames)
@@ -1277,7 +1277,7 @@ public class HttpServicePlugin extends HttpServlet
             pw.println("Failed Error Pages");
             for (final FailedErrorPageDTO ep : dto.failedErrorPageDTOs)
             {
-                final List<String> patterns = new ArrayList<String>();
+                final List<String> patterns = new ArrayList<>();
                 for(final long p : ep.errorCodes)
                 {
                     patterns.add(String.valueOf(p));

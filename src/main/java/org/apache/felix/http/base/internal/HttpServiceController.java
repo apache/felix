@@ -83,13 +83,12 @@ public final class HttpServiceController
 
                 @Override
                 public void sessionDestroyed(final HttpSessionEvent se) {
-                    registry.getRegistry(HttpServiceFactory.HTTP_SERVICE_CONTEXT_SERVICE_ID).getEventListenerRegistry().sessionDestroyed(se);
-                    whiteboardManager.sessionDestroyed(se.getSession(), HttpSessionWrapper.getSessionContextIds(se.getSession()));
+                    whiteboardManager.sessionDestroyed(se.getSession(), HttpSessionWrapper.getSessionContextNames(se.getSession()));
                 }
 
                 @Override
                 public void sessionCreated(final HttpSessionEvent se) {
-                    registry.getRegistry(HttpServiceFactory.HTTP_SERVICE_CONTEXT_SERVICE_ID).getEventListenerRegistry().sessionCreated(se);
+                    // nothing to do, session created event is sent from within the session
                 }
             };
         }
@@ -101,8 +100,8 @@ public final class HttpServiceController
         return new HttpSessionIdListener() {
 
             @Override
-            public void sessionIdChanged(final HttpSessionEvent event, String oldSessionId) {
-                whiteboardManager.sessionIdChanged(event, oldSessionId, HttpSessionWrapper.getSessionContextIds(event.getSession()));
+            public void sessionIdChanged(final HttpSessionEvent event, final String oldSessionId) {
+                whiteboardManager.sessionIdChanged(event, oldSessionId, HttpSessionWrapper.getSessionContextNames(event.getSession()));
             }
         };
     }

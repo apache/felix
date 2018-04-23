@@ -36,7 +36,7 @@ public final class SharedHttpServiceImpl
 {
     private final HandlerRegistry handlerRegistry;
 
-    private final Map<String, ServletHandler> aliasMap = new HashMap<String, ServletHandler>();
+    private final Map<String, ServletHandler> aliasMap = new HashMap<>();
 
     public SharedHttpServiceImpl(final HandlerRegistry handlerRegistry)
     {
@@ -98,7 +98,7 @@ public final class SharedHttpServiceImpl
         }
     }
 
-    public void unregisterServlet(final Servlet servlet, final boolean destroy)
+    public void unregisterServlet(final Servlet servlet)
     {
         if (servlet != null)
         {
@@ -110,7 +110,7 @@ public final class SharedHttpServiceImpl
                     final Map.Entry<String, ServletHandler> entry = i.next();
                     if (entry.getValue().getServlet() == servlet)
                     {
-                        this.handlerRegistry.getRegistry(entry.getValue().getContextServiceId()).unregisterServlet(entry.getValue().getServletInfo(), destroy);
+                        this.handlerRegistry.getRegistry(entry.getValue().getContextServiceId()).unregisterServlet(entry.getValue().getServletInfo(), false);
 
                         i.remove();
                         break;
@@ -121,15 +121,7 @@ public final class SharedHttpServiceImpl
         }
     }
 
-    public void unregisterFilter(final FilterHandler handler, final boolean destroy)
-    {
-        if (handler != null)
-        {
-            this.handlerRegistry.getRegistry(handler.getContextServiceId()).unregisterFilter(handler.getFilterInfo(), destroy);
-        }
-    }
-
-	public HandlerRegistry getHandlerRegistry() 
+	public HandlerRegistry getHandlerRegistry()
 	{
 		return this.handlerRegistry;
 	}

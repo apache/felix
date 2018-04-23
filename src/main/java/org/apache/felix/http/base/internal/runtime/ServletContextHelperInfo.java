@@ -33,11 +33,6 @@ import org.osgi.service.http.whiteboard.HttpWhiteboardConstants;
 public final class ServletContextHelperInfo extends AbstractInfo<ServletContextHelper>
 {
 
-    /**
-     * Properties starting with this prefix are passed as context init parameters.
-     */
-    private static final String CONTEXT_INIT_PREFIX = "context.init.";
-
     private final String name;
 
     private final String path;
@@ -52,7 +47,7 @@ public final class ServletContextHelperInfo extends AbstractInfo<ServletContextH
         super(ref);
         this.name = this.getStringProperty(ref, HttpWhiteboardConstants.HTTP_WHITEBOARD_CONTEXT_NAME);
         this.path = this.getStringProperty(ref, HttpWhiteboardConstants.HTTP_WHITEBOARD_CONTEXT_PATH);
-        this.initParams = getInitParams(ref, CONTEXT_INIT_PREFIX);
+        this.initParams = getInitParams(ref, HttpWhiteboardConstants.HTTP_WHITEBOARD_CONTEXT_INIT_PARAM_PREFIX);
     }
 
     public ServletContextHelperInfo(final int serviceRanking,

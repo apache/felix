@@ -48,6 +48,7 @@ public class InvocationChain implements FilterChain
     @Override
     public final void doFilter(@Nonnull final ServletRequest req, @Nonnull final  ServletResponse res) throws IOException, ServletException
     {
+        boolean callFinish = false;
         if ( this.index == -1 )
         {
             final HttpServletRequest hReq = (HttpServletRequest) req;
@@ -66,17 +67,33 @@ public class InvocationChain implements FilterChain
                 // we're done
                 return;
             }
+            else
+            {
+                callFinish = true;
+            }
         }
         this.index++;
 
-        if (this.index < this.filterHandlers.length)
+        try
         {
-            this.filterHandlers[this.index].handle(req, res, this);
+            if (this.index < this.filterHandlers.length)
+            {
+                this.filterHandlers[this.index].handle(req, res, this);
+            }
+            else
+            {
+                // Last entry in the chain...
+                this.servletHandler.handle(req, res);
+            }
         }
-        else
-        {
-            // Last entry in the chain...
-            this.servletHandler.handle(req, res);
+        finally {
+            if ( callFinish )
+            {
+                final HttpServletRequest hReq = (HttpServletRequest) req;
+                final HttpServletResponse hRes = (HttpServletResponse) res;
+
+                servletHandler.getContext().finishSecurity(hReq, hRes);
+            }
         }
     }
 }

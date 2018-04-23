@@ -16,13 +16,17 @@
  */
 package org.apache.felix.http.base.internal.handler;
 
+import java.io.FilePermission;
+
 import javax.servlet.Servlet;
 
 import org.apache.felix.http.base.internal.context.ExtServletContext;
 import org.apache.felix.http.base.internal.runtime.ServletInfo;
+import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceObjects;
 import org.osgi.framework.ServiceReference;
+import org.osgi.service.http.runtime.dto.DTOConstants;
 
 /**
  * Servlet handler for servlets registered through the http whiteboard.
@@ -31,18 +35,70 @@ public final class WhiteboardServletHandler extends ServletHandler
 {
     private final BundleContext bundleContext;
 
+    private final int multipartErrorCode;
+
+    private final Bundle multipartSecurityContext;
+
     public WhiteboardServletHandler(final long contextServiceId,
             final ExtServletContext context,
             final ServletInfo servletInfo,
-            final BundleContext bundleContext)
+            final BundleContext contextBundleContext,
+            final Bundle registeringBundle,
+            final Bundle httpWhiteboardBundle)
     {
         super(contextServiceId, context, servletInfo);
-        this.bundleContext = bundleContext;
+        this.bundleContext = contextBundleContext;
+        int errorCode = -1;
+        // if multipart upload is enabled and a security manager is active
+        // we need to check permissions
+        if ( this.getMultipartConfig() != null && System.getSecurityManager() != null )
+        {
+            final FilePermission writePerm = new FilePermission(this.getMultipartConfig().multipartLocation, "read,write,delete");
+            if ( servletInfo.getMultipartConfig().multipartLocation == null )
+            {
+                // Default location, whiteboard need writePerm, using bundle read perm
+                multipartSecurityContext = httpWhiteboardBundle;
+                if ( !httpWhiteboardBundle.hasPermission(writePerm))
+                {
+                    errorCode = DTOConstants.FAILURE_REASON_WHITEBOARD_WRITE_TO_DEFAULT_DENIED;
+                }
+                else
+                {
+                    final FilePermission readPerm = new FilePermission(this.getMultipartConfig().multipartLocation, "read");
+                    if ( !registeringBundle.hasPermission(readPerm) )
+                    {
+                        errorCode = DTOConstants.FAILURE_REASON_SERVLET_READ_FROM_DEFAULT_DENIED;
+                    }
+                }
+            }
+            else
+            {
+                multipartSecurityContext = registeringBundle;
+                // Provided location, whiteboard and using bundle need write perm
+                if ( !registeringBundle.hasPermission(writePerm) )
+                {
+                    errorCode = DTOConstants.FAILURE_REASON_SERVLET_WRITE_TO_LOCATION_DENIED;
+                }
+                if ( !httpWhiteboardBundle.hasPermission(writePerm) )
+                {
+                    errorCode = DTOConstants.FAILURE_REASON_WHITEBOARD_WRITE_TO_LOCATION_DENIED;
+                }
+            }
+        }
+        else
+        {
+            multipartSecurityContext = null;
+        }
+        multipartErrorCode = errorCode;
     }
 
     @Override
     public int init()
     {
+        if ( this.multipartErrorCode != -1 )
+        {
+            return this.multipartErrorCode;
+        }
         if ( this.useCount > 0 )
         {
             this.useCount++;
@@ -84,5 +140,11 @@ public final class WhiteboardServletHandler extends ServletHandler
             }
         }
         return false;
+    }
+
+    @Override
+    public Bundle getMultipartSecurityContext()
+    {
+        return multipartSecurityContext;
     }
 }

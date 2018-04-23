@@ -30,6 +30,8 @@ public interface ExtServletContext extends ServletContext
 {
     boolean handleSecurity(HttpServletRequest req, HttpServletResponse res) throws IOException;
 
+    void finishSecurity(HttpServletRequest req, HttpServletResponse res);
+
     HttpSessionAttributeListener getHttpSessionAttributeListener();
 
     HttpSessionListener getHttpSessionListener();

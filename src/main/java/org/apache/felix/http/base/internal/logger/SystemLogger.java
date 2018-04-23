@@ -18,51 +18,144 @@
  */
 package org.apache.felix.http.base.internal.logger;
 
+import java.lang.reflect.Array;
+
+import org.osgi.framework.Bundle;
+import org.osgi.framework.BundleContext;
+import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceReference;
 import org.osgi.service.log.LogService;
 
 public final class SystemLogger
 {
-    private final static LogService NOP = new NopLogger();
-    private static LogService LOGGER;
+    private static volatile LogServiceEnabledLogger LOGGER;
 
-    public static void setLogService(LogService service)
-    {
-        LOGGER = service;
+    public static void init(final BundleContext bundleContext) {
+        LOGGER = new LogServiceEnabledLogger(bundleContext);
     }
 
-    private static LogService getLogger()
-    {
-        return LOGGER != null ? LOGGER : NOP;
+    public static void destroy() {
+        if ( LOGGER != null ) {
+            LOGGER.close();
+            LOGGER = null;
+        }
     }
 
-    public static void debug(String message)
+    private static String getMessage(final ServiceReference<?> ref, final String message)
     {
-        getLogger().log(LogService.LOG_DEBUG, message);
+        if ( ref == null )
+        {
+            return message;
+        }
+        final Bundle bundle = ref.getBundle();
+        final StringBuilder ib = new StringBuilder();
+        ib.append("[ServiceReference ");
+        ib.append(String.valueOf(ref.getProperty(Constants.SERVICE_ID)));
+        ib.append(" from bundle ");
+        if ( bundle == null )
+        {
+            ib.append("<uninstalled>");
+        }
+        else
+        {
+            ib.append(bundle.getBundleId());
+            if ( bundle.getSymbolicName() != null )
+            {
+                ib.append(" : ");
+                ib.append(bundle.getSymbolicName());
+                ib.append(":");
+                ib.append(bundle.getVersion());
+            }
+        }
+        ib.append(" ref=");
+        ib.append(ref);
+        ib.append(" properties={");
+        boolean first = true;
+        for(final String name : ref.getPropertyKeys())
+        {
+            if ( first )
+            {
+                first = false;
+            }
+            else
+            {
+                ib.append(", ");
+            }
+            final Object val = ref.getProperty(name);
+            ib.append(name);
+            ib.append("=");
+            if ( val.getClass().isArray() )
+            {
+                boolean fa = true;
+                ib.append('[');
+                for(int i=0;i<Array.getLength(val);i++)
+                {
+                    if ( fa )
+                    {
+                        fa = false;
+                    }
+                    else
+                    {
+                        ib.append(", ");
+                    }
+                    ib.append(Array.get(val, i));
+                }
+            ib.append(']');
+            }
+            else
+            {
+                ib.append(val);
+            }
+        }
+        ib.append("}] ");
+        ib.append(message);
+
+        return ib.toString();
     }
 
-    public static void debug(String message, Throwable cause)
-    {
-        getLogger().log(LogService.LOG_DEBUG, message, cause);
+    private static void log(
+            final int level,
+            final ServiceReference<?> ref,
+            final String message,
+            final Throwable cause) {
+        final LogServiceEnabledLogger l = LOGGER;
+        if ( l != null ) {
+            l.log(level, getMessage(ref, message), cause);
+        }
     }
 
-    public static void info(String message)
+    public static void debug(final String message)
     {
-        getLogger().log(LogService.LOG_INFO, message);
+        log(LogService.LOG_DEBUG, null, message, null);
     }
 
-    public static void warning(String message, Throwable cause)
+    public static void debug(final ServiceReference<?> ref,  final String message)
     {
-        getLogger().log(LogService.LOG_WARNING, message, cause);
+        log(LogService.LOG_DEBUG, ref, message, null);
     }
 
-    public static void error(String message, Throwable cause)
+    public static void debug(final String message, final Throwable cause)
     {
-        getLogger().log(LogService.LOG_ERROR, message, cause);
+        log(LogService.LOG_DEBUG, null, message, cause);
     }
 
-    public static void error(ServiceReference<?> ref, String message, Throwable cause)
+    public static void info(final String message)
     {
-        getLogger().log(ref, LogService.LOG_ERROR, message, cause);
+        log(LogService.LOG_INFO, null, message, null);
+    }
+
+    public static void warning(final String message, final Throwable cause)
+    {
+        log(LogService.LOG_WARNING, null, message, cause);
+    }
+
+    public static void error(final String message, final Throwable cause)
+    {
+        log(LogService.LOG_ERROR, null, message, cause);
+    }
+
+    public static void error(final ServiceReference<?> ref, final String message, final Throwable cause)
+    {
+        log(LogService.LOG_ERROR, ref, message, cause);
     }
 }
