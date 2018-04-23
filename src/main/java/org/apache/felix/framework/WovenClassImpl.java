@@ -25,13 +25,12 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.ListIterator;
 
-import org.apache.felix.framework.util.ImmutableList;
+import org.apache.felix.framework.util.Util;
 import org.apache.felix.framework.util.manifestparser.ManifestParser;
 import org.osgi.framework.AdminPermission;
 import org.osgi.framework.PackagePermission;
 import org.osgi.framework.hooks.weaving.WovenClass;
 import org.osgi.framework.wiring.BundleRequirement;
-import org.osgi.framework.wiring.BundleRevision;
 import org.osgi.framework.wiring.BundleWiring;
 
 class WovenClassImpl implements WovenClass, List<String>
@@ -63,8 +62,8 @@ class WovenClassImpl implements WovenClass, List<String>
 
     synchronized void completeImports(List<String> imports)
     {
-        m_imports = (imports == null) ? ImmutableList.newInstance(m_imports)
-                : ImmutableList.newInstance(imports);
+        m_imports = (imports == null) ? Util.newImmutableList(m_imports)
+                : Util.newImmutableList(imports);
     }
 
     synchronized void completeDefine(Class definedClass)
