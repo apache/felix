@@ -23,7 +23,6 @@ import org.osgi.annotation.versioning.ProviderType;
  * Converting interface that has methods to specify the target type.
  *
  * @author $Id$
- * @ThreadSafe
  */
 @ProviderType
 public interface Converter {

@@ -35,7 +35,6 @@ import org.osgi.annotation.versioning.ConsumerType;
  *
  * @param <T> The target type for the conversion.
  * @author $Id$
- * @Immutable
  */
 @ConsumerType
 public class TypeReference<T> {
