@@ -99,7 +99,6 @@
                     </execution>
                 </executions>
             </plugin>
-            
         </plugins>
     </build>
 
@@ -137,12 +136,4 @@
             <scope>test</scope>            
         </dependency>
     </dependencies>
-    
-    <repositories>
-        <repository>
-            <id>osgi-snapshots</id>
-            <name>OSGi Snapshot Repository</name>
-            <url>https://oss.sonatype.org/content/repositories/osgi/</url>
-        </repository>
-    </repositories>    
 </project>
