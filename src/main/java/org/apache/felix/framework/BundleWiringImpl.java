@@ -24,7 +24,6 @@ import org.apache.felix.framework.capabilityset.SimpleFilter;
 import org.apache.felix.framework.resolver.ResourceNotFoundException;
 import org.apache.felix.framework.util.CompoundEnumeration;
 import org.apache.felix.framework.util.FelixConstants;
-import org.apache.felix.framework.util.ImmutableList;
 import org.apache.felix.framework.util.SecurityManagerEx;
 import org.apache.felix.framework.util.Util;
 import org.apache.felix.framework.util.manifestparser.ManifestParser;
@@ -188,7 +187,7 @@ public class BundleWiringImpl implements BundleWiring
         m_revision = revision;
         m_importedPkgs = importedPkgs;
         m_requiredPkgs = requiredPkgs;
-        m_wires = ImmutableList.newInstance(wires);
+        m_wires =  Util.newImmutableList(wires);
 
         // We need to sort the fragments and add ourself as a dependent of each one.
         // We also need to create an array of fragment contents to attach to our
@@ -273,7 +272,7 @@ public class BundleWiringImpl implements BundleWiring
                 }
             }
         }
-        m_resolvedReqs = ImmutableList.newInstance(reqList);
+        m_resolvedReqs = Util.newImmutableList(reqList);
 
         // Calculate resolved list of capabilities, which includes:
         // 1. All capabilities from host and any fragments except for exported
@@ -415,7 +414,7 @@ public class BundleWiringImpl implements BundleWiring
             }
         }
 
-        m_resolvedCaps = ImmutableList.newInstance(capList);
+        m_resolvedCaps = Util.newImmutableList(capList);
         m_includedPkgFilters = (includedPkgFilters.isEmpty())
                 ? Collections.EMPTY_MAP : includedPkgFilters;
         m_excludedPkgFilters = (excludedPkgFilters.isEmpty())
@@ -441,7 +440,7 @@ public class BundleWiringImpl implements BundleWiring
         // We need to return null here if we don't have any libraries, since a
         // zero-length array is used to indicate that matching native libraries
         // could not be found when resolving the bundle.
-        m_resolvedNativeLibs = (libList.isEmpty()) ? null : ImmutableList.newInstance(libList);
+        m_resolvedNativeLibs = (libList.isEmpty()) ? null : Util.newImmutableList(libList);
 
         ClassLoader bootLoader = m_defBootClassLoader;
         if (revision.getBundle().getBundleId() != 0)
@@ -461,12 +460,11 @@ public class BundleWiringImpl implements BundleWiring
         m_implicitBootDelegation =
             (m_configMap.get(FelixConstants.IMPLICIT_BOOT_DELEGATION_PROP) == null)
             || Boolean.valueOf(
-                    (String) m_configMap.get(
-                            FelixConstants.IMPLICIT_BOOT_DELEGATION_PROP)).booleanValue();
+                (String) m_configMap.get(
+                    FelixConstants.IMPLICIT_BOOT_DELEGATION_PROP));
 
         m_useLocalURLs =
-                (m_configMap.get(FelixConstants.USE_LOCALURLS_PROP) == null)
-                ? false : true;
+            m_configMap.get(FelixConstants.USE_LOCALURLS_PROP) != null;
     }
 
     private static List<List<String>> parsePkgFilters(BundleCapability cap, String filtername)
@@ -686,7 +684,7 @@ public class BundleWiringImpl implements BundleWiring
         // Technically, there is a window here where readers won't see
         // both values updates at the same time, but it seems unlikely
         // to cause any issues.
-        m_wires = ImmutableList.newInstance(wires);
+        m_wires = Util.newImmutableList(wires);
     }
 
     @Override
@@ -761,7 +759,7 @@ public class BundleWiringImpl implements BundleWiring
                 {
                     entries.add(e.nextElement());
                 }
-                return ImmutableList.newInstance(entries);
+                return  Util.newImmutableList(entries);
             }
             return Collections.EMPTY_LIST;
         }
