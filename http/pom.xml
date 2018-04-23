@@ -22,7 +22,7 @@
     <parent>
         <groupId>org.apache.felix</groupId>
         <artifactId>felix-parent</artifactId>
-        <version>4</version>
+        <version>5</version>
         <relativePath>../pom/pom.xml</relativePath>
     </parent>
 
@@ -38,12 +38,7 @@
         <url>http://svn.apache.org/viewvc/felix/trunk/http/</url>
     </scm>
     
-    <prerequisites>
-    	<maven>3.0.5</maven>
-    </prerequisites>
-
     <modules>
-        <module>api</module>
         <module>servlet-api</module>
         <module>base</module>
         <module>bridge</module>
