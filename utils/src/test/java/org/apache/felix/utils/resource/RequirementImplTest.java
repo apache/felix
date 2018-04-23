@@ -21,6 +21,8 @@ package org.apache.felix.utils.resource;
 import junit.framework.TestCase;
 
 import org.mockito.Mockito;
+import org.osgi.framework.Constants;
+import org.osgi.resource.Requirement;
 import org.osgi.resource.Resource;
 
 import java.util.Collections;
@@ -85,5 +87,21 @@ public class RequirementImplTest extends TestCase {
 
         RequirementImpl r3 = new RequirementImpl(res1, r);
         assertEquals(r, r3);
+    }
+
+    public void testOptional() {
+        RequirementImpl r1 = new RequirementImpl(null, "foo", Collections.singletonMap(Constants.RESOLUTION_DIRECTIVE, Constants.RESOLUTION_OPTIONAL), null);
+        assertTrue(r1.isOptional());
+
+        RequirementImpl r2 = new RequirementImpl(null, "bar", null, null);
+        assertFalse(r2.isOptional());
+
+        assertTrue(RequirementImpl.isOptional(r1));
+        assertFalse(RequirementImpl.isOptional(r2));
+
+        Requirement r3 = Mockito.mock(Requirement.class);
+        Mockito.when(r3.getDirectives()).thenReturn(Collections.singletonMap(Constants.RESOLUTION_DIRECTIVE, Constants.RESOLUTION_OPTIONAL));
+        assertTrue(RequirementImpl.isOptional(r3));
+        assertFalse(RequirementImpl.isOptional(Mockito.mock(Requirement.class)));
     }
 }
