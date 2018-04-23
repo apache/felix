@@ -29,7 +29,7 @@
     <name>Apache Felix Http Bridge</name>
     <description>This is an implementation of the OSGi Http Service and the OSGi Http Whiteboard Specification used when run as a web application</description>
     <artifactId>org.apache.felix.http.bridge</artifactId>
-    <version>3.0.19-R7-SNAPSHOT</version>
+    <version>3.0.19-SNAPSHOT</version>
     <packaging>bundle</packaging>
 
     <scm>
@@ -113,7 +113,7 @@
         <dependency>
             <groupId>org.apache.felix</groupId>
             <artifactId>org.apache.felix.http.base</artifactId>
-            <version>3.0.19-R7-SNAPSHOT</version>
+            <version>3.0.19-SNAPSHOT</version>
         </dependency>
     </dependencies>
 
