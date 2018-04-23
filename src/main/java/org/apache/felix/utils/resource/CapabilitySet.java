@@ -16,6 +16,12 @@
  */
 package org.apache.felix.utils.resource;
 
+import org.apache.felix.utils.version.VersionTable;
+import org.osgi.framework.Constants;
+import org.osgi.framework.Version;
+import org.osgi.resource.Capability;
+import org.osgi.resource.Requirement;
+
 import java.lang.reflect.Array;
 import java.lang.reflect.Constructor;
 import java.util.ArrayList;
@@ -28,11 +34,6 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 import java.util.TreeMap;
-
-import org.apache.felix.utils.version.VersionTable;
-import org.osgi.framework.Constants;
-import org.osgi.framework.Version;
-import org.osgi.resource.Capability;
 
 @SuppressWarnings("rawtypes")
 public class CapabilitySet {
@@ -199,6 +200,17 @@ public class CapabilitySet {
         }
 
         return matches;
+    }
+
+    public static boolean matches(Capability capability, Requirement requirement) {
+        if (requirement.getNamespace().equals(capability.getNamespace())) {
+            String filter = requirement.getDirectives().get(Constants.FILTER_DIRECTIVE);
+            if (filter != null) {
+                return matches(capability, SimpleFilter.parse(filter));
+            }
+            return true;
+        }
+        return false;
     }
 
     public static boolean matches(Capability cap, SimpleFilter sf) {

@@ -90,4 +90,18 @@ public class RequirementImpl extends AbstractCapabilityRequirement implements Re
         return filter;
     }
 
+    /**
+     * Utility method to check wether a requirment is optional. This method works with any
+     * object implementing the requirement interface.
+     *
+     * @param requirement A requirement
+     * @return {@code true} if the requirement it optional, {@code false} otherwise.
+     */
+    public static boolean isOptional(Requirement requirement) {
+        if (requirement instanceof RequirementImpl) {
+            return ((RequirementImpl) requirement).isOptional();
+        }
+
+        return Constants.RESOLUTION_OPTIONAL.equals(requirement.getDirectives().get(Constants.RESOLUTION_DIRECTIVE));
+    }
 }
