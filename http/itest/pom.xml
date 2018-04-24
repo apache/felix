@@ -21,7 +21,7 @@
 
 	<name>Apache Felix Http Integration Tests</name>
 	<artifactId>org.apache.felix.http.itest</artifactId>
-	<version>0.0.3-R7-SNAPSHOT</version>
+	<version>0.0.3-SNAPSHOT</version>
 	<packaging>jar</packaging>
 
 	<scm>
