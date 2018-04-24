@@ -32,6 +32,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Objects;
 import java.util.Set;
 import java.util.TreeMap;
 
@@ -203,14 +204,8 @@ public class CapabilitySet {
     }
 
     public static boolean matches(Capability capability, Requirement requirement) {
-        if (requirement.getNamespace().equals(capability.getNamespace())) {
-            String filter = requirement.getDirectives().get(Constants.FILTER_DIRECTIVE);
-            if (filter != null) {
-                return matches(capability, SimpleFilter.parse(filter));
-            }
-            return true;
-        }
-        return false;
+        return Objects.equals(capability.getNamespace(), requirement.getNamespace())
+                && matches(capability, RequirementImpl.getFilter(requirement));
     }
 
     public static boolean matches(Capability cap, SimpleFilter sf) {

@@ -73,7 +73,11 @@ public class RequirementImpl extends AbstractCapabilityRequirement implements Re
 
     public RequirementImpl(Resource resource, String path, Map<String, String> dirs, Map<String, Object> attrs, SimpleFilter sf) {
         super(resource, path, dirs, attrs);
-        this.filter = sf != null ? sf : SimpleFilter.convert(attributes);
+        if (sf == null) {
+            this.filter = getFilter(directives, attributes);
+        } else {
+            this.filter = sf;
+        }
         // Find resolution import directives.
         this.optional = Constants.RESOLUTION_OPTIONAL.equals(directives.get(Constants.RESOLUTION_DIRECTIVE));
     }
@@ -91,7 +95,7 @@ public class RequirementImpl extends AbstractCapabilityRequirement implements Re
     }
 
     /**
-     * Utility method to check wether a requirment is optional. This method works with any
+     * Utility method to check whether a requirement is optional. This method works with any
      * object implementing the requirement interface.
      *
      * @param requirement A requirement
@@ -103,5 +107,30 @@ public class RequirementImpl extends AbstractCapabilityRequirement implements Re
         }
 
         return Constants.RESOLUTION_OPTIONAL.equals(requirement.getDirectives().get(Constants.RESOLUTION_DIRECTIVE));
+    }
+
+    /**
+     * Utility method to obtain a SimpleFilter from a given requirement.
+     * If the requirement contains a {@link Constants#FILTER_DIRECTIVE} directive,
+     * it will be used, else, the filter will be derived from the attributes.
+     *
+     * @param requirement A requirement
+     * @return a valid filter, never {@code null}.
+     */
+    public static SimpleFilter getFilter(Requirement requirement) {
+        if (requirement instanceof RequirementImpl) {
+            return ((RequirementImpl) requirement).getFilter();
+        }
+
+        return getFilter(requirement.getDirectives(), requirement.getAttributes());
+    }
+
+    private static SimpleFilter getFilter(Map<String, String> directives, Map<String, Object> attributes) {
+        String filter = directives.get(Constants.FILTER_DIRECTIVE);
+        if (filter != null) {
+            return SimpleFilter.parse(filter);
+        } else {
+            return SimpleFilter.convert(attributes);
+        }
     }
 }
