@@ -110,7 +110,7 @@ public class XmlRepository extends BaseRepository {
         }
     }
 
-    private void checkAndLoadCache() {
+    protected void checkAndLoadCache() {
         if (checkAndLoadReferrals(url, Integer.MAX_VALUE)) {
             lock.writeLock().lock();
             try {

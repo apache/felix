@@ -73,7 +73,7 @@ public class JsonRepository extends BaseRepository {
         }
     }
 
-    private void checkAndLoadCache() {
+    protected void checkAndLoadCache() {
         loader.checkAndLoadCache();
     }
 
