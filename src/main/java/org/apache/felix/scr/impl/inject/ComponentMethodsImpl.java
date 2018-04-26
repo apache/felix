@@ -20,44 +20,57 @@
 
 package org.apache.felix.scr.impl.inject;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
-import org.apache.felix.scr.impl.helper.ComponentMethod;
-import org.apache.felix.scr.impl.helper.ComponentMethods;
-import org.apache.felix.scr.impl.helper.ReferenceMethods;
-import org.apache.felix.scr.impl.inject.ActivateMethod;
-import org.apache.felix.scr.impl.inject.BindMethods;
-import org.apache.felix.scr.impl.inject.DeactivateMethod;
-import org.apache.felix.scr.impl.inject.DuplexReferenceMethods;
-import org.apache.felix.scr.impl.inject.FieldMethods;
-import org.apache.felix.scr.impl.inject.ModifiedMethod;
+import org.apache.felix.scr.impl.inject.field.FieldMethods;
+import org.apache.felix.scr.impl.inject.methods.ActivateMethod;
+import org.apache.felix.scr.impl.inject.methods.BindMethods;
+import org.apache.felix.scr.impl.inject.methods.DeactivateMethod;
+import org.apache.felix.scr.impl.inject.methods.ModifiedMethod;
+import org.apache.felix.scr.impl.logger.ComponentLogger;
 import org.apache.felix.scr.impl.metadata.ComponentMetadata;
 import org.apache.felix.scr.impl.metadata.DSVersion;
 import org.apache.felix.scr.impl.metadata.ReferenceMetadata;
 
 /**
  * @version $Rev$ $Date$
+ * @param <T>
  */
-public class ComponentMethodsImpl implements ComponentMethods
+public class ComponentMethodsImpl<T> implements ComponentMethods<T>
 {
-    private ActivateMethod m_activateMethod;
-    private ModifiedMethod m_modifiedMethod;
-    private DeactivateMethod m_deactivateMethod;
+    private LifecycleMethod m_activateMethod;
+    private LifecycleMethod m_modifiedMethod;
+    private LifecycleMethod m_deactivateMethod;
+    private ComponentConstructor<T> m_constructor;
 
-    private final Map<String, ReferenceMethods> bindMethodMap = new HashMap<String, ReferenceMethods>();
+    private final Map<String, ReferenceMethods> bindMethodMap = new HashMap<>();
 
-    public synchronized void initComponentMethods( ComponentMetadata componentMetadata, Class<?> implementationObjectClass )
+    @Override
+    @SuppressWarnings({ "rawtypes", "unchecked" })
+	public synchronized void initComponentMethods(
+	        final ComponentMetadata componentMetadata,
+	        final Class<T> implementationObjectClass,
+	        final ComponentLogger logger)
     {
         if (m_activateMethod != null)
         {
+            // do init only once
             return;
         }
         DSVersion dsVersion = componentMetadata.getDSVersion();
         boolean configurableServiceProperties = componentMetadata.isConfigurableServiceProperties();
         boolean supportsInterfaces = componentMetadata.isConfigureWithInterfaces();
-        m_activateMethod = new ActivateMethod( componentMetadata.getActivate(), componentMetadata
-                .isActivateDeclared(), implementationObjectClass, dsVersion, configurableServiceProperties, supportsInterfaces );
+
+        m_activateMethod = new ActivateMethod(
+        		componentMetadata.getActivate(),
+        		componentMetadata.isActivateDeclared(),
+        		implementationObjectClass,
+        		dsVersion,
+        		configurableServiceProperties,
+        		supportsInterfaces);
         m_deactivateMethod = new DeactivateMethod( componentMetadata.getDeactivate(),
                 componentMetadata.isDeactivateDeclared(), implementationObjectClass, dsVersion, configurableServiceProperties, supportsInterfaces );
 
@@ -66,43 +79,60 @@ public class ComponentMethodsImpl implements ComponentMethods
         for ( ReferenceMetadata referenceMetadata: componentMetadata.getDependencies() )
         {
             final String refName = referenceMetadata.getName();
-            final ReferenceMethods methods;
-            if ( referenceMetadata.getField() != null && referenceMetadata.getBind() != null)
+            final List<ReferenceMethods> methods = new ArrayList<>();
+            if ( referenceMetadata.getField() != null )
             {
-                methods = new DuplexReferenceMethods(
-                        new FieldMethods( referenceMetadata, implementationObjectClass, dsVersion, configurableServiceProperties),
-                        new BindMethods( referenceMetadata, implementationObjectClass, dsVersion, configurableServiceProperties));
+                methods.add(new FieldMethods( referenceMetadata, implementationObjectClass, dsVersion, configurableServiceProperties));
             }
-            else if ( referenceMetadata.getField() != null )
+            if ( referenceMetadata.getBind() != null )
             {
-                methods = new FieldMethods( referenceMetadata, implementationObjectClass, dsVersion, configurableServiceProperties);
+                methods.add(new BindMethods( referenceMetadata, implementationObjectClass, dsVersion, configurableServiceProperties));
+            }
+
+            if ( methods.isEmpty() )
+            {
+            	    bindMethodMap.put( refName, ReferenceMethods.NOPReferenceMethod );
+            }
+            else if ( methods.size() == 1 )
+            {
+            	    bindMethodMap.put( refName, methods.get(0) );
             }
             else
             {
-                methods = new BindMethods( referenceMetadata, implementationObjectClass, dsVersion, configurableServiceProperties);
+            	    bindMethodMap.put( refName, new DuplexReferenceMethods(methods) );
             }
-            bindMethodMap.put( refName, methods );
         }
+
+    	    m_constructor = new ComponentConstructor(componentMetadata, implementationObjectClass, logger);
     }
 
-    public ComponentMethod getActivateMethod()
+	@Override
+    public LifecycleMethod getActivateMethod()
     {
         return m_activateMethod;
     }
 
-    public ComponentMethod getDeactivateMethod()
+	@Override
+    public LifecycleMethod getDeactivateMethod()
     {
         return m_deactivateMethod;
     }
 
-    public ComponentMethod getModifiedMethod()
+	@Override
+    public LifecycleMethod getModifiedMethod()
     {
         return m_modifiedMethod;
     }
 
+	@Override
     public ReferenceMethods getBindMethods(String refName )
     {
         return bindMethodMap.get( refName );
     }
 
+	@Override
+	public ComponentConstructor<T> getConstructor()
+	{
+		return m_constructor;
+	}
 }

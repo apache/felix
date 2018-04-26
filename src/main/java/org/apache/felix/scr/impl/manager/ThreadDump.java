@@ -32,7 +32,7 @@ public class ThreadDump implements Callable<String>
     public String call() throws Exception
     {
         ThreadMXBean threadMXBean = ManagementFactory.getThreadMXBean();
-        StringBuffer b = new StringBuffer( "Thread dump\n" );
+        StringBuilder b = new StringBuilder( "Thread dump\n" );
         ThreadInfo[] infos = threadMXBean.dumpAllThreads( threadMXBean.isObjectMonitorUsageSupported(), threadMXBean.isSynchronizerUsageSupported() );
         for ( int i = 0; i < infos.length; i++ )
         {

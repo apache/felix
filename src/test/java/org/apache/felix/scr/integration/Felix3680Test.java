@@ -22,18 +22,18 @@ import java.util.Iterator;
 
 import javax.inject.Inject;
 
-import junit.framework.TestCase;
-
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.ops4j.pax.exam.junit.JUnit4TestRunner;
+import org.ops4j.pax.exam.junit.PaxExam;
 import org.osgi.framework.BundleContext;
 import org.osgi.service.component.runtime.dto.ComponentDescriptionDTO;
+
+import junit.framework.TestCase;
 
 /**
  * This test validates the FELIX-3680 issue.
  */
-@RunWith(JUnit4TestRunner.class)
+@RunWith(PaxExam.class)
 public class Felix3680Test extends ComponentTestBase
 {
     static
@@ -44,7 +44,7 @@ public class Felix3680Test extends ComponentTestBase
         COMPONENT_PACKAGE = COMPONENT_PACKAGE + ".felix3680";
         restrictedLogging = true;
         //comment to get debug logging if the test fails.
-//        DS_LOGLEVEL = "warn";
+        //        DS_LOGLEVEL = "warn";
     }
 
     @Inject
@@ -70,14 +70,14 @@ public class Felix3680Test extends ComponentTestBase
         delay(30);
         disableAndCheck( main );
         delay( ); //async deactivate
-        for (Iterator it = log.foundWarnings().iterator(); it.hasNext();)
+        for (Iterator<String> it = log.foundWarnings().iterator(); it.hasNext();)
         {
-            String message = (String) it.next();
+            String message = it.next();
             if (message.startsWith("Performed ") && message.endsWith(" tests."))
             {
                 continue;
             }
             TestCase.fail("unexpected warning or error logged: " + message);
-        }        
+        }
     }
 }

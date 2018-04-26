@@ -54,16 +54,17 @@ import java.util.concurrent.LinkedBlockingQueue;
 
 import javax.inject.Inject;
 
-import org.apache.felix.scr.impl.ScrCommand;
+import org.apache.felix.scr.impl.ComponentCommands;
 import org.apache.felix.scr.integration.components.SimpleComponent;
+import org.apache.felix.service.command.Converter;
 import org.junit.After;
 import org.junit.Before;
+import org.ops4j.pax.exam.Configuration;
 import org.ops4j.pax.exam.CoreOptions;
 import org.ops4j.pax.exam.Option;
 import org.ops4j.pax.exam.OptionUtils;
+import org.ops4j.pax.exam.ProbeBuilder;
 import org.ops4j.pax.exam.TestProbeBuilder;
-import org.ops4j.pax.exam.junit.Configuration;
-import org.ops4j.pax.exam.junit.ProbeBuilder;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.BundleException;
@@ -138,7 +139,7 @@ public abstract class ComponentTestBase
 
     static
     {
-        theConfig = new Hashtable<String, Object>();
+        theConfig = new Hashtable<>();
         theConfig.put( PROP_NAME, PROP_NAME );
     }
 
@@ -146,18 +147,18 @@ public abstract class ComponentTestBase
     public TestProbeBuilder extendProbe(TestProbeBuilder builder)
     {
         builder.setHeader( "Export-Package",
-            "org.apache.felix.scr.integration.components,"
-                + "org.apache.felix.scr.integration.components.activatesignature,"
-                + "org.apache.felix.scr.integration.components.annoconfig,"
-                + "org.apache.felix.scr.integration.components.circular,"
-                + "org.apache.felix.scr.integration.components.circularFactory,"
-                + "org.apache.felix.scr.integration.components.concurrency,"
-                + "org.apache.felix.scr.integration.components.deadlock,"
-                + "org.apache.felix.scr.integration.components.felix3680,"
-                + "org.apache.felix.scr.integration.components.felix3680_2,"
-                + "org.apache.felix.scr.integration.components.felix4984,"
-                + "org.apache.felix.scr.integration.components.felix5248,"
-                + "org.apache.felix.scr.integration.components.felix5276" );
+                "org.apache.felix.scr.integration.components,"
+                        + "org.apache.felix.scr.integration.components.activatesignature,"
+                        + "org.apache.felix.scr.integration.components.annoconfig,"
+                        + "org.apache.felix.scr.integration.components.circular,"
+                        + "org.apache.felix.scr.integration.components.circularFactory,"
+                        + "org.apache.felix.scr.integration.components.concurrency,"
+                        + "org.apache.felix.scr.integration.components.deadlock,"
+                        + "org.apache.felix.scr.integration.components.felix3680,"
+                        + "org.apache.felix.scr.integration.components.felix3680_2,"
+                        + "org.apache.felix.scr.integration.components.felix4984,"
+                        + "org.apache.felix.scr.integration.components.felix5248,"
+                        + "org.apache.felix.scr.integration.components.felix5276" );
         builder.setHeader( "Import-Package", "org.apache.felix.scr.component" );
         builder.setHeader( "Bundle-ManifestVersion", "2" );
         return builder;
@@ -171,18 +172,18 @@ public abstract class ComponentTestBase
         if ( !bundleFile.canRead() )
         {
             throw new IllegalArgumentException( "Cannot read from bundle file " + bundleFileName + " specified in the "
-                + BUNDLE_JAR_SYS_PROP + " system property" );
+                    + BUNDLE_JAR_SYS_PROP + " system property" );
         }
 
         final Option[] base = options(
-            provision( CoreOptions.bundle( bundleFile.toURI().toString() ),
-                mavenBundle( "org.ops4j.pax.tinybundles", "tinybundles", "1.0.0" ),
-                mavenBundle( "org.apache.felix", "org.apache.felix.configadmin", felixCaVersion ) ),
-            junitBundles(), frameworkProperty( "org.osgi.framework.bsnversion" ).value( bsnVersionUniqueness ),
-            systemProperty( "ds.factory.enabled" ).value( Boolean.toString( NONSTANDARD_COMPONENT_FACTORY_BEHAVIOR ) ),
-            systemProperty( "ds.loglevel" ).value( DS_LOGLEVEL )
+                provision( CoreOptions.bundle( bundleFile.toURI().toString() ),
+                        mavenBundle( "org.ops4j.pax.tinybundles", "tinybundles", "1.0.0" ),
+                        mavenBundle( "org.apache.felix", "org.apache.felix.configadmin", felixCaVersion ) ),
+                junitBundles(), frameworkProperty( "org.osgi.framework.bsnversion" ).value( bsnVersionUniqueness ),
+                systemProperty( "ds.factory.enabled" ).value( Boolean.toString( NONSTANDARD_COMPONENT_FACTORY_BEHAVIOR ) ),
+                systemProperty( "ds.loglevel" ).value( DS_LOGLEVEL )
 
-        );
+                );
         final Option vmOption = ( paxRunnerVmOption != null )? CoreOptions.vmOption( paxRunnerVmOption ): null;
         NONSTANDARD_COMPONENT_FACTORY_BEHAVIOR = false;
         return OptionUtils.combine( base, vmOption );
@@ -196,11 +197,11 @@ public abstract class ComponentTestBase
         bundleContext.addFrameworkListener( log );
         bundleContext.registerService( LogService.class.getName(), log, null );
 
-        scrTracker = new ServiceTracker<ServiceComponentRuntime, ServiceComponentRuntime>( bundleContext,
-            ServiceComponentRuntime.class, null );
+        scrTracker = new ServiceTracker<>( bundleContext,
+                ServiceComponentRuntime.class, null );
         scrTracker.open();
-        configAdminTracker = new ServiceTracker<ConfigurationAdmin, ConfigurationAdmin>( bundleContext,
-            ConfigurationAdmin.class, null );
+        configAdminTracker = new ServiceTracker<>( bundleContext,
+                ConfigurationAdmin.class, null );
         configAdminTracker.open();
 
         bundle = installBundle( descriptorFile, COMPONENT_PACKAGE );
@@ -250,7 +251,7 @@ public abstract class ComponentTestBase
     }
 
     protected Collection<ComponentConfigurationDTO> findComponentConfigurationsByName(Bundle b, String name,
-        int expected)
+            int expected)
     {
         ServiceComponentRuntime scr = scrTracker.getService();
         if ( scr == null )
@@ -276,9 +277,9 @@ public abstract class ComponentTestBase
             for ( ComponentConfigurationDTO cc : ccs )
             {
                 Assert.assertTrue(
-                    "for ComponentConfiguration name: " + cc.description.name + " properties" + cc.properties
+                        "for ComponentConfiguration name: " + cc.description.name + " properties" + cc.properties
                         + "Expected one of state " + sb.toString() + " but was " + STATES.get( cc.state ),
-                    ( expected & cc.state ) == cc.state );
+                        ( expected & cc.state ) == cc.state );
             }
         }
         return ccs;
@@ -301,18 +302,18 @@ public abstract class ComponentTestBase
         return findComponentConfigurationByName( bundle, name, expected );
     }
 
-    static final Map<Integer, String> STATES = new HashMap<Integer, String>();
+    static final Map<Integer, String> STATES = new HashMap<>();
 
     static
     {
         STATES.put( ComponentConfigurationDTO.UNSATISFIED_REFERENCE,
-            "Unsatisfied (" + ComponentConfigurationDTO.UNSATISFIED_REFERENCE + ")" );
+                "Unsatisfied (" + ComponentConfigurationDTO.UNSATISFIED_REFERENCE + ")" );
         STATES.put( ComponentConfigurationDTO.SATISFIED, "Satisified (" + ComponentConfigurationDTO.SATISFIED + ")" );
         STATES.put( ComponentConfigurationDTO.ACTIVE, "Active (" + ComponentConfigurationDTO.ACTIVE + ")" );
     }
 
     protected ComponentConfigurationDTO getDisabledConfigurationAndEnable(Bundle b, String name, int initialState)
-        throws InvocationTargetException, InterruptedException
+            throws InvocationTargetException, InterruptedException
     {
         int count = 1;
         Collection<ComponentConfigurationDTO> ccs = getConfigurationsDisabledThenEnable( b, name, count, initialState );
@@ -321,13 +322,13 @@ public abstract class ComponentTestBase
     }
 
     protected ComponentConfigurationDTO getDisabledConfigurationAndEnable(String name, int initialState)
-        throws InvocationTargetException, InterruptedException
+            throws InvocationTargetException, InterruptedException
     {
         return getDisabledConfigurationAndEnable( bundle, name, initialState );
     }
 
     protected Collection<ComponentConfigurationDTO> getConfigurationsDisabledThenEnable(Bundle b, String name,
-        int count, int initialState) throws InvocationTargetException, InterruptedException
+            int count, int initialState) throws InvocationTargetException, InterruptedException
     {
         ServiceComponentRuntime scr = scrTracker.getService();
         if ( scr == null )
@@ -344,13 +345,13 @@ public abstract class ComponentTestBase
         for ( ComponentConfigurationDTO cc : ccs )
         {
             Assert.assertEquals( "Expected state " + STATES.get( initialState ) + " but was " + STATES.get( cc.state ),
-                initialState, cc.state );
+                    initialState, cc.state );
         }
         return ccs;
     }
 
     protected Collection<ComponentConfigurationDTO> getConfigurationsDisabledThenEnable(String name, int count,
-        int initialState) throws InvocationTargetException, InterruptedException
+            int initialState) throws InvocationTargetException, InterruptedException
     {
         return getConfigurationsDisabledThenEnable( bundle, name, count, initialState );
     }
@@ -372,8 +373,8 @@ public abstract class ComponentTestBase
             for ( ComponentConfigurationDTO cc : ccs )
             {
                 Assert.assertEquals(
-                    "Expected state " + STATES.get( expectedState ) + " but was " + STATES.get( cc.state ),
-                    expectedState, cc.state );
+                        "Expected state " + STATES.get( expectedState ) + " but was " + STATES.get( cc.state ),
+                        expectedState, cc.state );
             }
         }
         return cd;
@@ -502,7 +503,7 @@ public abstract class ComponentTestBase
     }
 
     protected org.osgi.service.cm.Configuration configure(String pid, String bundleLocation,
-        Dictionary<String, Object> props)
+            Dictionary<String, Object> props)
     {
         ConfigurationAdmin ca = getConfigurationAdmin();
         try
@@ -581,7 +582,7 @@ public abstract class ComponentTestBase
     protected ComponentFactory getComponentFactory(final String componentfactory) throws InvalidSyntaxException
     {
         final ServiceReference[] refs = bundleContext.getServiceReferences( ComponentFactory.class.getName(),
-            "(" + ComponentConstants.COMPONENT_FACTORY + "=" + componentfactory + ")" );
+                "(" + ComponentConstants.COMPONENT_FACTORY + "=" + componentfactory + ")" );
         TestCase.assertNotNull( refs );
         TestCase.assertEquals( 1, refs.length );
         final ComponentFactory factory = (ComponentFactory) bundleContext.getService( refs[0] );
@@ -590,10 +591,10 @@ public abstract class ComponentTestBase
     }
 
     protected void checkFactory(final String componentfactory, boolean expectFactoryPresent)
-        throws InvalidSyntaxException
+            throws InvalidSyntaxException
     {
         ServiceReference[] refs = bundleContext.getServiceReferences( ComponentFactory.class.getName(),
-            "(" + ComponentConstants.COMPONENT_FACTORY + "=" + componentfactory + ")" );
+                "(" + ComponentConstants.COMPONENT_FACTORY + "=" + componentfactory + ")" );
         if ( expectFactoryPresent )
         {
             TestCase.assertNotNull( refs );
@@ -607,16 +608,16 @@ public abstract class ComponentTestBase
     }
 
     protected ComponentInstance createFactoryComponentInstance(final String componentfactory)
-        throws InvalidSyntaxException
+            throws InvalidSyntaxException
     {
-        Hashtable<String, String> props = new Hashtable<String, String>();
+        Hashtable<String, String> props = new Hashtable<>();
         props.put( PROP_NAME_FACTORY, PROP_NAME_FACTORY );
 
         return createFactoryComponentInstance( componentfactory, props );
     }
 
     protected ComponentInstance createFactoryComponentInstance(final String componentfactory,
-        Hashtable<String, String> props) throws InvalidSyntaxException
+            Hashtable<String, String> props) throws InvalidSyntaxException
     {
         final ComponentFactory factory = getComponentFactory( componentfactory );
 
@@ -690,17 +691,17 @@ public abstract class ComponentTestBase
     }
 
     protected Bundle installBundle(final String descriptorFile, String componentPackage, String symbolicName,
-        String version, String location) throws BundleException
+            String version, String location) throws BundleException
     {
         final InputStream bundleStream = bundle().add( "OSGI-INF/components.xml",
-            getClass().getResource( descriptorFile ) )
+                getClass().getResource( descriptorFile ) )
 
-            .set( Constants.BUNDLE_SYMBOLICNAME, symbolicName ).set( Constants.BUNDLE_VERSION, version ).set(
-                Constants.IMPORT_PACKAGE, componentPackage ).set( "Service-Component", "OSGI-INF/components.xml" ).set(
-                    Constants.REQUIRE_CAPABILITY,
-                    ExtenderNamespace.EXTENDER_NAMESPACE
-                        + ";filter:=\"(&(osgi.extender=osgi.component)(version>=1.3)(!(version>=2.0)))\"" ).build(
-                            withBnd() );
+                .set( Constants.BUNDLE_SYMBOLICNAME, symbolicName ).set( Constants.BUNDLE_VERSION, version ).set(
+                        Constants.IMPORT_PACKAGE, componentPackage ).set( "Service-Component", "OSGI-INF/components.xml" ).set(
+                                Constants.REQUIRE_CAPABILITY,
+                                ExtenderNamespace.EXTENDER_NAMESPACE
+                                + ";filter:=\"(&(osgi.extender=osgi.component)(version>=1.3)(!(version>=2.0)))\"" ).build(
+                                        withBnd() );
 
         try
         {
@@ -724,13 +725,12 @@ public abstract class ComponentTestBase
 
     //Code copied from ScrCommand to make it easier to find out what your test components are actually doing.
     //    @Test
-    public void testDescription()
-    {
+    public void testDescription() throws Exception {
         PrintStream out = System.out;
         info( new PrintWriter( out ) );
     }
 
-    private static class InfoWriter extends ScrCommand
+    private static class InfoWriter extends ComponentCommands
     {
 
         protected InfoWriter(ServiceComponentRuntime scrService)
@@ -740,14 +740,14 @@ public abstract class ComponentTestBase
 
     }
 
-    void info(PrintWriter out)
-    {
+    void info(PrintWriter out) throws Exception {
         ServiceComponentRuntime scr = scrTracker.getService();
         if ( scr == null )
         {
             TestCase.fail( "no ServiceComponentRuntime" );
         }
-        new InfoWriter( scr ).list( null, out );
+        InfoWriter iw = new InfoWriter(scr);
+        out.print(iw.format(iw.list(), Converter.LINE));
     }
 
     protected boolean isAtLeastR5()
@@ -838,9 +838,9 @@ public abstract class ComponentTestBase
         private static final int RESTRICTED_LOG_SIZE = 1000;
         private final SimpleDateFormat m_sdf = new SimpleDateFormat( "HH:mm:ss,S" );
         private final static PrintStream m_out = new PrintStream(
-            new BufferedOutputStream( new FileOutputStream( FileDescriptor.err ), 128 ) );
+                new BufferedOutputStream( new FileOutputStream( FileDescriptor.err ), 128 ) );
         private final List<String> m_warnings = Collections.synchronizedList( new ArrayList<String>() );
-        private LinkedBlockingQueue<LogEntry> m_logQueue = new LinkedBlockingQueue<LogEntry>();
+        private LinkedBlockingQueue<LogEntry> m_logQueue = new LinkedBlockingQueue<>();
         private volatile Thread m_logThread;
         private volatile PrintStream m_realOut;
         private volatile PrintStream m_realErr;
@@ -909,6 +909,7 @@ public abstract class ComponentTestBase
             return firstFrameworkThrowable;
         }
 
+        @Override
         public void run()
         {
             try
@@ -980,6 +981,7 @@ public abstract class ComponentTestBase
             return true;
         }
 
+        @Override
         public void frameworkEvent(final FrameworkEvent event)
         {
             int eventType = event.getType();
@@ -994,11 +996,13 @@ public abstract class ComponentTestBase
 
         // ------------ LogService ----------------------------------------------------------------
 
+        @Override
         public void log(int level, String message)
         {
             log( level, message, null );
         }
 
+        @Override
         public void log(int level, String message, Throwable exception)
         {
             if ( level > getEnabledLogLevel() )
@@ -1008,11 +1012,13 @@ public abstract class ComponentTestBase
             m_logQueue.offer( new LogEntry( level, message, exception ) );
         }
 
+        @Override
         public void log(ServiceReference sr, int osgiLevel, String message)
         {
             log( sr, osgiLevel, message, null );
         }
 
+        @Override
         public void log(ServiceReference sr, int level, String msg, Throwable exception)
         {
             if ( sr != null )
@@ -1056,20 +1062,20 @@ public abstract class ComponentTestBase
         {
             switch (event)
             {
-                case FrameworkEvent.ERROR:
-                    return "FrameworkEvent: ERROR";
-                case FrameworkEvent.INFO:
-                    return "FrameworkEvent INFO";
-                case FrameworkEvent.PACKAGES_REFRESHED:
-                    return "FrameworkEvent: PACKAGE REFRESHED";
-                case FrameworkEvent.STARTED:
-                    return "FrameworkEvent: STARTED";
-                case FrameworkEvent.STARTLEVEL_CHANGED:
-                    return "FrameworkEvent: STARTLEVEL CHANGED";
-                case FrameworkEvent.WARNING:
-                    return "FrameworkEvent: WARNING";
-                default:
-                    return null;
+            case FrameworkEvent.ERROR:
+                return "FrameworkEvent: ERROR";
+            case FrameworkEvent.INFO:
+                return "FrameworkEvent INFO";
+            case FrameworkEvent.PACKAGES_REFRESHED:
+                return "FrameworkEvent: PACKAGE REFRESHED";
+            case FrameworkEvent.STARTED:
+                return "FrameworkEvent: STARTED";
+            case FrameworkEvent.STARTLEVEL_CHANGED:
+                return "FrameworkEvent: STARTLEVEL CHANGED";
+            case FrameworkEvent.WARNING:
+                return "FrameworkEvent: WARNING";
+            default:
+                return null;
             }
         }
     }

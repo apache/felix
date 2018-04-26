@@ -18,12 +18,15 @@
  */
 package org.apache.felix.scr.impl.manager;
 
-import org.apache.felix.scr.impl.helper.Logger;
+import org.apache.felix.scr.impl.logger.BundleLogger;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceReference;
 import org.osgi.service.cm.ConfigurationAdmin;
 
-public interface ComponentActivator extends Logger, ExtendedServiceListenerContext<ExtendedServiceEvent> {
+
+public interface ComponentActivator extends ExtendedServiceListenerContext<ExtendedServiceEvent> {
+
+    BundleLogger getLogger();
 
     BundleContext getBundleContext();
 
@@ -54,4 +57,6 @@ public interface ComponentActivator extends Logger, ExtendedServiceListenerConte
 
     void unsetRegionConfigurationSupport(RegionConfigurationSupport rcs);
 
+    /** Inform about any change in the state of the components. */
+    void updateChangeCount();
 }

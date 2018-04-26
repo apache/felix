@@ -19,23 +19,17 @@
 package org.apache.felix.scr.integration;
 
 
-import java.lang.reflect.Field;
-import java.util.Collection;
-import java.util.Map;
-
-import junit.framework.Assert;
-import junit.framework.TestCase;
-
 import org.apache.felix.scr.integration.components.EnableComponent;
 import org.apache.felix.scr.integration.components.SimpleComponent;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.ops4j.pax.exam.junit.JUnit4TestRunner;
-import org.osgi.service.component.ComponentContext;
+import org.ops4j.pax.exam.junit.PaxExam;
 import org.osgi.service.component.runtime.dto.ComponentConfigurationDTO;
 
+import junit.framework.TestCase;
 
-@RunWith(JUnit4TestRunner.class)
+
+@RunWith(PaxExam.class)
 public class ComponentEnableTest extends ComponentTestBase
 {
     static
@@ -51,11 +45,11 @@ public class ComponentEnableTest extends ComponentTestBase
     {
         final String enable = "org.apache.felix.scr.integration.components.enable";
         final String name = "org.apache.felix.scr.integration.components.SimpleComponent";
-        
+
         ComponentConfigurationDTO dto = findComponentConfigurationByName(enable, ComponentConfigurationDTO.SATISFIED);
-        
+
         EnableComponent ec = getServiceFromConfiguration(dto, EnableComponent.class);
-        
+
         TestCase.assertEquals(0, SimpleComponent.INSTANCES.size());
 
         ec.enable(name);

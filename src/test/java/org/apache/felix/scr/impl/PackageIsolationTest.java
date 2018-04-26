@@ -28,7 +28,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.regex.Pattern;
 
-import junit.framework.TestCase;
 import org.objectweb.asm.AnnotationVisitor;
 import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.ClassVisitor;
@@ -42,6 +41,8 @@ import org.objectweb.asm.TypePath;
 import org.objectweb.asm.signature.SignatureReader;
 import org.objectweb.asm.signature.SignatureVisitor;
 
+import junit.framework.TestCase;
+
 /**
  * Ensure that the helper / manager / metadata packages can actually be used
  * without any other packages.
@@ -52,6 +53,10 @@ public class PackageIsolationTest extends TestCase {
         final List<String> packages = Arrays.asList(
                 "org/apache/felix/scr/component",
                 "org/apache/felix/scr/impl/helper",
+                "org/apache/felix/scr/impl/inject",
+                "org/apache/felix/scr/impl/inject/field",
+                "org/apache/felix/scr/impl/inject/methods",
+                "org/apache/felix/scr/impl/logger",
                 "org/apache/felix/scr/impl/manager",
                 "org/apache/felix/scr/impl/metadata");
 
@@ -93,9 +98,9 @@ public class PackageIsolationTest extends TestCase {
     }
 
     public static class DependencyVisitor extends ClassVisitor {
-        Set<String> packages = new HashSet<String>();
+        Set<String> packages = new HashSet<>();
 
-        Map<String, Map<String, Integer>> groups = new HashMap<String, Map<String, Integer>>();
+        Map<String, Map<String, Integer>> groups = new HashMap<>();
 
         Map<String, Integer> current;
 
@@ -120,7 +125,7 @@ public class PackageIsolationTest extends TestCase {
             String p = getGroupKey(name);
             current = groups.get(p);
             if (current == null) {
-                current = new HashMap<String, Integer>();
+                current = new HashMap<>();
                 groups.put(p, current);
             }
 

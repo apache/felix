@@ -24,22 +24,22 @@ import java.util.Collections;
 import java.util.Dictionary;
 import java.util.Hashtable;
 
-import junit.framework.Assert;
-import junit.framework.TestCase;
-
 import org.apache.felix.scr.integration.components.MutatingService;
 import org.apache.felix.scr.integration.components.MutatingServiceConsumer;
 import org.apache.felix.scr.integration.components.SimpleServiceImpl;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.ops4j.pax.exam.junit.JUnit4TestRunner;
+import org.ops4j.pax.exam.junit.PaxExam;
 import org.osgi.framework.InvalidSyntaxException;
 import org.osgi.framework.ServiceReference;
 import org.osgi.service.component.runtime.dto.ComponentConfigurationDTO;
 import org.osgi.service.component.runtime.dto.ComponentDescriptionDTO;
 
+import junit.framework.Assert;
+import junit.framework.TestCase;
 
-@RunWith(JUnit4TestRunner.class)
+
+@RunWith(PaxExam.class)
 public class MutablePropertiesTest extends ComponentTestBase
 {
 

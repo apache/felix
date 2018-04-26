@@ -31,9 +31,10 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 
 import org.apache.felix.scr.impl.helper.Coercions;
-import org.apache.felix.scr.impl.helper.MethodResult;
-import org.apache.felix.scr.impl.helper.ReferenceMethod;
-import org.apache.felix.scr.impl.helper.ReferenceMethods;
+import org.apache.felix.scr.impl.inject.BindParameters;
+import org.apache.felix.scr.impl.inject.MethodResult;
+import org.apache.felix.scr.impl.inject.ReferenceMethod;
+import org.apache.felix.scr.impl.inject.ReferenceMethods;
 import org.apache.felix.scr.impl.metadata.ReferenceMetadata;
 import org.apache.felix.scr.impl.metadata.ReferenceMetadata.ReferenceScope;
 import org.apache.felix.scr.impl.metadata.ServiceMetadata.Scope;
@@ -91,10 +92,10 @@ public class DependencyManager<S, T> implements ReferenceManager<S, T>
         m_minCardinality = defaultMinimumCardinality(dependency);
 
         // dump the reference information if DEBUG is enabled
-        if (m_componentManager.isLogEnabled(LogService.LOG_DEBUG))
+        if (m_componentManager.getLogger().isLogEnabled(LogService.LOG_DEBUG))
         {
-            m_componentManager.log(LogService.LOG_DEBUG, "Dependency Manager created " + dependency.getDebugInfo(),
-                null);
+            m_componentManager.getLogger().log(LogService.LOG_DEBUG, "Dependency Manager created {0}",
+                null, dependency.getDebugInfo());
         }
     }
 
@@ -147,14 +148,15 @@ public class DependencyManager<S, T> implements ReferenceManager<S, T>
 
         private volatile Map<ServiceReference<T>, RefPair<S, T>> previousRefMap = EMPTY_REF_MAP;
 
+        @Override
         public void setTracker(ServiceTracker<T, RefPair<S, T>, ExtendedServiceEvent> tracker)
         {
             m_tracker = tracker;
-            m_componentManager.log(LogService.LOG_DEBUG, "dm {0} tracker reset (closed)", new Object[] { getName() },
-                null);
+            m_componentManager.getLogger().log(LogService.LOG_DEBUG, "dm {0} tracker reset (closed)", null, getName() );
             trackerOpened = false;
         }
 
+        @Override
         public boolean isSatisfied()
         {
             ServiceTracker<T, RefPair<S, T>, ExtendedServiceEvent> tracker = getTracker();
@@ -184,10 +186,11 @@ public class DependencyManager<S, T> implements ReferenceManager<S, T>
             return trackerOpened;
         }
 
+        @Override
         public void setTrackerOpened()
         {
             trackerOpened = true;
-            m_componentManager.log(LogService.LOG_DEBUG, "dm {0} tracker opened", new Object[] { getName() }, null);
+            m_componentManager.getLogger().log(LogService.LOG_DEBUG, "dm {0} tracker opened", null, getName());
         }
 
         protected void deactivateTracker()
@@ -204,6 +207,7 @@ public class DependencyManager<S, T> implements ReferenceManager<S, T>
             return previousRefMap;
         }
 
+        @Override
         public void setPreviousRefMap(Map<ServiceReference<T>, RefPair<S, T>> previousRefMap)
         {
             if (previousRefMap != null)
@@ -240,12 +244,14 @@ public class DependencyManager<S, T> implements ReferenceManager<S, T>
     private class FactoryCustomizer extends AbstractCustomizer
     {
 
+        @Override
         public RefPair<S, T> addingService(ServiceReference<T> serviceReference)
         {
             RefPair<S, T> refPair = newRefPair(serviceReference);
             return refPair;
         }
 
+        @Override
         public void addedService(ServiceReference<T> serviceReference, RefPair<S, T> refPair, int trackingCount,
             int serviceCount, ExtendedServiceEvent event)
         {
@@ -255,11 +261,13 @@ public class DependencyManager<S, T> implements ReferenceManager<S, T>
             }
         }
 
+        @Override
         public void modifiedService(ServiceReference<T> serviceReference, RefPair<S, T> refPair, int trackingCount,
             ExtendedServiceEvent event)
         {
         }
 
+        @Override
         public void removedService(ServiceReference<T> serviceReference, RefPair<S, T> refPair, int trackingCount,
             ExtendedServiceEvent event)
         {
@@ -270,6 +278,7 @@ public class DependencyManager<S, T> implements ReferenceManager<S, T>
             }
         }
 
+        @Override
         public boolean prebind(ComponentContextImpl<S> key)
         {
             AtomicInteger trackingCount = new AtomicInteger();
@@ -277,11 +286,13 @@ public class DependencyManager<S, T> implements ReferenceManager<S, T>
             return cardinalitySatisfied(serviceCount);
         }
 
+        @Override
         public void close()
         {
             deactivateTracker();
         }
 
+        @Override
         public Collection<RefPair<S, T>> getRefs(AtomicInteger trackingCount)
         {
             return Collections.emptyList();
@@ -294,6 +305,7 @@ public class DependencyManager<S, T> implements ReferenceManager<S, T>
         private RefPair<S, T> lastRefPair;
         private int lastRefPairTrackingCount;
 
+        @Override
         public RefPair<S, T> addingService(ServiceReference<T> serviceReference)
         {
             RefPair<S, T> refPair = getPreviousRefMap().get(serviceReference);
@@ -304,19 +316,20 @@ public class DependencyManager<S, T> implements ReferenceManager<S, T>
             return refPair;
         }
 
+        @Override
         public void addedService(ServiceReference<T> serviceReference, RefPair<S, T> refPair, int trackingCount,
             int serviceCount, ExtendedServiceEvent event)
         {
-            m_componentManager.log(LogService.LOG_DEBUG, "dm {0} tracking {1} MultipleDynamic added {2} (enter)",
-                new Object[] { getName(), trackingCount, serviceReference }, null);
+            m_componentManager.getLogger().log(LogService.LOG_DEBUG, "dm {0} tracking {1} MultipleDynamic added {2} (enter)",
+                    null, getName(), trackingCount, serviceReference );
             boolean tracked = false;
             if (getPreviousRefMap().remove(serviceReference) == null)
             {
                 if (isActive())
                 {
-                    m_componentManager.log(LogService.LOG_DEBUG,
+                    m_componentManager.getLogger().log(LogService.LOG_DEBUG,
                         "dm {0} tracking {1} MultipleDynamic already active, binding {2}",
-                        new Object[] { getName(), trackingCount, serviceReference }, null);
+                        null, getName(), trackingCount, serviceReference );
                     m_componentManager.invokeBindMethod(DependencyManager.this, refPair, trackingCount);
                     if (refPair.isFailed())
                     {
@@ -326,46 +339,48 @@ public class DependencyManager<S, T> implements ReferenceManager<S, T>
                 }
                 else if (isTrackerOpened() && cardinalityJustSatisfied(serviceCount))
                 {
-                    m_componentManager.log(LogService.LOG_DEBUG, "dm {0} tracking {1} MultipleDynamic, activating",
-                        new Object[] { getName(), trackingCount }, null);
+                    m_componentManager.getLogger().log(LogService.LOG_DEBUG, "dm {0} tracking {1} MultipleDynamic, activating",
+                            null, getName(), trackingCount);
                     tracked(trackingCount);
                     tracked = true;
                     m_componentManager.activateInternal();
                 }
                 else
                 {
-                    m_componentManager.log(LogService.LOG_DEBUG,
+                    m_componentManager.getLogger().log(LogService.LOG_DEBUG,
                         "dm {0} tracking {1} MultipleDynamic, inactive, doing nothing: tracker opened: {2}, optional: {3}",
-                        new Object[] { getName(), trackingCount, isTrackerOpened(), isOptional() }, null);
+                        null, getName(), trackingCount, isTrackerOpened(), isOptional() );
                 }
             }
-            m_componentManager.log(LogService.LOG_DEBUG, "dm {0} tracking {1} MultipleDynamic added {2} (exit)",
-                new Object[] { getName(), trackingCount, serviceReference }, null);
+            m_componentManager.getLogger().log(LogService.LOG_DEBUG, "dm {0} tracking {1} MultipleDynamic added {2} (exit)",
+                    null, getName(), trackingCount, serviceReference );
             if (!tracked)
             {
                 tracked(trackingCount);
             }
         }
 
+        @Override
         public void modifiedService(ServiceReference<T> serviceReference, RefPair<S, T> refPair, int trackingCount,
             ExtendedServiceEvent event)
         {
-            m_componentManager.log(LogService.LOG_DEBUG, "dm {0} tracking {1} MultipleDynamic modified {2} (enter)",
-                new Object[] { getName(), trackingCount, serviceReference }, null);
+            m_componentManager.getLogger().log(LogService.LOG_DEBUG, "dm {0} tracking {1} MultipleDynamic modified {2} (enter)",
+                    null, getName(), trackingCount, serviceReference );
             if (isActive())
             {
                 m_componentManager.invokeUpdatedMethod(DependencyManager.this, refPair, trackingCount);
             }
-            m_componentManager.log(LogService.LOG_DEBUG, "dm {0} tracking {1} MultipleDynamic modified {2} (exit)",
-                new Object[] { getName(), trackingCount, serviceReference }, null);
+            m_componentManager.getLogger().log(LogService.LOG_DEBUG, "dm {0} tracking {1} MultipleDynamic modified {2} (exit)",
+                    null, getName(), trackingCount, serviceReference );
             tracked(trackingCount);
         }
 
+        @Override
         public void removedService(ServiceReference<T> serviceReference, RefPair<S, T> refPair, int trackingCount,
             ExtendedServiceEvent event)
         {
-            m_componentManager.log(LogService.LOG_DEBUG, "dm {0} tracking {1} MultipleDynamic removed {2} (enter)",
-                new Object[] { getName(), trackingCount, serviceReference }, null);
+            m_componentManager.getLogger().log(LogService.LOG_DEBUG, "dm {0} tracking {1} MultipleDynamic removed {2} (enter)",
+                    null, getName(), trackingCount, serviceReference );
             refPair.markDeleted();
             boolean unbind = cardinalitySatisfied(getTracker().getServiceCount());
             if (unbind)
@@ -374,8 +389,8 @@ public class DependencyManager<S, T> implements ReferenceManager<S, T>
                 {
                     m_componentManager.invokeUnbindMethod(DependencyManager.this, refPair, trackingCount);
                 }
-                m_componentManager.log(LogService.LOG_DEBUG, "dm {0} tracking {1} MultipleDynamic removed (unbind) {2}",
-                    new Object[] { getName(), trackingCount, serviceReference }, null);
+                m_componentManager.getLogger().log(LogService.LOG_DEBUG, "dm {0} tracking {1} MultipleDynamic removed (unbind) {2}",
+                        null, getName(), trackingCount, serviceReference );
                 tracked(trackingCount);
             }
             else
@@ -385,19 +400,20 @@ public class DependencyManager<S, T> implements ReferenceManager<S, T>
                 tracked(trackingCount);
                 deactivateComponentManager();
                 lastRefPair = null;
-                m_componentManager.log(LogService.LOG_DEBUG,
+                m_componentManager.getLogger().log(LogService.LOG_DEBUG,
                     "dm {0} tracking {1} MultipleDynamic removed (deactivate) {2}",
-                    new Object[] { getName(), trackingCount, serviceReference }, null);
+                    null, getName(), trackingCount, serviceReference );
             }
             ungetService(refPair);
         }
 
+        @Override
         public boolean prebind(ComponentContextImpl<S> key)
         {
             int serviceCount = 0;
             AtomicInteger trackingCount = new AtomicInteger();
             SortedMap<ServiceReference<T>, RefPair<S, T>> tracked = getTracker().getTracked(true, trackingCount);
-            List<RefPair<S, T>> failed = new ArrayList<RefPair<S, T>>();
+            List<RefPair<S, T>> failed = new ArrayList<>();
             for (RefPair<S, T> refPair : tracked.values())
             {
                 if (getServiceObject(key, m_bindMethods.getBind(), refPair))
@@ -421,6 +437,7 @@ public class DependencyManager<S, T> implements ReferenceManager<S, T>
             return false;
         }
 
+        @Override
         public void close()
         {
             AtomicInteger trackingCount = new AtomicInteger();
@@ -431,6 +448,7 @@ public class DependencyManager<S, T> implements ReferenceManager<S, T>
             deactivateTracker();
         }
 
+        @Override
         public Collection<RefPair<S, T>> getRefs(AtomicInteger trackingCount)
         {
             if (lastRefPair == null)
@@ -454,23 +472,25 @@ public class DependencyManager<S, T> implements ReferenceManager<S, T>
     private class MultipleStaticGreedyCustomizer extends AbstractCustomizer
     {
 
+        @Override
         public RefPair<S, T> addingService(ServiceReference<T> serviceReference)
         {
             RefPair<S, T> refPair = newRefPair(serviceReference);
             return refPair;
         }
 
+        @Override
         public void addedService(ServiceReference<T> serviceReference, RefPair<S, T> refPair, int trackingCount,
             int serviceCount, ExtendedServiceEvent event)
         {
-            m_componentManager.log(LogService.LOG_DEBUG, "dm {0} tracking {1} MultipleStaticGreedy added {2} (enter)",
-                new Object[] { getName(), trackingCount, serviceReference }, null);
+            m_componentManager.getLogger().log(LogService.LOG_DEBUG, "dm {0} tracking {1} MultipleStaticGreedy added {2} (enter)",
+                    null, getName(), trackingCount, serviceReference );
             tracked(trackingCount);
             if (isActive())
             {
-                m_componentManager.log(LogService.LOG_DEBUG,
+                m_componentManager.getLogger().log(LogService.LOG_DEBUG,
                     "Dependency Manager: Static dependency on {0}/{1} is broken",
-                    new Object[] { getName(), m_dependencyMetadata.getInterface() }, null);
+                    null, getName(), m_dependencyMetadata.getInterface() );
                 deactivateComponentManager();
                 //event may be null during initial operations.
                 if (event != null)
@@ -483,16 +503,17 @@ public class DependencyManager<S, T> implements ReferenceManager<S, T>
             {
                 m_componentManager.activateInternal();
             }
-            m_componentManager.log(LogService.LOG_DEBUG, "dm {0} tracking {1} MultipleStaticGreedy added {2} (exit)",
-                new Object[] { getName(), trackingCount, serviceReference }, null);
+            m_componentManager.getLogger().log(LogService.LOG_DEBUG, "dm {0} tracking {1} MultipleStaticGreedy added {2} (exit)",
+                    null, getName(), trackingCount, serviceReference );
         }
 
+        @Override
         public void modifiedService(ServiceReference<T> serviceReference, RefPair<S, T> refPair, int trackingCount,
             ExtendedServiceEvent event)
         {
-            m_componentManager.log(LogService.LOG_DEBUG,
+            m_componentManager.getLogger().log(LogService.LOG_DEBUG,
                 "dm {0} tracking {1} MultipleStaticGreedy modified {2} (enter)",
-                new Object[] { getName(), trackingCount, serviceReference }, null);
+                null, getName(), trackingCount, serviceReference );
             boolean reactivate = false;
             if (isActive())
             {
@@ -507,23 +528,24 @@ public class DependencyManager<S, T> implements ReferenceManager<S, T>
                     event.addComponentManager(m_componentManager);
                 }
             }
-            m_componentManager.log(LogService.LOG_DEBUG, "dm {0} tracking {1} MultipleStaticGreedy modified {2} (exit)",
-                new Object[] { getName(), trackingCount, serviceReference }, null);
+            m_componentManager.getLogger().log(LogService.LOG_DEBUG, "dm {0} tracking {1} MultipleStaticGreedy modified {2} (exit)",
+                    null, getName(), trackingCount, serviceReference );
         }
 
+        @Override
         public void removedService(ServiceReference<T> serviceReference, RefPair<S, T> refPair, int trackingCount,
             ExtendedServiceEvent event)
         {
-            m_componentManager.log(LogService.LOG_DEBUG, "dm {0} tracking {1} MultipleStaticGreedy removed {2} (enter)",
-                new Object[] { getName(), trackingCount, serviceReference }, null);
+            m_componentManager.getLogger().log(LogService.LOG_DEBUG, "dm {0} tracking {1} MultipleStaticGreedy removed {2} (enter)",
+                    null, getName(), trackingCount, serviceReference );
             refPair.markDeleted();
             tracked(trackingCount);
             if (isActive())
             {
                 //deactivate while ref is still tracked
-                m_componentManager.log(LogService.LOG_DEBUG,
+                m_componentManager.getLogger().log(LogService.LOG_DEBUG,
                     "Dependency Manager: Static dependency on {0}/{1} is broken",
-                    new Object[] { getName(), m_dependencyMetadata.getInterface() }, null);
+                    null, getName(), m_dependencyMetadata.getInterface() );
                 deactivateComponentManager();
                 //try to reactivate after ref is no longer tracked.
                 if (event != null)
@@ -533,17 +555,18 @@ public class DependencyManager<S, T> implements ReferenceManager<S, T>
             }
             else if (!cardinalitySatisfied(getTracker().getServiceCount())) //may be called from an old tracker, so getTracker() may give a different answer
             {
-                m_componentManager.log(LogService.LOG_DEBUG,
+                m_componentManager.getLogger().log(LogService.LOG_DEBUG,
                     "Dependency Manager: Static dependency on {0}/{1} is broken",
-                    new Object[] { getName(), m_dependencyMetadata.getInterface() }, null);
+                    null, getName(), m_dependencyMetadata.getInterface() );
                 deactivateComponentManager();
             }
             //This is unlikely
             ungetService(refPair);
-            m_componentManager.log(LogService.LOG_DEBUG, "dm {0} tracking {1} MultipleStaticGreedy removed {2} (exit)",
-                new Object[] { getName(), trackingCount, serviceReference }, null);
+            m_componentManager.getLogger().log(LogService.LOG_DEBUG, "dm {0} tracking {1} MultipleStaticGreedy removed {2} (exit)",
+                    null, getName(), trackingCount, serviceReference );
         }
 
+        @Override
         public boolean prebind(ComponentContextImpl<S> key)
         {
             int serviceCount = 0;
@@ -561,6 +584,7 @@ public class DependencyManager<S, T> implements ReferenceManager<S, T>
             return cardinalitySatisfied(serviceCount);
         }
 
+        @Override
         public void close()
         {
             AtomicInteger trackingCount = new AtomicInteger();
@@ -571,6 +595,7 @@ public class DependencyManager<S, T> implements ReferenceManager<S, T>
             deactivateTracker();
         }
 
+        @Override
         public Collection<RefPair<S, T>> getRefs(AtomicInteger trackingCount)
         {
             ServiceTracker<T, RefPair<S, T>, ExtendedServiceEvent> tracker = getTracker();
@@ -585,36 +610,39 @@ public class DependencyManager<S, T> implements ReferenceManager<S, T>
     private class MultipleStaticReluctantCustomizer extends AbstractCustomizer
     {
 
-        private final AtomicReference<Collection<RefPair<S, T>>> refs = new AtomicReference<Collection<RefPair<S, T>>>();
+        private final AtomicReference<Collection<RefPair<S, T>>> refs = new AtomicReference<>();
         private int trackingCount;
 
+        @Override
         public RefPair<S, T> addingService(ServiceReference<T> serviceReference)
         {
             RefPair<S, T> refPair = newRefPair(serviceReference);
             return refPair;
         }
 
+        @Override
         public void addedService(ServiceReference<T> serviceReference, RefPair<S, T> refPair, int trackingCount,
             int serviceCount, ExtendedServiceEvent event)
         {
-            m_componentManager.log(LogService.LOG_DEBUG,
+            m_componentManager.getLogger().log(LogService.LOG_DEBUG,
                 "dm {0} tracking {1} MultipleStaticReluctant added {2} (enter)",
-                new Object[] { getName(), trackingCount, serviceReference }, null);
+                null, getName(), trackingCount, serviceReference );
             tracked(trackingCount);
             if (isTrackerOpened() && cardinalityJustSatisfied(serviceCount) && !isActive())
             {
                 m_componentManager.activateInternal();
             }
-            m_componentManager.log(LogService.LOG_DEBUG, "dm {0} tracking {1} MultipleStaticReluctant added {2} (exit)",
-                new Object[] { getName(), trackingCount, serviceReference }, null);
+            m_componentManager.getLogger().log(LogService.LOG_DEBUG, "dm {0} tracking {1} MultipleStaticReluctant added {2} (exit)",
+                    null, getName(), trackingCount, serviceReference );
         }
 
+        @Override
         public void modifiedService(ServiceReference<T> serviceReference, RefPair<S, T> refPair, int trackingCount,
             ExtendedServiceEvent event)
         {
-            m_componentManager.log(LogService.LOG_DEBUG,
+            m_componentManager.getLogger().log(LogService.LOG_DEBUG,
                 "dm {0} tracking {1} MultipleStaticReluctant modified {2} (enter)",
-                new Object[] { getName(), trackingCount, serviceReference }, null);
+                null, getName(), trackingCount, serviceReference );
             boolean reactivate = false;
             Collection<RefPair<S, T>> refs = this.refs.get();
             if (isActive() && refs.contains(refPair))
@@ -630,17 +658,18 @@ public class DependencyManager<S, T> implements ReferenceManager<S, T>
                     event.addComponentManager(m_componentManager);
                 }
             }
-            m_componentManager.log(LogService.LOG_DEBUG,
+            m_componentManager.getLogger().log(LogService.LOG_DEBUG,
                 "dm {0} tracking {1} MultipleStaticReluctant modified {2} (exit)",
-                new Object[] { getName(), trackingCount, serviceReference }, null);
+                null, getName(), trackingCount, serviceReference );
         }
 
+        @Override
         public void removedService(ServiceReference<T> serviceReference, RefPair<S, T> refPair, int trackingCount,
             ExtendedServiceEvent event)
         {
-            m_componentManager.log(LogService.LOG_DEBUG,
+            m_componentManager.getLogger().log(LogService.LOG_DEBUG,
                 "dm {0} tracking {1} MultipleStaticReluctant removed {2} (enter)",
-                new Object[] { getName(), trackingCount, serviceReference }, null);
+                null, getName(), trackingCount, serviceReference );
             refPair.markDeleted();
             tracked(trackingCount);
             Collection<RefPair<S, T>> refs = this.refs.get();
@@ -649,9 +678,9 @@ public class DependencyManager<S, T> implements ReferenceManager<S, T>
                 if (refs.contains(refPair))
                 {
                     //we are tracking the used refs, so we can deactivate here.
-                    m_componentManager.log(LogService.LOG_DEBUG,
+                    m_componentManager.getLogger().log(LogService.LOG_DEBUG,
                         "Dependency Manager: Static dependency on {0}/{1} is broken",
-                        new Object[] { getName(), m_dependencyMetadata.getInterface() }, null);
+                        null, getName(), m_dependencyMetadata.getInterface() );
                     deactivateComponentManager();
 
                     // FELIX-2368: immediately try to reactivate
@@ -664,17 +693,18 @@ public class DependencyManager<S, T> implements ReferenceManager<S, T>
             }
             else if (!cardinalitySatisfied(getTracker().getServiceCount()))
             {
-                m_componentManager.log(LogService.LOG_DEBUG,
+                m_componentManager.getLogger().log(LogService.LOG_DEBUG,
                     "Dependency Manager: Static dependency on {0}/{1} is broken",
-                    new Object[] { getName(), m_dependencyMetadata.getInterface() }, null);
+                    null, getName(), m_dependencyMetadata.getInterface() );
                 deactivateComponentManager();
             }
             ungetService(refPair);
-            m_componentManager.log(LogService.LOG_DEBUG,
+            m_componentManager.getLogger().log(LogService.LOG_DEBUG,
                 "dm {0} tracking {1} MultipleStaticReluctant removed {2} (exit)",
-                new Object[] { getName(), trackingCount, serviceReference }, null);
+                null, getName(), trackingCount, serviceReference );
         }
 
+        @Override
         public boolean prebind(ComponentContextImpl<S> key)
         {
             int serviceCount = 0;
@@ -691,7 +721,7 @@ public class DependencyManager<S, T> implements ReferenceManager<S, T>
                 }
                 return cardinalitySatisfied(serviceCount);
             }
-            refs = new ArrayList<RefPair<S, T>>();
+            refs = new ArrayList<>();
             AtomicInteger trackingCount = new AtomicInteger();
             SortedMap<ServiceReference<T>, RefPair<S, T>> tracked = getTracker().getTracked(true, trackingCount);
             for (RefPair<S, T> refPair : tracked.values())
@@ -719,6 +749,7 @@ public class DependencyManager<S, T> implements ReferenceManager<S, T>
             return cardinalitySatisfied(serviceCount);
         }
 
+        @Override
         public void close()
         {
             Collection<RefPair<S, T>> refs = this.refs.getAndSet(null);
@@ -732,6 +763,7 @@ public class DependencyManager<S, T> implements ReferenceManager<S, T>
             deactivateTracker();
         }
 
+        @Override
         public Collection<RefPair<S, T>> getRefs(AtomicInteger trackingCount)
         {
             trackingCount.set(this.trackingCount);
@@ -746,6 +778,7 @@ public class DependencyManager<S, T> implements ReferenceManager<S, T>
         private RefPair<S, T> refPair;
         private int trackingCount;
 
+        @Override
         public RefPair<S, T> addingService(ServiceReference<T> serviceReference)
         {
             RefPair<S, T> refPair = getPreviousRefMap().get(serviceReference);
@@ -756,11 +789,12 @@ public class DependencyManager<S, T> implements ReferenceManager<S, T>
             return refPair;
         }
 
+        @Override
         public void addedService(ServiceReference<T> serviceReference, RefPair<S, T> refPair, int trackingCount,
             int serviceCount, ExtendedServiceEvent event)
         {
-            m_componentManager.log(LogService.LOG_DEBUG, "dm {0} tracking {1} SingleDynamic added {2} (enter)",
-                new Object[] { getName(), trackingCount, serviceReference }, null);
+            m_componentManager.getLogger().log(LogService.LOG_DEBUG, "dm {0} tracking {1} SingleDynamic added {2} (enter)",
+                    null, getName(), trackingCount, serviceReference );
             boolean tracked = false;
             if (getPreviousRefMap().remove(serviceReference) == null)
             {
@@ -800,19 +834,20 @@ public class DependencyManager<S, T> implements ReferenceManager<S, T>
                 }
             }
             this.trackingCount = trackingCount;
-            m_componentManager.log(LogService.LOG_DEBUG, "dm {0} tracking {1} SingleDynamic added {2} (exit)",
-                new Object[] { getName(), trackingCount, serviceReference }, null);
+            m_componentManager.getLogger().log(LogService.LOG_DEBUG, "dm {0} tracking {1} SingleDynamic added {2} (exit)",
+                    null, getName(), trackingCount, serviceReference );
             if (!tracked)
             {
                 tracked(trackingCount);
             }
         }
 
+        @Override
         public void modifiedService(ServiceReference<T> serviceReference, RefPair<S, T> refPair, int trackingCount,
             ExtendedServiceEvent event)
         {
-            m_componentManager.log(LogService.LOG_DEBUG, "dm {0} tracking {1} SingleDynamic modified {2} (enter)",
-                new Object[] { getName(), trackingCount, serviceReference }, null);
+            m_componentManager.getLogger().log(LogService.LOG_DEBUG, "dm {0} tracking {1} SingleDynamic modified {2} (enter)",
+                    null, getName(), trackingCount, serviceReference );
             boolean invokeUpdated;
             synchronized (getTracker().tracked())
             {
@@ -823,16 +858,17 @@ public class DependencyManager<S, T> implements ReferenceManager<S, T>
                 m_componentManager.invokeUpdatedMethod(DependencyManager.this, refPair, trackingCount);
             }
             this.trackingCount = trackingCount;
-            m_componentManager.log(LogService.LOG_DEBUG, "dm {0} tracking {1} SingleDynamic modified {2} (exit)",
-                new Object[] { getName(), trackingCount, serviceReference }, null);
+            m_componentManager.getLogger().log(LogService.LOG_DEBUG, "dm {0} tracking {1} SingleDynamic modified {2} (exit)",
+                    null, getName(), trackingCount, serviceReference );
             tracked(trackingCount);
         }
 
+        @Override
         public void removedService(ServiceReference<T> serviceReference, RefPair<S, T> refPair, int trackingCount,
             ExtendedServiceEvent event)
         {
-            m_componentManager.log(LogService.LOG_DEBUG, "dm {0} tracking {1} SingleDynamic removed {2} (enter)",
-                new Object[] { getName(), trackingCount, serviceReference }, null);
+            m_componentManager.getLogger().log(LogService.LOG_DEBUG, "dm {0} tracking {1} SingleDynamic removed {2} (enter)",
+                    null, getName(), trackingCount, serviceReference );
             refPair.markDeleted();
             boolean deactivate = false;
             boolean untracked = true;
@@ -898,10 +934,11 @@ public class DependencyManager<S, T> implements ReferenceManager<S, T>
                 this.trackingCount = trackingCount;
                 tracked(trackingCount);
             }
-            m_componentManager.log(LogService.LOG_DEBUG, "dm {0} tracking {1} SingleDynamic removed {2} (exit)",
-                new Object[] { getName(), trackingCount, serviceReference }, null);
+            m_componentManager.getLogger().log(LogService.LOG_DEBUG, "dm {0} tracking {1} SingleDynamic removed {2} (exit)",
+                    null, getName(), trackingCount, serviceReference );
         }
 
+        @Override
         public boolean prebind(ComponentContextImpl<S> key)
         {
             RefPair<S, T> refPair = null;
@@ -932,6 +969,7 @@ public class DependencyManager<S, T> implements ReferenceManager<S, T>
             return success;
         }
 
+        @Override
         public void close()
         {
             closeRefPair();
@@ -947,6 +985,7 @@ public class DependencyManager<S, T> implements ReferenceManager<S, T>
             refPair = null;
         }
 
+        @Override
         public Collection<RefPair<S, T>> getRefs(AtomicInteger trackingCount)
         {
             Object monitor = getTracker() == null ? null : getTracker().tracked();
@@ -971,17 +1010,19 @@ public class DependencyManager<S, T> implements ReferenceManager<S, T>
         private RefPair<S, T> refPair;
         private int trackingCount;
 
+        @Override
         public RefPair<S, T> addingService(ServiceReference<T> serviceReference)
         {
             RefPair<S, T> refPair = newRefPair(serviceReference);
             return refPair;
         }
 
+        @Override
         public void addedService(ServiceReference<T> serviceReference, RefPair<S, T> refPair, int trackingCount,
             int serviceCount, ExtendedServiceEvent event)
         {
-            m_componentManager.log(LogService.LOG_DEBUG, "dm {0} tracking {1} SingleStatic added {2} (enter)",
-                new Object[] { getName(), trackingCount, serviceReference }, null);
+            m_componentManager.getLogger().log(LogService.LOG_DEBUG, "dm {0} tracking {1} SingleStatic added {2} (enter)",
+                    null, getName(), trackingCount, serviceReference);
             this.trackingCount = trackingCount;
             tracked(trackingCount);
             if (isActive())
@@ -1002,9 +1043,9 @@ public class DependencyManager<S, T> implements ReferenceManager<S, T>
                 }
                 else
                 {
-                    m_componentManager.log(LogService.LOG_DEBUG,
+                    m_componentManager.getLogger().log(LogService.LOG_DEBUG,
                         "dm {0} tracking {1} SingleStatic active but new {2} is worse match than old {3}",
-                        new Object[] { getName(), trackingCount, refPair, this.refPair, }, null);
+                        null, getName(), trackingCount, refPair, this.refPair);
                 }
             }
             else if (isTrackerOpened() && cardinalityJustSatisfied(serviceCount))
@@ -1013,19 +1054,20 @@ public class DependencyManager<S, T> implements ReferenceManager<S, T>
             }
             else
             {
-                m_componentManager.log(LogService.LOG_DEBUG,
+                m_componentManager.getLogger().log(LogService.LOG_DEBUG,
                     "dm {0} tracking {1} SingleStatic active: {2} trackerOpened: {3} optional: {4}",
-                    new Object[] { getName(), trackingCount, isActive(), isTrackerOpened(), isOptional() }, null);
+                    null, getName(), trackingCount, isActive(), isTrackerOpened(), isOptional() );
             }
-            m_componentManager.log(LogService.LOG_DEBUG, "dm {0} tracking {1} SingleStatic added {2} (exit)",
-                new Object[] { getName(), trackingCount, serviceReference }, null);
+            m_componentManager.getLogger().log(LogService.LOG_DEBUG, "dm {0} tracking {1} SingleStatic added {2} (exit)",
+                    null, getName(), trackingCount, serviceReference );
         }
 
+        @Override
         public void modifiedService(ServiceReference<T> serviceReference, RefPair<S, T> refPair, int trackingCount,
             ExtendedServiceEvent event)
         {
-            m_componentManager.log(LogService.LOG_DEBUG, "dm {0} tracking {1} SingleStatic modified {2} (enter)",
-                new Object[] { getName(), trackingCount, serviceReference }, null);
+            m_componentManager.getLogger().log(LogService.LOG_DEBUG, "dm {0} tracking {1} SingleStatic modified {2} (enter)",
+                    null, getName(), trackingCount, serviceReference );
             boolean invokeUpdated;
             final Object sync = getTracker().tracked();
             synchronized (sync)
@@ -1054,15 +1096,16 @@ public class DependencyManager<S, T> implements ReferenceManager<S, T>
                     event.addComponentManager(m_componentManager);
                 }
             }
-            m_componentManager.log(LogService.LOG_DEBUG, "dm {0} tracking {1} SingleStatic modified {2} (exit)",
-                new Object[] { getName(), trackingCount, serviceReference }, null);
+            m_componentManager.getLogger().log(LogService.LOG_DEBUG, "dm {0} tracking {1} SingleStatic modified {2} (exit)",
+                    null, getName(), trackingCount, serviceReference );
         }
 
+        @Override
         public void removedService(ServiceReference<T> serviceReference, RefPair<S, T> refPair, int trackingCount,
             ExtendedServiceEvent event)
         {
-            m_componentManager.log(LogService.LOG_DEBUG, "dm {0} tracking {1} SingleStatic removed {2} (enter)",
-                new Object[] { getName(), trackingCount, serviceReference }, null);
+            m_componentManager.getLogger().log(LogService.LOG_DEBUG, "dm {0} tracking {1} SingleStatic removed {2} (enter)",
+                    null, getName(), trackingCount, serviceReference );
             refPair.markDeleted();
             this.trackingCount = trackingCount;
             tracked(trackingCount);
@@ -1092,10 +1135,11 @@ public class DependencyManager<S, T> implements ReferenceManager<S, T>
                     event.addComponentManager(m_componentManager);
                 }
             }
-            m_componentManager.log(LogService.LOG_DEBUG, "dm {0} tracking {1} SingleStatic removed {2} (exit)",
-                new Object[] { getName(), trackingCount, serviceReference }, null);
+            m_componentManager.getLogger().log(LogService.LOG_DEBUG, "dm {0} tracking {1} SingleStatic removed {2} (exit)",
+                    null, getName(), trackingCount, serviceReference );
         }
 
+        @Override
         public boolean prebind(ComponentContextImpl<S> key)
         {
             boolean success = cardinalitySatisfied(0);
@@ -1126,6 +1170,7 @@ public class DependencyManager<S, T> implements ReferenceManager<S, T>
             return success;
         }
 
+        @Override
         public void close()
         {
             ServiceTracker<T, RefPair<S, T>, ExtendedServiceEvent> tracker = getTracker();
@@ -1145,6 +1190,7 @@ public class DependencyManager<S, T> implements ReferenceManager<S, T>
             }
         }
 
+        @Override
         public Collection<RefPair<S, T>> getRefs(AtomicInteger trackingCount)
         {
             Object monitor = getTracker() == null ? null : getTracker().tracked();
@@ -1166,52 +1212,63 @@ public class DependencyManager<S, T> implements ReferenceManager<S, T>
     private class NoPermissionsCustomizer implements Customizer<S, T>
     {
 
+        @Override
         public boolean prebind(ComponentContextImpl<S> key)
         {
             return false;
         }
 
+        @Override
         public void close()
         {
         }
 
+        @Override
         public Collection<RefPair<S, T>> getRefs(AtomicInteger trackingCount)
         {
             return Collections.emptyList();
         }
 
+        @Override
         public boolean isSatisfied()
         {
             return isOptional();
         }
 
+        @Override
         public void setTracker(ServiceTracker<T, RefPair<S, T>, ExtendedServiceEvent> tRefPairServiceTracker)
         {
         }
 
+        @Override
         public void setTrackerOpened()
         {
         }
 
+        @Override
         public void setPreviousRefMap(Map<ServiceReference<T>, RefPair<S, T>> previousRefMap)
         {
         }
 
+        @Override
         public RefPair<S, T> addingService(ServiceReference<T> tServiceReference)
         {
             return null;
         }
 
+        @Override
         public void addedService(ServiceReference<T> tServiceReference, RefPair<S, T> service, int trackingCount,
             int serviceCount, ExtendedServiceEvent event)
         {
         }
 
+        @Override
         public void modifiedService(ServiceReference<T> tServiceReference, RefPair<S, T> service, int trackingCount,
             ExtendedServiceEvent event)
         {
         }
 
+        @Override
         public void removedService(ServiceReference<T> tServiceReference, RefPair<S, T> service, int trackingCount,
             ExtendedServiceEvent event)
         {
@@ -1233,7 +1290,7 @@ public class DependencyManager<S, T> implements ReferenceManager<S, T>
         return m_minCardinality == 0;
     }
 
-    private boolean cardinalitySatisfied(int serviceCount)
+    public boolean cardinalitySatisfied(int serviceCount)
     {
         return m_minCardinality <= serviceCount;
     }
@@ -1285,15 +1342,8 @@ public class DependencyManager<S, T> implements ReferenceManager<S, T>
     {
         if (hasGetPermission())
         {
-            // component activator may be null if disposed concurrently
-            ComponentActivator bca = m_componentManager.getActivator();
-            if (bca == null)
-            {
-                return null;
-            }
-
             // get bundle context, may be null if component deactivated since getting bca
-            BundleContext bc = bca.getBundleContext();
+            BundleContext bc = m_componentManager.getActivator().getBundleContext();
             if (bc == null)
             {
                 return null;
@@ -1310,13 +1360,13 @@ public class DependencyManager<S, T> implements ReferenceManager<S, T>
             }
             catch (InvalidSyntaxException ise)
             {
-                m_componentManager.log(LogService.LOG_ERROR, "Unexpected problem with filter ''{0}''",
-                    new Object[] { targetFilter }, ise);
+                m_componentManager.getLogger().log(LogService.LOG_ERROR, "Unexpected problem with filter ''{0}''",
+                    ise, targetFilter );
                 return null;
             }
         }
 
-        m_componentManager.log(LogService.LOG_DEBUG, "No permission to access the services", null);
+        m_componentManager.getLogger().log(LogService.LOG_DEBUG, "No permission to access the services", null);
         return null;
     }
 
@@ -1366,7 +1416,7 @@ public class DependencyManager<S, T> implements ReferenceManager<S, T>
     T[] getServices(ComponentContextImpl<S> key)
     {
         Collection<RefPair<S, T>> refs = m_customizer.getRefs(new AtomicInteger());
-        List<T> services = new ArrayList<T>(refs.size());
+        List<T> services = new ArrayList<>(refs.size());
         for (RefPair<S, T> ref : refs)
         {
             T service = getService(key, ref);
@@ -1383,10 +1433,11 @@ public class DependencyManager<S, T> implements ReferenceManager<S, T>
     /* (non-Javadoc)
      * @see org.apache.felix.scr.impl.manager.ReferenceManager#getServiceReferences()
      */
+    @Override
     public List<ServiceReference<?>> getServiceReferences()
     {
         Collection<RefPair<S, T>> bound = m_customizer.getRefs(new AtomicInteger());
-        List<ServiceReference<?>> result = new ArrayList<ServiceReference<?>>(bound.size());
+        List<ServiceReference<?>> result = new ArrayList<>(bound.size());
         for (RefPair<S, T> ref : bound)
         {
             result.add(ref.getRef());
@@ -1450,15 +1501,14 @@ public class DependencyManager<S, T> implements ReferenceManager<S, T>
         final BundleContext bundleContext = m_componentManager.getBundleContext();
         if (bundleContext == null)
         {
-            m_componentManager.log(LogService.LOG_ERROR,
-                "Bundle shut down while getting service {0} ({1}/{2,number,#})", new Object[] { getName(),
-                        m_dependencyMetadata.getInterface(), refPair.getRef().getProperty(Constants.SERVICE_ID) },
-                null);
+            m_componentManager.getLogger().log(LogService.LOG_ERROR,
+                "Bundle shut down while getting service {0} ({1}/{2,number,#})", null, getName(),
+                        m_dependencyMetadata.getInterface(), refPair.getRef().getProperty(Constants.SERVICE_ID) );
             return null;
         }
         try
         {
-            refPair.getServiceObject(key, bundleContext, m_componentManager);
+            refPair.getServiceObject(key, bundleContext);
             serviceObject = refPair.getServiceObject(key);
         }
         catch (Exception e)
@@ -1466,10 +1516,9 @@ public class DependencyManager<S, T> implements ReferenceManager<S, T>
             // caused by getService() called on invalid bundle context
             // or if there is a service reference cycle involving service
             // factories !
-            m_componentManager.log(LogService.LOG_ERROR, "Failed getting service {0} ({1}/{2,number,#})",
-                new Object[] { getName(), m_dependencyMetadata.getInterface(),
-                        refPair.getRef().getProperty(Constants.SERVICE_ID) },
-                e);
+            m_componentManager.getLogger().log(LogService.LOG_ERROR, "Failed getting service {0} ({1}/{2,number,#})",
+                e, getName(), m_dependencyMetadata.getInterface(),
+                        refPair.getRef().getProperty(Constants.SERVICE_ID) );
             return null;
         }
 
@@ -1483,9 +1532,15 @@ public class DependencyManager<S, T> implements ReferenceManager<S, T>
     /* (non-Javadoc)
      * @see org.apache.felix.scr.impl.manager.ReferenceManager#getName()
      */
+    @Override
     public String getName()
     {
         return m_dependencyMetadata.getName();
+    }
+
+    public ReferenceMetadata getReferenceMetadata()
+    {
+    	return m_dependencyMetadata;
     }
 
     /**
@@ -1494,6 +1549,7 @@ public class DependencyManager<S, T> implements ReferenceManager<S, T>
      * registered in the framework and available to this dependency manager is
      * not zero.
      */
+    @Override
     public boolean isSatisfied()
     {
         return m_customizer.isSatisfied();
@@ -1520,6 +1576,11 @@ public class DependencyManager<S, T> implements ReferenceManager<S, T>
         return m_customizer.prebind(key);
     }
 
+    public static final class OpenStatus<S, T> {
+        public final AtomicInteger trackingCount = new AtomicInteger();
+        public Collection<RefPair<S, T>> refs;
+    }
+
     /**
      * initializes a dependency. This method binds all of the service
      * occurrences to the instance object
@@ -1528,42 +1589,61 @@ public class DependencyManager<S, T> implements ReferenceManager<S, T>
      * @return true if the dependency is satisfied and at least the minimum
      *      number of services could be bound. Otherwise false is returned.
      */
-    boolean open(ComponentContextImpl<S> componentContext, EdgeInfo edgeInfo)
+    OpenStatus<S, T> open(ComponentContextImpl<S> componentContext, EdgeInfo edgeInfo)
     {
-        if (!invokeInitMethod(componentContext))
-        {
-            m_componentManager.log(LogService.LOG_DEBUG, "For dependency {0}, failed to initialize object",
-                new Object[] { getName() }, null);
-            return false;
-        }
-
         int serviceCount = 0;
-        AtomicInteger trackingCount = new AtomicInteger();
-        Collection<RefPair<S, T>> refs;
+        final OpenStatus<S, T> status = new OpenStatus<>();
         CountDownLatch openLatch;
         synchronized (m_tracker.tracked())
         {
-            refs = m_customizer.getRefs(trackingCount);
-            edgeInfo.setOpen(trackingCount.get());
+        	status.refs = m_customizer.getRefs(status.trackingCount);
+            edgeInfo.setOpen(status.trackingCount.get());
             openLatch = edgeInfo.getOpenLatch();
         }
-        m_componentManager.log(LogService.LOG_DEBUG, "For dependency {0}, optional: {1}; to bind: {2}",
-            new Object[] { getName(), isOptional(), refs }, null);
-        for (RefPair<S, T> refPair : refs)
+        m_componentManager.getLogger().log(LogService.LOG_DEBUG, "For dependency {0}, optional: {1}; to bind: {2}",
+                null, getName(), isOptional(), status.refs);
+        for (RefPair<S, T> refPair : status.refs)
         {
             if (!refPair.isDeleted() && !refPair.isFailed())
             {
-                if (!doInvokeBindMethod(componentContext, refPair, trackingCount.get()))
+                serviceCount++;
+            }
+        }
+        openLatch.countDown();
+        return (cardinalitySatisfied(serviceCount) ? status : null);
+    }
+
+    boolean bind(final ComponentContextImpl<S> componentContext, final OpenStatus<S, T> status)
+    {
+        if (!invokeInitMethod(componentContext))
+        {
+            m_componentManager.getLogger().log(LogService.LOG_DEBUG, "For dependency {0}, failed to initialize object",
+                    null, getName());
+            return false;
+        }
+        final ReferenceMethod bindMethod = m_bindMethods.getBind();
+        return this.bindDependency(componentContext, bindMethod, status);
+    }
+
+    boolean bindDependency(final ComponentContextImpl<S> componentContext,
+            final ReferenceMethod bindMethod,
+            final OpenStatus<S, T> status)
+    {
+        int serviceCount = 0;
+        for (final RefPair<S, T> refPair : status.refs)
+        {
+            if (!refPair.isDeleted() && !refPair.isFailed())
+            {
+                if (!doInvokeBindMethod(componentContext, bindMethod, refPair, status.trackingCount.get()))
                 {
-                    m_componentManager.log(LogService.LOG_DEBUG,
+                    m_componentManager.getLogger().log(LogService.LOG_DEBUG,
                         "For dependency {0}, failed to invoke bind method on object {1}",
-                        new Object[] { getName(), refPair }, null);
+                        null, getName(), refPair );
 
                 }
                 serviceCount++;
             }
         }
-        openLatch.countDown();
         return cardinalitySatisfied(serviceCount);
     }
 
@@ -1589,9 +1669,9 @@ public class DependencyManager<S, T> implements ReferenceManager<S, T>
             latch = edgeInfo.getCloseLatch();
         }
 
-        m_componentManager.log(LogService.LOG_DEBUG,
+        m_componentManager.getLogger().log(LogService.LOG_DEBUG,
             "DependencyManager: {0} close component unbinding from {1} at tracking count {2} refpairs: {3}",
-            new Object[] { getName(), componentContext, trackingCount.get(), refPairs }, null);
+            null, getName(), componentContext, trackingCount.get(), refPairs );
         m_componentManager.waitForTracked(trackingCount.get());
         for (RefPair<S, T> boundRef : refPairs)
         {
@@ -1638,7 +1718,7 @@ public class DependencyManager<S, T> implements ReferenceManager<S, T>
         //TODO this check is no longer correct, fix it!
         //        if (refPair.getServiceObject(key) != null)
         //        {
-        //            m_componentManager.log( LogService.LOG_DEBUG,
+        //            m_componentManager.getLogger().log( LogService.LOG_DEBUG,
         //                    "DependencyManager : late binding of service reference {1} skipped as service has already been located",
         //                    new Object[] {ref}, null );
         //            //something else got the reference and may be binding it.
@@ -1659,7 +1739,7 @@ public class DependencyManager<S, T> implements ReferenceManager<S, T>
             final Object componentInstance = componentContext.getImplementationObject(false);
             if (componentInstance != null)
             {
-                return m_bindMethods.getInit().init(componentInstance, m_componentManager);
+                return m_bindMethods.getInit().init(componentInstance, componentContext.getLogger());
             }
         }
         return true;
@@ -1701,31 +1781,33 @@ public class DependencyManager<S, T> implements ReferenceManager<S, T>
                 }
             }
             //edgeInfo open has been set, so binding has started.
-            return doInvokeBindMethod(componentContext, refPair, trackingCount);
+            return doInvokeBindMethod(componentContext, m_bindMethods.getBind(), refPair, trackingCount);
 
         }
         else
         {
-            m_componentManager.log(LogService.LOG_DEBUG,
+            m_componentManager.getLogger().log(LogService.LOG_DEBUG,
                 "DependencyManager : component not yet created, assuming bind method call succeeded", null);
 
             return true;
         }
     }
 
-    private boolean doInvokeBindMethod(ComponentContextImpl<S> componentContext, RefPair<S, T> refPair,
+    private boolean doInvokeBindMethod(ComponentContextImpl<S> componentContext,
+            final ReferenceMethod bindMethod,
+            RefPair<S, T> refPair,
         int trackingCount)
     {
-        if (!getServiceObject(componentContext, m_bindMethods.getBind(), refPair))
+        if (!getServiceObject(componentContext, bindMethod, refPair))
         {
-            m_componentManager.log(LogService.LOG_WARNING,
+            m_componentManager.getLogger().log(LogService.LOG_WARNING,
                 "DependencyManager : invokeBindMethod : Service not available from service registry for ServiceReference {0} for reference {1}",
-                new Object[] { refPair.getRef(), getName() }, null);
+                null, refPair.getRef(), getName() );
             return false;
 
         }
-        MethodResult result = m_bindMethods.getBind().invoke(componentContext.getImplementationObject(false),
-            componentContext, refPair, MethodResult.VOID, m_componentManager);
+        MethodResult result = bindMethod.invoke(componentContext.getImplementationObject(false),
+            new BindParameters(componentContext, refPair), MethodResult.VOID);
         if (result == null)
         {
             return false;
@@ -1764,15 +1846,14 @@ public class DependencyManager<S, T> implements ReferenceManager<S, T>
             info.waitForOpen(m_componentManager, getName(), "invokeUpdatedMethod");
             if (!getServiceObject(componentContext, m_bindMethods.getUpdated(), refPair))
             {
-                m_componentManager.log(LogService.LOG_WARNING,
+                m_componentManager.getLogger().log(LogService.LOG_WARNING,
                     "DependencyManager : invokeUpdatedMethod : Service not available from service registry for ServiceReference {0} for reference {1}",
-                    new Object[] { refPair.getRef(), getName() }, null);
+                    null, refPair.getRef(), getName() );
                 return false;
 
             }
             final MethodResult methodResult = m_bindMethods.getUpdated().invoke(
-                componentContext.getImplementationObject(false), componentContext, refPair, MethodResult.VOID,
-                m_componentManager);
+                componentContext.getImplementationObject(false), new BindParameters(componentContext, refPair), MethodResult.VOID);
             if (methodResult != null)
             {
                 m_componentManager.setServiceProperties(methodResult, trackingCount);
@@ -1784,7 +1865,7 @@ public class DependencyManager<S, T> implements ReferenceManager<S, T>
             // don't care whether we can or cannot call the updated method
             // if the component instance has already been cleared by the
             // close() method
-            m_componentManager.log(LogService.LOG_DEBUG,
+            m_componentManager.getLogger().log(LogService.LOG_DEBUG,
                 "DependencyManager : Component not set, no need to call updated method", null);
         }
         return false;
@@ -1833,15 +1914,14 @@ public class DependencyManager<S, T> implements ReferenceManager<S, T>
 
             if (!getServiceObject(componentContext, m_bindMethods.getUnbind(), refPair))
             {
-                m_componentManager.log(LogService.LOG_WARNING,
+                m_componentManager.getLogger().log(LogService.LOG_WARNING,
                     "DependencyManager : invokeUnbindMethod : Service not available from service registry for ServiceReference {0} for reference {1}",
-                    new Object[] { refPair.getRef(), getName() }, null);
+                    null, refPair.getRef(), getName() );
                 return;
 
             }
             MethodResult methodResult = m_bindMethods.getUnbind().invoke(
-                componentContext.getImplementationObject(false), componentContext, refPair, MethodResult.VOID,
-                m_componentManager);
+                componentContext.getImplementationObject(false), new BindParameters(componentContext, refPair), MethodResult.VOID);
             if (methodResult != null)
             {
                 m_componentManager.setServiceProperties(methodResult, trackingCount);
@@ -1853,7 +1933,7 @@ public class DependencyManager<S, T> implements ReferenceManager<S, T>
             // don't care whether we can or cannot call the unbind method
             // if the component instance has already been cleared by the
             // close() method
-            m_componentManager.log(LogService.LOG_DEBUG,
+            m_componentManager.getLogger().log(LogService.LOG_DEBUG,
                 "DependencyManager : Component not set, no need to call unbind method", null);
         }
     }
@@ -1954,9 +2034,9 @@ public class DependencyManager<S, T> implements ReferenceManager<S, T>
         }
         catch (ComponentException e)
         {
-            m_componentManager.log(LogService.LOG_WARNING,
+            m_componentManager.getLogger().log(LogService.LOG_WARNING,
                 "Invalid minimum cardinality property for dependency {0}: {1}",
-                new Object[] { getName(), e.getMessage() }, null);
+                null, getName(), e.getMessage());
         }
         if (minimumCardinality != null && (minimumCardinality < defaultMinimumCardinality(m_dependencyMetadata)
             || (!m_dependencyMetadata.isMultiple() && minimumCardinality > 1)))
@@ -1994,9 +2074,9 @@ public class DependencyManager<S, T> implements ReferenceManager<S, T>
         // do nothing if target filter does not change
         if ((m_target == null && target == null) || (m_target != null && m_target.equals(target)))
         {
-            m_componentManager.log(LogService.LOG_DEBUG,
+            m_componentManager.getLogger().log(LogService.LOG_DEBUG,
                 "No change in target property for dependency {0}: currently registered: {1}",
-                new Object[] { getName(), m_tracker != null }, null);
+                null, getName(), m_tracker != null );
             if (m_tracker != null)
             {
                 m_minCardinality = minimumCardinality;
@@ -2071,8 +2151,8 @@ public class DependencyManager<S, T> implements ReferenceManager<S, T>
             //wait for service events to complete before processing initial set from new tracker.
             m_componentManager.waitForTracked(trackingCount.get());
         }
-        m_componentManager.log(LogService.LOG_DEBUG, "Setting target property for dependency {0} to {1}",
-            new Object[] { getName(), target }, null);
+        m_componentManager.getLogger().log(LogService.LOG_DEBUG, "Setting target property for dependency {0} to {1}",
+                null, getName(), target );
         BundleContext bundleContext = m_componentManager.getBundleContext();
         Filter eventFilter = null;
         if (bundleContext != null)
@@ -2085,9 +2165,9 @@ public class DependencyManager<S, T> implements ReferenceManager<S, T>
                 }
                 catch (InvalidSyntaxException ise)
                 {
-                    m_componentManager.log(LogService.LOG_ERROR,
+                    m_componentManager.getLogger().log(LogService.LOG_ERROR,
                         "Invalid syntax in target property for dependency {0} to {1}",
-                        new Object[] { getName(), target }, null);
+                        null, getName(), target );
 
                     //create a filter that will never be satisfied
                     eventFilterString = "(component.id=-1)";
@@ -2106,19 +2186,18 @@ public class DependencyManager<S, T> implements ReferenceManager<S, T>
         }
         else
         {
-            m_componentManager.log(LogService.LOG_ERROR, "Bundle is shut down for dependency {0} to {1}",
-                new Object[] { getName(), target }, null);
+            m_componentManager.getLogger().log(LogService.LOG_ERROR, "Bundle is shut down for dependency {0} to {1}",
+                    null, getName(), target );
             return;
         }
 
         m_customizer.setPreviousRefMap(refMap);
         boolean initialActive = oldTracker != null && oldTracker.isActive();
-        m_componentManager.log(LogService.LOG_DEBUG,
+        m_componentManager.getLogger().log(LogService.LOG_DEBUG,
             "New service tracker for {0}, initial active: {1}, previous references: {2}, classFilter: {3}, eventFilter {4}, initialReferenceFilter {5}",
-            new Object[] { getName(), initialActive, refMap, classFilterString, eventFilter,
-                    initialReferenceFilterString },
-            null);
-        ServiceTracker<T, RefPair<S, T>, ExtendedServiceEvent> tracker = new ServiceTracker<T, RefPair<S, T>, ExtendedServiceEvent>(
+            null, getName(), initialActive, refMap, classFilterString, eventFilter,
+                    initialReferenceFilterString );
+        ServiceTracker<T, RefPair<S, T>, ExtendedServiceEvent> tracker = new ServiceTracker<>(
             bundleContext, m_customizer, initialActive, m_componentManager.getActivator(), eventFilter,
             classFilterString, initialReferenceFilterString);
         m_customizer.setTracker(tracker);
@@ -2131,8 +2210,8 @@ public class DependencyManager<S, T> implements ReferenceManager<S, T>
         {
             oldTracker.completeClose(refMap);
         }
-        m_componentManager.log(LogService.LOG_DEBUG, "registering service listener for dependency {0}",
-            new Object[] { getName() }, null);
+        m_componentManager.getLogger().log(LogService.LOG_DEBUG, "registering service listener for dependency {0}",
+                null, getName());
     }
 
     private Customizer<S, T> newCustomizer()
@@ -2141,8 +2220,8 @@ public class DependencyManager<S, T> implements ReferenceManager<S, T>
         if (!hasGetPermission())
         {
             customizer = new NoPermissionsCustomizer();
-            m_componentManager.log(LogService.LOG_INFO, "No permission to get services for {0}",
-                new Object[] { getName() }, null);
+            m_componentManager.getLogger().log(LogService.LOG_INFO, "No permission to get services for {0}",
+                    null, getName());
         }
         else if (m_componentManager.isFactory())
         {
@@ -2188,14 +2267,14 @@ public class DependencyManager<S, T> implements ReferenceManager<S, T>
         {
             refMap = tracker.close(trackingCount);
             m_tracker = null;
-            m_componentManager.log(LogService.LOG_DEBUG, "unregistering service listener for dependency {0}",
-                new Object[] { getName() }, null);
+            m_componentManager.getLogger().log(LogService.LOG_DEBUG, "unregistering service listener for dependency {0}",
+                    null, getName());
         }
         else
         {
-            refMap = new TreeMap<ServiceReference<T>, RefPair<S, T>>(Collections.reverseOrder());
-            m_componentManager.log(LogService.LOG_DEBUG,
-                " No existing service listener to unregister for dependency {0}", new Object[] { getName() }, null);
+            refMap = new TreeMap<>(Collections.reverseOrder());
+            m_componentManager.getLogger().log(LogService.LOG_DEBUG,
+                " No existing service listener to unregister for dependency {0}", null, getName());
             trackingCount.set(-1);
         }
         //        m_registered = false;
@@ -2205,6 +2284,7 @@ public class DependencyManager<S, T> implements ReferenceManager<S, T>
     /* (non-Javadoc)
      * @see org.apache.felix.scr.impl.manager.ReferenceManager#getTarget()
      */
+    @Override
     public String getTarget()
     {
         return m_target;
@@ -2221,7 +2301,7 @@ public class DependencyManager<S, T> implements ReferenceManager<S, T>
         BundleContext bundleContext = m_componentManager.getBundleContext();
         if (bundleContext != null)
         {
-            return bindMethod.getServiceObject(key, refPair, bundleContext, m_componentManager);
+            return bindMethod.getServiceObject(new BindParameters(key, refPair), bundleContext);
         }
         else
         {
@@ -2234,13 +2314,13 @@ public class DependencyManager<S, T> implements ReferenceManager<S, T>
     {
         if (m_dependencyMetadata.getScope() == ReferenceScope.bundle)
         {
-            return new SingleRefPair<S, T>(serviceReference);
+            return new SingleRefPair<>(serviceReference);
         }
         if (m_componentManager.getComponentMetadata().getServiceScope() == Scope.singleton)
         {
-            return new SinglePrototypeRefPair<S, T>(m_componentManager.getBundleContext(), serviceReference);
+            return new SinglePrototypeRefPair<>(m_componentManager.getBundleContext(), serviceReference);
         }
-        return new MultiplePrototypeRefPair<S, T>(m_componentManager.getBundleContext(), serviceReference);
+        return new MultiplePrototypeRefPair<>(m_componentManager.getBundleContext(), serviceReference);
     }
 
     private void deactivateComponentManager()

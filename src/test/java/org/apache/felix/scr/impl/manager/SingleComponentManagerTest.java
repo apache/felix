@@ -26,6 +26,8 @@ import java.lang.reflect.Field;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.felix.scr.impl.inject.ComponentMethodsImpl;
+import org.apache.felix.scr.impl.logger.BundleLogger;
+import org.apache.felix.scr.impl.logger.ComponentLogger;
 import org.apache.felix.scr.impl.manager.AbstractComponentManager.State;
 import org.apache.felix.scr.impl.metadata.ComponentMetadata;
 import org.apache.felix.scr.impl.metadata.DSVersion;
@@ -40,141 +42,148 @@ import org.osgi.service.cm.ConfigurationAdmin;
 
 public class SingleComponentManagerTest
 {
-    
+
     private ServiceRegistration serviceRegistration = Mockito.mock(ServiceRegistration.class);
     private ServiceReference serviceReference = Mockito.mock(ServiceReference.class);
+    private BundleLogger bundleLogger = Mockito.mock(BundleLogger.class);
+    private ComponentLogger componentLogger = Mockito.mock(ComponentLogger.class);
+
     private ComponentActivator componentActivator = new ComponentActivator() {
 
-        public boolean isLogEnabled(int level)
-        {
-            // TODO Auto-generated method stub
-            return false;
-        }
-
-        public void log(int level, String pattern, Object[] arguments, ComponentMetadata metadata, Long componentId,
-            Throwable ex)
-        {
-            // TODO Auto-generated method stub
-            
-        }
-
-        public void log(int level, String message, ComponentMetadata metadata, Long componentId, Throwable ex)
-        {
-            // TODO Auto-generated method stub
-            
-        }
-
+        @Override
         public void addServiceListener(String className, Filter filter,
             ExtendedServiceListener<ExtendedServiceEvent> listener)
         {
             // TODO Auto-generated method stub
-            
+
         }
 
+        @Override
         public void removeServiceListener(String className, Filter filter,
             ExtendedServiceListener<ExtendedServiceEvent> listener)
         {
             // TODO Auto-generated method stub
-            
+
         }
 
+        @Override
         public BundleContext getBundleContext()
         {
             // TODO Auto-generated method stub
             return null;
         }
 
+        @Override
         public boolean isActive()
         {
             // TODO Auto-generated method stub
             return false;
         }
 
+        @Override
         public ScrConfiguration getConfiguration()
         {
             // TODO Auto-generated method stub
             return null;
         }
 
+        @Override
         public void schedule(Runnable runnable)
         {
             // TODO Auto-generated method stub
-            
+
         }
 
+        @Override
         public long registerComponentId(AbstractComponentManager<?> sAbstractComponentManager)
         {
             // TODO Auto-generated method stub
             return 0;
         }
 
+        @Override
         public void unregisterComponentId(AbstractComponentManager<?> sAbstractComponentManager)
         {
             // TODO Auto-generated method stub
-            
+
         }
 
+        @Override
         public <T> boolean enterCreate(ServiceReference<T> reference)
         {
             // TODO Auto-generated method stub
             return false;
         }
 
+        @Override
         public <T> void leaveCreate(ServiceReference<T> reference)
         {
             // TODO Auto-generated method stub
-            
+
         }
 
+        @Override
         public <S, T> void registerMissingDependency(DependencyManager<S, T> dependencyManager,
             ServiceReference<T> serviceReference, int trackingCount)
         {
             // TODO Auto-generated method stub
-            
+
         }
 
+        @Override
         public <T> void missingServicePresent(ServiceReference<T> serviceReference)
         {
             // TODO Auto-generated method stub
-            
+
         }
 
+        @Override
         public void enableComponent(String name)
         {
             // TODO Auto-generated method stub
-            
         }
 
+        @Override
         public void disableComponent(String name)
         {
             // TODO Auto-generated method stub
-            
         }
 
+        @Override
         public RegionConfigurationSupport setRegionConfigurationSupport(ServiceReference<ConfigurationAdmin> reference)
         {
             // TODO Auto-generated method stub
             return null;
         }
 
+        @Override
         public void unsetRegionConfigurationSupport(RegionConfigurationSupport rcs)
         {
             // TODO Auto-generated method stub
-            
         }
-        
+
+        @Override
+        public void updateChangeCount() {
+            // TODO Auto-generated method stub
+        }
+
+        @Override
+        public BundleLogger getLogger() {
+            return bundleLogger;
+        }
     };
-    
+
     @Test
     public void testGetService() throws Exception {
         ComponentMetadata cm = new ComponentMetadata(DSVersion.DS13);
         cm.setImplementationClassName("foo.bar.SomeClass");
-        cm.validate(null);
+        cm.validate();
 
         @SuppressWarnings("unchecked")
         ComponentContainer<Object> cc = Mockito.mock(ComponentContainer.class);
         Mockito.when(cc.getComponentMetadata()).thenReturn(cm);
         Mockito.when(cc.getActivator()).thenReturn(componentActivator);
+        Mockito.when(cc.getLogger()).thenReturn(componentLogger);
 
         SingleComponentManager<Object> scm = new SingleComponentManager<Object>(cc, new ComponentMethodsImpl()) {
             @Override
@@ -188,7 +197,7 @@ public class SingleComponentManagerTest
         Bundle b = Mockito.mock(Bundle.class);
         Mockito.when(b.getBundleContext()).thenReturn(bc);
 
-        ComponentContextImpl<Object> cci = new ComponentContextImpl<Object>(scm, b, null);
+        ComponentContextImpl<Object> cci = new ComponentContextImpl<>(scm, b, null);
         Object implObj = new Object();
         cci.setImplementationObject(implObj);
         cci.setImplementationAccessible(true);
@@ -211,12 +220,13 @@ public class SingleComponentManagerTest
     {
         ComponentMetadata cm = new ComponentMetadata(DSVersion.DS13);
         cm.setImplementationClassName("foo.bar.SomeClass");
-        cm.validate(null);
+        cm.validate();
 
         @SuppressWarnings("unchecked")
         ComponentContainer<Object> cc = Mockito.mock(ComponentContainer.class);
         Mockito.when(cc.getComponentMetadata()).thenReturn(cm);
         Mockito.when(cc.getActivator()).thenReturn(componentActivator);
+        Mockito.when(cc.getLogger()).thenReturn(componentLogger);
 
         SingleComponentManager<?> scm = new SingleComponentManager<Object>(cc, new ComponentMethodsImpl()) {
             @Override

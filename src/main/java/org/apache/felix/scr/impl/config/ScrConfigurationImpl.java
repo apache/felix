@@ -23,13 +23,13 @@ import java.util.Dictionary;
 import java.util.Hashtable;
 
 import org.apache.felix.scr.impl.Activator;
-import org.apache.felix.scr.impl.ScrCommand;
+import org.apache.felix.scr.impl.ComponentCommands;
 import org.apache.felix.scr.impl.manager.ScrConfiguration;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceRegistration;
-import org.osgi.service.cm.ManagedService;
 import org.osgi.service.log.LogService;
+import org.osgi.service.metatype.MetaTypeProvider;
 
 
 /**
@@ -87,27 +87,28 @@ public class ScrConfigurationImpl implements ScrConfiguration
 
     private Boolean globalExtender;
 
-    private BundleContext bundleContext;
+    private volatile BundleContext bundleContext;
 
-    private ServiceRegistration<ManagedService> managedService;
+    private volatile ServiceRegistration<?> managedServiceRef;
 
-    private ScrCommand scrCommand;
+    private volatile ServiceRegistration<?> metatypeProviderRef;
+
+    private ComponentCommands scrCommand;
 
     public ScrConfigurationImpl(Activator activator )
     {
         this.activator = activator;
     }
 
-    @SuppressWarnings("unchecked")
     public void start(final BundleContext bundleContext)
     {
         this.bundleContext = bundleContext;
 
         // listen for Configuration Admin configuration
-        Dictionary<String, Object> props = new Hashtable<String, Object>();
-        props.put(Constants.SERVICE_PID, PID);
-        props.put(Constants.SERVICE_DESCRIPTION, "SCR Configurator");
-        props.put(Constants.SERVICE_VENDOR, "The Apache Software Foundation");
+        final Dictionary<String, Object> msProps = new Hashtable<>();
+        msProps.put(Constants.SERVICE_PID, PID);
+        msProps.put(Constants.SERVICE_DESCRIPTION, "SCR Configurator");
+        msProps.put(Constants.SERVICE_VENDOR, "The Apache Software Foundation");
 
 
         // Process configure from bundle context properties so they can be predictably
@@ -116,23 +117,39 @@ public class ScrConfigurationImpl implements ScrConfiguration
         // configuration may be delivered asynchronously
         configure( null, false );
 
-        managedService = ( ServiceRegistration<ManagedService> ) bundleContext.registerService("org.osgi.service.cm.ManagedService", new ScrManagedServiceServiceFactory(this, activator),
-            props);
+        managedServiceRef = bundleContext.registerService("org.osgi.service.cm.ManagedService", new ScrManagedServiceServiceFactory(this),
+                msProps);
+
+        final Dictionary<String, Object> mtProps = new Hashtable<>();
+        mtProps.put(MetaTypeProvider.METATYPE_PID, PID);
+        mtProps.put(Constants.SERVICE_DESCRIPTION, "SCR Configurator MetaTypeProvider");
+        mtProps.put(Constants.SERVICE_VENDOR, "The Apache Software Foundation");
+
+        metatypeProviderRef = bundleContext.registerService("org.osgi.service.metatype.MetaTypeProvider", new ScrMetaTypeProviderServiceFactory(this),
+                mtProps);
     }
 
-    public void stop() {
-        if (this.managedService != null) {
-            this.managedService.unregister();
-            this.managedService = null;
+    public void stop()
+    {
+        if (this.managedServiceRef != null)
+        {
+            this.managedServiceRef.unregister();
+            this.managedServiceRef = null;
+        }
+
+        if (this.metatypeProviderRef != null)
+        {
+            this.metatypeProviderRef.unregister();
+            this.metatypeProviderRef = null;
         }
 
         this.bundleContext = null;
     }
-    
-    public void setScrCommand(ScrCommand scrCommand)
+
+    public void setScrCommand(ComponentCommands scrCommand)
     {
         this.scrCommand = scrCommand;
-        scrCommand.update(infoAsService());
+        scrCommand.updateProvideScrInfoService(infoAsService());
     }
 
     // Called from the ScrManagedService.updated method to reconfigure
@@ -186,7 +203,7 @@ public class ScrConfigurationImpl implements ScrConfiguration
             }
             if ( scrCommand != null )
             {
-                scrCommand.update( infoAsService() );
+                scrCommand.updateProvideScrInfoService( infoAsService() );
             }
             oldGlobalExtender = this.globalExtender;
             this.globalExtender = newGlobalExtender;
@@ -201,38 +218,45 @@ public class ScrConfigurationImpl implements ScrConfiguration
      * Returns the current log level.
      * @return
      */
+    @Override
     public int getLogLevel()
     {
         return logLevel;
     }
 
 
+    @Override
     public boolean isFactoryEnabled()
     {
         return factoryEnabled;
     }
 
 
+    @Override
     public boolean keepInstances()
     {
         return keepInstances;
     }
-    
+
+    @Override
     public boolean infoAsService()
     {
         return infoAsService;
     }
 
+    @Override
     public long lockTimeout()
     {
         return lockTimeout;
     }
 
+    @Override
     public long stopTimeout()
     {
         return stopTimeout;
     }
 
+    @Override
     public boolean globalExtender()
     {
         return globalExtender;
@@ -254,7 +278,7 @@ public class ScrConfigurationImpl implements ScrConfiguration
     {
         return getLogLevel( bundleContext.getProperty( PROP_LOGLEVEL ) );
     }
-    
+
     private boolean getDefaultInfoAsService()
     {
         return VALUE_TRUE.equalsIgnoreCase( bundleContext.getProperty( PROP_INFO_SERVICE) );

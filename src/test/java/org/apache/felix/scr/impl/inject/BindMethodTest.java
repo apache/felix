@@ -19,13 +19,11 @@
 package org.apache.felix.scr.impl.inject;
 
 
-import junit.framework.TestCase;
-
-import org.apache.felix.scr.impl.BundleComponentActivator;
 import org.apache.felix.scr.impl.MockBundle;
-import org.apache.felix.scr.impl.helper.ComponentMethods;
-import org.apache.felix.scr.impl.inject.BindMethod;
-import org.apache.felix.scr.impl.inject.BindParameters;
+import org.apache.felix.scr.impl.inject.methods.BindMethod;
+import org.apache.felix.scr.impl.logger.ComponentLogger;
+import org.apache.felix.scr.impl.logger.MockComponentLogger;
+import org.apache.felix.scr.impl.manager.ComponentActivator;
 import org.apache.felix.scr.impl.manager.ComponentContainer;
 import org.apache.felix.scr.impl.manager.ComponentContextImpl;
 import org.apache.felix.scr.impl.manager.RefPair;
@@ -39,10 +37,12 @@ import org.apache.felix.scr.impl.manager.components.T3;
 import org.apache.felix.scr.impl.manager.components2.T2;
 import org.apache.felix.scr.impl.metadata.ComponentMetadata;
 import org.apache.felix.scr.impl.metadata.DSVersion;
-import org.easymock.EasyMock;
+import org.mockito.Mockito;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceReference;
+
+import junit.framework.TestCase;
 
 
 public class BindMethodTest extends TestCase
@@ -56,19 +56,15 @@ public class BindMethodTest extends TestCase
     @Override
     public void setUp()
     {
-        m_serviceReference = EasyMock.createNiceMock( ServiceReference.class );
-        m_serviceInstance = EasyMock.createNiceMock( FakeService.class );
-        m_context = EasyMock.createNiceMock( BundleContext.class );
+        m_serviceReference = Mockito.mock( ServiceReference.class );
+        m_serviceInstance = Mockito.mock( FakeService.class );
+        m_context = Mockito.mock( BundleContext.class );
 
-        EasyMock.expect( m_context.getService( m_serviceReference ) ).andReturn( m_serviceInstance )
-                .anyTimes();
+        Mockito.when( m_context.getService( m_serviceReference ) ).thenReturn( m_serviceInstance );
 
-        EasyMock.expect( m_serviceReference.getPropertyKeys() ).andReturn( new String[]
-            { Constants.SERVICE_ID } ).anyTimes();
-        EasyMock.expect( m_serviceReference.getProperty( Constants.SERVICE_ID ) ).andReturn( "Fake Service" )
-            .anyTimes();
-        EasyMock.replay( new Object[]
-            { m_serviceReference, m_context } );
+        Mockito.when( m_serviceReference.getPropertyKeys() ).thenReturn( new String[]
+            { Constants.SERVICE_ID } );
+        Mockito.when( m_serviceReference.getProperty( Constants.SERVICE_ID ) ).thenReturn( "Fake Service" );
     }
 
 
@@ -455,27 +451,31 @@ public class BindMethodTest extends TestCase
                 FakeService.class.getName(), dsVersion, false );
         RefPair refPair = new SingleRefPair( m_serviceReference );
         ComponentContextImpl<T1> cc = new ComponentContextImpl(icm, new MockBundle(), null);
-        assertTrue( bm.getServiceObject( cc, refPair, m_context, icm ) );
+        assertTrue( bm.getServiceObject( new BindParameters(cc, refPair), m_context ) );
         BindParameters bp = new BindParameters(cc, refPair);
-        bm.invoke( component, bp, null, icm );
+        bm.invoke( component, bp, null );
         assertEquals( expectCallPerformed, component.callPerformed );
     }
 
     private ComponentContainer newContainer()
     {
+        final ComponentActivator activator = Mockito.mock(ComponentActivator.class);
         final ComponentMetadata metadata = newMetadata();
         ComponentContainer container = new ComponentContainer() {
 
-            public BundleComponentActivator getActivator()
+            @Override
+            public ComponentActivator getActivator()
             {
-                return null;
+                return activator;
             }
 
+            @Override
             public ComponentMetadata getComponentMetadata()
             {
                 return metadata;
             }
 
+            @Override
             public void disposed(SingleComponentManager component)
             {
             }
@@ -485,6 +485,10 @@ public class BindMethodTest extends TestCase
                 return false;
             }
 
+            @Override
+            public ComponentLogger getLogger() {
+                return new MockComponentLogger();
+            }
         };
         return container;
     }
@@ -493,7 +497,7 @@ public class BindMethodTest extends TestCase
 		ComponentMetadata metadata = new ComponentMetadata( DSVersion.DS11 );
         metadata.setName("foo");
         metadata.setImplementationClassName(Object.class.getName());
-        metadata.validate(null);
+        metadata.validate();
 		return metadata;
 	}
 

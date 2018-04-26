@@ -18,56 +18,39 @@
  */
 package org.apache.felix.scr.impl.config;
 
-import org.apache.felix.scr.impl.helper.SimpleLogger;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.ServiceFactory;
 import org.osgi.framework.ServiceRegistration;
-import org.osgi.service.log.LogService;
 
 /**
- * The <code>ScrManagedServiceServiceFactory</code> is the ServiceFactory
- * registered on behalf of the {@link ScrManagedService} (or
- * {@link ScrManagedServiceMetaTypeProvider}, resp.) to create the instance on
- * demand once it is used by the Configuration Admin Service or the MetaType
- * Service.
+ * The {@code ScrManagedServiceServiceFactory} is a {@code ServiceFactory} registered
+ * on behalf of {@link ScrManagedService} to create a managed service instance
+ * on demand once it is used by the Configuration Admin Service.
  * <p>
- * In contrast to the {@link ScrManagedService} and
- * {@link ScrManagedServiceMetaTypeProvider} classes, this class only requires
+ * In contrast to the {@link ScrManagedService} class, this class only requires
  * core OSGi API and thus may be instantiated without the Configuration Admin
- * and/or MetaType Service API actually available at the time of instantiation.
+ * actually available at the time of instantiation.
  */
-public class ScrManagedServiceServiceFactory implements ServiceFactory<ScrManagedService>
+@SuppressWarnings("rawtypes")
+public class ScrManagedServiceServiceFactory implements ServiceFactory
 {
     private final ScrConfigurationImpl scrConfiguration;
-    private final SimpleLogger logger;
 
-    public ScrManagedServiceServiceFactory(final ScrConfigurationImpl scrConfiguration, final SimpleLogger logger)
+    public ScrManagedServiceServiceFactory(final ScrConfigurationImpl scrConfiguration)
     {
         this.scrConfiguration = scrConfiguration;
-        this.logger = logger;
     }
 
-    public ScrManagedService getService(Bundle bundle, ServiceRegistration<ScrManagedService> registration)
+    @Override
+    public Object getService(final Bundle bundle, final ServiceRegistration registration)
     {
-        try
-        {
-            return ScrManagedServiceMetaTypeProvider.create( this.scrConfiguration );
-        }
-        catch ( Throwable t )
-        {
-            // assume MetaType Service API not available
-            logger
-                .log(
-                    LogService.LOG_INFO,
-                    "Cannot create MetaType providing ManagedService; not providing Metatype information but just accepting configuration",
-                    null );
-        }
         return new ScrManagedService( this.scrConfiguration );
     }
 
-    public void ungetService(Bundle bundle, ServiceRegistration<ScrManagedService> registration, ScrManagedService service)
+    @Override
+    public void ungetService(final Bundle bundle, final ServiceRegistration registration, final Object service)
     {
-        // nothing really todo; GC will do the rest
+        // nothing really to do; GC will do the rest
     }
 
 }

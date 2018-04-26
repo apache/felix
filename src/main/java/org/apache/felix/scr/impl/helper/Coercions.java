@@ -25,13 +25,13 @@ import org.osgi.framework.Bundle;
 import org.osgi.service.component.ComponentException;
 
 /**
- * This implements the coercion table in RFC 190 5.6.3 
+ * This implements the coercion table in RFC 190 5.6.3
  *
  */
 public class Coercions
 {
     // Numbers are   AtomicInteger, AtomicLong, BigDecimal, BigInteger, Byte, Double, Float, Integer, Long, Short
-    //annotation fields can be primitives, String, Class, enums, annotations, and arrays of the preceding types 
+    //annotation fields can be primitives, String, Class, enums, annotations, and arrays of the preceding types
     //    input scalars
     //    String | Integer | Long | Float
     //    | Double | Byte | Short
@@ -68,7 +68,7 @@ public class Coercions
         }
         if ( type.isEnum() )
         {
-            Class clazz = type; //TODO is there a better way to do ? enum creation?
+            final Class clazz = type;
             return coerceToEnum( raw, clazz );
         }
         if ( type == Float.class || type == float.class )
@@ -197,7 +197,7 @@ public class Coercions
         }
         if ( o instanceof Character )
         {
-            return (double) ( (Character) o ).charValue();
+            return ( (Character) o ).charValue();
         }
         if ( o instanceof Number )
         {
@@ -234,7 +234,7 @@ public class Coercions
         }
         if ( o instanceof Character )
         {
-            return (float) ( (Character) o ).charValue();
+            return ( (Character) o ).charValue();
         }
         if ( o instanceof Number )
         {
@@ -271,7 +271,7 @@ public class Coercions
         }
         if ( o instanceof Character )
         {
-            return (int) ( (Character) o ).charValue();
+            return ( (Character) o ).charValue();
         }
         if ( o instanceof Number )
         {
@@ -308,7 +308,7 @@ public class Coercions
         }
         if ( o instanceof Character )
         {
-            return (long) ( (Character) o ).charValue();
+            return ( (Character) o ).charValue();
         }
         if ( o instanceof Number )
         {

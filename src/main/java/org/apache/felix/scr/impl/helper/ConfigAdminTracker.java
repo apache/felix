@@ -35,9 +35,7 @@ public class ConfigAdminTracker
     public ConfigAdminTracker(final ComponentActivator componentActivator)
     {
 
-        //TODO this assumes that there is 0 or 1 ca service visible to the bundle being extended.
-        //Is this sure to be true?
-        configAdminTracker = new ServiceTracker<ConfigurationAdmin, RegionConfigurationSupport>(
+        configAdminTracker = new ServiceTracker<>(
             componentActivator.getBundleContext(), CONFIGURATION_ADMIN,
             new ServiceTrackerCustomizer<ConfigurationAdmin, RegionConfigurationSupport>()
             {
@@ -59,9 +57,9 @@ public class ConfigAdminTracker
                     }
                     catch ( final Exception ex)
                     {
-                        componentActivator.log(LogService.LOG_ERROR,
+                        componentActivator.getLogger().log(LogService.LOG_ERROR,
                                 "Configuration admin API visible to bundle " + componentActivator.getBundleContext().getBundle() +
-                                " is not the same as the Configuration Admin API visible to the SCR implementation.", null, null, ex);
+                                " is not the same as the Configuration Admin API visible to the SCR implementation.", ex);
                     }
 
                     if ( !visible )

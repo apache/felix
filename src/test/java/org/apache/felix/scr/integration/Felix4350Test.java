@@ -20,32 +20,32 @@ package org.apache.felix.scr.integration;
 
 import java.lang.reflect.InvocationTargetException;
 
-import junit.framework.TestCase;
 import org.apache.felix.scr.integration.components.Felix4350Component;
 import org.apache.felix.scr.integration.components.SimpleComponent;
 import org.apache.felix.scr.integration.components.SimpleComponent2;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.ops4j.pax.exam.junit.JUnit4TestRunner;
+import org.ops4j.pax.exam.junit.PaxExam;
 import org.osgi.framework.Bundle;
-import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceFactory;
 import org.osgi.framework.ServiceRegistration;
 import org.osgi.service.component.runtime.dto.ComponentDescriptionDTO;
 
+import junit.framework.TestCase;
+
 /**
  * This test validates the FELIX-4350 issue.
  */
-@RunWith(JUnit4TestRunner.class)
+@RunWith(PaxExam.class)
 public class Felix4350Test extends ComponentTestBase
 {
     static
     {
         // uncomment to enable debugging of this test class
-//                paxRunnerVmOption = DEBUG_VM_OPTION;
+        //                paxRunnerVmOption = DEBUG_VM_OPTION;
         descriptorFile = "/integration_test_FELIX_4350.xml";
         //comment to get debug logging if the test fails.
-//        DS_LOGLEVEL = "warn";
+        //        DS_LOGLEVEL = "warn";
     }
 
     @Test
@@ -82,7 +82,7 @@ public class Felix4350Test extends ComponentTestBase
     {
         ServiceRegistration dep1Reg = register(new SimpleComponent(), 0);
         ServiceRegistration dep2Reg = register(new SimpleComponent2(), 1000);
-        
+
         final ComponentDescriptionDTO main = findComponentDescriptorByName(componentName);
         TestCase.assertNotNull(main);
 
@@ -106,7 +106,7 @@ public class Felix4350Test extends ComponentTestBase
         dep1Reg = register(new SimpleComponent(), 0);
         dep2Reg = register(new SimpleComponent2(), 1000);
         Felix4350Component.check(1, 1, false);
-        
+
         asyncEnable(main); //needs to be async
         delay(300);
         dep1Reg.unregister();
@@ -116,13 +116,14 @@ public class Felix4350Test extends ComponentTestBase
 
         Felix4350Component.check(2, 1, true); //n.b. counts are cumulative
     }
-    
+
     protected void asyncEnable( final ComponentDescriptionDTO cd ) throws Exception
     {
-    	new Thread( new Runnable() {
+        new Thread( new Runnable() {
 
-			public void run() {
-				try
+            @Override
+            public void run() {
+                try
                 {
                     enableAndCheck( cd );
                 }
@@ -132,16 +133,18 @@ public class Felix4350Test extends ComponentTestBase
                 catch (InterruptedException e)
                 {
                 }
-			}}).start();
+            }}).start();
     }
 
     protected ServiceRegistration register(final Object service, final int delay) {
         return bundleContext.registerService(service.getClass().getName(), new ServiceFactory() {
+            @Override
             public Object getService(Bundle bundle, ServiceRegistration registration)
             {
                 delay(delay);
                 return service;
             }
+            @Override
             public void ungetService(Bundle bundle, ServiceRegistration registration, Object service)
             {
             }

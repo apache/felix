@@ -22,7 +22,7 @@ import java.util.Dictionary;
 
 import org.osgi.service.component.ComponentInstance;
 
-public interface ExtFactoryComponentInstance extends ComponentInstance
+public interface ExtFactoryComponentInstance<S> extends ComponentInstance<S>
 {
     
     void modify( Dictionary<String, ?> properties );

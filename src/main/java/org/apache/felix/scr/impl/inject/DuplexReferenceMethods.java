@@ -18,109 +18,124 @@
  */
 package org.apache.felix.scr.impl.inject;
 
-import org.apache.felix.scr.impl.helper.InitReferenceMethod;
-import org.apache.felix.scr.impl.helper.MethodResult;
-import org.apache.felix.scr.impl.helper.ReferenceMethod;
-import org.apache.felix.scr.impl.helper.ReferenceMethods;
-import org.apache.felix.scr.impl.helper.SimpleLogger;
-import org.apache.felix.scr.impl.manager.ComponentContextImpl;
-import org.apache.felix.scr.impl.manager.RefPair;
+import java.util.List;
+
+import org.apache.felix.scr.impl.logger.ComponentLogger;
 import org.osgi.framework.BundleContext;
 
 public class DuplexReferenceMethods implements ReferenceMethods
 {
-    /** First is field methods. */
-    private final ReferenceMethods first;
+    private final ReferenceMethod bind;
+    private final ReferenceMethod updated;
+    private final ReferenceMethod unbind;
+    private final InitReferenceMethod init;
 
-    /** Second is method methods. */
-    private final ReferenceMethods second;
-
-    public DuplexReferenceMethods(final ReferenceMethods first, final ReferenceMethods second)
+    public DuplexReferenceMethods(final List<ReferenceMethods> methods)
     {
-        this.first = first;
-        this.second = second;
-    }
-
-    public ReferenceMethod getBind()
-    {
-        return new DuplexReferenceMethod(first.getBind(), second.getBind());
-    }
-
-    public ReferenceMethod getUnbind()
-    {
-        return new DuplexReferenceMethod(first.getUnbind(), second.getUnbind());
-    }
-
-    public ReferenceMethod getUpdated()
-    {
-        return new DuplexReferenceMethod(first.getUpdated(), second.getUpdated());
-    }
-
-    public InitReferenceMethod getInit()
-    {
-        return new InitReferenceMethod()
+      	final ReferenceMethod[] bindList = new ReferenceMethod[methods.size()];
+    	    final ReferenceMethod[] updatedList = new ReferenceMethod[methods.size()];
+    	    final ReferenceMethod[] unbindList = new ReferenceMethod[methods.size()];
+    	    int index = 0;
+    	    for(final ReferenceMethods m : methods)
+    	    {
+    		    bindList[index] = m.getBind();
+    		    updatedList[index] = m.getUpdated();
+    		    unbindList[index] = m.getUnbind();
+    		    index++;
+    	    }
+        this.bind = new DuplexReferenceMethod(bindList);
+        this.updated = new DuplexReferenceMethod(updatedList);
+        this.unbind = new DuplexReferenceMethod(unbindList);
+        this.init = new InitReferenceMethod()
         {
-
-            public boolean init(Object componentInstance, SimpleLogger logger)
+            @Override
+            public boolean init(final Object componentInstance, final ComponentLogger logger)
             {
-                final InitReferenceMethod i1 = first.getInit();
-                if ( i1 != null )
-                {
-                    if ( !i1.init(componentInstance, logger))
-                    {
-                        return false;
-                    }
-                }
-                final InitReferenceMethod i2 = second.getInit();
-                if ( i2 != null )
-                {
-                    if ( !i2.init(componentInstance, logger))
-                    {
-                        return false;
-                    }
-                }
-                return true;
+            	    boolean result = true;
+            	    for(final ReferenceMethods m : methods)
+            	    {
+            		    final InitReferenceMethod init = m.getInit();
+            		    if ( init != null )
+            		    {
+            			    result = init.init(componentInstance, logger);
+            			    if ( !result )
+            			    {
+            				    break;
+            			    }
+            		    }
+              	}
+                return result;
             }
         };
+    }
+
+    @Override
+    public ReferenceMethod getBind()
+    {
+    	    return this.bind;
+    }
+
+    @Override
+    public ReferenceMethod getUnbind()
+    {
+      	return this.unbind;
+    }
+
+    @Override
+    public ReferenceMethod getUpdated()
+    {
+    	    return this.updated;
+    }
+
+    @Override
+    public InitReferenceMethod getInit()
+    {
+      	return this.init;
     }
 
     private static final class DuplexReferenceMethod implements ReferenceMethod
     {
 
-        private final ReferenceMethod first;
+        private final ReferenceMethod[] methods;
 
-        private final ReferenceMethod second;
-
-        public DuplexReferenceMethod(final ReferenceMethod first, final ReferenceMethod second)
+        public DuplexReferenceMethod(final ReferenceMethod[] methods)
         {
-            this.first = first;
-            this.second = second;
+            this.methods = methods;
         }
 
-        public MethodResult invoke(Object componentInstance,
-                                   ComponentContextImpl<?> componentContext,
-                                   RefPair<?, ?> refPair,
-                                   MethodResult methodCallFailureResult,
-                                   SimpleLogger logger) {
-            if ( first.invoke(componentInstance, componentContext, refPair, methodCallFailureResult, logger) != null )
-            {
-                return second.invoke(componentInstance, componentContext, refPair, methodCallFailureResult, logger);
-            }
-            return null;
-        }
-
-        public <S, T> boolean getServiceObject(ComponentContextImpl<S> key,
-                RefPair<S, T> refPair, BundleContext context,
-                SimpleLogger logger)
+        @Override
+        public MethodResult invoke(final Object componentInstance,
+        		final BindParameters parameters,
+        		final MethodResult methodCallFailureResult)
         {
-            // only if both return true, we return true
-            boolean result = first.getServiceObject(key, refPair, context, logger);
-            if ( result )
-            {
-                result = second.getServiceObject(key, refPair, context, logger);
-            }
+          	MethodResult result = null;
+        	    for(final ReferenceMethod m : methods)
+        	    {
+        		    result = m.invoke(componentInstance, parameters, methodCallFailureResult);
+        		    if ( result == null )
+        		    {
+        			    break;
+        		    }
+        	    }
             return result;
         }
 
+        @Override
+        public <S, T> boolean getServiceObject(
+        		final BindParameters parameters,
+        		final BundleContext context)
+        {
+            // only if all return true, we return true
+         	boolean result = false;
+         	for(final ReferenceMethod m : methods)
+        	    {
+        		    result = m.getServiceObject(parameters, context);
+        		    if (!result )
+        		    {
+        			    break;
+        		    }
+        	    }
+            return result;
+        }
     }
 }

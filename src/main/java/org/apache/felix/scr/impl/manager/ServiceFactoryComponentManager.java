@@ -24,9 +24,9 @@ import java.util.Collection;
 import java.util.Dictionary;
 import java.util.IdentityHashMap;
 
-import org.apache.felix.scr.impl.helper.ComponentMethod;
-import org.apache.felix.scr.impl.helper.ComponentMethods;
-import org.apache.felix.scr.impl.helper.MethodResult;
+import org.apache.felix.scr.impl.inject.ComponentMethods;
+import org.apache.felix.scr.impl.inject.LifecycleMethod;
+import org.apache.felix.scr.impl.inject.MethodResult;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.ServiceRegistration;
 import org.osgi.service.component.ComponentConstants;
@@ -56,13 +56,13 @@ public class ServiceFactoryComponentManager<S> extends SingleComponentManager<S>
 
     // maintain the map of ComponentContext objects created for the
     // service instances
-    private IdentityHashMap<S, ComponentContextImpl<S>> serviceContexts = new IdentityHashMap<S, ComponentContextImpl<S>>();
+    private IdentityHashMap<S, ComponentContextImpl<S>> serviceContexts = new IdentityHashMap<>();
 
     /**
      * @param container ComponentHolder for configuration management
      * @param componentMethods
      */
-    public ServiceFactoryComponentManager( ComponentContainer<S> container, ComponentMethods componentMethods )
+    public ServiceFactoryComponentManager( ComponentContainer<S> container, ComponentMethods<S> componentMethods )
     {
         super( container, componentMethods );
     }
@@ -71,6 +71,7 @@ public class ServiceFactoryComponentManager<S> extends SingleComponentManager<S>
     /* (non-Javadoc)
      * @see org.apache.felix.scr.AbstractComponentManager#deleteComponent()
      */
+    @Override
     protected void deleteComponent( int reason )
     {
         if ( !isStateLocked() )
@@ -80,7 +81,8 @@ public class ServiceFactoryComponentManager<S> extends SingleComponentManager<S>
         for (ComponentContextImpl<S> componentContext: getComponentContexts() )
         {
             disposeImplementationObject( componentContext, reason );
-            log( LogService.LOG_DEBUG, "Unset implementation object for component {0} in deleteComponent for reason {1}", new Object[] { getName(), REASONS[ reason ] },  null );
+            getLogger().log( LogService.LOG_DEBUG, "Unset implementation object for component in deleteComponent for reason {0}",
+                    null, REASONS[ reason ] );
         }
         serviceContexts.clear();
         clearServiceProperties();
@@ -90,18 +92,19 @@ public class ServiceFactoryComponentManager<S> extends SingleComponentManager<S>
     /* (non-Javadoc)
      * @see org.osgi.framework.ServiceFactory#getService(org.osgi.framework.Bundle, org.osgi.framework.ServiceRegistration)
      */
+    @Override
     public S getService( Bundle bundle, ServiceRegistration<S> serviceRegistration )
     {
-        log( LogService.LOG_DEBUG, "ServiceFactory.getService()", null );
+        getLogger().log( LogService.LOG_DEBUG, "ServiceFactory.getService()", null );
 
         // When the getServiceMethod is called, the implementation object must be created
 
-        ComponentContextImpl<S> componentContext = new ComponentContextImpl<S>(this, bundle, serviceRegistration);
+        ComponentContextImpl<S> componentContext = new ComponentContextImpl<>(this, bundle, serviceRegistration);
         if (collectDependencies(componentContext) )
         {
-            log( LogService.LOG_DEBUG,
-                "getService (ServiceFactory) dependencies collected.",
-                null );
+            getLogger().log( LogService.LOG_DEBUG,
+                    "getService (ServiceFactory) dependencies collected.",
+                    null );
 
         }
         else
@@ -113,6 +116,7 @@ public class ServiceFactoryComponentManager<S> extends SingleComponentManager<S>
         // private ComponentContext and implementation instances
         S service = createImplementationObject( bundle, new SetImplementationObject<S>()
         {
+            @Override
             public void presetComponentContext( ComponentContextImpl<S> componentContext )
             {
                 synchronized ( serviceContexts )
@@ -121,6 +125,7 @@ public class ServiceFactoryComponentManager<S> extends SingleComponentManager<S>
                 }
             }
 
+            @Override
             public void resetImplementationObject( S implementationObject )
             {
                 synchronized ( serviceContexts )
@@ -136,11 +141,13 @@ public class ServiceFactoryComponentManager<S> extends SingleComponentManager<S>
         {
             // log that the service factory component cannot be created (we don't
             // know why at this moment; this should already have been logged)
-            log( LogService.LOG_DEBUG, "Failed creating the component instance; see log for reason", null );
-        } 
-        else 
+            getLogger().log( LogService.LOG_DEBUG, "Failed creating the component instance; see log for reason", null );
+            setState(previousState, State.failed);
+
+        }
+        else
         {
-             setState(previousState, State.active);
+            setState(previousState, State.active);
         }
 
         return service;
@@ -150,9 +157,10 @@ public class ServiceFactoryComponentManager<S> extends SingleComponentManager<S>
     /* (non-Javadoc)
      * @see org.osgi.framework.ServiceFactory#ungetService(org.osgi.framework.Bundle, org.osgi.framework.ServiceRegistration, java.lang.Object)
      */
+    @Override
     public void ungetService( Bundle bundle, ServiceRegistration<S> registration, S service )
     {
-        log( LogService.LOG_DEBUG, "ServiceFactory.ungetService()", null );
+        getLogger().log( LogService.LOG_DEBUG, "ServiceFactory.ungetService()", null );
 
         // When the ungetServiceMethod is called, the implementation object must be deactivated
         // private ComponentContext and implementation instances
@@ -178,10 +186,11 @@ public class ServiceFactoryComponentManager<S> extends SingleComponentManager<S>
     {
         synchronized ( serviceContexts )
         {
-            return new ArrayList<ComponentContextImpl<S>>( serviceContexts.values() );
+            return new ArrayList<>( serviceContexts.values() );
         }
     }
 
+    @Override
     <T> void invokeBindMethod( DependencyManager<S, T> dependencyManager, RefPair<S, T> refPair, int trackingCount )
     {
         for ( ComponentContextImpl<S> cc : getComponentContexts() )
@@ -190,21 +199,23 @@ public class ServiceFactoryComponentManager<S> extends SingleComponentManager<S>
         }
     }
 
+    @Override
     <T> boolean invokeUpdatedMethod( DependencyManager<S, T> dependencyManager, RefPair<S, T> refPair, int trackingCount )
     {
-    	// as all instances are treated the same == have the same updated signatures for methods/fields
-    	// we just need one result
-    	boolean reactivate = false;
+        // as all instances are treated the same == have the same updated signatures for methods/fields
+        // we just need one result
+        boolean reactivate = false;
         for ( ComponentContextImpl<S> cc : getComponentContexts() )
         {
-            if ( dependencyManager.invokeUpdatedMethod( cc, refPair, trackingCount, cc.getEdgeInfo( dependencyManager ) ) ) 
+            if ( dependencyManager.invokeUpdatedMethod( cc, refPair, trackingCount, cc.getEdgeInfo( dependencyManager ) ) )
             {
-            	reactivate = true;
+                reactivate = true;
             }
         }
         return reactivate;
     }
 
+    @Override
     <T> void invokeUnbindMethod( DependencyManager<S, T> dependencyManager, RefPair<S, T> oldRefPair, int trackingCount )
     {
         for ( ComponentContextImpl<S> cc : getComponentContexts() )
@@ -213,20 +224,21 @@ public class ServiceFactoryComponentManager<S> extends SingleComponentManager<S>
         }
     }
 
+    @Override
     protected MethodResult invokeModifiedMethod()
     {
-        ComponentMethod modifiedMethod = getComponentMethods().getModifiedMethod();
+        LifecycleMethod modifiedMethod = getComponentMethods().getModifiedMethod();
         MethodResult result = MethodResult.VOID;
         for ( ComponentContextImpl<S> componentContext : getComponentContexts() )
         {
             S instance = componentContext.getImplementationObject(true);
             result = modifiedMethod.invoke( instance,
-                    componentContext, -1, MethodResult.VOID, this );
+                    componentContext, -1, MethodResult.VOID );
 
         }
         return result;
     }
-    
+
     @Override
     boolean hasInstance()
     {
@@ -235,6 +247,7 @@ public class ServiceFactoryComponentManager<S> extends SingleComponentManager<S>
 
     //---------- Component interface
 
+    @Override
     public ComponentInstance getComponentInstance()
     {
         // TODO: should return the component instance corresponding to the

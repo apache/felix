@@ -18,16 +18,22 @@
  */
 package org.apache.felix.scr.impl.inject;
 
+import java.lang.annotation.Annotation;
 import java.lang.reflect.Array;
+import java.lang.reflect.Field;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
 import java.lang.reflect.Proxy;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -37,17 +43,120 @@ import org.osgi.service.component.ComponentException;
 
 public class Annotations
 {
-
-    static public <T> T toObject(Class<T> clazz, Map<String, Object> props, Bundle b, boolean supportsInterfaces )
+    /** Capture all methods defined by the annotation interface */
+    private static final Set<Method> ANNOTATION_METHODS = new HashSet<Method>();
+    static
     {
-        Map<String, Object> m = new HashMap<String, Object>();
-
-        Method[] methods = clazz.getMethods();
-        Map<String, Method> complexFields = new HashMap<String, Method>();
-        for ( Method method: methods )
+        for(final Method m : Annotation.class.getMethods())
         {
-            String name = method.getName();
-            String key = fixup(name);
+            ANNOTATION_METHODS.add(m);
+        }
+    }
+
+    /** Constant for the single element method */
+    private static final String VALUE_METHOD = "value";
+
+    /** Constant for the prefix constant. */
+    private static final String PREFIX_CONSTANT = "PREFIX_";
+
+    /**
+     * Check whether the provided type is a single element annotation.
+     * A single element annotation has a method named "value" and all
+     * other annotation methods must have a default value.
+     * @param clazz The provided type
+     * @return {@code true} if the type is a single element annotation.
+     */
+    static public boolean isSingleElementAnnotation(final Class<?> clazz)
+    {
+        boolean result = false;
+        if ( clazz.isAnnotation() )
+        {
+            result = true;
+            boolean hasValue = false;
+            for ( final Method method: clazz.getMethods() )
+            {
+                // filter out methods from Annotation
+                boolean isFromAnnotation = false;
+                for(final Method objMethod : ANNOTATION_METHODS)
+                {
+                    if ( objMethod.getName().equals(method.getName())
+                      && Arrays.equals(objMethod.getParameterTypes(), method.getParameterTypes()) )
+                    {
+                        isFromAnnotation = true;
+                        break;
+                    }
+                }
+                if ( isFromAnnotation )
+                {
+                    continue;
+                }
+                if ( VALUE_METHOD.equals(method.getName()) )
+                {
+                    hasValue = true;
+                    continue;
+                }
+                if ( method.getDefaultValue() == null )
+                {
+                    result = false;
+                    break;
+                }
+
+            }
+            if ( result )
+            {
+                result = hasValue;
+            }
+
+        }
+        return result;
+    }
+
+    static public String getPrefix(Class<?> clazz)
+    {
+        try
+        {
+            final Field f = clazz.getField(PREFIX_CONSTANT);
+            if ( Modifier.isStatic(f.getModifiers())
+                 && Modifier.isPublic(f.getModifiers())
+                 && Modifier.isFinal(f.getModifiers())
+                 && String.class.isAssignableFrom(f.getType()))
+            {
+                final Object value = f.get(null);
+                if ( value != null )
+                {
+                    return value.toString();
+                }
+            }
+        }
+        catch ( final Exception ignore)
+        {
+            // ignore
+        }
+        return null;
+    }
+
+    @SuppressWarnings("unchecked")
+	static public <T> T toObject(Class<T> clazz, Map<String, Object> props, Bundle b, boolean supportsInterfaces )
+    {
+        final boolean isSingleElementAnn = isSingleElementAnnotation(clazz);
+        final String prefix = getPrefix(clazz);
+        final Map<String, Object> m = new HashMap<String, Object>();
+
+        final Map<String, Method> complexFields = new HashMap<String, Method>();
+        for ( final Method method: clazz.getMethods() )
+        {
+            final String name = method.getName();
+            final String key;
+            if ( isSingleElementAnn && name.equals(VALUE_METHOD) )
+            {
+                key = mapTypeNameToKey(clazz.getSimpleName());
+            }
+            else
+            {
+                final String mapped = mapIdentifierToKey(name);
+                key = (prefix == null ? mapped : prefix.concat(mapped));
+            }
+
             Object raw = props.get(key);
             Class<?> returnType = method.getReturnType();
             Object cooked;
@@ -125,7 +234,7 @@ public class Annotations
             }
         }
 
-        InvocationHandler h = new Handler(m);
+        final InvocationHandler h = new Handler(m, clazz);
         return (T) Proxy.newProxyInstance(clazz.getClassLoader(), new Class<?>[] { clazz }, h);
     }
 
@@ -172,7 +281,7 @@ public class Annotations
     {
         if (raw == null)
         {
-            return null;
+            return Array.newInstance(componentType, 0);
         }
         if (raw.getClass().isArray())
         {
@@ -188,7 +297,8 @@ public class Annotations
         }
         if (raw instanceof Collection)
         {
-            Collection raws = (Collection) raw;
+            @SuppressWarnings("rawtypes")
+			Collection raws = (Collection) raw;
             int size = raws.size();
             Object result = Array.newInstance(componentType, size);
             int i = 0;
@@ -207,19 +317,20 @@ public class Annotations
 
     }
 
-    private static final Pattern p = Pattern.compile("(\\$\\$)|(\\$)|(__)|(_)");
+    private static final Pattern p = Pattern.compile("(\\$_\\$)|(\\$\\$)|(\\$)|(__)|(_)");
 
-    static String fixup(String name)
+    static String mapIdentifierToKey(String name)
     {
         Matcher m = p.matcher(name);
         StringBuffer b = new StringBuffer();
         while (m.find())
         {
-            String replacement = "";//null;
-            if (m.group(1) != null) replacement = "\\$";
-            if (m.group(2) != null) replacement = "";
-            if (m.group(3) != null) replacement = "_";
-            if (m.group(4) != null) replacement = ".";
+            String replacement = "";
+            if (m.group(1) != null) replacement = "-";
+            if (m.group(2) != null) replacement = "\\$";
+            if (m.group(3) != null) replacement = "";
+            if (m.group(4) != null) replacement = "_";
+            if (m.group(5) != null) replacement = ".";
 
             m.appendReplacement(b, replacement);
         }
@@ -227,15 +338,39 @@ public class Annotations
         return b.toString();
     }
 
+    static String mapTypeNameToKey(String name)
+    {
+        final StringBuilder sb = new StringBuilder();
+        boolean lastLow = false;
+        for(final char c : name.toCharArray())
+        {
+            if ( lastLow && (Character.isLetter(c) || Character.isDigit(c)) && Character.isUpperCase(c) )
+            {
+                sb.append('.');
+            }
+            lastLow = false;
+            if ( (Character.isLetter(c) || Character.isDigit(c)) && Character.isLowerCase(c))
+            {
+                lastLow = true;
+            }
+            sb.append(Character.toLowerCase(c));
+        }
+        return sb.toString();
+    }
+
     private final static class Handler implements InvocationHandler
     {
         private final Map<String, Object> values;
 
-        public Handler(Map<String, Object> values)
+        private final Class<?> type;
+
+        public Handler(final Map<String, Object> values, final Class<?> type)
         {
             this.values = values;
+            this.type = type;
         }
 
+        @Override
         public Object invoke(Object proxy, Method method, Object[] args) throws Throwable
         {
             Object value = values.get(method.getName());
@@ -243,9 +378,54 @@ public class Annotations
             {
                 throw new ComponentException(((Invalid)value).getMessage());
             }
+            if ( value == null )
+            {
+                // check for methods of the Annotations class like hashCode, toString, equals etc.
+                if (method.getName().equals("hashCode") &&
+                    method.getParameterTypes().length == 0 )
+                {
+                    int hashCode = 0;
+                    for (final Map.Entry<String, Object> entry : values.entrySet()) {
+                        if (value instanceof Invalid) {
+                            continue;
+                        }
+                        hashCode += (127 * entry.getKey().hashCode()) ^ entry.getValue().hashCode();
+                    }
+                    value = hashCode;
+                }
+                else if (method.getName().equals("equals")
+                         && method.getParameterTypes().length == 1)
+                {
+                    final Object other = args[0];
+                    if (proxy == other)
+                    {
+                        value = true;
+                    }
+                    else
+                    {
+                        value = false;
+                        if (type.isInstance(other) && Proxy.isProxyClass(other.getClass()))
+                        {
+                            final InvocationHandler ih = Proxy.getInvocationHandler(other);
+                            if (ih instanceof Handler) {
+                                value = ((Handler)ih).values.equals(values);
+                            }
+                        }
+                    }
+                }
+                else if (method.getName().equals("toString")
+                        && method.getParameterTypes().length == 0 )
+                {
+                    value = type.getName() + " : " + values;
+                }
+                else if (method.getName().equals("annotationType")
+                         && method.getParameterTypes().length == 0 )
+                {
+                    value = type;
+                }
+            }
             return value;
         }
-
     }
 
     private final static class Invalid

@@ -18,6 +18,8 @@
  */
 package org.apache.felix.scr.impl.manager;
 
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.lang.reflect.InvocationTargetException;
 import java.security.Permission;
 import java.util.ArrayList;
@@ -40,9 +42,9 @@ import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
-import org.apache.felix.scr.impl.helper.ComponentMethods;
-import org.apache.felix.scr.impl.helper.MethodResult;
-import org.apache.felix.scr.impl.helper.SimpleLogger;
+import org.apache.felix.scr.impl.inject.ComponentMethods;
+import org.apache.felix.scr.impl.inject.MethodResult;
+import org.apache.felix.scr.impl.logger.ComponentLogger;
 import org.apache.felix.scr.impl.metadata.ComponentMetadata;
 import org.apache.felix.scr.impl.metadata.ReferenceMetadata;
 import org.apache.felix.scr.impl.metadata.ServiceMetadata;
@@ -64,7 +66,7 @@ import org.osgi.util.promise.Promise;
  * implementation object's lifecycle.
  *
  */
-public abstract class AbstractComponentManager<S> implements SimpleLogger, ComponentManager<S>
+public abstract class AbstractComponentManager<S> implements ComponentManager<S>
 {
     //useful text for deactivation reason numbers
     static final String[] REASONS = { "Unspecified", "Component disabled", "Reference became unsatisfied",
@@ -76,9 +78,11 @@ public abstract class AbstractComponentManager<S> implements SimpleLogger, Compo
         disposed(-1, false, false, false),
         //Since enable/disable on the component description are asynchronous, this tracks the component configuration state
         //which may differ while the enable/disable is occurring.
-        disabled(-1, false, false, false), unsatisfiedReference(ComponentConfigurationDTO.UNSATISFIED_REFERENCE, true,
-            false, false), satisfied(ComponentConfigurationDTO.SATISFIED, true, true,
-                false), active(ComponentConfigurationDTO.ACTIVE, true, true, true);
+        disabled(-1, false, false, false),
+        unsatisfiedReference(ComponentConfigurationDTO.UNSATISFIED_REFERENCE, true, false, false),
+        satisfied(ComponentConfigurationDTO.SATISFIED, true, true, false),
+        active(ComponentConfigurationDTO.ACTIVE, true, true, true),
+        failed(ComponentConfigurationDTO.FAILED_ACTIVATION, true, true, false);
 
         private final int specState;
 
@@ -125,7 +129,7 @@ public abstract class AbstractComponentManager<S> implements SimpleLogger, Compo
     // the ID of this component
     private long m_componentId;
 
-    private final ComponentMethods m_componentMethods;
+    private final ComponentMethods<S> m_componentMethods;
 
     // The dependency managers that manage every dependency
     private final List<DependencyManager<S, ?>> m_dependencyManagers;
@@ -142,10 +146,10 @@ public abstract class AbstractComponentManager<S> implements SimpleLogger, Compo
      * This latch prevents concurrent enable, disable, and reconfigure.  Since the enable and disable operations may use
      * two threads and the initiating thread does not wait for the operation to complete, we can't use a regular lock.
      */
-    private final AtomicReference<Deferred<Void>> m_enabledLatchRef = new AtomicReference<Deferred<Void>>(
-        new Deferred<Void>());
+    private final AtomicReference<Deferred<Void>> m_enabledLatchRef = new AtomicReference<>(
+            new Deferred<Void>());
 
-    private final AtomicReference<State> state = new AtomicReference<State>(State.disabled);
+    private final AtomicReference<State> state = new AtomicReference<>(State.disabled);
 
     //service event tracking
     private int m_floor;
@@ -154,9 +158,11 @@ public abstract class AbstractComponentManager<S> implements SimpleLogger, Compo
 
     private final Lock m_missingLock = new ReentrantLock();
     private final Condition m_missingCondition = m_missingLock.newCondition();
-    private final Set<Integer> m_missing = new TreeSet<Integer>();
+    private final Set<Integer> m_missing = new TreeSet<>();
 
     protected final ReentrantReadWriteLock m_activationLock = new ReentrantReadWriteLock();
+
+    private volatile String failureReason;
 
     /**
      * The constructor receives both the activator and the metadata
@@ -164,12 +170,12 @@ public abstract class AbstractComponentManager<S> implements SimpleLogger, Compo
      * @param container
      * @param componentMethods
      */
-    protected AbstractComponentManager(ComponentContainer<S> container, ComponentMethods componentMethods)
+    protected AbstractComponentManager(ComponentContainer<S> container, ComponentMethods<S> componentMethods)
     {
         this(container, componentMethods, false);
     }
 
-    protected AbstractComponentManager(ComponentContainer<S> container, ComponentMethods componentMethods, boolean factoryInstance)
+    protected AbstractComponentManager(ComponentContainer<S> container, ComponentMethods<S> componentMethods, boolean factoryInstance)
     {
         m_enabledLatchRef.get().resolve(null);
         m_factoryInstance = factoryInstance;
@@ -184,39 +190,37 @@ public abstract class AbstractComponentManager<S> implements SimpleLogger, Compo
         m_stateLock = new ReentrantLock(true);
 
         // dump component details
-        if (isLogEnabled(LogService.LOG_DEBUG))
+        if (m_container.getLogger().isLogEnabled(LogService.LOG_DEBUG))
         {
-            log(LogService.LOG_DEBUG,
-                "Component {0} created: DS={1}, implementation={2}, immediate={3}, default-enabled={4}, factory={5}, configuration-policy={6}, activate={7}, deactivate={8}, modified={9} configuration-pid={10}",
-                new Object[] { metadata.getName(), metadata.getDSVersion(), metadata.getImplementationClassName(),
-                        metadata.isImmediate(), metadata.isEnabled(), metadata.getFactoryIdentifier(),
-                        metadata.getConfigurationPolicy(), metadata.getActivate(), metadata.getDeactivate(),
-                        metadata.getModified(), metadata.getConfigurationPid() },
-                null);
+            m_container.getLogger().log(LogService.LOG_DEBUG,
+                    "Component created: DS={0}, implementation={1}, immediate={2}, default-enabled={3}, factory={4}, configuration-policy={5}, activate={6}, deactivate={7}, modified={8} configuration-pid={9}",
+                    null,
+                    metadata.getDSVersion(), metadata.getImplementationClassName(),
+                            metadata.isImmediate(), metadata.isEnabled(), metadata.getFactoryIdentifier(),
+                            metadata.getConfigurationPolicy(), metadata.getActivate(), metadata.getDeactivate(),
+                            metadata.getModified(), metadata.getConfigurationPid());
 
             if (metadata.getServiceMetadata() != null)
             {
-                log(LogService.LOG_DEBUG,
-                    "Component {0} Services: scope={1}, services={2}", new Object[] { metadata.getName(),
-                            metadata.getServiceScope(), Arrays.asList(metadata.getServiceMetadata().getProvides()) },
-                    null);
+                m_container.getLogger().log(LogService.LOG_DEBUG,
+                        "Component Services: scope={0}, services={1}",
+                        null,
+                        metadata.getServiceScope(), Arrays.toString(metadata.getServiceMetadata().getProvides()));
             }
-
             if (metadata.getProperties() != null)
             {
-                log(LogService.LOG_DEBUG, "Component {0} Properties: {1}",
-                    new Object[] { metadata.getName(), metadata.getProperties() }, null);
+                m_container.getLogger().log(LogService.LOG_DEBUG, "Component Properties: {0}", null,
+                         metadata.getProperties() );
             }
         }
     }
 
     final long getLockTimeout()
     {
-        ComponentActivator activator = getActivator();
         //for tests....
-        if (activator != null && activator.getConfiguration() != null)
+        if (m_container.getActivator().getConfiguration() != null)
         {
-            return activator.getConfiguration().lockTimeout();
+            return m_container.getActivator().getConfiguration().lockTimeout();
         }
         return ScrConfiguration.DEFAULT_LOCK_TIMEOUT_MILLISECONDS;
     }
@@ -244,7 +248,6 @@ public abstract class AbstractComponentManager<S> implements SimpleLogger, Compo
             catch (InterruptedException e1)
             {
                 Thread.currentThread().interrupt();
-                //TODO is there a better exception to throw?
                 throw new IllegalStateException("Interrupted twice: Could not obtain lock");
             }
             Thread.currentThread().interrupt();
@@ -294,11 +297,11 @@ public abstract class AbstractComponentManager<S> implements SimpleLogger, Compo
         try
         {
             String dump = new ThreadDump().call();
-            log(LogService.LOG_DEBUG, dump, null);
+            m_container.getLogger().log(LogService.LOG_DEBUG, dump, null);
         }
         catch (Throwable t)
         {
-            log(LogService.LOG_DEBUG, "Could not dump threads", t);
+            m_container.getLogger().log(LogService.LOG_DEBUG, "Could not dump threads", t);
         }
     }
 
@@ -345,8 +348,8 @@ public abstract class AbstractComponentManager<S> implements SimpleLogger, Compo
         {
             while (m_ceiling < trackingCount || (!m_missing.isEmpty() && m_missing.iterator().next() < trackingCount))
             {
-                log(LogService.LOG_DEBUG, "waitForTracked trackingCount: {0} ceiling: {1} missing: {2}",
-                    new Object[] { trackingCount, m_ceiling, m_missing }, null);
+                m_container.getLogger().log(LogService.LOG_DEBUG, "waitForTracked trackingCount: {0} ceiling: {1} missing: {2}", null,
+                         trackingCount, m_ceiling, m_missing );
                 try
                 {
                     if (!doMissingWait())
@@ -365,9 +368,9 @@ public abstract class AbstractComponentManager<S> implements SimpleLogger, Compo
                     }
                     catch (InterruptedException e1)
                     {
-                        log(LogService.LOG_ERROR,
-                            "waitForTracked interrupted twice: {0} ceiling: {1} missing: {2},  Expect further errors",
-                            new Object[] { trackingCount, m_ceiling, m_missing }, e1);
+                        m_container.getLogger().log(LogService.LOG_ERROR,
+                                "waitForTracked interrupted twice: {0} ceiling: {1} missing: {2},  Expect further errors", e1,
+                                 trackingCount, m_ceiling, m_missing );
                     }
                     Thread.currentThread().interrupt();
                 }
@@ -383,8 +386,8 @@ public abstract class AbstractComponentManager<S> implements SimpleLogger, Compo
     {
         if (!m_missingCondition.await(getLockTimeout(), TimeUnit.MILLISECONDS))
         {
-            log(LogService.LOG_ERROR, "waitForTracked timed out: {0} ceiling: {1} missing: {2},  Expect further errors",
-                new Object[] { m_trackingCount, m_ceiling, m_missing }, null);
+            m_container.getLogger().log(LogService.LOG_ERROR, "waitForTracked timed out: {0} ceiling: {1} missing: {2},  Expect further errors", null,
+                     m_trackingCount, m_ceiling, m_missing);
             dumpThreads();
             m_missing.clear();
             return false;
@@ -396,23 +399,17 @@ public abstract class AbstractComponentManager<S> implements SimpleLogger, Compo
 
     void registerComponentId()
     {
-        final ComponentActivator activator = getActivator();
-        if (activator != null)
-        {
-            this.m_componentId = activator.registerComponentId(this);
-        }
+        this.m_componentId = m_container.getActivator().registerComponentId(this);
+        this.m_container.getLogger().setComponentId(this.m_componentId);
     }
 
     void unregisterComponentId()
     {
         if (this.m_componentId >= 0)
         {
-            final ComponentActivator activator = getActivator();
-            if (activator != null)
-            {
-                activator.unregisterComponentId(this);
-            }
+            m_container.getActivator().unregisterComponentId(this);
             this.m_componentId = -1;
+            this.m_container.getLogger().setComponentId(this.m_componentId);
         }
     }
 
@@ -441,7 +438,7 @@ public abstract class AbstractComponentManager<S> implements SimpleLogger, Compo
         if (async)
         {
             final Deferred<Void> latch = enableLatch;
-            getActivator().schedule(new Runnable()
+            m_container.getActivator().schedule(new Runnable()
             {
 
                 long count = taskCounter.incrementAndGet();
@@ -505,7 +502,7 @@ public abstract class AbstractComponentManager<S> implements SimpleLogger, Compo
             {
                 Thread.currentThread().interrupt();
             }
-            newEnabledLatch = new Deferred<Void>();
+            newEnabledLatch = new Deferred<>();
         }
         while (!m_enabledLatchRef.compareAndSet(enabledLatch, newEnabledLatch));
         return newEnabledLatch;
@@ -533,7 +530,7 @@ public abstract class AbstractComponentManager<S> implements SimpleLogger, Compo
         if (async)
         {
             final Deferred<Void> latch = enableLatch;
-            getActivator().schedule(new Runnable()
+            m_container.getActivator().schedule(new Runnable()
             {
 
                 long count = taskCounter.incrementAndGet();
@@ -584,11 +581,7 @@ public abstract class AbstractComponentManager<S> implements SimpleLogger, Compo
 
     <T> void registerMissingDependency(DependencyManager<S, T> dm, ServiceReference<T> ref, int trackingCount)
     {
-        ComponentActivator activator = getActivator();
-        if (activator != null)
-        {
-            activator.registerMissingDependency(dm, ref, trackingCount);
-        }
+        m_container.getActivator().registerMissingDependency(dm, ref, trackingCount);
     }
 
     //---------- Component interface ------------------------------------------
@@ -597,11 +590,6 @@ public abstract class AbstractComponentManager<S> implements SimpleLogger, Compo
     public long getId()
     {
         return m_componentId;
-    }
-
-    protected String getName()
-    {
-        return getComponentMetadata().getName();
     }
 
     /**
@@ -629,12 +617,7 @@ public abstract class AbstractComponentManager<S> implements SimpleLogger, Compo
 
     BundleContext getBundleContext()
     {
-        final ComponentActivator activator = getActivator();
-        if (activator != null)
-        {
-            return activator.getBundleContext();
-        }
-        return null;
+        return m_container.getActivator().getBundleContext();
     }
 
     protected boolean isImmediate()
@@ -657,59 +640,59 @@ public abstract class AbstractComponentManager<S> implements SimpleLogger, Compo
         {
             throw new IllegalStateException("enable: " + this);
         }
-        if (!isActivatorActive())
+        if (!m_container.getActivator().isActive())
         {
-            log(LogService.LOG_DEBUG, "Bundle's component activator is not active; not enabling component", null);
+            m_container.getLogger().log(LogService.LOG_DEBUG, "Bundle's component activator is not active; not enabling component", null);
             return;
         }
         if (previousState.isEnabled())
         {
-            log(LogService.LOG_WARNING, "enable  called but component is already in state {0}",
-                new Object[] { previousState }, null);
+            m_container.getLogger().log(LogService.LOG_WARNING, "enable called but component is already in state {0}", null,
+                     previousState);
             return;
         }
 
         registerComponentId();
-        log(LogService.LOG_DEBUG, "Updating target filters", null);
+        m_container.getLogger().log(LogService.LOG_DEBUG, "Updating target filters", null);
         updateTargets(getProperties());
 
         setState(previousState, State.unsatisfiedReference);
-        log(LogService.LOG_DEBUG, "Component enabled", null);
+        m_container.getLogger().log(LogService.LOG_DEBUG, "Component enabled", null);
         activateInternal();
     }
 
     final void activateInternal()
     {
-        log(LogService.LOG_DEBUG, "ActivateInternal", null);
+        m_container.getLogger().log(LogService.LOG_DEBUG, "ActivateInternal", null);
         State s = getState();
         if (s == State.disposed)
         {
-            log(LogService.LOG_DEBUG, "ActivateInternal: disposed", null);
+            m_container.getLogger().log(LogService.LOG_DEBUG, "ActivateInternal: disposed", null);
             return;
         }
         if (s == State.active)
         {
-            log(LogService.LOG_DEBUG, "ActivateInternal: already activated", null);
+            m_container.getLogger().log(LogService.LOG_DEBUG, "ActivateInternal: already activated", null);
             return;
         }
         if (!s.isEnabled())
         {
-            log(LogService.LOG_DEBUG, "Component is not enabled; not activating component", null);
+            m_container.getLogger().log(LogService.LOG_DEBUG, "Component is not enabled; not activating component", null);
             return;
         }
-        if (!isActivatorActive())
+        if (!m_container.getActivator().isActive())
         {
-            log(LogService.LOG_DEBUG, "Bundle's component activator is not active; not activating component", null);
+            m_container.getLogger().log(LogService.LOG_DEBUG, "Bundle's component activator is not active; not activating component", null);
             return;
         }
 
-        log(LogService.LOG_DEBUG, "Activating component from state {0}", new Object[] { getState() }, null);
+        m_container.getLogger().log(LogService.LOG_DEBUG, "Activating component from state {0}", null,  getState() );
 
         // Before creating the implementation object, we are going to
         // test that the bundle has enough permissions to register services
         if (!hasServiceRegistrationPermissions())
         {
-            log(LogService.LOG_DEBUG, "Component is not permitted to register all services, cannot activate", null);
+            m_container.getLogger().log(LogService.LOG_DEBUG, "Component is not permitted to register all services, cannot activate", null);
             return;
         }
 
@@ -720,24 +703,24 @@ public abstract class AbstractComponentManager<S> implements SimpleLogger, Compo
             s = getState();
             if (s == State.disposed)
             {
-                log(LogService.LOG_DEBUG, "ActivateInternal: disposed", null);
+                m_container.getLogger().log(LogService.LOG_DEBUG, "ActivateInternal: disposed", null);
                 return;
             }
             if (s == State.active)
             {
-                log(LogService.LOG_DEBUG, "ActivateInternal: already activated", null);
+                m_container.getLogger().log(LogService.LOG_DEBUG, "ActivateInternal: already activated", null);
                 return;
             }
             if (!s.isEnabled())
             {
-                log(LogService.LOG_DEBUG, "Component is not enabled; not activating component", null);
+                m_container.getLogger().log(LogService.LOG_DEBUG, "Component is not enabled; not activating component", null);
                 return;
             }
             // Before creating the implementation object, we are going to
             // test if all the mandatory dependencies are satisfied
             if (!verifyDependencyManagers())
             {
-                log(LogService.LOG_DEBUG, "Not all dependencies satisfied, cannot activate", null);
+                m_container.getLogger().log(LogService.LOG_DEBUG, "Not all dependencies satisfied, cannot activate", null);
                 return;
             }
 
@@ -752,14 +735,14 @@ public abstract class AbstractComponentManager<S> implements SimpleLogger, Compo
                 ServiceRegistration<S> serviceRegistration = registrationManager.getServiceRegistration();
                 if ( serviceRegistration != null )
                 {
-                    getActivator().enterCreate( serviceRegistration.getReference() );
+                    m_container.getActivator().enterCreate( serviceRegistration.getReference() );
                     try
                     {
                         getServiceInternal( serviceRegistration );
                     }
                     finally
                     {
-                        getActivator().leaveCreate( serviceRegistration.getReference() );
+                        m_container.getActivator().leaveCreate( serviceRegistration.getReference() );
                     }
                 }
                 else
@@ -796,7 +779,7 @@ public abstract class AbstractComponentManager<S> implements SimpleLogger, Compo
         {
             nextState = State.disposed;
         }
-        log(LogService.LOG_DEBUG, "Deactivating component", null);
+        m_container.getLogger().log(LogService.LOG_DEBUG, "Deactivating component", null);
 
         // catch any problems from deleting the component to prevent the
         // component to remain in the deactivating state !
@@ -813,7 +796,7 @@ public abstract class AbstractComponentManager<S> implements SimpleLogger, Compo
         }
         if (isFactory() || m_factoryInstance || dispose)
         {
-            log(LogService.LOG_DEBUG, "Disposing component (reason: " + reason + ")", null);
+            m_container.getLogger().log(LogService.LOG_DEBUG, "Disposing component (reason: " + reason + ")", null);
             clear();
         }
     }
@@ -824,7 +807,7 @@ public abstract class AbstractComponentManager<S> implements SimpleLogger, Compo
         {
             if (!unregisterService())
             {
-                log(LogService.LOG_DEBUG, "Component deactivation occuring on another thread", null);
+                m_container.getLogger().log(LogService.LOG_DEBUG, "Component deactivation occuring on another thread", null);
             }
             obtainStateLock();
             try
@@ -844,7 +827,7 @@ public abstract class AbstractComponentManager<S> implements SimpleLogger, Compo
         }
         catch (Throwable t)
         {
-            log(LogService.LOG_WARNING, "Component deactivation threw an exception", t);
+            m_container.getLogger().log(LogService.LOG_WARNING, "Component deactivation threw an exception", t);
         }
     }
 
@@ -873,7 +856,8 @@ public abstract class AbstractComponentManager<S> implements SimpleLogger, Compo
         return this;
     }
 
-    ComponentMethods getComponentMethods()
+
+    ComponentMethods<S> getComponentMethods()
     {
         return m_componentMethods;
     }
@@ -903,14 +887,14 @@ public abstract class AbstractComponentManager<S> implements SimpleLogger, Compo
             final Dictionary<String, Object> serviceProperties = getServiceProperties();
             try
             {
+                @SuppressWarnings("unchecked")
                 ServiceRegistration<S> serviceRegistration = (ServiceRegistration<S>) bundleContext.registerService(
-                    services, getService(), serviceProperties);
+                        services, getService(), serviceProperties);
                 return serviceRegistration;
             }
             catch (ServiceException e)
             {
-                log(LogService.LOG_ERROR, "Unexpected error registering component service with properties {0}",
-                    new Object[] { serviceProperties }, e);
+                log(LogService.LOG_ERROR, "Unexpected error registering component service with properties {0}", e, serviceProperties);
                 return null;
             }
         }
@@ -929,9 +913,9 @@ public abstract class AbstractComponentManager<S> implements SimpleLogger, Compo
         }
 
         @Override
-        void log(int level, String message, Object[] arguments, Throwable ex)
+        void log(int level, String message, Throwable ex, Object... arguments)
         {
-            AbstractComponentManager.this.log(level, message, arguments, ex);
+            AbstractComponentManager.this.getLogger().log(level, message, ex, arguments);
         }
 
         @Override
@@ -982,7 +966,7 @@ public abstract class AbstractComponentManager<S> implements SimpleLogger, Compo
         return m_trackingCount;
     }
 
-    private void initDependencyManagers()
+    private void initDependencyManagers(final ComponentContextImpl<S> componentContext)
     {
         if (m_dependencyManagersInitialized)
         {
@@ -991,24 +975,24 @@ public abstract class AbstractComponentManager<S> implements SimpleLogger, Compo
         final Bundle bundle = getBundle();
         if (bundle == null)
         {
-            log(LogService.LOG_ERROR, "bundle shut down while trying to load implementation object class", null);
+            m_container.getLogger().log(LogService.LOG_ERROR, "bundle shut down while trying to load implementation object class", null);
             throw new IllegalStateException("bundle shut down while trying to load implementation object class");
         }
-        Class<?> implementationObjectClass;
+        Class<S> implementationObjectClass;
         try
         {
-            implementationObjectClass = bundle.loadClass(getComponentMetadata().getImplementationClassName());
+            implementationObjectClass = (Class<S>) bundle.loadClass(getComponentMetadata().getImplementationClassName());
         }
         catch (ClassNotFoundException e)
         {
-            log(LogService.LOG_ERROR, "Could not load implementation object class {0}",
-                new Object[] { getComponentMetadata().getImplementationClassName() }, e);
+            m_container.getLogger().log(LogService.LOG_ERROR, "Could not load implementation object class {0}",
+                    e, getComponentMetadata().getImplementationClassName() );
             throw new IllegalStateException(
-                "Could not load implementation object class " + getComponentMetadata().getImplementationClassName());
+                    "Could not load implementation object class " + getComponentMetadata().getImplementationClassName());
         }
-        m_componentMethods.initComponentMethods(getComponentMetadata(), implementationObjectClass);
+        m_componentMethods.initComponentMethods(getComponentMetadata(), implementationObjectClass, componentContext.getLogger());
 
-        for (DependencyManager dependencyManager : m_dependencyManagers)
+        for (DependencyManager<S, ?> dependencyManager : m_dependencyManagers)
         {
             dependencyManager.initBindingMethods(m_componentMethods.getBindMethods(dependencyManager.getName()));
         }
@@ -1024,19 +1008,19 @@ public abstract class AbstractComponentManager<S> implements SimpleLogger, Compo
      */
     protected boolean collectDependencies(ComponentContextImpl<S> componentContext)
     {
-        initDependencyManagers();
+        initDependencyManagers(componentContext);
         for (DependencyManager<S, ?> dependencyManager : m_dependencyManagers)
         {
             if (!dependencyManager.prebind(componentContext))
             {
                 //not actually satisfied any longer
                 deactivateDependencyManagers();
-                log(LogService.LOG_DEBUG, "Could not get required dependency for dependency manager: {0}",
-                    new Object[] { dependencyManager.getName() }, null);
+                m_container.getLogger().log(LogService.LOG_DEBUG, "Could not get required dependency for dependency manager: {0}", null,
+                         dependencyManager.getName());
                 return false;
             }
         }
-        log(LogService.LOG_DEBUG, "This thread collected dependencies", null);
+        m_container.getLogger().log(LogService.LOG_DEBUG, "This thread collected dependencies", null);
         return true;
     }
 
@@ -1045,26 +1029,22 @@ public abstract class AbstractComponentManager<S> implements SimpleLogger, Compo
      * @return {@code true} if the component needs reactivation, {@code false} otherwise.
      */
     abstract <T> boolean invokeUpdatedMethod(DependencyManager<S, T> dependencyManager, RefPair<S, T> refPair,
-        int trackingCount);
+            int trackingCount);
 
     abstract <T> void invokeBindMethod(DependencyManager<S, T> dependencyManager, RefPair<S, T> refPair,
-        int trackingCount);
+            int trackingCount);
 
     abstract <T> void invokeUnbindMethod(DependencyManager<S, T> dependencyManager, RefPair<S, T> oldRefPair,
-        int trackingCount);
+            int trackingCount);
 
     void notifyWaiters()
     {
         if ( registrationManager.getServiceRegistration() != null )
         {
             //see if our service has been requested but returned null....
-            ComponentActivator activator = getActivator();
-            log( LogService.LOG_DEBUG, "Notifying possible clients that service might be available with activator {0}",
-                new Object[] { activator }, null );
-            if ( activator != null )
-            {
-                activator.missingServicePresent( registrationManager.getServiceRegistration().getReference() );
-            }
+            m_container.getLogger().log( LogService.LOG_DEBUG, "Notifying possible clients that service might be available with activator {0}", null,
+                m_container.getActivator()  );
+            m_container.getActivator().missingServicePresent( registrationManager.getServiceRegistration().getReference() );
         }
 
     }
@@ -1075,59 +1055,19 @@ public abstract class AbstractComponentManager<S> implements SimpleLogger, Compo
         return m_container.getActivator();
     }
 
-    boolean isActivatorActive()
-    {
-        ComponentActivator activator = getActivator();
-        return activator != null && activator.isActive();
-    }
-
     synchronized void clear()
     {
-        // for some testing, the activator may be null
-        if (m_container.getActivator() != null)
-        {
-            m_container.getActivator().unregisterComponentId(this);
-        }
+        m_container.getActivator().unregisterComponentId(this);
     }
 
-    /**
-     * Returns <code>true</code> if logging for the given level is enabled.
-     */
-    @Override
-    public boolean isLogEnabled(int level)
-    {
-        ComponentActivator activator = getActivator();
-        if (activator != null)
-        {
-            return activator.isLogEnabled(level);
-        }
-        return false;
-    }
-
-    @Override
-    public void log(int level, String message, Throwable ex)
-    {
-        ComponentActivator activator = getActivator();
-        if (activator != null)
-        {
-            activator.log(level, message, getComponentMetadata(), m_componentId, ex);
-        }
-    }
-
-    @Override
-    public void log(int level, String message, Object[] arguments, Throwable ex)
-    {
-        ComponentActivator activator = getActivator();
-        if (activator != null)
-        {
-            activator.log(level, message, arguments, getComponentMetadata(), m_componentId, ex);
-        }
+    public ComponentLogger getLogger() {
+        return m_container.getLogger();
     }
 
     @Override
     public String toString()
     {
-        return "Component: " + getName() + " (" + getId() + ")";
+        return "Component: " + getComponentMetadata().getName() + " (" + getId() + ")";
     }
 
     private boolean hasServiceRegistrationPermissions()
@@ -1147,8 +1087,8 @@ public abstract class AbstractComponentManager<S> implements SimpleLogger, Compo
                         final Permission perm = new ServicePermission(service, ServicePermission.REGISTER);
                         if (!bundle.hasPermission(perm))
                         {
-                            log(LogService.LOG_DEBUG, "Permission to register service {0} is denied",
-                                new Object[] { service }, null);
+                            m_container.getLogger().log(LogService.LOG_DEBUG, "Permission to register service {0} is denied", null,
+                                    service );
                             allowed = false;
                         }
                     }
@@ -1162,8 +1102,8 @@ public abstract class AbstractComponentManager<S> implements SimpleLogger, Compo
 
     private List<DependencyManager<S, ?>> loadDependencyManagers(ComponentMetadata metadata)
     {
-        List<DependencyManager<S, ?>> depMgrList = new ArrayList<DependencyManager<S, ?>>(
-            metadata.getDependencies().size());
+        List<DependencyManager<S, ?>> depMgrList = new ArrayList<>(
+                metadata.getDependencies().size());
 
         // If this component has got dependencies, create dependency managers for each one of them.
         if (metadata.getDependencies().size() != 0)
@@ -1171,6 +1111,7 @@ public abstract class AbstractComponentManager<S> implements SimpleLogger, Compo
             int index = 0;
             for (ReferenceMetadata currentdependency : metadata.getDependencies())
             {
+                @SuppressWarnings({ "unchecked", "rawtypes" })
                 DependencyManager<S, ?> depmanager = new DependencyManager(this, currentdependency, index++);
 
                 depMgrList.add(depmanager);
@@ -1202,20 +1143,20 @@ public abstract class AbstractComponentManager<S> implements SimpleLogger, Compo
                 // bundle has no service get permission
                 if (dm.isOptional())
                 {
-                    log(LogService.LOG_DEBUG, "No permission to get optional dependency: {0}; assuming satisfied",
-                        new Object[] { dm.getName() }, null);
+                    m_container.getLogger().log(LogService.LOG_DEBUG, "No permission to get optional dependency: {0}; assuming satisfied",
+                            null, dm.getName() );
                 }
                 else
                 {
-                    log(LogService.LOG_DEBUG, "No permission to get mandatory dependency: {0}; assuming unsatisfied",
-                        new Object[] { dm.getName() }, null);
+                    m_container.getLogger().log(LogService.LOG_DEBUG, "No permission to get mandatory dependency: {0}; assuming unsatisfied",
+                            null, dm.getName() );
                     satisfied = false;
                 }
             }
             else if (!dm.isSatisfied())
             {
                 // bundle would have permission but there are not enough services
-                log(LogService.LOG_DEBUG, "Dependency not satisfied: {0}", new Object[] { dm.getName() }, null);
+                m_container.getLogger().log(LogService.LOG_DEBUG, "Dependency not satisfied: {0}", null, dm.getName() );
                 satisfied = false;
             }
         }
@@ -1250,7 +1191,7 @@ public abstract class AbstractComponentManager<S> implements SimpleLogger, Compo
      */
     List<DependencyManager<S, ?>> getReversedDependencyManagers()
     {
-        List<DependencyManager<S, ?>> list = new ArrayList<DependencyManager<S, ?>>(m_dependencyManagers);
+        List<DependencyManager<S, ?>> list = new ArrayList<>(m_dependencyManagers);
         Collections.reverse(list);
         return list;
     }
@@ -1271,7 +1212,7 @@ public abstract class AbstractComponentManager<S> implements SimpleLogger, Compo
 
     private void deactivateDependencyManagers()
     {
-        log(LogService.LOG_DEBUG, "Deactivating dependency managers", null);
+        m_container.getLogger().log(LogService.LOG_DEBUG, "Deactivating dependency managers", null);
         for (DependencyManager<S, ?> dm : getDependencyManagers())
         {
             dm.deactivate();
@@ -1280,7 +1221,7 @@ public abstract class AbstractComponentManager<S> implements SimpleLogger, Compo
 
     private void disableDependencyManagers()
     {
-        log(LogService.LOG_DEBUG, "Disabling dependency managers", null);
+        m_container.getLogger().log(LogService.LOG_DEBUG, "Disabling dependency managers", null);
         AtomicInteger trackingCount = new AtomicInteger();
         for (DependencyManager<S, ?> dm : getDependencyManagers())
         {
@@ -1327,11 +1268,11 @@ public abstract class AbstractComponentManager<S> implements SimpleLogger, Compo
      *         private and had not to be copied
      */
     protected static Dictionary<String, Object> copyTo(Dictionary<String, Object> target, final Map<String, ?> source,
-        final boolean allProps)
+            final boolean allProps)
     {
         if (target == null)
         {
-            target = new Hashtable<String, Object>();
+            target = new Hashtable<>();
         }
 
         if (source != null && !source.isEmpty())
@@ -1367,7 +1308,7 @@ public abstract class AbstractComponentManager<S> implements SimpleLogger, Compo
      */
     protected static Map<String, Object> copyToMap(final Dictionary<String, ?> source, final boolean allProps)
     {
-        Map<String, Object> target = new HashMap<String, Object>();
+        Map<String, Object> target = new HashMap<>();
 
         if (source != null && !source.isEmpty())
         {
@@ -1386,9 +1327,9 @@ public abstract class AbstractComponentManager<S> implements SimpleLogger, Compo
     }
 
     protected static Dictionary<String, Object> copyToDictionary(final Dictionary<String, ?> source,
-        final boolean allProps)
+            final boolean allProps)
     {
-        Hashtable<String, Object> target = new Hashtable<String, Object>();
+        Hashtable<String, Object> target = new Hashtable<>();
 
         if (source != null && !source.isEmpty())
         {
@@ -1423,20 +1364,42 @@ public abstract class AbstractComponentManager<S> implements SimpleLogger, Compo
     State getState()
     {
         State s = state.get();
-        log(LogService.LOG_DEBUG, "Querying state {0}", new Object[] { s }, null);
+        m_container.getLogger().log(LogService.LOG_DEBUG, "Querying state {0}", null, s );
         return s;
+    }
+
+    @Override
+    public String getFailureReason() {
+        return this.failureReason;
+    }
+
+    public void setFailureReason(final Throwable e)
+    {
+        if ( e != null )
+        {
+            final StringWriter sw = new StringWriter();
+            final PrintWriter pw = new PrintWriter(sw);
+            e.printStackTrace(pw);
+            pw.flush();
+            this.failureReason = sw.toString();
+        }
     }
 
     void setState(State previousState, State newState)
     {
         if (state.compareAndSet(previousState, newState))
         {
-            log(LogService.LOG_DEBUG, "Changed state from {0} to {1}", new Object[] { previousState, newState }, null);
+            m_container.getLogger().log(LogService.LOG_DEBUG, "Changed state from {0} to {1}", null, previousState, newState );
+            if ( newState != State.failed )
+            {
+                this.failureReason = null;
+            }
+            m_container.getActivator().updateChangeCount();
         }
         else
         {
-            log(LogService.LOG_DEBUG, "Did not change state from {0} to {1}: current state {2}",
-                new Object[] { previousState, newState, state.get() }, null);
+            m_container.getLogger().log(LogService.LOG_DEBUG, "Did not change state from {0} to {1}: current state {2}",
+                    null, previousState, newState, state.get() );
         }
 
     }
@@ -1452,7 +1415,7 @@ public abstract class AbstractComponentManager<S> implements SimpleLogger, Compo
                 tracked(trackingCount);
             }
             Dictionary<String, Object> serviceProps = (methodResult.getResult() == null) ? null
-                : new Hashtable<String, Object>(methodResult.getResult());
+                    : new Hashtable<>(methodResult.getResult());
             setServiceProperties(serviceProps);
         }
     }
@@ -1465,4 +1428,9 @@ public abstract class AbstractComponentManager<S> implements SimpleLogger, Compo
 
     public abstract void getComponentManagers(List<AbstractComponentManager<S>> cms);
 
+    @Override
+    public ServiceReference<S> getRegisteredServiceReference()
+    {
+        return null;
+    }
 }

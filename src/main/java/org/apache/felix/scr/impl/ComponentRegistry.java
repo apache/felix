@@ -21,17 +21,22 @@ package org.apache.felix.scr.impl;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Dictionary;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Hashtable;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.Timer;
+import java.util.TimerTask;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
-import org.apache.felix.scr.impl.helper.ComponentMethods;
-import org.apache.felix.scr.impl.helper.SimpleLogger;
+import org.apache.felix.scr.impl.inject.ComponentMethods;
 import org.apache.felix.scr.impl.inject.ComponentMethodsImpl;
+import org.apache.felix.scr.impl.logger.ComponentLogger;
+import org.apache.felix.scr.impl.logger.ScrLogger;
 import org.apache.felix.scr.impl.manager.AbstractComponentManager;
 import org.apache.felix.scr.impl.manager.ComponentActivator;
 import org.apache.felix.scr.impl.manager.ComponentHolder;
@@ -42,9 +47,11 @@ import org.apache.felix.scr.impl.metadata.ComponentMetadata;
 import org.apache.felix.scr.impl.metadata.TargetedPID;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.ServiceReference;
+import org.osgi.framework.ServiceRegistration;
 import org.osgi.service.cm.ConfigurationAdmin;
 import org.osgi.service.component.ComponentConstants;
 import org.osgi.service.component.ComponentException;
+import org.osgi.service.component.runtime.ServiceComponentRuntime;
 import org.osgi.service.log.LogService;
 
 
@@ -54,6 +61,13 @@ import org.osgi.service.log.LogService;
  */
 public class ComponentRegistry
 {
+    /**
+     * Service property for change count. This constant is defined here to avoid
+     * a dependency on R7 of the framework.
+     * The value of the property is of type {@code Long}.
+     */
+    private static String PROP_CHANGECOUNT = "service.changecount";
+
 
     /**
      * The map of known components indexed by component name. The values are
@@ -108,16 +122,16 @@ public class ComponentRegistry
      */
     private long m_componentCounter = -1;
 
-    private final Map<ServiceReference<?>, List<Entry<?, ?>>> m_missingDependencies = new HashMap<ServiceReference<?>, List<Entry<?, ?>>>( );
+    private final Map<ServiceReference<?>, List<Entry<?, ?>>> m_missingDependencies = new HashMap<>( );
 
-    private final SimpleLogger m_logger;
+    private final ScrLogger m_logger;
 
-    public ComponentRegistry( SimpleLogger logger )
+    public ComponentRegistry( final ScrLogger logger )
     {
         m_logger = logger;
-        m_componentHoldersByName = new HashMap<ComponentRegistryKey, ComponentHolder<?>>();
-        m_componentHoldersByPid = new HashMap<String, Set<ComponentHolder<?>>>();
-        m_componentsById = new HashMap<Long, AbstractComponentManager<?>>();
+        m_componentHoldersByName = new HashMap<>();
+        m_componentHoldersByPid = new HashMap<>();
+        m_componentsById = new HashMap<>();
 
     }
 
@@ -208,7 +222,7 @@ public class ComponentRegistry
                 Bundle cBundle = existingRegistration.getActivator().getBundleContext().getBundle();
                 ComponentMetadata cMeta = existingRegistration.getComponentMetadata();
 
-                StringBuffer buf = new StringBuffer( message );
+                StringBuilder buf = new StringBuilder( message );
                 buf.append( " by Bundle " ).append( cBundle.getBundleId() );
                 if ( cBundle.getSymbolicName() != null )
                 {
@@ -239,9 +253,8 @@ public class ComponentRegistry
     final void registerComponentHolder( final ComponentRegistryKey key, ComponentHolder<?> componentHolder )
     {
         m_logger.log(LogService.LOG_DEBUG,
-                "Registering component with pid {0} for bundle {1}",
-                new Object[] {componentHolder.getComponentMetadata().getConfigurationPid(), key.getBundleId()},
-                null);
+                "Registering component with pid {0} for bundle {1}", null,
+                componentHolder.getComponentMetadata().getConfigurationPid(), key.getBundleId());
         synchronized ( m_componentHoldersByName )
         {
             // only register the component if there is a m_registration for it !
@@ -268,13 +281,13 @@ public class ComponentRegistry
                 Set<ComponentHolder<?>> set = m_componentHoldersByPid.get( configurationPid );
                 if ( set == null )
                 {
-                    set = new HashSet<ComponentHolder<?>>();
+                    set = new HashSet<>();
                     m_componentHoldersByPid.put( configurationPid, set );
                 }
                 set.add( componentHolder );
             }
         }
-
+        this.updateChangeCount();
   }
 
     /**
@@ -298,7 +311,7 @@ public class ComponentRegistry
     public final Collection<ComponentHolder<?>> getComponentHoldersByPid(TargetedPID targetedPid)
     {
         String pid = targetedPid.getServicePid();
-        Set<ComponentHolder<?>> componentHoldersUsingPid = new HashSet<ComponentHolder<?>>();
+        Set<ComponentHolder<?>> componentHoldersUsingPid = new HashSet<>();
         synchronized (m_componentHoldersByPid)
         {
             Set<ComponentHolder<?>> set = m_componentHoldersByPid.get(pid);
@@ -326,7 +339,7 @@ public class ComponentRegistry
      */
     public final List<ComponentHolder<?>> getComponentHolders()
     {
-    	List<ComponentHolder<?>> all = new ArrayList<ComponentHolder<?>>();
+    	List<ComponentHolder<?>> all = new ArrayList<>();
         synchronized ( m_componentHoldersByName )
         {
         	all.addAll(m_componentHoldersByName.values());
@@ -337,7 +350,7 @@ public class ComponentRegistry
     public final List<ComponentHolder<?>> getComponentHolders(Bundle...bundles)
     {
     	List<ComponentHolder<?>> all =getComponentHolders();
-        List<ComponentHolder<?>> holders = new ArrayList<ComponentHolder<?>>();
+        List<ComponentHolder<?>> holders = new ArrayList<>();
         for ( ComponentHolder<?> holder: all)
         {
         	ComponentActivator activator = holder.getActivator();
@@ -392,8 +405,8 @@ public class ComponentRegistry
 
         if (component != null) {
             m_logger.log(LogService.LOG_DEBUG,
-                    "Unregistering component with pid {0} for bundle {1}",
-                    new Object[] {component.getComponentMetadata().getConfigurationPid(), key.getBundleId()}, null);
+                    "Unregistering component with pid {0} for bundle {1}", null,
+                    component.getComponentMetadata().getConfigurationPid(), key.getBundleId());
             synchronized (m_componentHoldersByPid)
             {
                 List<String> configurationPids = component.getComponentMetadata().getConfigurationPid();
@@ -410,6 +423,7 @@ public class ComponentRegistry
                     }
                 }
             }
+            this.updateChangeCount();
         }
     }
 
@@ -419,22 +433,22 @@ public class ComponentRegistry
      * Factory method to issue {@link ComponentHolder} instances to manage
      * components described by the given component <code>metadata</code>.
      */
-    public <S> ComponentHolder<S> createComponentHolder( ComponentActivator activator, ComponentMetadata metadata )
+    public <S> ComponentHolder<S> createComponentHolder( ComponentActivator activator, ComponentMetadata metadata, ComponentLogger logger )
     {
-        return new DefaultConfigurableComponentHolder<S>(activator, metadata);
+        return new DefaultConfigurableComponentHolder<>(activator, metadata, logger);
     }
 
     static class DefaultConfigurableComponentHolder<S> extends ConfigurableComponentHolder<S>
     {
-        public DefaultConfigurableComponentHolder(ComponentActivator activator, ComponentMetadata metadata)
+        public DefaultConfigurableComponentHolder(ComponentActivator activator, ComponentMetadata metadata, ComponentLogger logger)
         {
-            super(activator, metadata);
+            super(activator, metadata, logger);
         }
 
         @Override
-        protected ComponentMethods createComponentMethods()
+        protected ComponentMethods<S> createComponentMethods()
         {
-            return new ComponentMethodsImpl();
+            return new ComponentMethodsImpl<>();
         }
     }
 
@@ -449,7 +463,7 @@ public class ComponentRegistry
         @Override
         protected List<ServiceReference<?>> initialValue()
         {
-            return new ArrayList<ServiceReference<?>>();
+            return new ArrayList<>();
         }
     };
 
@@ -465,15 +479,13 @@ public class ComponentRegistry
         if (info.contains(serviceReference))
         {
             m_logger.log(LogService.LOG_ERROR,
-                "Circular reference detected trying to get service {0}\n stack of references: {1}",
-                new Object[] {serviceReference, new Info(info)},
-                new Exception("stack trace"));
+                "Circular reference detected trying to get service {0}\n stack of references: {1}", new Exception("stack trace"),
+                serviceReference, new Info(info));
             return true;
         }
         m_logger.log(LogService.LOG_DEBUG,
-            "getService  {0}: stack of references: {1}",
-            new Object[] {serviceReference, info},
-            null);
+            "getService  {0}: stack of references: {1}", null,
+            serviceReference, info);
         info.add(serviceReference);
         return false;
     }
@@ -494,7 +506,7 @@ public class ComponentRegistry
         @Override
         public String toString()
         {
-            StringBuffer sb = new StringBuffer();
+        	StringBuilder sb = new StringBuilder();
             for (ServiceReference<?> sr: info)
             {
                 sb.append("ServiceReference: ").append(sr).append("\n");
@@ -554,9 +566,7 @@ public class ComponentRegistry
                         ((DependencyManager<?, T>)entry.getDm()).invokeBindMethodLate( serviceReference, entry.getTrackingCount() );
                     }
                     m_logger.log(LogService.LOG_DEBUG,
-                        "Ran {0} asynchronously",
-                        new Object[] {this},
-                        null);
+                        "Ran {0} asynchronously", null, this);
                 }
 
                 @Override
@@ -567,9 +577,7 @@ public class ComponentRegistry
 
             } ;
             m_logger.log(LogService.LOG_DEBUG,
-                "Scheduling runnable {0} asynchronously",
-                new Object[] {runnable},
-                null);
+                "Scheduling runnable {0} asynchronously", null, runnable);
             actor.schedule( runnable );
         }
     }
@@ -580,22 +588,20 @@ public class ComponentRegistry
         if ( serviceReference.getProperty( ComponentConstants.COMPONENT_NAME ) == null || serviceReference.getProperty( ComponentConstants.COMPONENT_ID ) == null )
         {
             m_logger.log(LogService.LOG_DEBUG,
-                "Missing service {0} for dependency manager {1} is not a DS service, cannot resolve circular dependency",
-                new Object[] {serviceReference, dependencyManager},
-                null);
+                "Missing service {0} for dependency manager {1} is not a DS service, cannot resolve circular dependency", null,
+                serviceReference, dependencyManager);
             return;
         }
         List<Entry<?, ?>> dependencyManagers = m_missingDependencies.get( serviceReference );
         if ( dependencyManagers == null )
         {
-            dependencyManagers = new ArrayList<Entry<?, ?>>();
+            dependencyManagers = new ArrayList<>();
             m_missingDependencies.put( serviceReference, dependencyManagers );
         }
-        dependencyManagers.add( new Entry<S, T>( dependencyManager, trackingCount ) );
+        dependencyManagers.add( new Entry<>( dependencyManager, trackingCount ) );
         m_logger.log(LogService.LOG_DEBUG,
-            "Dependency managers {0} waiting for missing service {1}",
-            new Object[] {dependencyManagers, serviceReference},
-            null);
+            "Dependency managers {0} waiting for missing service {1}", null,
+            dependencyManagers, serviceReference);
         }
 
     private static class Entry<S,T>
@@ -626,7 +632,7 @@ public class ComponentRegistry
         }
     }
 
-    private final ConcurrentMap<Long, RegionConfigurationSupport> bundleToRcsMap = new ConcurrentHashMap<Long, RegionConfigurationSupport>();
+    private final ConcurrentMap<Long, RegionConfigurationSupport> bundleToRcsMap = new ConcurrentHashMap<>();
 
     public RegionConfigurationSupport registerRegionConfigurationSupport(
             ServiceReference<ConfigurationAdmin> reference) {
@@ -679,4 +685,64 @@ public class ComponentRegistry
 		}
 
 	}
+
+	private final Object changeCountLock = new Object();
+
+    private volatile long changeCount;
+
+    private volatile Timer timer;
+
+    private volatile ServiceRegistration<ServiceComponentRuntime> registration;
+
+    public Dictionary<String, Object> getServiceRegistrationProperties()
+    {
+        final Dictionary<String, Object> props = new Hashtable<>();
+        props.put(PROP_CHANGECOUNT, this.changeCount);
+
+        return props;
+    }
+
+    public void setRegistration(final ServiceRegistration<ServiceComponentRuntime> reg)
+    {
+        this.registration = reg;
+    }
+
+    public void updateChangeCount()
+    {
+        if ( registration != null )
+        {
+            synchronized ( changeCountLock )
+            {
+                this.changeCount++;
+                final long count = this.changeCount;
+                if ( this.timer == null )
+                {
+                    this.timer = new Timer();
+                }
+                timer.schedule(new TimerTask()
+                {
+
+                    @Override
+                    public void run() {
+                        synchronized ( changeCountLock )
+                        {
+                            if ( changeCount == count )
+                            {
+                                try
+                                {
+                                    registration.setProperties(getServiceRegistrationProperties());
+                                }
+                                catch ( final IllegalStateException ise)
+                                {
+                                    // we ignore this as this might happen on shutdown
+                                }
+                                timer.cancel();
+                                timer = null;
+                            }
+                        }
+                    }
+                }, 5000L);
+            }
+        }
+    }
 }

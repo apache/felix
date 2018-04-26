@@ -48,8 +48,8 @@ import org.osgi.util.tracker.BundleTrackerCustomizer;
  */
 public abstract class AbstractExtender implements BundleActivator, BundleTrackerCustomizer<Bundle>, SynchronousBundleListener {
 
-    private final ConcurrentMap<Bundle, Activator.ScrExtension> extensions = new ConcurrentHashMap<Bundle, Activator.ScrExtension>();
-    private final ConcurrentMap<Bundle, FutureTask<Void>> destroying = new ConcurrentHashMap<Bundle, FutureTask<Void>>();
+    private final ConcurrentMap<Bundle, Activator.ScrExtension> extensions = new ConcurrentHashMap<>();
+    private final ConcurrentMap<Bundle, FutureTask<Void>> destroying = new ConcurrentHashMap<>();
     private volatile boolean stopping;
     private volatile boolean stopped;
 
@@ -68,7 +68,7 @@ public abstract class AbstractExtender implements BundleActivator, BundleTracker
     public void start(BundleContext context) throws Exception {
         this.context = context;
         this.context.addBundleListener(this);
-        this.tracker = new BundleTracker<Bundle>(this.context, Bundle.ACTIVE | Bundle.STARTING, this);
+        this.tracker = new BundleTracker<>(this.context, Bundle.ACTIVE | Bundle.STARTING, this);
         doStart();
     }
 
@@ -78,7 +78,7 @@ public abstract class AbstractExtender implements BundleActivator, BundleTracker
         while (!extensions.isEmpty()) {
             Collection<Bundle> toDestroy = chooseBundlesToDestroy(extensions.keySet());
             if (toDestroy == null || toDestroy.isEmpty()) {
-                toDestroy = new ArrayList<Bundle>(extensions.keySet());
+                toDestroy = new ArrayList<>(extensions.keySet());
             }
             for (Bundle bundle : toDestroy) {
                 destroyExtension(bundle);
@@ -208,7 +208,7 @@ public abstract class AbstractExtender implements BundleActivator, BundleTracker
                 final Activator.ScrExtension extension = extensions.remove(bundle);
                 if (extension != null) {
                     debug(bundle, "Scheduling extension destruction");
-                    future = new FutureTask<Void>(new Runnable() {
+                    future = new FutureTask<>(new Runnable() {
                         @Override
                         public void run() {
                             debug(bundle, "Destroying extension");
@@ -254,4 +254,5 @@ public abstract class AbstractExtender implements BundleActivator, BundleTracker
 
     protected abstract void debug(Bundle bundle, String msg);
     protected abstract void warn(Bundle bundle, String msg, Throwable t);
+
 }

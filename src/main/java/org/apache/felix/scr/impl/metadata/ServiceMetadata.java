@@ -27,61 +27,61 @@ import java.util.List;
  *
  */
 public class ServiceMetadata {
-	
-	public enum Scope { singleton, bundle, prototype}
 
-	// 112.4.6 Flag that indicates if the service is a ServiceFactory
-	private Boolean m_serviceFactory;
-	
-	private String m_scopeName;
-	private Scope m_scope = Scope.singleton;
+    public enum Scope { singleton, bundle, prototype}
 
-	// List of provided interfaces
-	private List<String> m_provides = new ArrayList<String>();
+    // 112.4.6 Flag that indicates if the service is a ServiceFactory
+    private Boolean m_serviceFactory;
 
-	// Flag that indicates if this metadata has been validated and has become immutable
-	private boolean m_validated = false;
+    private String m_scopeName;
+    private Scope m_scope = Scope.singleton;
 
-	/**
-	 * Setter for the servicefactory attribute of the service element
-	 *
-	 * @param serviceFactory
-	 */
-	public void setServiceFactory(boolean serviceFactory) {
-		if(m_validated) {
-			return;
-		}
+    // List of provided interfaces
+    private List<String> m_provides = new ArrayList<String>();
 
-		m_serviceFactory = serviceFactory;
-	}
-	
-	public void setScope(String scopeName) {
-		if(m_validated) {
-			return;
-		}
-		this.m_scopeName = scopeName;
-	}
+    // Flag that indicates if this metadata has been validated and has become immutable
+    private boolean m_validated = false;
 
-	
+    /**
+     * Setter for the servicefactory attribute of the service element
+     *
+     * @param serviceFactory
+     */
+    public void setServiceFactory(boolean serviceFactory) {
+        if (m_validated) {
+            return;
+        }
 
-	public Scope getScope() {
-		return m_scope;
-	}
+        m_serviceFactory = serviceFactory;
+    }
 
-	/**
-	 * Add a provided interface to this service
-	 *
-	 * @param provide a String containing the name of the provided interface
-	 */
-	public void addProvide(String provide) {
-		if(m_validated) {
-			return;
-		}
+    public void setScope(String scopeName) {
+        if(m_validated) {
+            return;
+        }
+        this.m_scopeName = scopeName;
+    }
 
-		m_provides.add(provide);
-	}
 
-	/**
+
+    public Scope getScope() {
+        return m_scope;
+    }
+
+    /**
+     * Add a provided interface to this service
+     *
+     * @param provide a String containing the name of the provided interface
+     */
+    public void addProvide(String provide) {
+        if(m_validated) {
+            return;
+        }
+
+        m_provides.add(provide);
+    }
+
+    /**
      * Returns the implemented interfaces
      *
      * @return the implemented interfaces as a string array
@@ -99,38 +99,38 @@ public class ServiceMetadata {
         if ( m_provides.size() == 0 )
         {
             throw componentMetadata
-                .validationFailure( "At least one provided interface must be declared in the service element" );
+            .validationFailure( "At least one provided interface must be declared in the service element" );
         }
         for ( String provide: m_provides )
         {
-        	if ( provide == null )
-        	{
+            if ( provide == null )
+            {
                 throw componentMetadata
-                    .validationFailure( "Null provides.  Possibly service is not specified as value of attribute 'interface'" );
-        	}
+                .validationFailure( "Null provides.  Possibly service is not specified as value of attribute 'interface'" );
+            }
         }
         if (m_serviceFactory != null)
         {
-        	if ( componentMetadata.getDSVersion().isDS13() )
-        	{
-            	throw componentMetadata.validationFailure("service-factory can only be specified in version 1.2 and earlier");
-        	}
-        	m_scope = m_serviceFactory? Scope.bundle: Scope.singleton;
+            if ( componentMetadata.getDSVersion().isDS13() )
+            {
+                throw componentMetadata.validationFailure("service-factory can only be specified in version 1.2 and earlier");
+            }
+            m_scope = m_serviceFactory? Scope.bundle: Scope.singleton;
         }
         if ( m_scopeName != null )
         {
-        	if ( !componentMetadata.getDSVersion().isDS13() )
-        	{ 
-            	throw componentMetadata.validationFailure("service scope can only be specified in version 1.3 and later");
-        	}
-        	try
-        	{
-        		m_scope = Scope.valueOf(m_scopeName);
-        	}
-        	catch (IllegalArgumentException e)
-        	{
-            	throw componentMetadata.validationFailure("Service scope may be only 'singleton' 'bundle' or 'prototype' not " + m_scopeName);
-        	}
+            if ( !componentMetadata.getDSVersion().isDS13() )
+            {
+                throw componentMetadata.validationFailure("service scope can only be specified in version 1.3 and later");
+            }
+            try
+            {
+                m_scope = Scope.valueOf(m_scopeName);
+            }
+            catch (IllegalArgumentException e)
+            {
+                throw componentMetadata.validationFailure("Service scope may be only 'singleton' 'bundle' or 'prototype' not " + m_scopeName);
+            }
         }
         m_validated = true;
     }

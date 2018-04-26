@@ -24,12 +24,12 @@ import java.util.Hashtable;
 
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.ops4j.pax.exam.junit.JUnit4TestRunner;
+import org.ops4j.pax.exam.junit.PaxExam;
 import org.osgi.service.cm.Configuration;
 import org.osgi.service.component.runtime.dto.ComponentConfigurationDTO;
 import org.osgi.service.log.LogService;
 
-@RunWith(JUnit4TestRunner.class)
+@RunWith(PaxExam.class)
 public class Felix5276Test extends ComponentTestBase
 {
     static
@@ -49,7 +49,7 @@ public class Felix5276Test extends ComponentTestBase
 
         String componentNameA = "A";
         ComponentConfigurationDTO componentA = findComponentConfigurationByName(componentNameA,
-            ComponentConfigurationDTO.ACTIVE);
+                ComponentConfigurationDTO.ACTIVE);
         log.log(LogService.LOG_INFO, "A checked active");
 
         String componentNameB = "B";
