@@ -16,38 +16,26 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.felix.cm.impl;
+package org.apache.felix.cm.impl.persistence;
 
+import java.io.IOException;
+import java.util.Collection;
+import java.util.Dictionary;
+import java.util.List;
+import java.util.Set;
 
-public class MockConfigurationManager extends ConfigurationManager
+import org.apache.felix.cm.PersistenceManager;
+import org.apache.felix.cm.impl.SimpleFilter;
+
+/**
+ * Extension of the {@link PersistenceManager}.
+ */
+public interface ExtPersistenceManager extends PersistenceManager
 {
+    Collection<Dictionary> getDictionaries( SimpleFilter filter ) throws IOException;
 
-    void updated( ConfigurationImpl config, boolean fireEvent )
-    {
-        // do nothing, might register the update call
-    }
+    Set<String> getFactoryConfigurationPids( List<String> targetedFactoryPids )
+    throws IOException;
 
-
-    void deleted( ConfigurationImpl config )
-    {
-        // do nothing, might register the update call
-    }
-
-
-    void revokeConfiguration( ConfigurationImpl config )
-    {
-        // do nothing, might register the update call
-    }
-
-
-    void reassignConfiguration( ConfigurationImpl config )
-    {
-        // do nothing, might register the update call
-    }
-
-
-    public void log( int level, String message, Throwable t )
-    {
-        // no logging for now
-    }
+    PersistenceManager getDelegatee();
 }

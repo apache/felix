@@ -16,10 +16,13 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.felix.cm.impl;
+package org.apache.felix.cm.impl.persistence;
 
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.Dictionary;
 import java.util.Enumeration;
 import java.util.HashMap;
@@ -27,13 +30,13 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.Vector;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
-import org.apache.felix.cm.NotCachablePersistenceManager;
 import org.apache.felix.cm.PersistenceManager;
+import org.apache.felix.cm.impl.CaseInsensitiveDictionary;
+import org.apache.felix.cm.impl.SimpleFilter;
 import org.osgi.framework.Constants;
 import org.osgi.service.cm.ConfigurationAdmin;
 
@@ -44,14 +47,14 @@ import org.osgi.service.cm.ConfigurationAdmin;
  * are also (or primarily) routed through a local cache of dictionaries indexed
  * by the <code>service.pid</code>.
  */
-class CachingPersistenceManagerProxy implements PersistenceManager
+public class CachingPersistenceManagerProxy implements ExtPersistenceManager
 {
 
     /** The actual PersistenceManager */
     private final PersistenceManager pm;
 
     /** Cached dictionaries */
-    private final Map<String, CaseInsensitiveDictionary> cache = new HashMap<String, CaseInsensitiveDictionary>();
+    private final Map<String, CaseInsensitiveDictionary> cache = new HashMap<>();
 
     /** Protecting lock */
     private final ReadWriteLock globalLock = new ReentrantReadWriteLock();
@@ -64,7 +67,7 @@ class CachingPersistenceManagerProxy implements PersistenceManager
     private volatile boolean fullyLoaded;
 
     /** Factory configuration cache. */
-    private final Map<String, Set<String>> factoryConfigCache = new HashMap<String, Set<String>>();
+    private final Map<String, Set<String>> factoryConfigCache = new HashMap<>();
 
     /**
      * Creates a new caching layer for the given actual {@link PersistenceManager}.
@@ -75,10 +78,7 @@ class CachingPersistenceManagerProxy implements PersistenceManager
         this.pm = pm;
     }
 
-    public boolean isNotCachablePersistenceManager() {
-        return pm instanceof NotCachablePersistenceManager;
-    }
-
+    @Override
     public PersistenceManager getDelegatee()
     {
         return pm;
@@ -156,40 +156,43 @@ class CachingPersistenceManagerProxy implements PersistenceManager
     @Override
     public Enumeration getDictionaries() throws IOException
     {
-        return getDictionaries( null );
+        return Collections.enumeration(getDictionaries( null ));
     }
 
-    private final void cache(final Dictionary props)
+    private final CaseInsensitiveDictionary cache(final Dictionary props)
     {
         final String pid = (String) props.get( Constants.SERVICE_PID );
-        if ( pid != null && !cache.containsKey(pid) )
+        CaseInsensitiveDictionary dict = null;
+        if ( pid != null )
         {
-            cache.put( pid, copy( props ) );
-            final String factoryPid = (String)props.get(ConfigurationAdmin.SERVICE_FACTORYPID);
-            if ( factoryPid != null )
+            dict = cache.get(pid);
+            if ( dict == null )
             {
-                Set<String> factoryPids = this.factoryConfigCache.get(factoryPid);
-                if ( factoryPids == null )
+                dict = new CaseInsensitiveDictionary(props);
+                cache.put( pid, dict );
+                final String factoryPid = (String)props.get(ConfigurationAdmin.SERVICE_FACTORYPID);
+                if ( factoryPid != null )
                 {
-                    factoryPids = new HashSet<String>();
-                    this.factoryConfigCache.put(factoryPid, factoryPids);
+                    Set<String> factoryPids = this.factoryConfigCache.get(factoryPid);
+                    if ( factoryPids == null )
+                    {
+                        factoryPids = new HashSet<>();
+                        this.factoryConfigCache.put(factoryPid, factoryPids);
+                    }
+                    factoryPids.add(pid);
                 }
-                factoryPids.add(pid);
             }
         }
+        return dict;
     }
 
-    public Enumeration getDictionaries( SimpleFilter filter ) throws IOException
+    @Override
+    public Collection<Dictionary> getDictionaries( final SimpleFilter filter ) throws IOException
     {
         Lock lock = globalLock.readLock();
         try
         {
             lock.lock();
-            boolean fullyLoaded = this.fullyLoaded;
-            if ( pm instanceof NotCachablePersistenceManager )
-            {
-                fullyLoaded = false;
-            }
             // if not fully loaded, call back to the underlying persistence
             // manager and cache all dictionaries whose service.pid is set
             if ( !fullyLoaded )
@@ -210,15 +213,15 @@ class CachingPersistenceManagerProxy implements PersistenceManager
             }
 
             // Deep copy the configuration to avoid any threading issue
-            Vector<Dictionary> configs = new Vector<Dictionary>();
-            for (Dictionary d : cache.values())
+            final List<Dictionary> configs = new ArrayList<>();
+            for (final Dictionary d : cache.values())
             {
                 if ( d.get( Constants.SERVICE_PID ) != null && ( filter == null || filter.matches( d ) ) )
                 {
-                    configs.add( copy( d ) );
+                    configs.add( new CaseInsensitiveDictionary( d ) );
                 }
             }
-            return configs.elements();
+            return configs;
         }
         finally
         {
@@ -244,7 +247,7 @@ class CachingPersistenceManagerProxy implements PersistenceManager
         try
         {
             lock.lock();
-            Dictionary loaded = cache.get( pid );
+            CaseInsensitiveDictionary loaded = cache.get( pid );
             if ( loaded == null && !fullyLoaded )
             {
                 lock.unlock();
@@ -253,15 +256,14 @@ class CachingPersistenceManagerProxy implements PersistenceManager
                 loaded = cache.get( pid );
                 if ( loaded == null )
                 {
-                    loaded = pm.load(pid);
-                    if ( loaded != null )
+                    final Dictionary props = pm.load( pid );
+                    if ( props != null )
                     {
-                        this.cache(loaded);
+                        loaded = this.cache(props);
                     }
                 }
-
             }
-            return loaded == null ? null : copy( loaded );
+            return loaded == null ? null : new CaseInsensitiveDictionary(loaded);
         }
         finally
         {
@@ -296,9 +298,11 @@ class CachingPersistenceManagerProxy implements PersistenceManager
         }
     }
 
-    public void getFactoryConfigurationPids(final List<String> targetedFactoryPids, final Set<String> pids)
+    @Override
+    public Set<String> getFactoryConfigurationPids(final List<String> targetedFactoryPids )
     throws IOException
     {
+        final Set<String> pids = new HashSet<>();
         Lock lock = globalLock.readLock();
         try
         {
@@ -335,15 +339,6 @@ class CachingPersistenceManagerProxy implements PersistenceManager
         {
             lock.unlock();
         }
-    }
-
-    /**
-     * Creates and returns a copy of the given dictionary. This method simply
-     * copies all entries from the source dictionary to the newly created
-     * target.
-     */
-    CaseInsensitiveDictionary copy( final Dictionary source )
-    {
-        return new CaseInsensitiveDictionary( source );
+        return pids;
     }
 }

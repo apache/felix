@@ -19,7 +19,11 @@
 package org.apache.felix.cm.impl;
 
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+
 import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.io.PrintStream;
 import java.lang.reflect.Field;
 import java.util.Dictionary;
@@ -35,6 +39,11 @@ import org.apache.felix.cm.MockNotCachablePersistenceManager;
 import org.apache.felix.cm.MockPersistenceManager;
 import org.apache.felix.cm.PersistenceManager;
 import org.apache.felix.cm.impl.helper.ManagedServiceFactoryTracker;
+import org.apache.felix.cm.impl.persistence.CachingPersistenceManagerProxy;
+import org.apache.felix.cm.impl.persistence.PersistenceManagerProxy;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
 import org.mockito.Mockito;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.Constants;
@@ -45,9 +54,7 @@ import org.osgi.service.cm.SynchronousConfigurationListener;
 import org.osgi.service.log.LogService;
 import org.osgi.util.tracker.ServiceTracker;
 
-import junit.framework.TestCase;
-
-public class ConfigurationManagerTest extends TestCase
+public class ConfigurationManagerTest
 {
 
     private PrintStream replacedStdErr;
@@ -55,50 +62,41 @@ public class ConfigurationManagerTest extends TestCase
     private ByteArrayOutputStream output;
 
 
-    @Override
-    protected void setUp() throws Exception
+    @Before
+    public void setUp() throws Exception
     {
-        super.setUp();
-
         replacedStdErr = System.err;
 
         output = new ByteArrayOutputStream();
         System.setErr( new PrintStream( output ) );
+        setLogLevel(LogService.LOG_WARNING);
     }
 
 
-    @Override
-    protected void tearDown() throws Exception
+    @After
+    public void tearDown() throws Exception
     {
         System.setErr( replacedStdErr );
-
-        super.tearDown();
     }
 
-    public void test_listConfigurations_cached() throws Exception
+    @Test public void test_listConfigurations_cached() throws Exception
     {
         String pid = "testDefaultPersistenceManager";
-        ConfigurationManager configMgr = new ConfigurationManager();
-        setServiceTrackerField( configMgr, "persistenceManagerTracker" );
 
-        Field field = configMgr.getClass().getDeclaredField( "persistenceManagers" );
-        field.setAccessible( true );
-        CachingPersistenceManagerProxy[] persistenceManagers = new CachingPersistenceManagerProxy [1];
         PersistenceManager pm =new MockPersistenceManager();
-        Dictionary dictionary = new Hashtable();
+        Dictionary<String, Object> dictionary = new Hashtable<>();
         dictionary.put( "property1", "value1" );
         dictionary.put( Constants.SERVICE_PID, pid );
         pm.store( pid, dictionary );
 
-        persistenceManagers[0] = new CachingPersistenceManagerProxy(pm);
-        field.set(configMgr, persistenceManagers);
+        ConfigurationManager configMgr = new ConfigurationManager(new CachingPersistenceManagerProxy(pm), null);
 
         ConfigurationImpl[] conf = configMgr.listConfigurations(new ConfigurationAdminImpl(configMgr, null), null);
 
         assertEquals(1, conf.length);
         assertEquals(2, conf[0].getProperties(true).size());
 
-        dictionary = new Hashtable();
+        dictionary = new Hashtable<>();
         dictionary.put( "property1", "value2" );
         pid = "testDefaultPersistenceManager";
         dictionary.put( Constants.SERVICE_PID, pid );
@@ -112,34 +110,27 @@ public class ConfigurationManagerTest extends TestCase
         assertEquals("value1", conf[0].getProperties(true).get("property1"));
     }
 
-    public void test_listConfigurations_notcached() throws Exception
+    @Test public void test_listConfigurations_notcached() throws Exception
     {
         String pid = "testDefaultPersistenceManager";
-        ConfigurationManager configMgr = new ConfigurationManager();
-        setServiceTrackerField( configMgr, "persistenceManagerTracker" );
-
-        Field field = configMgr.getClass().getDeclaredField( "persistenceManagers" );
-        field.setAccessible( true );
-        CachingPersistenceManagerProxy[] persistenceManagers = new CachingPersistenceManagerProxy[1];
-        PersistenceManager pm =new MockNotCachablePersistenceManager();
-        Dictionary dictionary = new Hashtable();
+        PersistenceManager pm = new MockNotCachablePersistenceManager();
+        Dictionary<String, Object> dictionary = new Hashtable<>();
         dictionary.put( "property1", "value1" );
         dictionary.put( Constants.SERVICE_PID, pid );
         pm.store( pid, dictionary );
 
-        persistenceManagers[0] = new CachingPersistenceManagerProxy(pm);
-        field.set(configMgr, persistenceManagers);
+        ConfigurationManager configMgr = new ConfigurationManager(new PersistenceManagerProxy(pm), null);
 
         ConfigurationImpl[] conf = configMgr.listConfigurations(new ConfigurationAdminImpl(configMgr, null), null);
 
         assertEquals(1, conf.length);
         assertEquals(2, conf[0].getProperties(true).size());
 
-        dictionary = new Hashtable();
+        dictionary = new Hashtable<>();
         dictionary.put("property1", "valueNotCached");
         pid = "testDefaultPersistenceManager";
         dictionary.put( Constants.SERVICE_PID, pid );
-        persistenceManagers[0].store( pid, dictionary );
+        pm.store( pid, dictionary );
 
         conf = configMgr.listConfigurations(new ConfigurationAdminImpl(configMgr, null), null);
         assertEquals(1, conf.length);
@@ -149,101 +140,100 @@ public class ConfigurationManagerTest extends TestCase
         assertEquals("valueNotCached", conf[0].getProperties(true).get("property1"));
     }
 
-    public void testLogNoLogService()
+    @Test public void testLogNoLogService() throws IOException
     {
-        ConfigurationManager configMgr = createConfigurationManager( null );
+        ConfigurationManager configMgr = createConfigurationManagerAndLog( null );
 
-        setLogLevel( configMgr, LogService.LOG_WARNING );
+        setLogLevel( LogService.LOG_WARNING );
         assertNoLog( configMgr, LogService.LOG_DEBUG, "Debug Test Message", null );
         assertNoLog( configMgr, LogService.LOG_INFO, "Info Test Message", null );
         assertLog( configMgr, LogService.LOG_WARNING, "Warning Test Message", null );
         assertLog( configMgr, LogService.LOG_ERROR, "Error Test Message", null );
 
-        setLogLevel( configMgr, LogService.LOG_ERROR );
+        setLogLevel( LogService.LOG_ERROR );
         assertNoLog( configMgr, LogService.LOG_DEBUG, "Debug Test Message", null );
         assertNoLog( configMgr, LogService.LOG_INFO, "Info Test Message", null );
         assertNoLog( configMgr, LogService.LOG_WARNING, "Warning Test Message", null );
         assertLog( configMgr, LogService.LOG_ERROR, "Error Test Message", null );
 
         // lower than error -- no output
-        setLogLevel( configMgr, LogService.LOG_ERROR - 1 );
+        setLogLevel( LogService.LOG_ERROR - 1 );
         assertNoLog( configMgr, LogService.LOG_DEBUG, "Debug Test Message", null );
         assertNoLog( configMgr, LogService.LOG_INFO, "Info Test Message", null );
         assertNoLog( configMgr, LogService.LOG_WARNING, "Warning Test Message", null );
         assertNoLog( configMgr, LogService.LOG_ERROR, "Error Test Message", null );
 
         // minimal log level -- no output
-        setLogLevel( configMgr, Integer.MIN_VALUE );
+        setLogLevel( Integer.MIN_VALUE );
         assertNoLog( configMgr, LogService.LOG_DEBUG, "Debug Test Message", null );
         assertNoLog( configMgr, LogService.LOG_INFO, "Info Test Message", null );
         assertNoLog( configMgr, LogService.LOG_WARNING, "Warning Test Message", null );
         assertNoLog( configMgr, LogService.LOG_ERROR, "Error Test Message", null );
 
-        setLogLevel( configMgr, LogService.LOG_INFO );
+        setLogLevel( LogService.LOG_INFO );
         assertNoLog( configMgr, LogService.LOG_DEBUG, "Debug Test Message", null );
         assertLog( configMgr, LogService.LOG_INFO, "Info Test Message", null );
         assertLog( configMgr, LogService.LOG_WARNING, "Warning Test Message", null );
         assertLog( configMgr, LogService.LOG_ERROR, "Error Test Message", null );
 
-        setLogLevel( configMgr, LogService.LOG_DEBUG );
+        setLogLevel( LogService.LOG_DEBUG );
         assertLog( configMgr, LogService.LOG_DEBUG, "Debug Test Message", null );
         assertLog( configMgr, LogService.LOG_INFO, "Info Test Message", null );
         assertLog( configMgr, LogService.LOG_WARNING, "Warning Test Message", null );
         assertLog( configMgr, LogService.LOG_ERROR, "Error Test Message", null );
 
         // maximal log level -- all output
-        setLogLevel( configMgr, Integer.MAX_VALUE );
+        setLogLevel( Integer.MAX_VALUE );
         assertLog( configMgr, LogService.LOG_DEBUG, "Debug Test Message", null );
         assertLog( configMgr, LogService.LOG_INFO, "Info Test Message", null );
         assertLog( configMgr, LogService.LOG_WARNING, "Warning Test Message", null );
         assertLog( configMgr, LogService.LOG_ERROR, "Error Test Message", null );
     }
-
 
     // this test always expects output since when using a LogService, the log
     // level property is ignored
-    public void testLogWithLogService()
+    @Test public void testLogWithLogService() throws IOException
     {
         LogService logService = new MockLogService();
-        ConfigurationManager configMgr = createConfigurationManager( logService );
+        ConfigurationManager configMgr = createConfigurationManagerAndLog( logService );
 
-        setLogLevel( configMgr, LogService.LOG_WARNING );
+        setLogLevel( LogService.LOG_WARNING );
         assertLog( configMgr, LogService.LOG_DEBUG, "Debug Test Message", null );
         assertLog( configMgr, LogService.LOG_INFO, "Info Test Message", null );
         assertLog( configMgr, LogService.LOG_WARNING, "Warning Test Message", null );
         assertLog( configMgr, LogService.LOG_ERROR, "Error Test Message", null );
 
-        setLogLevel( configMgr, LogService.LOG_ERROR );
+        setLogLevel( LogService.LOG_ERROR );
         assertLog( configMgr, LogService.LOG_DEBUG, "Debug Test Message", null );
         assertLog( configMgr, LogService.LOG_INFO, "Info Test Message", null );
         assertLog( configMgr, LogService.LOG_WARNING, "Warning Test Message", null );
         assertLog( configMgr, LogService.LOG_ERROR, "Error Test Message", null );
 
-        setLogLevel( configMgr, LogService.LOG_ERROR - 1 );
+        setLogLevel( LogService.LOG_ERROR - 1 );
         assertLog( configMgr, LogService.LOG_DEBUG, "Debug Test Message", null );
         assertLog( configMgr, LogService.LOG_INFO, "Info Test Message", null );
         assertLog( configMgr, LogService.LOG_WARNING, "Warning Test Message", null );
         assertLog( configMgr, LogService.LOG_ERROR, "Error Test Message", null );
 
-        setLogLevel( configMgr, Integer.MIN_VALUE );
+        setLogLevel( Integer.MIN_VALUE );
         assertLog( configMgr, LogService.LOG_DEBUG, "Debug Test Message", null );
         assertLog( configMgr, LogService.LOG_INFO, "Info Test Message", null );
         assertLog( configMgr, LogService.LOG_WARNING, "Warning Test Message", null );
         assertLog( configMgr, LogService.LOG_ERROR, "Error Test Message", null );
 
-        setLogLevel( configMgr, LogService.LOG_INFO );
+        setLogLevel( LogService.LOG_INFO );
         assertLog( configMgr, LogService.LOG_DEBUG, "Debug Test Message", null );
         assertLog( configMgr, LogService.LOG_INFO, "Info Test Message", null );
         assertLog( configMgr, LogService.LOG_WARNING, "Warning Test Message", null );
         assertLog( configMgr, LogService.LOG_ERROR, "Error Test Message", null );
 
-        setLogLevel( configMgr, LogService.LOG_DEBUG );
+        setLogLevel( LogService.LOG_DEBUG );
         assertLog( configMgr, LogService.LOG_DEBUG, "Debug Test Message", null );
         assertLog( configMgr, LogService.LOG_INFO, "Info Test Message", null );
         assertLog( configMgr, LogService.LOG_WARNING, "Warning Test Message", null );
         assertLog( configMgr, LogService.LOG_ERROR, "Error Test Message", null );
 
-        setLogLevel( configMgr, Integer.MAX_VALUE );
+        setLogLevel( Integer.MAX_VALUE );
         assertLog( configMgr, LogService.LOG_DEBUG, "Debug Test Message", null );
         assertLog( configMgr, LogService.LOG_INFO, "Info Test Message", null );
         assertLog( configMgr, LogService.LOG_WARNING, "Warning Test Message", null );
@@ -251,41 +241,41 @@ public class ConfigurationManagerTest extends TestCase
     }
 
 
-    public void testLogSetup()
+    @Test public void testLogSetup() throws IOException
     {
         final MockBundleContext bundleContext = new MockBundleContext();
-        ConfigurationManager configMgr = createConfigurationManager( null );
+        createConfigurationManagerAndLog( null );
 
         // ensure the configuration data goes to target
         bundleContext.setProperty( "felix.cm.dir", "target/config" );
 
         // default value is 2
         bundleContext.setProperty( "felix.cm.loglevel", null );
-        configMgr.start( bundleContext );
-        assertEquals( 2, getLogLevel( configMgr ) );
-        configMgr.stop( bundleContext );
+        Log.logger.start( bundleContext );
+        assertEquals( 2, getLogLevel( ) );
+        Log.logger.stop( );
 
         // illegal number yields default value
         bundleContext.setProperty( "felix.cm.loglevel", "not-a-number" );
-        configMgr.start( bundleContext );
-        assertEquals( 2, getLogLevel( configMgr ) );
-        configMgr.stop( bundleContext );
+        Log.logger.start( bundleContext );
+        assertEquals( 2, getLogLevel( ) );
+        Log.logger.stop( );
 
         bundleContext.setProperty( "felix.cm.loglevel", "-100" );
-        configMgr.start( bundleContext );
-        assertEquals( -100, getLogLevel( configMgr ) );
-        configMgr.stop( bundleContext );
+        Log.logger.start( bundleContext );
+        assertEquals( -100, getLogLevel( ) );
+        Log.logger.stop( );
 
         bundleContext.setProperty( "felix.cm.loglevel", "4" );
-        configMgr.start( bundleContext );
-        assertEquals( 4, getLogLevel( configMgr ) );
-        configMgr.stop( bundleContext );
+        Log.logger.start( bundleContext );
+        assertEquals( 4, getLogLevel( ) );
+        Log.logger.stop( );
     }
 
 
-    public void testEventsStartingBundle() throws Exception
+    @Test public void testEventsStartingBundle() throws Exception
     {
-        final Set<String> result = new HashSet<String>();
+        final Set<String> result = new HashSet<>();
 
         SynchronousConfigurationListener syncListener1 = new SynchronousConfigurationListener()
         {
@@ -316,9 +306,8 @@ public class ConfigurationManagerTest extends TestCase
         ServiceRegistration mockReg = Mockito.mock( ServiceRegistration.class );
         Mockito.when( mockReg.getReference() ).thenReturn( mockRef );
 
-        ConfigurationManager configMgr = new ConfigurationManager();
+        ConfigurationManager configMgr = new ConfigurationManager(new PersistenceManagerProxy(new MockPersistenceManager()), null);
 
-        setServiceTrackerField( configMgr, "logTracker" );
         setServiceTrackerField( configMgr, "configurationListenerTracker" );
         ServiceReference[] refs =
                 setServiceTrackerField( configMgr, "syncConfigurationListenerTracker",
@@ -348,9 +337,9 @@ public class ConfigurationManagerTest extends TestCase
         srField.set( configMgr, mockReg );
         Field utField = configMgr.getClass().getDeclaredField( "updateThread" );
         utField.setAccessible( true );
-        utField.set( configMgr, new UpdateThread( configMgr, null, "Test updater" ));
+        utField.set( configMgr, new UpdateThread( null, "Test updater" ));
 
-        Dictionary<String, Object> props = new Hashtable<String, Object>();
+        Dictionary<String, Object> props = new Hashtable<>();
         props.put( Constants.SERVICE_PID, "org.acme.testpid" );
         ConfigurationImpl config = new ConfigurationImpl( configMgr, new MockPersistenceManager(), props );
         configMgr.updated( config, true );
@@ -361,7 +350,9 @@ public class ConfigurationManagerTest extends TestCase
 
     public void test_factoryConfigurationCleanup() throws Exception
     {
-        final ConfigurationManager configMgr = new ConfigurationManager();
+        MockNotCachablePersistenceManager pm = new MockNotCachablePersistenceManager();
+        ConfigurationManager configMgr = new ConfigurationManager(new CachingPersistenceManagerProxy(pm), null);
+
         final Field bcField = configMgr.getClass().getDeclaredField("bundleContext");
         bcField.setAccessible(true);
         bcField.set(configMgr, new MockBundleContext());
@@ -380,7 +371,7 @@ public class ConfigurationManagerTest extends TestCase
         });
         final Field utField = configMgr.getClass().getDeclaredField( "updateThread" );
         utField.setAccessible( true );
-        utField.set( configMgr, new UpdateThread( configMgr, null, "Test updater" ) {
+        utField.set( configMgr, new UpdateThread( null, "Test updater" ) {
 
             @Override
             void schedule(Runnable update) {
@@ -388,16 +379,8 @@ public class ConfigurationManagerTest extends TestCase
             }
         });
 
-        Field field = configMgr.getClass().getDeclaredField( "persistenceManagers" );
-        field.setAccessible( true );
-        CachingPersistenceManagerProxy[] persistenceManagers = new CachingPersistenceManagerProxy[1];
-        MockNotCachablePersistenceManager pm = new MockNotCachablePersistenceManager();
-
-        persistenceManagers[0] = new CachingPersistenceManagerProxy(pm);
-        field.set(configMgr, persistenceManagers);
-
         final String factoryPid = "my.factory";
-        final Dictionary<String, Object> props = new Hashtable<String, Object>();
+        final Dictionary<String, Object> props = new Hashtable<>();
         props.put("hello", "world");
 
         final ConfigurationImpl c1 = configMgr.createFactoryConfiguration(factoryPid, null);
@@ -407,13 +390,13 @@ public class ConfigurationManagerTest extends TestCase
         final ConfigurationImpl c3 = configMgr.createFactoryConfiguration(factoryPid, null);
         c3.update(props);
 
-        assertEquals(3, pm.getStored().size());
+        assertEquals(4, pm.getStored().size());
 
         c1.delete();
-        assertEquals(2, pm.getStored().size());
+        assertEquals(3, pm.getStored().size());
 
         c2.delete();
-        assertEquals(1, pm.getStored().size());
+        assertEquals(2, pm.getStored().size());
 
         c3.delete();
         assertEquals(0, pm.getStored().size());
@@ -423,7 +406,7 @@ public class ConfigurationManagerTest extends TestCase
     {
         try
         {
-            configMgr.log( level, message, t );
+            Log.logger.log( level, message, t );
             assertTrue( "Expecting no log output", output.size() == 0 );
         }
         finally
@@ -438,7 +421,7 @@ public class ConfigurationManagerTest extends TestCase
     {
         try
         {
-            configMgr.log( level, message, t );
+            Log.logger.log( level, message, t );
             assertTrue( "Expecting log output", output.size() > 0 );
 
             final String expectedLog = MockLogService.toMessageLine( level, message );
@@ -454,14 +437,14 @@ public class ConfigurationManagerTest extends TestCase
     }
 
 
-    private static void setLogLevel( ConfigurationManager configMgr, int level )
+    private static void setLogLevel( int level )
     {
         final String fieldName = "logLevel";
         try
         {
-            Field field = configMgr.getClass().getDeclaredField( fieldName );
+            Field field = Log.class.getDeclaredField( fieldName );
             field.setAccessible( true );
-            field.setInt( configMgr, level );
+            field.setInt( Log.logger, level );
         }
         catch ( Throwable ignore )
         {
@@ -471,14 +454,14 @@ public class ConfigurationManagerTest extends TestCase
     }
 
 
-    private static int getLogLevel( ConfigurationManager configMgr )
+    private static int getLogLevel( )
     {
         final String fieldName = "logLevel";
         try
         {
-            Field field = configMgr.getClass().getDeclaredField( fieldName );
+            Field field = Log.class.getDeclaredField( fieldName );
             field.setAccessible( true );
-            return field.getInt( configMgr );
+            return field.getInt( Log.logger );
         }
         catch ( Throwable ignore )
         {
@@ -488,42 +471,17 @@ public class ConfigurationManagerTest extends TestCase
     }
 
 
-    private static ConfigurationManager createConfigurationManager( final LogService logService )
-    {
-        ConfigurationManager configMgr = new ConfigurationManager();
-
-        try
-        {
-            Field field = configMgr.getClass().getDeclaredField( "logTracker" );
-            field.setAccessible( true );
-            field.set( configMgr, new ServiceTracker( new MockBundleContext(), "", null )
-            {
-                @Override
-                public Object getService()
-                {
-                    return logService;
-                }
-            } );
-        }
-        catch ( Throwable ignore )
-        {
-            throw ( IllegalArgumentException ) new IllegalArgumentException( "Cannot set logTracker field value" )
-                .initCause( ignore );
-        }
-
-        return configMgr;
-    }
-
     private static ServiceReference[] setServiceTrackerField( ConfigurationManager configMgr,
             String fieldName, Object ... services ) throws Exception
     {
-        final Map<ServiceReference, Object> refMap = new HashMap<ServiceReference, Object>();
+        final Map<ServiceReference, Object> refMap = new HashMap<>();
         for ( Object svc : services )
         {
             ServiceReference sref = Mockito.mock( ServiceReference.class );
             Mockito.when( sref.getProperty( "objectClass" ) ).thenReturn(new String[] { "TestService" });
             refMap.put( sref, svc );
         }
+
 
         Field field = configMgr.getClass().getDeclaredField( fieldName );
         field.setAccessible( true );
@@ -543,5 +501,33 @@ public class ConfigurationManagerTest extends TestCase
         } );
 
         return refMap.keySet().toArray(new ServiceReference[0]);
+    }
+
+    private static ConfigurationManager createConfigurationManagerAndLog( final LogService logService )
+    throws IOException
+    {
+        final PersistenceManager pm = Mockito.mock(PersistenceManager.class);
+        ConfigurationManager configMgr = new ConfigurationManager(new CachingPersistenceManagerProxy(pm), null);
+
+        try
+        {
+            Field field = Log.class.getDeclaredField( "logTracker" );
+            field.setAccessible( true );
+            field.set( Log.logger, new ServiceTracker( new MockBundleContext(), "", null )
+            {
+                @Override
+                public Object getService()
+                {
+                    return logService;
+                }
+            } );
+        }
+        catch ( Throwable ignore )
+        {
+            throw ( IllegalArgumentException ) new IllegalArgumentException( "Cannot set logTracker field value" )
+                .initCause( ignore );
+        }
+
+        return configMgr;
     }
 }

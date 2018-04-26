@@ -18,7 +18,7 @@
  */
 package org.apache.felix.cm;
 
-import aQute.bnd.annotation.ConsumerType;
+import org.osgi.annotation.versioning.ConsumerType;
 
 /**
  * <code>NotCachablePersistenceManager</code> is a marker interface which
