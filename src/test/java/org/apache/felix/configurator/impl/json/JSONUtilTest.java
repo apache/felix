@@ -28,9 +28,9 @@ import java.io.StringWriter;
 import java.io.Writer;
 import java.net.URL;
 import java.util.List;
-import java.util.Map;
 
-import org.apache.felix.configurator.impl.TypeConverter;
+import javax.json.JsonObject;
+
 import org.apache.felix.configurator.impl.model.ConfigurationFile;
 import org.junit.Test;
 
@@ -54,36 +54,39 @@ public class JSONUtilTest {
 
     @Test public void testReadJSON() throws Exception {
         final ConfigurationFile cg = JSONUtil.readJSON(new TypeConverter(null),
-                "a", new URL("http://a"), 1, readJSON("json/valid.json"));
+                "a", new URL("http://a"), 1, readJSON("json/valid.json"),
+                new JSONUtil.Report());
         assertNotNull(cg);
         assertEquals(2, cg.getConfigurations().size());
     }
 
     @SuppressWarnings("unchecked")
     @Test public void testTypes() throws Exception {
-        final Map config = JSONUtil.parseJSON("a", JSONUtilTest.readJSON("json/simple-types.json"));
-        final Map properties = (Map)config.get("config");
+        final JsonObject config = JSONUtil.parseJSON("a",
+                JSONUtilTest.readJSON("json/simple-types.json"),
+                new JSONUtil.Report());
+        final JsonObject properties = (JsonObject)config.get("config");
 
-        assertTrue(properties.get("string") instanceof String);
-        assertTrue(properties.get("boolean") instanceof Boolean);
-        assertTrue(properties.get("number") instanceof Long);
-        assertTrue(properties.get("float") instanceof Double);
+        assertTrue(JSONUtil.getValue(properties, "string") instanceof String);
+        assertTrue(JSONUtil.getValue(properties, "boolean") instanceof Boolean);
+        assertTrue(JSONUtil.getValue(properties, "number") instanceof Long);
+        assertTrue(JSONUtil.getValue(properties, "float") instanceof Double);
 
         // arrays
-        assertTrue(properties.get("string.array") instanceof List<?>);
-        assertTrue(((List<Object>)properties.get("string.array")).get(0) instanceof String);
-        assertTrue(((List<Object>)properties.get("string.array")).get(1) instanceof String);
+        assertTrue(JSONUtil.getValue(properties, "string.array") instanceof List<?>);
+        assertTrue(((List<Object>)JSONUtil.getValue(properties, "string.array")).get(0) instanceof String);
+        assertTrue(((List<Object>)JSONUtil.getValue(properties, "string.array")).get(1) instanceof String);
 
-        assertTrue((List<Object>)properties.get("boolean.array") instanceof List<?>);
-        assertTrue(((List<Object>)properties.get("boolean.array")).get(0) instanceof Boolean);
-        assertTrue(((List<Object>)properties.get("boolean.array")).get(1) instanceof Boolean);
+        assertTrue((List<Object>)JSONUtil.getValue(properties, "boolean.array") instanceof List<?>);
+        assertTrue(((List<Object>)JSONUtil.getValue(properties, "boolean.array")).get(0) instanceof Boolean);
+        assertTrue(((List<Object>)JSONUtil.getValue(properties, "boolean.array")).get(1) instanceof Boolean);
 
-        assertTrue((List<Object>)properties.get("number.array") instanceof List<?>);
-        assertTrue(((List<Object>)properties.get("number.array")).get(0) instanceof Long);
-        assertTrue(((List<Object>)properties.get("number.array")).get(1) instanceof Long);
+        assertTrue((List<Object>)JSONUtil.getValue(properties, "number.array") instanceof List<?>);
+        assertTrue(((List<Object>)JSONUtil.getValue(properties, "number.array")).get(0) instanceof Long);
+        assertTrue(((List<Object>)JSONUtil.getValue(properties, "number.array")).get(1) instanceof Long);
 
-        assertTrue((List<Object>)properties.get("float.array") instanceof List<?>);
-        assertTrue(((List<Object>)properties.get("float.array")).get(0) instanceof Double);
-        assertTrue(((List<Object>)properties.get("float.array")).get(1) instanceof Double);
+        assertTrue((List<Object>)JSONUtil.getValue(properties, "float.array") instanceof List<?>);
+        assertTrue(((List<Object>)JSONUtil.getValue(properties, "float.array")).get(0) instanceof Double);
+        assertTrue(((List<Object>)JSONUtil.getValue(properties, "float.array")).get(1) instanceof Double);
     }
 }

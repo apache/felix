@@ -30,10 +30,6 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
-import org.apache.felix.configurator.impl.Util;
-import org.apache.felix.configurator.impl.logger.SystemLogger;
-import org.osgi.framework.BundleContext;
-
 public class State extends AbstractState implements Serializable {
 
     private static final long serialVersionUID = 1L;
@@ -41,15 +37,13 @@ public class State extends AbstractState implements Serializable {
     /** Serialization version. */
     private static final int VERSION = 1;
 
-    private static final String FILE_NAME = "state.ser";
+    public static final String FILE_NAME = "state.ser";
 
-    private final Map<Long, Long> bundlesLastModified = new HashMap<Long, Long>();
+    private final Map<Long, Long> bundlesLastModified = new HashMap<>();
 
-    private final Set<String> environments = new HashSet<>();
+    private final Map<Long, Long> bundlesConfigAdminBundleId = new HashMap<>();
 
     private volatile Set<String> initialHashes;
-
-    volatile transient boolean envsChanged = true;
 
     /**
      * Serialize the object
@@ -62,7 +56,7 @@ public class State extends AbstractState implements Serializable {
     throws IOException {
         out.writeInt(VERSION);
         out.writeObject(bundlesLastModified);
-        out.writeObject(environments);
+        out.writeObject(bundlesConfigAdminBundleId);
         out.writeObject(initialHashes);
     }
 
@@ -78,35 +72,30 @@ public class State extends AbstractState implements Serializable {
         if ( version < 1 || version > VERSION ) {
             throw new ClassNotFoundException(this.getClass().getName());
         }
-        Util.setField(this, "bundlesLastModified", in.readObject());
-        Util.setField(this, "environments", in.readObject());
+        ReflectionUtil.setField(this, "bundlesLastModified", in.readObject());
+        ReflectionUtil.setField(this, "bundlesConfigAdminBundleId", in.readObject());
         initialHashes = (Set<String>) in.readObject();
     }
 
-    public static State createOrReadState(final BundleContext bc) {
-        final File f = bc.getDataFile(FILE_NAME);
+    public static State createOrReadState(final File f)
+    throws ClassNotFoundException, IOException {
         if ( f == null || !f.exists() ) {
             return new State();
         }
         try ( final ObjectInputStream ois = new ObjectInputStream(new FileInputStream(f)) ) {
 
             return (State) ois.readObject();
-        } catch ( final ClassNotFoundException | IOException e ) {
-            SystemLogger.error("Unable to read persisted state from " + f, e);
-            return new State();
         }
     }
 
-    public static void writeState(final BundleContext bc, final State state) {
-        final File f = bc.getDataFile(FILE_NAME);
+    public static void writeState(final File f, final State state)
+    throws IOException {
         if ( f == null ) {
             // do nothing, no file system support
             return;
         }
         try ( final ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(f)) ) {
             oos.writeObject(state);
-        } catch ( final IOException e) {
-            SystemLogger.error("Unable to persist state to " + f, e);
         }
     }
 
@@ -122,25 +111,23 @@ public class State extends AbstractState implements Serializable {
         this.bundlesLastModified.remove(bundleId);
     }
 
+    public Long getConfigAdminBundleId(final long bundleId) {
+        return this.bundlesConfigAdminBundleId.get(bundleId);
+    }
+
+    public void setConfigAdminBundleId(final long bundleId, final long lastModified) {
+        this.bundlesConfigAdminBundleId.put(bundleId, lastModified);
+    }
+
+    public void removeConfigAdminBundleId(final long bundleId) {
+        this.bundlesConfigAdminBundleId.remove(bundleId);
+    }
+
     public Set<Long> getKnownBundleIds() {
         return this.bundlesLastModified.keySet();
     }
 
-    public Set<String> getEnvironments() {
-        return this.environments;
-    }
-
-    public void changeEnvironments(final Set<String> envs) {
-        this.envsChanged = this.environments.equals(envs);
-        this.environments.clear();
-        this.environments.addAll(envs);
-    }
-
-    public boolean environmentsChanged() {
-        return this.envsChanged;
-    }
-
-    public Set<String> getInitialHashes() {
+   public Set<String> getInitialHashes() {
         return this.initialHashes;
     }
 
@@ -183,7 +170,12 @@ public class State extends AbstractState implements Serializable {
 
     @Override
     public String toString() {
-        return "State [bundlesLastModified=" + bundlesLastModified + ", environments=" + environments
-                + ", initialHashes=" + initialHashes + "]";
+        return "State [bundlesLastModified=" + bundlesLastModified +
+                ", initialHashes=" + initialHashes +
+                ", bundlesConfigAdminBundleId=" + bundlesConfigAdminBundleId + "]";
+    }
+
+    public Set<Long> getBundleIdsUsingConfigAdmin() {
+        return new HashSet<>(this.bundlesConfigAdminBundleId.keySet());
     }
 }

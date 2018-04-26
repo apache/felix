@@ -72,7 +72,7 @@ public class ConfigUtilTest {
     }
 
     @Test public void testGetFactoryNoCreate() throws Exception {
-        final String pid = "a.b#alias";
+        final String pid = "a.b~name";
         final ConfigurationAdmin ca = mock(ConfigurationAdmin.class);
         when(ca.listConfigurations(getFilterString(pid))).thenReturn(null);
         assertNull(ConfigUtil.getOrCreateConfiguration(ca, pid, false));
@@ -81,21 +81,21 @@ public class ConfigUtilTest {
     }
 
     @Test public void testGetFactoryCreate() throws Exception {
-        final String pid = "a.b#alias";
+        final String pid = "a.b~name";
         final Configuration cfg = mock(Configuration.class);
         when(cfg.getPid()).thenReturn(pid);
 
         final ConfigurationAdmin ca = mock(ConfigurationAdmin.class);
         when(ca.listConfigurations(getFilterString(pid))).thenReturn(null);
-        when(ca.getFactoryConfiguration("a.b", "alias", "?")).thenReturn(cfg);
+        when(ca.getFactoryConfiguration("a.b", "name", "?")).thenReturn(cfg);
         assertEquals(cfg, ConfigUtil.getOrCreateConfiguration(ca, pid, true));
         verify(ca).listConfigurations(getFilterString(pid));
-        verify(ca).getFactoryConfiguration("a.b", "alias", "?");
+        verify(ca).getFactoryConfiguration("a.b", "name", "?");
         verifyNoMoreInteractions(ca);
     }
 
     @Test public void testGetFactoryAvailable() throws Exception {
-        final String pid = "a.b#alias";
+        final String pid = "a.b~name";
         final Configuration cfg = mock(Configuration.class);
         when(cfg.getPid()).thenReturn(pid);
 

@@ -18,23 +18,7 @@
  */
 package org.apache.felix.configurator.impl.logger;
 
-import org.osgi.framework.ServiceReference;
-import org.osgi.service.log.LogService;
+interface InternalLogger {
 
-public abstract class AbstractLogger implements LogService {
-
-    @Override
-    public final void log(int level, String message) {
-        log(null, level, message, null);
-    }
-
-    @Override
-    public final void log(int level, String message, Throwable cause) {
-        log(null, level, message, cause);
-    }
-
-    @Override
-    public final void log(@SuppressWarnings("rawtypes") ServiceReference ref, int level, String message) {
-        log(ref, level, message, null);
-    }
+    void log(int level, String message, Throwable exception);
 }

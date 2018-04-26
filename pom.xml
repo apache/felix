@@ -22,7 +22,7 @@
     <parent>
         <groupId>org.apache.felix</groupId>
         <artifactId>felix-parent</artifactId>
-        <version>4</version>
+        <version>5</version>
         <relativePath/>
     </parent>
 
@@ -36,21 +36,17 @@
     <version>0.0.1-SNAPSHOT</version>
 
     <scm>
-        <connection>scm:svn:http://svn.apache.org/repos/asf/felix/trunk/configurator</connection>
-        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/felix/trunk/configurator</developerConnection>
-        <url>http://svn.apache.org/viewvc/felix/trunk/configurator</url>
+        <connection>scm:svn:http://svn.apache.org/repos/asf/felix/trunk/osgi-r7/configurator</connection>
+        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/felix/trunk/osgi-r7/configurator</developerConnection>
+        <url>http://svn.apache.org/viewvc/felix/trunk/osgi-r7/configurator</url>
     </scm>
-
-    <properties>
-        <felix.java.version>8</felix.java.version>
-    </properties>
 
     <build>
         <plugins>
             <plugin>
                 <groupId>org.apache.felix</groupId>
                 <artifactId>maven-bundle-plugin</artifactId>
-                <version>3.2.0</version>
+                <version>3.5.0</version>
                 <extensions>true</extensions>
                 <configuration>
                     <instructions>
@@ -60,16 +56,21 @@
                             ${project.artifactId}
                         </Bundle-SymbolicName>
                         <Import-Package>
-                            !org.osgi.service.coordinator,
+                            org.osgi.service.coordinator;resolution:=optional,
+                            org.osgi.service.log;resolution:=optional,
                             *
                         </Import-Package>
+                        <Export-Package>
+                            org.osgi.service.configurator
+                        </Export-Package>
                         <DynamicImport-Package>
-                            org.osgi.service.coordinator
+                            org.osgi.service.coordinator;version="[1.0,2)",
+                            org.osgi.service.log;version="[1.3,2)"                         
                         </DynamicImport-Package>
                         <Provide-Capability>
-                            osgi.implementation;osgi.implementation="osgi.configurator";version:Version="1.0"
+                            osgi.extender;osgi.extender="osgi.configurator";version:Version="1.0"
                         </Provide-Capability>
-                        <Embed-Dependency>org.apache.felix.serializer,org.apache.felix.converter</Embed-Dependency>
+                        <Embed-Dependency>geronimo-json_1.0_spec,johnzon-core,org.apache.felix.converter</Embed-Dependency>
                     </instructions>
                 </configuration>
             </plugin>
@@ -101,19 +102,31 @@
         <dependency>
             <groupId>org.apache.felix</groupId>
 		    <artifactId>org.apache.felix.converter</artifactId>
-		    <version>0.1-SNAPSHOT</version>
+		    <version>0.3.0-SNAPSHOT</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
-            <groupId>org.apache.felix</groupId>
-            <artifactId>org.apache.felix.serializer</artifactId>
-            <version>0.1-SNAPSHOT</version>
+            <groupId>org.apache.geronimo.specs</groupId>
+            <artifactId>geronimo-json_1.0_spec</artifactId>
+            <version>1.0-alpha-1</version>
+            <scope>provided</scope> 
+        </dependency>
+        <dependency>
+            <groupId>org.apache.johnzon</groupId>
+            <artifactId>johnzon-core</artifactId>
+            <version>1.0.0</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
-            <groupId>org.apache.felix</groupId>
-            <artifactId>org.apache.felix.configadmin</artifactId>
-            <version>1.9.0-SNAPSHOT</version>
+            <groupId>org.osgi</groupId>
+            <artifactId>org.osgi.service.cm</artifactId>
+            <version>1.6.0</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.osgi</groupId>
+            <artifactId>org.osgi.service.configurator</artifactId>
+            <version>1.0.0</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
@@ -127,6 +140,18 @@
             <artifactId>org.osgi.service.coordinator</artifactId>
             <version>1.0.2</version>
             <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+            <version>4.12</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.mockito</groupId>
+            <artifactId>mockito-core</artifactId>
+            <version>2.17.0</version>
+            <scope>test</scope>
         </dependency>
     </dependencies>
 </project>
