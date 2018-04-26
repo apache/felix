@@ -24,7 +24,6 @@ import java.io.StringWriter;
 import java.util.Dictionary;
 import java.util.HashSet;
 import java.util.Hashtable;
-import java.util.Properties;
 import java.util.Set;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
@@ -71,10 +70,10 @@ public class ConfigurationAdminUpdateStressTest extends ConfigurationTestBase im
     // ----------------------- Initialization -------------------------------------------
 
     @Before
-    public void startup( BundleContext context )
+    public void startup()
     {
-        context.registerService( LogService.class.getName(), this, null );
-        _tracker = new ServiceTracker( context, ConfigurationAdmin.class.getName(), null );
+        bundleContext.registerService( LogService.class.getName(), this, null );
+        _tracker = new ServiceTracker( bundleContext, ConfigurationAdmin.class.getName(), null );
         _tracker.open();
     }
 
@@ -85,7 +84,7 @@ public class ConfigurationAdminUpdateStressTest extends ConfigurationTestBase im
      */
 
     @After
-    public void tearDown( BundleContext context )
+    public void tearDown()
     {
         _tracker.close();
     }
@@ -144,12 +143,12 @@ public class ConfigurationAdminUpdateStressTest extends ConfigurationTestBase im
     // --------------------------- CM Update stress test -------------------------------------
 
     @Test
-    public void testCMUpdateStress( BundleContext context )
+    public void testCMUpdateStress()
     {
         _testLatch = new CountDownLatch( 1 );
         try
         {
-            CreateUpdateStress stress = new CreateUpdateStress( context );
+            CreateUpdateStress stress = new CreateUpdateStress( bundleContext );
             stress.start();
 
             if ( !_testLatch.await( 15, TimeUnit.SECONDS ) )
@@ -259,7 +258,7 @@ public class ConfigurationAdminUpdateStressTest extends ConfigurationTestBase im
                 ConfigurationAdmin cm = ( ConfigurationAdmin ) _tracker.waitForService( 2000 );
                 setupLatches();
                 Factory factory = new Factory();
-                Properties serviceProps = new Properties();
+                Hashtable<String, Object> serviceProps = new Hashtable<String, Object>();
                 serviceProps.put( "service.pid", _FACTORYPID );
                 _bc.registerService( ManagedServiceFactory.class.getName(), factory, serviceProps );
 

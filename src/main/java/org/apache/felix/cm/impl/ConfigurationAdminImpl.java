@@ -20,6 +20,7 @@ package org.apache.felix.cm.impl;
 
 
 import java.io.IOException;
+
 import org.osgi.framework.Bundle;
 import org.osgi.framework.InvalidSyntaxException;
 import org.osgi.service.cm.Configuration;
@@ -38,10 +39,10 @@ public class ConfigurationAdminImpl implements ConfigurationAdmin
 {
 
     // The configuration manager to which most of the tasks are delegated
-    private ConfigurationManager configurationManager;
+    private volatile ConfigurationManager configurationManager;
 
     // The bundle for which this instance has been created
-    private Bundle bundle;
+    private volatile Bundle bundle;
 
 
     ConfigurationAdminImpl( ConfigurationManager configurationManager, Bundle bundle )
@@ -69,13 +70,17 @@ public class ConfigurationAdminImpl implements ConfigurationAdmin
     /* (non-Javadoc)
      * @see org.osgi.service.cm.ConfigurationAdmin#createFactoryConfiguration(java.lang.String)
      */
+    @Override
     public Configuration createFactoryConfiguration( String factoryPid ) throws IOException
     {
-        configurationManager.log( LogService.LOG_DEBUG, "createFactoryConfiguration(factoryPid={0})", new Object[]
-            { factoryPid } );
+        final ConfigurationManager configurationManager = getConfigurationManager();
 
-        ConfigurationImpl config = configurationManager.createFactoryConfiguration( factoryPid, this.getBundle()
-            .getLocation() );
+        Log.logger.log( LogService.LOG_DEBUG, "createFactoryConfiguration(factoryPid={0})", new Object[]
+                { factoryPid } );
+
+        // FELIX-3360: new factory configuration with implicit binding is dynamic
+        ConfigurationImpl config = configurationManager.createFactoryConfiguration( factoryPid, null );
+        config.setDynamicBundleLocation( this.getBundle().getLocation(), false );
         return this.wrap( config );
     }
 
@@ -83,14 +88,17 @@ public class ConfigurationAdminImpl implements ConfigurationAdmin
     /* (non-Javadoc)
      * @see org.osgi.service.cm.ConfigurationAdmin#createFactoryConfiguration(java.lang.String, java.lang.String)
      */
+    @Override
     public Configuration createFactoryConfiguration( String factoryPid, String location ) throws IOException
     {
-        configurationManager.log( LogService.LOG_DEBUG, "createFactoryConfiguration(factoryPid={0}, location={1})",
-            new Object[]
-                { factoryPid, location } );
+        final ConfigurationManager configurationManager = getConfigurationManager();
+
+        Log.logger.log( LogService.LOG_DEBUG, "createFactoryConfiguration(factoryPid={0}, location={1})",
+                new Object[]
+                        { factoryPid, location } );
 
         // CM 1.4 / 104.13.2.3
-        this.checkPermission( ( location == null ) ? "*" : location );
+        this.checkPermission( configurationManager, ( location == null ) ? "*" : location, false );
 
         ConfigurationImpl config = configurationManager.createFactoryConfiguration( factoryPid, location );
         return this.wrap( config );
@@ -100,31 +108,38 @@ public class ConfigurationAdminImpl implements ConfigurationAdmin
     /* (non-Javadoc)
      * @see org.osgi.service.cm.ConfigurationAdmin#getConfiguration(java.lang.String)
      */
+    @Override
     public Configuration getConfiguration( String pid ) throws IOException
     {
-        configurationManager.log( LogService.LOG_DEBUG, "getConfiguration(pid={0})", new Object[]
-            { pid } );
+        final ConfigurationManager configurationManager = getConfigurationManager();
+
+        Log.logger.log( LogService.LOG_DEBUG, "getConfiguration(pid={0})", new Object[]
+                { pid } );
 
         ConfigurationImpl config = configurationManager.getConfiguration( pid );
         if ( config == null )
         {
-            config = configurationManager.createConfiguration( pid, getBundle().getLocation() );
+            config = configurationManager.createConfiguration( pid, null );
+
+            // FELIX-3360: configuration creation with implicit binding is dynamic
+            config.setDynamicBundleLocation( getBundle().getLocation(), false );
         }
         else
         {
             if ( config.getBundleLocation() == null )
             {
-                configurationManager.log( LogService.LOG_DEBUG, "Binding configuration {0} (isNew: {1}) to bundle {2}",
-                    new Object[]
-                        { config.getPid(), config.isNew() ? Boolean.TRUE : Boolean.FALSE,
-                            this.getBundle().getLocation() } );
+                Log.logger.log( LogService.LOG_DEBUG, "Binding configuration {0} (isNew: {1}) to bundle {2}",
+                        new Object[]
+                                { config.getPid(), config.isNew() ? Boolean.TRUE : Boolean.FALSE,
+                                        this.getBundle().getLocation() } );
 
-                config.setStaticBundleLocation( this.getBundle().getLocation() );
+                // FELIX-3360: first implicit binding is dynamic
+                config.setDynamicBundleLocation( getBundle().getLocation(), true );
             }
             else
             {
                 // CM 1.4 / 104.13.2.3
-                this.checkPermission( config.getBundleLocation() );
+                this.checkPermission( configurationManager, config.getBundleLocation(), false );
             }
         }
 
@@ -135,13 +150,16 @@ public class ConfigurationAdminImpl implements ConfigurationAdmin
     /* (non-Javadoc)
      * @see org.osgi.service.cm.ConfigurationAdmin#getConfiguration(java.lang.String, java.lang.String)
      */
+    @Override
     public Configuration getConfiguration( String pid, String location ) throws IOException
     {
-        configurationManager.log( LogService.LOG_DEBUG, "getConfiguration(pid={0}, location={1})", new Object[]
-            { pid, location } );
+        final ConfigurationManager configurationManager = getConfigurationManager();
+
+        Log.logger.log( LogService.LOG_DEBUG, "getConfiguration(pid={0}, location={1})", new Object[]
+                { pid, location } );
 
         // CM 1.4 / 104.13.2.3
-        this.checkPermission( ( location == null ) ? "*" : location );
+        this.checkPermission( configurationManager, ( location == null ) ? "*" : location, false );
 
         ConfigurationImpl config = configurationManager.getConfiguration( pid );
         if ( config == null )
@@ -151,7 +169,7 @@ public class ConfigurationAdminImpl implements ConfigurationAdmin
         else
         {
             final String configLocation = config.getBundleLocation();
-            this.checkPermission( ( configLocation == null ) ? "*" : configLocation );
+            this.checkPermission( configurationManager, ( configLocation == null ) ? "*" : configLocation, false );
         }
 
         return this.wrap( config );
@@ -161,10 +179,13 @@ public class ConfigurationAdminImpl implements ConfigurationAdmin
     /* (non-Javadoc)
      * @see org.osgi.service.cm.ConfigurationAdmin#listConfigurations(java.lang.String)
      */
+    @Override
     public Configuration[] listConfigurations( String filter ) throws IOException, InvalidSyntaxException
     {
-        configurationManager.log( LogService.LOG_DEBUG, "listConfigurations(filter={0})", new Object[]
-            { filter } );
+        final ConfigurationManager configurationManager = getConfigurationManager();
+
+        Log.logger.log( LogService.LOG_DEBUG, "listConfigurations(filter={0})", new Object[]
+                { filter } );
 
         ConfigurationImpl ci[] = configurationManager.listConfigurations( this, filter );
         if ( ci == null || ci.length == 0 )
@@ -194,11 +215,11 @@ public class ConfigurationAdminImpl implements ConfigurationAdmin
      * Returns <code>true</code> if the current access control context (call
      * stack) has the CONFIGURE permission.
      */
-    boolean hasPermission(String name)
+    boolean hasPermission( final ConfigurationManager configurationManager, String name )
     {
         try
         {
-            checkPermission(name);
+            checkPermission(configurationManager, name, false);
             return true;
         }
         catch ( SecurityException se )
@@ -214,57 +235,171 @@ public class ConfigurationAdminImpl implements ConfigurationAdmin
      * <code>SecurityException</code> if this is not the case.
      *
      * @param name The bundle location to check for permission. If this
-     *      is <code>null</code> or exactly matches the using bundle's
-     *      location, permission is always granted.
+     *      is <code>null</code> permission is always granted.
+     * @param checkOwn If {@code false} permission is always granted if
+     *      {@code name} is the same the using bundle's location.
      *
      * @throws SecurityException if the access control context does not
      *      have the appropriate permission
      */
-    void checkPermission( String name )
+    void checkPermission( final ConfigurationManager configurationManager, String name, boolean checkOwn )
+    {
+        checkPermission(configurationManager, name, ConfigurationPermission.CONFIGURE, checkOwn);
+    }
+
+    /**
+     * Checks whether the current access control context (call stack) has
+     * the given permission for the given bundle location and throws a
+     * <code>SecurityException</code> if this is not the case.
+     *
+     * @param name The bundle location to check for permission. If this
+     *      is <code>null</code> permission is always granted.
+     * @param action The action to check.
+     * @param checkOwn If {@code false} permission is always granted if
+     *      {@code name} is the same as the using bundle's location.
+     *
+     * @throws SecurityException if the access control context does not
+     *      have the appropriate permission
+     */
+    void checkPermission( final ConfigurationManager configurationManager, String name, String action, boolean checkOwn )
     {
         // the caller's permission must be checked
         final SecurityManager sm = System.getSecurityManager();
         if ( sm != null )
         {
             // CM 1.4 / 104.11.1 Implicit permission
-            if ( name != null && !name.equals( getBundle().getLocation() ) )
+            if ( name != null && ( checkOwn || !name.equals( getBundle().getLocation() ) ) )
             {
                 try
                 {
-                    sm.checkPermission( new ConfigurationPermission( name, ConfigurationPermission.CONFIGURE ) );
+                    sm.checkPermission( new ConfigurationPermission( name, action ) );
 
-                    configurationManager.log( LogService.LOG_DEBUG,
-                        "Explicit Permission; grant CONFIGURE permission on configuration bound to {0} to bundle {1}",
-                        new Object[]
-                            { name, getBundle().getLocation() } );
+                    Log.logger.log( LogService.LOG_DEBUG,
+                            "Explicit Permission; grant {0} permission on configuration bound to {1} to bundle {2}",
+                            new Object[]
+                                    { action, name, getBundle().getLocation() } );
                 }
                 catch ( SecurityException se )
                 {
-                    configurationManager
-                        .log(
+                    Log.logger
+                    .log(
                             LogService.LOG_DEBUG,
-                            "No Permission; denied CONFIGURE permission on configuration bound to {0} to bundle {1}; reason: {2}",
+                            "No Permission; denied {0} permission on configuration bound to {1} to bundle {2}; reason: {3}",
                             new Object[]
-                                { name, getBundle().getLocation(), se.getMessage() } );
+                                    { action, name, getBundle().getLocation(), se.getMessage() } );
                     throw se;
                 }
             }
-            else if ( configurationManager.isLogEnabled( LogService.LOG_DEBUG ) )
+            else if ( Log.logger.isLogEnabled( LogService.LOG_DEBUG ) )
             {
-                configurationManager.log( LogService.LOG_DEBUG,
-                    "Implicit Permission; grant CONFIGURE permission on configuration bound to {0} to bundle {1}",
-                    new Object[]
-                        { name, getBundle().getLocation() } );
+                Log.logger.log( LogService.LOG_DEBUG,
+                        "Implicit Permission; grant {0} permission on configuration bound to {1} to bundle {2}",
+                        new Object[]
+                                { action, name, getBundle().getLocation() } );
 
             }
         }
-        else if ( configurationManager.isLogEnabled( LogService.LOG_DEBUG ) )
+        else if ( Log.logger.isLogEnabled( LogService.LOG_DEBUG ) )
         {
-            configurationManager.log( LogService.LOG_DEBUG,
-                "No SecurityManager installed; grant CONFIGURE permission on configuration bound to {0} to bundle {1}",
-                new Object[]
-                    { name, getBundle().getLocation() } );
+            Log.logger.log( LogService.LOG_DEBUG,
+                    "No SecurityManager installed; grant {0} permission on configuration bound to {1} to bundle {2}",
+                    new Object[]
+                            { action, name, getBundle().getLocation() } );
         }
+    }
+
+
+    /**
+     * Returns the {@link ConfigurationManager} backing this configuration
+     * admin instance or throws {@code IllegalStateException} if already
+     * disposed off.
+     *
+     * @return The {@link ConfigurationManager} instance if still active
+     * @throws IllegalStateException if this instance has been
+     *      {@linkplain #dispose() disposed off} already.
+     */
+    private ConfigurationManager getConfigurationManager()
+    {
+        if ( this.configurationManager == null )
+        {
+            throw new IllegalStateException( "Configuration Admin service has been unregistered" );
+        }
+
+        return this.configurationManager;
+    }
+
+
+    /**
+     * @see org.osgi.service.cm.ConfigurationAdmin#getFactoryConfiguration(java.lang.String, java.lang.String, java.lang.String)
+     */
+    @Override
+    public Configuration getFactoryConfiguration(String factoryPid, String name, String location) throws IOException
+    {
+        final ConfigurationManager configurationManager = getConfigurationManager();
+
+        Log.logger.log( LogService.LOG_DEBUG, "getFactoryConfiguration(factoryPid={0}, name={1}, location={2})", new Object[]
+                { factoryPid, name, location } );
+
+        final String pid = factoryPid + '~' + name;
+
+        // CM 1.4 / 104.13.2.3
+        this.checkPermission( configurationManager, ( location == null ) ? "*" : location, false );
+
+        ConfigurationImpl config = configurationManager.getConfiguration( pid );
+        if ( config == null )
+        {
+            config = configurationManager.createConfiguration( pid, factoryPid, location );
+        }
+        else
+        {
+            final String configLocation = config.getBundleLocation();
+            this.checkPermission( configurationManager, ( configLocation == null ) ? "*" : configLocation, false );
+        }
+
+        return this.wrap( config );
+    }
+
+
+    /**
+     * @see org.osgi.service.cm.ConfigurationAdmin#getFactoryConfiguration(java.lang.String, java.lang.String)
+     */
+    @Override
+    public Configuration getFactoryConfiguration(String factoryPid, String name) throws IOException {
+        final ConfigurationManager configurationManager = getConfigurationManager();
+
+        Log.logger.log( LogService.LOG_DEBUG, "getFactoryConfiguration(factoryPid={0}, name={1})", new Object[]
+                { factoryPid, name } );
+
+        final String pid = factoryPid + '~' + name;
+
+        ConfigurationImpl config = configurationManager.getConfiguration( pid );
+        if ( config == null )
+        {
+            config = configurationManager.createConfiguration( pid, factoryPid, null );
+
+            // FELIX-3360: configuration creation with implicit binding is dynamic
+            config.setDynamicBundleLocation( getBundle().getLocation(), false );
+        }
+        else
+        {
+            if ( config.getBundleLocation() == null )
+            {
+                Log.logger.log( LogService.LOG_DEBUG, "Binding configuration {0} (isNew: {1}) to bundle {2}",
+                        new Object[]
+                                { config.getPid(), config.isNew() ? Boolean.TRUE : Boolean.FALSE,
+                                        this.getBundle().getLocation() } );
+
+                // FELIX-3360: first implicit binding is dynamic
+                config.setDynamicBundleLocation( getBundle().getLocation(), true );
+            }
+            else
+            {
+                // CM 1.4 / 104.13.2.3
+                this.checkPermission( configurationManager, config.getBundleLocation(), false );
+            }
+        }
+
+        return this.wrap( config );
     }
 
 }

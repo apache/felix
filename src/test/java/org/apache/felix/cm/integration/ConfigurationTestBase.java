@@ -19,10 +19,14 @@
 package org.apache.felix.cm.integration;
 
 
+import static org.ops4j.pax.exam.CoreOptions.bundle;
+import static org.ops4j.pax.exam.CoreOptions.cleanCaches;
+import static org.ops4j.pax.exam.CoreOptions.junitBundles;
 import static org.ops4j.pax.exam.CoreOptions.mavenBundle;
 import static org.ops4j.pax.exam.CoreOptions.options;
-import static org.ops4j.pax.exam.CoreOptions.provision;
-import static org.ops4j.pax.exam.CoreOptions.waitForFrameworkStartup;
+import static org.ops4j.pax.exam.CoreOptions.vmOption;
+import static org.ops4j.pax.exam.CoreOptions.workingDirectory;
+
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -33,21 +37,18 @@ import java.util.HashSet;
 import java.util.Hashtable;
 import java.util.Set;
 
-import junit.framework.AssertionFailedError;
-import junit.framework.TestCase;
+import javax.inject.Inject;
 
 import org.apache.felix.cm.integration.helper.BaseTestActivator;
 import org.apache.felix.cm.integration.helper.ManagedServiceTestActivator;
-import org.apache.felix.cm.integration.helper.MyTinyBundle;
 import org.apache.felix.cm.integration.helper.UpdateThreadSignalTask;
 import org.junit.After;
 import org.junit.Before;
-import org.ops4j.pax.exam.CoreOptions;
-import org.ops4j.pax.exam.Inject;
 import org.ops4j.pax.exam.Option;
 import org.ops4j.pax.exam.OptionUtils;
-import org.ops4j.pax.exam.container.def.PaxRunnerOptions;
-import org.ops4j.pax.swissbox.tinybundles.core.TinyBundles;
+import org.ops4j.pax.exam.TestProbeBuilder;
+import org.ops4j.pax.exam.junit.ProbeBuilder;
+import org.ops4j.pax.tinybundles.core.TinyBundles;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.BundleException;
@@ -57,6 +58,9 @@ import org.osgi.framework.ServiceReference;
 import org.osgi.service.cm.Configuration;
 import org.osgi.service.cm.ConfigurationAdmin;
 import org.osgi.util.tracker.ServiceTracker;
+
+import junit.framework.AssertionFailedError;
+import junit.framework.TestCase;
 
 
 public abstract class ConfigurationTestBase
@@ -81,16 +85,16 @@ public abstract class ConfigurationTestBase
 
     protected Bundle bundle;
 
-    protected ServiceTracker configAdminTracker;
+    protected ServiceTracker<ConfigurationAdmin, ConfigurationAdmin> configAdminTracker;
 
-    private Set<String> configurations = new HashSet<String>();
+    private Set<String> configurations = new HashSet<>();
 
     protected static final String PROP_NAME = "theValue";
     protected static final Dictionary<String, String> theConfig;
 
     static
     {
-        theConfig = new Hashtable<String, String>();
+        theConfig = new Hashtable<>();
         theConfig.put( PROP_NAME, PROP_NAME );
     }
 
@@ -107,22 +111,21 @@ public abstract class ConfigurationTestBase
         }
 
         final Option[] base = options(
-            /* CoreOptions.allFrameworks(), */
-            provision(
-                CoreOptions.bundle( bundleFile.toURI().toString() ),
-                mavenBundle( "org.ops4j.pax.swissbox", "pax-swissbox-tinybundles", "1.0.0" )
-             ),
-             waitForFrameworkStartup()
+                workingDirectory("target/paxexam/"),
+                cleanCaches(true),
+                junitBundles(),
+                mavenBundle("org.ops4j.pax.tinybundles", "tinybundles", "1.0.0"),
+                bundle(bundleFile.toURI().toString())
         );
-        final Option vmOption = ( paxRunnerVmOption != null ) ? PaxRunnerOptions.vmOption( paxRunnerVmOption ) : null;
-        return OptionUtils.combine( base, vmOption );
+        final Option option = ( paxRunnerVmOption != null ) ? vmOption( paxRunnerVmOption ) : null;
+        return OptionUtils.combine( base, option );
     }
 
 
     @Before
     public void setUp()
     {
-        configAdminTracker = new ServiceTracker( bundleContext, ConfigurationAdmin.class.getName(), null );
+        configAdminTracker = new ServiceTracker<>( bundleContext, ConfigurationAdmin.class, null );
         configAdminTracker.open();
     }
 
@@ -157,19 +160,22 @@ public abstract class ConfigurationTestBase
     }
 
 
+    @ProbeBuilder
+    public TestProbeBuilder buildProbe( TestProbeBuilder builder ) {
+        return builder.setHeader(Constants.EXPORT_PACKAGE, "org.apache.felix.cm.integration.helper");
+    }
+
     protected Bundle installBundle( final String pid, final Class<?> activatorClass, final String location )
         throws BundleException
     {
         final String activatorClassName = activatorClass.getName();
-        final InputStream bundleStream = new MyTinyBundle()
-            .prepare(
-                TinyBundles.withBnd()
-                .set( Constants.BUNDLE_SYMBOLICNAME, activatorClassName )
+        final InputStream bundleStream = TinyBundles.bundle()
+                .set(Constants.BUNDLE_SYMBOLICNAME, activatorClassName)
                 .set( Constants.BUNDLE_VERSION, "0.0.11" )
                 .set( Constants.IMPORT_PACKAGE, "org.apache.felix.cm.integration.helper" )
                 .set( Constants.BUNDLE_ACTIVATOR, activatorClassName )
                 .set( BaseTestActivator.HEADER_PID, pid )
-            ).build( TinyBundles.asStream() );
+                .build( TinyBundles.withBnd() );
 
         try
         {
@@ -237,14 +243,19 @@ public abstract class ConfigurationTestBase
 
     protected Bundle getCmBundle()
     {
-        final ServiceReference caref = configAdminTracker.getServiceReference();
+        final ServiceReference<ConfigurationAdmin> caref = configAdminTracker.getServiceReference();
         return ( caref == null ) ? null : caref.getBundle();
     }
 
 
     protected ConfigurationAdmin getConfigurationAdmin()
     {
-        ConfigurationAdmin ca = ( ConfigurationAdmin ) configAdminTracker.getService();
+        ConfigurationAdmin ca = null;
+        try {
+            ca = configAdminTracker.waitForService(5000L);
+        } catch (InterruptedException e) {
+            // ignore
+        }
         if ( ca == null )
         {
             TestCase.fail( "Missing ConfigurationAdmin service" );

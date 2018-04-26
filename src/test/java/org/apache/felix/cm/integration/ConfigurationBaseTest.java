@@ -20,8 +20,13 @@ package org.apache.felix.cm.integration;
 
 
 import java.io.IOException;
+import java.util.Arrays;
+import java.util.Collection;
 import java.util.Dictionary;
 import java.util.Hashtable;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Vector;
 
 import junit.framework.TestCase;
 
@@ -179,7 +184,7 @@ public class ConfigurationBaseTest extends ConfigurationTestBase
 
 
     @Test
-    public void test_configuration_after_getProperties_config_admin_stop() throws BundleException
+    public void test_configuration_getProperties_after_config_admin_stop() throws BundleException
     {
         final String pid = "test_configuration_after_config_admin_stop";
         final Configuration config = configure( pid, null, true );
@@ -240,7 +245,7 @@ public class ConfigurationBaseTest extends ConfigurationTestBase
 
 
     @Test
-    public void test_configuration_after_getBundleLocation_config_admin_stop() throws BundleException
+    public void test_configuration_getBundleLocation_after_config_admin_stop() throws BundleException
     {
         final String pid = "test_configuration_after_config_admin_stop";
         final Configuration config = configure( pid, null, true );
@@ -386,6 +391,199 @@ public class ConfigurationBaseTest extends ConfigurationTestBase
 
 
     @Test
+    public void test_configuration_admin_createFactoryConfiguration_1_after_config_admin_stop() throws BundleException
+    {
+        final ConfigurationAdmin ca = getConfigurationAdmin();
+        TestCase.assertNotNull( "ConfigurationAdmin service is required", ca );
+
+        final Bundle cfgAdminBundle = configAdminTracker.getServiceReference().getBundle();
+        cfgAdminBundle.stop();
+        try
+        {
+            ca.createFactoryConfiguration( "sample" );
+            TestCase.fail( "Expected IllegalStateException for ConfigurationAdmin.createFactoryConfiguration" );
+        }
+        catch ( IllegalStateException ise )
+        {
+            // expected
+        }
+        catch ( Exception e )
+        {
+            TestCase.fail( "Expected IllegalStateException for ConfigurationAdmin.createFactoryConfiguration, got: " + e );
+        }
+        finally
+        {
+            try
+            {
+                cfgAdminBundle.start();
+            }
+            catch ( BundleException be )
+            {
+                // tooo bad
+            }
+        }
+    }
+
+
+    @Test
+    public void test_configuration_admin_createFactoryConfiguration_2_after_config_admin_stop() throws BundleException
+    {
+        final ConfigurationAdmin ca = getConfigurationAdmin();
+        TestCase.assertNotNull( "ConfigurationAdmin service is required", ca );
+
+        final Bundle cfgAdminBundle = configAdminTracker.getServiceReference().getBundle();
+        cfgAdminBundle.stop();
+        try
+        {
+            ca.createFactoryConfiguration( "sample", "location" );
+            TestCase.fail( "Expected IllegalStateException for ConfigurationAdmin.createFactoryConfiguration" );
+        }
+        catch ( IllegalStateException ise )
+        {
+            // expected
+        }
+        catch ( Exception e )
+        {
+            TestCase.fail( "Expected IllegalStateException for ConfigurationAdmin.createFactoryConfiguration, got: " + e );
+        }
+        finally
+        {
+            try
+            {
+                cfgAdminBundle.start();
+            }
+            catch ( BundleException be )
+            {
+                // tooo bad
+            }
+        }
+    }
+
+
+    @Test
+    public void test_configuration_admin_getConfiguration_1_after_config_admin_stop() throws BundleException
+    {
+        final ConfigurationAdmin ca = getConfigurationAdmin();
+        TestCase.assertNotNull( "ConfigurationAdmin service is required", ca );
+
+        final Bundle cfgAdminBundle = configAdminTracker.getServiceReference().getBundle();
+        cfgAdminBundle.stop();
+        try
+        {
+            ca.getConfiguration( "sample" );
+            TestCase.fail( "Expected IllegalStateException for ConfigurationAdmin.getConfiguration" );
+        }
+        catch ( IllegalStateException ise )
+        {
+            // expected
+        }
+        catch ( Exception e )
+        {
+            TestCase.fail( "Expected IllegalStateException for ConfigurationAdmin.getConfiguration, got: " + e );
+        }
+        finally
+        {
+            try
+            {
+                cfgAdminBundle.start();
+            }
+            catch ( BundleException be )
+            {
+                // tooo bad
+            }
+        }
+    }
+
+
+    @Test
+    public void test_configuration_admin_getConfiguration_2_after_config_admin_stop() throws BundleException
+    {
+        final ConfigurationAdmin ca = getConfigurationAdmin();
+        TestCase.assertNotNull( "ConfigurationAdmin service is required", ca );
+
+        final Bundle cfgAdminBundle = configAdminTracker.getServiceReference().getBundle();
+        cfgAdminBundle.stop();
+        try
+        {
+            ca.getConfiguration( "sample", "location" );
+            TestCase.fail( "Expected IllegalStateException for ConfigurationAdmin.getConfiguration" );
+        }
+        catch ( IllegalStateException ise )
+        {
+            // expected
+        }
+        catch ( Exception e )
+        {
+            TestCase.fail( "Expected IllegalStateException for ConfigurationAdmin.getConfiguration, got: " + e );
+        }
+        finally
+        {
+            try
+            {
+                cfgAdminBundle.start();
+            }
+            catch ( BundleException be )
+            {
+                // tooo bad
+            }
+        }
+    }
+
+
+    @Test
+    public void test_configuration_admin_listConfigurations_after_config_admin_stop() throws BundleException
+    {
+        final ConfigurationAdmin ca = getConfigurationAdmin();
+        TestCase.assertNotNull( "ConfigurationAdmin service is required", ca );
+
+        final Bundle cfgAdminBundle = configAdminTracker.getServiceReference().getBundle();
+        cfgAdminBundle.stop();
+        try
+        {
+            ca.listConfigurations( "(service.pid=sample)" );
+            TestCase.fail( "Expected IllegalStateException for ConfigurationAdmin.listConfigurations" );
+        }
+        catch ( IllegalStateException ise )
+        {
+            // expected
+        }
+        catch ( Exception e )
+        {
+            TestCase.fail( "Expected IllegalStateException for ConfigurationAdmin.listConfigurations, got: " + e );
+        }
+        finally
+        {
+            try
+            {
+                cfgAdminBundle.start();
+            }
+            catch ( BundleException be )
+            {
+                // tooo bad
+            }
+        }
+    }
+
+
+    @Test
+    public void test_configuration_change_counter() throws IOException
+    {
+        // 1. create config with pid and locationA
+        // 2. update config with properties
+        final String pid = "test_configuration_change_counter";
+        final Configuration config = configure( pid, null, false );
+
+        TestCase.assertEquals("Expect first version to be 1", 1, config.getChangeCount());
+
+        config.update(new Hashtable(){{put("x", "x");}});
+        TestCase.assertEquals("Expect second version to be 2", 2, config.getChangeCount());
+
+        // delete
+        config.delete();
+    }
+
+
+    @Test
     public void test_basic_configuration_configure_then_start() throws BundleException, IOException
     {
         // 1. create config with pid and locationA
@@ -487,7 +685,7 @@ public class ConfigurationBaseTest extends ConfigurationTestBase
 
 
     @Test
-    public void test_basic_configuration_factory_configure_then_start() throws BundleException, IOException
+    public void test_basic_configuration_factory_start_then_configure() throws BundleException, IOException
     {
         final String factoryPid = "test_basic_configuration_factory_configure_then_start";
         bundle = installBundle( factoryPid, ManagedServiceFactoryTestActivator.class );
@@ -523,13 +721,14 @@ public class ConfigurationBaseTest extends ConfigurationTestBase
 
 
     @Test
-    public void test_basic_configuration_factory_start_then_configure() throws BundleException, IOException
+    public void test_basic_configuration_factory_configure_then_start() throws BundleException, IOException
     {
         // 1. create config with pid and locationA
         // 2. update config with properties
         final String factoryPid = "test_basic_configuration_factory_start_then_configure";
         final Configuration config = createFactoryConfiguration( factoryPid, null, true );
         final String pid = config.getPid();
+        delay();
 
         // 3. register ManagedService ms1 with pid from said locationA
         bundle = installBundle( factoryPid, ManagedServiceFactoryTestActivator.class );
@@ -576,7 +775,7 @@ public class ConfigurationBaseTest extends ConfigurationTestBase
 
         // assert activater has no configuration
         TestCase.assertNull( "Expect no Properties after Service Registration", tester.props );
-        TestCase.assertEquals( "Expect no update call", 1, tester.numManagedServiceUpdatedCalls );
+        TestCase.assertEquals( "Expect update call", 1, tester.numManagedServiceUpdatedCalls );
 
         // configure after ManagedServiceRegistration --> configure via update
         configure( pid );
@@ -584,7 +783,7 @@ public class ConfigurationBaseTest extends ConfigurationTestBase
 
         // assert activater has configuration
         TestCase.assertNotNull( "Expect Properties after Service Registration", tester.props );
-        TestCase.assertEquals( "Expect a single update call", 2, tester.numManagedServiceUpdatedCalls );
+        TestCase.assertEquals( "Expect a second update call", 2, tester.numManagedServiceUpdatedCalls );
 
         // stop the bundle now
         bundle.stop();
@@ -721,7 +920,8 @@ public class ConfigurationBaseTest extends ConfigurationTestBase
         // 6. test bundle calls cm.getConfiguration(pid1)
         final Configuration get2 = getConfigurationAdmin().getConfiguration( pid );
         TestCase.assertEquals( bundle.getLocation(), get2.getBundleLocation() );
-}
+    }
+
 
     @Test
     public void test_ManagedService_change_pid() throws BundleException, IOException
@@ -765,6 +965,80 @@ public class ConfigurationBaseTest extends ConfigurationTestBase
         // ==> update with null
         TestCase.assertNull( tester.props );
         TestCase.assertEquals( 3, tester.numManagedServiceUpdatedCalls );
+    }
+
+
+    @Test
+    public void test_ManagedService_change_pid_overlap() throws BundleException, IOException
+    {
+        final String pid0 = "test_ManagedService_change_pid_0";
+        final String pid1 = "test_ManagedService_change_pid_1";
+        final String pid2 = "test_ManagedService_change_pid_2";
+
+        final Configuration config0 = configure( pid0, null, true );
+        final Configuration config1 = configure( pid1, null, true );
+        final Configuration config2 = configure( pid2, null, true );
+        delay();
+
+        // register ManagedService ms1 with pid from said locationA
+        bundle = installBundle( pid0 + "," + pid1, ManagedServiceTestActivator.class );
+        bundle.start();
+        delay();
+
+        final ManagedServiceTestActivator tester = ManagedServiceTestActivator.INSTANCE;
+        TestCase.assertNotNull( tester.props );
+
+        TestCase.assertEquals( pid0, tester.configs.get( pid0 ).get( Constants.SERVICE_PID ) );
+        TestCase.assertNull( tester.configs.get( pid0 ).get( ConfigurationAdmin.SERVICE_FACTORYPID ) );
+        TestCase.assertNull( tester.configs.get( pid0 ).get( ConfigurationAdmin.SERVICE_BUNDLELOCATION ) );
+        TestCase.assertEquals( PROP_NAME, tester.configs.get( pid0 ).get( PROP_NAME ) );
+
+        TestCase.assertEquals( pid1, tester.configs.get( pid1 ).get( Constants.SERVICE_PID ) );
+        TestCase.assertNull( tester.configs.get( pid1 ).get( ConfigurationAdmin.SERVICE_FACTORYPID ) );
+        TestCase.assertNull( tester.configs.get( pid1 ).get( ConfigurationAdmin.SERVICE_BUNDLELOCATION ) );
+        TestCase.assertEquals( PROP_NAME, tester.configs.get( pid1 ).get( PROP_NAME ) );
+
+        // two pids, two calls
+        TestCase.assertEquals( 2, tester.numManagedServiceUpdatedCalls );
+
+        // change ManagedService PID
+        tester.changePid( pid1 + "," + pid2 );
+        delay();
+
+        TestCase.assertNotNull( tester.props );
+
+        // config pid0 is not "removed"
+        TestCase.assertEquals( pid0, tester.configs.get( pid0 ).get( Constants.SERVICE_PID ) );
+        TestCase.assertNull( tester.configs.get( pid0 ).get( ConfigurationAdmin.SERVICE_FACTORYPID ) );
+        TestCase.assertNull( tester.configs.get( pid0 ).get( ConfigurationAdmin.SERVICE_BUNDLELOCATION ) );
+        TestCase.assertEquals( PROP_NAME, tester.configs.get( pid0 ).get( PROP_NAME ) );
+
+        // config pid1 is retained
+        TestCase.assertEquals( pid1, tester.configs.get( pid1 ).get( Constants.SERVICE_PID ) );
+        TestCase.assertNull( tester.configs.get( pid1 ).get( ConfigurationAdmin.SERVICE_FACTORYPID ) );
+        TestCase.assertNull( tester.configs.get( pid1 ).get( ConfigurationAdmin.SERVICE_BUNDLELOCATION ) );
+        TestCase.assertEquals( PROP_NAME, tester.configs.get( pid1 ).get( PROP_NAME ) );
+
+        // config pid2 is added
+        TestCase.assertEquals( pid2, tester.configs.get( pid2 ).get( Constants.SERVICE_PID ) );
+        TestCase.assertNull( tester.configs.get( pid2 ).get( ConfigurationAdmin.SERVICE_FACTORYPID ) );
+        TestCase.assertNull( tester.configs.get( pid2 ).get( ConfigurationAdmin.SERVICE_BUNDLELOCATION ) );
+        TestCase.assertEquals( PROP_NAME, tester.configs.get( pid2 ).get( PROP_NAME ) );
+
+        // one "additional" pid, one additional call
+        TestCase.assertEquals( 3, tester.numManagedServiceUpdatedCalls );
+
+        // delete
+        config0.delete(); // ignored by MS
+        config1.delete();
+        config2.delete();
+        delay();
+
+        // ==> update with null
+        TestCase.assertNull( tester.props );
+
+        // two pids removed, two calls
+        TestCase.assertEquals( 5, tester.numManagedServiceUpdatedCalls );
     }
 
 
@@ -834,6 +1108,96 @@ public class ConfigurationBaseTest extends ConfigurationTestBase
         TestCase.assertEquals( 1, tester.numManagedServiceFactoryDeleteCalls );
     }
 
+
+    @Test
+    public void test_ManagedServiceFactory_change_pid_overlap() throws BundleException, IOException
+    {
+
+        final String factoryPid0 = "test_ManagedServiceFactory_change_pid_0";
+        final String factoryPid1 = "test_ManagedServiceFactory_change_pid_1";
+        final String factoryPid2 = "test_ManagedServiceFactory_change_pid_2";
+
+        final Configuration config0 = createFactoryConfiguration( factoryPid0, null, true );
+        final String pid0 = config0.getPid();
+        final Configuration config1 = createFactoryConfiguration( factoryPid1, null, true );
+        final String pid1 = config1.getPid();
+        final Configuration config2 = createFactoryConfiguration( factoryPid2, null, true );
+        final String pid2 = config2.getPid();
+        delay();
+
+        bundle = installBundle( factoryPid0 + "," + factoryPid1, ManagedServiceFactoryTestActivator.class );
+        bundle.start();
+        delay();
+
+        // pid0 properties provided on registration
+        final ManagedServiceFactoryTestActivator tester = ManagedServiceFactoryTestActivator.INSTANCE;
+        Dictionary<?, ?> props0 = tester.configs.get( pid0 );
+        TestCase.assertNotNull( props0 );
+        TestCase.assertEquals( pid0, props0.get( Constants.SERVICE_PID ) );
+        TestCase.assertEquals( factoryPid0, props0.get( ConfigurationAdmin.SERVICE_FACTORYPID ) );
+        TestCase.assertNull( props0.get( ConfigurationAdmin.SERVICE_BUNDLELOCATION ) );
+        TestCase.assertEquals( PROP_NAME, props0.get( PROP_NAME ) );
+
+        Dictionary<?, ?> props1 = tester.configs.get( pid1 );
+        TestCase.assertNotNull( props1 );
+        TestCase.assertEquals( pid1, props1.get( Constants.SERVICE_PID ) );
+        TestCase.assertEquals( factoryPid1, props1.get( ConfigurationAdmin.SERVICE_FACTORYPID ) );
+        TestCase.assertNull( props1.get( ConfigurationAdmin.SERVICE_BUNDLELOCATION ) );
+        TestCase.assertEquals( PROP_NAME, props1.get( PROP_NAME ) );
+
+        TestCase.assertEquals( 0, tester.numManagedServiceUpdatedCalls );
+        TestCase.assertEquals( 2, tester.numManagedServiceFactoryUpdatedCalls );
+        TestCase.assertEquals( 0, tester.numManagedServiceFactoryDeleteCalls );
+
+        // change ManagedService PID
+        tester.changePid( factoryPid1 + "," + factoryPid2 );
+        delay();
+
+        // pid2 properties must have been added
+        Dictionary<?, ?> props2 = tester.configs.get( pid2 );
+        TestCase.assertNotNull( props2 );
+        TestCase.assertEquals( pid2, props2.get( Constants.SERVICE_PID ) );
+        TestCase.assertEquals( factoryPid2, props2.get( ConfigurationAdmin.SERVICE_FACTORYPID ) );
+        TestCase.assertNull( props2.get( ConfigurationAdmin.SERVICE_BUNDLELOCATION ) );
+        TestCase.assertEquals( PROP_NAME, props2.get( PROP_NAME ) );
+
+        // pid0 properties must still exist !
+        Dictionary<?, ?> props01 = tester.configs.get( pid0 );
+        TestCase.assertNotNull( props01 );
+        TestCase.assertEquals( pid0, props01.get( Constants.SERVICE_PID ) );
+        TestCase.assertEquals( factoryPid0, props01.get( ConfigurationAdmin.SERVICE_FACTORYPID ) );
+        TestCase.assertNull( props01.get( ConfigurationAdmin.SERVICE_BUNDLELOCATION ) );
+        TestCase.assertEquals( PROP_NAME, props01.get( PROP_NAME ) );
+
+        // pid1 properties must still exist !
+        Dictionary<?, ?> props11 = tester.configs.get( pid1 );
+        TestCase.assertNotNull( props11 );
+        TestCase.assertEquals( pid1, props11.get( Constants.SERVICE_PID ) );
+        TestCase.assertEquals( factoryPid1, props11.get( ConfigurationAdmin.SERVICE_FACTORYPID ) );
+        TestCase.assertNull( props11.get( ConfigurationAdmin.SERVICE_BUNDLELOCATION ) );
+        TestCase.assertEquals( PROP_NAME, props11.get( PROP_NAME ) );
+
+        TestCase.assertEquals( 0, tester.numManagedServiceUpdatedCalls );
+        TestCase.assertEquals( 3, tester.numManagedServiceFactoryUpdatedCalls );
+        TestCase.assertEquals( 0, tester.numManagedServiceFactoryDeleteCalls );
+
+        // delete
+        config0.delete();
+        config1.delete();
+        config2.delete();
+        delay();
+
+        // only pid1 and pid2 properties removed because pid0 is not registered any longer
+        TestCase.assertNotNull( tester.configs.get( pid0 ) );
+        TestCase.assertNull( tester.configs.get( pid1 ) );
+        TestCase.assertNull( tester.configs.get( pid2 ) );
+
+        TestCase.assertEquals( 0, tester.numManagedServiceUpdatedCalls );
+        TestCase.assertEquals( 3, tester.numManagedServiceFactoryUpdatedCalls );
+        TestCase.assertEquals( 2, tester.numManagedServiceFactoryDeleteCalls );
+    }
+
+
     @Test
     public void test_factory_configuration_collision() throws IOException, InvalidSyntaxException, BundleException {
         final String factoryPid = "test_factory_configuration_collision";
@@ -841,6 +1205,10 @@ public class ConfigurationBaseTest extends ConfigurationTestBase
         final Configuration cf = getConfigurationAdmin().createFactoryConfiguration( factoryPid, null );
         TestCase.assertNotNull( cf );
         final String pid = cf.getPid();
+
+        // check factory configuration setup
+        TestCase.assertNotNull( "Configuration must have PID", pid );
+        TestCase.assertEquals( "Factory configuration must have requested factory PID", factoryPid, cf.getFactoryPid() );
 
         try
         {
@@ -850,9 +1218,6 @@ public class ConfigurationBaseTest extends ConfigurationTestBase
 
             final ManagedServiceFactoryTestActivator tester = ManagedServiceFactoryTestActivator.INSTANCE;
             TestCase.assertEquals( "MSF must not be updated with new configuration", 0, tester.numManagedServiceFactoryUpdatedCalls );
-
-            TestCase.assertNotNull( "Configuration must have PID", pid );
-            TestCase.assertEquals( "Factory configuration must have requested factory PID", factoryPid, cf.getFactoryPid() );
 
             // assert getConfiguration returns the same configurtion
             final Configuration c1 = getConfigurationAdmin().getConfiguration( pid, null );
@@ -895,6 +1260,67 @@ public class ConfigurationBaseTest extends ConfigurationTestBase
         {
             // make sure no configuration survives ...
             getConfigurationAdmin().getConfiguration( pid, null ).delete();
+        }
+    }
+
+   @Test
+    public void test_collection_property_order() throws IOException, BundleException
+    {
+        final String pid = "test_collection_property_order";
+        final String[] value = new String[]
+            { "a", "b", "c" };
+        final Bundle cmBundle = getCmBundle();
+        try
+        {
+            final Vector v = new Vector( Arrays.asList( value ) );
+            getConfigurationAdmin().getConfiguration( pid ).update( new Hashtable()
+            {
+                {
+                    put( "v", v );
+                }
+            } );
+            assertOrder( value, getConfigurationAdmin().getConfiguration( pid ).getProperties().get( "v" ) );
+
+            cmBundle.stop();
+            cmBundle.start();
+
+            assertOrder( value, getConfigurationAdmin().getConfiguration( pid ).getProperties().get( "v" ) );
+            getConfigurationAdmin().getConfiguration( pid, null ).delete();
+
+            final List l = Arrays.asList( value );
+            getConfigurationAdmin().getConfiguration( pid ).update( new Hashtable()
+            {
+                {
+                    put( "v", l );
+                }
+            } );
+            assertOrder( value, getConfigurationAdmin().getConfiguration( pid ).getProperties().get( "v" ) );
+
+            cmBundle.stop();
+            cmBundle.start();
+
+            assertOrder( value, getConfigurationAdmin().getConfiguration( pid ).getProperties().get( "v" ) );
+            getConfigurationAdmin().getConfiguration( pid, null ).delete();
+        }
+        finally
+        {
+            // make sure no configuration survives ...
+            getConfigurationAdmin().getConfiguration( pid, null ).delete();
+        }
+    }
+
+
+    private void assertOrder( final String[] expected, final Object actual )
+    {
+        TestCase.assertTrue( "Actual value must be a collection", actual instanceof Collection );
+        TestCase.assertEquals( "Collection must have " + expected.length + " entries", expected.length,
+            ( ( Collection ) actual ).size() );
+
+        final Iterator actualI = ( ( Collection ) actual ).iterator();
+        for ( int i = 0; i < expected.length; i++ )
+        {
+            String string = expected[i];
+            TestCase.assertEquals( i + "th element must be " + string, string, actualI.next() );
         }
     }
 }

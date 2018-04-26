@@ -32,8 +32,10 @@ import org.junit.runner.RunWith;
 import org.ops4j.pax.exam.junit.JUnit4TestRunner;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleException;
+import org.osgi.framework.ServiceReference;
 import org.osgi.framework.ServiceRegistration;
 import org.osgi.service.cm.Configuration;
+import org.osgi.service.cm.ConfigurationAdmin;
 import org.osgi.service.cm.ConfigurationEvent;
 import org.osgi.service.cm.ConfigurationListener;
 
@@ -1003,6 +1005,127 @@ public class ConfigurationBindingTest extends ConfigurationTestBase
         configListener.assertEvents( ConfigurationEvent.CM_LOCATION_CHANGED, 0 );
     }
 
+    /**
+     * Tests configuration dynamic binding. See FELIX-3360.
+     */
+    @SuppressWarnings({ "serial", "javadoc" })
+    @Test
+    public void test_dynamic_binding_getConfiguration_pid() throws BundleException, IOException {
+        String ignoredPid = "test_dynamic_binding_getConfiguration_pid_ignored";
+        String pid1 = "test_dynamic_binding_getConfiguration_pid_1";
+        String pid2 = "test_dynamic_binding_getConfiguration_pid_2";
+
+        // ensure configuration is unbound
+        configure( pid1 );
+        delay();
+        configListener.assertEvents( ConfigurationEvent.CM_UPDATED, 1 );
+
+        bundle = installBundle( ignoredPid );
+        bundle.start();
+        delay();
+
+        // ensure config1 unbound
+        Configuration config1 = getConfiguration( pid1 );
+        TestCase.assertNull( config1.getBundleLocation() );
+
+        ServiceReference<ConfigurationAdmin> sr = bundle.getBundleContext().getServiceReference( ConfigurationAdmin.class );
+        ConfigurationAdmin bundleCa = bundle.getBundleContext().getService( sr );
+
+        // ensure dynamic binding
+        Configuration bundleConfig1 = bundleCa.getConfiguration( pid1 );
+        TestCase.assertEquals( bundle.getLocation(), bundleConfig1.getBundleLocation() );
+        delay();
+        configListener.assertEvents( ConfigurationEvent.CM_LOCATION_CHANGED, 1 );
+
+        // create config2; ensure dynamic binding
+        Configuration bundleConfig2 = bundleCa.getConfiguration( pid2 );
+        TestCase.assertNull(bundleConfig2.getProperties());
+        TestCase.assertEquals( bundle.getLocation(), bundleConfig2.getBundleLocation() );
+        bundleConfig2.update( new Hashtable<String, String>()
+        {
+            {
+                put( "key", "value" );
+            }
+        } );
+
+        // uninstall the bundle, 2 dynamic locations changed
+        bundle.uninstall();
+        bundle = null;
+        delay();
+        configListener.assertEvents( ConfigurationEvent.CM_LOCATION_CHANGED, 2 );
+
+        bundleConfig1 = getConfiguration( pid1 );
+        TestCase.assertNull( bundleConfig1.getBundleLocation() );
+
+        bundleConfig2 = getConfiguration( pid2 );
+        TestCase.assertNull(bundleConfig2.getBundleLocation());
+
+        bundleConfig1.delete();
+        bundleConfig2.delete();
+    }
+
+    /**
+     * Tests factory configuration dynamic binding. See FELIX-3360.
+     */
+    @SuppressWarnings({ "javadoc", "serial" })
+    @Test
+    public void test_dynamic_binding_createFactoryConfiguration_pid() throws BundleException, IOException {
+        String ignoredPid = "test_dynamic_binding_createFactoryConfiguration_pid_ignored";
+        String pid1 = null;
+        String pid2 = null;
+        String factoryPid1 = "test_dynamic_binding_createFactoryConfiguration_pid_1";
+        String factoryPid2 = "test_dynamic_binding_createFactoryConfiguration_pid_2";
+
+        // ensure configuration is unbound
+        pid1 = createFactoryConfiguration( factoryPid1 ).getPid();
+        delay();
+        configListener.assertEvents( ConfigurationEvent.CM_UPDATED, 1 );
+
+        bundle = installBundle( ignoredPid );
+        bundle.start();
+        delay();
+
+        // ensure config1 unbound
+        Configuration config1 = getConfiguration( pid1 );
+        TestCase.assertNull( config1.getBundleLocation() );
+
+        ServiceReference<ConfigurationAdmin> sr = bundle.getBundleContext().getServiceReference( ConfigurationAdmin.class );
+        ConfigurationAdmin bundleCa = bundle.getBundleContext().getService( sr );
+
+        // ensure dynamic binding
+        Configuration bundleConfig1 = bundleCa.getConfiguration( pid1 );
+        TestCase.assertEquals( bundle.getLocation(), bundleConfig1.getBundleLocation() );
+        delay();
+        configListener.assertEvents( ConfigurationEvent.CM_LOCATION_CHANGED, 1 );
+
+        // create config2; ensure dynamic binding
+        Configuration bundleConfig2 = bundleCa.createFactoryConfiguration( factoryPid2 );
+        pid2 = bundleConfig2.getPid();
+        TestCase.assertNull(bundleConfig2.getProperties());
+        TestCase.assertEquals( bundle.getLocation(), bundleConfig2.getBundleLocation() );
+        bundleConfig2.update( new Hashtable<String, String>()
+        {
+            {
+                put( "key", "value" );
+            }
+        } );
+
+        // uninstall the bundle, 2 dynamic locations changed
+        bundle.uninstall();
+        bundle = null;
+        delay();
+        configListener.assertEvents( ConfigurationEvent.CM_LOCATION_CHANGED, 2 );
+
+        bundleConfig1 = getConfiguration( pid1 );
+        TestCase.assertNull( bundleConfig1.getBundleLocation() );
+
+        bundleConfig2 = getConfiguration( pid2 );
+        TestCase.assertNull(bundleConfig2.getBundleLocation());
+
+        bundleConfig1.delete();
+        bundleConfig2.delete();
+    }
+
     private static class ConfigListener implements ConfigurationListener {
 
         private int[] events = new int[3];
@@ -1017,6 +1140,15 @@ public class ConfigurationBindingTest extends ConfigurationTestBase
         {
             TestCase.assertEquals( "Events of type " + type, numEvents, events[type - 1] );
             events[type - 1] = 0;
+        }
+
+
+        void reset()
+        {
+            for ( int i = 0; i < events.length; i++ )
+            {
+                events[i] = 0;
+            }
         }
     }
 }

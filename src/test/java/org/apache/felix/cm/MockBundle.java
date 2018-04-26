@@ -19,16 +19,21 @@
 package org.apache.felix.cm;
 
 
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
+import java.security.cert.X509Certificate;
 import java.util.Dictionary;
 import java.util.Enumeration;
+import java.util.List;
+import java.util.Map;
 
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.BundleException;
 import org.osgi.framework.ServiceReference;
+import org.osgi.framework.Version;
 
 
 public class MockBundle implements Bundle
@@ -45,168 +50,214 @@ public class MockBundle implements Bundle
     }
 
 
+    @Override
     public Enumeration findEntries( String arg0, String arg1, boolean arg2 )
     {
-        // TODO Auto-generated method stub
         return null;
     }
 
 
+    @Override
     public BundleContext getBundleContext()
     {
         return context;
     }
 
 
+    @Override
     public long getBundleId()
     {
         return 0;
     }
 
 
+    @Override
     public URL getEntry( String arg0 )
     {
-        // TODO Auto-generated method stub
         return null;
     }
 
 
+    @Override
     public Enumeration getEntryPaths( String arg0 )
     {
-        // TODO Auto-generated method stub
         return null;
     }
 
 
+    @Override
     public Dictionary getHeaders()
     {
-        // TODO Auto-generated method stub
         return null;
     }
 
 
+    @Override
     public Dictionary getHeaders( String arg0 )
     {
-        // TODO Auto-generated method stub
         return null;
     }
 
 
+    @Override
     public long getLastModified()
     {
-        // TODO Auto-generated method stub
         return 0;
     }
 
 
+    @Override
     public String getLocation()
     {
         return location;
     }
 
 
+    @Override
     public ServiceReference[] getRegisteredServices()
     {
-        // TODO Auto-generated method stub
         return null;
     }
 
 
+    @Override
     public URL getResource( String arg0 )
     {
-        // TODO Auto-generated method stub
         return null;
     }
 
 
-    public Enumeration getResources( String arg0 ) throws IOException
+    @Override
+    public Enumeration getResources( String arg0 )
     {
-        // TODO Auto-generated method stub
         return null;
     }
 
 
+    @Override
     public ServiceReference[] getServicesInUse()
     {
-        // TODO Auto-generated method stub
         return null;
     }
 
 
+    @Override
     public int getState()
     {
-        // TODO Auto-generated method stub
         return 0;
     }
 
 
+    @Override
     public String getSymbolicName()
     {
-        // TODO Auto-generated method stub
         return null;
     }
 
 
+    @Override
     public boolean hasPermission( Object arg0 )
     {
-        // TODO Auto-generated method stub
         return false;
     }
 
 
+    @Override
     public Class loadClass( String arg0 ) throws ClassNotFoundException
     {
-        // TODO Auto-generated method stub
-        return null;
+        throw new ClassNotFoundException( arg0 );
     }
 
 
-    public void start() throws BundleException
+    @Override
+    public void start()
     {
-        // TODO Auto-generated method stub
-
     }
 
 
-    public void stop() throws BundleException
+    @Override
+    public void stop()
     {
-        // TODO Auto-generated method stub
-
     }
 
 
-    public void uninstall() throws BundleException
+    @Override
+    public void uninstall()
     {
-        // TODO Auto-generated method stub
-
     }
 
 
-    public void update() throws BundleException
+    @Override
+    public void update()
     {
-        // TODO Auto-generated method stub
-
     }
 
 
+    @Override
     public void update( InputStream arg0 ) throws BundleException
     {
-        // TODO Auto-generated method stub
-
+        if ( arg0 != null )
+        {
+            try
+            {
+                arg0.close();
+            }
+            catch ( IOException ioe )
+            {
+                throw new BundleException( ioe.getMessage(), ioe );
+            }
+        }
     }
 
 
-    public void start( int options ) throws BundleException
+    @Override
+    public void start( int options )
     {
-        // TODO Auto-generated method stub
-
     }
 
 
-    public void stop( int options ) throws BundleException
+    @Override
+    public void stop( int options )
     {
-        // TODO Auto-generated method stub
+    }
 
+
+    @Override
+    public int compareTo( Bundle o )
+    {
+        return 0;
+    }
+
+
+    // Framework 1.5 additions
+
+    @Override
+    public Map<X509Certificate, List<X509Certificate>> getSignerCertificates( int signersType )
+    {
+        throw new AbstractMethodError( "Not supported on Framework API 1.4; added in Framework API 1.5" );
+    }
+
+
+    @Override
+    public Version getVersion()
+    {
+        return Version.emptyVersion;
+    }
+
+
+    // Framework 1.6 additions
+
+    @Override
+    public <A> A adapt( Class<A> type )
+    {
+        throw new AbstractMethodError( "Not supported on Framework API 1.4; added in Framework API 1.6" );
+    }
+
+
+    @Override
+    public File getDataFile( String filename )
+    {
+        throw new AbstractMethodError( "Not supported on Framework API 1.4; added in Framework API 1.6" );
     }
 
 }

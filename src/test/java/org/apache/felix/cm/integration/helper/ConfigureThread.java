@@ -71,7 +71,7 @@ public class ConfigureThread extends TestThread
         }
         catch ( IOException ioe )
         {
-            // TODO: log !!
+            // ignore
         }
     }
 
@@ -85,7 +85,7 @@ public class ConfigureThread extends TestThread
         }
         catch ( IOException ioe )
         {
-            // TODO: log !!
+            // ignore
         }
     }
 }

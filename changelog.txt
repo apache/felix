@@ -1,3 +1,139 @@
+Changes in 1.9.0
+----------------
+** Improvement
+    * [FELIX-5288] - Implement RFC 227 (OSGi R7 Update)
+    * [FELIX-5289] - Alias PID Handling of Factory Configurations (OSGi R7)
+    * [FELIX-5290] - Locking Configuration Records (OSGi R7)
+    * [FELIX-5291] - Improve Configuration Updates (OSGi R7)
+    * [FELIX-5292] - Capabilities (OSGi R7)
+    * [FELIX-5293] - Improved ConfigurationPlugin Support (OSGi R7)
+    * [FELIX-5468] - Refactor persistence handling
+    * [FELIX-5695] - Use Java 7 as base version
+** Bug
+    * [FELIX-5745] - Empty collections should be allowed as property value
+
+
+Changes from 1.8.14 to 1.8.16
+-----------------------------
+** Bug
+    * [FELIX-5669] : Registering a PersistenceManager causes duplicate caches.
+
+
+Changes from 1.8.12 to 1.8.14
+-----------------------------
+** Bug
+    * [FELIX-5443] - Frequent Changes cause UpdateThread to ConcurrentModificationException
+    * [FELIX-5435] - Service does not get loaded with updated properties that have been modified on file system after felix framework restart
+
+
+Changes from 1.8.10 to 1.8.12
+-----------------------------
+
+** Improvement
+    * [FELIX-5380] - Reduce quite useless log verbosity
+    * [FELIX-5366] - Additional Unit Tests for ConfigurationHandler
+
+** Bug
+    * [FELIX-5368] - ConfigurationManager ignores NotCachablePersistenceManager marker interface
+    * [FELIX-5385] - ConfigAdmin uses wrong security when calling ManagedServices
+
+
+Changes from 1.8.8 to 1.8.10
+----------------------------
+
+** Improvement
+    * [FELIX-5088] - CaseSensitiveDictionary should implement equals()
+    * [FELIX-5211] - Use provide/require capabilities instead of obsolete and meaningless import-export service headers
+
+** Bug
+    * [FELIX-5301] - ConfigurationPlugin support is not spec compliant
+
+
+Changes from 1.8.6 to 1.8.8
+---------------------------
+
+** Improvement
+    * [FELIX-4917] - FilePersistenceManager doesn't support comments
+
+** Bug
+    * [FELIX-4962] - Configadmin leaks caller's security context downstream
+    * [FELIX-4945] - Escaped folder names makes ConfigAdmin incompatible and factory configs not always work
+
+
+Changes from 1.8.4 to 1.8.6
+---------------------------
+
+** Improvement
+    * [FELIX-4844] - Store configuration data in a diff-tool friendly way
+    * [FELIX-4884] - Avoid unnecessary array creation if listConfigurations does not find anything
+
+
+Changes from 1.8.2 to 1.8.4
+---------------------------
+
+** Bug
+    * [FELIX-4846] - Wrong exception type in list operation
+    * [FELIX-4851] - ConfigAdmin only forwards ConfigurationEvents to ConfigurationListeners which are provided by bundles that are in state ACTIVE
+    * [FELIX-4855] - ConfigAdmin does not update ManagedServiceFactory on framework restart
+
+
+Changes from 1.8.0 to 1.8.2
+----------------------------
+
+** Bug
+    * [FELIX-4302] - Config Admin can create illegal names on windows
+    * [FELIX-4360] - Ensure ordered property values in configurations
+    * [FELIX-4362] - Security ConfigAdmin permissions are inherited on the stack
+    * [FELIX-4385] - NPE in Configuration Admin Service when deleting configuration
+    * [FELIX-4408] - CaseInsensitiveDictionary is platform/locale dependant
+    * [FELIX-4566] - Consistency in PersistenceManager and Cache is not guaranteed
+
+** Improvement
+    * [FELIX-4316] - Packages imported dynamically should also be imported statically with an optional flag
+    * [FELIX-4811] - Optimize ConfigurationManager#listConfigurations
+
+
+Changes from 1.6.0 to 1.8.0
+----------------------------
+
+** Bug
+    * [FELIX-3360] - Bundle location is statically set for dynamically bound bundles
+    * [FELIX-3762] - NPE in UpdateConfiguration#run
+    * [FELIX-3820] - Possible NPE in ConfigAdmin after shutting down when accessed by bad behaving bundles
+    * [FELIX-3823] - ConfigAdmin should explicitely unregister services
+    * [FELIX-4165] - FilePersistenceManager fails to rename configuration file
+    * [FELIX-4197] - [CM] Always check permission on Configuration.get/setBundleLocation
+    * [FELIX-4238] - Unnecessary re-initialization of PersistenceManagers in configadmin
+
+** Improvement
+    * [FELIX-4039] - Add Permissions file in ConfigAdmin bundle 
+
+** Task
+    * [FELIX-3808] - Upgrade ConfigAdmin to pax-exam 2
+
+
+Changes from 1.4.0 to 1.6.0
+----------------------------
+
+** Bug
+    * [FELIX-3532] - Source artifact is not being generated
+    * [FELIX-3596] - Config Admin should track SynchronousConfigurationListeners
+    * [FELIX-3721] - Configuration not always provided upon initial service registration
+
+** Improvement
+    * [FELIX-3577] - Refactor helpers and service trackers
+    * [FELIX-3622] - ConfigurationManager.listConfigurations may not always properly log the configuration PID
+
+** Task
+    * [FELIX-3479] - [Config Admin 1.5] Implement Configuration.getChangeCount()
+    * [FELIX-3480] - [Config Admin 1.5] Implement support for SynchronousConfigurationListener
+    * [FELIX-3481] - [Config Admin 1.5] Implement support for Targeted PIDs
+    * [FELIX-3483] - [Config Admin 1.5] Export cm API at version 1.5
+    * [FELIX-3554] - Prevent same configuration to be delivered multiple times
+    * [FELIX-3562] - Use OSGi Configuration Admin 1.5 API classes
+    * [FELIX-3578] - ConfigAdmin Maven build does not have Maven convention *-sources.jar artifacts
+
+
 Changes from 1.2.8 to 1.4.0
 ----------------------------
 

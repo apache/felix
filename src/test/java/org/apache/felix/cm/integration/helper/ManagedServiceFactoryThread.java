@@ -106,7 +106,7 @@ public class ManagedServiceFactoryThread extends TestThread implements ManagedSe
         synchronized ( configs )
         {
             configs.add( properties );
-            configured = true;
+            configured = properties != null;
         }
     }
 }

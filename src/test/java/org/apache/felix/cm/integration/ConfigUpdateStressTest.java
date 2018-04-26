@@ -133,10 +133,13 @@ public class ConfigUpdateStressTest extends ConfigurationTestBase
             // wait for all tasks to terminate
             delay();
 
+            final boolean isConfigured = mt.isConfigured();
             final ArrayList<Dictionary> configs = mt.getConfigs();
 
             // terminate mt to ensure no further config updates
             mt.cleanup();
+
+            TestCase.assertTrue( "Last update call must have been with configuration",  isConfigured);
 
             if ( configs.size() == 0 )
             {
@@ -199,10 +202,13 @@ public class ConfigUpdateStressTest extends ConfigurationTestBase
             // wait for all tasks to terminate
             delay();
 
+            final boolean isConfigured = mt.isConfigured();
             final ArrayList<Dictionary> configs = mt.getConfigs();
 
             // terminate mt to ensure no further config updates
             mt.cleanup();
+
+            TestCase.assertTrue( "Last update call must have been with configuration",  isConfigured);
 
             if ( configs.size() == 0 )
             {

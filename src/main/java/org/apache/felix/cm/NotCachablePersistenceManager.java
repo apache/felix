@@ -16,38 +16,25 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.felix.cm.impl;
+package org.apache.felix.cm;
 
+import org.osgi.annotation.versioning.ConsumerType;
 
-public class MockConfigurationManager extends ConfigurationManager
+/**
+ * <code>NotCachablePersistenceManager</code> is a marker interface which
+ * extends {@link PersistenceManager} to inform that no cache should be applied
+ * around this persistence manager. This gives the opportunity for the
+ * persistence manager to implement it's own caching heuristics.
+ * <p>
+ * To make implementations of this interface available to the Configuration
+ * Admin Service they must be registered as service for interface
+ * {@link PersistenceManager}.
+ * <p>
+ * See also {@link PersistenceManager}
+ *
+ * @since 1.1
+ */
+@ConsumerType
+public interface NotCachablePersistenceManager extends PersistenceManager
 {
-
-    void updated( ConfigurationImpl config, boolean fireEvent )
-    {
-        // do nothing, might register the update call
-    }
-
-
-    void deleted( ConfigurationImpl config )
-    {
-        // do nothing, might register the update call
-    }
-
-
-    void revokeConfiguration( ConfigurationImpl config )
-    {
-        // do nothing, might register the update call
-    }
-
-
-    void reassignConfiguration( ConfigurationImpl config )
-    {
-        // do nothing, might register the update call
-    }
-
-
-    void log( int level, String message, Throwable t )
-    {
-        // no logging for now
-    }
 }

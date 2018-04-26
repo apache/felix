@@ -25,9 +25,6 @@ import junit.framework.TestCase;
 import org.apache.felix.cm.MockBundleContext;
 import org.osgi.framework.BundleContext;
 
-/**
- * The <code>FilePersistenceManagerConstructorTest</code> TODO
- */
 public class FilePersistenceManagerConstructorTest extends TestCase
 {
 

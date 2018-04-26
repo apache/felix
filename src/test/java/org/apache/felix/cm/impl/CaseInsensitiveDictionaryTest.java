@@ -23,6 +23,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Vector;
 
 import junit.framework.TestCase;
@@ -30,6 +31,28 @@ import junit.framework.TestCase;
 
 public class CaseInsensitiveDictionaryTest extends TestCase
 {
+
+    public void testLocaleIndependence() {
+        Locale defaultLocal = Locale.getDefault();
+        CaseInsensitiveDictionary dict = new CaseInsensitiveDictionary();
+        dict.put("illegal", "value1");
+        dict.put("ILLEGAL", "value2");
+        assertEquals(dict.get("illegal"), "value2");
+        assertEquals(dict.get("ILLEGAL"), "value2");
+
+        // validate "i" conversion with Turkish default locale
+        Locale.setDefault(new Locale("tr", "" ,""));
+        try {
+            dict = new CaseInsensitiveDictionary();
+            dict.put("illegal", "value1");
+            dict.put("ILLEGAL", "value2");
+            assertEquals(dict.get("illegal"), "value2");
+            assertEquals(dict.get("ILLEGAL"), "value2");
+        } finally {
+            Locale.setDefault(defaultLocal);
+        }
+    }
+
 
     public void testCheckValueNull()
     {

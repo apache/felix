@@ -21,24 +21,50 @@ package org.apache.felix.cm.impl;
 
 import java.io.IOException;
 import java.security.SecureRandom;
-import java.text.MessageFormat;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Dictionary;
+import java.util.HashMap;
+import java.util.Hashtable;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Random;
+import java.util.Set;
 
 import org.apache.felix.cm.PersistenceManager;
-import org.apache.felix.cm.file.FilePersistenceManager;
-import org.osgi.framework.*;
-import org.osgi.service.cm.*;
+import org.apache.felix.cm.impl.helper.BaseTracker;
+import org.apache.felix.cm.impl.helper.ConfigurationMap;
+import org.apache.felix.cm.impl.helper.ManagedServiceFactoryTracker;
+import org.apache.felix.cm.impl.helper.ManagedServiceTracker;
+import org.apache.felix.cm.impl.helper.TargetedPID;
+import org.apache.felix.cm.impl.persistence.CachingPersistenceManagerProxy;
+import org.apache.felix.cm.impl.persistence.ExtPersistenceManager;
+import org.osgi.framework.Bundle;
+import org.osgi.framework.BundleContext;
+import org.osgi.framework.BundleEvent;
+import org.osgi.framework.BundleListener;
+import org.osgi.framework.Constants;
+import org.osgi.framework.InvalidSyntaxException;
+import org.osgi.framework.ServiceReference;
+import org.osgi.framework.ServiceRegistration;
+import org.osgi.service.cm.ConfigurationAdmin;
+import org.osgi.service.cm.ConfigurationEvent;
+import org.osgi.service.cm.ConfigurationListener;
+import org.osgi.service.cm.ConfigurationPermission;
+import org.osgi.service.cm.ConfigurationPlugin;
+import org.osgi.service.cm.ManagedService;
+import org.osgi.service.cm.ManagedServiceFactory;
+import org.osgi.service.cm.SynchronousConfigurationListener;
 import org.osgi.service.log.LogService;
 import org.osgi.util.tracker.ServiceTracker;
 
 
 /**
- * The <code>ConfigurationManager</code> is the central class in this
+ * The {@code ConfigurationManager} is the central class in this
  * implementation of the Configuration Admin Service Specification. As such it
  * has the following tasks:
  * <ul>
- * <li>It is a <code>BundleActivator</code> which is called when the bundle
- * is started and stopped.
  * <li>It is a <code>BundleListener</code> which gets informed when the
  * states of bundles change. Mostly this is needed to unbind any bound
  * configuration in case a bundle is uninstalled.
@@ -50,72 +76,34 @@ import org.osgi.util.tracker.ServiceTracker;
  * configuration persistence layers.
  * <li>A {@link ConfigurationAdminFactory} instance is registered as the
  * <code>ConfigurationAdmin</code> service.
- * <li>A {@link FilePersistenceManager} instance is registered as a default
- * {@link PersistenceManager}.
  * <li>Last but not least this instance manages all tasks laid out in the
  * specification such as maintaining configuration, taking care of configuration
  * events, etc.
  * </ul>
- * <p>
- * The default {@link FilePersistenceManager} is configured with a configuration
- * location taken from the <code>felix.cm.dir</code> framework property. If
- * this property is not set the <code>config</code> directory in the current
- * working directory as specified in the <code>user.dir</code> system property
- * is used.
  */
-public class ConfigurationManager implements BundleActivator, BundleListener
+public class ConfigurationManager implements BundleListener
 {
-
-    /**
-     * The name of the bundle context property defining the location for the
-     * configuration files (value is "felix.cm.dir").
-     *
-     * @see #start(BundleContext)
-     */
-    public static final String CM_CONFIG_DIR = "felix.cm.dir";
-
-    /**
-     * The name of the bundle context property defining the maximum log level
-     * (value is "felix.cm.loglevel"). The log level setting is only used if
-     * there is no OSGi LogService available. Otherwise this setting is ignored.
-     * <p>
-     * This value of this property is expected to be an integer number
-     * corresponding to the log level values of the OSGi LogService. That is 1
-     * for errors, 2 for warnings, 3 for informational messages and 4 for debug
-     * messages. The default value is 2, such that only warnings and errors are
-     * logged in the absence of a LogService.
-     */
-    public static final String CM_LOG_LEVEL = "felix.cm.loglevel";
-
-    // The name of the LogService (not using the class, which might be missing)
-    private static final String LOG_SERVICE_NAME = "org.osgi.service.log.LogService";
-
-    private static final int CM_LOG_LEVEL_DEFAULT = 2;
-
     // random number generator to create configuration PIDs for factory
     // configurations
     private static Random numberGenerator;
 
     // the BundleContext of the Configuration Admin Service bundle
-    private BundleContext bundleContext;
+    private final BundleContext bundleContext;
 
     // the service registration of the configuration admin
-    private volatile ServiceRegistration configurationAdminRegistration;
-
-    // the ServiceTracker to emit log services (see log(int, String, Throwable))
-    private ServiceTracker logTracker;
+    private volatile ServiceRegistration<ConfigurationAdmin> configurationAdminRegistration;
 
     // the ConfigurationEvent listeners
-    private ServiceTracker configurationListenerTracker;
+    private ServiceTracker<ConfigurationListener, ConfigurationListener> configurationListenerTracker;
+
+    // the synchronous ConfigurationEvent listeners
+    private ServiceTracker<SynchronousConfigurationListener, SynchronousConfigurationListener> syncConfigurationListenerTracker;
 
     // service tracker for managed services
-    private ServiceTracker managedServiceTracker;
+    private ManagedServiceTracker managedServiceTracker;
 
     // service tracker for managed service factories
-    private ServiceTracker managedServiceFactoryTracker;
-
-    // PersistenceManager services
-    private ServiceTracker persistenceManagerTracker;
+    private ManagedServiceFactoryTracker managedServiceFactoryTracker;
 
     // the thread used to schedule tasks required to run asynchronously
     private UpdateThread updateThread;
@@ -124,23 +112,13 @@ public class ConfigurationManager implements BundleActivator, BundleListener
     private UpdateThread eventThread;
 
     /**
-     * The actual list of {@link PersistenceManager persistence managers} to use
-     * when looking for configuration data. This list is built from the
-     * {@link #persistenceManagerMap}, which is ordered according to the
-     * {@link RankingComparator}.
+     * The persistence manager
      */
-    private PersistenceManager[] persistenceManagers;
-
-    // the persistenceManagerTracker.getTrackingCount when the
-    // persistenceManagers were last got
-    private int pmtCount;
-
-    // the cache of Factory instances mapped by their factory PID
-    private final Map factories = new HashMap();
+    private final ExtPersistenceManager persistenceManager;
 
     // the cache of Configuration instances mapped by their PID
     // have this always set to prevent NPE on bundle shutdown
-    private final Map configurations = new HashMap();
+    private final HashMap<String, ConfigurationImpl> configurations = new HashMap<>();
 
     /**
      * The map of dynamic configuration bindings. This maps the
@@ -153,10 +131,7 @@ public class ConfigurationManager implements BundleActivator, BundleListener
      * <p>
      * The map is written to persistence on each change.
      */
-    private DynamicBindings dynamicBindings;
-
-    // the maximum log level when no LogService is available
-    private int logLevel = CM_LOG_LEVEL_DEFAULT;
+    private final DynamicBindings dynamicBindings;
 
     // flag indicating whether BundleChange events should be consumed (FELIX-979)
     private volatile boolean handleBundleEvents;
@@ -164,75 +139,37 @@ public class ConfigurationManager implements BundleActivator, BundleListener
     // flag indicating whether the manager is considered alive
     private volatile boolean isActive;
 
-    public void start( BundleContext bundleContext )
+    // Coordinator service if available
+    private volatile Object coordinator;
+
+    public ConfigurationManager(final ExtPersistenceManager persistenceManager,
+            final BundleContext bundleContext)
+    throws IOException
     {
-        // track the log service using a ServiceTracker
-        logTracker = new ServiceTracker( bundleContext, LOG_SERVICE_NAME , null );
-        logTracker.open();
-
-        // assign the log level
-        String logLevelProp = bundleContext.getProperty( CM_LOG_LEVEL );
-        if ( logLevelProp == null )
-        {
-            logLevel = CM_LOG_LEVEL_DEFAULT;
-        }
-        else
-        {
-            try
-            {
-                logLevel = Integer.parseInt( logLevelProp );
-            }
-            catch ( NumberFormatException nfe )
-            {
-                logLevel = CM_LOG_LEVEL_DEFAULT;
-            }
-        }
-
         // set up some fields
         this.bundleContext = bundleContext;
+        this.dynamicBindings = new DynamicBindings( bundleContext, persistenceManager.getDelegatee() );
+        this.persistenceManager = persistenceManager;
+    }
 
+    public ServiceReference<ConfigurationAdmin> start()
+    {
         // configurationlistener support
-        configurationListenerTracker = new ServiceTracker( bundleContext, ConfigurationListener.class.getName(), null );
+        configurationListenerTracker = new ServiceTracker<>( bundleContext, ConfigurationListener.class, null );
         configurationListenerTracker.open();
+        syncConfigurationListenerTracker = new ServiceTracker<>( bundleContext,
+                SynchronousConfigurationListener.class, null );
+        syncConfigurationListenerTracker.open();
 
         // initialize the asynchonous updater thread
         ThreadGroup tg = new ThreadGroup( "Configuration Admin Service" );
         tg.setDaemon( true );
-        this.updateThread = new UpdateThread( this, tg, "CM Configuration Updater" );
-        this.eventThread = new UpdateThread( this, tg, "CM Event Dispatcher" );
-
-        // set up the location (might throw IllegalArgumentException)
-        try
-        {
-            FilePersistenceManager fpm = new FilePersistenceManager( bundleContext, bundleContext
-                .getProperty( CM_CONFIG_DIR ) );
-            Hashtable props = new Hashtable();
-            props.put( Constants.SERVICE_PID, fpm.getClass().getName() );
-            props.put( Constants.SERVICE_DESCRIPTION, "Platform Filesystem Persistence Manager" );
-            props.put( Constants.SERVICE_VENDOR, "Apache Software Foundation" );
-            props.put( Constants.SERVICE_RANKING, new Integer( Integer.MIN_VALUE ) );
-            bundleContext.registerService( PersistenceManager.class.getName(), fpm, props );
-
-            // setup dynamic configuration bindings
-            dynamicBindings = new DynamicBindings( bundleContext, fpm );
-        }
-        catch ( IOException ioe )
-        {
-            log( LogService.LOG_ERROR, "Failure setting up dynamic configuration bindings", ioe );
-        }
-        catch ( IllegalArgumentException iae )
-        {
-            log( LogService.LOG_ERROR, "Cannot create the FilePersistenceManager", iae );
-        }
+        this.updateThread = new UpdateThread( tg, "CM Configuration Updater" );
+        this.eventThread = new UpdateThread( tg, "CM Event Dispatcher" );
 
         // register as bundle and service listener
         handleBundleEvents = true;
         bundleContext.addBundleListener( this );
-
-        // get all persistence managers to begin with
-        pmtCount = 1; // make sure to get the persistence managers at least once
-        persistenceManagerTracker = new ServiceTracker( bundleContext, PersistenceManager.class.getName(), null );
-        persistenceManagerTracker.open();
 
         // consider alive now (before clients use Configuration Admin
         // service registered in the next step)
@@ -240,28 +177,34 @@ public class ConfigurationManager implements BundleActivator, BundleListener
 
         // create and register configuration admin - start after PM tracker ...
         ConfigurationAdminFactory caf = new ConfigurationAdminFactory( this );
-        Hashtable props = new Hashtable();
+        Dictionary<String, Object> props = new Hashtable<>();
         props.put( Constants.SERVICE_PID, "org.apache.felix.cm.ConfigurationAdmin" );
-        props.put( Constants.SERVICE_DESCRIPTION, "Configuration Admin Service Specification 1.2 Implementation" );
-        props.put( Constants.SERVICE_VENDOR, "Apache Software Foundation" );
-        configurationAdminRegistration = bundleContext.registerService( ConfigurationAdmin.class.getName(), caf, props );
+        props.put( Constants.SERVICE_DESCRIPTION, "Configuration Admin Service Specification 1.6 Implementation" );
+        props.put( Constants.SERVICE_VENDOR, "The Apache Software Foundation" );
+        configurationAdminRegistration = bundleContext.registerService( ConfigurationAdmin.class, caf, props );
+
+        // start handling ManagedService[Factory] services
+        managedServiceTracker = new ManagedServiceTracker(this);
+        managedServiceFactoryTracker = new ManagedServiceFactoryTracker(this);
 
         // start processing the event queues only after registering the service
         // see FELIX-2813 for details
         this.updateThread.start();
         this.eventThread.start();
 
-        // start handling ManagedService[Factory] services
-        managedServiceTracker = new ManagedServiceTracker(this);
-        managedServiceFactoryTracker = new ManagedServiceFactoryTracker(this);
+        return configurationAdminRegistration.getReference();
     }
 
 
-    public void stop( BundleContext bundleContext )
+    public void stop( )
     {
 
         // stop handling bundle events immediately
         handleBundleEvents = false;
+
+        // stop handling ManagedService[Factory] services
+        managedServiceFactoryTracker.close();
+        managedServiceTracker.close();
 
         // stop queue processing before unregistering the service
         // see FELIX-2813 for details
@@ -278,22 +221,16 @@ public class ConfigurationManager implements BundleActivator, BundleListener
         // clearing the field before actually unregistering the service
         // prevents IllegalStateException in getServiceReference() if
         // the field is not null but the service already unregistered
-        if (configurationAdminRegistration != null) {
-            ServiceRegistration reg = configurationAdminRegistration;
-            configurationAdminRegistration = null;
-            reg.unregister();
+        final ServiceRegistration<ConfigurationAdmin> caReg = configurationAdminRegistration;
+        configurationAdminRegistration = null;
+        if ( caReg != null )
+        {
+            caReg.unregister();
         }
 
         // consider inactive after unregistering such that during
         // unregistration the manager is still alive and can react
         isActive = false;
-
-        // stop handling ManagedService[Factory] services
-        managedServiceFactoryTracker.close();
-        managedServiceTracker.close();
-
-        // don't care for PersistenceManagers any more
-        persistenceManagerTracker.close();
 
         // stop listening for events
         bundleContext.removeBundleListener( this );
@@ -303,9 +240,9 @@ public class ConfigurationManager implements BundleActivator, BundleListener
             configurationListenerTracker.close();
         }
 
-        if ( logTracker != null )
+        if ( syncConfigurationListenerTracker != null )
         {
-            logTracker.close();
+            syncConfigurationListenerTracker.close();
         }
 
         // just ensure the configuration cache is empty
@@ -313,14 +250,6 @@ public class ConfigurationManager implements BundleActivator, BundleListener
         {
             configurations.clear();
         }
-
-        // just ensure the factory cache is empty
-        synchronized ( factories )
-        {
-            factories.clear();
-        }
-
-        this.bundleContext = null;
     }
 
 
@@ -332,6 +261,10 @@ public class ConfigurationManager implements BundleActivator, BundleListener
         return isActive;
     }
 
+    public BundleContext getBundleContext()
+    {
+        return bundleContext;
+    }
 
     // ---------- Configuration caching support --------------------------------
 
@@ -339,7 +272,7 @@ public class ConfigurationManager implements BundleActivator, BundleListener
     {
         synchronized ( configurations )
         {
-            return ( ConfigurationImpl ) configurations.get( pid );
+            return configurations.get( pid );
         }
     }
 
@@ -348,8 +281,8 @@ public class ConfigurationManager implements BundleActivator, BundleListener
     {
         synchronized ( configurations )
         {
-            return ( ConfigurationImpl[] ) configurations.values().toArray(
-                new ConfigurationImpl[configurations.size()] );
+            return configurations.values().toArray(
+                    new ConfigurationImpl[configurations.size()] );
         }
     }
 
@@ -358,13 +291,14 @@ public class ConfigurationManager implements BundleActivator, BundleListener
     {
         synchronized ( configurations )
         {
-            Object existing = configurations.get( configuration.getPid() );
+            final String pid = configuration.getPidString();
+            final Object existing = configurations.get( pid );
             if ( existing != null )
             {
                 return ( ConfigurationImpl ) existing;
             }
 
-            configurations.put( configuration.getPid(), configuration );
+            configurations.put( pid, configuration );
             return configuration;
         }
     }
@@ -374,34 +308,7 @@ public class ConfigurationManager implements BundleActivator, BundleListener
     {
         synchronized ( configurations )
         {
-            configurations.remove( configuration.getPid() );
-        }
-    }
-
-
-    Factory getCachedFactory( String factoryPid )
-    {
-        synchronized ( factories )
-        {
-            return ( Factory ) factories.get( factoryPid );
-        }
-    }
-
-
-    Factory[] getCachedFactories()
-    {
-        synchronized ( factories )
-        {
-            return ( Factory[] ) factories.values().toArray( new Factory[factories.size()] );
-        }
-    }
-
-
-    void cacheFactory( Factory factory )
-    {
-        synchronized ( factories )
-        {
-            factories.put( factory.getFactoryPid(), factory );
+            configurations.remove( configuration.getPidString() );
         }
     }
 
@@ -418,8 +325,8 @@ public class ConfigurationManager implements BundleActivator, BundleListener
             }
             catch ( IOException ioe )
             {
-                log( LogService.LOG_ERROR, "Failed storing dynamic configuration binding for {0} to {1}", new Object[]
-                    { pid, location, ioe } );
+                Log.logger.log( LogService.LOG_ERROR, "Failed storing dynamic configuration binding for {0} to {1}", new Object[]
+                        { pid, location, ioe } );
             }
         }
     }
@@ -441,6 +348,73 @@ public class ConfigurationManager implements BundleActivator, BundleListener
         return cacheConfiguration( createConfiguration( createPid( factoryPid ), factoryPid, location ) );
     }
 
+    /**
+     * Returns a targeted configuration for the given service PID and
+     * the reference target service.
+     * <p>
+     * A configuration returned has already been checked for visibility
+     * by the bundle registering the referenced service. Additionally,
+     * the configuration is also dynamically bound if needed.
+     *
+     * @param rawPid The raw service PID to get targeted configuration for.
+     * @param target The target <code>ServiceReference</code> to get
+     *      configuration for.
+     * @return The best matching targeted configuration or <code>null</code>
+     *      if there is no configuration at all.
+     * @throwss IOException if an error occurrs reading configurations
+     *      from persistence.
+     */
+    ConfigurationImpl getTargetedConfiguration( final String rawPid, final ServiceReference target ) throws IOException
+    {
+        final Bundle serviceBundle = target.getBundle();
+        if ( serviceBundle != null )
+        {
+            // list of targeted PIDs to check
+            final StringBuilder targetedPid = new StringBuilder( rawPid );
+            int i = 3;
+            String[] names = new String[4];
+            names[i--] = targetedPid.toString();
+            targetedPid.append( '|' ).append( serviceBundle.getSymbolicName() );
+            names[i--] = targetedPid.toString();
+            targetedPid.append( '|' ).append( serviceBundle.getVersion().toString() );
+            names[i--] = targetedPid.toString();
+            targetedPid.append( '|' ).append( serviceBundle.getLocation() );
+            names[i--] = targetedPid.toString();
+
+            for ( String candidate : names )
+            {
+                ConfigurationImpl config = getConfiguration( candidate );
+                if ( config != null && !config.isDeleted() )
+                {
+                    // check visibility to use and dynamically bind
+                    if ( canReceive( serviceBundle, config.getBundleLocation() ) )
+                    {
+                        config.tryBindLocation( serviceBundle.getLocation() );
+                        return config;
+                    }
+
+                    // CM 1.4 / 104.13.2.2 / 104.5.3
+                    // act as if there is no configuration
+                    Log.logger.log(
+                            LogService.LOG_DEBUG,
+                            "Cannot use configuration {0} for {1}: No visibility to configuration bound to {2}; calling with null",
+                            new Object[]
+                                    { config.getPid(), target , config.getBundleLocation() } );
+                }
+            }
+        }
+        else
+        {
+            Log.logger.log( LogService.LOG_INFO,
+                    "Service for PID {0} seems to already have been unregistered, not updating with configuration",
+                    new Object[]
+                            { rawPid } );
+        }
+
+        // service already unregistered, nothing to do really
+        return null;
+    }
+
 
     /**
      * Returns the {@link ConfigurationImpl} with the given PID if
@@ -449,7 +423,7 @@ public class ConfigurationManager implements BundleActivator, BundleListener
      *
      * @param pid The PID for which to return the configuration
      * @return The configuration or <code>null</code> if non exists
-     * @throws IOException If an error occurrs reading from a persistence
+     * @throws IOException If an error occurs reading from a persistence
      *      manager.
      */
     ConfigurationImpl getConfiguration( String pid ) throws IOException
@@ -457,28 +431,24 @@ public class ConfigurationManager implements BundleActivator, BundleListener
         ConfigurationImpl config = getCachedConfiguration( pid );
         if ( config != null )
         {
-            log( LogService.LOG_DEBUG, "Found cached configuration {0} bound to {1}", new Object[]
-                { pid, config.getBundleLocation() } );
+            Log.logger.log( LogService.LOG_DEBUG, "Found cached configuration {0} bound to {1}", new Object[]
+                    { pid, config.getBundleLocation() } );
 
             config.ensureFactoryConfigPersisted();
 
             return config;
         }
 
-        PersistenceManager[] pmList = getPersistenceManagers();
-        for ( int i = 0; i < pmList.length; i++ )
+        if ( this.persistenceManager.exists( pid ) )
         {
-            if ( pmList[i].exists( pid ) )
-            {
-                Dictionary props = pmList[i].load( pid );
-                config = new ConfigurationImpl( this, pmList[i], props );
-                log( LogService.LOG_DEBUG, "Found existing configuration {0} bound to {1}", new Object[]
+            final Dictionary props = this.persistenceManager.load( pid );
+            config = new ConfigurationImpl( this, this.persistenceManager, props );
+            Log.logger.log( LogService.LOG_DEBUG, "Found existing configuration {0} bound to {1}", new Object[]
                     { pid, config.getBundleLocation() } );
-                return cacheConfiguration( config );
-            }
+            return cacheConfiguration( config );
         }
 
-        // neither the cache nor any persistence manager has configuration
+        // neither the cache nor the persistence manager has configuration
         return null;
     }
 
@@ -516,78 +486,76 @@ public class ConfigurationManager implements BundleActivator, BundleListener
 
 
     ConfigurationImpl[] listConfigurations( ConfigurationAdminImpl configurationAdmin, String filterString )
-        throws IOException, InvalidSyntaxException
+            throws IOException, InvalidSyntaxException
     {
-        Filter filter = null;
+        SimpleFilter filter = null;
         if ( filterString != null )
         {
-            filter = bundleContext.createFilter( filterString );
+            filter = SimpleFilter.parse( filterString );
         }
 
-        log( LogService.LOG_DEBUG, "Listing configurations matching {0}", new Object[]
-            { filterString } );
+        Log.logger.log( LogService.LOG_DEBUG, "Listing configurations matching {0}", new Object[]
+                { filterString } );
 
-        List configList = new ArrayList();
+        List<ConfigurationImpl> configList = new ArrayList<>();
 
-        PersistenceManager[] pmList = getPersistenceManagers();
-        for ( int i = 0; i < pmList.length; i++ )
+        Collection<Dictionary> configs = this.persistenceManager.getDictionaries(filter );
+        for(final Dictionary config : configs)
         {
-            Enumeration configs = pmList[i].getDictionaries();
-            while ( configs.hasMoreElements() )
+            // ignore non-Configuration dictionaries
+            final String pid = ( String ) config.get( Constants.SERVICE_PID );
+            if ( pid == null )
             {
-                Dictionary config = ( Dictionary ) configs.nextElement();
+                continue;
+            }
 
-                // ignore non-Configuration dictionaries
-                String pid = ( String ) config.get( Constants.SERVICE_PID );
-                if ( pid == null )
-                {
-                    continue;
-                }
-
-                // CM 1.4 / 104.13.2.3 Permission required
-                if ( !configurationAdmin.hasPermission( ( String ) config
-                    .get( ConfigurationAdmin.SERVICE_BUNDLELOCATION ) ) )
-                {
-                    log(
+            // CM 1.4 / 104.13.2.3 Permission required
+            if ( !configurationAdmin.hasPermission( this,
+                    ( String ) config.get( ConfigurationAdmin.SERVICE_BUNDLELOCATION ) ) )
+            {
+                Log.logger.log(
                         LogService.LOG_DEBUG,
                         "Omitting configuration {0}: No permission for bundle {1} on configuration bound to {2}",
                         new Object[]
-                            { config.get( Constants.SERVICE_PID ), configurationAdmin.getBundle().getLocation(),
-                                config.get( ConfigurationAdmin.SERVICE_BUNDLELOCATION ) } );
-                    continue;
-                }
+                                { pid, configurationAdmin.getBundle().getLocation(),
+                                        config.get( ConfigurationAdmin.SERVICE_BUNDLELOCATION ) } );
+                continue;
+            }
 
-                // check filter
-                if ( filter == null || filter.match( config ) )
-                {
-                    // ensure the service.pid and returned a cached config if available
-                    ConfigurationImpl cfg = getCachedConfiguration( pid );
-                    if ( cfg == null )
-                    {
-                        cfg = new ConfigurationImpl( this, pmList[i], config );
-                    }
-
-                    // FELIX-611: Ignore configuration objects without props
-                    if ( !cfg.isNew() )
-                    {
-                        log( LogService.LOG_DEBUG, "Adding configuration {0}", new Object[]
-                            { config.get( Constants.SERVICE_PID ) } );
-                        configList.add( cfg );
-                    }
-                    else
-                    {
-                        log( LogService.LOG_DEBUG, "Omitting configuration {0}: Is new", new Object[]
-                            { config.get( Constants.SERVICE_PID ) } );
-                    }
-                } else {
-                    log( LogService.LOG_DEBUG, "Omitting configuration {0}: Does not match filter", new Object[]
-                        { config.get( Constants.SERVICE_PID ) } );
+            // ensure the service.pid and returned a cached config if available
+            ConfigurationImpl cfg = null;
+            if ( this.persistenceManager instanceof CachingPersistenceManagerProxy)
+            {
+                cfg = getCachedConfiguration( pid );
+                if (cfg == null) {
+                    cfg = new ConfigurationImpl(this, this.persistenceManager, config);
+                    // add the to configurations cache if it wasn't in the cache
+                    cacheConfiguration(cfg);
                 }
+            } else {
+                cfg = new ConfigurationImpl( this, this.persistenceManager, config );
+            }
+
+            // FELIX-611: Ignore configuration objects without props
+            if ( !cfg.isNew() )
+            {
+                Log.logger.log( LogService.LOG_DEBUG, "Adding configuration {0}", new Object[]
+                        { pid } );
+                configList.add( cfg );
+            }
+            else
+            {
+                Log.logger.log( LogService.LOG_DEBUG, "Omitting configuration {0}: Is new", new Object[]
+                        { pid } );
             }
         }
 
-        return ( ConfigurationImpl[] ) configList.toArray( new ConfigurationImpl[configList
-            .size()] );
+        if ( configList.size() == 0 )
+        {
+            return null;
+        }
+        return configList.toArray( new ConfigurationImpl[configList
+                                                         .size()] );
     }
 
 
@@ -595,10 +563,14 @@ public class ConfigurationManager implements BundleActivator, BundleListener
     {
         // remove the configuration from the cache
         removeConfiguration( config );
-        fireConfigurationEvent( ConfigurationEvent.CM_DELETED, config.getPid(), config.getFactoryPid() );
-        updateThread.schedule( new DeleteConfiguration( config ) );
-        log( LogService.LOG_DEBUG, "DeleteConfiguration({0}) scheduled", new Object[]
-            { config.getPid() } );
+        fireConfigurationEvent( ConfigurationEvent.CM_DELETED, config.getPidString(), config.getFactoryPidString() );
+        final Runnable task = new DeleteConfiguration( config );
+        if ( this.coordinator == null || !CoordinatorUtil.addToCoordination(this.coordinator, updateThread, task) )
+        {
+            updateThread.schedule( task );
+        }
+        Log.logger.log( LogService.LOG_DEBUG, "DeleteConfiguration({0}) scheduled", new Object[]
+                { config.getPid() } );
     }
 
 
@@ -606,49 +578,78 @@ public class ConfigurationManager implements BundleActivator, BundleListener
     {
         if ( fireEvent )
         {
-            fireConfigurationEvent( ConfigurationEvent.CM_UPDATED, config.getPid(), config.getFactoryPid() );
+            fireConfigurationEvent( ConfigurationEvent.CM_UPDATED, config.getPidString(), config.getFactoryPidString() );
         }
-        updateThread.schedule( new UpdateConfiguration( config ) );
-        log( LogService.LOG_DEBUG, "UpdateConfiguration({0}) scheduled", new Object[]
-            { config.getPid() } );
+        final Runnable task = new UpdateConfiguration( config );
+        if ( this.coordinator == null || !CoordinatorUtil.addToCoordination(this.coordinator, updateThread, task) )
+        {
+            updateThread.schedule( task );
+        }
+        Log.logger.log( LogService.LOG_DEBUG, "UpdateConfiguration({0}) scheduled", new Object[]
+                { config.getPid() } );
     }
 
 
     void locationChanged( ConfigurationImpl config, String oldLocation )
     {
-        fireConfigurationEvent( ConfigurationEvent.CM_LOCATION_CHANGED, config.getPid(), config.getFactoryPid() );
+        fireConfigurationEvent( ConfigurationEvent.CM_LOCATION_CHANGED, config.getPidString(), config.getFactoryPidString() );
         if ( oldLocation != null && !config.isNew() )
         {
-            updateThread.schedule( new LocationChanged( config, oldLocation ) );
-            log( LogService.LOG_DEBUG, "LocationChanged({0}, {1}=>{2}) scheduled", new Object[]
-                { config.getPid(), oldLocation, config.getBundleLocation() } );
+            final Runnable task = new LocationChanged( config, oldLocation );
+            if ( this.coordinator == null || !CoordinatorUtil.addToCoordination(this.coordinator, updateThread, task) )
+            {
+                updateThread.schedule( task );
+            }
+            Log.logger.log( LogService.LOG_DEBUG, "LocationChanged({0}, {1}=>{2}) scheduled", new Object[]
+                    { config.getPid(), oldLocation, config.getBundleLocation() } );
         }
         else
         {
-            log( LogService.LOG_DEBUG,
-                "LocationChanged not scheduled for {0} (old location is null or configuration is new)", new Object[]
-                    { config.getPid() } );
+            Log.logger.log( LogService.LOG_DEBUG,
+                    "LocationChanged not scheduled for {0} (old location is null or configuration is new)", new Object[]
+                            { config.getPid() } );
         }
     }
 
 
     void fireConfigurationEvent( int type, String pid, String factoryPid )
     {
-        FireConfigurationEvent event = new FireConfigurationEvent( type, pid, factoryPid );
-        if ( event.hasConfigurationEventListeners() )
+        // prevent event senders
+        FireConfigurationEvent asyncSender = new FireConfigurationEvent( this.configurationListenerTracker, type, pid,
+                factoryPid );
+        FireConfigurationEvent syncSender = new FireConfigurationEvent( this.syncConfigurationListenerTracker, type,
+                pid, factoryPid );
+
+        // send synchronous events
+        if ( syncSender.hasConfigurationEventListeners() )
         {
-            eventThread.schedule( event );
+            syncSender.run();
         }
         else
         {
-            log( LogService.LOG_DEBUG, "No ConfigurationListeners to send {0} event to.", new Object[]
-                { event.getTypeName() } );
+            Log.logger.log( LogService.LOG_DEBUG, "No SynchronousConfigurationListeners to send {0} event to.", new Object[]
+                    { syncSender.getTypeName() } );
+        }
+
+        // schedule asynchronous events
+        if ( asyncSender.hasConfigurationEventListeners() )
+        {
+            if ( this.coordinator == null || !CoordinatorUtil.addToCoordination(this.coordinator, eventThread, asyncSender) )
+            {
+                eventThread.schedule( asyncSender );
+            }
+        }
+        else
+        {
+            Log.logger.log( LogService.LOG_DEBUG, "No ConfigurationListeners to send {0} event to.", new Object[]
+                    { asyncSender.getTypeName() } );
         }
     }
 
 
     // ---------- BundleListener -----------------------------------------------
 
+    @Override
     public void bundleChanged( BundleEvent event )
     {
         if ( event.getType() == BundleEvent.UNINSTALLED && handleBundleEvents )
@@ -672,53 +673,41 @@ public class ConfigurationManager implements BundleActivator, BundleListener
 
     // ---------- internal -----------------------------------------------------
 
-    private PersistenceManager[] getPersistenceManagers()
+    private ServiceReference<ConfigurationAdmin> getServiceReference()
     {
-        int currentPmtCount = persistenceManagerTracker.getTrackingCount();
-        if ( persistenceManagers == null || currentPmtCount > pmtCount )
-        {
-
-            List pmList = new ArrayList();
-            PersistenceManager[] pm;
-
-            ServiceReference[] refs = persistenceManagerTracker.getServiceReferences();
-            if ( refs == null || refs.length == 0 )
-            {
-                pm = new PersistenceManager[0];
-            }
-            else
-            {
-                // sort the references according to the cmRanking property
-                if ( refs.length > 1 )
-                {
-                    Arrays.sort( refs, RankingComparator.SRV_RANKING );
-                }
-
-                // create the service array from the sorted set of referenecs
-                for ( int i = 0; i < refs.length; i++ )
-                {
-                    Object service = persistenceManagerTracker.getService( refs[i] );
-                    if ( service != null )
-                    {
-                        pmList.add( new CachingPersistenceManagerProxy( ( PersistenceManager ) service ) );
-                    }
-                }
-
-                pm = ( PersistenceManager[] ) pmList.toArray( new PersistenceManager[pmList.size()] );
-            }
-
-            pmtCount = pm.length;
-            persistenceManagers = pm;
+        ServiceRegistration<ConfigurationAdmin> reg = configurationAdminRegistration;
+        if (reg != null) {
+            return reg.getReference();
         }
 
-        return persistenceManagers;
-    }
+        // probably called for firing an event during service registration
+        // since we didn't get the service registration yet we use the
+        // service registry to get our service reference
+        BundleContext context = bundleContext;
+        if ( context != null )
+        {
+            try
+            {
+                Collection<ServiceReference<ConfigurationAdmin>> refs = context.getServiceReferences( ConfigurationAdmin.class, null );
+                if ( refs != null && !refs.isEmpty())
+                {
+                    for(final ServiceReference<ConfigurationAdmin> ref : refs)
+                    {
+                        if ( ref.getBundle().getBundleId() == context.getBundle().getBundleId() )
+                        {
+                            return ref;
+                        }
+                    }
+                }
+            }
+            catch ( InvalidSyntaxException e )
+            {
+                // unexpected since there is no filter
+            }
+        }
 
-
-    private ServiceReference getServiceReference()
-    {
-        ServiceRegistration reg = configurationAdminRegistration;
-        return ( reg != null ) ? reg.getReference() : null;
+        // service references
+        return null;
     }
 
 
@@ -727,50 +716,46 @@ public class ConfigurationManager implements BundleActivator, BundleListener
      * service property as a String[], which may be <code>null</code> if
      * the ManagedService does not have such a property.
      */
-    private void configure( String[] pids, ServiceReference sr, ManagedService service )
-    {
-        if ( pids != null )
-        {
-            if ( isLogEnabled( LogService.LOG_DEBUG ) )
-            {
-                log( LogService.LOG_DEBUG, "configure(ManagedService {0})", new Object[]
-                    { toString( sr ) } );
-            }
-
-            for ( int i = 0; i < pids.length; i++ )
-            {
-                ManagedServiceUpdate update = new ManagedServiceUpdate( pids[i], sr, service );
-                updateThread.schedule( update );
-                log( LogService.LOG_DEBUG, "ManagedServiceUpdate({0}) scheduled", new Object[]
-                    { pids[i] } );
-            }
-        }
-    }
-
-
     /**
      * Configures the ManagedServiceFactory and returns the service.pid
      * service property as a String[], which may be <code>null</code> if
      * the ManagedServiceFactory does not have such a property.
      */
-    private void configure( String[] pids, ServiceReference sr, ManagedServiceFactory service )
+    /**
+     * Schedules the configuration of the referenced service with
+     * configuration for the given PID.
+     *
+     * @param pid The list of service PID of the configurations to be
+     *      provided to the referenced service.
+     * @param sr The <code>ServiceReference</code> to the service
+     *      to be configured.
+     * @param factory <code>true</code> If the service is considered to
+     *      be a <code>ManagedServiceFactory</code>. Otherwise the service
+     *      is considered to be a <code>ManagedService</code>.
+     */
+    public void configure( String[] pid, ServiceReference sr, final boolean factory, final ConfigurationMap<?> configs )
     {
-        if ( pids != null )
+        if ( Log.logger.isLogEnabled( LogService.LOG_DEBUG ) )
         {
-            if ( isLogEnabled( LogService.LOG_DEBUG ) )
-            {
-                log( LogService.LOG_DEBUG, "configure(ManagedServiceFactory {0})", new Object[]
-                    { toString( sr ) } );
-            }
-
-            for ( int i = 0; i < pids.length; i++ )
-            {
-                ManagedServiceFactoryUpdate update = new ManagedServiceFactoryUpdate( pids[i], sr, service );
-                updateThread.schedule( update );
-                log( LogService.LOG_DEBUG, "ManagedServiceFactoryUpdate({0}) scheduled", new Object[]
-                    { pids[i] } );
-            }
+            Log.logger.log( LogService.LOG_DEBUG, "configure(ManagedService {0})", new Object[]
+                    { sr } );
         }
+
+        Runnable r;
+        if ( factory )
+        {
+            r = new ManagedServiceFactoryUpdate( pid, sr, configs );
+        }
+        else
+        {
+            r = new ManagedServiceUpdate( pid, sr, configs );
+        }
+        if ( this.coordinator == null || !CoordinatorUtil.addToCoordination(this.coordinator, updateThread, r) )
+        {
+            updateThread.schedule( r );
+        }
+        Log.logger.log( LogService.LOG_DEBUG, "[{0}] scheduled", new Object[]
+                { r } );
     }
 
 
@@ -798,71 +783,78 @@ public class ConfigurationManager implements BundleActivator, BundleListener
      */
     ConfigurationImpl createConfiguration( String pid, String factoryPid, String bundleLocation ) throws IOException
     {
-        log( LogService.LOG_DEBUG, "createConfiguration({0}, {1}, {2})", new Object[]
-            { pid, factoryPid, bundleLocation } );
-        return new ConfigurationImpl( this, getPersistenceManagers()[0], pid, factoryPid, bundleLocation );
-    }
-
-
-    Factory getFactory( String factoryPid ) throws IOException
-    {
-        Factory factory = getCachedFactory( factoryPid );
-        if ( factory != null )
-        {
-            return factory;
-        }
-
-        PersistenceManager[] pmList = getPersistenceManagers();
-        for ( int i = 0; i < pmList.length; i++ )
-        {
-            if ( Factory.exists( pmList[i], factoryPid ) )
-            {
-                factory = Factory.load( this, pmList[i], factoryPid );
-                cacheFactory( factory );
-                return factory;
-            }
-        }
-
-        // if getting here, there is no configuration yet, optionally create new
-        return createFactory( factoryPid );
-    }
-
-
-    Factory createFactory( String factoryPid )
-    {
-        Factory factory = new Factory( this, getPersistenceManagers()[0], factoryPid );
-        cacheFactory( factory );
-        return factory;
+        Log.logger.log( LogService.LOG_DEBUG, "createConfiguration({0}, {1}, {2})", new Object[]
+                { pid, factoryPid, bundleLocation } );
+        return new ConfigurationImpl( this, this.persistenceManager, pid, factoryPid, bundleLocation );
     }
 
 
     /**
-     * Calls the registered configuration plugins on the given configuration
-     * properties from the given configuration object unless the configuration
-     * has just been created and not been updated yet.
+     * Returns a list of {@link Factory} instances according to the
+     * Configuration Admin 1.5 specification for targeted PIDs (Section
+     * 104.3.2)
      *
-     * @param props The configuraiton properties run through the registered
-     *          ConfigurationPlugin services. This may be <code>null</code>
-     *          in which case this method just immediately returns.
-     * @param targetPid The identification of the configuration update used to
-     *          select the plugins according to their cm.target service
-     *          property
-     * @param sr The service reference of the managed service (factory) which
-     *          is to be updated with configuration
-     * @param cfg The configuration object whose properties have to be passed
-     *          through the plugins
+     * @param rawFactoryPid The raw factory PID without any targettng.
+     * @param target The <code>ServiceReference</code> of the service to
+     *      be supplied with targeted configuration.
+     * @return A list of {@link Factory} instances as listed above. This
+     *      list will always at least include an instance for the
+     *      <code>rawFactoryPid</code>. Other instances are only included
+     *      if existing.
+     * @throws IOException If an error occurs reading any of the
+     *      {@link Factory} instances from persistence
      */
-    private void callPlugins( final Dictionary props, final String targetPid, final ServiceReference sr,
-        final ConfigurationImpl cfg )
+    List<String> getTargetedFactories( final String rawFactoryPid, final ServiceReference target ) throws IOException
     {
-        // guard against NPE for new configuration never updated
-        if (props == null) {
-            return;
+        List<String> factories = new LinkedList<>();
+
+        final Bundle serviceBundle = target.getBundle();
+        if ( serviceBundle != null )
+        {
+            final StringBuilder targetedPid = new StringBuilder( rawFactoryPid );
+            factories.add( targetedPid.toString() );
+
+            targetedPid.append( '|' ).append( serviceBundle.getSymbolicName() );
+            factories.add( 0, targetedPid.toString() );
+
+            targetedPid.append( '|' ).append( serviceBundle.getVersion().toString() );
+            factories.add( 0, targetedPid.toString() );
+
+            targetedPid.append( '|' ).append( serviceBundle.getLocation() );
+            factories.add( 0, targetedPid.toString() );
         }
 
-        ServiceReference[] plugins = null;
+        return factories;
+    }
+
+    /**
+     * Calls the registered configuration plugins on the given configuration
+     * properties from the given configuration object.
+     * <p>
+     * The plugins to be called are selected as <code>ConfigurationPlugin</code>
+     * services registered with a <code>cm.target</code> property set to
+     * <code>*</code> or the factory PID of the configuration (for factory
+     * configurations) or the PID of the configuration (for non-factory
+     * configurations).
+     *
+     * @param props The configuration properties run through the registered
+     *          ConfigurationPlugin services. This must not be
+     *          <code>null</code>.
+     * @param sr The service reference of the managed service (factory) which
+     *          is to be updated with configuration
+     * @param configPid The PID of the configuration object whose properties
+     *          are to be augmented
+     * @param factoryPid the factory PID of the configuration object whose
+     *          properties are to be augmented. This is non-<code>null</code>
+     *          only for a factory configuration.
+     */
+    public void callPlugins( final Dictionary<String, Object> props, final ServiceReference<?> sr, final String configPid,
+            final String factoryPid )
+    {
+        ServiceReference<?>[] plugins = null;
         try
         {
+            final String targetPid = (factoryPid == null) ? configPid : factoryPid;
             String filter = "(|(!(cm.target=*))(cm.target=" + targetPid + "))";
             plugins = bundleContext.getServiceReferences( ConfigurationPlugin.class.getName(), filter );
         }
@@ -886,25 +878,34 @@ public class ConfigurationManager implements BundleActivator, BundleListener
         // call the plugins in order
         for ( int i = 0; i < plugins.length; i++ )
         {
-            ServiceReference pluginRef = plugins[i];
+            ServiceReference<?> pluginRef = plugins[i];
             ConfigurationPlugin plugin = ( ConfigurationPlugin ) bundleContext.getService( pluginRef );
             if ( plugin != null )
             {
+                // if cmRanking is below 0 or above 1000, ignore modifications from the plugin
+                boolean ignore = false;
+                Object rankObj = pluginRef.getProperty( ConfigurationPlugin.CM_RANKING );
+                if ( rankObj instanceof Integer )
+                {
+                    final int ranking = ( ( Integer ) rankObj ).intValue();
+                    ignore = (ranking < 0 ) || (ranking > 1000);
+                }
+
                 try
                 {
-                    plugin.modifyConfiguration( sr, props );
+                    plugin.modifyConfiguration( sr, ignore ? CaseInsensitiveDictionary.unmodifiable(props) : props );
                 }
                 catch ( Throwable t )
                 {
-                    log( LogService.LOG_ERROR, "Unexpected problem calling configuration plugin {0}", new Object[]
-                        { toString( pluginRef ), t } );
+                    Log.logger.log( LogService.LOG_ERROR, "Unexpected problem calling configuration plugin {0}", new Object[]
+                            { pluginRef , t } );
                 }
                 finally
                 {
                     // ensure ungetting the plugin
                     bundleContext.ungetService( pluginRef );
                 }
-                cfg.setAutoProperties( props, false );
+                ConfigurationImpl.setAutoProperties( props, configPid, factoryPid );
             }
         }
     }
@@ -940,7 +941,7 @@ public class ConfigurationManager implements BundleActivator, BundleListener
         randomBytes[8] &= 0x3f; /* clear variant */
         randomBytes[8] |= 0x80; /* set to IETF variant */
 
-        StringBuffer buf = new StringBuffer( factoryPid.length() + 1 + 36 );
+        StringBuilder buf = new StringBuilder( factoryPid.length() + 1 + 36 );
 
         // prefix the new pid with the factory pid
         buf.append( factoryPid ).append( "." );
@@ -960,172 +961,6 @@ public class ConfigurationManager implements BundleActivator, BundleListener
         }
 
         return buf.toString();
-    }
-
-
-    boolean isLogEnabled( int level )
-    {
-        return level <= logLevel;
-    }
-
-
-    void log( int level, String format, Object[] args )
-    {
-        if ( isLogEnabled( level ) )
-        {
-            Throwable throwable = null;
-            String message = format;
-
-            if ( args != null && args.length > 0 )
-            {
-                if ( args[args.length - 1] instanceof Throwable )
-                {
-                    throwable = ( Throwable ) args[args.length - 1];
-                }
-                message = MessageFormat.format( format, args );
-            }
-
-            log( level, message, throwable );
-        }
-    }
-
-
-    void log( int level, String message, Throwable t )
-    {
-        // log using the LogService if available
-        Object log = logTracker.getService();
-        if ( log != null )
-        {
-            ( ( LogService ) log ).log( getServiceReference(), level, message, t );
-            return;
-        }
-
-        // Otherwise only log if more serious than the configured level
-        if ( isLogEnabled( level ) )
-        {
-            String code;
-            switch ( level )
-            {
-                case LogService.LOG_INFO:
-                    code = "*INFO *";
-                    break;
-
-                case LogService.LOG_WARNING:
-                    code = "*WARN *";
-                    break;
-
-                case LogService.LOG_ERROR:
-                    code = "*ERROR*";
-                    break;
-
-                case LogService.LOG_DEBUG:
-                default:
-                    code = "*DEBUG*";
-            }
-
-            System.err.println( code + " " + message );
-            if ( t != null )
-            {
-                t.printStackTrace( System.err );
-            }
-        }
-    }
-
-
-    /**
-     * Returns the <code>service.pid</code> property of the service reference as
-     * an array of strings or <code>null</code> if the service reference does
-     * not have a service PID property.
-     * <p>
-     * The service.pid property may be a single string, in which case a single
-     * element array is returned. If the property is an array of string, this
-     * array is returned. If the property is a collection it is assumed to be a
-     * collection of strings and the collection is converted to an array to be
-     * returned. Otherwise (also if the property is not set) <code>null</code>
-     * is returned.
-     *
-     * @throws NullPointerException
-     *             if reference is <code>null</code>
-     * @throws ArrayStoreException
-     *             if the service pid is a collection and not all elements are
-     *             strings.
-     */
-    static String[] getServicePid( ServiceReference reference )
-    {
-        Object pidObj = reference.getProperty( Constants.SERVICE_PID );
-        if ( pidObj instanceof String )
-        {
-            return new String[]
-                { ( String ) pidObj };
-        }
-        else if ( pidObj instanceof String[] )
-        {
-            return ( String[] ) pidObj;
-        }
-        else if ( pidObj instanceof Collection )
-        {
-            Collection pidCollection = ( Collection ) pidObj;
-            return ( String[] ) pidCollection.toArray( new String[pidCollection.size()] );
-        }
-
-        return null;
-    }
-
-
-    static String toString( ServiceReference ref )
-    {
-        String[] ocs = ( String[] ) ref.getProperty( "objectClass" );
-        StringBuffer buf = new StringBuffer("[");
-        for ( int i = 0; i < ocs.length; i++ )
-        {
-            buf.append(ocs[i]);
-            if ( i < ocs.length - 1 )
-                buf.append(", ");
-        }
-
-        buf.append( ", id=" ).append( ref.getProperty( Constants.SERVICE_ID ) );
-
-        Bundle provider = ref.getBundle();
-        if ( provider != null )
-        {
-            buf.append( ", bundle=" ).append( provider.getBundleId() );
-            buf.append( '/' ).append( provider.getLocation() );
-        }
-        else
-        {
-            buf.append( ", unregistered" );
-        }
-
-        buf.append( "]" );
-        return buf.toString();
-    }
-
-
-    void handleCallBackError( final Throwable error, final ServiceReference target, final ConfigurationImpl config )
-    {
-        if ( error instanceof ConfigurationException )
-        {
-            final ConfigurationException ce = ( ConfigurationException ) error;
-            if ( ce.getProperty() != null )
-            {
-                log( LogService.LOG_ERROR, "{0}: Updating property {1} of configuration {2} caused a problem: {3}",
-                    new Object[]
-                        { toString( target ), ce.getProperty(), config.getPid(), ce.getReason(), ce } );
-            }
-            else
-            {
-                log( LogService.LOG_ERROR, "{0}: Updating configuration {1} caused a problem: {2}", new Object[]
-                    { toString( target ), config.getPid(), ce.getReason(), ce } );
-            }
-        }
-        else
-        {
-            {
-                log( LogService.LOG_ERROR, "{0}: Unexpected problem updating configuration {1}", new Object[]
-                    { toString( target ), config, error } );
-            }
-
-        }
     }
 
 
@@ -1149,8 +984,8 @@ public class ConfigurationManager implements BundleActivator, BundleListener
     {
         if ( location == null )
         {
-            log( LogService.LOG_DEBUG, "canReceive=true; bundle={0}; configuration=(unbound)", new Object[]
-                { bundle.getLocation() } );
+            Log.logger.log( LogService.LOG_DEBUG, "canReceive=true; bundle={0}; configuration=(unbound)", new Object[]
+                    { bundle.getLocation() } );
             return true;
         }
         else if ( location.startsWith( "?" ) )
@@ -1159,202 +994,30 @@ public class ConfigurationManager implements BundleActivator, BundleListener
             if ( System.getSecurityManager() != null )
             {
                 final boolean hasPermission = bundle.hasPermission( new ConfigurationPermission( location,
-                    ConfigurationPermission.TARGET ) );
-                log( LogService.LOG_DEBUG, "canReceive={0}: bundle={1}; configuration={2} (SecurityManager check)",
-                    new Object[]
-                        { new Boolean( hasPermission ), bundle.getLocation(), location } );
+                        ConfigurationPermission.TARGET ) );
+                Log.logger.log( LogService.LOG_DEBUG, "canReceive={0}: bundle={1}; configuration={2} (SecurityManager check)",
+                        new Object[]
+                                { new Boolean( hasPermission ), bundle.getLocation(), location } );
                 return hasPermission;
             }
 
-            log( LogService.LOG_DEBUG, "canReceive=true; bundle={0}; configuration={1} (no SecurityManager)",
-                new Object[]
-                    { bundle.getLocation(), location } );
+            Log.logger.log( LogService.LOG_DEBUG, "canReceive=true; bundle={0}; configuration={1} (no SecurityManager)",
+                    new Object[]
+                            { bundle.getLocation(), location } );
             return true;
         }
         else
         {
             // single location, must match
             final boolean hasPermission = location.equals( bundle.getLocation() );
-            log( LogService.LOG_DEBUG, "canReceive={0}: bundle={1}; configuration={2}", new Object[]
-                { new Boolean( hasPermission ), bundle.getLocation(), location } );
+            Log.logger.log( LogService.LOG_DEBUG, "canReceive={0}: bundle={1}; configuration={2}", new Object[]
+                    { new Boolean( hasPermission ), bundle.getLocation(), location } );
             return hasPermission;
         }
     }
 
 
     // ---------- inner classes
-
-    private ServiceHelper createServiceHelper( ConfigurationImpl config )
-    {
-        if ( config.getFactoryPid() == null )
-        {
-            return new ManagedServiceHelper( config );
-        }
-        return new ManagedServiceFactoryHelper( config );
-    }
-
-    private abstract class ServiceHelper
-    {
-        protected final ConfigurationImpl config;
-
-        private final Dictionary properties;
-
-        protected ServiceHelper( ConfigurationImpl config )
-        {
-            this.config = config;
-            this.properties = config.getProperties( true );
-        }
-
-        final ServiceReference[] getServices( )
-        {
-            try
-            {
-                ServiceReference[] refs = doGetServices();
-                if ( refs != null && refs.length > 1 )
-                {
-                    Arrays.sort( refs, RankingComparator.SRV_RANKING );
-                }
-                return refs;
-            }
-            catch ( InvalidSyntaxException ise )
-            {
-                log( LogService.LOG_ERROR, "Service selection filter is invalid to update {0}", new Object[]
-                    { config, ise } );
-            }
-            return null;
-        }
-
-
-        protected abstract ServiceReference[] doGetServices() throws InvalidSyntaxException;
-
-
-        abstract void provide( ServiceReference service );
-
-
-        abstract void remove( ServiceReference service );
-
-
-        protected Dictionary getProperties( String targetPid, ServiceReference service )
-        {
-            Dictionary props = new CaseInsensitiveDictionary( this.properties );
-            callPlugins( props, targetPid, service, config );
-            return props;
-        }
-    }
-
-    private class ManagedServiceHelper extends ServiceHelper
-    {
-
-        protected ManagedServiceHelper( ConfigurationImpl config )
-        {
-            super( config );
-        }
-
-
-        public ServiceReference[] doGetServices() throws InvalidSyntaxException
-        {
-            return bundleContext.getServiceReferences( ManagedService.class.getName(), "(" + Constants.SERVICE_PID
-                + "=" + config.getPid() + ")" );
-        }
-
-
-        public void provide( ServiceReference service )
-        {
-            ManagedService srv = ( ManagedService ) bundleContext.getService( service );
-            if ( srv != null )
-            {
-                try
-                {
-                    Dictionary props = getProperties( this.config.getPid(), service );
-                    srv.updated( props );
-                }
-                catch ( Throwable t )
-                {
-                    handleCallBackError( t, service, config );
-                }
-                finally
-                {
-                    bundleContext.ungetService( service );
-                }
-            }
-        }
-
-
-        public void remove( ServiceReference service )
-        {
-            ManagedService srv = ( ManagedService ) bundleContext.getService( service );
-            try
-            {
-                srv.updated( null );
-            }
-            catch ( Throwable t )
-            {
-                handleCallBackError( t, service, config );
-            }
-            finally
-            {
-                bundleContext.ungetService( service );
-            }
-        }
-
-    }
-
-    private class ManagedServiceFactoryHelper extends ServiceHelper
-    {
-
-        protected ManagedServiceFactoryHelper( ConfigurationImpl config )
-        {
-            super( config );
-        }
-
-
-        public ServiceReference[] doGetServices() throws InvalidSyntaxException
-        {
-            return bundleContext.getServiceReferences( ManagedServiceFactory.class.getName(), "("
-                + Constants.SERVICE_PID + "=" + config.getFactoryPid() + ")" );
-        }
-
-
-        public void provide( ServiceReference service )
-        {
-            ManagedServiceFactory srv = ( ManagedServiceFactory ) bundleContext.getService( service );
-            if ( srv != null )
-            {
-                try
-                {
-                    Dictionary props = getProperties( this.config.getFactoryPid(), service );
-                    srv.updated( config.getPid(), props );
-                }
-                catch ( Throwable t )
-                {
-                    handleCallBackError( t, service, config );
-                }
-                finally
-                {
-                    bundleContext.ungetService( service );
-                }
-            }
-        }
-
-
-        public void remove( ServiceReference service )
-        {
-            ManagedServiceFactory srv = ( ManagedServiceFactory ) bundleContext.getService( service );
-            try
-            {
-                srv.deleted( config.getPid() );
-            }
-            catch ( Throwable t )
-            {
-                handleCallBackError( t, service, config );
-            }
-            finally
-            {
-                bundleContext.ungetService( service );
-            }
-        }
-
-    }
 
     /**
      * The <code>ManagedServiceUpdate</code> updates a freshly registered
@@ -1364,117 +1027,80 @@ public class ConfigurationManager implements BundleActivator, BundleListener
      */
     private class ManagedServiceUpdate implements Runnable
     {
-        private final String pid;
+        private final String[] pids;
 
-        private final ServiceReference sr;
+        private final ServiceReference<ManagedService> sr;
 
-        private final ManagedService service;
+        private final ConfigurationMap<?> configs;
 
-        private final ConfigurationImpl config;
 
-        private final Dictionary rawProperties;
-
-        private final long revision;
-
-        ManagedServiceUpdate( String pid, ServiceReference sr, ManagedService service )
+        ManagedServiceUpdate( String[] pids, ServiceReference<ManagedService> sr, ConfigurationMap<?> configs )
         {
-            this.pid = pid;
+            this.pids = pids;
             this.sr = sr;
-            this.service = service;
-
-            // get or load configuration for the pid
-            ConfigurationImpl config = null;
-            Dictionary rawProperties = null;
-            long revision = -1;
-            try
-            {
-                config = getConfiguration( pid );
-                if ( config != null )
-                {
-                    synchronized ( config )
-                    {
-                        rawProperties = config.getProperties( true );
-                        revision = config.getRevision();
-                    }
-                }
-            }
-            catch ( IOException ioe )
-            {
-                log( LogService.LOG_ERROR, "Error loading configuration for {0}", new Object[]
-                    { pid, ioe } );
-            }
-
-            this.config = config;
-            this.rawProperties = rawProperties;
-            this.revision = revision;
+            this.configs = configs;
         }
 
 
+        @Override
         public void run()
         {
-            Dictionary properties = rawProperties;
+            for ( String pid : this.pids )
+            {
+                try
+                {
+                    final ConfigurationImpl config = getTargetedConfiguration( pid, this.sr );
+                    provide( pid, config );
+                }
+                catch ( IOException ioe )
+                {
+                    Log.logger.log( LogService.LOG_ERROR, "Error loading configuration for {0}", new Object[]
+                            { pid, ioe } );
+                }
+                catch ( Exception e )
+                {
+                    Log.logger.log( LogService.LOG_ERROR, "Unexpected problem providing configuration {0} to service {1}",
+                            new Object[]
+                                    { pid, this.sr, e } );
+                }
+            }
+        }
 
-            // check configuration and call plugins if existing
+
+        private void provide(final String servicePid, final ConfigurationImpl config)
+        {
+            // check configuration
+            final TargetedPID configPid;
+            final Dictionary<String, Object> properties;
+            final long revision;
             if ( config != null )
             {
-                log( LogService.LOG_DEBUG, "Updating configuration {0} to revision #{1}", new Object[]
-                    { pid, new Long( revision ) } );
-
-                Bundle serviceBundle = sr.getBundle();
-                if ( serviceBundle == null )
+                synchronized ( config )
                 {
-                    log( LogService.LOG_INFO,
-                        "Service for PID {0} seems to already have been unregistered, not updating with configuration",
-                        new Object[]
-                            { pid } );
-                    return;
+                    configPid = config.getPid();
+                    properties = config.getProperties( true );
+                    revision = config.getRevision();
                 }
-
-                if ( canReceive( serviceBundle, config.getBundleLocation() ) )
-                {
-                    // 104.4.2 Dynamic Binding
-                    config.tryBindLocation( serviceBundle.getLocation() );
-
-                    // prepare the configuration for the service (call plugins)
-                    callPlugins( properties, pid, sr, config );
-                }
-                else
-                {
-                    // CM 1.4 / 104.13.2.2 / 104.5.3
-                    // act as if there is no configuration
-                    log(
-                        LogService.LOG_DEBUG,
-                        "Cannot use configuration {0} for {1}: No visibility to configuration bound to {2}; calling with null",
-                        new Object[]
-                            { pid, ConfigurationManager.toString( sr ), config.getBundleLocation() } );
-
-                    // CM 1.4 / 104.5.3 ManagedService.updated must be
-                    // called with null if configuration is no visible
-                    properties = null;
-                }
-
             }
             else
             {
                 // 104.5.3 ManagedService.updated must be called with null
                 // if no configuration is available
+                configPid = new TargetedPID( servicePid );
                 properties = null;
+                revision = -1;
             }
 
-            // update the service with the configuration
-            try
-            {
-                service.updated( properties );
-            }
-            catch ( Throwable t )
-            {
-                handleCallBackError( t, sr, config );
-            }
+            Log.logger.log( LogService.LOG_DEBUG, "Updating service {0} with configuration {1}@{2}", new Object[]
+                    { servicePid, configPid, new Long( revision ) } );
+
+            managedServiceTracker.provideConfiguration( sr, configPid, null, properties, revision, this.configs );
         }
 
+        @Override
         public String toString()
         {
-            return "ManagedService Update: pid=" + pid;
+            return "ManagedService Update: pid=" + Arrays.asList( pids );
         }
     }
 
@@ -1487,34 +1113,33 @@ public class ConfigurationManager implements BundleActivator, BundleListener
      */
     private class ManagedServiceFactoryUpdate implements Runnable
     {
-        private final String factoryPid;
+        private final String[] factoryPids;
 
-        private final ServiceReference sr;
+        private final ServiceReference<ManagedServiceFactory> sr;
 
-        private final ManagedServiceFactory service;
+        private final ConfigurationMap<?> configs;
 
-        private final Map configs;
 
-        private final Map revisions;
-
-        ManagedServiceFactoryUpdate( String factoryPid, ServiceReference sr, ManagedServiceFactory service )
+        ManagedServiceFactoryUpdate( String[] factoryPids, ServiceReference<ManagedServiceFactory> sr, final ConfigurationMap<?> configs )
         {
-            this.factoryPid = factoryPid;
+            this.factoryPids = factoryPids;
             this.sr = sr;
-            this.service = service;
+            this.configs = configs;
+        }
 
-            Factory factory = null;
-            Map configs = null;
-            Map revisions = null;
-            try
+
+        @Override
+        public void run()
+        {
+            for ( String factoryPid : this.factoryPids )
             {
-                factory = getFactory( factoryPid );
-                if (factory != null) {
-                    configs = new HashMap();
-                    revisions = new HashMap();
-                    for ( Iterator pi = factory.getPIDs().iterator(); pi.hasNext(); )
+
+                try
+                {
+                    final List<String> targetedFactoryPids = getTargetedFactories( factoryPid, sr );
+                    final Set<String> pids = persistenceManager.getFactoryConfigurationPids(targetedFactoryPids);
+                    for ( final String pid : pids )
                     {
-                        final String pid = ( String ) pi.next();
                         ConfigurationImpl cfg;
                         try
                         {
@@ -1522,19 +1147,17 @@ public class ConfigurationManager implements BundleActivator, BundleListener
                         }
                         catch ( IOException ioe )
                         {
-                            log( LogService.LOG_ERROR, "Error loading configuration for {0}", new Object[]
-                                { pid, ioe } );
+                            Log.logger.log( LogService.LOG_ERROR, "Error loading configuration for {0}", new Object[]
+                                    { pid, ioe } );
                             continue;
                         }
 
                         // sanity check on the configuration
                         if ( cfg == null )
                         {
-                            log( LogService.LOG_ERROR, "Configuration {0} referred to by factory {1} does not exist",
-                                new Object[]
-                                    { pid, factoryPid } );
-                            factory.removePID( pid );
-                            factory.storeSilently();
+                            Log.logger.log( LogService.LOG_ERROR,
+                                    "Configuration {0} referred to by factory {1} does not exist", new Object[]
+                                            { pid, factoryPid } );
                             continue;
                         }
                         else if ( cfg.isNew() )
@@ -1545,116 +1168,167 @@ public class ConfigurationManager implements BundleActivator, BundleListener
                             // As of FELIX-612 (not storing new factory configurations)
                             // this should not happen. We keep this for added stability
                             // but raise the logging level to error.
-                            log( LogService.LOG_ERROR, "Ignoring new configuration pid={0}", new Object[]
-                                { pid } );
-                            continue;
-                        }
-                        else if ( !factoryPid.equals( cfg.getFactoryPid() ) )
-                        {
-                            log( LogService.LOG_ERROR,
-                                "Configuration {0} referred to by factory {1} seems to belong to factory {2}",
-                                new Object[]
-                                    { pid, factoryPid, cfg.getFactoryPid() } );
-                            factory.removePID( pid );
-                            factory.storeSilently();
+                            Log.logger.log( LogService.LOG_ERROR, "Ignoring new configuration pid={0}", new Object[]
+                                    { pid } );
                             continue;
                         }
 
-                        // get the configuration properties for later
-                        synchronized ( cfg )
-                        {
-                            configs.put( cfg, cfg.getProperties( true ) );
-                            revisions.put( cfg, new Long( cfg.getRevision() ) );
-                        }
+                        provide( factoryPid, cfg );
                     }
                 }
+                catch ( IOException ioe )
+                {
+                    Log.logger.log( LogService.LOG_ERROR, "Cannot get factory mapping for factory PID {0}", new Object[]
+                            { factoryPid, ioe } );
+                }
             }
-            catch ( IOException ioe )
-            {
-                log( LogService.LOG_ERROR, "Cannot get factory mapping for factory PID {0}", new Object[]
-                    { factoryPid, ioe } );
-            }
-
-            this.configs = configs;
-            this.revisions = revisions;
         }
 
 
-        public void run()
-        {
-            Bundle serviceBundle = sr.getBundle();
+        private void provide(final String factoryPid, final ConfigurationImpl config) {
+
+            final Dictionary<String, Object> rawProperties;
+            final long revision;
+            synchronized ( config )
+            {
+                rawProperties = config.getProperties( true );
+                revision = config.getRevision();
+            }
+
+            Log.logger.log( LogService.LOG_DEBUG, "Updating service {0} with configuration {1}/{2}@{3}", new Object[]
+                    { factoryPid, config.getFactoryPid(), config.getPid(), new Long( revision ) } );
+
+            // CM 1.4 / 104.13.2.1
+            final Bundle serviceBundle = this.sr.getBundle();
             if ( serviceBundle == null )
             {
-                log(
-                    LogService.LOG_INFO,
-                    "ManagedServiceFactory for factory PID {0} seems to already have been unregistered, not updating with factory",
-                    new Object[]
-                        { factoryPid } );
+                Log.logger.log(
+                        LogService.LOG_INFO,
+                        "ManagedServiceFactory for factory PID {0} seems to already have been unregistered, not updating with factory",
+                        new Object[]
+                                { factoryPid } );
                 return;
             }
 
-            if ( configs == null || configs.isEmpty() )
+            if ( !canReceive( serviceBundle, config.getBundleLocation() ) )
             {
-                log( LogService.LOG_DEBUG, "No configuration with factory PID {0}; not updating ManagedServiceFactory",
-                    new Object[]
-                        { factoryPid } );
+                Log.logger.log( LogService.LOG_ERROR,
+                        "Cannot use configuration {0} for {1}: No visibility to configuration bound to {2}",
+                        new Object[]
+                                { config.getPid(), sr , config.getBundleLocation() } );
+
+                // no service, really, bail out
+                return;
             }
-            else
+
+            // 104.4.2 Dynamic Binding
+            config.tryBindLocation( serviceBundle.getLocation() );
+
+            // update the service with the configuration (if non-null)
+            if ( rawProperties != null )
             {
-                for ( Iterator ci = configs.entrySet().iterator(); ci.hasNext(); )
-                {
-                    final Map.Entry entry = ( Map.Entry ) ci.next();
-                    final ConfigurationImpl cfg = ( ConfigurationImpl ) entry.getKey();
-                    final Dictionary properties = ( Dictionary ) entry.getValue();
-                    final long revision = ( ( Long ) revisions.get( cfg ) ).longValue();
-
-                    log( LogService.LOG_DEBUG, "Updating configuration {0} to revision #{1}", new Object[]
-                        { cfg.getPid(), new Long( revision ) } );
-
-                    // CM 1.4 / 104.13.2.1
-                    if ( !canReceive( serviceBundle, cfg.getBundleLocation() ) )
-                    {
-                        log( LogService.LOG_ERROR,
-                            "Cannot use configuration {0} for {1}: No visibility to configuration bound to {2}",
-                            new Object[]
-                                { cfg.getPid(), ConfigurationManager.toString( sr ), cfg.getBundleLocation() } );
-                        continue;
-                    }
-
-                    // 104.4.2 Dynamic Binding
-                    cfg.tryBindLocation( serviceBundle.getLocation() );
-
-                    // prepare the configuration for the service (call plugins)
-                    // call the plugins with cm.target set to the service's factory PID
-                    // (clarification in Section 104.9.1 of Compendium 4.2)
-                    callPlugins( properties, factoryPid, sr, cfg );
-
-                    // update the service with the configuration (if non-null)
-                    if ( properties != null )
-                    {
-                        log( LogService.LOG_DEBUG, "{0}: Updating configuration pid={1}", new Object[]
-                            { ConfigurationManager.toString( sr ), cfg.getPid() } );
-
-                        try
-                        {
-                            service.updated( cfg.getPid(), properties );
-                        }
-                        catch ( Throwable t )
-                        {
-                            handleCallBackError( t, sr, cfg );
-                        }
-                    }
-                }
+                Log.logger.log( LogService.LOG_DEBUG, "{0}: Updating configuration pid={1}", new Object[]
+                        { sr, config.getPid() } );
+                managedServiceFactoryTracker.provideConfiguration( sr, config.getPid(), config.getFactoryPid(),
+                        rawProperties, revision, this.configs );
             }
         }
 
 
+        @Override
         public String toString()
         {
-            return "ManagedServiceFactory Update: factoryPid=" + factoryPid;
+            return "ManagedServiceFactory Update: factoryPid=" + Arrays.asList( this.factoryPids );
         }
     }
 
+    private abstract class ConfigurationProvider<T> implements Runnable
+    {
+
+        protected final ConfigurationImpl config;
+        protected final long revision;
+        protected final Dictionary<String, ?> properties;
+        private BaseTracker<T> helper;
+
+
+        protected ConfigurationProvider( final ConfigurationImpl config )
+        {
+            synchronized ( config )
+            {
+                this.config = config;
+                this.revision = config.getRevision();
+                this.properties = config.getProperties( true );
+            }
+        }
+
+
+        protected TargetedPID getTargetedServicePid()
+        {
+            final TargetedPID factoryPid = this.config.getFactoryPid();
+            if ( factoryPid != null )
+            {
+                return factoryPid;
+            }
+            return this.config.getPid();
+        }
+
+
+        protected BaseTracker<T> getHelper()
+        {
+            if ( this.helper == null )
+            {
+                this.helper = ( BaseTracker<T> ) ( ( this.config.getFactoryPid() == null ) ? ConfigurationManager.this.managedServiceTracker
+                        : ConfigurationManager.this.managedServiceFactoryTracker );
+            }
+            return this.helper;
+        }
+
+
+        protected boolean provideReplacement( ServiceReference<T> sr )
+        {
+            if ( this.config.getFactoryPid() == null )
+            {
+                try
+                {
+                    final String configPidString = this.getHelper().getServicePid( sr, this.config.getPid() );
+                    if (configPidString == null) {
+                        return false; // The managed service is not registered anymore in the OSGi service registry.
+                    }
+                    final ConfigurationImpl rc = getTargetedConfiguration( configPidString, sr );
+                    if ( rc != null )
+                    {
+                        final TargetedPID configPid;
+                        final Dictionary<String, Object> properties;
+                        final long revision;
+                        synchronized ( rc )
+                        {
+                            configPid = rc.getPid();
+                            properties = rc.getProperties( true );
+                            revision = rc.getRevision();
+                        }
+
+                        this.getHelper().provideConfiguration( sr, configPid, null, properties, -revision, null );
+
+                        return true;
+                    }
+                }
+                catch ( IOException ioe )
+                {
+                    Log.logger.log( LogService.LOG_ERROR, "Error loading configuration for {0}", new Object[]
+                            { this.config.getPid(), ioe } );
+                }
+                catch ( Exception e )
+                {
+                    Log.logger.log( LogService.LOG_ERROR, "Unexpected problem providing configuration {0} to service {1}",
+                            new Object[]
+                                    { this.config.getPid(), sr, e } );
+                }
+            }
+
+            // factory or no replacement available
+            return false;
+        }
+    }
 
     /**
      * The <code>UpdateConfiguration</code> is used to update
@@ -1662,75 +1336,75 @@ public class ConfigurationManager implements BundleActivator, BundleListener
      * they are subscribed to. This may cause the configuration to be
      * supplied to multiple services.
      */
-    private class UpdateConfiguration implements Runnable
+    private class UpdateConfiguration extends ConfigurationProvider
     {
-
-        private final ConfigurationImpl config;
-        private final ServiceHelper helper;
-        private final long revision;
-
 
         UpdateConfiguration( final ConfigurationImpl config )
         {
-            this.config = config;
-            synchronized ( config )
-            {
-                this.helper = createServiceHelper( config );
-                this.revision = config.getRevision();
-            }
+            super( config );
         }
 
 
+        @Override
         public void run()
         {
-            log( LogService.LOG_DEBUG, "Updating configuration {0} to revision #{1}", new Object[]
-                { config.getPid(), new Long( revision ) } );
+            Log.logger.log( LogService.LOG_DEBUG, "Updating configuration {0} to revision #{1}", new Object[]
+                    { config.getPid(), new Long( revision ) } );
 
-            final ServiceReference[] srList = helper.getServices();
-            if ( srList != null )
+            final List<ServiceReference<?>> srList = this.getHelper().getServices( getTargetedServicePid() );
+            if ( !srList.isEmpty() )
             {
                 // optionally bind dynamically to the first service
-                config.tryBindLocation( srList[0].getBundle().getLocation() );
+                Bundle bundle = srList.get(0).getBundle();
+                if (bundle == null) {
+                    Log.logger.log( LogService.LOG_DEBUG,
+                            "Service {0} seems to be unregistered concurrently (not providing configuration)",
+                            new Object[]
+                                    { srList.get(0) } );
+                    return;
+                }
+                config.tryBindLocation( bundle.getLocation() );
 
                 final String configBundleLocation = config.getBundleLocation();
 
                 // provide configuration to all services from the
                 // correct bundle
-                for ( int i = 0; i < srList.length; i++ )
+                for (ServiceReference<?> ref : srList)
                 {
-                    final ServiceReference ref = srList[i];
                     final Bundle refBundle = ref.getBundle();
                     if ( refBundle == null )
                     {
-                        log( LogService.LOG_DEBUG,
-                            "Service {0} seems to be unregistered concurrently (not providing configuration)",
-                            new Object[]
-                                { ConfigurationManager.toString( ref ) } );
+                        Log.logger.log( LogService.LOG_DEBUG,
+                                "Service {0} seems to be unregistered concurrently (not providing configuration)",
+                                new Object[]
+                                        { ref } );
                     }
                     else if ( canReceive( refBundle, configBundleLocation ) )
                     {
-                        helper.provide( ref );
+                        this.getHelper().provideConfiguration( ref, this.config.getPid(), this.config.getFactoryPid(),
+                                this.properties, this.revision, null );
                     }
                     else
                     {
                         // CM 1.4 / 104.13.2.2
-                        log( LogService.LOG_ERROR,
-                            "Cannot use configuration {0} for {1}: No visibility to configuration bound to {2}",
-                            new Object[]
-                                { config.getPid(), ConfigurationManager.toString( ref ), configBundleLocation } );
+                        Log.logger.log( LogService.LOG_ERROR,
+                                "Cannot use configuration {0} for {1}: No visibility to configuration bound to {2}",
+                                new Object[]
+                                        { config.getPid(), ref, configBundleLocation } );
                     }
 
                 }
             }
-            else if ( isLogEnabled( LogService.LOG_DEBUG ) )
+            else if ( Log.logger.isLogEnabled( LogService.LOG_DEBUG ) )
             {
-                log( LogService.LOG_DEBUG, "No ManagedService[Factory] registered for updates to configuration {0}",
-                    new Object[]
-                        { config.getPid() } );
+                Log.logger.log( LogService.LOG_DEBUG, "No ManagedService[Factory] registered for updates to configuration {0}",
+                        new Object[]
+                                { config.getPid() } );
             }
         }
 
 
+        @Override
         public String toString()
         {
             return "Update: pid=" + config.getPid();
@@ -1743,10 +1417,9 @@ public class ConfigurationManager implements BundleActivator, BundleListener
      * <code>ManagedService[Factory]</code> services of a configuration
      * being deleted.
      */
-    private class DeleteConfiguration implements Runnable
+    private class DeleteConfiguration extends ConfigurationProvider
     {
 
-        private final ConfigurationImpl config;
         private final String configLocation;
 
 
@@ -1757,98 +1430,81 @@ public class ConfigurationManager implements BundleActivator, BundleListener
              * after calling this method. The pid and factoryPid fields are
              * final and cannot be reset.
              */
-            this.config = config;
+            super(config);
             this.configLocation = config.getBundleLocation();
         }
 
 
+        @Override
         public void run()
         {
-            final String pid = config.getPid();
-            final String factoryPid = config.getFactoryPid();
-            final ServiceHelper helper = createServiceHelper( config );
-
-            ServiceReference[] srList = helper.getServices( );
-            if ( srList != null )
+            List<ServiceReference<?>> srList = this.getHelper().getServices( getTargetedServicePid() );
+            if ( !srList.isEmpty() )
             {
-                for ( int i = 0; i < srList.length; i++ )
+                for (ServiceReference<?> sr : srList)
                 {
-                    final ServiceReference sr = srList[i];
                     final Bundle srBundle = sr.getBundle();
                     if ( srBundle == null )
                     {
-                        log( LogService.LOG_DEBUG,
-                            "Service {0} seems to be unregistered concurrently (not removing configuration)",
-                            new Object[]
-                                { ConfigurationManager.toString( sr ) } );
+                        Log.logger.log( LogService.LOG_DEBUG,
+                                "Service {0} seems to be unregistered concurrently (not removing configuration)",
+                                new Object[]
+                                        { sr } );
                     }
                     else if ( canReceive( srBundle, configLocation ) )
                     {
-                        helper.remove( sr );
+                        // revoke configuration unless a replacement
+                        // configuration can be provided
+                        if ( !this.provideReplacement( sr ) )
+                        {
+                            this.getHelper().removeConfiguration( sr, this.config.getPid(), this.config.getFactoryPid() );
+                        }
                     }
                     else
                     {
                         // CM 1.4 / 104.13.2.2
-                        log( LogService.LOG_ERROR,
-                            "Cannot remove configuration {0} for {1}: No visibility to configuration bound to {2}",
-                            new Object[]
-                                { config.getPid(), ConfigurationManager.toString( sr ), configLocation } );
+                        Log.logger.log( LogService.LOG_ERROR,
+                                "Cannot remove configuration {0} for {1}: No visibility to configuration bound to {2}",
+                                new Object[]
+                                        { config.getPid(), sr, configLocation } );
                     }
-                }
-            }
-
-            if ( factoryPid != null )
-            {
-                // remove the pid from the factory
-                try
-                {
-                    Factory factory = getFactory( factoryPid );
-                    factory.removePID( pid );
-                    factory.store();
-                }
-                catch ( IOException ioe )
-                {
-                    log( LogService.LOG_ERROR, "Failed removing {0} from the factory {1}", new Object[]
-                        { pid, factoryPid, ioe } );
                 }
             }
         }
 
+        @Override
         public String toString()
         {
             return "Delete: pid=" + config.getPid();
         }
     }
 
-    private class LocationChanged implements Runnable
+    private class LocationChanged extends ConfigurationProvider
     {
-        private final ConfigurationImpl config;
         private final String oldLocation;
 
 
         LocationChanged( ConfigurationImpl config, String oldLocation )
         {
-            this.config = config;
+            super( config );
             this.oldLocation = oldLocation;
         }
 
 
+        @Override
         public void run()
         {
-            ServiceHelper helper = createServiceHelper( this.config );
-            ServiceReference[] srList = helper.getServices( );
-            if ( srList != null )
+            List<ServiceReference<?>> srList = this.getHelper().getServices( getTargetedServicePid() );
+            if ( !srList.isEmpty() )
             {
-                for ( int i = 0; i < srList.length; i++ )
+                for (final ServiceReference<?> sr : srList)
                 {
-                    final ServiceReference sr = srList[i];
-
                     final Bundle srBundle = sr.getBundle();
                     if ( srBundle == null )
                     {
-                        log( LogService.LOG_DEBUG,
-                            "Service {0} seems to be unregistered concurrently (not processing)", new Object[]
-                                { ConfigurationManager.toString( sr ) } );
+                        Log.logger.log( LogService.LOG_DEBUG,
+                                "Service {0} seems to be unregistered concurrently (not processing)", new Object[]
+                                        { sr } );
                         continue;
                     }
 
@@ -1864,34 +1520,40 @@ public class ConfigurationManager implements BundleActivator, BundleListener
 
                     if ( wasVisible && !isVisible )
                     {
-                        // call deleted method
-                        helper.remove( sr );
-                        log( LogService.LOG_DEBUG, "Configuration {0} revoked from {1} (no more visibility)",
-                            new Object[]
-                                { config.getPid(), ConfigurationManager.toString( sr ) } );
+                        // revoke configuration unless a replacement
+                        // configuration can be provided
+                        if ( !this.provideReplacement( sr ) )
+                        {
+                            this.getHelper().removeConfiguration( sr, this.config.getPid(), this.config.getFactoryPid() );
+                            Log.logger.log( LogService.LOG_DEBUG, "Configuration {0} revoked from {1} (no more visibility)",
+                                    new Object[]
+                                            { config.getPid(), sr } );
+                        }
                     }
                     else if ( !wasVisible && isVisible )
                     {
                         // call updated method
-                        helper.provide( sr );
-                        log( LogService.LOG_DEBUG, "Configuration {0} provided to {1} (new visibility)", new Object[]
-                            { config.getPid(), ConfigurationManager.toString( sr ) } );
+                        this.getHelper().provideConfiguration( sr, this.config.getPid(), this.config.getFactoryPid(),
+                                this.properties, this.revision, null );
+                        Log.logger.log( LogService.LOG_DEBUG, "Configuration {0} provided to {1} (new visibility)", new Object[]
+                                { config.getPid(), sr } );
                     }
                     else
                     {
                         // same visibility as before
-                        log( LogService.LOG_DEBUG, "Unmodified visibility to configuration {0} for {1}", new Object[]
-                            { config.getPid(), ConfigurationManager.toString( sr ) } );
+                        Log.logger.log( LogService.LOG_DEBUG, "Unmodified visibility to configuration {0} for {1}", new Object[]
+                                { config.getPid(), sr } );
                     }
                 }
             }
         }
 
 
+        @Override
         public String toString()
         {
             return "Location Changed (pid=" + config.getPid() + "): " + oldLocation + " ==> "
-                + config.getBundleLocation();
+                    + config.getBundleLocation();
         }
     }
 
@@ -1909,14 +1571,15 @@ public class ConfigurationManager implements BundleActivator, BundleListener
 
         private final Bundle[] listenerProvider;
 
+        private ConfigurationEvent event;
 
-        private FireConfigurationEvent( final int type, final String pid, final String factoryPid)
+        private FireConfigurationEvent( final ServiceTracker listenerTracker, final int type, final String pid, final String factoryPid)
         {
             this.type = type;
             this.pid = pid;
             this.factoryPid = factoryPid;
 
-            final ServiceReference[] srs = configurationListenerTracker.getServiceReferences();
+            final ServiceReference[] srs = listenerTracker.getServiceReferences();
             if ( srs == null || srs.length == 0 )
             {
                 this.listenerReferences = null;
@@ -1930,7 +1593,7 @@ public class ConfigurationManager implements BundleActivator, BundleListener
                 this.listenerProvider = new Bundle[srs.length];
                 for ( int i = 0; i < srs.length; i++ )
                 {
-                    this.listeners[i] = ( ConfigurationListener ) configurationListenerTracker.getService( srs[i] );
+                    this.listeners[i] = ( ConfigurationListener ) listenerTracker.getService( srs[i] );
                     this.listenerProvider[i] = srs[i].getBundle();
                 }
             }
@@ -1947,212 +1610,73 @@ public class ConfigurationManager implements BundleActivator, BundleListener
         {
             switch ( type )
             {
-                case ConfigurationEvent.CM_DELETED:
-                    return "CM_DELETED";
-                case ConfigurationEvent.CM_UPDATED:
-                    return "CM_UPDATED";
-                case ConfigurationEvent.CM_LOCATION_CHANGED:
-                    return "CM_LOCATION_CHANGED";
-                default:
-                    return "<UNKNOWN(" + type + ")>";
+            case ConfigurationEvent.CM_DELETED:
+                return "CM_DELETED";
+            case ConfigurationEvent.CM_UPDATED:
+                return "CM_UPDATED";
+            case ConfigurationEvent.CM_LOCATION_CHANGED:
+                return "CM_LOCATION_CHANGED";
+            default:
+                return "<UNKNOWN(" + type + ")>";
             }
         }
 
 
+        @Override
         public void run()
         {
-            final String typeName = getTypeName();
-            final ConfigurationEvent event = new ConfigurationEvent( getServiceReference(), type, factoryPid, pid );
-
             for ( int i = 0; i < listeners.length; i++ )
             {
-                if ( listenerProvider[i].getState() == Bundle.ACTIVE )
-                {
-                    log( LogService.LOG_DEBUG, "Sending {0} event for {1} to {2}", new Object[]
-                        { typeName, pid, ConfigurationManager.toString( listenerReferences[i] ) } );
-
-                    try
-                    {
-                        listeners[i].configurationEvent( event );
-                    }
-                    catch ( Throwable t )
-                    {
-                        log( LogService.LOG_ERROR, "Unexpected problem delivering configuration event to {0}",
-                            new Object[]
-                                { ConfigurationManager.toString( listenerReferences[i] ), t } );
-                    }
-                }
+                sendEvent( i );
             }
         }
 
+
+        @Override
         public String toString()
         {
             return "Fire ConfigurationEvent: pid=" + pid;
         }
-    }
-
-    private static class ManagedServiceTracker extends ServiceTracker
-    {
-
-        private final ConfigurationManager cm;
 
 
-        ManagedServiceTracker( ConfigurationManager cm )
+        private ConfigurationEvent getConfigurationEvent()
         {
-            super( cm.bundleContext, ManagedService.class.getName(), null );
-            this.cm = cm;
-            open();
+            if ( event == null )
+            {
+                this.event = new ConfigurationEvent( getServiceReference(), type, factoryPid, pid );
+            }
+            return event;
         }
 
 
-        public Object addingService( ServiceReference reference )
+        private void sendEvent( final int serviceIndex )
         {
-            Object service = super.addingService( reference );
-
-            // configure the managed service
-            final String[] pids;
-            if ( service instanceof ManagedService )
+            if ( (listenerProvider[serviceIndex].getState() & (Bundle.ACTIVE | Bundle.STARTING)) > 0
+                    && this.listeners[serviceIndex] != null )
             {
-                pids = getServicePid( reference );
-                cm.configure( pids, reference, ( ManagedService ) service );
+                Log.logger.log( LogService.LOG_DEBUG, "Sending {0} event for {1} to {2}", new Object[]
+                        { getTypeName(), pid, listenerReferences[serviceIndex]} );
+
+                try
+                {
+                    listeners[serviceIndex].configurationEvent( getConfigurationEvent() );
+                }
+                catch ( Throwable t )
+                {
+                    Log.logger.log( LogService.LOG_ERROR, "Unexpected problem delivering configuration event to {0}", new Object[]
+                            { listenerReferences[serviceIndex], t } );
+                }
+                finally
+                {
+                    this.listeners[serviceIndex] = null;
+                }
             }
-            else
-            {
-                cm.log( LogService.LOG_WARNING, "Service {0} is not a ManagedService", new Object[]
-                    { service } );
-                pids = null;
-            }
-
-            return new ManagedServiceHolder( service, pids );
-        }
-
-
-        public void modifiedService( ServiceReference reference, Object service )
-        {
-            ManagedServiceHolder holder = ( ManagedServiceHolder ) service;
-            String[] pids = getServicePid( reference );
-
-            if ( holder.isDifferentPids( pids ) )
-            {
-                cm.configure( pids, reference, ( ManagedService ) holder.getManagedService() );
-                holder.setConfiguredPids( pids );
-            }
-        }
-
-
-        public void removedService( ServiceReference reference, Object service )
-        {
-            final Object serviceObject = ( ( ManagedServiceHolder ) service ).getManagedService();
-            super.removedService( reference, serviceObject );
         }
     }
 
-    private static class ManagedServiceFactoryTracker extends ServiceTracker
+    public void setCoordinator(final Object service)
     {
-        private final ConfigurationManager cm;
-
-
-        ManagedServiceFactoryTracker( ConfigurationManager cm )
-        {
-            super( cm.bundleContext, ManagedServiceFactory.class.getName(), null );
-            this.cm = cm;
-            open();
-        }
-
-
-        public Object addingService( ServiceReference reference )
-        {
-            Object serviceObject = super.addingService( reference );
-
-            // configure the managed service factory
-            final String[] pids;
-            if ( serviceObject instanceof ManagedServiceFactory )
-            {
-                pids = getServicePid( reference );
-                cm.configure( pids, reference, ( ManagedServiceFactory ) serviceObject );
-            }
-            else
-            {
-                cm.log( LogService.LOG_WARNING, "Service {0} is not a ManagedServiceFactory", new Object[]
-                    { serviceObject } );
-                pids = null;
-            }
-
-            return new ManagedServiceHolder( serviceObject, pids );
-        }
-
-
-        public void modifiedService( ServiceReference reference, Object service )
-        {
-            ManagedServiceHolder holder = ( ManagedServiceHolder ) service;
-            String[] pids = getServicePid( reference );
-
-            if ( holder.isDifferentPids( pids ) )
-            {
-                cm.configure( pids, reference, ( ManagedServiceFactory ) holder.getManagedService() );
-                holder.setConfiguredPids( pids );
-            }
-
-            super.modifiedService( reference, service );
-        }
-
-
-        public void removedService( ServiceReference reference, Object service )
-        {
-            final Object serviceObject = ( ( ManagedServiceHolder ) service ).getManagedService();
-            super.removedService( reference, serviceObject );
-        }
-    }
-
-    private static class ManagedServiceHolder
-    {
-        private final Object managedService;
-        private String[] configuredPids;
-
-
-        ManagedServiceHolder( final Object managedService, final String[] configuredPids )
-        {
-            this.managedService = managedService;
-            this.configuredPids = configuredPids;
-        }
-
-
-        public Object getManagedService()
-        {
-            return managedService;
-        }
-
-
-        public void setConfiguredPids( String[] configuredPids )
-        {
-            this.configuredPids = configuredPids;
-        }
-
-
-        boolean isDifferentPids( final String[] pids )
-        {
-            if ( this.configuredPids == null && pids == null )
-            {
-                return false;
-            }
-            else if ( this.configuredPids == null )
-            {
-                return true;
-            }
-            else if ( pids == null )
-            {
-                return true;
-            }
-            else if ( this.configuredPids.length != pids.length )
-            {
-                return true;
-            }
-            else
-            {
-                HashSet thisPids = new HashSet( Arrays.asList( this.configuredPids ) );
-                HashSet otherPids = new HashSet( Arrays.asList( pids ) );
-                return !thisPids.equals( otherPids );
-            }
-        }
+        this.coordinator = service;
     }
 }
+

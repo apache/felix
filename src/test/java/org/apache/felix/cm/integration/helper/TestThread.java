@@ -40,15 +40,15 @@ abstract class TestThread extends Thread
     {
         synchronized ( flag )
         {
-            if ( !notified )
+            while ( !notified )
             {
                 try
                 {
-                    flag.wait();
+                    flag.wait( 500L );
                 }
                 catch ( InterruptedException ie )
                 {
-                    // TODO: log
+                    // ignore
                 }
             }
         }

@@ -21,8 +21,8 @@ package org.apache.felix.cm.integration.helper;
 
 import java.util.Dictionary;
 
-import org.ops4j.pax.swissbox.tinybundles.dp.Constants;
 import org.osgi.framework.BundleContext;
+import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceRegistration;
 import org.osgi.service.cm.ManagedService;
 
@@ -51,7 +51,7 @@ public class ManagedServiceTestActivator extends BaseTestActivator
 
     public void changePid( final String newPid )
     {
-        this.registrationProps.put( Constants.SERVICE_PID, newPid );
+        this.registrationProps.put( Constants.SERVICE_PID, toServicePidObject( newPid ) );
         this.registration.setProperties( this.registrationProps );
     }
 }
