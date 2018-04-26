@@ -29,13 +29,13 @@
     <name>Apache Felix Http Whiteboard</name>
     <description>This is an implementation of the proprietary Apache Felix whiteboard support</description>
     <artifactId>org.apache.felix.http.whiteboard</artifactId>
-    <version>3.0.1-SNAPSHOT</version>
+    <version>4.0.0</version>
     <packaging>bundle</packaging>
 
     <scm>
-        <connection>scm:svn:http://svn.apache.org/repos/asf/felix/trunk/http/whiteboard</connection>
-        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/felix/trunk/http/whiteboard</developerConnection>
-        <url>http://svn.apache.org/viewvc/felix/trunk/http/whiteboard/</url>
+        <connection>scm:svn:http://svn.apache.org/repos/asf/felix/releases/org.apache.felix.http.whiteboard-4.0.0</connection>
+        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/felix/releases/org.apache.felix.http.whiteboard-4.0.0</developerConnection>
+        <url>http://svn.apache.org/viewvc/felix/releases/org.apache.felix.http.whiteboard-4.0.0</url>
     </scm>
 
     <build>
