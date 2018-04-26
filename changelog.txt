@@ -2,13 +2,16 @@ Changes in 1.9.0
 ----------------
 ** Improvement
     * [FELIX-5288] - Implement RFC 227 (OSGi R7 Update)
+    * [FELIX-5351] - Implement coordinations (OSGi R7)
     * [FELIX-5289] - Alias PID Handling of Factory Configurations (OSGi R7)
     * [FELIX-5290] - Locking Configuration Records (OSGi R7)
     * [FELIX-5291] - Improve Configuration Updates (OSGi R7)
     * [FELIX-5292] - Capabilities (OSGi R7)
     * [FELIX-5293] - Improved ConfigurationPlugin Support (OSGi R7)
     * [FELIX-5468] - Refactor persistence handling
+    * [FELIX-5693] - Improve persistence manager handling
     * [FELIX-5695] - Use Java 7 as base version
+    * [FELIX-5778] - Refactor factory configuration handling
 ** Bug
     * [FELIX-5745] - Empty collections should be allowed as property value
 
