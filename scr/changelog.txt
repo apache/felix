@@ -14,6 +14,8 @@ Changes in 2.1.0
     * [FELIX-5695] Use Java 7 as base version
     * [FELIX-5696] Separate metatype provider from managed service
 ** Bug
+    * [FELIX-5769] SCR should not bind prototype_required reference to bundle scope service
+    * [FELIX-5775] Service properties not updated for lazy service when configuration changes
     * [FELIX-5507] ConfigurationAdmin might not be visible to SCR implementation
     * [FELIX-5543] Component property types must implement java.lang.annotation.Annotation methods properly
 
