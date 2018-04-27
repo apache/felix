@@ -113,8 +113,8 @@
         </dependency>
         <dependency>
             <groupId>org.osgi</groupId>
-            <artifactId>osgi.promise</artifactId>
-            <version>6.0.0</version>
+            <artifactId>org.osgi.util.promise</artifactId>
+            <version>1.0.0</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
