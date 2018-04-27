@@ -1,3 +1,9 @@
+Changes in 2.1.0
+----------------
+** Improvement
+    * [FELIX-5841] : Update webconsole plugin to DS 1.4 (R7)
+
+
 Changes from 2.0.6 to 2.0.8
 ---------------------------
 ** Improvement
