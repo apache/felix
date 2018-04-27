@@ -354,6 +354,12 @@ class WebConsolePlugin extends SimpleWebConsolePlugin
 
         keyVal(jw, "Configuration Policy", desc.configurationPolicy);
 
+        if ( component != null && component.state == ComponentConfigurationDTO.FAILED_ACTIVATION && component.failure != null ) {
+            keyVal(jw, "failure", component.failure);
+        }
+        if ( component != null && component.service != null ) {
+            keyVal(jw, "serviceId", component.service.id);
+        }
         listServices(jw, desc);
         if (desc.configurationPid.length == 1) {
             keyVal(jw, "PID", desc.configurationPid[0]);
@@ -493,7 +499,27 @@ class WebConsolePlugin extends SimpleWebConsolePlugin
             jw.endArray();
             jw.endObject();
         }
+        if ( component == null && desc.factoryProperties != null ) {
+            jw.object();
+            jw.key("key");
+            jw.value("FactoryProperties");
+            jw.key("value");
+            jw.array();
+            TreeSet<String> keys = new TreeSet<String>(desc.factoryProperties.keySet());
+            for (Iterator<String> ki = keys.iterator(); ki.hasNext();)
+            {
+                final String key = ki.next();
+                final StringBuilder b = new StringBuilder();
+                b.append(key).append(" = ");
 
+                Object prop = props.get(key);
+                prop = WebConsoleUtil.toString(prop);
+                b.append(prop);
+                jw.value(b.toString());
+            }
+            jw.endArray();
+            jw.endObject();
+        }
     }
 
     private void keyVal(JSONWriter jw, String key, Object value) throws IOException

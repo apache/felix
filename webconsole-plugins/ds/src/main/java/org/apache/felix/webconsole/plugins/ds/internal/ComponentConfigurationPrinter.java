@@ -197,12 +197,19 @@ class ComponentConfigurationPrinter implements InventoryPrinter
         pw.println("  Bundle=" + cfg.description.bundle.symbolicName + " ("
                 + cfg.description.bundle.id + ")");
         pw.println("  State=" + toStateString(cfg.state));
+        if ( cfg.state == ComponentConfigurationDTO.FAILED_ACTIVATION && cfg.failure != null ) {
+            pw.println("  Failure=" + cfg.failure);
+        }
         pw.println("  DefaultState="
                 + (cfg.description.defaultEnabled ? "enabled" : "disabled"));
         pw.println("  Activation=" + (cfg.description.immediate ? "immediate" : "delayed"));
         pw.println("  ConfigurationPolicy=" + cfg.description.configurationPolicy);
 
         listServices(pw, cfg.description);
+        if ( cfg.service != null ) {
+            pw.println("  ServiceId=" + String.valueOf(cfg.service.id));
+        }
+
         listReferences(pw, cfg.description, cfg);
         listProperties(pw, cfg.description, cfg);
 
@@ -347,6 +354,21 @@ class ComponentConfigurationPrinter implements InventoryPrinter
                 pw.println("    " + key + "=" + value);
             }
         }
+        if ( cfg == null && description.factoryProperties != null ) {
+            pw.println("  FactoryProperties=");
+            TreeSet<String> keys = new TreeSet<String>(description.factoryProperties.keySet());
+            for (Iterator<String> ki = keys.iterator(); ki.hasNext();)
+            {
+                String key = ki.next();
+                Object value = props.get(key);
+                value = WebConsoleUtil.toString(value);
+                if (value.getClass().isArray())
+                {
+                    value = Arrays.asList((Object[]) value);
+                }
+                pw.println("    " + key + "=" + value);
+            }
+        }
     }
 
     static final String toStateString(int state)
@@ -361,6 +383,8 @@ class ComponentConfigurationPrinter implements InventoryPrinter
             return "unsatisfied (configuration)";
         case ComponentConfigurationDTO.UNSATISFIED_REFERENCE:
             return "unsatisfied (reference)";
+        case ComponentConfigurationDTO.FAILED_ACTIVATION:
+            return "failed activation";
         default:
             return String.valueOf(state);
         }
