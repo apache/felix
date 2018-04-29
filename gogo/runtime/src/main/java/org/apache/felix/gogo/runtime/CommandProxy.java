@@ -22,8 +22,13 @@ import java.util.List;
 
 import org.apache.felix.service.command.CommandSession;
 import org.apache.felix.service.command.Function;
+<<<<<<< HEAD
+import org.osgi.framework.ServiceReference;
+import org.osgi.framework.BundleContext;
+=======
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceReference;
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 
 public class CommandProxy implements Function
 {
@@ -75,6 +80,8 @@ public class CommandProxy implements Function
         {
             if (tgt instanceof Function)
             {
+<<<<<<< HEAD
+=======
                 for (int i = 0; i < arguments.size(); i++)
                 {
                     Object obj = arguments.get(i);
@@ -84,6 +91,7 @@ public class CommandProxy implements Function
                     }
                 }
 
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
                 return ((Function) tgt).execute(session, arguments);
             }
             else

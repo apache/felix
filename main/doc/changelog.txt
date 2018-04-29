@@ -1,3 +1,5 @@
+<<<<<<< HEAD
+=======
 Changes from 5.6.8 to 5.6.10
 ----------------------------
 
@@ -107,6 +109,7 @@ Changes from 4.2.1 to 4.4.0
 ** Improvement
     * Update to latest framework version 4.4.0
 
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 Changes form 4.2.0 to 4.2.1
 ---------------------------
 

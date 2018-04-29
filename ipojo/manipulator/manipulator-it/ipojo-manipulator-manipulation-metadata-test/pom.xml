@@ -23,7 +23,11 @@
     <parent>
         <groupId>org.apache.felix</groupId>
         <artifactId>org.apache.felix.ipojo.manipulator.manipulator-it</artifactId>
+<<<<<<< HEAD
+        <version>1.11.1-SNAPSHOT</version>
+=======
         <version>1.12.2-SNAPSHOT</version>
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     </parent>
 
     <modelVersion>4.0.0</modelVersion>
@@ -31,5 +35,9 @@
     <artifactId>ipojo-manipulator-manipulation-metadata-test</artifactId>
 
     <name>Apache Felix iPOJO Manipulator ~ Metadata IT</name>
+<<<<<<< HEAD
+    
+=======
 
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 </project>

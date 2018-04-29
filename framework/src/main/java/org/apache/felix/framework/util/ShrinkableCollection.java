@@ -33,31 +33,46 @@ public class ShrinkableCollection<T> implements Collection<T>
         m_delegate = delegate;
     }
 
+<<<<<<< HEAD
+=======
     @Override
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     public boolean add(T o)
     {
         throw new UnsupportedOperationException();
     }
 
+<<<<<<< HEAD
+=======
     @Override
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     public boolean addAll(Collection<? extends T> c)
     {
         throw new UnsupportedOperationException();
     }
 
+<<<<<<< HEAD
+=======
     @Override
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     public void clear()
     {
         m_delegate.clear();
     }
 
+<<<<<<< HEAD
+=======
     @Override
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     public boolean contains(Object o)
     {
         return m_delegate.contains(o);
     }
 
+<<<<<<< HEAD
+=======
     @Override
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     public boolean containsAll(Collection<?> c)
     {
         return m_delegate.containsAll(c);
@@ -75,49 +90,74 @@ public class ShrinkableCollection<T> implements Collection<T>
         return m_delegate.hashCode();
     }
 
+<<<<<<< HEAD
+=======
     @Override
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     public boolean isEmpty()
     {
         return m_delegate.isEmpty();
     }
 
+<<<<<<< HEAD
+    public Iterator iterator()
+=======
     @Override
     public Iterator<T> iterator()
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     {
         return m_delegate.iterator();
     }
 
+<<<<<<< HEAD
+=======
     @Override
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     public boolean remove(Object o)
     {
         return m_delegate.remove(o);
     }
 
+<<<<<<< HEAD
+=======
     @Override
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     public boolean removeAll(Collection<?> c)
     {
         return m_delegate.removeAll(c);
     }
 
+<<<<<<< HEAD
+=======
     @Override
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     public boolean retainAll(Collection<?> c)
     {
         return m_delegate.retainAll(c);
     }
 
+<<<<<<< HEAD
+=======
     @Override
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     public int size()
     {
         return m_delegate.size();
     }
 
+<<<<<<< HEAD
+=======
     @Override
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     public Object[] toArray()
     {
         return m_delegate.toArray();
     }
 
+<<<<<<< HEAD
+=======
     @Override
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     public <A> A[] toArray(A[] a)
     {
         return m_delegate.toArray(a);

@@ -1,5 +1,9 @@
 /*
+<<<<<<< HEAD
+ * Copyright (c) OSGi Alliance (2010, 2012). All Rights Reserved.
+=======
  * Copyright (c) OSGi Alliance (2010, 2013). All Rights Reserved.
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,7 +21,10 @@
 package org.osgi.framework.hooks.bundle;
 
 import java.util.Collection;
+<<<<<<< HEAD
+=======
 import org.osgi.annotation.versioning.ConsumerType;
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.BundleEvent;
 
@@ -29,9 +36,14 @@ import org.osgi.framework.BundleEvent;
  * (install, start, stop, update, and uninstall bundle) operations.
  * 
  * @ThreadSafe
+<<<<<<< HEAD
+ * @version $Id: e1471b36491a02bd8598a30d05c889ee58edc760 $
+ */
+=======
  * @author $Id: 0b986db904e41d5a5bfb5d28fc849ee967decf0d $
  */
 @ConsumerType
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 public interface EventHook {
 
 	/**

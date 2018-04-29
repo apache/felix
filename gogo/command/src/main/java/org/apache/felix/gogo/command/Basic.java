@@ -37,8 +37,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.TreeMap;
+<<<<<<< HEAD
+=======
 
 import org.apache.felix.service.command.CommandSession;
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 import org.apache.felix.service.command.Descriptor;
 import org.apache.felix.service.command.Parameter;
 import org.osgi.framework.Bundle;
@@ -54,7 +57,10 @@ import org.osgi.service.log.LogService;
 import org.osgi.service.packageadmin.PackageAdmin;
 import org.osgi.service.startlevel.StartLevel;
 
+<<<<<<< HEAD
+=======
 @SuppressWarnings("deprecation")
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 public class Basic
 {
     private final BundleContext m_bc;
@@ -68,7 +74,11 @@ public class Basic
     public void bundlelevel(@Descriptor("bundle to query") Bundle bundle)
     {
         // Keep track of service references.
+<<<<<<< HEAD
+        List<ServiceReference> refs = new ArrayList();
+=======
         List<ServiceReference<?>> refs = new ArrayList<>();
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 
         // Get start level service.
         StartLevel sl = Util.getService(m_bc, StartLevel.class, refs);
@@ -98,7 +108,11 @@ public class Basic
         @Descriptor("target identifiers") Bundle[] bundles)
     {
         // Keep track of service references.
+<<<<<<< HEAD
+        List<ServiceReference> refs = new ArrayList();
+=======
         List<ServiceReference<?>> refs = new ArrayList<>();
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 
         // Get start level service.
         StartLevel sl = Util.getService(m_bc, StartLevel.class, refs);
@@ -153,7 +167,11 @@ public class Basic
     public void frameworklevel()
     {
         // Keep track of service references.
+<<<<<<< HEAD
+        List<ServiceReference> refs = new ArrayList();
+=======
         List<ServiceReference<?>> refs = new ArrayList<>();
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 
         // Get start level service.
         StartLevel sl = Util.getService(m_bc, StartLevel.class, refs);
@@ -169,7 +187,11 @@ public class Basic
     public void frameworklevel(@Descriptor("target start level") int level)
     {
         // Keep track of service references.
+<<<<<<< HEAD
+        List<ServiceReference> refs = new ArrayList();
+=======
         List<ServiceReference<?>> refs = new ArrayList<>();
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 
         // Get start level service.
         StartLevel sl = Util.getService(m_bc, StartLevel.class, refs);
@@ -191,6 +213,15 @@ public class Basic
             String title = Util.getBundleName(bundle);
             System.out.println("\n" + title);
             System.out.println(Util.getUnderlineString(title.length()));
+<<<<<<< HEAD
+            Dictionary dict = bundle.getHeaders();
+            Enumeration keys = dict.keys();
+            while (keys.hasMoreElements())
+            {
+                Object k = (String) keys.nextElement();
+                Object v = dict.get(k);
+                System.out.println(k + " = " + Util.getValueString(v));
+=======
             Dictionary<String, String> dict = bundle.getHeaders();
             Enumeration<String> keys = dict.keys();
             while (keys.hasMoreElements())
@@ -198,6 +229,7 @@ public class Basic
                 String k = keys.nextElement();
                 String v = dict.get(k);
                 System.out.println(k + " = " + v);
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
             }
         }
     }
@@ -258,6 +290,17 @@ public class Basic
                 System.out.println("   scope: " + name.substring(0, name.indexOf(':')));
 
                 // Get flags and options.
+<<<<<<< HEAD
+                Class[] paramTypes = m.getParameterTypes();
+                Map<String, Parameter> flags = new TreeMap();
+                Map<String, String> flagDescs = new TreeMap();
+                Map<String, Parameter> options = new TreeMap();
+                Map<String, String> optionDescs = new TreeMap();
+                List<String> params = new ArrayList();
+                Annotation[][] anns = m.getParameterAnnotations();
+                for (int paramIdx = 0; paramIdx < anns.length; paramIdx++)
+                {
+=======
                 Class<?>[] paramTypes = m.getParameterTypes();
                 Map<String, Parameter> flags = new TreeMap<>();
                 Map<String, String> flagDescs = new TreeMap<>();
@@ -272,6 +315,7 @@ public class Basic
                         /* Do not bother the user with a CommandSession. */
                         continue;
                     }
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
                     Parameter p = findAnnotation(anns[paramIdx], Parameter.class);
                     d = findAnnotation(anns[paramIdx], Descriptor.class);
                     if (p != null)
@@ -366,7 +410,11 @@ public class Basic
 
     private Map<String, List<Method>> getCommands()
     {
+<<<<<<< HEAD
+        ServiceReference[] refs = null;
+=======
         ServiceReference<?>[] refs = null;
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         try
         {
             refs = m_bc.getAllServiceReferences(null, "(osgi.command.scope=*)");
@@ -376,9 +424,15 @@ public class Basic
             // This should never happen.
         }
 
+<<<<<<< HEAD
+        Map<String, List<Method>> commands = new TreeMap();
+
+        for (ServiceReference ref : refs)
+=======
         Map<String, List<Method>> commands = new TreeMap<>();
 
         for (ServiceReference<?> ref : refs)
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         {
             Object svc = m_bc.getService(ref);
             if (svc != null)
@@ -390,7 +444,11 @@ public class Basic
 
                 for (String func : funcs)
                 {
+<<<<<<< HEAD
+                    commands.put(scope + ":" + func, new ArrayList());
+=======
                     commands.put(scope + ":" + func, new ArrayList<Method>());
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
                 }
 
                 if (!commands.isEmpty())
@@ -423,6 +481,15 @@ public class Basic
     }
 
     @Descriptor("install bundle using URLs")
+<<<<<<< HEAD
+    public void install(@Descriptor("target URLs") String[] urls)
+    {
+        StringBuffer sb = new StringBuffer();
+
+        for (String url : urls)
+        {
+            String location = url.trim();
+=======
     public void install(@Descriptor("command session")CommandSession session,
                         @Descriptor("target URLs") String[] urls) throws IOException
     {
@@ -431,6 +498,7 @@ public class Basic
         for (String url : urls)
         {
             String location = Util.resolveUri(session, url.trim());
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
             Bundle bundle = null;
             try
             {
@@ -491,7 +559,11 @@ public class Basic
         @Descriptor("subtring matched against name or symbolic name") String pattern)
     {
         // Keep track of service references.
+<<<<<<< HEAD
+        List<ServiceReference> refs = new ArrayList();
+=======
         List<ServiceReference<?>> refs = new ArrayList<>();
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 
         // Get start level service.
         StartLevel sl = Util.getService(m_bc, StartLevel.class, refs);
@@ -500,7 +572,11 @@ public class Basic
             System.out.println("Start Level service is unavailable.");
         }
 
+<<<<<<< HEAD
+        List<Bundle> found = new ArrayList();
+=======
         List<Bundle> found = new ArrayList<>();
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 
         if (pattern == null)
         {
@@ -509,10 +585,21 @@ public class Basic
         else
         {
             Bundle[] bundles = m_bc.getBundles();
+<<<<<<< HEAD
+
+            for (int i = 0; i < bundles.length; i++)
+            {
+                Bundle bundle = bundles[i];
+                String name = (String) bundle.getHeaders().get(Constants.BUNDLE_NAME);
+                if (matchBundleName(bundle.getSymbolicName(), pattern)
+                    || matchBundleName(name, pattern))
+                {
+=======
             for (Bundle bundle : bundles) {
                 String name = bundle.getHeaders().get(Constants.BUNDLE_NAME);
                 if (matchBundleName(bundle.getSymbolicName(), pattern)
                         || matchBundleName(name, pattern)) {
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
                     found.add(bundle);
                 }
             }
@@ -520,7 +607,11 @@ public class Basic
 
         if (found.size() > 0)
         {
+<<<<<<< HEAD
+            printBundleList((Bundle[]) found.toArray(new Bundle[found.size()]), sl,
+=======
             printBundleList(found.toArray(new Bundle[found.size()]), sl,
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
                 showLoc, showSymbolic, showUpdate);
         }
         else
@@ -548,7 +639,11 @@ public class Basic
         @Descriptor("minimum log level [ debug | info | warn | error ]") String logLevel)
     {
         // Keep track of service references.
+<<<<<<< HEAD
+        List<ServiceReference> refs = new ArrayList();
+=======
         List<ServiceReference<?>> refs = new ArrayList<>();
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 
         // Get start level service.
         LogReaderService lrs = Util.getService(m_bc, LogReaderService.class, refs);
@@ -558,15 +653,23 @@ public class Basic
         }
         else
         {
+<<<<<<< HEAD
+            Enumeration entries = lrs.getLog();
+=======
             @SuppressWarnings("unchecked")
             Enumeration<LogEntry> entries = lrs.getLog();
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 
             int minLevel = logLevelAsInt(logLevel);
 
             int index = 0;
             while (entries.hasMoreElements() && (maxEntries < 0 || index < maxEntries))
             {
+<<<<<<< HEAD
+                LogEntry entry = (LogEntry) entries.nextElement();
+=======
                 LogEntry entry = entries.nextElement();
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
                 if (entry.getLevel() <= minLevel)
                 {
                     display(entry);
@@ -582,7 +685,11 @@ public class Basic
     {
         SimpleDateFormat sdf = new SimpleDateFormat("yyyy.MM.dd HH:mm:ss");
 
+<<<<<<< HEAD
+        StringBuffer buffer = new StringBuffer();
+=======
         StringBuilder buffer = new StringBuilder();
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         buffer.append(sdf.format(new Date(entry.getTime()))).append(" ");
         buffer.append(logLevelAsString(entry.getLevel())).append(" - ");
         buffer.append("Bundle: ").append(entry.getBundle().getSymbolicName());
@@ -646,7 +753,11 @@ public class Basic
         }
 
         // Keep track of service references.
+<<<<<<< HEAD
+        List<ServiceReference> refs = new ArrayList();
+=======
         List<ServiceReference<?>> refs = new ArrayList<>();
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 
         // Get package admin service.
         PackageAdmin pa = Util.getService(m_bc, PackageAdmin.class, refs);
@@ -655,7 +766,11 @@ public class Basic
             System.out.println("Package Admin service is unavailable.");
         }
 
+<<<<<<< HEAD
+        pa.refreshPackages((bundles == null) ? null : bundles);
+=======
         pa.refreshPackages(bundles);
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 
         Util.ungetServices(m_bc, refs);
     }
@@ -670,7 +785,11 @@ public class Basic
         }
 
         // Keep track of service references.
+<<<<<<< HEAD
+        List<ServiceReference> refs = new ArrayList();
+=======
         List<ServiceReference<?>> refs = new ArrayList<>();
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 
         // Get package admin service.
         PackageAdmin pa = Util.getService(m_bc, PackageAdmin.class, refs);
@@ -873,6 +992,13 @@ public class Basic
     }
 
     @Descriptor("update bundle from URL")
+<<<<<<< HEAD
+    public void update(@Descriptor("target bundle") Bundle bundle,
+        @Descriptor("URL from where to retrieve bundle") String location)
+    {
+        if (location != null)
+        {
+=======
     public void update(
             @Descriptor("command session") CommandSession session,
             @Descriptor("target bundle") Bundle bundle,
@@ -880,6 +1006,7 @@ public class Basic
         if (location != null)
         {
             location = Util.resolveUri(session, location.trim());
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
             try
             {
                 // Get the bundle.
@@ -933,7 +1060,11 @@ public class Basic
         }
         else
         {
+<<<<<<< HEAD
+            Class clazz = null;
+=======
             Class<?> clazz = null;
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
             try
             {
                 clazz = bundle.loadClass(className);
@@ -995,7 +1126,11 @@ public class Basic
         for (Bundle bundle : bundles)
         {
             // Get the bundle name or location.
+<<<<<<< HEAD
+            String name = (String) bundle.getHeaders().get(Constants.BUNDLE_NAME);
+=======
             String name = bundle.getHeaders().get(Constants.BUNDLE_NAME);
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
             // If there is no name, then default to symbolic name.
             name = (name == null) ? bundle.getSymbolicName() : name;
             // If there is no symbolic name, resort to location.
@@ -1014,7 +1149,11 @@ public class Basic
             }
             else if (showUpdate)
             {
+<<<<<<< HEAD
+                name = (String) bundle.getHeaders().get(Constants.BUNDLE_UPDATELOCATION);
+=======
                 name = bundle.getHeaders().get(Constants.BUNDLE_UPDATELOCATION);
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
                 name = (name == null) ? bundle.getLocation() : name;
             }
 
@@ -1028,12 +1167,20 @@ public class Basic
 
             if (level < 0)
             {
+<<<<<<< HEAD
+                System.out.println(String.format("%5d|%-11s|%s", bundle.getBundleId(),
+=======
                 System.out.println(String.format("%5d|%-11s|%s|%s", bundle.getBundleId(),
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
                     getStateString(bundle), name, bundle.getVersion()));
             }
             else
             {
+<<<<<<< HEAD
+                System.out.println(String.format("%5d|%-11s|%5d|%s",
+=======
                 System.out.println(String.format("%5d|%-11s|%5d|%s|%s",
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
                     bundle.getBundleId(), getStateString(bundle), level, name,
                     bundle.getVersion()));
             }
@@ -1068,4 +1215,8 @@ public class Basic
             return "Unknown    ";
         }
     }
+<<<<<<< HEAD
 }
+=======
+}
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368

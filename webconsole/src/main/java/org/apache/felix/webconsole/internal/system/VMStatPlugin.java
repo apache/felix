@@ -20,7 +20,10 @@ package org.apache.felix.webconsole.internal.system;
 
 
 import java.io.IOException;
+<<<<<<< HEAD
+=======
 import java.io.StringWriter;
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 import java.text.DateFormat;
 import java.text.MessageFormat;
 import java.util.Date;
@@ -29,11 +32,19 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+<<<<<<< HEAD
+=======
 import org.apache.felix.utils.json.JSONWriter;
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 import org.apache.felix.webconsole.DefaultVariableResolver;
 import org.apache.felix.webconsole.SimpleWebConsolePlugin;
 import org.apache.felix.webconsole.WebConsoleUtil;
 import org.apache.felix.webconsole.internal.OsgiManagerPlugin;
+<<<<<<< HEAD
+import org.json.JSONException;
+import org.json.JSONObject;
+=======
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleException;
 import org.osgi.service.startlevel.StartLevel;
@@ -86,7 +97,11 @@ public class VMStatPlugin extends SimpleWebConsolePlugin implements OsgiManagerP
      * @see javax.servlet.http.HttpServlet#doPost(javax.servlet.http.HttpServletRequest, javax.servlet.http.HttpServletResponse)
      */
     protected void doPost( HttpServletRequest request, HttpServletResponse response ) throws ServletException,
+<<<<<<< HEAD
+        IOException
+=======
     IOException
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     {
         final String action = request.getParameter( "action"); //$NON-NLS-1$
 
@@ -202,6 +217,37 @@ public class VMStatPlugin extends SimpleWebConsolePlugin implements OsgiManagerP
         final String startTime = format.format( new Date( startDate ) );
         final String upTime = formatPeriod( System.currentTimeMillis() - startDate );
 
+<<<<<<< HEAD
+        JSONObject json = new JSONObject();
+        try
+        {
+            json.put( "systemStartLevel", getStartLevel().getStartLevel() );
+            json.put( "bundleStartLevel", getStartLevel().getInitialBundleStartLevel() );
+            json.put( "lastStarted", startTime );
+            json.put( "upTime", upTime );
+            json.put( "runtime", sysProp( "java.runtime.name" ) + "(build "
+                + sysProp( "java.runtime.version" ) + ")" );
+            json.put( "jvm", sysProp( "java.vm.name" ) + "(build " + sysProp( "java.vm.version" )
+                + ", " + sysProp( "java.vm.info" ) + ")" );
+            json.put( "shutdownTimer", shutdownTimer );
+            json.put( "mem_total", totalMem );
+            json.put( "mem_free", freeMem );
+            json.put( "mem_used", usedMem );
+            json.put( "shutdownType", shutdownType );
+
+            // only add the processors if the number is available
+            final int processors = getAvailableProcessors();
+            if ( processors > 0 )
+            {
+                json.put( "processors", processors );
+            }
+        }
+        catch ( JSONException e )
+        {
+            throw new IOException( e.toString() );
+        }
+
+=======
         StringWriter json = new StringWriter();
         JSONWriter jw = new JSONWriter(json);
         jw.object();
@@ -231,6 +277,7 @@ public class VMStatPlugin extends SimpleWebConsolePlugin implements OsgiManagerP
 
         jw.flush();
 
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         DefaultVariableResolver vars = ( ( DefaultVariableResolver ) WebConsoleUtil.getVariableResolver( request ) );
         vars.put( "startData", json.toString() );
 
@@ -255,9 +302,15 @@ public class VMStatPlugin extends SimpleWebConsolePlugin implements OsgiManagerP
         final Long hours = new Long( period / 1000 / 60 / 60 % 24 );
         final Long days = new Long( period / 1000 / 60 / 60 / 24 );
         return MessageFormat.format(
+<<<<<<< HEAD
+            "{0,number} '${vmstat.upTime.format.days}' {1,number,00}:{2,number,00}:{3,number,00}.{4,number,000}",
+            new Object[]
+                { days, hours, mins, secs, msecs } );
+=======
                 "{0,number} '${vmstat.upTime.format.days}' {1,number,00}:{2,number,00}:{3,number,00}.{4,number,000}",
                 new Object[]
                         { days, hours, mins, secs, msecs } );
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     }
 
 

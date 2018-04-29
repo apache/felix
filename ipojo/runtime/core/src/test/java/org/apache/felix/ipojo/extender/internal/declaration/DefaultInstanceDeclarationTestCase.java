@@ -19,6 +19,11 @@
 
 package org.apache.felix.ipojo.extender.internal.declaration;
 
+<<<<<<< HEAD
+import static org.mockito.Matchers.eq;
+import static org.mockito.Mockito.verify;
+
+=======
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyObject;
 import static org.mockito.Matchers.eq;
@@ -26,16 +31,26 @@ import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.verify;
 
 import java.util.Dictionary;
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 import java.util.Hashtable;
 
 import org.apache.felix.ipojo.Factory;
 import org.apache.felix.ipojo.extender.InstanceDeclaration;
+<<<<<<< HEAD
+import org.junit.runner.RunWith;
+=======
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
+<<<<<<< HEAD
+import org.mockito.runners.MockitoJUnitRunner;
+import org.osgi.framework.BundleContext;
+=======
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceRegistration;
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 
 import junit.framework.TestCase;
 
@@ -47,15 +62,20 @@ public class DefaultInstanceDeclarationTestCase extends TestCase {
     @Mock
     private BundleContext m_bundleContext;
 
+<<<<<<< HEAD
+=======
     @Mock
     private ServiceRegistration<?> m_registration;
 
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     @Captor
     private ArgumentCaptor<Hashtable<String, Object>> argument;
 
     @Override
     public void setUp() throws Exception {
         MockitoAnnotations.initMocks(this);
+<<<<<<< HEAD
+=======
         doReturn(m_registration)
                 .when(m_bundleContext)
                 .registerService(
@@ -63,6 +83,7 @@ public class DefaultInstanceDeclarationTestCase extends TestCase {
                         anyObject(),
                         any(Dictionary.class));
 
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     }
 
     public void testRegistrationWithEmptyConfiguration() throws Exception {
@@ -95,6 +116,8 @@ public class DefaultInstanceDeclarationTestCase extends TestCase {
         assertEquals(argument.getValue().get(InstanceDeclaration.COMPONENT_VERSION_PROPERTY), "1.0.0");
 
     }
+<<<<<<< HEAD
+=======
 
     public void testHandlePublication() throws Exception {
         DefaultInstanceDeclaration declaration = new DefaultInstanceDeclaration(m_bundleContext, "component.Hello");
@@ -129,4 +152,5 @@ public class DefaultInstanceDeclarationTestCase extends TestCase {
         assertFalse(declaration.isRegistered());
         verify(m_registration).unregister();
     }
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 }

@@ -28,9 +28,14 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 import java.util.TreeSet;
+<<<<<<< HEAD
+import org.apache.felix.inventory.InventoryPrinter;
+import org.apache.felix.inventory.Format;
+=======
 
 import org.apache.felix.inventory.Format;
 import org.apache.felix.inventory.InventoryPrinter;
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 import org.apache.felix.inventory.impl.webconsole.ConsoleConstants;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
@@ -206,7 +211,11 @@ public class InventoryPrinterManagerImpl implements ServiceTrackerCustomizer
             {
                 this.usedAdapters.add(addAdapter);
             }
+<<<<<<< HEAD
+            addAdapter.registerConsole(this.bundleContext, this);
+=======
             addAdapter.registerConsole(reference.getBundle().getBundleContext(), this);
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         }
     }
 

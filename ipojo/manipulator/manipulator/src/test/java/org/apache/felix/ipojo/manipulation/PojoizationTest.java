@@ -35,7 +35,11 @@ public class PojoizationTest extends TestCase {
 		File out = new File("target/test-classes/tests.manipulation-no-annotations-manipulated.jar");
 		out.delete();
 		File metadata = new File("target/test-classes/metadata.xml");
+<<<<<<< HEAD
+		pojoization.pojoization(in, out, metadata);
+=======
 		pojoization.pojoization(in, out, metadata, null);
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 
 		Assert.assertTrue(out.exists());
 	}
@@ -46,7 +50,11 @@ public class PojoizationTest extends TestCase {
 		File in = new File("target/test-classes/tests.manipulator-annotations.jar");
 		File out = new File("target/test-classes/tests.manipulation-annotations-manipulated.jar");
 		out.delete();
+<<<<<<< HEAD
+		pojoization.pojoization(in, out, (File) null);
+=======
 		pojoization.pojoization(in, out, (File) null, null);
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 
 		Assert.assertTrue(out.exists());
 	}
@@ -57,7 +65,11 @@ public class PojoizationTest extends TestCase {
 		File in = new File("target/test-classes/tests.manipulation.java5.jar");
 		File out = new File("target/test-classes/tests.manipulation.java5-manipulated.jar");
 		out.delete();
+<<<<<<< HEAD
+		pojoization.pojoization(in, out, (File) null);
+=======
 		pojoization.pojoization(in, out, (File) null, null);
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 
 		Assert.assertTrue(out.exists());
 	}

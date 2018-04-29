@@ -19,19 +19,33 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
 	<parent>
 	    <groupId>org.apache.felix</groupId>
+<<<<<<< HEAD
+	    <artifactId>felix-parent</artifactId>
+	    <version>2.1</version>
+	    <relativePath>../../pom/pom.xml</relativePath>
+=======
 	    <artifactId>org.apache.felix.httplite.reactor</artifactId>
 	    <version>0.1.7-SNAPSHOT</version>
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
  	</parent>
 	<modelVersion>4.0.0</modelVersion>
 	<packaging>bundle</packaging>
 	<name>Apache Felix Lightweight HTTP Service Complete</name>
 	<description>A minimal HTTP Service implementation, complete bundle.</description>
+<<<<<<< HEAD
+	<version>0.1.5-SNAPSHOT</version>
+=======
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 	<artifactId>org.apache.felix.httplite.complete</artifactId>
 	<dependencies>		
 		<dependency>
 			<groupId>org.apache.felix</groupId>
 			<artifactId>org.apache.felix.httplite.core</artifactId>
+<<<<<<< HEAD
+			<version>0.1.5-SNAPSHOT</version>
+=======
 			<version>${project.version}</version>
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 		</dependency>
 		<dependency>
 			<groupId>org.osgi</groupId>
@@ -84,12 +98,15 @@
 						<Bundle-Activator>org.apache.felix.httplite.osgi.Activator</Bundle-Activator>
 						<Bundle-Vendor>The Apache Software Foundation</Bundle-Vendor>
 						<Include-Resource>META-INF/LICENSE=LICENSE,META-INF/NOTICE=NOTICE,META-INF/DEPENDENCIES=DEPENDENCIES</Include-Resource>
+<<<<<<< HEAD
+=======
 						<Import-Package>
 							javax.servlet;version="2.4",
 							javax.servlet.http;version="2.4",
 							org.osgi.service.http;version="1.2",
 							*
 						</Import-Package>
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 						<Export-Package>
 							javax.servlet;version="2.4",
 							javax.servlet.http;version="2.4",
@@ -101,5 +118,14 @@
 			</plugin>
 		</plugins>
 	</build>
+<<<<<<< HEAD
+	<scm>
+		<connection>scm:svn:http://svn.apache.org/repos/asf/felix/trunk/httplite/complete</connection>
+		<developerConnection>scm:svn:https://svn.apache.org/repos/asf/felix/trunk/httplite/complete</developerConnection>
+		<url>http://svn.apache.org/repos/asf/felix/trunk/httplite/complete</url>
+	</scm>  
+	<url>http://felix.apache.org/site/apache-felix-lightweight-http-service.html</url>
+=======
 
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 </project>

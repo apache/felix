@@ -28,16 +28,24 @@ import java.lang.reflect.Proxy;
 /**
  * Utility class that injects dependencies. Can be used to unit test service implementations.
  */
+<<<<<<< HEAD
+public class Utils {
+=======
 public class Utils
 {
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     /**
      * Configures an object to use a null object for the specified service interface.
      *
      * @param object the object
      * @param iface the service interface
      */
+<<<<<<< HEAD
+    public static void configureObject(Object object, Class iface) {
+=======
     public static void configureObject(Object object, Class iface)
     {
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         configureObject(object, iface, createNullObject(iface));
     }
 
@@ -47,9 +55,14 @@ public class Utils
      * @param iface the service interface
      * @return a null object
      */
+<<<<<<< HEAD
+    public static Object createNullObject(Class iface) {
+        return Proxy.newProxyInstance(iface.getClassLoader(), new Class[] { iface }, new DefaultNullObject());
+=======
     public static <T> T createNullObject(Class<T> iface)
     {
         return (T) Proxy.newProxyInstance(iface.getClassLoader(), new Class[] { iface }, new DefaultNullObject());
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     }
 
     /**
@@ -60,6 +73,13 @@ public class Utils
      * @param handler the handler to pass invocations to.
      * @return an adapter that will try to pass on received invocations to the given handler
      */
+<<<<<<< HEAD
+    public static Object createMockObjectAdapter(Class iface, final Object handler) {
+        return Proxy.newProxyInstance(iface.getClassLoader(), new Class[] { iface }, new DefaultNullObject() {
+
+            public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
+                try {
+=======
     public static <T> T createMockObjectAdapter(Class<T> iface, final Object handler)
     {
         return (T) Proxy.newProxyInstance(iface.getClassLoader(), new Class[] { iface }, new DefaultNullObject()
@@ -68,16 +88,24 @@ public class Utils
             {
                 try
                 {
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
                     Method bridge = handler.getClass().getMethod(method.getName(), method.getParameterTypes());
                     bridge.setAccessible(true);
                     return bridge.invoke(handler, args);
                 }
+<<<<<<< HEAD
+                catch (NoSuchMethodException ex) {
+                    return super.invoke(proxy, method, args);
+                }
+                catch (InvocationTargetException ex) {
+=======
                 catch (NoSuchMethodException ex)
                 {
                     return super.invoke(proxy, method, args);
                 }
                 catch (InvocationTargetException ex)
                 {
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
                     throw ex.getCause();
                 }
             }
@@ -91,6 +119,23 @@ public class Utils
      * @param iface the service interface
      * @param instance the implementation
      */
+<<<<<<< HEAD
+    public static void configureObject(Object object, Class iface, Object instance) {
+        Class serviceClazz = object.getClass();
+
+        while (serviceClazz != null) {
+            Field[] fields = serviceClazz.getDeclaredFields();
+            AccessibleObject.setAccessible(fields, true);
+            for (int j = 0; j < fields.length; j++) {
+                if (fields[j].getType().equals(iface)) {
+                    try {
+                        // synchronized makes sure the field is actually written to immediately
+                        synchronized (new Object()) {
+                            fields[j].set(object, instance);
+                        }
+                    }
+                    catch (Exception e) {
+=======
     public static void configureObject(Object object, Class iface, Object instance)
     {
         Class serviceClazz = object.getClass();
@@ -113,6 +158,7 @@ public class Utils
                     }
                     catch (Exception e)
                     {
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
                         throw new IllegalStateException("Could not set field " + fields[j].getName() + " on " + object);
                     }
                 }
@@ -120,12 +166,26 @@ public class Utils
             serviceClazz = serviceClazz.getSuperclass();
         }
     }
+<<<<<<< HEAD
+    
+=======
 
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     /**
      * Remove the given directory and all it's files and subdirectories
      * 
      * @param directory the name of the directory to remove
      */
+<<<<<<< HEAD
+    public static void removeDirectoryWithContent(File directory) {
+        if ((directory == null) || !directory.exists()) {
+            return;
+        }
+        File[] filesAndSubDirs = directory.listFiles();
+        for (int i=0; i < filesAndSubDirs.length; i++) {
+            File file = filesAndSubDirs[i];
+            if (file.isDirectory()) {
+=======
     public static void removeDirectoryWithContent(File directory)
     {
         if ((directory == null) || !directory.exists())
@@ -138,6 +198,7 @@ public class Utils
             File file = filesAndSubDirs[i];
             if (file.isDirectory())
             {
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
                 removeDirectoryWithContent(file);
             }
             // else just remove the file

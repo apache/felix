@@ -21,11 +21,19 @@
 
     <!-- component requires configuration -->
     <scr:component name="SimpleComponent.configuration.require"
+<<<<<<< HEAD
+        enabled="false"
+        configuration-policy="require"
+        modified="modified" >
+        <implementation class="org.apache.felix.scr.integration.components.SimpleComponent" />
+        <property name="service.pid" value="SimpleComponent.configuration.require" />
+=======
         enabled="true"
         configuration-policy="require"
         modified="modified" >
         <implementation class="org.apache.felix.scr.integration.components.SimpleComponent" />
         <!-- <property name="service.pid" value="SimpleComponent.configuration.require" /> -->
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     </scr:component>
 
 </components>

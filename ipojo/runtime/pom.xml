@@ -25,7 +25,11 @@
     </parent>
     <modelVersion>4.0.0</modelVersion>
     <artifactId>org.apache.felix.ipojo.runtime-project</artifactId>
+<<<<<<< HEAD
+    <version>1.11.1-SNAPSHOT</version>
+=======
     <version>1.12.2-SNAPSHOT</version>
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     <name>Apache Felix iPOJO Runtime Project</name>
     <packaging>pom</packaging>
 
@@ -63,6 +67,8 @@
         <url>http://svn.apache.org/viewvc/felix/trunk/ipojo/runtime</url>
     </scm>
 
+<<<<<<< HEAD
+=======
     <build>
         <plugins>
             <plugin>
@@ -78,4 +84,5 @@
         </plugins>
     </build>
 
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 </project>

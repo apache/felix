@@ -16,22 +16,49 @@
  */
 package org.apache.felix.http.whiteboard.internal.tracker;
 
+<<<<<<< HEAD
+import org.osgi.framework.BundleContext;
+import org.osgi.framework.ServiceReference;
+import org.osgi.service.http.HttpContext;
+import org.apache.felix.http.whiteboard.internal.manager.ExtenderManager;
+=======
 import org.apache.felix.http.whiteboard.internal.manager.ExtenderManager;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceReference;
 import org.osgi.service.http.HttpContext;
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 
 public final class HttpContextTracker
     extends AbstractTracker<HttpContext>
 {
     private final ExtenderManager manager;
 
+<<<<<<< HEAD
+    public HttpContextTracker(BundleContext context, ExtenderManager manager)
+=======
     public HttpContextTracker(final BundleContext context, final ExtenderManager manager)
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     {
         super(context, HttpContext.class);
         this.manager = manager;
     }
 
+<<<<<<< HEAD
+    protected void added(HttpContext service, ServiceReference ref)
+    {
+        this.manager.add(service, ref);
+    }
+
+    protected void modified(HttpContext service, ServiceReference ref)
+    {
+        removed(service, ref);
+        added(service, ref);
+    }
+
+    protected void removed(HttpContext service, ServiceReference ref)
+    {
+        this.manager.remove(service);
+=======
     @Override
     protected void added(final HttpContext service, final ServiceReference<HttpContext> ref)
     {
@@ -43,5 +70,6 @@ public final class HttpContextTracker
     protected void removed(final HttpContext service, final ServiceReference<HttpContext> ref)
     {
         this.manager.removeHttpContext(ref);
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     }
 }

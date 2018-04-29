@@ -21,7 +21,10 @@ package org.apache.felix.deploymentadmin.itest;
 import static org.osgi.service.deploymentadmin.DeploymentException.CODE_BUNDLE_NAME_ERROR;
 import static org.osgi.service.deploymentadmin.DeploymentException.CODE_OTHER_ERROR;
 
+<<<<<<< HEAD
+=======
 
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 import org.apache.felix.deploymentadmin.itest.util.DeploymentPackageBuilder;
 import org.apache.felix.deploymentadmin.itest.util.DeploymentPackageBuilder.JarManifestManipulatingFilter;
 import org.junit.Test;
@@ -29,12 +32,36 @@ import org.junit.runner.RunWith;
 import org.ops4j.pax.exam.junit.PaxExam;
 import org.osgi.service.deploymentadmin.DeploymentAdmin;
 import org.osgi.service.deploymentadmin.DeploymentException;
+<<<<<<< HEAD
+=======
 import org.osgi.service.deploymentadmin.DeploymentPackage;
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 
 /**
  * Generic tests for {@link DeploymentAdmin}.
  */
 @RunWith(PaxExam.class)
+<<<<<<< HEAD
+public class DeploymentAdminTest extends BaseIntegrationTest {
+
+    @Test
+    public void testBundleSymbolicNameMustMatchManifestEntry() throws Exception {
+        DeploymentPackageBuilder dpBuilder = createNewDeploymentPackageBuilder("1.0.0");
+        dpBuilder
+            .add(dpBuilder.createBundleResource()
+                .setUrl(getTestBundle("bundle1"))
+            )
+            .add(dpBuilder.createBundleResource()
+                .setUrl(getTestBundle("bundle2"))
+                .setFilter(new JarManifestManipulatingFilter("Bundle-SymbolicName", "foo"))
+            );
+        
+        try {
+            m_deploymentAdmin.installDeploymentPackage(dpBuilder.generate());
+            fail("Succeeded into installing a bundle with a fake symbolic name?!");
+        }
+        catch (DeploymentException exception) {
+=======
 public class DeploymentAdminTest extends BaseIntegrationTest
 {
     /**
@@ -96,12 +123,31 @@ public class DeploymentAdminTest extends BaseIntegrationTest
         }
         catch (DeploymentException exception)
         {
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
             // Ok; expected...
             assertDeploymentException(CODE_BUNDLE_NAME_ERROR, exception);
         }
     }
 
     @Test
+<<<<<<< HEAD
+    public void testBundleVersionMustMatchManifestEntry() throws Exception {
+        DeploymentPackageBuilder dpBuilder = createNewDeploymentPackageBuilder("1.0.0");
+        dpBuilder
+            .add(dpBuilder.createBundleResource()
+                .setUrl(getTestBundle("bundle1"))
+            )
+            .add(dpBuilder.createBundleResource()
+                .setUrl(getTestBundle("bundle2"))
+                .setFilter(new JarManifestManipulatingFilter("Bundle-Version", "1.1.0"))
+            );
+        
+        try {
+            m_deploymentAdmin.installDeploymentPackage(dpBuilder.generate());
+            fail("Succeeded into installing a bundle with a fake version?!");
+        }
+        catch (DeploymentException exception) {
+=======
     public void testBundleVersionMustMatchManifestEntry() throws Exception
     {
         DeploymentPackageBuilder dpBuilder = createNewDeploymentPackageBuilder("1.0.0");
@@ -115,12 +161,31 @@ public class DeploymentAdminTest extends BaseIntegrationTest
         }
         catch (DeploymentException exception)
         {
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
             // Ok; expected...
             assertDeploymentException(CODE_OTHER_ERROR, exception);
         }
     }
 
     @Test
+<<<<<<< HEAD
+    public void testManifestEntryMustMatchBundleSymbolicName() throws Exception {
+        DeploymentPackageBuilder dpBuilder = createNewDeploymentPackageBuilder("1.0.0");
+        dpBuilder
+            .add(dpBuilder.createBundleResource()
+                .setUrl(getTestBundle("bundle1"))
+            )
+            .add(dpBuilder.createBundleResource()
+                .setSymbolicName("foo")
+                .setUrl(getTestBundle("bundle2"))
+            );
+        
+        try {
+            m_deploymentAdmin.installDeploymentPackage(dpBuilder.generate());
+            fail("Succeeded into installing a bundle with a fake symbolic name?!");
+        }
+        catch (DeploymentException exception) {
+=======
     public void testManifestEntryMustMatchBundleSymbolicName() throws Exception
     {
         DeploymentPackageBuilder dpBuilder = createNewDeploymentPackageBuilder("1.0.0");
@@ -133,12 +198,31 @@ public class DeploymentAdminTest extends BaseIntegrationTest
         }
         catch (DeploymentException exception)
         {
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
             // Ok; expected...
             assertDeploymentException(CODE_BUNDLE_NAME_ERROR, exception);
         }
     }
 
     @Test
+<<<<<<< HEAD
+    public void testManifestEntryMustMatchBundleVersion() throws Exception {
+        DeploymentPackageBuilder dpBuilder = createNewDeploymentPackageBuilder("1.0.0");
+        dpBuilder
+            .add(dpBuilder.createBundleResource()
+                .setUrl(getTestBundle("bundle1"))
+            )
+            .add(dpBuilder.createBundleResource()
+                .setVersion("1.1.0")
+                .setUrl(getTestBundle("bundle2"))
+            );
+        
+        try {
+            m_deploymentAdmin.installDeploymentPackage(dpBuilder.generate());
+            fail("Succeeded into installing a bundle with a fake version?!");
+        }
+        catch (DeploymentException exception) {
+=======
     public void testManifestEntryMustMatchBundleVersion() throws Exception
     {
         DeploymentPackageBuilder dpBuilder = createNewDeploymentPackageBuilder("1.0.0");
@@ -151,6 +235,7 @@ public class DeploymentAdminTest extends BaseIntegrationTest
         }
         catch (DeploymentException exception)
         {
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
             // Ok; expected...
             assertDeploymentException(CODE_OTHER_ERROR, exception);
         }

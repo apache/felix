@@ -26,10 +26,18 @@
     <parent>
         <groupId>org.apache.felix</groupId>
         <artifactId>org.apache.felix.ipojo.distributions</artifactId>
+<<<<<<< HEAD
+        <version>1.9.0-SNAPSHOT</version>
+    </parent>
+
+    <artifactId>ipojo-webconsole-quicktart</artifactId>
+    <version>1.9.0-SNAPSHOT</version>
+=======
         <version>1.10.2-SNAPSHOT</version>
     </parent>
 
     <artifactId>ipojo-webconsole-quicktart</artifactId>
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 
     <packaging>pom</packaging>
 
@@ -99,6 +107,14 @@
             <version>4.2.0</version>
         </dependency>
         <dependency>
+<<<<<<< HEAD
+            <groupId>org.json</groupId>
+            <artifactId>org.ow2.chameleon.commons.json</artifactId>
+            <version>20090911-0002</version>
+        </dependency>
+        <dependency>
+=======
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
             <groupId>commons-io</groupId>
             <artifactId>commons-io</artifactId>
             <version>2.4</version>

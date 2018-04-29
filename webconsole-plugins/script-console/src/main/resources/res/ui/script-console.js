@@ -8,6 +8,10 @@ function sendData(url, data) {
         url:url,
         data:data,
 //        dataType:"json",
+<<<<<<< HEAD
+        timeout:30000, //In millis
+=======
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         beforeSend:function () {
             $('#ajaxSpinner').show();
         },
@@ -39,7 +43,11 @@ function setUpCodeMirror() {
     });
     outputEditor = CodeMirror.fromTextArea(document.getElementById("result"), {
             lineNumbers:true,
+<<<<<<< HEAD
+            readOnly:"nocursor"
+=======
             readOnly:true
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         });
 }
 

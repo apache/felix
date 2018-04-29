@@ -74,7 +74,12 @@ public class Telnet implements Runnable
         {
             if (server != null)
             {
+<<<<<<< HEAD
+                throw new IllegalStateException("telnetd is already running on port "
+                    + port);
+=======
                 throw new IllegalStateException("telnetd is already running on port " + port);
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
             }
             ip = opt.get("ip");
             port = opt.getNumber("port");
@@ -114,9 +119,14 @@ public class Telnet implements Runnable
     private void start() throws IOException
     {
         quit = false;
+<<<<<<< HEAD
+        server = new ServerSocket(port, 0, InetAddress.getByName(ip));
+        thread = new Thread(this, "gogo telnet");
+=======
         InetAddress addr = "".equals(ip) ? null : InetAddress.getByName(ip);
         server = new ServerSocket(port, 0, addr);
         thread = new Thread(this, "Gogo telnet");
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         thread.start();
     }
 
@@ -139,6 +149,33 @@ public class Telnet implements Runnable
                 final CommandSession session = processor.createSession(
                     socket.getInputStream(), out, out);
 
+<<<<<<< HEAD
+                Thread handler = new Thread()
+                {
+                    public void run()
+                    {
+                        try
+                        {
+                            session.execute("gosh --login --noshutdown");
+                        }
+                        catch (Exception e)
+                        {
+                            e.printStackTrace();
+                        }
+                        finally
+                        {
+                            session.close();
+                            try
+                            {
+                                socket.close();
+                            }
+                            catch (IOException e)
+                            {
+                            }
+                        }
+                    }
+                };
+=======
                 Thread handler = new Thread(() -> {
                     try
                     {
@@ -160,6 +197,7 @@ public class Telnet implements Runnable
                         }
                     }
                 });
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
                 handler.start();
             }
         }

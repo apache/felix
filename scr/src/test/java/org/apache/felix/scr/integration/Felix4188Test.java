@@ -18,9 +18,12 @@
  */
 package org.apache.felix.scr.integration;
 
+<<<<<<< HEAD
+=======
 import static org.ops4j.pax.tinybundles.core.TinyBundles.bundle;
 import static org.ops4j.pax.tinybundles.core.TinyBundles.withBnd;
 
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.Field;
@@ -28,36 +31,63 @@ import java.util.concurrent.CountDownLatch;
 
 import javax.inject.Inject;
 
+<<<<<<< HEAD
+import junit.framework.TestCase;
+import org.apache.felix.scr.Component;
+import org.apache.felix.scr.integration.components.felix4188.Felix4188Component;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.ops4j.pax.exam.junit.JUnit4TestRunner;
+=======
 import org.apache.felix.scr.integration.components.felix4188.Felix4188Component;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.ops4j.pax.exam.junit.PaxExam;
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.BundleException;
 import org.osgi.framework.Constants;
+<<<<<<< HEAD
+
+import static org.ops4j.pax.tinybundles.core.TinyBundles.bundle;
+import static org.ops4j.pax.tinybundles.core.TinyBundles.withBnd;
+=======
 import org.osgi.framework.InvalidSyntaxException;
 import org.osgi.framework.ServiceReference;
 import org.osgi.service.component.runtime.dto.ComponentConfigurationDTO;
 
 import junit.framework.Assert;
 import junit.framework.TestCase;
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 
 /**
  * This test validates the FELIX-4188 issue.
  */
+<<<<<<< HEAD
+@RunWith(JUnit4TestRunner.class)
+=======
 @RunWith(PaxExam.class)
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 public class Felix4188Test extends ComponentTestBase
 {
 
     static
     {
         // uncomment to enable debugging of this test class
+<<<<<<< HEAD
+        //        paxRunnerVmOption = DEBUG_VM_OPTION;
+        descriptorFile = "/integration_test_FELIX_4188.xml";
+        restrictedLogging = true;
+        //comment to get debug logging if the test fails.
+//        DS_LOGLEVEL = "warn";
+=======
         //                paxRunnerVmOption = DEBUG_VM_OPTION;
         descriptorFile = "/integration_test_FELIX_4188.xml";
         //        restrictedLogging = true;
         //comment to get debug logging if the test fails.
         //        DS_LOGLEVEL = "warn";
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     }
 
     @Inject
@@ -66,6 +96,23 @@ public class Felix4188Test extends ComponentTestBase
     @Test
     public void test_concurrent_deactivation() throws Exception
     {
+<<<<<<< HEAD
+        final Bundle bundle1 = installBundle("/integration_test_FELIX_4188_1.xml", "", "simplecomponent1");
+        bundle1.start();
+
+        final Bundle bundle2 = installBundle("/integration_test_FELIX_4188_2.xml", "", "simplecomponent2");
+        bundle2.start();
+
+        final Component aComp1 =
+                findComponentByName("org.apache.felix.scr.integration.components.Felix4188Component-1");
+        aComp1.enable();
+        final Object aInst1 = aComp1.getComponentInstance().getInstance();
+
+        final Component aComp2 =
+                findComponentByName("org.apache.felix.scr.integration.components.Felix4188Component-2");
+        aComp2.enable();
+        final Object aInst2 = aComp2.getComponentInstance().getInstance();
+=======
         final Bundle bundle1 = installBundle("/integration_test_FELIX_4188_1.xml", "org.apache.felix.scr.integration.components", "simplecomponent1");
         bundle1.start();
 
@@ -79,11 +126,15 @@ public class Felix4188Test extends ComponentTestBase
         final ComponentConfigurationDTO aComp2 =
                 findComponentConfigurationByName( bundle2, "org.apache.felix.scr.integration.components.Felix4188Component-2", ComponentConfigurationDTO.SATISFIED);
         final Object aInst2 = getServiceFromConfigurationInAllClassSpaces(aComp2, Felix4188Component.class.getName());
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 
         final CountDownLatch latch = new CountDownLatch(1);
 
         new Thread() {
+<<<<<<< HEAD
+=======
             @Override
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
             public void run() {
                 Bundle scrBundle = scrTracker.getServiceReference().getBundle();
                 try {
@@ -117,6 +168,8 @@ public class Felix4188Test extends ComponentTestBase
         return field.get(instance);
     }
 
+<<<<<<< HEAD
+=======
     // Note that this test installs two bundles both with the same class in it.
     // This causes multiple class spaces to be created by the framework.
     private Object getServiceFromConfigurationInAllClassSpaces( ComponentConfigurationDTO dto, String clazz ) throws InvalidSyntaxException
@@ -134,6 +187,7 @@ public class Felix4188Test extends ComponentTestBase
     }
 
 
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     protected Bundle installBundle( final String descriptorFile, String componentPackage, String symbolicname ) throws BundleException
     {
         final InputStream bundleStream = bundle()

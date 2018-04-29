@@ -21,6 +21,15 @@ package org.apache.felix.ipojo.runtime.test.dependencies.timeout;
 
 import org.apache.felix.ipojo.ComponentInstance;
 import org.apache.felix.ipojo.runtime.test.dependencies.timeout.services.*;
+<<<<<<< HEAD
+import org.junit.Test;
+import org.osgi.framework.ServiceReference;
+
+import static org.junit.Assert.*;
+
+public class DelayTest extends Common {
+
+=======
 import org.junit.After;
 import org.junit.Test;
 import org.ops4j.pax.exam.spi.reactors.ExamReactorStrategy;
@@ -42,6 +51,7 @@ public class DelayTest extends Common {
         }
     }
 
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     @Test
     public void testDelayTimeout() {
         String prov = "provider";
@@ -55,7 +65,11 @@ public class DelayTest extends Common {
         ServiceReference ref_cs = ipojoHelper.getServiceReferenceByName(CheckService.class.getName(), un);
         assertNotNull("Check cs availability", ref_cs);
 
+<<<<<<< HEAD
+        CheckService cs = (CheckService) osgiHelper.getServiceObject(ref_cs);
+=======
         CheckService cs = (CheckService) osgiHelper.getRawServiceObject(ref_cs);
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         assertTrue("Check invocation", cs.check());
 
         // Stop the provider.
@@ -65,7 +79,11 @@ public class DelayTest extends Common {
         long begin = System.currentTimeMillis();
         DelayedProvider dp = new DelayedProvider(provider, 200);
         dp.start();
+<<<<<<< HEAD
+        cs = (CheckService) osgiHelper.getServiceObject(ref_cs);
+=======
         cs = (CheckService) osgiHelper.getRawServiceObject(ref_cs);
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         assertTrue("Check invocation - 2", cs.check());
         long end = System.currentTimeMillis();
 
@@ -73,7 +91,11 @@ public class DelayTest extends Common {
 
         ref_cs = ipojoHelper.getServiceReferenceByName(CheckService.class.getName(), un);
         assertNotNull("Check cs availability - 3", ref_cs);
+<<<<<<< HEAD
+        cs = (CheckService) osgiHelper.getServiceObject(ref_cs);
+=======
         cs = (CheckService) osgiHelper.getRawServiceObject(ref_cs);
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         assertTrue("Check invocation - 3", cs.check());
 
         provider.stop();
@@ -97,32 +119,51 @@ public class DelayTest extends Common {
         ServiceReference ref_cs = ipojoHelper.getServiceReferenceByName(CheckService.class.getName(), un);
         assertNotNull("Check cs availability", ref_cs);
 
+<<<<<<< HEAD
+        CheckService cs = (CheckService) osgiHelper.getServiceObject(ref_cs);
+=======
         CheckService cs = (CheckService) osgiHelper.getRawServiceObject(ref_cs);
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         assertTrue("Check invocation", cs.check());
 
         // Stop the provider.
         provider.stop();
         ref_cs = ipojoHelper.getServiceReferenceByName(CheckService.class.getName(), un);
         assertNotNull("Check cs availability - 2", ref_cs);
+<<<<<<< HEAD
+        DelayedProvider dp = new DelayedProvider(provider, 400);
+        dp.start();
+        cs = (CheckService) osgiHelper.getServiceObject(ref_cs);
+=======
         delayed = new DelayedProvider(provider, 1000);
         delayed.start();
         cs = (CheckService) osgiHelper.getRawServiceObject(ref_cs);
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         try {
             cs.check();
         } catch (RuntimeException e) {
             // OK
+<<<<<<< HEAD
+            dp.stop();
+=======
             delayed.stop();
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
             provider.stop();
             provider.dispose();
             under.stop();
             under.dispose();
             return;
         }
+<<<<<<< HEAD
+
+        fail("Timeout expected");
+=======
         if (TimeUtils.TIME_FACTOR == 1) {
             fail("Timeout expected");
         } else {
             System.err.println("A timeout was expected, however this test really depends on your CPU and IO speed");
         }
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     }
 
     @Test
@@ -141,7 +182,11 @@ public class DelayTest extends Common {
         ServiceReference ref_cs = ipojoHelper.getServiceReferenceByName(CheckService.class.getName(), un);
         assertNotNull("Check cs availability", ref_cs);
 
+<<<<<<< HEAD
+        CheckService cs = (CheckService) osgiHelper.getServiceObject(ref_cs);
+=======
         CheckService cs = (CheckService) osgiHelper.getRawServiceObject(ref_cs);
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         assertTrue("Check invocation", cs.check());
 
         // Stop the providers.
@@ -154,7 +199,11 @@ public class DelayTest extends Common {
         DelayedProvider dp2 = new DelayedProvider(provider2, 100);
         dp.start();
         dp2.start();
+<<<<<<< HEAD
+        cs = (CheckService) osgiHelper.getServiceObject(ref_cs);
+=======
         cs = (CheckService) osgiHelper.getRawServiceObject(ref_cs);
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         assertTrue("Check invocation - 2", cs.check());
         long end = System.currentTimeMillis();
         System.out.println("delay = " + (end - begin));
@@ -165,7 +214,11 @@ public class DelayTest extends Common {
 
         ref_cs = ipojoHelper.getServiceReferenceByName(CheckService.class.getName(), un);
         assertNotNull("Check cs availability - 3", ref_cs);
+<<<<<<< HEAD
+        cs = (CheckService) osgiHelper.getServiceObject(ref_cs);
+=======
         cs = (CheckService) osgiHelper.getRawServiceObject(ref_cs);
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         assertTrue("Check invocation - 3", cs.check());
 
         provider1.stop();
@@ -191,7 +244,11 @@ public class DelayTest extends Common {
         ServiceReference ref_cs = ipojoHelper.getServiceReferenceByName(CheckService.class.getName(), un);
         assertNotNull("Check cs availability", ref_cs);
 
+<<<<<<< HEAD
+        CheckService cs = (CheckService) osgiHelper.getServiceObject(ref_cs);
+=======
         CheckService cs = (CheckService) osgiHelper.getRawServiceObject(ref_cs);
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         assertTrue("Check invocation", cs.check());
 
         // Stop the providers.
@@ -204,7 +261,11 @@ public class DelayTest extends Common {
         DelayedProvider dp2 = new DelayedProvider(provider2, 100);
         dp.start();
         dp2.start();
+<<<<<<< HEAD
+        cs = (CheckService) osgiHelper.getServiceObject(ref_cs);
+=======
         cs = (CheckService) osgiHelper.getRawServiceObject(ref_cs);
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         assertTrue("Check invocation - 2", cs.check());
         long end = System.currentTimeMillis();
         System.out.println("delay = " + (end - begin));
@@ -215,7 +276,11 @@ public class DelayTest extends Common {
 
         ref_cs = ipojoHelper.getServiceReferenceByName(CheckService.class.getName(), un);
         assertNotNull("Check cs availability - 3", ref_cs);
+<<<<<<< HEAD
+        cs = (CheckService) osgiHelper.getServiceObject(ref_cs);
+=======
         cs = (CheckService) osgiHelper.getRawServiceObject(ref_cs);
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         assertTrue("Check invocation - 3", cs.check());
 
         provider1.stop();

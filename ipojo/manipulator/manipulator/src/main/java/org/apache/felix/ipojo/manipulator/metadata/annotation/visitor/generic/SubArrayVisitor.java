@@ -23,13 +23,22 @@ import org.apache.felix.ipojo.manipulator.metadata.annotation.visitor.util.Eleme
 import org.apache.felix.ipojo.metadata.Attribute;
 import org.apache.felix.ipojo.metadata.Element;
 import org.objectweb.asm.AnnotationVisitor;
+<<<<<<< HEAD
+import org.objectweb.asm.Type;
+import org.objectweb.asm.commons.EmptyVisitor;
+=======
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.Type;
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 
 /**
  * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
+<<<<<<< HEAD
+public class SubArrayVisitor extends EmptyVisitor implements AnnotationVisitor {
+=======
 public class SubArrayVisitor extends AnnotationVisitor {
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 
     /**
      * Parent element.
@@ -49,22 +58,34 @@ public class SubArrayVisitor extends AnnotationVisitor {
 
     /**
      * Constructor.
+<<<<<<< HEAD
+=======
      *
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
      * @param elem : element element.
      * @param name : attribute name.
      */
     public SubArrayVisitor(Element elem, String name) {
+<<<<<<< HEAD
+=======
         super(Opcodes.ASM5);
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         m_elem = elem;
         m_name = name;
     }
 
     /**
      * Visit a 'simple' element of the visited array.
+<<<<<<< HEAD
+     * @param name : null
+     * @param value : element value.
+     * @see org.objectweb.asm.commons.EmptyVisitor#visit(String, Object)
+=======
      *
      * @param name  : null
      * @param value : element value.
      * @see org.objectweb.asm.AnnotationVisitor#visit(String, Object)
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
      */
     public void visit(String name, Object value) {
         if (m_acc == null) {
@@ -86,9 +107,14 @@ public class SubArrayVisitor extends AnnotationVisitor {
 
     /**
      * Visits an enumeration attribute.
+<<<<<<< HEAD
+     * @param name the attribute name
+     * @param desc the enumeration descriptor
+=======
      *
      * @param name  the attribute name
      * @param desc  the enumeration descriptor
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
      * @param value the attribute value
      */
     public void visitEnum(String name, String desc, String value) {
@@ -102,11 +128,18 @@ public class SubArrayVisitor extends AnnotationVisitor {
 
     /**
      * Visit an annotation element of the visited array.
+<<<<<<< HEAD
+     * @param name : null
+     * @param desc : annotation to visit
+     * @return the visitor which will visit the annotation
+     * @see org.objectweb.asm.commons.EmptyVisitor#visitAnnotation(String, String)
+=======
      *
      * @param name : null
      * @param desc : annotation to visit
      * @return the visitor which will visit the annotation
      * @see org.objectweb.asm.AnnotationVisitor#visitAnnotation(String, String)
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
      */
     public AnnotationVisitor visitAnnotation(String name, String desc) {
         // Sub annotations are map to sub-elements
@@ -117,8 +150,12 @@ public class SubArrayVisitor extends AnnotationVisitor {
 
     /**
      * End of the visit.
+<<<<<<< HEAD
+     * @see org.objectweb.asm.commons.EmptyVisitor#visitEnd()
+=======
      *
      * @see org.objectweb.asm.AnnotationVisitor#visitEnd()
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
      */
     public void visitEnd() {
         if (m_acc != null) {

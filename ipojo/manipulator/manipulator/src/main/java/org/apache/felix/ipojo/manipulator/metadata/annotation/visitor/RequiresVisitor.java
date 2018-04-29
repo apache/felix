@@ -23,15 +23,24 @@ import org.apache.felix.ipojo.manipulator.metadata.annotation.ComponentWorkbench
 import org.apache.felix.ipojo.metadata.Attribute;
 import org.apache.felix.ipojo.metadata.Element;
 import org.objectweb.asm.AnnotationVisitor;
+<<<<<<< HEAD
+import org.objectweb.asm.Type;
+import org.objectweb.asm.commons.EmptyVisitor;
+=======
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.Type;
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 
 /**
  * AnnotationVisitor parsing the @Requires annotation.
  * @see org.apache.felix.ipojo.annotations.Requires
  * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
+<<<<<<< HEAD
+public class RequiresVisitor extends EmptyVisitor implements AnnotationVisitor {
+=======
 public class RequiresVisitor extends AnnotationVisitor {
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 
 
     private ComponentWorkbench workbench;
@@ -106,7 +115,10 @@ public class RequiresVisitor extends AnnotationVisitor {
      * @param name : field name.
      */
     public RequiresVisitor(ComponentWorkbench workbench, String name) {
+<<<<<<< HEAD
+=======
         super(Opcodes.ASM5);
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         this.workbench = workbench;
         this.m_field = name;
     }
@@ -179,7 +191,11 @@ public class RequiresVisitor extends AnnotationVisitor {
     @Override
     public void visitEnum(String name, String desc, String value) {
         if (name.equals("policy")) {
+<<<<<<< HEAD
+            m_policy = getPolicy(value.toString());
+=======
             m_policy = getPolicy(value);
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         }
     }
 
@@ -189,7 +205,11 @@ public class RequiresVisitor extends AnnotationVisitor {
      * @see org.objectweb.asm.AnnotationVisitor#visitEnd()
      */
     public void visitEnd() {
+<<<<<<< HEAD
+        Element requires = null;
+=======
         Element requires;
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         if (m_id == null) {
             requires = workbench.getIds().get(m_field);
         } else {

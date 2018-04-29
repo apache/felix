@@ -18,6 +18,10 @@
  */
 package org.apache.felix.scr.integration;
 
+<<<<<<< HEAD
+
+=======
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 import static org.ops4j.pax.exam.CoreOptions.frameworkProperty;
 import static org.ops4j.pax.exam.CoreOptions.junitBundles;
 import static org.ops4j.pax.exam.CoreOptions.mavenBundle;
@@ -38,6 +42,19 @@ import java.io.PrintStream;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.lang.reflect.Field;
+<<<<<<< HEAD
+import java.lang.reflect.Method;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.Date;
+import java.util.Dictionary;
+import java.util.Hashtable;
+import java.util.Iterator;
+import java.util.List;
+import java.util.TreeSet;
+=======
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.text.SimpleDateFormat;
@@ -50,10 +67,26 @@ import java.util.HashMap;
 import java.util.Hashtable;
 import java.util.List;
 import java.util.Map;
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 import java.util.concurrent.LinkedBlockingQueue;
 
 import javax.inject.Inject;
 
+<<<<<<< HEAD
+import junit.framework.TestCase;
+
+import org.apache.felix.scr.Component;
+import org.apache.felix.scr.Reference;
+import org.apache.felix.scr.ScrService;
+import org.junit.After;
+import org.junit.Before;
+import org.ops4j.pax.exam.CoreOptions;
+import org.ops4j.pax.exam.Option;
+import org.ops4j.pax.exam.OptionUtils;
+import org.ops4j.pax.exam.TestProbeBuilder;
+import org.ops4j.pax.exam.junit.Configuration;
+import org.ops4j.pax.exam.junit.ProbeBuilder;
+=======
 import org.apache.felix.scr.impl.ComponentCommands;
 import org.apache.felix.scr.integration.components.SimpleComponent;
 import org.apache.felix.service.command.Converter;
@@ -65,6 +98,7 @@ import org.ops4j.pax.exam.Option;
 import org.ops4j.pax.exam.OptionUtils;
 import org.ops4j.pax.exam.ProbeBuilder;
 import org.ops4j.pax.exam.TestProbeBuilder;
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.BundleException;
@@ -73,6 +107,12 @@ import org.osgi.framework.FrameworkEvent;
 import org.osgi.framework.FrameworkListener;
 import org.osgi.framework.InvalidSyntaxException;
 import org.osgi.framework.ServiceReference;
+<<<<<<< HEAD
+import org.osgi.service.cm.ConfigurationAdmin;
+import org.osgi.service.log.LogService;
+import org.osgi.util.tracker.ServiceTracker;
+
+=======
 import org.osgi.namespace.extender.ExtenderNamespace;
 import org.osgi.service.cm.ConfigurationAdmin;
 import org.osgi.service.component.ComponentConstants;
@@ -86,6 +126,7 @@ import org.osgi.util.tracker.ServiceTracker;
 
 import junit.framework.Assert;
 import junit.framework.TestCase;
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 
 public abstract class ComponentTestBase
 {
@@ -95,9 +136,15 @@ public abstract class ComponentTestBase
 
     protected Bundle bundle;
 
+<<<<<<< HEAD
+    protected ServiceTracker scrTracker;
+
+    protected ServiceTracker configAdminTracker;
+=======
     protected ServiceTracker<ServiceComponentRuntime, ServiceComponentRuntime> scrTracker;
 
     protected ServiceTracker<ConfigurationAdmin, ConfigurationAdmin> configAdminTracker;
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 
     // the name of the system property providing the bundle file to be installed and tested
     protected static final String BUNDLE_JAR_SYS_PROP = "project.bundle.file";
@@ -106,7 +153,11 @@ public abstract class ComponentTestBase
     protected static final String BUNDLE_JAR_DEFAULT = "target/scr.jar";
 
     protected static final String PROP_NAME = "theValue";
+<<<<<<< HEAD
+    protected static final Dictionary<String, String> theConfig;
+=======
     protected static final Dictionary<String, Object> theConfig;
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 
     // the JVM option to set to enable remote debugging
     protected static final String DEBUG_VM_OPTION = "-Xrunjdwp:transport=dt_socket,server=y,suspend=y,address=30303";
@@ -116,7 +167,10 @@ public abstract class ComponentTestBase
     // method include it when starting the OSGi framework JVM
     protected static String paxRunnerVmOption = null;
 
+<<<<<<< HEAD
+=======
     //To investigate any problems at all set to "debug"
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     protected static String DS_LOGLEVEL = "debug";
 
     protected static String bsnVersionUniqueness = "single";
@@ -125,6 +179,21 @@ public abstract class ComponentTestBase
     protected static String descriptorFile = "/integration_test_simple_components.xml";
     protected static String COMPONENT_PACKAGE = "org.apache.felix.scr.integration.components";
 
+<<<<<<< HEAD
+
+    protected static boolean NONSTANDARD_COMPONENT_FACTORY_BEHAVIOR = false;
+    protected volatile Log log;
+    
+    //set to true to only get last 1000 lines of log.
+    protected static boolean restrictedLogging;
+    
+    protected static String felixCaVersion = System.getProperty( "felix.ca.version" );
+
+
+    static
+    {
+        theConfig = new Hashtable<String, String>();
+=======
     protected static boolean NONSTANDARD_COMPONENT_FACTORY_BEHAVIOR = false;
     protected volatile Log log;
 
@@ -140,10 +209,23 @@ public abstract class ComponentTestBase
     static
     {
         theConfig = new Hashtable<>();
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         theConfig.put( PROP_NAME, PROP_NAME );
     }
 
     @ProbeBuilder
+<<<<<<< HEAD
+    public TestProbeBuilder extendProbe(TestProbeBuilder builder) {
+        builder.setHeader("Export-Package", "org.apache.felix.scr.integration.components," +
+                                            "org.apache.felix.scr.integration.components.activatesignature," +
+                                            "org.apache.felix.scr.integration.components.circular," +
+                                            "org.apache.felix.scr.integration.components.circularFactory," +
+                                            "org.apache.felix.scr.integration.components.concurrency," +
+                                            "org.apache.felix.scr.integration.components.felix3680," +
+                                            "org.apache.felix.scr.integration.components.felix3680_2");
+        builder.setHeader("Import-Package", "org.apache.felix.scr,org.apache.felix.scr.component;mandatory:=\"status\"; status=\"provisional\"");
+        builder.setHeader("Bundle-ManifestVersion", "2");
+=======
     public TestProbeBuilder extendProbe(TestProbeBuilder builder)
     {
         builder.setHeader( "Export-Package",
@@ -161,6 +243,7 @@ public abstract class ComponentTestBase
                         + "org.apache.felix.scr.integration.components.felix5276" );
         builder.setHeader( "Import-Package", "org.apache.felix.scr.component" );
         builder.setHeader( "Bundle-ManifestVersion", "2" );
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         return builder;
     }
 
@@ -172,6 +255,39 @@ public abstract class ComponentTestBase
         if ( !bundleFile.canRead() )
         {
             throw new IllegalArgumentException( "Cannot read from bundle file " + bundleFileName + " specified in the "
+<<<<<<< HEAD
+                + BUNDLE_JAR_SYS_PROP + " system property" );
+        }
+
+        final Option[] base = options(
+            provision(
+                CoreOptions.bundle( bundleFile.toURI().toString() ),
+                mavenBundle( "org.ops4j.pax.tinybundles", "tinybundles", "1.0.0" ),
+                mavenBundle( "org.apache.felix", "org.apache.felix.configadmin", felixCaVersion )
+             ),
+             junitBundles(),
+             frameworkProperty( "org.osgi.framework.bsnversion" ).value( bsnVersionUniqueness ),
+             systemProperty( "ds.factory.enabled" ).value( Boolean.toString( NONSTANDARD_COMPONENT_FACTORY_BEHAVIOR ) ),
+             systemProperty( "ds.loglevel" ).value( DS_LOGLEVEL )
+
+        );
+        final Option vmOption = ( paxRunnerVmOption != null ) ? CoreOptions.vmOption( paxRunnerVmOption ) : null;
+        return OptionUtils.combine( base, vmOption );
+    }
+
+
+    @Before
+    public void setUp() throws BundleException
+    {
+        log = new Log(restrictedLogging);
+        log.start();
+        bundleContext.addFrameworkListener( log );
+        bundleContext.registerService( LogService.class.getName(), log, null );
+        
+        scrTracker = new ServiceTracker( bundleContext, "org.apache.felix.scr.ScrService", null );
+        scrTracker.open();
+        configAdminTracker = new ServiceTracker( bundleContext, "org.osgi.service.cm.ConfigurationAdmin", null );
+=======
                     + BUNDLE_JAR_SYS_PROP + " system property" );
         }
 
@@ -202,12 +318,17 @@ public abstract class ComponentTestBase
         scrTracker.open();
         configAdminTracker = new ServiceTracker<>( bundleContext,
                 ConfigurationAdmin.class, null );
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         configAdminTracker.open();
 
         bundle = installBundle( descriptorFile, COMPONENT_PACKAGE );
         bundle.start();
     }
 
+<<<<<<< HEAD
+
+=======
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     @After
     public void tearDown() throws BundleException
     {
@@ -230,6 +351,61 @@ public abstract class ComponentTestBase
         }
     }
 
+<<<<<<< HEAD
+
+    protected Component[] getComponents()
+    {
+        ScrService scr = ( ScrService ) scrTracker.getService();
+        if ( scr != null )
+        {
+            return scr.getComponents();
+        }
+
+        return null;
+    }
+
+
+    protected Component findComponentByName( String name )
+    {
+        Component[] components = findComponentsByName( name );
+        if ( components != null && components.length > 0 )
+        {
+            return components[0];
+        }
+
+        return null;
+    }
+
+
+    protected Component[] findComponentsByName( String name )
+    {
+        ScrService scr = ( ScrService ) scrTracker.getService();
+        if ( scr != null )
+        {
+            return scr.getComponents( name );
+        }
+
+        return null;
+    }
+
+
+    protected static void delay()
+    {
+        try
+        {
+            Thread.sleep( 300 );
+        }
+        catch ( InterruptedException ie )
+        {
+            // dont care
+        }
+    }
+
+
+    protected ConfigurationAdmin getConfigurationAdmin()
+    {
+        ConfigurationAdmin ca = ( ConfigurationAdmin ) configAdminTracker.getService();
+=======
     protected Collection<ComponentDescriptionDTO> getComponentDescriptions()
     {
         ServiceComponentRuntime scr = scrTracker.getService();
@@ -484,6 +660,7 @@ public abstract class ComponentTestBase
     protected ConfigurationAdmin getConfigurationAdmin()
     {
         ConfigurationAdmin ca = configAdminTracker.getService();
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         if ( ca == null )
         {
             TestCase.fail( "Missing ConfigurationAdmin service" );
@@ -491,6 +668,15 @@ public abstract class ComponentTestBase
         return ca;
     }
 
+<<<<<<< HEAD
+    protected org.osgi.service.cm.Configuration configure( String pid )
+    {
+        return configure( pid, null );
+        
+    }
+
+    protected org.osgi.service.cm.Configuration configure( String pid, String bundleLocation )
+=======
     protected org.osgi.service.cm.Configuration configure(String pid)
     {
         return configure( pid, null );
@@ -504,16 +690,25 @@ public abstract class ComponentTestBase
 
     protected org.osgi.service.cm.Configuration configure(String pid, String bundleLocation,
             Dictionary<String, Object> props)
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     {
         ConfigurationAdmin ca = getConfigurationAdmin();
         try
         {
             org.osgi.service.cm.Configuration config = ca.getConfiguration( pid, null );
+<<<<<<< HEAD
+            if (bundleLocation != null)
+            {
+                config.setBundleLocation( bundleLocation );
+            }
+            config.update( theConfig );
+=======
             if ( bundleLocation != null )
             {
                 config.setBundleLocation( bundleLocation );
             }
             config.update( props );
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
             return config;
         }
         catch ( IOException ioe )
@@ -523,7 +718,12 @@ public abstract class ComponentTestBase
         return null;
     }
 
+<<<<<<< HEAD
+
+    protected void deleteConfig( String pid )
+=======
     protected void deleteConfig(String pid)
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     {
         ConfigurationAdmin ca = getConfigurationAdmin();
         try
@@ -537,7 +737,12 @@ public abstract class ComponentTestBase
         }
     }
 
+<<<<<<< HEAD
+
+    protected String createFactoryConfiguration( String factoryPid )
+=======
     protected String createFactoryConfiguration(String factoryPid, String bundleLocation)
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     {
         ConfigurationAdmin ca = getConfigurationAdmin();
         try
@@ -553,7 +758,12 @@ public abstract class ComponentTestBase
         }
     }
 
+<<<<<<< HEAD
+
+    protected void deleteFactoryConfigurations( String factoryPid )
+=======
     protected void deleteFactoryConfigurations(String factoryPid)
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     {
         ConfigurationAdmin ca = getConfigurationAdmin();
         try
@@ -578,6 +788,10 @@ public abstract class ComponentTestBase
         }
     }
 
+<<<<<<< HEAD
+
+    protected static Class<?> getType( Object object, String desiredName )
+=======
     //component factory test helper methods
     protected ComponentFactory getComponentFactory(final String componentfactory) throws InvalidSyntaxException
     {
@@ -631,6 +845,7 @@ public abstract class ComponentTestBase
     }
 
     protected static Class<?> getType(Object object, String desiredName)
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     {
         Class<?> ccImpl = object.getClass();
         while ( ccImpl != null && !desiredName.equals( ccImpl.getSimpleName() ) )
@@ -645,7 +860,12 @@ public abstract class ComponentTestBase
         return ccImpl;
     }
 
+<<<<<<< HEAD
+
+    protected static Object getFieldValue( Object object, String fieldName )
+=======
     protected static Object getFieldValue(Object object, String fieldName)
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     {
         try
         {
@@ -658,6 +878,26 @@ public abstract class ComponentTestBase
             return null; // keep the compiler happy
         }
     }
+<<<<<<< HEAD
+    
+    protected Object getComponentManagerFromComponentInstance( Object instance )
+    {
+        Object cc = getFieldValue( instance, "m_componentContext");
+        return getFieldValue( cc, "m_componentManager" );
+    }
+
+
+    protected static Field getField( Class<?> type, String fieldName ) throws NoSuchFieldException
+    {
+        Class<?> clazz = type;
+        while (clazz != null)
+        {
+            Field[] fields = clazz.getDeclaredFields();
+            for (int i = 0; i < fields.length; i++)
+            {
+                Field field = fields[i];
+                if (field.getName().equals(fieldName))
+=======
 
     protected Object getComponentManagerFromComponentInstance(Object instance)
     {
@@ -675,6 +915,7 @@ public abstract class ComponentTestBase
             {
                 Field field = fields[i];
                 if ( field.getName().equals( fieldName ) )
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
                 {
                     field.setAccessible( true );
                     return field;
@@ -682,6 +923,27 @@ public abstract class ComponentTestBase
             }
             clazz = clazz.getSuperclass();
         }
+<<<<<<< HEAD
+        throw new NoSuchFieldException(fieldName);        
+    }
+
+
+    protected Bundle installBundle( final String descriptorFile, String componentPackage ) throws BundleException
+    {
+        return installBundle(descriptorFile, componentPackage, "simplecomponent", "0.0.11", null);
+    }
+    
+    protected Bundle installBundle( final String descriptorFile, String componentPackage, String symbolicName, String version, String location ) throws BundleException
+    {
+        final InputStream bundleStream = bundle()
+                .add("OSGI-INF/components.xml", getClass().getResource(descriptorFile))
+
+                .set(Constants.BUNDLE_SYMBOLICNAME, symbolicName)
+                .set(Constants.BUNDLE_VERSION, version)
+                .set(Constants.IMPORT_PACKAGE, componentPackage)
+                .set("Service-Component", "OSGI-INF/components.xml")
+                .build(withBnd());
+=======
         throw new NoSuchFieldException( fieldName );
     }
 
@@ -702,6 +964,7 @@ public abstract class ComponentTestBase
                                 ExtenderNamespace.EXTENDER_NAMESPACE
                                 + ";filter:=\"(&(osgi.extender=osgi.component)(version>=1.3)(!(version>=2.0)))\"" ).build(
                                         withBnd() );
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 
         try
         {
@@ -725,6 +988,143 @@ public abstract class ComponentTestBase
 
     //Code copied from ScrCommand to make it easier to find out what your test components are actually doing.
     //    @Test
+<<<<<<< HEAD
+    public void testDescription()
+    {
+        PrintStream out = System.out;
+        info( out );
+    }
+
+    void info( PrintStream out )
+    {
+        Component[] components = getComponents();
+        if ( components == null )
+        {
+            return;
+        }
+
+        for ( int j = 0; j < components.length; j++ )
+        {
+            Component component = components[j];
+            out.print( "ID: " );
+            out.println( component.getId() );
+            out.print( "Name: " );
+            out.println( component.getName() );
+            out.print( "Bundle: " );
+            out.println( component.getBundle().getSymbolicName() + " (" + component.getBundle().getBundleId() + ")" );
+            out.print( "State: " );
+            out.println( toStateString( component.getState() ) );
+            out.print( "Default State: " );
+            out.println( component.isDefaultEnabled() ? "enabled" : "disabled" );
+            out.print( "Activation: " );
+            out.println( component.isImmediate() ? "immediate" : "delayed" );
+
+            // DS 1.1 new features
+            out.print( "Configuration Policy: " );
+            out.println( component.getConfigurationPolicy() );
+            out.print( "Activate Method: " );
+            out.print( component.getActivate() );
+            if ( component.isActivateDeclared() )
+            {
+                out.print( " (declared in the descriptor)" );
+            }
+            out.println();
+            out.print( "Deactivate Method: " );
+            out.print( component.getDeactivate() );
+            if ( component.isDeactivateDeclared() )
+            {
+                out.print( " (declared in the descriptor)" );
+            }
+            out.println();
+            out.print( "Modified Method: " );
+            if ( component.getModified() != null )
+            {
+                out.print( component.getModified() );
+            }
+            else
+            {
+                out.print( "-" );
+            }
+            out.println();
+
+            if ( component.getFactory() != null )
+            {
+                out.print( "Factory: " );
+                out.println( component.getFactory() );
+            }
+
+            String[] services = component.getServices();
+            if ( services != null )
+            {
+                out.print( "Services: " );
+                out.println( services[0] );
+                for ( int i = 1; i < services.length; i++ )
+                {
+                    out.print( "          " );
+                    out.println( services[i] );
+                }
+                out.print( "Service Type: " );
+                out.println( component.isServiceFactory() ? "service factory" : "service" );
+            }
+
+            Reference[] refs = component.getReferences();
+            if ( refs != null )
+            {
+                for ( int i = 0; i < refs.length; i++ )
+                {
+                    out.print( "Reference: " );
+                    out.println( refs[i].getName() );
+                    out.print( "    Satisfied: " );
+                    out.println( refs[i].isSatisfied() ? "satisfied" : "unsatisfied" );
+                    out.print( "    Service Name: " );
+                    out.println( refs[i].getServiceName() );
+                    if ( refs[i].getTarget() != null )
+                    {
+                        out.print( "    Target Filter: " );
+                        out.println( refs[i].getTarget() );
+                    }
+                    out.print( "    Multiple: " );
+                    out.println( refs[i].isMultiple() ? "multiple" : "single" );
+                    out.print( "    Optional: " );
+                    out.println( refs[i].isOptional() ? "optional" : "mandatory" );
+                    out.print( "    Policy: " );
+                    out.println( refs[i].isStatic() ? "static" : "dynamic" );
+                    out.print( "    Policy option: " );
+                    out.println( refs[i].isReluctant() ? "reluctant" : "greedy" );
+                }
+            }
+
+            Dictionary props = component.getProperties();
+            if ( props != null )
+            {
+                out.println( "Properties:" );
+                TreeSet keys = new TreeSet( Collections.list( props.keys() ) );
+                for ( Iterator ki = keys.iterator(); ki.hasNext(); )
+                {
+                    Object key = ki.next();
+                    out.print( "    " );
+                    out.print( key );
+                    out.print( " = " );
+
+                    Object prop = props.get( key );
+                    if ( prop.getClass().isArray() )
+                    {
+                        prop = Arrays.asList( ( Object[] ) prop );
+                    }
+                    out.print( prop );
+
+                    out.println();
+                }
+            }
+        }
+    }
+    
+    protected boolean isAtLeastR5() 
+    {
+        try
+        {
+            Method m = org.osgi.service.cm.Configuration.class.getDeclaredMethod( "getChangeCount");
+=======
     public void testDescription() throws Exception {
         PrintStream out = System.out;
         info( new PrintWriter( out ) );
@@ -755,11 +1155,16 @@ public abstract class ComponentTestBase
         try
         {
             Method m = org.osgi.service.cm.Configuration.class.getDeclaredMethod( "getChangeCount" );
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
             return true;
         }
         catch ( SecurityException e )
         {
+<<<<<<< HEAD
+            throw new RuntimeException(e);
+=======
             throw new RuntimeException( e );
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         }
         catch ( NoSuchMethodException e )
         {
@@ -767,6 +1172,43 @@ public abstract class ComponentTestBase
         }
     }
 
+<<<<<<< HEAD
+    private String toStateString( int state )
+    {
+        switch ( state )
+        {
+            case Component.STATE_DISABLED:
+                return "disabled";
+            case Component.STATE_UNSATISFIED:
+                return "unsatisfied";
+            case Component.STATE_ACTIVE:
+                return "active";
+            case Component.STATE_REGISTERED:
+                return "registered";
+            case Component.STATE_FACTORY:
+                return "factory";
+            case Component.STATE_DISPOSED:
+                return "disposed";
+
+            case Component.STATE_ENABLING:
+                return "enabling";
+            case Component.STATE_ENABLED:
+                return "enabled";
+            case Component.STATE_ACTIVATING:
+                return "activating";
+            case Component.STATE_DEACTIVATING:
+                return "deactivating";
+            case Component.STATE_DISABLING:
+                return "disabling";
+            case Component.STATE_DISPOSING:
+                return "disposing";
+            default:
+                return String.valueOf( state );
+        }
+    }
+
+=======
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     // Used to ignore logs displayed by the framework from stdout.
     // (the log service will log it because it listen to fwk error
     // events ...).
@@ -774,13 +1216,21 @@ public abstract class ComponentTestBase
     {
         NullStdout()
         {
+<<<<<<< HEAD
+            super(new OutputStream()
+=======
             super( new OutputStream()
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
             {
                 @Override
                 public void write(int b) throws IOException
                 {
                 }
+<<<<<<< HEAD
+            });
+=======
             } );
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         }
     }
 
@@ -792,7 +1242,12 @@ public abstract class ComponentTestBase
         private final long m_time;
         private final Thread m_thread;
 
+<<<<<<< HEAD
+
+        LogEntry( int level, String msg, Throwable t )
+=======
         LogEntry(int level, String msg, Throwable t)
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         {
             m_level = level;
             m_msg = msg;
@@ -801,42 +1256,79 @@ public abstract class ComponentTestBase
             m_thread = Thread.currentThread();
         }
 
+<<<<<<< HEAD
+
+=======
         @Override
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         public String toString()
         {
             return m_msg;
         }
 
+<<<<<<< HEAD
+
+=======
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         public int getLevel()
         {
             return m_level;
         }
 
+<<<<<<< HEAD
+
+=======
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         public String getMessage()
         {
             return m_msg;
         }
 
+<<<<<<< HEAD
+
+=======
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         public Throwable getError()
         {
             return m_err;
         }
 
+<<<<<<< HEAD
+
+=======
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         public long getTime()
         {
             return m_time;
         }
 
+<<<<<<< HEAD
+
+=======
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         public Thread getThread()
         {
             return m_thread;
         }
     }
+<<<<<<< HEAD
+    
+=======
 
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     public static class Log implements LogService, FrameworkListener, Runnable
     {
         private static final int RESTRICTED_LOG_SIZE = 1000;
         private final SimpleDateFormat m_sdf = new SimpleDateFormat( "HH:mm:ss,S" );
+<<<<<<< HEAD
+        private final static PrintStream m_out = new PrintStream( new BufferedOutputStream( new FileOutputStream(
+            FileDescriptor.err ), 128 ) );
+        private final List<String> m_warnings = Collections.synchronizedList( new ArrayList<String>() );
+        private LinkedBlockingQueue<LogEntry> m_logQueue = new LinkedBlockingQueue<LogEntry>();
+        private volatile Thread m_logThread;
+        private volatile PrintStream m_realOut;
+        private volatile PrintStream m_realErr;
+=======
         private final static PrintStream m_out = new PrintStream(
                 new BufferedOutputStream( new FileOutputStream( FileDescriptor.err ), 128 ) );
         private final List<String> m_warnings = Collections.synchronizedList( new ArrayList<String>() );
@@ -845,6 +1337,7 @@ public abstract class ComponentTestBase
         private volatile PrintStream m_realOut;
         private volatile PrintStream m_realErr;
         private String[] ignoredWarnings;
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 
         protected Throwable firstFrameworkThrowable;
 
@@ -852,10 +1345,16 @@ public abstract class ComponentTestBase
         private final String[] log = new String[1000];
         private int i = 0;
 
+<<<<<<< HEAD
+        public Log( boolean restrictedLogging )
+        {
+            this.restrictedLogging = restrictedLogging;
+=======
         public Log(boolean restrictedLogging, String[] ignoredWarnings)
         {
             this.restrictedLogging = restrictedLogging;
             this.ignoredWarnings = ignoredWarnings;
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         }
 
         public void start()
@@ -868,6 +1367,22 @@ public abstract class ComponentTestBase
             m_logThread.start();
         }
 
+<<<<<<< HEAD
+        
+        public void stop()
+        {
+            System.setOut(m_realOut);
+            System.setErr(m_realErr);
+            if ( restrictedLogging )
+            {
+                for (int j = 0; j < RESTRICTED_LOG_SIZE; j++)
+                {
+                    if ( log[i] != null )
+                    {
+                        m_realErr.println(log[i++]);
+                    }
+                    if (i == RESTRICTED_LOG_SIZE) i = 0;
+=======
         public void stop()
         {
             System.setOut( m_realOut );
@@ -882,6 +1397,7 @@ public abstract class ComponentTestBase
                     }
                     if ( i == RESTRICTED_LOG_SIZE )
                         i = 0;
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
                 }
             }
             else
@@ -899,17 +1415,30 @@ public abstract class ComponentTestBase
             }
         }
 
+<<<<<<< HEAD
+
+=======
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         List<String> foundWarnings()
         {
             return m_warnings;
         }
+<<<<<<< HEAD
+        
+=======
 
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         Throwable getFirstFrameworkThrowable()
         {
             return firstFrameworkThrowable;
         }
 
+<<<<<<< HEAD
+
+
+=======
         @Override
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         public void run()
         {
             try
@@ -918,7 +1447,11 @@ public abstract class ComponentTestBase
                 while ( true )
                 {
                     entry = m_logQueue.take();
+<<<<<<< HEAD
+                    if ( entry.getLevel() <= 2 )
+=======
                     if ( entry.getLevel() <= 2 && acceptWarning( entry.getMessage() ) )
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
                     {
                         if ( m_warnings.size() < 1024 )
                         {
@@ -948,8 +1481,12 @@ public abstract class ComponentTestBase
                     if ( restrictedLogging )
                     {
                         log[i++] = sw.toString();
+<<<<<<< HEAD
+                        if ( i == RESTRICTED_LOG_SIZE ) i = 0;
+=======
                         if ( i == RESTRICTED_LOG_SIZE )
                             i = 0;
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
                     }
                     else
                     {
@@ -964,6 +1501,18 @@ public abstract class ComponentTestBase
             }
         }
 
+<<<<<<< HEAD
+
+        // ------------- FrameworkListener -----------------------------------------------------------
+
+        public void frameworkEvent( final FrameworkEvent event )
+        {
+            int eventType = event.getType();
+            String msg = getFrameworkEventMessage( eventType );
+            int level = ( eventType == FrameworkEvent.ERROR ) ? LogService.LOG_ERROR : LogService.LOG_WARNING;
+            log( level, msg, event.getThrowable() );
+            if (event.getThrowable() != null && firstFrameworkThrowable == null)
+=======
         // ------------- FrameworkListener -----------------------------------------------------------
 
         private boolean acceptWarning(String message)
@@ -989,21 +1538,34 @@ public abstract class ComponentTestBase
             int level = ( eventType == FrameworkEvent.ERROR )? LogService.LOG_ERROR: LogService.LOG_WARNING;
             log( level, msg, event.getThrowable() );
             if ( event.getThrowable() != null && firstFrameworkThrowable == null )
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
             {
                 firstFrameworkThrowable = event.getThrowable();
             }
         }
 
+<<<<<<< HEAD
+
+        // ------------ LogService ----------------------------------------------------------------
+
+        public void log( int level, String message )
+=======
         // ------------ LogService ----------------------------------------------------------------
 
         @Override
         public void log(int level, String message)
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         {
             log( level, message, null );
         }
 
+<<<<<<< HEAD
+
+        public void log( int level, String message, Throwable exception )
+=======
         @Override
         public void log(int level, String message, Throwable exception)
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         {
             if ( level > getEnabledLogLevel() )
             {
@@ -1012,14 +1574,24 @@ public abstract class ComponentTestBase
             m_logQueue.offer( new LogEntry( level, message, exception ) );
         }
 
+<<<<<<< HEAD
+
+        public void log( ServiceReference sr, int osgiLevel, String message )
+=======
         @Override
         public void log(ServiceReference sr, int osgiLevel, String message)
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         {
             log( sr, osgiLevel, message, null );
         }
 
+<<<<<<< HEAD
+
+        public void log( ServiceReference sr, int level, String msg, Throwable exception )
+=======
         @Override
         public void log(ServiceReference sr, int level, String msg, Throwable exception)
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         {
             if ( sr != null )
             {
@@ -1038,6 +1610,10 @@ public abstract class ComponentTestBase
             }
         }
 
+<<<<<<< HEAD
+
+=======
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         private int getEnabledLogLevel()
         {
             if ( DS_LOGLEVEL.regionMatches( true, 0, "err", 0, "err".length() ) )
@@ -1058,6 +1634,27 @@ public abstract class ComponentTestBase
             }
         }
 
+<<<<<<< HEAD
+
+        private String getFrameworkEventMessage( int event )
+        {
+            switch ( event )
+            {
+                case FrameworkEvent.ERROR:
+                    return "FrameworkEvent: ERROR";
+                case FrameworkEvent.INFO:
+                    return "FrameworkEvent INFO";
+                case FrameworkEvent.PACKAGES_REFRESHED:
+                    return "FrameworkEvent: PACKAGE REFRESHED";
+                case FrameworkEvent.STARTED:
+                    return "FrameworkEvent: STARTED";
+                case FrameworkEvent.STARTLEVEL_CHANGED:
+                    return "FrameworkEvent: STARTLEVEL CHANGED";
+                case FrameworkEvent.WARNING:
+                    return "FrameworkEvent: WARNING";
+                default:
+                    return null;
+=======
         private String getFrameworkEventMessage(int event)
         {
             switch (event)
@@ -1076,6 +1673,7 @@ public abstract class ComponentTestBase
                 return "FrameworkEvent: WARNING";
             default:
                 return null;
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
             }
         }
     }

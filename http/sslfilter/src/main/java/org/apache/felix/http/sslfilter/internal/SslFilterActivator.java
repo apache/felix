@@ -18,6 +18,17 @@
  */
 package org.apache.felix.http.sslfilter.internal;
 
+<<<<<<< HEAD
+import org.osgi.framework.BundleActivator;
+import org.osgi.framework.BundleContext;
+
+public class SslFilterActivator implements BundleActivator
+{
+    private HttpServiceTracker httpTracker;
+    private LogServiceTracker logTracker;
+
+    public void start(BundleContext context)
+=======
 import java.util.Dictionary;
 import java.util.Hashtable;
 
@@ -47,10 +58,23 @@ public class SslFilterActivator implements BundleActivator
 
     @Override
     public void start(final BundleContext context)
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     {
         this.logTracker = new LogServiceTracker(context);
         this.logTracker.open();
 
+<<<<<<< HEAD
+        this.httpTracker = new HttpServiceTracker(context);
+        this.httpTracker.open();
+    }
+
+    public void stop(BundleContext context)
+    {
+        if (this.httpTracker != null)
+        {
+            this.httpTracker.close();
+            this.httpTracker = null;
+=======
         final Dictionary<String, Object> props = new Hashtable<String, Object>();
         props.put(Constants.SERVICE_PID, SslFilter.PID);
 
@@ -102,6 +126,7 @@ public class SslFilterActivator implements BundleActivator
         {
             this.configReceiver.unregister();
             this.configReceiver = null;
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         }
         if (this.logTracker != null)
         {
@@ -109,9 +134,12 @@ public class SslFilterActivator implements BundleActivator
             this.logTracker = null;
         }
     }
+<<<<<<< HEAD
+=======
 
     void configureFilters(@SuppressWarnings("rawtypes") final Dictionary properties) throws ConfigurationException
     {
         this.filter.configure(properties);
     }
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 }

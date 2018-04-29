@@ -22,6 +22,10 @@ import java.lang.annotation.ElementType;
 import java.lang.annotation.Target;
 
 /**
+<<<<<<< HEAD
+* This annotation declares that the component instances will provide a service.
+* @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
+=======
  * This annotation declares that the component instances will provide a service.
  *
  * <pre>
@@ -32,12 +36,16 @@ import java.lang.annotation.Target;
  *     }
  * </pre>
  * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 */
 @Target({ElementType.TYPE, ElementType.ANNOTATION_TYPE})
 public @interface Provides {
 
     /**
      * Set the provided specifications.
+<<<<<<< HEAD
+     * Default : all implemented interfaces
+=======
      * It can be used to force the exposed service to use an implementation class
      * (not an interface) as specification.
      * Default : all implemented interfaces
@@ -49,11 +57,20 @@ public @interface Provides {
      *         // ...
      *     }
      * </pre>
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
      */
     Class[] specifications() default { };
 
     /**
      * Set the service object creation strategy.
+<<<<<<< HEAD
+     * Two value are possible: SINGLETON, SERVICE, METHOD, INSTANCE or the strategy class name.
+     * SERVICE means OSGi Service Factory.
+     * METHOD delegates the creation to the factory-method of the component
+     * INSTANCE creates one service object per requiring instance
+     * for other strategies, specify the qualified name of the CreationStrategy class.
+     * Default : SINGLETON
+=======
      * Multiple values are possible: {@literal SINGLETON}, {@literal SERVICE},
      * {@literal METHOD}, {@literal INSTANCE} or the strategy fully qualified class name:
      * <ul>
@@ -63,11 +80,19 @@ public @interface Provides {
      *     <li>{@literal INSTANCE}: Creates one service object per requiring instance</li>
      *     <li>Any other value is interpreted as the qualified name of a {@code CreationStrategy} implementation</li>
      * </ul>
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
      */
     String strategy() default "SINGLETON";
 
     /**
      * Allows adding static properties to the service.
+<<<<<<< HEAD
+     * Nested properties are static service properties,
+     * so <b>must</b> contain the name and the value as
+     * they are not attached to a field.
+     * The array contains {@link StaticServiceProperty} elements.
+     * Default : No service properties
+=======
      * Nested properties are static service properties, so <b>must</b> contain the name,
      * value and type as they are not attached to a field (cannot discover type through
      * introspection).
@@ -87,6 +112,7 @@ public @interface Provides {
      *     }
      * </pre>
 
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
      */
     StaticServiceProperty[] properties() default {};
 }

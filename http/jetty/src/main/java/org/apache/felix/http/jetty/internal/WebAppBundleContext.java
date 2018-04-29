@@ -16,18 +16,30 @@
  */
 package org.apache.felix.http.jetty.internal;
 
-import java.io.File;
-import java.io.IOException;
-import java.net.MalformedURLException;
-import java.net.URL;
-import java.util.Enumeration;
-
+<<<<<<< HEAD
 import org.eclipse.jetty.util.URIUtil;
 import org.eclipse.jetty.util.resource.Resource;
 import org.eclipse.jetty.util.resource.URLResource;
 import org.eclipse.jetty.webapp.WebAppContext;
 import org.osgi.framework.Bundle;
 
+=======
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
+import java.io.File;
+import java.io.IOException;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.util.Enumeration;
+
+<<<<<<< HEAD
+=======
+import org.eclipse.jetty.util.URIUtil;
+import org.eclipse.jetty.util.resource.Resource;
+import org.eclipse.jetty.util.resource.URLResource;
+import org.eclipse.jetty.webapp.WebAppContext;
+import org.osgi.framework.Bundle;
+
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 class WebAppBundleContext extends WebAppContext
 {
     public WebAppBundleContext(String contextPath, final Bundle bundle, final ClassLoader parent)
@@ -70,12 +82,20 @@ class WebAppBundleContext extends WebAppContext
             }
 
             @Override
+<<<<<<< HEAD
+            @SuppressWarnings({ "unchecked" })
+=======
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
             protected Enumeration<URL> findResources(String name) throws IOException
             {
                 // Don't try to load resources from the bundle when it is not active
                 if (bundle.getState() == Bundle.ACTIVE)
                 {
+<<<<<<< HEAD
+                    Enumeration<URL> urls = (Enumeration<URL>) bundle.getResources(name);
+=======
                     Enumeration<URL> urls = bundle.getResources(name);
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
                     if (urls != null)
                     {
                         return urls;
@@ -105,7 +125,11 @@ class WebAppBundleContext extends WebAppContext
         }
 
         @Override
+<<<<<<< HEAD
+        public synchronized void release()
+=======
         public synchronized void close()
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         {
             if (this._in != null)
             {
@@ -115,7 +139,11 @@ class WebAppBundleContext extends WebAppContext
                 // "Inflater has been closed"
                 this._in = null;
             }
+<<<<<<< HEAD
+            super.release();
+=======
             super.close();
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         }
 
         @Override

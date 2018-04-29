@@ -16,7 +16,11 @@
  */
 function renderData( eventData )  {
 	switch(eventData.status) {
+<<<<<<< HEAD
+		case -1: // no event admin
+=======
 		case -1: // no scr service
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 			$('.statline').html(i18n.stat_no_service);
 			$('#scr').addClass('ui-helper-hidden');
 			break;
@@ -39,8 +43,13 @@ function renderData( eventData )  {
 
 function getEntryId(/* Object */ dataEntry) {
     var id = dataEntry.id;
+<<<<<<< HEAD
+    if (id < 0) {
+        id = dataEntry.name;
+=======
     if (id == null || id < 0 || id === "") {
         id = dataEntry.bundleId + '/' + dataEntry.name;
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         if (dataEntry.pid) {
             id += '/' + dataEntry.pid;
         }
@@ -62,13 +71,22 @@ function entry( /* Object */ dataEntry ) {
 	_.find('td:eq(2)').text( dataEntry.state );
 
 	// setup buttons
+<<<<<<< HEAD
+	if ( dataEntry.stateRaw == 1 || dataEntry.stateRaw == 1024 ) { // disabled or disabling
+		_.find('li:eq(0)').removeClass('ui-helper-hidden').click(function() { changeDataEntryState(idPath, 'enable') });
+=======
 	if ( dataEntry.stateRaw == -1 ) { // disabled or disabling
 		_.find('li:eq(0)').removeClass('ui-helper-hidden').click(function() { changeDataEntryState(dataEntry.name, 'enable') });
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 	} else {
 		_.find('li:eq(1)').removeClass('ui-helper-hidden').click(function() { changeDataEntryState(idPath, 'disable') });
 	}
 	if ( dataEntry.configurable ) _.find('li:eq(2)').removeClass('ui-helper-hidden').click(function() { // configure
+<<<<<<< HEAD
+		changeDataEntryState(dataEntry.pid, 'configure');
+=======
 		changeDataEntryState(dataEntry.configurable, 'configure');
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 	});	
 }
 
@@ -88,7 +106,11 @@ function showDetails( id ) {
 	}, 'json');
 }
 
+<<<<<<< HEAD
+function hideDetails( id ) {
+=======
 function hideDetails( id, path ) {
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 	var __test__ = $('#img' + id);
 	$('#img' + id).each(function() {
 		$('#pluginInlineDetails').remove();
@@ -97,14 +119,22 @@ function hideDetails( id, path ) {
 			removeClass('ui-icon-triangle-1-s').//down
 			addClass('ui-icon-triangle-1-e').//right
 		    attr('title', 'Details').
+<<<<<<< HEAD
+			unbind('click').click(function() {showDetails(id)});
+=======
 			unbind('click').click(function() {showDetails(path)});
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 	});
 }
 
 function renderDetails( data ) {
 	data = data.data[0];
+<<<<<<< HEAD
+	var id = getEntryId(data).replace(/[./-]/g, '_');
+=======
 	var idPath = getEntryId(data);
 	var id = idPath.replace(/[./-]/g, '_');
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 	$('#pluginInlineDetails').remove();
 	var __test__ = $('#entry' + id);
 	$('#entry' + id + ' > td').eq(1).append('<div id="pluginInlineDetails"/>');
@@ -124,7 +154,11 @@ function renderDetails( data ) {
 				removeClass('ui-icon-triangle-1-e').//right
 				addClass('ui-icon-triangle-1-s').//down
 				attr('title', 'Hide Details').
+<<<<<<< HEAD
+				unbind('click').click(function() {hideDetails(id)});
+=======
 				unbind('click').click(function() {hideDetails(id, idPath)});
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 		}
 	});
 	$('#pluginInlineDetails').append('<table border="0"><tbody></tbody></table>');

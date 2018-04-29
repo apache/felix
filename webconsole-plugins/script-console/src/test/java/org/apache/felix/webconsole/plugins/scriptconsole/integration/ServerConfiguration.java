@@ -19,6 +19,8 @@
 
 package org.apache.felix.webconsole.plugins.scriptconsole.integration;
 
+<<<<<<< HEAD
+=======
 import static org.ops4j.pax.exam.CoreOptions.cleanCaches;
 import static org.ops4j.pax.exam.CoreOptions.frameworkProperty;
 import static org.ops4j.pax.exam.CoreOptions.mavenBundle;
@@ -28,11 +30,19 @@ import static org.ops4j.pax.exam.CoreOptions.wrappedBundle;
 
 import java.io.File;
 
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 import org.ops4j.pax.exam.Configuration;
 import org.ops4j.pax.exam.CoreOptions;
 import org.ops4j.pax.exam.Option;
 import org.ops4j.pax.exam.OptionUtils;
 
+<<<<<<< HEAD
+import java.io.File;
+
+import static org.ops4j.pax.exam.CoreOptions.*;
+
+=======
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 public class ServerConfiguration
 {
 
@@ -85,6 +95,10 @@ public class ServerConfiguration
                 mavenBundle("org.apache.felix", "org.apache.felix.webconsole").versionAsInProject(),
                 mavenBundle("commons-io", "commons-io").versionAsInProject(),
                 wrappedBundle(mavenBundle("commons-fileupload", "commons-fileupload").versionAsInProject()),
+<<<<<<< HEAD
+                wrappedBundle(mavenBundle("org.json", "json").versionAsInProject()),
+=======
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
                 mavenBundle("org.codehaus.groovy", "groovy-all", "2.1.0"),
                 frameworkProperty("osgi.clean").value("true"),
 //            systemProperty("org.ops4j.pax.logging.DefaultServiceLog.level").value("INFO"),

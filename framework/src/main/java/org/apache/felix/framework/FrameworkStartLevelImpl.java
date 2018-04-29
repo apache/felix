@@ -20,7 +20,10 @@ package org.apache.felix.framework;
 
 import java.util.ArrayList;
 import java.util.List;
+<<<<<<< HEAD
+=======
 
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 import org.osgi.framework.AdminPermission;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
@@ -51,10 +54,16 @@ class FrameworkStartLevelImpl implements FrameworkStartLevel, Runnable
         m_registry = registry;
     }
 
+<<<<<<< HEAD
+    void start()
+    {
+        m_slReg = m_registry.registerService(m_felix._getBundleContext(),
+=======
     @SuppressWarnings("unchecked")
     void start()
     {
         m_slReg = (ServiceRegistration<StartLevel>) m_registry.registerService(m_felix,
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
                 new String[] { StartLevel.class.getName() },
                 new StartLevelImpl(m_felix),
                 null);
@@ -126,10 +135,15 @@ class FrameworkStartLevelImpl implements FrameworkStartLevel, Runnable
 
         synchronized (m_requests)
         {
+<<<<<<< HEAD
+            // Start thread if necessary.
+            startThread();
+=======
             if (m_thread == null)
             {
                 throw new IllegalStateException("No inital startlevel yet");
             }
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
             // Queue request.
             m_requestListeners.add(listeners);
             m_requests.add(new Integer(startlevel));
@@ -239,7 +253,11 @@ class FrameworkStartLevelImpl implements FrameworkStartLevel, Runnable
                 // Start thread if necessary.
                 startThread();
                 // Synchronously persists the start level.
+<<<<<<< HEAD
+                ((BundleImpl) m_bundle).setStartLevel(startlevel);
+=======
                 m_bundle.setStartLevel(startlevel);
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
                 // Queue request.
                 m_requestListeners.add(null);
                 m_requests.add(new Object[] { m_bundle, new Integer(startlevel) });

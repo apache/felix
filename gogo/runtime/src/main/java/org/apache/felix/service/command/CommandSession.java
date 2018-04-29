@@ -20,6 +20,11 @@ package org.apache.felix.service.command;
 
 import java.io.InputStream;
 import java.io.PrintStream;
+<<<<<<< HEAD
+
+public interface CommandSession
+{
+=======
 import java.nio.file.Path;
 import java.util.List;
 
@@ -35,6 +40,7 @@ public interface CommandSession extends AutoCloseable
 
     void currentDir(Path path);
 
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     /**
      * Execute a program in this session.
      *
@@ -86,7 +92,11 @@ public interface CommandSession extends AutoCloseable
      * @param name  Name of the variable.
      * @param value Value of the variable
      */
+<<<<<<< HEAD
+    void put(String name, Object value);
+=======
     Object put(String name, Object value);
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 
     /**
      * Convert an object to string form (CharSequence). The level is defined in
@@ -105,6 +115,8 @@ public interface CommandSession extends AutoCloseable
      */
 
     Object convert(Class<?> type, Object instance);
+<<<<<<< HEAD
+=======
 
     //
     // Job support
@@ -136,4 +148,5 @@ public interface CommandSession extends AutoCloseable
         }
     }
 
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 }

@@ -1,4 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
+<<<<<<< HEAD
+=======
 <!-- 
   Licensed to the Apache Software Foundation (ASF) under one
   or more contributor license agreements.  See the NOTICE file
@@ -17,6 +19,7 @@
   specific language governing permissions and limitations
   under the License.
 -->
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 <configuration>
 	<appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
 		<encoder>

@@ -91,7 +91,11 @@ public class TestStaticPropsReconfiguration extends Common {
         reconf.put("string", new String("toto"));
         reconf.put("strAProp", new String[]{"foo", "baz"});
         reconf.put("intAProp", new int[]{3, 2, 1});
+<<<<<<< HEAD
+        Factory fact = (Factory) osgiHelper.getServiceObject(fact_ref);
+=======
         Factory fact = (Factory) osgiHelper.getRawServiceObject(fact_ref);
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         try {
             fact.reconfigure(reconf);
         } catch (Exception e) {
@@ -168,7 +172,11 @@ public class TestStaticPropsReconfiguration extends Common {
         reconf.put("string", "toto");
         reconf.put("strAProp", new String[]{"foo", "baz"});
         reconf.put("intAProp", new int[]{3, 2, 1});
+<<<<<<< HEAD
+        Factory fact = (Factory) osgiHelper.getServiceObject(fact_ref);
+=======
         Factory fact = (Factory) osgiHelper.getRawServiceObject(fact_ref);
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         try {
             fact.reconfigure(reconf);
         } catch (Exception e) {

@@ -21,6 +21,13 @@ package org.apache.felix.framework;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+<<<<<<< HEAD
+import org.osgi.framework.AdminPermission;
+import org.osgi.framework.Bundle;
+import org.osgi.framework.FrameworkListener;
+import org.osgi.framework.ServiceRegistration;
+import org.osgi.framework.wiring.FrameworkWiring;
+=======
 
 import org.osgi.framework.AdminPermission;
 import org.osgi.framework.Bundle;
@@ -30,6 +37,7 @@ import org.osgi.framework.ServiceRegistration;
 import org.osgi.framework.wiring.BundleCapability;
 import org.osgi.framework.wiring.FrameworkWiring;
 import org.osgi.resource.Requirement;
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 import org.osgi.service.packageadmin.PackageAdmin;
 
 class FrameworkWiringImpl implements FrameworkWiring, Runnable
@@ -49,10 +57,16 @@ class FrameworkWiringImpl implements FrameworkWiring, Runnable
         m_registry = registry;
     }
 
+<<<<<<< HEAD
+    void start()
+    {
+        m_paReg = m_registry.registerService(m_felix._getBundleContext(),
+=======
     @SuppressWarnings("unchecked")
     void start()
     {
         m_paReg = (ServiceRegistration<PackageAdmin>) m_registry.registerService(m_felix,
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
                 new String[] { PackageAdmin.class.getName() },
                 new PackageAdminImpl(m_felix),
                 null);
@@ -125,11 +139,14 @@ class FrameworkWiringImpl implements FrameworkWiring, Runnable
                 new AdminPermission(m_felix, AdminPermission.RESOLVE));
         }
 
+<<<<<<< HEAD
+=======
         if (m_thread == null)
         {
             return false;
         }
 
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         return m_felix.resolveBundles(bundles);
     }
 
@@ -195,6 +212,8 @@ class FrameworkWiringImpl implements FrameworkWiring, Runnable
             }
         }
     }
+<<<<<<< HEAD
+=======
 
     /**
      * @see org.osgi.framework.wiring.FrameworkWiring#findProviders(org.osgi.resource.Requirement)
@@ -203,4 +222,5 @@ class FrameworkWiringImpl implements FrameworkWiring, Runnable
     {
         return m_felix.findProviders(requirement);
     }
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 }

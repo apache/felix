@@ -87,7 +87,11 @@ public class TestObedience extends Common {
 
         // Stop the handler
         hf.stop();
+<<<<<<< HEAD
+        HandlerManagerFactory hf2 = (HandlerManagerFactory) ipojoHelper.getHandlerFactory("controller");
+=======
         HandlerManagerFactory hf2 = (HandlerManagerFactory) ipojoHelper.getFactoryHelper().getHandlerFactory("controller", 1, false);
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         assertNull("Check handler availability -2", hf2);
 
         // Check the factory invalidity
@@ -96,8 +100,13 @@ public class TestObedience extends Common {
         assertEquals("Check factory state -2", Factory.INVALID, cf.getState());
 
         // Check the instance disappearance, the instance was disposed.
+<<<<<<< HEAD
+        ref_arch = ipojoHelper.getServiceReferenceByName(Architecture.class.getName(), "SimpleInstance");
+        assertNull("Check Architecture availability -1", ref_arch);
+=======
         assertFalse("Check Architecture availability -1", ipojoHelper
                 .isServiceAvailableByName(Architecture.class.getName(), "SimpleInstance"));
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 
         // Restart the handler
         hf.start();

@@ -21,6 +21,28 @@ package org.apache.felix.framework;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+<<<<<<< HEAD
+import java.util.List;
+import java.util.Map;
+import org.apache.felix.framework.StatefulResolver.ResolverHookRecord;
+import org.apache.felix.framework.resolver.CandidateComparator;
+import org.apache.felix.framework.resolver.HostedCapability;
+import org.apache.felix.framework.resolver.ResolveContext;
+import org.apache.felix.framework.resolver.ResolveException;
+import org.osgi.framework.wiring.BundleCapability;
+import org.osgi.framework.wiring.BundleRequirement;
+import org.osgi.framework.wiring.BundleRevision;
+import org.osgi.framework.wiring.BundleWiring;
+
+/**
+ *
+ * @author rickhall
+ */
+public class ResolveContextImpl extends ResolveContext
+{
+    private final StatefulResolver m_state;
+    private final Map<BundleRevision, BundleWiring> m_wirings;
+=======
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -50,13 +72,18 @@ public class ResolveContextImpl extends ResolveContext implements FelixResolveCo
 {
     private final StatefulResolver m_state;
     private final Map<Resource, Wiring> m_wirings;
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     private final ResolverHookRecord m_resolverHookrecord;
     private final Collection<BundleRevision> m_mandatory;
     private final Collection<BundleRevision> m_optional;
     private final Collection<BundleRevision> m_ondemand;
 
     ResolveContextImpl(
+<<<<<<< HEAD
+        StatefulResolver state, Map<BundleRevision, BundleWiring> wirings,
+=======
         StatefulResolver state, Map<Resource, Wiring> wirings,
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         ResolverHookRecord resolverHookRecord, Collection<BundleRevision> mandatory,
         Collection<BundleRevision> optional, Collection<BundleRevision> ondemand)
     {
@@ -69,6 +96,30 @@ public class ResolveContextImpl extends ResolveContext implements FelixResolveCo
     }
 
     @Override
+<<<<<<< HEAD
+    public Collection<BundleRevision> getMandatoryRevisions()
+    {
+        return new ArrayList<BundleRevision>(m_mandatory);
+    }
+
+    @Override
+    public Collection<BundleRevision> getOptionalRevisions()
+    {
+        return new ArrayList<BundleRevision>(m_optional);
+    }
+
+    public Collection<BundleRevision> getOndemandRevisions()
+    {
+        return new ArrayList<BundleRevision>(m_ondemand);
+    }
+
+    public List<BundleCapability> findProviders(BundleRequirement br, boolean obeyMandatory)
+    {
+        return m_state.findProvidersInternal(m_resolverHookrecord, br, obeyMandatory);
+    }
+
+    public int insertHostedCapability(List<BundleCapability> caps, HostedCapability hc)
+=======
     public Collection<Resource> getMandatoryResources()
     {
         return new ArrayList<Resource>(m_mandatory);
@@ -104,6 +155,7 @@ public class ResolveContextImpl extends ResolveContext implements FelixResolveCo
 
     @Override
     public int insertHostedCapability(List<Capability> caps, HostedCapability hc)
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     {
         int idx = Collections.binarySearch(caps, hc, new CandidateComparator());
         if (idx < 0)
@@ -114,18 +166,37 @@ public class ResolveContextImpl extends ResolveContext implements FelixResolveCo
         return idx;
     }
 
+<<<<<<< HEAD
+    public boolean isEffective(BundleRequirement br)
+=======
     @Override
     public boolean isEffective(Requirement br)
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     {
         return m_state.isEffective(br);
     }
 
+<<<<<<< HEAD
+    public Map<BundleRevision, BundleWiring> getWirings()
+=======
     @Override
     public Map<Resource, Wiring> getWirings()
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     {
         return m_wirings;
     }
 
+<<<<<<< HEAD
+    public void checkExecutionEnvironment(BundleRevision rev) throws ResolveException
+    {
+        m_state.checkExecutionEnvironment(rev);
+    }
+
+    public void checkNativeLibraries(BundleRevision rev) throws ResolveException
+    {
+        m_state.checkNativeLibraries(rev);
+    }
+=======
 	@Override
 	public Collection<Wire> getSubstitutionWires(Wiring wiring) {
 		// TODO: this is calculating information that probably has been calculated 
@@ -171,4 +242,5 @@ public class ResolveContextImpl extends ResolveContext implements FelixResolveCo
         }
         return substitutionWires;
 	}
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 }

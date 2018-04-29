@@ -20,7 +20,11 @@
 	</parent>
 	<name>Apache Felix DeploymentAdmin Impl Bundle 2</name>
 	<version>2.0.0</version>
+<<<<<<< HEAD
+	<artifactId>org.apache.felix.deploymentadmin.test.bundleimpl</artifactId>
+=======
 	<artifactId>org.apache.felix.deploymentadmin.test.bundleimpl2</artifactId>
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 	<packaging>bundle</packaging>
 	<dependencies>
 		<dependency>
@@ -29,7 +33,11 @@
 		</dependency>
 		<dependency>
 			<groupId>org.apache.felix</groupId>
+<<<<<<< HEAD
+			<artifactId>org.apache.felix.deploymentadmin.test.bundleapi</artifactId>
+=======
 			<artifactId>org.apache.felix.deploymentadmin.test.bundleapi2</artifactId>
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 			<version>2.0.0</version>
 		</dependency>
 	</dependencies>

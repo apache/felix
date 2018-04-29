@@ -1,5 +1,9 @@
 /*
+<<<<<<< HEAD
+ * Copyright (c) OSGi Alliance (2007, 2012). All Rights Reserved.
+=======
  * Copyright (c) OSGi Alliance (2007, 2013). All Rights Reserved.
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -34,7 +38,11 @@ import java.util.Map;
  * @param <T> The value mapped to the tracked item.
  * @param <R> The reason the tracked item is being tracked or untracked.
  * @ThreadSafe
+<<<<<<< HEAD
+ * @version $Id: 16340086b98d308c2d12f13bcd87fc6467a5a367 $
+=======
  * @author $Id: 5988d793936c25139421a95bad2d3cd96e2ab355 $
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
  * @since 1.4
  */
 abstract class AbstractTracked<S, T, R> {

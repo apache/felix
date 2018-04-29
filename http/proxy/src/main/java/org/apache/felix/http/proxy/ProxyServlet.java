@@ -16,6 +16,15 @@
  */
 package org.apache.felix.http.proxy;
 
+<<<<<<< HEAD
+import org.osgi.framework.BundleContext;
+import javax.servlet.http.HttpServlet;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import javax.servlet.ServletException;
+import javax.servlet.ServletConfig;
+import java.io.IOException;
+=======
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.MalformedURLException;
@@ -43,26 +52,45 @@ import javax.servlet.http.HttpServletRequestWrapper;
 import javax.servlet.http.HttpServletResponse;
 
 import org.osgi.framework.BundleContext;
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 
 public final class ProxyServlet
     extends HttpServlet
 {
+<<<<<<< HEAD
+    private DispatcherTracker tracker;
+=======
     private volatile DispatcherTracker tracker;
 
     private volatile boolean initialized = false;
 
     private volatile ServletContext servletContext;
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 
     @Override
     public void init(ServletConfig config)
         throws ServletException
     {
         super.init(config);
+<<<<<<< HEAD
+
+        try {
+            doInit();
+        } catch (ServletException e) {
+            throw e;
+        } catch (Exception e) {
+            throw new ServletException(e);
+        }
+=======
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     }
 
     private void doInit()
         throws Exception
     {
+<<<<<<< HEAD
+        this.tracker = new DispatcherTracker(getBundleContext(), null, getServletConfig());
+=======
         final ServletConfig origConfig = getServletConfig();
         ServletConfig config = origConfig;
         if ( this.servletContext != null ) {
@@ -90,10 +118,19 @@ public final class ProxyServlet
             };
         }
         this.tracker = new DispatcherTracker(getBundleContext(), null, config);
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         this.tracker.open();
     }
 
     @Override
+<<<<<<< HEAD
+    protected void service(HttpServletRequest req, HttpServletResponse res)
+        throws ServletException, IOException
+    {
+        HttpServlet dispatcher = this.tracker.getDispatcher();
+        if (dispatcher != null) {
+            dispatcher.service(req, res);
+=======
     protected void service(final HttpServletRequest req, final HttpServletResponse res)
         throws ServletException, IOException
     {
@@ -121,6 +158,7 @@ public final class ProxyServlet
         if (dispatcher != null) {
             final HttpServletRequest r = (this.servletContext == null ? req : new BridgeHttpServletRequest(req, this.servletContext));
             dispatcher.service(r, res);
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         } else {
             res.sendError(HttpServletResponse.SC_SERVICE_UNAVAILABLE);
         }
@@ -137,14 +175,20 @@ public final class ProxyServlet
         throws ServletException
     {
         Object context = getServletContext().getAttribute(BundleContext.class.getName());
+<<<<<<< HEAD
+        if (context instanceof BundleContext) {
+=======
         if (context instanceof BundleContext)
         {
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
             return (BundleContext)context;
         }
 
         throw new ServletException("Bundle context attribute [" + BundleContext.class.getName() +
                 "] not set in servlet context");
     }
+<<<<<<< HEAD
+=======
 
     private static final class BridgeHttpServletRequest extends HttpServletRequestWrapper
     {
@@ -450,4 +494,5 @@ public final class ProxyServlet
         }
 
     }
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 }

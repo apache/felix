@@ -19,7 +19,10 @@
 
 package org.apache.felix.ipojo.manipulator.metadata.annotation.visitor.util;
 
+<<<<<<< HEAD
+=======
 import org.apache.felix.ipojo.manipulator.spi.ModuleProvider;
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 import org.apache.felix.ipojo.manipulator.Reporter;
 import org.apache.felix.ipojo.manipulator.ResourceStore;
 import org.apache.felix.ipojo.manipulator.metadata.annotation.registry.DefaultBindingRegistry;
@@ -29,14 +32,25 @@ import org.apache.felix.ipojo.manipulator.metadata.annotation.registry.MetaAnnot
 import org.apache.felix.ipojo.manipulator.metadata.annotation.registry.BindingRegistry;
 import org.apache.felix.ipojo.manipulator.spi.Module;
 
+<<<<<<< HEAD
+import java.util.ServiceLoader;
+
+import static org.apache.felix.ipojo.manipulator.spi.helper.Predicates.or;
+
+=======
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 /**
  * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
 public class Bindings {
 
+<<<<<<< HEAD
+    public static BindingRegistry newBindingRegistry(Reporter reporter, ResourceStore store) {
+=======
     public static BindingRegistry newBindingRegistry(final Reporter reporter,
                                                      final ResourceStore store,
                                                      final ModuleProvider provider) {
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 
         // Build the registry by aggregation of the features we want
         // TODO We can enable/disable the legacy support easily here
@@ -45,12 +59,27 @@ public class Bindings {
         registry = new LegacyGenericBindingRegistry(registry, reporter);
         registry = new IgnoreAllBindingRegistry(registry, reporter);
 
+<<<<<<< HEAD
+        ServiceLoader<Module> loader = ServiceLoader.load(Module.class, classloader());
+
+        // Build each Module and add its contributed Bindings in the registry
+        for (Module module : loader) {
+            module.configure();
+=======
         // Build each Module and add its contributed Bindings in the registry
         for (Module module : provider.findModules()) {
             module.load();
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
             registry.addBindings(module);
         }
 
         return registry;
     }
+<<<<<<< HEAD
+
+    private static ClassLoader classloader() {
+        return Bindings.class.getClassLoader();
+    }
+=======
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 }

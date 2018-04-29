@@ -543,4 +543,8 @@ public class JarContent implements Content
             }
         }
     }
+<<<<<<< HEAD
 }
+=======
+}
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368

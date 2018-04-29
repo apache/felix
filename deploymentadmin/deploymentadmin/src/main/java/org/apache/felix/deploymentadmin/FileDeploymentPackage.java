@@ -56,6 +56,11 @@ public class FileDeploymentPackage extends AbstractDeploymentPackage {
         m_contentsDir = packageDir;
     }
 
+<<<<<<< HEAD
+    public BundleInfoImpl[] getOrderedBundleInfos() {
+        List result = new ArrayList();
+        for(Iterator i = m_index.iterator(); i.hasNext();) {
+=======
     public InputStream getBundleStream(String symbolicName) throws IOException {
         BundleInfoImpl bundleInfo = getBundleInfoByName(symbolicName);
         if (bundleInfo != null) {
@@ -75,6 +80,7 @@ public class FileDeploymentPackage extends AbstractDeploymentPackage {
     public BundleInfoImpl[] getOrderedBundleInfos() {
         List result = new ArrayList();
         for (Iterator i = m_index.iterator(); i.hasNext();) {
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
             AbstractInfo bundleInfo = getBundleInfoByPath((String) i.next());
             if (bundleInfo != null) {
                 result.add(bundleInfo);
@@ -83,9 +89,23 @@ public class FileDeploymentPackage extends AbstractDeploymentPackage {
         return (BundleInfoImpl[]) result.toArray(new BundleInfoImpl[result.size()]);
     }
 
+<<<<<<< HEAD
+    public InputStream getBundleStream(String symbolicName) throws IOException {
+        BundleInfoImpl bundleInfo = getBundleInfoByName(symbolicName);
+        if (bundleInfo != null) {
+            return new GZIPInputStream(new FileInputStream(new File(m_contentsDir, bundleInfo.getPath())));
+        }
+        return null;
+    }
+
+    public ResourceInfoImpl[] getOrderedResourceInfos() {
+        List result = new ArrayList();
+        for(Iterator i = m_index.iterator(); i.hasNext();) {
+=======
     public ResourceInfoImpl[] getOrderedResourceInfos() {
         List result = new ArrayList();
         for (Iterator i = m_index.iterator(); i.hasNext();) {
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
             AbstractInfo resourceInfo = getResourceInfoByPath((String) i.next());
             if (resourceInfo != null) {
                 result.add(resourceInfo);
@@ -93,4 +113,15 @@ public class FileDeploymentPackage extends AbstractDeploymentPackage {
         }
         return (ResourceInfoImpl[]) result.toArray(new ResourceInfoImpl[result.size()]);
     }
+<<<<<<< HEAD
+
+    public InputStream getCurrentEntryStream() {
+        throw new UnsupportedOperationException("Not implemented for file-based deployment package");
+    }
+
+    public AbstractInfo getNextEntry() throws IOException {
+        throw new UnsupportedOperationException("Not implemented for file-based deployment package");
+    }
+=======
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 }

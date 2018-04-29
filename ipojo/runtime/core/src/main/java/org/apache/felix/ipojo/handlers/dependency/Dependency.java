@@ -55,7 +55,11 @@ public class Dependency extends DependencyModel implements FieldInterceptor, Met
      */
     private final String m_exception;
     /**
+<<<<<<< HEAD
+     * Is the Nullable pattern enable?
+=======
      * Is the Nullable pattern enabled?
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
      */
     private final boolean m_supportNullable;
     /**
@@ -416,6 +420,15 @@ public class Dependency extends DependencyModel implements FieldInterceptor, Met
         return new RuntimeException(message);
     }
 
+<<<<<<< HEAD
+    private Object createNullableObject() {
+        // To load the proxy we use the POJO class loader. Indeed, this classloader imports iPOJO (so can access to Nullable) and has
+        // access to the service specification.
+        try {
+            ClassLoader cl = new NullableClassLoader(
+                    getHandler().getInstanceManager().getClazz().getClassLoader(),
+                    getSpecification().getClassLoader());
+=======
     private void createNullableObject() {
         // To load the proxy we use the POJO class loader. Indeed, this classloader imports iPOJO (so can access to Nullable) and has
         // access to the service specification.
@@ -429,6 +442,7 @@ public class Dependency extends DependencyModel implements FieldInterceptor, Met
             ClassLoader cl = new NullableClassLoader(
                     getHandler().getInstanceManager().getClazz().getClassLoader(),
                     findClassLoadersFromSpecification(getSpecification()));
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 
             m_nullable =
                     Proxy.newProxyInstance(cl, new Class[]{
@@ -441,6 +455,10 @@ public class Dependency extends DependencyModel implements FieldInterceptor, Met
         } catch (Throwable e) { // Catch any other exception that can occurs
             throw new IllegalStateException("Cannot create the Nullable object, an unexpected error occurs", e);
         }
+<<<<<<< HEAD
+
+        return m_nullable;
+=======
     }
 
     private List<ClassLoader> findClassLoadersFromSpecification(Class clazz) {
@@ -463,6 +481,7 @@ public class Dependency extends DependencyModel implements FieldInterceptor, Met
             }
         }
         return classLoaders;
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     }
 
     /**
@@ -495,11 +514,15 @@ public class Dependency extends DependencyModel implements FieldInterceptor, Met
 
         if (m_isProxy) {
             if (isAggregate()) {
+<<<<<<< HEAD
+                m_proxyObject = new ServiceCollection(this);
+=======
                 if (m_type == AggregateDependencyInjectionType.SET) {
                     m_proxyObject = new ServiceSet(this);
                 } else {
                     m_proxyObject = new ServiceList(this);
                 }
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
             } else {
                 // Can we really proxy ? We can proxy only interfaces.
                 if (getSpecification().isInterface()) {
@@ -513,7 +536,11 @@ public class Dependency extends DependencyModel implements FieldInterceptor, Met
 
                     if (type == null || type.equals(DependencyHandler.SMART_PROXY)) {
                         SmartProxyFactory proxyFactory = new SmartProxyFactory(this.getClass().getClassLoader());
+<<<<<<< HEAD
+                        m_proxyObject = proxyFactory.getProxy(getSpecification(), this);
+=======
                         m_proxyObject = proxyFactory.getProxy(this);
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
                     } else {
                         DynamicProxyFactory proxyFactory = new DynamicProxyFactory();
                         m_proxyObject = proxyFactory.getProxy(getSpecification());
@@ -1058,6 +1085,23 @@ public class Dependency extends DependencyModel implements FieldInterceptor, Met
         /**
          * Component classloader.
          */
+<<<<<<< HEAD
+        private ClassLoader m_component;
+        /**
+         * Specification classloader.
+         */
+        private ClassLoader m_specification;
+
+        /**
+         * Creates a NullableClassLoader.
+         *
+         * @param cmp  the component class loader.
+         * @param spec the specification class loader.
+         */
+        public NullableClassLoader(ClassLoader cmp, ClassLoader spec) {
+            m_component = cmp;
+            m_specification = spec;
+=======
         private ClassLoader       m_component;
         /**
          * Specification classloaders.
@@ -1072,11 +1116,19 @@ public class Dependency extends DependencyModel implements FieldInterceptor, Met
         public NullableClassLoader(ClassLoader cmp, List<ClassLoader> classLoadersFromSpecification) {
             m_component = cmp;
             m_classLoadersFromSpecification = classLoadersFromSpecification;
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         }
 
         /**
          * Loads the given class.
          * This method uses the classloader of the component class
+<<<<<<< HEAD
+         * and (if not found) the specification classloader.
+         *
+         * @param name the class name
+         * @return the class object
+         * @throws ClassNotFoundException if the class is not found by the two classloaders.
+=======
          * and (if not found) the specification classloaders.
          * Throws the last {@link ClassNotFoundException} caught while trying
          * to load the class from the specifiation classloaders
@@ -1084,12 +1136,20 @@ public class Dependency extends DependencyModel implements FieldInterceptor, Met
          * @param name the class name
          * @return the class object
          * @throws ClassNotFoundException if the class is not found by the classloaders.
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
          * @see java.lang.ClassLoader#loadClass(java.lang.String)
          */
         public Class loadClass(String name) throws ClassNotFoundException {
             try {
                 return m_component.loadClass(name);
             } catch (ClassNotFoundException e) {
+<<<<<<< HEAD
+                return m_specification.loadClass(name);
+            }
+        }
+
+
+=======
                 ClassNotFoundException lastCaught = null;
                 for (ClassLoader classLoader : m_classLoadersFromSpecification) {
                     try {
@@ -1101,6 +1161,7 @@ public class Dependency extends DependencyModel implements FieldInterceptor, Met
                 throw lastCaught;
             }
         }
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     }
 
     /**
@@ -1143,10 +1204,18 @@ public class Dependency extends DependencyModel implements FieldInterceptor, Met
          * Create a proxy object for the given specification. The proxy
          * uses the given dependency to get the service object.
          *
+<<<<<<< HEAD
+         * @param spec the service specification (interface)
+         * @param dep  the dependency used to get the service
+         * @return the proxy object.
+         */
+        public Object getProxy(Class spec, Dependency dep) {
+=======
          * @param dep  the dependency used to get the service
          * @return the proxy object.
          */
         public Object getProxy(Dependency dep) {
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
             try {
                 Class clazz = getProxyClass(getSpecification());
                 Constructor constructor = clazz.getConstructor(

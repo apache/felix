@@ -1,5 +1,9 @@
 /*
+<<<<<<< HEAD
+ * Copyright (c) OSGi Alliance (2011, 2012). All Rights Reserved.
+=======
  * Copyright (c) OSGi Alliance (2011, 2013). All Rights Reserved.
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,7 +21,10 @@
 package org.osgi.framework.hooks.bundle;
 
 import java.util.Collection;
+<<<<<<< HEAD
+=======
 import org.osgi.annotation.versioning.ConsumerType;
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
@@ -34,9 +41,14 @@ import org.osgi.framework.Constants;
  * in a bundle symbolic name and version collision.
  * 
  * @ThreadSafe
+<<<<<<< HEAD
+ * @version $Id: a1a25ee0432f210a56e911246f477f19edc28bc1 $
+ */
+=======
  * @author $Id: b05e0c3819aff6df35c2ec034242596d04f53408 $
  */
 @ConsumerType
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 public interface CollisionHook {
 
 	/**
@@ -56,17 +68,30 @@ public interface CollisionHook {
 	 * on the operation type the target bundle and the collision candidate
 	 * collection are the following:
 	 * <ul>
+<<<<<<< HEAD
+	 * <li> {@link #INSTALLING installing} - The target is the bundle associated
+=======
 	 * <li>{@link #INSTALLING installing} - The target is the bundle associated
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 	 * with the {@link BundleContext} used to call one of the
 	 * {@link BundleContext#installBundle(String) install} methods. The
 	 * collision candidate collection contains the existing bundles installed
 	 * which have the same symbolic name and version as the bundle being
+<<<<<<< HEAD
+	 * installed.
+	 * <li> {@link #UPDATING updating} - The target is the bundle used to call
+	 * one of the {@link Bundle#update() update} methods. The collision
+	 * candidate collection contains the existing bundles installed which have
+	 * the same symbolic name and version as the content the target bundle is
+	 * being updated to.
+=======
 	 * installed.</li>
 	 * <li>{@link #UPDATING updating} - The target is the bundle used to call
 	 * one of the {@link Bundle#update() update} methods. The collision
 	 * candidate collection contains the existing bundles installed which have
 	 * the same symbolic name and version as the content the target bundle is
 	 * being updated to.</li>
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 	 * </ul>
 	 * This method can filter the collection of collision candidates by removing
 	 * potential collisions. For the specified operation to succeed, the

@@ -86,9 +86,12 @@ public class Instance {
     }
 
     public Instance named(String name) {
+<<<<<<< HEAD
+=======
         if (name == null || name.length() == 0) {
             throw new IllegalArgumentException("The instance name cannot be null or empty");
         }
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         this.name = name;
         return this;
     }
@@ -104,7 +107,11 @@ public class Instance {
 
     public Instance nameIfUnnamed(String name) {
         if (this.name == null) {
+<<<<<<< HEAD
+            this.name = name;
+=======
             named(name);
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         }
         return this;
     }
@@ -126,7 +133,11 @@ public class Instance {
         }
     }
 
+<<<<<<< HEAD
+    public static class FluentMap<K,T> extends LinkedHashMap<K, T> {
+=======
     public static class FluentMap<K, T> extends LinkedHashMap<K, T> {
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 
         public FluentMap() {
             super(new LinkedHashMap<K, T>());
@@ -166,18 +177,24 @@ public class Instance {
         private T value;
 
         Property(String name) {
+<<<<<<< HEAD
+=======
             if (name == null || name.length() == 0) {
                 throw new IllegalArgumentException("The property name cannot be null or empty");
             }
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
             this.name = name;
         }
 
         public Instance setto(T value) {
+<<<<<<< HEAD
+=======
             if ("instance.name".endsWith(name)) {
                 if (value == null || value.toString().length() == 0) {
                     throw new IllegalArgumentException("The instance name cannot be null or empty");
                 }
             }
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
             this.value = value;
             return Instance.this;
         }

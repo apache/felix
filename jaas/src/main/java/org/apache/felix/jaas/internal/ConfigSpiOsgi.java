@@ -63,12 +63,20 @@ public class ConfigSpiOsgi extends ConfigurationSpi implements ManagedService,
 
     public static final String SERVICE_PID = "org.apache.felix.jaas.ConfigurationSpi";
 
+<<<<<<< HEAD
+    private static enum GlobalConfigurationPolicy
+=======
     private enum GlobalConfigurationPolicy
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     {
         DEFAULT, REPLACE, PROXY
     }
 
+<<<<<<< HEAD
+    private Map<String, Realm> configs = Collections.emptyMap();
+=======
     private volatile Map<String, Realm> configs = Collections.emptyMap();
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 
     private final Logger log;
 
@@ -78,7 +86,11 @@ public class ConfigSpiOsgi extends ConfigurationSpi implements ManagedService,
      *
      * In case it does not find any config it looks for config entry for an app named 'other'
      */
+<<<<<<< HEAD
+    private static final String DEFAULT_REALM_NAME = "other";
+=======
     static final String DEFAULT_REALM_NAME = "other";
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 
     @Property
     private static final String JAAS_DEFAULT_REALM_NAME = "jaas.defaultRealmName";
@@ -117,8 +129,11 @@ public class ConfigSpiOsgi extends ConfigurationSpi implements ManagedService,
     public ConfigSpiOsgi(BundleContext context, Logger log) throws ConfigurationException {
         this.context = context;
         this.log = log;
+<<<<<<< HEAD
+=======
         this.originalConfig = getGlobalConfiguration();
         this.proxyConfig = new DelegatingConfiguration(osgiConfig, originalConfig);
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 
         updated(getDefaultConfig());
         this.tracker = new ServiceTracker(context, LoginModuleFactory.class.getName(),
@@ -133,6 +148,12 @@ public class ConfigSpiOsgi extends ConfigurationSpi implements ManagedService,
         //TODO Should this registration be made conditional i.e. service is only registered
         //only if there active LoginModules present
         this.context.registerService(LoginContextFactory.class.getName(), this, new Properties());
+<<<<<<< HEAD
+
+        this.originalConfig = getGlobalConfiguration();
+        this.proxyConfig = new DelegatingConfiguration(osgiConfig, originalConfig);
+=======
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     }
 
     @Override
@@ -206,6 +227,12 @@ public class ConfigSpiOsgi extends ConfigurationSpi implements ManagedService,
             realm.afterPropertiesSet();
         }
 
+<<<<<<< HEAD
+        //We also register the Spi with OSGI SR if any configuration is available
+        //This would allow any client component to determine when it should start
+        //and use the config
+        if (!realmToConfigMap.isEmpty() && spiReg == null)
+=======
         this.configs = Collections.unmodifiableMap(realmToConfigMap);
     }
 
@@ -215,12 +242,26 @@ public class ConfigSpiOsgi extends ConfigurationSpi implements ManagedService,
         //This would allow any client component to determine when it should start
         //and use the config
         if (spiReg == null && configs != null && !configs.isEmpty())
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         {
             Properties props = new Properties();
             props.setProperty("providerName", "felix");
 
+<<<<<<< HEAD
+            synchronized (lock)
+            {
+                spiReg = context.registerService(ConfigurationSpi.class.getName(), this,
+                    props);
+            }
+        }
+
+        synchronized (lock)
+        {
+            this.configs = Collections.unmodifiableMap(realmToConfigMap);
+=======
             spiReg = context.registerService(ConfigurationSpi.class.getName(), this,
                     props);
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         }
     }
 
@@ -234,12 +275,15 @@ public class ConfigSpiOsgi extends ConfigurationSpi implements ManagedService,
 
     void close()
     {
+<<<<<<< HEAD
+=======
 
         if (spiReg != null)
         {
             spiReg.unregister();
         }
 
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         this.tracker.close();
         deregisterProvider(jaasConfigProviderName);
 
@@ -270,11 +314,16 @@ public class ConfigSpiOsgi extends ConfigurationSpi implements ManagedService,
 
         if (!newDefaultRealmName.equals(defaultRealmName))
         {
+<<<<<<< HEAD
+            defaultRealmName = newDefaultRealmName;
+            recreateConfigs();
+=======
             synchronized (lock)
             {
                 defaultRealmName = newDefaultRealmName;
                 recreateConfigs();
             }
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         }
 
         String newProviderName = PropertiesUtil.toString(properties.get(JAAS_CONFIG_PROVIDER_NAME),
@@ -362,12 +411,18 @@ public class ConfigSpiOsgi extends ConfigurationSpi implements ManagedService,
 
     private void deregisterProvider(String providerName)
     {
+<<<<<<< HEAD
+        Security.removeProvider(providerName);
+        log.log(LogService.LOG_INFO, "Removed provider " + providerName + " type "
+            + JAAS_CONFIG_ALGO_NAME + " from Security providers list");
+=======
         if (providerName != null)
         {
             Security.removeProvider(providerName);
             log.log(LogService.LOG_INFO, "Removed provider " + providerName + " type "
                     + JAAS_CONFIG_ALGO_NAME + " from Security providers list");
         }
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     }
 
     // ---------- ServiceTracker ----------------------------------------------
@@ -376,6 +431,10 @@ public class ConfigSpiOsgi extends ConfigurationSpi implements ManagedService,
     public Object addingService(ServiceReference reference)
     {
         LoginModuleFactory lmf = (LoginModuleFactory) context.getService(reference);
+<<<<<<< HEAD
+        registerFactory(reference, lmf);
+        recreateConfigs();
+=======
         boolean registerSpi = false;
         synchronized (lock)
         {
@@ -394,12 +453,16 @@ public class ConfigSpiOsgi extends ConfigurationSpi implements ManagedService,
             registerSpiWithOSGi();
         }
 
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         return lmf;
     }
 
     @Override
     public void modifiedService(ServiceReference reference, Object service)
     {
+<<<<<<< HEAD
+        recreateConfigs();
+=======
         LoginModuleFactory lmf = providerMap.get(reference);
         if (lmf instanceof OsgiLoginModuleProvider) {
             // refresh to update configs
@@ -409,16 +472,22 @@ public class ConfigSpiOsgi extends ConfigurationSpi implements ManagedService,
         {
             recreateConfigs();
         }
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     }
 
     @Override
     public void removedService(ServiceReference reference, Object service)
     {
+<<<<<<< HEAD
+        deregisterFactory(reference);
+        recreateConfigs();
+=======
         synchronized (lock)
         {
             deregisterFactory(reference);
             recreateConfigs();
         }
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         context.ungetService(reference);
     }
 

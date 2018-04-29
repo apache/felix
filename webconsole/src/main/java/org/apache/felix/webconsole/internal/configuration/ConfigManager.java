@@ -19,19 +19,33 @@ package org.apache.felix.webconsole.internal.configuration;
 
 import java.io.IOException;
 import java.io.PrintWriter;
+<<<<<<< HEAD
+import java.util.Iterator;
+import java.util.Locale;
+import java.util.Map;
+=======
 import java.io.StringWriter;
 import java.util.Locale;
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+<<<<<<< HEAD
+=======
 import org.apache.felix.utils.json.JSONWriter;
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 import org.apache.felix.webconsole.DefaultVariableResolver;
 import org.apache.felix.webconsole.SimpleWebConsolePlugin;
 import org.apache.felix.webconsole.WebConsoleUtil;
 import org.apache.felix.webconsole.internal.OsgiManagerPlugin;
+<<<<<<< HEAD
+import org.json.JSONException;
+import org.json.JSONObject;
+=======
 import org.osgi.framework.Constants;
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 import org.osgi.framework.InvalidSyntaxException;
 import org.osgi.service.cm.Configuration;
 
@@ -53,21 +67,30 @@ public class ConfigManager extends SimpleWebConsolePlugin implements OsgiManager
     static final String PID = "pid"; //$NON-NLS-1$
     static final String FACTORY_PID = "factoryPid"; //$NON-NLS-1$
     static final String PLACEHOLDER_PID = "[Temporary PID replaced by real PID upon save]"; //$NON-NLS-1$
+<<<<<<< HEAD
+=======
     static final String REFERER = "referer"; //$NON-NLS-1$
     static final String FACTORY_CREATE = "factoryCreate"; //$NON-NLS-1$
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 
     static final String ACTION_CREATE = "create"; //$NON-NLS-1$
     static final String ACTION_DELETE = "delete"; //$NON-NLS-1$
     static final String ACTION_APPLY = "apply"; //$NON-NLS-1$
     static final String ACTION_UNBIND = "unbind"; //$NON-NLS-1$
     static final String PROPERTY_LIST = "propertylist"; //$NON-NLS-1$
+<<<<<<< HEAD
+=======
     static final String LOCATION = "$location"; //$NON-NLS-1$
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 
     static final String CONFIGURATION_ADMIN_NAME = "org.osgi.service.cm.ConfigurationAdmin"; //$NON-NLS-1$
     static final String META_TYPE_NAME = "org.osgi.service.metatype.MetaTypeService"; //$NON-NLS-1$
 
+<<<<<<< HEAD
+=======
     public static final String UNBOUND_LOCATION = "??unbound:bundle/location"; //$NON-NLS-1$
 
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     // templates
     private final String TEMPLATE;
 
@@ -150,12 +173,20 @@ public class ConfigManager extends SimpleWebConsolePlugin implements OsgiManager
         Configuration config = null;
 
         // should actually apply the configuration before redirecting
+<<<<<<< HEAD
+        if ( request.getParameter( ACTION_CREATE ) != null ) //$NON-NLS-1$
+=======
         if ( request.getParameter( ACTION_CREATE ) != null )
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         {
             config = cas.getPlaceholderConfiguration( pid ); // ca.createFactoryConfiguration( pid, null );
             pid = config.getPid();
         }
+<<<<<<< HEAD
+        else if ( request.getParameter( ACTION_APPLY ) != null ) //$NON-NLS-1$
+=======
         else if ( request.getParameter( ACTION_APPLY ) != null )
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         {
             String redirect = cas.applyConfiguration( request, pid );
             if ( redirect != null )
@@ -168,9 +199,14 @@ public class ConfigManager extends SimpleWebConsolePlugin implements OsgiManager
             }
             else
             {
+<<<<<<< HEAD
+                response.setContentType("text/plain"); //$NON-NLS-1$
+                response.getWriter().print("true"); //$NON-NLS-1$
+=======
                 response.setContentType( "application/json" ); //$NON-NLS-1$
                 response.setCharacterEncoding( "UTF-8" ); //$NON-NLS-1$
                 response.getWriter().print( "{ \"status\": true }" ); //$NON-NLS-1$
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
             }
 
             return;
@@ -182,12 +218,30 @@ public class ConfigManager extends SimpleWebConsolePlugin implements OsgiManager
         }
 
         // check for configuration unbinding
+<<<<<<< HEAD
+        if ( request.getParameter( ACTION_UNBIND ) != null ) //$NON-NLS-1$
+        {
+            if ( config != null && config.getBundleLocation() != null )
+            {
+                config.setBundleLocation( null );
+
+                // workaround for Felix Config Admin 1.2.8 not clearing dynamic
+                // bundle location when clearing static bundle location. In
+                // this case we first set the static bundle location to the
+                // dynamic bundle location and then try to set both to null
+                if ( config.getBundleLocation() != null )
+                {
+                    config.setBundleLocation( "??invalid:bundle/location" ); //$NON-NLS-1$
+                    config.setBundleLocation( null );
+                }
+=======
         if ( request.getParameter( ACTION_UNBIND ) != null )
         {
             if ( config != null && config.getBundleLocation() != null )
             {
                 config.setBundleLocation( UNBOUND_LOCATION );
 
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
             }
             response.setContentType( "application/json" ); //$NON-NLS-1$
             response.setCharacterEncoding( "UTF-8" ); //$NON-NLS-1$
@@ -208,10 +262,17 @@ public class ConfigManager extends SimpleWebConsolePlugin implements OsgiManager
      * @see org.apache.felix.webconsole.AbstractWebConsolePlugin#doGet(javax.servlet.http.HttpServletRequest, javax.servlet.http.HttpServletResponse)
      */
     protected void doGet( HttpServletRequest request, HttpServletResponse response )
+<<<<<<< HEAD
+    throws ServletException, IOException
+    {
+        // check for "post" requests from previous versions
+        if ( "true".equals(request.getParameter("post")) ) {
+=======
             throws ServletException, IOException
     {
         // check for "post" requests from previous versions
         if ( "true".equals(request.getParameter("post")) ) { //$NON-NLS-1$ //$NON-NLS-2$
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
             this.doPost(request, response);
             return;
         }
@@ -268,6 +329,16 @@ public class ConfigManager extends SimpleWebConsolePlugin implements OsgiManager
             final ConfigAdminSupport ca = this.getConfigurationAdminSupport();
             if ( ca != null )
             {
+<<<<<<< HEAD
+                try
+                {
+                    final Map services = ca.getServices( pid, pidFilter, locale, false );
+                    boolean printComma = false;
+                    for ( Iterator spi = services.keySet().iterator(); spi.hasNext(); )
+                    {
+                        final String servicePid = ( String ) spi.next();
+                        final Configuration config = ca.getConfiguration( servicePid );
+=======
                 // create filter
                 final StringBuffer sb = new StringBuffer();
                 if ( pid != null && pidFilter != null)
@@ -301,17 +372,27 @@ public class ConfigManager extends SimpleWebConsolePlugin implements OsgiManager
                     for(int i=0; configs != null && i<configs.length; i++)
                     {
                         final Configuration config = configs[i];
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
                         if ( config != null )
                         {
                             if ( printComma )
                             {
                                 pw.print( ',' );
                             }
+<<<<<<< HEAD
+                            ca.printConfigurationJson( pw, servicePid, config, pidFilter, locale );
+=======
                             ca.printConfigurationJson( pw, config.getPid(), config, null, locale );
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
                             printComma = true;
                         }
                     }
                 }
+<<<<<<< HEAD
+                catch ( InvalidSyntaxException e )
+                {
+                    // this should not happened as we checked the filter before
+=======
                 catch ( final InvalidSyntaxException ise )
                 {
                     // should print message
@@ -320,6 +401,7 @@ public class ConfigManager extends SimpleWebConsolePlugin implements OsgiManager
                 catch ( final IOException ioe )
                 {
                     // should print message
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
                 }
             }
             pw.write( "]" ); //$NON-NLS-1$
@@ -386,6 +468,26 @@ public class ConfigManager extends SimpleWebConsolePlugin implements OsgiManager
         final String locale = ( loc != null ) ? loc.toString() : null;
 
 
+<<<<<<< HEAD
+        JSONObject json = new JSONObject();
+        try
+        {
+            final ConfigAdminSupport ca = getConfigurationAdminSupport();
+            json.put("status", ca != null ? Boolean.TRUE : Boolean.FALSE); //$NON-NLS-1$
+            if ( ca != null )
+            {
+                ca.listConfigurations( json, pidFilter, locale, loc );
+                ca.listFactoryConfigurations( json, pidFilter, locale );
+            }
+        }
+        catch (JSONException e)
+        {
+            throw new IOException(e.toString());
+        }
+
+        // if a configuration is addressed, display it immediately
+        if ( request.getParameter( ACTION_CREATE ) != null && pid != null ) //$NON-NLS-1$
+=======
         StringWriter json = new StringWriter();
         JSONWriter jw = new JSONWriter(json);
         jw.object();
@@ -400,12 +502,18 @@ public class ConfigManager extends SimpleWebConsolePlugin implements OsgiManager
 
         // if a configuration is addressed, display it immediately
         if ( request.getParameter( ACTION_CREATE ) != null && pid != null )
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         {
             pid = PLACEHOLDER_PID; // new PlaceholderConfiguration( pid ).getPid();
         }
 
 
         // prepare variables
+<<<<<<< HEAD
+        DefaultVariableResolver vars = ( ( DefaultVariableResolver ) WebConsoleUtil.getVariableResolver( request ) );
+        vars.put( "__data__", json.toString() ); //$NON-NLS-1$
+        vars.put( "selectedPid", pid != null ? pid : ""); //$NON-NLS-1$ //$NON-NLS-2$
+=======
         final String referer = request.getParameter( REFERER );
         final boolean factoryCreate = "true".equals( request.getParameter(FACTORY_CREATE) ); //$NON-NLS-1$
         DefaultVariableResolver vars = ( ( DefaultVariableResolver ) WebConsoleUtil.getVariableResolver( request ) );
@@ -413,6 +521,7 @@ public class ConfigManager extends SimpleWebConsolePlugin implements OsgiManager
         vars.put( "selectedPid", pid != null ? pid : "" ); //$NON-NLS-1$ //$NON-NLS-2$
         vars.put( "configurationReferer", referer != null ? referer : "" ); //$NON-NLS-1$ //$NON-NLS-2$
         vars.put( "factoryCreate", Boolean.valueOf(factoryCreate) ); //$NON-NLS-1$
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         vars.put( "param.apply", ACTION_APPLY ); //$NON-NLS-1$
         vars.put( "param.create", ACTION_CREATE ); //$NON-NLS-1$
         vars.put( "param.unbind", ACTION_UNBIND ); //$NON-NLS-1$

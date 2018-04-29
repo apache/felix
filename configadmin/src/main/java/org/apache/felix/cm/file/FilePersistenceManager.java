@@ -473,7 +473,10 @@ public class FilePersistenceManager implements PersistenceManager
      *
      * @param pid The identifier of the configuration file to delete.
      */
+<<<<<<< HEAD
+=======
     @Override
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     public void delete( final String pid )
     {
         if ( System.getSecurityManager() != null )
@@ -489,9 +492,14 @@ public class FilePersistenceManager implements PersistenceManager
 
     private void _privilegedDelete( final String pid )
     {
+<<<<<<< HEAD
+        AccessController.doPrivileged( new PrivilegedAction()
+        {
+=======
         AccessController.doPrivileged( new PrivilegedAction<Object>()
         {
             @Override
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
             public Object run()
             {
                 _delete( pid );
@@ -518,6 +526,24 @@ public class FilePersistenceManager implements PersistenceManager
      *
      * @return <code>true</code> if the file exists
      */
+<<<<<<< HEAD
+    public boolean exists( final String pid )
+    {
+        if ( System.getSecurityManager() != null )
+        {
+            return _privilegedExists( pid );
+        }
+
+        return _exists( pid );
+    }
+
+
+    private boolean _privilegedExists( final String pid )
+    {
+        final Object result = AccessController.doPrivileged( new PrivilegedAction()
+        {
+            public Object run()
+=======
     @Override
     public boolean exists( final String pid )
     {
@@ -536,6 +562,7 @@ public class FilePersistenceManager implements PersistenceManager
         {
             @Override
             public Boolean run()
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
             {
                 // FELIX-2771: Boolean.valueOf(boolean) is not in Foundation
                 return _exists( pid ) ? Boolean.TRUE : Boolean.FALSE;
@@ -579,21 +606,34 @@ public class FilePersistenceManager implements PersistenceManager
     }
 
 
+<<<<<<< HEAD
+=======
     @SuppressWarnings("rawtypes")
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     private Dictionary _privilegedLoad( final File cfgFile ) throws IOException
     {
         try
         {
+<<<<<<< HEAD
+            Object result = AccessController.doPrivileged( new PrivilegedExceptionAction()
+            {
+                public Object run() throws IOException
+=======
             Dictionary result = AccessController.doPrivileged( new PrivilegedExceptionAction<Dictionary>()
             {
                 @Override
                 public Dictionary run() throws IOException
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
                 {
                     return _load( cfgFile );
                 }
             } );
 
+<<<<<<< HEAD
+            return ( Dictionary ) result;
+=======
             return result;
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         }
         catch ( PrivilegedActionException pae )
         {
@@ -615,7 +655,10 @@ public class FilePersistenceManager implements PersistenceManager
      * @throws IOException
      *             If an error occurrs reading the configuration file.
      */
+<<<<<<< HEAD
+=======
     @SuppressWarnings("rawtypes")
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     Dictionary _load( File cfgFile ) throws IOException
     {
         // this method is not part of the API of this class but is made
@@ -664,8 +707,11 @@ public class FilePersistenceManager implements PersistenceManager
      *
      * @throws IOException If an error occurrs writing the configuration data.
      */
+<<<<<<< HEAD
+=======
     @SuppressWarnings("rawtypes")
     @Override
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     public void store( final String pid, final Dictionary props ) throws IOException
     {
         if ( System.getSecurityManager() != null )
@@ -679,14 +725,22 @@ public class FilePersistenceManager implements PersistenceManager
     }
 
 
+<<<<<<< HEAD
+=======
     @SuppressWarnings("rawtypes")
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     private void _privilegedStore( final String pid, final Dictionary props ) throws IOException
     {
         try
         {
+<<<<<<< HEAD
+            AccessController.doPrivileged( new PrivilegedExceptionAction()
+            {
+=======
             AccessController.doPrivileged( new PrivilegedExceptionAction<Object>()
             {
                 @Override
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
                 public Object run() throws IOException
                 {
                     _store( pid, props );
@@ -702,7 +756,10 @@ public class FilePersistenceManager implements PersistenceManager
     }
 
 
+<<<<<<< HEAD
+=======
     @SuppressWarnings("rawtypes")
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     private void _store( final String pid, final Dictionary props ) throws IOException
     {
         OutputStream out = null;
@@ -799,7 +856,10 @@ public class FilePersistenceManager implements PersistenceManager
      * This enumeration loads configuration lazily with a look ahead of one
      * dictionary.
      */
+<<<<<<< HEAD
+=======
     @SuppressWarnings("rawtypes")
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     class DictionaryEnumeration implements Enumeration
     {
         private Stack<File> dirStack;
@@ -853,15 +913,25 @@ public class FilePersistenceManager implements PersistenceManager
 
         protected Dictionary _privilegedSeek()
         {
+<<<<<<< HEAD
+            Object result = AccessController.doPrivileged( new PrivilegedAction()
+            {
+                public Object run()
+=======
             Dictionary result = AccessController.doPrivileged( new PrivilegedAction<Dictionary>()
             {
                 @Override
                 public Dictionary run()
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
                 {
                     return _seek();
                 }
             } );
+<<<<<<< HEAD
+            return ( Dictionary ) result;
+=======
             return result;
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         }
 
 

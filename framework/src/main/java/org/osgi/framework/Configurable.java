@@ -1,5 +1,9 @@
 /*
+<<<<<<< HEAD
+ * Copyright (c) OSGi Alliance (2000, 2012). All Rights Reserved.
+=======
  * Copyright (c) OSGi Alliance (2000, 2013). All Rights Reserved.
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -26,7 +30,11 @@ package org.osgi.framework;
  * {@code instanceof Configurable}.
  * 
  * @deprecated As of 1.2. Please use Configuration Admin service.
+<<<<<<< HEAD
+ * @version $Id: 1018601ae90d2d16ec34136db4b04dca3ccf8e65 $
+=======
  * @author $Id: dce95833dd076e870099385a306989959a84aafd $
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
  */
 public interface Configurable {
 	/**

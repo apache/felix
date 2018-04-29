@@ -22,7 +22,11 @@
     <parent>
         <groupId>org.apache.felix</groupId>
         <artifactId>felix-parent</artifactId>
+<<<<<<< HEAD
+        <version>1.2.0</version>
+=======
         <version>3</version>
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         <relativePath>../../pom/pom.xml</relativePath>
     </parent>
     <properties>
@@ -30,7 +34,11 @@
     </properties>
     <packaging>bundle</packaging>
     <name>Apache Felix AutoConf Resource Processor</name>
+<<<<<<< HEAD
+    <version>0.1.6-SNAPSHOT</version>
+=======
     <version>0.1.10-SNAPSHOT</version>
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     <artifactId>org.apache.felix.deployment.rp.autoconf</artifactId>
     <dependencies>
         <dependency>
@@ -44,6 +52,22 @@
             <version>${osgi.version}</version>
         </dependency>
         <dependency>
+<<<<<<< HEAD
+            <groupId>${pom.groupId}</groupId>
+            <artifactId>org.apache.felix.dependencymanager</artifactId>
+            <version>3.1.0</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>${pom.groupId}</groupId>
+            <artifactId>org.apache.felix.deploymentadmin</artifactId>
+            <version>0.9.4</version>
+        </dependency>
+        <dependency>
+            <groupId>${pom.groupId}</groupId>
+            <artifactId>org.apache.felix.metatype</artifactId>
+            <version>1.0.6</version>
+=======
             <groupId>org.apache.felix</groupId>
             <artifactId>org.apache.felix.dependencymanager</artifactId>
 			<version>4.1.1</version>
@@ -57,6 +81,7 @@
             <groupId>org.apache.felix</groupId>
             <artifactId>org.apache.felix.metatype</artifactId>
             <version>1.1.2</version>
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         </dependency>
     </dependencies>
     <build>
@@ -85,6 +110,11 @@
                         <Bundle-Name>Apache Felix AutoConf Resource Processor</Bundle-Name>
                         <Bundle-Description>A customizer bundle that publishes a Resource Processor service that processes configuration resources shipped in a Deployment Package.</Bundle-Description>
                         <Bundle-Vendor>The Apache Software Foundation</Bundle-Vendor>
+<<<<<<< HEAD
+                        <Private-Package>org.apache.felix.deployment.rp.autoconf, org.apache.felix.metatype, org.apache.felix.metatype.internal.l10n, org.apache.felix.metatype.internal, org.kxml2.io;-split-package:=merge-first, org.xmlpull.v1;-split-package:=merge-first, org.osgi.service.metatype;-split-package:=merge-first</Private-Package>
+                        <Import-Package>org.apache.felix.dm,org.osgi.service.deploymentadmin,org.osgi.service.deploymentadmin.spi,org.osgi.service.event,org.osgi.service.log,*</Import-Package>
+                        <Export-Package>org.osgi.service.deploymentadmin.spi;version="1.0",org.osgi.service.metatype;version="1.2"</Export-Package>
+=======
                         <Private-Package>
                         	org.apache.felix.deployment.rp.autoconf,
                         	org.apache.felix.metatype,
@@ -98,6 +128,7 @@
                         	org.osgi.service.deploymentadmin.spi; -split-package:=merge-last;version="1.0",
                         	org.osgi.service.metatype; -split-package:=merge-last;version="1.2"
                        	</Export-Package>
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
                         <DeploymentPackage-Customizer>true</DeploymentPackage-Customizer>
                         <Deployment-ProvidesResourceProcessor>org.osgi.deployment.rp.autoconf</Deployment-ProvidesResourceProcessor>
                     </instructions>
@@ -105,9 +136,12 @@
             </plugin>
         </plugins>
     </build>
+<<<<<<< HEAD
+=======
 	<scm>
 		<connection>scm:svn:http://svn.apache.org/repos/asf/felix/trunk/deploymentadmin/autoconf</connection>
 		<developerConnection>scm:svn:https://svn.apache.org/repos/asf/felix/trunk/deploymentadmin/autoconf</developerConnection>
 		<url>http://svn.apache.org/viewvc/felix/trunk/deploymentadmin/autoconf</url>
 	</scm>
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 </project>

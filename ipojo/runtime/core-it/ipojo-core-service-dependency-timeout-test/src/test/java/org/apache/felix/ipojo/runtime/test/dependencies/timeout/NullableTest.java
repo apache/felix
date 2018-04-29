@@ -23,13 +23,19 @@ import org.apache.felix.ipojo.ComponentInstance;
 import org.apache.felix.ipojo.runtime.test.dependencies.timeout.services.CheckService;
 import org.apache.felix.ipojo.runtime.test.dependencies.timeout.services.FooService;
 import org.junit.Test;
+<<<<<<< HEAD
+=======
 import org.ops4j.pax.exam.spi.reactors.ExamReactorStrategy;
 import org.ops4j.pax.exam.spi.reactors.PerMethod;
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 import org.osgi.framework.ServiceReference;
 
 import static org.junit.Assert.*;
 
+<<<<<<< HEAD
+=======
 @ExamReactorStrategy(PerMethod.class)
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 public class NullableTest extends Common {
 
     @Test
@@ -45,14 +51,22 @@ public class NullableTest extends Common {
         ServiceReference ref_cs = ipojoHelper.getServiceReferenceByName(CheckService.class.getName(), un);
         assertNotNull("Check cs availability", ref_cs);
 
+<<<<<<< HEAD
+        CheckService cs = (CheckService) osgiHelper.getServiceObject(ref_cs);
+=======
         CheckService cs = (CheckService) osgiHelper.getRawServiceObject(ref_cs);
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         assertTrue("Check invocation", cs.check());
 
         // Stop the provider.
         provider.stop();
         ref_cs = ipojoHelper.getServiceReferenceByName(CheckService.class.getName(), un);
         assertNotNull("Check cs availability - 2", ref_cs);
+<<<<<<< HEAD
+        cs = (CheckService) osgiHelper.getServiceObject(ref_cs);
+=======
         cs = (CheckService) osgiHelper.getRawServiceObject(ref_cs);
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         boolean res = false;
         try {
             res = cs.check();
@@ -65,6 +79,10 @@ public class NullableTest extends Common {
         provider.dispose();
         under.stop();
         under.dispose();
+<<<<<<< HEAD
+        return;
+=======
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     }
 
     @Test
@@ -80,7 +98,11 @@ public class NullableTest extends Common {
         ServiceReference ref_cs = ipojoHelper.getServiceReferenceByName(CheckService.class.getName(), un);
         assertNotNull("Check cs availability", ref_cs);
 
+<<<<<<< HEAD
+        CheckService cs = (CheckService) osgiHelper.getServiceObject(ref_cs);
+=======
         CheckService cs = (CheckService) osgiHelper.getRawServiceObject(ref_cs);
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         assertTrue("Check invocation", cs.check());
 
         // Stop the provider.
@@ -90,7 +112,11 @@ public class NullableTest extends Common {
         long begin = System.currentTimeMillis();
         DelayedProvider dp = new DelayedProvider(provider, 200);
         dp.start();
+<<<<<<< HEAD
+        cs = (CheckService) osgiHelper.getServiceObject(ref_cs);
+=======
         cs = (CheckService) osgiHelper.getRawServiceObject(ref_cs);
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         assertTrue("Check invocation - 2", cs.check());
         long end = System.currentTimeMillis();
 
@@ -98,7 +124,11 @@ public class NullableTest extends Common {
 
         ref_cs = ipojoHelper.getServiceReferenceByName(CheckService.class.getName(), un);
         assertNotNull("Check cs availability - 3", ref_cs);
+<<<<<<< HEAD
+        cs = (CheckService) osgiHelper.getServiceObject(ref_cs);
+=======
         cs = (CheckService) osgiHelper.getRawServiceObject(ref_cs);
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         assertTrue("Check invocation - 3", cs.check());
 
         provider.stop();

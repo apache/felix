@@ -22,13 +22,21 @@
     <parent>
         <groupId>org.apache.felix</groupId>
         <artifactId>org.apache.felix.http.parent</artifactId>
+<<<<<<< HEAD
+        <version>3-SNAPSHOT</version>
+=======
         <version>9</version>
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         <relativePath>../parent/pom.xml</relativePath>
     </parent>
 
     <name>Apache Felix Http SSL Filter</name>
     <artifactId>org.apache.felix.http.sslfilter</artifactId>
+<<<<<<< HEAD
+    <version>0.0.3-SNAPSHOT</version>
+=======
     <version>1.2.5-SNAPSHOT</version>
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     <packaging>bundle</packaging>
 
     <scm>
@@ -36,6 +44,13 @@
         <developerConnection>scm:svn:https://svn.apache.org/repos/asf/felix/trunk/http/sslfilter</developerConnection>
         <url>http://svn.apache.org/viewvc/felix/trunk/http/sslfilter/</url>
     </scm>
+<<<<<<< HEAD
+    
+    <properties>
+    	<felix.http.api.version>2.2.2-SNAPSHOT</felix.http.api.version>
+    </properties>
+=======
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 
     <build>
         <plugins>
@@ -49,6 +64,11 @@
                             org.apache.felix.http.sslfilter.internal.SslFilterActivator
                         </Bundle-Activator>
                         <Import-Package>
+<<<<<<< HEAD
+                            javax.servlet.*;version=${servlet.version},
+                            *
+                        </Import-Package>
+=======
                             javax.servlet.*;version=2.3,
                             org.osgi.service.cm;resolution:=optional,
                             *
@@ -59,6 +79,7 @@
                         <Require-Capability>
                             osgi.implementation;filter:="(&amp;(osgi.implementation=osgi.http)(version&gt;=1.0)(!(version&gt;=2.0)))"
                         </Require-Capability>
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
                     </instructions>
                 </configuration>
             </plugin>
@@ -67,28 +88,45 @@
 
     <dependencies>
         <dependency>
+<<<<<<< HEAD
+            <groupId>javax.servlet</groupId>
+            <artifactId>servlet-api</artifactId>
+=======
             <groupId>org.osgi</groupId>
             <artifactId>org.osgi.core</artifactId>
             <version>4.2.0</version>
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
             <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>org.osgi</groupId>
+<<<<<<< HEAD
+            <artifactId>org.osgi.core</artifactId>
+=======
             <artifactId>org.osgi.service.http.whiteboard</artifactId>
             <version>1.0.0</version>
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
             <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>org.osgi</groupId>
             <artifactId>org.osgi.compendium</artifactId>
+<<<<<<< HEAD
+=======
             <version>4.2.0</version>
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
             <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>org.apache.felix</groupId>
+<<<<<<< HEAD
+            <artifactId>org.apache.felix.http.api</artifactId>
+            <version>2.2.3-SNAPSHOT</version>
+=======
             <artifactId>org.apache.felix.http.servlet-api</artifactId>
             <version>1.1.0</version>
             <scope>provided</scope>
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         </dependency>
 
         <!-- Test Dependencies -->
@@ -110,6 +148,8 @@
             <version>3.2.1</version>
             <scope>test</scope>
         </dependency>
+<<<<<<< HEAD
+=======
         <dependency>
           <groupId>org.eclipse.jetty</groupId>
           <artifactId>jetty-servlet</artifactId>
@@ -117,6 +157,7 @@
           <scope>test</scope>
         </dependency>
 
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     </dependencies>
 
 </project>

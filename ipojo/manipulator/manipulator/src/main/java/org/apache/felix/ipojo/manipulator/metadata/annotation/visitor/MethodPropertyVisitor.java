@@ -22,14 +22,22 @@ package org.apache.felix.ipojo.manipulator.metadata.annotation.visitor;
 import org.apache.felix.ipojo.metadata.Attribute;
 import org.apache.felix.ipojo.metadata.Element;
 import org.objectweb.asm.AnnotationVisitor;
+<<<<<<< HEAD
+import org.objectweb.asm.commons.EmptyVisitor;
+=======
 import org.objectweb.asm.Opcodes;
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 
 import static org.apache.felix.ipojo.manipulator.metadata.annotation.visitor.util.Names.computeEffectiveMethodName;
 
 /**
  * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
+<<<<<<< HEAD
+public class MethodPropertyVisitor extends EmptyVisitor implements AnnotationVisitor {
+=======
 public class MethodPropertyVisitor extends AnnotationVisitor {
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 
     /**
      * Parent element.
@@ -73,7 +81,10 @@ public class MethodPropertyVisitor extends AnnotationVisitor {
      * @param method : attached method.
      */
     public MethodPropertyVisitor(Element parent, String method) {
+<<<<<<< HEAD
+=======
         super(Opcodes.ASM5);
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         m_parent = parent;
         m_method = method;
     }
@@ -83,7 +94,11 @@ public class MethodPropertyVisitor extends AnnotationVisitor {
      *
      * @param name : annotation name
      * @param value : annotation value
+<<<<<<< HEAD
+     * @see org.objectweb.asm.commons.EmptyVisitor#visit(java.lang.String, java.lang.Object)
+=======
      * @see org.objectweb.asm.AnnotationVisitor#visit(java.lang.String, java.lang.Object)
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
      */
     public void visit(String name, Object value) {
         if (name.equals("name")) {
@@ -111,7 +126,11 @@ public class MethodPropertyVisitor extends AnnotationVisitor {
      * End of the visit.
      * Append the computed element to the element element.
      *
+<<<<<<< HEAD
+     * @see org.objectweb.asm.commons.EmptyVisitor#visitEnd()
+=======
      * @see org.objectweb.asm.AnnotationVisitor#visitEnd()
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
      */
     public void visitEnd() {
         Element prop = visitEndCommon();

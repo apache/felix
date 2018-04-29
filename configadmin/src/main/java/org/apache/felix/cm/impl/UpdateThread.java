@@ -34,6 +34,13 @@ import org.osgi.service.log.LogService;
 public class UpdateThread implements Runnable
 {
 
+<<<<<<< HEAD
+    // the configuration manager on whose behalf this thread is started
+    // (this is mainly used for logging)
+    private final ConfigurationManager configurationManager;
+
+=======
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     // the thread group into which the worker thread will be placed
     private final ThreadGroup workerThreadGroup;
 
@@ -42,6 +49,19 @@ public class UpdateThread implements Runnable
 
     // the queue of Runnable instances  to be run
     private final LinkedList updateTasks;
+<<<<<<< HEAD
+
+    // the actual thread
+    private Thread worker;
+
+
+    public UpdateThread( final ConfigurationManager configurationManager, final ThreadGroup tg, final String name )
+    {
+        this.configurationManager = configurationManager;
+        this.workerThreadGroup = tg;
+        this.workerBaseName = name;
+
+=======
 
     // the actual thread
     private Thread worker;
@@ -55,6 +75,7 @@ public class UpdateThread implements Runnable
         this.workerBaseName = name;
         this.acc = AccessController.getContext();
 
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         this.updateTasks = new LinkedList();
     }
 
@@ -99,10 +120,17 @@ public class UpdateThread implements Runnable
                 // set the thread name indicating the current task
                 Thread.currentThread().setName( workerBaseName + " (" + task + ")" );
 
+<<<<<<< HEAD
+                configurationManager.log( LogService.LOG_DEBUG, "Running task {0}", new Object[]
+                    { task } );
+
+                task.run();
+=======
                 Log.logger.log( LogService.LOG_DEBUG, "Running task {0}", new Object[]
                     { task } );
 
                 run0(task);
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
             }
             catch ( Throwable t )
             {
@@ -113,9 +141,49 @@ public class UpdateThread implements Runnable
                 // reset the thread name to "idle"
                 Thread.currentThread().setName( workerBaseName );
             }
+            finally
+            {
+                // reset the thread name to "idle"
+                Thread.currentThread().setName( workerBaseName );
+            }
         }
     }
 
+<<<<<<< HEAD
+    /**
+     * Starts processing the queued tasks. This method does nothing if the
+     * worker has already been started.
+     */
+    synchronized void start()
+    {
+        if ( this.worker == null )
+        {
+            Thread workerThread = new Thread( workerThreadGroup, this, workerBaseName );
+            workerThread.setDaemon( true );
+            workerThread.start();
+            this.worker = workerThread;
+        }
+    }
+
+
+    /**
+     * Terminates the worker thread and waits for the thread to have processed
+     * all outstanding events up to and including the termination job. All
+     * jobs {@link #schedule(Runnable) scheduled} after termination has been
+     * initiated will not be processed any more. This method does nothing if
+     * the worker thread is not currently active.
+     * <p>
+     * If the worker thread does not terminate within 5 seconds it is killed
+     * by calling the (deprecated) <code>Thread.stop()</code> method. It may
+     * be that the worker thread may be blocked by a deadlock (it should not,
+     * though). In this case hope is that <code>Thread.stop()</code> will be
+     * able to released that deadlock at the expense of one or more tasks to
+     * not be executed any longer.... In any case an ERROR message is logged
+     * with the LogService in this situation.
+     */
+    synchronized void terminate()
+    {
+=======
     void run0(final Runnable task) throws Throwable {
         if (System.getSecurityManager() != null) {
             try {
@@ -172,6 +240,7 @@ public class UpdateThread implements Runnable
      */
     synchronized void terminate()
     {
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         if ( this.worker != null )
         {
             Thread workerThread = this.worker;
@@ -191,7 +260,11 @@ public class UpdateThread implements Runnable
 
             if ( workerThread.isAlive() )
             {
+<<<<<<< HEAD
+                this.configurationManager.log( LogService.LOG_ERROR,
+=======
                 Log.logger.log( LogService.LOG_ERROR,
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
                     "Worker thread {0} did not terminate within 5 seconds; trying to kill", new Object[]
                         { workerBaseName } );
                 workerThread.stop();
@@ -205,7 +278,11 @@ public class UpdateThread implements Runnable
     {
         synchronized ( updateTasks )
         {
+<<<<<<< HEAD
+            configurationManager.log( LogService.LOG_DEBUG, "Scheduling task {0}", new Object[]
+=======
             Log.logger.log( LogService.LOG_DEBUG, "Scheduling task {0}", new Object[]
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
                 { update } );
 
             // append to the task queue

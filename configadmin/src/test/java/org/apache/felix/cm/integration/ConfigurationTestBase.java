@@ -19,6 +19,8 @@
 package org.apache.felix.cm.integration;
 
 
+<<<<<<< HEAD
+=======
 import static org.ops4j.pax.exam.CoreOptions.bundle;
 import static org.ops4j.pax.exam.CoreOptions.cleanCaches;
 import static org.ops4j.pax.exam.CoreOptions.junitBundles;
@@ -27,6 +29,7 @@ import static org.ops4j.pax.exam.CoreOptions.options;
 import static org.ops4j.pax.exam.CoreOptions.vmOption;
 import static org.ops4j.pax.exam.CoreOptions.workingDirectory;
 
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -37,13 +40,25 @@ import java.util.HashSet;
 import java.util.Hashtable;
 import java.util.Set;
 
+<<<<<<< HEAD
+import junit.framework.AssertionFailedError;
+import junit.framework.TestCase;
+=======
 import javax.inject.Inject;
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 
 import org.apache.felix.cm.integration.helper.BaseTestActivator;
 import org.apache.felix.cm.integration.helper.ManagedServiceTestActivator;
 import org.apache.felix.cm.integration.helper.UpdateThreadSignalTask;
 import org.junit.After;
 import org.junit.Before;
+<<<<<<< HEAD
+
+import javax.inject.Inject;
+
+import org.ops4j.pax.exam.CoreOptions;
+=======
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 import org.ops4j.pax.exam.Option;
 import org.ops4j.pax.exam.OptionUtils;
 import org.ops4j.pax.exam.TestProbeBuilder;
@@ -59,8 +74,12 @@ import org.osgi.service.cm.Configuration;
 import org.osgi.service.cm.ConfigurationAdmin;
 import org.osgi.util.tracker.ServiceTracker;
 
+<<<<<<< HEAD
+import static org.ops4j.pax.exam.CoreOptions.*;
+=======
 import junit.framework.AssertionFailedError;
 import junit.framework.TestCase;
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 
 
 public abstract class ConfigurationTestBase
@@ -85,16 +104,26 @@ public abstract class ConfigurationTestBase
 
     protected Bundle bundle;
 
+<<<<<<< HEAD
+    protected ServiceTracker configAdminTracker;
+
+    private Set<String> configurations = new HashSet<String>();
+=======
     protected ServiceTracker<ConfigurationAdmin, ConfigurationAdmin> configAdminTracker;
 
     private Set<String> configurations = new HashSet<>();
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 
     protected static final String PROP_NAME = "theValue";
     protected static final Dictionary<String, String> theConfig;
 
     static
     {
+<<<<<<< HEAD
+        theConfig = new Hashtable<String, String>();
+=======
         theConfig = new Hashtable<>();
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         theConfig.put( PROP_NAME, PROP_NAME );
     }
 
@@ -125,7 +154,11 @@ public abstract class ConfigurationTestBase
     @Before
     public void setUp()
     {
+<<<<<<< HEAD
+        configAdminTracker = new ServiceTracker( bundleContext, ConfigurationAdmin.class.getName(), null );
+=======
         configAdminTracker = new ServiceTracker<>( bundleContext, ConfigurationAdmin.class, null );
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         configAdminTracker.open();
     }
 
@@ -243,19 +276,27 @@ public abstract class ConfigurationTestBase
 
     protected Bundle getCmBundle()
     {
+<<<<<<< HEAD
+        final ServiceReference caref = configAdminTracker.getServiceReference();
+=======
         final ServiceReference<ConfigurationAdmin> caref = configAdminTracker.getServiceReference();
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         return ( caref == null ) ? null : caref.getBundle();
     }
 
 
     protected ConfigurationAdmin getConfigurationAdmin()
     {
+<<<<<<< HEAD
+        ConfigurationAdmin ca = ( ConfigurationAdmin ) configAdminTracker.getService();
+=======
         ConfigurationAdmin ca = null;
         try {
             ca = configAdminTracker.waitForService(5000L);
         } catch (InterruptedException e) {
             // ignore
         }
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         if ( ca == null )
         {
             TestCase.fail( "Missing ConfigurationAdmin service" );

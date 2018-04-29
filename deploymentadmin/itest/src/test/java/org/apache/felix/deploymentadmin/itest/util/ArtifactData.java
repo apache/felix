@@ -18,8 +18,11 @@
  */
 package org.apache.felix.deploymentadmin.itest.util;
 
+<<<<<<< HEAD
+=======
 import java.io.IOException;
 import java.io.InputStream;
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 import java.net.URL;
 
 public class ArtifactData {
@@ -30,7 +33,10 @@ public class ArtifactData {
     private String m_bundleSymbolicName;
     private String m_bundleVersion;
     private boolean m_isCustomizer;
+<<<<<<< HEAD
+=======
     private boolean m_needRP;
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     private String m_processorPID;
     private boolean m_missing;
     private ResourceFilter m_filter;
@@ -40,6 +46,8 @@ public class ArtifactData {
         m_filename = filename;
     }
 
+<<<<<<< HEAD
+=======
     public final InputStream createInputStream() throws IOException {
         if (m_filter != null) {
             return m_filter.createInputStream(m_url);
@@ -47,6 +55,7 @@ public class ArtifactData {
         return m_url.openStream();
     }
 
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     public String getFilename() {
         return m_filename;
     }
@@ -75,10 +84,13 @@ public class ArtifactData {
         return m_isBundle;
     }
 
+<<<<<<< HEAD
+=======
     public boolean isLocalizationFile() {
         return m_filename.startsWith("OSGI-INF/l10n/");
     }
 
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     public boolean isCustomizer() {
         return m_isCustomizer;
     }
@@ -87,10 +99,13 @@ public class ArtifactData {
         return m_missing;
     }
 
+<<<<<<< HEAD
+=======
     public boolean isResourceProcessorNeeded() {
         return m_needRP;
     }
 
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     void setArtifactResourceProcessor(String processorPID) {
         m_processorPID = processorPID;
     }
@@ -109,10 +124,13 @@ public class ArtifactData {
         m_missing = missing;
     }
 
+<<<<<<< HEAD
+=======
     void setNeedResourceProcessor(boolean needRP) {
         m_needRP = needRP;
     }
 
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     void setResourceProcessor(String processorPID) {
         m_isCustomizer = true;
         m_processorPID = processorPID;

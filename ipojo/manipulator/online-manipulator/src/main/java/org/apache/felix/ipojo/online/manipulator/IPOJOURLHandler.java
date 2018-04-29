@@ -18,6 +18,19 @@
  */
 package org.apache.felix.ipojo.online.manipulator;
 
+<<<<<<< HEAD
+import org.apache.felix.ipojo.manipulator.Pojoization;
+import org.osgi.framework.BundleContext;
+import org.osgi.service.url.URLStreamHandlerService;
+
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.net.URLConnection;
+=======
 import static java.lang.String.format;
 import static org.apache.felix.ipojo.online.manipulator.Files.dump;
 import static org.osgi.service.log.LogService.LOG_DEBUG;
@@ -58,11 +71,34 @@ import java.net.URL;
 import java.net.URLConnection;
 import java.util.ArrayList;
 import java.util.List;
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 
 /**
  * iPOJO URL Handler allowing installation time manipulation.
+<<<<<<< HEAD
+ * When a bundle is installed with the <code>ipojo:</code> URL
+ * prefix, the bundle is downloaded and manipulated by this
+ * handler.
+ * The metadata.xml file can either be provided inside the bundle (root,
+ * or in META-INF) or given in the URL:
+ * ipojo:URL_BUNDLE!URL_METADATA.
+ *
+ * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
+ */
+public class IPOJOURLHandler
+        extends org.osgi.service.url.AbstractURLStreamHandlerService implements URLStreamHandlerService {
+
+    /**
+     * The bundle context.
+     */
+    private BundleContext m_context;
+    /**
+     * The directory storing bundles.
+     */
+    private File m_temp;
+=======
  *
  * When a bundle is installed with the {@literal ipojo} URL prefix, the referred bundle is
  * manipulated by this handler.
@@ -120,12 +156,20 @@ public class IPOJOURLHandler extends AbstractURLStreamHandlerService {
     public void unbindModule(Module module) {
         m_modules.remove(module);
     }
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 
     /**
      * Creates a IPOJOURLHandler.
      * Gets the bundle context and create the working
      * directory.
      *
+<<<<<<< HEAD
+     * @param bc the bundle context
+     */
+    public IPOJOURLHandler(BundleContext bc) {
+        m_context = bc;
+        m_temp = m_context.getDataFile("temp");
+=======
      * @param bundleContext the bundle context
      */
     public IPOJOURLHandler(BundleContext bundleContext) {
@@ -135,6 +179,7 @@ public class IPOJOURLHandler extends AbstractURLStreamHandlerService {
     public IPOJOURLHandler(BundleContext context, File work) {
         m_context = context;
         m_temp = work;
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         if (!m_temp.exists()) {
             m_temp.mkdir();
         }
@@ -144,7 +189,10 @@ public class IPOJOURLHandler extends AbstractURLStreamHandlerService {
      * Stops the URL handler:
      * Deletes the working directory.
      */
+<<<<<<< HEAD
+=======
     @Invalidate
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     public void stop() {
         File[] files = m_temp.listFiles();
         if (files != null) {
@@ -166,24 +214,93 @@ public class IPOJOURLHandler extends AbstractURLStreamHandlerService {
      * @see org.osgi.service.url.AbstractURLStreamHandlerService#openConnection(java.net.URL)
      */
     public URLConnection openConnection(URL url) throws IOException {
+<<<<<<< HEAD
+        System.out.println("Processing URL : " + url);
+
+        // Parse the url:
+        String full = url.toExternalForm();
+        // Remote ipojo://
+        if (full.startsWith("ipojo:")) {
+            full = full.substring(6);
+        }
+        // Remove '/' or '//'
+        while (full.startsWith("/")) {
+            full = full.substring(1);
+        }
+
+        full = full.trim();
+
+        // Now full is like : URL,URL or URL
+=======
         logger.log(LOG_DEBUG, format("Processing URL %s", url));
         String full = removeScheme(url);
 
         // Now full is like : URL!URL or URL
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         String[] urls = full.split("!");
         URL bundleURL = null;
         URL metadataURL = null;
         if (urls.length == 1) {
             // URL form
+<<<<<<< HEAD
+            System.out.println("Extracted URL : " + urls[0]);
+            bundleURL = new URL(urls[0]);
+        } else if (urls.length == 2) {
+            // URL,URL form
+=======
             bundleURL = new URL(urls[0]);
         } else if (urls.length == 2) {
             // URL!URL form
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
             bundleURL = new URL(urls[0]);
             metadataURL = new URL(urls[1]);
         } else {
             throw new MalformedURLException("The iPOJO url is not formatted correctly, ipojo:bundle_url[!metadata_url] expected");
         }
 
+<<<<<<< HEAD
+        File bundle = File.createTempFile("ipojo_", ".jar", m_temp);
+        save(bundleURL, bundle);
+        File metadata = null;
+        if (metadataURL != null) {
+            metadata = File.createTempFile("ipojo_", ".xml", m_temp);
+            save(metadataURL, metadata);
+        } else {
+            // Check that the metadata are in the jar file
+            JarFile jar = new JarFile(bundle);
+            metadata = findMetadata(jar);
+        }
+
+        // Pojoization
+        Pojoization pojoizator = new Pojoization();
+        File out = new File(m_temp, bundle.getName() + "-ipojo.jar");
+        System.out.println("Pojoization " + bundle.exists() + " - " + metadata.exists());
+        try {
+            pojoizator.pojoization(bundle, out, metadata);
+        } catch (Exception e) {
+            if (!pojoizator.getErrors().isEmpty()) {
+                throw new IOException("Errors occured during the manipulation : " + pojoizator.getErrors());
+            }
+            e.printStackTrace();
+            throw new RuntimeException(e.getMessage());
+        }
+
+        if (!pojoizator.getErrors().isEmpty()) {
+            throw new IOException("Errors occured during the manipulation : " + pojoizator.getErrors());
+        }
+        if (!pojoizator.getWarnings().isEmpty()) {
+            System.err.println("Warnings occured during the manipulation : " + pojoizator.getWarnings());
+        }
+
+        System.out.println("Manipulation done : " + out.exists());
+
+        // Cleanup
+        bundle.delete();
+        if (metadata != null) {
+            metadata.delete();
+        }
+        out.deleteOnExit();
+=======
         logger.log(LOG_DEBUG, format("Extracted URL %s", url));
 
         // Dump the referenced bundle on disk
@@ -241,12 +358,51 @@ public class IPOJOURLHandler extends AbstractURLStreamHandlerService {
         original.delete();
         out.deleteOnExit();
 
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         // Returns the URL Connection
         return out.toURI().toURL().openConnection();
 
 
     }
 
+<<<<<<< HEAD
+    /**
+     * Downloads the content pointed by the given url to
+     * the given file.
+     *
+     * @param url  the url
+     * @param file the file
+     * @throws java.io.IOException occurs if the content cannot be read
+     *                             and save inside the file
+     */
+    private void save(URL url, File file) throws IOException {
+        InputStream is = url.openStream();
+        save(is, file);
+    }
+
+    /**
+     * Saves the content of the input stream to the given file.
+     *
+     * @param is   the input stream to read
+     * @param file the file
+     * @throws java.io.IOException occurs if the content cannot be read
+     *                             and save inside the file
+     */
+    private void save(InputStream is, File file) throws IOException {
+        FileOutputStream writer = new FileOutputStream(file);
+        int cc = 0;
+        do {
+            int i = is.read();
+            if (i == -1) {
+                break;
+            }
+            cc++;
+            writer.write(i);
+        } while (true);
+        System.out.println(cc + " bytes copied");
+        is.close();
+        writer.close();
+=======
     private String removeScheme(final URL url) {
         String full = url.toExternalForm();
         // Remove ipojo:
@@ -277,6 +433,7 @@ public class IPOJOURLHandler extends AbstractURLStreamHandlerService {
                 new CoreModuleProvider(),
                 new DefaultModuleProvider(m_modules)
         );
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     }
 
     /**
@@ -288,7 +445,11 @@ public class IPOJOURLHandler extends AbstractURLStreamHandlerService {
      * </ol>
      *
      * @param jar the jar file
+<<<<<<< HEAD
+     * @return the founded file or <code>null</code> if not found.
+=======
      * @return the found file or <code>null</code> if not found.
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
      * @throws java.io.IOException occurs when the Jar file cannot be read.
      */
     private File findMetadata(JarFile jar) throws IOException {
@@ -298,6 +459,15 @@ public class IPOJOURLHandler extends AbstractURLStreamHandlerService {
         }
 
         if (je == null) {
+<<<<<<< HEAD
+            System.out.println("Metadata file not found, use annotations only.");
+            return null; // Not Found, use annotation only
+        } else {
+            System.out.println("Metadata file found: " + je.getName());
+            File metadata = File.createTempFile("ipojo_", ".xml", m_temp);
+            save(jar.getInputStream(je), metadata);
+            System.out.println("Metadata file saved to " + metadata.getAbsolutePath());
+=======
             logger.log(LOG_DEBUG, "Metadata file not found, use annotations only.");
             return null; // Not Found, use annotation only
         } else {
@@ -305,6 +475,7 @@ public class IPOJOURLHandler extends AbstractURLStreamHandlerService {
             File metadata = File.createTempFile("ipojo-", ".xml", m_temp);
             dump(jar.getInputStream(je), metadata);
             logger.log(LOG_DEBUG, format("Metadata file saved at %s", metadata));
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
             return metadata;
         }
 

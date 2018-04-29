@@ -1,5 +1,9 @@
 /*
+<<<<<<< HEAD
+ * Copyright (c) OSGi Alliance (2004, 2012). All Rights Reserved.
+=======
  * Copyright (c) OSGi Alliance (2004, 2013). All Rights Reserved.
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -33,7 +37,11 @@ import org.osgi.framework.wiring.FrameworkWiring;
  * 
  * @Immutable
  * @see FrameworkListener
+<<<<<<< HEAD
+ * @version $Id: f679c7581879a2e6006ecdd317a5dd5f735764e3 $
+=======
  * @author $Id: 7b74a68311acf2116ccf21e589ece0ce2cd383ba $
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
  */
 
 public class FrameworkEvent extends EventObject {
@@ -223,6 +231,18 @@ public class FrameworkEvent extends EventObject {
 	 * <p>
 	 * The type values are:
 	 * <ul>
+<<<<<<< HEAD
+	 * <li>{@link #STARTED}
+	 * <li>{@link #ERROR}
+	 * <li>{@link #WARNING}
+	 * <li>{@link #INFO}
+	 * <li>{@link #PACKAGES_REFRESHED}
+	 * <li>{@link #STARTLEVEL_CHANGED}
+	 * <li>{@link #STOPPED}
+	 * <li>{@link #STOPPED_BOOTCLASSPATH_MODIFIED}
+	 * <li>{@link #STOPPED_UPDATE}
+	 * <li>{@link #WAIT_TIMEDOUT}
+=======
 	 * <li>{@link #STARTED}</li>
 	 * <li>{@link #ERROR}</li>
 	 * <li>{@link #WARNING}</li>
@@ -233,6 +253,7 @@ public class FrameworkEvent extends EventObject {
 	 * <li>{@link #STOPPED_BOOTCLASSPATH_MODIFIED}</li>
 	 * <li>{@link #STOPPED_UPDATE}</li>
 	 * <li>{@link #WAIT_TIMEDOUT}</li>
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 	 * </ul>
 	 * 
 	 * @return The type of state change.

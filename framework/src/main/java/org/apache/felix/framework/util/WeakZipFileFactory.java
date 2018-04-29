@@ -21,7 +21,10 @@ package org.apache.felix.framework.util;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+<<<<<<< HEAD
+=======
 import java.lang.ref.SoftReference;
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Enumeration;
@@ -173,7 +176,10 @@ public class WeakZipFileFactory
         private ZipFile m_zipFile;
         private int m_status = OPEN;
         private long m_timestamp;
+<<<<<<< HEAD
+=======
         private volatile SoftReference<List<ZipEntry>> m_entries;
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 
         /**
          * Constructor is private since instances need to be centrally
@@ -231,6 +237,19 @@ public class WeakZipFileFactory
 
             try
             {
+<<<<<<< HEAD
+                // We need to suck in all of the entries since the zip
+                // file may get weakly closed during iteration. Technically,
+                // this may not be 100% correct either since if the zip file
+                // gets weakly closed and reopened, then the zip entries
+                // will be from a different zip file. It is not clear if this
+                // will cause any issues.
+                Enumeration<? extends ZipEntry> e = m_zipFile.entries();
+                List<ZipEntry> entries = new ArrayList<ZipEntry>();
+                while (e.hasMoreElements())
+                {
+                    entries.add(e.nextElement());
+=======
                 List<ZipEntry> entries = null;
                 if (m_entries != null)
                 {
@@ -261,6 +280,7 @@ public class WeakZipFileFactory
                             m_entries = new SoftReference<List<ZipEntry>>(entries);
                         }
                     }
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
                 }
                 return Collections.enumeration(entries);
             }

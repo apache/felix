@@ -30,9 +30,16 @@ import org.osgi.framework.Bundle;
 import org.osgi.framework.Constants;
 import org.osgi.framework.InvalidSyntaxException;
 import org.osgi.framework.ServiceReference;
+<<<<<<< HEAD
+import org.osgi.service.packageadmin.ExportedPackage;
+
+/**
+ * ServicesConfigurationPrinter provides a configuration printer for inspecting the 
+=======
 
 /**
  * ServicesConfigurationPrinter provides a configuration printer for inspecting the
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
  * registered services.
  */
 public class ServicesConfigurationPrinter extends AbstractConfigurationPrinter implements Constants
@@ -130,7 +137,11 @@ public class ServicesConfigurationPrinter extends AbstractConfigurationPrinter i
         ServiceReference[] refs = null;
         try
         {
+<<<<<<< HEAD
+            refs = getBundleContext().getAllServiceReferences(null, null);
+=======
             refs = BundleContextUtil.getWorkingBundleContext(getBundleContext()).getAllServiceReferences(null, null);
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         }
         catch (InvalidSyntaxException e)
         {

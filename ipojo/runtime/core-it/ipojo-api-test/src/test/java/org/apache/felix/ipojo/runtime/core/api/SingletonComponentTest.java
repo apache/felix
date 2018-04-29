@@ -77,8 +77,14 @@ public class SingletonComponentTest extends Common {
         type.stop();
         assertThat("Ci is disposed", ci.getState(),
                 is(ComponentInstance.DISPOSED));
+<<<<<<< HEAD
+        ref = ipojoHelper.getServiceReferenceByName(Foo.class.getName(), ci
+                .getInstanceName());
+        assertThat(ref, is(nullValue()));
+=======
         assertThat(ipojoHelper.isServiceAvailableByName(Foo.class.getName(), ci
                 .getInstanceName()), is(false));
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     }
 
     @Test

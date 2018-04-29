@@ -1,3 +1,5 @@
+<<<<<<< HEAD
+=======
 Release 0.1.8
 -------------
 
@@ -14,6 +16,7 @@ Release 0.1.5
 FELIX-3355 Autoconf can't find Metatype service
 FELIX-4314 Split service registration to solve visibility issue in autoconf
 
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 Release 0.1.4
 -------------
 

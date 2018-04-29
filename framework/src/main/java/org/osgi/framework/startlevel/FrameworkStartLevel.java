@@ -1,5 +1,9 @@
 /*
+<<<<<<< HEAD
+ * Copyright (c) OSGi Alliance (2002, 2011). All Rights Reserved.
+=======
  * Copyright (c) OSGi Alliance (2002, 2013). All Rights Reserved.
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,7 +20,10 @@
 
 package org.osgi.framework.startlevel;
 
+<<<<<<< HEAD
+=======
 import org.osgi.annotation.versioning.ProviderType;
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleReference;
 import org.osgi.framework.FrameworkListener;
@@ -33,9 +40,15 @@ import org.osgi.framework.FrameworkListener;
  * obtained by calling {@link BundleReference#getBundle()}.
  * 
  * @ThreadSafe
+<<<<<<< HEAD
+ * @noimplement
+ * @version $Id: 12c6f60842df994c7de2cc3cfd02f791b95fc35b $
+ */
+=======
  * @author $Id: de8d10036e85359428ca3e14bbe9b2c6d448fb93 $
  */
 @ProviderType
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 public interface FrameworkStartLevel extends BundleReference {
 	/**
 	 * Return the active start level value of the Framework.
@@ -70,13 +83,21 @@ public interface FrameworkStartLevel extends BundleReference {
 	 * At each intermediate start level value on the way to and including the
 	 * target start level, the Framework must:
 	 * <ol>
+<<<<<<< HEAD
+	 * <li>Change the active start level to the intermediate start level value.
+=======
 	 * <li>Change the active start level to the intermediate start level value.</li>
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 	 * <li>Start bundles at the intermediate start level whose autostart setting
 	 * indicate they must be started. They are started as described in the
 	 * {@link Bundle#start(int)} method using the {@link Bundle#START_TRANSIENT}
 	 * option. The {@link Bundle#START_ACTIVATION_POLICY} option must also be
 	 * used if {@link BundleStartLevel#isActivationPolicyUsed()} returns
+<<<<<<< HEAD
+	 * {@code true} for the bundle.
+=======
 	 * {@code true} for the bundle.</li>
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 	 * </ol>
 	 * When this process completes after the specified start level is reached,
 	 * the Framework will fire a Framework event of type
@@ -93,8 +114,13 @@ public interface FrameworkStartLevel extends BundleReference {
 	 * <ol>
 	 * <li>Stop bundles at the intermediate start level as described in the
 	 * {@link Bundle#stop(int)} method using the {@link Bundle#STOP_TRANSIENT}
+<<<<<<< HEAD
+	 * option.
+	 * <li>Change the active start level to the intermediate start level value.
+=======
 	 * option.</li>
 	 * <li>Change the active start level to the intermediate start level value.</li>
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 	 * </ol>
 	 * When this process completes after the specified start level is reached,
 	 * the Framework will fire a Framework event of type

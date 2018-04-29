@@ -29,6 +29,20 @@ import org.junit.Test;
 
 public class RegistrationManagerTest
 {
+<<<<<<< HEAD
+    
+    private volatile boolean fail;
+    
+    private int n = 10;
+    private ArrayList<Thread> threads = new ArrayList<Thread>();
+    
+    private TRM trm = new TRM();
+    
+    @Test
+    public void testRegistrationManager( ) throws Exception
+    {
+       
+=======
 
     private volatile boolean fail;
 
@@ -41,6 +55,7 @@ public class RegistrationManagerTest
     public void testRegistrationManager( ) throws Exception
     {
 
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         for (int setup = 0; setup < 1 << n; setup++ )
         {
             runTest(setup);
@@ -50,9 +65,15 @@ public class RegistrationManagerTest
             }
         }
     }
+<<<<<<< HEAD
+    
+    private void runTest(int setup) throws InterruptedException
+    {   
+=======
 
     private void runTest(int setup) throws InterruptedException
     {
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         final CountDownLatch done = new CountDownLatch( n );
         for (int i = 0; i < n; i++)
         {
@@ -60,20 +81,32 @@ public class RegistrationManagerTest
             final RegState change = b? RegState.registered: RegState.unregistered;
             new Thread(new Runnable() {
 
+<<<<<<< HEAD
+=======
                 @Override
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
                 public void run()
                 {
                     trm.changeRegistration( change, null );
                 }
+<<<<<<< HEAD
+                
+=======
 
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
             }).start();
             done.countDown();
         }
         done.await();
     }
 
+<<<<<<< HEAD
+    
+    private class TRM extends RegistrationManager<Object> 
+=======
 
     private class TRM extends RegistrationManager<Object>
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     {
 
         @Override
@@ -92,12 +125,15 @@ public class RegistrationManagerTest
         }
 
         @Override
+<<<<<<< HEAD
+=======
         void postRegister(Object t)
         {
             // TODO Auto-generated method stub
         }
 
         @Override
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         void unregister(Object serviceRegistration)
         {
             try
@@ -112,9 +148,15 @@ public class RegistrationManagerTest
         }
 
         @Override
+<<<<<<< HEAD
+        void log(int level, String message, Object[] arguments, Throwable ex)
+        {
+            if ( arguments.length == 1 && (arguments[0] instanceof ArrayList))
+=======
         void log(int level, String message, Throwable ex, Object... arguments)
         {
             if ( arguments != null && arguments.length == 1 && (arguments[0] instanceof ArrayList))
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
             {
                 ArrayList<RegState> opqueue = ( ArrayList<org.apache.felix.scr.impl.manager.RegistrationManager.RegState> ) arguments[0];
 //                System.out.println("opqueue: " + opqueue);
@@ -131,7 +173,11 @@ public class RegistrationManagerTest
                     }
                 }
             }
+<<<<<<< HEAD
+            
+=======
 
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         }
 
         @Override
@@ -145,8 +191,14 @@ public class RegistrationManagerTest
         void reportTimeout()
         {
             // TODO Auto-generated method stub
+<<<<<<< HEAD
+            
+        }
+        
+=======
 
         }
 
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     }
 }

@@ -1,0 +1,125 @@
+<!--
+ Licensed to the Apache Software Foundation (ASF) under one
+ or more contributor license agreements.  See the NOTICE file
+ distributed with this work for additional information
+ regarding copyright ownership.  The ASF licenses this file
+ to you under the Apache License, Version 2.0 (the
+ "License"); you may not use this file except in compliance
+ with the License.  You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+ Unless required by applicable law or agreed to in writing,
+ software distributed under the License is distributed on an
+ "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ KIND, either express or implied.  See the License for the
+ specific language governing permissions and limitations
+ under the License.
+-->
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+
+ <parent>
+   <artifactId>felix-parent</artifactId>
+   <groupId>org.apache.felix</groupId>
+   <version>2.1</version>
+   <relativePath>../pom/pom.xml</relativePath>
+ </parent>
+
+ <modelVersion>4.0.0</modelVersion>
+
+ <artifactId>maven-bundle-plugin</artifactId>
+ <version>2.4.1-SNAPSHOT</version>
+ <packaging>maven-plugin</packaging>
+
+ <name>Maven Bundle Plugin</name>
+ <description>
+  Provides a maven plugin that supports creating an OSGi bundle
+  from the contents of the compilation classpath along with its
+  resources and dependencies. Plus a zillion other features.
+  The plugin uses the Bnd tool (http://www.aqute.biz/Code/Bnd)
+ </description>
+
+ <scm>
+  <connection>scm:svn:http://svn.apache.org/repos/asf/felix/trunk/bundleplugin</connection>
+  <developerConnection>scm:svn:https://svn.apache.org/repos/asf/felix/trunk/bundleplugin</developerConnection>
+  <url>http://svn.apache.org/repos/asf/felix/trunk/bundleplugin</url>
+ </scm>
+
+ <build>
+  <plugins>
+   <plugin>
+    <groupId>org.apache.maven.plugins</groupId>
+    <artifactId>maven-compiler-plugin</artifactId>
+    <configuration>
+     <source>1.5</source>
+     <target>1.5</target>
+    </configuration>
+   </plugin>
+  </plugins>
+ </build>
+
+ <dependencies>
+  <dependency>
+    <groupId>biz.aQute.bnd</groupId>
+    <artifactId>bndlib</artifactId>
+    <version>2.2.0</version>
+  </dependency>
+  <dependency>
+    <groupId>org.apache.felix</groupId>
+    <artifactId>org.apache.felix.bundlerepository</artifactId>
+    <version>1.6.6</version>
+  </dependency>
+  <dependency>
+   <groupId>org.apache.maven</groupId>
+   <artifactId>maven-core</artifactId>
+   <version>2.0.7</version>
+  </dependency>
+  <dependency>
+   <groupId>org.apache.maven</groupId>
+   <artifactId>maven-archiver</artifactId>
+   <version>2.5</version>
+  </dependency>
+  <dependency>
+   <groupId>org.apache.maven.shared</groupId>
+   <artifactId>maven-dependency-tree</artifactId>
+   <version>2.1</version>
+  </dependency>
+  <dependency>
+   <groupId>org.codehaus.plexus</groupId>
+   <artifactId>plexus-utils</artifactId>
+   <version>3.0.10</version>
+  </dependency>
+  <dependency>
+   <groupId>org.apache.maven.shared</groupId>
+   <artifactId>maven-plugin-testing-harness</artifactId>
+   <version>1.1</version>
+   <scope>test</scope>
+  </dependency>
+ </dependencies>
+
+ <reporting>
+  <plugins>
+   <plugin>
+    <groupId>org.apache.maven.plugins</groupId>
+    <artifactId>maven-plugin-plugin</artifactId>
+    <version>3.2</version>
+   </plugin>
+   <plugin>
+    <groupId>org.apache.maven.plugins</groupId>
+    <artifactId>maven-changes-plugin</artifactId>
+    <version>2.9</version>
+    <configuration>
+     <component>12311143</component>
+     <versionPrefix>maven-bundle-plugin-</versionPrefix>
+     <statusIds>Resolved,Closed</statusIds>
+     <maxEntries>1000</maxEntries>
+     <issueManagementSystems>
+      <issueManagementSystem>JIRA</issueManagementSystem>
+     </issueManagementSystems>
+     <useJql>true</useJql>
+    </configuration>
+   </plugin>
+  </plugins>
+ </reporting>
+
+</project>

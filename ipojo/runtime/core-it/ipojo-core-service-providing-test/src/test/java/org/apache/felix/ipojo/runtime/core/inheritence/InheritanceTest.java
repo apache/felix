@@ -141,7 +141,11 @@ public class InheritanceTest extends Common {
         ServiceReference ref = ipojoHelper.getServiceReferenceByName(Architecture.class.getName(), "d");
         Assert.assertNotNull(ref);
 
+<<<<<<< HEAD
+        Architecture arch = (Architecture) osgiHelper.getServiceObject(ref);
+=======
         Architecture arch = (Architecture) osgiHelper.getRawServiceObject(ref);
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 
         System.out.println(arch.getInstanceDescription().getDescription());
 

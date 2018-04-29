@@ -30,8 +30,14 @@ import org.apache.felix.ipojo.manipulator.metadata.annotation.registry.Binding;
 public interface Module extends Iterable<Binding> {
 
     /**
+<<<<<<< HEAD
+     * Configure the bindings provided by this module.
+     */
+    void configure();
+=======
      * Load the bindings provided by this module (only once).
      * @since 1.11.2
      */
     void load();
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 }

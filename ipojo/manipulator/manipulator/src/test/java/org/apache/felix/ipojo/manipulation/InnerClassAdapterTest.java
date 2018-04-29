@@ -23,11 +23,21 @@ import junit.framework.Assert;
 import org.apache.felix.ipojo.InstanceManager;
 import org.apache.felix.ipojo.Pojo;
 import org.apache.felix.ipojo.metadata.Element;
+<<<<<<< HEAD
+=======
 import org.junit.Ignore;
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 import org.junit.Test;
 import org.mockito.Mockito;
 
 import java.io.File;
+<<<<<<< HEAD
+import java.io.IOException;
+import java.lang.reflect.Constructor;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+import java.util.Arrays;
+=======
 import java.io.FilenameFilter;
 import java.io.IOException;
 import java.lang.reflect.Constructor;
@@ -36,6 +46,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.Arrays;
 import java.util.concurrent.Callable;
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 
 import static junit.framework.Assert.assertEquals;
 import static org.fest.assertions.Assertions.assertThat;
@@ -48,9 +59,14 @@ public class InnerClassAdapterTest {
     public static String baseClassDirectory = "target/test-classes/";
 
     public static ManipulatedClassLoader manipulate(String className, Manipulator manipulator) throws IOException {
+<<<<<<< HEAD
+        byte[] bytecode = ManipulatorTest.getBytesFromFile(
+                new File(baseClassDirectory + className.replace(".", "/") + ".class"));
+=======
         final File mainClassFile = new File(baseClassDirectory + className.replace(".", "/") + ".class");
         byte[] bytecode = ManipulatorTest.getBytesFromFile(
                 mainClassFile);
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 
         // Preparation.
         try {
@@ -95,6 +111,8 @@ public class InnerClassAdapterTest {
                 Assert.fail("Cannot find inner class '" + resourcePath + "'");
             }
         }
+<<<<<<< HEAD
+=======
 
         // Lookup for all the other inner classes (not manipulated)
         File[] files = mainClassFile.getParentFile().listFiles(new FilenameFilter() {
@@ -111,14 +129,18 @@ public class InnerClassAdapterTest {
             classloader.addInnerClassIfNotAlreadyDefined(name, innerClassBytecode);
         }
 
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         return classloader;
     }
 
     public static ManipulatedClassLoader manipulate(String className, Manipulator manipulator,
                                                     ManipulatedClassLoader initial) throws IOException {
         byte[] bytecode = initial.get(className);
+<<<<<<< HEAD
+=======
         final File mainClassFile = new File(baseClassDirectory + className.replace(".", "/") + ".class");
         String mainClass = className;
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 
         // Preparation.
         try {
@@ -163,6 +185,8 @@ public class InnerClassAdapterTest {
                 Assert.fail("Cannot find inner class '" + resourcePath + "'");
             }
         }
+<<<<<<< HEAD
+=======
 
         // Lookup for all the other inner classes (not manipulated)
         File[] files = mainClassFile.getParentFile().listFiles(new FilenameFilter() {
@@ -180,6 +204,7 @@ public class InnerClassAdapterTest {
             classloader.addInnerClassIfNotAlreadyDefined(name, innerClassBytecode);
         }
 
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         return classloader;
     }
 
@@ -203,13 +228,23 @@ public class InnerClassAdapterTest {
 
     @Test
     public void testManipulatingTheInner() throws Exception {
+<<<<<<< HEAD
+        Manipulator manipulator = new Manipulator();
+=======
         Manipulator manipulator = new Manipulator(this.getClass().getClassLoader());
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         String className = "test.PojoWithInner";
         byte[] origin = ManipulatorTest.getBytesFromFile(new File(baseClassDirectory + className.replace(".",
                 "/") + ".class"));
 
         ManipulatedClassLoader classloader = manipulate(className, manipulator);
 
+<<<<<<< HEAD
+
+
+
+=======
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         Class cl = classloader.findClass(className);
         Assert.assertNotNull(cl);
         Assert.assertNotNull(manipulator.getManipulationMetadata());
@@ -224,12 +259,21 @@ public class InnerClassAdapterTest {
         boolean found = false;
         Constructor cst = null;
         Constructor[] csts = cl.getDeclaredConstructors();
+<<<<<<< HEAD
+        for (int i = 0; i < csts.length; i++) {
+            System.out.println(Arrays.asList(csts[i].getParameterTypes()));
+            if (csts[i].getParameterTypes().length == 1 &&
+                    csts[i].getParameterTypes()[0].equals(InstanceManager.class)) {
+                found = true;
+                cst = csts[i];
+=======
         for (Constructor cst2 : csts) {
             System.out.println(Arrays.asList(cst2.getParameterTypes()));
             if (cst2.getParameterTypes().length == 1 &&
                     cst2.getParameterTypes()[0].equals(InstanceManager.class)) {
                 found = true;
                 cst = cst2;
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
             }
         }
         Assert.assertTrue(found);
@@ -260,7 +304,11 @@ public class InnerClassAdapterTest {
 
     @Test
     public void testInnerClasses() throws IOException, ClassNotFoundException, NoSuchMethodException, IllegalAccessException, InvocationTargetException, InstantiationException {
+<<<<<<< HEAD
+        Manipulator manipulator = new Manipulator();
+=======
         Manipulator manipulator = new Manipulator(this.getClass().getClassLoader());
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         String className = "test.inner.ComponentWithInnerClasses";
         ManipulatedClassLoader classloader = manipulate(className, manipulator);
 
@@ -276,7 +324,11 @@ public class InnerClassAdapterTest {
         InstanceManager im = Mockito.mock(InstanceManager.class);
         Constructor constructor = clazz.getDeclaredConstructor(InstanceManager.class);
         constructor.setAccessible(true);
+<<<<<<< HEAD
+        Object pojo = constructor.newInstance(new Object[]{im});
+=======
         Object pojo = constructor.newInstance(im);
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         Assert.assertNotNull(pojo);
         Assert.assertTrue(pojo instanceof Pojo);
         Method method = clazz.getMethod("doSomething", new Class[0]);
@@ -287,11 +339,19 @@ public class InnerClassAdapterTest {
     @Test
     public void testDoubleManipulation() throws IOException, ClassNotFoundException, NoSuchMethodException,
             IllegalAccessException, InvocationTargetException, InstantiationException {
+<<<<<<< HEAD
+        Manipulator manipulator = new Manipulator();
+        String className = "test.inner.ComponentWithInnerClasses";
+        ManipulatedClassLoader classloader = manipulate(className, manipulator);
+
+        manipulator = new Manipulator();
+=======
         Manipulator manipulator = new Manipulator(this.getClass().getClassLoader());
         String className = "test.inner.ComponentWithInnerClasses";
         ManipulatedClassLoader classloader = manipulate(className, manipulator);
 
         manipulator = new Manipulator(this.getClass().getClassLoader());
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         classloader = manipulate(className, manipulator, classloader);
 
         Class clazz = classloader.findClass(className);
@@ -305,7 +365,11 @@ public class InnerClassAdapterTest {
         InstanceManager im = Mockito.mock(InstanceManager.class);
         Constructor constructor = clazz.getDeclaredConstructor(InstanceManager.class);
         constructor.setAccessible(true);
+<<<<<<< HEAD
+        Object pojo = constructor.newInstance(new Object[]{im});
+=======
         Object pojo = constructor.newInstance(im);
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         Assert.assertNotNull(pojo);
         Assert.assertTrue(pojo instanceof Pojo);
         Method method = clazz.getMethod("doSomething", new Class[0]);
@@ -316,7 +380,11 @@ public class InnerClassAdapterTest {
     @Test
     public void testThatManipulationMetadataContainsTheInnerClasses() throws IOException, ClassNotFoundException,
             NoSuchMethodException, IllegalAccessException, InvocationTargetException, InstantiationException {
+<<<<<<< HEAD
+        Manipulator manipulator = new Manipulator();
+=======
         Manipulator manipulator = new Manipulator(this.getClass().getClassLoader());
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         String className = "test.inner.ComponentWithInnerClasses";
         manipulate(className, manipulator);
 
@@ -343,7 +411,11 @@ public class InnerClassAdapterTest {
     @Test
     public void testThatTheClassContainsTheFlagsForTheInnerMethods() throws IOException, ClassNotFoundException,
             NoSuchMethodException, IllegalAccessException, InvocationTargetException, InstantiationException, NoSuchFieldException {
+<<<<<<< HEAD
+        Manipulator manipulator = new Manipulator();
+=======
         Manipulator manipulator = new Manipulator(this.getClass().getClassLoader());
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         String className = "test.inner.ComponentWithInnerClasses";
         ManipulatedClassLoader classLoader = manipulate(className, manipulator);
 
@@ -359,6 +431,8 @@ public class InnerClassAdapterTest {
         assertThat(clazz.getDeclaredField(flag)).isNotNull();
     }
 
+<<<<<<< HEAD
+=======
     @Test
     public void testThatStaticInnerClassesAreNotManipulated() throws Exception {
         Manipulator manipulator = new Manipulator(this.getClass().getClassLoader());
@@ -396,4 +470,5 @@ public class InnerClassAdapterTest {
         return null;
     }
 
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 }

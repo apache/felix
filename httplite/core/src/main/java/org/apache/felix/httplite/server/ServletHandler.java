@@ -58,8 +58,13 @@ public class ServletHandler implements ServiceRegistrationHandler
      * Process the servlet.
      * 
      * @param close true if not keep-alive connection.
+<<<<<<< HEAD
+     * @throws ServletException
+     * @throws IOException
+=======
      * @throws ServletException as per spec
      * @throws IOException as per spec
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
      */
     public void handle(final boolean close) throws ServletException, IOException
     {

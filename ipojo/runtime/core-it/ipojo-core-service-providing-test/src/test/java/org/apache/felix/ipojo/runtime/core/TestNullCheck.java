@@ -57,7 +57,11 @@ public class TestNullCheck extends Common {
         assertNotNull(ref.getProperty("prop2"));
 
         // Test foo invocation
+<<<<<<< HEAD
+        FooService fs = (FooService) osgiHelper.getServiceObject(ref);
+=======
         FooService fs = (FooService) osgiHelper.getRawServiceObject(ref);
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         assertTrue("FooService invocation failed", fs.foo());
 
         ref = osgiHelper.getServiceReference(FooService.class.getName(), "(" + "instance.name" + "=" + compName + ")");

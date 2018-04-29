@@ -24,19 +24,31 @@ import org.apache.felix.ipojo.manipulator.metadata.annotation.visitor.RequiresVi
 import org.apache.felix.ipojo.metadata.Attribute;
 import org.apache.felix.ipojo.metadata.Element;
 import org.objectweb.asm.AnnotationVisitor;
+<<<<<<< HEAD
+import org.objectweb.asm.Type;
+import org.objectweb.asm.commons.EmptyVisitor;
+=======
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.Type;
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 
 /**
  * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
+<<<<<<< HEAD
+public abstract class AbstractBindVisitor extends EmptyVisitor implements AnnotationVisitor {
+=======
 public abstract class AbstractBindVisitor extends AnnotationVisitor {
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 
     protected ComponentWorkbench workbench;
     protected Action action;
 
     public AbstractBindVisitor(ComponentWorkbench workbench, Action action) {
+<<<<<<< HEAD
+=======
         super(Opcodes.ASM5);
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         this.workbench = workbench;
         this.action = action;
     }
@@ -82,9 +94,15 @@ public abstract class AbstractBindVisitor extends AnnotationVisitor {
     /**
      * Visit annotation's attributes.
      *
+<<<<<<< HEAD
+     * @param name : annotation name
+     * @param value : annotation value
+     * @see org.objectweb.asm.commons.EmptyVisitor#visit(String, Object)
+=======
      * @param name  : annotation name
      * @param value : annotation value
      * @see org.objectweb.asm.AnnotationVisitor#visit(String, Object)
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
      */
     public void visit(String name, Object value) {
         if (name.equals("filter")) {
@@ -101,7 +119,11 @@ public abstract class AbstractBindVisitor extends AnnotationVisitor {
         }
         if (name.equals("specification")) {
             // Detect whether it's an internal class name.
+<<<<<<< HEAD
+            if (value.toString().startsWith("L")  && value.toString().endsWith(";")) {
+=======
             if (value.toString().startsWith("L") && value.toString().endsWith(";")) {
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
                 Type type = Type.getType(value.toString());
                 m_specification = type.getClassName();
             } else {
@@ -135,7 +157,11 @@ public abstract class AbstractBindVisitor extends AnnotationVisitor {
     @Override
     public void visitEnum(String name, String desc, String value) {
         if (name.equals("policy")) {
+<<<<<<< HEAD
+            m_policy = RequiresVisitor.getPolicy(value.toString());
+=======
             m_policy = RequiresVisitor.getPolicy(value);
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         }
     }
 
@@ -158,6 +184,34 @@ public abstract class AbstractBindVisitor extends AnnotationVisitor {
     }
 
     protected boolean completeExistingRequires(Element requires) {
+<<<<<<< HEAD
+
+        if (!completeAttribute(requires, "specification", m_specification))
+            return false;
+
+        if (!completeAttribute(requires, "optional", m_optional))
+            return false;
+
+        if (!completeAttribute(requires, "aggregate", m_aggregate))
+            return false;
+
+        if (!completeAttribute(requires, "filter", m_filter))
+            return false;
+
+        if (!completeAttribute(requires, "policy", m_policy))
+            return false;
+
+        if (!completeAttribute(requires, "comparator", m_comparator))
+            return false;
+
+        if (!completeAttribute(requires, "from", m_from))
+            return false;
+
+        if(!completeAttribute(requires, "proxy", m_proxy))
+            return false;
+
+        return true;
+=======
         return
                 completeAttribute(requires, "specification", m_specification)
                         && completeAttribute(requires, "optional", m_optional)
@@ -167,6 +221,7 @@ public abstract class AbstractBindVisitor extends AnnotationVisitor {
                         && completeAttribute(requires, "comparator", m_comparator)
                         && completeAttribute(requires, "from", m_from)
                         && completeAttribute(requires, "proxy", m_proxy);
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     }
 
     private boolean completeAttribute(Element requires, String name, String value) {

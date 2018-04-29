@@ -25,8 +25,11 @@ import java.util.List;
 import java.util.ListIterator;
 
 import org.apache.felix.deploymentadmin.AbstractDeploymentPackage;
+<<<<<<< HEAD
+=======
 import org.apache.felix.deploymentadmin.Constants;
 import org.apache.felix.deploymentadmin.DeploymentAdminConfig;
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 import org.apache.felix.deploymentadmin.DeploymentAdminImpl;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
@@ -39,22 +42,42 @@ import org.osgi.service.packageadmin.PackageAdmin;
 /**
  * Represents a running deployment session.
  */
+<<<<<<< HEAD
+public class DeploymentSessionImpl implements DeploymentSession {
+=======
 public class DeploymentSessionImpl implements DeploymentSession, Constants {
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 
     private final AbstractDeploymentPackage m_target;
     private final AbstractDeploymentPackage m_source;
     private final List m_commands;
     private final DeploymentAdminImpl m_admin;
+<<<<<<< HEAD
+    private volatile Command m_currentCommand = null;
+    private volatile boolean m_cancelled;
+
+    public DeploymentSessionImpl(AbstractDeploymentPackage source, AbstractDeploymentPackage target, List commands, DeploymentAdminImpl admin) {
+=======
     private final DeploymentAdminConfig m_config;
 
     private volatile Command m_currentCommand = null;
     private volatile boolean m_cancelled;
 
     public DeploymentSessionImpl(AbstractDeploymentPackage source, AbstractDeploymentPackage target, List commands, DeploymentAdminImpl admin, DeploymentAdminConfig config) {
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         m_source = source;
         m_target = target;
         m_commands = commands;
         m_admin = admin;
+<<<<<<< HEAD
+    }
+
+    /**
+     * Calling this method will cause the commands specified for this session to be executed. the commands will be rolled back if the session is
+     * canceled or if an exception is caused by one of the commands.
+     *
+     * @throws DeploymentException If the session was canceled (<code>DeploymentException.CODE_CANCELLED</code>) or if one of the commands caused an exception (<code>DeploymentException.*</code>)
+=======
         m_config = config;
     }
 
@@ -66,6 +89,7 @@ public class DeploymentSessionImpl implements DeploymentSession, Constants {
      * @throws DeploymentException If the session was canceled (
      *             <code>DeploymentException.CODE_CANCELLED</code>) or if one of the
      *             commands caused an exception (<code>DeploymentException.*</code>)
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
      */
     public void call(boolean ignoreExceptions) throws DeploymentException {
         List executedCommands = new ArrayList();
@@ -73,7 +97,11 @@ public class DeploymentSessionImpl implements DeploymentSession, Constants {
             if (m_cancelled) {
                 // previous command did not pick up on cancel
                 rollback(executedCommands);
+<<<<<<< HEAD
+                throw new DeploymentException(DeploymentException.CODE_CANCELLED);
+=======
                 throw new DeploymentException(CODE_CANCELLED);
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
             }
             m_currentCommand = (Command) i.next();
             try {
@@ -82,12 +110,17 @@ public class DeploymentSessionImpl implements DeploymentSession, Constants {
             }
             catch (DeploymentException de) {
                 if (!ignoreExceptions) {
+<<<<<<< HEAD
+                    rollback(executedCommands);
+                    throw de;
+=======
                     // XXX catch exception and verify whether it is possible to
                     // have exceptions during a rollback
                     rollback(executedCommands);
                     throw de;
                 } else {
                     m_admin.getLog().log(LogService.LOG_DEBUG, "Ignoring exception as requested!", de);
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
                 }
             }
         }
@@ -97,11 +130,25 @@ public class DeploymentSessionImpl implements DeploymentSession, Constants {
         m_currentCommand = null;
     }
 
+<<<<<<< HEAD
+    private void rollback(List executedCommands) {
+        for (ListIterator i = executedCommands.listIterator(executedCommands.size()); i.hasPrevious();) {
+            Command command = (Command) i.previous();
+            command.rollback(this);
+        }
+    }
+
+    /**
+     * Cancels the session if it is in progress.
+     *
+     * @return true if a session was in progress and now canceled, false otherwise.
+=======
     /**
      * Cancels the session if it is in progress.
      * 
      * @return true if a session was in progress and now canceled, false
      *         otherwise.
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
      */
     public boolean cancel() {
         m_cancelled = true;
@@ -116,6 +163,9 @@ public class DeploymentSessionImpl implements DeploymentSession, Constants {
     }
 
     /**
+<<<<<<< HEAD
+     * Retrieve the base directory of the persistent storage area according to 
+=======
      * Returns the bundle context of the bundle this class is part of.
      * 
      * @return The <code>BundleContext</code>.
@@ -134,11 +184,16 @@ public class DeploymentSessionImpl implements DeploymentSession, Constants {
 
     /**
      * Retrieve the base directory of the persistent storage area according to
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
      * OSGi Core R4 6.1.6.10 for the given <code>BundleContext</code>.
      * 
      * @param bundle of which the storage area will be returned
      * @return a <code>File</code> that represents the base directory of the
+<<<<<<< HEAD
+     *     persistent storage area for the bundle
+=======
      *         persistent storage area for the bundle
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
      */
     public File getDataFile(Bundle bundle) {
         File result = null;
@@ -148,8 +203,12 @@ public class DeploymentSessionImpl implements DeploymentSession, Constants {
             result = context.getDataFile("");
         }
         else {
+<<<<<<< HEAD
+            // TODO this method should not return null or throw an exception; we need to resolve this...
+=======
             // TODO this method should not return null or throw an exception; we
             // need to resolve this...
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
             throw new IllegalStateException("Could not retrieve valid bundle context from bundle " + bundle.getSymbolicName());
         }
 
@@ -159,9 +218,32 @@ public class DeploymentSessionImpl implements DeploymentSession, Constants {
         return result;
     }
 
+<<<<<<< HEAD
+    public DeploymentPackage getSourceDeploymentPackage() {
+        return m_source;
+    }
+
+    public DeploymentPackage getTargetDeploymentPackage() {
+        return m_target;
+    }
+
+    /**
+     * Returns the bundle context of the bundle this class is part of.
+     *
+     * @return The <code>BundleContext</code>.
+     */
+    public BundleContext getBundleContext() {
+        return m_admin.getBundleContext();
+    }
+
+    /**
+     * Returns the currently present log service.
+     *
+=======
     /**
      * Returns the currently present log service.
      * 
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
      * @return The <code>LogService</code>.
      */
     public LogService getLog() {
@@ -170,7 +252,11 @@ public class DeploymentSessionImpl implements DeploymentSession, Constants {
 
     /**
      * Returns the currently present package admin.
+<<<<<<< HEAD
+     *
+=======
      * 
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
      * @return The <code>PackageAdmin</code>
      */
     public PackageAdmin getPackageAdmin() {
@@ -178,6 +264,10 @@ public class DeploymentSessionImpl implements DeploymentSession, Constants {
     }
 
     /**
+<<<<<<< HEAD
+     * Returns the target deployment package as an <code>AbstractDeploymentPackage</code>.
+     *
+=======
      * Returns the source deployment package as an
      * <code>AbstractDeploymentPackage</code>.
      * 
@@ -195,12 +285,22 @@ public class DeploymentSessionImpl implements DeploymentSession, Constants {
      * Returns the target deployment package as an
      * <code>AbstractDeploymentPackage</code>.
      * 
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
      * @return The target deployment package of the session.
      */
     public AbstractDeploymentPackage getTargetAbstractDeploymentPackage() {
         return m_target;
     }
 
+<<<<<<< HEAD
+    /**
+     * Returns the source deployment package as an <code>AbstractDeploymentPackage</code>.
+     *
+     * @return The source deployment packge of the session.
+     */
+    public AbstractDeploymentPackage getSourceAbstractDeploymentPackage() {
+        return m_source;
+=======
     public DeploymentPackage getTargetDeploymentPackage() {
         return m_target;
     }
@@ -210,5 +310,6 @@ public class DeploymentSessionImpl implements DeploymentSession, Constants {
             Command command = (Command) i.previous();
             command.rollback(this);
         }
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     }
 }

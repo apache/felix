@@ -24,6 +24,14 @@ import java.net.URL;
 import java.net.URLConnection;
 import java.net.URLStreamHandler;
 import java.net.URLStreamHandlerFactory;
+<<<<<<< HEAD
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.StringTokenizer;
+
+=======
 import java.util.List;
 import java.util.StringTokenizer;
 import java.util.concurrent.ConcurrentHashMap;
@@ -31,6 +39,7 @@ import java.util.concurrent.CopyOnWriteArrayList;
 
 import static org.apache.felix.framework.util.Util.putIfAbsentAndReturn;
 
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 import org.apache.felix.framework.util.FelixConstants;
 import org.apache.felix.framework.util.SecureAction;
 import org.apache.felix.framework.util.SecurityManagerEx;
@@ -91,6 +100,21 @@ class URLHandlers implements URLStreamHandlerFactory, ContentHandlerFactory
     private final static ConcurrentHashMap<ClassLoader, List<Object>> m_classloaderToFrameworkLists = new ConcurrentHashMap<ClassLoader, List<Object>>();
 
     // The list to hold all enabled frameworks registered with this handlers
+<<<<<<< HEAD
+    private static final List m_frameworks = new ArrayList();
+    private static int m_counter = 0;
+
+    private static Map m_contentHandlerCache = null;
+    private static Map m_streamHandlerCache = null;
+    private static URLStreamHandlerFactory m_streamHandlerFactory;
+    private static ContentHandlerFactory m_contentHandlerFactory;
+    private static final String STREAM_HANDLER_PACKAGE_PROP = "java.protocol.handler.pkgs";
+    private static final String DEFAULT_STREAM_HANDLER_PACKAGE = "sun.net.www.protocol|com.ibm.oti.net.www.protocol|gnu.java.net.protocol|wonka.net|com.acunia.wonka.net|org.apache.harmony.luni.internal.net.www.protocol|weblogic.utils|weblogic.net|javax.net.ssl|COM.newmonics.www.protocols";
+    private static Object m_rootURLHandlers;
+
+    private static final String m_streamPkgs;
+    private static final Map m_builtIn = new HashMap();
+=======
     private static final CopyOnWriteArrayList m_frameworks = new CopyOnWriteArrayList();
     private static volatile int m_counter = 0;
 
@@ -106,6 +130,7 @@ class URLHandlers implements URLStreamHandlerFactory, ContentHandlerFactory
 
     private static final String m_streamPkgs;
     private static final ConcurrentHashMap<String, URLStreamHandler> m_builtIn = new ConcurrentHashMap<String, URLStreamHandler>();
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     private static final boolean m_loaded;
 
     static
@@ -118,6 +143,11 @@ class URLHandlers implements URLStreamHandlerFactory, ContentHandlerFactory
             (null != URLHandlersContentHandlerProxy.class) && (null != URLStreamHandlerService.class);
     }
 
+<<<<<<< HEAD
+
+    private static final Map m_handlerToURL = new HashMap();
+=======
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     private void init(String protocol, URLStreamHandlerFactory factory)
     {
         try
@@ -126,7 +156,11 @@ class URLHandlers implements URLStreamHandlerFactory, ContentHandlerFactory
             if (handler != null)
             {
                 URL url = new URL(protocol, null, -1, "", handler);
+<<<<<<< HEAD
+                m_handlerToURL.put(handler, url);
+=======
                 addToCache(m_protocolToURL, protocol, url);
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
             }
         }
         catch (Throwable ex)
@@ -285,7 +319,11 @@ class URLHandlers implements URLStreamHandlerFactory, ContentHandlerFactory
             m_streamHandlerFactory.getClass().getName())))
         {
             m_sm = null;
+<<<<<<< HEAD
+            m_handlerToURL.clear();
+=======
             m_protocolToURL.clear();
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
             m_builtIn.clear();
         }
     }
@@ -354,6 +392,150 @@ class URLHandlers implements URLStreamHandlerFactory, ContentHandlerFactory
     }
 
     private URLStreamHandler getBuiltInStreamHandler(String protocol, URLStreamHandlerFactory factory)
+<<<<<<< HEAD
+    {
+        synchronized (m_builtIn)
+        {
+            if (m_builtIn.containsKey(protocol))
+            {
+                return (URLStreamHandler) m_builtIn.get(protocol);
+            }
+        }
+        if (factory != null)
+        {
+            URLStreamHandler result = factory.createURLStreamHandler(protocol);
+            if (result != null)
+            {
+                return addToCache(protocol, result);
+            }
+        }
+        // Check for built-in handlers for the mime type.
+        // Iterate over built-in packages.
+        URLStreamHandler handler = loadBuiltInStreamHandler(protocol, null);
+        if (handler == null)
+        {
+            handler = loadBuiltInStreamHandler(protocol, ClassLoader.getSystemClassLoader());
+        }
+        return addToCache(protocol, handler);
+    }
+
+    private URLStreamHandler loadBuiltInStreamHandler(String protocol, ClassLoader classLoader) {
+        StringTokenizer pkgTok = new StringTokenizer(m_streamPkgs, "| ");
+        while (pkgTok.hasMoreTokens())
+        {
+            String pkg = pkgTok.nextToken().trim();
+            String className = pkg + "." + protocol + ".Handler";
+            try
+            {
+                // If a built-in handler is found then cache and return it
+                Class handler = m_secureAction.forName(className, classLoader);
+                if (handler != null)
+                {
+                    return (URLStreamHandler) handler.newInstance();
+                }
+            }
+            catch (Throwable ex)
+            {
+                // This could be a class not found exception or an
+                // instantiation exception, not much we can do in either
+                // case other than ignore it.
+            }
+        }
+        // This is a workaround for android - Starting with 4.1 the built-in core handler
+        // are not following the normal naming nore package schema :-(
+        String androidHandler = null;
+        if ("file".equalsIgnoreCase(protocol))
+        {
+            androidHandler = "libcore.net.url.FileHandler";
+        }
+        else if ("ftp".equalsIgnoreCase(protocol))
+        {
+            androidHandler = "libcore.net.url.FtpHandler";
+        }
+        else if ("http".equalsIgnoreCase(protocol))
+        {
+            androidHandler = "libcore.net.http.HttpHandler";
+        }
+        else if ("https".equalsIgnoreCase(protocol))
+        {
+            androidHandler = "libcore.net.http.HttpsHandler";
+        }
+        else if ("jar".equalsIgnoreCase(protocol))
+        {
+            androidHandler = "libcore.net.url.JarHandler";
+        }
+        if (androidHandler != null)
+        {
+            try
+            {
+                // If a built-in handler is found then cache and return it
+                Class handler = m_secureAction.forName(androidHandler, classLoader);
+                if (handler != null)
+                {
+                    return (URLStreamHandler) handler.newInstance();
+                }
+            }
+            catch (Throwable ex)
+            {
+                // This could be a class not found exception or an
+                // instantiation exception, not much we can do in either
+                // case other than ignore it.
+            }
+        }
+        return null;
+    }
+
+    private synchronized URLStreamHandler addToCache(String protocol, URLStreamHandler result)
+    {
+        if (!m_builtIn.containsKey(protocol))
+            {
+                m_builtIn.put(protocol, result);
+                return result;
+            }
+        return (URLStreamHandler) m_builtIn.get(protocol);
+    }
+
+    /**
+     * <p>
+     * This is a method implementation for the <tt>URLStreamHandlerFactory</tt>
+     * interface. It simply creates a stream handler proxy object for the
+     * specified protocol. It caches the returned proxy; therefore, subsequent
+     * requests for the same protocol will receive the same handler proxy.
+     * </p>
+     * @param protocol the protocol for which a stream handler should be returned.
+     * @return a stream handler proxy for the specified protocol.
+    **/
+    public URLStreamHandler createURLStreamHandler(String protocol)
+    {
+        // See if there is a cached stream handler.
+        // IMPLEMENTATION NOTE: Caching is not strictly necessary for
+        // stream handlers since the Java runtime caches them. Caching is
+        // performed for code consistency between stream and content
+        // handlers and also because caching behavior may not be guaranteed
+        // across different JRE implementations.
+        URLStreamHandler handler = getFromStreamCache(protocol);
+
+        if (handler != null)
+        {
+            return handler;
+        }
+        // If this is the framework's "bundle:" protocol, then return
+        // a handler for that immediately, since no one else can be
+        // allowed to deal with it.
+        if (protocol.equals(FelixConstants.BUNDLE_URL_PROTOCOL))
+        {
+            return addToStreamCache(protocol,
+                new URLHandlersBundleStreamHandler(m_secureAction));
+        }
+
+       handler = getBuiltInStreamHandler(protocol,
+           (m_streamHandlerFactory != this) ? m_streamHandlerFactory : null);
+
+        // If built-in content handler, then create a proxy handler.
+        return addToStreamCache(protocol,
+            new URLHandlersStreamHandlerProxy(protocol, m_secureAction,
+                handler, (URL) m_handlerToURL.get(handler)));
+=======
     {
         URLStreamHandler handler = getFromCache(m_builtIn, protocol);
 
@@ -488,6 +670,7 @@ class URLHandlers implements URLStreamHandlerFactory, ContentHandlerFactory
         return addToCache(m_streamHandlerCache, protocol,
             new URLHandlersStreamHandlerProxy(protocol, m_secureAction,
                 handler, getFromCache(m_protocolToURL, protocol)));
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     }
 
     /**
@@ -508,18 +691,73 @@ class URLHandlers implements URLStreamHandlerFactory, ContentHandlerFactory
         // performed for code consistency between stream and content
         // handlers and also because caching behavior may not be guaranteed
         // across different JRE implementations.
+<<<<<<< HEAD
+        ContentHandler handler = getFromContentCache(mimeType);
+=======
         ContentHandler handler = getFromCache(m_contentHandlerCache, mimeType);
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 
         if (handler != null)
         {
             return handler;
         }
 
+<<<<<<< HEAD
+        return addToContentCache(mimeType,
+=======
         return addToCache(m_contentHandlerCache, mimeType,
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
             new URLHandlersContentHandlerProxy(mimeType, m_secureAction,
             (m_contentHandlerFactory != this) ? m_contentHandlerFactory : null));
     }
 
+<<<<<<< HEAD
+    private synchronized ContentHandler addToContentCache(String mimeType, ContentHandler handler)
+    {
+        if (m_contentHandlerCache == null)
+        {
+            m_contentHandlerCache = new HashMap();
+        }
+        return (ContentHandler) addToCache(m_contentHandlerCache, mimeType, handler);
+    }
+
+    private synchronized ContentHandler getFromContentCache(String mimeType)
+    {
+        return (ContentHandler) ((m_contentHandlerCache != null) ?
+            m_contentHandlerCache.get(mimeType) : null);
+    }
+
+    private synchronized URLStreamHandler addToStreamCache(String protocol, URLStreamHandler handler)
+    {
+        if (m_streamHandlerCache == null)
+        {
+            m_streamHandlerCache = new HashMap();
+        }
+        return (URLStreamHandler) addToCache(m_streamHandlerCache, protocol, handler);
+    }
+
+    private synchronized URLStreamHandler getFromStreamCache(String protocol)
+    {
+        return (URLStreamHandler) ((m_streamHandlerCache != null) ?
+            m_streamHandlerCache.get(protocol) : null);
+    }
+
+    private Object addToCache(Map cache, String key, Object value)
+    {
+        if (value == null)
+        {
+            return null;
+        }
+
+        Object result = cache.get(key);
+
+        if (result == null)
+        {
+            cache.put(key, value);
+            result = value;
+        }
+        return result;
+=======
     private static <K,V> V addToCache(ConcurrentHashMap<K,V> cache, K key, V value)
     {
         return key != null && value != null ? putIfAbsentAndReturn(cache, key, value) : null;
@@ -528,6 +766,7 @@ class URLHandlers implements URLStreamHandlerFactory, ContentHandlerFactory
     private static <K,V> V getFromCache(ConcurrentHashMap<K,V> cache, K key)
     {
         return key != null ? cache.get(key) : null;
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     }
 
     /**
@@ -584,6 +823,7 @@ class URLHandlers implements URLStreamHandlerFactory, ContentHandlerFactory
                     }
                 }
             }
+            m_counter++;
         }
     }
 
@@ -600,6 +840,15 @@ class URLHandlers implements URLStreamHandlerFactory, ContentHandlerFactory
         boolean unregister = false;
         synchronized (m_frameworks)
         {
+<<<<<<< HEAD
+            m_counter--;
+            if (m_frameworks.remove(framework))
+            {
+                if (m_frameworks.isEmpty())
+                {
+                    unregister = true;
+                    m_handler = null;
+=======
             if (m_frameworks.contains(framework))
             {
                 if (m_frameworks.size() == 1 && m_handler != null)
@@ -647,8 +896,26 @@ class URLHandlers implements URLStreamHandlerFactory, ContentHandlerFactory
                             }
                         }
                     }
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
                 }
             }
+        }
+        if (unregister)
+        {
+             try
+             {
+                 m_secureAction.invoke(m_secureAction.getDeclaredMethod(
+                     m_rootURLHandlers.getClass(),
+                     "unregisterFrameworkListsForContextSearch",
+                     new Class[]{ ClassLoader.class}),
+                     m_rootURLHandlers,
+                     new Object[] {URLHANDLERS_CLASS.getClassLoader()});
+             }
+             catch (Exception e)
+             {
+                 // This should not happen
+                 e.printStackTrace();
+             }
         }
     }
 
@@ -665,6 +932,22 @@ class URLHandlers implements URLStreamHandlerFactory, ContentHandlerFactory
     **/
     public static Object getFrameworkFromContext()
     {
+<<<<<<< HEAD
+        // This is a hack. The idea is to return the only registered framework
+        synchronized (m_classloaderToFrameworkLists)
+        {
+            if (m_classloaderToFrameworkLists.isEmpty())
+            {
+                synchronized (m_frameworks)
+                {
+                    if ((m_counter == 1) && (m_frameworks.size() == 1))
+                    {
+                        return m_frameworks.get(0);
+                    }
+                }
+            }
+        }
+=======
         // This is a hack. The idea is to return the only registered framework quickly
         int attempts = 0;
         while (m_classloaderToFrameworkLists.isEmpty() && (m_counter == 1) && (m_frameworks.size() == 1))
@@ -681,6 +964,7 @@ class URLHandlers implements URLStreamHandlerFactory, ContentHandlerFactory
             }
         }
 
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         // get the current class call stack.
         Class[] stack = m_sm.getClassContext();
         // Find the first class that is loaded from a bundle.
@@ -711,12 +995,25 @@ class URLHandlers implements URLStreamHandlerFactory, ContentHandlerFactory
 
             if ((frameworks == null) && (index == URLHANDLERS_CLASS.getClassLoader()))
             {
+<<<<<<< HEAD
+                ClassLoader index = targetClass.getClassLoader().getClass().getClassLoader();
+
+                List frameworks = (List) m_classloaderToFrameworkLists.get(
+                    index);
+
+                if ((frameworks == null) && (index == URLHANDLERS_CLASS.getClassLoader()))
+                {
+                    frameworks = m_frameworks;
+                }
+                if (frameworks != null)
+=======
                 frameworks = m_frameworks;
             }
             if (frameworks != null)
             {
                 // Check the registry of framework instances
                 for (Object framework : frameworks)
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
                 {
                     try
                     {
@@ -725,7 +1022,28 @@ class URLHandlers implements URLStreamHandlerFactory, ContentHandlerFactory
                             "getBundle", CLASS_TYPE),
                             framework, new Object[]{targetClass}) != null)
                         {
+<<<<<<< HEAD
+                            Object framework = frameworks.get(i);
+                            try
+                            {
+                                if (m_secureAction.invoke(
+                                    m_secureAction.getDeclaredMethod(framework.getClass(),
+                                    "getBundle", CLASS_TYPE),
+                                    framework, new Object[]{targetClass}) != null)
+                                {
+                                    return framework;
+                                }
+                            }
+                            catch (Exception ex)
+                            {
+                                // This should not happen but if it does there is
+                                // not much we can do other then ignore it.
+                                // Maybe log this or something.
+                                ex.printStackTrace();
+                            }
+=======
                             return framework;
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
                         }
                     }
                     catch (Exception ex)

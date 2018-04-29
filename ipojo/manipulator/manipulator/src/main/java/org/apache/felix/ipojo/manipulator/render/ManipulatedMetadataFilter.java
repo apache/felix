@@ -19,7 +19,11 @@
 
 package org.apache.felix.ipojo.manipulator.render;
 
+<<<<<<< HEAD
+import org.apache.felix.ipojo.manipulation.MethodCreator;
+=======
 import org.apache.felix.ipojo.manipulation.ClassManipulator;
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 import org.apache.felix.ipojo.metadata.Attribute;
 import org.apache.felix.ipojo.metadata.Element;
 
@@ -41,7 +45,11 @@ public class ManipulatedMetadataFilter implements MetadataFilter {
             // * manipulated methods
             // * fields for the InstanceManager
             // * InstanceManager setter
+<<<<<<< HEAD
+            if (value.startsWith(MethodCreator.PREFIX)
+=======
             if (value.startsWith(ClassManipulator.PREFIX)
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
                     || value.contains("org.apache.felix.ipojo.InstanceManager")
                     || value.contains("_setInstanceManager")) {
                 return true;

@@ -1,5 +1,9 @@
 /*
+<<<<<<< HEAD
+ * Copyright (c) OSGi Alliance (2000, 2012). All Rights Reserved.
+=======
  * Copyright (c) OSGi Alliance (2000, 2013). All Rights Reserved.
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -41,6 +45,15 @@ import java.util.Set;
  * A bundle's authority to provide or require a capability.
  * <ul>
  * <li>The {@code provide} action allows a bundle to provide a capability
+<<<<<<< HEAD
+ * matching the specified filter.
+ * <li>The {@code require} action allows a bundle to require a capability
+ * matching the specified filter.
+ * </ul>
+ * 
+ * @ThreadSafe
+ * @version $Id: b17bcaec959f67c3eae4c4c80c39a0a8716b22dc $
+=======
  * matching the specified filter.</li>
  * <li>The {@code require} action allows a bundle to require a capability
  * matching the specified filter.</li>
@@ -48,6 +61,7 @@ import java.util.Set;
  * 
  * @ThreadSafe
  * @author $Id: 1d8e892cf46d7410cd3fdff1f5ca2fb010a33ae6 $
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
  * @since 1.6
  */
 
@@ -334,7 +348,10 @@ public final class CapabilityPermission extends BasicPermission {
 	 * @return {@code true} if the specified permission is implied by this
 	 *         object; {@code false} otherwise.
 	 */
+<<<<<<< HEAD
+=======
 	@Override
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 	public boolean implies(Permission p) {
 		if (!(p instanceof CapabilityPermission)) {
 			return false;
@@ -383,7 +400,10 @@ public final class CapabilityPermission extends BasicPermission {
 	 * 
 	 * @return The canonical string representation of the actions.
 	 */
+<<<<<<< HEAD
+=======
 	@Override
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 	public String getActions() {
 		String result = actions;
 		if (result == null) {
@@ -415,7 +435,10 @@ public final class CapabilityPermission extends BasicPermission {
 	 * @return A new {@code PermissionCollection} object suitable for storing
 	 *         {@code CapabilityPermission} objects.
 	 */
+<<<<<<< HEAD
+=======
 	@Override
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 	public PermissionCollection newPermissionCollection() {
 		return new CapabilityPermissionCollection();
 	}
@@ -431,7 +454,10 @@ public final class CapabilityPermission extends BasicPermission {
 	 *         name and actions as this {@code CapabilityPermission} object;
 	 *         {@code false} otherwise.
 	 */
+<<<<<<< HEAD
+=======
 	@Override
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 	public boolean equals(Object obj) {
 		if (obj == this) {
 			return true;
@@ -452,7 +478,10 @@ public final class CapabilityPermission extends BasicPermission {
 	 * 
 	 * @return Hash code value for this object.
 	 */
+<<<<<<< HEAD
+=======
 	@Override
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 	public int hashCode() {
 		int h = 31 * 17 + getName().hashCode();
 		h = 31 * h + getActions().hashCode();
@@ -491,8 +520,14 @@ public final class CapabilityPermission extends BasicPermission {
 	}
 
 	/**
+<<<<<<< HEAD
+	 * Called by {@code <@link CapabilityPermission#implies(Permission)>}. This
+	 * method is only called on a requested permission which cannot have a
+	 * filter set.
+=======
 	 * Called by {@link CapabilityPermission#implies(Permission)}. This method
 	 * is only called on a requested permission which cannot have a filter set.
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 	 * 
 	 * @return a map of properties for this permission.
 	 */
@@ -506,8 +541,13 @@ public final class CapabilityPermission extends BasicPermission {
 		if (bundle == null) {
 			return properties = props;
 		}
+<<<<<<< HEAD
+		AccessController.doPrivileged(new PrivilegedAction<Object>() {
+			public Object run() {
+=======
 		AccessController.doPrivileged(new PrivilegedAction<Void>() {
 			public Void run() {
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 				props.put("id", new Long(bundle.getBundleId()));
 				props.put("location", bundle.getLocation());
 				String name = bundle.getSymbolicName();
@@ -535,7 +575,10 @@ public final class CapabilityPermission extends BasicPermission {
 			entries = null;
 		}
 
+<<<<<<< HEAD
+=======
 		@Override
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 		public Object get(Object k) {
 			if (!(k instanceof String)) {
 				return null;
@@ -614,7 +657,10 @@ final class CapabilityPermissionCollection extends PermissionCollection {
 	 * @throws SecurityException If this {@code CapabilityPermissionCollection}
 	 *         object has been marked read-only.
 	 */
+<<<<<<< HEAD
+=======
 	@Override
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 	public void add(final Permission permission) {
 		if (!(permission instanceof CapabilityPermission)) {
 			throw new IllegalArgumentException("invalid permission: " + permission);
@@ -669,7 +715,10 @@ final class CapabilityPermissionCollection extends PermissionCollection {
 	 * @return {@code true} if {@code permission} is a proper subset of a
 	 *         permission in the set; {@code false} otherwise.
 	 */
+<<<<<<< HEAD
+=======
 	@Override
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 	public boolean implies(final Permission permission) {
 		if (!(permission instanceof CapabilityPermission)) {
 			return false;
@@ -750,7 +799,10 @@ final class CapabilityPermissionCollection extends PermissionCollection {
 	 * 
 	 * @return Enumeration of all the CapabilityPermission objects.
 	 */
+<<<<<<< HEAD
+=======
 	@Override
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 	public synchronized Enumeration<Permission> elements() {
 		List<Permission> all = new ArrayList<Permission>(permissions.values());
 		Map<String, CapabilityPermission> pc = filterPermissions;
@@ -774,11 +826,17 @@ final class CapabilityPermissionCollection extends PermissionCollection {
 
 	private synchronized void readObject(java.io.ObjectInputStream in) throws IOException, ClassNotFoundException {
 		ObjectInputStream.GetField gfields = in.readFields();
+<<<<<<< HEAD
+		HashMap<String, CapabilityPermission> p = (HashMap<String, CapabilityPermission>) gfields.get("permissions", null);
+		permissions = p;
+		all_allowed = gfields.get("all_allowed", false);
+=======
 		@SuppressWarnings("unchecked")
 		HashMap<String, CapabilityPermission> p = (HashMap<String, CapabilityPermission>) gfields.get("permissions", null);
 		permissions = p;
 		all_allowed = gfields.get("all_allowed", false);
 		@SuppressWarnings("unchecked")
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 		HashMap<String, CapabilityPermission> fp = (HashMap<String, CapabilityPermission>) gfields.get("filterPermissions", null);
 		filterPermissions = fp;
 	}

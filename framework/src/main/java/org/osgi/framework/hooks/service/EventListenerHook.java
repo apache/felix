@@ -1,5 +1,9 @@
 /*
+<<<<<<< HEAD
+ * Copyright (c) OSGi Alliance (2010, 2012). All Rights Reserved.
+=======
  * Copyright (c) OSGi Alliance (2010, 2013). All Rights Reserved.
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,7 +22,10 @@ package org.osgi.framework.hooks.service;
 
 import java.util.Collection;
 import java.util.Map;
+<<<<<<< HEAD
+=======
 import org.osgi.annotation.versioning.ConsumerType;
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceEvent;
 import org.osgi.framework.hooks.service.ListenerHook.ListenerInfo;
@@ -32,9 +39,15 @@ import org.osgi.framework.hooks.service.ListenerHook.ListenerInfo;
  * 
  * @ThreadSafe
  * @since 1.1
+<<<<<<< HEAD
+ * @version $Id: b0b99b29206f272ad479fa08ffcd5ef5fda909b8 $
+ */
+
+=======
  * @author $Id: 2b80241ca24005be3a9a3550138e1ba9a3a9ad6e $
  */
 @ConsumerType
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 public interface EventListenerHook {
 	/**
 	 * Event listener hook method. This method is called prior to service event

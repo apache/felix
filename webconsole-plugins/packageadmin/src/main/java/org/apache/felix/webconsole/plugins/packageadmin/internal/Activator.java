@@ -6,9 +6,15 @@
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License. You may obtain a copy of the License at
+<<<<<<< HEAD
+ * 
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * 
+=======
  *
  * http://www.apache.org/licenses/LICENSE-2.0
  *
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
  * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
@@ -21,9 +27,15 @@ package org.apache.felix.webconsole.plugins.packageadmin.internal;
 import java.util.Dictionary;
 import java.util.Hashtable;
 
+<<<<<<< HEAD
+import org.apache.felix.webconsole.ConfigurationPrinter;
+import org.apache.felix.webconsole.SimpleWebConsolePlugin;
+import org.apache.felix.webconsole.WebConsoleConstants;
+=======
 import org.apache.felix.inventory.Format;
 import org.apache.felix.inventory.InventoryPrinter;
 import org.apache.felix.webconsole.SimpleWebConsolePlugin;
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceReference;
@@ -41,7 +53,11 @@ public class Activator implements BundleActivator, ServiceTrackerCustomizer
 
     private BundleContext context;
     private SimpleWebConsolePlugin plugin;
+<<<<<<< HEAD
+    private ServiceRegistration printerReg;
+=======
     private ServiceRegistration<InventoryPrinter> printerReg;
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 
     /**
      * @see org.osgi.framework.BundleActivator#start(org.osgi.framework.BundleContext)
@@ -54,6 +70,13 @@ public class Activator implements BundleActivator, ServiceTrackerCustomizer
         this.pkgAdminTracker.open();
 
         // register configuration printer
+<<<<<<< HEAD
+        final Dictionary/*<String, Object>*/props = new Hashtable/*<String, Object>*/();
+        props.put(WebConsoleConstants.CONFIG_PRINTER_MODES, new String[] {
+                ConfigurationPrinter.MODE_ZIP, ConfigurationPrinter.MODE_TXT });
+        printerReg = context.registerService(
+            "org.apache.felix.webconsole.ConfigurationPrinter", //$NON-NLS-1$
+=======
         final Dictionary<String, Object> props = new Hashtable<String, Object>();
         props.put(InventoryPrinter.NAME, "duplicate_exports"); //$NON-NLS-1$
         props.put(InventoryPrinter.TITLE, "Duplicate Exports"); //$NON-NLS-1$
@@ -61,6 +84,7 @@ public class Activator implements BundleActivator, ServiceTrackerCustomizer
 
         printerReg = context.registerService(
             InventoryPrinter.class,
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
             new WebConsolePrinter(context, pkgAdminTracker), props);
     }
 

@@ -19,8 +19,11 @@
 package org.apache.felix.scr.impl.manager;
 
 import java.util.Hashtable;
+<<<<<<< HEAD
+=======
 import java.util.Map;
 
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 import junit.framework.TestCase;
 
 public class AbstractComponentManagerTest extends TestCase
@@ -28,11 +31,19 @@ public class AbstractComponentManagerTest extends TestCase
 
     public void test_copyTo_withoutExclusions()
     {
+<<<<<<< HEAD
+        final Hashtable ht = new Hashtable();
+        ht.put( "p1", "v1" );
+        ht.put( "p.2", "v2" );
+        ht.put( ".p3", "v3" );
+        final Hashtable dict = (Hashtable) AbstractComponentManager.copyTo( null, ht, true );
+=======
         final Hashtable<String, String> ht = new Hashtable<String, String>();
         ht.put( "p1", "v1" );
         ht.put( "p.2", "v2" );
         ht.put( ".p3", "v3" );
         final Map<String, Object> dict = AbstractComponentManager.copyToMap( ht, true );
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         assertNotNull( "Copy result is not null", dict );
         assertEquals( "Number of items", 3, dict.size() );
         assertEquals( "Value for key p1", "v1", dict.get( "p1" ) );
@@ -42,11 +53,19 @@ public class AbstractComponentManagerTest extends TestCase
 
     public void test_copyTo_excludingStartingWithDot()
     {
+<<<<<<< HEAD
+        final Hashtable ht = new Hashtable();
+        ht.put( "p1", "v1" );
+        ht.put( "p.2", "v2" );
+        ht.put( ".p3", "v3" );
+        final Hashtable dict = (Hashtable) AbstractComponentManager.copyTo( null, ht, false );
+=======
         final Hashtable<String, String> ht = new Hashtable<String, String>();
         ht.put( "p1", "v1" );
         ht.put( "p.2", "v2" );
         ht.put( ".p3", "v3" );
         final Map<String, Object> dict = AbstractComponentManager.copyToMap( ht, false );
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         assertNotNull( "Copy result is not null", dict );
         assertEquals( "Number of items", 2, dict.size() );
         assertEquals( "Value for key p1", "v1", dict.get( "p1" ) );

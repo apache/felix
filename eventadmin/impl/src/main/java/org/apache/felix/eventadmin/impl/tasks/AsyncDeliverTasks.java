@@ -19,10 +19,18 @@
 package org.apache.felix.eventadmin.impl.tasks;
 
 import java.util.Collection;
+<<<<<<< HEAD
+import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+
+=======
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.felix.eventadmin.impl.handler.EventHandlerProxy;
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 import org.osgi.service.event.Event;
 
 /**
@@ -42,7 +50,11 @@ public class AsyncDeliverTasks
     private final SyncDeliverTasks m_deliver_task;
 
     /** A map of running threads currently delivering async events. */
+<<<<<<< HEAD
+    private final Map m_running_threads = new HashMap();
+=======
     private final Map<Long, TaskExecuter> m_running_threads = new ConcurrentHashMap<Long, TaskExecuter>();
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 
     /**
      * The constructor of the class that will use the asynchronous.
@@ -64,6 +76,89 @@ public class AsyncDeliverTasks
      * @param tasks The event handler dispatch tasks to execute
      *
      */
+<<<<<<< HEAD
+    public void execute(final Collection tasks, final Event event)
+    {
+        /*
+        final Iterator i = tasks.iterator();
+        boolean hasOrdered = false;
+        while ( i.hasNext() )
+        {
+            final EventHandlerProxy task = (EventHandlerProxy)i.next();
+            if ( !task.isAsyncOrderedDelivery() )
+            {
+                // do somethimg
+            }
+            else
+            {
+                hasOrdered = true;
+            }
+
+        }
+        if ( hasOrdered )
+        {*/
+            final Thread currentThread = Thread.currentThread();
+            TaskExecuter executer = null;
+            synchronized (m_running_threads )
+            {
+                final TaskExecuter runningExecutor = (TaskExecuter)m_running_threads.get(currentThread);
+                if ( runningExecutor != null )
+                {
+                    runningExecutor.add(tasks, event);
+                }
+                else
+                {
+                    executer = new TaskExecuter( tasks, event, currentThread );
+                    m_running_threads.put(currentThread, executer);
+                }
+            }
+            if ( executer != null )
+            {
+                m_pool.executeTask(executer);
+            }
+        //}
+    }
+
+    private final class TaskExecuter implements Runnable
+    {
+        private final List m_tasks = new LinkedList();
+
+        private final Object m_key;
+
+        public TaskExecuter(final Collection tasks, final Event event, final Object key)
+        {
+            m_key = key;
+            m_tasks.add(new Object[] {tasks, event});
+        }
+
+        public void run()
+        {
+            boolean running;
+            do
+            {
+                Object[] tasks = null;
+                synchronized ( m_tasks )
+                {
+                    tasks = (Object[]) m_tasks.remove(0);
+                }
+                m_deliver_task.execute((Collection)tasks[0], (Event)tasks[1], true);
+                synchronized ( m_running_threads )
+                {
+                    running = m_tasks.size() > 0;
+                    if ( !running )
+                    {
+                        m_running_threads.remove(m_key);
+                    }
+                }
+            } while ( running );
+        }
+
+        public void add(final Collection tasks, final Event event)
+        {
+            synchronized ( m_tasks )
+            {
+                m_tasks.add(new Object[] {tasks, event});
+=======
     public void execute(final Collection<EventHandlerProxy> tasks, final Event event)
     {
         /*
@@ -187,6 +282,7 @@ public class AsyncDeliverTasks
             {
                 last.next = info;
                 last = info;
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
             }
         }
     }

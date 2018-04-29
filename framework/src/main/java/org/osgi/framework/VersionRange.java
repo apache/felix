@@ -1,5 +1,9 @@
 /*
+<<<<<<< HEAD
+ * Copyright (c) OSGi Alliance (2011, 2012). All Rights Reserved.
+=======
  * Copyright (c) OSGi Alliance (2011, 2013). All Rights Reserved.
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -32,7 +36,11 @@ import java.util.StringTokenizer;
  * 
  * @since 1.7
  * @Immutable
+<<<<<<< HEAD
+ * @version $Id: d0c21e6a5015a7fa0b33179a29122ea7d137145a $
+=======
  * @author $Id: 1f5fa660a1a42e83371fe0d2c61ae79ce1cb1710 $
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
  */
 
 public class VersionRange {
@@ -123,7 +131,11 @@ public class VersionRange {
 	 * 
 	 * @param range String representation of the version range. The versions in
 	 *        the range must contain no whitespace. Other whitespace in the
+<<<<<<< HEAD
+	 *        range string is ignored.
+=======
 	 *        range string is ignored. Must not be {@code null}.
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 	 * @throws IllegalArgumentException If {@code range} is improperly
 	 *         formatted.
 	 */
@@ -191,7 +203,11 @@ public class VersionRange {
 	 */
 	private static Version parseVersion(String version, String range) {
 		try {
+<<<<<<< HEAD
+			return Version.parseVersion(version);
+=======
 			return Version.valueOf(version);
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 		} catch (IllegalArgumentException e) {
 			IllegalArgumentException iae = new IllegalArgumentException("invalid range \"" + range + "\": " + e.getMessage());
 			iae.initCause(e);
@@ -377,11 +393,17 @@ public class VersionRange {
 	 * 
 	 * @return The string representation of this version range.
 	 */
+<<<<<<< HEAD
+	public String toString() {
+		if (versionRangeString != null) {
+			return versionRangeString;
+=======
 	@Override
 	public String toString() {
 		String s = versionRangeString;
 		if (s != null) {
 			return s;
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 		}
 		String leftVersion = left.toString();
 		if (right == null) {
@@ -404,16 +426,26 @@ public class VersionRange {
 	 * 
 	 * @return An integer which is a hash code value for this object.
 	 */
+<<<<<<< HEAD
+	public int hashCode() {
+		if (hash != 0) {
+			return hash;
+=======
 	@Override
 	public int hashCode() {
 		int h = hash;
 		if (h != 0) {
 			return h;
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 		}
 		if (empty) {
 			return hash = 31;
 		}
+<<<<<<< HEAD
+		int h = 31 + (leftClosed ? 7 : 5);
+=======
 		h = 31 + (leftClosed ? 7 : 5);
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 		h = 31 * h + left.hashCode();
 		if (right != null) {
 			h = 31 * h + right.hashCode();
@@ -434,7 +466,10 @@ public class VersionRange {
 	 * @return {@code true} if {@code object} is a {@code VersionRange} and is
 	 *         equal to this object; {@code false} otherwise.
 	 */
+<<<<<<< HEAD
+=======
 	@Override
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 	public boolean equals(Object object) {
 		if (object == this) { // quicktest
 			return true;
@@ -476,6 +511,11 @@ public class VersionRange {
 		}
 
 		StringBuffer result = new StringBuffer(128);
+<<<<<<< HEAD
+		if (right != null) {
+			result.append("(&");
+		}
+=======
 		final boolean needPresence = !leftClosed && ((right == null) || !rightClosed);
 		final boolean multipleTerms = needPresence || (right != null);
 		if (multipleTerms) {
@@ -486,6 +526,7 @@ public class VersionRange {
 			result.append(attributeName);
 			result.append("=*)");
 		}
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 		if (leftClosed) {
 			result.append('(');
 			result.append(attributeName);
@@ -513,13 +554,18 @@ public class VersionRange {
 				result.append(right.toString0());
 				result.append("))");
 			}
+<<<<<<< HEAD
+=======
 		}
 		if (multipleTerms) {
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 			result.append(')');
 		}
 
 		return result.toString();
 	}
+<<<<<<< HEAD
+=======
 
 	/**
 	 * Returns a {@code VersionRange} object holding the version range in the
@@ -540,4 +586,5 @@ public class VersionRange {
 	public static VersionRange valueOf(String range) {
 		return new VersionRange(range);
 	}
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 }

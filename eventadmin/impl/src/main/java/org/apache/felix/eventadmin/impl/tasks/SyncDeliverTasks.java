@@ -24,6 +24,10 @@ import java.util.Iterator;
 import org.apache.felix.eventadmin.impl.handler.EventHandlerProxy;
 import org.osgi.service.event.Event;
 
+<<<<<<< HEAD
+import EDU.oswego.cs.dl.util.concurrent.TimeoutException;
+=======
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 
 /**
  * This class does the actual work of the synchronous event delivery.
@@ -79,6 +83,98 @@ public class SyncDeliverTasks
     }
 
     /**
+<<<<<<< HEAD
+     * This method defines if a timeout handling should be used for the
+     * task.
+     * @param tasks The event handler dispatch tasks to execute
+     */
+    private boolean useTimeout(final EventHandlerProxy proxy)
+    {
+        // we only check the proxy if a timeout is configured
+        if ( this.timeout > 0)
+        {
+            return proxy.useTimeout();
+        }
+        return false;
+    }
+
+    /**
+     * This blocks an unrelated thread used to send a synchronous event until the
+     * event is send (or a timeout occurs).
+     *
+     * @param tasks The event handler dispatch tasks to execute
+     *
+     */
+    public void execute(final Collection tasks, final Event event, final boolean filterAsyncUnordered)
+    {
+        final Thread sleepingThread = Thread.currentThread();
+        final SyncThread syncThread = sleepingThread instanceof SyncThread ? (SyncThread)sleepingThread : null;
+
+        final Iterator i = tasks.iterator();
+        while ( i.hasNext() )
+        {
+            final EventHandlerProxy task = (EventHandlerProxy)i.next();
+//            if ( !filterAsyncUnordered || task.isAsyncOrderedDelivery() )
+//            {
+                if ( !useTimeout(task) )
+                {
+                    // no timeout, we can directly execute
+                    task.sendEvent(event);
+                }
+                else if ( syncThread != null )
+                {
+                    // if this is a cascaded event, we directly use this thread
+                    // otherwise we could end up in a starvation
+                    final long startTime = System.currentTimeMillis();
+                    task.sendEvent(event);
+                    if ( System.currentTimeMillis() - startTime > this.timeout )
+                    {
+                        task.blackListHandler();
+                    }
+                }
+                else
+                {
+                    final Rendezvous startBarrier = new Rendezvous();
+                    final Rendezvous timerBarrier = new Rendezvous();
+                    this.pool.executeTask(new Runnable()
+                    {
+                        public void run()
+                        {
+                            try
+                            {
+                                // notify the outer thread to start the timer
+                                startBarrier.waitForRendezvous();
+                                // execute the task
+                                task.sendEvent(event);
+                                // stop the timer
+                                timerBarrier.waitForRendezvous();
+                            }
+                            catch (final IllegalStateException ise)
+                            {
+                                // this can happen on shutdown, so we ignore it
+                            }
+                        }
+                    });
+                    // we wait for the inner thread to start
+                    startBarrier.waitForRendezvous();
+
+                    // timeout handling
+                    // we sleep for the sleep time
+                    // if someone wakes us up it's the finished inner task
+                    try
+                    {
+                        timerBarrier.waitAttemptForRendezvous(this.timeout);
+                    }
+                    catch (final TimeoutException ie)
+                    {
+                        // if we timed out, we have to blacklist the handler
+                        task.blackListHandler();
+                    }
+
+                }
+//            }
+        }
+=======
      * This blocks an unrelated thread used to send a synchronous event until the
      * event is send (or a timeout occurs).
      *
@@ -124,5 +220,6 @@ public class SyncDeliverTasks
         }
         handlerLatch.awaitAndBlacklistCheck();
 
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     }
 }

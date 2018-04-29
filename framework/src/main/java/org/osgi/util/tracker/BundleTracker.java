@@ -1,5 +1,9 @@
 /*
+<<<<<<< HEAD
+ * Copyright (c) OSGi Alliance (2007, 2012). All Rights Reserved.
+=======
  * Copyright (c) OSGi Alliance (2007, 2013). All Rights Reserved.
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -44,7 +48,11 @@ import org.osgi.framework.SynchronousBundleListener;
  * 
  * @param <T> The type of the tracked object.
  * @ThreadSafe
+<<<<<<< HEAD
+ * @version $Id: f21db4fe54284d4810bd9b5fa2528957804e3a21 $
+=======
  * @author $Id: 9a1b57568a8be735292700584f4eb936fc80f2ff $
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
  * @since 1.4
  */
 public class BundleTracker<T> implements BundleTrackerCustomizer<T> {
@@ -218,7 +226,10 @@ public class BundleTracker<T> implements BundleTrackerCustomizer<T> {
 	 * @see BundleTrackerCustomizer#addingBundle(Bundle, BundleEvent)
 	 */
 	public T addingBundle(Bundle bundle, BundleEvent event) {
+<<<<<<< HEAD
+=======
 		@SuppressWarnings("unchecked")
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 		T result = (T) bundle;
 		return result;
 	}
@@ -464,7 +475,10 @@ public class BundleTracker<T> implements BundleTrackerCustomizer<T> {
 		 * @return Customized object for the tracked item or {@code null} if the
 		 *         item is not to be tracked.
 		 */
+<<<<<<< HEAD
+=======
 		@Override
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 		T customizerAdding(final Bundle item, final BundleEvent related) {
 			return customizer.addingBundle(item, related);
 		}
@@ -477,7 +491,10 @@ public class BundleTracker<T> implements BundleTrackerCustomizer<T> {
 		 * @param related Action related object.
 		 * @param object Customized object for the tracked item.
 		 */
+<<<<<<< HEAD
+=======
 		@Override
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 		void customizerModified(final Bundle item, final BundleEvent related, final T object) {
 			customizer.modifiedBundle(item, related, object);
 		}
@@ -490,7 +507,10 @@ public class BundleTracker<T> implements BundleTrackerCustomizer<T> {
 		 * @param related Action related object.
 		 * @param object Customized object for the tracked item.
 		 */
+<<<<<<< HEAD
+=======
 		@Override
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 		void customizerRemoved(final Bundle item, final BundleEvent related, final T object) {
 			customizer.removedBundle(item, related, object);
 		}

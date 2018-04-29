@@ -23,13 +23,21 @@ import org.apache.felix.ipojo.manipulator.Reporter;
 import org.apache.felix.ipojo.manipulator.metadata.annotation.registry.BindingRegistry;
 import org.objectweb.asm.AnnotationVisitor;
 import org.objectweb.asm.MethodVisitor;
+<<<<<<< HEAD
+import org.objectweb.asm.commons.EmptyVisitor;
+=======
 import org.objectweb.asm.Opcodes;
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 import org.objectweb.asm.tree.MethodNode;
 
 /**
  * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
+<<<<<<< HEAD
+public class MethodMetadataCollector extends EmptyVisitor implements MethodVisitor {
+=======
 public class MethodMetadataCollector extends MethodVisitor {
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 
     /**
      * Binding's registry.
@@ -37,6 +45,14 @@ public class MethodMetadataCollector extends MethodVisitor {
     private BindingRegistry registry;
 
     /**
+<<<<<<< HEAD
+     * Output informations.
+     */
+    private Reporter reporter;
+
+    /**
+=======
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
      * The workbench currently in use.
      */
     private ComponentWorkbench workbench;
@@ -47,8 +63,13 @@ public class MethodMetadataCollector extends MethodVisitor {
     private MethodNode node;
 
     public MethodMetadataCollector(ComponentWorkbench workbench, MethodNode node, Reporter reporter) {
+<<<<<<< HEAD
+        this.workbench = workbench;
+        this.reporter = reporter;
+=======
         super(Opcodes.ASM5);
         this.workbench = workbench;
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         this.node = node;
         this.registry = workbench.getBindingRegistry();
     }
@@ -56,12 +77,22 @@ public class MethodMetadataCollector extends MethodVisitor {
     /**
      * Visit method annotations.
      *
+<<<<<<< HEAD
+     * @param desc : annotation name.
+     * @param visible : is the annotation visible at runtime.
+     * @return the visitor paring the visited annotation.
+     * @see org.objectweb.asm.commons.EmptyVisitor#visitAnnotation(java.lang.String, boolean)
+     */
+    public AnnotationVisitor visitAnnotation(String desc, boolean visible) {
+
+=======
      * @param desc    : annotation name.
      * @param visible : is the annotation visible at runtime.
      * @return the visitor paring the visited annotation.
      * @see org.objectweb.asm.MethodVisitor#visitAnnotation(java.lang.String, boolean)
      */
     public AnnotationVisitor visitAnnotation(String desc, boolean visible) {
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         // Return the visitor to be executed (may be null)
         return registry.selection(workbench)
                 .method(this, node)
@@ -73,7 +104,11 @@ public class MethodMetadataCollector extends MethodVisitor {
     /**
      * Visit a parameter annotation.
      *
+<<<<<<< HEAD
+     * @see org.objectweb.asm.commons.EmptyVisitor#visitParameterAnnotation(int, java.lang.String, boolean)
+=======
      * @see org.objectweb.asm.MethodVisitor#visitParameterAnnotation(int, java.lang.String, boolean)
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
      */
     public AnnotationVisitor visitParameterAnnotation(int index,
                                                       String desc,
@@ -92,4 +127,8 @@ public class MethodMetadataCollector extends MethodVisitor {
     }
 
 
+<<<<<<< HEAD
+
+=======
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 }

@@ -18,6 +18,12 @@
  */
 package org.apache.felix.eventadmin.impl;
 
+<<<<<<< HEAD
+
+import java.util.*;
+
+import org.apache.felix.eventadmin.impl.adapter.*;
+=======
 import java.security.AccessControlContext;
 import java.security.AccessController;
 import java.security.PrivilegedAction;
@@ -30,13 +36,18 @@ import org.apache.felix.eventadmin.impl.adapter.BundleEventAdapter;
 import org.apache.felix.eventadmin.impl.adapter.FrameworkEventAdapter;
 import org.apache.felix.eventadmin.impl.adapter.LogEventAdapter;
 import org.apache.felix.eventadmin.impl.adapter.ServiceEventAdapter;
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 import org.apache.felix.eventadmin.impl.handler.EventAdminImpl;
 import org.apache.felix.eventadmin.impl.security.SecureEventAdminFactory;
 import org.apache.felix.eventadmin.impl.tasks.DefaultThreadPool;
 import org.apache.felix.eventadmin.impl.util.LogWrapper;
+<<<<<<< HEAD
+import org.osgi.framework.*;
+=======
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceRegistration;
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 import org.osgi.service.cm.ConfigurationException;
 import org.osgi.service.cm.ManagedService;
 import org.osgi.service.event.EventAdmin;
@@ -83,13 +94,26 @@ import org.osgi.service.metatype.MetaTypeProvider;
  *      <tt>org.apache.felix.eventadmin.IgnoreTimeout</tt> - Configure
  *         <tt>EventHandler</tt>s to be called without a timeout.
  * </p>
+<<<<<<< HEAD
+=======
  * <p>
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
  * If a timeout is configured by default all event handlers are called using the timeout.
  * For performance optimization it is possible to configure event handlers where the
  * timeout handling is not used - this reduces the thread usage from the thread pools
  * as the timout handling requires an additional thread to call the event handler.
  * However, the application should work without this configuration property. It is a
  * pure optimization!
+<<<<<<< HEAD
+ * The value is a list of string (separated by comma). If the string ends with a dot,
+ * all handlers in exactly this package are ignored. If the string ends with a star,
+ * all handlers in this package and all subpackages are ignored. If the string neither
+ * ends with a dot nor with a start, this is assumed to define an exact class name.
+ *
+ * These properties are read at startup and serve as a default configuration.
+ * If a configuration admin is configured, the event admin can be configured
+ * through the config admin.
+=======
  * </p>
  * <p>
  * The value is a list of strings (separated by comma). If the string ends with a dot,
@@ -120,6 +144,7 @@ import org.osgi.service.metatype.MetaTypeProvider;
  * If a configuration admin is configured, the event admin can be configured
  * through the config admin.
  * </p>
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
  *
  * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
@@ -129,11 +154,17 @@ public class Configuration
     static final String PID = "org.apache.felix.eventadmin.impl.EventAdmin";
 
     static final String PROP_THREAD_POOL_SIZE = "org.apache.felix.eventadmin.ThreadPoolSize";
+<<<<<<< HEAD
+    static final String PROP_TIMEOUT = "org.apache.felix.eventadmin.Timeout";
+    static final String PROP_REQUIRE_TOPIC = "org.apache.felix.eventadmin.RequireTopic";
+    static final String PROP_IGNORE_TIMEOUT = "org.apache.felix.eventadmin.IgnoreTimeout";
+=======
     static final String PROP_ASYNC_TO_SYNC_THREAD_RATIO = "org.apache.felix.eventadmin.AsyncToSyncThreadRatio";
     static final String PROP_TIMEOUT = "org.apache.felix.eventadmin.Timeout";
     static final String PROP_REQUIRE_TOPIC = "org.apache.felix.eventadmin.RequireTopic";
     static final String PROP_IGNORE_TIMEOUT = "org.apache.felix.eventadmin.IgnoreTimeout";
     static final String PROP_IGNORE_TOPIC = "org.apache.felix.eventadmin.IgnoreTopic";
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     static final String PROP_LOG_LEVEL = "org.apache.felix.eventadmin.LogLevel";
 
     /** The bundle context. */
@@ -141,18 +172,24 @@ public class Configuration
 
     private int m_threadPoolSize;
 
+<<<<<<< HEAD
+=======
     private double m_asyncToSyncThreadRatio;
 
     private int m_asyncThreadPoolSize;
 
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     private int m_timeout;
 
     private boolean m_requireTopic;
 
     private String[] m_ignoreTimeout;
 
+<<<<<<< HEAD
+=======
     private String[] m_ignoreTopics;
 
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     private int m_logLevel;
 
     // The thread pool used - this is a member because we need to close it on stop
@@ -174,6 +211,11 @@ public class Configuration
 
     private ServiceRegistration m_managedServiceReg;
 
+<<<<<<< HEAD
+    public Configuration( BundleContext bundleContext )
+    {
+        m_bundleContext = bundleContext;
+=======
     // the access control context
     private final AccessControlContext acc;
 
@@ -181,6 +223,7 @@ public class Configuration
     {
         m_bundleContext = bundleContext;
         this.acc = AccessController.getContext();
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 
         // default configuration
         configure( null );
@@ -204,7 +247,11 @@ public class Configuration
                     interfaceNames = new String[] {ManagedService.class.getName(), MetaTypeProvider.class.getName()};
                     service = enhancedService;
                 }
+<<<<<<< HEAD
+                Dictionary props = new Hashtable();
+=======
                 Dictionary<String, Object> props = new Hashtable<>();
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
                 props.put( Constants.SERVICE_PID, PID );
                 m_managedServiceReg = m_bundleContext.registerService( interfaceNames, service, props );
             }
@@ -215,13 +262,25 @@ public class Configuration
         }
     }
 
+<<<<<<< HEAD
+    void updateFromConfigAdmin(final Dictionary config)
+=======
     void updateFromConfigAdmin(final Dictionary<String, ?> config)
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     {
         // do this in the background as we don't want to stop
         // the config admin
         new Thread()
         {
 
+<<<<<<< HEAD
+            public void run()
+            {
+                synchronized ( Configuration.this )
+                {
+                    Configuration.this.configure( config );
+                    Configuration.this.startOrUpdate();
+=======
             @Override
             public void run()
             {
@@ -243,6 +302,7 @@ public class Configuration
                 else
                 {
                     updateFromConfigAdmin0( config );
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
                 }
             }
 
@@ -250,6 +310,12 @@ public class Configuration
 
     }
 
+<<<<<<< HEAD
+    /**
+     * Configures this instance.
+     */
+    void configure( Dictionary config )
+=======
     void updateFromConfigAdmin0(final Dictionary<String, ?> config) {
         synchronized ( Configuration.this )
         {
@@ -262,11 +328,23 @@ public class Configuration
      * Configures this instance.
      */
     void configure( Dictionary<String, ?> config )
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     {
         if ( config == null )
         {
             // The size of the internal thread pool. Note that we must execute
             // each synchronous event dispatch that happens in the synchronous event
+<<<<<<< HEAD
+            // dispatching thread in a new thread, hence a small thread pool is o.k.
+            // A value of less then 2 triggers the default value. A value of 2
+            // effectively disables thread pooling. Furthermore, this will be used by
+            // a lazy thread pool (i.e., new threads are created when needed). Ones the
+            // the size is reached and no cached thread is available new threads will
+            // be created.
+            m_threadPoolSize = getIntProperty(
+                PROP_THREAD_POOL_SIZE, m_bundleContext.getProperty(PROP_THREAD_POOL_SIZE), 20, 2);
+
+=======
             // dispatching thread in a new thread.
             // A value of less then 2 triggers the default value. A value of 2
             // effectively disables thread pooling. Furthermore, this will be used by
@@ -283,6 +361,7 @@ public class Configuration
             m_asyncToSyncThreadRatio = getDoubleProperty(
             	PROP_ASYNC_TO_SYNC_THREAD_RATIO, m_bundleContext.getProperty(PROP_ASYNC_TO_SYNC_THREAD_RATIO), 0.5, 0.0);
 
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
             // The timeout in milliseconds - A value of less then 100 turns timeouts off.
             // Any other value is the time in milliseconds granted to each EventHandler
             // before it gets blacklisted.
@@ -310,6 +389,8 @@ public class Configuration
                     m_ignoreTimeout[i] = st.nextToken();
                 }
             }
+<<<<<<< HEAD
+=======
 
             final String valueIgnoreTopic = m_bundleContext.getProperty(PROP_IGNORE_TOPIC);
             if ( valueIgnoreTopic == null )
@@ -325,6 +406,7 @@ public class Configuration
                     m_ignoreTopics[i] = st.nextToken();
                 }
             }
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
             m_logLevel = getIntProperty(PROP_LOG_LEVEL,
                     m_bundleContext.getProperty(PROP_LOG_LEVEL),
                     LogWrapper.LOG_WARNING, // default log level is WARNING
@@ -333,8 +415,11 @@ public class Configuration
         else
         {
             m_threadPoolSize = getIntProperty(PROP_THREAD_POOL_SIZE, config.get(PROP_THREAD_POOL_SIZE), 20, 2);
+<<<<<<< HEAD
+=======
             m_asyncToSyncThreadRatio = getDoubleProperty(
                 	PROP_ASYNC_TO_SYNC_THREAD_RATIO, config.get(PROP_ASYNC_TO_SYNC_THREAD_RATIO), 0.5, 0.0);
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
             m_timeout = getIntProperty(PROP_TIMEOUT, config.get(PROP_TIMEOUT), 5000, Integer.MIN_VALUE);
             m_requireTopic = getBooleanProperty(config.get(PROP_REQUIRE_TOPIC), true);
             m_ignoreTimeout = null;
@@ -347,11 +432,17 @@ public class Configuration
             {
                 m_ignoreTimeout = (String[])value;
             }
+<<<<<<< HEAD
+            else
+=======
             else if ( value != null )
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
             {
                 LogWrapper.getLogger().log(LogWrapper.LOG_WARNING,
                         "Value for property: " + PROP_IGNORE_TIMEOUT + " is neither a string nor a string array - Using default");
             }
+<<<<<<< HEAD
+=======
             m_ignoreTopics = null;
             final Object valueIT = config.get(PROP_IGNORE_TOPIC);
             if ( valueIT instanceof String )
@@ -367,6 +458,7 @@ public class Configuration
                 LogWrapper.getLogger().log(LogWrapper.LOG_WARNING,
                         "Value for property: " + PROP_IGNORE_TOPIC + " is neither a string nor a string array - Using default");
             }
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
             m_logLevel = getIntProperty(PROP_LOG_LEVEL,
                     config.get(PROP_LOG_LEVEL),
                     LogWrapper.LOG_WARNING, // default log level is WARNING
@@ -377,7 +469,10 @@ public class Configuration
         {
             m_timeout = 0;
         }
+<<<<<<< HEAD
+=======
         m_asyncThreadPoolSize = m_threadPoolSize > 5 ? (int)Math.floor(m_threadPoolSize * m_asyncToSyncThreadRatio)  : 2;
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     }
 
     private void startOrUpdate()
@@ -388,10 +483,13 @@ public class Configuration
         LogWrapper.getLogger().log(LogWrapper.LOG_DEBUG,
             PROP_THREAD_POOL_SIZE + "=" + m_threadPoolSize);
         LogWrapper.getLogger().log(LogWrapper.LOG_DEBUG,
+<<<<<<< HEAD
+=======
                 PROP_ASYNC_TO_SYNC_THREAD_RATIO + "=" + m_asyncToSyncThreadRatio);
         LogWrapper.getLogger().log(LogWrapper.LOG_DEBUG,
                 "Async Pool Size=" + m_asyncThreadPoolSize);
         LogWrapper.getLogger().log(LogWrapper.LOG_DEBUG,
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
             PROP_TIMEOUT + "=" + m_timeout);
         LogWrapper.getLogger().log(LogWrapper.LOG_DEBUG,
             PROP_REQUIRE_TOPIC + "=" + m_requireTopic);
@@ -408,7 +506,11 @@ public class Configuration
         {
             m_sync_pool.configure(m_threadPoolSize);
         }
+<<<<<<< HEAD
+        final int asyncThreadPoolSize = m_threadPoolSize > 5 ? m_threadPoolSize / 2 : 2;
+=======
         final int asyncThreadPoolSize = m_asyncThreadPoolSize;
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         if ( m_async_pool == null )
         {
             m_async_pool = new DefaultThreadPool(asyncThreadPoolSize, false);
@@ -425,8 +527,12 @@ public class Configuration
                     m_async_pool,
                     m_timeout,
                     m_ignoreTimeout,
+<<<<<<< HEAD
+                    m_requireTopic);
+=======
                     m_requireTopic,
                     m_ignoreTopics);
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 
             // Finally, adapt the outside events to our kind of events as per spec
             adaptEvents(m_admin);
@@ -439,7 +545,11 @@ public class Configuration
         }
         else
         {
+<<<<<<< HEAD
+            m_admin.update(m_timeout, m_ignoreTimeout, m_requireTopic);
+=======
             m_admin.update(m_timeout, m_ignoreTimeout, m_requireTopic, m_ignoreTopics);
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         }
 
     }
@@ -510,7 +620,11 @@ public class Configuration
         {
             return new MetaTypeProviderImpl((ManagedService)managedService,
                     m_threadPoolSize, m_timeout, m_requireTopic,
+<<<<<<< HEAD
+                    m_ignoreTimeout);
+=======
                     m_ignoreTimeout, m_ignoreTopics, m_asyncToSyncThreadRatio);
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         }
         catch (final Throwable t)
         {
@@ -525,8 +639,12 @@ public class Configuration
         {
             return new ManagedService()
             {
+<<<<<<< HEAD
+                public void updated( Dictionary properties ) throws ConfigurationException
+=======
                 @Override
                 public void updated( Dictionary<String, ?> properties ) throws ConfigurationException
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
                 {
                     updateFromConfigAdmin(properties);
                 }
@@ -581,6 +699,8 @@ public class Configuration
     }
 
     /**
+<<<<<<< HEAD
+=======
      * Returns either the parsed double from the value of the property if it is set and
      * not less then the min value or the default. Additionally, a warning is
      * generated in case the value is erroneous (i.e., can not be parsed as an double or
@@ -622,6 +742,7 @@ public class Configuration
     }
 
     /**
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
      * Returns true if the value of the property is set and is either 1, true, or yes
      * Returns false if the value of the property is set and is either 0, false, or no
      * Returns the defaultValue otherwise

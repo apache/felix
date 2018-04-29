@@ -54,8 +54,13 @@ public class DefaultMetaTypeProvider implements MetaTypeProvider
     private final Bundle bundle;
     private final String localePrefix;
 
+<<<<<<< HEAD
+    private Map objectClassDefinitions;
+    private Map designates;
+=======
     private Map /* <String, OCD> */ objectClassDefinitions;
     private List /* <Designate> */ designates;
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     private String[] locales;
 
 
@@ -196,7 +201,12 @@ public class DefaultMetaTypeProvider implements MetaTypeProvider
         return null;
     }
 
+<<<<<<< HEAD
+
+    protected Map getObjectClassDefinitions()
+=======
     protected Map /* <String, OCD> */ getObjectClassDefinitions()
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     {
         return objectClassDefinitions;
     }

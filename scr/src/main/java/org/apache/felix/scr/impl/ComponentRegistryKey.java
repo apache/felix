@@ -23,8 +23,13 @@ import org.osgi.framework.Bundle;
 
 
 /**
+<<<<<<< HEAD
+ * The <code>ComponentRegistryKey</code> isused as the key in the
+ * component register to register components by their names.
+=======
  * The <code>ComponentRegistryKey</code> is used as the key in the
  * component registry to register components by their names.
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
  * <p>
  * Two instances of this class are equal if they are the same or if there
  * component name and bundle ID is equal.
@@ -78,4 +83,9 @@ final class ComponentRegistryKey
     {
         return componentName;
     }
+<<<<<<< HEAD
+    
+    
+=======
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 }

@@ -37,8 +37,11 @@ public class InterpolationHelper {
     private static final char   ESCAPE_CHAR = '\\';
     private static final String DELIM_START = "${";
     private static final String DELIM_STOP = "}";
+<<<<<<< HEAD
+=======
     private static final String MARKER = "$__";
     private static final String ENV_PREFIX = "env:";
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 
 
     /**
@@ -46,7 +49,11 @@ public class InterpolationHelper {
      */
     public interface SubstitutionCallback {
 
+<<<<<<< HEAD
+        public String getValue(String key);
+=======
         String getValue(String key);
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 
     }
 
@@ -64,7 +71,10 @@ public class InterpolationHelper {
      * Perform substitution on a property set
      *
      * @param properties the property set to perform substitution on
+<<<<<<< HEAD
+=======
      * @param context The bundle context
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
      */
     public static void performSubstitution(Map<String,String> properties, BundleContext context)
     {
@@ -75,6 +85,11 @@ public class InterpolationHelper {
      * Perform substitution on a property set
      *
      * @param properties the property set to perform substitution on
+<<<<<<< HEAD
+     */
+    public static void performSubstitution(Map<String,String> properties, SubstitutionCallback callback)
+    {
+=======
      * @param callback Callback for substituion
      */
     public static void performSubstitution(Map<String,String> properties, SubstitutionCallback callback)
@@ -97,11 +112,16 @@ public class InterpolationHelper {
                                            boolean substituteFromSystemProperties,
                                            boolean defaultsToEmptyString)
     {
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         Map<String, String> org = new HashMap<String, String>(properties);
         for (String name : properties.keySet())
         {
             String value = properties.get(name);
+<<<<<<< HEAD
+            properties.put(name, substVars(value, name, null, org, callback));
+=======
             properties.put(name, substVars(value, name, null, org, callback, substituteFromConfig, substituteFromSystemProperties, defaultsToEmptyString));
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         }
     }
 
@@ -123,6 +143,8 @@ public class InterpolationHelper {
      *        detect cycles.
      * @param cycleMap Map of variable references used to detect nested cycles.
      * @param configProps Set of configuration properties.
+<<<<<<< HEAD
+=======
      * @return The value of the specified string after system property substitution.
      * @throws IllegalArgumentException If there was a syntax error in the
      *         property placeholder syntax or a recursive variable reference.
@@ -154,6 +176,7 @@ public class InterpolationHelper {
      *        detect cycles.
      * @param cycleMap Map of variable references used to detect nested cycles.
      * @param configProps Set of configuration properties.
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
      * @param context the bundle context to retrieve properties from
      * @return The value of the specified string after system property substitution.
      * @throws IllegalArgumentException If there was a syntax error in the
@@ -199,6 +222,8 @@ public class InterpolationHelper {
                                    SubstitutionCallback callback)
             throws IllegalArgumentException
     {
+<<<<<<< HEAD
+=======
         return substVars(val, currentKey, cycleMap, configProps, callback, true, true, true);
     }
 
@@ -251,6 +276,7 @@ public class InterpolationHelper {
                                       boolean defaultsToEmptyString)
             throws IllegalArgumentException
     {
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         if (cycleMap == null)
         {
             cycleMap = new HashMap<String,String>();
@@ -265,6 +291,30 @@ public class InterpolationHelper {
         // Find the first ending '}' variable delimiter, which
         // will correspond to the first deepest nested variable
         // placeholder.
+<<<<<<< HEAD
+        int stopDelim = val.indexOf(DELIM_STOP);
+        while (stopDelim > 0 && val.charAt(stopDelim - 1) == ESCAPE_CHAR)
+        {
+            stopDelim = val.indexOf(DELIM_STOP, stopDelim + 1);
+        }
+
+        // Find the matching starting "${" variable delimiter
+        // by looping until we find a start delimiter that is
+        // greater than the stop delimiter we have found.
+        int startDelim = val.indexOf(DELIM_START);
+        while (stopDelim >= 0)
+        {
+            int idx = val.indexOf(DELIM_START, startDelim + DELIM_START.length());
+            if ((idx < 0) || (idx > stopDelim))
+            {
+                break;
+            }
+            else if (idx < stopDelim)
+            {
+                startDelim = idx;
+            }
+        }
+=======
         int startDelim;
         int stopDelim = -1;
         do
@@ -293,13 +343,18 @@ public class InterpolationHelper {
             }
         }
         while (startDelim >= 0 && stopDelim >= 0 && stopDelim < startDelim + DELIM_START.length());
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 
         // If we do not have a start or stop delimiter, then just
         // return the existing value.
         if ((startDelim < 0) || (stopDelim < 0))
         {
+<<<<<<< HEAD
+            return unescape(val);
+=======
             cycleMap.remove(currentKey);
             return val;
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         }
 
         // At this point, we have found a variable placeholder so
@@ -307,6 +362,8 @@ public class InterpolationHelper {
         // Using the start and stop delimiter indices, extract
         // the first, deepest nested variable placeholder.
         String variable = val.substring(startDelim + DELIM_START.length(), stopDelim);
+<<<<<<< HEAD
+=======
         String org = variable;
 
         // Strip expansion modifiers
@@ -319,6 +376,7 @@ public class InterpolationHelper {
             op = variable.substring(idx);
             variable = variable.substring(0, idx);
         }
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 
         // Verify that this is not a recursive variable reference.
         if (cycleMap.get(variable) != null)
@@ -326,6 +384,18 @@ public class InterpolationHelper {
             throw new IllegalArgumentException("recursive variable reference: " + variable);
         }
 
+<<<<<<< HEAD
+        // Get the value of the deepest nested variable placeholder.
+        // Try to configuration properties first.
+        String substValue = (String) ((configProps != null) ? configProps.get(variable) : null);
+        if (substValue == null)
+        {
+            if (variable.length() <= 0)
+            {
+                substValue = "";
+            }
+            else
+=======
         String substValue = null;
         // Get the value of the deepest nested variable placeholder.
         // Try to configuration properties first.
@@ -336,18 +406,27 @@ public class InterpolationHelper {
         if (substValue == null)
         {
             if (variable.length() > 0)
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
             {
                 if (callback != null)
                 {
                     substValue = callback.getValue(variable);
                 }
+<<<<<<< HEAD
+                if (substValue == null)
+                {
+                    substValue = System.getProperty(variable, "");
+=======
                 if (substValue == null && substituteFromSystemProperties)
                 {
                     substValue = System.getProperty(variable);
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
                 }
             }
         }
 
+<<<<<<< HEAD
+=======
         if (op != null)
         {
             if (op.startsWith(":-"))
@@ -384,6 +463,7 @@ public class InterpolationHelper {
             }
         }
 
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         // Remove the found variable from the cycle map, since
         // it may appear more than once in the value and we don't
         // want such situations to appear as a recursive reference.
@@ -396,9 +476,16 @@ public class InterpolationHelper {
 
         // Now perform substitution again, since there could still
         // be substitutions to make.
+<<<<<<< HEAD
+        val = substVars(val, currentKey, cycleMap, configProps, callback);
+
+        // Remove escape characters preceding {, } and \
+        val = unescape(val);
+=======
         val = doSubstVars(val, currentKey, cycleMap, configProps, callback, substituteFromConfig, substituteFromSystemProperties, defaultsToEmptyString);
 
         cycleMap.remove(currentKey);
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 
         // Return the value.
         return val;
@@ -406,7 +493,10 @@ public class InterpolationHelper {
 
     private static String unescape(String val)
     {
+<<<<<<< HEAD
+=======
         val = val.replaceAll("\\" + MARKER, "\\$");
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         int escape = val.indexOf(ESCAPE_CHAR);
         while (escape >= 0 && escape < val.length() - 1)
         {
@@ -420,11 +510,19 @@ public class InterpolationHelper {
         return val;
     }
 
+<<<<<<< HEAD
+    private static class BundleContextSubstitutionCallback implements SubstitutionCallback
+    {
+        private final BundleContext context;
+
+        private BundleContextSubstitutionCallback(BundleContext context)
+=======
     public static class BundleContextSubstitutionCallback implements SubstitutionCallback
     {
         private final BundleContext context;
 
         public BundleContextSubstitutionCallback(BundleContext context)
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         {
             this.context = context;
         }
@@ -432,6 +530,15 @@ public class InterpolationHelper {
         public String getValue(String key)
         {
             String value = null;
+<<<<<<< HEAD
+            if (context != null)
+            {
+                value = context.getProperty(key);
+            }
+            if (value == null)
+            {
+                value = System.getProperty(key, "");
+=======
             if (key.startsWith(ENV_PREFIX))
             {
                 value = System.getenv(key.substring(ENV_PREFIX.length()));
@@ -446,6 +553,7 @@ public class InterpolationHelper {
                 {
                     value = System.getProperty(key);
                 }
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
             }
             return value;
         }

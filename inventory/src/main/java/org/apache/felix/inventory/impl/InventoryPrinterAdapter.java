@@ -19,6 +19,14 @@ package org.apache.felix.inventory.impl;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.Comparator;
+<<<<<<< HEAD
+import java.util.zip.ZipOutputStream;
+
+import org.apache.felix.inventory.InventoryPrinter;
+import org.apache.felix.inventory.Format;
+import org.apache.felix.inventory.ZipAttachmentProvider;
+import org.osgi.framework.BundleContext;
+=======
 import java.util.Dictionary;
 import java.util.Hashtable;
 import java.util.zip.ZipOutputStream;
@@ -30,6 +38,7 @@ import org.apache.felix.inventory.impl.webconsole.ConsoleConstants;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceFactory;
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 import org.osgi.framework.ServiceRegistration;
 
 /**
@@ -77,6 +86,9 @@ public class InventoryPrinterAdapter implements InventoryPrinterHandler, Compara
             final Object value = this.description.getServiceReference().getProperty(InventoryPrinter.WEBCONSOLE);
             if (value == null || !"false".equalsIgnoreCase(value.toString()))
             {
+<<<<<<< HEAD
+                this.registration = WebConsolePlugin.register(context, manager, this.description);
+=======
                 final Dictionary props = new Hashtable();
                 props.put(ConsoleConstants.PLUGIN_LABEL, "status-" + this.description.getName());
                 props.put(ConsoleConstants.PLUGIN_TITLE, this.description.getTitle());
@@ -95,6 +107,7 @@ public class InventoryPrinterAdapter implements InventoryPrinterHandler, Compara
                     }
 
                 }, props);
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
             }
         }
     }

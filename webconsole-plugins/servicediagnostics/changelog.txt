@@ -1,9 +1,12 @@
+<<<<<<< HEAD
+=======
 Changes from 0.1.3 to 0.1.4
 ---------------------------
 
 ** Improvement
   * [FELIX-5554] removed dependency on org.json
 
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 Changes from 0.1.2 to 0.1.3
 ---------------------------
 

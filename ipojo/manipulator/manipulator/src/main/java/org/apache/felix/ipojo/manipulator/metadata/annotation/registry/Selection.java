@@ -30,6 +30,10 @@ import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Type;
 import org.objectweb.asm.tree.ClassNode;
 import org.objectweb.asm.tree.FieldNode;
+<<<<<<< HEAD
+import org.objectweb.asm.tree.MemberNode;
+=======
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 import org.objectweb.asm.tree.MethodNode;
 
 import java.lang.annotation.ElementType;
@@ -46,9 +50,13 @@ public class Selection {
     private BindingRegistry registry;
     private ComponentWorkbench workbench;
     private Reporter reporter;
+<<<<<<< HEAD
+    private MemberNode node;
+=======
     private FieldNode field;
     private MethodNode method;
     private ClassNode clazz;
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     private int index = BindingContext.NO_INDEX;
     private String annotation;
     private ElementType elementType = null;
@@ -62,21 +70,33 @@ public class Selection {
 
     public Selection field(FieldVisitor visitor, FieldNode node) {
         this.visitor = visitor;
+<<<<<<< HEAD
+        this.node = node;
+=======
         this.field = node;
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         this.elementType = ElementType.FIELD;
         return this;
     }
 
     public Selection method(MethodVisitor visitor, MethodNode node) {
         this.visitor = visitor;
+<<<<<<< HEAD
+        this.node = node;
+=======
         this.method = node;
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         this.elementType = ElementType.METHOD;
         return this;
     }
 
     public Selection type(ClassVisitor visitor, ClassNode node) {
         this.visitor = visitor;
+<<<<<<< HEAD
+        this.node = node;
+=======
         this.clazz = node;
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         this.elementType = ElementType.TYPE;
         return this;
     }
@@ -84,7 +104,11 @@ public class Selection {
     public Selection parameter(MethodVisitor visitor, MethodNode node, int index) {
         this.visitor = visitor;
         this.index = index;
+<<<<<<< HEAD
+        this.node = node;
+=======
         this.method = node;
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         this.elementType = ElementType.PARAMETER;
         return this;
     }
@@ -111,6 +135,10 @@ public class Selection {
     }
 
     private List<AnnotationVisitor> list() {
+<<<<<<< HEAD
+
+        BindingContext context = new BindingContext(workbench, reporter, Type.getType(annotation), node, elementType, index, visitor);
+=======
         BindingContext context;
 
         if (elementType == ElementType.FIELD) {
@@ -126,6 +154,7 @@ public class Selection {
         }
 
 
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         List<Binding> predicates = registry.getBindings(annotation);
 
         List<AnnotationVisitor> visitors = new ArrayList<AnnotationVisitor>();

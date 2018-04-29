@@ -18,12 +18,17 @@
  */
 package org.apache.felix.http.sslfilter.internal;
 
+<<<<<<< HEAD
+import java.io.IOException;
+import java.security.cert.CertificateException;
+=======
 import static org.apache.felix.http.sslfilter.internal.SslFilterConstants.HDR_X_FORWARDED_SSL;
 import static org.apache.felix.http.sslfilter.internal.SslFilterConstants.HDR_X_FORWARDED_SSL_CERTIFICATE;
 
 import java.io.IOException;
 import java.security.cert.CertificateException;
 import java.util.Dictionary;
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 
 import javax.servlet.Filter;
 import javax.servlet.FilterChain;
@@ -32,6 +37,36 @@ import javax.servlet.ServletException;
 import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
+<<<<<<< HEAD
+
+import org.osgi.service.log.LogService;
+
+public class SslFilter implements Filter
+{
+    // request header indicating an SSL endpoint proxy
+    private static final String X_FORWARD_SSL_HEADER = "X-Forwarded-SSL";
+
+    // value indicating an SSL endpoint proxy
+    private static final String X_FORWARD_SSL_VALUE = "on";
+
+    // request header indicating an SSL client certificate (if available)
+    private static final String X_FORWARD_SSL_CERTIFICATE_HEADER = "X-Forwarded-SSL-Certificate";
+
+    public void init(FilterConfig config)
+    {
+        // No explicit initialization needed...
+    }
+
+    public void doFilter(ServletRequest req, ServletResponse res, FilterChain chain) throws IOException, ServletException
+    {
+        HttpServletRequest httpReq = (HttpServletRequest) req;
+        if (X_FORWARD_SSL_VALUE.equalsIgnoreCase(httpReq.getHeader(X_FORWARD_SSL_HEADER)))
+        {
+            try
+            {
+                // In case this fails, we fall back to the original HTTP request, which is better than nothing...
+                httpReq = new SslFilterRequest(httpReq, httpReq.getHeader(X_FORWARD_SSL_CERTIFICATE_HEADER));
+=======
 import javax.servlet.http.HttpServletResponse;
 
 import org.osgi.service.cm.ConfigurationException;
@@ -83,6 +118,7 @@ public class SslFilter implements Filter
                 httpResp = new SslFilterResponse(httpResp, httpReq, cfg);
                 // In case this fails, we fall back to the original HTTP request, which is better than nothing...
                 httpReq = new SslFilterRequest(httpReq, httpReq.getHeader(cfg.certHeader));
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
             }
             catch (CertificateException e)
             {
@@ -90,10 +126,18 @@ public class SslFilter implements Filter
             }
         }
 
+<<<<<<< HEAD
+        // forward the request making sure any certificate is removed
+        // again after the request processing gets back here
+        try
+        {
+            chain.doFilter(httpReq, res);
+=======
         // forward the request making sure any certificate is removed again after the request processing gets back here
         try
         {
             chain.doFilter(httpReq, httpResp);
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         }
         finally
         {
@@ -104,6 +148,11 @@ public class SslFilter implements Filter
         }
     }
 
+<<<<<<< HEAD
+    public void destroy()
+    {
+        // No explicit destroy needed...
+=======
     @Override
     public void init(FilterConfig config)
     {
@@ -190,5 +239,6 @@ public class SslFilter implements Filter
             this.certHeader = certHeader;
             this.rewriteAbsoluteUrls = rewriteAbsoluteUrls;
         }
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     }
 }

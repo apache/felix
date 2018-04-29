@@ -14,13 +14,21 @@
     <parent>
         <groupId>org.apache.felix</groupId>
         <artifactId>felix-parent</artifactId>
+<<<<<<< HEAD
+        <version>2.1</version>
+=======
         <version>5</version>
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         <relativePath>../../../pom/pom.xml</relativePath>
     </parent>
 
     <artifactId>org.apache.felix.webconsole.plugins.ds</artifactId>
     <packaging>bundle</packaging>
+<<<<<<< HEAD
+    <version>1.0.1-SNAPSHOT</version>
+=======
     <version>2.0.9-SNAPSHOT</version>
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 
     <name>Apache Felix Web Console Service Component Runtime/Declarative Services Plugin</name>
     <description>
@@ -29,7 +37,11 @@
 
     <scm>
         <connection>scm:svn:http://svn.apache.org/repos/asf/felix/trunk/webconsole-plugins/ds</connection>
+<<<<<<< HEAD
+        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/felix/trunk/webconsole-plugins/ds</developerConnection>
+=======
        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/felix/trunk/webconsole-plugins/ds</developerConnection>
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         <url>http://svn.apache.org/viewvc/felix/trunk/webconsole-plugins/ds</url>
     </scm>
 
@@ -55,7 +67,11 @@
             <plugin>
                 <groupId>org.apache.felix</groupId>
                 <artifactId>maven-bundle-plugin</artifactId>
+<<<<<<< HEAD
+                <version>2.3.4</version>
+=======
                 <version>3.5.0</version>
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
                 <extensions>true</extensions>
                 <configuration>
                     <instructions>
@@ -68,6 +84,8 @@
                         <Include-Resource>
                             {maven-resources},OSGI-INF=target/classes/OSGI-INF
                         </Include-Resource>
+<<<<<<< HEAD
+=======
                         <Import-Package>
                             org.osgi.service.cm;version="[1.6,2)";resolution:=optional,
                             org.osgi.service.metatype;version="[1.2,2)";resolution:=optional,
@@ -80,6 +98,7 @@
                         <Embed-Dependency>
                              org.apache.felix.utils;inline=org/apache/felix/utils/json/JSONWriter**
                         </Embed-Dependency>
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
                     </instructions>
                 </configuration>
             </plugin>
@@ -95,12 +114,21 @@
         </dependency>
         <dependency>
             <groupId>org.osgi</groupId>
+<<<<<<< HEAD
+            <artifactId>org.osgi.core</artifactId>
+            <version>4.0.0</version>
+=======
             <artifactId>osgi.core</artifactId>
             <version>6.0.0</version>
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
             <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>org.osgi</groupId>
+<<<<<<< HEAD
+            <artifactId>org.osgi.compendium</artifactId>
+            <version>4.1.0</version>
+=======
             <artifactId>org.osgi.service.component</artifactId>
             <version>1.4.0</version>
             <scope>provided</scope>
@@ -121,11 +149,21 @@
             <groupId>org.osgi</groupId>
             <artifactId>org.osgi.util.promise</artifactId>
             <version>1.0.0</version>
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
             <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>org.apache.felix</groupId>
             <artifactId>org.apache.felix.webconsole</artifactId>
+<<<<<<< HEAD
+            <version>3.1.0</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.json</groupId>
+            <artifactId>json</artifactId>
+            <version>20070829</version>
+=======
             <version>4.2.0</version>
             <scope>provided</scope>
         </dependency>
@@ -133,12 +171,18 @@
             <groupId>org.apache.felix</groupId>
             <artifactId>org.apache.felix.inventory</artifactId>
             <version>1.0.4</version>
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
             <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>org.apache.felix</groupId>
+<<<<<<< HEAD
+            <artifactId>org.apache.felix.scr</artifactId>
+            <version>1.6.0</version>
+=======
             <artifactId>org.apache.felix.utils</artifactId>
             <version>1.9.0</version>
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
             <scope>provided</scope>
         </dependency>
     </dependencies>

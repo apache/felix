@@ -88,10 +88,13 @@ public class ManipulatedClassLoader extends ClassLoader {
     public Map<String, byte[]> getAllInnerClasses() {
         return inner;
     }
+<<<<<<< HEAD
+=======
 
     public void addInnerClassIfNotAlreadyDefined(String name, byte[] innerClassBytecode) {
         if (! inner.containsKey(name)) {
             inner.put(name, innerClassBytecode);
         }
     }
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 }

@@ -15,8 +15,11 @@
  */
 package org.apache.felix.resolver;
 
+<<<<<<< HEAD
+=======
 import java.util.Collections;
 import java.util.HashMap;
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 import java.util.Map;
 import org.osgi.framework.namespace.PackageNamespace;
 import org.osgi.resource.Capability;
@@ -27,12 +30,17 @@ public class WrappedCapability implements HostedCapability
 {
     private final Resource m_host;
     private final Capability m_cap;
+<<<<<<< HEAD
+=======
     private final Map<String, Object> m_augmentedAttrs;
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 
     public WrappedCapability(Resource host, Capability cap)
     {
         m_host = host;
         m_cap = cap;
+<<<<<<< HEAD
+=======
         if ("osgi.content".equals(m_cap.getNamespace())) {
             // Augment the attributes only for osgi.content namespace.
             // This is done to work around issues with wrapper resources equality tests.
@@ -46,6 +54,7 @@ public class WrappedCapability implements HostedCapability
         } else {
             m_augmentedAttrs = m_cap.getAttributes();
         }
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     }
 
     @Override
@@ -102,7 +111,11 @@ public class WrappedCapability implements HostedCapability
 
     public Map<String, Object> getAttributes()
     {
+<<<<<<< HEAD
+        return m_cap.getAttributes();
+=======
         return m_augmentedAttrs;
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     }
 
 // TODO: RFC-112 - Need impl-specific type.

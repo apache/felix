@@ -23,7 +23,10 @@ public interface Extension {
     /**
      * Start this extension. Starting and stopping of the extension
      * should be synchronized.
+<<<<<<< HEAD
+=======
      * @throws Exception If starting fails.
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
      */
     void start() throws Exception;
 
@@ -31,7 +34,10 @@ public interface Extension {
      * Destroy should be synchronous and only return when the extension
      * has been fully destroyed.  In addition it must be synchronized with
      * start, because start() and destroy() can be called concurrently.
+<<<<<<< HEAD
+=======
      * @throws Exception If destroying fails.
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
      */
     void destroy() throws Exception;
 

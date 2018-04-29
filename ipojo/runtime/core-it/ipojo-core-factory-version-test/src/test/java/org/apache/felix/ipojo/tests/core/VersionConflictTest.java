@@ -202,7 +202,11 @@ public class VersionConflictTest extends Common {
 
         ServiceReference refv1 = ipojoHelper.getServiceReferenceByName(Architecture.class.getName(), "mycons");
         Assert.assertNotNull(refv1);
+<<<<<<< HEAD
+        Architecture arch = (Architecture) osgiHelper.getServiceObject(refv1);
+=======
         Architecture arch = (Architecture) osgiHelper.getRawServiceObject(refv1);
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 
         HandlerDescription desc = arch.getInstanceDescription().getHandlerDescription("org.apache.felix.ipojo:requires");
         Assert.assertNotNull(desc);
@@ -215,7 +219,11 @@ public class VersionConflictTest extends Common {
         Assert.assertEquals(Dependency.RESOLVED, dep.getState());
 
         Assert.assertEquals(1, dep.getServiceReferences().size());
+<<<<<<< HEAD
+        ServiceReference r = (ServiceReference) dep.getServiceReferences().get(0);
+=======
         ServiceReference r = dep.getServiceReferences().get(0);
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         Assert.assertEquals("provider", r.getProperty("factory.name"));
         Assert.assertEquals("2.0", r.getProperty("factory.version"));
     }
@@ -256,7 +264,11 @@ public class VersionConflictTest extends Common {
 
         ServiceReference refv1 = ipojoHelper.getServiceReferenceByName(Architecture.class.getName(), "mycons");
         Assert.assertNotNull(refv1);
+<<<<<<< HEAD
+        Architecture arch = (Architecture) osgiHelper.getServiceObject(refv1);
+=======
         Architecture arch = (Architecture) osgiHelper.getRawServiceObject(refv1);
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 
         HandlerDescription desc = arch.getInstanceDescription().getHandlerDescription("org.apache.felix.ipojo:requires");
         Assert.assertNotNull(desc);
@@ -269,7 +281,11 @@ public class VersionConflictTest extends Common {
         Assert.assertEquals(Dependency.RESOLVED, dep.getState());
 
         Assert.assertEquals(1, dep.getServiceReferences().size());
+<<<<<<< HEAD
+        ServiceReference r = (ServiceReference) dep.getServiceReferences().get(0);
+=======
         ServiceReference r = dep.getServiceReferences().get(0);
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 
         Assert.assertEquals("provider", r.getProperty("factory.name"));
         Assert.assertEquals("1.0", r.getProperty("factory.version"));

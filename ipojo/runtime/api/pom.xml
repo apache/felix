@@ -25,11 +25,16 @@
     </parent>
     <modelVersion>4.0.0</modelVersion>
     <packaging>bundle</packaging>
+<<<<<<< HEAD
+    <artifactId>org.apache.felix.ipojo.api</artifactId>
+    <version>1.11.1-SNAPSHOT</version>
+=======
     <properties>
         <asm.version>5.0.2</asm.version>
     </properties>
     <artifactId>org.apache.felix.ipojo.api</artifactId>
     <version>1.12.2-SNAPSHOT</version>
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     <name>Apache Felix iPOJO API</name>
 
     <description>
@@ -63,16 +68,26 @@
                         <Export-Package>
                             org.apache.felix.ipojo.api,
                             org.apache.felix.ipojo.api.composite,
+<<<<<<< HEAD
+                            org.objectweb.asm.commons;version=3.3.1;-split-package:=merge-last,
+                            org.objectweb.asm;version=3.3.1;-split-package:=merge-last,
+                            org.objectweb.asm.signature;version=3.3.1;-split-package:=merge-last
+=======
                             org.objectweb.asm.commons;version=${asm.version};-split-package:=merge-last,
                             org.objectweb.asm;version=${asm.version};-split-package:=merge-last,
                             org.objectweb.asm.signature;version=${asm.version};-split-package:=merge-last
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
                         </Export-Package>
                         <Private-Package>
                             org.objectweb.asm.commons,
                             org.objectweb.asm.signature,
                             org.objectweb.asm,
+<<<<<<< HEAD
+                            org.objectweb.asm.tree,
+=======
                             org.objectweb.asm.tree*,
                             org.objectweb.asm.util,
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
                             org.apache.felix.ipojo.manipulation*,
                             org.apache.felix.ipojo.manipulator*
                         </Private-Package>
@@ -113,18 +128,34 @@
         <dependency>
             <groupId>org.apache.felix</groupId>
             <artifactId>org.apache.felix.ipojo</artifactId>
+<<<<<<< HEAD
+            <version>1.11.1-SNAPSHOT</version>
+=======
             <version>1.12.2-SNAPSHOT</version>
             <scope>provided</scope>
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         </dependency>
         <dependency>
             <groupId>org.apache.felix</groupId>
             <artifactId>org.apache.felix.ipojo.composite</artifactId>
+<<<<<<< HEAD
+            <version>1.11.1-SNAPSHOT</version>
+=======
             <version>1.12.2-SNAPSHOT</version>
             <scope>provided</scope>
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         </dependency>
         <dependency>
             <groupId>org.apache.felix</groupId>
             <artifactId>org.apache.felix.ipojo.manipulator</artifactId>
+<<<<<<< HEAD
+            <version>1.11.0</version>
+        </dependency>
+        <dependency>
+            <groupId>asm</groupId>
+            <artifactId>asm-all</artifactId>
+            <version>3.3.1</version>
+=======
             <version>1.12.1</version>
         </dependency>
         <dependency>
@@ -132,6 +163,7 @@
             <artifactId>org.osgi.core</artifactId>
             <version>4.3.1</version>
             <scope>provided</scope>
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         </dependency>
     </dependencies>
 </project>

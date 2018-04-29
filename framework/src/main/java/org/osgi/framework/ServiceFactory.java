@@ -1,5 +1,9 @@
 /*
+<<<<<<< HEAD
+ * Copyright (c) OSGi Alliance (2000, 2012). All Rights Reserved.
+=======
  * Copyright (c) OSGi Alliance (2000, 2014). All Rights Reserved.
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,15 +20,36 @@
 
 package org.osgi.framework;
 
+<<<<<<< HEAD
+/**
+ * Allows services to provide customized service objects in the OSGi
+=======
 import org.osgi.annotation.versioning.ConsumerType;
 
 /**
  * A factory for {@link Constants#SCOPE_BUNDLE bundle scope} services. The
  * factory can provide service objects customized for each bundle in the OSGi
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
  * environment.
  * 
  * <p>
  * When registering a service, a {@code ServiceFactory} object can be used
+<<<<<<< HEAD
+ * instead of a service object, so that the bundle developer can gain control of
+ * the specific service object granted to a bundle that is using the service.
+ * 
+ * <p>
+ * When this happens, the {@code BundleContext.getService(ServiceReference)}
+ * method calls the {@code ServiceFactory.getService} method to create a service
+ * object specifically for the requesting bundle. The service object returned by
+ * the {@code ServiceFactory} is cached by the Framework until the bundle
+ * releases its use of the service.
+ * 
+ * <p>
+ * When the bundle's use count for the service is decremented to zero (including
+ * the bundle stopping or the service being unregistered), the
+ * {@code ServiceFactory.ungetService} method is called.
+=======
  * instead of a service object, so that the bundle developer can create a
  * customized service object for each bundle that is using the service.
  * 
@@ -44,6 +69,7 @@ import org.osgi.annotation.versioning.ConsumerType;
  * framework will call the
  * {@link #ungetService(Bundle, ServiceRegistration, Object) ungetService}
  * method.
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
  * 
  * <p>
  * {@code ServiceFactory} objects are only used by the Framework and are not
@@ -53,18 +79,32 @@ import org.osgi.annotation.versioning.ConsumerType;
  * @param <S> Type of Service
  * @see BundleContext#getService(ServiceReference)
  * @ThreadSafe
+<<<<<<< HEAD
+ * @version $Id: 535776e702ec5ace54f577218ff8f7920741558b $
+ */
+
+public interface ServiceFactory<S> {
+	/**
+	 * Creates a new service object.
+=======
  * @author $Id: f11fc6bee18315fb659c7987d1b66f1c9c95548a $
  */
 @ConsumerType
 public interface ServiceFactory<S> {
 	/**
 	 * Returns a service object for a bundle.
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 	 * 
 	 * <p>
 	 * The Framework invokes this method the first time the specified
 	 * {@code bundle} requests a service object using the
+<<<<<<< HEAD
+	 * {@code BundleContext.getService(ServiceReference)} method. The service
+	 * factory can then return a specific service object for each bundle.
+=======
 	 * {@link BundleContext#getService(ServiceReference)} method. The factory
 	 * can then return a customized service object for each bundle.
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 	 * 
 	 * <p>
 	 * The Framework must check that the returned service object is valid. If
@@ -84,10 +124,16 @@ public interface ServiceFactory<S> {
 	 * 
 	 * <p>
 	 * The Framework caches the valid service object and will return the same
+<<<<<<< HEAD
+	 * service object on any future call to {@code BundleContext.getService} for
+	 * the specified bundle. This means the Framework must not allow this method
+	 * to be concurrently called for the specified bundle.
+=======
 	 * service object on any future call to
 	 * {@link BundleContext#getService(ServiceReference)} for the specified
 	 * bundle. This means the Framework must not allow this method to be
 	 * concurrently called for the specified bundle.
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 	 * 
 	 * @param bundle The bundle requesting the service.
 	 * @param registration The {@code ServiceRegistration} object for the
@@ -99,7 +145,11 @@ public interface ServiceFactory<S> {
 	public S getService(Bundle bundle, ServiceRegistration<S> registration);
 
 	/**
+<<<<<<< HEAD
+	 * Releases a service object.
+=======
 	 * Releases a service object customized for a bundle.
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 	 * 
 	 * <p>
 	 * The Framework invokes this method when a service has been released by a

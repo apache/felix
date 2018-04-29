@@ -24,14 +24,22 @@ import org.apache.felix.ipojo.manipulator.metadata.annotation.ComponentWorkbench
 import org.apache.felix.ipojo.metadata.Attribute;
 import org.apache.felix.ipojo.metadata.Element;
 import org.objectweb.asm.AnnotationVisitor;
+<<<<<<< HEAD
+import org.objectweb.asm.commons.EmptyVisitor;
+=======
 import org.objectweb.asm.Opcodes;
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 
 /**
  * Parse the @Component annotation.
  * @see org.apache.felix.ipojo.annotations.Component
  * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
+<<<<<<< HEAD
+public class ComponentVisitor extends EmptyVisitor implements AnnotationVisitor {
+=======
 public class ComponentVisitor extends AnnotationVisitor {
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 
     private Reporter reporter;
 
@@ -45,7 +53,10 @@ public class ComponentVisitor extends AnnotationVisitor {
     private ComponentWorkbench workbench;
 
     public ComponentVisitor(ComponentWorkbench workbench, Reporter reporter) {
+<<<<<<< HEAD
+=======
         super(Opcodes.ASM5);
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         this.workbench = workbench;
         this.reporter = reporter;
     }
@@ -54,13 +65,21 @@ public class ComponentVisitor extends AnnotationVisitor {
      * Visit @Component annotation attribute.
      * @param name attribute name
      * @param value attribute value
+<<<<<<< HEAD
+     * @see org.objectweb.asm.commons.EmptyVisitor#visit(java.lang.String, java.lang.Object)
+=======
      * @see org.objectweb.asm.AnnotationVisitor#visit(java.lang.String, java.lang.Object)
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
      */
     public void visit(String name, Object value) {
         if (name.equals("public_factory")  || name.equals("publicFactory")) {
             // public_factory is deprecated, but must sill be supported
             String factory = value.toString();
+<<<<<<< HEAD
+            if (factory != null && factory.equalsIgnoreCase("false")) {
+=======
             if (factory.equalsIgnoreCase("false")) {
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
                 component.addAttribute(new Attribute("public", "false"));
             } else {
                 component.addAttribute(new Attribute("public", "true"));
@@ -116,7 +135,11 @@ public class ComponentVisitor extends AnnotationVisitor {
     /**
      * End of the visit.
      * Append to the "component" element computed attribute.
+<<<<<<< HEAD
+     * @see org.objectweb.asm.commons.EmptyVisitor#visitEnd()
+=======
      * @see org.objectweb.asm.AnnotationVisitor#visitEnd()
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
      */
     public void visitEnd() {
 

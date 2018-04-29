@@ -26,8 +26,15 @@ import org.apache.felix.ipojo.manipulator.util.Metadatas;
 import org.apache.felix.ipojo.manipulator.util.Streams;
 import org.apache.felix.ipojo.metadata.Element;
 
+<<<<<<< HEAD
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+=======
 import java.io.*;
 import java.net.URL;
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -76,12 +83,18 @@ public class JarFileResourceStore implements ResourceStore {
      */
     private Manifest m_manifest;
 
+<<<<<<< HEAD
+    /**
+     * Construct a {@link JarFileResourceStore} wrapping the given original bundle,
+     * and configured to output in the given target file.
+=======
     private ClassLoader classLoader;
 
     /**
      * Construct a {@link JarFileResourceStore} wrapping the given original bundle,
      * and configured to output in the given target file.
      *
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
      * @param source original Bundle
      * @param target File where the updated Bundle will be outputted
      * @throws IOException if there is an error retrieving the Manifest from the original JarFile
@@ -112,6 +125,12 @@ public class JarFileResourceStore implements ResourceStore {
         this.m_manifest = manifest;
     }
 
+<<<<<<< HEAD
+    public byte[] read(String path) throws IOException {
+        ZipEntry entry = m_source.getEntry(getInternalPath(path));
+        if (entry == null) {
+            throw new IOException("Jar Entry is not found for class " + path + ".");
+=======
     public void setClassLoader(ClassLoader classLoader) {
         this.classLoader = classLoader;
     }
@@ -121,10 +140,13 @@ public class JarFileResourceStore implements ResourceStore {
         if (entry == null) {
             // Not in the Jar file, trying from classpath
             return tryToLoadFromClassloader(path);
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         }
         return Streams.readBytes(m_source.getInputStream(entry));
     }
 
+<<<<<<< HEAD
+=======
     private byte[] tryToLoadFromClassloader(String path) throws IOException {
         if (classLoader != null) {
             byte[] bytes = toByteArray(classLoader.getResource(path));
@@ -148,6 +170,7 @@ public class JarFileResourceStore implements ResourceStore {
 
     }
 
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     private String getInternalPath(String path) {
         return m_mapper.internalize(path);
     }

@@ -23,28 +23,43 @@ import org.apache.felix.ipojo.manipulator.metadata.annotation.ComponentWorkbench
 import org.apache.felix.ipojo.metadata.Attribute;
 import org.apache.felix.ipojo.metadata.Element;
 import org.objectweb.asm.AnnotationVisitor;
+<<<<<<< HEAD
+import org.objectweb.asm.commons.EmptyVisitor;
+=======
 import org.objectweb.asm.Opcodes;
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 
 /**
  * Parses the @Controller annotation.
  * @see org.apache.felix.ipojo.annotations.Controller
  * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
+<<<<<<< HEAD
+public class ControllerVisitor extends EmptyVisitor implements AnnotationVisitor {
+=======
 public class ControllerVisitor extends AnnotationVisitor {
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 
     private ComponentWorkbench workbench;
 
     private String field;
 
     public ControllerVisitor(ComponentWorkbench workbench, String field) {
+<<<<<<< HEAD
+=======
         super(Opcodes.ASM5);
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         this.workbench = workbench;
         this.field = field;
     }
 
     /**
      * Visit @Handler annotation attributes.
+<<<<<<< HEAD
+     * @see org.objectweb.asm.commons.EmptyVisitor#visit(String, Object)
+=======
      * @see org.objectweb.asm.AnnotationVisitor#visit(String, Object)
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
      */
     public void visitEnd() {
         Element controller = new Element("controller", "");

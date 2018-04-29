@@ -16,13 +16,19 @@
  */
 package org.apache.felix.utils.properties;
 
+<<<<<<< HEAD
+=======
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.StringReader;
 import java.io.StringWriter;
+<<<<<<< HEAD
+=======
 import java.util.ArrayList;
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
@@ -238,6 +244,11 @@ public class PropertiesTest extends TestCase {
         assertTrue(sw.toString(), sw.toString().endsWith(RESULT3));
         List<String> rawValue = properties.getRaw(KEY1);
         assertEquals(2, rawValue.size());
+<<<<<<< HEAD
+        assertEquals(KEY1A + " = " + VALUE1 + "\\", rawValue.get(0));
+        assertEquals(VALUE1, rawValue.get(1));
+    }
+=======
         assertEquals(KEY1A + " = " + VALUE1, rawValue.get(0));
         assertEquals(VALUE1, rawValue.get(1));
     }
@@ -353,4 +364,5 @@ public class PropertiesTest extends TestCase {
         properties.save(sw);
         assertEquals(str, sw.toString());
     }
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 }

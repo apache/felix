@@ -19,9 +19,12 @@
 package org.apache.felix.webconsole.internal.servlet;
 
 
+<<<<<<< HEAD
+=======
 import java.security.AccessController;
 import java.security.PrivilegedActionException;
 import java.security.PrivilegedExceptionAction;
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 import java.util.Dictionary;
 
 import org.osgi.framework.BundleContext;
@@ -45,6 +48,10 @@ class ConfigurationSupport implements ManagedService
 
 
     //---------- ManagedService
+<<<<<<< HEAD
+
+    public void updated( Dictionary config ) throws ConfigurationException
+=======
     public void updated( final Dictionary config ) throws ConfigurationException
     {
         if (null != System.getSecurityManager())
@@ -80,6 +87,7 @@ class ConfigurationSupport implements ManagedService
     }
 
     void updated0( Dictionary config ) throws ConfigurationException
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     {
         // validate hashed password
         if ( isPasswordHashed( config ) )
@@ -103,11 +111,17 @@ class ConfigurationSupport implements ManagedService
                         Dictionary newConfig = cfg.getProperties();
                         if ( newConfig != null )
                         {
+<<<<<<< HEAD
+                            // assumption: config is not null and as a non-null password String property
+                            final String pwd = ( String ) config.get( OsgiManager.PROP_PASSWORD );
+                            final String hashedPassword = Password.hashPassword( pwd );
+=======
                             String pwd = ( String ) config.get( OsgiManager.PROP_PASSWORD );
                             // password can be null, see FELIX-4995
                             final String hashedPassword = null == pwd 
                                 ? OsgiManager.DEFAULT_PASSWORD
                                 : Password.hashPassword( pwd );
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
                             newConfig.put( OsgiManager.PROP_PASSWORD, hashedPassword );
                             cfg.update( newConfig );
                         }

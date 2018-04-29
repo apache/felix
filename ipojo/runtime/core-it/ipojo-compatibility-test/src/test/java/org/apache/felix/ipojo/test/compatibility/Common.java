@@ -109,7 +109,11 @@ public abstract class Common extends BaseTest {
         bundle.add(HelloServiceProvider.class);
         InputStream inputStream = bundle
                 .set(Constants.BUNDLE_SYMBOLICNAME, "iPOJO-Hello-Provider")
+<<<<<<< HEAD
+                .set(Constants.IMPORT_PACKAGE, "*")
+=======
                 //.set(Constants.IMPORT_PACKAGE, "*")
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
                 .build(IPOJOStrategy.withiPOJO());
 
         try {
@@ -138,7 +142,11 @@ public abstract class Common extends BaseTest {
         bundle.add(HelloServiceConsumer.class);
         InputStream inputStream = bundle
                 .set(Constants.BUNDLE_SYMBOLICNAME, "iPOJO-Hello-Consumer")
+<<<<<<< HEAD
+                .set(Constants.IMPORT_PACKAGE, "*")
+=======
                 //.set(Constants.IMPORT_PACKAGE, "*")
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
                 .build(IPOJOStrategy.withiPOJO());
 
         try {
@@ -175,7 +183,11 @@ public abstract class Common extends BaseTest {
 
         InputStream inputStream = bundle
                 .set(Constants.BUNDLE_SYMBOLICNAME, "hello-provider-scr")
+<<<<<<< HEAD
+                .set(Constants.IMPORT_PACKAGE, "*")
+=======
                 //.set(Constants.IMPORT_PACKAGE, "*")
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
                 .set("Service-Component", "scr/provider.xml")
                 .build(withBnd());
 
@@ -210,7 +222,11 @@ public abstract class Common extends BaseTest {
 
         InputStream inputStream = bundle
                 .set(Constants.BUNDLE_SYMBOLICNAME, "hello-consumer-scr")
+<<<<<<< HEAD
+                .set(Constants.IMPORT_PACKAGE, "*")
+=======
                // .set(Constants.IMPORT_PACKAGE, "*")
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
                 .set("Service-Component", "scr/consumer.xml")
                 .build(withBnd());
 
@@ -248,7 +264,11 @@ public abstract class Common extends BaseTest {
 
         InputStream inputStream = bundle
                 .set(Constants.BUNDLE_SYMBOLICNAME, "hello-provider-blueprint")
+<<<<<<< HEAD
+                .set(Constants.IMPORT_PACKAGE, "*")
+=======
                // .set(Constants.IMPORT_PACKAGE, "*")
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
                 .set("Bundle-Blueprint", "blueprint/provider.xml")
                 .build(withBnd());
 
@@ -283,7 +303,11 @@ public abstract class Common extends BaseTest {
 
         InputStream inputStream = bundle
                 .set(Constants.BUNDLE_SYMBOLICNAME, "hello-consumer-blueprint")
+<<<<<<< HEAD
+                .set(Constants.IMPORT_PACKAGE, "*")
+=======
                // .set(Constants.IMPORT_PACKAGE, "*")
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
                 .set("Bundle-Blueprint", "blueprint/consumer.xml")
                 .build(withBnd());
 

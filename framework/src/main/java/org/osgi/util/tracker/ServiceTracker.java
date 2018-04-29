@@ -1,5 +1,9 @@
 /*
+<<<<<<< HEAD
+ * Copyright (c) OSGi Alliance (2000, 2012). All Rights Reserved.
+=======
  * Copyright (c) OSGi Alliance (2000, 2014). All Rights Reserved.
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -52,7 +56,11 @@ import org.osgi.framework.ServiceReference;
  * @param <S> The type of the service being tracked.
  * @param <T> The type of the tracked object.
  * @ThreadSafe
+<<<<<<< HEAD
+ * @version $Id: 21926ad8717a91633face6bbf570febfcd23b1c7 $
+=======
  * @author $Id: a0af979aa9c88a89f220c1b2d8d7c060ced41006 $
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
  */
 public class ServiceTracker<S, T> implements ServiceTrackerCustomizer<S, T> {
 	/* set this to true to compile in debug messages */
@@ -298,7 +306,10 @@ public class ServiceTracker<S, T> implements ServiceTrackerCustomizer<S, T> {
 					} else {
 						if (trackReference != null) {
 							if (trackReference.getBundle() != null) {
+<<<<<<< HEAD
+=======
 								@SuppressWarnings("unchecked")
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 								ServiceReference<S>[] single = new ServiceReference[] {trackReference};
 								references = single;
 							}
@@ -332,7 +343,10 @@ public class ServiceTracker<S, T> implements ServiceTrackerCustomizer<S, T> {
 	 *         invalid syntax.
 	 */
 	private ServiceReference<S>[] getInitialReferences(boolean trackAllServices, String className, String filterString) throws InvalidSyntaxException {
+<<<<<<< HEAD
+=======
 		@SuppressWarnings("unchecked")
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 		ServiceReference<S>[] result = (ServiceReference<S>[]) ((trackAllServices) ? context.getAllServiceReferences(className, filterString) : context.getServiceReferences(className, filterString));
 		return result;
 	}
@@ -410,7 +424,10 @@ public class ServiceTracker<S, T> implements ServiceTrackerCustomizer<S, T> {
 	 * @see ServiceTrackerCustomizer#addingService(ServiceReference)
 	 */
 	public T addingService(ServiceReference<S> reference) {
+<<<<<<< HEAD
+=======
 		@SuppressWarnings("unchecked")
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 		T result = (T) context.getService(reference);
 		return result;
 	}
@@ -530,7 +547,10 @@ public class ServiceTracker<S, T> implements ServiceTrackerCustomizer<S, T> {
 			if (length == 0) {
 				return null;
 			}
+<<<<<<< HEAD
+=======
 			@SuppressWarnings("unchecked")
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 			ServiceReference<S>[] result = new ServiceReference[length];
 			return t.copyKeys(result);
 		}
@@ -544,7 +564,11 @@ public class ServiceTracker<S, T> implements ServiceTrackerCustomizer<S, T> {
 	 * If multiple services are being tracked, the service with the highest
 	 * ranking (as specified in its {@code service.ranking} property) is
 	 * returned. If there is a tie in ranking, the service with the lowest
+<<<<<<< HEAD
+	 * service ID (as specified in its {@code service.id} property); that is,
+=======
 	 * service id (as specified in its {@code service.id} property); that is,
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 	 * the service that was registered first is returned. This is the same
 	 * algorithm used by {@code BundleContext.getServiceReference}.
 	 * 
@@ -847,9 +871,13 @@ public class ServiceTracker<S, T> implements ServiceTrackerCustomizer<S, T> {
 				return array;
 			}
 			if (length > array.length) {
+<<<<<<< HEAD
+				array = (T[]) Array.newInstance(array.getClass().getComponentType(), length);
+=======
 				@SuppressWarnings("unchecked")
 				T[] newInstance = (T[]) Array.newInstance(array.getClass().getComponentType(), length);
 				array = newInstance;
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 			}
 			for (int i = 0; i < length; i++) {
 				array[i] = getService(references[i]);
@@ -889,7 +917,10 @@ public class ServiceTracker<S, T> implements ServiceTrackerCustomizer<S, T> {
 			if (closed) {
 				return;
 			}
+<<<<<<< HEAD
+=======
 			@SuppressWarnings("unchecked")
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 			final ServiceReference<S> reference = (ServiceReference<S>) event.getServiceReference();
 			if (DEBUG) {
 				System.out.println("ServiceTracker.Tracked.serviceChanged[" + event.getType() + "]: " + reference);
@@ -921,7 +952,10 @@ public class ServiceTracker<S, T> implements ServiceTrackerCustomizer<S, T> {
 		 * 
 		 * @GuardedBy this
 		 */
+<<<<<<< HEAD
+=======
 		@Override
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 		final void modified() {
 			super.modified(); /* increment the modification count */
 			ServiceTracker.this.modified();
@@ -936,7 +970,10 @@ public class ServiceTracker<S, T> implements ServiceTrackerCustomizer<S, T> {
 		 * @return Customized object for the tracked item or {@code null} if the
 		 *         item is not to be tracked.
 		 */
+<<<<<<< HEAD
+=======
 		@Override
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 		final T customizerAdding(final ServiceReference<S> item, final ServiceEvent related) {
 			return customizer.addingService(item);
 		}
@@ -949,7 +986,10 @@ public class ServiceTracker<S, T> implements ServiceTrackerCustomizer<S, T> {
 		 * @param related Action related object.
 		 * @param object Customized object for the tracked item.
 		 */
+<<<<<<< HEAD
+=======
 		@Override
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 		final void customizerModified(final ServiceReference<S> item, final ServiceEvent related, final T object) {
 			customizer.modifiedService(item, object);
 		}
@@ -962,7 +1002,10 @@ public class ServiceTracker<S, T> implements ServiceTrackerCustomizer<S, T> {
 		 * @param related Action related object.
 		 * @param object Customized object for the tracked item.
 		 */
+<<<<<<< HEAD
+=======
 		@Override
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 		final void customizerRemoved(final ServiceReference<S> item, final ServiceEvent related, final T object) {
 			customizer.removedService(item, object);
 		}

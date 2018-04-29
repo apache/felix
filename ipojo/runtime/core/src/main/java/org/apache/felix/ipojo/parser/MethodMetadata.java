@@ -75,7 +75,11 @@ public class MethodMetadata {
      * Creates a Method Metadata.
      * @param metadata the method manipulation element.
      */
+<<<<<<< HEAD
+    MethodMetadata(Element metadata) {
+=======
     public MethodMetadata(Element metadata) {
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         m_name = metadata.getAttribute("name");
         String arg = metadata.getAttribute("arguments");
         String names = metadata.getAttribute("names");

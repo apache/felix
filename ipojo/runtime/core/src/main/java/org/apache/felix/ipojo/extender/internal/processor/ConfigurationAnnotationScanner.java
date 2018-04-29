@@ -21,9 +21,15 @@ package org.apache.felix.ipojo.extender.internal.processor;
 
 import org.apache.felix.ipojo.configuration.Configuration;
 import org.objectweb.asm.AnnotationVisitor;
+<<<<<<< HEAD
+import org.objectweb.asm.Opcodes;
+import org.objectweb.asm.Type;
+import org.objectweb.asm.commons.EmptyVisitor;
+=======
 import org.objectweb.asm.ClassVisitor;
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.Type;
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 
 /**
  * Class visitor detecting @Configuration annotation.
@@ -33,17 +39,24 @@ import org.objectweb.asm.Type;
  * {@literal parent} is set to the parent class if and only if it's not a java.* class (which don't contain the
  * Configuration annotation) and {@literal isConfiguration} is set to false
  */
+<<<<<<< HEAD
+public class ConfigurationAnnotationScanner extends EmptyVisitor implements Opcodes {
+=======
 public class ConfigurationAnnotationScanner extends ClassVisitor implements Opcodes {
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 
     private static final String CONFIGURATION_ANNOTATION_DESCRIPTOR = Type.getType(Configuration.class)
             .getDescriptor();
     private boolean m_isConfiguration = false;
     private String m_super;
 
+<<<<<<< HEAD
+=======
     public ConfigurationAnnotationScanner() {
         super(Opcodes.ASM5);
     }
 
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 
     @Override
     public void visit(int version, int access, String name, String signature, String superName, String[] interfaces) {
@@ -63,7 +76,11 @@ public class ConfigurationAnnotationScanner extends ClassVisitor implements Opco
     }
 
     public String getParent() {
+<<<<<<< HEAD
+        if (m_super == null  || m_super.startsWith("java/") || m_isConfiguration) {
+=======
         if (m_super == null || m_super.startsWith("java/") || m_isConfiguration) {
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
             return null;
         }
         return m_super.replace("/", ".");

@@ -22,6 +22,13 @@
 package org.apache.felix.gogo.runtime;
 
 import java.io.InputStream;
+<<<<<<< HEAD
+import java.io.PrintStream;
+import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
+import java.util.Arrays;
+import java.util.Collection;
+=======
 import java.io.OutputStream;
 import java.io.PrintStream;
 import java.lang.reflect.Method;
@@ -36,10 +43,15 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 import java.util.Dictionary;
 import java.util.Enumeration;
 import java.util.Formatter;
 import java.util.HashMap;
+<<<<<<< HEAD
+import java.util.Map;
+
+=======
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Callable;
@@ -56,6 +68,7 @@ import org.apache.felix.service.command.JobListener;
 import org.apache.felix.service.command.Process;
 import org.apache.felix.gogo.runtime.Pipe.Result;
 import org.apache.felix.service.command.CommandProcessor;
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 import org.apache.felix.service.command.CommandSession;
 import org.apache.felix.service.command.Converter;
 import org.apache.felix.service.command.Function;
@@ -66,6 +79,26 @@ public class CommandSessionImpl implements CommandSession, Converter
     public static final String SESSION_CLOSED = "session is closed";
     public static final String VARIABLES = ".variables";
     public static final String COMMANDS = ".commands";
+<<<<<<< HEAD
+    private static final String COLUMN = "%-20s %s\n";
+    
+    protected InputStream in;
+    protected PrintStream out;
+    PrintStream err;
+    
+    private final CommandProcessorImpl processor;
+    protected final Map<String, Object> variables = new HashMap<String, Object>();
+    private boolean closed;
+
+    protected CommandSessionImpl(CommandProcessorImpl shell, InputStream in, PrintStream out, PrintStream err)
+    {
+        this.processor = shell;
+        this.in = in;
+        this.out = out;
+        this.err = err;
+    }
+    
+=======
     public static final String CONSTANTS = ".constants";
     private static final String COLUMN = "%-20s %s\n";
 
@@ -116,11 +149,17 @@ public class CommandSessionImpl implements CommandSession, Converter
         this.perr = out == err ? pout : err instanceof PrintStream ? (PrintStream) err : new PrintStream(err, true);
     }
 
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     ThreadIO threadIO()
     {
         return processor.threadIO;
     }
 
+<<<<<<< HEAD
+    public void close()
+    {
+        this.closed = true;
+=======
     public CommandProcessor processor()
     {
         return processor;
@@ -149,11 +188,16 @@ public class CommandSessionImpl implements CommandSession, Converter
             this.processor.closeSession(this);
             executor.shutdownNow();
         }
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     }
 
     public Object execute(CharSequence commandline) throws Exception
     {
         assert processor != null;
+<<<<<<< HEAD
+        assert processor.threadIO != null;
+=======
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 
         if (closed)
         {
@@ -186,7 +230,11 @@ public class CommandSessionImpl implements CommandSession, Converter
         // there is no API to list all variables, so overload name == null
         if (name == null || VARIABLES.equals(name))
         {
+<<<<<<< HEAD
+            return variables.keySet();
+=======
             return Collections.unmodifiableSet(variables.keySet());
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         }
 
         if (COMMANDS.equals(name))
@@ -194,6 +242,32 @@ public class CommandSessionImpl implements CommandSession, Converter
             return processor.getCommands();
         }
 
+<<<<<<< HEAD
+        if( processor.constants.containsKey(name) )
+        {
+            return processor.constants.get(name);
+        }
+
+        if (variables.containsKey("#" + name))
+        {
+            Object f = variables.get("#" + name);
+            if (f instanceof Function)
+            {
+                try
+                {
+                    f = ((Function) f).execute(this, null);
+                }
+                catch (Exception e)
+                {
+                    // Ignore
+                }
+            }
+            return f;
+        }
+        if (variables.containsKey(name))
+        {
+            return variables.get(name);
+=======
         if (CONSTANTS.equals(name))
         {
             return Collections.unmodifiableSet(processor.constants.keySet());
@@ -227,11 +301,17 @@ public class CommandSessionImpl implements CommandSession, Converter
         if (val != null)
         {
             return val;
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         }
 
         return processor.getCommand(name, variables.get("SCOPE"));
     }
 
+<<<<<<< HEAD
+    public void put(String name, Object value)
+    {
+        variables.put(name, value);
+=======
     public Object put(String name, Object value)
     {
         if (value != null)
@@ -242,15 +322,25 @@ public class CommandSessionImpl implements CommandSession, Converter
         {
             return variables.remove(name);
         }
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     }
 
     public PrintStream getConsole()
     {
+<<<<<<< HEAD
+        return out;
+    }
+
+    @SuppressWarnings("unchecked")
+    public CharSequence format(Object target, int level, Converter escape)
+        throws Exception
+=======
         return pout;
     }
 
     @SuppressWarnings("unchecked")
     public CharSequence format(Object target, int level, Converter escape) throws Exception
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     {
         if (target == null)
         {
@@ -366,7 +456,11 @@ public class CommandSessionImpl implements CommandSession, Converter
         }
         if (target instanceof Dictionary)
         {
+<<<<<<< HEAD
+            Map<Object, Object> result = new HashMap<Object, Object>();
+=======
             Map<Object, Object> result = new HashMap<>();
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
             for (Enumeration e = ((Dictionary) target).keys(); e.hasMoreElements();)
             {
                 Object key = e.nextElement();
@@ -413,10 +507,13 @@ public class CommandSessionImpl implements CommandSession, Converter
                 }
             }
         }
+<<<<<<< HEAD
+=======
         if (target instanceof Path)
         {
             return target.toString();
         }
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         if (level == Converter.INSPECT)
         {
             return inspect(target);
@@ -437,7 +534,13 @@ public class CommandSessionImpl implements CommandSession, Converter
             try
             {
                 String name = m.getName();
+<<<<<<< HEAD
+                if (m.getName().startsWith("get") && !m.getName().equals("getClass")
+                    && m.getParameterTypes().length == 0
+                    && Modifier.isPublic(m.getModifiers()))
+=======
                 if (m.getName().startsWith("get") && !m.getName().equals("getClass") && m.getParameterTypes().length == 0 && Modifier.isPublic(m.getModifiers()))
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
                 {
                     found = true;
                     name = name.substring(3);
@@ -446,9 +549,19 @@ public class CommandSessionImpl implements CommandSession, Converter
                     f.format(COLUMN, name, format(value, Converter.LINE, this));
                 }
             }
+<<<<<<< HEAD
+            catch (IllegalAccessException e)
+            {
+                // Ignore
+            }
+            catch (Exception e)
+            {
+                e.printStackTrace();
+=======
             catch (Exception e)
             {
                 // Ignore
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
             }
         }
         if (found)
@@ -463,12 +576,16 @@ public class CommandSessionImpl implements CommandSession, Converter
 
     public Object convert(Class<?> desiredType, Object in)
     {
+<<<<<<< HEAD
+        return processor.convert(desiredType, in);
+=======
         return processor.convert(this, desiredType, in);
     }
 
     public Object doConvert(Class<?> desiredType, Object in)
     {
         return processor.doConvert(desiredType, in);
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     }
 
     public CharSequence format(Object result, int inspect)
@@ -483,6 +600,8 @@ public class CommandSessionImpl implements CommandSession, Converter
         }
     }
 
+<<<<<<< HEAD
+=======
     public Object expr(CharSequence expr)
     {
         return processor.expr(this, expr);
@@ -852,4 +971,5 @@ public class CommandSessionImpl implements CommandSession, Converter
         }
     }
 
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 }

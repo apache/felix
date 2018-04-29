@@ -18,6 +18,31 @@
  */
 package org.apache.felix.scr.impl.config;
 
+<<<<<<< HEAD
+import org.apache.felix.scr.impl.Activator;
+import org.osgi.framework.Bundle;
+import org.osgi.framework.ServiceFactory;
+import org.osgi.framework.ServiceRegistration;
+import org.osgi.service.log.LogService;
+
+/**
+ * The <code>ScrManagedServiceServiceFactory</code> is the ServiceFactory
+ * registered on behalf of the {@link ScrManagedService} (or
+ * {@link ScrManagedServiceMetaTypeProvider}, resp.) to create the instance on
+ * demand once it is used by the Configuration Admin Service or the MetaType
+ * Service.
+ * <p>
+ * In contrast to the {@link ScrManagedService} and
+ * {@link ScrManagedServiceMetaTypeProvider} classes, this class only requires
+ * core OSGi API and thus may be instantiated without the Configuration Admin
+ * and/or MetaType Service API actually available at the time of instantiation.
+ */
+public class ScrManagedServiceServiceFactory implements ServiceFactory
+{
+    private final ScrConfiguration scrConfiguration;
+
+    public ScrManagedServiceServiceFactory(final ScrConfiguration scrConfiguration)
+=======
 import org.osgi.framework.Bundle;
 import org.osgi.framework.ServiceFactory;
 import org.osgi.framework.ServiceRegistration;
@@ -37,10 +62,35 @@ public class ScrManagedServiceServiceFactory implements ServiceFactory
     private final ScrConfigurationImpl scrConfiguration;
 
     public ScrManagedServiceServiceFactory(final ScrConfigurationImpl scrConfiguration)
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     {
         this.scrConfiguration = scrConfiguration;
     }
 
+<<<<<<< HEAD
+    public Object getService(Bundle bundle, ServiceRegistration registration)
+    {
+        try
+        {
+            return ScrManagedServiceMetaTypeProvider.create( this.scrConfiguration );
+        }
+        catch ( Throwable t )
+        {
+            // assume MetaType Service API not available
+            Activator
+                .log(
+                    LogService.LOG_ERROR,
+                    null,
+                    "Cannot create MetaType providing ManagedService; not providing Metatype information but just accepting configuration",
+                    t );
+        }
+        return new ScrManagedService( this.scrConfiguration );
+    }
+
+    public void ungetService(Bundle bundle, ServiceRegistration registration, Object service)
+    {
+        // nothing really todo; GC will do the rest
+=======
     @Override
     public Object getService(final Bundle bundle, final ServiceRegistration registration)
     {
@@ -51,6 +101,7 @@ public class ScrManagedServiceServiceFactory implements ServiceFactory
     public void ungetService(final Bundle bundle, final ServiceRegistration registration, final Object service)
     {
         // nothing really to do; GC will do the rest
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     }
 
 }

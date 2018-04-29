@@ -19,11 +19,19 @@
 package org.apache.felix.cm.integration.helper;
 
 
+<<<<<<< HEAD
+import junit.framework.TestCase;
+
+import org.osgi.service.cm.ConfigurationEvent;
+import org.osgi.service.cm.ConfigurationListener;
+
+=======
 import org.osgi.service.cm.ConfigurationEvent;
 import org.osgi.service.cm.ConfigurationListener;
 
 import junit.framework.TestCase;
 
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 
 public class TestListener implements ConfigurationListener
 {
@@ -42,7 +50,10 @@ public class TestListener implements ConfigurationListener
     }
 
 
+<<<<<<< HEAD
+=======
     @Override
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     public void configurationEvent( final ConfigurationEvent event )
     {
         this.numberOfEvents++;

@@ -126,7 +126,11 @@ public class TestMethodProperties extends Common {
     public void testConfigurationPrimitive() {
         ServiceReference ref = ipojoHelper.getServiceReferenceByName(CheckService.class.getName(), instance.getInstanceName());
         assertNotNull("Test check service availability", ref);
+<<<<<<< HEAD
+        CheckService check = (CheckService) osgiHelper.getServiceObject(ref);
+=======
         CheckService check = (CheckService) osgiHelper.getRawServiceObject(ref);
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         Properties props = check.getProps();
 
         Byte b = (Byte) props.get("b");
@@ -169,7 +173,11 @@ public class TestMethodProperties extends Common {
 
         ref = ipojoHelper.getServiceReferenceByName(CheckService.class.getName(), instance.getInstanceName());
         assertNotNull("Test check service availability", ref);
+<<<<<<< HEAD
+        check = (CheckService) osgiHelper.getServiceObject(ref);
+=======
         check = (CheckService) osgiHelper.getRawServiceObject(ref);
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         props = check.getProps();
 
         b = (Byte) props.get("b");
@@ -214,7 +222,11 @@ public class TestMethodProperties extends Common {
     public void testConfigurationPrimitiveString() {
         ServiceReference ref = ipojoHelper.getServiceReferenceByName(CheckService.class.getName(), instance.getInstanceName());
         assertNotNull("Test check service availability", ref);
+<<<<<<< HEAD
+        CheckService check = (CheckService) osgiHelper.getServiceObject(ref);
+=======
         CheckService check = (CheckService) osgiHelper.getRawServiceObject(ref);
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         Properties props = check.getProps();
 
         Byte b = (Byte) props.get("b");
@@ -257,7 +269,11 @@ public class TestMethodProperties extends Common {
 
         ref = ipojoHelper.getServiceReferenceByName(CheckService.class.getName(), instance.getInstanceName());
         assertNotNull("Test check service availability", ref);
+<<<<<<< HEAD
+        check = (CheckService) osgiHelper.getServiceObject(ref);
+=======
         check = (CheckService) osgiHelper.getRawServiceObject(ref);
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         props = check.getProps();
 
         b = (Byte) props.get("b");
@@ -302,7 +318,11 @@ public class TestMethodProperties extends Common {
     public void testConfigurationPrimitiveArrays() {
         ServiceReference ref = ipojoHelper.getServiceReferenceByName(CheckService.class.getName(), instance.getInstanceName());
         assertNotNull("Test check service availability", ref);
+<<<<<<< HEAD
+        CheckService check = (CheckService) osgiHelper.getServiceObject(ref);
+=======
         CheckService check = (CheckService) osgiHelper.getRawServiceObject(ref);
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         Properties props = check.getProps();
 
         byte[] b = (byte[]) props.get("bs");
@@ -361,7 +381,11 @@ public class TestMethodProperties extends Common {
 
         ref = ipojoHelper.getServiceReferenceByName(CheckService.class.getName(), instance.getInstanceName());
         assertNotNull("Test check service availability", ref);
+<<<<<<< HEAD
+        check = (CheckService) osgiHelper.getServiceObject(ref);
+=======
         check = (CheckService) osgiHelper.getRawServiceObject(ref);
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         props = check.getProps();
 
         b = (byte[]) props.get("bs");
@@ -422,7 +446,11 @@ public class TestMethodProperties extends Common {
     public void testConfigurationPrimitiveArraysString() {
         ServiceReference ref = ipojoHelper.getServiceReferenceByName(CheckService.class.getName(), instance.getInstanceName());
         assertNotNull("Test check service availability", ref);
+<<<<<<< HEAD
+        CheckService check = (CheckService) osgiHelper.getServiceObject(ref);
+=======
         CheckService check = (CheckService) osgiHelper.getRawServiceObject(ref);
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         Properties props = check.getProps();
 
         byte[] b = (byte[]) props.get("bs");
@@ -481,7 +509,11 @@ public class TestMethodProperties extends Common {
 
         ref = ipojoHelper.getServiceReferenceByName(CheckService.class.getName(), instance.getInstanceName());
         assertNotNull("Test check service availability", ref);
+<<<<<<< HEAD
+        check = (CheckService) osgiHelper.getServiceObject(ref);
+=======
         check = (CheckService) osgiHelper.getRawServiceObject(ref);
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         props = check.getProps();
 
         b = (byte[]) props.get("bs");
@@ -542,7 +574,11 @@ public class TestMethodProperties extends Common {
     public void testConfigurationObj() {
         ServiceReference ref = ipojoHelper.getServiceReferenceByName(CheckService.class.getName(), instance.getInstanceName());
         assertNotNull("Test check service availability", ref);
+<<<<<<< HEAD
+        CheckService check = (CheckService) osgiHelper.getServiceObject(ref);
+=======
         CheckService check = (CheckService) osgiHelper.getRawServiceObject(ref);
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         Properties props = check.getProps();
 
         String s = (String) props.get("string");
@@ -563,7 +599,11 @@ public class TestMethodProperties extends Common {
 
         ref = ipojoHelper.getServiceReferenceByName(CheckService.class.getName(), instance.getInstanceName());
         assertNotNull("Test check service availability", ref);
+<<<<<<< HEAD
+        check = (CheckService) osgiHelper.getServiceObject(ref);
+=======
         check = (CheckService) osgiHelper.getRawServiceObject(ref);
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         props = check.getProps();
 
         s = (String) props.get("string");
@@ -585,7 +625,11 @@ public class TestMethodProperties extends Common {
     public void testConfigurationObjString() {
         ServiceReference ref = ipojoHelper.getServiceReferenceByName(CheckService.class.getName(), instance.getInstanceName());
         assertNotNull("Test check service availability", ref);
+<<<<<<< HEAD
+        CheckService check = (CheckService) osgiHelper.getServiceObject(ref);
+=======
         CheckService check = (CheckService) osgiHelper.getRawServiceObject(ref);
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         Properties props = check.getProps();
 
         String s = (String) props.get("string");
@@ -606,7 +650,11 @@ public class TestMethodProperties extends Common {
 
         ref = ipojoHelper.getServiceReferenceByName(CheckService.class.getName(), instance.getInstanceName());
         assertNotNull("Test check service availability", ref);
+<<<<<<< HEAD
+        check = (CheckService) osgiHelper.getServiceObject(ref);
+=======
         check = (CheckService) osgiHelper.getRawServiceObject(ref);
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         props = check.getProps();
 
         s = (String) props.get("string");
@@ -628,7 +676,11 @@ public class TestMethodProperties extends Common {
     public void testConfigurationPrimitive2() {
         ServiceReference ref = ipojoHelper.getServiceReferenceByName(CheckService.class.getName(), instance2.getInstanceName());
         assertNotNull("Test check service availability", ref);
+<<<<<<< HEAD
+        CheckService check = (CheckService) osgiHelper.getServiceObject(ref);
+=======
         CheckService check = (CheckService) osgiHelper.getRawServiceObject(ref);
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         Properties props = check.getProps();
 
         Byte b = (Byte) props.get("b");
@@ -671,7 +723,11 @@ public class TestMethodProperties extends Common {
 
         ref = ipojoHelper.getServiceReferenceByName(CheckService.class.getName(), instance2.getInstanceName());
         assertNotNull("Test check service availability", ref);
+<<<<<<< HEAD
+        check = (CheckService) osgiHelper.getServiceObject(ref);
+=======
         check = (CheckService) osgiHelper.getRawServiceObject(ref);
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         props = check.getProps();
 
         b = (Byte) props.get("b");
@@ -716,7 +772,11 @@ public class TestMethodProperties extends Common {
     public void testConfigurationPrimitive2String() {
         ServiceReference ref = ipojoHelper.getServiceReferenceByName(CheckService.class.getName(), instance2.getInstanceName());
         assertNotNull("Test check service availability", ref);
+<<<<<<< HEAD
+        CheckService check = (CheckService) osgiHelper.getServiceObject(ref);
+=======
         CheckService check = (CheckService) osgiHelper.getRawServiceObject(ref);
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         Properties props = check.getProps();
 
         Byte b = (Byte) props.get("b");
@@ -759,7 +819,11 @@ public class TestMethodProperties extends Common {
 
         ref = ipojoHelper.getServiceReferenceByName(CheckService.class.getName(), instance2.getInstanceName());
         assertNotNull("Test check service availability", ref);
+<<<<<<< HEAD
+        check = (CheckService) osgiHelper.getServiceObject(ref);
+=======
         check = (CheckService) osgiHelper.getRawServiceObject(ref);
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         props = check.getProps();
 
         b = (Byte) props.get("b");
@@ -804,7 +868,11 @@ public class TestMethodProperties extends Common {
     public void testConfigurationPrimitiveArrays2() {
         ServiceReference ref = ipojoHelper.getServiceReferenceByName(CheckService.class.getName(), instance2.getInstanceName());
         assertNotNull("Test check service availability", ref);
+<<<<<<< HEAD
+        CheckService check = (CheckService) osgiHelper.getServiceObject(ref);
+=======
         CheckService check = (CheckService) osgiHelper.getRawServiceObject(ref);
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         Properties props = check.getProps();
 
         byte[] b = (byte[]) props.get("bs");
@@ -863,7 +931,11 @@ public class TestMethodProperties extends Common {
 
         ref = ipojoHelper.getServiceReferenceByName(CheckService.class.getName(), instance2.getInstanceName());
         assertNotNull("Test check service availability", ref);
+<<<<<<< HEAD
+        check = (CheckService) osgiHelper.getServiceObject(ref);
+=======
         check = (CheckService) osgiHelper.getRawServiceObject(ref);
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         props = check.getProps();
 
         b = (byte[]) props.get("bs");
@@ -924,7 +996,11 @@ public class TestMethodProperties extends Common {
     public void testConfigurationPrimitiveArrays2String() {
         ServiceReference ref = ipojoHelper.getServiceReferenceByName(CheckService.class.getName(), instance2.getInstanceName());
         assertNotNull("Test check service availability", ref);
+<<<<<<< HEAD
+        CheckService check = (CheckService) osgiHelper.getServiceObject(ref);
+=======
         CheckService check = (CheckService) osgiHelper.getRawServiceObject(ref);
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         Properties props = check.getProps();
 
         byte[] b = (byte[]) props.get("bs");
@@ -983,7 +1059,11 @@ public class TestMethodProperties extends Common {
 
         ref = ipojoHelper.getServiceReferenceByName(CheckService.class.getName(), instance2.getInstanceName());
         assertNotNull("Test check service availability", ref);
+<<<<<<< HEAD
+        check = (CheckService) osgiHelper.getServiceObject(ref);
+=======
         check = (CheckService) osgiHelper.getRawServiceObject(ref);
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         props = check.getProps();
 
         b = (byte[]) props.get("bs");
@@ -1044,7 +1124,11 @@ public class TestMethodProperties extends Common {
     public void testConfigurationObj2() {
         ServiceReference ref = ipojoHelper.getServiceReferenceByName(CheckService.class.getName(), instance2.getInstanceName());
         assertNotNull("Test check service availability", ref);
+<<<<<<< HEAD
+        CheckService check = (CheckService) osgiHelper.getServiceObject(ref);
+=======
         CheckService check = (CheckService) osgiHelper.getRawServiceObject(ref);
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         Properties props = check.getProps();
 
         String s = (String) props.get("string");
@@ -1065,7 +1149,11 @@ public class TestMethodProperties extends Common {
 
         ref = ipojoHelper.getServiceReferenceByName(CheckService.class.getName(), instance2.getInstanceName());
         assertNotNull("Test check service availability", ref);
+<<<<<<< HEAD
+        check = (CheckService) osgiHelper.getServiceObject(ref);
+=======
         check = (CheckService) osgiHelper.getRawServiceObject(ref);
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         props = check.getProps();
 
         s = (String) props.get("string");
@@ -1087,7 +1175,11 @@ public class TestMethodProperties extends Common {
     public void testConfigurationObj2String() {
         ServiceReference ref = ipojoHelper.getServiceReferenceByName(CheckService.class.getName(), instance2.getInstanceName());
         assertNotNull("Test check service availability", ref);
+<<<<<<< HEAD
+        CheckService check = (CheckService) osgiHelper.getServiceObject(ref);
+=======
         CheckService check = (CheckService) osgiHelper.getRawServiceObject(ref);
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         Properties props = check.getProps();
 
         String s = (String) props.get("string");
@@ -1108,7 +1200,11 @@ public class TestMethodProperties extends Common {
 
         ref = ipojoHelper.getServiceReferenceByName(CheckService.class.getName(), instance2.getInstanceName());
         assertNotNull("Test check service availability", ref);
+<<<<<<< HEAD
+        check = (CheckService) osgiHelper.getServiceObject(ref);
+=======
         check = (CheckService) osgiHelper.getRawServiceObject(ref);
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         props = check.getProps();
 
         s = (String) props.get("string");
@@ -1178,7 +1274,11 @@ public class TestMethodProperties extends Common {
     public void testConfigurationPrimitiveNoValue() {
         ServiceReference ref = ipojoHelper.getServiceReferenceByName(CheckService.class.getName(), instance3.getInstanceName());
         assertNotNull("Test check service availability", ref);
+<<<<<<< HEAD
+        CheckService check = (CheckService) osgiHelper.getServiceObject(ref);
+=======
         CheckService check = (CheckService) osgiHelper.getRawServiceObject(ref);
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         Properties props = check.getProps();
 
         Byte b = (Byte) props.get("b");
@@ -1221,7 +1321,11 @@ public class TestMethodProperties extends Common {
 
         ref = ipojoHelper.getServiceReferenceByName(CheckService.class.getName(), instance3.getInstanceName());
         assertNotNull("Test check service availability", ref);
+<<<<<<< HEAD
+        check = (CheckService) osgiHelper.getServiceObject(ref);
+=======
         check = (CheckService) osgiHelper.getRawServiceObject(ref);
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         props = check.getProps();
 
         b = (Byte) props.get("b");
@@ -1266,7 +1370,11 @@ public class TestMethodProperties extends Common {
     public void testConfigurationPrimitiveStringNoValue() {
         ServiceReference ref = ipojoHelper.getServiceReferenceByName(CheckService.class.getName(), instance3.getInstanceName());
         assertNotNull("Test check service availability", ref);
+<<<<<<< HEAD
+        CheckService check = (CheckService) osgiHelper.getServiceObject(ref);
+=======
         CheckService check = (CheckService) osgiHelper.getRawServiceObject(ref);
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         Properties props = check.getProps();
 
         Byte b = (Byte) props.get("b");
@@ -1309,7 +1417,11 @@ public class TestMethodProperties extends Common {
 
         ref = ipojoHelper.getServiceReferenceByName(CheckService.class.getName(), instance3.getInstanceName());
         assertNotNull("Test check service availability", ref);
+<<<<<<< HEAD
+        check = (CheckService) osgiHelper.getServiceObject(ref);
+=======
         check = (CheckService) osgiHelper.getRawServiceObject(ref);
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         props = check.getProps();
 
         b = (Byte) props.get("b");
@@ -1354,7 +1466,11 @@ public class TestMethodProperties extends Common {
     public void testConfigurationPrimitiveArraysNoValue() {
         ServiceReference ref = ipojoHelper.getServiceReferenceByName(CheckService.class.getName(), instance3.getInstanceName());
         assertNotNull("Test check service availability", ref);
+<<<<<<< HEAD
+        CheckService check = (CheckService) osgiHelper.getServiceObject(ref);
+=======
         CheckService check = (CheckService) osgiHelper.getRawServiceObject(ref);
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         Properties props = check.getProps();
 
 
@@ -1398,7 +1514,11 @@ public class TestMethodProperties extends Common {
 
         ref = ipojoHelper.getServiceReferenceByName(CheckService.class.getName(), instance3.getInstanceName());
         assertNotNull("Test check service availability", ref);
+<<<<<<< HEAD
+        check = (CheckService) osgiHelper.getServiceObject(ref);
+=======
         check = (CheckService) osgiHelper.getRawServiceObject(ref);
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         props = check.getProps();
 
         b = (byte[]) props.get("bs");
@@ -1459,7 +1579,11 @@ public class TestMethodProperties extends Common {
     public void testConfigurationPrimitiveArraysStringNoValue() {
         ServiceReference ref = ipojoHelper.getServiceReferenceByName(CheckService.class.getName(), instance3.getInstanceName());
         assertNotNull("Test check service availability", ref);
+<<<<<<< HEAD
+        CheckService check = (CheckService) osgiHelper.getServiceObject(ref);
+=======
         CheckService check = (CheckService) osgiHelper.getRawServiceObject(ref);
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         Properties props = check.getProps();
 
         byte[] b = (byte[]) props.get("bs");
@@ -1503,7 +1627,11 @@ public class TestMethodProperties extends Common {
 
         ref = ipojoHelper.getServiceReferenceByName(CheckService.class.getName(), instance3.getInstanceName());
         assertNotNull("Test check service availability", ref);
+<<<<<<< HEAD
+        check = (CheckService) osgiHelper.getServiceObject(ref);
+=======
         check = (CheckService) osgiHelper.getRawServiceObject(ref);
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         props = check.getProps();
 
         b = (byte[]) props.get("bs");
@@ -1564,7 +1692,11 @@ public class TestMethodProperties extends Common {
     public void testConfigurationObjNoValue() {
         ServiceReference ref = ipojoHelper.getServiceReferenceByName(CheckService.class.getName(), instance3.getInstanceName());
         assertNotNull("Test check service availability", ref);
+<<<<<<< HEAD
+        CheckService check = (CheckService) osgiHelper.getServiceObject(ref);
+=======
         CheckService check = (CheckService) osgiHelper.getRawServiceObject(ref);
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         Properties props = check.getProps();
 
         String s = (String) props.get("string");
@@ -1584,7 +1716,11 @@ public class TestMethodProperties extends Common {
 
         ref = ipojoHelper.getServiceReferenceByName(CheckService.class.getName(), instance3.getInstanceName());
         assertNotNull("Test check service availability", ref);
+<<<<<<< HEAD
+        check = (CheckService) osgiHelper.getServiceObject(ref);
+=======
         check = (CheckService) osgiHelper.getRawServiceObject(ref);
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         props = check.getProps();
 
         s = (String) props.get("string");
@@ -1606,7 +1742,11 @@ public class TestMethodProperties extends Common {
     public void testConfigurationObjStringNoValue() {
         ServiceReference ref = ipojoHelper.getServiceReferenceByName(CheckService.class.getName(), instance3.getInstanceName());
         assertNotNull("Test check service availability", ref);
+<<<<<<< HEAD
+        CheckService check = (CheckService) osgiHelper.getServiceObject(ref);
+=======
         CheckService check = (CheckService) osgiHelper.getRawServiceObject(ref);
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         Properties props = check.getProps();
 
         String s = (String) props.get("string");
@@ -1626,7 +1766,11 @@ public class TestMethodProperties extends Common {
 
         ref = ipojoHelper.getServiceReferenceByName(CheckService.class.getName(), instance3.getInstanceName());
         assertNotNull("Test check service availability", ref);
+<<<<<<< HEAD
+        check = (CheckService) osgiHelper.getServiceObject(ref);
+=======
         check = (CheckService) osgiHelper.getRawServiceObject(ref);
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         props = check.getProps();
 
         s = (String) props.get("string");

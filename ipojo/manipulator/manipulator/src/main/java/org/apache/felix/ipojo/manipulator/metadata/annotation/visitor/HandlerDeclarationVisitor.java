@@ -24,7 +24,11 @@ import org.apache.felix.ipojo.manipulator.metadata.annotation.ComponentWorkbench
 import org.apache.felix.ipojo.metadata.Attribute;
 import org.apache.felix.ipojo.metadata.Element;
 import org.objectweb.asm.AnnotationVisitor;
+<<<<<<< HEAD
+import org.objectweb.asm.commons.EmptyVisitor;
+=======
 import org.objectweb.asm.Opcodes;
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 import org.w3c.dom.Attr;
 import org.w3c.dom.Document;
 import org.w3c.dom.NamedNodeMap;
@@ -40,7 +44,11 @@ import java.io.InputStream;
  * @see org.apache.felix.ipojo.annotations.HandlerDeclaration
  * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
+<<<<<<< HEAD
+public class HandlerDeclarationVisitor extends EmptyVisitor implements AnnotationVisitor {
+=======
 public class HandlerDeclarationVisitor extends AnnotationVisitor {
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 
     /**
      * XML accepted by the handler.
@@ -53,7 +61,10 @@ public class HandlerDeclarationVisitor extends AnnotationVisitor {
     private Reporter reporter;
 
     public HandlerDeclarationVisitor(ComponentWorkbench workbench, DocumentBuilder builder, Reporter reporter) {
+<<<<<<< HEAD
+=======
         super(Opcodes.ASM5);
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         this.workbench = workbench;
         this.builder = builder;
         this.reporter = reporter;
@@ -63,7 +74,11 @@ public class HandlerDeclarationVisitor extends AnnotationVisitor {
      * Parses the value attribute.
      * @param name 'value'
      * @param value the value
+<<<<<<< HEAD
+     * @see org.objectweb.asm.commons.EmptyVisitor#visit(java.lang.String, java.lang.Object)
+=======
      * @see org.objectweb.asm.AnnotationVisitor#visit(java.lang.String, java.lang.Object)
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
      */
     public void visit(String name, Object value) {
         // there is only a 'value' attribute
@@ -73,7 +88,11 @@ public class HandlerDeclarationVisitor extends AnnotationVisitor {
     /**
      * End of the visit.
      * Builds the XML document.
+<<<<<<< HEAD
+     * @see org.objectweb.asm.commons.EmptyVisitor#visitEnd()
+=======
      * @see org.objectweb.asm.AnnotationVisitor#visitEnd()
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
      */
     public void visitEnd() {
         // The value is an XML document

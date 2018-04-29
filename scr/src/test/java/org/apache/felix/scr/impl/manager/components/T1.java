@@ -382,6 +382,8 @@ public class T1
     {
         callPerformed = "suitableT1";
     }
+<<<<<<< HEAD
+=======
     
     void packageT1Map(Map props)
     {
@@ -399,4 +401,5 @@ public class T1
         }
     }
     
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 }

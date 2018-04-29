@@ -34,17 +34,23 @@ public class ActivatorComponent
 
     public static final String FLAG_REGISTER_SERVICE = "registerService";
 
+<<<<<<< HEAD
+=======
     private static ActivatorComponent activatorComponent;
 
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     private ServiceRegistration registration;
 
     private SimpleService simpleService;
 
+<<<<<<< HEAD
+=======
     public static ActivatorComponent getInstance()
     {
     	    return activatorComponent;
     }
 
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     @SuppressWarnings("unused")
     private void myActivate( BundleContext context, Map<?, ?> configuration )
     {
@@ -56,11 +62,14 @@ public class ActivatorComponent
         {
             registration = context.registerService( SimpleService.class.getName(), new SimpleServiceImpl(), null );
         }
+<<<<<<< HEAD
+=======
         if ( activatorComponent != null )
         {
         	    throw new IllegalStateException( "not the only activator component");
         }
         this.activatorComponent = this;
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     }
 
 

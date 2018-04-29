@@ -1,3 +1,5 @@
+<<<<<<< HEAD
+=======
 
 Changes from 2.0.4 to 2.0.6
 ---------------------------
@@ -31,6 +33,7 @@ Changes from 1.6.6 to 2.0.2
     * [FELIX-2465] - system.bundle should be automatically wired to the relevant bundle
     * [FELIX-3842] - NPE in LocalRepositoryImpl
 
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 Changes from 1.6.4 to 1.6.6
 ---------------------------
 

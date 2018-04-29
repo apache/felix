@@ -20,14 +20,22 @@
  <parent>
     <groupId>org.apache.felix</groupId>
     <artifactId>felix-parent</artifactId>
+<<<<<<< HEAD
+    <version>2.1</version>
+=======
     <version>3</version>
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     <relativePath>../pom/pom.xml</relativePath>
   </parent>
   <modelVersion>4.0.0</modelVersion>
   <packaging>bundle</packaging>
   <name>Apache Felix Main</name>
   <artifactId>org.apache.felix.main</artifactId>
+<<<<<<< HEAD
+  <version>4.3.0-SNAPSHOT</version>
+=======
   <version>5.7.0-SNAPSHOT</version>
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     <scm>
       <connection>scm:svn:http://svn.apache.org/repos/asf/felix/trunk/main</connection>
       <developerConnection>scm:svn:https://svn.apache.org/repos/asf/felix/trunk/main</developerConnection>
@@ -37,18 +45,30 @@
     <dependency>
       <groupId>${project.groupId}</groupId>
       <artifactId>org.apache.felix.framework</artifactId>
+<<<<<<< HEAD
+      <version>${framework.version}</version>
+=======
       <version>5.7.0-SNAPSHOT</version>
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     </dependency>
   </dependencies>
   <properties>
     <log.level>4</log.level>
     <dollar>$</dollar>
+<<<<<<< HEAD
+    <framework.version>4.3.0-SNAPSHOT</framework.version>
+    <gogo.runtime.version>0.10.0</gogo.runtime.version>
+    <gogo.shell.version>0.10.0</gogo.shell.version>
+    <gogo.command.version>0.12.0</gogo.command.version>
+    <obr.version>1.6.6</obr.version>
+=======
     <gogo.runtime.version>1.0.10</gogo.runtime.version>
     <gogo.jline.shell.version>1.0.10</gogo.jline.shell.version>
     <gogo.command.version>1.0.2</gogo.command.version>
     <jline.version>3.5.1</jline.version>
     <obr.version>2.0.10</obr.version>
     <jansi.version>1.16</jansi.version>
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
   </properties>
   <profiles>
     <profile>
@@ -73,7 +93,11 @@
       <plugin>
         <groupId>org.apache.felix</groupId>
         <artifactId>maven-bundle-plugin</artifactId>
+<<<<<<< HEAD
+        <version>2.3.5</version>
+=======
         <version>2.5.0</version>
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         <extensions>true</extensions>
         <configuration>
           <instructions>
@@ -81,7 +105,11 @@
             <Main-Class>org.apache.felix.main.Main</Main-Class>
             <Bundle-SymbolicName>org.apache.felix.main</Bundle-SymbolicName>
             <Bundle-Name>Apache Felix</Bundle-Name>
+<<<<<<< HEAD
+            <Bundle-Description>OSGi R4 framework.</Bundle-Description>
+=======
             <Bundle-Description>OSGi R6 framework.</Bundle-Description>
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
             <Bundle-Vendor>The Apache Software Foundation</Bundle-Vendor>
             <Embed-Dependency>*;artifactId=org.apache.felix.framework;inline=true</Embed-Dependency>
             <Private-Package>org.apache.felix.main.*</Private-Package>
@@ -103,7 +131,11 @@
             <configuration>
                 <artifactItems>
                   <artifactItem>
+<<<<<<< HEAD
+                     <groupId>${pom.groupId}</groupId>
+=======
                      <groupId>${project.groupId}</groupId>
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
                      <artifactId>org.apache.felix.gogo.runtime</artifactId>
                      <version>${gogo.runtime.version}</version>
                      <type>jar</type>
@@ -111,15 +143,25 @@
                      <outputDirectory>${project.basedir}/bundle</outputDirectory>
                    </artifactItem>
                    <artifactItem>
+<<<<<<< HEAD
+                     <groupId>${pom.groupId}</groupId>
+                     <artifactId>org.apache.felix.gogo.shell</artifactId>
+                     <version>${gogo.shell.version}</version>
+=======
                      <groupId>${project.groupId}</groupId>
                      <artifactId>org.apache.felix.gogo.jline</artifactId>
                      <version>${gogo.jline.shell.version}</version>
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
                      <type>jar</type>
                      <overWrite>true</overWrite>
                      <outputDirectory>${project.basedir}/bundle</outputDirectory>
                    </artifactItem>
                    <artifactItem>
+<<<<<<< HEAD
+                     <groupId>${pom.groupId}</groupId>
+=======
                      <groupId>${project.groupId}</groupId>
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
                      <artifactId>org.apache.felix.gogo.command</artifactId>
                      <version>${gogo.command.version}</version>
                      <type>jar</type>
@@ -133,6 +175,8 @@
                      <type>jar</type>
                      <overWrite>true</overWrite>
                      <outputDirectory>${project.basedir}/bundle</outputDirectory>
+<<<<<<< HEAD
+=======
                    </artifactItem>
                    <artifactItem>
                      <groupId>org.jline</groupId>
@@ -149,6 +193,7 @@
                      <type>jar</type>
                      <overWrite>true</overWrite>
                      <outputDirectory>${project.basedir}/bundle</outputDirectory>
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
                    </artifactItem>
                  </artifactItems>
             </configuration>
@@ -166,7 +211,11 @@
                 <mkdir dir="${basedir}/bin" />
                 <delete dir="${basedir}/conf" />
                 <mkdir dir="${basedir}/conf" />
+<<<<<<< HEAD
+                <copy file="${basedir}/target/org.apache.felix.main-${pom.version}.jar" tofile="${basedir}/bin/felix.jar" />
+=======
                 <copy file="${basedir}/target/org.apache.felix.main-${project.version}.jar" tofile="${basedir}/bin/felix.jar" />
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
                 <copy file="${basedir}/target/classes/config.properties" todir="${basedir}/conf" />
               </tasks>
             </configuration>

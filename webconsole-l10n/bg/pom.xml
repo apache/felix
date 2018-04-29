@@ -82,7 +82,10 @@
                         <Fragment-Host>
                             org.apache.felix.webconsole
                         </Fragment-Host>
+<<<<<<< HEAD
+=======
                         <Include-Resource>{maven-resources},OSGI-INF=target/classes/OSGI-INF</Include-Resource>
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
                         <_removeheaders>
                             Embed-Dependency,Private-Package,Include-Resource
                         </_removeheaders>

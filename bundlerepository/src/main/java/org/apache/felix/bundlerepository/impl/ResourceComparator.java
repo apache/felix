@@ -1,4 +1,8 @@
+<<<<<<< HEAD
+/* 
+=======
 /*
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -28,6 +32,12 @@ class ResourceComparator implements Comparator
     {
         Resource r1 = (Resource) o1;
         Resource r2 = (Resource) o2;
+<<<<<<< HEAD
+        String name1 = (String) r1.getPresentationName();
+        String name2 = (String) r2.getPresentationName();
+        if (name1 == null)
+        {
+=======
         String name1 = r1.getPresentationName();
         String name2 = r2.getPresentationName();
         if (name1 == null)
@@ -36,6 +46,7 @@ class ResourceComparator implements Comparator
             {
                 return 0;
             }
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
             return -1;
         }
         else if (name2 == null)

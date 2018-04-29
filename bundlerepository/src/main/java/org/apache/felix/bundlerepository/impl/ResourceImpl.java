@@ -1,4 +1,8 @@
+<<<<<<< HEAD
+/* 
+=======
 /*
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -18,6 +22,10 @@
  */
 package org.apache.felix.bundlerepository.impl;
 
+<<<<<<< HEAD
+import java.net.URI;
+import java.util.*;
+=======
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -31,6 +39,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.StringTokenizer;
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 
 import org.apache.felix.bundlerepository.Capability;
 import org.apache.felix.bundlerepository.Property;
@@ -102,8 +111,12 @@ public class ResourceImpl implements Resource
 
     public String getPresentationName()
     {
+<<<<<<< HEAD
+        return (String) m_map.get(PRESENTATION_NAME);
+=======
         String pres = (String) m_map.get(PRESENTATION_NAME);
         return (pres!=null && !pres.isEmpty())? pres : toString();
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     }
 
     public String getSymbolicName()
@@ -131,6 +144,9 @@ public class ResourceImpl implements Resource
 
     public Long getSize()
     {
+<<<<<<< HEAD
+        return ((Long) m_map.get(Resource.SIZE));
+=======
         Object sz = m_map.get(Resource.SIZE);
         if (sz instanceof Long)
             return ((Long) sz);
@@ -187,6 +203,7 @@ public class ResourceImpl implements Resource
                 is.close();
         }
         return fileSize;
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     }
 
     public Requirement[] getRequirements()
@@ -236,7 +253,11 @@ public class ResourceImpl implements Resource
     }
 
     /**
+<<<<<<< HEAD
+     * Default setter method when setting parsed data from the XML file. 
+=======
      * Default setter method when setting parsed data from the XML file.
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
      **/
     public Object put(Object key, Object value)
     {
@@ -311,6 +332,10 @@ public class ResourceImpl implements Resource
 
     public String toString()
     {
+<<<<<<< HEAD
+        return getId();
+=======
         return (getId() == null || getId().isEmpty())?getSymbolicName():getId();
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     }
 }

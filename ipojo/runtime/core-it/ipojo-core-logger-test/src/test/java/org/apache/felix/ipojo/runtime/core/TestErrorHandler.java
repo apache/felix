@@ -21,7 +21,10 @@ package org.apache.felix.ipojo.runtime.core;
 
 import org.apache.felix.ipojo.ComponentInstance;
 import org.apache.felix.ipojo.ErrorHandler;
+<<<<<<< HEAD
+=======
 import org.apache.felix.ipojo.Factory;
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 import org.apache.felix.ipojo.runtime.core.components.MyComponent;
 import org.apache.felix.ipojo.runtime.core.components.MyErroneousComponent;
 import org.apache.felix.ipojo.runtime.core.services.MyService;
@@ -42,8 +45,11 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
+<<<<<<< HEAD
+=======
 import static junit.framework.Assert.assertNotNull;
 import static junit.framework.Assert.fail;
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 import static org.ops4j.pax.exam.CoreOptions.mavenBundle;
 import static org.ops4j.pax.exam.CoreOptions.streamBundle;
 import static org.ops4j.pax.exam.MavenUtils.asInProject;
@@ -98,6 +104,15 @@ public class TestErrorHandler extends Common {
         MyErrorHandler handler = new MyErrorHandler();
         bc.registerService(ErrorHandler.class.getName(), handler, null);
 
+<<<<<<< HEAD
+        try {
+            ipojoHelper.createComponentInstance("org.apache.felix.ipojo.runtime.core.components.MyErroneousComponent");
+        } catch (Exception e) {
+            System.out.println(e);
+        }
+
+
+=======
         Factory factory = ipojoHelper.getFactory("org.apache.felix.ipojo.runtime.core.components.MyErroneousComponent");
         assertNotNull(factory);
         try {
@@ -107,6 +122,7 @@ public class TestErrorHandler extends Common {
             // Error expected.
         }
 
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         System.out.println(handler.m_errors);
 
         Assert.assertFalse(handler.m_errors.isEmpty());

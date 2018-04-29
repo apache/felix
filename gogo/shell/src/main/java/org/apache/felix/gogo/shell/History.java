@@ -36,7 +36,11 @@ public class History {
 
     public History() {
         this.limit = SIZE_DEFAULT;
+<<<<<<< HEAD
+        this.commands = new LinkedList<String>();
+=======
         this.commands = new LinkedList<>();
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     }
 
     CharSequence evaluate(final CharSequence commandLine) {

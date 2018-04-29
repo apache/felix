@@ -1,5 +1,9 @@
 /*
+<<<<<<< HEAD
+ * Copyright (c) OSGi Alliance (2000, 2011). All Rights Reserved.
+=======
  * Copyright (c) OSGi Alliance (2000, 2013). All Rights Reserved.
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,7 +21,10 @@
 package org.osgi.framework;
 
 import java.util.EventListener;
+<<<<<<< HEAD
+=======
 import org.osgi.annotation.versioning.ConsumerType;
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 
 /**
  * A {@code FrameworkEvent} listener. {@code FrameworkListener} is a listener
@@ -35,9 +42,15 @@ import org.osgi.annotation.versioning.ConsumerType;
  * 
  * @see FrameworkEvent
  * @NotThreadSafe
+<<<<<<< HEAD
+ * @version $Id: ad7f563bd13b60e2b8a378f147057ca7f0accae2 $
+ */
+
+=======
  * @author $Id: 97c76c64c6e6595ad445dcc2d8083d52540f73b8 $
  */
 @ConsumerType
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 public interface FrameworkListener extends EventListener {
 
 	/**

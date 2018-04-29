@@ -1,3 +1,5 @@
+<<<<<<< HEAD
+=======
 Version 3.6.4
 -------------
 ** Bug
@@ -103,6 +105,7 @@ Version 3.2.8
     * [FELIX-4332] - Incorrect evalution of variables
     * [FELIX-4338] - Incorrect overwriting of properties that have not been changed
 
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 Version 3.2.6
 -------------
 ** Bug

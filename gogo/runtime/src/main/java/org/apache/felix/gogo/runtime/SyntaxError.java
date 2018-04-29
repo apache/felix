@@ -23,6 +23,14 @@ public class SyntaxError extends RuntimeException
     private static final long serialVersionUID = 1L;
     private final int line;
     private final int column;
+<<<<<<< HEAD
+
+    public SyntaxError(int line, int column, String message)
+    {
+        super(message);
+        this.line = line;
+        this.column = column;
+=======
     private final Token statement;
 
     public SyntaxError(int line, int column, String message)
@@ -36,6 +44,7 @@ public class SyntaxError extends RuntimeException
         this.line = line;
         this.column = column;
         this.statement = statement;
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     }
     
     public int column()
@@ -47,9 +56,12 @@ public class SyntaxError extends RuntimeException
     {
         return line;
     }
+<<<<<<< HEAD
+=======
 
     public Token statement() {
         return statement;
     }
 
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 }

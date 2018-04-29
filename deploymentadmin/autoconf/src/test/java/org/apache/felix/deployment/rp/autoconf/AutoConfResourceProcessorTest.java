@@ -21,10 +21,14 @@ package org.apache.felix.deployment.rp.autoconf;
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
+<<<<<<< HEAD
+import java.util.Dictionary;
+=======
 import java.util.Collections;
 import java.util.Dictionary;
 import java.util.LinkedHashMap;
 import java.util.Map;
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 import java.util.Properties;
 
 import junit.framework.TestCase;
@@ -40,6 +44,298 @@ import org.osgi.service.cm.Configuration;
 import org.osgi.service.cm.ConfigurationAdmin;
 import org.osgi.service.deploymentadmin.DeploymentPackage;
 import org.osgi.service.deploymentadmin.spi.DeploymentSession;
+<<<<<<< HEAD
+import org.osgi.service.log.LogService;
+
+public class AutoConfResourceProcessorTest extends TestCase {
+    /** Make sure the processor does not accept a 'null' session. */
+    public void testNullSession() throws Exception {
+        AutoConfResourceProcessor p = new AutoConfResourceProcessor();
+        try {
+            p.begin(null);
+            fail("Should have gotten an exception when trying to begin with null session.");
+        }
+        catch (Exception e) {
+            // expected
+        }
+    }
+    
+    /** Go through a simple session, containing two empty configurations. */
+    public void testSimpleSession() throws Exception {
+        AutoConfResourceProcessor p = new AutoConfResourceProcessor();
+        Utils.configureObject(p, LogService.class);
+        Utils.configureObject(p, DependencyManager.class, new DependencyManager((BundleContext) Utils.createNullObject(BundleContext.class)) {
+        	public void remove(Component service) {
+        	}
+        });
+        File tempDir = File.createTempFile("persistence", "dir");
+        tempDir.delete();
+        tempDir.mkdirs();
+        
+        System.out.println("Temporary dir: " + tempDir);
+        
+        Utils.configureObject(p, PersistencyManager.class, new PersistencyManager(tempDir));
+        Session s = new Session();
+        p.begin(s);
+        Utils.configureObject(p, Component.class, Utils.createMockObjectAdapter(Component.class, new Object() {
+            public DependencyManager getDependencyManager() {
+                return new DependencyManager((BundleContext) Utils.createNullObject(BundleContext.class));
+            }
+        }));
+        p.process("a", new ByteArrayInputStream("<MetaData />".getBytes()));
+        p.process("b", new ByteArrayInputStream("<MetaData />".getBytes()));
+        p.prepare();
+        p.commit();
+        p.postcommit();
+        Utils.removeDirectoryWithContent(tempDir);
+    }
+
+    /** Go through a simple session, containing two empty configurations. */
+    public void testSimpleInstallAndUninstallSession() throws Throwable {
+        AutoConfResourceProcessor p = new AutoConfResourceProcessor();
+        Utils.configureObject(p, LogService.class);
+        Utils.configureObject(p, DependencyManager.class, new DependencyManager((BundleContext) Utils.createNullObject(BundleContext.class)) {
+        	public void remove(Component service) {
+        	}
+        });
+        Logger logger = new Logger();
+        Utils.configureObject(p, LogService.class, logger);
+        File tempDir = File.createTempFile("persistence", "dir");
+        tempDir.delete();
+        tempDir.mkdirs();
+        
+        System.out.println("Temporary dir: " + tempDir);
+        
+        Utils.configureObject(p, PersistencyManager.class, new PersistencyManager(tempDir));
+        Session s = new Session();
+        p.begin(s);
+        Utils.configureObject(p, Component.class, Utils.createMockObjectAdapter(Component.class, new Object() {
+            public DependencyManager getDependencyManager() {
+                return new DependencyManager((BundleContext) Utils.createNullObject(BundleContext.class));
+            }
+        }));
+        p.process("a", new ByteArrayInputStream("<MetaData />".getBytes()));
+        p.prepare();
+        p.commit();
+        p.postcommit();
+        logger.failOnException();
+        s = new Session();
+        p.begin(s);
+        p.dropped("a");
+        p.prepare();
+        p.commit();
+        p.postcommit();
+        logger.failOnException();
+        Utils.removeDirectoryWithContent(tempDir);
+    }
+    
+    /** Go through a simple session, containing two empty configurations. */
+    public void testBasicConfigurationSession() throws Throwable {
+        AutoConfResourceProcessor p = new AutoConfResourceProcessor();
+        Logger logger = new Logger();
+        Utils.configureObject(p, LogService.class, logger);
+        Utils.configureObject(p, DependencyManager.class, new DependencyManager((BundleContext) Utils.createNullObject(BundleContext.class)) {
+        	public void remove(Component service) {
+        	}
+        });
+        File tempDir = File.createTempFile("persistence", "dir");
+        tempDir.delete();
+        tempDir.mkdirs();
+        
+        System.out.println("Temporary dir: " + tempDir);
+        
+        Utils.configureObject(p, PersistencyManager.class, new PersistencyManager(tempDir));
+        Session s = new Session();
+        p.begin(s);
+        Utils.configureObject(p, Component.class, Utils.createMockObjectAdapter(Component.class, new Object() {
+            public DependencyManager getDependencyManager() {
+                return new DependencyManager((BundleContext) Utils.createNullObject(BundleContext.class));
+            }
+        }));
+        String config =
+            "<MetaData xmlns:metatype='http://www.osgi.org/xmlns/metatype/v1.0.0'>\n" + 
+            "  <OCD name='ocd' id='ocd'>\n" + 
+            "    <AD id='name' type='STRING' cardinality='0' />\n" + 
+            "  </OCD>\n" + 
+            "  <Designate pid='simple' bundle='osgi-dp:location'>\n" + 
+            "    <Object ocdref='ocd'>\n" + 
+            "      <Attribute adref='name'>\n" + 
+            "        <Value><![CDATA[test]]></Value>\n" + 
+            "      </Attribute>\n" + 
+            "    </Object>\n" + 
+            "  </Designate>\n" + 
+            "</MetaData>\n";
+        p.process("basic", new ByteArrayInputStream(config.getBytes()));
+        p.prepare();
+        p.commit();
+        p.addConfigurationAdmin(null, new ConfigurationAdmin() {
+            public Configuration[] listConfigurations(String filter) throws IOException, InvalidSyntaxException {
+                return null;
+            }
+            
+            public Configuration getConfiguration(String pid, String location) throws IOException {
+                return new ConfigurationImpl();
+            }
+            
+            public Configuration getConfiguration(String pid) throws IOException {
+                return null;
+            }
+            
+            public Configuration createFactoryConfiguration(String factoryPid, String location) throws IOException {
+                return null;
+            }
+            
+            public Configuration createFactoryConfiguration(String factoryPid) throws IOException {
+                return null;
+            }
+        });
+        p.postcommit();
+        logger.failOnException();
+        Utils.removeDirectoryWithContent(tempDir);
+    }
+
+    /** Go through a simple session, containing two empty configurations. */
+    public void testFilteredConfigurationSession() throws Throwable {
+        AutoConfResourceProcessor p = new AutoConfResourceProcessor();
+        Logger logger = new Logger();
+        Utils.configureObject(p, LogService.class, logger);
+        BundleContext mockBC = (BundleContext) Utils.createMockObjectAdapter(BundleContext.class, new Object() {
+            public Filter createFilter(String condition) {
+                return (Filter) Utils.createMockObjectAdapter(Filter.class, new Object() {
+                    public boolean match(ServiceReference ref) {
+                        Object id = ref.getProperty("id");
+                        if (id != null && id.equals(Integer.valueOf(42))) {
+                            return true;
+                        }
+                        return false;
+                    }
+                    public void remove(Component service) {
+                    }
+                });
+            }
+        });
+		Utils.configureObject(p, BundleContext.class, mockBC);
+        Utils.configureObject(p, DependencyManager.class, new DependencyManager(mockBC) {
+        	public void remove(Component service) {
+        	}
+        });
+        File tempDir = File.createTempFile("persistence", "dir");
+        tempDir.delete();
+        tempDir.mkdirs();
+        
+        System.out.println("Temporary dir: " + tempDir);
+        
+        Utils.configureObject(p, PersistencyManager.class, new PersistencyManager(tempDir));
+        Session s = new Session();
+        p.begin(s);
+        Utils.configureObject(p, Component.class, Utils.createMockObjectAdapter(Component.class, new Object() {
+            public DependencyManager getDependencyManager() {
+                return new DependencyManager((BundleContext) Utils.createNullObject(BundleContext.class));
+            }
+        }));
+        String config =
+            "<MetaData xmlns:metatype='http://www.osgi.org/xmlns/metatype/v1.0.0' filter='(id=42)'>\n" + 
+            "  <OCD name='ocd' id='ocd'>\n" + 
+            "    <AD id='name' type='STRING' cardinality='0' />\n" + 
+            "  </OCD>\n" + 
+            "  <Designate pid='simple' bundle='osgi-dp:location'>\n" + 
+            "    <Object ocdref='ocd'>\n" + 
+            "      <Attribute adref='name'>\n" + 
+            "        <Value><![CDATA[test]]></Value>\n" + 
+            "      </Attribute>\n" + 
+            "    </Object>\n" + 
+            "  </Designate>\n" + 
+            "</MetaData>\n";
+        p.process("basic", new ByteArrayInputStream(config.getBytes()));
+        p.prepare();
+        p.commit();
+        Properties props = new Properties();
+        props.put("id", Integer.valueOf(42));
+        final Configuration configuration = new ConfigurationImpl();
+        p.addConfigurationAdmin(new Reference(props), new ConfigurationAdmin() {
+            public Configuration[] listConfigurations(String filter) throws IOException, InvalidSyntaxException {
+                return null;
+            }
+            
+            public Configuration getConfiguration(String pid, String location) throws IOException {
+                return configuration;
+            }
+            
+            public Configuration getConfiguration(String pid) throws IOException {
+                return null;
+            }
+            
+            public Configuration createFactoryConfiguration(String factoryPid, String location) throws IOException {
+                return null;
+            }
+            
+            public Configuration createFactoryConfiguration(String factoryPid) throws IOException {
+                return null;
+            }
+        });
+        
+        final Configuration emptyConfiguration = new ConfigurationImpl();
+        p.addConfigurationAdmin(new Reference(new Properties()), new ConfigurationAdmin() {
+            public Configuration[] listConfigurations(String filter) throws IOException, InvalidSyntaxException {
+                return null;
+            }
+            
+            public Configuration getConfiguration(String pid, String location) throws IOException {
+                return emptyConfiguration;
+            }
+            
+            public Configuration getConfiguration(String pid) throws IOException {
+                return null;
+            }
+            
+            public Configuration createFactoryConfiguration(String factoryPid, String location) throws IOException {
+                return null;
+            }
+            
+            public Configuration createFactoryConfiguration(String factoryPid) throws IOException {
+                return null;
+            }
+        });        
+        p.postcommit();
+        logger.failOnException();
+        assertEquals("test", configuration.getProperties().get("name"));
+        assertNull(emptyConfiguration.getProperties());
+        Utils.removeDirectoryWithContent(tempDir);
+    }
+
+    private static class ConfigurationImpl implements Configuration {
+        private String m_bundleLocation = "osgi-dp:location";
+        private Dictionary m_properties;
+
+        public String getPid() {
+            return null;
+        }
+
+        public Dictionary getProperties() {
+            return m_properties;
+        }
+
+        public void update(Dictionary properties) throws IOException {
+            m_properties = properties;
+        }
+
+        public void delete() throws IOException {
+        }
+
+        public String getFactoryPid() {
+            return null;
+        }
+
+        public void update() throws IOException {
+        }
+
+        public void setBundleLocation(String bundleLocation) {
+            m_bundleLocation = bundleLocation;
+        }
+
+        public String getBundleLocation() {
+            return m_bundleLocation;
+=======
 import org.osgi.service.deploymentadmin.spi.ResourceProcessorException;
 import org.osgi.service.log.LogService;
 
@@ -184,10 +480,34 @@ public class AutoConfResourceProcessorTest extends TestCase
         public void update(Dictionary properties) throws IOException
         {
             m_properties = properties;
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         }
     }
 
     /** Dummy session. */
+<<<<<<< HEAD
+    private static class Session implements DeploymentSession {
+        public DeploymentPackage getTargetDeploymentPackage() {
+            return null;
+        }
+        public DeploymentPackage getSourceDeploymentPackage() {
+            return null;
+        }
+        public File getDataFile(Bundle bundle) {
+            return null;
+        }
+    }
+    
+    private static class Logger implements LogService {
+        private static final String[] LEVEL = { "", "[ERROR]", "[WARN ]", "[INFO ]", "[DEBUG]" };
+        private Throwable m_exception;
+        
+        public void log(int level, String message) {
+            System.out.println(LEVEL[level] + " - " + message);
+        }
+
+        public void log(int level, String message, Throwable exception) {
+=======
     private static class DeploymentSessionImpl implements DeploymentSession
     {
         public File getDataFile(Bundle bundle)
@@ -232,10 +552,59 @@ public class AutoConfResourceProcessorTest extends TestCase
 
         public void log(int level, String message, Throwable exception)
         {
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
             System.out.println(LEVEL[level] + " - " + message + " - " + exception.getMessage());
             m_exception = exception;
         }
 
+<<<<<<< HEAD
+        public void log(ServiceReference sr, int level, String message) {
+            System.out.println(LEVEL[level] + " - " + message);
+        }
+
+        public void log(ServiceReference sr, int level, String message, Throwable exception) {
+            System.out.println(LEVEL[level] + " - " + message + " - " + exception.getMessage());
+            m_exception = exception;
+        }
+        
+        public void failOnException() throws Throwable {
+            if (m_exception != null) {
+                throw m_exception;
+            }
+        }
+    }
+    private static class Reference implements ServiceReference {
+        private final Dictionary m_properties;
+
+        public Reference(Dictionary properties) {
+            m_properties = properties;
+        }
+
+        public Object getProperty(String key) {
+            return m_properties.get(key);
+        }
+
+        public String[] getPropertyKeys() {
+            return null;
+        }
+
+        public Bundle getBundle() {
+            return null;
+        }
+
+        public Bundle[] getUsingBundles() {
+            return null;
+        }
+
+        public boolean isAssignableTo(Bundle bundle, String className) {
+            return false;
+        }
+
+        public int compareTo(Object reference) {
+            return 0;
+        }
+    }
+=======
         public void log(ServiceReference sr, int level, String message)
         {
             System.out.println(LEVEL[level] + " - " + message);
@@ -624,4 +993,5 @@ public class AutoConfResourceProcessorTest extends TestCase
         Utils.configureObject(p, Component.class, createMockComponent());
         return s;
     }
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 }

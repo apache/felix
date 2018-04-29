@@ -18,10 +18,28 @@
  */
 package org.apache.felix.ipojo.handlers.providedservice;
 
+<<<<<<< HEAD
+import java.lang.reflect.InvocationHandler;
+import java.lang.reflect.Method;
+import java.lang.reflect.Proxy;
+import java.util.*;
+
+=======
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 import org.apache.felix.ipojo.*;
 import org.apache.felix.ipojo.util.Callback;
 import org.apache.felix.ipojo.util.Property;
 import org.apache.felix.ipojo.util.SecurityHelper;
+<<<<<<< HEAD
+import org.osgi.framework.Bundle;
+import org.osgi.framework.BundleContext;
+import org.osgi.framework.Constants;
+import org.osgi.framework.ServiceFactory;
+import org.osgi.framework.ServiceReference;
+import org.osgi.framework.ServiceRegistration;
+import org.osgi.service.cm.ConfigurationAdmin;
+
+=======
 import org.osgi.framework.*;
 import org.osgi.service.cm.ConfigurationAdmin;
 
@@ -30,6 +48,7 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 import java.util.*;
 
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 /**
  * Provided Service represent a provided service by the component.
  *
@@ -139,11 +158,19 @@ public class ProvidedService implements ServiceFactory {
     /**
      * Creates a provided service object.
      *
+<<<<<<< HEAD
+     * @param handler the the provided service handler.
+     * @param specification the specifications provided by this provided service
+     * @param factoryPolicy the service providing policy
+     * @param creationStrategyClass the customized service object creation strategy.
+     * @param conf the instance configuration.
+=======
      * @param handler               the the provided service handler.
      * @param specification         the specifications provided by this provided service
      * @param factoryPolicy         the service providing policy
      * @param creationStrategyClass the customized service object creation strategy.
      * @param conf                  the instance configuration.
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
      */
     public ProvidedService(ProvidedServiceHandler handler, String[] specification, int factoryPolicy, Class creationStrategyClass, Dictionary conf) {
         CreationStrategy strategy;
@@ -237,7 +264,10 @@ public class ProvidedService implements ServiceFactory {
 
     /**
      * Add properties to the provided service.
+<<<<<<< HEAD
+=======
      *
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
      * @param props : the properties to attached to the service registration
      */
     protected void setProperties(Property[] props) {
@@ -268,7 +298,10 @@ public class ProvidedService implements ServiceFactory {
 
     /**
      * Get the service reference of the service registration.
+<<<<<<< HEAD
+=======
      *
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
      * @return the service reference of the provided service (null if the
      * service is not published).
      */
@@ -282,12 +315,20 @@ public class ProvidedService implements ServiceFactory {
 
     /**
      * Returns a service object for the dependency.
+<<<<<<< HEAD
+     * @see org.osgi.framework.ServiceFactory#getService(org.osgi.framework.Bundle, org.osgi.framework.ServiceRegistration)
+     * @param bundle : the bundle
+     * @param registration : the service registration of the registered service
+     * @return a new service object or a already created service object (in the case of singleton) or <code>null</code>
+     * if the instance is no more valid.
+=======
      *
      * @param bundle       : the bundle
      * @param registration : the service registration of the registered service
      * @return a new service object or a already created service object (in the case of singleton) or <code>null</code>
      * if the instance is no more valid.
      * @see org.osgi.framework.ServiceFactory#getService(org.osgi.framework.Bundle, org.osgi.framework.ServiceRegistration)
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
      */
     public Object getService(Bundle bundle, ServiceRegistration registration) {
         if (getInstanceManager().getState() == InstanceManager.VALID) {
@@ -300,11 +341,19 @@ public class ProvidedService implements ServiceFactory {
     /**
      * The unget method.
      *
+<<<<<<< HEAD
+     * @see org.osgi.framework.ServiceFactory#ungetService(org.osgi.framework.Bundle,
+     * org.osgi.framework.ServiceRegistration, java.lang.Object)
+     * @param bundle : bundle
+     * @param registration : service registration
+     * @param service : service object
+=======
      * @param bundle       : bundle
      * @param registration : service registration
      * @param service      : service object
      * @see org.osgi.framework.ServiceFactory#ungetService(org.osgi.framework.Bundle,
      * org.osgi.framework.ServiceRegistration, java.lang.Object)
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
      */
     public void ungetService(Bundle bundle, ServiceRegistration registration, Object service) {
         m_strategy.ungetService(bundle, registration, service);
@@ -318,18 +367,38 @@ public class ProvidedService implements ServiceFactory {
     public void registerService() {
         ServiceRegistration reg = null;
         Properties serviceProperties = null;
+<<<<<<< HEAD
+=======
         // Do not have to be in the synchronized block, immutable.
         final BundleContext bc = m_handler.getInstanceManager().getContext();
 
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         synchronized (this) {
             if (m_serviceRegistration != null) {
                 return;
             } else {
                 if (m_handler.getInstanceManager().getState() == ComponentInstance.VALID && isAtLeastAServiceControllerValid()) {
+<<<<<<< HEAD
+                    // Build the service properties list
+
+                    BundleContext bc = m_handler.getInstanceManager().getContext();
+                    // Security check
+                    if (SecurityHelper.hasPermissionToRegisterServices(
+                            m_serviceSpecifications, bc)  && SecurityHelper.canRegisterService(bc)) {
+                        serviceProperties = getServiceProperties();
+                        m_strategy.onPublication(getInstanceManager(),
+                                getServiceSpecificationsToRegister(),
+                                serviceProperties);
+                        m_serviceRegistration = bc.registerService(
+                                getServiceSpecificationsToRegister(), this,
+                                (Dictionary) serviceProperties);
+                        reg = m_serviceRegistration; // Stack confinement
+=======
                     // Security check
                     if (SecurityHelper.hasPermissionToRegisterServices(
                             m_serviceSpecifications, bc) && SecurityHelper.canRegisterService(bc)) {
                         serviceProperties = getServiceProperties();
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
                     } else {
                         throw new SecurityException("The bundle "
                                 + bc.getBundle().getBundleId()
@@ -337,13 +406,29 @@ public class ProvidedService implements ServiceFactory {
                                 + " permission to register the services "
                                 + Arrays.asList(m_serviceSpecifications));
                     }
+<<<<<<< HEAD
+=======
                 } else {
                     // We don't have to do anything.
                     return;
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
                 }
             }
         }
 
+<<<<<<< HEAD
+        // An update may happen during the registration, re-check and apply.
+        // This must be call outside the synchronized block.
+        // If the registration is null, the security helper returns false.
+        if (m_wasUpdated  && SecurityHelper.canUpdateService(reg)) {
+            Properties updated = getServiceProperties();
+            reg.setProperties((Dictionary) updated);
+            m_publishedProperties = updated;
+            m_wasUpdated = false;
+        }
+
+        synchronized (this) {
+=======
         // Registration must be done outside of the synchronized block.
         m_strategy.onPublication(getInstanceManager(),
                 getServiceSpecificationsToRegister(),
@@ -379,6 +464,7 @@ public class ProvidedService implements ServiceFactory {
             m_publishedProperties = serviceProperties;
             m_wasUpdated = false;
 
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
             // Call the post-registration callback in the same thread holding
             // the monitor lock.
             // This allows to be sure that the callback is called once per
@@ -387,8 +473,13 @@ public class ProvidedService implements ServiceFactory {
             if (m_postRegistration != null) {
                 try {
                     m_postRegistration
+<<<<<<< HEAD
+                            .call(new Object[] { m_serviceRegistration
+                                    .getReference() });
+=======
                             .call(new Object[]{m_serviceRegistration
                                     .getReference()});
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
                 } catch (Exception e) {
                     m_handler.error(
                             "Cannot invoke the post-registration callback "
@@ -421,9 +512,15 @@ public class ProvidedService implements ServiceFactory {
             // Call the post-unregistration callback in the same thread holding the monitor lock.
             // This allows to be sure that the callback is called once per unregistration.
             // But the callback must take care to not create a deadlock
+<<<<<<< HEAD
+            if (m_postUnregistration != null   && ref != null) {
+                try {
+                    m_postUnregistration.call(new Object[] { ref });
+=======
             if (m_postUnregistration != null && ref != null) {
                 try {
                     m_postUnregistration.call(new Object[]{ref});
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
                 } catch (Exception e) {
                     m_handler.error("Cannot invoke the post-unregistration callback " + m_postUnregistration.getMethod(), e);
                 }
@@ -439,7 +536,10 @@ public class ProvidedService implements ServiceFactory {
 
     /**
      * Get the current provided service state.
+<<<<<<< HEAD
+=======
      *
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
      * @return The state of the provided service.
      */
     public int getState() {
@@ -457,8 +557,11 @@ public class ProvidedService implements ServiceFactory {
     /**
      * Return the list of properties attached to this service. This list
      * contains only property where a value are assigned.
+<<<<<<< HEAD
+=======
      * <p/>
      * This method is called while holding the monitor lock.
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
      *
      * @return the properties attached to the provided service.
      */
@@ -467,7 +570,11 @@ public class ProvidedService implements ServiceFactory {
         Properties serviceProperties = new Properties();
         for (Property p : m_properties.values()) {
             final Object value = p.getValue();
+<<<<<<< HEAD
+            if (value != null  && value != Property.NO_VALUE) {
+=======
             if (value != null && value != Property.NO_VALUE) {
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
                 serviceProperties.put(p.getName(), value);
             }
         }
@@ -476,7 +583,10 @@ public class ProvidedService implements ServiceFactory {
 
     /**
      * Get the list of properties attached to the service registration.
+<<<<<<< HEAD
+=======
      *
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
      * @return the properties attached to the provided service.
      */
     public synchronized Property[] getProperties() {
@@ -522,6 +632,16 @@ public class ProvidedService implements ServiceFactory {
                     // Check changes
                     Enumeration keys = oldProps.keys();
                     boolean hasChanged = false;
+<<<<<<< HEAD
+                    while (! hasChanged  && keys.hasMoreElements()) {
+                        String k = (String) keys.nextElement();
+                        Object val = oldProps.get(k);
+                        if (! val.equals(updated.get(k))) {
+                            hasChanged = true;
+                        }
+                    }
+                    if (hasChanged  && SecurityHelper.canUpdateService(m_serviceRegistration)) {
+=======
                     while (!hasChanged && keys.hasMoreElements()) {
                         String k = (String) keys.nextElement();
                         Object val = oldProps.get(k);
@@ -530,6 +650,7 @@ public class ProvidedService implements ServiceFactory {
                         }
                     }
                     if (hasChanged && SecurityHelper.canUpdateService(m_serviceRegistration)) {
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
                         m_handler.info("Updating Registration : " + updated);
                         m_publishedProperties = updated;
                         m_serviceRegistration.setProperties(updated);
@@ -549,7 +670,10 @@ public class ProvidedService implements ServiceFactory {
 
     /**
      * Add properties to the list.
+<<<<<<< HEAD
+=======
      *
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
      * @param props : properties to add
      */
     protected void addProperties(Dictionary props) {
@@ -559,6 +683,13 @@ public class ProvidedService implements ServiceFactory {
             String key = (String) keys.nextElement();
             Object value = props.get(key);
 
+<<<<<<< HEAD
+            Property property  = m_properties.get(key);
+            if (property != null) {
+                // Already existing property
+                if (property.getValue() == null  || ! value.equals(property.getValue())) {
+                    m_properties.get(key).setValue(value);
+=======
             // m_properties can be modified by another thread, we need to make a stack confinement
             Property property;
             synchronized (this) {
@@ -569,6 +700,7 @@ public class ProvidedService implements ServiceFactory {
                 // Already existing property
                 if (property.getValue() == null || !value.equals(property.getValue())) {
                     property.setValue(value);
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
                     updated = true;
                 }
             } else {
@@ -591,7 +723,10 @@ public class ProvidedService implements ServiceFactory {
 
     /**
      * Remove properties from the list.
+<<<<<<< HEAD
+=======
      *
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
      * @param props : properties to remove
      */
     protected void deleteProperties(Dictionary props) {
@@ -610,7 +745,10 @@ public class ProvidedService implements ServiceFactory {
 
     /**
      * Get the published service specifications.
+<<<<<<< HEAD
+=======
      *
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
      * @return the list of provided service specifications (i.e. java
      * interface).
      */
@@ -620,7 +758,10 @@ public class ProvidedService implements ServiceFactory {
 
     /**
      * Get the service registration.
+<<<<<<< HEAD
+=======
      *
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
      * @return the service registration of this service.
      */
     public ServiceRegistration getServiceRegistration() {
@@ -629,11 +770,18 @@ public class ProvidedService implements ServiceFactory {
 
     /**
      * Sets the service controller on this provided service.
+<<<<<<< HEAD
+     * @param field the field attached to this controller
+     * @param value the value the initial value
+     * @param specification the target specification, if <code>null</code>
+     * affect all specifications.
+=======
      *
      * @param field         the field attached to this controller
      * @param value         the value the initial value
      * @param specification the target specification, if <code>null</code>
      *                      affect all specifications.
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
      */
     public void setController(String field, boolean value, String specification) {
         if (specification == null) {
@@ -646,13 +794,20 @@ public class ProvidedService implements ServiceFactory {
 
     /**
      * Gets the service controller attached to the given field.
+<<<<<<< HEAD
+=======
      *
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
      * @param field the field name
      * @return the service controller, {@code null} if there is no service controller attached to the given field
      * name.
      */
     public ServiceController getController(String field) {
+<<<<<<< HEAD
+        for (ServiceController controller: m_controllers.values()) {
+=======
         for (ServiceController controller : m_controllers.values()) {
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
             if (field.equals(controller.m_field)) {
                 return controller;
             }
@@ -662,7 +817,10 @@ public class ProvidedService implements ServiceFactory {
 
     /**
      * Gets the service controller handling the service publishing the given specification.
+<<<<<<< HEAD
+=======
      *
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
      * @param spec the specification (qualified class name)
      * @return the service controller, {@code null} if there is no service controller handling the service publishing
      * the given service specification
@@ -673,7 +831,10 @@ public class ProvidedService implements ServiceFactory {
 
     /**
      * Checks if at least one service controller is valid.
+<<<<<<< HEAD
+=======
      *
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
      * @return <code>true</code> if one service controller at least
      * is valid.
      */
@@ -756,7 +917,11 @@ public class ProvidedService implements ServiceFactory {
      * Remove the given listener from the provided service handler's list of listeners.
      *
      * @param listener the {@code ProvidedServiceListener} object to be removed
+<<<<<<< HEAD
+     * @throws NullPointerException if {@code listener} is {@code null}
+=======
      * @throws NullPointerException   if {@code listener} is {@code null}
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
      * @throws NoSuchElementException if {@code listener} wasn't present the in provided service handler's list of listeners
      */
     public void removeListener(ProvidedServiceListener listener) {
@@ -767,7 +932,11 @@ public class ProvidedService implements ServiceFactory {
             // We definitely cannot rely on listener's equals method...
             // ...so we need to manually search for the listener, using ==.
             int i = -1;
+<<<<<<< HEAD
+            for(int j = m_listeners.size() -1; j>=0 ; j--) {
+=======
             for (int j = m_listeners.size() - 1; j >= 0; j--) {
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
                 if (m_listeners.get(j) == listener) {
                     // Found!
                     i = j;
@@ -839,7 +1008,10 @@ public class ProvidedService implements ServiceFactory {
 
         /**
          * Creates a ServiceController.
+<<<<<<< HEAD
+=======
          *
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
          * @param field the field
          * @param value the initial value
          */
@@ -854,7 +1026,10 @@ public class ProvidedService implements ServiceFactory {
 
         /**
          * Gets the value.
+<<<<<<< HEAD
+=======
          *
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
          * @return the value
          */
         public boolean getValue() {
@@ -865,7 +1040,10 @@ public class ProvidedService implements ServiceFactory {
 
         /**
          * Sets the value.
+<<<<<<< HEAD
+=======
          *
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
          * @param value the value
          */
         public void setValue(Boolean value) {
@@ -894,6 +1072,24 @@ public class ProvidedService implements ServiceFactory {
 
         /**
          * The service is going to be registered.
+<<<<<<< HEAD
+         * @param instance the instance manager
+         * @param interfaces the published interfaces
+         * @param props the properties
+         * @see org.apache.felix.ipojo.handlers.providedservice.CreationStrategy#onPublication(InstanceManager, java.lang.String[], java.util.Properties)
+         */
+        public void onPublication(InstanceManager instance, String[] interfaces,
+                Properties props) { }
+
+        /**
+         * The service was unpublished.
+         * @see org.apache.felix.ipojo.handlers.providedservice.CreationStrategy#onUnpublication()
+         */
+        public void onUnpublication() { }
+
+        /**
+         * A service object is required.
+=======
          *
          * @param instance   the instance manager
          * @param interfaces the published interfaces
@@ -915,6 +1111,7 @@ public class ProvidedService implements ServiceFactory {
         /**
          * A service object is required.
          *
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
          * @param arg0 the bundle requiring the service object.
          * @param arg1 the service registration.
          * @return the first pojo object.
@@ -926,14 +1123,22 @@ public class ProvidedService implements ServiceFactory {
 
         /**
          * A service object is released.
+<<<<<<< HEAD
+         * @param arg0  the bundle
+=======
          *
          * @param arg0 the bundle
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
          * @param arg1 the service registration
          * @param arg2 the get service object.
          * @see org.osgi.framework.ServiceFactory#ungetService(org.osgi.framework.Bundle, org.osgi.framework.ServiceRegistration, java.lang.Object)
          */
         public void ungetService(Bundle arg0, ServiceRegistration arg1,
+<<<<<<< HEAD
+                Object arg2) {
+=======
                                  Object arg2) {
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         }
 
     }
@@ -946,6 +1151,21 @@ public class ProvidedService implements ServiceFactory {
 
         /**
          * The service is going to be registered.
+<<<<<<< HEAD
+         * @param instance the instance manager
+         * @param interfaces the published interfaces
+         * @param props the properties
+         * @see org.apache.felix.ipojo.handlers.providedservice.CreationStrategy#onPublication(InstanceManager, java.lang.String[], java.util.Properties)
+         */
+        public void onPublication(InstanceManager instance, String[] interfaces,
+                Properties props) { }
+
+        /**
+         * The service is unpublished.
+         * @see org.apache.felix.ipojo.handlers.providedservice.CreationStrategy#onUnpublication()
+         */
+        public void onUnpublication() { }
+=======
          *
          * @param instance   the instance manager
          * @param interfaces the published interfaces
@@ -963,12 +1183,16 @@ public class ProvidedService implements ServiceFactory {
          */
         public void onUnpublication() {
         }
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 
         /**
          * OSGi Service Factory getService method.
          * Returns a new service object per asking bundle.
          * This object is then cached by the framework.
+<<<<<<< HEAD
+=======
          *
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
          * @param arg0 the bundle requiring the service
          * @param arg1 the service registration
          * @return the service object for the asking bundle
@@ -981,14 +1205,21 @@ public class ProvidedService implements ServiceFactory {
         /**
          * OSGi Service Factory unget method.
          * Deletes the created object for the asking bundle.
+<<<<<<< HEAD
+=======
          *
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
          * @param arg0 the asking bundle
          * @param arg1 the service registration
          * @param arg2 the created service object returned for this bundle
          * @see org.osgi.framework.ServiceFactory#ungetService(org.osgi.framework.Bundle, org.osgi.framework.ServiceRegistration, java.lang.Object)
          */
         public void ungetService(Bundle arg0, ServiceRegistration arg1,
+<<<<<<< HEAD
+                Object arg2) {
+=======
                                  Object arg2) {
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
             m_handler.getInstanceManager().deletePojoObject(arg2);
         }
     }
@@ -1014,7 +1245,10 @@ public class ProvidedService implements ServiceFactory {
          * the service object is unget (i.e. removed from the map and deleted).
          * In all other cases, a {@link UnsupportedOperationException} is thrown as this policy
          * requires to use  the {@link IPOJOServiceFactory} interaction pattern.
+<<<<<<< HEAD
+=======
          *
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
          * @param arg0 the proxy object
          * @param arg1 the called method
          * @param arg2 the arguments
@@ -1034,7 +1268,11 @@ public class ProvidedService implements ServiceFactory {
             }
 
             // Regular methods from java.lang.Object : equals and hashCode
+<<<<<<< HEAD
+            if (arg1.getName().equals("equals")  && arg2 != null  && arg2.length == 1) {
+=======
             if (arg1.getName().equals("equals") && arg2 != null && arg2.length == 1) {
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
                 return this.equals(arg2[0]);
             }
 
@@ -1050,7 +1288,10 @@ public class ProvidedService implements ServiceFactory {
         /**
          * A service object is required.
          * This policy returns a service object per asking instance.
+<<<<<<< HEAD
+=======
          *
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
          * @param instance the instance requiring the service object
          * @return the service object for this instance
          * @see org.apache.felix.ipojo.IPOJOServiceFactory#getService(org.apache.felix.ipojo.ComponentInstance)
@@ -1067,8 +1308,12 @@ public class ProvidedService implements ServiceFactory {
         /**
          * A service object is unget.
          * The service object is removed from the map and deleted.
+<<<<<<< HEAD
+         * @param instance the instance releasing the service
+=======
          *
          * @param instance  the instance releasing the service
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
          * @param svcObject the service object
          * @see org.apache.felix.ipojo.IPOJOServiceFactory#ungetService(org.apache.felix.ipojo.ComponentInstance, java.lang.Object)
          */
@@ -1079,6 +1324,15 @@ public class ProvidedService implements ServiceFactory {
 
         /**
          * The service is going to be registered.
+<<<<<<< HEAD
+         * @param instance the instance manager
+         * @param interfaces the published interfaces
+         * @param props the properties
+         * @see org.apache.felix.ipojo.handlers.providedservice.CreationStrategy#onPublication(InstanceManager, java.lang.String[], java.util.Properties)
+         */
+        public void onPublication(InstanceManager instance, String[] interfaces,
+                Properties props) { }
+=======
          *
          * @param instance   the instance manager
          * @param interfaces the published interfaces
@@ -1088,11 +1342,15 @@ public class ProvidedService implements ServiceFactory {
         public void onPublication(InstanceManager instance, String[] interfaces,
                                   Properties props) {
         }
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 
         /**
          * The service is going to be unregistered.
          * The instance map is cleared. Created object are disposed.
+<<<<<<< HEAD
+=======
          *
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
          * @see org.apache.felix.ipojo.handlers.providedservice.CreationStrategy#onUnpublication()
          */
         public void onUnpublication() {
@@ -1106,7 +1364,10 @@ public class ProvidedService implements ServiceFactory {
 
         /**
          * OSGi Service Factory getService method.
+<<<<<<< HEAD
+=======
          *
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
          * @param arg0 the asking bundle
          * @param arg1 the service registration
          * @return a proxy implementing the {@link IPOJOServiceFactory}
@@ -1121,22 +1382,34 @@ public class ProvidedService implements ServiceFactory {
         /**
          * OSGi Service factory unget method.
          * Does nothing.
+<<<<<<< HEAD
+=======
          *
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
          * @param arg0 the asking bundle
          * @param arg1 the service registration
          * @param arg2 the service object created for this bundle.
          * @see org.osgi.framework.ServiceFactory#ungetService(org.osgi.framework.Bundle, org.osgi.framework.ServiceRegistration, java.lang.Object)
          */
         public void ungetService(Bundle arg0, ServiceRegistration arg1,
+<<<<<<< HEAD
+                Object arg2) { }
+=======
                                  Object arg2) {
         }
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 
         /**
          * Utility method returning the class array of provided service
          * specification and the {@link IPOJOServiceFactory} interface.
+<<<<<<< HEAD
+         * @param specs the published service interface
+         * @param bc the bundle context, used to load classes
+=======
          *
          * @param specs the published service interface
          * @param bc    the bundle context, used to load classes
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
          * @return the class array containing provided service specification and
          * the {@link IPOJOServiceFactory} class.
          */

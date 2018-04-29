@@ -27,26 +27,45 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
 
+<<<<<<< HEAD
+import junit.framework.TestCase;
+
+=======
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 import org.osgi.framework.Bundle;
 import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceReference;
 import org.osgi.service.cm.ConfigurationPlugin;
 
+<<<<<<< HEAD
+=======
 import junit.framework.TestCase;
 
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 
 public class RankingComparatorTest extends TestCase
 {
 
+<<<<<<< HEAD
+    private final Comparator srvRank = RankingComparator.SRV_RANKING;
+    private final Comparator cmRank = RankingComparator.CM_RANKING;
+=======
     private final Comparator<ServiceReference<?>> srvRank = RankingComparator.SRV_RANKING;
     private final Comparator<ServiceReference<?>> cmRank = RankingComparator.CM_RANKING;
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 
 
     public void test_service_ranking_no_property()
     {
+<<<<<<< HEAD
+        ServiceReference r1 = new MockServiceReference().setProperty( Constants.SERVICE_RANKING, null );
+        ServiceReference r2 = new MockServiceReference().setProperty( Constants.SERVICE_RANKING, null );
+        ServiceReference r3 = new MockServiceReference().setProperty( Constants.SERVICE_RANKING, null );
+=======
         ServiceReference<?> r1 = new MockServiceReference().setProperty( Constants.SERVICE_RANKING, null );
         ServiceReference<?> r2 = new MockServiceReference().setProperty( Constants.SERVICE_RANKING, null );
         ServiceReference<?> r3 = new MockServiceReference().setProperty( Constants.SERVICE_RANKING, null );
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 
         assertTrue( srvRank.compare( r1, r1 ) == 0 );
         assertTrue( srvRank.compare( r1, r2 ) < 0 );
@@ -61,6 +80,17 @@ public class RankingComparatorTest extends TestCase
         assertTrue( srvRank.compare( r3, r3 ) == 0 );
 
         assertTrue( cmRank.compare( r1, r1 ) == 0 );
+<<<<<<< HEAD
+        assertTrue( cmRank.compare( r1, r2 ) == 0 );
+        assertTrue( cmRank.compare( r1, r3 ) == 0 );
+
+        assertTrue( cmRank.compare( r2, r1 ) == 0 );
+        assertTrue( cmRank.compare( r2, r2 ) == 0 );
+        assertTrue( cmRank.compare( r2, r3 ) == 0 );
+
+        assertTrue( cmRank.compare( r3, r1 ) == 0 );
+        assertTrue( cmRank.compare( r3, r2 ) == 0 );
+=======
         assertTrue( cmRank.compare( r1, r2 ) > 0 );
         assertTrue( cmRank.compare( r1, r3 ) > 0 );
 
@@ -70,15 +100,22 @@ public class RankingComparatorTest extends TestCase
 
         assertTrue( cmRank.compare( r3, r1 ) < 0 );
         assertTrue( cmRank.compare( r3, r2 ) < 0 );
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         assertTrue( cmRank.compare( r3, r3 ) == 0 );
     }
 
 
     public void test_service_ranking_property()
     {
+<<<<<<< HEAD
+        ServiceReference r1 = new MockServiceReference().setProperty( Constants.SERVICE_RANKING, new Integer( 100 ) );
+        ServiceReference r2 = new MockServiceReference().setProperty( Constants.SERVICE_RANKING, new Integer( -100 ) );
+        ServiceReference r3 = new MockServiceReference().setProperty( Constants.SERVICE_RANKING, null );
+=======
         ServiceReference<?> r1 = new MockServiceReference().setProperty( Constants.SERVICE_RANKING, new Integer( 100 ) );
         ServiceReference<?> r2 = new MockServiceReference().setProperty( Constants.SERVICE_RANKING, new Integer( -100 ) );
         ServiceReference<?> r3 = new MockServiceReference().setProperty( Constants.SERVICE_RANKING, null );
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 
         assertTrue( srvRank.compare( r1, r1 ) == 0 );
         assertTrue( srvRank.compare( r1, r2 ) < 0 );
@@ -96,11 +133,19 @@ public class RankingComparatorTest extends TestCase
 
     public void test_service_cm_ranking_property()
     {
+<<<<<<< HEAD
+        ServiceReference r1 = new MockServiceReference()
+            .setProperty( ConfigurationPlugin.CM_RANKING, new Integer( 100 ) );
+        ServiceReference r2 = new MockServiceReference().setProperty( ConfigurationPlugin.CM_RANKING,
+            new Integer( -100 ) );
+        ServiceReference r3 = new MockServiceReference().setProperty( ConfigurationPlugin.CM_RANKING, null );
+=======
         ServiceReference<?> r1 = new MockServiceReference()
             .setProperty( ConfigurationPlugin.CM_RANKING, new Integer( 100 ) );
         ServiceReference<?> r2 = new MockServiceReference().setProperty( ConfigurationPlugin.CM_RANKING,
             new Integer( -100 ) );
         ServiceReference<?> r3 = new MockServiceReference().setProperty( ConfigurationPlugin.CM_RANKING, null );
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 
         assertTrue( cmRank.compare( r1, r1 ) == 0 );
         assertTrue( cmRank.compare( r1, r2 ) > 0 );
@@ -118,10 +163,17 @@ public class RankingComparatorTest extends TestCase
 
     public void test_service_ranking_sort()
     {
+<<<<<<< HEAD
+        ServiceReference r1 = new MockServiceReference().setProperty( Constants.SERVICE_RANKING, new Integer( 100 ) );
+        ServiceReference r2 = new MockServiceReference().setProperty( Constants.SERVICE_RANKING, new Integer( -100 ) );
+        ServiceReference r3 = new MockServiceReference().setProperty( Constants.SERVICE_RANKING, null );
+        ServiceReference[] refs =
+=======
         ServiceReference<?> r1 = new MockServiceReference().setProperty( Constants.SERVICE_RANKING, new Integer( 100 ) );
         ServiceReference<?> r2 = new MockServiceReference().setProperty( Constants.SERVICE_RANKING, new Integer( -100 ) );
         ServiceReference<?> r3 = new MockServiceReference().setProperty( Constants.SERVICE_RANKING, null );
         ServiceReference<?>[] refs =
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
             { r1, r2, r3 };
 
         assertSame( r1, refs[0] );
@@ -138,16 +190,28 @@ public class RankingComparatorTest extends TestCase
 
     public void test_service_ranking_set()
     {
+<<<<<<< HEAD
+        ServiceReference r1 = new MockServiceReference().setProperty( Constants.SERVICE_RANKING, new Integer( 100 ) );
+        ServiceReference r2 = new MockServiceReference().setProperty( Constants.SERVICE_RANKING, new Integer( -100 ) );
+        ServiceReference r3 = new MockServiceReference().setProperty( Constants.SERVICE_RANKING, null );
+
+        Set refSet = new TreeSet( srvRank );
+=======
         ServiceReference<?> r1 = new MockServiceReference().setProperty( Constants.SERVICE_RANKING, new Integer( 100 ) );
         ServiceReference<?> r2 = new MockServiceReference().setProperty( Constants.SERVICE_RANKING, new Integer( -100 ) );
         ServiceReference<?> r3 = new MockServiceReference().setProperty( Constants.SERVICE_RANKING, null );
 
         Set<ServiceReference<?>> refSet = new TreeSet<ServiceReference<?>>( srvRank );
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         refSet.add( r1 );
         refSet.add( r2 );
         refSet.add( r3 );
 
+<<<<<<< HEAD
+        Iterator refIter = refSet.iterator();
+=======
         Iterator<ServiceReference<?>> refIter = refSet.iterator();
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         assertSame( r1, refIter.next() );
         assertSame( r3, refIter.next() );
         assertSame( r2, refIter.next() );
@@ -156,12 +220,21 @@ public class RankingComparatorTest extends TestCase
 
     public void test_service_cm_ranking_sort()
     {
+<<<<<<< HEAD
+        ServiceReference r1 = new MockServiceReference()
+            .setProperty( ConfigurationPlugin.CM_RANKING, new Integer( 100 ) );
+        ServiceReference r2 = new MockServiceReference().setProperty( ConfigurationPlugin.CM_RANKING,
+            new Integer( -100 ) );
+        ServiceReference r3 = new MockServiceReference().setProperty( ConfigurationPlugin.CM_RANKING, null );
+        ServiceReference[] refs =
+=======
         ServiceReference<?> r1 = new MockServiceReference()
             .setProperty( ConfigurationPlugin.CM_RANKING, new Integer( 100 ) );
         ServiceReference<?> r2 = new MockServiceReference().setProperty( ConfigurationPlugin.CM_RANKING,
             new Integer( -100 ) );
         ServiceReference<?> r3 = new MockServiceReference().setProperty( ConfigurationPlugin.CM_RANKING, null );
         ServiceReference<?>[] refs =
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
             { r1, r2, r3 };
 
         assertSame( r1, refs[0] );
@@ -178,6 +251,15 @@ public class RankingComparatorTest extends TestCase
 
     public void test_service_cm_ranking_set()
     {
+<<<<<<< HEAD
+        ServiceReference r1 = new MockServiceReference()
+            .setProperty( ConfigurationPlugin.CM_RANKING, new Integer( 100 ) );
+        ServiceReference r2 = new MockServiceReference().setProperty( ConfigurationPlugin.CM_RANKING,
+            new Integer( -100 ) );
+        ServiceReference r3 = new MockServiceReference().setProperty( ConfigurationPlugin.CM_RANKING, null );
+
+        Set refSet = new TreeSet( cmRank );
+=======
         ServiceReference<?> r1 = new MockServiceReference()
             .setProperty( ConfigurationPlugin.CM_RANKING, new Integer( 100 ) );
         ServiceReference<?> r2 = new MockServiceReference().setProperty( ConfigurationPlugin.CM_RANKING,
@@ -185,22 +267,35 @@ public class RankingComparatorTest extends TestCase
         ServiceReference<?> r3 = new MockServiceReference().setProperty( ConfigurationPlugin.CM_RANKING, null );
 
         Set<ServiceReference<?>> refSet = new TreeSet<ServiceReference<?>>( cmRank );
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         refSet.add( r1 );
         refSet.add( r2 );
         refSet.add( r3 );
 
+<<<<<<< HEAD
+        Iterator refIter = refSet.iterator();
+=======
         Iterator<ServiceReference<?>> refIter = refSet.iterator();
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         assertSame( r2, refIter.next() );
         assertSame( r3, refIter.next() );
         assertSame( r1, refIter.next() );
     }
 
+<<<<<<< HEAD
+    private static class MockServiceReference implements ServiceReference
+=======
     private static class MockServiceReference implements ServiceReference<Object>
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     {
 
         static long id = 0;
 
+<<<<<<< HEAD
+        private final Map props = new HashMap();
+=======
         private final Map<String, Object> props = new HashMap<String, Object>();
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 
         {
             props.put( Constants.SERVICE_ID, new Long( id ) );
@@ -222,13 +317,24 @@ public class RankingComparatorTest extends TestCase
         }
 
 
+<<<<<<< HEAD
+=======
         @Override
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         public Object getProperty( String key )
         {
             return props.get( key );
         }
 
 
+<<<<<<< HEAD
+        public String[] getPropertyKeys()
+        {
+            return ( String[] ) props.keySet().toArray( new String[props.size()] );
+        }
+
+
+=======
         @Override
         public String[] getPropertyKeys()
         {
@@ -237,34 +343,47 @@ public class RankingComparatorTest extends TestCase
 
 
         @Override
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         public Bundle getBundle()
         {
             return null;
         }
 
 
+<<<<<<< HEAD
+=======
         @Override
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         public Bundle[] getUsingBundles()
         {
             return null;
         }
 
 
+<<<<<<< HEAD
+=======
         @Override
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         public boolean isAssignableTo( Bundle bundle, String className )
         {
             return false;
         }
 
 
+<<<<<<< HEAD
+=======
         @Override
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         public int compareTo( Object reference )
         {
             return 0;
         }
 
 
+<<<<<<< HEAD
+=======
         @Override
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         public String toString()
         {
             return "ServiceReference " + getProperty( Constants.SERVICE_ID );

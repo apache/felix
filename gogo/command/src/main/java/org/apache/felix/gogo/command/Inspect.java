@@ -21,8 +21,13 @@ package org.apache.felix.gogo.command;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+<<<<<<< HEAD
+
+import java.util.Map;
+=======
 import java.util.Map;
 
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 import org.apache.felix.service.command.Descriptor;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
@@ -32,6 +37,12 @@ import org.osgi.framework.wiring.BundleCapability;
 import org.osgi.framework.wiring.BundleRequirement;
 import org.osgi.framework.wiring.BundleWire;
 import org.osgi.framework.wiring.BundleWiring;
+<<<<<<< HEAD
+import org.osgi.service.packageadmin.ExportedPackage;
+import org.osgi.service.packageadmin.PackageAdmin;
+import org.osgi.service.packageadmin.RequiredBundle;
+=======
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 
 public class Inspect
 {
@@ -95,7 +106,11 @@ public class Inspect
         {
             if (separatorNeeded)
             {
+<<<<<<< HEAD
+                System.out.println("");
+=======
                 System.out.println();
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
             }
 
             // Print out any matching generic capabilities.
@@ -194,7 +209,11 @@ public class Inspect
     {
         // Aggregate matching capabilities.
         Map<BundleCapability, List<BundleWire>> map =
+<<<<<<< HEAD
+            new HashMap<BundleCapability, List<BundleWire>>();
+=======
                 new HashMap<>();
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         for (BundleWire wire : wires)
         {
             if (matchNamespace(namespace, wire.getCapability().getNamespace()))
@@ -202,7 +221,11 @@ public class Inspect
                 List<BundleWire> dependents = map.get(wire.getCapability());
                 if (dependents == null)
                 {
+<<<<<<< HEAD
+                    dependents = new ArrayList<BundleWire>();
+=======
                     dependents = new ArrayList<>();
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
                     map.put(wire.getCapability(), dependents);
                 }
                 dependents.add(wire);
@@ -270,7 +293,11 @@ public class Inspect
         {
             if (separatorNeeded)
             {
+<<<<<<< HEAD
+                System.out.println("");
+=======
                 System.out.println();
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
             }
 
             // Print out any matching generic requirements.
@@ -369,7 +396,11 @@ public class Inspect
     {
         // Aggregate matching capabilities.
         Map<BundleRequirement, List<BundleWire>> map =
+<<<<<<< HEAD
+            new HashMap<BundleRequirement, List<BundleWire>>();
+=======
                 new HashMap<>();
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         for (BundleWire wire : wires)
         {
             if (matchNamespace(namespace, wire.getRequirement().getNamespace()))
@@ -377,7 +408,11 @@ public class Inspect
                 List<BundleWire> providers = map.get(wire.getRequirement());
                 if (providers == null)
                 {
+<<<<<<< HEAD
+                    providers = new ArrayList<BundleWire>();
+=======
                     providers = new ArrayList<>();
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
                     map.put(wire.getRequirement(), providers);
                 }
                 providers.add(wire);

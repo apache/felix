@@ -17,7 +17,11 @@
     specific language governing permissions and limitations
     under the License.
 -->
+<<<<<<< HEAD
+<metatype:MetaData xmlns:metatype="http://www.osgi.org/xmlns/metatype/v1.0.0" localization="OSGI-INF/metatype/metatype">
+=======
 <metatype:MetaData xmlns:metatype="http://www.osgi.org/xmlns/metatype/v1.0.0" localization="OSGI-INF/l10n/metatype">
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     <OCD id="org.apache.felix.webconsole.plugins.event.internal.PluginServlet" name="%plugin.name" description="%plugin.description">
         <AD id="max.size" type="Integer" default="250" name="%max.size.name" description="%max.size.description"/>
     </OCD>

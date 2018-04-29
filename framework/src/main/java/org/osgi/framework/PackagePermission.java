@@ -1,5 +1,9 @@
 /*
+<<<<<<< HEAD
+ * Copyright (c) OSGi Alliance (2000, 2012). All Rights Reserved.
+=======
  * Copyright (c) OSGi Alliance (2000, 2013). All Rights Reserved.
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -54,7 +58,11 @@ import java.util.Map;
  * deprecated, implies the {@code import} action.
  * 
  * @ThreadSafe
+<<<<<<< HEAD
+ * @version $Id: e993fbc36b6bff84182a8594af5af3cad8c4e2a3 $
+=======
  * @author $Id: c2d45ff158a6a19ff7bc155af3ac9941cb6a89d6 $
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
  */
 
 public final class PackagePermission extends BasicPermission {
@@ -372,7 +380,10 @@ public final class PackagePermission extends BasicPermission {
 	 * @return {@code true} if the specified permission is implied by this
 	 *         object; {@code false} otherwise.
 	 */
+<<<<<<< HEAD
+=======
 	@Override
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 	public boolean implies(Permission p) {
 		if (!(p instanceof PackagePermission)) {
 			return false;
@@ -425,7 +436,10 @@ public final class PackagePermission extends BasicPermission {
 	 * @return Canonical string representation of the {@code PackagePermission}
 	 *         actions.
 	 */
+<<<<<<< HEAD
+=======
 	@Override
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 	public String getActions() {
 		String result = actions;
 		if (result == null) {
@@ -455,7 +469,10 @@ public final class PackagePermission extends BasicPermission {
 	 * 
 	 * @return A new {@code PermissionCollection} object.
 	 */
+<<<<<<< HEAD
+=======
 	@Override
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 	public PermissionCollection newPermissionCollection() {
 		return new PackagePermissionCollection();
 	}
@@ -473,7 +490,10 @@ public final class PackagePermission extends BasicPermission {
 	 *         has the same package name and actions as this
 	 *         {@code PackagePermission} object; {@code false} otherwise.
 	 */
+<<<<<<< HEAD
+=======
 	@Override
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 	public boolean equals(Object obj) {
 		if (obj == this) {
 			return true;
@@ -493,7 +513,10 @@ public final class PackagePermission extends BasicPermission {
 	 * 
 	 * @return A hash code value for this object.
 	 */
+<<<<<<< HEAD
+=======
 	@Override
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 	public int hashCode() {
 		int h = 31 * 17 + getName().hashCode();
 		h = 31 * h + getActions().hashCode();
@@ -530,8 +553,14 @@ public final class PackagePermission extends BasicPermission {
 	}
 
 	/**
+<<<<<<< HEAD
+	 * Called by {@code <@link PackagePermission#implies(Permission)>}. This
+	 * method is only called on a requested permission which cannot have a
+	 * filter set.
+=======
 	 * Called by {@link PackagePermission#implies(Permission)}. This method is
 	 * only called on a requested permission which cannot have a filter set.
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 	 * 
 	 * @return a map of properties for this permission.
 	 */
@@ -543,8 +572,13 @@ public final class PackagePermission extends BasicPermission {
 		final Map<String, Object> map = new HashMap<String, Object>(5);
 		map.put("package.name", getName());
 		if (bundle != null) {
+<<<<<<< HEAD
+			AccessController.doPrivileged(new PrivilegedAction<Object>() {
+				public Object run() {
+=======
 			AccessController.doPrivileged(new PrivilegedAction<Void>() {
 				public Void run() {
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 					map.put("id", new Long(bundle.getBundleId()));
 					map.put("location", bundle.getLocation());
 					String name = bundle.getSymbolicName();
@@ -614,7 +648,10 @@ final class PackagePermissionCollection extends PermissionCollection {
 	 * @throws SecurityException If this {@code PackagePermissionCollection}
 	 *         object has been marked read-only.
 	 */
+<<<<<<< HEAD
+=======
 	@Override
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 	public void add(final Permission permission) {
 		if (!(permission instanceof PackagePermission)) {
 			throw new IllegalArgumentException("invalid permission: " + permission);
@@ -671,7 +708,10 @@ final class PackagePermissionCollection extends PermissionCollection {
 	 * @return {@code true} if {@code permission} is a proper subset of a
 	 *         permission in the set; {@code false} otherwise.
 	 */
+<<<<<<< HEAD
+=======
 	@Override
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 	public boolean implies(final Permission permission) {
 		if (!(permission instanceof PackagePermission)) {
 			return false;
@@ -750,7 +790,10 @@ final class PackagePermissionCollection extends PermissionCollection {
 	 * 
 	 * @return Enumeration of all {@code PackagePermission} objects.
 	 */
+<<<<<<< HEAD
+=======
 	@Override
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 	public synchronized Enumeration<Permission> elements() {
 		List<Permission> all = new ArrayList<Permission>(permissions.values());
 		Map<String, PackagePermission> pc = filterPermissions;
@@ -775,11 +818,17 @@ final class PackagePermissionCollection extends PermissionCollection {
 
 	private synchronized void readObject(java.io.ObjectInputStream in) throws IOException, ClassNotFoundException {
 		ObjectInputStream.GetField gfields = in.readFields();
+<<<<<<< HEAD
+		Hashtable<String, PackagePermission> hashtable = (Hashtable<String, PackagePermission>) gfields.get("permissions", null);
+		permissions = new HashMap<String, PackagePermission>(hashtable);
+		all_allowed = gfields.get("all_allowed", false);
+=======
 		@SuppressWarnings("unchecked")
 		Hashtable<String, PackagePermission> hashtable = (Hashtable<String, PackagePermission>) gfields.get("permissions", null);
 		permissions = new HashMap<String, PackagePermission>(hashtable);
 		all_allowed = gfields.get("all_allowed", false);
 		@SuppressWarnings("unchecked")
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 		HashMap<String, PackagePermission> fp = (HashMap<String, PackagePermission>) gfields.get("filterPermissions", null);
 		filterPermissions = fp;
 	}

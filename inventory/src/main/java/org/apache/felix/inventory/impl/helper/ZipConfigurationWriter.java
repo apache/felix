@@ -93,7 +93,11 @@ public class ZipConfigurationWriter extends ConfigurationWriter
             final ZipEntry entry = new ZipEntry(baseName.concat(".txt"));
             entry.setTime(System.currentTimeMillis());
             this.zip.putNextEntry(entry, Format.TEXT);
+<<<<<<< HEAD
+            handler.print(this, Format.TEXT, false);
+=======
             handler.print(this, Format.TEXT, true);
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
             this.flush();
             this.zip.closeEntry();
         }

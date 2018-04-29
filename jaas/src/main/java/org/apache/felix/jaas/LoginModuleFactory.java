@@ -48,6 +48,8 @@ public interface LoginModuleFactory
     String JAAS_REALM_NAME = "jaas.realmName";
 
     /**
+<<<<<<< HEAD
+=======
      * Property name specifying the ranking (i.e. sort order) of the configured login module entries. The entries
      * are sorted in a descending order (i.e. higher value ranked configurations come first)
      * @since 1.0.1 (bundle version 0.0.2)
@@ -55,6 +57,7 @@ public interface LoginModuleFactory
     String JAAS_RANKING = "jaas.ranking";
 
     /**
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
      * Creates the LoginModule instance
      * @return loginModule instance
      */

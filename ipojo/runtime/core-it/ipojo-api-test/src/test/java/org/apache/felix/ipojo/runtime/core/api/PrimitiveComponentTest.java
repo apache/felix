@@ -19,14 +19,24 @@
 
 package org.apache.felix.ipojo.runtime.core.api;
 
+<<<<<<< HEAD
+import org.apache.felix.ipojo.ComponentInstance;
+import org.apache.felix.ipojo.ConfigurationException;
+import org.apache.felix.ipojo.MissingHandlerException;
+import org.apache.felix.ipojo.UnacceptableConfiguration;
+=======
 import org.apache.felix.ipojo.*;
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 import org.apache.felix.ipojo.api.Dependency;
 import org.apache.felix.ipojo.api.PrimitiveComponentType;
 import org.apache.felix.ipojo.api.Service;
 import org.apache.felix.ipojo.api.SingletonComponentType;
 import org.apache.felix.ipojo.runtime.core.api.components.FooImpl;
 import org.apache.felix.ipojo.runtime.core.api.components.MyComponentImpl;
+<<<<<<< HEAD
+=======
 import org.apache.felix.ipojo.runtime.core.api.components.PlainHelloImpl;
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 import org.apache.felix.ipojo.runtime.core.api.services.Foo;
 import org.junit.Before;
 import org.junit.Test;
@@ -77,6 +87,17 @@ public class PrimitiveComponentTest extends Common {
         PrimitiveComponentType type = createAProvider();
         ci = type.createInstance();
         assertThat("Ci is valid", ci.getState(), is(ComponentInstance.VALID));
+<<<<<<< HEAD
+        ServiceReference ref = ipojoHelper.getServiceReferenceByName(Foo.class
+                .getName(), ci.getInstanceName());
+        assertThat(ref, is(notNullValue()));
+        type.stop();
+        assertThat("Ci is disposed", ci.getState(),
+                is(ComponentInstance.DISPOSED));
+        ref = ipojoHelper.getServiceReferenceByName(Foo.class.getName(), ci
+                .getInstanceName());
+        assertThat(ref, is(nullValue()));
+=======
         assertThat(ipojoHelper.isServiceAvailableByName(Foo.class.getName(), ci
                 .getInstanceName()), is(true));
         type.stop();
@@ -84,6 +105,7 @@ public class PrimitiveComponentTest extends Common {
                 is(ComponentInstance.DISPOSED));
         assertThat(ipojoHelper.isServiceAvailableByName(Foo.class.getName(), ci
                 .getInstanceName()), is(false));
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 
     }
 
@@ -130,6 +152,8 @@ public class PrimitiveComponentTest extends Common {
         assertThat("cons2 is valid", cons2.getState(), is(ComponentInstance.VALID));
     }
 
+<<<<<<< HEAD
+=======
     @Test
     public void notManipulatedComponent() throws Exception {
         assertThat(context, is(notNullValue()));
@@ -153,6 +177,7 @@ public class PrimitiveComponentTest extends Common {
         x.stop();
     }
 
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     private PrimitiveComponentType createAProvider() {
         return new PrimitiveComponentType()
                 .setBundleContext(context)

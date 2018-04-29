@@ -15,7 +15,11 @@ import org.osgi.service.component.ComponentInstance;
 
 public class CFactory implements Runnable {
     private ComponentFactory _cFactory;
+<<<<<<< HEAD
+    private Thread[] _threads = new Thread[1];
+=======
     private Thread[] _threads = new Thread[2];
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     
     public void bindCFactory(ComponentFactory cFactory) {
       _cFactory = cFactory;

@@ -23,19 +23,47 @@
     <parent>
         <groupId>org.apache.felix</groupId>
         <artifactId>felix-parent</artifactId>
+<<<<<<< HEAD
+        <version>1.2.0</version>
+=======
         <version>4</version>
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         <relativePath>../pom</relativePath>
     </parent>
 
     <artifactId>org.apache.felix.prefs</artifactId>
     <packaging>bundle</packaging>
+<<<<<<< HEAD
+    <version>1.0.7-SNAPSHOT</version>
+=======
     <version>1.1.1-SNAPSHOT</version>
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 
     <name>Apache Felix Preferences Service</name>
     <description>
         Implementation of the OSGi Preferences Service Specification 1.1.1
     </description>
 
+<<<<<<< HEAD
+    <dependencies>
+        <dependency>
+            <groupId>org.apache.felix</groupId>
+            <artifactId>org.osgi.core</artifactId>
+            <version>1.2.0</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.felix</groupId>
+            <artifactId>org.osgi.compendium</artifactId>
+            <version>1.2.0</version>
+        </dependency>
+        <dependency>
+            <groupId>commons-codec</groupId>
+            <artifactId>commons-codec</artifactId>
+            <version>1.3</version>
+        </dependency>
+    </dependencies>
+=======
     <properties>
         <felix.java.version>6</felix.java.version>
     </properties>
@@ -45,6 +73,7 @@
         <developerConnection>scm:svn:https://svn.apache.org/repos/asf/felix/trunk/prefs</developerConnection>
         <url>http://svn.apache.org/repos/asf/felix/prefs</url>
     </scm>
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 
     <build>
         <plugins>

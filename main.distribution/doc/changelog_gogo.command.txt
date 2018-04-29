@@ -1,11 +1,14 @@
 Changes from 0.10.0 to 0.12.0
 -----------------------------
 
+<<<<<<< HEAD
+=======
 * Fix a NPE with the obr:info command
 
 Changes from 0.10.0 to 0.12.0
 -----------------------------
 
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 ** Improvement
     * [FELIX-3050] - [Gogo Command] Update "inspect" command to work with OSGi R4.3 generic capabilities/requirements
     * [FELIX-3088] - [Gogo Command] The "resolve" command should print some message if not all bundles could be resolved

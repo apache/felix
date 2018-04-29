@@ -27,6 +27,23 @@ import java.io.StringReader;
 import java.util.Iterator;
 import java.util.List;
 
+<<<<<<< HEAD
+import junit.framework.TestCase;
+
+import org.apache.felix.scr.impl.MockBundle;
+import org.apache.felix.scr.impl.MockLogger;
+import org.apache.felix.scr.impl.parser.KXml2SAXParser;
+import org.apache.felix.scr.impl.parser.ParseException;
+import org.osgi.service.component.ComponentException;
+import org.xmlpull.v1.XmlPullParserException;
+
+
+public class XmlHandlerTest extends TestCase
+{
+    private MockLogger logger;
+
+
+=======
 import org.apache.felix.scr.impl.MockBundle;
 import org.apache.felix.scr.impl.logger.MockBundleLogger;
 import org.apache.felix.scr.impl.parser.KXml2SAXParser;
@@ -44,11 +61,16 @@ public class XmlHandlerTest extends TestCase
 
 
     @Override
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     protected void setUp() throws Exception
     {
         super.setUp();
 
+<<<<<<< HEAD
+        logger = new MockLogger();
+=======
         logger = new MockBundleLogger();
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     }
 
 
@@ -99,7 +121,11 @@ public class XmlHandlerTest extends TestCase
         final List metadataList = readMetadataFromString( "<scr:component xmlns:scr=\"http://www.osgi.org/xmlns/scr/v1.0.0\" name=\"n\" ><implementation class=\"n\"/></scr:component>" );
         assertEquals( "1 Descriptor expected", 1, metadataList.size() );
         final ComponentMetadata metadata = ( ComponentMetadata ) metadataList.get( 0 );
+<<<<<<< HEAD
+        assertEquals( "Expect NS 1.0.0", XmlHandler.DS_VERSION_1_0, metadata.getNamespaceCode() );
+=======
         assertEquals( "Expect NS 1.0.0", DSVersion.DS10, metadata.getDSVersion() );
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     }
 
 
@@ -108,7 +134,11 @@ public class XmlHandlerTest extends TestCase
         final List metadataList = readMetadataFromString( "<scr:component xmlns:scr=\"http://www.osgi.org/xmlns/scr/v1.1.0\" name=\"n\" ><implementation class=\"n\"/></scr:component>" );
         assertEquals( "1 Descriptor expected", 1, metadataList.size() );
         final ComponentMetadata metadata = ( ComponentMetadata ) metadataList.get( 0 );
+<<<<<<< HEAD
+        assertEquals( "Expect NS 1.1.0", XmlHandler.DS_VERSION_1_1, metadata.getNamespaceCode() );
+=======
         assertEquals( "Expect NS 1.1.0", DSVersion.DS11, metadata.getDSVersion() );
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     }
 
 
@@ -117,7 +147,11 @@ public class XmlHandlerTest extends TestCase
         final List metadataList = readMetadataFromString( "<scr:component xmlns:scr=\"http://felix.apache.org/xmlns/scr/v1.1.0-felix\" name=\"n\" ><implementation class=\"n\"/></scr:component>" );
         assertEquals( "1 Descriptor expected", 1, metadataList.size() );
         final ComponentMetadata metadata = ( ComponentMetadata ) metadataList.get( 0 );
+<<<<<<< HEAD
+        assertEquals( "Expect NS 1.1.0-felix", XmlHandler.DS_VERSION_1_1_FELIX, metadata.getNamespaceCode() );
+=======
         assertEquals( "Expect NS 1.1.0-felix", DSVersion.DS11Felix, metadata.getDSVersion() );
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     }
 
 
@@ -126,7 +160,11 @@ public class XmlHandlerTest extends TestCase
         final List metadataList = readMetadataFromString( "<scr:component xmlns:scr=\"http://www.osgi.org/xmlns/scr/v1.2.0\" name=\"n\" ><implementation class=\"n\"/></scr:component>" );
         assertEquals( "1 Descriptor expected", 1, metadataList.size() );
         final ComponentMetadata metadata = ( ComponentMetadata ) metadataList.get( 0 );
+<<<<<<< HEAD
+        assertEquals( "Expect NS 1.2.0", XmlHandler.DS_VERSION_1_2, metadata.getNamespaceCode() );
+=======
         assertEquals( "Expect NS 1.2.0", DSVersion.DS12, metadata.getDSVersion() );
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     }
 
 
@@ -135,7 +173,11 @@ public class XmlHandlerTest extends TestCase
         final List metadataList = readMetadataFromString( "<scr:component xmlns:scr=\"http://felix.apache.org/xmlns/scr/v1.2.0-felix\" name=\"n\" ><implementation class=\"n\"/></scr:component>" );
         assertEquals( "1 Descriptor expected", 1, metadataList.size() );
         final ComponentMetadata metadata = ( ComponentMetadata ) metadataList.get( 0 );
+<<<<<<< HEAD
+        assertEquals( "Expect NS 1.2.0-felix", XmlHandler.DS_VERSION_1_2_FELIX, metadata.getNamespaceCode() );
+=======
         assertEquals( "Expect NS 1.2.0-felix", DSVersion.DS12Felix, metadata.getDSVersion() );
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     }
 
 
@@ -152,7 +194,11 @@ public class XmlHandlerTest extends TestCase
         assertEquals( "1 Descriptor expected", 1, metadataList.size() );
 
         final ComponentMetadata metadata = ( ComponentMetadata ) metadataList.get( 0 );
+<<<<<<< HEAD
+        assertEquals( "Expect NS 1.0.0", XmlHandler.DS_VERSION_1_0, metadata.getNamespaceCode() );
+=======
         assertEquals( "Expect NS 1.0.0", DSVersion.DS10, metadata.getDSVersion() );
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     }
 
 
@@ -160,17 +206,30 @@ public class XmlHandlerTest extends TestCase
     {
         final List metadataList10 = readMetadata( "/components_activate_10.xml" );
         assertEquals( "Component Descriptors", 4, metadataList10.size() );
+<<<<<<< HEAD
+        ComponentMetadataTest.failDS10Validation( ( ComponentMetadata ) metadataList10.get( 0 ), "activate", logger );
+        ComponentMetadataTest.failDS10Validation( ( ComponentMetadata ) metadataList10.get( 1 ), "deactivate", logger );
+        ComponentMetadataTest.failDS10Validation( ( ComponentMetadata ) metadataList10.get( 2 ), "modified", logger );
+        ComponentMetadataTest.failDS10Validation( ( ComponentMetadata ) metadataList10.get( 3 ),
+            "configuration-policy", logger );
+=======
         ComponentMetadataTest.failDS10Validation( ( ComponentMetadata ) metadataList10.get( 0 ), "activate" );
         ComponentMetadataTest.failDS10Validation( ( ComponentMetadata ) metadataList10.get( 1 ), "deactivate" );
         ComponentMetadataTest.failDS10Validation( ( ComponentMetadata ) metadataList10.get( 2 ), "modified" );
         ComponentMetadataTest.failDS10Validation( ( ComponentMetadata ) metadataList10.get( 3 ),
             "configuration-policy" );
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 
         final List metadataList11 = readMetadata( "/components_activate_11.xml" );
         assertEquals( "Component Descriptors", 1, metadataList11.size() );
         final ComponentMetadata cm11 = ( ComponentMetadata ) metadataList11.get( 0 );
+<<<<<<< HEAD
+        cm11.validate( logger );
+        assertEquals( "DS Version 1.1", XmlHandler.DS_VERSION_1_1, cm11.getNamespaceCode() );
+=======
         cm11.validate( );
         assertEquals( "DS Version 1.1", DSVersion.DS11, cm11.getDSVersion() );
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         assertEquals( "Expected Activate Method set", "myactivate", cm11.getActivate() );
         assertTrue( "Activate method expected to be declared", cm11.isActivateDeclared() );
         assertEquals( "Expected Deactivate Method set", "mydeactivate", cm11.getDeactivate() );
@@ -188,7 +247,11 @@ public class XmlHandlerTest extends TestCase
         final ComponentMetadata cm10 = ( ComponentMetadata ) metadataList10.get( 0 );
         try
         {
+<<<<<<< HEAD
+            cm10.validate( logger );
+=======
             cm10.validate( );
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
             fail( "Expected validation failure for component without name" );
         }
         catch ( ComponentException ce )
@@ -199,7 +262,11 @@ public class XmlHandlerTest extends TestCase
         final List metadataList11 = readMetadata( "/components_anonymous_11.xml" );
         assertEquals( "Component Descriptors", 1, metadataList11.size() );
         final ComponentMetadata cm11 = ( ComponentMetadata ) metadataList11.get( 0 );
+<<<<<<< HEAD
+        cm11.validate( logger );
+=======
         cm11.validate( );
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         assertEquals( "Expected name equals class", cm11.getImplementationClassName(), cm11.getName() );
     }
 
@@ -211,7 +278,11 @@ public class XmlHandlerTest extends TestCase
         final ComponentMetadata cm10 = ( ComponentMetadata ) metadataList10.get( 0 );
         try
         {
+<<<<<<< HEAD
+            cm10.validate( logger );
+=======
             cm10.validate( );
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
             fail( "Expected validation failure for component without name" );
         }
         catch ( ComponentException ce )
@@ -222,7 +293,11 @@ public class XmlHandlerTest extends TestCase
         final List metadataList11 = readMetadata( "/components_anonymous_11.xml" );
         assertEquals( "Component Descriptors", 1, metadataList11.size() );
         final ComponentMetadata cm11 = ( ComponentMetadata ) metadataList11.get( 0 );
+<<<<<<< HEAD
+        cm11.validate( logger );
+=======
         cm11.validate( );
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         assertEquals( "Expected name equals class", cm11.getImplementationClassName(), cm11.getName() );
     }
 
@@ -236,8 +311,13 @@ public class XmlHandlerTest extends TestCase
         // dont validate this, we test the raw reading
 
         // ds namespace
+<<<<<<< HEAD
+        assertEquals( "DS Version 1.0", XmlHandler.DS_VERSION_1_0, cm10.getNamespaceCode() );
+        assertFalse( "DS Version 1.0", cm10.isDS11() );
+=======
         assertEquals( "DS Version 1.0", DSVersion.DS10, cm10.getDSVersion() );
         assertFalse( "DS Version 1.0", cm10.getDSVersion().isDS11() );
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 
         // base component attributes
         assertEquals( "component name", true, cm10.isEnabled() );
@@ -272,9 +352,14 @@ public class XmlHandlerTest extends TestCase
 
         // service setup
         final ServiceMetadata sm = cm10.getServiceMetadata();
+<<<<<<< HEAD
+        assertNotNull( "service", sm );
+        assertEquals( "servicefactory", true, sm.isServiceFactory() );
+=======
         sm.validate( cm10 ); // service metadata requires validation to set scope properly
         assertNotNull( "service", sm );
         assertEquals( "servicefactory", ServiceMetadata.Scope.bundle, sm.getScope() );
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         assertEquals( "1 interface", 1, sm.getProvides().length );
         assertEquals( "service interface", "components.all.service", sm.getProvides()[0] );
 
@@ -313,7 +398,11 @@ public class XmlHandlerTest extends TestCase
         final ComponentMetadata cm10 = ( ComponentMetadata ) metadataList10.get( 0 );
         try
         {
+<<<<<<< HEAD
+            cm10.validate( logger );
+=======
             cm10.validate( );
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
             fail( "Expect validation failure for duplicate implementation element" );
         }
         catch ( ComponentException ce )
@@ -330,7 +419,11 @@ public class XmlHandlerTest extends TestCase
         final ComponentMetadata cm11 = ( ComponentMetadata ) metadataList11.get( 0 );
         try
         {
+<<<<<<< HEAD
+            cm11.validate( logger );
+=======
             cm11.validate( );
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
             fail( "Expect validation failure for duplicate implementation element" );
         }
         catch ( ComponentException ce )
@@ -347,7 +440,11 @@ public class XmlHandlerTest extends TestCase
         final ComponentMetadata cm10 = ( ComponentMetadata ) metadataList10.get( 0 );
         try
         {
+<<<<<<< HEAD
+            cm10.validate( logger );
+=======
             cm10.validate( );
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
             fail( "Expect validation failure for duplicate service element" );
         }
         catch ( ComponentException ce )
@@ -364,7 +461,11 @@ public class XmlHandlerTest extends TestCase
         final ComponentMetadata cm11 = ( ComponentMetadata ) metadataList11.get( 0 );
         try
         {
+<<<<<<< HEAD
+            cm11.validate( logger );
+=======
             cm11.validate( );
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
             fail( "Expect validation failure for duplicate service element" );
         }
         catch ( ComponentException ce )
@@ -384,7 +485,11 @@ public class XmlHandlerTest extends TestCase
         {
             final KXml2SAXParser parser = new KXml2SAXParser( reader );
 
+<<<<<<< HEAD
+            XmlHandler handler = new XmlHandler( new MockBundle(), logger );
+=======
             XmlHandler handler = new XmlHandler( new MockBundle(), logger, false, false );
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
             parser.parseXML( handler );
 
             return handler.getComponentMetadataList();
@@ -460,8 +565,13 @@ public class XmlHandlerTest extends TestCase
         // dont validate this, we test the raw reading
 
         // ds namespace
+<<<<<<< HEAD
+        assertEquals( "DS Version 1.1", XmlHandler.DS_VERSION_1_1, cm11.getNamespaceCode() );
+        assertTrue( "DS Version 1.1", cm11.isDS11() );
+=======
         assertEquals( "DS Version 1.1", DSVersion.DS11, cm11.getDSVersion() );
         assertTrue( "DS Version 1.1", cm11.getDSVersion().isDS11() );
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 
         assertEquals( "component name", "DummyClass", cm11.getName() );
         assertEquals( "component name", "DummyClass", cm11.getImplementationClassName() );

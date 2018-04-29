@@ -18,6 +18,23 @@
  */
 package org.apache.felix.scr.impl;
 
+<<<<<<< HEAD
+
+import java.io.PrintStream;
+import java.text.MessageFormat;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
+
+import org.apache.felix.scr.impl.config.ScrConfiguration;
+import org.apache.felix.utils.extender.AbstractExtender;
+import org.apache.felix.utils.extender.Extension;
+import org.osgi.framework.Bundle;
+import org.osgi.framework.BundleContext;
+import org.osgi.framework.Constants;
+import org.osgi.service.component.ComponentConstants;
+=======
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -39,6 +56,7 @@ import org.osgi.framework.wiring.BundleWiring;
 import org.osgi.namespace.extender.ExtenderNamespace;
 import org.osgi.service.component.ComponentConstants;
 import org.osgi.service.component.runtime.ServiceComponentRuntime;
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 import org.osgi.service.log.LogService;
 
 /**
@@ -51,7 +69,21 @@ public class Activator extends AbstractExtender
     // Our configuration from bundle context properties and Config Admin
     private final ScrConfigurationImpl m_configuration;
 
+<<<<<<< HEAD
+    // name of the PackageAdmin class (this is a string to not create a reference to the class)
+    static final String PACKAGEADMIN_CLASS = "org.osgi.service.packageadmin.PackageAdmin";
+
+    // Our configuration from bundle context properties and Config Admin
+    private static ScrConfiguration m_configuration = new ScrConfiguration();
+
+    // this bundle's context
+    private static BundleContext m_context;
+
+    // this bundle
+    private static Bundle m_bundle;
+=======
     private BundleContext m_context;
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 
     //Either this bundle's context or the framework bundle context, depending on the globalExtender setting.
     private BundleContext m_globalContext;
@@ -60,7 +92,14 @@ public class Activator extends AbstractExtender
     private Bundle m_bundle;
 
     // the log service to log messages to
+<<<<<<< HEAD
+    private static volatile ServiceTracker m_logService;
+
+    // the package admin service (see BindMethod.getParameterClass)
+    private static volatile ServiceTracker m_packageAdmin;
+=======
     private volatile ScrLogger logger;
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 
     // map of BundleComponentActivator instances per Bundle indexed by Bundle id
     private Map<Long, BundleComponentActivator> m_componentBundles;
@@ -71,6 +110,10 @@ public class Activator extends AbstractExtender
     //  thread acting upon configurations
     private ComponentActorThread m_componentActor;
 
+<<<<<<< HEAD
+    public Activator() {
+        setSynchronous(true);
+=======
     private ServiceRegistration<ServiceComponentRuntime> m_runtime_reg;
 
     private ComponentCommands m_componentCommands;
@@ -78,6 +121,7 @@ public class Activator extends AbstractExtender
     public Activator()
     {
         m_configuration = new ScrConfigurationImpl( this );
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     }
 
     /**
@@ -92,6 +136,30 @@ public class Activator extends AbstractExtender
     {
         m_context = context;
         m_bundle = context.getBundle();
+<<<<<<< HEAD
+        super.start(context);
+    }
+
+    protected void doStart() throws Exception {
+        // require the log service
+        m_logService = new ServiceTracker( m_context, LOGSERVICE_CLASS, null );
+        m_logService.open();
+
+        // prepare component registry
+        m_componentBundles = new HashMap<Long, BundleComponentActivator>();
+        m_componentRegistry = new ComponentRegistry( m_context );
+
+        // get the configuration
+        m_configuration.start( m_context );
+
+        // log SCR startup
+        log( LogService.LOG_INFO, m_bundle, " Version = {0}",
+            new Object[] {m_bundle.getHeaders().get( Constants.BUNDLE_VERSION )}, null );
+
+        // create and start the component actor
+        m_componentActor = new ComponentActorThread();
+        Thread t = new Thread(m_componentActor, "SCR Component Actor");
+=======
         // require the log service
         logger = new ScrLogger(m_configuration, m_context);
         // set bundle context for PackageAdmin tracker
@@ -166,14 +234,21 @@ public class Activator extends AbstractExtender
         // create and start the component actor
         m_componentActor = new ComponentActorThread( this.logger );
         Thread t = new Thread( m_componentActor, "SCR Component Actor" );
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         t.setDaemon( true );
         t.start();
 
         super.doStart();
 
+<<<<<<< HEAD
+        // register the Gogo and old Shell commands
+        ScrCommand scrCommand = ScrCommand.register(m_context, m_componentRegistry, m_configuration);
+        m_configuration.setScrCommand( scrCommand );
+=======
         m_componentCommands = new ComponentCommands(m_context, runtime, m_configuration);
         m_componentCommands.register();
         m_componentCommands.updateProvideScrInfoService(m_configuration.infoAsService());
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     }
 
     @Override
@@ -188,12 +263,19 @@ public class Activator extends AbstractExtender
      * which have been registered during the active life time of the SCR
      * implementation bundle.
      */
+<<<<<<< HEAD
+=======
     @Override
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     public void doStop() throws Exception
     {
         // stop tracking
         super.doStop();
 
+<<<<<<< HEAD
+        // dispose component registry
+        m_componentRegistry.dispose();
+=======
         if ( m_componentCommands != null )
         {
             m_componentCommands.unregister();
@@ -208,12 +290,34 @@ public class Activator extends AbstractExtender
         {
             m_componentRegistry = null;
         }
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 
         // terminate the actor thread
         if ( m_componentActor != null )
         {
             m_componentActor.terminate();
             m_componentActor = null;
+<<<<<<< HEAD
+        }
+
+        // close the LogService tracker now
+        if ( m_logService != null )
+        {
+            m_logService.close();
+            m_logService = null;
+        }
+
+        // close the PackageAdmin tracker now
+        if ( m_packageAdmin != null )
+        {
+            m_packageAdmin.close();
+            m_packageAdmin = null;
+        }
+
+        // remove the reference to the component context
+        m_context = null;
+    }
+=======
         }
 
         // close the LogService tracker now
@@ -270,6 +374,7 @@ public class Activator extends AbstractExtender
                 }
             }
         }
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 
         public void destroy()
         {
@@ -287,6 +392,30 @@ public class Activator extends AbstractExtender
                     logger.log(LogService.LOG_WARNING,  "The wait for {0} being started before destruction has been interrupted.", e,
                             bundle );
 
+<<<<<<< HEAD
+
+    @Override
+    protected Extension doCreateExtension(final Bundle bundle) throws Exception
+    {
+        return new ScrExtension(bundle);
+    }
+
+    protected class ScrExtension implements Extension {
+
+        private final Bundle bundle;
+        private final CountDownLatch started;
+
+        public ScrExtension(Bundle bundle) {
+            this.bundle = bundle;
+            this.started = new CountDownLatch(1);
+        }
+
+        public void start() {
+            try {
+                loadComponents( ScrExtension.this.bundle );
+            } finally {
+                started.countDown();
+=======
                 }
                 disposeComponents( bundle );
             }
@@ -296,10 +425,24 @@ public class Activator extends AbstractExtender
                 {
                     stateLock.unlock();
                 }
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
             }
+        }
+
+<<<<<<< HEAD
+        public void destroy() {
+            try {
+                this.started.await(m_configuration.stopTimeout(), TimeUnit.MILLISECONDS);
+            } catch (InterruptedException e) {
+                log( LogService.LOG_WARNING, m_bundle, "The wait for bundle {0}/{1} being started before destruction has been interrupted.",
+                        new Object[] {bundle.getSymbolicName(), bundle.getBundleId()}, e );
+            }
+            disposeComponents( this.bundle );
         }
     }
 
+=======
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     /**
      * Loads the components of the given bundle. If the bundle has no
      * <i>Service-Component</i> header, this method has no effect. The
@@ -321,6 +464,74 @@ public class Activator extends AbstractExtender
         BundleContext context = bundle.getBundleContext();
         if ( context == null )
         {
+<<<<<<< HEAD
+            log( LogService.LOG_ERROR, m_bundle, "Cannot get BundleContext of bundle {0}/{1}",
+                new Object[] {bundle.getSymbolicName(), bundle.getBundleId()}, null );
+            return;
+        }
+
+        // FELIX-1666 method is called for the LAZY_ACTIVATION event and
+        // the started event. Both events cause this method to be called;
+        // so we have to make sure to not load components twice
+        // FELIX-2231 Mark bundle loaded early to prevent concurrent loading
+        // if LAZY_ACTIVATION and STARTED event are fired at the same time
+        final boolean loaded;
+        final Long bundleId = bundle.getBundleId();
+        synchronized ( m_componentBundles )
+        {
+            if ( m_componentBundles.containsKey( bundleId ) )
+            {
+                loaded = true;
+            }
+            else
+            {
+                m_componentBundles.put( bundleId, null );
+                loaded = false;
+            }
+        }
+
+        // terminate if already loaded (or currently being loaded)
+        if ( loaded )
+        {
+            log( LogService.LOG_DEBUG, m_bundle, "Components for bundle {0}/{1} already loaded. Nothing to do.",
+                new Object[] {bundle.getSymbolicName(), bundle.getBundleId()}, null );
+            return;
+        }
+
+        try
+        {
+            BundleComponentActivator ga = new BundleComponentActivator( m_componentRegistry, m_componentActor, context,
+                m_configuration );
+
+            // replace bundle activator in the map
+            synchronized ( m_componentBundles )
+            {
+                m_componentBundles.put( bundleId, ga );
+            }
+        }
+        catch ( Exception e )
+        {
+            // remove the bundle id from the bundles map to ensure it is
+            // not marked as being loaded
+            synchronized ( m_componentBundles )
+            {
+                m_componentBundles.remove( bundleId );
+            }
+
+            if ( e instanceof IllegalStateException && bundle.getState() != Bundle.ACTIVE )
+            {
+                log(
+                    LogService.LOG_DEBUG,
+                    m_bundle,
+                    "Bundle {0}/{1} has been stopped while trying to activate its components. Trying again when the bundles gets started again.",
+                new Object[] {bundle.getSymbolicName(), bundle.getBundleId()},
+                    e );
+            }
+            else
+            {
+                log( LogService.LOG_ERROR, m_bundle, "Error while loading components of bundle {0}/{1}",
+                new Object[] {bundle.getSymbolicName(), bundle.getBundleId()}, e );
+=======
             logger.log(LogService.LOG_DEBUG,  "Cannot get BundleContext of {0}.", null, bundle);
 
             return;
@@ -362,9 +573,25 @@ public class Activator extends AbstractExtender
             {
                 m_componentBundles.put( bundleId, null );
                 loaded = false;
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
             }
         }
 
+<<<<<<< HEAD
+    /**
+     * Unloads components of the given bundle. If no components have been loaded
+     * for the bundle, this method has no effect.
+     */
+    private void disposeComponents( Bundle bundle )
+    {
+        final Object ga;
+        synchronized ( m_componentBundles )
+        {
+            ga = m_componentBundles.remove( bundle.getBundleId() );
+        }
+
+        if ( ga != null )
+=======
         // terminate if already loaded (or currently being loaded)
         if ( loaded )
         {
@@ -387,11 +614,23 @@ public class Activator extends AbstractExtender
             }
         }
         catch ( Exception e )
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         {
             // remove the bundle id from the bundles map to ensure it is
             // not marked as being loaded
             synchronized ( m_componentBundles )
             {
+<<<<<<< HEAD
+                int reason = isStopping()
+                        ? ComponentConstants.DEACTIVATION_REASON_DISPOSED
+                        : ComponentConstants.DEACTIVATION_REASON_BUNDLE_STOPPED;
+                ( ( BundleComponentActivator ) ga ).dispose( reason );
+            }
+            catch ( Exception e )
+            {
+                log( LogService.LOG_ERROR, m_bundle, "Error while disposing components of bundle {0}/{1}",
+                    new Object[] {bundle.getSymbolicName(), bundle.getBundleId()}, e );
+=======
                 m_componentBundles.remove( bundleId );
             }
 
@@ -403,10 +642,62 @@ public class Activator extends AbstractExtender
             else
             {
                 logger.log(LogService.LOG_ERROR,  "Error while loading components of {0}", e, bundle);
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
             }
         }
     }
 
+<<<<<<< HEAD
+    @Override
+    protected void debug(Bundle bundle, String msg) {
+        log( LogService.LOG_DEBUG, bundle, msg, null );
+    }
+
+    @Override
+    protected void warn(Bundle bundle, String msg, Throwable t) {
+        log( LogService.LOG_WARNING, bundle, msg, t );
+    }
+
+    @Override
+    protected void error(String msg, Throwable t) {
+        log( LogService.LOG_DEBUG, m_bundle, msg, t );
+    }
+
+    public static void log( int level, Bundle bundle, String pattern, Object[] arguments, Throwable ex )
+    {
+        if ( isLogEnabled( level ) )
+        {
+            final String message = MessageFormat.format( pattern, arguments );
+            log( level, bundle, message, ex );
+        }
+    }
+
+    /**
+     * Returns <code>true</code> if logging for the given level is enabled.
+     */
+    public static boolean isLogEnabled( int level )
+    {
+        return m_configuration.getLogLevel() >= level;
+    }
+
+    /**
+     * Method to actually emit the log message. If the LogService is available,
+     * the message will be logged through the LogService. Otherwise the message
+     * is logged to stdout (or stderr in case of LOG_ERROR level messages),
+     *
+     * @param level The log level to log the message at
+     * @param message The message to log
+     * @param ex An optional <code>Throwable</code> whose stack trace is written,
+     *      or <code>null</code> to not log a stack trace.
+     */
+    public static void log( int level, Bundle bundle, String message, Throwable ex )
+    {
+        if ( isLogEnabled( level ) )
+        {
+            ServiceTracker t = m_logService;
+            Object logger = ( t != null ) ? t.getService() : null;
+            if ( logger == null )
+=======
     /**
      * Unloads components of the given bundle. If no components have been loaded
      * for the bundle, this method has no effect.
@@ -456,6 +747,7 @@ public class Activator extends AbstractExtender
         if ( logger.isLogEnabled(LogService.LOG_WARNING) )
         {
             if ( bundle != null )
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
             {
                 logger.log( LogService.LOG_WARNING, "{0} : " + msg, t, bundle );
             }
@@ -464,5 +756,23 @@ public class Activator extends AbstractExtender
                 logger.log( LogService.LOG_WARNING, msg, t );
             }
         }
+    }
+
+
+    public static Object getPackageAdmin()
+    {
+        if ( m_packageAdmin == null )
+        {
+            synchronized ( Activator.class )
+            {
+                if ( m_packageAdmin == null )
+                {
+                    m_packageAdmin = new ServiceTracker( m_context, PACKAGEADMIN_CLASS, null );
+                    m_packageAdmin.open();
+                }
+            }
+        }
+
+        return m_packageAdmin.getService();
     }
 }

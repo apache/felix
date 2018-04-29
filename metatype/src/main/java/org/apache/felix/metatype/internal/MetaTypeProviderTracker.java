@@ -26,7 +26,11 @@ import org.osgi.service.metatype.MetaTypeProvider;
 import org.osgi.util.tracker.ServiceTracker;
 
 
+<<<<<<< HEAD
+public class MetaTypeProviderTracker extends ServiceTracker
+=======
 public class MetaTypeProviderTracker extends ServiceTracker<MetaTypeProvider, MetaTypeProviderHolder>
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 {
 
     final MetaTypeServiceImpl mti;
@@ -39,16 +43,33 @@ public class MetaTypeProviderTracker extends ServiceTracker<MetaTypeProvider, Me
     }
 
 
+<<<<<<< HEAD
+    public Object addingService( ServiceReference reference )
+    {
+        final MetaTypeProvider provider = ( MetaTypeProvider ) this.context.getService( reference );
+=======
     @Override
     public MetaTypeProviderHolder addingService( ServiceReference<MetaTypeProvider> reference )
     {
         final MetaTypeProvider provider = this.context.getService( reference );
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         final MetaTypeProviderHolder holder = new MetaTypeProviderHolder( reference, provider );
         mti.addService( holder );
         return holder;
     }
 
 
+<<<<<<< HEAD
+    public void modifiedService( ServiceReference reference, Object service )
+    {
+        ( ( MetaTypeProviderHolder ) service ).update( this.mti );
+    }
+
+
+    public void removedService( ServiceReference reference, Object service )
+    {
+        mti.removeService( ( MetaTypeProviderHolder ) service );
+=======
     @Override
     public void modifiedService( ServiceReference<MetaTypeProvider> reference, MetaTypeProviderHolder service )
     {
@@ -60,6 +81,7 @@ public class MetaTypeProviderTracker extends ServiceTracker<MetaTypeProvider, Me
     public void removedService( ServiceReference<MetaTypeProvider> reference, MetaTypeProviderHolder service )
     {
         mti.removeService( service );
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         this.context.ungetService( reference );
     }
 }

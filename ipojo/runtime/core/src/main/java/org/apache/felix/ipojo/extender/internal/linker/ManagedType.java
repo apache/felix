@@ -310,10 +310,13 @@ public class ManagedType implements FactoryStateListener, Lifecycle {
                             // It is automatically started
                             // Future.get should never be null since this tracker is started when the factory has been created
                             ComponentInstance instance = m_future.get().createComponentInstance(instanceDeclaration.getConfiguration());
+<<<<<<< HEAD
+=======
                             if (instance instanceof InstanceBundleContextAware) {
                                 ((InstanceBundleContextAware) instance).setInstanceBundleContext(instanceDeclaration
                                         .getBundle().getBundleContext());
                             }
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 
                             // Notify the declaration that everything is fine
                             instanceDeclaration.bind();

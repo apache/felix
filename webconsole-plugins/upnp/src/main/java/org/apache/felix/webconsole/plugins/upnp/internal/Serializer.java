@@ -16,9 +16,14 @@
  */
 package org.apache.felix.webconsole.plugins.upnp.internal;
 
+<<<<<<< HEAD
+import org.json.JSONException;
+import org.json.JSONObject;
+=======
 import java.util.HashMap;
 import java.util.Map;
 
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 import org.osgi.framework.ServiceReference;
 import org.osgi.service.upnp.UPnPAction;
 import org.osgi.service.upnp.UPnPDevice;
@@ -34,14 +39,25 @@ class Serializer
         // prevent instantiation
     }
 
+<<<<<<< HEAD
+    static final JSONObject deviceToJSON(ServiceReference ref, UPnPDevice device)
+        throws JSONException
+    {
+        final JSONObject json = new JSONObject();
+=======
     static final Map<String, Object> deviceToJSON(ServiceReference ref, UPnPDevice device)
     {
         final Map<String, Object> json = new HashMap<String, Object>();
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         json.put("icon", device.getIcons(null) != null); //$NON-NLS-1$
 
         // add properties
         final String[] props = ref.getPropertyKeys();
+<<<<<<< HEAD
+        final JSONObject _props = new JSONObject();
+=======
         final Map<String, Object> _props = new HashMap<String, Object>();
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         for (int i = 0; props != null && i < props.length; i++)
         {
             _props.put(props[i], ref.getProperty(props[i]));
@@ -49,6 +65,11 @@ class Serializer
         json.put("props", _props); //$NON-NLS-1$
 
         final UPnPService[] services = device.getServices();
+<<<<<<< HEAD
+        for (int i = 0; services != null && i < services.length; i++)
+        {
+            json.append("services", services[i].getType()); //$NON-NLS-1$
+=======
         if ( services != null )
         {
             final String[] serviceTypes = new String[services.length];
@@ -57,15 +78,23 @@ class Serializer
                 serviceTypes[i] = services[i].getType();
             }
             json.put("services", serviceTypes); //$NON-NLS-1$
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         }
 
         return json;
     }
 
+<<<<<<< HEAD
+    static final JSONObject serviceToJSON(UPnPService service,
+        SessionObject session) throws JSONException
+    {
+        final JSONObject json = new JSONObject();
+=======
     static final Map<String, Object> serviceToJSON(UPnPService service,
         SessionObject session)
     {
         final Map<String, Object> json = new HashMap<String, Object>();
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 
         // add service properties
         json.put("type", service.getType()); //$NON-NLS-1$
@@ -73,6 +102,23 @@ class Serializer
 
         // add state variables
         final UPnPStateVariable[] vars = service.getStateVariables();
+<<<<<<< HEAD
+        for (int i = 0; vars != null && i < vars.length; i++)
+        {
+            Object value = null;
+            if (vars[i] instanceof UPnPLocalStateVariable)
+            {
+                value = ((UPnPLocalStateVariable) vars[i]).getCurrentValue();
+            }
+
+            if (value == null)
+                value = session.getValue(vars[i].getName());
+            if (value == null)
+                value = "---"; //$NON-NLS-1$
+
+            json.append("variables", variableToJSON(vars[i], vars[i].getName()) //$NON-NLS-1$
+            .put("value", value));// //$NON-NLS-1$
+=======
         if ( vars != null )
         {
             @SuppressWarnings("unchecked")
@@ -94,10 +140,16 @@ class Serializer
                 arr[i].put("value", value);// //$NON-NLS-1$
             }
             json.put("variables", arr); //$NON-NLS-1$
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         }
 
         // add actions
         final UPnPAction[] actions = service.getActions();
+<<<<<<< HEAD
+        for (int i = 0; actions != null && i < actions.length; i++)
+        {
+            json.append("actions", actionToJSON(actions[i])); //$NON-NLS-1$
+=======
         if ( actions != null )
         {
             Object[] arr = new Object[actions.length];
@@ -106,11 +158,37 @@ class Serializer
                 arr[i] = actionToJSON(actions[i]);
             }
             json.put("actions", arr); //$NON-NLS-1$
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         }
 
         return json;
     }
 
+<<<<<<< HEAD
+    static final JSONObject variableToJSON(final UPnPStateVariable var,
+        final String name) throws JSONException
+    {
+        return new JSONObject()//
+        .put("name", name) // //$NON-NLS-1$
+        .put("default", var.getDefaultValue()) // //$NON-NLS-1$
+        .put("min", var.getMinimum()) //$NON-NLS-1$
+        .put("max", var.getMaximum()) //$NON-NLS-1$
+        .put("step", var.getStep()) //$NON-NLS-1$
+        .put("allowed", var.getAllowedValues()) //$NON-NLS-1$
+        .put("sendsEvents", var.sendsEvents()) //$NON-NLS-1$
+        .put("type", var.getUPnPDataType()); //$NON-NLS-1$
+    }
+
+    static final JSONObject actionToJSON(UPnPAction action) throws JSONException
+    {
+        final JSONObject json = new JSONObject();
+        json.put("name", action.getName()); //$NON-NLS-1$
+        final String[] names = action.getInputArgumentNames();
+        for (int i = 0; names != null && i < names.length; i++)
+        {
+            final UPnPStateVariable variable = action.getStateVariable(names[i]);
+            json.append("inVars", variableToJSON(variable, names[i])); //$NON-NLS-1$
+=======
     static final Map<String, Object> variableToJSON(final UPnPStateVariable var,
         final String name)
     {
@@ -140,6 +218,7 @@ class Serializer
                 vars[i] = variableToJSON(variable, names[i]); //$NON-NLS-1$
             }
             json.put("inVars", vars); //$NON-NLS-1$
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         }
 
         return json;

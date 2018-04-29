@@ -29,7 +29,10 @@ import org.apache.felix.ipojo.parser.FieldMetadata;
 import org.apache.felix.ipojo.parser.MethodMetadata;
 import org.apache.felix.ipojo.parser.PojoMetadata;
 import org.apache.felix.ipojo.util.Callback;
+<<<<<<< HEAD
+=======
 import org.apache.felix.ipojo.util.Log;
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 import org.apache.felix.ipojo.util.Property;
 import org.apache.felix.ipojo.util.SecurityHelper;
 import org.osgi.framework.Constants;
@@ -97,11 +100,15 @@ public class ConfigurationHandler extends PrimitiveHandler implements ManagedSer
     /**
      * The configuration listeners.
      */
+<<<<<<< HEAD
+    private List<ConfigurationListener> m_listeners = new ArrayList<ConfigurationListener>();
+=======
     private final Set<ConfigurationListener> m_listeners = new LinkedHashSet<ConfigurationListener>();
     /**
      * The last configuration sent to listeners.
      */
     private Map<String, Object> m_lastConfiguration;
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 
     /**
      * Initialize the component type.
@@ -203,7 +210,11 @@ public class ConfigurationHandler extends PrimitiveHandler implements ManagedSer
             String man = configurables[i].getAttribute("mandatory");
             mandatory = man != null && man.equalsIgnoreCase("true");
 
+<<<<<<< HEAD
+            PropertyDescription pd = null;
+=======
             PropertyDescription pd;
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
             if (value == null) {
                 pd = new PropertyDescription(name, type, null, false); // Cannot be immutable if we have no value.
             } else {
@@ -338,7 +349,10 @@ public class ConfigurationHandler extends PrimitiveHandler implements ManagedSer
             m_sr.unregister();
             m_sr = null;
         }
+<<<<<<< HEAD
+=======
         m_lastConfiguration = Collections.emptyMap();
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     }
 
     /**
@@ -806,6 +820,16 @@ public class ConfigurationHandler extends PrimitiveHandler implements ManagedSer
 
     /**
      * Remove the given listener from the configuration handler's list of listeners.
+<<<<<<< HEAD
+     *
+     * @param listener the {@code ConfigurationListener} object to be removed
+     * @throws NullPointerException   if {@code listener} is {@code null}
+     * @throws NoSuchElementException if {@code listener} wasn't present the in configuration handler's list of listeners
+     */
+    public void removeListener(ConfigurationListener listener) {
+        if (listener == null) {
+            throw new NullPointerException("null listener");
+=======
      * If the listeners is not registered, this method does nothing.
      *
      * @param listener the {@code ConfigurationListener} object to be removed
@@ -814,10 +838,25 @@ public class ConfigurationHandler extends PrimitiveHandler implements ManagedSer
     public void removeListener(ConfigurationListener listener) {
         if (listener == null) {
             throw new NullPointerException("The list of listener is null");
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         }
         synchronized (m_listeners) {
             // We definitely cannot rely on listener's equals method...
             // ...so we need to manually search for the listener, using ==.
+<<<<<<< HEAD
+            int i = -1;
+            for (int j = m_listeners.size() - 1; j >= 0; j--) {
+                if (m_listeners.get(j) == listener) {
+                    // Found!
+                    i = j;
+                    break;
+                }
+            }
+            if (i != -1) {
+                m_listeners.remove(i);
+            } else {
+                throw new NoSuchElementException("no such listener");
+=======
             ConfigurationListener found = null;
             for (ConfigurationListener l : m_listeners) {
                 if (l == listener) {
@@ -827,6 +866,7 @@ public class ConfigurationHandler extends PrimitiveHandler implements ManagedSer
             }
             if (found != null) {
                 m_listeners.remove(found);
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
             }
         }
     }
@@ -837,6 +877,19 @@ public class ConfigurationHandler extends PrimitiveHandler implements ManagedSer
      * @param map the new configuration of the component instance.
      */
     private void notifyListeners(Map<String, Object> map) {
+<<<<<<< HEAD
+        // Get a snapshot of the listeners
+        List<ConfigurationListener> tmp;
+        synchronized (m_listeners) {
+            tmp = new ArrayList<ConfigurationListener>(m_listeners);
+        }
+        // Protect the map.
+        map = Collections.unmodifiableMap(map);
+        // Do notify, outside any lock
+        for (ConfigurationListener l : tmp) {
+            try {
+                l.configurationChanged(getInstanceManager(), map);
+=======
 
         // Get a snapshot of the listeners
         // and check if we had a change in the map.
@@ -885,6 +938,7 @@ public class ConfigurationHandler extends PrimitiveHandler implements ManagedSer
         for (ConfigurationListener l : tmp) {
             try {
                 l.configurationChanged(getInstanceManager(), m_lastConfiguration);
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
             } catch (Throwable e) {
                 // Failure inside a listener: put a warning on the logger, and continue
                 warn(String.format(

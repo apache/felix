@@ -1,5 +1,9 @@
 /*
+<<<<<<< HEAD
+ * Copyright (c) OSGi Alliance (2001, 2010). All Rights Reserved.
+=======
  * Copyright (c) OSGi Alliance (2001, 2013). All Rights Reserved.
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -29,7 +33,11 @@ import org.osgi.framework.Bundle;
  * 
  * @ThreadSafe
  * @noimplement
+<<<<<<< HEAD
+ * @version $Id: a268c3bdc986080fa16bdb2f56ba1d3800d030dd $
+=======
  * @author $Id: 4aad25d2f145d9a2d24825bc481dcc254b74ed51 $
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
  * @deprecated This service has been replaced by the
  *             <code>org.osgi.framework.wiring</code> package.
  * @see org.osgi.service.packageadmin.ExportedPackage
@@ -104,6 +112,32 @@ public interface PackageAdmin {
 	 * graph any bundle that is wired to a package that is currently exported by
 	 * a bundle in the graph. The graph is fully constructed when there is no
 	 * bundle outside the graph that is wired to a bundle in the graph. The
+<<<<<<< HEAD
+	 * graph may contain {@code UNINSTALLED} bundles that are currently
+	 * still exporting packages.
+	 * 
+	 * <li>Each bundle in the graph that is in the {@code ACTIVE} state
+	 * will be stopped as described in the {@code Bundle.stop} method.
+	 * 
+	 * <li>Each bundle in the graph that is in the {@code RESOLVED} state
+	 * is unresolved and thus moved to the {@code INSTALLED} state. The
+	 * effect of this step is that bundles in the graph are no longer
+	 * {@code RESOLVED}.
+	 * 
+	 * <li>Each bundle in the graph that is in the {@code UNINSTALLED}
+	 * state is removed from the graph and is now completely removed from the
+	 * Framework.
+	 * 
+	 * <li>Each bundle in the graph that was in the {@code ACTIVE} state
+	 * prior to Step 2 is started as described in the {@code Bundle.start}
+	 * method, causing all bundles required for the restart to be resolved. It
+	 * is possible that, as a result of the previous steps, packages that were
+	 * previously exported no longer are. Therefore, some bundles may be
+	 * unresolvable until another bundle offering a compatible package for
+	 * export has been installed in the Framework.
+	 * <li>A framework event of type
+	 * {@code FrameworkEvent.PACKAGES_REFRESHED} is fired.
+=======
 	 * graph may contain {@code UNINSTALLED} bundles that are currently still
 	 * exporting packages.</li>
 	 * 
@@ -126,6 +160,7 @@ public interface PackageAdmin {
 	 * export has been installed in the Framework.</li>
 	 * <li>A framework event of type {@code FrameworkEvent.PACKAGES_REFRESHED}
 	 * is fired.</li>
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 	 * </ol>
 	 * 
 	 * <p>
@@ -275,7 +310,11 @@ public interface PackageAdmin {
 	 * Returns the special type of the specified bundle. The bundle type values
 	 * are:
 	 * <ul>
+<<<<<<< HEAD
+	 * <li>{@link #BUNDLE_TYPE_FRAGMENT}
+=======
 	 * <li>{@link #BUNDLE_TYPE_FRAGMENT}</li>
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 	 * </ul>
 	 * 
 	 * A bundle may be more than one type at a time. A type code is used to

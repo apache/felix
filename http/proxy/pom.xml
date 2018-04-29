@@ -22,13 +22,21 @@
     <parent>
         <groupId>org.apache.felix</groupId>
         <artifactId>org.apache.felix.http.parent</artifactId>
+<<<<<<< HEAD
+        <version>3-SNAPSHOT</version>
+=======
         <version>9</version>
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         <relativePath>../parent/pom.xml</relativePath>
     </parent>
 
     <name>Apache Felix Http Proxy</name>
     <artifactId>org.apache.felix.http.proxy</artifactId>
+<<<<<<< HEAD
+    <version>2.2.3-SNAPSHOT</version>
+=======
     <version>3.0.3-SNAPSHOT</version>
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     <packaging>jar</packaging>
 
     <scm>
@@ -42,6 +50,19 @@
             <plugin>
                 <groupId>org.apache.felix</groupId>
                 <artifactId>maven-bundle-plugin</artifactId>
+<<<<<<< HEAD
+                <configuration>
+                    <instructions>
+                        <Export-Package>
+                            org.apache.felix.http.proxy;version=2.1.0
+                        </Export-Package>
+                        <Import-Package>
+                            *;resolution:=optional
+                        </Import-Package>
+                    </instructions>
+                </configuration>
+=======
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
             </plugin>
         </plugins>
     </build>
@@ -49,6 +70,20 @@
     <dependencies>
         <dependency>
             <groupId>javax.servlet</groupId>
+<<<<<<< HEAD
+            <artifactId>servlet-api</artifactId>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.osgi</groupId>
+            <artifactId>org.osgi.core</artifactId>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.osgi</groupId>
+            <artifactId>org.osgi.compendium</artifactId>
+            <scope>provided</scope>
+=======
             <artifactId>javax.servlet-api</artifactId>
         </dependency>
         <dependency>
@@ -58,6 +93,7 @@
         <dependency>
             <groupId>org.osgi</groupId>
             <artifactId>osgi.cmpn</artifactId>
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         </dependency>
     </dependencies>
 

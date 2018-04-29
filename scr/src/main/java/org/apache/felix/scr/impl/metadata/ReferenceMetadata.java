@@ -21,14 +21,22 @@ package org.apache.felix.scr.impl.metadata;
 import java.util.Set;
 import java.util.TreeSet;
 
+<<<<<<< HEAD
+import org.apache.felix.scr.impl.helper.Logger;
+
+=======
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 /**
  * Information associated to a dependency
  *
  */
 public class ReferenceMetadata
 {
+<<<<<<< HEAD
+=======
 	public enum ReferenceScope {bundle, prototype, prototype_required}
 
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     // constant for option single reference - 0..1
     public static final String CARDINALITY_0_1 = "0..1";
 
@@ -42,7 +50,11 @@ public class ReferenceMetadata
     public static final String CARDINALITY_1_N = "1..n";
 
     // set of valid cardinality settings
+<<<<<<< HEAD
+    private static final Set CARDINALITY_VALID;
+=======
     private static final Set<String> CARDINALITY_VALID;
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 
     // constant for static policy
     public static final String POLICY_STATIC = "static";
@@ -51,7 +63,11 @@ public class ReferenceMetadata
     public static final String POLICY_DYNAMIC = "dynamic";
 
     // set of valid policy settings
+<<<<<<< HEAD
+    private static final Set POLICY_VALID;
+=======
     private static final Set<String> POLICY_VALID;
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 
     // constant for reluctant policy option
     public static final String POLICY_OPTION_RELUCTANT = "reluctant";
@@ -60,6 +76,18 @@ public class ReferenceMetadata
     public static final String POLICY_OPTION_GREEDY = "greedy";
 
     // set of valid policy option settings
+<<<<<<< HEAD
+    private static final Set POLICY_OPTION_VALID;
+
+    // Name for the reference (required)
+    private String m_name = null;
+
+    // Interface name (required)
+    private String m_interface = null;
+
+    // Cardinality (optional, default="1..1")
+    private String m_cardinality = null;
+=======
     private static final Set<String> POLICY_OPTION_VALID;
 
     // constant for update field strategy
@@ -97,11 +125,30 @@ public class ReferenceMetadata
 
     // Cardinality (optional, default="1..1")
     private String m_cardinality;
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 
     // Target (optional)
     private String m_target;
 
     // Name of the bind method (optional)
+<<<<<<< HEAD
+    private String m_bind = null;
+
+    // Name of the updated method (optional, since DS 1.1-felix)
+    private String m_updated = null;
+
+    // Name of the unbind method (optional)
+    private String m_unbind = null;
+
+    // Policy attribute (optional, default = static)
+    private String m_policy = null;
+
+    // Policy option attribute (optional, default = reluctant)
+    private String m_policy_option = null;
+
+    // Flag that is set once the component is verified (its properties cannot be changed)
+    private boolean m_validated = false;
+=======
     private String m_bind;
 
     // Name of the updated method (optional, since DS 1.1-felix)
@@ -135,12 +182,19 @@ public class ReferenceMetadata
     // Parameter index, set based on {@code m_parameter} after validation
     // (optional, since DS 1.4)
     private Integer m_parameterIndex;
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 
     // Flags that store the values passed as strings
     private boolean m_isStatic = true;
     private boolean m_isOptional = false;
     private boolean m_isMultiple = false;
     private boolean m_isReluctant = true;
+<<<<<<< HEAD
+
+    static
+    {
+        CARDINALITY_VALID = new TreeSet();
+=======
     private boolean m_isReplace = true;
 
     // Flag that is set once the component is verified (its properties cannot be changed)
@@ -149,11 +203,23 @@ public class ReferenceMetadata
     static
     {
         CARDINALITY_VALID = new TreeSet<>();
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         CARDINALITY_VALID.add( CARDINALITY_0_1 );
         CARDINALITY_VALID.add( CARDINALITY_0_N );
         CARDINALITY_VALID.add( CARDINALITY_1_1 );
         CARDINALITY_VALID.add( CARDINALITY_1_N );
 
+<<<<<<< HEAD
+        POLICY_VALID = new TreeSet();
+        POLICY_VALID.add( POLICY_DYNAMIC );
+        POLICY_VALID.add( POLICY_STATIC );
+
+        POLICY_OPTION_VALID = new TreeSet();
+        POLICY_OPTION_VALID.add( POLICY_OPTION_RELUCTANT );
+        POLICY_OPTION_VALID.add( POLICY_OPTION_GREEDY );
+    }
+
+=======
         POLICY_VALID = new TreeSet<>();
         POLICY_VALID.add( POLICY_DYNAMIC );
         POLICY_VALID.add( POLICY_STATIC );
@@ -173,6 +239,7 @@ public class ReferenceMetadata
         FIELD_VALUE_TYPE_VALID.add ( FIELD_VALUE_TYPE_SERVICEOBJECTS );
         FIELD_VALUE_TYPE_VALID.add ( FIELD_VALUE_TYPE_TUPLE );
     }
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 
     /////////////////////////////////////////////// setters ///////////////////////////////////
 
@@ -331,6 +398,11 @@ public class ReferenceMetadata
     }
 
 
+<<<<<<< HEAD
+    /////////////////////////////////////////////// getters ///////////////////////////////////
+
+    /**
+=======
     /**
      * Setter for the field attribute
      *
@@ -402,6 +474,7 @@ public class ReferenceMetadata
     /////////////////////////////////////////////// getters ///////////////////////////////////
 
 	/**
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
      * Returns the name of the reference
      *
      * @return A string containing the reference's name
@@ -503,6 +576,8 @@ public class ReferenceMetadata
     }
 
 
+<<<<<<< HEAD
+=======
     /**
      * Get the name of a field in the component implementation class that is used to hold
      * the reference
@@ -561,6 +636,7 @@ public class ReferenceMetadata
         return m_collection_type;
     }
 
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     // Getters for boolean values that determine both policy and cardinality
 
     /**
@@ -573,6 +649,10 @@ public class ReferenceMetadata
         return m_isStatic;
     }
 
+<<<<<<< HEAD
+
+=======
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     /**
      * Test if dependency is optional (0..1 or 0..n)
      *
@@ -605,6 +685,8 @@ public class ReferenceMetadata
         return m_isReluctant;
     }
 
+<<<<<<< HEAD
+=======
     /**
      * Test if field strategy is replace.
      *
@@ -614,6 +696,7 @@ public class ReferenceMetadata
     {
         return m_isReplace;
     }
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 
     /**
      * Returns the name of the component property referring to the {@link #getTarget() target}
@@ -627,6 +710,8 @@ public class ReferenceMetadata
         return getName() + ".target";
     }
 
+<<<<<<< HEAD
+=======
     public String getMinCardinalityName()
     {
         return getName() + ".cardinality.minimum";
@@ -636,11 +721,20 @@ public class ReferenceMetadata
     public ReferenceScope getScope() {
 		return m_scope;
 	}
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 
     /**
      *  Method used to verify if the semantics of this metadata are correct
      *
      */
+<<<<<<< HEAD
+    void validate( final ComponentMetadata componentMetadata, final Logger logger )
+    {
+        if ( m_name == null )
+        {
+            // 112.10 name attribute is optional, defaults to interface since DS 1.1
+            if ( !componentMetadata.isDS11() )
+=======
     void validate(final ComponentMetadata componentMetadata )
     {
         final DSVersion dsVersion = componentMetadata.getDSVersion();
@@ -649,6 +743,7 @@ public class ReferenceMetadata
         {
             // 112.10 name attribute is optional, defaults to interface since DS 1.1
             if ( !dsVersion.isDS11() )
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
             {
                 throw componentMetadata.validationFailure( "A name must be declared for the reference" );
             }
@@ -687,11 +782,20 @@ public class ReferenceMetadata
         {
             throw componentMetadata.validationFailure( "Policy option must be one of " + POLICY_OPTION_VALID );
         }
+<<<<<<< HEAD
+        else if ( !componentMetadata.isDS12() && !POLICY_OPTION_RELUCTANT.equals( m_policy_option ) )
+=======
         else if ( !dsVersion.isDS12() && !POLICY_OPTION_RELUCTANT.equals( m_policy_option ) )
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         {
             throw componentMetadata.validationFailure( "Policy option must be reluctant for DS < 1.2" );
         }
 
+<<<<<<< HEAD
+
+        // updated method is only supported in namespace xxx and later
+        if ( m_updated != null && !componentMetadata.isDS11Felix() )
+=======
         if (m_scopeName != null) {
         	    if ( !dsVersion.isDS13() )
         	    {
@@ -710,11 +814,17 @@ public class ReferenceMetadata
         // checks for event based injection
         // updated method is only supported in namespace xxx and later
         if ( m_updated != null && !(dsVersion.isDS12() || dsVersion == DSVersion.DS11Felix) )
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         {
             // FELIX-3648 validation must fail (instead of just ignore)
             throw componentMetadata.validationFailure( "updated method declaration requires DS 1.2 or later namespace " );
         }
 
+<<<<<<< HEAD
+        m_validated = true;
+    }
+
+=======
         // checks for field injection
         if ( m_field != null )
         {
@@ -824,4 +934,5 @@ public class ReferenceMetadata
                 ", collection-type=" + this.getFieldCollectionType() +
                 ", parameter=" + this.getParameterIndex();
     }
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 }

@@ -18,6 +18,11 @@
  */
 package org.apache.felix.framework.util;
 
+<<<<<<< HEAD
+import java.io.*;
+import java.net.URL;
+
+=======
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -25,20 +30,32 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.lang.reflect.Method;
 import java.net.URL;
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+<<<<<<< HEAD
+=======
 import java.util.Iterator;
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Properties;
+<<<<<<< HEAD
+import org.apache.felix.framework.Logger;
+import org.apache.felix.framework.capabilityset.CapabilitySet;
+import org.apache.felix.framework.wiring.BundleCapabilityImpl;
+import org.apache.felix.framework.wiring.BundleRequirementImpl;
+
+=======
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.felix.framework.Felix;
 import org.apache.felix.framework.Logger;
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 import org.osgi.framework.Bundle;
 import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceReference;
@@ -47,7 +64,10 @@ import org.osgi.framework.wiring.BundleRequirement;
 import org.osgi.framework.wiring.BundleRevision;
 import org.osgi.framework.wiring.BundleWire;
 import org.osgi.framework.wiring.BundleWiring;
+<<<<<<< HEAD
+=======
 import org.osgi.resource.Resource;
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 
 public class Util
 {
@@ -56,9 +76,16 @@ public class Util
     **/
     private static final String DEFAULT_PROPERTIES_FILE = "default.properties";
 
+<<<<<<< HEAD
+    public static String getDefaultProperty(Logger logger, String name)
+    {
+        String value = null;
+
+=======
     public static Properties loadDefaultProperties(Logger logger)
     {
         Properties defaultProperties = new Properties();
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         URL propURL = Util.class.getClassLoader().getResource(DEFAULT_PROPERTIES_FILE);
         if (propURL != null)
         {
@@ -67,8 +94,19 @@ public class Util
             {
                 // Load properties from URL.
                 is = propURL.openConnection().getInputStream();
+<<<<<<< HEAD
+                Properties props = new Properties();
+                props.load(is);
+                is.close();
+                // Perform variable substitution for property.
+                value = props.getProperty(name);
+                value = (value != null)
+                    ? Util.substVars(value, name, null, props)
+                    : null;
+=======
                 defaultProperties.load(is);
                 is.close();
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
             }
             catch (Exception ex)
             {
@@ -86,6 +124,11 @@ public class Util
                     Logger.LOG_ERROR, "Unable to load any configuration properties.", ex);
             }
         }
+<<<<<<< HEAD
+        return value;
+    }
+
+=======
         return initializeJPMS(defaultProperties);
     }
 
@@ -181,6 +224,7 @@ public class Util
         return result;
     }
 
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     /**
      * Converts a revision identifier to a bundle identifier. Revision IDs
      * are typically <tt>&lt;bundle-id&gt;.&lt;revision&gt;</tt>; this
@@ -385,6 +429,7 @@ public class Util
      */
     public static List<BundleCapability> getCapabilityByNamespace(
         BundleRevision br, String namespace)
+<<<<<<< HEAD
     {
         final List<BundleCapability> matching = new ArrayList();
         final List<BundleCapability> caps = (br.getWiring() != null)
@@ -411,6 +456,34 @@ public class Util
         {
             for (BundleRequirement req : reqs)
             {
+=======
+    {
+        final List<BundleCapability> matching = new ArrayList();
+        final List<BundleCapability> caps = (br.getWiring() != null)
+            ? br.getWiring().getCapabilities(null)
+            : br.getDeclaredCapabilities(null);
+        if (caps != null)
+        {
+            for (BundleCapability cap : caps)
+            {
+                if (cap.getNamespace().equals(namespace))
+                {
+                    matching.add(cap);
+                }
+            }
+        }
+        return matching;
+    }
+
+    public static List<BundleRequirement> getDynamicRequirements(
+        List<BundleRequirement> reqs)
+    {
+        List<BundleRequirement> result = new ArrayList<BundleRequirement>();
+        if (reqs != null)
+        {
+            for (BundleRequirement req : reqs)
+            {
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
                 String resolution = req.getDirectives().get(Constants.RESOLUTION_DIRECTIVE);
                 if ((resolution != null) && resolution.equals("dynamic"))
                 {
@@ -721,7 +794,11 @@ public class Util
                 {
                     if (entry.getKey().equalsIgnoreCase(Constants.SINGLETON_DIRECTIVE))
                     {
+<<<<<<< HEAD
+                        return Boolean.valueOf((String) entry.getValue());
+=======
                         return Boolean.valueOf(entry.getValue());
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
                     }
                 }
                 // Can only have one bundle capability, so break.
@@ -743,6 +820,8 @@ public class Util
         return ((revision.getTypes() & BundleRevision.TYPE_FRAGMENT) > 0);
     }
 
+<<<<<<< HEAD
+=======
     public static boolean isFragment(Resource resource)
     {
         if (resource instanceof BundleRevision)
@@ -751,6 +830,7 @@ public class Util
             return false;
     }
 
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     public static List<BundleRevision> getFragments(BundleWiring wiring)
     {
         List<BundleRevision> fragments = Collections.EMPTY_LIST;
@@ -885,10 +965,13 @@ public class Util
         builder.insert(23, '-');
         return builder.toString();
     }
+<<<<<<< HEAD
+=======
 
     public static <K,V> V putIfAbsentAndReturn(ConcurrentHashMap<K,V> map, K key, V value)
     {
         V result = map.putIfAbsent(key, value);
         return result != null ? result : value;
     }
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 }

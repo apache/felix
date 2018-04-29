@@ -1,5 +1,9 @@
 /*
+<<<<<<< HEAD
+ * Copyright (c) OSGi Alliance (2010, 2012). All Rights Reserved.
+=======
  * Copyright (c) OSGi Alliance (2010, 2013). All Rights Reserved.
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,7 +21,10 @@
 package org.osgi.framework.wiring;
 
 import java.util.Map;
+<<<<<<< HEAD
+=======
 import org.osgi.annotation.versioning.ProviderType;
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 import org.osgi.framework.namespace.AbstractWiringNamespace;
 import org.osgi.resource.Requirement;
 
@@ -26,9 +33,15 @@ import org.osgi.resource.Requirement;
  * revision}.
  * 
  * @ThreadSafe
+<<<<<<< HEAD
+ * @noimplement
+ * @version $Id: 212ffb64f724d982db86ff7e49ed64ea530e670a $
+ */
+=======
  * @author $Id: ac0578af567754bcd12c63a350c06afdd1bfec05 $
  */
 @ProviderType
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 public interface BundleRequirement extends Requirement {
 	/**
 	 * Returns the bundle revision declaring this requirement.

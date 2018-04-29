@@ -18,12 +18,27 @@
  */
 package org.apache.felix.http.proxy;
 
+<<<<<<< HEAD
+import java.util.EventListener;
+
+=======
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 import javax.servlet.ServletContext;
 import javax.servlet.ServletContextEvent;
 import javax.servlet.ServletContextListener;
 import javax.servlet.http.HttpSessionAttributeListener;
 import javax.servlet.http.HttpSessionBindingEvent;
 import javax.servlet.http.HttpSessionEvent;
+<<<<<<< HEAD
+import javax.servlet.http.HttpSessionListener;
+
+import org.osgi.framework.BundleContext;
+import org.osgi.framework.Constants;
+import org.osgi.framework.Filter;
+import org.osgi.framework.InvalidSyntaxException;
+import org.osgi.framework.ServiceReference;
+import org.osgi.util.tracker.ServiceTracker;
+=======
 import javax.servlet.http.HttpSessionIdListener;
 import javax.servlet.http.HttpSessionListener;
 
@@ -31,6 +46,7 @@ import org.apache.felix.http.proxy.impl.EventDispatcherTracker;
 import org.apache.felix.http.proxy.impl.ProxyServletContextListener;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.InvalidSyntaxException;
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 
 /**
  * The <code>ProxyListener</code> implements a Servlet API listener for HTTP
@@ -38,6 +54,22 @@ import org.osgi.framework.InvalidSyntaxException;
  * and forwarded to the event dispatcher.
  *
  * @since 2.1.0
+<<<<<<< HEAD
+ */
+public class ProxyListener implements HttpSessionAttributeListener, HttpSessionListener, ServletContextListener
+{
+
+    private ServletContext servletContext;
+
+    private ServiceTracker eventDispatcherTracker;
+
+    private HttpSessionListener sessionDispatcher;
+
+    private HttpSessionAttributeListener attributeDispatcher;
+
+    // ---------- ServletContextListener
+
+=======
  * @deprecated Use the {@link ProxyServletContextListener} instead.
  */
 @Deprecated
@@ -55,12 +87,16 @@ public class ProxyListener
     // ---------- ServletContextListener
 
     @Override
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     public void contextInitialized(final ServletContextEvent sce)
     {
         this.servletContext = sce.getServletContext();
     }
 
+<<<<<<< HEAD
+=======
     @Override
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     public void contextDestroyed(final ServletContextEvent sce)
     {
         if (this.eventDispatcherTracker != null)
@@ -73,7 +109,10 @@ public class ProxyListener
 
     // ---------- HttpSessionListener
 
+<<<<<<< HEAD
+=======
     @Override
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     public void sessionCreated(final HttpSessionEvent se)
     {
         final HttpSessionListener sessionDispatcher = getSessionDispatcher();
@@ -83,7 +122,10 @@ public class ProxyListener
         }
     }
 
+<<<<<<< HEAD
+=======
     @Override
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     public void sessionDestroyed(final HttpSessionEvent se)
     {
         final HttpSessionListener sessionDispatcher = getSessionDispatcher();
@@ -93,6 +135,10 @@ public class ProxyListener
         }
     }
 
+<<<<<<< HEAD
+    // ---------- HttpSessionAttributeListener
+
+=======
     // ---------- HttpSessionIdListener
 
     @Override
@@ -108,6 +154,7 @@ public class ProxyListener
     // ---------- HttpSessionAttributeListener
 
     @Override
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     public void attributeAdded(final HttpSessionBindingEvent se)
     {
         final HttpSessionAttributeListener attributeDispatcher = getAttributeDispatcher();
@@ -117,7 +164,10 @@ public class ProxyListener
         }
     }
 
+<<<<<<< HEAD
+=======
     @Override
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     public void attributeRemoved(final HttpSessionBindingEvent se)
     {
         final HttpSessionAttributeListener attributeDispatcher = getAttributeDispatcher();
@@ -127,7 +177,10 @@ public class ProxyListener
         }
     }
 
+<<<<<<< HEAD
+=======
     @Override
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     public void attributeReplaced(final HttpSessionBindingEvent se)
     {
         final HttpSessionAttributeListener attributeDispatcher = getAttributeDispatcher();
@@ -154,7 +207,20 @@ public class ProxyListener
             try
             {
                 BundleContext bundleContext = (BundleContext) bundleContextAttr;
+<<<<<<< HEAD
+                Filter filter = createFilter(bundleContext, null);
+                this.eventDispatcherTracker = new ServiceTracker(bundleContext, filter, null)
+                {
+                    public void removedService(ServiceReference reference, Object service)
+                    {
+                        ProxyListener.this.sessionDispatcher = null;
+                        ProxyListener.this.attributeDispatcher = null;
+                        super.removedService(reference, service);
+                    }
+                };
+=======
                 this.eventDispatcherTracker = new EventDispatcherTracker(bundleContext);
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
                 this.eventDispatcherTracker.open();
             }
             catch (InvalidSyntaxException e)
@@ -168,6 +234,39 @@ public class ProxyListener
 
     private HttpSessionListener getSessionDispatcher()
     {
+<<<<<<< HEAD
+        if (this.sessionDispatcher == null)
+        {
+            final Object dispatcher = getDispatcher();
+            if (dispatcher instanceof HttpSessionListener)
+            {
+                this.sessionDispatcher = (HttpSessionListener) dispatcher;
+            }
+        }
+        return this.sessionDispatcher;
+    }
+
+    private HttpSessionAttributeListener getAttributeDispatcher()
+    {
+        if (this.attributeDispatcher == null)
+        {
+            final Object dispatcher = getDispatcher();
+            if (dispatcher instanceof HttpSessionAttributeListener)
+            {
+                this.attributeDispatcher = (HttpSessionAttributeListener) dispatcher;
+            }
+        }
+        return this.attributeDispatcher;
+    }
+
+    private static Filter createFilter(BundleContext context, String filter) throws InvalidSyntaxException
+    {
+        StringBuffer str = new StringBuffer();
+        str.append("(&(").append(Constants.OBJECTCLASS).append("=");
+        str.append(EventListener.class.getName()).append(")");
+        str.append(filter != null ? filter : DispatcherTracker.DEFAULT_FILTER).append(")");
+        return context.createFilter(str.toString());
+=======
         if (this.eventDispatcherTracker != null)
         {
             return this.eventDispatcherTracker.getHttpSessionListener();
@@ -191,5 +290,6 @@ public class ProxyListener
             return this.eventDispatcherTracker.getHttpSessionAttributeListener();
         }
         return null;
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     }
 }

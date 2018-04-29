@@ -1,5 +1,9 @@
 /*
+<<<<<<< HEAD
+ * Copyright (c) OSGi Alliance (2010). All Rights Reserved.
+=======
  * Copyright (c) OSGi Alliance (2010, 2013). All Rights Reserved.
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,7 +27,11 @@ package org.osgi.framework.hooks.weaving;
  * <p>
  * This exception conforms to the general purpose exception chaining mechanism.
  * 
+<<<<<<< HEAD
+ * @version $Id: eb38b85f6ed66ec445fb2f0ee7143df021327a9a $
+=======
  * @author $Id: 7575fc1b015fea7c77397391df6c8d2085513e76 $
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
  */
 
 public class WeavingException extends RuntimeException {

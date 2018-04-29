@@ -1,3 +1,5 @@
+<<<<<<< HEAD
+=======
 Changes from 4 to 5
 -------------------
 ** Improvement
@@ -20,6 +22,7 @@ Changes from 3 to 4
     * [FELIX-5160] - Update configuration for Apache rat plugin
 
 
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 Changes from 2.1 to 3
 ---------------------
 

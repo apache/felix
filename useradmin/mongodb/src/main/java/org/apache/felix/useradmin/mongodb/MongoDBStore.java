@@ -147,8 +147,12 @@ public class MongoDBStore implements RoleProvider, RoleRepositoryStore, UserAdmi
             result.getLastError().throwOnError();
         }
 
+<<<<<<< HEAD
+        return role;
+=======
         // FELIX-4400: ensure we return the correct role...
         return getRole(roleName);
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     }
 
     /**

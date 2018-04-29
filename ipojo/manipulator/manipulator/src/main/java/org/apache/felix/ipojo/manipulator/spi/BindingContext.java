@@ -22,9 +22,13 @@ package org.apache.felix.ipojo.manipulator.spi;
 import org.apache.felix.ipojo.manipulator.Reporter;
 import org.apache.felix.ipojo.manipulator.metadata.annotation.ComponentWorkbench;
 import org.objectweb.asm.Type;
+<<<<<<< HEAD
+import org.objectweb.asm.tree.MemberNode;
+=======
 import org.objectweb.asm.tree.ClassNode;
 import org.objectweb.asm.tree.FieldNode;
 import org.objectweb.asm.tree.MethodNode;
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 
 import java.lang.annotation.ElementType;
 
@@ -39,15 +43,32 @@ public class BindingContext {
      *
      */
     private ComponentWorkbench workbench;
+<<<<<<< HEAD
+    private MemberNode node;
+=======
     private FieldNode field;
     private MethodNode method;
     private ClassNode clazz;
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     private ElementType elementType;
     private int parameterIndex;
     private Reporter reporter;
     private Type annotationType;
     private Object visitor;
 
+<<<<<<< HEAD
+    public BindingContext(final ComponentWorkbench workbench,
+                          final Reporter reporter,
+                          final Type annotationType,
+                          final MemberNode node,
+                          final ElementType elementType,
+                          final int parameterIndex,
+                          final Object visitor) {
+        this.workbench = workbench;
+        this.reporter = reporter;
+        this.annotationType = annotationType;
+        this.node = node;
+=======
 
     public BindingContext(final ComponentWorkbench workbench,
                           final Reporter reporter,
@@ -91,6 +112,7 @@ public class BindingContext {
         this.workbench = workbench;
         this.reporter = reporter;
         this.annotationType = annotationType;
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         this.elementType = elementType;
         this.parameterIndex = parameterIndex;
         this.visitor = visitor;
@@ -100,6 +122,10 @@ public class BindingContext {
         return workbench;
     }
 
+<<<<<<< HEAD
+    public MemberNode getNode() {
+        return node;
+=======
     public FieldNode getFieldNode() {
         return field;
     }
@@ -110,6 +136,7 @@ public class BindingContext {
 
     public ClassNode getClassNode() {
         return clazz;
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     }
 
     public ElementType getElementType() {
@@ -131,6 +158,8 @@ public class BindingContext {
     public Object getVisitor() {
         return visitor;
     }
+<<<<<<< HEAD
+=======
 
     /**
      * This method is just to support the compatibility with the previous version. It returns an ASM node of the
@@ -159,4 +188,5 @@ public class BindingContext {
         // No node ?
         return null;
     }
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 }

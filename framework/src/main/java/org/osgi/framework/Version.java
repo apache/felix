@@ -1,5 +1,9 @@
 /*
+<<<<<<< HEAD
+ * Copyright (c) OSGi Alliance (2004, 2012). All Rights Reserved.
+=======
  * Copyright (c) OSGi Alliance (2004, 2014). All Rights Reserved.
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -37,7 +41,11 @@ import java.util.StringTokenizer;
  * 
  * @since 1.3
  * @Immutable
+<<<<<<< HEAD
+ * @version $Id: a0b5a865f7fbf2b3dcb77a13b2e99da0b64702bb $
+=======
  * @author $Id: c24d4d37a0657ac69de29085d2d290cbb0031c4a $
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
  */
 
 public class Version implements Comparable<Version> {
@@ -210,13 +218,21 @@ public class Version implements Comparable<Version> {
 	 * Parses a version identifier from the specified string.
 	 * 
 	 * <p>
+<<<<<<< HEAD
+	 * See {@code Version(String)} for the format of the version string.
+=======
 	 * See {@link #Version(String)} for the format of the version string.
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 	 * 
 	 * @param version String representation of the version identifier. Leading
 	 *        and trailing whitespace will be ignored.
 	 * @return A {@code Version} object representing the version identifier. If
 	 *         {@code version} is {@code null} or the empty string then
+<<<<<<< HEAD
+	 *         {@code emptyVersion} will be returned.
+=======
 	 *         {@link #emptyVersion} will be returned.
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 	 * @throws IllegalArgumentException If {@code version} is improperly
 	 *         formatted.
 	 */
@@ -225,6 +241,8 @@ public class Version implements Comparable<Version> {
 			return emptyVersion;
 		}
 
+<<<<<<< HEAD
+=======
 		return valueOf(version);
 	}
 
@@ -249,6 +267,7 @@ public class Version implements Comparable<Version> {
 	 * @since 1.8
 	 */
 	public static Version valueOf(String version) {
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 		version = version.trim();
 		if (version.length() == 0) {
 			return emptyVersion;
@@ -303,7 +322,10 @@ public class Version implements Comparable<Version> {
 	 * 
 	 * @return The string representation of this version identifier.
 	 */
+<<<<<<< HEAD
+=======
 	@Override
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 	public String toString() {
 		return toString0();
 	}
@@ -314,9 +336,14 @@ public class Version implements Comparable<Version> {
 	 * @return The string representation of this version identifier.
 	 */
 	String toString0() {
+<<<<<<< HEAD
+		if (versionString != null) {
+			return versionString;
+=======
 		String s = versionString;
 		if (s != null) {
 			return s;
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 		}
 		int q = qualifier.length();
 		StringBuffer result = new StringBuffer(20 + q);
@@ -337,6 +364,13 @@ public class Version implements Comparable<Version> {
 	 * 
 	 * @return An integer which is a hash code value for this object.
 	 */
+<<<<<<< HEAD
+	public int hashCode() {
+		if (hash != 0) {
+			return hash;
+		}
+		int h = 31 * 17;
+=======
 	@Override
 	public int hashCode() {
 		int h = hash;
@@ -344,6 +378,7 @@ public class Version implements Comparable<Version> {
 			return h;
 		}
 		h = 31 * 17;
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 		h = 31 * h + major;
 		h = 31 * h + minor;
 		h = 31 * h + micro;
@@ -363,7 +398,10 @@ public class Version implements Comparable<Version> {
 	 * @return {@code true} if {@code object} is a {@code Version} and is equal
 	 *         to this object; {@code false} otherwise.
 	 */
+<<<<<<< HEAD
+=======
 	@Override
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 	public boolean equals(Object object) {
 		if (object == this) { // quicktest
 			return true;

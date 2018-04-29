@@ -34,9 +34,13 @@ import org.osgi.framework.Constants;
 import org.osgi.framework.Filter;
 import org.osgi.framework.FrameworkListener;
 import org.osgi.framework.InvalidSyntaxException;
+<<<<<<< HEAD
+import org.osgi.framework.ServiceListener;
+=======
 import org.osgi.framework.ServiceFactory;
 import org.osgi.framework.ServiceListener;
 import org.osgi.framework.ServiceObjects;
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 import org.osgi.framework.ServicePermission;
 import org.osgi.framework.ServiceReference;
 import org.osgi.framework.ServiceRegistration;
@@ -473,6 +477,11 @@ class BundleContextImpl implements FelixBundleContext
     public boolean ungetService(ServiceReference<?> ref)
     {
         checkValidity();
+
+        // CONCURRENCY NOTE: This is a check-then-act situation,
+        // but we ignore it since the time window is small and
+        // the result is the same as if the calling thread had
+        // won the race condition.
 
         if (ref == null)
         {

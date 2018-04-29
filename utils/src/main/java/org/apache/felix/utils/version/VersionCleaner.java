@@ -33,8 +33,13 @@ public final class VersionCleaner {
      * the version syntax. This method cleans up such a version to match an OSGi
      * version.
      *
+<<<<<<< HEAD
+     * @param version
+     * @return
+=======
      * @param version The version to clean
      * @return The cleaned version
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
      */
     public static String clean(String version)
     {
@@ -42,11 +47,14 @@ public final class VersionCleaner {
         {
             return "0.0.0";
         }
+<<<<<<< HEAD
+=======
         String clean = fastSyntax(version);
         if (clean != null)
         {
             return clean;
         }
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         StringBuffer result = new StringBuffer();
         Matcher m = FUZZY_VERSION.matcher(version);
         if (m.matches())
@@ -113,6 +121,8 @@ public final class VersionCleaner {
         }
     }
 
+<<<<<<< HEAD
+=======
     private static String fastSyntax(String version) {
         int state = 0;
         for (int i = 0, l = version.length(); i < l; i++) {
@@ -154,4 +164,5 @@ public final class VersionCleaner {
         }
     }
 
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 }

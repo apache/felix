@@ -22,15 +22,25 @@
     <parent>
         <groupId>org.apache.felix</groupId>
         <artifactId>org.apache.felix.http.parent</artifactId>
+<<<<<<< HEAD
+        <version>3-SNAPSHOT</version>
+=======
         <version>10</version>
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         <relativePath>../parent/pom.xml</relativePath>
     </parent>
 
     <name>Apache Felix Http Whiteboard</name>
+<<<<<<< HEAD
+    <artifactId>org.apache.felix.http.whiteboard</artifactId>
+    <version>2.2.3-SNAPSHOT</version>
+    <packaging>jar</packaging>
+=======
     <description>This is an implementation of the proprietary Apache Felix whiteboard support</description>
     <artifactId>org.apache.felix.http.whiteboard</artifactId>
     <version>4.0.1-SNAPSHOT</version>
     <packaging>bundle</packaging>
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 
     <scm>
         <connection>scm:svn:http://svn.apache.org/repos/asf/felix/trunk/http/whiteboard</connection>
@@ -49,6 +59,8 @@
                         <Bundle-Activator>
                             org.apache.felix.http.whiteboard.internal.WhiteboardActivator
                         </Bundle-Activator>
+<<<<<<< HEAD
+=======
                         <Import-Package>
                             org.osgi.service.log;resolution:=optional;version="[1.3,2)",
                             *
@@ -56,13 +68,17 @@
                         <DynamicImport-Package>
                             org.osgi.service.log;version="[1.3,2)"
                         </DynamicImport-Package>
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
                         <Embed-Dependency>
                             org.apache.felix.http.base;inline=org/apache/felix/http/base/internal/AbstractActivator*.class|
                                 org/apache/felix/http/base/internal/logger/*
                         </Embed-Dependency>
+<<<<<<< HEAD
+=======
                         <Require-Capability>
                             osgi.implementation;filter:="(&amp;(osgi.implementation=osgi.http)(version&gt;=1.1)(!(version&gt;=2.0)))"
                         </Require-Capability>
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
                     </instructions>
                 </configuration>
             </plugin>
@@ -72,6 +88,34 @@
     <dependencies>
         <dependency>
             <groupId>javax.servlet</groupId>
+<<<<<<< HEAD
+            <artifactId>servlet-api</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.osgi</groupId>
+            <artifactId>org.osgi.core</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.osgi</groupId>
+            <artifactId>org.osgi.compendium</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.felix</groupId>
+            <artifactId>org.apache.felix.http.api</artifactId>
+            <version>${project.version}</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.felix</groupId>
+            <artifactId>org.apache.felix.http.base</artifactId>
+            <version>${project.version}</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>biz.aQute</groupId>
+            <artifactId>bndlib</artifactId>
+            <version>1.50.0</version>
+=======
             <artifactId>javax.servlet-api</artifactId>
         </dependency>
         <dependency>
@@ -100,6 +144,7 @@
             <groupId>org.apache.felix</groupId>
             <artifactId>org.apache.felix.http.base</artifactId>
             <version>4.0.0</version>
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
             <scope>provided</scope>
         </dependency>
 
@@ -111,4 +156,8 @@
             <scope>test</scope>
         </dependency>
     </dependencies>
+<<<<<<< HEAD
+
+=======
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 </project>

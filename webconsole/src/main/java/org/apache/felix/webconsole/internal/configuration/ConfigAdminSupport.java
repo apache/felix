@@ -21,6 +21,15 @@ package org.apache.felix.webconsole.internal.configuration;
 
 import java.io.IOException;
 import java.io.PrintWriter;
+<<<<<<< HEAD
+import java.util.Dictionary;
+import java.util.Enumeration;
+import java.util.HashMap;
+import java.util.Hashtable;
+import java.util.Iterator;
+import java.util.Locale;
+import java.util.Map;
+=======
 import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.Dictionary;
@@ -34,10 +43,21 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 import java.util.SortedMap;
 import java.util.StringTokenizer;
 import java.util.TreeMap;
 import java.util.Vector;
+<<<<<<< HEAD
+import java.util.Map.Entry;
+
+import javax.servlet.http.HttpServletRequest;
+
+import org.apache.felix.webconsole.internal.Util;
+import org.json.JSONException;
+import org.json.JSONObject;
+import org.json.JSONWriter;
+=======
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -45,6 +65,7 @@ import javax.servlet.http.HttpServletRequest;
 
 import org.apache.felix.utils.json.JSONWriter;
 import org.apache.felix.webconsole.internal.Util;
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
@@ -63,6 +84,8 @@ import org.osgi.service.metatype.ObjectClassDefinition;
 class ConfigAdminSupport
 {
 
+<<<<<<< HEAD
+=======
     private static final String PROPERTY_FACTORYCONFIG_NAMEHINT = "webconsole.configurationFactory.nameHint";
     private static final Set CONFIG_PROPERTIES_HIDE = new HashSet();
     static {
@@ -73,6 +96,7 @@ class ConfigAdminSupport
     }
     private static final Pattern NAMEHINT_PLACEHOLER_REGEXP = Pattern.compile("\\{([^\\{\\}]*)}");
 
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     private final BundleContext bundleContext;
     private final ConfigurationAdmin service;
 
@@ -163,7 +187,11 @@ class ConfigAdminSupport
     }
 
     String applyConfiguration( HttpServletRequest request, String pid )
+<<<<<<< HEAD
+        throws IOException
+=======
             throws IOException
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     {
         if ( request.getParameter( ConfigManager.ACTION_DELETE ) != null ) //$NON-NLS-1$
         {
@@ -198,6 +226,11 @@ class ConfigAdminSupport
             final MetaTypeServiceSupport mtss = getMetaTypeSupport();
             final Map adMap = ( mtss != null ) ? mtss.getAttributeDefinitionMap( config, null ) : new HashMap();
             final StringTokenizer propTokens = new StringTokenizer( propertyList, "," ); //$NON-NLS-1$
+<<<<<<< HEAD
+            while ( propTokens.hasMoreTokens() )
+            {
+                String propName = propTokens.nextToken();
+=======
             final List propsToKeep = new ArrayList();
             while ( propTokens.hasMoreTokens() )
             {
@@ -209,6 +242,7 @@ class ConfigAdminSupport
                         ? '$' + propName : propName;
                 propsToKeep.add(propName);
 
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
                 PropertyDescriptor ad = (PropertyDescriptor) adMap.get( propName );
 
                 // try to derive from current value
@@ -220,11 +254,19 @@ class ConfigAdminSupport
                 int attributeType = MetaTypeSupport.getAttributeType( ad );
 
                 if ( ad == null
+<<<<<<< HEAD
+                    || ( ad.getCardinality() == 0 && ( attributeType == AttributeDefinition.STRING || attributeType == MetaTypeServiceSupport.ATTRIBUTE_TYPE_PASSWORD ) ) )
+                {
+                    String prop = request.getParameter( propName );
+                    if ( prop != null
+                        && ( attributeType != MetaTypeSupport.ATTRIBUTE_TYPE_PASSWORD || !MetaTypeSupport.PASSWORD_PLACEHOLDER_VALUE.equals( prop ) ) )
+=======
                         || ( ad.getCardinality() == 0 && ( attributeType == AttributeDefinition.STRING || attributeType == MetaTypeServiceSupport.ATTRIBUTE_TYPE_PASSWORD ) ) )
                 {
                     String prop = request.getParameter( paramName );
                     if ( prop != null
                             && ( attributeType != MetaTypeSupport.ATTRIBUTE_TYPE_PASSWORD || !MetaTypeSupport.PASSWORD_PLACEHOLDER_VALUE.equals( prop ) ) )
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
                     {
                         props.put( propName, prop );
                     }
@@ -232,7 +274,11 @@ class ConfigAdminSupport
                 else if ( ad.getCardinality() == 0 )
                 {
                     // scalar of non-string
+<<<<<<< HEAD
+                    String prop = request.getParameter( propName );
+=======
                     String prop = request.getParameter( paramName );
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
                     if ( prop != null )
                     {
                         try
@@ -250,7 +296,11 @@ class ConfigAdminSupport
                     // array or vector of any type
                     Vector vec = new Vector();
 
+<<<<<<< HEAD
+                    String[] properties = request.getParameterValues( propName );
+=======
                     String[] properties = request.getParameterValues( paramName );
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
                     if ( properties != null )
                     {
                         if ( attributeType == MetaTypeSupport.ATTRIBUTE_TYPE_PASSWORD )
@@ -301,6 +351,9 @@ class ConfigAdminSupport
                 }
             }
 
+<<<<<<< HEAD
+            config.update( props );
+=======
             // remove the properties that are not specified in the request
             final Dictionary updateProps = new Hashtable(props.size());
             for ( Enumeration e = props.keys(); e.hasMoreElements(); )
@@ -336,6 +389,7 @@ class ConfigAdminSupport
                 }
             }
             config.update( updateProps );
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         }
 
         // redirect to the new configuration (if existing)
@@ -344,7 +398,11 @@ class ConfigAdminSupport
 
 
     void printConfigurationJson( PrintWriter pw, String pid, Configuration config, String pidFilter,
+<<<<<<< HEAD
+        String locale )
+=======
             String locale )
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     {
 
         JSONWriter result = new JSONWriter( pw );
@@ -367,7 +425,11 @@ class ConfigAdminSupport
 
 
     void configForm( JSONWriter json, String pid, Configuration config, String pidFilter, String locale )
+<<<<<<< HEAD
+        throws JSONException
+=======
             throws IOException
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     {
 
         json.key( ConfigManager.PID );
@@ -404,7 +466,11 @@ class ConfigAdminSupport
             }
             if ( ocd != null )
             {
+<<<<<<< HEAD
+                mtss.mergeWithMetaType( props, ocd, json );
+=======
                 mtss.mergeWithMetaType( props, ocd, json, CONFIG_PROPERTIES_HIDE );
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
                 doSimpleMerge = false;
             }
         }
@@ -413,7 +479,11 @@ class ConfigAdminSupport
         {
             json.key( "title" ).value( pid ); //$NON-NLS-1$
             json.key( "description" ).value( //$NON-NLS-1$
+<<<<<<< HEAD
+                "This form is automatically generated from existing properties because no property "
+=======
                     "This form is automatically generated from existing properties because no property "
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
                     + "descriptors are available for this configuration. This may be cause by the absence "
                     + "of the OSGi Metatype Service or the absence of a MetaType descriptor for this configuration." );
 
@@ -424,9 +494,15 @@ class ConfigAdminSupport
 
                 // ignore well known special properties
                 if ( !id.equals( Constants.SERVICE_PID ) && !id.equals( Constants.SERVICE_DESCRIPTION )
+<<<<<<< HEAD
+                    && !id.equals( Constants.SERVICE_ID ) && !id.equals( Constants.SERVICE_VENDOR )
+                    && !id.equals( ConfigurationAdmin.SERVICE_BUNDLELOCATION )
+                    && !id.equals( ConfigurationAdmin.SERVICE_FACTORYPID ) )
+=======
                         && !id.equals( Constants.SERVICE_ID ) && !id.equals( Constants.SERVICE_VENDOR )
                         && !id.equals( ConfigurationAdmin.SERVICE_BUNDLELOCATION )
                         && !id.equals( ConfigurationAdmin.SERVICE_FACTORYPID ) )
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
                 {
                     final Object value = props.get( id );
                     final PropertyDescriptor ad = MetaTypeServiceSupport.createAttributeDefinition( id, value );
@@ -444,8 +520,12 @@ class ConfigAdminSupport
     }
 
 
+<<<<<<< HEAD
+    void addConfigurationInfo( Configuration config, JSONWriter json, String locale ) throws JSONException
+=======
     void addConfigurationInfo( Configuration config, JSONWriter json, String locale )
             throws IOException
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     {
 
         if ( config.getFactoryPid() != null )
@@ -454,6 +534,10 @@ class ConfigAdminSupport
             json.value( config.getFactoryPid() );
         }
 
+<<<<<<< HEAD
+        String location;
+        if ( config.getBundleLocation() == null )
+=======
         String bundleLocation = config.getBundleLocation();
         if ( ConfigManager.UNBOUND_LOCATION.equals(bundleLocation) )
         {
@@ -461,6 +545,7 @@ class ConfigAdminSupport
         }
         String location;
         if ( bundleLocation == null )
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         {
             location = ""; //$NON-NLS-1$
         }
@@ -469,10 +554,17 @@ class ConfigAdminSupport
             // if the configuration is bound to a bundle location which
             // is not related to an installed bundle, we just print the
             // raw bundle location binding
+<<<<<<< HEAD
+            Bundle bundle = MetaTypeServiceSupport.getBundle( this.getBundleContext(), config.getBundleLocation() );
+            if ( bundle == null )
+            {
+                location = config.getBundleLocation();
+=======
             Bundle bundle = MetaTypeServiceSupport.getBundle( this.getBundleContext(), bundleLocation );
             if ( bundle == null )
             {
                 location = bundleLocation;
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
             }
             else
             {
@@ -499,8 +591,13 @@ class ConfigAdminSupport
         try
         {
             final ServiceReference[] refs = getBundleContext().getServiceReferences(
+<<<<<<< HEAD
+                null,
+                "(&(" + Constants.OBJECTCLASS + '=' + ManagedService.class.getName() //$NON-NLS-1$
+=======
                     (String)null,
                     "(&(" + Constants.OBJECTCLASS + '=' + ManagedService.class.getName() //$NON-NLS-1$
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
                     + ")(" + Constants.SERVICE_PID + '=' + pid + "))"); //$NON-NLS-1$ //$NON-NLS-2$
             if ( refs != null && refs.length > 0 )
             {
@@ -512,7 +609,11 @@ class ConfigAdminSupport
             configManager.log( "Error getting service associated with configuration " + pid, t );
         }
         json.key( "bundle_location" ); //$NON-NLS-1$
+<<<<<<< HEAD
+        json.value ( config.getBundleLocation() );
+=======
         json.value ( bundleLocation );
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         json.key( "service_location" ); //$NON-NLS-1$
         json.value ( serviceLocation );
     }
@@ -537,13 +638,21 @@ class ConfigAdminSupport
     }
 
 
+<<<<<<< HEAD
+    final void listConfigurations( JSONObject json, String pidFilter, String locale, Locale loc )
+=======
     final void listConfigurations( JSONWriter jw, String pidFilter, String locale, Locale loc )
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     {
         try
         {
             // start with ManagedService instances
             Map optionsPlain = getServices(ManagedService.class.getName(), pidFilter,
+<<<<<<< HEAD
+                locale, true);
+=======
                     locale, true);
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 
             // next are the MetaType informations without ManagedService
             final MetaTypeServiceSupport mtss = getMetaTypeSupport();
@@ -590,14 +699,28 @@ class ConfigAdminSupport
                 optionsPlain.put( pid, pid );
             }
 
+<<<<<<< HEAD
+=======
             jw.key("pids");//$NON-NLS-1$
             jw.array();
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
             for ( Iterator ii = optionsPlain.keySet().iterator(); ii.hasNext(); )
             {
                 String id = ( String ) ii.next();
                 Object name = optionsPlain.get( id );
 
                 final Configuration config = this.getConfiguration( id );
+<<<<<<< HEAD
+                JSONObject data = new JSONObject() //
+                    .put( "id", id ) //$NON-NLS-1$
+                    .put( "name", name ); //$NON-NLS-1$
+                if ( null != config )
+                {
+                    final String fpid = config.getFactoryPid();
+                    if ( null != fpid )
+                    {
+                        data.put( "fpid", fpid ); //$NON-NLS-1$
+=======
                 jw.object();
                 jw.key("id").value( id ); //$NON-NLS-1$
                 jw.key( "name").value( name ); //$NON-NLS-1$
@@ -615,11 +738,21 @@ class ConfigAdminSupport
                         {
                             jw.key( "nameHint").value(val ); //$NON-NLS-1$
                         }
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
                     }
 
                     final Bundle bundle = getBoundBundle( config );
                     if ( null != bundle )
                     {
+<<<<<<< HEAD
+                        data.put( "bundle", bundle.getBundleId() ); //$NON-NLS-1$
+                        data.put( "bundle_name", Util.getName( bundle, loc ) ); //$NON-NLS-1$
+                    }
+                }
+
+                json.append( "pids", data ); //$NON-NLS-1$
+            }
+=======
                         jw.key( "bundle").value( bundle.getBundleId() ); //$NON-NLS-1$
                         jw.key( "bundle_name").value( Util.getName( bundle, loc ) ); //$NON-NLS-1$
                     }
@@ -628,6 +761,7 @@ class ConfigAdminSupport
 
             }
             jw.endArray();
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         }
         catch (Exception e)
         {
@@ -635,6 +769,11 @@ class ConfigAdminSupport
         }
     }
 
+<<<<<<< HEAD
+
+    final void listFactoryConfigurations(JSONObject json, String pidFilter,
+        String locale)
+=======
     /**
      * Builds a "name hint" for factory configuration based on other property
      * values of the config and a "name hint template" defined as hidden
@@ -747,29 +886,46 @@ class ConfigAdminSupport
 
     final void listFactoryConfigurations(JSONWriter jw, String pidFilter,
             String locale)
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     {
         try
         {
             final Map optionsFactory = getServices(ManagedServiceFactory.class.getName(),
+<<<<<<< HEAD
+                pidFilter, locale, true);
+=======
                     pidFilter, locale, true);
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
             final MetaTypeServiceSupport mtss = getMetaTypeSupport();
             if ( mtss != null )
             {
                 addMetaTypeNames( optionsFactory, mtss.getFactoryPidObjectClasses( locale ), pidFilter,
+<<<<<<< HEAD
+                    ConfigurationAdmin.SERVICE_FACTORYPID );
+            }
+=======
                         ConfigurationAdmin.SERVICE_FACTORYPID );
             }
             jw.key("fpids");
             jw.array();
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
             for ( Iterator ii = optionsFactory.keySet().iterator(); ii.hasNext(); )
             {
                 String id = ( String ) ii.next();
                 Object name = optionsFactory.get( id );
+<<<<<<< HEAD
+                json.append( "fpids", new JSONObject() //$NON-NLS-1$
+                    .put( "id", id ) //$NON-NLS-1$
+                    .put( "name", name ) ); //$NON-NLS-1$
+            }
+=======
                 jw.object();
                 jw.key("id").value(id ); //$NON-NLS-1$
                 jw.key("name").value( name ); //$NON-NLS-1$
                 jw.endObject();
             }
             jw.endArray();
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         }
         catch (Exception e)
         {
@@ -778,7 +934,11 @@ class ConfigAdminSupport
     }
 
     SortedMap getServices( String serviceClass, String serviceFilter, String locale,
+<<<<<<< HEAD
+        boolean ocdRequired ) throws InvalidSyntaxException
+=======
             boolean ocdRequired ) throws InvalidSyntaxException
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     {
         // sorted map of options
         SortedMap optionsFactory = new TreeMap( String.CASE_INSENSITIVE_ORDER );
@@ -913,9 +1073,12 @@ class ConfigAdminSupport
         }
 
     }
+<<<<<<< HEAD
+=======
 
     public Configuration[] listConfigurations(String filter) throws IOException, InvalidSyntaxException
     {
         return this.service.listConfigurations(filter);
     }
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 }

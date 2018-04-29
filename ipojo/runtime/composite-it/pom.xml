@@ -25,7 +25,11 @@
     </parent>
     <modelVersion>4.0.0</modelVersion>
     <artifactId>org.apache.felix.ipojo.runtime.composite-it</artifactId>
+<<<<<<< HEAD
+    <version>1.11.1-SNAPSHOT</version>
+=======
     <version>1.12.2-SNAPSHOT</version>
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     <name>Apache Felix iPOJO Runtime Project ~ Composite Integration Tests</name>
     <packaging>pom</packaging>
 
@@ -40,7 +44,11 @@
         <equinox.version>3.8.1.v20120830-144521</equinox.version>
         <knoperflerfish.version>5.3.3</knoperflerfish.version>
 
+<<<<<<< HEAD
+        <manipulator.version>1.10.1</manipulator.version>
+=======
         <manipulator.version>1.12.1</manipulator.version>
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     </properties>
 
     <modules>
@@ -193,27 +201,55 @@
         <dependency>
             <groupId>org.apache.felix</groupId>
             <artifactId>org.apache.felix.ipojo</artifactId>
+<<<<<<< HEAD
+            <version>1.11.1-SNAPSHOT</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.osgi</groupId>
+                    <artifactId>org.osgi.core</artifactId>
+                </exclusion>
+            </exclusions>
+=======
             <version>1.12.2-SNAPSHOT</version>
             <scope>provided</scope>
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         </dependency>
 
         <dependency>
             <groupId>org.apache.felix</groupId>
             <artifactId>org.apache.felix.ipojo.composite</artifactId>
+<<<<<<< HEAD
+            <version>1.11.1-SNAPSHOT</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.osgi</groupId>
+                    <artifactId>org.osgi.core</artifactId>
+                </exclusion>
+            </exclusions>
+=======
             <version>1.12.2-SNAPSHOT</version>
             <scope>provided</scope>
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         </dependency>
 
         <dependency>
             <groupId>org.apache.felix</groupId>
             <artifactId>org.apache.felix.ipojo.manipulator</artifactId>
+<<<<<<< HEAD
+            <version>1.11.0</version>
+=======
             <version>${manipulator.version}</version>
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         </dependency>
 
         <dependency>
             <groupId>org.apache.felix</groupId>
             <artifactId>org.apache.felix.configadmin</artifactId>
+<<<<<<< HEAD
+            <version>1.6.0</version>
+=======
             <version>1.8.0</version>
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
             <scope>test</scope>
         </dependency>
 

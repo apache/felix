@@ -89,7 +89,11 @@ public class ThreadPool
      *   <li><tt>ThreadPool.STOPPING_STATE</tt> - the thread pool is in the
      *       process of shutting down.
      *   </li>
+<<<<<<< HEAD
+     * </li>
+=======
      * </ul>
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
      * @return The current state of the thread pool.
     **/
     public synchronized int getState()
@@ -159,7 +163,11 @@ public class ThreadPool
 
     /**
      * This method adds an HTTP connection to the thread pool for servicing.
+<<<<<<< HEAD
+     * @param connection
+=======
      * @param connection the HTTP connection.
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
      * @throws java.lang.IllegalStateException If the thread pool is not in the
      *         <tt>ThreadPool.ACTIVE_STATE</tt> state.
     **/

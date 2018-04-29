@@ -19,7 +19,11 @@
 package org.apache.felix.service.command;
 
 import java.io.InputStream;
+<<<<<<< HEAD
+import java.io.PrintStream;
+=======
 import java.io.OutputStream;
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 
 /**
  * A command shell can create and maintain a number of command sessions.
@@ -32,7 +36,11 @@ public interface CommandProcessor
      * The scope of commands provided by this service. This name can be used to distinguish
      * between different command providers with the same function names.
      */
+<<<<<<< HEAD
+    final static String COMMAND_SCOPE = "osgi.command.scope";
+=======
     String COMMAND_SCOPE = "osgi.command.scope";
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 
     /**
      * A list of method names that may be called for this command provider. A
@@ -42,7 +50,11 @@ public interface CommandProcessor
      * Help information for the command may be supplied with a space as
      * separation.
      */
+<<<<<<< HEAD
+    final static String COMMAND_FUNCTION = "osgi.command.function";
+=======
     String COMMAND_FUNCTION = "osgi.command.function";
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 
     /**
      * Create a new command session associated with IO streams.
@@ -59,7 +71,11 @@ public interface CommandProcessor
      * @param err The stream used for System.err
      * @return A new session.
      */
+<<<<<<< HEAD
+    CommandSession createSession(InputStream in, PrintStream out, PrintStream err);
+=======
     CommandSession createSession(InputStream in, OutputStream out, OutputStream err);
 
     CommandSession createSession(CommandSession parent);
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 }

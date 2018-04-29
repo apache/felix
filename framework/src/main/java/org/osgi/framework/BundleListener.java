@@ -1,5 +1,9 @@
 /*
+<<<<<<< HEAD
+ * Copyright (c) OSGi Alliance (2000, 2011). All Rights Reserved.
+=======
  * Copyright (c) OSGi Alliance (2000, 2013). All Rights Reserved.
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,7 +21,10 @@
 package org.osgi.framework;
 
 import java.util.EventListener;
+<<<<<<< HEAD
+=======
 import org.osgi.annotation.versioning.ConsumerType;
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 
 /**
  * A {@code BundleEvent} listener. {@code BundleListener} is a listener
@@ -35,9 +42,15 @@ import org.osgi.annotation.versioning.ConsumerType;
  * 
  * @see BundleEvent
  * @NotThreadSafe
+<<<<<<< HEAD
+ * @version $Id: d48b4a8a59c839466a3d749dde23980d236f58c6 $
+ */
+
+=======
  * @author $Id: 2c27d37a3a77e1c80f9b022f8dc2f614dff5f5ef $
  */
 @ConsumerType
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 public interface BundleListener extends EventListener {
 	/**
 	 * Receives notification that a bundle has had a lifecycle change.

@@ -23,6 +23,16 @@ import org.apache.felix.ipojo.manipulator.metadata.annotation.ComponentWorkbench
 import org.apache.felix.ipojo.metadata.Attribute;
 import org.apache.felix.ipojo.metadata.Element;
 import org.objectweb.asm.AnnotationVisitor;
+<<<<<<< HEAD
+import org.objectweb.asm.commons.EmptyVisitor;
+
+/**
+ * Parse the @Instantitate annotation.
+ * @see org.apache.felix.ipojo.annotations.Instantiate
+ * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
+ */
+public class InstantiateVisitor extends EmptyVisitor implements AnnotationVisitor {
+=======
 import org.objectweb.asm.Opcodes;
 
 /**
@@ -32,22 +42,32 @@ import org.objectweb.asm.Opcodes;
  * @see org.apache.felix.ipojo.annotations.Instantiate
  */
 public class InstantiateVisitor extends AnnotationVisitor {
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 
     private Element instance = new Element("instance", "");
 
     private ComponentWorkbench workbench;
 
     public InstantiateVisitor(ComponentWorkbench workbench) {
+<<<<<<< HEAD
+=======
         super(Opcodes.ASM5);
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         this.workbench = workbench;
     }
 
     /**
      * Visit an annotation attribute.
+<<<<<<< HEAD
+     * @param name the attribute name
+     * @param value the attribute value
+     * @see org.objectweb.asm.commons.EmptyVisitor#visit(java.lang.String, java.lang.Object)
+=======
      *
      * @param name  the attribute name
      * @param value the attribute value
      * @see org.objectweb.asm.AnnotationVisitor#visit(java.lang.String, java.lang.Object)
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
      */
     public void visit(String name, Object value) {
         if (name.equals("name")) {
@@ -57,8 +77,12 @@ public class InstantiateVisitor extends AnnotationVisitor {
 
     /**
      * End of the visit. Creates the instance element.
+<<<<<<< HEAD
+     * @see org.objectweb.asm.commons.EmptyVisitor#visitEnd()
+=======
      *
      * @see org.objectweb.asm.AnnotationVisitor#visitEnd()
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
      */
     public void visitEnd() {
         // We set the instance's component attribute to the class name, if the component type has a custom name,

@@ -23,6 +23,11 @@ import collection.JavaConversions._
 
 import scala.collection.mutable.{Map => mMap}
 
+<<<<<<< HEAD
+import org.json.JSONObject
+
+=======
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 import Util._
 
 /**
@@ -91,6 +96,13 @@ object Util
         l.map(_.take(1)).mkString(".") + l.last.drop(1)
     }
 
+<<<<<<< HEAD
+    /** 
+     * turn the ServiceDiagnostics output into a JSON representation.
+     */
+    def json(map:Map[String,Set[String]]) = 
+      new JSONObject(asJavaMap(mMap() ++ map.map(kv => (kv._1, asJavaList(kv._2.toList)))))
+=======
 }
 
 object JSON
@@ -113,4 +125,5 @@ object JSON
   }
 
   def json[T:Json](v:T) = implicitly[Json[T]].toJson(v)
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 }

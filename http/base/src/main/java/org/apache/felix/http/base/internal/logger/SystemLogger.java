@@ -18,16 +18,52 @@
  */
 package org.apache.felix.http.base.internal.logger;
 
+<<<<<<< HEAD
+=======
 import java.lang.reflect.Array;
 
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceReference;
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 import org.osgi.service.log.LogService;
 
 public final class SystemLogger
 {
+<<<<<<< HEAD
+    private final static LogService NOP = new NopLogger();
+    private static LogService LOGGER;
+
+    public static void setLogService(LogService service)
+    {
+        LOGGER = service;
+    }
+
+    private static LogService getLogger()
+    {
+        return LOGGER != null ? LOGGER : NOP;
+    }
+
+    public static void debug(String message)
+    {
+        getLogger().log(LogService.LOG_DEBUG, message);
+    }
+
+    public static void info(String message)
+    {
+        getLogger().log(LogService.LOG_INFO, message);
+    }
+
+    public static void warning(String message, Throwable cause)
+    {
+        getLogger().log(LogService.LOG_WARNING, message, cause);
+    }
+
+    public static void error(String message, Throwable cause)
+    {
+        getLogger().log(LogService.LOG_ERROR, message, cause);
+=======
     private static volatile LogServiceEnabledLogger LOGGER;
 
     public static void init(final BundleContext bundleContext) {
@@ -157,5 +193,6 @@ public final class SystemLogger
     public static void error(final ServiceReference<?> ref, final String message, final Throwable cause)
     {
         log(LogService.LOG_ERROR, ref, message, cause);
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     }
 }

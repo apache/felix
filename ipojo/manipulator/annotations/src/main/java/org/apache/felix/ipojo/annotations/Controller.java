@@ -22,6 +22,9 @@ import java.lang.annotation.ElementType;
 import java.lang.annotation.Target;
 
 /**
+<<<<<<< HEAD
+ * This annotation declares a lifecycle controller.
+=======
  * This annotation declares a <a href="http://felix.apache.org/documentation/subprojects/apache-felix-ipojo/apache-felix-ipojo-userguide/instance-vs-service-controller.html">lifecycle controller</a>.
  *
  * <pre>
@@ -43,6 +46,7 @@ import java.lang.annotation.Target;
  *     }
  * </pre>
 
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
  * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
 @Target({ElementType.FIELD, ElementType.ANNOTATION_TYPE})

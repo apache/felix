@@ -1,3 +1,5 @@
+<<<<<<< HEAD
+=======
 Changes from 1.12.0 to 1.12.1
 -----------------------------
 
@@ -55,6 +57,7 @@ Changes from 1.11.0 to 1.11.1
 ** Improvement
     * [FELIX-4292] - @Component 'propagation' attribute has wrong default value
 
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 Changes from 1.10.1 to 1.11.0
 -----------------------------
 

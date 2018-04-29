@@ -22,6 +22,7 @@ import java.io.File;
 import java.util.HashMap;
 import java.util.Map;
 
+
 import org.osgi.framework.Bundle;
 import org.osgi.service.deploymentadmin.BundleInfo;
 import org.osgi.service.deploymentadmin.DeploymentException;
@@ -29,19 +30,19 @@ import org.osgi.service.deploymentadmin.DeploymentPackage;
 import org.osgi.service.log.LogService;
 
 /**
- * Command that determines the storage area's of all bundles in the source
- * deployment package of a deployment session.
+ * Command that determines the storage area's of all bundles in the source deployment
+ * package of a deployment session.
  */
 public class GetStorageAreaCommand extends Command {
 
     private final Map m_storageAreas = new HashMap();
 
-    protected void doExecute(DeploymentSessionImpl session) throws Exception {
+    public void execute(DeploymentSessionImpl session) throws DeploymentException {
         DeploymentPackage target = session.getTargetDeploymentPackage();
         BundleInfo[] infos = target.getBundleInfos();
         for (int i = 0; i < infos.length; i++) {
             if (isCancelled()) {
-                throw new DeploymentException(CODE_CANCELLED);
+                throw new DeploymentException(DeploymentException.CODE_CANCELLED);
             }
             Bundle bundle = target.getBundle(infos[i].getSymbolicName());
             if (bundle != null) {
@@ -50,21 +51,20 @@ public class GetStorageAreaCommand extends Command {
                     m_storageAreas.put(bundle.getSymbolicName(), root);
                 }
                 catch (IllegalStateException ise) {
-                    session.getLog().log(LogService.LOG_WARNING, "Could not get reference to storage area of bundle '" + bundle.getSymbolicName() + "'");
+                    session.getLog().log(LogService.LOG_WARNING, "Could not get reference to storage area of bundle '" + bundle.getSymbolicName() +"'");
                 }
             }
         }
     }
 
     /**
-     * Determines the storage area's of all bundles in the source deployment
-     * package of a deployment session.
-     * 
-     * @return <code>Map</code> with <code>File</code> object references to the
-     *         storage area's, they bundle symbolic name is used as a key in the
-     *         <code>Map</code>.
+     * Determines the storage area's of all bundles in the source deployment package of
+     * a deployment session.
+     *
+     * @return <code>Map</code> with <code>File</code> object references to the storage area's, they bundle symbolic name is used as a key in the <code>Map</code>.
      */
     public Map getStorageAreas() {
         return m_storageAreas;
     }
+
 }

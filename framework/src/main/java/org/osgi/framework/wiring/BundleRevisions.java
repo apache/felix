@@ -1,5 +1,9 @@
 /*
+<<<<<<< HEAD
+ * Copyright (c) OSGi Alliance (2011, 2012). All Rights Reserved.
+=======
  * Copyright (c) OSGi Alliance (2011, 2013). All Rights Reserved.
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,7 +21,10 @@
 package org.osgi.framework.wiring;
 
 import java.util.List;
+<<<<<<< HEAD
+=======
 import org.osgi.annotation.versioning.ProviderType;
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleReference;
 
@@ -37,9 +44,15 @@ import org.osgi.framework.BundleReference;
  * {@link #getRevisions()} on the bundle.
  * 
  * @ThreadSafe
+<<<<<<< HEAD
+ * @noimplement
+ * @version $Id: 8423242078417873faf0f8979e153e3c1f3a0e4b $
+ */
+=======
  * @author $Id: 83e7bf03af2150a54af13a319325856e532cefde $
  */
 @ProviderType
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 public interface BundleRevisions extends BundleReference {
 	/**
 	 * Return the bundle revisions for the {@link BundleReference#getBundle()

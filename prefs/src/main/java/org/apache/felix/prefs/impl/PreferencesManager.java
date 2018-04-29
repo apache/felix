@@ -43,7 +43,11 @@ import org.osgi.util.tracker.ServiceTracker;
 public class PreferencesManager
     implements BundleActivator,
     BundleListener,
+<<<<<<< HEAD
+    ServiceFactory,
+=======
     ServiceFactory<PreferencesService>,
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     BackingStoreManager {
 
     /**
@@ -92,8 +96,17 @@ public class PreferencesManager
     public void start(final BundleContext context) throws Exception {
         this.context = context;
 
+<<<<<<< HEAD
+        // track the log service using a ServiceTracker
+        this.logTracker = new ServiceTracker(context, LogService.class.getName(), null);
+        this.logTracker.open();
+
+        // create the tracker for our backing store
+        this.storeTracker = new ServiceTracker(context, BackingStore.class.getName(), null);
+=======
         // create the tracker for our backing store
         this.storeTracker = new ServiceTracker<BackingStore, BackingStore>(context, BackingStore.class, null);
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         this.storeTracker.open();
 
         // register this activator as a bundle lister
@@ -109,9 +122,15 @@ public class PreferencesManager
     public void stop(final BundleContext context) throws Exception {
         // if we get stopped, we should save all in memory representations
         synchronized (this.services) {
+<<<<<<< HEAD
+            final Iterator i = this.services.values().iterator();
+            while (i.hasNext()) {
+                final PreferencesServiceImpl service = (PreferencesServiceImpl) i.next();
+=======
             final Iterator<PreferencesServiceImpl> i = this.services.values().iterator();
             while (i.hasNext()) {
                 final PreferencesServiceImpl service = i.next();
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
                 this.save(service);
             }
             this.services.clear();
@@ -123,6 +142,14 @@ public class PreferencesManager
         }
         this.defaultStore = null;
 
+<<<<<<< HEAD
+        // stop tracking log service
+        if (this.logTracker != null) {
+            this.logTracker.close();
+            this.logTracker = null;
+        }
+=======
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 
         this.context = null;
     }
@@ -130,8 +157,12 @@ public class PreferencesManager
     /**
      * @see org.osgi.framework.ServiceFactory#getService(org.osgi.framework.Bundle, org.osgi.framework.ServiceRegistration)
      */
+<<<<<<< HEAD
+    public Object getService(final Bundle bundle, final ServiceRegistration reg) {
+=======
     public PreferencesService getService(final Bundle bundle,
             final ServiceRegistration<PreferencesService> reg) {
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         final Long bundleId = new Long(bundle.getBundleId());
 
         synchronized (this.services) {
@@ -151,6 +182,13 @@ public class PreferencesManager
     /**
      * @see org.osgi.framework.ServiceFactory#ungetService(org.osgi.framework.Bundle, org.osgi.framework.ServiceRegistration, java.lang.Object)
      */
+<<<<<<< HEAD
+    public void ungetService(final Bundle bundle, final ServiceRegistration reg, final Object s) {
+        final Long bundleId = new Long(bundle.getBundleId());
+        // we save all the preferences
+        synchronized (this.services) {
+            final PreferencesServiceImpl service = (PreferencesServiceImpl) this.services.get(bundleId);
+=======
     public void ungetService(final Bundle bundle,
             final ServiceRegistration<PreferencesService> reg,
             final PreferencesService s) {
@@ -158,6 +196,7 @@ public class PreferencesManager
         // we save all the preferences
         synchronized (this.services) {
             final PreferencesServiceImpl service = this.services.get(bundleId);
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
             if (service != null) {
                 this.save(service);
             }
@@ -170,9 +209,15 @@ public class PreferencesManager
      * @param service
      */
     protected void save(final PreferencesServiceImpl service) {
+<<<<<<< HEAD
+        final Iterator i = service.getAllPreferences().iterator();
+        while (i.hasNext()) {
+            final PreferencesImpl prefs = (PreferencesImpl) i.next();
+=======
         final Iterator<PreferencesImpl> i = service.getAllPreferences().iterator();
         while (i.hasNext()) {
             final PreferencesImpl prefs = i.next();
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
             try {
                 this.getStore().store(prefs);
             }
@@ -182,18 +227,37 @@ public class PreferencesManager
         }
     }
 
+<<<<<<< HEAD
+    protected void log(final int level, final String message, final Throwable t) {
+        final LogService log = (LogService) this.logTracker.getService();
+        if (log != null) {
+            log.log(level, message, t);
+            return;
+        }
+    }
+
+=======
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     /**
      * @see org.apache.felix.prefs.BackingStoreManager#getStore()
      */
     public BackingStore getStore() throws BackingStoreException {
         BackingStore service = null;
+<<<<<<< HEAD
+        ServiceTracker storeTracker = this.storeTracker;
+=======
         ServiceTracker<BackingStore, BackingStore> storeTracker = this.storeTracker;
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 
         // Only possible if we're not stopped already...
         if (storeTracker != null) {
 	        // has the service changed?
 	        int currentCount = storeTracker.getTrackingCount();
+<<<<<<< HEAD
+	        service = (BackingStore) storeTracker.getService();
+=======
 	        service = storeTracker.getService();
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 	        if (service != null && this.storeTrackingCount < currentCount) {
 	            this.storeTrackingCount = currentCount;
 	            this.cleanupStore(service);

@@ -20,9 +20,14 @@ package org.apache.felix.framework.resolver;
 
 import org.osgi.framework.wiring.BundleRequirement;
 import org.osgi.framework.wiring.BundleRevision;
+<<<<<<< HEAD
+
+public class ResolveException extends RuntimeException
+=======
 import org.osgi.service.resolver.ResolutionException;
 
 public class ResolveException extends ResolutionException
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 {
     private final BundleRevision m_revision;
     private final BundleRequirement m_req;

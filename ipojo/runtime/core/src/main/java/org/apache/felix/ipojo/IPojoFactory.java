@@ -367,7 +367,11 @@ public abstract class IPojoFactory implements Factory {
      * Gets the component type description.
      * @return the component type description object. <code>Null</code> if not already computed.
      */
+<<<<<<< HEAD
+    public synchronized ComponentTypeDescription getComponentDescription() {
+=======
     public ComponentTypeDescription getComponentDescription() {
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         return m_componentDesc;
     }
 
@@ -376,7 +380,11 @@ public abstract class IPojoFactory implements Factory {
      * @return the component type description.
      * @see org.apache.felix.ipojo.Factory#getDescription()
      */
+<<<<<<< HEAD
+    public synchronized Element getDescription() {
+=======
     public Element getDescription() {
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         // Can be null, if not already computed.
         if (m_componentDesc == null) {
             return new Element("No description available for " + m_factoryName, "");
@@ -791,6 +799,23 @@ public abstract class IPojoFactory implements Factory {
      */
     protected void computeDescription() {
         for (RequiredHandler req : m_requiredHandlers) {
+<<<<<<< HEAD
+            if (getHandler(req, null) == null) {
+                m_logger.log(Logger.ERROR, "Cannot extract handler object from " + m_factoryName + " " + req
+                        .getFullName());
+            } else {
+                Handler handler = getHandler(req, null).getHandler();
+                try {
+                    handler.setFactory(this);
+                    handler.initializeComponentFactory(m_componentDesc, m_componentMetadata);
+                    ((Pojo) handler).getComponentInstance().dispose();
+                } catch (ConfigurationException e) {
+                    ((Pojo) handler).getComponentInstance().dispose();
+                    m_logger.log(Logger.ERROR, e.getMessage());
+                    stop();
+                    throw new IllegalStateException(e);
+                }
+=======
             HandlerManager handlerManager = null;
             try {
                 handlerManager = getHandler(req, null);
@@ -816,6 +841,7 @@ public abstract class IPojoFactory implements Factory {
                 m_logger.log(Logger.ERROR, e.getMessage());
                 stop();
                 throw new IllegalStateException(e);
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
             }
         }
     }
@@ -916,28 +942,44 @@ public abstract class IPojoFactory implements Factory {
      * @param context the service context in which the handler is created (same as the instance context).
      * @return the handler object.
      */
+<<<<<<< HEAD
+    protected HandlerManager getHandler(RequiredHandler req, ServiceContext context) {
+=======
     protected HandlerManager getHandler(RequiredHandler req, ServiceContext context) throws MissingHandlerException,
             UnacceptableConfiguration, ConfigurationException {
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         try {
             return (HandlerManager) req.getFactory().createComponentInstance(null, context);
         } catch (MissingHandlerException e) {
             m_logger.log(Logger.ERROR, "The creation of the handler " + req.getFullName() + " has failed: " + e.getMessage());
             stop();
+<<<<<<< HEAD
+            return null;
+=======
             throw e;
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         } catch (UnacceptableConfiguration e) {
             m_logger.log(Logger.ERROR, "The creation of the handler "
                     + req.getFullName()
                     + " has failed (UnacceptableConfiguration): "
                     + e.getMessage());
             stop();
+<<<<<<< HEAD
+            return null;
+=======
             throw e;
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         } catch (org.apache.felix.ipojo.ConfigurationException e) {
             m_logger.log(Logger.ERROR, "The configuration of the handler "
                     + req.getFullName()
                     + " has failed (ConfigurationException): "
                     + e.getMessage());
             stop();
+<<<<<<< HEAD
+            return null;
+=======
             throw e;
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         }
     }
 

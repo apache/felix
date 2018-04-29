@@ -22,7 +22,10 @@
     <!-- Component Factory Instances -->
     <scr:component name="factory.component"
         enabled="false"
+<<<<<<< HEAD
+=======
         modified="modified"
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         factory="factory.component.factory" >
         <implementation class="org.apache.felix.scr.integration.components.SimpleComponent" />
     </scr:component>
@@ -31,6 +34,13 @@
     <scr:component name="factory.component.configuration"
         enabled="false"
         configuration-policy="require"
+<<<<<<< HEAD
+        factory="factory.component.factory.configuration" >
+        <implementation class="org.apache.felix.scr.integration.components.SimpleComponent" />
+    </scr:component>
+    
+    <!-- Component Factory Instances, requiring configuration -->
+=======
         factory="factory.component.factory.configuration"
         modified="modified" >
         <implementation class="org.apache.felix.scr.integration.components.SimpleComponent" />
@@ -68,6 +78,7 @@
         <implementation class="org.apache.felix.scr.integration.components.SimpleComponent" />
     </scr:component>
     
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     <scr:component name="factory.component.reference"
         enabled="false"
         configuration-policy="ignore"

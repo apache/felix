@@ -43,7 +43,11 @@ import org.osgi.service.event.EventHandler;
 public class EventHandlerProxy {
 
     /** The service reference for the event handler. */
+<<<<<<< HEAD
+    private final ServiceReference reference;
+=======
     private final ServiceReference<EventHandler> reference;
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 
     /** The handler context. */
     private final EventHandlerTracker.HandlerContext handlerContext;
@@ -73,7 +77,11 @@ public class EventHandlerProxy {
      * @param reference Reference to the EventHandler
      */
     public EventHandlerProxy(final EventHandlerTracker.HandlerContext context,
+<<<<<<< HEAD
+                    final ServiceReference reference)
+=======
                     final ServiceReference<EventHandler> reference)
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     {
         this.handlerContext = context;
         this.reference = reference;
@@ -123,12 +131,20 @@ public class EventHandlerProxy {
         }
         else if (topicObj instanceof Collection)
         {
+<<<<<<< HEAD
+            final Collection col = (Collection)topicObj;
+            final String[] values = new String[col.size()];
+            int index = 0;
+            // check if one value matches '*'
+            final Iterator i = col.iterator();
+=======
             @SuppressWarnings("unchecked")
             final Collection<Object> col = (Collection<Object>)topicObj;
             final String[] values = new String[col.size()];
             int index = 0;
             // check if one value matches '*'
             final Iterator<Object> i = col.iterator();
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
             boolean matchAll = false;
             while ( i.hasNext() )
             {
@@ -213,9 +229,13 @@ public class EventHandlerProxy {
         Object delivery = reference.getProperty(EventConstants.EVENT_DELIVERY);
         if ( delivery instanceof Collection )
         {
+<<<<<<< HEAD
+            delivery = ((Collection)delivery).toArray(new String[((Collection)delivery).size()]);
+=======
             @SuppressWarnings("unchecked")
             final Collection<String> col = (Collection<String>)delivery;
             delivery = col.toArray(new String[col.size()]);
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         }
         if ( delivery instanceof String )
         {
@@ -283,7 +303,11 @@ public class EventHandlerProxy {
         {
             try
             {
+<<<<<<< HEAD
+                this.handler = (EventHandler)this.handlerContext.bundleContext.getService(this.reference);
+=======
                 this.handler = this.handlerContext.bundleContext.getService(this.reference);
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
                 if ( this.handler != null )
                 {
                     this.checkTimeout(this.handler.getClass().getName());
@@ -431,6 +455,15 @@ public class EventHandlerProxy {
      */
     public void blackListHandler()
     {
+<<<<<<< HEAD
+        LogWrapper.getLogger().log(
+                        LogWrapper.LOG_WARNING,
+                        "Blacklisting ServiceReference [" + this.reference + " | Bundle("
+                                        + this.reference.getBundle() + ")] due to timeout!");
+        this.blacklisted = true;
+        // we can free the handler now.
+        this.release();
+=======
     	if(!this.blacklisted)
     	{
 	        LogWrapper.getLogger().log(
@@ -441,5 +474,6 @@ public class EventHandlerProxy {
 	        // we can free the handler now.
 	        this.release();
     	}
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     }
 }

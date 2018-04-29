@@ -23,6 +23,10 @@ import org.objectweb.asm.*;
 import org.objectweb.asm.commons.GeneratorAdapter;
 import org.objectweb.asm.tree.LocalVariableNode;
 
+<<<<<<< HEAD
+import java.util.Iterator;
+=======
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -35,7 +39,11 @@ import java.util.Set;
  *
  * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
+<<<<<<< HEAD
+public class InnerClassAdapter extends ClassAdapter implements Opcodes {
+=======
 public class InnerClassAdapter extends ClassVisitor implements Opcodes {
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 
     /**
      * The manipulator having manipulated the outer class.
@@ -66,6 +74,15 @@ public class InnerClassAdapter extends ClassVisitor implements Opcodes {
      * Creates the inner class adapter.
      *
      * @param name      the inner class name (internal name)
+<<<<<<< HEAD
+     * @param arg0       parent class visitor
+     * @param outerClassName outer class (implementation class)
+     * @param manipulator the manipulator having manipulated the outer class.
+     */
+    public InnerClassAdapter(String name, ClassVisitor arg0, String outerClassName,
+                             Manipulator manipulator) {
+        super(arg0);
+=======
      * @param visitor       parent class visitor
      * @param outerClassName outer class (implementation class)
      * @param manipulator the manipulator having manipulated the outer class.
@@ -73,6 +90,7 @@ public class InnerClassAdapter extends ClassVisitor implements Opcodes {
     public InnerClassAdapter(String name, ClassVisitor visitor, String outerClassName,
                              Manipulator manipulator) {
         super(Opcodes.ASM5, visitor);
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         m_name = name;
         m_simpleName = m_name.substring(m_name.indexOf("$") + 1);
         m_outer = outerClassName;
@@ -80,6 +98,21 @@ public class InnerClassAdapter extends ClassVisitor implements Opcodes {
         m_fields = manipulator.getFields().keySet();
     }
 
+<<<<<<< HEAD
+    @Override
+    public void visit(int version, int access, String name, String signature, String superName, String[] interfaces) {
+        // If version = 1.7, use 1.6 if the ipojo.downgrade.classes system property is either
+        // not set of set to true.
+        int theVersion = version;
+        String downgrade = System.getProperty("ipojo.downgrade.classes");
+        if ((downgrade == null  || "true".equals(downgrade))  && version == Opcodes.V1_7) {
+            theVersion = Opcodes.V1_6;
+        }
+        super.visit(theVersion, access, name, signature, superName, interfaces);
+    }
+
+=======
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     /**
      * Visits a method.
      * This methods create a code visitor manipulating outer class field accesses.
@@ -90,8 +123,12 @@ public class InnerClassAdapter extends ClassVisitor implements Opcodes {
      * @param signature  method signature
      * @param exceptions list of exceptions thrown by the method
      * @return a code adapter manipulating field accesses
+<<<<<<< HEAD
+     * @see org.objectweb.asm.ClassAdapter#visitMethod(int, java.lang.String, java.lang.String, java.lang.String, java.lang.String[])
+=======
      * @see org.objectweb.asm.ClassVisitor#visitMethod(int, java.lang.String, java.lang.String, java.lang.String,
      * java.lang.String[])
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
      */
     public MethodVisitor visitMethod(int access, String name, String desc, String signature, String[] exceptions) {
         // Do nothing on static methods, should not happen in non-static inner classes.
@@ -127,16 +164,26 @@ public class InnerClassAdapter extends ClassVisitor implements Opcodes {
             }
 
             // The new name is the method name prefixed by the PREFIX.
+<<<<<<< HEAD
+            MethodVisitor mv = super.visitMethod(access, MethodCreator.PREFIX + name, desc, signature,
+                    exceptions);
+            return new MethodCodeAdapter(mv, m_outer, access,  MethodCreator.PREFIX + name, desc, m_fields);
+=======
             MethodVisitor mv = super.visitMethod(ACC_PRIVATE, ClassManipulator.PREFIX + name, desc, signature,
                     exceptions);
             return new MethodCodeAdapter(mv, m_outer, ACC_PRIVATE,  ClassManipulator.PREFIX + name, desc, m_fields);
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         } else {
             return super.visitMethod(access, name, desc, signature, exceptions);
         }
     }
 
     private String getMethodFlagName(String name, String desc) {
+<<<<<<< HEAD
+        return MethodCreator.METHOD_FLAG_PREFIX + getMethodId(name, desc);
+=======
         return ClassManipulator.METHOD_FLAG_PREFIX + getMethodId(name, desc);
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     }
 
     private String getMethodId(String name, String desc) {
@@ -197,7 +244,11 @@ public class InnerClassAdapter extends ClassVisitor implements Opcodes {
 
         // Compute result and exception stack location
         int result = -1;
+<<<<<<< HEAD
+        int exception = -1;
+=======
         int exception;
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 
         //int arguments = mv.newLocal(Type.getType((new Object[0]).getClass()));
 
@@ -223,7 +274,11 @@ public class InnerClassAdapter extends ClassVisitor implements Opcodes {
 
         mv.visitVarInsn(ALOAD, 0);
         mv.loadArgs();
+<<<<<<< HEAD
+        mv.visitMethodInsn(INVOKESPECIAL, m_name, MethodCreator.PREFIX + name, desc);
+=======
         mv.visitMethodInsn(INVOKESPECIAL, m_name, ClassManipulator.PREFIX + name, desc, false);
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         mv.visitInsn(returnType.getOpcode(IRETURN));
 
         // end of the non intercepted method invocation.
@@ -232,18 +287,31 @@ public class InnerClassAdapter extends ClassVisitor implements Opcodes {
 
         mv.visitVarInsn(ALOAD, 0);
         mv.visitFieldInsn(GETFIELD, m_name, "this$0", "L" + m_outer + ";");
+<<<<<<< HEAD
+        mv.visitFieldInsn(GETFIELD, m_outer, MethodCreator.IM_FIELD, "Lorg/apache/felix/ipojo/InstanceManager;");
+        mv.visitVarInsn(ALOAD, 0);
+        mv.visitLdcInsn(getMethodId(name, desc));
+        mv.loadArgArray();
+        mv.visitMethodInsn(INVOKEVIRTUAL, "org/apache/felix/ipojo/InstanceManager", MethodCreator.ENTRY,
+                "(Ljava/lang/Object;Ljava/lang/String;[Ljava/lang/Object;)V");
+=======
         mv.visitFieldInsn(GETFIELD, m_outer, ClassManipulator.IM_FIELD, "Lorg/apache/felix/ipojo/InstanceManager;");
         mv.visitVarInsn(ALOAD, 0);
         mv.visitLdcInsn(getMethodId(name, desc));
         mv.loadArgArray();
         mv.visitMethodInsn(INVOKEVIRTUAL, "org/apache/felix/ipojo/InstanceManager", ClassManipulator.ENTRY,
                 "(Ljava/lang/Object;Ljava/lang/String;[Ljava/lang/Object;)V", false);
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 
         mv.visitVarInsn(ALOAD, 0);
 
         // Do not allow argument modification : just reload arguments.
         mv.loadArgs();
+<<<<<<< HEAD
+        mv.visitMethodInsn(INVOKESPECIAL, m_name, MethodCreator.PREFIX + name, desc);
+=======
         mv.visitMethodInsn(INVOKESPECIAL, m_name, ClassManipulator.PREFIX + name, desc, false);
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 
         if (returnType.getSort() != Type.VOID) {
             mv.visitVarInsn(returnType.getOpcode(ISTORE), result);
@@ -251,7 +319,11 @@ public class InnerClassAdapter extends ClassVisitor implements Opcodes {
 
         mv.visitVarInsn(ALOAD, 0);
         mv.visitFieldInsn(GETFIELD, m_name, "this$0", "L" + m_outer + ";");
+<<<<<<< HEAD
+        mv.visitFieldInsn(GETFIELD, m_outer, MethodCreator.IM_FIELD, "Lorg/apache/felix/ipojo/InstanceManager;");
+=======
         mv.visitFieldInsn(GETFIELD, m_outer, ClassManipulator.IM_FIELD, "Lorg/apache/felix/ipojo/InstanceManager;");
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         mv.visitVarInsn(ALOAD, 0);
         mv.visitLdcInsn(getMethodId(name, desc));
         if (returnType.getSort() != Type.VOID) {
@@ -260,8 +332,12 @@ public class InnerClassAdapter extends ClassVisitor implements Opcodes {
         } else {
             mv.visitInsn(ACONST_NULL);
         }
+<<<<<<< HEAD
+        mv.visitMethodInsn(INVOKEVIRTUAL, "org/apache/felix/ipojo/InstanceManager", MethodCreator.EXIT, "(Ljava/lang/Object;Ljava/lang/String;Ljava/lang/Object;)V");
+=======
         mv.visitMethodInsn(INVOKEVIRTUAL, "org/apache/felix/ipojo/InstanceManager",
                 ClassManipulator.EXIT, "(Ljava/lang/Object;Ljava/lang/String;Ljava/lang/Object;)V", false);
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 
         mv.visitLabel(l1);
         Label l7 = new Label();
@@ -271,12 +347,20 @@ public class InnerClassAdapter extends ClassVisitor implements Opcodes {
         mv.visitVarInsn(ASTORE, exception);
         mv.visitVarInsn(ALOAD, 0);
         mv.visitFieldInsn(GETFIELD, m_name, "this$0", "L" + m_outer + ";");
+<<<<<<< HEAD
+        mv.visitFieldInsn(GETFIELD, m_outer, MethodCreator.IM_FIELD, "Lorg/apache/felix/ipojo/InstanceManager;");
+        mv.visitVarInsn(ALOAD, 0);
+        mv.visitLdcInsn(getMethodId(name, desc));
+        mv.visitVarInsn(ALOAD, exception);
+        mv.visitMethodInsn(INVOKEVIRTUAL, "org/apache/felix/ipojo/InstanceManager", MethodCreator.ERROR, "(Ljava/lang/Object;Ljava/lang/String;Ljava/lang/Throwable;)V");
+=======
         mv.visitFieldInsn(GETFIELD, m_outer, ClassManipulator.IM_FIELD, "Lorg/apache/felix/ipojo/InstanceManager;");
         mv.visitVarInsn(ALOAD, 0);
         mv.visitLdcInsn(getMethodId(name, desc));
         mv.visitVarInsn(ALOAD, exception);
         mv.visitMethodInsn(INVOKEVIRTUAL, "org/apache/felix/ipojo/InstanceManager", ClassManipulator.ERROR,
                 "(Ljava/lang/Object;Ljava/lang/String;Ljava/lang/Throwable;)V", false);
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         mv.visitVarInsn(ALOAD, exception);
         mv.visitInsn(ATHROW);
 
@@ -295,16 +379,30 @@ public class InnerClassAdapter extends ClassVisitor implements Opcodes {
 
         // Move annotations
         if (annotations != null) {
+<<<<<<< HEAD
+            for (int i = 0; i < annotations.size(); i++) {
+                ClassChecker.AnnotationDescriptor ad = annotations.get(i);
+=======
             for (ClassChecker.AnnotationDescriptor ad : annotations) {
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
                 ad.visitAnnotation(mv);
             }
         }
 
         // Move parameter annotations
         if (paramAnnotations != null  && ! paramAnnotations.isEmpty()) {
+<<<<<<< HEAD
+            Iterator<Integer> ids = paramAnnotations.keySet().iterator();
+            while(ids.hasNext()) {
+                Integer id = ids.next();
+                List<ClassChecker.AnnotationDescriptor> ads = paramAnnotations.get(id);
+                for (int i = 0; i < ads.size(); i++) {
+                    ClassChecker.AnnotationDescriptor ad = ads.get(i);
+=======
             for (Integer id : paramAnnotations.keySet()) {
                 List<ClassChecker.AnnotationDescriptor> ads = paramAnnotations.get(id);
                 for (ClassChecker.AnnotationDescriptor ad : ads) {
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
                     ad.visitParameterAnnotation(id, mv);
                 }
             }
@@ -324,7 +422,11 @@ public class InnerClassAdapter extends ClassVisitor implements Opcodes {
     /**
      * Gets the method descriptor for the specified name and descriptor.
      * The method descriptor is looked inside the
+<<<<<<< HEAD
+     * {@link MethodCreator#m_visitedMethods}
+=======
      * {@link ClassManipulator#m_visitedMethods}
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
      * @param name the name of the method
      * @param desc the descriptor of the method
      * @return the method descriptor or <code>null</code> if not found.

@@ -54,7 +54,11 @@ public class TestSimplePS extends Common {
         assertNotNull("FS not available", ref);
 
         // Test foo invocation
+<<<<<<< HEAD
+        FooService fs = (FooService) osgiHelper.getServiceObject(ref);
+=======
         FooService fs = (FooService) osgiHelper.getRawServiceObject(ref);
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         assertTrue("FooService invocation failed", fs.foo());
 
         ipojoHelper.dispose();

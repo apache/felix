@@ -18,6 +18,10 @@
  */
 package org.apache.felix.framework;
 
+<<<<<<< HEAD
+import java.lang.ref.WeakReference;
+import java.net.MalformedURLException;
+=======
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -32,6 +36,7 @@ import java.net.URL;
 import java.net.URLConnection;
 import java.net.URLStreamHandler;
 import java.security.AccessController;
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 import java.security.CodeSource;
 import java.security.Permission;
 import java.security.PermissionCollection;
@@ -39,6 +44,8 @@ import java.security.Permissions;
 import java.security.PrivilegedAction;
 import java.security.ProtectionDomain;
 import java.security.cert.Certificate;
+<<<<<<< HEAD
+=======
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Enumeration;
@@ -51,11 +58,45 @@ import org.apache.felix.framework.cache.JarContent;
 import org.apache.felix.framework.util.FelixConstants;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.PackagePermission;
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 
 import org.osgi.framework.wiring.BundleRevision;
 
 public class BundleProtectionDomain extends ProtectionDomain
 {
+<<<<<<< HEAD
+    private final WeakReference m_felix;
+    private final WeakReference m_bundle;
+    private final int m_hashCode;
+    private final String m_toString;
+    private final WeakReference m_revision;
+
+    // TODO: SECURITY - This should probably take a revision, not a bundle.
+    BundleProtectionDomain(Felix felix, BundleImpl bundle, Object certificates)
+        throws MalformedURLException
+    {
+        super(
+            new CodeSource(
+                Felix.m_secureAction.createURL(
+                    Felix.m_secureAction.createURL(null, "location:", new FakeURLStreamHandler()),
+                    bundle._getLocation().startsWith("reference:") ? 
+                        bundle._getLocation().substring("reference:".length()) : 
+                        bundle._getLocation(),
+                    new FakeURLStreamHandler()
+                    ),
+                (Certificate[]) certificates),
+            null, null, null);
+        m_felix = new WeakReference(felix);
+        m_bundle = new WeakReference(bundle);
+        m_revision = new WeakReference(bundle.adapt(BundleRevisionImpl.class));
+        m_hashCode = bundle.hashCode();
+        m_toString = "[" + bundle + "]";
+    }
+
+    BundleRevision getRevision()
+    {
+        return (BundleRevision) m_revision.get();
+=======
     private static final class BundleInputStream extends InputStream
     {
         private final Content m_root;
@@ -431,12 +472,19 @@ public class BundleProtectionDomain extends ProtectionDomain
     BundleRevisionImpl getRevision()
     {
         return m_revision.get();
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     }
 
     public boolean implies(Permission permission)
     {
+<<<<<<< HEAD
+        Felix felix = (Felix) m_felix.get();
+        return (felix != null) ?
+            felix.impliesBundlePermission(this, permission, false) : false;
+=======
         Felix felix = getFramework();
         return felix != null && felix.impliesBundlePermission(this, permission, false);
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     }
 
     boolean superImplies(Permission permission)
@@ -446,6 +494,16 @@ public class BundleProtectionDomain extends ProtectionDomain
 
     public boolean impliesDirect(Permission permission)
     {
+<<<<<<< HEAD
+        Felix felix = (Felix) m_felix.get();
+        return (felix != null) ?
+            felix.impliesBundlePermission(this, permission, true) : false;
+    }
+
+    BundleImpl getBundle()
+    {
+        return (BundleImpl) m_bundle.get();
+=======
         Felix felix = getFramework();
         return felix != null && felix.impliesBundlePermission(this, permission, true);
     }
@@ -473,6 +531,7 @@ public class BundleProtectionDomain extends ProtectionDomain
     Felix getFramework() {
         BundleRevisionImpl revision = m_revision.get();
         return revision != null ? revision.getBundle().getFramework() : null;
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     }
 
     public int hashCode()
@@ -483,6 +542,16 @@ public class BundleProtectionDomain extends ProtectionDomain
     public boolean equals(Object other)
     {
         if ((other == null) || (other.getClass() != BundleProtectionDomain.class))
+<<<<<<< HEAD
+        {
+            return false;
+        }
+        if (m_hashCode != other.hashCode())
+        {
+            return false;
+        }
+        return m_bundle.get() == ((BundleProtectionDomain) other).m_bundle.get();
+=======
         {
             return false;
         }
@@ -491,6 +560,7 @@ public class BundleProtectionDomain extends ProtectionDomain
             return false;
         }
         return m_revision.get() == ((BundleProtectionDomain) other).m_revision.get();
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     }
 
     public String toString()

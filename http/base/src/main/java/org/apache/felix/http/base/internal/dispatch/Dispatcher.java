@@ -16,6 +16,13 @@
  */
 package org.apache.felix.http.base.internal.dispatch;
 
+<<<<<<< HEAD
+import org.apache.felix.http.base.internal.handler.HandlerRegistry;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import javax.servlet.ServletException;
+import java.io.IOException;
+=======
 import java.io.IOException;
 import java.util.Set;
 
@@ -40,18 +47,31 @@ import org.apache.felix.http.base.internal.registry.PathResolution;
 import org.apache.felix.http.base.internal.registry.PerContextHandlerRegistry;
 import org.apache.felix.http.base.internal.whiteboard.WhiteboardManager;
 import org.osgi.service.http.whiteboard.Preprocessor;
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 
 public final class Dispatcher
 {
     private final HandlerRegistry handlerRegistry;
 
+<<<<<<< HEAD
+    public Dispatcher(HandlerRegistry handlerRegistry)
+=======
     private volatile WhiteboardManager whiteboardManager;
 
     public Dispatcher(final HandlerRegistry handlerRegistry)
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     {
         this.handlerRegistry = handlerRegistry;
     }
 
+<<<<<<< HEAD
+    public void dispatch(HttpServletRequest req, HttpServletResponse res)
+        throws ServletException, IOException
+    {
+        ServletPipeline servletPipeline = new ServletPipeline(this.handlerRegistry.getServlets());
+        FilterPipeline filterPipeline = new FilterPipeline(this.handlerRegistry.getFilters(), servletPipeline);
+        filterPipeline.dispatch(req, res, new NotFoundFilterChain());
+=======
     /**
      * Set or unset the whiteboard manager.
      * @param service The whiteboard manager or {@code null}
@@ -169,5 +189,6 @@ public final class Dispatcher
 			}
 		});
 
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     }
 }

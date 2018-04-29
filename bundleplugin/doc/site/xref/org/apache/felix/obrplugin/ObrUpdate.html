@@ -1,0 +1,398 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+<meta http-equiv="content-type" content="text/html; charset=ISO-8859-1" />
+<title>ObrUpdate xref</title>
+<link type="text/css" rel="stylesheet" href="../../../../stylesheet.css" />
+</head>
+<body>
+<pre>
+
+<a name="1" href="#1">1</a>   <em class="jxr_comment">/*<em class="jxr_comment"> </em></em>
+<a name="2" href="#2">2</a>   <em class="jxr_comment"> * Licensed to the Apache Software Foundation (ASF) under one</em>
+<a name="3" href="#3">3</a>   <em class="jxr_comment"> * or more contributor license agreements.  See the NOTICE file</em>
+<a name="4" href="#4">4</a>   <em class="jxr_comment"> * distributed with this work for additional information</em>
+<a name="5" href="#5">5</a>   <em class="jxr_comment"> * regarding copyright ownership.  The ASF licenses this file</em>
+<a name="6" href="#6">6</a>   <em class="jxr_comment"> * to you under the Apache License, Version 2.0 (the</em>
+<a name="7" href="#7">7</a>   <em class="jxr_comment"> * "License"); you may not use this file except in compliance</em>
+<a name="8" href="#8">8</a>   <em class="jxr_comment"> * with the License.  You may obtain a copy of the License at</em>
+<a name="9" href="#9">9</a>   <em class="jxr_comment"> *</em>
+<a name="10" href="#10">10</a>  <em class="jxr_comment"> *   <a href="http://www.apache.org/licenses/LICENSE-2.0" target="alexandria_uri">http://www.apache.org/licenses/LICENSE-2.0</a></em>
+<a name="11" href="#11">11</a>  <em class="jxr_comment"> *</em>
+<a name="12" href="#12">12</a>  <em class="jxr_comment"> * Unless required by applicable law or agreed to in writing,</em>
+<a name="13" href="#13">13</a>  <em class="jxr_comment"> * software distributed under the License is distributed on an</em>
+<a name="14" href="#14">14</a>  <em class="jxr_comment"> * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY</em>
+<a name="15" href="#15">15</a>  <em class="jxr_comment"> * KIND, either express or implied.  See the License for the</em>
+<a name="16" href="#16">16</a>  <em class="jxr_comment"> * specific language governing permissions and limitations</em>
+<a name="17" href="#17">17</a>  <em class="jxr_comment"> * under the License.</em>
+<a name="18" href="#18">18</a>  <em class="jxr_comment"> */</em>
+<a name="19" href="#19">19</a>  <strong class="jxr_keyword">package</strong> org.apache.felix.obrplugin;
+<a name="20" href="#20">20</a>  
+<a name="21" href="#21">21</a>  
+<a name="22" href="#22">22</a>  <strong class="jxr_keyword">import</strong> java.io.File;
+<a name="23" href="#23">23</a>  <strong class="jxr_keyword">import</strong> java.io.FileInputStream;
+<a name="24" href="#24">24</a>  <strong class="jxr_keyword">import</strong> java.io.FileOutputStream;
+<a name="25" href="#25">25</a>  <strong class="jxr_keyword">import</strong> java.io.IOException;
+<a name="26" href="#26">26</a>  <strong class="jxr_keyword">import</strong> java.io.InputStream;
+<a name="27" href="#27">27</a>  <strong class="jxr_keyword">import</strong> java.io.OutputStreamWriter;
+<a name="28" href="#28">28</a>  <strong class="jxr_keyword">import</strong> java.io.Writer;
+<a name="29" href="#29">29</a>  <strong class="jxr_keyword">import</strong> java.lang.reflect.Method;
+<a name="30" href="#30">30</a>  <strong class="jxr_keyword">import</strong> java.net.URI;
+<a name="31" href="#31">31</a>  <strong class="jxr_keyword">import</strong> java.util.regex.Pattern;
+<a name="32" href="#32">32</a>  
+<a name="33" href="#33">33</a>  <strong class="jxr_keyword">import</strong> org.apache.felix.bundlerepository.Resource;
+<a name="34" href="#34">34</a>  <strong class="jxr_keyword">import</strong> org.apache.felix.bundlerepository.impl.DataModelHelperImpl;
+<a name="35" href="#35">35</a>  <strong class="jxr_keyword">import</strong> org.apache.felix.bundlerepository.impl.PullParser;
+<a name="36" href="#36">36</a>  <strong class="jxr_keyword">import</strong> org.apache.felix.bundlerepository.impl.RepositoryImpl;
+<a name="37" href="#37">37</a>  <strong class="jxr_keyword">import</strong> org.apache.felix.bundlerepository.impl.RepositoryParser;
+<a name="38" href="#38">38</a>  <strong class="jxr_keyword">import</strong> org.apache.felix.bundlerepository.impl.ResourceImpl;
+<a name="39" href="#39">39</a>  <strong class="jxr_keyword">import</strong> org.apache.maven.plugin.MojoExecutionException;
+<a name="40" href="#40">40</a>  <strong class="jxr_keyword">import</strong> org.apache.maven.plugin.logging.Log;
+<a name="41" href="#41">41</a>  <strong class="jxr_keyword">import</strong> org.apache.maven.project.MavenProject;
+<a name="42" href="#42">42</a>  <strong class="jxr_keyword">import</strong> org.codehaus.plexus.util.FileUtils;
+<a name="43" href="#43">43</a>  <strong class="jxr_keyword">import</strong> org.kxml2.io.KXmlParser;
+<a name="44" href="#44">44</a>  <strong class="jxr_keyword">import</strong> org.xmlpull.v1.XmlPullParser;
+<a name="45" href="#45">45</a>  
+<a name="46" href="#46">46</a>  
+<a name="47" href="#47">47</a>  <em class="jxr_javadoccomment">/**</em>
+<a name="48" href="#48">48</a>  <em class="jxr_javadoccomment"> * this class parse the old repository.xml file build the bundle resource description and update the repository.</em>
+<a name="49" href="#49">49</a>  <em class="jxr_javadoccomment"> * @author &lt;a href="<a href="mailto:dev@felix.apache.org" target="alexandria_uri">mailto:dev@felix.apache.org</a>"&gt;Felix Project Team&lt;/a&gt;</em>
+<a name="50" href="#50">50</a>  <em class="jxr_javadoccomment"> */</em>
+<a name="51" href="#51">51</a>  <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">class</strong> <a href="../../../../org/apache/felix/obrplugin/ObrUpdate.html">ObrUpdate</a>
+<a name="52" href="#52">52</a>  {
+<a name="53" href="#53">53</a>      <strong class="jxr_keyword">private</strong> <strong class="jxr_keyword">static</strong> Pattern TIMESTAMP = Pattern.compile( <span class="jxr_string">"-[0-9]{8}&#92;&#92;.[0-9]{6}-[0-9]+"</span> );
+<a name="54" href="#54">54</a>  
+<a name="55" href="#55">55</a>      <strong class="jxr_keyword">private</strong> <strong class="jxr_keyword">static</strong> Method setURI;
+<a name="56" href="#56">56</a>  
+<a name="57" href="#57">57</a>      <strong class="jxr_keyword">static</strong>
+<a name="58" href="#58">58</a>      {
+<a name="59" href="#59">59</a>          <strong class="jxr_keyword">try</strong>
+<a name="60" href="#60">60</a>          {
+<a name="61" href="#61">61</a>              setURI = RepositoryImpl.<strong class="jxr_keyword">class</strong>.getDeclaredMethod( <span class="jxr_string">"setURI"</span>, String.<strong class="jxr_keyword">class</strong> );
+<a name="62" href="#62">62</a>              setURI.setAccessible( <strong class="jxr_keyword">true</strong> );
+<a name="63" href="#63">63</a>          }
+<a name="64" href="#64">64</a>          <strong class="jxr_keyword">catch</strong> ( Exception e )
+<a name="65" href="#65">65</a>          {
+<a name="66" href="#66">66</a>              setURI = <strong class="jxr_keyword">null</strong>;
+<a name="67" href="#67">67</a>          }
+<a name="68" href="#68">68</a>      }
+<a name="69" href="#69">69</a>  
+<a name="70" href="#70">70</a>      <em class="jxr_javadoccomment">/**</em>
+<a name="71" href="#71">71</a>  <em class="jxr_javadoccomment">     * logger for this plugin.</em>
+<a name="72" href="#72">72</a>  <em class="jxr_javadoccomment">     */</em>
+<a name="73" href="#73">73</a>      <strong class="jxr_keyword">private</strong> Log m_logger;
+<a name="74" href="#74">74</a>  
+<a name="75" href="#75">75</a>      <em class="jxr_javadoccomment">/**</em>
+<a name="76" href="#76">76</a>  <em class="jxr_javadoccomment">     * name and path to the repository descriptor file.</em>
+<a name="77" href="#77">77</a>  <em class="jxr_javadoccomment">     */</em>
+<a name="78" href="#78">78</a>      <strong class="jxr_keyword">private</strong> URI m_repositoryXml;
+<a name="79" href="#79">79</a>  
+<a name="80" href="#80">80</a>      <em class="jxr_javadoccomment">/**</em>
+<a name="81" href="#81">81</a>  <em class="jxr_javadoccomment">     * name and path to the obr.xml file.</em>
+<a name="82" href="#82">82</a>  <em class="jxr_javadoccomment">     */</em>
+<a name="83" href="#83">83</a>      <strong class="jxr_keyword">private</strong> URI m_obrXml;
+<a name="84" href="#84">84</a>  
+<a name="85" href="#85">85</a>      <em class="jxr_javadoccomment">/**</em>
+<a name="86" href="#86">86</a>  <em class="jxr_javadoccomment">     * maven project description.</em>
+<a name="87" href="#87">87</a>  <em class="jxr_javadoccomment">     */</em>
+<a name="88" href="#88">88</a>      <strong class="jxr_keyword">private</strong> MavenProject m_project;
+<a name="89" href="#89">89</a>  
+<a name="90" href="#90">90</a>      <em class="jxr_javadoccomment">/**</em>
+<a name="91" href="#91">91</a>  <em class="jxr_javadoccomment">     * user configuration information.</em>
+<a name="92" href="#92">92</a>  <em class="jxr_javadoccomment">     */</em>
+<a name="93" href="#93">93</a>      <strong class="jxr_keyword">private</strong> <a href="../../../../org/apache/felix/obrplugin/Config.html">Config</a> m_userConfig;
+<a name="94" href="#94">94</a>  
+<a name="95" href="#95">95</a>      <em class="jxr_javadoccomment">/**</em>
+<a name="96" href="#96">96</a>  <em class="jxr_javadoccomment">     * root on parent document.</em>
+<a name="97" href="#97">97</a>  <em class="jxr_javadoccomment">     */</em>
+<a name="98" href="#98">98</a>      <strong class="jxr_keyword">private</strong> RepositoryImpl m_repository;
+<a name="99" href="#99">99</a>  
+<a name="100" href="#100">100</a>     <em class="jxr_javadoccomment">/**</em>
+<a name="101" href="#101">101</a> <em class="jxr_javadoccomment">     * used to store bundle information.</em>
+<a name="102" href="#102">102</a> <em class="jxr_javadoccomment">     */</em>
+<a name="103" href="#103">103</a>     <strong class="jxr_keyword">private</strong> ResourceImpl m_resourceBundle;
+<a name="104" href="#104">104</a> 
+<a name="105" href="#105">105</a>     <em class="jxr_javadoccomment">/**</em>
+<a name="106" href="#106">106</a> <em class="jxr_javadoccomment">     * base URI used to relativize bundle URIs.</em>
+<a name="107" href="#107">107</a> <em class="jxr_javadoccomment">     */</em>
+<a name="108" href="#108">108</a>     <strong class="jxr_keyword">private</strong> URI m_baseURI;
+<a name="109" href="#109">109</a> 
+<a name="110" href="#110">110</a> 
+<a name="111" href="#111">111</a>     <em class="jxr_javadoccomment">/**</em>
+<a name="112" href="#112">112</a> <em class="jxr_javadoccomment">     * initialize information.</em>
+<a name="113" href="#113">113</a> <em class="jxr_javadoccomment">     * @param repositoryXml path to the repository descriptor file</em>
+<a name="114" href="#114">114</a> <em class="jxr_javadoccomment">     * @param obrXml path and filename to the obr.xml file</em>
+<a name="115" href="#115">115</a> <em class="jxr_javadoccomment">     * @param project maven project description</em>
+<a name="116" href="#116">116</a> <em class="jxr_javadoccomment">     * @param mavenRepositoryPath path to the local maven repository</em>
+<a name="117" href="#117">117</a> <em class="jxr_javadoccomment">     * @param userConfig user information</em>
+<a name="118" href="#118">118</a> <em class="jxr_javadoccomment">     * @param logger plugin logger</em>
+<a name="119" href="#119">119</a> <em class="jxr_javadoccomment">     */</em>
+<a name="120" href="#120">120</a>     <strong class="jxr_keyword">public</strong> <a href="../../../../org/apache/felix/obrplugin/ObrUpdate.html">ObrUpdate</a>( URI repositoryXml, URI obrXml, MavenProject project, String mavenRepositoryPath,
+<a name="121" href="#121">121</a>         <a href="../../../../org/apache/felix/obrplugin/Config.html">Config</a> userConfig, Log logger )
+<a name="122" href="#122">122</a>     {
+<a name="123" href="#123">123</a>         m_repositoryXml = repositoryXml;
+<a name="124" href="#124">124</a>         m_obrXml = obrXml;
+<a name="125" href="#125">125</a>         m_project = project;
+<a name="126" href="#126">126</a>         m_logger = logger;
+<a name="127" href="#127">127</a> 
+<a name="128" href="#128">128</a>         m_userConfig = userConfig;
+<a name="129" href="#129">129</a> 
+<a name="130" href="#130">130</a>         <strong class="jxr_keyword">if</strong> ( userConfig.isRemoteFile() )
+<a name="131" href="#131">131</a>         {
+<a name="132" href="#132">132</a>             m_baseURI = ObrUtils.toFileURI( mavenRepositoryPath );
+<a name="133" href="#133">133</a>         }
+<a name="134" href="#134">134</a>         <strong class="jxr_keyword">else</strong>
+<a name="135" href="#135">135</a>         {
+<a name="136" href="#136">136</a>             m_baseURI = m_repositoryXml;
+<a name="137" href="#137">137</a>         }
+<a name="138" href="#138">138</a>     }
+<a name="139" href="#139">139</a> 
+<a name="140" href="#140">140</a> 
+<a name="141" href="#141">141</a>     <em class="jxr_javadoccomment">/**</em>
+<a name="142" href="#142">142</a> <em class="jxr_javadoccomment">     * update the repository descriptor file. parse the old repository descriptor file,</em>
+<a name="143" href="#143">143</a> <em class="jxr_javadoccomment">     * get the old reference of the bundle or determine the id for a new bundle, extract</em>
+<a name="144" href="#144">144</a> <em class="jxr_javadoccomment">     * information from bindex set the new information in descriptor file and save it.</em>
+<a name="145" href="#145">145</a> <em class="jxr_javadoccomment">     * </em>
+<a name="146" href="#146">146</a> <em class="jxr_javadoccomment">     * @param bundleJar path to the bundle jar file</em>
+<a name="147" href="#147">147</a> <em class="jxr_javadoccomment">     * @param sourceJar path to the source jar file</em>
+<a name="148" href="#148">148</a> <em class="jxr_javadoccomment">     * @param docJar path to the docs jar file</em>
+<a name="149" href="#149">149</a> <em class="jxr_javadoccomment">     * </em>
+<a name="150" href="#150">150</a> <em class="jxr_javadoccomment">     * @throws MojoExecutionException if the plugin failed</em>
+<a name="151" href="#151">151</a> <em class="jxr_javadoccomment">     */</em>
+<a name="152" href="#152">152</a>     <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">void</strong> updateRepository( URI bundleJar, URI sourceJar, URI docJar ) <strong class="jxr_keyword">throws</strong> MojoExecutionException
+<a name="153" href="#153">153</a>     {
+<a name="154" href="#154">154</a>         m_logger.debug( <span class="jxr_string">" (f) repositoryXml = "</span> + m_repositoryXml );
+<a name="155" href="#155">155</a>         m_logger.debug( <span class="jxr_string">" (f) bundleJar = "</span> + bundleJar );
+<a name="156" href="#156">156</a>         m_logger.debug( <span class="jxr_string">" (f) sourceJar = "</span> + sourceJar );
+<a name="157" href="#157">157</a>         m_logger.debug( <span class="jxr_string">" (f) docJar = "</span> + docJar );
+<a name="158" href="#158">158</a>         m_logger.debug( <span class="jxr_string">" (f) obrXml = "</span> + m_obrXml );
+<a name="159" href="#159">159</a> 
+<a name="160" href="#160">160</a>         <strong class="jxr_keyword">if</strong> ( m_repository == <strong class="jxr_keyword">null</strong> )
+<a name="161" href="#161">161</a>         {
+<a name="162" href="#162">162</a>             <strong class="jxr_keyword">return</strong>;
+<a name="163" href="#163">163</a>         }
+<a name="164" href="#164">164</a> 
+<a name="165" href="#165">165</a>         <em class="jxr_comment">// get the file size</em>
+<a name="166" href="#166">166</a>         File bundleFile = <strong class="jxr_keyword">new</strong> File( bundleJar );
+<a name="167" href="#167">167</a>         <strong class="jxr_keyword">if</strong> ( !bundleFile.exists() )
+<a name="168" href="#168">168</a>         {
+<a name="169" href="#169">169</a>             String snapshot = TIMESTAMP.matcher( bundleFile.getName() ).replaceFirst( <span class="jxr_string">"-SNAPSHOT"</span> );
+<a name="170" href="#170">170</a>             bundleFile = <strong class="jxr_keyword">new</strong> File( bundleFile.getParentFile(), snapshot );
+<a name="171" href="#171">171</a>         }
+<a name="172" href="#172">172</a>         <strong class="jxr_keyword">if</strong> ( bundleFile.exists() )
+<a name="173" href="#173">173</a>         {
+<a name="174" href="#174">174</a>             URI resourceURI = m_userConfig.getRemoteBundle();
+<a name="175" href="#175">175</a>             <strong class="jxr_keyword">if</strong> ( <strong class="jxr_keyword">null</strong> == resourceURI )
+<a name="176" href="#176">176</a>             {
+<a name="177" href="#177">177</a>                 resourceURI = bundleJar;
+<a name="178" href="#178">178</a>                 <strong class="jxr_keyword">if</strong> ( m_userConfig.isPathRelative() )
+<a name="179" href="#179">179</a>                 {
+<a name="180" href="#180">180</a>                     resourceURI = ObrUtils.getRelativeURI( m_baseURI, resourceURI );
+<a name="181" href="#181">181</a>                 }
+<a name="182" href="#182">182</a>             }
+<a name="183" href="#183">183</a> 
+<a name="184" href="#184">184</a>             <strong class="jxr_keyword">if</strong> ( m_userConfig.isRemoteFile() )
+<a name="185" href="#185">185</a>             {
+<a name="186" href="#186">186</a>                 m_logger.info( <span class="jxr_string">"Deploying "</span> + resourceURI );
+<a name="187" href="#187">187</a>             }
+<a name="188" href="#188">188</a>             <strong class="jxr_keyword">else</strong>
+<a name="189" href="#189">189</a>             {
+<a name="190" href="#190">190</a>                 m_logger.info( <span class="jxr_string">"Installing "</span> + resourceURI );
+<a name="191" href="#191">191</a>             }
+<a name="192" href="#192">192</a> 
+<a name="193" href="#193">193</a>             <strong class="jxr_keyword">try</strong>
+<a name="194" href="#194">194</a>             {
+<a name="195" href="#195">195</a>                 m_resourceBundle = ( ResourceImpl ) <strong class="jxr_keyword">new</strong> DataModelHelperImpl().createResource( bundleFile.toURI().toURL() );
+<a name="196" href="#196">196</a>                 <strong class="jxr_keyword">if</strong> ( m_resourceBundle == <strong class="jxr_keyword">null</strong> )
+<a name="197" href="#197">197</a>                 {
+<a name="198" href="#198">198</a>                     <strong class="jxr_keyword">return</strong>;
+<a name="199" href="#199">199</a>                 }
+<a name="200" href="#200">200</a>             }
+<a name="201" href="#201">201</a>             <strong class="jxr_keyword">catch</strong> ( IOException e )
+<a name="202" href="#202">202</a>             {
+<a name="203" href="#203">203</a>                 <strong class="jxr_keyword">throw</strong> <strong class="jxr_keyword">new</strong> MojoExecutionException( <span class="jxr_string">"Unable to load resource information"</span>, e );
+<a name="204" href="#204">204</a>             }
+<a name="205" href="#205">205</a> 
+<a name="206" href="#206">206</a>             m_resourceBundle.put( Resource.SIZE, String.valueOf( bundleFile.length() ) );
+<a name="207" href="#207">207</a>             m_resourceBundle.put( Resource.URI, resourceURI.toASCIIString() );
+<a name="208" href="#208">208</a>         }
+<a name="209" href="#209">209</a>         <strong class="jxr_keyword">else</strong>
+<a name="210" href="#210">210</a>         {
+<a name="211" href="#211">211</a>             m_logger.error( <span class="jxr_string">"file doesn't exist: "</span> + bundleJar );
+<a name="212" href="#212">212</a>             <strong class="jxr_keyword">return</strong>;
+<a name="213" href="#213">213</a>         }
+<a name="214" href="#214">214</a> 
+<a name="215" href="#215">215</a>         <em class="jxr_comment">// parse the obr.xml file</em>
+<a name="216" href="#216">216</a>         <strong class="jxr_keyword">if</strong> ( m_obrXml != <strong class="jxr_keyword">null</strong> )
+<a name="217" href="#217">217</a>         {
+<a name="218" href="#218">218</a>             m_logger.info( <span class="jxr_string">"Adding "</span> + m_obrXml );
+<a name="219" href="#219">219</a> 
+<a name="220" href="#220">220</a>             <em class="jxr_comment">// URL url = getClass().getResource("/SchemaObr.xsd");</em>
+<a name="221" href="#221">221</a>             <em class="jxr_comment">// TODO validate obr.xml file</em>
+<a name="222" href="#222">222</a> 
+<a name="223" href="#223">223</a>             <em class="jxr_comment">// add contents to resource bundle</em>
+<a name="224" href="#224">224</a>             parseObrXml();
+<a name="225" href="#225">225</a>         }
+<a name="226" href="#226">226</a> 
+<a name="227" href="#227">227</a>         String sourcePath = relativisePath( sourceJar );
+<a name="228" href="#228">228</a>         String docPath = relativisePath( docJar );
+<a name="229" href="#229">229</a> 
+<a name="230" href="#230">230</a>         <em class="jxr_comment">//        m_resourceBundle.construct( m_project, bindexExtractor, sourcePath, docPath );</em>
+<a name="231" href="#231">231</a>         <em class="jxr_comment">//         TODO: rebuild wrt m_project</em>
+<a name="232" href="#232">232</a> 
+<a name="233" href="#233">233</a>         m_repository.addResource( m_resourceBundle );
+<a name="234" href="#234">234</a>         m_repository.setLastModified( System.currentTimeMillis() );
+<a name="235" href="#235">235</a>     }
+<a name="236" href="#236">236</a> 
+<a name="237" href="#237">237</a> 
+<a name="238" href="#238">238</a>     <strong class="jxr_keyword">private</strong> String relativisePath( URI uri )
+<a name="239" href="#239">239</a>     {
+<a name="240" href="#240">240</a>         <strong class="jxr_keyword">if</strong> ( <strong class="jxr_keyword">null</strong> != uri )
+<a name="241" href="#241">241</a>         {
+<a name="242" href="#242">242</a>             <strong class="jxr_keyword">if</strong> ( m_userConfig.isPathRelative() )
+<a name="243" href="#243">243</a>             {
+<a name="244" href="#244">244</a>                 <strong class="jxr_keyword">return</strong> ObrUtils.getRelativeURI( m_baseURI, uri ).toASCIIString();
+<a name="245" href="#245">245</a>             }
+<a name="246" href="#246">246</a> 
+<a name="247" href="#247">247</a>             <strong class="jxr_keyword">return</strong> uri.toASCIIString();
+<a name="248" href="#248">248</a>         }
+<a name="249" href="#249">249</a> 
+<a name="250" href="#250">250</a>         <strong class="jxr_keyword">return</strong> <strong class="jxr_keyword">null</strong>;
+<a name="251" href="#251">251</a>     }
+<a name="252" href="#252">252</a> 
+<a name="253" href="#253">253</a> 
+<a name="254" href="#254">254</a>     <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">void</strong> writeRepositoryXml() <strong class="jxr_keyword">throws</strong> MojoExecutionException
+<a name="255" href="#255">255</a>     {
+<a name="256" href="#256">256</a>         m_logger.info( <span class="jxr_string">"Writing OBR metadata"</span> );
+<a name="257" href="#257">257</a> 
+<a name="258" href="#258">258</a>         File file = <strong class="jxr_keyword">null</strong>;
+<a name="259" href="#259">259</a>         Writer writer;
+<a name="260" href="#260">260</a>         <strong class="jxr_keyword">try</strong>
+<a name="261" href="#261">261</a>         {
+<a name="262" href="#262">262</a>             file = File.createTempFile( <span class="jxr_string">"repository"</span>, <span class="jxr_string">".xml"</span> );
+<a name="263" href="#263">263</a>             writer = <strong class="jxr_keyword">new</strong> OutputStreamWriter( <strong class="jxr_keyword">new</strong> FileOutputStream( file ) );
+<a name="264" href="#264">264</a>         }
+<a name="265" href="#265">265</a>         <strong class="jxr_keyword">catch</strong> ( IOException e )
+<a name="266" href="#266">266</a>         {
+<a name="267" href="#267">267</a>             m_logger.error( <span class="jxr_string">"Unable to write to file: "</span> + file.getName() );
+<a name="268" href="#268">268</a>             e.printStackTrace();
+<a name="269" href="#269">269</a>             <strong class="jxr_keyword">throw</strong> <strong class="jxr_keyword">new</strong> MojoExecutionException( <span class="jxr_string">"Unable to write to file: "</span> + file.getName() + <span class="jxr_string">" : "</span> + e.getMessage() );
+<a name="270" href="#270">270</a>         }
+<a name="271" href="#271">271</a> 
+<a name="272" href="#272">272</a>         <strong class="jxr_keyword">try</strong>
+<a name="273" href="#273">273</a>         {
+<a name="274" href="#274">274</a>             <strong class="jxr_keyword">new</strong> DataModelHelperImpl().writeRepository( m_repository, writer );
+<a name="275" href="#275">275</a>         }
+<a name="276" href="#276">276</a>         <strong class="jxr_keyword">catch</strong> ( IOException e )
+<a name="277" href="#277">277</a>         {
+<a name="278" href="#278">278</a>             <strong class="jxr_keyword">throw</strong> <strong class="jxr_keyword">new</strong> MojoExecutionException( <span class="jxr_string">"Unable to write repository xml"</span>, e );
+<a name="279" href="#279">279</a>         }
+<a name="280" href="#280">280</a> 
+<a name="281" href="#281">281</a>         <strong class="jxr_keyword">try</strong>
+<a name="282" href="#282">282</a>         {
+<a name="283" href="#283">283</a>             writer.flush();
+<a name="284" href="#284">284</a>             writer.close();
+<a name="285" href="#285">285</a> 
+<a name="286" href="#286">286</a>             File outputFile = <strong class="jxr_keyword">new</strong> File( m_repositoryXml );
+<a name="287" href="#287">287</a>             outputFile.getParentFile().mkdirs();
+<a name="288" href="#288">288</a>             FileUtils.rename( file, outputFile );
+<a name="289" href="#289">289</a>         }
+<a name="290" href="#290">290</a>         <strong class="jxr_keyword">catch</strong> ( IOException e )
+<a name="291" href="#291">291</a>         {
+<a name="292" href="#292">292</a>             e.printStackTrace();
+<a name="293" href="#293">293</a>             <strong class="jxr_keyword">throw</strong> <strong class="jxr_keyword">new</strong> MojoExecutionException( <span class="jxr_string">"IOException"</span> );
+<a name="294" href="#294">294</a>         }
+<a name="295" href="#295">295</a> 
+<a name="296" href="#296">296</a>     }
+<a name="297" href="#297">297</a> 
+<a name="298" href="#298">298</a> 
+<a name="299" href="#299">299</a>     <em class="jxr_javadoccomment">/**</em>
+<a name="300" href="#300">300</a> <em class="jxr_javadoccomment">      * Parse the repository descriptor file.</em>
+<a name="301" href="#301">301</a> <em class="jxr_javadoccomment">      *</em>
+<a name="302" href="#302">302</a> <em class="jxr_javadoccomment">      * @throws MojoExecutionException if the plugin failed</em>
+<a name="303" href="#303">303</a> <em class="jxr_javadoccomment">      */</em>
+<a name="304" href="#304">304</a>     <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">void</strong> parseRepositoryXml() <strong class="jxr_keyword">throws</strong> MojoExecutionException
+<a name="305" href="#305">305</a>     {
+<a name="306" href="#306">306</a>         File fout = <strong class="jxr_keyword">new</strong> File( m_repositoryXml );
+<a name="307" href="#307">307</a>         <strong class="jxr_keyword">if</strong> ( !fout.exists() )
+<a name="308" href="#308">308</a>         {
+<a name="309" href="#309">309</a>             m_repository = <strong class="jxr_keyword">new</strong> RepositoryImpl();
+<a name="310" href="#310">310</a>             writeRepositoryXml();
+<a name="311" href="#311">311</a>         }
+<a name="312" href="#312">312</a>         <strong class="jxr_keyword">else</strong>
+<a name="313" href="#313">313</a>         {
+<a name="314" href="#314">314</a>             <strong class="jxr_keyword">try</strong>
+<a name="315" href="#315">315</a>             {
+<a name="316" href="#316">316</a>                 m_repository = ( RepositoryImpl ) <strong class="jxr_keyword">new</strong> DataModelHelperImpl().repository( m_repositoryXml.toURL() );
+<a name="317" href="#317">317</a>                 <strong class="jxr_keyword">if</strong> ( setURI != <strong class="jxr_keyword">null</strong> )
+<a name="318" href="#318">318</a>                 {
+<a name="319" href="#319">319</a>                     setURI.invoke( m_repository, ( String ) <strong class="jxr_keyword">null</strong> );
+<a name="320" href="#320">320</a>                 }
+<a name="321" href="#321">321</a>             }
+<a name="322" href="#322">322</a>             <strong class="jxr_keyword">catch</strong> ( Exception e )
+<a name="323" href="#323">323</a>             {
+<a name="324" href="#324">324</a>                 <strong class="jxr_keyword">throw</strong> <strong class="jxr_keyword">new</strong> MojoExecutionException( <span class="jxr_string">"Unable to read repository xml: "</span> + m_repositoryXml, e );
+<a name="325" href="#325">325</a>             }
+<a name="326" href="#326">326</a>         }
+<a name="327" href="#327">327</a>     }
+<a name="328" href="#328">328</a> 
+<a name="329" href="#329">329</a> 
+<a name="330" href="#330">330</a>     <em class="jxr_javadoccomment">/**</em>
+<a name="331" href="#331">331</a> <em class="jxr_javadoccomment">     * put the information from obr.xml into ressourceBundle object.</em>
+<a name="332" href="#332">332</a> <em class="jxr_javadoccomment">     */</em>
+<a name="333" href="#333">333</a>     <strong class="jxr_keyword">private</strong> <strong class="jxr_keyword">void</strong> parseObrXml() <strong class="jxr_keyword">throws</strong> MojoExecutionException
+<a name="334" href="#334">334</a>     {
+<a name="335" href="#335">335</a>         <strong class="jxr_keyword">try</strong>
+<a name="336" href="#336">336</a>         {
+<a name="337" href="#337">337</a>             InputStream is = <strong class="jxr_keyword">new</strong> FileInputStream( <strong class="jxr_keyword">new</strong> File( m_obrXml ) );
+<a name="338" href="#338">338</a>             <strong class="jxr_keyword">try</strong>
+<a name="339" href="#339">339</a>             {
+<a name="340" href="#340">340</a>                 KXmlParser kxp = <strong class="jxr_keyword">new</strong> KXmlParser();
+<a name="341" href="#341">341</a>                 kxp.setInput( is, <strong class="jxr_keyword">null</strong> );
+<a name="342" href="#342">342</a>                 kxp.nextTag(); <em class="jxr_comment">// skip top level element</em>
+<a name="343" href="#343">343</a>                 kxp.nextTag(); <em class="jxr_comment">// go to first child element</em>
+<a name="344" href="#344">344</a>                 parseObrXml( kxp );
+<a name="345" href="#345">345</a>             }
+<a name="346" href="#346">346</a>             <strong class="jxr_keyword">finally</strong>
+<a name="347" href="#347">347</a>             {
+<a name="348" href="#348">348</a>                 is.close();
+<a name="349" href="#349">349</a>             }
+<a name="350" href="#350">350</a>         }
+<a name="351" href="#351">351</a>         <strong class="jxr_keyword">catch</strong> ( Exception e )
+<a name="352" href="#352">352</a>         {
+<a name="353" href="#353">353</a>             <strong class="jxr_keyword">throw</strong> <strong class="jxr_keyword">new</strong> MojoExecutionException( <span class="jxr_string">"Unable to parse obr xml: "</span> + m_obrXml, e );
+<a name="354" href="#354">354</a>         }
+<a name="355" href="#355">355</a>     }
+<a name="356" href="#356">356</a> 
+<a name="357" href="#357">357</a> 
+<a name="358" href="#358">358</a>     <strong class="jxr_keyword">private</strong> <strong class="jxr_keyword">void</strong> parseObrXml( KXmlParser kxp ) <strong class="jxr_keyword">throws</strong> Exception
+<a name="359" href="#359">359</a>     {
+<a name="360" href="#360">360</a>         PullParser parser = <strong class="jxr_keyword">new</strong> PullParser();
+<a name="361" href="#361">361</a>         <strong class="jxr_keyword">while</strong> ( kxp.getEventType() == XmlPullParser.START_TAG )
+<a name="362" href="#362">362</a>         {
+<a name="363" href="#363">363</a>             <strong class="jxr_keyword">if</strong> ( RepositoryParser.CATEGORY.equals( kxp.getName() ) )
+<a name="364" href="#364">364</a>             {
+<a name="365" href="#365">365</a>                 m_resourceBundle.addCategory( parser.parseCategory( kxp ) );
+<a name="366" href="#366">366</a>             }
+<a name="367" href="#367">367</a>             <strong class="jxr_keyword">else</strong> <strong class="jxr_keyword">if</strong> ( RepositoryParser.REQUIRE.equals( kxp.getName() ) )
+<a name="368" href="#368">368</a>             {
+<a name="369" href="#369">369</a>                 m_resourceBundle.addRequire( parser.parseRequire( kxp ) );
+<a name="370" href="#370">370</a>             }
+<a name="371" href="#371">371</a>             <strong class="jxr_keyword">else</strong> <strong class="jxr_keyword">if</strong> ( RepositoryParser.CAPABILITY.equals( kxp.getName() ) )
+<a name="372" href="#372">372</a>             {
+<a name="373" href="#373">373</a>                 m_resourceBundle.addCapability( parser.parseCapability( kxp ) );
+<a name="374" href="#374">374</a>             }
+<a name="375" href="#375">375</a>             <strong class="jxr_keyword">else</strong>
+<a name="376" href="#376">376</a>             {
+<a name="377" href="#377">377</a>                 kxp.nextTag();
+<a name="378" href="#378">378</a>                 parseObrXml( kxp );
+<a name="379" href="#379">379</a>             }
+<a name="380" href="#380">380</a>             kxp.nextTag();
+<a name="381" href="#381">381</a>         }
+<a name="382" href="#382">382</a>     }
+<a name="383" href="#383">383</a> 
+<a name="384" href="#384">384</a> }
+</pre>
+<hr/><div id="footer">This page was automatically generated by <a href="http://maven.apache.org/">Maven</a></div></body>
+</html>
+

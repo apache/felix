@@ -16,15 +16,22 @@
  */
 package org.apache.felix.webconsole.plugins.upnp.internal;
 
+<<<<<<< HEAD
+=======
 import java.io.IOException;
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 import java.io.PrintWriter;
 import java.util.Arrays;
 import java.util.Iterator;
 import java.util.TreeMap;
 
+<<<<<<< HEAD
+import org.apache.felix.webconsole.ConfigurationPrinter;
+=======
 import org.apache.felix.inventory.Format;
 import org.apache.felix.inventory.InventoryPrinter;
 import org.apache.felix.utils.json.JSONWriter;
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 import org.apache.felix.webconsole.WebConsoleUtil;
 import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceReference;
@@ -38,7 +45,11 @@ import org.osgi.util.tracker.ServiceTracker;
  * Prints the available UPnP devices
  *
  */
+<<<<<<< HEAD
+class ConfigurationPrinterImpl implements ConfigurationPrinter, Constants
+=======
 class ConfigurationPrinterImpl implements InventoryPrinter, Constants
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 {
 
     private final ServiceTracker tracker;
@@ -49,12 +60,27 @@ class ConfigurationPrinterImpl implements InventoryPrinter, Constants
     }
 
     /**
+<<<<<<< HEAD
+     * @see org.apache.felix.webconsole.ConfigurationPrinter#getTitle()
+     */
+    public String getTitle()
+    {
+        return "UPnP Devices"; //$NON-NLS-1$
+    }
+
+    /**
+     * @see org.apache.felix.webconsole.ConfigurationPrinter#printConfiguration(java.io.PrintWriter)
+     */
+    public void printConfiguration(PrintWriter pw)
+    {
+=======
      * @see org.apache.felix.inventory.InventoryPrinter
      *   #print(java.io.PrintWriter, org.apache.felix.inventory.Format, boolean)
      */
     public void print(PrintWriter pw, Format format, boolean isZip)
     {
 
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         TreeMap componentMap = new TreeMap();
 
         ServiceReference[] refs = tracker.getServiceReferences();
@@ -64,6 +90,11 @@ class ConfigurationPrinterImpl implements InventoryPrinter, Constants
             if (null != ref.getProperty(UPnPDevice.UDN)) // make sure device is valid
             {
                 // order components by friendly name
+<<<<<<< HEAD
+                componentMap.put(nameOf(ref).toString() + ref.getProperty(SERVICE_ID), ref);
+            }
+        }
+=======
                 componentMap.put(nameOf(ref).toString() + ref.getProperty(SERVICE_ID),
                     ref);
             }
@@ -112,6 +143,7 @@ class ConfigurationPrinterImpl implements InventoryPrinter, Constants
 
     private void printText(TreeMap componentMap, PrintWriter pw)
     {
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 
         if (componentMap.isEmpty())
         {
@@ -211,7 +243,11 @@ class ConfigurationPrinterImpl implements InventoryPrinter, Constants
             {
                 print(pw, vars[i]);
             }
+<<<<<<< HEAD
+        } 
+=======
         }
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     }
 
     private void print(PrintWriter pw, UPnPStateVariable var)
@@ -243,6 +279,9 @@ class ConfigurationPrinterImpl implements InventoryPrinter, Constants
         pw.println();
     }
 
+<<<<<<< HEAD
+=======
 
 
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 }

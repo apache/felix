@@ -26,10 +26,16 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Hashtable;
 import java.util.Map;
+<<<<<<< HEAD
+import java.util.zip.ZipFile;
+import org.osgi.framework.Bundle;
+
+=======
 import java.util.jar.JarFile;
 import java.util.zip.ZipFile;
 
 import org.osgi.framework.Bundle;
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.BundleEvent;
@@ -600,16 +606,25 @@ public class SecureAction
         }
     }
 
+<<<<<<< HEAD
+    public ZipFile openZipFile(File file) throws IOException
+=======
     public URLConnection openURLConnection(URL url) throws IOException
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     {
         if (System.getSecurityManager() != null)
         {
             try
             {
                 Actions actions = (Actions) m_actions.get();
+<<<<<<< HEAD
+                actions.set(Actions.OPEN_ZIPFILE_ACTION, file);
+                return (ZipFile) AccessController.doPrivileged(actions, m_acc);
+=======
                 actions.set(Actions.OPEN_URLCONNECTION_ACTION, url);
                 return (URLConnection) AccessController.doPrivileged(actions,
                     m_acc);
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
             }
             catch (PrivilegedActionException ex)
             {
@@ -622,70 +637,33 @@ public class SecureAction
         }
         else
         {
-            return url.openConnection();
-        }
-    }
-
-    public ZipFile openZipFile(File file) throws IOException
-    {
-        if (System.getSecurityManager() != null)
-        {
-            try
-            {
-                Actions actions = (Actions) m_actions.get();
-                actions.set(Actions.OPEN_ZIPFILE_ACTION, file);
-                return (ZipFile) AccessController.doPrivileged(actions, m_acc);
-            }
-            catch (PrivilegedActionException ex)
-            {
-                if (ex.getException() instanceof IOException)
-                {
-                    throw (IOException) ex.getException();
-                }
-                throw (RuntimeException) ex.getException();
-            }
-        }
-        else
-        {
+<<<<<<< HEAD
             return new ZipFile(file);
-        }
-    }
-
-    public JarFile openJarFile(File file) throws IOException
-    {
-        if (System.getSecurityManager() != null)
-        {
-            try
-            {
-                Actions actions = (Actions) m_actions.get();
-                actions.set(Actions.OPEN_JARFILE_ACTION, file);
-                return (JarFile) AccessController.doPrivileged(actions, m_acc);
-            }
-            catch (PrivilegedActionException ex)
-            {
-                if (ex.getException() instanceof IOException)
-                {
-                    throw (IOException) ex.getException();
-                }
-                throw (RuntimeException) ex.getException();
-            }
-        }
-        else
-        {
-            return new JarFile(file);
         }
     }
 
     public void startActivator(BundleActivator activator, BundleContext context)
         throws Exception
+=======
+            return url.openConnection();
+        }
+    }
+
+    public ZipFile openZipFile(File file) throws IOException
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     {
         if (System.getSecurityManager() != null)
         {
             try
             {
                 Actions actions = (Actions) m_actions.get();
+<<<<<<< HEAD
                 actions.set(Actions.START_ACTIVATOR_ACTION, activator, context);
                 AccessController.doPrivileged(actions, m_acc);
+=======
+                actions.set(Actions.OPEN_ZIPFILE_ACTION, file);
+                return (ZipFile) AccessController.doPrivileged(actions, m_acc);
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
             }
             catch (PrivilegedActionException ex)
             {
@@ -694,20 +672,33 @@ public class SecureAction
         }
         else
         {
+<<<<<<< HEAD
             activator.start(context);
         }
     }
 
     public void stopActivator(BundleActivator activator, BundleContext context)
         throws Exception
+=======
+            return new ZipFile(file);
+        }
+    }
+
+    public JarFile openJarFile(File file) throws IOException
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     {
         if (System.getSecurityManager() != null)
         {
             try
             {
                 Actions actions = (Actions) m_actions.get();
+<<<<<<< HEAD
                 actions.set(Actions.STOP_ACTIVATOR_ACTION, activator, context);
                 AccessController.doPrivileged(actions, m_acc);
+=======
+                actions.set(Actions.OPEN_JARFILE_ACTION, file);
+                return (JarFile) AccessController.doPrivileged(actions, m_acc);
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
             }
             catch (PrivilegedActionException ex)
             {
@@ -716,6 +707,7 @@ public class SecureAction
         }
         else
         {
+<<<<<<< HEAD
             activator.stop(context);
         }
     }
@@ -738,6 +730,9 @@ public class SecureAction
         else
         {
             return Policy.getPolicy();
+=======
+            return new JarFile(file);
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         }
     }
 
@@ -787,6 +782,7 @@ public class SecureAction
         }
     }
 
+<<<<<<< HEAD
     public Constructor getDeclaredConstructor(Class target, Class[] types) throws Exception
     {
         if (System.getSecurityManager() != null)
@@ -809,6 +805,9 @@ public class SecureAction
     }
 
     public Method getMethod(Class target, String method, Class[] types) throws Exception
+=======
+    public Policy getPolicy()
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     {
         if (System.getSecurityManager() != null)
         {
@@ -829,7 +828,36 @@ public class SecureAction
         }
     }
 
+<<<<<<< HEAD
     public Method getDeclaredMethod(Class target, String method, Class[] types) throws Exception
+=======
+    public void addURLToURLClassLoader(URL extension, ClassLoader loader) throws Exception
+    {
+        if (System.getSecurityManager() != null)
+        {
+            Actions actions = (Actions) m_actions.get();
+            actions.set(Actions.ADD_EXTENSION_URL_ACTION, extension, loader);
+            try
+            {
+                AccessController.doPrivileged(actions, m_acc);
+            }
+            catch (PrivilegedActionException e)
+            {
+                throw e.getException();
+            }
+        }
+        else
+        {
+            Method addURL =
+                URLClassLoader.class.getDeclaredMethod("addURL",
+                new Class[] {URL.class});
+            addURL.setAccessible(true);
+            addURL.invoke(loader, new Object[]{extension});
+        }
+    }
+
+    public Constructor getConstructor(Class target, Class[] types) throws Exception
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     {
         if (System.getSecurityManager() != null)
         {
@@ -850,6 +878,85 @@ public class SecureAction
         }
     }
 
+<<<<<<< HEAD
+    public void setAccesssible(AccessibleObject ao)
+=======
+    public Constructor getDeclaredConstructor(Class target, Class[] types) throws Exception
+    {
+        if (System.getSecurityManager() != null)
+        {
+            Actions actions = (Actions) m_actions.get();
+            actions.set(Actions.GET_DECLARED_CONSTRUCTOR_ACTION, target, types);
+            try
+            {
+                return (Constructor) AccessController.doPrivileged(actions, m_acc);
+            }
+            catch (PrivilegedActionException e)
+            {
+                throw e.getException();
+            }
+        }
+        else
+        {
+            return target.getDeclaredConstructor(types);
+        }
+    }
+
+    public Method getMethod(Class target, String method, Class[] types) throws Exception
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
+    {
+        if (System.getSecurityManager() != null)
+        {
+            Actions actions = (Actions) m_actions.get();
+            actions.set(Actions.SET_ACCESSIBLE_ACTION, ao);
+            try
+            {
+                AccessController.doPrivileged(actions, m_acc);
+            }
+            catch (PrivilegedActionException e)
+            {
+                throw (RuntimeException) e.getException();
+            }
+        }
+        else
+        {
+            ao.setAccessible(true);
+        }
+    }
+
+<<<<<<< HEAD
+    public Object invoke(Method method, Object target, Object[] params) throws Exception
+=======
+    public Method getDeclaredMethod(Class target, String method, Class[] types) throws Exception
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
+    {
+        if (System.getSecurityManager() != null)
+        {
+            Actions actions = (Actions) m_actions.get();
+<<<<<<< HEAD
+            actions.set(Actions.INVOKE_METHOD_ACTION, method, target, params);
+=======
+            actions.set(Actions.GET_DECLARED_METHOD_ACTION, target, method, types);
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
+            try
+            {
+                return AccessController.doPrivileged(actions, m_acc);
+            }
+            catch (PrivilegedActionException e)
+            {
+                throw e.getException();
+            }
+        }
+        else
+        {
+            method.setAccessible(true);
+            return method.invoke(target, params);
+        }
+    }
+
+<<<<<<< HEAD
+    public Object invokeDirect(Method method, Object target, Object[] params) throws Exception
+=======
     public void setAccesssible(AccessibleObject ao)
     {
         if (System.getSecurityManager() != null)
@@ -872,11 +979,12 @@ public class SecureAction
     }
 
     public Object invoke(Method method, Object target, Object[] params) throws Exception
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     {
         if (System.getSecurityManager() != null)
         {
             Actions actions = (Actions) m_actions.get();
-            actions.set(Actions.INVOKE_METHOD_ACTION, method, target, params);
+            actions.set(Actions.INVOKE_DIRECTMETHOD_ACTION, method, target, params);
             try
             {
                 return AccessController.doPrivileged(actions, m_acc);
@@ -888,11 +996,12 @@ public class SecureAction
         }
         else
         {
-            method.setAccessible(true);
             return method.invoke(target, params);
         }
     }
 
+<<<<<<< HEAD
+=======
     public Object invokeDirect(Method method, Object target, Object[] params) throws Exception
     {
         if (System.getSecurityManager() != null)
@@ -914,6 +1023,7 @@ public class SecureAction
         }
     }
 
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     public Object invoke(Constructor constructor, Object[] params) throws Exception
     {
         if (System.getSecurityManager() != null)
@@ -1057,6 +1167,7 @@ public class SecureAction
     public void flush(Class targetClazz, Object lock) throws Exception
     {
         if (System.getSecurityManager() != null)
+<<<<<<< HEAD
         {
             Actions actions = (Actions) m_actions.get();
             actions.set(Actions.FLUSH_FIELD_ACTION, targetClazz, lock);
@@ -1072,6 +1183,456 @@ public class SecureAction
         else
         {
             _flush(targetClazz, lock);
+        }
+    }
+
+    private static void _flush(Class targetClazz, Object lock) throws Exception
+    {
+        synchronized (lock)
+        {
+            Field[] fields = targetClazz.getDeclaredFields();
+            // reset cache
+            for (int i = 0; i < fields.length; i++)
+            {
+                if (Modifier.isStatic(fields[i].getModifiers()) &&
+                    ((fields[i].getType() == Hashtable.class) || (fields[i].getType() == HashMap.class)))
+                {
+                    fields[i].setAccessible(true);
+                    if (fields[i].getType() == Hashtable.class)
+                    {
+                        Hashtable cache = (Hashtable) fields[i].get(null);
+                        if (cache != null)
+                        {
+                            cache.clear();
+                        }
+                    }
+                    else
+                    {
+                        HashMap cache = (HashMap) fields[i].get(null);
+                        if (cache != null)
+                        {
+                            cache.clear();
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    public void invokeBundleFindHook(
+        org.osgi.framework.hooks.bundle.FindHook fh,
+        BundleContext bc, Collection<Bundle> bundles)
+        throws Exception
+    {
+        if (System.getSecurityManager() != null)
+        {
+            Actions actions = (Actions) m_actions.get();
+            actions.set(Actions.INVOKE_BUNDLE_FIND_HOOK, fh, bc, bundles);
+            try
+            {
+                AccessController.doPrivileged(actions, m_acc);
+            }
+            catch (PrivilegedActionException e)
+            {
+                throw e.getException();
+            }
+        }
+        else
+        {
+            fh.find(bc, bundles);
+        }
+    }
+
+    public void invokeBundleEventHook(
+        org.osgi.framework.hooks.bundle.EventHook eh,
+        BundleEvent event, Collection<BundleContext> contexts)
+        throws Exception
+    {
+        if (System.getSecurityManager() != null)
+        {
+            Actions actions = (Actions) m_actions.get();
+            actions.set(Actions.INVOKE_BUNDLE_EVENT_HOOK, eh, event, contexts);
+            try
+            {
+                AccessController.doPrivileged(actions, m_acc);
+            }
+            catch (PrivilegedActionException e)
+            {
+                throw e.getException();
+            }
+        }
+        else
+        {
+            eh.event(event, contexts);
+        }
+    }
+
+    public void invokeWeavingHook(
+        org.osgi.framework.hooks.weaving.WeavingHook wh,
+        org.osgi.framework.hooks.weaving.WovenClass wc)
+        throws Exception
+    {
+        if (System.getSecurityManager() != null)
+        {
+            Actions actions = (Actions) m_actions.get();
+            actions.set(Actions.INVOKE_WEAVING_HOOK, wh, wc);
+            try
+            {
+                AccessController.doPrivileged(actions, m_acc);
+            }
+            catch (PrivilegedActionException e)
+            {
+                throw e.getException();
+            }
+        }
+        else
+        {
+            wh.weave(wc);
+        }
+    }
+
+    public void invokeServiceEventHook(
+        org.osgi.framework.hooks.service.EventHook eh,
+        ServiceEvent event, Collection<BundleContext> contexts)
+        throws Exception
+    {
+        if (System.getSecurityManager() != null)
+        {
+            Actions actions = (Actions) m_actions.get();
+            actions.set(Actions.INVOKE_SERVICE_EVENT_HOOK, eh, event, contexts);
+            try
+            {
+                AccessController.doPrivileged(actions, m_acc);
+            }
+            catch (PrivilegedActionException e)
+            {
+                throw e.getException();
+            }
+        }
+        else
+        {
+            eh.event(event, contexts);
+        }
+    }
+
+    public void invokeServiceFindHook(
+        org.osgi.framework.hooks.service.FindHook fh,
+        BundleContext context, String name, String filter,
+        boolean allServices, Collection<ServiceReference<?>> references)
+        throws Exception
+    {
+        if (System.getSecurityManager() != null)
+        {
+            Actions actions = (Actions) m_actions.get();
+            actions.set(
+                Actions.INVOKE_SERVICE_FIND_HOOK, fh, context, name, filter,
+                (allServices) ? Boolean.TRUE : Boolean.FALSE, references);
+            try
+            {
+                AccessController.doPrivileged(actions, m_acc);
+            }
+            catch (PrivilegedActionException e)
+            {
+                throw e.getException();
+            }
+        }
+        else
+        {
+            fh.find(context, name, filter, allServices, references);
+        }
+    }
+
+    public void invokeServiceListenerHookAdded(
+        org.osgi.framework.hooks.service.ListenerHook lh,
+        Collection<ListenerHook.ListenerInfo> listeners)
+        throws Exception
+    {
+        if (System.getSecurityManager() != null)
+        {
+            Actions actions = (Actions) m_actions.get();
+            actions.set(Actions.INVOKE_SERVICE_LISTENER_HOOK_ADDED, lh, listeners);
+            try
+            {
+                AccessController.doPrivileged(actions, m_acc);
+            }
+            catch (PrivilegedActionException e)
+            {
+                throw e.getException();
+            }
+        }
+        else
+        {
+            lh.added(listeners);
+        }
+    }
+
+    public void invokeServiceListenerHookRemoved(
+        org.osgi.framework.hooks.service.ListenerHook lh,
+        Collection<ListenerHook.ListenerInfo> listeners)
+        throws Exception
+    {
+        if (System.getSecurityManager() != null)
+        {
+            Actions actions = (Actions) m_actions.get();
+            actions.set(Actions.INVOKE_SERVICE_LISTENER_HOOK_REMOVED, lh, listeners);
+            try
+            {
+                AccessController.doPrivileged(actions, m_acc);
+            }
+            catch (PrivilegedActionException e)
+            {
+                throw e.getException();
+            }
+        }
+        else
+        {
+            lh.removed(listeners);
+        }
+    }
+
+    public void invokeServiceEventListenerHook(
+        org.osgi.framework.hooks.service.EventListenerHook elh,
+        ServiceEvent event,
+        Map<BundleContext, Collection<ListenerHook.ListenerInfo>> listeners)
+        throws Exception
+    {
+        if (System.getSecurityManager() != null)
+        {
+            Actions actions = (Actions) m_actions.get();
+            actions.set(Actions.INVOKE_SERVICE_EVENT_LISTENER_HOOK, elh, event, listeners);
+            try
+            {
+                AccessController.doPrivileged(actions, m_acc);
+            }
+            catch (PrivilegedActionException e)
+            {
+                throw e.getException();
+            }
+        }
+        else
+        {
+            elh.event(event, listeners);
+        }
+    }
+
+    public ResolverHook invokeResolverHookFactory(
+        org.osgi.framework.hooks.resolver.ResolverHookFactory rhf,
+        Collection<BundleRevision> triggers)
+        throws Exception
+    {
+        if (System.getSecurityManager() != null)
+        {
+            Actions actions = (Actions) m_actions.get();
+            actions.set(Actions.INVOKE_RESOLVER_HOOK_FACTORY, rhf, triggers);
+            try
+            {
+                return (ResolverHook) AccessController.doPrivileged(actions, m_acc);
+            }
+            catch (PrivilegedActionException e)
+            {
+                throw e.getException();
+            }
+        }
+        else
+        {
+            return rhf.begin(triggers);
+        }
+    }
+
+    public void invokeResolverHookResolvable(
+        org.osgi.framework.hooks.resolver.ResolverHook rh,
+        Collection<BundleRevision> candidates)
+        throws Exception
+    {
+        if (System.getSecurityManager() != null)
+        {
+            Actions actions = (Actions) m_actions.get();
+            actions.set(Actions.INVOKE_RESOLVER_HOOK_RESOLVABLE, rh, candidates);
+            try
+            {
+                AccessController.doPrivileged(actions, m_acc);
+            }
+            catch (PrivilegedActionException e)
+            {
+                throw e.getException();
+            }
+        }
+        else
+        {
+            rh.filterResolvable(candidates);
+        }
+    }
+
+    public void invokeResolverHookSingleton(
+        org.osgi.framework.hooks.resolver.ResolverHook rh,
+        BundleCapability singleton,
+        Collection<BundleCapability> collisions)
+        throws Exception
+    {
+        if (System.getSecurityManager() != null)
+        {
+            Actions actions = (Actions) m_actions.get();
+            actions.set(Actions.INVOKE_RESOLVER_HOOK_SINGLETON, rh, singleton, collisions);
+            try
+            {
+                AccessController.doPrivileged(actions, m_acc);
+            }
+            catch (PrivilegedActionException e)
+            {
+                throw e.getException();
+            }
+        }
+        else
+        {
+            rh.filterSingletonCollisions(singleton, collisions);
+        }
+    }
+
+    public void invokeResolverHookMatches(
+        org.osgi.framework.hooks.resolver.ResolverHook rh,
+        BundleRequirement req,
+        Collection<BundleCapability> candidates)
+        throws Exception
+    {
+        if (System.getSecurityManager() != null)
+        {
+            Actions actions = (Actions) m_actions.get();
+            actions.set(Actions.INVOKE_RESOLVER_HOOK_MATCHES, rh, req, candidates);
+            try
+            {
+                AccessController.doPrivileged(actions, m_acc);
+            }
+            catch (PrivilegedActionException e)
+            {
+                throw e.getException();
+            }
+        }
+        else
+        {
+            rh.filterMatches(req, candidates);
+        }
+    }
+
+    public void invokeResolverHookEnd(
+        org.osgi.framework.hooks.resolver.ResolverHook rh)
+        throws Exception
+    {
+        if (System.getSecurityManager() != null)
+        {
+            Actions actions = (Actions) m_actions.get();
+            actions.set(Actions.INVOKE_RESOLVER_HOOK_END, rh);
+            try
+            {
+                AccessController.doPrivileged(actions, m_acc);
+            }
+            catch (PrivilegedActionException e)
+            {
+                throw e.getException();
+            }
+        }
+        else
+        {
+            rh.end();
+        }
+    }
+
+    private static class Actions implements PrivilegedExceptionAction
+    {
+        public static final int INITIALIZE_CONTEXT_ACTION = 0;
+        public static final int ADD_EXTENSION_URL_ACTION = 1;
+        public static final int CREATE_TMPFILE_ACTION = 2;
+        public static final int CREATE_URL_ACTION = 3;
+        public static final int CREATE_URL_WITH_CONTEXT_ACTION = 4;
+        public static final int DELETE_FILE_ACTION = 5;
+        public static final int EXEC_ACTION = 6;
+        public static final int FILE_EXISTS_ACTION = 7;
+        public static final int FILE_IS_DIRECTORY_ACTION = 8;
+        public static final int FOR_NAME_ACTION = 9;
+        public static final int GET_ABSOLUTE_PATH_ACTION = 10;
+        public static final int GET_CONSTRUCTOR_ACTION = 11;
+        public static final int GET_DECLARED_CONSTRUCTOR_ACTION = 12;
+        public static final int GET_DECLARED_METHOD_ACTION = 13;
+        public static final int GET_FIELD_ACTION = 14;
+        public static final int GET_FILE_INPUT_ACTION = 15;
+        public static final int GET_FILE_OUTPUT_ACTION = 16;
+        public static final int TO_URI_ACTION = 17;
+        public static final int GET_METHOD_ACTION = 18;
+        public static final int GET_POLICY_ACTION = 19;
+        public static final int GET_PROPERTY_ACTION = 20;
+        public static final int GET_PARENT_CLASS_LOADER_ACTION = 21;
+        public static final int GET_SYSTEM_CLASS_LOADER_ACTION = 22;
+        public static final int GET_URL_INPUT_ACTION = 23;
+        public static final int INVOKE_CONSTRUCTOR_ACTION = 24;
+        public static final int INVOKE_DIRECTMETHOD_ACTION = 25;
+        public static final int INVOKE_METHOD_ACTION = 26;
+        public static final int LIST_DIRECTORY_ACTION = 27;
+        public static final int MAKE_DIRECTORIES_ACTION = 28;
+        public static final int MAKE_DIRECTORY_ACTION = 29;
+        public static final int OPEN_ZIPFILE_ACTION = 30;
+        public static final int OPEN_URLCONNECTION_ACTION = 31;
+        public static final int RENAME_FILE_ACTION = 32;
+        public static final int SET_ACCESSIBLE_ACTION = 33;
+        public static final int START_ACTIVATOR_ACTION = 34;
+        public static final int STOP_ACTIVATOR_ACTION = 35;
+        public static final int SWAP_FIELD_ACTION = 36;
+        public static final int SYSTEM_EXIT_ACTION = 37;
+        public static final int FLUSH_FIELD_ACTION = 38;
+        public static final int GET_CLASS_LOADER_ACTION = 39;
+        public static final int INVOKE_BUNDLE_FIND_HOOK = 40;
+        public static final int INVOKE_BUNDLE_EVENT_HOOK = 41;
+        public static final int INVOKE_WEAVING_HOOK = 42;
+        public static final int INVOKE_SERVICE_EVENT_HOOK = 43;
+        public static final int INVOKE_SERVICE_FIND_HOOK = 44;
+        public static final int INVOKE_SERVICE_LISTENER_HOOK_ADDED = 45;
+        public static final int INVOKE_SERVICE_LISTENER_HOOK_REMOVED = 46;
+        public static final int INVOKE_SERVICE_EVENT_LISTENER_HOOK = 47;
+        public static final int INVOKE_RESOLVER_HOOK_FACTORY = 48;
+        public static final int INVOKE_RESOLVER_HOOK_RESOLVABLE = 49;
+        public static final int INVOKE_RESOLVER_HOOK_SINGLETON = 50;
+        public static final int INVOKE_RESOLVER_HOOK_MATCHES = 51;
+        public static final int INVOKE_RESOLVER_HOOK_END = 52;
+
+        private int m_action = -1;
+        private Object m_arg1 = null;
+        private Object m_arg2 = null;
+        private Object m_arg3 = null;
+        private Object m_arg4 = null;
+        private Object m_arg5 = null;
+        private Object m_arg6 = null;
+
+        public void set(int action)
+        {
+            m_action = action;
+        }
+
+        public void set(int action, Object arg1)
+        {
+            m_action = action;
+            m_arg1 = arg1;
+        }
+
+        public void set(int action, Object arg1, Object arg2)
+        {
+            m_action = action;
+            m_arg1 = arg1;
+            m_arg2 = arg2;
+=======
+        {
+            Actions actions = (Actions) m_actions.get();
+            actions.set(Actions.FLUSH_FIELD_ACTION, targetClazz, lock);
+            try
+            {
+                AccessController.doPrivileged(actions, m_acc);
+            }
+            catch (PrivilegedActionException e)
+            {
+                throw e.getException();
+            }
+        }
+        else
+        {
+            _flush(targetClazz, lock);
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         }
     }
 
@@ -1777,6 +2338,8 @@ public class SecureAction
                 case INVOKE_RESOLVER_HOOK_END:
                     ((org.osgi.framework.hooks.resolver.ResolverHook) arg1).end();
                     return null;
+<<<<<<< HEAD
+=======
                 case INVOKE_BUNDLE_COLLISION_HOOK:
                     ((org.osgi.framework.hooks.bundle.CollisionHook) arg1).filterCollisions((Integer) arg2,
                         (Bundle) arg3, (Collection<Bundle>) arg4);
@@ -1790,6 +2353,7 @@ public class SecureAction
                     ((org.osgi.framework.hooks.weaving.WovenClassListener) arg1).modified(
                         (org.osgi.framework.hooks.weaving.WovenClass) arg2);
                     return null;
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
             }
 
             return null;

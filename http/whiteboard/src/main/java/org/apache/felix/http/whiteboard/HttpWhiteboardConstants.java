@@ -23,9 +23,13 @@ package org.apache.felix.http.whiteboard;
  * used by the Http Whiteboard registration support.
  *
  * @since Http Whiteboard Bundle 2.3.0
+<<<<<<< HEAD
+ */
+=======
  * @deprecated Use the OSGi Http Whiteboard Service instead
  */
 @Deprecated
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 public class HttpWhiteboardConstants
 {
 

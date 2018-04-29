@@ -1,5 +1,9 @@
 /*
+<<<<<<< HEAD
+ * Copyright (c) OSGi Alliance (2000, 2012). All Rights Reserved.
+=======
  * Copyright (c) OSGi Alliance (2000, 2013). All Rights Reserved.
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -25,7 +29,10 @@ import java.util.Dictionary;
 import java.util.Enumeration;
 import java.util.List;
 import java.util.Map;
+<<<<<<< HEAD
+=======
 import org.osgi.annotation.versioning.ProviderType;
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 import org.osgi.framework.wiring.FrameworkWiring;
 
 /**
@@ -45,12 +52,21 @@ import org.osgi.framework.wiring.FrameworkWiring;
  * <p>
  * A bundle can be in one of six states:
  * <ul>
+<<<<<<< HEAD
+ * <li>{@link #UNINSTALLED}
+ * <li>{@link #INSTALLED}
+ * <li>{@link #RESOLVED}
+ * <li>{@link #STARTING}
+ * <li>{@link #STOPPING}
+ * <li>{@link #ACTIVE}
+=======
  * <li>{@link #UNINSTALLED}</li>
  * <li>{@link #INSTALLED}</li>
  * <li>{@link #RESOLVED}</li>
  * <li>{@link #STARTING}</li>
  * <li>{@link #STOPPING}</li>
  * <li>{@link #ACTIVE}</li>
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
  * </ul>
  * <p>
  * Values assigned to these states have no specified ordering; they represent
@@ -75,9 +91,15 @@ import org.osgi.framework.wiring.FrameworkWiring;
  * bundle id} and is greater if it has a higher bundle id.
  * 
  * @ThreadSafe
+<<<<<<< HEAD
+ * @noimplement
+ * @version $Id: 8a58ab72af389b1999b88348e4944203b7096510 $
+ */
+=======
  * @author $Id: 81a8f18b2fcc7810817cd19f6d5e0709db1c1d12 $
  */
 @ProviderType
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 public interface Bundle extends Comparable<Bundle> {
 	/**
 	 * The bundle is uninstalled and may not be used.
@@ -115,6 +137,16 @@ public interface Bundle extends Comparable<Bundle> {
 	 * include:
 	 * <ul>
 	 * <li>The bundle's class path from its {@link Constants#BUNDLE_CLASSPATH}
+<<<<<<< HEAD
+	 * Manifest header.
+	 * <li>The bundle's package dependencies from its
+	 * {@link Constants#EXPORT_PACKAGE} and {@link Constants#IMPORT_PACKAGE}
+	 * Manifest headers.
+	 * <li>The bundle's required bundle dependencies from its
+	 * {@link Constants#REQUIRE_BUNDLE} Manifest header.
+	 * <li>A fragment bundle's host dependency from its
+	 * {@link Constants#FRAGMENT_HOST} Manifest header.
+=======
 	 * Manifest header.</li>
 	 * <li>The bundle's package dependencies from its
 	 * {@link Constants#EXPORT_PACKAGE} and {@link Constants#IMPORT_PACKAGE}
@@ -123,6 +155,7 @@ public interface Bundle extends Comparable<Bundle> {
 	 * {@link Constants#REQUIRE_BUNDLE} Manifest header.</li>
 	 * <li>A fragment bundle's host dependency from its
 	 * {@link Constants#FRAGMENT_HOST} Manifest header.</li>
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 	 * </ul>
 	 * <p>
 	 * Note that the bundle is not active yet. A bundle must be put in the
@@ -263,11 +296,20 @@ public interface Bundle extends Comparable<Bundle> {
 	 * <ul>
 	 * <li>If the {@link #START_TRANSIENT} option is set, then a
 	 * {@code BundleException} is thrown indicating this bundle cannot be
+<<<<<<< HEAD
+	 * started due to the Framework's current start level.
+	 * 
+	 * <li>Otherwise, the Framework must set this bundle's persistent autostart
+	 * setting to <em>Started with declared activation</em> if the
+	 * {@link #START_ACTIVATION_POLICY} option is set or
+	 * <em>Started with eager activation</em> if not set.
+=======
 	 * started due to the Framework's current start level.</li>
 	 * <li>Otherwise, the Framework must set this bundle's persistent autostart
 	 * setting to <em>Started with declared activation</em> if the
 	 * {@link #START_ACTIVATION_POLICY} option is set or
 	 * <em>Started with eager activation</em> if not set.</li>
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 	 * </ul>
 	 * <p>
 	 * When the Framework's current start level becomes equal to or more than
@@ -279,23 +321,53 @@ public interface Bundle extends Comparable<Bundle> {
 	 * then this method must wait for activation or deactivation to complete
 	 * before continuing. If this does not occur in a reasonable time, a
 	 * {@code BundleException} is thrown to indicate this bundle was unable to
+<<<<<<< HEAD
+	 * be started.
+	 * 
+	 * <li>If this bundle's state is {@code ACTIVE} then this method returns
+	 * immediately.
+	 * 
+=======
 	 * be started.</li>
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 	 * <li>If the {@link #START_TRANSIENT} option is not set then set this
 	 * bundle's autostart setting to <em>Started with declared activation</em>
 	 * if the {@link #START_ACTIVATION_POLICY} option is set or
 	 * <em>Started with eager activation</em> if not set. When the Framework is
 	 * restarted and this bundle's autostart setting is not <em>Stopped</em>,
+<<<<<<< HEAD
+	 * this bundle must be automatically started.
+	 * 
+	 * <li>If this bundle's state is not {@code RESOLVED}, an attempt is made to
+	 * resolve this bundle. If the Framework cannot resolve this bundle, a
+	 * {@code BundleException} is thrown.
+	 * 
+=======
 	 * this bundle must be automatically started.</li>
 	 * <li>If this bundle's state is {@code ACTIVE} then this method returns
 	 * immediately.</li>
 	 * <li>If this bundle's state is not {@code RESOLVED}, an attempt is made to
 	 * resolve this bundle. If the Framework cannot resolve this bundle, a
 	 * {@code BundleException} is thrown.</li>
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 	 * <li>If the {@link #START_ACTIVATION_POLICY} option is set and this
 	 * bundle's declared activation policy is {@link Constants#ACTIVATION_LAZY
 	 * lazy} then:
 	 * <ul>
 	 * <li>If this bundle's state is {@code STARTING} then this method returns
+<<<<<<< HEAD
+	 * immediately.
+	 * <li>This bundle's state is set to {@code STARTING}.
+	 * <li>A bundle event of type {@link BundleEvent#LAZY_ACTIVATION} is fired.
+	 * <li>This method returns immediately and the remaining steps will be
+	 * followed when this bundle's activation is later triggered.
+	 * </ul>
+	 * <i></i>
+	 * <li>This bundle's state is set to {@code STARTING}.
+	 * 
+	 * <li>A bundle event of type {@link BundleEvent#STARTING} is fired.
+	 * 
+=======
 	 * immediately.</li>
 	 * <li>This bundle's state is set to {@code STARTING}.</li>
 	 * <li>A bundle event of type {@link BundleEvent#LAZY_ACTIVATION} is fired.</li>
@@ -305,10 +377,30 @@ public interface Bundle extends Comparable<Bundle> {
 	 * </li>
 	 * <li>This bundle's state is set to {@code STARTING}.</li>
 	 * <li>A bundle event of type {@link BundleEvent#STARTING} is fired.</li>
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 	 * <li>The {@link BundleActivator#start(BundleContext)} method of this
 	 * bundle's {@code BundleActivator}, if one is specified, is called. If the
 	 * {@code BundleActivator} is invalid or throws an exception then:
 	 * <ul>
+<<<<<<< HEAD
+	 * <li>This bundle's state is set to {@code STOPPING}.
+	 * <li>A bundle event of type {@link BundleEvent#STOPPING} is fired.
+	 * <li>Any services registered by this bundle must be unregistered.
+	 * <li>Any services used by this bundle must be released.
+	 * <li>Any listeners registered by this bundle must be removed.
+	 * <li>This bundle's state is set to {@code RESOLVED}.
+	 * <li>A bundle event of type {@link BundleEvent#STOPPED} is fired.
+	 * <li>A {@code BundleException} is then thrown.
+	 * </ul>
+	 * <i></i>
+	 * <li>If this bundle's state is {@code UNINSTALLED}, because this bundle
+	 * was uninstalled while the {@code BundleActivator.start} method was
+	 * running, a {@code BundleException} is thrown.
+	 * 
+	 * <li>This bundle's state is set to {@code ACTIVE}.
+	 * 
+	 * <li>A bundle event of type {@link BundleEvent#STARTED} is fired.
+=======
 	 * <li>This bundle's state is set to {@code STOPPING}.</li>
 	 * <li>A bundle event of type {@link BundleEvent#STOPPING} is fired.</li>
 	 * <li>Any services registered by this bundle must be unregistered.</li>
@@ -321,29 +413,48 @@ public interface Bundle extends Comparable<Bundle> {
 	 * </li>
 	 * <li>This bundle's state is set to {@code ACTIVE}.</li>
 	 * <li>A bundle event of type {@link BundleEvent#STARTED} is fired.</li>
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 	 * </ol>
 	 * 
 	 * <b>Preconditions </b>
 	 * <ul>
 	 * <li>{@code getState()} in &#x007B; {@code INSTALLED}, {@code RESOLVED}
 	 * &#x007D; or &#x007B; {@code INSTALLED}, {@code RESOLVED},
+<<<<<<< HEAD
+	 * {@code STARTING} &#x007D; if this bundle has a lazy activation policy.
+=======
 	 * {@code STARTING} &#x007D; if this bundle has a lazy activation policy.</li>
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 	 * </ul>
 	 * <b>Postconditions, no exceptions thrown </b>
 	 * <ul>
 	 * <li>Bundle autostart setting is modified unless the
+<<<<<<< HEAD
+	 * {@link #START_TRANSIENT} option was set.
+	 * <li>{@code getState()} in &#x007B; {@code ACTIVE} &#x007D; unless the
+	 * lazy activation policy was used.
+	 * <li>{@code BundleActivator.start()} has been called and did not throw an
+	 * exception unless the lazy activation policy was used.
+=======
 	 * {@link #START_TRANSIENT} option was set.</li>
 	 * <li>{@code getState()} in &#x007B; {@code ACTIVE} &#x007D; unless the
 	 * lazy activation policy was used.</li>
 	 * <li>{@code BundleActivator.start()} has been called and did not throw an
 	 * exception unless the lazy activation policy was used.</li>
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 	 * </ul>
 	 * <b>Postconditions, when an exception is thrown </b>
 	 * <ul>
 	 * <li>Depending on when the exception occurred, bundle autostart setting is
+<<<<<<< HEAD
+	 * modified unless the {@link #START_TRANSIENT} option was set.
+	 * <li>{@code getState()} not in &#x007B; {@code STARTING}, {@code ACTIVE}
+	 * &#x007D;.
+=======
 	 * modified unless the {@link #START_TRANSIENT} option was set.</li>
 	 * <li>{@code getState()} not in &#x007B; {@code STARTING}, {@code ACTIVE}
 	 * &#x007D;.</li>
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 	 * </ul>
 	 * 
 	 * @param options The options for starting this bundle. See
@@ -393,11 +504,31 @@ public interface Bundle extends Comparable<Bundle> {
 	 * The following steps are required to stop a bundle:
 	 * <ol>
 	 * <li>If this bundle's state is {@code UNINSTALLED} then an
+<<<<<<< HEAD
+	 * {@code IllegalStateException} is thrown.
+	 * 
+=======
 	 * {@code IllegalStateException} is thrown.</li>
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 	 * <li>If this bundle is in the process of being activated or deactivated
 	 * then this method must wait for activation or deactivation to complete
 	 * before continuing. If this does not occur in a reasonable time, a
 	 * {@code BundleException} is thrown to indicate this bundle was unable to
+<<<<<<< HEAD
+	 * be stopped.
+	 * <li>If the {@link #STOP_TRANSIENT} option is not set then then set this
+	 * bundle's persistent autostart setting to to <em>Stopped</em>. When the
+	 * Framework is restarted and this bundle's autostart setting is
+	 * <em>Stopped</em>, this bundle must not be automatically started.
+	 * 
+	 * <li>If this bundle's state is not {@code STARTING} or {@code ACTIVE} then
+	 * this method returns immediately.
+	 * 
+	 * <li>This bundle's state is set to {@code STOPPING}.
+	 * 
+	 * <li>A bundle event of type {@link BundleEvent#STOPPING} is fired.
+	 * 
+=======
 	 * be stopped.</li>
 	 * <li>If the {@link #STOP_TRANSIENT} option is not set then then set this
 	 * bundle's persistent autostart setting to to <em>Stopped</em>. When the
@@ -407,11 +538,27 @@ public interface Bundle extends Comparable<Bundle> {
 	 * this method returns immediately.</li>
 	 * <li>This bundle's state is set to {@code STOPPING}.</li>
 	 * <li>A bundle event of type {@link BundleEvent#STOPPING} is fired.</li>
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 	 * <li>If this bundle's state was {@code ACTIVE} prior to setting the state
 	 * to {@code STOPPING}, the {@link BundleActivator#stop(BundleContext)}
 	 * method of this bundle's {@code BundleActivator}, if one is specified, is
 	 * called. If that method throws an exception, this method must continue to
 	 * stop this bundle and a {@code BundleException} must be thrown after
+<<<<<<< HEAD
+	 * completion of the remaining steps.
+	 * 
+	 * <li>Any services registered by this bundle must be unregistered.
+	 * <li>Any services used by this bundle must be released.
+	 * <li>Any listeners registered by this bundle must be removed.
+	 * 
+	 * <li>If this bundle's state is {@code UNINSTALLED}, because this bundle
+	 * was uninstalled while the {@code BundleActivator.stop} method was
+	 * running, a {@code BundleException} must be thrown.
+	 * 
+	 * <li>This bundle's state is set to {@code RESOLVED}.
+	 * 
+	 * <li>A bundle event of type {@link BundleEvent#STOPPED} is fired.
+=======
 	 * completion of the remaining steps.</li>
 	 * <li>Any services registered by this bundle must be unregistered.</li>
 	 * <li>Any services used by this bundle must be released.</li>
@@ -421,25 +568,42 @@ public interface Bundle extends Comparable<Bundle> {
 	 * running, a {@code BundleException} must be thrown.</li>
 	 * <li>This bundle's state is set to {@code RESOLVED}.</li>
 	 * <li>A bundle event of type {@link BundleEvent#STOPPED} is fired.</li>
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 	 * </ol>
 	 * 
 	 * <b>Preconditions </b>
 	 * <ul>
+<<<<<<< HEAD
+	 * <li>{@code getState()} in &#x007B; {@code ACTIVE} &#x007D;.
+=======
 	 * <li>{@code getState()} in &#x007B; {@code ACTIVE} &#x007D;.</li>
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 	 * </ul>
 	 * <b>Postconditions, no exceptions thrown </b>
 	 * <ul>
 	 * <li>Bundle autostart setting is modified unless the
+<<<<<<< HEAD
+	 * {@link #STOP_TRANSIENT} option was set.
+	 * <li>{@code getState()} not in &#x007B; {@code ACTIVE}, {@code STOPPING}
+	 * &#x007D;.
+	 * <li>{@code BundleActivator.stop} has been called and did not throw an
+	 * exception.
+=======
 	 * {@link #STOP_TRANSIENT} option was set.</li>
 	 * <li>{@code getState()} not in &#x007B; {@code ACTIVE}, {@code STOPPING}
 	 * &#x007D;.</li>
 	 * <li>{@code BundleActivator.stop} has been called and did not throw an
 	 * exception.</li>
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 	 * </ul>
 	 * <b>Postconditions, when an exception is thrown </b>
 	 * <ul>
 	 * <li>Bundle autostart setting is modified unless the
+<<<<<<< HEAD
+	 * {@link #STOP_TRANSIENT} option was set.
+=======
 	 * {@link #STOP_TRANSIENT} option was set.</li>
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 	 * </ul>
 	 * 
 	 * @param options The options for stopping this bundle. See
@@ -500,15 +664,38 @@ public interface Bundle extends Comparable<Bundle> {
 	 * The following steps are required to update a bundle:
 	 * <ol>
 	 * <li>If this bundle's state is {@code UNINSTALLED} then an
+<<<<<<< HEAD
+	 * {@code IllegalStateException} is thrown.
+	 * 
+	 * <li>If this bundle's state is {@code ACTIVE}, {@code STARTING} or
+	 * {@code STOPPING}, this bundle is stopped as described in the
+	 * {@code Bundle.stop} method. If {@code Bundle.stop} throws an exception,
+	 * the exception is rethrown terminating the update.
+	 * 
+=======
 	 * {@code IllegalStateException} is thrown.</li>
 	 * <li>If this bundle's state is {@code ACTIVE}, {@code STARTING} or
 	 * {@code STOPPING}, this bundle is stopped as described in the
 	 * {@code Bundle.stop} method. If {@code Bundle.stop} throws an exception,
 	 * the exception is rethrown terminating the update.</li>
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 	 * <li>The updated version of this bundle is read from the input stream and
 	 * installed. If the Framework is unable to install the updated version of
 	 * this bundle, the original version of this bundle must be restored and a
 	 * {@code BundleException} must be thrown after completion of the remaining
+<<<<<<< HEAD
+	 * steps.
+	 * 
+	 * <li>This bundle's state is set to {@code INSTALLED}.
+	 * 
+	 * <li>If the updated version of this bundle was successfully installed, a
+	 * bundle event of type {@link BundleEvent#UPDATED} is fired.
+	 * 
+	 * <li>If this bundle's state was originally {@code ACTIVE}, the updated
+	 * bundle is started as described in the {@code Bundle.start} method. If
+	 * {@code Bundle.start} throws an exception, a Framework event of type
+	 * {@link FrameworkEvent#ERROR} is fired containing the exception.
+=======
 	 * steps.</li>
 	 * <li>This bundle's state is set to {@code INSTALLED}.</li>
 	 * <li>If the updated version of this bundle was successfully installed, a
@@ -517,23 +704,38 @@ public interface Bundle extends Comparable<Bundle> {
 	 * bundle is started as described in the {@code Bundle.start} method. If
 	 * {@code Bundle.start} throws an exception, a Framework event of type
 	 * {@link FrameworkEvent#ERROR} is fired containing the exception.</li>
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 	 * </ol>
 	 * 
 	 * <b>Preconditions </b>
 	 * <ul>
+<<<<<<< HEAD
+	 * <li>{@code getState()} not in &#x007B; {@code UNINSTALLED} &#x007D;.
+=======
 	 * <li>{@code getState()} not in &#x007B; {@code UNINSTALLED} &#x007D;.</li>
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 	 * </ul>
 	 * <b>Postconditions, no exceptions thrown </b>
 	 * <ul>
 	 * <li>{@code getState()} in &#x007B; {@code INSTALLED}, {@code RESOLVED},
+<<<<<<< HEAD
+	 * {@code ACTIVE} &#x007D;.
+	 * <li>This bundle has been updated.
+=======
 	 * {@code ACTIVE} &#x007D;.</li>
 	 * <li>This bundle has been updated.</li>
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 	 * </ul>
 	 * <b>Postconditions, when an exception is thrown </b>
 	 * <ul>
 	 * <li>{@code getState()} in &#x007B; {@code INSTALLED}, {@code RESOLVED},
+<<<<<<< HEAD
+	 * {@code ACTIVE} &#x007D;.
+	 * <li>Original bundle is still used; no update occurred.
+=======
 	 * {@code ACTIVE} &#x007D;.</li>
 	 * <li>Original bundle is still used; no update occurred.</li>
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 	 * </ul>
 	 * 
 	 * @param input The {@code InputStream} from which to read the new bundle or
@@ -608,20 +810,49 @@ public interface Bundle extends Comparable<Bundle> {
 	 * The following steps are required to uninstall a bundle:
 	 * <ol>
 	 * <li>If this bundle's state is {@code UNINSTALLED} then an
+<<<<<<< HEAD
+	 * {@code IllegalStateException} is thrown.
+	 * 
+=======
 	 * {@code IllegalStateException} is thrown.</li>
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 	 * <li>If this bundle's state is {@code ACTIVE}, {@code STARTING} or
 	 * {@code STOPPING}, this bundle is stopped as described in the
 	 * {@code Bundle.stop} method. If {@code Bundle.stop} throws an exception, a
 	 * Framework event of type {@link FrameworkEvent#ERROR} is fired containing
+<<<<<<< HEAD
+	 * the exception.
+	 * 
+	 * <li>This bundle's state is set to {@code UNINSTALLED}.
+	 * 
+	 * <li>A bundle event of type {@link BundleEvent#UNINSTALLED} is fired.
+	 * 
+	 * <li>This bundle and any persistent storage area provided for this bundle
+	 * by the Framework are removed.
+=======
 	 * the exception.</li>
 	 * <li>This bundle's state is set to {@code UNINSTALLED}.</li>
 	 * <li>A bundle event of type {@link BundleEvent#UNINSTALLED} is fired.</li>
 	 * <li>This bundle and any persistent storage area provided for this bundle
 	 * by the Framework are removed.</li>
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 	 * </ol>
 	 * 
 	 * <b>Preconditions </b>
 	 * <ul>
+<<<<<<< HEAD
+	 * <li>{@code getState()} not in &#x007B; {@code UNINSTALLED} &#x007D;.
+	 * </ul>
+	 * <b>Postconditions, no exceptions thrown </b>
+	 * <ul>
+	 * <li>{@code getState()} in &#x007B; {@code UNINSTALLED} &#x007D;.
+	 * <li>This bundle has been uninstalled.
+	 * </ul>
+	 * <b>Postconditions, when an exception is thrown </b>
+	 * <ul>
+	 * <li>{@code getState()} not in &#x007B; {@code UNINSTALLED} &#x007D;.
+	 * <li>This Bundle has not been uninstalled.
+=======
 	 * <li>{@code getState()} not in &#x007B; {@code UNINSTALLED} &#x007D;.</li>
 	 * </ul>
 	 * <b>Postconditions, no exceptions thrown </b>
@@ -633,6 +864,7 @@ public interface Bundle extends Comparable<Bundle> {
 	 * <ul>
 	 * <li>{@code getState()} not in &#x007B; {@code UNINSTALLED} &#x007D;.</li>
 	 * <li>This Bundle has not been uninstalled.</li>
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 	 * </ul>
 	 * 
 	 * @throws BundleException If the uninstall failed. This can occur if
@@ -698,12 +930,21 @@ public interface Bundle extends Comparable<Bundle> {
 	 * <p>
 	 * A bundle's unique identifier has the following attributes:
 	 * <ul>
+<<<<<<< HEAD
+	 * <li>Is unique and persistent.
+	 * <li>Is a {@code long}.
+	 * <li>Its value is not reused for another bundle, even after a bundle is
+	 * uninstalled.
+	 * <li>Does not change while a bundle remains installed.
+	 * <li>Does not change when a bundle is updated.
+=======
 	 * <li>Is unique and persistent.</li>
 	 * <li>Is a {@code long}.</li>
 	 * <li>Its value is not reused for another bundle, even after a bundle is
 	 * uninstalled.</li>
 	 * <li>Does not change while a bundle remains installed.</li>
 	 * <li>Does not change when a bundle is updated.</li>
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 	 * </ul>
 	 * 
 	 * <p>
@@ -760,8 +1001,13 @@ public interface Bundle extends Comparable<Bundle> {
 	/**
 	 * Returns this bundle's {@code ServiceReference} list for all services it
 	 * is using or returns {@code null} if this bundle is not using any
+<<<<<<< HEAD
+	 * services. A bundle is considered to be using a service if its use count
+	 * for that service is greater than zero.
+=======
 	 * services. A bundle is considered to be using a service if it has any
 	 * unreleased service objects.
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 	 * 
 	 * <p>
 	 * If the Java Runtime Environment supports permissions, a

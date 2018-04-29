@@ -21,6 +21,17 @@ package org.apache.felix.ipojo.manipulator.metadata.annotation.visitor.stereotyp
 
 import org.apache.felix.ipojo.manipulator.metadata.annotation.model.AnnotationType;
 import org.apache.felix.ipojo.manipulator.metadata.annotation.model.Playback;
+<<<<<<< HEAD
+import org.objectweb.asm.FieldVisitor;
+import org.objectweb.asm.commons.EmptyVisitor;
+
+/**
+ * User: guillaume
+ * Date: 30/05/13
+ * Time: 18:55
+ */
+public class FieldStereotypeVisitor extends EmptyVisitor {
+=======
 import org.objectweb.asm.AnnotationVisitor;
 import org.objectweb.asm.FieldVisitor;
 import org.objectweb.asm.Opcodes;
@@ -29,12 +40,16 @@ import org.objectweb.asm.Opcodes;
  * Parses stereotypes for field.
  */
 public class FieldStereotypeVisitor extends AnnotationVisitor {
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 
     private final FieldVisitor m_delegate;
     private final AnnotationType m_annotationType;
 
     public FieldStereotypeVisitor(final FieldVisitor delegate, AnnotationType annotationType) {
+<<<<<<< HEAD
+=======
         super(Opcodes.ASM5);
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         this.m_delegate = delegate;
         m_annotationType = annotationType;
     }

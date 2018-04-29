@@ -49,7 +49,11 @@ public class BundleEventConverter {
                 break;
             case BundleEvent.STARTING:
                 buffer.append( "starting" );
+<<<<<<< HEAD
+                topic.append("STARTED");
+=======
                 topic.append("STARTING");
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
                 break;
             case BundleEvent.STOPPED:
                 buffer.append( "stopped" );
@@ -65,7 +69,11 @@ public class BundleEventConverter {
                 break;
             case BundleEvent.UNRESOLVED:
                 buffer.append( "unresolved" );
+<<<<<<< HEAD
+                topic.append("UNINSTALLED");
+=======
                 topic.append("UNRESOLVED");
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
                 break;
             case BundleEvent.UPDATED:
                 buffer.append( "updated" );

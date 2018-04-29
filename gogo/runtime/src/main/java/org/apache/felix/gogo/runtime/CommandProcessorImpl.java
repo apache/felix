@@ -19,26 +19,54 @@
 package org.apache.felix.gogo.runtime;
 
 import java.io.InputStream;
+<<<<<<< HEAD
+import java.io.PrintStream;
+import java.lang.reflect.Method;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.LinkedHashMap;
+=======
 import java.io.OutputStream;
 import java.lang.reflect.Method;
 import java.nio.file.Path;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.WeakHashMap;
+<<<<<<< HEAD
+import java.util.concurrent.CopyOnWriteArraySet;
+
+import org.apache.felix.gogo.api.CommandSessionListener;
+import org.apache.felix.service.command.CommandProcessor;
+import org.apache.felix.service.command.CommandSession;
+import org.apache.felix.service.command.Converter;
+import org.apache.felix.service.command.Function;
+=======
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.CopyOnWriteArraySet;
 
 import org.apache.felix.service.command.*;
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 import org.apache.felix.service.threadio.ThreadIO;
 
 public class CommandProcessorImpl implements CommandProcessor
 {
+<<<<<<< HEAD
+    protected final Set<Converter> converters = new HashSet<Converter>();
+    protected final Set<CommandSessionListener> listeners = new CopyOnWriteArraySet<CommandSessionListener>();
+    protected final Map<String, Object> commands = new LinkedHashMap<String, Object>();
+    protected final Map<String, Object> constants = new HashMap<String, Object>();
+    protected final ThreadIO threadIO;
+    protected final WeakHashMap<CommandSession, Object> sessions = new WeakHashMap<CommandSession, Object>();
+=======
     protected final Set<Converter> converters = new CopyOnWriteArraySet<>();
     protected final Set<CommandSessionListener> listeners = new CopyOnWriteArraySet<>();
     protected final ConcurrentMap<String, Map<Object, Integer>> commands = new ConcurrentHashMap<>();
@@ -51,12 +79,20 @@ public class CommandProcessorImpl implements CommandProcessor
     {
         this(null);
     }
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 
     public CommandProcessorImpl(ThreadIO tio)
     {
         threadIO = tio;
     }
 
+<<<<<<< HEAD
+    public CommandSession createSession(InputStream in, PrintStream out, PrintStream err)
+    {
+        CommandSessionImpl session = new CommandSessionImpl(this, in, out, err);
+        sessions.put(session, null);
+        return session;
+=======
     @Override
     public CommandSessionImpl createSession(CommandSession parent) {
         synchronized (sessions) {
@@ -93,10 +129,16 @@ public class CommandProcessorImpl implements CommandProcessor
         {
             sessions.remove(session);
         }
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     }
 
     public void stop()
     {
+<<<<<<< HEAD
+        for (CommandSession session : sessions.keySet())
+        {
+            session.close();
+=======
         synchronized (sessions)
         {
             stopped = true;
@@ -108,6 +150,7 @@ public class CommandProcessorImpl implements CommandProcessor
             }
             // Just in case...
 			sessions.clear();
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         }
     }
 
@@ -136,7 +179,11 @@ public class CommandProcessorImpl implements CommandProcessor
         return Collections.unmodifiableSet(commands.keySet());
     }
 
+<<<<<<< HEAD
+    Function getCommand(String name, final Object path)
+=======
     protected Function getCommand(String name, final Object path)
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     {
         int colon = name.indexOf(':');
 
@@ -149,9 +196,15 @@ public class CommandProcessorImpl implements CommandProcessor
         String cfunction = name.substring(colon);
         boolean anyScope = (colon == 1 && name.charAt(0) == '*');
 
+<<<<<<< HEAD
+        Object cmd = commands.get(name);
+
+        if (null == cmd && anyScope)
+=======
         Map<Object, Integer> cmdMap = commands.get(name);
 
         if (null == cmdMap && anyScope)
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         {
             String scopePath = (null == path ? "*" : path.toString());
 
@@ -159,17 +212,41 @@ public class CommandProcessorImpl implements CommandProcessor
             {
                 if (scope.equals("*"))
                 {
+<<<<<<< HEAD
+                    synchronized (commands)
+                    {
+                        for (Entry<String, Object> entry : commands.entrySet())
+                        {
+                            if (entry.getKey().endsWith(cfunction))
+                            {
+                                cmd = entry.getValue();
+                                break;
+                            }
+=======
                     for (Entry<String, Map<Object, Integer>> entry : commands.entrySet())
                     {
                         if (entry.getKey().endsWith(cfunction))
                         {
                             cmdMap = entry.getValue();
                             break;
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
                         }
                     }
                 }
                 else
                 {
+<<<<<<< HEAD
+                    cmd = commands.get(scope + cfunction);
+                }
+
+                if (cmd != null)
+                {
+                    break;
+                }
+            }
+        }
+
+=======
                     cmdMap = commands.get(scope + cfunction);
                     if (cmdMap != null)
                     {
@@ -190,6 +267,7 @@ public class CommandProcessorImpl implements CommandProcessor
                 }
             }
         }
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         if ((null == cmd) || (cmd instanceof Function))
         {
             return (Function) cmd;
@@ -198,6 +276,16 @@ public class CommandProcessorImpl implements CommandProcessor
         return new CommandProxy(cmd, cfunction.substring(1));
     }
 
+<<<<<<< HEAD
+    public void addCommand(String scope, Object target)
+    {
+        Class<?> tc = (target instanceof Class<?>) ? (Class<?>) target
+            : target.getClass();
+        addCommand(scope, target, tc);
+    }
+
+    public void addCommand(String scope, Object target, Class<?> functions)
+=======
     @Descriptor("add commands")
     public void addCommand(@Descriptor("scope") String scope, @Descriptor("target") Object target)
     {
@@ -212,6 +300,7 @@ public class CommandProcessorImpl implements CommandProcessor
     }
 
     public void addCommand(String scope, Object target, Class<?> functions, int ranking)
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     {
         if (target == null)
         {
@@ -221,7 +310,11 @@ public class CommandProcessorImpl implements CommandProcessor
         String[] names = getFunctions(functions);
         for (String function : names)
         {
+<<<<<<< HEAD
+            addCommand(scope, target, function);
+=======
             addCommand(scope, target, function, ranking);
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         }
     }
 
@@ -237,6 +330,12 @@ public class CommandProcessorImpl implements CommandProcessor
 
     public void addCommand(String scope, Object target, String function)
     {
+<<<<<<< HEAD
+        synchronized (commands)
+        {
+            commands.put((scope + ":" + function).toLowerCase(), target);
+        }
+=======
         addCommand(scope, target, function, 0);
     }
 
@@ -250,10 +349,17 @@ public class CommandProcessorImpl implements CommandProcessor
             cmdMap = commands.get(key);
         }
         cmdMap.put(target, ranking);
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     }
 
     public void removeCommand(String scope, String function)
     {
+<<<<<<< HEAD
+        String func = (scope + ":" + function).toLowerCase();
+        synchronized (commands)
+        {
+            commands.remove(func);
+=======
         // TODO: WARNING: this method does remove all mapping for scope:function
         String key = (scope + ":" + function).toLowerCase();
         commands.remove(key);
@@ -267,21 +373,38 @@ public class CommandProcessorImpl implements CommandProcessor
         if (cmdMap != null)
         {
             cmdMap.remove(target);
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         }
     }
 
     public void removeCommand(Object target)
     {
+<<<<<<< HEAD
+        synchronized (commands)
+        {
+            for (Iterator<Object> i = commands.values().iterator(); i.hasNext();)
+            {
+                if (i.next() == target)
+                {
+                    i.remove();
+                }
+            }
+=======
         for (Map<Object, Integer> cmdMap : commands.values())
         {
             cmdMap.remove(target);
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         }
     }
 
     private String[] getFunctions(Class<?> target)
     {
         String[] functions;
+<<<<<<< HEAD
+        Set<String> list = new TreeSet<String>();
+=======
         Set<String> list = new TreeSet<>();
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         Method methods[] = target.getMethods();
         for (Method m : methods)
         {
@@ -304,6 +427,17 @@ public class CommandProcessorImpl implements CommandProcessor
         return functions;
     }
 
+<<<<<<< HEAD
+    protected void put(String name, Object target)
+    {
+        synchronized (commands)
+        {
+            commands.put(name, target);
+        }
+    }
+
+    public Object convert(Class<?> desiredType, Object in)
+=======
     public Object convert(CommandSession session, Class<?> desiredType, Object in)
     {
         int[] cost = new int[1];
@@ -317,6 +451,7 @@ public class CommandProcessorImpl implements CommandProcessor
     }
 
     Object doConvert(Class<?> desiredType, Object in)
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     {
         for (Converter c : converters)
         {
@@ -330,11 +465,17 @@ public class CommandProcessorImpl implements CommandProcessor
             }
             catch (Exception e)
             {
+<<<<<<< HEAD
+                e.printStackTrace();
+            }
+        }
+=======
                 // Ignore
                 e.getCause();
             }
         }
 
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         return null;
     }
 
@@ -368,7 +509,12 @@ public class CommandProcessorImpl implements CommandProcessor
         }
     }
 
+<<<<<<< HEAD
+    void afterExecute(CommandSession session, CharSequence commandline,
+        Exception exception)
+=======
     void afterExecute(CommandSession session, CharSequence commandline, Exception exception)
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     {
         for (CommandSessionListener l : listeners)
         {
@@ -398,6 +544,8 @@ public class CommandProcessorImpl implements CommandProcessor
         }
     }
 
+<<<<<<< HEAD
+=======
     public Object expr(CommandSessionImpl session, CharSequence expr)
     {
         return new Expression(expr.toString()).eval(session.variables);
@@ -412,4 +560,5 @@ public class CommandProcessorImpl implements CommandProcessor
     {
         return session.currentDir().resolve(path);
     }
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 }

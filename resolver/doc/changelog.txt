@@ -1,3 +1,5 @@
+<<<<<<< HEAD
+=======
 1.16.0
 ------
 
@@ -78,6 +80,7 @@
     * [FELIX-4498] - Resolver does not allow optional reqs to resolve if they introduce class space inconsistencies
     * [FELIX-4656] - Improve memory usage and speed of the resolver
 
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 1.0.0
 -----
 

@@ -165,14 +165,22 @@ public class BundleResources
         resourceName += ".properties";
 
         Properties props = new Properties( parentProperties );
+<<<<<<< HEAD
+        URL resURL = bundle.getEntry( resourceName );
+=======
         // FELIX-5173 - allow the resource to be provided by fragments as well...
         URL resURL = bundle.getResource( resourceName );
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 
         // FELIX-607 backwards compatibility, support
         if ( resURL == null )
         {
+<<<<<<< HEAD
+            resURL = bundle.getEntry( MetaTypeService.METATYPE_DOCUMENTS_LOCATION + "/" + resourceName );
+=======
             // FELIX-5173 - allow the resource to be provided by fragments as well...
             resURL = bundle.getResource( MetaTypeService.METATYPE_DOCUMENTS_LOCATION + "/" + resourceName );
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         }
 
         if ( resURL != null )

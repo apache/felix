@@ -1,5 +1,9 @@
 /*
+<<<<<<< HEAD
+ * Copyright (c) OSGi Alliance (2000, 2012). All Rights Reserved.
+=======
  * Copyright (c) OSGi Alliance (2000, 2013). All Rights Reserved.
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -32,7 +36,11 @@ import java.util.EventObject;
  * @Immutable
  * @see ServiceListener
  * @see AllServiceListener
+<<<<<<< HEAD
+ * @version $Id: 49e34e0ad5564d6f4ca0ab0053b272c22b9fb917 $
+=======
  * @author $Id: b27a941cb68e6416825b1b717090a2eb098733f3 $
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
  */
 
 public class ServiceEvent extends EventObject {

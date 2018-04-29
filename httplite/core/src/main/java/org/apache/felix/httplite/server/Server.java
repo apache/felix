@@ -53,6 +53,13 @@ public class Server
      * Thread pool limit property
      */
     public static final String CONFIG_PROPERTY_THREADPOOL_LIMIT_PROP = "org.apache.felix.http.threadpool.limit";
+<<<<<<< HEAD
+     /**
+     * Flag to enable debugging for this service implementation. The default is false.
+     */
+    public static final String CONFIG_PROPERTY_HTTP_DEBUG = "org.apache.felix.http.debug";
+=======
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     /**
      * Flag to enable the user of HTTPS. The default is false.
      */
@@ -142,7 +149,11 @@ public class Server
      * The configuration properties cannot be changed after construction. The
      * web server is not active until it is started.
      * @param configMap The map of configuration properties; can be <tt>null</tt>.
+<<<<<<< HEAD
+     * @param logger 
+=======
      * @param logger the logger 
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     **/
     public Server(Map configMap, final Logger logger)
     {
@@ -168,7 +179,11 @@ public class Server
     /**
      * Get the port the HTTP server listens on based on configuration map or default value.
      * 
+<<<<<<< HEAD
+     * @param configMap
+=======
      * @param configMap the map of configuration properties
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
      * @return port number that server listens on.
      */
     public static int getConfiguredPort(Map configMap)
@@ -180,7 +195,11 @@ public class Server
     /**
      * Get the address of the interface the HTTP server listens on based on configuration map or default value.
      * 
+<<<<<<< HEAD
+     * @param configMap
+=======
      * @param configMap the map of configuration properties
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
      * @return Address of the interface to bind to or null if no interface is specified.
      */
     public InetAddress getConfiguredBindAddr(Map configMap)
@@ -211,7 +230,11 @@ public class Server
      *   <li><tt>HttpServer.STOPPING_STATE</tt> - the web server is in the
      *       process of shutting down.
      *   </li>
+<<<<<<< HEAD
+     * </li>
+=======
      * </ul>
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
      * @return The current state of the web server.
     **/
     public synchronized int getState()

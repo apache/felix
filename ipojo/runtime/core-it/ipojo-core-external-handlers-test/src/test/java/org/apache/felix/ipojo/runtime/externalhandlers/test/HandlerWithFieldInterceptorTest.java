@@ -60,7 +60,11 @@ public class HandlerWithFieldInterceptorTest extends Common {
         String name = "HandlerTest-1";
         ServiceReference ref = ipojoHelper.getServiceReferenceByName(CheckService.class.getName(), name);
         assertNotNull("Check the check service availability", ref);
+<<<<<<< HEAD
+        CheckService cs = (CheckService) osgiHelper.getServiceObject(ref);
+=======
         CheckService cs = (CheckService) osgiHelper.getRawServiceObject(ref);
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 
         Dictionary<String, Object> p = cs.getProps();
         assertEquals("Assert 'simple' equality", p.get("Simple"), "simple");
@@ -74,7 +78,11 @@ public class HandlerWithFieldInterceptorTest extends Common {
 
         ServiceReference ref2 = ipojoHelper.getServiceReferenceByName(FooService.class.getName(), name);
         assertNotNull("Check the foo service availability", ref2);
+<<<<<<< HEAD
+        FooService fs = (FooService) osgiHelper.getServiceObject(ref2);
+=======
         FooService fs = (FooService) osgiHelper.getRawServiceObject(ref2);
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 
         fs.foo(); // This trigger the changes.
 

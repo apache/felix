@@ -23,18 +23,29 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+<<<<<<< HEAD
+import java.util.Set;
+import java.util.Map.Entry;
+
+import org.apache.felix.webconsole.ConfigurationPrinter;
+=======
 import java.util.Map.Entry;
 import java.util.Set;
 
 import org.apache.felix.inventory.Format;
 import org.apache.felix.inventory.InventoryPrinter;
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.service.packageadmin.ExportedPackage;
 import org.osgi.service.packageadmin.PackageAdmin;
 import org.osgi.util.tracker.ServiceTracker;
 
+<<<<<<< HEAD
+class WebConsolePrinter implements ConfigurationPrinter
+=======
 class WebConsolePrinter implements InventoryPrinter
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 {
 
     private final ServiceTracker tracker;
@@ -47,11 +58,17 @@ class WebConsolePrinter implements InventoryPrinter
     }
 
     /**
+<<<<<<< HEAD
+     * @see org.apache.felix.webconsole.ConfigurationPrinter#printConfiguration(java.io.PrintWriter)
+     */
+    public void printConfiguration(PrintWriter pw)
+=======
      * @see org.apache.felix.inventory.InventoryPrinter#print(
      *  java.io.PrintWriter, org.apache.felix.inventory.Format, boolean)
      */
     @SuppressWarnings("deprecation")
     public void print(PrintWriter pw, Format format, boolean isZip)
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     {
         final PackageAdmin pa = (PackageAdmin) tracker.getService();
         if (pa == null)
@@ -62,7 +79,11 @@ class WebConsolePrinter implements InventoryPrinter
 
         try
         {
+<<<<<<< HEAD
+            Map/*<String, Set<ExportedPackage>>*/exports = WebConsolePlugin.collectExportedPackages(
+=======
             Map<String, Set<ExportedPackage>> exports = WebConsolePlugin.collectExportedPackages(
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
                 pa, bc);
 
             pw.print("Status: PackageAdmin service reports ");
@@ -78,6 +99,27 @@ class WebConsolePrinter implements InventoryPrinter
         }
     }
 
+<<<<<<< HEAD
+    private void dumpDuplicatesAsTxt(final PrintWriter pw,
+        final Map/*<String, Set<ExportedPackage>>*/exports)
+    {
+        pw.println("Duplicate Exported Packages");
+        pw.println("---------------------------");
+        final List/*<String[]>*/lines = new ArrayList/*<String[]>*/();
+        lines.add(new String[] { "Package", "Exports", "Imports" });
+
+        for (Iterator/*<Entry<String, Set<ExportedPackage>>>*/entriesIter = exports.entrySet().iterator(); entriesIter.hasNext();)
+        {
+            Entry/*<String, Set<ExportedPackage>>*/exportEntry = (Entry) entriesIter.next();
+
+            final Set/*<ExportedPackage>*/exportSet = (Set) exportEntry.getValue();
+            if (exportSet.size() > 1)
+            {
+                String firstCol = (String) exportEntry.getKey();
+                for (Iterator packageIter = exportSet.iterator(); packageIter.hasNext();)
+                {
+                    ExportedPackage exportedPackage = (ExportedPackage) packageIter.next();
+=======
     @SuppressWarnings("deprecation")
     private void dumpDuplicatesAsTxt(final PrintWriter pw,
         final Map<String, Set<ExportedPackage>> exports)
@@ -98,6 +140,7 @@ class WebConsolePrinter implements InventoryPrinter
                 for (Iterator<ExportedPackage> packageIter = exportSet.iterator(); packageIter.hasNext();)
                 {
                     ExportedPackage exportedPackage = packageIter.next();
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
                     final Bundle[] importers = exportedPackage.getImportingBundles();
                     final String secondCol = "version=" + exportedPackage.getVersion()
                         + ", Bundle " + exportedPackage.getExportingBundle();
@@ -131,7 +174,11 @@ class WebConsolePrinter implements InventoryPrinter
         int maxFirst = 0, maxSecond = 0;
         for (int i = 0; i < lines.size(); i++)
         {
+<<<<<<< HEAD
+            final String[] entry = (String[]) lines.get(i);
+=======
             final String[] entry = lines.get(i);
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
             if (entry[0].length() > maxFirst)
             {
                 maxFirst = entry[0].length();
@@ -145,7 +192,11 @@ class WebConsolePrinter implements InventoryPrinter
         maxSecond += 2;
         for (int i = 0; i < lines.size(); i++)
         {
+<<<<<<< HEAD
+            final String[] entry = (String[]) lines.get(i);
+=======
             final String[] entry = lines.get(i);
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
             padText(pw, entry[0], maxFirst);
             padText(pw, entry[1], maxSecond);
             pw.println(entry[2]);
@@ -164,7 +215,11 @@ class WebConsolePrinter implements InventoryPrinter
     }
 
     /**
+<<<<<<< HEAD
+     * @see org.apache.felix.webconsole.ConfigurationPrinter#getTitle()
+=======
      * @return
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
      */
     public String getTitle()
     {

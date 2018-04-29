@@ -50,7 +50,10 @@ public class BundleEventAdapter extends AbstractAdapter implements BundleListene
         context.addBundleListener(this);
     }
 
+<<<<<<< HEAD
+=======
     @Override
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     public void destroy(BundleContext context) {
         context.removeBundleListener(this);
     }

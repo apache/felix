@@ -1,3 +1,5 @@
+<<<<<<< HEAD
+=======
 Changes in 1.0.6
 ----------------
 ** Bug
@@ -17,6 +19,7 @@ Changes in 1.0.2
     * [FELIX-4078] - ConfigurationPrinterAdapter.getMethod should not only consider implementation class
 
 
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 Initial Release 1.0.0
 ---------------------
 

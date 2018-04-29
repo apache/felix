@@ -19,6 +19,21 @@
 package org.apache.felix.cm.impl;
 
 
+<<<<<<< HEAD
+import java.io.ByteArrayOutputStream;
+import java.io.PrintStream;
+import java.lang.reflect.Field;
+
+import junit.framework.TestCase;
+
+import org.apache.felix.cm.MockBundleContext;
+import org.apache.felix.cm.MockLogService;
+import org.osgi.service.log.LogService;
+import org.osgi.util.tracker.ServiceTracker;
+
+
+public class ConfigurationManagerTest extends TestCase
+=======
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
@@ -55,6 +70,7 @@ import org.osgi.service.log.LogService;
 import org.osgi.util.tracker.ServiceTracker;
 
 public class ConfigurationManagerTest
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 {
 
     private PrintStream replacedStdErr;
@@ -62,13 +78,38 @@ public class ConfigurationManagerTest
     private ByteArrayOutputStream output;
 
 
+<<<<<<< HEAD
+    protected void setUp() throws Exception
+    {
+        super.setUp();
+
+=======
     @Before
     public void setUp() throws Exception
     {
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         replacedStdErr = System.err;
 
         output = new ByteArrayOutputStream();
         System.setErr( new PrintStream( output ) );
+<<<<<<< HEAD
+    }
+
+
+    protected void tearDown() throws Exception
+    {
+        System.setErr( replacedStdErr );
+
+        super.tearDown();
+    }
+
+
+    public void testLogNoLogService()
+    {
+        ConfigurationManager configMgr = createConfigurationManager( null );
+
+        setLogLevel( configMgr, LogService.LOG_WARNING );
+=======
         setLogLevel(LogService.LOG_WARNING);
     }
 
@@ -145,51 +186,87 @@ public class ConfigurationManagerTest
         ConfigurationManager configMgr = createConfigurationManagerAndLog( null );
 
         setLogLevel( LogService.LOG_WARNING );
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         assertNoLog( configMgr, LogService.LOG_DEBUG, "Debug Test Message", null );
         assertNoLog( configMgr, LogService.LOG_INFO, "Info Test Message", null );
         assertLog( configMgr, LogService.LOG_WARNING, "Warning Test Message", null );
         assertLog( configMgr, LogService.LOG_ERROR, "Error Test Message", null );
 
+<<<<<<< HEAD
+        setLogLevel( configMgr, LogService.LOG_ERROR );
+=======
         setLogLevel( LogService.LOG_ERROR );
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         assertNoLog( configMgr, LogService.LOG_DEBUG, "Debug Test Message", null );
         assertNoLog( configMgr, LogService.LOG_INFO, "Info Test Message", null );
         assertNoLog( configMgr, LogService.LOG_WARNING, "Warning Test Message", null );
         assertLog( configMgr, LogService.LOG_ERROR, "Error Test Message", null );
 
         // lower than error -- no output
+<<<<<<< HEAD
+        setLogLevel( configMgr, LogService.LOG_ERROR - 1 );
+=======
         setLogLevel( LogService.LOG_ERROR - 1 );
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         assertNoLog( configMgr, LogService.LOG_DEBUG, "Debug Test Message", null );
         assertNoLog( configMgr, LogService.LOG_INFO, "Info Test Message", null );
         assertNoLog( configMgr, LogService.LOG_WARNING, "Warning Test Message", null );
         assertNoLog( configMgr, LogService.LOG_ERROR, "Error Test Message", null );
 
         // minimal log level -- no output
+<<<<<<< HEAD
+        setLogLevel( configMgr, Integer.MIN_VALUE );
+=======
         setLogLevel( Integer.MIN_VALUE );
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         assertNoLog( configMgr, LogService.LOG_DEBUG, "Debug Test Message", null );
         assertNoLog( configMgr, LogService.LOG_INFO, "Info Test Message", null );
         assertNoLog( configMgr, LogService.LOG_WARNING, "Warning Test Message", null );
         assertNoLog( configMgr, LogService.LOG_ERROR, "Error Test Message", null );
 
+<<<<<<< HEAD
+        setLogLevel( configMgr, LogService.LOG_INFO );
+=======
         setLogLevel( LogService.LOG_INFO );
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         assertNoLog( configMgr, LogService.LOG_DEBUG, "Debug Test Message", null );
         assertLog( configMgr, LogService.LOG_INFO, "Info Test Message", null );
         assertLog( configMgr, LogService.LOG_WARNING, "Warning Test Message", null );
         assertLog( configMgr, LogService.LOG_ERROR, "Error Test Message", null );
 
+<<<<<<< HEAD
+        setLogLevel( configMgr, LogService.LOG_DEBUG );
+=======
         setLogLevel( LogService.LOG_DEBUG );
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         assertLog( configMgr, LogService.LOG_DEBUG, "Debug Test Message", null );
         assertLog( configMgr, LogService.LOG_INFO, "Info Test Message", null );
         assertLog( configMgr, LogService.LOG_WARNING, "Warning Test Message", null );
         assertLog( configMgr, LogService.LOG_ERROR, "Error Test Message", null );
 
         // maximal log level -- all output
+<<<<<<< HEAD
+        setLogLevel( configMgr, Integer.MAX_VALUE );
+=======
         setLogLevel( Integer.MAX_VALUE );
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         assertLog( configMgr, LogService.LOG_DEBUG, "Debug Test Message", null );
         assertLog( configMgr, LogService.LOG_INFO, "Info Test Message", null );
         assertLog( configMgr, LogService.LOG_WARNING, "Warning Test Message", null );
         assertLog( configMgr, LogService.LOG_ERROR, "Error Test Message", null );
     }
 
+<<<<<<< HEAD
+
+    // this test always expects output since when using a LogService, the log
+    // level property is ignored
+    public void testLogWithLogService()
+    {
+        LogService logService = new MockLogService();
+        ConfigurationManager configMgr = createConfigurationManager( logService );
+
+        setLogLevel( configMgr, LogService.LOG_WARNING );
+=======
     // this test always expects output since when using a LogService, the log
     // level property is ignored
     @Test public void testLogWithLogService() throws IOException
@@ -198,42 +275,67 @@ public class ConfigurationManagerTest
         ConfigurationManager configMgr = createConfigurationManagerAndLog( logService );
 
         setLogLevel( LogService.LOG_WARNING );
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         assertLog( configMgr, LogService.LOG_DEBUG, "Debug Test Message", null );
         assertLog( configMgr, LogService.LOG_INFO, "Info Test Message", null );
         assertLog( configMgr, LogService.LOG_WARNING, "Warning Test Message", null );
         assertLog( configMgr, LogService.LOG_ERROR, "Error Test Message", null );
 
+<<<<<<< HEAD
+        setLogLevel( configMgr, LogService.LOG_ERROR );
+=======
         setLogLevel( LogService.LOG_ERROR );
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         assertLog( configMgr, LogService.LOG_DEBUG, "Debug Test Message", null );
         assertLog( configMgr, LogService.LOG_INFO, "Info Test Message", null );
         assertLog( configMgr, LogService.LOG_WARNING, "Warning Test Message", null );
         assertLog( configMgr, LogService.LOG_ERROR, "Error Test Message", null );
 
+<<<<<<< HEAD
+        setLogLevel( configMgr, LogService.LOG_ERROR - 1 );
+=======
         setLogLevel( LogService.LOG_ERROR - 1 );
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         assertLog( configMgr, LogService.LOG_DEBUG, "Debug Test Message", null );
         assertLog( configMgr, LogService.LOG_INFO, "Info Test Message", null );
         assertLog( configMgr, LogService.LOG_WARNING, "Warning Test Message", null );
         assertLog( configMgr, LogService.LOG_ERROR, "Error Test Message", null );
 
+<<<<<<< HEAD
+        setLogLevel( configMgr, Integer.MIN_VALUE );
+=======
         setLogLevel( Integer.MIN_VALUE );
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         assertLog( configMgr, LogService.LOG_DEBUG, "Debug Test Message", null );
         assertLog( configMgr, LogService.LOG_INFO, "Info Test Message", null );
         assertLog( configMgr, LogService.LOG_WARNING, "Warning Test Message", null );
         assertLog( configMgr, LogService.LOG_ERROR, "Error Test Message", null );
 
+<<<<<<< HEAD
+        setLogLevel( configMgr, LogService.LOG_INFO );
+=======
         setLogLevel( LogService.LOG_INFO );
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         assertLog( configMgr, LogService.LOG_DEBUG, "Debug Test Message", null );
         assertLog( configMgr, LogService.LOG_INFO, "Info Test Message", null );
         assertLog( configMgr, LogService.LOG_WARNING, "Warning Test Message", null );
         assertLog( configMgr, LogService.LOG_ERROR, "Error Test Message", null );
 
+<<<<<<< HEAD
+        setLogLevel( configMgr, LogService.LOG_DEBUG );
+=======
         setLogLevel( LogService.LOG_DEBUG );
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         assertLog( configMgr, LogService.LOG_DEBUG, "Debug Test Message", null );
         assertLog( configMgr, LogService.LOG_INFO, "Info Test Message", null );
         assertLog( configMgr, LogService.LOG_WARNING, "Warning Test Message", null );
         assertLog( configMgr, LogService.LOG_ERROR, "Error Test Message", null );
 
+<<<<<<< HEAD
+        setLogLevel( configMgr, Integer.MAX_VALUE );
+=======
         setLogLevel( Integer.MAX_VALUE );
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         assertLog( configMgr, LogService.LOG_DEBUG, "Debug Test Message", null );
         assertLog( configMgr, LogService.LOG_INFO, "Info Test Message", null );
         assertLog( configMgr, LogService.LOG_WARNING, "Warning Test Message", null );
@@ -241,16 +343,47 @@ public class ConfigurationManagerTest
     }
 
 
+<<<<<<< HEAD
+    public void testLogSetup()
+    {
+        final MockBundleContext bundleContext = new MockBundleContext();
+        ConfigurationManager configMgr = createConfigurationManager( null );
+=======
     @Test public void testLogSetup() throws IOException
     {
         final MockBundleContext bundleContext = new MockBundleContext();
         createConfigurationManagerAndLog( null );
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 
         // ensure the configuration data goes to target
         bundleContext.setProperty( "felix.cm.dir", "target/config" );
 
         // default value is 2
         bundleContext.setProperty( "felix.cm.loglevel", null );
+<<<<<<< HEAD
+        configMgr.start( bundleContext );
+        assertEquals( 2, getLogLevel( configMgr ) );
+        configMgr.stop( bundleContext );
+
+        // illegal number yields default value
+        bundleContext.setProperty( "felix.cm.loglevel", "not-a-number" );
+        configMgr.start( bundleContext );
+        assertEquals( 2, getLogLevel( configMgr ) );
+        configMgr.stop( bundleContext );
+
+        bundleContext.setProperty( "felix.cm.loglevel", "-100" );
+        configMgr.start( bundleContext );
+        assertEquals( -100, getLogLevel( configMgr ) );
+        configMgr.stop( bundleContext );
+
+        bundleContext.setProperty( "felix.cm.loglevel", "4" );
+        configMgr.start( bundleContext );
+        assertEquals( 4, getLogLevel( configMgr ) );
+        configMgr.stop( bundleContext );
+    }
+
+
+=======
         Log.logger.start( bundleContext );
         assertEquals( 2, getLogLevel( ) );
         Log.logger.stop( );
@@ -402,11 +535,16 @@ public class ConfigurationManagerTest
         assertEquals(0, pm.getStored().size());
     }
 
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     private void assertNoLog( ConfigurationManager configMgr, int level, String message, Throwable t )
     {
         try
         {
+<<<<<<< HEAD
+            configMgr.log( level, message, t );
+=======
             Log.logger.log( level, message, t );
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
             assertTrue( "Expecting no log output", output.size() == 0 );
         }
         finally
@@ -421,7 +559,11 @@ public class ConfigurationManagerTest
     {
         try
         {
+<<<<<<< HEAD
+            configMgr.log( level, message, t );
+=======
             Log.logger.log( level, message, t );
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
             assertTrue( "Expecting log output", output.size() > 0 );
 
             final String expectedLog = MockLogService.toMessageLine( level, message );
@@ -437,14 +579,24 @@ public class ConfigurationManagerTest
     }
 
 
+<<<<<<< HEAD
+    private static void setLogLevel( ConfigurationManager configMgr, int level )
+=======
     private static void setLogLevel( int level )
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     {
         final String fieldName = "logLevel";
         try
         {
+<<<<<<< HEAD
+            Field field = configMgr.getClass().getDeclaredField( fieldName );
+            field.setAccessible( true );
+            field.setInt( configMgr, level );
+=======
             Field field = Log.class.getDeclaredField( fieldName );
             field.setAccessible( true );
             field.setInt( Log.logger, level );
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         }
         catch ( Throwable ignore )
         {
@@ -454,14 +606,24 @@ public class ConfigurationManagerTest
     }
 
 
+<<<<<<< HEAD
+    private static int getLogLevel( ConfigurationManager configMgr )
+=======
     private static int getLogLevel( )
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     {
         final String fieldName = "logLevel";
         try
         {
+<<<<<<< HEAD
+            Field field = configMgr.getClass().getDeclaredField( fieldName );
+            field.setAccessible( true );
+            return field.getInt( configMgr );
+=======
             Field field = Log.class.getDeclaredField( fieldName );
             field.setAccessible( true );
             return field.getInt( Log.logger );
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         }
         catch ( Throwable ignore )
         {
@@ -471,6 +633,18 @@ public class ConfigurationManagerTest
     }
 
 
+<<<<<<< HEAD
+    private static ConfigurationManager createConfigurationManager( final LogService logService )
+    {
+        ConfigurationManager configMgr = new ConfigurationManager();
+
+        try
+        {
+            Field field = configMgr.getClass().getDeclaredField( "logTracker" );
+            field.setAccessible( true );
+            field.set( configMgr, new ServiceTracker( new MockBundleContext(), "", null )
+            {
+=======
     private static ServiceReference[] setServiceTrackerField( ConfigurationManager configMgr,
             String fieldName, Object ... services ) throws Exception
     {
@@ -516,6 +690,7 @@ public class ConfigurationManagerTest
             field.set( Log.logger, new ServiceTracker( new MockBundleContext(), "", null )
             {
                 @Override
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
                 public Object getService()
                 {
                     return logService;

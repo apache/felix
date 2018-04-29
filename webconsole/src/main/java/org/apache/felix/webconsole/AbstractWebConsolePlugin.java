@@ -21,9 +21,12 @@ import java.io.*;
 import java.lang.reflect.*;
 import java.net.URL;
 import java.net.URLConnection;
+<<<<<<< HEAD
+=======
 import java.security.AccessController;
 import java.security.PrivilegedActionException;
 import java.security.PrivilegedExceptionAction;
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 import java.util.*;
 
 import javax.servlet.ServletConfig;
@@ -57,6 +60,8 @@ public abstract class AbstractWebConsolePlugin extends HttpServlet
 
     /** The name of the request attribute containing the map of FileItems from the POST request */
     public static final String ATTR_FILEUPLOAD = "org.apache.felix.webconsole.fileupload"; //$NON-NLS-1$
+<<<<<<< HEAD
+=======
     
     /** 
      * The name of the request attribute containing a {@link java.io.File} - upload repository path used by
@@ -74,6 +79,7 @@ public abstract class AbstractWebConsolePlugin extends HttpServlet
      * provided by the bundle context.
      */
     public static final String ATTR_FILEUPLOAD_REPO = "org.apache.felix.webconsole.fileupload.repo"; //$NON-NLS-1$
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 
     /**
      * Web Console Plugin typically consists of servlet and resources such as images,
@@ -207,7 +213,11 @@ public abstract class AbstractWebConsolePlugin extends HttpServlet
     /**
      * Detects whether this request is intended to have the headers and
      * footers of this plugin be rendered or not. This method always returns
+<<<<<<< HEAD
+     * <code>true</true> and may be overwritten by plugins to detect
+=======
      * <code>true</code> and may be overwritten by plugins to detect
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
      * from the actual request, whether or not to render the header and
      * footer.
      *
@@ -488,7 +498,12 @@ public abstract class AbstractWebConsolePlugin extends HttpServlet
             }
         }
     }
+<<<<<<< HEAD
+
+
+=======
     
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     /**
      * If the request addresses a resource which may be served by the
      * <code>getResource</code> method of the
@@ -507,6 +522,9 @@ public abstract class AbstractWebConsolePlugin extends HttpServlet
      *
      * @throws IOException If an error occurs accessing or spooling the resource.
      */
+<<<<<<< HEAD
+    private final boolean spoolResource( HttpServletRequest request, HttpServletResponse response ) throws IOException
+=======
     private final boolean spoolResource(final HttpServletRequest request, 
         final HttpServletResponse response) throws IOException
     {
@@ -537,6 +555,7 @@ public abstract class AbstractWebConsolePlugin extends HttpServlet
     }
 
     final boolean spoolResource0( HttpServletRequest request, HttpServletResponse response ) throws IOException
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     {
         // no resource if no resource accessor
         Method getResourceMethod = getGetResourceMethod();
@@ -737,9 +756,12 @@ public abstract class AbstractWebConsolePlugin extends HttpServlet
             SortedMap categoryMap = sortMenuCategoryMap( menuMap, appRoot );
             pw.println( "<ul id=\"navmenu\">" );
             renderSubmenu( categoryMap, appRoot, pw, 0 );
+<<<<<<< HEAD
+=======
             pw.println("<li class=\"logoutButton navMenuItem-0\">");
             pw.println("<a href=\"" + appRoot + "/logout\">${logout}</a>");
             pw.println("</li>");
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
             pw.println( "</ul>" );
         }
     }

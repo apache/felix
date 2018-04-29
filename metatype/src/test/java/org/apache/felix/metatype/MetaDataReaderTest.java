@@ -155,6 +155,92 @@ public class MetaDataReaderTest extends TestCase
         }
     }
 
+    public void testOptionalAttributesInMetaData() throws IOException, XmlPullParserException
+    {
+        String name = "myattribute";
+        String value = "working";
+        String localization = "test";
+        String empty = "<MetaData " + name + "=\"" + value + "\" localization=\"" + localization + "\" />";
+        MetaData mti = read( empty );
+
+        assertEquals( localization, mti.getLocalePrefix() );
+        assertNull( mti.getObjectClassDefinitions() );
+        assertNotNull( mti.getOptionalAttributes() );
+        assertEquals( 1, mti.getOptionalAttributes().size() );
+        assertEquals( value, mti.getOptionalAttributes().get( name ) );
+    }
+
+
+    public void testWithNamespace_1_0_0() throws IOException, XmlPullParserException
+    {
+        String empty = "<metatype:MetaData xmlns:metatype=\"http://www.osgi.org/xmlns/metatype/v1.0.0\" "
+            + "xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" ></metatype:MetaData>";
+        MetaData mti = read( empty );
+
+        assertNotNull( mti );
+        assertNull( mti.getLocalePrefix() );
+        assertNull( mti.getObjectClassDefinitions() );
+    }
+
+
+    public void testWithNamespace_1_1_0() throws IOException, XmlPullParserException
+    {
+        String empty = "<metatype:MetaData xmlns:metatype=\"http://www.osgi.org/xmlns/metatype/v1.1.0\" "
+            + "xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" ></metatype:MetaData>";
+        MetaData mti = read( empty );
+
+        assertNotNull( mti );
+        assertNull( mti.getLocalePrefix() );
+        assertNull( mti.getObjectClassDefinitions() );
+    }
+
+
+    public void testWithNamespace_1_2_0() throws IOException, XmlPullParserException
+    {
+        String empty = "<metatype:MetaData xmlns:metatype=\"http://www.osgi.org/xmlns/metatype/v1.1.0\" "
+            + "xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" ></metatype:MetaData>";
+        MetaData mti = read( empty );
+
+        assertNotNull( mti );
+        assertNull( mti.getLocalePrefix() );
+        assertNull( mti.getObjectClassDefinitions() );
+    }
+
+
+    public void testWithInvalidNamespaceUri()
+    {
+        String empty = "<metatype:MetaData xmlns:metatype=\"http://www.osgi.org/xmlns/datatype/v1.0.0\" "
+            + "xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" ></metatype:MetaData>";
+
+        try
+        {
+            read( empty );
+            fail( "Parse failure expected for unsupported namespace URI" );
+        }
+        catch ( IOException e )
+        {
+            // expected due to unsupported namespace URI
+        }
+    }
+
+
+    public void testWithInvalidNamespaceName()
+    {
+        String empty = "<datatype:MetaData xmlns:metatype=\"http://www.osgi.org/xmlns/metatype/v1.0.0\" "
+            + "xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" ></datatype:MetaData>";
+
+        try
+        {
+            read( empty );
+            fail( "Parse failure expected for undefined namespace prefix" );
+        }
+        catch ( IOException e )
+        {
+            // expected due to undefined namespace prefix used
+        }
+    }
+
+
     public void testEmptyLocalization() throws IOException, XmlPullParserException
     {
         String testLoc = "OSGI-INF/folder/base";
@@ -430,7 +516,12 @@ public class MetaDataReaderTest extends TestCase
         assertEquals("c", defaultValue[2]);
     }
 
+<<<<<<< HEAD
+
+    private MetaData read( String data ) throws IOException
+=======
     private MetaData read(String data) throws IOException
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     {
         InputStream input = new ByteArrayInputStream(data.getBytes("UTF-8"));
         return reader.parse(input);

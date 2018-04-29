@@ -35,8 +35,13 @@
  */
 
 // This document is an experimental draft to enable interoperability
+<<<<<<< HEAD
+// between bundle repositories. There is currently no commitment to 
+// turn this draft into an official specification.  
+=======
 // between bundle repositories. There is currently no commitment to
 // turn this draft into an official specification.
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 package org.apache.felix.bundlerepository;
 
 import java.util.Map;
@@ -44,11 +49,19 @@ import java.util.Map;
 /**
  * A named set of properties representing some capability that is provided by
  * its owner.
+<<<<<<< HEAD
+ * 
+=======
  *
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
  * @version $Revision: 1.3 $
  */
 public interface Capability
 {
+<<<<<<< HEAD
+
+=======
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     String BUNDLE = "bundle";
     String FRAGMENT = "fragment";
     String PACKAGE = "package";
@@ -57,19 +70,36 @@ public interface Capability
 
     /**
      * Return the name of the capability.
+<<<<<<< HEAD
+     * 
+=======
      *
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
      */
     String getName();
 
     /**
      * Return the properties of this capability
+<<<<<<< HEAD
+     * 
+=======
      *
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
      * @return
      */
     Property[] getProperties();
 
     /**
      * Return the map of properties.
+<<<<<<< HEAD
+     * 
+     * @return a Map<String,Object>
+     */
+    Map getPropertiesAsMap();
+
+
+
+=======
      *
      * @return a Map<String,Object>
      */
@@ -82,4 +112,5 @@ public interface Capability
      * @return a Map of directives or an empty map there are no directives.
      */
     Map<String, String> getDirectives();
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 }

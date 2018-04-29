@@ -90,9 +90,14 @@ class MemoryUsagePanel extends AbstractWebConsolePlugin implements Configuration
                 filesBuf.append('{');
                 filesBuf.append("'name':'").append(file.getName());
                 filesBuf.append("',").append("'date':").append(file.lastModified());
+<<<<<<< HEAD
+                totalSize += support.formatNumber(filesBuf, "size", file.length());
+                filesBuf.append("},");
+=======
                 support.formatNumber(filesBuf, "size", file.length());
                 filesBuf.append("},");
                 totalSize += file.length();
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
             }
 
             statusBuf.append("'files':").append(files.length);

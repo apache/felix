@@ -50,7 +50,11 @@ public class TestProvidedServiceArchitecture extends Common {
         ServiceReference arch_ref = ipojoHelper.getServiceReferenceByName(Architecture.class.getName(), compName);
         assertNotNull("Architecture not available", arch_ref);
 
+<<<<<<< HEAD
+        Architecture arch = (Architecture) osgiHelper.getServiceObject(arch_ref);
+=======
         Architecture arch = (Architecture) osgiHelper.getRawServiceObject(arch_ref);
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         InstanceDescription id = arch.getInstanceDescription();
 
         assertEquals("Check component instance name (" + id.getName() + ")", id.getName(), compName);
@@ -102,7 +106,11 @@ public class TestProvidedServiceArchitecture extends Common {
         ServiceReference arch_ref = ipojoHelper.getServiceReferenceByName(Architecture.class.getName(), compName);
         assertNotNull("Architecture not available", arch_ref);
 
+<<<<<<< HEAD
+        Architecture arch = (Architecture) osgiHelper.getServiceObject(arch_ref);
+=======
         Architecture arch = (Architecture) osgiHelper.getRawServiceObject(arch_ref);
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         InstanceDescription id = arch.getInstanceDescription();
 
         assertEquals("Check component instance name (" + id.getName() + ")", id.getName(), compName);
@@ -149,7 +157,11 @@ public class TestProvidedServiceArchitecture extends Common {
         ServiceReference arch_ref = ipojoHelper.getServiceReferenceByName(Architecture.class.getName(), compName);
         assertNotNull("Architecture not available", arch_ref);
 
+<<<<<<< HEAD
+        Architecture arch = (Architecture) osgiHelper.getServiceObject(arch_ref);
+=======
         Architecture arch = (Architecture) osgiHelper.getRawServiceObject(arch_ref);
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         InstanceDescription id = arch.getInstanceDescription();
 
         assertEquals("Check component instance name (" + id.getName() + ")", id.getName(), compName);
@@ -193,7 +205,11 @@ public class TestProvidedServiceArchitecture extends Common {
         ServiceReference arch_ref = ipojoHelper.getServiceReferenceByName(Architecture.class.getName(), compName);
         assertNotNull("Architecture not available", arch_ref);
 
+<<<<<<< HEAD
+        Architecture arch = (Architecture) osgiHelper.getServiceObject(arch_ref);
+=======
         Architecture arch = (Architecture) osgiHelper.getRawServiceObject(arch_ref);
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         InstanceDescription id = arch.getInstanceDescription();
 
         assertEquals("Check component instance name (" + id.getName() + ")", id.getName(), compName);

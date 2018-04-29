@@ -35,7 +35,11 @@ import org.osgi.framework.Version;
 public class Util
 {
 
+<<<<<<< HEAD
+    // FIXME: from the constants below only PARAM_ACTION is used, consider removeal of others?
+=======
     // FIXME: from the constants below only PARAM_ACTION is used, consider removal of others?
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 
     /** web apps subpage */
     public static final String PAGE_WEBAPPS = "/webapps";
@@ -101,12 +105,21 @@ public class Util
      */
     public static String getHeaderValue( Bundle bundle, String headerName )
     {
+<<<<<<< HEAD
+       Object value = bundle.getHeaders().get(headerName);
+       if ( value != null )
+       {
+           return value.toString();
+       }
+       return "";
+=======
         Object value = bundle.getHeaders().get(headerName);
         if ( value != null )
         {
             return value.toString();
         }
         return "";
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     }
 
     /**
@@ -142,12 +155,20 @@ public class Util
         }
         return l;
     }
+<<<<<<< HEAD
+    
+=======
 
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     /**
      * This method expects a locale string in format language_COUNTRY, or
      * language. The method will determine which is the correct form of locale
      * string and construct a <code>Locale</code> object.
+<<<<<<< HEAD
+     * 
+=======
      *
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
      * @param locale the locale string, if <code>null</code> - default locale is
      *          returned
      * @return a locale object

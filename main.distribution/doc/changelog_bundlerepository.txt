@@ -1,3 +1,5 @@
+<<<<<<< HEAD
+=======
 
 Changes from 2.0.4 to 2.0.6
 ---------------------------
@@ -96,6 +98,7 @@ Changes from 1.4.3 to 1.6.0
     * [FELIX-2211] - Simplify the repository parser based on KXml2
     * [FELIX-2215] - Refactor bundlerepository and maven bundle plugin obr data model
 
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 Changes from 1.4.2 to 1.4.3
 ---------------------------
 

@@ -20,28 +20,42 @@ package org.apache.felix.gogo.runtime;
 
 import java.io.EOFException;
 
+<<<<<<< HEAD
+import junit.framework.TestCase;
+=======
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 
 /*
  * Test features of the new parser/tokenizer, many of which are not supported
  * by the original parser.
  */
+<<<<<<< HEAD
+public class TestParser2 extends TestCase
+{
+=======
 public class TestParser2 extends AbstractParserTest
 {
     @Test
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     public void testComment() throws Exception
     {
         Context c = new Context();
         c.addCommand("echo", this);
 
+<<<<<<< HEAD
+        assertEquals("file://wibble#tag", c.execute("echo file://wibble#tag"));
+        assertEquals("file:", c.execute("echo file: //wibble#tag"));
+=======
         c.currentDir(null);
 
         assertEquals("file://wibble#tag", c.execute("echo file://wibble#tag"));
 //CHANGE        assertEquals("file:", c.execute("echo file: //wibble#tag"));
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 
         assertEquals("PWD/*.java", c.execute("echo PWD/*.java"));
         try
@@ -59,10 +73,16 @@ public class TestParser2 extends AbstractParserTest
         // quote in comment in closure
         assertEquals("ok", c.execute("x = { // can't quote\necho ok\n}; x"));
         assertEquals("ok", c.execute("x = {\n// can't quote\necho ok\n}; x"));
+<<<<<<< HEAD
+        assertEquals("ok", c.execute("x = {// can't quote\necho ok\n}; x"));
+    }
+
+=======
 //CHANGE        assertEquals("ok", c.execute("x = {// can't quote\necho ok\n}; x"));
     }
 
     @Test
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     public void testCoercion() throws Exception
     {
         Context c = new Context();
@@ -71,7 +91,10 @@ public class TestParser2 extends AbstractParserTest
         assertEquals("null x", c.execute("echo $expandsToNull x"));
     }
 
+<<<<<<< HEAD
+=======
     @Test
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     public void testStringExecution() throws Exception
     {
         Context c = new Context();

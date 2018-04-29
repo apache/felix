@@ -1,5 +1,9 @@
 /*
+<<<<<<< HEAD
+ * Copyright (c) OSGi Alliance (2007, 2012). All Rights Reserved.
+=======
  * Copyright (c) OSGi Alliance (2007, 2013). All Rights Reserved.
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,7 +20,10 @@
 
 package org.osgi.util.tracker;
 
+<<<<<<< HEAD
+=======
 import org.osgi.annotation.versioning.ConsumerType;
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleEvent;
 
@@ -43,10 +50,16 @@ import org.osgi.framework.BundleEvent;
  * 
  * @param <T> The type of the tracked object.
  * @ThreadSafe
+<<<<<<< HEAD
+ * @version $Id: 727e757d2fa2940c88c9b74c8d299de6b3a7d0d0 $
+ * @since 1.4
+ */
+=======
  * @author $Id: 031b2979522768150d23ee70dfe62528432c19f7 $
  * @since 1.4
  */
 @ConsumerType
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 public interface BundleTrackerCustomizer<T> {
 	/**
 	 * A bundle is being added to the {@code BundleTracker}.

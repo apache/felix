@@ -64,7 +64,11 @@ public class TestPropertyModifier extends Common {
         // Not exposed here:
         assertNull("Classes -0", ref.getProperty("classes"));
 
+<<<<<<< HEAD
+        CheckService check = (CheckService) osgiHelper.getServiceObject(ref);
+=======
         CheckService check = (CheckService) osgiHelper.getRawServiceObject(ref);
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         assertTrue(check.check());
 
         // Property exposed now.
@@ -95,7 +99,11 @@ public class TestPropertyModifier extends Common {
         assertEquals("Classes[1] -3", CheckService.class.getName(), str[1].getName());
 
 
+<<<<<<< HEAD
+        check = (CheckService) osgiHelper.getServiceObject(ref);
+=======
         check = (CheckService) osgiHelper.getRawServiceObject(ref);
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         p = check.getProps();
         str2 = (Class[]) p.get("classes");
         assertEquals("Classes size -4", 2, str2.length);

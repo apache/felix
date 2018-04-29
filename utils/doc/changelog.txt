@@ -1,3 +1,5 @@
+<<<<<<< HEAD
+=======
 Changes from 1.10.2 to 1.10.4
 ----------------------------
 ** Bug
@@ -80,6 +82,7 @@ Changes from 1.4.0 to 1.4.2
 ** Improvement
     * [FELIX-4339] - Make the use of escape characters deterministic
 
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 Changes from 1.2.0 to 1.4.0
 ---------------------------
 ** Bug

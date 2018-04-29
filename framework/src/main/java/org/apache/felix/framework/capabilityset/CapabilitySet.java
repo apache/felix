@@ -20,16 +20,60 @@ package org.apache.felix.framework.capabilityset;
 
 import java.lang.reflect.Array;
 import java.lang.reflect.Constructor;
+<<<<<<< HEAD
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.HashSet;
+=======
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
+<<<<<<< HEAD
+import java.util.TreeMap;
+import org.apache.felix.framework.util.SecureAction;
+import org.apache.felix.framework.util.StringComparator;
+import org.apache.felix.framework.wiring.BundleCapabilityImpl;
+import org.osgi.framework.wiring.BundleCapability;
+
+public class CapabilitySet
+{
+    private final Map<String, Map<Object, Set<BundleCapability>>> m_indices;
+    private final Set<BundleCapability> m_capSet = new HashSet<BundleCapability>();
+    private final static SecureAction m_secureAction = new SecureAction();
+
+public void dump()
+{
+    for (Entry<String, Map<Object, Set<BundleCapability>>> entry : m_indices.entrySet())
+    {
+        boolean header1 = false;
+        for (Entry<Object, Set<BundleCapability>> entry2 : entry.getValue().entrySet())
+        {
+            boolean header2 = false;
+            for (BundleCapability cap : entry2.getValue())
+            {
+                if (cap.getRevision().getBundle().getBundleId() != 0)
+                {
+                    if (!header1)
+                    {
+                        System.out.println(entry.getKey() + ":");
+                        header1 = true;
+                    }
+                    if (!header2)
+                    {
+                        System.out.println("   " + entry2.getKey());
+                        header2 = true;
+                    }
+                    System.out.println("      " + cap);
+=======
 import java.util.SortedMap;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
@@ -73,10 +117,29 @@ public class CapabilitySet
                         }
                         System.out.println("      " + cap);
                     }
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
                 }
             }
         }
     }
+<<<<<<< HEAD
+}
+
+    public CapabilitySet(List<String> indexProps, boolean caseSensitive)
+    {
+        m_indices = (caseSensitive)
+            ? new TreeMap<String, Map<Object, Set<BundleCapability>>>()
+            : new TreeMap<String, Map<Object, Set<BundleCapability>>>(
+                new StringComparator(false));
+        for (int i = 0; (indexProps != null) && (i < indexProps.size()); i++)
+        {
+            m_indices.put(
+                indexProps.get(i), new HashMap<Object, Set<BundleCapability>>());
+        }
+    }
+
+    public void addCapability(BundleCapability cap)
+=======
 
     public CapabilitySet(final List<String> indexProps, final boolean caseSensitive)
     {
@@ -92,6 +155,7 @@ public class CapabilitySet
     }
 
     public void addCapability(final BundleCapability cap)
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     {
         m_capSet.add(cap);
 
@@ -106,8 +170,12 @@ public class CapabilitySet
                     value = convertArrayToList(value);
                 }
 
+<<<<<<< HEAD
+                Map<Object, Set<BundleCapability>> index = entry.getValue();
+=======
                 ConcurrentMap<Object, Set<BundleCapability>> index =
                         (ConcurrentMap<Object, Set<BundleCapability>>) entry.getValue();
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 
                 if (value instanceof Collection)
                 {
@@ -126,6 +194,20 @@ public class CapabilitySet
     }
 
     private void indexCapability(
+<<<<<<< HEAD
+        Map<Object, Set<BundleCapability>> index, BundleCapability cap, Object capValue)
+    {
+        Set<BundleCapability> caps = index.get(capValue);
+        if (caps == null)
+        {
+            caps = new HashSet<BundleCapability>();
+            index.put(capValue, caps);
+        }
+        caps.add(cap);
+    }
+
+    public void removeCapability(BundleCapability cap)
+=======
         ConcurrentMap<Object, Set<BundleCapability>> index, BundleCapability cap, Object capValue)
     {
         Set<BundleCapability> caps = Collections.newSetFromMap(new ConcurrentHashMap<BundleCapability, Boolean>());
@@ -136,6 +218,7 @@ public class CapabilitySet
     }
 
     public void removeCapability(final BundleCapability cap)
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     {
         if (m_capSet.remove(cap))
         {
@@ -182,17 +265,29 @@ public class CapabilitySet
         }
     }
 
+<<<<<<< HEAD
+    public Set<BundleCapability> match(SimpleFilter sf, boolean obeyMandatory)
+    {
+        Set<BundleCapability> matches = match(m_capSet, sf);
+=======
     public Set<Capability> match(final SimpleFilter sf, final boolean obeyMandatory)
     {
         final Set<Capability> matches = match(m_capSet, sf);
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         return (obeyMandatory)
             ? matchMandatory(matches, sf)
             : matches;
     }
 
+<<<<<<< HEAD
+    private Set<BundleCapability> match(Set<BundleCapability> caps, SimpleFilter sf)
+    {
+        Set<BundleCapability> matches = new HashSet<BundleCapability>();
+=======
     private Set<Capability> match(Set<Capability> caps, final SimpleFilter sf)
     {
         Set<Capability> matches = Collections.newSetFromMap(new ConcurrentHashMap<Capability, Boolean>());
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 
         if (sf.getOperation() == SimpleFilter.MATCH_ALL)
         {
@@ -204,7 +299,11 @@ public class CapabilitySet
             // For AND we calculate the intersection of each subfilter.
             // We can short-circuit the AND operation if there are no
             // remaining capabilities.
+<<<<<<< HEAD
+            List<SimpleFilter> sfs = (List<SimpleFilter>) sf.getValue();
+=======
             final List<SimpleFilter> sfs = (List<SimpleFilter>) sf.getValue();
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
             for (int i = 0; (caps.size() > 0) && (i < sfs.size()); i++)
             {
                 matches = match(caps, sfs.get(i));
@@ -241,17 +340,27 @@ public class CapabilitySet
                 if (existingCaps != null)
                 {
                     matches.addAll(existingCaps);
+<<<<<<< HEAD
+                    matches.retainAll(caps);
+=======
                     if (caps != m_capSet)
                     {
                         matches.retainAll(caps);
                     }
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
                 }
             }
             else
             {
+<<<<<<< HEAD
+                for (Iterator<BundleCapability> it = caps.iterator(); it.hasNext(); )
+                {
+                    BundleCapability cap = it.next();
+=======
                 for (Iterator<Capability> it = caps.iterator(); it.hasNext(); )
                 {
                     Capability cap = it.next();
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
                     Object lhs = cap.getAttributes().get(sf.getName());
                     if (lhs != null)
                     {
@@ -267,12 +376,20 @@ public class CapabilitySet
         return matches;
     }
 
+<<<<<<< HEAD
+    public static boolean matches(BundleCapability cap, SimpleFilter sf)
+=======
     public static boolean matches(Capability cap, SimpleFilter sf)
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     {
         return matchesInternal(cap, sf) && matchMandatory(cap, sf);
     }
 
+<<<<<<< HEAD
+    private static boolean matchesInternal(BundleCapability cap, SimpleFilter sf)
+=======
     private static boolean matchesInternal(Capability cap, SimpleFilter sf)
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     {
         boolean matched = true;
 
@@ -326,12 +443,21 @@ public class CapabilitySet
         return matched;
     }
 
+<<<<<<< HEAD
+    private static Set<BundleCapability> matchMandatory(
+        Set<BundleCapability> caps, SimpleFilter sf)
+    {
+        for (Iterator<BundleCapability> it = caps.iterator(); it.hasNext(); )
+        {
+            BundleCapability cap = it.next();
+=======
     private static Set<Capability> matchMandatory(
         Set<Capability> caps, SimpleFilter sf)
     {
         for (Iterator<Capability> it = caps.iterator(); it.hasNext(); )
         {
             Capability cap = it.next();
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
             if (!matchMandatory(cap, sf))
             {
                 it.remove();
@@ -340,13 +466,21 @@ public class CapabilitySet
         return caps;
     }
 
+<<<<<<< HEAD
+    private static boolean matchMandatory(BundleCapability cap, SimpleFilter sf)
+=======
     private static boolean matchMandatory(Capability cap, SimpleFilter sf)
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     {
         Map<String, Object> attrs = cap.getAttributes();
         for (Entry<String, Object> entry : attrs.entrySet())
         {
             if (((BundleCapabilityImpl) cap).isAttributeMandatory(entry.getKey())
+<<<<<<< HEAD
+                && !matchMandatoryAttrbute(entry.getKey(), sf))
+=======
                 && !matchMandatoryAttribute(entry.getKey(), sf))
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
             {
                 return false;
             }
@@ -354,7 +488,11 @@ public class CapabilitySet
         return true;
     }
 
+<<<<<<< HEAD
+    private static boolean matchMandatoryAttrbute(String attrName, SimpleFilter sf)
+=======
     private static boolean matchMandatoryAttribute(String attrName, SimpleFilter sf)
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     {
         if ((sf.getName() != null) && sf.getName().equals(attrName))
         {
@@ -377,7 +515,10 @@ public class CapabilitySet
     }
 
     private static final Class<?>[] STRING_CLASS = new Class[] { String.class };
+<<<<<<< HEAD
+=======
     private static final String VALUE_OF_METHOD_NAME = "valueOf";
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 
     private static boolean compare(Object lhs, Object rhsUnknown, int op)
     {
@@ -385,7 +526,11 @@ public class CapabilitySet
         {
             return false;
         }
+<<<<<<< HEAD
+        
+=======
 
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         // If this is a PRESENT operation, then just return true immediately
         // since we wouldn't be here if the attribute wasn't present.
         if (op == SimpleFilter.PRESENT)
@@ -393,6 +538,8 @@ public class CapabilitySet
             return true;
         }
 
+<<<<<<< HEAD
+=======
         //Need a special case here when lhs is a Version and rhs is a VersionRange
         //Version is comparable so we need to check this first
         if(lhs instanceof Version && op == SimpleFilter.EQ)
@@ -413,6 +560,7 @@ public class CapabilitySet
             }
         }
 
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         // If the type is comparable, then we can just return the
         // result immediately.
         if (lhs instanceof Comparable)
@@ -470,7 +618,11 @@ public class CapabilitySet
                         return false;
                     }
                 case SimpleFilter.APPROX :
+<<<<<<< HEAD
+                    return compareApproximate(((Comparable) lhs), rhs);
+=======
                     return compareApproximate(lhs, rhs);
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
                 case SimpleFilter.SUBSTRING :
                     return SimpleFilter.compareSubstring((List<String>) rhs, (String) lhs);
                 default:
@@ -593,10 +745,13 @@ public class CapabilitySet
             {
                 rhs = new Character(rhsString.charAt(0));
             }
+<<<<<<< HEAD
+=======
             else if(lhs instanceof Version && rhsString.indexOf(',') >= 0)
             {
                 rhs = VersionRange.parse(rhsString);
             }
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
             else
             {
                 // Spec says we should trim number types.
@@ -604,6 +759,11 @@ public class CapabilitySet
                 {
                     rhsString = rhsString.trim();
                 }
+<<<<<<< HEAD
+                Constructor ctor = m_secureAction.getConstructor(lhs.getClass(), STRING_CLASS);
+                m_secureAction.setAccesssible(ctor);
+                rhs = ctor.newInstance(new Object[] { rhsString });
+=======
 
                 try
                 {
@@ -628,6 +788,7 @@ public class CapabilitySet
                     m_secureAction.setAccesssible(ctor);
                     rhs = ctor.newInstance(new Object[] { rhsString });
                 }
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
             }
         }
         catch (Exception ex)
@@ -660,4 +821,8 @@ public class CapabilitySet
         }
         return list;
     }
+<<<<<<< HEAD
 }
+=======
+}
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368

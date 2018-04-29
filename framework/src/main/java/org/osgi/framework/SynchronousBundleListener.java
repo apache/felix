@@ -1,5 +1,9 @@
 /*
+<<<<<<< HEAD
+ * Copyright (c) OSGi Alliance (2001, 2011). All Rights Reserved.
+=======
  * Copyright (c) OSGi Alliance (2001, 2013). All Rights Reserved.
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,8 +20,11 @@
 
 package org.osgi.framework;
 
+<<<<<<< HEAD
+=======
 import org.osgi.annotation.versioning.ConsumerType;
 
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 /**
  * A synchronous {@code BundleEvent} listener. {@code SynchronousBundleListener}
  * is a listener interface that may be implemented by a bundle developer. When a
@@ -59,9 +66,15 @@ import org.osgi.annotation.versioning.ConsumerType;
  * @since 1.1
  * @see BundleEvent
  * @ThreadSafe
+<<<<<<< HEAD
+ * @version $Id: 74246f4ceeba7f9a5ee198048522f93d4691c51a $
+ */
+
+=======
  * @author $Id: 6b50c6c9d8b8b091928495eb036552773284b13a $
  */
 @ConsumerType
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 public interface SynchronousBundleListener extends BundleListener {
 	// This is a marker interface
 }

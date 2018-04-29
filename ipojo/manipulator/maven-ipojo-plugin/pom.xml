@@ -25,7 +25,11 @@
     </parent>
     <modelVersion>4.0.0</modelVersion>
     <artifactId>maven-ipojo-plugin</artifactId>
+<<<<<<< HEAD
+    <version>1.11.1-SNAPSHOT</version>
+=======
     <version>1.12.2-SNAPSHOT</version>
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     <name>Apache Felix iPOJO Maven Plugin</name>
     <packaging>maven-plugin</packaging>
 
@@ -71,10 +75,19 @@
         <dependency>
             <groupId>org.apache.felix</groupId>
             <artifactId>org.apache.felix.ipojo.metadata</artifactId>
+<<<<<<< HEAD
+            <version>1.4.0</version>
+=======
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         </dependency>
         <dependency>
             <groupId>org.apache.felix</groupId>
             <artifactId>org.apache.felix.ipojo.manipulator</artifactId>
+<<<<<<< HEAD
+            <version>${project.version}</version>
+        </dependency>
+    </dependencies>
+=======
         </dependency>
     </dependencies>
 
@@ -90,6 +103,7 @@
         </dependencies>
     </dependencyManagement>
 
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     <build>
 
         <plugins>

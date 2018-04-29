@@ -1,5 +1,9 @@
 /*
+<<<<<<< HEAD
+ * Copyright (c) OSGi Alliance (2000, 2012). All Rights Reserved.
+=======
  * Copyright (c) OSGi Alliance (2000, 2013). All Rights Reserved.
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,8 +20,11 @@
 
 package org.osgi.framework;
 
+<<<<<<< HEAD
+=======
 import org.osgi.annotation.versioning.ConsumerType;
 
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 /**
  * Customizes the starting and stopping of a bundle.
  * <p>
@@ -36,19 +43,32 @@ import org.osgi.annotation.versioning.ConsumerType;
  * {@code BundleActivator}. The form of the Manifest header is:
  * 
  * <p>
+<<<<<<< HEAD
+ * {@code Bundle-Activator: <i>class-name</i>}
+ * 
+ * <p>
+ * where {@code <i>class-name</i>} is a fully qualified Java classname.
+=======
  * {@code Bundle-Activator:} <i>class-name</i>
  * 
  * <p>
  * where <i>class-name</i> is a fully qualified Java classname.
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
  * <p>
  * The specified {@code BundleActivator} class must have a public constructor
  * that takes no parameters so that a {@code BundleActivator} object can be
  * created by {@code Class.newInstance()}.
  * 
  * @NotThreadSafe
+<<<<<<< HEAD
+ * @version $Id: f5b2debe0064ab60669102d0a087feaeab13dc0e $
+ */
+
+=======
  * @author $Id: a9d91a8ae13157f49a6a55b0c7f25b63b6bd00bd $
  */
 @ConsumerType
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 public interface BundleActivator {
 	/**
 	 * Called when this bundle is started so the Framework can perform the

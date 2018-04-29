@@ -123,7 +123,11 @@ public class ADTest extends TestCase
     public void testSpaces()
     {
         String value = "Hello World";
+<<<<<<< HEAD
+        String listString = BLANK + value + BLANK + "," + BLANK + value + BLANK + "," +value;
+=======
         String listString = BLANK + value + BLANK + "," + BLANK + value + BLANK + "," + value;
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         String[] list = AD.splitList(listString);
         assertNotNull(list);
         assertEquals(3, list.length);
@@ -157,7 +161,10 @@ public class ADTest extends TestCase
         assertEquals(AttributeDefinition.INTEGER, AD.toType("Integer"));
         assertEquals(AttributeDefinition.BYTE, AD.toType("Byte"));
         assertEquals(AttributeDefinition.CHARACTER, AD.toType("Char"));
+<<<<<<< HEAD
+=======
         assertEquals(AttributeDefinition.CHARACTER, AD.toType("Character"));
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         assertEquals(AttributeDefinition.BOOLEAN, AD.toType("Boolean"));
         assertEquals(AttributeDefinition.SHORT, AD.toType("Short"));
         assertEquals(AttributeDefinition.PASSWORD, AD.toType("Password"));
@@ -206,6 +213,16 @@ public class ADTest extends TestCase
     }
 
     /**
+<<<<<<< HEAD
+     * FELIX-3884 : if an AD has options, default values must be in the option
+     * values.
+     */
+    public void testOptionsAndDefaultValues()
+    {
+        final AD ad = new AD();
+        ad.setType("String");
+        final Map options = new HashMap();
+=======
      * FELIX-3884 : if an AD has options, default values must be in the option values.
      */
     public void testOptionsAndDefaultValues()
@@ -216,10 +233,30 @@ public class ADTest extends TestCase
         ad.setRequired(false);
 
         Map options = new HashMap();
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         options.put("A", "L-A");
         options.put("B", "L-B");
         ad.setOptions(options);
 
+<<<<<<< HEAD
+        ad.setDefaultValue(new String[] {"A", "B"});
+        equalsArray(new String[] {"A", "B"}, ad.getDefaultValue());
+
+        ad.setDefaultValue(new String[] {"A", "B", "C"});
+        equalsArray(new String[] {"A", "B"}, ad.getDefaultValue());
+
+        ad.setDefaultValue(new String[] {"X", "Y", "B"});
+        equalsArray(new String[] {"B"}, ad.getDefaultValue());
+
+        ad.setDefaultValue(new String[] {"X", "Y", "Z"});
+        assertNull(ad.getDefaultValue());
+    }
+
+    private void equalsArray(String[] a, String[] b)
+    {
+        assertEquals(a.length, b.length);
+        for(int i=0; i<a.length;i++)
+=======
         ad.setDefaultValue("A,B");
         assertArrayEquals(new String[] { "A", "B" }, ad.getDefaultValue());
 
@@ -295,6 +332,7 @@ public class ADTest extends TestCase
     {
         assertEquals(a.length, b.length);
         for (int i = 0; i < a.length; i++)
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         {
             assertEquals(a[i], b[i]);
         }

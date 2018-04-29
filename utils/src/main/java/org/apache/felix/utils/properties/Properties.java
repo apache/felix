@@ -32,11 +32,17 @@ import java.net.URL;
 import java.security.AccessController;
 import java.security.PrivilegedAction;
 import java.util.AbstractMap;
+<<<<<<< HEAD
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Enumeration;
+=======
 import java.util.AbstractSet;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Enumeration;
 import java.util.Iterator;
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
@@ -68,7 +74,11 @@ public class Properties extends AbstractMap<String, String> {
      * The default encoding (ISO-8859-1 as specified by
      * http://java.sun.com/j2se/1.5.0/docs/api/java/util/Properties.html)
      */
+<<<<<<< HEAD
+    private static final String DEFAULT_ENCODING = "ISO-8859-1";
+=======
     static final String DEFAULT_ENCODING = "ISO-8859-1";
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 
     /** Constant for the platform specific line separator.*/
     private static final String LINE_SEPARATOR = AccessController.doPrivileged(new PrivilegedAction<String>() {
@@ -88,14 +98,26 @@ public class Properties extends AbstractMap<String, String> {
     private List<String> header;
     private List<String> footer;
     private File location;
+<<<<<<< HEAD
+    private BundleContext context;
+=======
     private InterpolationHelper.SubstitutionCallback callback;
     boolean substitute = true;
     boolean typed;
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 
     public Properties() {
     }
 
     public Properties(File location) throws IOException {
+<<<<<<< HEAD
+      this(location, null);
+    }
+
+    public Properties(File location, BundleContext context) throws IOException {
+        this.location = location;
+        this.context = context;
+=======
       this(location, (InterpolationHelper.SubstitutionCallback) null);
     }
 
@@ -106,10 +128,13 @@ public class Properties extends AbstractMap<String, String> {
     public Properties(File location, InterpolationHelper.SubstitutionCallback callback) throws IOException {
         this.location = location;
         this.callback = callback;
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         if(location.exists())
             load(location);
     }
 
+<<<<<<< HEAD
+=======
     public Properties(boolean substitute) {
         this.substitute = substitute;
     }
@@ -119,6 +144,7 @@ public class Properties extends AbstractMap<String, String> {
         this.substitute = substitute;
     }
 
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     public void load(File location) throws IOException {
         InputStream is = new FileInputStream(location);
         try {
@@ -142,7 +168,11 @@ public class Properties extends AbstractMap<String, String> {
     }
 
     public void load(Reader reader) throws IOException {
+<<<<<<< HEAD
+        loadLayout(reader);
+=======
         loadLayout(reader, false);
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     }
 
     public void save() throws IOException {
@@ -163,7 +193,11 @@ public class Properties extends AbstractMap<String, String> {
     }
 
     public void save(Writer writer) throws IOException {
+<<<<<<< HEAD
+        saveLayout(writer);
+=======
         saveLayout(writer, typed);
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     }
 
     /**
@@ -172,7 +206,11 @@ public class Properties extends AbstractMap<String, String> {
      *
      * @param os an output stream.
      * @param comment this parameter is ignored as this Properties
+<<<<<<< HEAD
+     * @throws IOException
+=======
      * @throws IOException If storing fails
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
      */
     public void store(OutputStream os, String comment) throws IOException {
         this.save(os);
@@ -195,7 +233,11 @@ public class Properties extends AbstractMap<String, String> {
      *
      * @param key the property key.
      * @param defaultValue a default value.
+<<<<<<< HEAD
+     * @return
+=======
      * @return The property value of the default value
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
      */
     public String getProperty(String key, String defaultValue) {
         if (this.get(key) != null)
@@ -205,6 +247,9 @@ public class Properties extends AbstractMap<String, String> {
 
     @Override
     public Set<Entry<String, String>> entrySet() {
+<<<<<<< HEAD
+        return storage.entrySet();
+=======
         return new AbstractSet<Entry<String, String>>() {
             @Override
             public Iterator<Entry<String, String>> iterator() {
@@ -245,6 +290,7 @@ public class Properties extends AbstractMap<String, String> {
                 return storage.size();
             }
         };
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     }
 
     /**
@@ -281,14 +327,34 @@ public class Properties extends AbstractMap<String, String> {
         return old;
     }
 
+<<<<<<< HEAD
+=======
     void putAllSubstituted(Map<? extends String, ? extends String> m) {
         storage.putAll(m);
     }
 
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     public String put(String key, List<String> commentLines, List<String> valueLines) {
         commentLines = new ArrayList<String>(commentLines);
         valueLines = new ArrayList<String>(valueLines);
         String escapedKey = escapeKey(key);
+<<<<<<< HEAD
+        int lastLine = valueLines.size() - 1;
+        if (valueLines.isEmpty()) {
+            valueLines.add(escapedKey + "=");
+        } else if (!valueLines.get(0).trim().startsWith(escapedKey)) {
+            valueLines.set(0, escapedKey + " = " + escapeJava(valueLines.get(0)) + (0 < lastLine? "\\": ""));
+        }
+        for (int i = 1; i < valueLines.size(); i++) {
+            valueLines.set(i, escapeJava(valueLines.get(i)) + (i < lastLine? "\\": ""));
+        }
+        StringBuilder value = new StringBuilder();
+        for (String line: valueLines) {
+            value.append(line);
+        }
+        this.layout.put(key, new Layout(commentLines, valueLines));
+        return storage.put(key, unescapeJava(value.toString()));
+=======
         StringBuilder sb = new StringBuilder();
         int lastLine = valueLines.size() - 1;
         if (valueLines.isEmpty()) {
@@ -316,6 +382,7 @@ public class Properties extends AbstractMap<String, String> {
         String[] property = PropertiesReader.parseProperty(sb.toString());
         this.layout.put(key, new Layout(commentLines, valueLines));
         return storage.put(key, property[1]);
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     }
 
     public String put(String key, List<String> commentLines, String value) {
@@ -328,6 +395,8 @@ public class Properties extends AbstractMap<String, String> {
         return put(key, Collections.singletonList(comment), value);
     }
 
+<<<<<<< HEAD
+=======
     public boolean update(Map<String, String> props) {
         Properties properties;
         if (props instanceof Properties) {
@@ -369,6 +438,7 @@ public class Properties extends AbstractMap<String, String> {
         return modified;
     }
 
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     public List<String> getRaw(String key) {
         if (layout.containsKey(key)) {
             if (layout.get(key).getValueLines() != null) {
@@ -382,6 +452,8 @@ public class Properties extends AbstractMap<String, String> {
         return result;
     }
 
+<<<<<<< HEAD
+=======
     public List<String> getComments(String key) {
         if (layout.containsKey(key)) {
             if (layout.get(key).getCommentLines() != null) {
@@ -391,6 +463,7 @@ public class Properties extends AbstractMap<String, String> {
         return new ArrayList<String>();
     }
 
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     @Override
     public String remove(Object key) {
         Layout l = layout.get(key);
@@ -455,6 +528,13 @@ public class Properties extends AbstractMap<String, String> {
      * @param in the reader to the properties file
      * @throws java.io.IOException if an error occurs
      */
+<<<<<<< HEAD
+    protected void loadLayout(Reader in) throws IOException
+    {
+        PropertiesReader reader = new PropertiesReader(in);
+        while (reader.nextProperty())
+        {
+=======
     protected void loadLayout(Reader in, boolean maybeTyped) throws IOException
     {
         PropertiesReader reader = new PropertiesReader(in, maybeTyped);
@@ -462,6 +542,7 @@ public class Properties extends AbstractMap<String, String> {
         while (reader.nextProperty())
         {
             hasProperty = true;
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
             storage.put(reader.getPropertyName(), reader.getPropertyValue());
             int idx = checkHeaderComment(reader.getCommentLines());
             layout.put(reader.getPropertyName(),
@@ -470,6 +551,16 @@ public class Properties extends AbstractMap<String, String> {
                                     null,
                                new ArrayList<String>(reader.getValueLines())));
         }
+<<<<<<< HEAD
+        footer = new ArrayList<String>(reader.getCommentLines());
+        if(context != null)
+        {
+            InterpolationHelper.performSubstitution(storage, context);
+        }
+        else {
+            InterpolationHelper.performSubstitution(storage);
+        }
+=======
         typed = maybeTyped && reader.typed != null && reader.typed;
         if (!typed) {
             for (Map.Entry<String,String> e : storage.entrySet()) {
@@ -499,6 +590,7 @@ public class Properties extends AbstractMap<String, String> {
             callback = new InterpolationHelper.BundleContextSubstitutionCallback(null);
         }
         InterpolationHelper.performSubstitution(storage, callback);
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     }
 
     /**
@@ -508,9 +600,15 @@ public class Properties extends AbstractMap<String, String> {
      * @param out the writer
      * @throws java.io.IOException if an error occurs
      */
+<<<<<<< HEAD
+    protected void saveLayout(Writer out) throws IOException
+    {
+        PropertiesWriter writer = new PropertiesWriter(out);
+=======
     protected void saveLayout(Writer out, boolean typed) throws IOException
     {
         PropertiesWriter writer = new PropertiesWriter(out, typed);
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         if (header != null)
         {
             for (String s : header)
@@ -531,6 +629,11 @@ public class Properties extends AbstractMap<String, String> {
             }
             if (l != null && l.getValueLines() != null)
             {
+<<<<<<< HEAD
+                for (String s : l.getValueLines())
+                {
+                    writer.writeln(s);
+=======
                 for (int i = 0; i < l.getValueLines().size(); i++)
                 {
                     String s = l.getValueLines().get(i);
@@ -542,6 +645,7 @@ public class Properties extends AbstractMap<String, String> {
                     {
                         writer.writeln(s);
                     }
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
                 }
             }
             else
@@ -707,12 +811,20 @@ public class Properties extends AbstractMap<String, String> {
      * <p>The only difference between Java strings and JavaScript strings
      * is that in JavaScript, a single quote must be escaped.</p>
      *
+<<<<<<< HEAD
+     * <p>Example:
+=======
      * <p>Example:</p>
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
      * <pre>
      * input string: He didn't say, "Stop!"
      * output string: He didn't say, \"Stop!\"
      * </pre>
+<<<<<<< HEAD
+     * </p>
+=======
      *
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
      *
      * @param str  String to escape values in, may be null
      * @return String with escaped values, <code>null</code> if null string input
@@ -862,23 +974,33 @@ public class Properties extends AbstractMap<String, String> {
         /** Stores the value of the last read property.*/
         private String propertyValue;
 
+<<<<<<< HEAD
+=======
         private boolean maybeTyped;
 
         /** Stores if the properties are typed or not */
         Boolean typed;
 
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         /**
          * Creates a new instance of <code>PropertiesReader</code> and sets
          * the underlaying reader and the list delimiter.
          *
          * @param reader the reader
          */
+<<<<<<< HEAD
+        public PropertiesReader(Reader reader)
+=======
         public PropertiesReader(Reader reader, boolean maybeTyped)
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         {
             super(reader);
             commentLines = new ArrayList<String>();
             valueLines = new ArrayList<String>();
+<<<<<<< HEAD
+=======
             this.maybeTyped = maybeTyped;
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         }
 
         /**
@@ -913,19 +1035,34 @@ public class Properties extends AbstractMap<String, String> {
                     continue;
                 }
 
+<<<<<<< HEAD
+=======
                 boolean combine = checkCombineLines(line);
                 if (combine)
                 {
                     line = line.substring(0, line.length() - 1);
                 }
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
                 valueLines.add(line);
                 while (line.length() > 0 && contains(WHITE_SPACE, line.charAt(0)))
                 {
                     line = line.substring(1, line.length());
                 }
+<<<<<<< HEAD
+
+                if (checkCombineLines(line))
+                {
+                    line = line.substring(0, line.length() - 1);
+                    buffer.append(line);
+                }
+                else
+                {
+                    buffer.append(line);
+=======
                 buffer.append(line);
                 if (!combine)
                 {
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
                     break;
                 }
             }
@@ -953,6 +1090,10 @@ public class Properties extends AbstractMap<String, String> {
 
             // parse the line
             String[] property = parseProperty(line);
+<<<<<<< HEAD
+            propertyName = unescapeJava(property[0]);
+            propertyValue = unescapeJava(property[1]);
+=======
             boolean typed = false;
             if (maybeTyped && property[1].length() >= 2) {
                 typed = property[1].matches("\\s*[TILFDXSCBilfdxscb]?(\\[[\\S\\s]*\\]|\\{[\\S\\s]*\\}|\"[\\S\\s]*\")\\s*");
@@ -964,6 +1105,7 @@ public class Properties extends AbstractMap<String, String> {
             }
             propertyName = unescapeJava(property[0]);
             propertyValue = property[1];
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
             return true;
         }
 
@@ -1157,17 +1299,26 @@ public class Properties extends AbstractMap<String, String> {
      */
     public static class PropertiesWriter extends FilterWriter
     {
+<<<<<<< HEAD
+=======
         private boolean typed;
 
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         /**
          * Constructor.
          *
          * @param writer a Writer object providing the underlying stream
          */
+<<<<<<< HEAD
+        public PropertiesWriter(Writer writer)
+        {
+            super(writer);
+=======
         public PropertiesWriter(Writer writer, boolean typed)
         {
             super(writer);
             this.typed = typed;
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         }
 
         /**
@@ -1181,7 +1332,11 @@ public class Properties extends AbstractMap<String, String> {
         {
             write(escapeKey(key));
             write(" = ");
+<<<<<<< HEAD
+            write(escapeJava(value));
+=======
             write(typed ? value : escapeJava(value));
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
             writeln(null);
         }
 
@@ -1241,4 +1396,8 @@ public class Properties extends AbstractMap<String, String> {
 
     } // class Layout
 
+<<<<<<< HEAD
 }
+=======
+}
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368

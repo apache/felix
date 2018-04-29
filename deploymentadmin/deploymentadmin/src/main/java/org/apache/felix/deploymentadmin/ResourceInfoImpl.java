@@ -27,7 +27,7 @@ import org.osgi.service.deploymentadmin.DeploymentException;
  */
 public class ResourceInfoImpl extends AbstractInfo {
 
-    private final String m_resourceProcessor;
+    private String m_resourceProcessor;
 
     /**
      * Create an instance of this class.
@@ -38,21 +38,7 @@ public class ResourceInfoImpl extends AbstractInfo {
      */
     public ResourceInfoImpl(String path, Attributes attributes) throws DeploymentException {
         super(path, attributes);
-
-        String rp = attributes.getValue(RESOURCE_PROCESSOR);
-        if (rp != null && "".equals(rp.trim())) {
-            rp = null;
-        }
-
-        m_resourceProcessor = rp;
-    }
-
-    /**
-     * @return <code>true</code> if this resource needs to be processed by a customizer/resource processor,
-     *         <code>false</code> otherwise.
-     */
-    public boolean isProcessedResource() {
-        return m_resourceProcessor != null;
+        m_resourceProcessor = attributes.getValue(Constants.RESOURCE_PROCESSOR);
     }
 
     /**

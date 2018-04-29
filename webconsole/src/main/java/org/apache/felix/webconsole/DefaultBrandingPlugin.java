@@ -34,7 +34,11 @@ import org.apache.commons.io.IOUtils;
  * <p>
  * This default implementation provides Apache Felix based default branding
  * as follows:
+<<<<<<< HEAD
+ * <table>
+=======
  * <table summary="Web Console Branding Properties">
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
  * <tr><th>Name</th><th>Property Name</th><th>Default Value</th></tr>
  * <tr>
  *  <td>Brand Name</td>

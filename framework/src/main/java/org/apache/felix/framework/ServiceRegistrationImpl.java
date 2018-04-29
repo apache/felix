@@ -33,6 +33,10 @@ import org.apache.felix.framework.util.MapToDictionary;
 import org.apache.felix.framework.util.StringMap;
 import org.apache.felix.framework.util.Util;
 import org.apache.felix.framework.wiring.BundleCapabilityImpl;
+<<<<<<< HEAD
+import org.osgi.framework.*;
+import org.osgi.framework.BundleReference;
+=======
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleReference;
 import org.osgi.framework.Constants;
@@ -41,6 +45,7 @@ import org.osgi.framework.ServiceException;
 import org.osgi.framework.ServiceFactory;
 import org.osgi.framework.ServiceReference;
 import org.osgi.framework.ServiceRegistration;
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 import org.osgi.framework.wiring.BundleCapability;
 import org.osgi.framework.wiring.BundleRevision;
 import org.osgi.framework.wiring.BundleWire;
@@ -60,15 +65,22 @@ class ServiceRegistrationImpl implements ServiceRegistration
     // Service factory interface.
     private volatile ServiceFactory m_factory;
     // Associated property dictionary.
+<<<<<<< HEAD
+    private volatile Map m_propMap = new StringMap();
+=======
     private volatile Map<String, Object> m_propMap = new StringMap();
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     // Re-usable service reference.
     private final ServiceReferenceImpl m_ref;
     // Flag indicating that we are unregistering.
     private volatile boolean m_isUnregistering = false;
+<<<<<<< HEAD
+=======
     // This threadlocal is used to detect cycles.
     private final ThreadLocal<Boolean> m_threadLoopDetection = new ThreadLocal<Boolean>();
 
     private final Object syncObject = new Object();
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 
     public ServiceRegistrationImpl(
         ServiceRegistry registry, Bundle bundle,
@@ -178,8 +190,14 @@ class ServiceRegistrationImpl implements ServiceRegistration
 
         // Case 2.
         if ((m_factory != null)
+<<<<<<< HEAD
+            && (m_factory.getClass().getClassLoader() instanceof BundleReference)
+            && !((BundleReference) m_factory.getClass()
+                .getClassLoader()).getBundle().equals(m_bundle))
+=======
             && (Felix.m_secureAction.getClassLoader(m_factory.getClass()) instanceof BundleReference)
             && !((BundleReference) Felix.m_secureAction.getClassLoader(m_factory.getClass())).getBundle().equals(m_bundle))
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         {
             try
             {
@@ -300,11 +318,27 @@ class ServiceRegistrationImpl implements ServiceRegistration
     private void initializeProperties(Dictionary<String, Object> dict)
     {
         // Create a case-insensitive map for the properties.
+<<<<<<< HEAD
+        Map props = new StringMap();
+=======
         Map<String, Object> props = new StringMap();
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 
         if (dict != null)
         {
             // Make sure there are no duplicate keys.
+<<<<<<< HEAD
+            Enumeration keys = dict.keys();
+            while (keys.hasMoreElements())
+            {
+                Object key = keys.nextElement();
+                if (props.get(key) == null)
+                {
+                    props.put(key, dict.get(key));
+                }
+                else
+                {
+=======
             Enumeration<String> keys = dict.keys();
             while (keys.hasMoreElements())
             {
@@ -315,6 +349,7 @@ class ServiceRegistrationImpl implements ServiceRegistration
                 }
                 else
                 {
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
                     throw new IllegalArgumentException("Duplicate service property: " + key);
                 }
             }
@@ -323,6 +358,8 @@ class ServiceRegistrationImpl implements ServiceRegistration
         // Add the framework assigned properties.
         props.put(Constants.OBJECTCLASS, m_classes);
         props.put(Constants.SERVICE_ID, m_serviceId);
+<<<<<<< HEAD
+=======
         props.put(Constants.SERVICE_BUNDLEID, m_bundle.getBundleId());
         if ( m_factory != null )
         {
@@ -334,6 +371,7 @@ class ServiceRegistrationImpl implements ServiceRegistration
         {
             props.put(Constants.SERVICE_SCOPE, Constants.SCOPE_SINGLETON);
         }
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 
         // Update the service property map.
         m_propMap = props;
@@ -378,7 +416,11 @@ class ServiceRegistrationImpl implements ServiceRegistration
         else
         {
             throw new ServiceException(
+<<<<<<< HEAD
+                "Service factory returned null.", ServiceException.FACTORY_ERROR);
+=======
                 "Service factory returned null. (" + m_factory + ")", ServiceException.FACTORY_ERROR);
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         }
         return svcObj;
     }
@@ -497,7 +539,10 @@ class ServiceRegistrationImpl implements ServiceRegistration
             return ServiceRegistrationImpl.this.getUsingBundles();
         }
 
+<<<<<<< HEAD
+=======
         @Override
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         public String toString()
         {
             String[] ocs = (String[]) getProperty("objectClass");
@@ -757,6 +802,8 @@ class ServiceRegistrationImpl implements ServiceRegistration
             return Collections.EMPTY_SET;
         }
     }
+<<<<<<< HEAD
+=======
 
     boolean currentThreadMarked()
     {
@@ -772,4 +819,5 @@ class ServiceRegistrationImpl implements ServiceRegistration
     {
         m_threadLoopDetection.set(null);
     }
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 }

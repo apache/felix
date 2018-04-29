@@ -161,7 +161,11 @@ public interface WebConsoleConstants
      * {@link AbstractWebConsolePlugin#renderTopNavigation(javax.servlet.http.HttpServletRequest, java.io.PrintWriter)}
      * method does.
      * <p>
+<<<<<<< HEAD
+     * The type of this request attribute is <code>Map<String, String></code>.
+=======
      * The type of this request attribute is <code>Map&lt;String, String&gt;</code>.
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
      *
      * @since 2.0.0
      */

@@ -24,19 +24,32 @@ import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 import java.util.Arrays;
+<<<<<<< HEAD
+import java.util.Formatter;
+
+=======
 
 import org.apache.felix.service.command.Converter;
 import org.apache.felix.service.command.Function;
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.InvalidSyntaxException;
 import org.osgi.framework.ServiceReference;
+<<<<<<< HEAD
+import org.apache.felix.service.command.Converter;
+import org.apache.felix.service.command.Function;
+=======
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 import org.osgi.service.startlevel.StartLevel;
 
 public class Converters implements Converter
 {
     private final BundleContext context;
+<<<<<<< HEAD
+=======
 
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     public Converters(BundleContext context)
     {
         this.context = context;
@@ -67,6 +80,12 @@ public class Converters implements Converter
 
     private CharSequence print(ServiceReference ref)
     {
+<<<<<<< HEAD
+        StringBuilder sb = new StringBuilder();
+        Formatter f = new Formatter(sb);
+
+=======
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         String spid = "";
         Object pid = ref.getProperty("service.pid");
         if (pid != null)
@@ -74,9 +93,16 @@ public class Converters implements Converter
             spid = pid.toString();
         }
 
+<<<<<<< HEAD
+        f.format("%06d %3s %-40s %s", ref.getProperty("service.id"),
+            ref.getBundle().getBundleId(),
+            getShortNames((String[]) ref.getProperty("objectclass")), spid);
+        return sb;
+=======
         return String.format("%06d %3s %-40s %s", ref.getProperty("service.id"),
             ref.getBundle().getBundleId(),
             getShortNames((String[]) ref.getProperty("objectclass")), spid);
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     }
 
     private CharSequence getShortNames(String[] list)
@@ -85,7 +111,11 @@ public class Converters implements Converter
         String del = "";
         for (String s : list)
         {
+<<<<<<< HEAD
+            sb.append(del + getShortName(s));
+=======
             sb.append(del).append(getShortName(s));
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
             del = " | ";
         }
         return sb;
@@ -188,7 +218,11 @@ public class Converters implements Converter
         String s = in.toString();
         if (s.startsWith("(") && s.endsWith(")"))
         {
+<<<<<<< HEAD
+            ServiceReference refs[] = context.getServiceReferences(null, String.format(
+=======
             ServiceReference refs[] = context.getServiceReferences((String) null, String.format(
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
                 "(|(service.id=%s)(service.pid=%s))", in, in));
             if (refs != null && refs.length > 0)
             {
@@ -196,7 +230,11 @@ public class Converters implements Converter
             }
         }
 
+<<<<<<< HEAD
+        ServiceReference refs[] = context.getServiceReferences(null, String.format(
+=======
         ServiceReference refs[] = context.getServiceReferences((String) null, String.format(
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
             "(|(service.id=%s)(service.pid=%s))", in, in));
         if (refs != null && refs.length > 0)
         {

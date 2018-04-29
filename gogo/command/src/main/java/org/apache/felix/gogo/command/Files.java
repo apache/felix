@@ -21,16 +21,27 @@ package org.apache.felix.gogo.command;
 import java.io.File;
 import java.io.FileFilter;
 import java.io.IOException;
+<<<<<<< HEAD
+=======
 import java.net.URI;
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 import java.util.ArrayList;
 import java.util.List;
 import org.apache.felix.service.command.CommandSession;
 import org.apache.felix.service.command.Descriptor;
 import org.osgi.framework.BundleContext;
+<<<<<<< HEAD
+
+public class Files
+{
+    private static final String CWD = "_cwd";
+
+=======
 import static org.apache.felix.gogo.command.Util.CWD;
 
 public class Files
 {
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     private final BundleContext m_bc;
 
     public Files(BundleContext bc)
@@ -68,11 +79,15 @@ public class Files
         {
             return cwd;
         }
+<<<<<<< HEAD
+        cwd = new File(cwd, dir);
+=======
 
         URI curUri = cwd.toURI();
         URI newUri = curUri.resolve(dir);
 
         cwd = new File(newUri);
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         if (!cwd.exists())
         {
             throw new IOException("Directory does not exist");
@@ -147,8 +162,13 @@ public class Files
 
     public static List<String> parseSubstring(String value)
     {
+<<<<<<< HEAD
+        List<String> pieces = new ArrayList();
+        StringBuffer ss = new StringBuffer();
+=======
         List<String> pieces = new ArrayList<>();
         StringBuilder ss = new StringBuilder();
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         // int kind = SIMPLE; // assume until proven otherwise
         boolean wasStar = false; // indicates last piece was a star
         boolean leftstar = false; // track if the initial piece is a star
@@ -265,7 +285,18 @@ loop:   for (int i = 0; i < len; i++)
             // string ends with it.
             if (i == len - 1)
             {
+<<<<<<< HEAD
+                if (s.endsWith(piece))
+                {
+                    result = true;
+                }
+                else
+                {
+                    result = false;
+                }
+=======
                 result = s.endsWith(piece);
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
                 break loop;
             }
 
@@ -287,4 +318,8 @@ loop:   for (int i = 0; i < len; i++)
 
         return result;
     }
+<<<<<<< HEAD
 }
+=======
+}
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368

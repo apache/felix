@@ -91,7 +91,11 @@ public class TestDynamicProps extends Common {
         }
 
         // Invoke
+<<<<<<< HEAD
+        FooService fs = (FooService) osgiHelper.getServiceObject(sr);
+=======
         FooService fs = (FooService) osgiHelper.getRawServiceObject(sr);
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         assertTrue("invoke fs", fs.foo());
 
         // Re-check the property (change)
@@ -153,7 +157,11 @@ public class TestDynamicProps extends Common {
         }
 
         // Invoke
+<<<<<<< HEAD
+        FooService fs = (FooService) osgiHelper.getServiceObject(sr);
+=======
         FooService fs = (FooService) osgiHelper.getRawServiceObject(sr);
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         assertTrue("invoke fs", fs.foo());
 
         // Re-check the property (change)
@@ -215,7 +223,11 @@ public class TestDynamicProps extends Common {
         }
 
         // Invoke
+<<<<<<< HEAD
+        FooService fs = (FooService) osgiHelper.getServiceObject(sr);
+=======
         FooService fs = (FooService) osgiHelper.getRawServiceObject(sr);
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         assertTrue("invoke fs", fs.foo());
 
         // Re-check the property (change)
@@ -266,7 +278,11 @@ public class TestDynamicProps extends Common {
         }
 
         // Invoke
+<<<<<<< HEAD
+        FooService fs = (FooService) osgiHelper.getServiceObject(sr);
+=======
         FooService fs = (FooService) osgiHelper.getRawServiceObject(sr);
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         assertTrue("invoke fs", fs.foo());
 
         // Re-check the property (change)

@@ -23,13 +23,21 @@
     <parent>
         <groupId>org.apache.felix</groupId>
         <artifactId>felix-parent</artifactId>
+<<<<<<< HEAD
+        <version>2</version>
+=======
         <version>4</version>
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         <relativePath>../../../pom/pom.xml</relativePath>
     </parent>
 
     <artifactId>org.apache.felix.webconsole.plugins.packageadmin</artifactId>
     <packaging>bundle</packaging>
+<<<<<<< HEAD
+    <version>1.0.1-SNAPSHOT</version>
+=======
     <version>1.0.5-SNAPSHOT</version>
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 
     <name>Apache Felix Web Console Package Admin Service Plugin</name>
     <description>
@@ -51,6 +59,22 @@
     </scm>
 
     <build>
+<<<<<<< HEAD
+		<!-- add UTF-8-to-ISO translated resources -->
+		<resources>
+			<resource>
+				<directory>${basedir}/src/main/resources</directory>
+			</resource>
+			<resource>
+				<directory>target/classes</directory>
+				<includes>
+					<include>OSGI-INF/**</include>
+				</includes>
+				<filtering>false</filtering>
+			</resource>
+		</resources>
+=======
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 
         <plugins>
 			<!-- translate UTF-8 encoded properties files to ISO-8859-1 -->
@@ -83,6 +107,15 @@
                         <Private-Package>
                             org.apache.felix.webconsole.plugins.packageadmin.*
                         </Private-Package>
+<<<<<<< HEAD
+                        <Bundle-Activator>
+                            org.apache.felix.webconsole.plugins.packageadmin.internal.Activator
+                        </Bundle-Activator>
+                    </instructions>
+                </configuration>
+            </plugin>
+			<plugin>
+=======
                         <Embed-Dependency>
                             org.apache.felix.utils;inline=org/apache/felix/utils/manifest/*,
                             org.apache.felix.utils;inline=org/apache/felix/utils/json/JSONWriter*
@@ -97,6 +130,7 @@
                 </configuration>
             </plugin>
             <plugin>
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
                 <groupId>org.apache.rat</groupId>
                 <artifactId>apache-rat-plugin</artifactId>
                 <configuration>
@@ -115,7 +149,11 @@
         <dependency>
             <groupId>org.osgi</groupId>
             <artifactId>org.osgi.core</artifactId>
+<<<<<<< HEAD
+            <version>4.0.0</version>
+=======
             <version>4.3.1</version>
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
             <scope>provided</scope>
         </dependency>
         <dependency>
@@ -125,12 +163,15 @@
             <scope>provided</scope>
         </dependency>
         <dependency>
+<<<<<<< HEAD
+=======
             <groupId>org.apache.felix</groupId>
             <artifactId>org.apache.felix.utils</artifactId>
             <version>1.9.0</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
             <groupId>javax.servlet</groupId>
             <artifactId>servlet-api</artifactId>
             <version>2.3</version>
@@ -142,6 +183,18 @@
             <version>1.4</version>
             <scope>provided</scope>
         </dependency>
+<<<<<<< HEAD
+		<dependency>
+			<groupId>org.apache.felix</groupId>
+			<artifactId>org.apache.felix.webconsole</artifactId>
+			<version>3.1.8</version>
+			<scope>provided</scope>
+		</dependency>
+        <dependency>
+            <groupId>org.json</groupId>
+            <artifactId>json</artifactId>
+            <version>20070829</version>
+=======
         <dependency>
             <groupId>org.apache.felix</groupId>
             <artifactId>org.apache.felix.webconsole</artifactId>
@@ -152,6 +205,7 @@
             <groupId>org.apache.felix</groupId>
             <artifactId>org.apache.felix.inventory</artifactId>
             <version>1.0.0</version>
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
             <scope>provided</scope>
         </dependency>
     </dependencies>

@@ -22,7 +22,11 @@ public interface FelixConstants extends org.osgi.framework.Constants
 {
     String SYSTEM_BUNDLE_SYMBOLICNAME = "org.apache.felix.framework";
     // Framework constants and values.
+<<<<<<< HEAD
+    String FRAMEWORK_VERSION_VALUE = "1.5";
+=======
     String FRAMEWORK_VERSION_VALUE = "1.8";
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     String FRAMEWORK_VENDOR_VALUE = "Apache Software Foundation";
 
     // Framework constants and values.
@@ -51,11 +55,14 @@ public interface FelixConstants extends org.osgi.framework.Constants
     String IMPLICIT_BOOT_DELEGATION_PROP = "felix.bootdelegation.implicit";
     String BOOT_CLASSLOADERS_PROP = "felix.bootdelegation.classloaders";
     String USE_LOCALURLS_PROP = "felix.jarurls";
+<<<<<<< HEAD
+=======
     String NATIVE_OS_NAME_ALIAS_PREFIX = "felix.native.osname.alias";
     String NATIVE_PROC_NAME_ALIAS_PREFIX = "felix.native.processor.alias";
     String USE_CACHEDURLS_PROPS = "felix.bundlecodesource.usecachedurls";
     String RESOLVER_PARALLELISM = "felix.resolver.parallelism";
     String USE_PROPERTY_SUBSTITUTION_IN_SYSTEMPACKAGES = "felix.systempackages.substitution";
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 
     // Missing OSGi constant for resolution directive.
     String RESOLUTION_DYNAMIC = "dynamic";
@@ -70,5 +77,8 @@ public interface FelixConstants extends org.osgi.framework.Constants
     String FAKE_URL_PROTOCOL_VALUE = "location:";
     String FELIX_EXTENSION_ACTIVATOR = "Felix-Activator";
     String SECURITY_DEFAULT_POLICY = "felix.security.defaultpolicy";
+<<<<<<< HEAD
+=======
     String FELIX_EXTENSIONS_DISABLE = "felix.extensions.disable";
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 }

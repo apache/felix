@@ -18,12 +18,20 @@
  */
 package org.apache.felix.utils.log;
 
+<<<<<<< HEAD
+=======
 import java.io.PrintStream;
 
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceReference;
 import org.osgi.service.log.LogService;
 
+<<<<<<< HEAD
+import java.io.PrintStream;
+
+=======
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 /**
  * Internal logger to be used in order to avoid a mandatory dependency on OSGi LogService.
  * It first tries to log to a log service implementation if there is one available and then fallback to System out/err
@@ -62,11 +70,14 @@ public class Logger
     }
 
     /**
+<<<<<<< HEAD
+=======
 	 * Logs a message.
 	 * 
 	 * @param level The severity of the message. T
 	 * @param message Human readable string describing the condition or
 	 *        <code>null</code>.
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
      * @see LogService#log(int, String)
      */
     public void log(int level, String message)
@@ -75,6 +86,8 @@ public class Logger
     }
 
     /**
+<<<<<<< HEAD
+=======
 	 * Logs a message.
 	 * 
 	 * @param level The severity of the message. T
@@ -82,6 +95,7 @@ public class Logger
 	 *        <code>null</code>.
 	 * @param exception The exception that reflects the condition or
 	 *        <code>null</code>.
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
      * @see LogService#log(int, String, Throwable)
      */
     public void log(int level, String message, Throwable exception)

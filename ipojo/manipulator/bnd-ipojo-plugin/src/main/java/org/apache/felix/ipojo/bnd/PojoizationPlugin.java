@@ -19,12 +19,20 @@
 
 package org.apache.felix.ipojo.bnd;
 
+<<<<<<< HEAD
+import java.io.File;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+
+=======
 import aQute.bnd.osgi.Analyzer;
 import aQute.bnd.osgi.Jar;
 import aQute.bnd.osgi.Resource;
 import aQute.bnd.service.AnalyzerPlugin;
 import aQute.bnd.service.Plugin;
 import aQute.service.reporter.Reporter;
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 import org.apache.felix.ipojo.manipulator.ManipulationVisitor;
 import org.apache.felix.ipojo.manipulator.Pojoization;
 import org.apache.felix.ipojo.manipulator.ResourceStore;
@@ -32,13 +40,24 @@ import org.apache.felix.ipojo.manipulator.metadata.AnnotationMetadataProvider;
 import org.apache.felix.ipojo.manipulator.metadata.CacheableMetadataProvider;
 import org.apache.felix.ipojo.manipulator.metadata.CompositeMetadataProvider;
 import org.apache.felix.ipojo.manipulator.metadata.FileMetadataProvider;
+<<<<<<< HEAD
+=======
 import org.apache.felix.ipojo.manipulator.util.Classpath;
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 import org.apache.felix.ipojo.manipulator.visitor.check.CheckFieldConsistencyVisitor;
 import org.apache.felix.ipojo.manipulator.visitor.writer.ManipulatedResourcesWriter;
 import org.apache.felix.ipojo.metadata.Element;
 
+<<<<<<< HEAD
+import aQute.bnd.osgi.Analyzer;
+import aQute.bnd.osgi.Resource;
+import aQute.bnd.service.AnalyzerPlugin;
+import aQute.bnd.service.Plugin;
+import aQute.service.reporter.Reporter;
+=======
 import java.io.File;
 import java.util.*;
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 
 /**
  * A {@code BndIpojoPlugin} is ...
@@ -102,6 +121,9 @@ public class PojoizationPlugin implements Plugin, AnalyzerPlugin {
             return false;
         }
 
+<<<<<<< HEAD
+        manipulateComponents(reporter, store, cache);
+=======
         // Compute the classpath to build the classloader.
         List<Jar> jars = analyzer.getClasspath();
         Jar jar = analyzer.getJar();
@@ -117,26 +139,42 @@ public class PojoizationPlugin implements Plugin, AnalyzerPlugin {
         }
         Classpath cp = new Classpath(paths);
         manipulateComponents(reporter, store, cache, cp.createClassLoader());
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 
         int nbComponents = findElements(cache.getMetadatas(), "component").size();
         int nbHandlers = findElements(cache.getMetadatas(), "handler").size();
         this.m_reporter.trace("iPOJO manipulation performed performed in %s ms (%d components, %d handlers).",
+<<<<<<< HEAD
+                               (System.currentTimeMillis() - start),
+                               nbComponents,
+                               nbHandlers);
+
+=======
                 (System.currentTimeMillis() - start),
                 nbComponents,
                 nbHandlers);
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         // Return true if a new run should be performed after the analyze
         return false;
     }
 
+<<<<<<< HEAD
+    protected void manipulateComponents(BndReporter reporter, BndJarResourceStore store, CacheableMetadataProvider cache) {
+=======
     protected void manipulateComponents(BndReporter reporter, BndJarResourceStore store,
                                         CacheableMetadataProvider cache, ClassLoader classLoader) {
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         Pojoization pojoization = new Pojoization(reporter);
         pojoization.disableAnnotationProcessing();
         if (m_useLocalSchemas) {
             pojoization.setUseLocalXSD();
         }
 
+<<<<<<< HEAD
+        pojoization.pojoization(store, cache, createVisitor(store, reporter));
+=======
         pojoization.pojoization(store, cache, createVisitor(store, reporter), classLoader);
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     }
 
     protected CompositeMetadataProvider buildMetadataProvider(Analyzer analyzer, BndReporter reporter, BndJarResourceStore store) {

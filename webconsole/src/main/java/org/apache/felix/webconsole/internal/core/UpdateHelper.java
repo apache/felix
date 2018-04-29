@@ -61,10 +61,13 @@ class UpdateHelper extends BaseUpdateInstallHelper
         return bundle;
     }
 
+<<<<<<< HEAD
+=======
     protected Bundle getTargetBundle() 
     {
         return bundle;
     }
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 
     protected Bundle doRun() throws Exception
     {
@@ -102,6 +105,10 @@ class UpdateHelper extends BaseUpdateInstallHelper
         return null;
     }
 
+<<<<<<< HEAD
+
+=======
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     private boolean updateFromBundleLocation()
     {
         getLog().log( LogService.LOG_DEBUG, "Trying to update with Bundle.update()" );

@@ -23,12 +23,24 @@ import org.apache.felix.ipojo.manipulator.spi.AnnotationVisitorFactory;
 import org.apache.felix.ipojo.manipulator.spi.BindingContext;
 import org.apache.felix.ipojo.metadata.Element;
 import org.objectweb.asm.AnnotationVisitor;
+<<<<<<< HEAD
+import org.objectweb.asm.tree.ClassNode;
+import org.objectweb.asm.tree.FieldNode;
+import org.objectweb.asm.tree.MethodNode;
+
+/**
+* User: guillaume
+* Date: 11/07/13
+* Time: 14:41
+*/
+=======
 
 /**
  * User: guillaume
  * Date: 11/07/13
  * Time: 14:41
  */
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 public class GenericVisitorFactory implements AnnotationVisitorFactory {
     private final String m_name;
     private final String m_namespace;
@@ -40,6 +52,27 @@ public class GenericVisitorFactory implements AnnotationVisitorFactory {
 
     // Need to build a new Element instance for each created visitor
     public AnnotationVisitor newAnnotationVisitor(BindingContext context) {
+<<<<<<< HEAD
+        if (context.getNode() instanceof ClassNode) {
+            return new TypeGenericVisitor(context.getWorkbench(),
+                                          new Element(m_name, m_namespace));
+        } else if (context.getNode() instanceof FieldNode) {
+            return new FieldGenericVisitor(context.getWorkbench(),
+                                           new Element(m_name, m_namespace),
+                                           (FieldNode) context.getNode());
+
+        } else if ((context.getNode() instanceof MethodNode) &&
+                (context.getParameterIndex() == BindingContext.NO_INDEX)) {
+            return new MethodGenericVisitor(context.getWorkbench(),
+                                            new Element(m_name, m_namespace),
+                                            (MethodNode) context.getNode());
+        } else {
+            // last case: method parameter annotation
+            return new ParameterGenericVisitor(context.getWorkbench(),
+                                               new Element(m_name, m_namespace),
+                                               (MethodNode) context.getNode(),
+                                               context.getParameterIndex());
+=======
         if (context.getClassNode() != null) {
             return new TypeGenericVisitor(context.getWorkbench(),
                     new Element(m_name, m_namespace));
@@ -59,6 +92,7 @@ public class GenericVisitorFactory implements AnnotationVisitorFactory {
                     new Element(m_name, m_namespace),
                     context.getMethodNode(),
                     context.getParameterIndex());
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         }
     }
 

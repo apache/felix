@@ -189,11 +189,16 @@ ul.icons li {
 	list-style: none
 }
 /* language selection element */
+<<<<<<< HEAD
+#langSelect { position: absolute;	top: 5px; right: 5px }
+#langSelect img   { display: block; padding: 2px 0 }
+=======
 #langSelect { position: absolute; top: 5px; right: 5px }
 #langSelect img   { display: block; padding: 2px 0 }
 /* logout element */
 .logoutButton { float: right; text-decoration: none }
 
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 
 .filterBox      { float: left; margin-left: 1em }
 .servicesFilter { width: 400px; }

@@ -21,22 +21,34 @@ package org.apache.felix.ipojo.manipulator.metadata.annotation.visitor.stereotyp
 
 import org.apache.felix.ipojo.manipulator.metadata.annotation.model.AnnotationType;
 import org.apache.felix.ipojo.manipulator.metadata.annotation.model.Playback;
+<<<<<<< HEAD
+import org.objectweb.asm.ClassVisitor;
+import org.objectweb.asm.commons.EmptyVisitor;
+=======
 import org.objectweb.asm.AnnotationVisitor;
 import org.objectweb.asm.ClassVisitor;
 import org.objectweb.asm.Opcodes;
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 
 /**
  * User: guillaume
  * Date: 30/05/13
  * Time: 18:55
  */
+<<<<<<< HEAD
+public class TypeStereotypeVisitor extends EmptyVisitor {
+=======
 public class TypeStereotypeVisitor extends AnnotationVisitor {
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 
     private final ClassVisitor m_delegate;
     private final AnnotationType m_annotationType;
 
     public TypeStereotypeVisitor(final ClassVisitor delegate, AnnotationType annotationType) {
+<<<<<<< HEAD
+=======
         super(Opcodes.ASM5);
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         this.m_delegate = delegate;
         m_annotationType = annotationType;
     }

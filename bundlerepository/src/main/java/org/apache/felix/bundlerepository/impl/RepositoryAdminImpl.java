@@ -26,16 +26,25 @@ import java.security.PrivilegedExceptionAction;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
+<<<<<<< HEAD
+import java.util.HashMap;
+=======
 import java.util.LinkedHashMap;
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 import java.util.List;
 import java.util.Map;
 import java.util.StringTokenizer;
 
 import org.apache.felix.bundlerepository.Capability;
 import org.apache.felix.bundlerepository.DataModelHelper;
+<<<<<<< HEAD
+import org.apache.felix.bundlerepository.Requirement;
+import org.apache.felix.bundlerepository.Repository;
+=======
 import org.apache.felix.bundlerepository.Repository;
 import org.apache.felix.bundlerepository.RepositoryAdmin;
 import org.apache.felix.bundlerepository.Requirement;
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 import org.apache.felix.bundlerepository.Resolver;
 import org.apache.felix.bundlerepository.Resource;
 import org.apache.felix.utils.collections.MapToDictionary;
@@ -43,6 +52,11 @@ import org.apache.felix.utils.log.Logger;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Filter;
 import org.osgi.framework.InvalidSyntaxException;
+<<<<<<< HEAD
+import org.apache.felix.bundlerepository.Repository;
+import org.apache.felix.bundlerepository.RepositoryAdmin;
+=======
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 
 public class RepositoryAdminImpl implements RepositoryAdmin
 {
@@ -51,7 +65,11 @@ public class RepositoryAdminImpl implements RepositoryAdmin
     private final SystemRepositoryImpl m_system;
     private final LocalRepositoryImpl m_local;
     private final DataModelHelper m_helper = new DataModelHelperImpl();
+<<<<<<< HEAD
+    private Map m_repoMap = new HashMap();
+=======
     private Map m_repoMap = new LinkedHashMap();
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     private boolean m_initialized = false;
 
     // Reusable comparator for sorting resources by name.

@@ -22,6 +22,10 @@ import java.lang.annotation.ElementType;
 import java.lang.annotation.Target;
 
 /**
+<<<<<<< HEAD
+ * This annotation declares a component.
+ * This annotation is mandatory to declares an iPOJO component.
+=======
  * Declares a component type (needed to create instances of the component).
  * This annotation is mandatory to declares an iPOJO component.
  *
@@ -48,6 +52,7 @@ import java.lang.annotation.Target;
  * <ul>
  *     <li><a href="http://felix.apache.org/documentation/subprojects/apache-felix-ipojo/apache-felix-ipojo-userguide/ipojo-advanced-topics/how-to-use-ipojo-factories.html">Use iPOJO Factories</a></li>
  * </ul>
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
  * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
 @Target({ElementType.TYPE, ElementType.ANNOTATION_TYPE})
@@ -55,12 +60,20 @@ public @interface Component {
 
     /**
      * Set if the component type is public.
+<<<<<<< HEAD
+     * Default: true
+=======
      * @see #publicFactory()
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
      * @deprecated renamed to publicFactory.
      */
     boolean public_factory() default true;
 
     /**
+<<<<<<< HEAD
+     * Set if the component type is public.
+     * Default: true
+=======
      * Set if the component type is public or private (defaults to public).
      * A private factory does not expose a {@code Factory} service.
      * Only instances declared in the same bundle are created.
@@ -71,22 +84,36 @@ public @interface Component {
      *     }
      * </pre>
      * Default: {@literal true}
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
      */
     boolean publicFactory() default true;
 
     /**
      * Set the component type name.
+<<<<<<< HEAD
+=======
      * <pre>
      *     {@code @Component(name = "my-component")}
      *     public class MyComponent {
      *         // ...
      *     }
      * </pre>
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
      * Default : implementation class name.
      */
     String name() default "";
 
     /**
+<<<<<<< HEAD
+     * Enable / Disable the architecture exposition.
+     * Default : false
+     */
+    boolean architecture() default false;
+
+    /**
+     * Set if the component is immediate.
+     * Default : false
+=======
      * Enable / Disable the architecture exposition (no {@code Architecture}
      * service will be exposed for component's instances).
      * <pre>
@@ -111,10 +138,21 @@ public @interface Component {
      *     }
      * </pre>
      * Default : {@literal false}
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
      */
     boolean immediate() default false;
 
     /**
+<<<<<<< HEAD
+     * Set if the component must propagate received configuration to provided services.
+     * default: false
+     */
+    boolean propagation() default false;
+
+    /**
+     * Set the Managed Service PID.
+     * default no PID (i.e. the managed service will not be exposed).
+=======
      * Enable or disable the configuration propagation to service properties.
      * <pre>
      *     {@code @Component(propagation = false)}
@@ -135,6 +173,7 @@ public @interface Component {
      *         // ...
      *     }
      * </pre>
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
      */
     String managedservice() default "";
 
@@ -143,7 +182,10 @@ public @interface Component {
      * from a static method. The specified method must be a static
      * method and return a pojo object.
      * By default, iPOJO uses the 'regular' constructor.
+<<<<<<< HEAD
+=======
      * @see #factoryMethod()
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
      * @deprecated now is called <tt>factoryMethod</tt>.
      */
     String factory_method() default "";
@@ -153,6 +195,8 @@ public @interface Component {
      * from a static method. The specified method must be a static
      * method and return a pojo object.
      * By default, iPOJO uses the 'regular' constructor.
+<<<<<<< HEAD
+=======
      * <pre>
      *     {@code @Component(factoryMethod = "createInstance")}
      *     public class MyComponent {
@@ -162,17 +206,21 @@ public @interface Component {
      *         }
      *     }
      * </pre>
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
      */
     String factoryMethod() default "";
 
     /**
      * Set the version of the component type.
+<<<<<<< HEAD
+=======
      * <pre>
      *     {@code @Component(version = "1.3")}
      *     public class MyComponent {
      *         // ...
      *     }
      * </pre>
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
      */
     String version() default "";
 }

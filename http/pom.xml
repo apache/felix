@@ -22,14 +22,22 @@
     <parent>
         <groupId>org.apache.felix</groupId>
         <artifactId>felix-parent</artifactId>
+<<<<<<< HEAD
+        <version>2.1</version>
+=======
         <version>5</version>
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         <relativePath>../pom/pom.xml</relativePath>
     </parent>
 
     <name>Apache Felix Http Reactor</name>
     <groupId>org.apache.felix</groupId>
     <artifactId>org.apache.felix.http</artifactId>
+<<<<<<< HEAD
+    <version>5-SNAPSHOT</version>
+=======
     <version>7-SNAPSHOT</version>
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     <packaging>pom</packaging>
 
     <scm>
@@ -37,9 +45,15 @@
         <developerConnection>scm:svn:https://svn.apache.org/repos/asf/felix/trunk/http</developerConnection>
         <url>http://svn.apache.org/viewvc/felix/trunk/http/</url>
     </scm>
+<<<<<<< HEAD
+
+    <modules>
+        <module>api</module>
+=======
     
     <modules>
         <module>servlet-api</module>
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         <module>base</module>
         <module>bridge</module>
         <module>jetty</module>
@@ -49,7 +63,11 @@
         <module>cometd</module>
         <module>bundle</module>
         <module>sslfilter</module>
+<<<<<<< HEAD
+        <module>samples/filter</module>
+=======
         <module>itest</module>
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         <module>samples/bridge</module>
         <module>samples/whiteboard</module>
         <module>samples/cometd</module>

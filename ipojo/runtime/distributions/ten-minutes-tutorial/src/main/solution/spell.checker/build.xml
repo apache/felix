@@ -28,7 +28,11 @@
 	
 	<taskdef resource="aQute/bnd/ant/taskdef.properties"
 		      classpath="../../tasks/bnd-${bnd.version}.jar"/>
+<<<<<<< HEAD
+	<taskdef name="ipojo" classpath="../../tasks/org.apache.felix.ipojo.ant-${ipojo.ant.version}.jar"
+=======
 	<taskdef name="ipojo" classpath="../../tasks/org.apache.felix.ipojo.ant-${ipojo.manipulator.version}.jar"
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 		classname="org.apache.felix.ipojo.task.IPojoTask"/>
 	
 	<target name="clean">
@@ -39,7 +43,11 @@
 	
 	<target name="buildclasspath">
 		<copy file="../spell.services/output/spell.services.jar" todir="${lib.dir}"/>
+<<<<<<< HEAD
+        <copy file="../../tasks/org.apache.felix.ipojo.ant-${ipojo.ant.version}.jar" todir="${lib.dir}"/>
+=======
         <copy file="../../tasks/org.apache.felix.ipojo.ant-${ipojo.manipulator.version}.jar" todir="${lib.dir}"/>
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 	</target>
 
     <path id="classpath">
@@ -68,7 +76,10 @@
 		
 		<ipojo
 				input="${output.dir}/${ant.project.name}.jar"
+<<<<<<< HEAD
+=======
                 classpathref="classpath"
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 		/>
 	</target>
 

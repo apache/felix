@@ -145,12 +145,20 @@ public class PropertyMetadata {
         {
             m_type = "String";
         }
+<<<<<<< HEAD
+        else if ( componentMetadata.isDS11() && m_type.equals( "Char" ) )
+=======
         else if ( componentMetadata.getDSVersion().isDS11() && m_type.equals( "Char" ) )
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         {
             throw componentMetadata
                 .validationFailure( "Illegal property type 'Char' used for DS 1.1 descriptor, use 'Character' instead" );
         }
+<<<<<<< HEAD
+        else if ( !componentMetadata.isDS11() && m_type.equals( "Character" ) )
+=======
         else if ( !componentMetadata.getDSVersion().isDS11() && m_type.equals( "Character" ) )
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         {
             throw componentMetadata
                 .validationFailure( "Illegal property type 'Character' used for DS 1.0 descriptor, use 'Char' instead" );

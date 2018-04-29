@@ -49,12 +49,21 @@
             <version>1.10.1</version>
         </dependency>
         <dependency>
+<<<<<<< HEAD
+            <groupId>asm</groupId>
+            <artifactId>asm-all</artifactId>
+            <version>3.3.1</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>asm</groupId>
+=======
             <groupId>org.ow2.asm</groupId>
             <artifactId>asm-all</artifactId>
             <version>5.0.2</version>
             <exclusions>
                 <exclusion>
                     <groupId>org.ow2.asm</groupId>
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
                     <artifactId>asm-tree</artifactId>
                 </exclusion>
             </exclusions>

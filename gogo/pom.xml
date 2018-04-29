@@ -21,7 +21,11 @@
     <parent>
         <groupId>org.apache.felix</groupId>
         <artifactId>felix-parent</artifactId>
+<<<<<<< HEAD
+        <version>1.2.1</version>
+=======
         <version>4</version>
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         <relativePath>../pom/pom.xml</relativePath>
     </parent>
     <modelVersion>4.0.0</modelVersion>
@@ -29,6 +33,9 @@
     <name>Apache Felix Gogo</name>
     <description>Apache Felix Gogo Subproject</description>
     <artifactId>gogo-reactor</artifactId>
+<<<<<<< HEAD
+    <version>0.7.0-SNAPSHOT</version>
+=======
     <version>1.1.0-SNAPSHOT</version>
 
     <scm>
@@ -36,11 +43,15 @@
          <developerConnection>scm:svn:https://svn.apache.org/repos/asf/felix/trunk/gogo</developerConnection>
          <url>http://svn.apache.org/repos/asf/felix/gogo</url>
     </scm>
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 
     <modules>
     	<module>gogo-parent</module>
         <module>runtime</module>
+<<<<<<< HEAD
+=======
         <module>jline</module>
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         <module>shell</module>
         <module>command</module>
     </modules>

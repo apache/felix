@@ -118,6 +118,11 @@ public class Activator implements BundleActivator
             context.getProperty(Server.CONFIG_PROPERTY_HTTP_ENABLE));
         config.put(Server.CONFIG_PROPERTY_HTTPS_ENABLE,
             context.getProperty(Server.CONFIG_PROPERTY_HTTPS_ENABLE));
+<<<<<<< HEAD
+        config.put(Server.CONFIG_PROPERTY_HTTP_DEBUG,
+            context.getProperty(Server.CONFIG_PROPERTY_HTTP_DEBUG));
+=======
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         config.put(Server.CONFIG_PROPERTY_THREADPOOL_LIMIT_PROP,
             context.getProperty(Server.CONFIG_PROPERTY_THREADPOOL_LIMIT_PROP));
         config.put(Server.CONFIG_PROPERTY_THREADPOOL_TIMEOUT_PROP,

@@ -23,7 +23,10 @@ import org.apache.felix.ipojo.ComponentInstance;
 import org.apache.felix.ipojo.runtime.test.dependencies.timeout.services.*;
 import org.junit.Test;
 import org.osgi.framework.ServiceReference;
+<<<<<<< HEAD
+=======
 import org.ow2.chameleon.testing.helpers.TimeUtils;
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 
 import static org.junit.Assert.*;
 
@@ -42,24 +45,36 @@ public class DefaultImplementationTest extends Common {
         ServiceReference ref_cs = ipojoHelper.getServiceReferenceByName(CheckService.class.getName(), un);
         assertNotNull("Check cs availability", ref_cs);
 
+<<<<<<< HEAD
+        CheckService cs = (CheckService) osgiHelper.getServiceObject(ref_cs);
+=======
         CheckService cs = (CheckService) osgiHelper.getRawServiceObject(ref_cs);
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         assertTrue("Check invocation", cs.check());
 
         // Stop the provider.
         provider.stop();
         ref_cs = ipojoHelper.getServiceReferenceByName(CheckService.class.getName(), un);
         assertNotNull("Check cs availability - 2", ref_cs);
+<<<<<<< HEAD
+        cs = (CheckService) osgiHelper.getServiceObject(ref_cs);
+=======
         cs = (CheckService) osgiHelper.getRawServiceObject(ref_cs);
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         boolean res = false;
         try {
             res = cs.check();
         } catch (RuntimeException e) {
+<<<<<<< HEAD
+            fail("A nullable was expected ...");
+=======
             if (TimeUtils.TIME_FACTOR == 1) {
                 fail("A nullable was expected ...");
             } else {
                 System.err.println("A null was expected, however this test really depends on your CPU and IO speed");
                 return;
             }
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         }
         assertFalse("Check nullable", res);
 
@@ -82,7 +97,11 @@ public class DefaultImplementationTest extends Common {
         ServiceReference ref_cs = ipojoHelper.getServiceReferenceByName(CheckService.class.getName(), un);
         assertNotNull("Check cs availability", ref_cs);
 
+<<<<<<< HEAD
+        CheckService cs = (CheckService) osgiHelper.getServiceObject(ref_cs);
+=======
         CheckService cs = (CheckService) osgiHelper.getRawServiceObject(ref_cs);
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         assertTrue("Check invocation", cs.check());
 
         // Stop the provider.
@@ -92,7 +111,11 @@ public class DefaultImplementationTest extends Common {
         long begin = System.currentTimeMillis();
         DelayedProvider dp = new DelayedProvider(provider, 200);
         dp.start();
+<<<<<<< HEAD
+        cs = (CheckService) osgiHelper.getServiceObject(ref_cs);
+=======
         cs = (CheckService) osgiHelper.getRawServiceObject(ref_cs);
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         assertTrue("Check invocation - 2", cs.check());
         long end = System.currentTimeMillis();
 
@@ -100,7 +123,11 @@ public class DefaultImplementationTest extends Common {
 
         ref_cs = ipojoHelper.getServiceReferenceByName(CheckService.class.getName(), un);
         assertNotNull("Check cs availability - 3", ref_cs);
+<<<<<<< HEAD
+        cs = (CheckService) osgiHelper.getServiceObject(ref_cs);
+=======
         cs = (CheckService) osgiHelper.getRawServiceObject(ref_cs);
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         assertTrue("Check invocation - 3", cs.check());
 
         provider.stop();

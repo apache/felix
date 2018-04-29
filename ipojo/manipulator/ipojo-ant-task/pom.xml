@@ -25,7 +25,11 @@
     </parent>
     <modelVersion>4.0.0</modelVersion>
     <artifactId>org.apache.felix.ipojo.ant</artifactId>
+<<<<<<< HEAD
+    <version>1.11.1-SNAPSHOT</version>
+=======
     <version>1.12.2-SNAPSHOT</version>
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     <packaging>bundle</packaging>
     <name>Apache Felix iPOJO Ant Task</name>
 
@@ -34,17 +38,29 @@
     </description>
 
     <properties>
+<<<<<<< HEAD
+        <ipojo.import.packages>[1.11.0,2.0.0)</ipojo.import.packages>
+=======
         <ipojo.import.packages>[1.12.1,2.0.0)</ipojo.import.packages>
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     </properties>
 
     <dependencies>
         <dependency>
             <groupId>org.apache.felix</groupId>
             <artifactId>org.apache.felix.ipojo.metadata</artifactId>
+<<<<<<< HEAD
+            <version>1.4.0</version>
+=======
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         </dependency>
         <dependency>
             <groupId>org.apache.felix</groupId>
             <artifactId>org.apache.felix.ipojo.manipulator</artifactId>
+<<<<<<< HEAD
+            <version>${project.version}</version>
+=======
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         </dependency>
         <dependency>
             <groupId>xerces</groupId>
@@ -62,6 +78,8 @@
             <version>1.2</version>
         </dependency>
     </dependencies>
+<<<<<<< HEAD
+=======
 
     <dependencyManagement>
         <dependencies>
@@ -75,6 +93,7 @@
         </dependencies>
     </dependencyManagement>
 
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     <build>
         <resources>
             <resource>
@@ -106,7 +125,11 @@
                             org.objectweb.asm.util;-split-package:=merge-first,
                             org.objectweb.asm;-split-package:=merge-first,
                             org.objectweb.asm.commons;-split-package:=merge-first,
+<<<<<<< HEAD
+                            org.objectweb.asm.tree;-split-package:=merge-first,
+=======
                             org.objectweb.asm.tree*;-split-package:=merge-first,
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
                             org.apache.xerces.parsers, org.apache.xerces.xni*,
                             org.apache.xerces.impl*, org.apache.xerces.util.*,
                             org.apache.xerces.dom.*, org.apache.xerces.dom3.*,

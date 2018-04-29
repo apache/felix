@@ -18,6 +18,26 @@
  */
 package org.apache.felix.gogo.runtime;
 
+<<<<<<< HEAD
+import java.io.File;
+import java.net.URI;
+import java.util.HashMap;
+import java.util.Map;
+
+import org.apache.felix.gogo.runtime.Evaluate;
+import org.apache.felix.gogo.runtime.Parser;
+import org.apache.felix.gogo.runtime.SyntaxError;
+import org.apache.felix.gogo.runtime.Token;
+import org.apache.felix.gogo.runtime.Tokenizer;
+import org.apache.felix.gogo.runtime.Tokenizer.Type;
+
+import junit.framework.TestCase;
+
+public class TestTokenizer extends TestCase
+{
+    private final Map<String, Object> vars = new HashMap<String, Object>();
+    private final Evaluate evaluate;
+=======
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.PrintStream;
@@ -51,12 +71,18 @@ public class TestTokenizer
     private final Map<String, Object> vars = new HashMap<>();
     private final Evaluate evaluate;
     private Path currentDir = null;
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 
     public TestTokenizer()
     {
         evaluate = new Evaluate()
         {
+<<<<<<< HEAD
+            public Object eval(Token t) throws Exception
+            {
+=======
             public Object eval(Token t) {
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
                 throw new UnsupportedOperationException("eval not implemented.");
             }
 
@@ -69,6 +95,11 @@ public class TestTokenizer
             {
                 return vars.put(key, value);
             }
+<<<<<<< HEAD
+        };
+    }
+
+=======
 
             public Object expr(Token t) {
                 throw new UnsupportedOperationException("expr not implemented.");
@@ -87,6 +118,7 @@ public class TestTokenizer
     }
 
     @Test
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     public void testHello() throws Exception
     {
         testHello("hello world\n");
@@ -117,6 +149,19 @@ public class TestTokenizer
     }
 
     // hello world
+<<<<<<< HEAD
+    private void testHello(CharSequence text) throws Exception
+    {
+        Tokenizer t = new Tokenizer(text);
+        assertEquals(Type.WORD, t.next());
+        assertEquals("hello", t.value().toString());
+        assertEquals(Type.WORD, t.next());
+        assertEquals("world", t.value().toString());
+        assertEquals(Type.NEWLINE, t.next());
+        assertEquals(Type.EOT, t.next());
+    }
+
+=======
     private void testHello(CharSequence text) {
         Tokenizer t = new Tokenizer(text);
         assertEquals("hello", t.next().toString());
@@ -126,12 +171,26 @@ public class TestTokenizer
     }
     
     @Test
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     public void testString() throws Exception
     {
         testString("'single $quote' \"double $quote\"\n");
     }
 
     // 'single quote' "double quote"
+<<<<<<< HEAD
+    private void testString(CharSequence text) throws Exception
+    {
+        Tokenizer t = new Tokenizer(text);
+        assertEquals(Type.WORD, t.next());
+        assertEquals("'single $quote'", t.value().toString());
+        assertEquals(Type.WORD, t.next());
+        assertEquals("\"double $quote\"", t.value().toString());
+        assertEquals(Type.NEWLINE, t.next());
+        assertEquals(Type.EOT, t.next());
+    }
+
+=======
     private void testString(CharSequence text) {
         Tokenizer t = new Tokenizer(text);
         assertEquals("'single $quote'", t.next().toString());
@@ -141,10 +200,40 @@ public class TestTokenizer
     }
 
     @Test
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     public void testClosure() throws Exception
     {
         testClosure2("x = { echo '}' $args //comment's\n}\n");
         testClosure2("x={ echo '}' $args //comment's\n}\n");
+<<<<<<< HEAD
+        assertEquals(Type.CLOSURE, token1("{ echo \\{ $args \n}"));
+        assertEquals(Type.CLOSURE, token1("{ echo \\} $args \n}"));
+    }
+
+    /*
+     * x = {echo $args};
+     */
+    private void testClosure2(CharSequence text) throws Exception
+    {
+        Tokenizer t = new Tokenizer(text);
+        assertEquals(Type.WORD, t.next());
+        assertEquals("x", t.value().toString());
+        assertEquals(Type.ASSIGN, t.next());
+        assertEquals(Type.CLOSURE, t.next());
+        assertEquals(" echo '}' $args //comment's\n", t.value().toString());
+        assertEquals(Type.NEWLINE, t.next());
+        assertEquals(Type.EOT, t.next());
+    }
+
+    private Type token1(CharSequence text) throws Exception
+    {
+        Tokenizer t = new Tokenizer(text);
+        Type type = t.next();
+        assertEquals(Type.EOT, t.next());
+        return type;
+    }
+
+=======
         token1("{ echo \\{ $args \n}");
         token1("{ echo \\} $args \n}");
     }
@@ -359,19 +448,28 @@ public class TestTokenizer
     }
 
     @Test
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     public void testExpand() throws Exception
     {
         final URI home = new URI("/home/derek");
         final File pwd = new File("/tmp");
         final String user = "derek";
 
+<<<<<<< HEAD
+        vars.clear();
+=======
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         vars.put("HOME", home);
         vars.put("PWD", pwd);
         vars.put("USER", user);
         vars.put(user, "Derek Baum");
 
         // quote removal
+<<<<<<< HEAD
+        assertEquals("hello", expand("hello"));
+=======
         assertEquals("hello", expand("hello").toString());
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         assertEquals("hello", expand("'hello'"));
         assertEquals("\"hello\"", expand("'\"hello\"'"));
         assertEquals("hello", expand("\"hello\""));
@@ -383,7 +481,11 @@ public class TestTokenizer
         assertEquals("hello\\w", expand("\"hello\\\\w\""));
         assertEquals("hello\\w", expand("\"hello\\w\""));
         assertEquals("hello\\\\w", expand("'hello\\\\w'"));
+<<<<<<< HEAD
+        assertEquals("hello", expand("he\\\nllo"));
+=======
 //CHANGE        assertEquals("hello", expand("he\\\nllo"));
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         assertEquals("he\\llo", expand("'he\\llo'"));
         assertEquals("he'llo", expand("'he'\\''llo'"));
         assertEquals("he\"llo", expand("\"he\\\"llo\""));
@@ -397,11 +499,34 @@ public class TestTokenizer
         // Note: we could use literal Unicode pound '£' instead of \u00a3 in next test.
         // if above is not UK currency symbol, then your locale is not configured for UTF-8.
         // Java on Macs cannot handle UTF-8 unless you explicitly set '-Dfile.encoding=UTF-8'.
+<<<<<<< HEAD
+        assertEquals("pound\u00a3cent\u00a2", expand("pound\\u00a3cent\\u00a2"));
+        assertEquals("euro\\u20ac", expand("'euro\\u20ac'"));
+        try
+        {
+            expand("eot\\u20a");
+            fail("EOT in unicode");
+        }
+        catch (SyntaxError e)
+        {
+            // expected
+        }
+        try
+        {
+            expand("bad\\u20ag");
+            fail("bad unicode");
+        }
+        catch (SyntaxError e)
+        {
+            // expected
+        }
+=======
         assertEquals("pound\u00a3cent\u00a2", expand("$'pound\\u00a3cent\\u00a2'"));
         assertEquals("euro\\u20ac", expand("$'euro\\\\u20ac'"));
         assertEquals("euro\u20ac", expand("$'euro\\u20ac'"));
         assertEquals("euro\u020a", expand("$'euro\\u20a'"));
         assertEquals("euro\u020ag", expand("$'euro\\u20ag'"));
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 
         // simple variable expansion - quoting or concatenation converts result to String
         assertEquals(user, expand("$USER"));
@@ -450,6 +575,14 @@ public class TestTokenizer
             // expected
         }
 
+<<<<<<< HEAD
+        assertEquals(user, expand("${USER\\\n:?}"));
+        assertEquals(user, expand("${US\\u0045R:?}"));
+
+        // bash doesn't supported nested expansions
+        // gogo only supports them in the ${} syntax
+        assertEquals("Derek Baum", expand("${$USER}"));
+=======
         try {
             expand("${USER\\\n:?}");
         }
@@ -466,12 +599,26 @@ public class TestTokenizer
         assertEquals("Derek Baum", expand("${${(P)USR}:-$derek}"));
         assertEquals("derek", expand("${${USER}}"));
         assertEquals("derek", expand("${${USER:-d}}"));
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         assertEquals("x", expand("${$USR:-x}"));
         assertEquals("$" + user, expand("$$USER"));
     }
 
     private Object expand(CharSequence word) throws Exception
     {
+<<<<<<< HEAD
+        return Tokenizer.expand(word, evaluate);
+    }
+
+    public void testParser() throws Exception
+    {
+        new Parser("// comment\n" + "a=\"who's there?\"; ps -ef;\n" + "ls | \n grep y\n").program();
+        String p1 = "a=1 \\$b=2 c={closure}\n";
+        new Parser(p1).program();
+        new Parser(new Token(Type.ARRAY, p1, (short) 0, (short) 0)).program();
+    }
+
+=======
         return Expander.expand(word, evaluate);
     }
 
@@ -556,4 +703,5 @@ public class TestTokenizer
         }
         new Parser("a << foo\n \nfoo\n").statement();
     }
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 }

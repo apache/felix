@@ -48,10 +48,18 @@ public class TestUpdated extends Common {
         Configuration configuration = admin.createFactoryConfiguration(factoryName, "?");
         configuration.update(props);
 
+<<<<<<< HEAD
+        ServiceReference ref = osgiHelper.waitForService(FooService.class.getName(),
+                "(instance.name=" + configuration.getPid() + ")",
+                1000);
+
+        FooService fs = (FooService) osgiHelper.getServiceObject(ref);
+=======
         FooService fs = osgiHelper.waitForService(FooService.class,
                 "(instance.name=" + configuration.getPid() + ")",
                 1000);
 
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         assertEquals(fs.getInt(), 1);
 
         // Update the property
@@ -87,10 +95,18 @@ public class TestUpdated extends Common {
         Configuration configuration = admin.createFactoryConfiguration(factoryName, "?");
         configuration.update(props);
 
+<<<<<<< HEAD
+        ServiceReference ref = osgiHelper.waitForService(FooService.class.getName(),
+                "(instance.name=" + configuration.getPid() + ")",
+                1000);
+
+        FooService fs = (FooService) osgiHelper.getServiceObject(ref);
+=======
         FooService fs = osgiHelper.waitForService(FooService.class,
                 "(instance.name=" + configuration.getPid() + ")",
                 1000);
 
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         assertEquals(fs.getInt(), 1);
 
         // Update the property using the managed service.

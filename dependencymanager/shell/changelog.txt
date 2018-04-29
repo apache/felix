@@ -1,0 +1,4 @@
+Release 3.0.0
+-------------
+
+Major, backward incompatible release. Start of recorded changes.

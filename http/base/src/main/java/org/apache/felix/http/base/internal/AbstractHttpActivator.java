@@ -19,24 +19,55 @@ package org.apache.felix.http.base.internal;
 public abstract class AbstractHttpActivator
     extends AbstractActivator
 {
+<<<<<<< HEAD
+    private DispatcherServlet dispatcher;
+    private EventDispatcher eventDispatcher;
     private HttpServiceController controller;
 
+    protected final DispatcherServlet getDispatcherServlet()
+    {
+        return this.dispatcher;
+    }
+
+    protected final EventDispatcher getEventDispatcher()
+    {
+        return this.eventDispatcher;
+    }
+
+=======
+    private HttpServiceController controller;
+
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     protected final HttpServiceController getHttpServiceController()
     {
         return this.controller;
     }
 
+<<<<<<< HEAD
+=======
     @Override
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     protected void doStart()
         throws Exception
     {
         this.controller = new HttpServiceController(getBundleContext());
+<<<<<<< HEAD
+        this.dispatcher = new DispatcherServlet(this.controller);
+        this.eventDispatcher = new EventDispatcher(this.controller);
+    }
+
+=======
     }
 
     @Override
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     protected void doStop()
         throws Exception
     {
         this.controller.unregister();
+<<<<<<< HEAD
+        this.dispatcher.destroy();
+=======
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     }
 }

@@ -68,7 +68,11 @@ public class TestPropertiesInAnonymousClass extends Common {
         }
 
         // Invoke
+<<<<<<< HEAD
+        FooService fs = (FooService) osgiHelper.getServiceObject(sr);
+=======
         FooService fs = (FooService) osgiHelper.getRawServiceObject(sr);
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         assertTrue("invoke fs", fs.foo());
 
         sr = ipojoHelper.getServiceReferenceByName(FooService.class.getName(), "FooProviderAno-1");
@@ -131,7 +135,11 @@ public class TestPropertiesInAnonymousClass extends Common {
         }
 
         // Invoke
+<<<<<<< HEAD
+        FooService fs = (FooService) osgiHelper.getServiceObject(sr);
+=======
         FooService fs = (FooService) osgiHelper.getRawServiceObject(sr);
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         assertTrue("invoke fs", fs.getBoolean());
 
         sr = ipojoHelper.getServiceReferenceByName(FooService.class.getName(), "FooProviderAno-1");

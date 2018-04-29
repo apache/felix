@@ -50,150 +50,216 @@ public class MockBundle implements Bundle
     }
 
 
+<<<<<<< HEAD
+=======
     @Override
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     public Enumeration findEntries( String arg0, String arg1, boolean arg2 )
     {
         return null;
     }
 
 
+<<<<<<< HEAD
+=======
     @Override
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     public BundleContext getBundleContext()
     {
         return context;
     }
 
 
+<<<<<<< HEAD
+=======
     @Override
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     public long getBundleId()
     {
         return 0;
     }
 
 
+<<<<<<< HEAD
+=======
     @Override
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     public URL getEntry( String arg0 )
     {
         return null;
     }
 
 
+<<<<<<< HEAD
+=======
     @Override
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     public Enumeration getEntryPaths( String arg0 )
     {
         return null;
     }
 
 
+<<<<<<< HEAD
+=======
     @Override
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     public Dictionary getHeaders()
     {
         return null;
     }
 
 
+<<<<<<< HEAD
+=======
     @Override
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     public Dictionary getHeaders( String arg0 )
     {
         return null;
     }
 
 
+<<<<<<< HEAD
+=======
     @Override
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     public long getLastModified()
     {
         return 0;
     }
 
 
+<<<<<<< HEAD
+=======
     @Override
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     public String getLocation()
     {
         return location;
     }
 
 
+<<<<<<< HEAD
+=======
     @Override
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     public ServiceReference[] getRegisteredServices()
     {
         return null;
     }
 
 
+<<<<<<< HEAD
+=======
     @Override
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     public URL getResource( String arg0 )
     {
         return null;
     }
 
 
+<<<<<<< HEAD
+=======
     @Override
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     public Enumeration getResources( String arg0 )
     {
         return null;
     }
 
 
+<<<<<<< HEAD
+=======
     @Override
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     public ServiceReference[] getServicesInUse()
     {
         return null;
     }
 
 
+<<<<<<< HEAD
+=======
     @Override
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     public int getState()
     {
         return 0;
     }
 
 
+<<<<<<< HEAD
+=======
     @Override
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     public String getSymbolicName()
     {
         return null;
     }
 
 
+<<<<<<< HEAD
+=======
     @Override
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     public boolean hasPermission( Object arg0 )
     {
         return false;
     }
 
 
+<<<<<<< HEAD
+=======
     @Override
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     public Class loadClass( String arg0 ) throws ClassNotFoundException
     {
         throw new ClassNotFoundException( arg0 );
     }
 
 
+<<<<<<< HEAD
+=======
     @Override
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     public void start()
     {
     }
 
 
+<<<<<<< HEAD
+=======
     @Override
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     public void stop()
     {
     }
 
 
+<<<<<<< HEAD
+=======
     @Override
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     public void uninstall()
     {
     }
 
 
+<<<<<<< HEAD
+=======
     @Override
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     public void update()
     {
     }
 
 
+<<<<<<< HEAD
+=======
     @Override
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     public void update( InputStream arg0 ) throws BundleException
     {
         if ( arg0 != null )
@@ -210,19 +276,28 @@ public class MockBundle implements Bundle
     }
 
 
+<<<<<<< HEAD
+=======
     @Override
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     public void start( int options )
     {
     }
 
 
+<<<<<<< HEAD
+=======
     @Override
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     public void stop( int options )
     {
     }
 
 
+<<<<<<< HEAD
+=======
     @Override
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     public int compareTo( Bundle o )
     {
         return 0;
@@ -231,30 +306,45 @@ public class MockBundle implements Bundle
 
     // Framework 1.5 additions
 
+<<<<<<< HEAD
+=======
     @Override
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     public Map<X509Certificate, List<X509Certificate>> getSignerCertificates( int signersType )
     {
         throw new AbstractMethodError( "Not supported on Framework API 1.4; added in Framework API 1.5" );
     }
 
 
+<<<<<<< HEAD
+    public Version getVersion()
+    {
+        throw new AbstractMethodError( "Not supported on Framework API 1.4; added in Framework API 1.5" );
+=======
     @Override
     public Version getVersion()
     {
         return Version.emptyVersion;
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     }
 
 
     // Framework 1.6 additions
 
+<<<<<<< HEAD
+=======
     @Override
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     public <A> A adapt( Class<A> type )
     {
         throw new AbstractMethodError( "Not supported on Framework API 1.4; added in Framework API 1.6" );
     }
 
 
+<<<<<<< HEAD
+=======
     @Override
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     public File getDataFile( String filename )
     {
         throw new AbstractMethodError( "Not supported on Framework API 1.4; added in Framework API 1.6" );

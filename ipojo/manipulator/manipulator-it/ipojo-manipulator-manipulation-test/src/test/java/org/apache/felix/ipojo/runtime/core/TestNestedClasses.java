@@ -167,11 +167,14 @@ public class TestNestedClasses extends BaseTest {
     }
 
     @Test
+<<<<<<< HEAD
+=======
     public void testAnonymousClassDeclaredInStaticField() {
         assertEquals(service.getProps().get("call"), 1);
     }
 
     @Test
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     public void testPackageStaticInnerClass() {
         Map data = (Map) service.getProps().get("packageStaticInner");
         assertNotNull("Check data existence", data);
@@ -217,9 +220,15 @@ public class TestNestedClasses extends BaseTest {
         assertEquals("Check private int", new Integer(3), data.get("privateInt"));
         assertEquals("Check non-managed object", "not-managed", data.get("nonObject"));
         assertEquals("Check non-managed int", new Integer(5), data.get("nonInt"));
+<<<<<<< HEAD
+
+    }
+
+=======
     }
 
 
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     @Override
     protected List<String> getExtraExports() {
         return Arrays.asList("org.apache.felix.ipojo.runtime.core.components");

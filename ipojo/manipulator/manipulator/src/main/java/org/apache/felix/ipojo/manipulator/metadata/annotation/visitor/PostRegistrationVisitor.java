@@ -23,6 +23,15 @@ import org.apache.felix.ipojo.manipulator.metadata.annotation.ComponentWorkbench
 import org.apache.felix.ipojo.metadata.Attribute;
 import org.apache.felix.ipojo.metadata.Element;
 import org.objectweb.asm.AnnotationVisitor;
+<<<<<<< HEAD
+import org.objectweb.asm.commons.EmptyVisitor;
+
+/**
+ * @see org.apache.felix.ipojo.annotations.PostRegistration
+ * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
+ */
+public class PostRegistrationVisitor extends EmptyVisitor implements AnnotationVisitor {
+=======
 import org.objectweb.asm.Opcodes;
 
 /**
@@ -30,19 +39,27 @@ import org.objectweb.asm.Opcodes;
  * @see org.apache.felix.ipojo.annotations.PostRegistration
  */
 public class PostRegistrationVisitor extends AnnotationVisitor {
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 
     private ComponentWorkbench workbench;
     private String name;
 
     public PostRegistrationVisitor(ComponentWorkbench workbench, String name) {
+<<<<<<< HEAD
+=======
         super(Opcodes.ASM5);
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         this.workbench = workbench;
         this.name = name;
     }
 
     @Override
     public void visitEnd() {
+<<<<<<< HEAD
+        Element provides = null;
+=======
         Element provides;
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         if (workbench.getIds().containsKey("provides")) {
             provides = workbench.getIds().get("provides");
             provides.addAttribute(new Attribute("post-registration", name));

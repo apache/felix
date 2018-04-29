@@ -23,6 +23,10 @@ import org.apache.felix.deploymentadmin.ResourceInfoImpl;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceReference;
 import org.osgi.service.deploymentadmin.spi.ResourceProcessor;
+<<<<<<< HEAD
+import org.osgi.service.deploymentadmin.spi.ResourceProcessorException;
+=======
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 import org.osgi.service.log.LogService;
 
 /**
@@ -33,21 +37,35 @@ public class DropResourceCommand extends Command {
     private final CommitResourceCommand m_commitCommand;
 
     /**
+<<<<<<< HEAD
+     * Creates an instance of this command. The commit command is used to make sure
+     * the resource processors used to drop resources will be committed at a later stage in the process.
+     *
+     * @param commitCommand The commit command that will be executed at a later stage in the process.
+=======
      * Creates an instance of this command. The commit command is used to make
      * sure the resource processors used to drop resources will be committed at
      * a later stage in the process.
      * 
      * @param commitCommand The commit command that will be executed at a later
      *        stage in the process.
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
      */
     public DropResourceCommand(CommitResourceCommand commitCommand) {
         m_commitCommand = commitCommand;
     }
 
+<<<<<<< HEAD
+    public void execute(DeploymentSessionImpl session) {
+        // Allow proper rollback in case the drop fails...
+        addRollback(new RollbackCommitAction(session));
+        
+=======
     protected void doExecute(DeploymentSessionImpl session) throws Exception {
         // Allow proper rollback in case the drop fails...
         addRollback(new RollbackCommitAction(session));
 
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         AbstractDeploymentPackage target = session.getTargetAbstractDeploymentPackage();
         AbstractDeploymentPackage source = session.getSourceAbstractDeploymentPackage();
         BundleContext context = session.getBundleContext();
@@ -56,12 +74,15 @@ public class DropResourceCommand extends Command {
         ResourceInfoImpl[] orderedTargetResources = target.getOrderedResourceInfos();
         for (int i = orderedTargetResources.length - 1; i >= 0; i--) {
             ResourceInfoImpl resourceInfo = orderedTargetResources[i];
+<<<<<<< HEAD
+=======
             // FELIX-4491: only resources that need to be processed should be handled...
             if (!resourceInfo.isProcessedResource()) {
                 session.getLog().log(LogService.LOG_INFO, "Ignoring non-processed resource: " + resourceInfo.getPath());
                 continue;
             }
 
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
             String path = resourceInfo.getPath();
             if (source.getResourceInfoByPath(path) == null) {
                 ServiceReference ref = target.getResourceProcessor(path);
@@ -70,11 +91,19 @@ public class DropResourceCommand extends Command {
                     if (resourceProcessor != null) {
                         try {
                             if (m_commitCommand.addResourceProcessor(resourceProcessor)) {
+<<<<<<< HEAD
+                            	resourceProcessor.begin(session);
+                            }
+                            resourceProcessor.dropped(path);
+                        }
+                        catch (ResourceProcessorException e) {
+=======
                                 resourceProcessor.begin(session);
                             }
                             resourceProcessor.dropped(path);
                         }
                         catch (Exception e) {
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
                             log.log(LogService.LOG_WARNING, "Not allowed to drop resource '" + path + "'", e);
                         }
                     }
@@ -82,6 +111,17 @@ public class DropResourceCommand extends Command {
             }
         }
     }
+<<<<<<< HEAD
+    
+    private class RollbackCommitAction implements Runnable {
+        private final DeploymentSessionImpl m_session; 
+        
+        public RollbackCommitAction(DeploymentSessionImpl session) {
+            m_session = session;
+        }
+        
+        public void run() {
+=======
 
     private class RollbackCommitAction extends AbstractAction {
         private final DeploymentSessionImpl m_session;
@@ -91,6 +131,7 @@ public class DropResourceCommand extends Command {
         }
 
         protected void doRun() {
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
             m_commitCommand.rollback(m_session);
         }
     }

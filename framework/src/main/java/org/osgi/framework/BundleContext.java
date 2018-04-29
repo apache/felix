@@ -1,5 +1,9 @@
 /*
+<<<<<<< HEAD
+ * Copyright (c) OSGi Alliance (2000, 2012). All Rights Reserved.
+=======
  * Copyright (c) OSGi Alliance (2000, 2014). All Rights Reserved.
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,7 +24,10 @@ import java.io.File;
 import java.io.InputStream;
 import java.util.Collection;
 import java.util.Dictionary;
+<<<<<<< HEAD
+=======
 import org.osgi.annotation.versioning.ProviderType;
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 
 /**
  * A bundle's execution context within the Framework. The context is used to
@@ -30,6 +37,17 @@ import org.osgi.annotation.versioning.ProviderType;
  * <p>
  * {@code BundleContext} methods allow a bundle to:
  * <ul>
+<<<<<<< HEAD
+ * <li>Subscribe to events published by the Framework.
+ * <li>Register service objects with the Framework service registry.
+ * <li>Retrieve {@code ServiceReferences} from the Framework service registry.
+ * <li>Get and release service objects for a referenced service.
+ * <li>Install new bundles in the Framework.
+ * <li>Get the list of bundles installed in the Framework.
+ * <li>Get the {@link Bundle} object for a bundle.
+ * <li>Create {@code File} objects for files in a persistent storage area
+ * provided for the bundle by the Framework.
+=======
  * <li>Subscribe to events published by the Framework.</li>
  * <li>Register service objects with the Framework service registry.</li>
  * <li>Retrieve {@code ServiceReferences} from the Framework service registry.</li>
@@ -39,6 +57,7 @@ import org.osgi.annotation.versioning.ProviderType;
  * <li>Get the {@link Bundle} object for a bundle.</li>
  * <li>Create {@code File} objects for files in a persistent storage area
  * provided for the bundle by the Framework.</li>
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
  * </ul>
  * 
  * <p>
@@ -58,6 +77,10 @@ import org.osgi.annotation.versioning.ProviderType;
  * <p>
  * The {@code BundleContext} object is only valid during the execution of its
  * context bundle; that is, during the period from when the context bundle is in
+<<<<<<< HEAD
+ * the {@code STARTING}, {@code STOPPING}, and {@code ACTIVE} bundle states. If
+ * the {@code BundleContext} object is used subsequently, an
+=======
  * the {@code STARTING}, {@code STOPPING}, and {@code ACTIVE} bundle states.
  * However, the {@code BundleContext} object becomes invalid after
  * {@link BundleActivator#stop(BundleContext)} returns (if the bundle has a
@@ -69,6 +92,7 @@ import org.osgi.annotation.versioning.ProviderType;
  * unget operations), those other bundles can observe the stopping bundle in the
  * {@code STOPPING} state but with an invalid {@code BundleContext} object. If
  * the {@code BundleContext} object is used after it has become invalid, an
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
  * {@code IllegalStateException} must be thrown. The {@code BundleContext}
  * object must never be reused after its context bundle is stopped.
  * 
@@ -85,9 +109,16 @@ import org.osgi.annotation.versioning.ProviderType;
  * Environment supports permissions.
  * 
  * @ThreadSafe
+<<<<<<< HEAD
+ * @noimplement
+ * @version $Id: 4f166fd274f3965e48a7dbc239213d00e062b6d0 $
+ */
+
+=======
  * @author $Id: fbf0b18296a0b85d628ee8c47d0f0f213a914e48 $
  */
 @ProviderType
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 public interface BundleContext extends BundleReference {
 
 	/**
@@ -136,6 +167,24 @@ public interface BundleContext extends BundleReference {
 	 * The following steps are required to install a bundle:
 	 * <ol>
 	 * <li>If a bundle containing the same location identifier is already
+<<<<<<< HEAD
+	 * installed, the {@code Bundle} object for that bundle is returned.
+	 * 
+	 * <li>The bundle's content is read from the input stream. If this fails, a
+	 * {@link BundleException} is thrown.
+	 * 
+	 * <li>The bundle's associated resources are allocated. The associated
+	 * resources minimally consist of a unique identifier and a persistent
+	 * storage area if the platform has file system support. If this step fails,
+	 * a {@code BundleException} is thrown.
+	 * 
+	 * <li>The bundle's state is set to {@code INSTALLED}.
+	 * 
+	 * <li>A bundle event of type {@link BundleEvent#INSTALLED} is fired.
+	 * 
+	 * <li>The {@code Bundle} object for the newly or previously installed
+	 * bundle is returned.
+=======
 	 * installed, the {@code Bundle} object for that bundle is returned.</li>
 	 * <li>The bundle's content is read from the input stream. If this fails, a
 	 * {@link BundleException} is thrown.</li>
@@ -147,13 +196,19 @@ public interface BundleContext extends BundleReference {
 	 * <li>A bundle event of type {@link BundleEvent#INSTALLED} is fired.</li>
 	 * <li>The {@code Bundle} object for the newly or previously installed
 	 * bundle is returned.</li>
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 	 * </ol>
 	 * 
 	 * <b>Postconditions, no exceptions thrown </b>
 	 * <ul>
 	 * <li>{@code getState()} in &#x007B; {@code INSTALLED}, {@code RESOLVED}
+<<<<<<< HEAD
+	 * &#x007D;.
+	 * <li>Bundle has a unique ID.
+=======
 	 * &#x007D;.</li>
 	 * <li>Bundle has a unique ID.</li>
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 	 * </ul>
 	 * <b>Postconditions, when an exception is thrown </b>
 	 * <ul>
@@ -390,6 +445,25 @@ public interface BundleContext extends BundleReference {
 	 * <p>
 	 * The following steps are required to register a service:
 	 * <ol>
+<<<<<<< HEAD
+	 * <li>If {@code service} is not a {@code ServiceFactory}, an
+	 * {@code IllegalArgumentException} is thrown if {@code service} is not an
+	 * {@code instanceof} all the specified class names.
+	 * <li>The Framework adds the following service properties to the service
+	 * properties from the specified {@code Dictionary} (which may be
+	 * {@code null}): <br/>
+	 * A property named {@link Constants#SERVICE_ID} identifying the
+	 * registration number of the service <br/>
+	 * A property named {@link Constants#OBJECTCLASS} containing all the
+	 * specified classes. <br/>
+	 * Properties with these names in the specified {@code Dictionary} will be
+	 * ignored.
+	 * <li>The service is added to the Framework service registry and may now be
+	 * used by other bundles.
+	 * <li>A service event of type {@link ServiceEvent#REGISTERED} is fired.
+	 * <li>A {@code ServiceRegistration} object for this registration is
+	 * returned.
+=======
 	 * <li>If {@code service} does not implement {@code ServiceFactory}, an
 	 * {@code IllegalArgumentException} is thrown if {@code service} is not an
 	 * {@code instanceof} all the specified class names.</li>
@@ -413,13 +487,18 @@ public interface BundleContext extends BundleReference {
 	 * <li>A service event of type {@link ServiceEvent#REGISTERED} is fired.</li>
 	 * <li>A {@code ServiceRegistration} object for this registration is
 	 * returned.</li>
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 	 * </ol>
 	 * 
 	 * @param clazzes The class names under which the service can be located.
 	 *        The class names in this array will be stored in the service's
 	 *        properties under the key {@link Constants#OBJECTCLASS}.
+<<<<<<< HEAD
+	 * @param service The service object or a {@code ServiceFactory} object.
+=======
 	 * @param service The service object or an object implementing
 	 *        {@code ServiceFactory}.
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 	 * @param properties The properties for this service. The keys in the
 	 *        properties object must all be {@code String} objects. See
 	 *        {@link Constants} for a list of standard service property keys.
@@ -433,10 +512,17 @@ public interface BundleContext extends BundleReference {
 	 *         unregister the service.
 	 * @throws IllegalArgumentException If one of the following is true:
 	 *         <ul>
+<<<<<<< HEAD
+	 *         <li>{@code service} is {@code null}. <li>{@code service} is not a
+	 *         {@code ServiceFactory} object and is not an instance of all the
+	 *         named classes in {@code clazzes}. <li> {@code properties}
+	 *         contains case variants of the same key name.
+=======
 	 *         <li>{@code service} is {@code null}.</li><li>{@code service} does
 	 *         not implement {@code ServiceFactory} and is not an instance of
 	 *         all the specified classes.</li><li> {@code properties} contains
 	 *         case variants of the same key name.</li>
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 	 *         </ul>
 	 * @throws SecurityException If the caller does not have the
 	 *         {@code ServicePermission} to register the service for all the
@@ -444,7 +530,10 @@ public interface BundleContext extends BundleReference {
 	 *         permissions.
 	 * @throws IllegalStateException If this BundleContext is no longer valid.
 	 * @see ServiceRegistration
+<<<<<<< HEAD
+=======
 	 * @see PrototypeServiceFactory
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 	 * @see ServiceFactory
 	 */
 	ServiceRegistration<?> registerService(String[] clazzes, Object service, Dictionary<String, ?> properties);
@@ -462,8 +551,12 @@ public interface BundleContext extends BundleReference {
 	 * than just a single string.
 	 * 
 	 * @param clazz The class name under which the service can be located.
+<<<<<<< HEAD
+	 * @param service The service object or a {@code ServiceFactory} object.
+=======
 	 * @param service The service object or an object implementing
 	 *        {@code ServiceFactory}.
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 	 * @param properties The properties for this service.
 	 * @return A {@code ServiceRegistration} object for use by the bundle
 	 *         registering the service to update the service's properties or to
@@ -484,8 +577,12 @@ public interface BundleContext extends BundleReference {
 	 * 
 	 * @param <S> Type of Service.
 	 * @param clazz The class under whose name the service can be located.
+<<<<<<< HEAD
+	 * @param service The service object or a {@code ServiceFactory} object.
+=======
 	 * @param service The service object or an object implementing
 	 *        {@code ServiceFactory}.
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 	 * @param properties The properties for this service.
 	 * @return A {@code ServiceRegistration} object for use by the bundle
 	 *         registering the service to update the service's properties or to
@@ -497,6 +594,8 @@ public interface BundleContext extends BundleReference {
 	<S> ServiceRegistration<S> registerService(Class<S> clazz, S service, Dictionary<String, ?> properties);
 
 	/**
+<<<<<<< HEAD
+=======
 	 * Registers the specified service factory object with the specified
 	 * properties under the name of the specified class with the Framework.
 	 * 
@@ -520,6 +619,7 @@ public interface BundleContext extends BundleReference {
 	<S> ServiceRegistration<S> registerService(Class<S> clazz, ServiceFactory<S> factory, Dictionary<String, ?> properties);
 
 	/**
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 	 * Returns an array of {@code ServiceReference} objects. The returned array
 	 * of {@code ServiceReference} objects contains services that were
 	 * registered under the specified class, match the specified filter
@@ -550,6 +650,18 @@ public interface BundleContext extends BundleReference {
 	 * service must have been registered with the specified class name. The
 	 * complete list of class names with which a service was registered is
 	 * available from the service's {@link Constants#OBJECTCLASS objectClass}
+<<<<<<< HEAD
+	 * property.
+	 * <li>If the specified {@code filter} is not {@code null}, the filter
+	 * expression must match the service.
+	 * <li>If the Java Runtime Environment supports permissions, the caller must
+	 * have {@code ServicePermission} with the {@code GET} action for at least
+	 * one of the class names under which the service was registered.
+	 * <li>For each class name with which the service was registered, calling
+	 * {@link ServiceReference#isAssignableTo(Bundle, String)} with the context
+	 * bundle and the class name on the service's {@code ServiceReference}
+	 * object must return {@code true}
+=======
 	 * property.</li>
 	 * <li>If the specified {@code filter} is not {@code null}, the filter
 	 * expression must match the service.</li>
@@ -560,6 +672,7 @@ public interface BundleContext extends BundleReference {
 	 * {@link ServiceReference#isAssignableTo(Bundle, String)} with the context
 	 * bundle and the class name on the service's {@code ServiceReference}
 	 * object must return {@code true}</li>
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 	 * </ul>
 	 * 
 	 * @param clazz The class name with which the service was registered or
@@ -602,12 +715,21 @@ public interface BundleContext extends BundleReference {
 	 * service must have been registered with the specified class name. The
 	 * complete list of class names with which a service was registered is
 	 * available from the service's {@link Constants#OBJECTCLASS objectClass}
+<<<<<<< HEAD
+	 * property.
+	 * <li>If the specified {@code filter} is not {@code null}, the filter
+	 * expression must match the service.
+	 * <li>If the Java Runtime Environment supports permissions, the caller must
+	 * have {@code ServicePermission} with the {@code GET} action for at least
+	 * one of the class names under which the service was registered.
+=======
 	 * property.</li>
 	 * <li>If the specified {@code filter} is not {@code null}, the filter
 	 * expression must match the service.</li>
 	 * <li>If the Java Runtime Environment supports permissions, the caller must
 	 * have {@code ServicePermission} with the {@code GET} action for at least
 	 * one of the class names under which the service was registered.</li>
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 	 * </ul>
 	 * 
 	 * @param clazz The class name with which the service was registered or
@@ -643,7 +765,11 @@ public interface BundleContext extends BundleReference {
 	 * highest ranking (as specified in its {@link Constants#SERVICE_RANKING}
 	 * property) is returned.
 	 * <p>
+<<<<<<< HEAD
+	 * If there is a tie in ranking, the service with the lowest service ID (as
+=======
 	 * If there is a tie in ranking, the service with the lowest service id (as
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 	 * specified in its {@link Constants#SERVICE_ID} property); that is, the
 	 * service that was registered first is returned.
 	 * 
@@ -673,7 +799,11 @@ public interface BundleContext extends BundleReference {
 	 * If multiple such services exist, the service with the highest ranking (as
 	 * specified in its {@link Constants#SERVICE_RANKING} property) is returned.
 	 * <p>
+<<<<<<< HEAD
+	 * If there is a tie in ranking, the service with the lowest service ID (as
+=======
 	 * If there is a tie in ranking, the service with the lowest service id (as
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 	 * specified in its {@link Constants#SERVICE_ID} property); that is, the
 	 * service that was registered first is returned.
 	 * 
@@ -718,6 +848,18 @@ public interface BundleContext extends BundleReference {
 	 * <li>The service must have been registered with the name of the specified
 	 * class. The complete list of class names with which a service was
 	 * registered is available from the service's {@link Constants#OBJECTCLASS
+<<<<<<< HEAD
+	 * objectClass} property.
+	 * <li>If the specified {@code filter} is not {@code null}, the filter
+	 * expression must match the service.
+	 * <li>If the Java Runtime Environment supports permissions, the caller must
+	 * have {@code ServicePermission} with the {@code GET} action for at least
+	 * one of the class names under which the service was registered.
+	 * <li>For each class name with which the service was registered, calling
+	 * {@link ServiceReference#isAssignableTo(Bundle, String)} with the context
+	 * bundle and the class name on the service's {@code ServiceReference}
+	 * object must return {@code true}
+=======
 	 * objectClass} property.</li>
 	 * <li>If the specified {@code filter} is not {@code null}, the filter
 	 * expression must match the service.</li>
@@ -728,6 +870,7 @@ public interface BundleContext extends BundleReference {
 	 * {@link ServiceReference#isAssignableTo(Bundle, String)} with the context
 	 * bundle and the class name on the service's {@code ServiceReference}
 	 * object must return {@code true}</li>
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 	 * </ul>
 	 * 
 	 * @param <S> Type of Service
@@ -744,6 +887,24 @@ public interface BundleContext extends BundleReference {
 	<S> Collection<ServiceReference<S>> getServiceReferences(Class<S> clazz, String filter) throws InvalidSyntaxException;
 
 	/**
+<<<<<<< HEAD
+	 * Returns the service object referenced by the specified
+	 * {@code ServiceReference} object.
+	 * <p>
+	 * A bundle's use of a service is tracked by the bundle's use count of that
+	 * service. Each time a service's service object is returned by
+	 * {@link #getService(ServiceReference)} the context bundle's use count for
+	 * that service is incremented by one. Each time the service is released by
+	 * {@link #ungetService(ServiceReference)} the context bundle's use count
+	 * for that service is decremented by one.
+	 * <p>
+	 * When a bundle's use count for a service drops to zero, the bundle should
+	 * no longer use that service.
+	 * 
+	 * <p>
+	 * This method will always return {@code null} when the service associated
+	 * with this {@code reference} has been unregistered.
+=======
 	 * Returns the service object for the service referenced by the specified
 	 * {@code ServiceReference} object.
 	 * 
@@ -762,10 +923,32 @@ public interface BundleContext extends BundleReference {
 	 * <p>
 	 * This method will always return {@code null} when the service associated
 	 * with the specified {@code reference} has been unregistered.
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 	 * 
 	 * <p>
 	 * The following steps are required to get the service object:
 	 * <ol>
+<<<<<<< HEAD
+	 * <li>If the service has been unregistered, {@code null} is returned.
+	 * <li>If the context bundle's use count for the service is currently zero
+	 * and the service was registered with an object implementing the
+	 * {@code ServiceFactory} interface, the
+	 * {@link ServiceFactory#getService(Bundle, ServiceRegistration)} method is
+	 * called to create a service object for the context bundle. If the service
+	 * object returned by the {@code ServiceFactory} object is {@code null}, not
+	 * an {@code instanceof} all the classes named when the service was
+	 * registered or the {@code ServiceFactory} object throws an exception or
+	 * will be recursively called for the context bundle, {@code null} is
+	 * returned and a Framework event of type {@link FrameworkEvent#ERROR}
+	 * containing a {@link ServiceException} describing the error is fired. <br>
+	 * This service object is cached by the Framework. While the context
+	 * bundle's use count for the service is greater than zero, subsequent calls
+	 * to get the services's service object for the context bundle will return
+	 * the cached service object.
+	 * <li>The context bundle's use count for this service is incremented by
+	 * one.
+	 * <li>The service object for the service is returned.
+=======
 	 * <li>If the service has been unregistered, {@code null} is returned.</li>
 	 * <li>If the context bundle's use count for the service is currently zero
 	 * and the service has {@link Constants#SCOPE_BUNDLE bundle} or
@@ -785,6 +968,7 @@ public interface BundleContext extends BundleReference {
 	 * <li>The context bundle's use count for the service is incremented by one.
 	 * </li>
 	 * <li>The service object for the service is returned.</li>
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 	 * </ol>
 	 * 
 	 * @param <S> Type of Service.
@@ -809,12 +993,34 @@ public interface BundleContext extends BundleReference {
 	<S> S getService(ServiceReference<S> reference);
 
 	/**
+<<<<<<< HEAD
+	 * Releases the service object referenced by the specified
+=======
 	 * Releases the service object for the service referenced by the specified
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 	 * {@code ServiceReference} object. If the context bundle's use count for
 	 * the service is zero, this method returns {@code false}. Otherwise, the
 	 * context bundle's use count for the service is decremented by one.
 	 * 
 	 * <p>
+<<<<<<< HEAD
+	 * The service's service object should no longer be used and all references
+	 * to it should be destroyed when a bundle's use count for the service drops
+	 * to zero.
+	 * 
+	 * <p>
+	 * The following steps are required to unget the service object:
+	 * <ol>
+	 * <li>If the context bundle's use count for the service is zero or the
+	 * service has been unregistered, {@code false} is returned.
+	 * <li>The context bundle's use count for this service is decremented by
+	 * one.
+	 * <li>If the context bundle's use count for the service is currently zero
+	 * and the service was registered with a {@code ServiceFactory} object, the
+	 * {@link ServiceFactory#ungetService(Bundle, ServiceRegistration, Object)}
+	 * method is called to release the service object for the context bundle.
+	 * <li>{@code true} is returned.
+=======
 	 * The service object must no longer be used and all references to it should
 	 * be destroyed when a bundle's use count for the service drops to zero.
 	 * 
@@ -831,6 +1037,7 @@ public interface BundleContext extends BundleReference {
 	 * {@link ServiceFactory#ungetService(Bundle, ServiceRegistration, Object)}
 	 * method is called to release the service object for the context bundle.</li>
 	 * <li>{@code true} is returned.</li>
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 	 * </ol>
 	 * 
 	 * @param reference A reference to the service to be released.
@@ -847,6 +1054,8 @@ public interface BundleContext extends BundleReference {
 	boolean ungetService(ServiceReference<?> reference);
 
 	/**
+<<<<<<< HEAD
+=======
 	 * Returns the {@link ServiceObjects} object for the service referenced by
 	 * the specified {@code ServiceReference} object.
 	 * 
@@ -888,6 +1097,7 @@ public interface BundleContext extends BundleReference {
 	<S> ServiceObjects<S> getServiceObjects(ServiceReference<S> reference);
 
 	/**
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 	 * Creates a {@code File} object for a file in the persistent storage area
 	 * provided for the bundle by the Framework. This method will return
 	 * {@code null} if the platform does not have file system support.

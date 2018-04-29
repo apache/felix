@@ -38,16 +38,33 @@ import org.osgi.service.cm.ManagedService;
 public class ScrManagedService implements ManagedService
 {
 
+<<<<<<< HEAD
+    private final ScrConfiguration scrConfiguration;
+
+    protected final ScrConfiguration getScrConfiguration()
+    {
+        return scrConfiguration;
+    }
+
+    public ScrManagedService(final ScrConfiguration scrConfiguration)
+=======
     private final ScrConfigurationImpl scrConfiguration;
 
     public ScrManagedService(final ScrConfigurationImpl scrConfiguration)
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     {
         this.scrConfiguration = scrConfiguration;
     }
 
+<<<<<<< HEAD
+    public void updated(Dictionary properties) throws ConfigurationException
+    {
+        this.scrConfiguration.configure(properties);
+=======
     @Override
     public void updated(final Dictionary<String, ?> properties) throws ConfigurationException
     {
         this.scrConfiguration.configure(properties, true);
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     }
 }

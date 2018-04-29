@@ -53,7 +53,11 @@ public class MethodCodeAdapter extends GeneratorAdapter implements Opcodes {
      * @param fields : Contained fields
      */
     public MethodCodeAdapter(final MethodVisitor mv, final String owner, int access, String name, String desc, Set<String> fields) {
+<<<<<<< HEAD
+        super(mv, access, name, desc);
+=======
         super(Opcodes.ASM5, mv, access, name, desc);
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         m_owner = owner;
         m_fields = fields;
     }
@@ -70,11 +74,19 @@ public class MethodCodeAdapter extends GeneratorAdapter implements Opcodes {
         if (owner.equals(m_owner) && m_fields.contains(name)) {
             if (opcode == GETFIELD) {
                 String gDesc = "()" + desc;
+<<<<<<< HEAD
+                visitMethodInsn(INVOKEVIRTUAL, owner, "__get" + name, gDesc);
+                return;
+            } else if (opcode == PUTFIELD) {
+                String sDesc = "(" + desc + ")V";
+                visitMethodInsn(INVOKEVIRTUAL, owner, "__set" + name, sDesc);
+=======
                 visitMethodInsn(INVOKEVIRTUAL, owner, "__get" + name, gDesc, false);
                 return;
             } else if (opcode == PUTFIELD) {
                 String sDesc = "(" + desc + ")V";
                 visitMethodInsn(INVOKEVIRTUAL, owner, "__set" + name, sDesc, false);
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
                 return;
             }
         }
@@ -90,14 +102,22 @@ public class MethodCodeAdapter extends GeneratorAdapter implements Opcodes {
      * @param visible the annotation visibility
      * @return the <code>null</code> if the annotation is visible, otherwise returns
      * {@link GeneratorAdapter#visitAnnotation(String, boolean)}
+<<<<<<< HEAD
+     * @see org.objectweb.asm.MethodAdapter#visitAnnotation(java.lang.String, boolean)
+=======
      * @see org.objectweb.asm.commons.GeneratorAdapter#visitAnnotation(java.lang.String, boolean)
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
      */
     public AnnotationVisitor visitAnnotation(String name, boolean visible) {
         // Annotations are moved to the injected constructor.
         if (visible) {
             return null;
         } else {
+<<<<<<< HEAD
+            return super.visitAnnotation(name, visible);
+=======
             return super.visitAnnotation(name, false);
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         }
     }
 
@@ -108,14 +128,22 @@ public class MethodCodeAdapter extends GeneratorAdapter implements Opcodes {
      * @param visible if te annotation visibility
      * @return the <code>null</code> if the annotation is visible, otherwise returns
      * {@link GeneratorAdapter#visitAnnotation(String, boolean)}
+<<<<<<< HEAD
+     * @see org.objectweb.asm.MethodAdapter#visitParameterAnnotation(int, java.lang.String, boolean)
+=======
      * @see org.objectweb.asm.commons.GeneratorAdapter#visitParameterAnnotation(int, java.lang.String, boolean)
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
      */
     public AnnotationVisitor visitParameterAnnotation(int id, String name,
             boolean visible) {
         if (visible) {
             return null;
         } else {
+<<<<<<< HEAD
+            return super.visitParameterAnnotation(id, name, visible);
+=======
             return super.visitParameterAnnotation(id, name, false);
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         }
     }
 

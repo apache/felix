@@ -87,7 +87,11 @@ public class CustomStrategyTest extends Common {
         ServiceReference refcons1 = ipojoHelper.getServiceReferenceByName(CheckService.class.getName(), cons1.getInstanceName());
         assertNotNull("Cons1 Service available", refcons1);
 
+<<<<<<< HEAD
+        CheckService cs_cons1 = (CheckService) osgiHelper.getServiceObject(refcons1);
+=======
         CheckService cs_cons1 = (CheckService) osgiHelper.getRawServiceObject(refcons1);
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         Properties props = cs_cons1.getProps();
         Long id = (Long) props.get("id");
         FooService fscons1 = (FooService) props.get("object");
@@ -100,7 +104,11 @@ public class CustomStrategyTest extends Common {
         ServiceReference refcons2 = ipojoHelper.getServiceReferenceByName(CheckService.class.getName(), cons2.getInstanceName());
         assertNotNull("Cons2 Service available", refcons2);
 
+<<<<<<< HEAD
+        CheckService cs_cons2 = (CheckService) osgiHelper.getServiceObject(refcons2);
+=======
         CheckService cs_cons2 = (CheckService) osgiHelper.getRawServiceObject(refcons2);
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         Properties props2 = cs_cons2.getProps();
         Long id2 = (Long) props2.get("id");
         FooService fscons2 = (FooService) props2.get("object");
@@ -127,13 +135,21 @@ public class CustomStrategyTest extends Common {
         // The two consumers are started and use their own objects.
         ServiceReference refcons1 = ipojoHelper.getServiceReferenceByName(CheckService.class.getName(), cons1.getInstanceName());
         assertNotNull("Cons1 Service available", refcons1);
+<<<<<<< HEAD
+        CheckService cs_cons1 = (CheckService) osgiHelper.getServiceObject(refcons1);
+=======
         CheckService cs_cons1 = (CheckService) osgiHelper.getRawServiceObject(refcons1);
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         Properties props = cs_cons1.getProps();
         FooService fscons1 = (FooService) props.get("object");
 
         ServiceReference refcons2 = ipojoHelper.getServiceReferenceByName(CheckService.class.getName(), cons2.getInstanceName());
         assertNotNull("Cons2 Service available", refcons2);
+<<<<<<< HEAD
+        CheckService cs_cons2 = (CheckService) osgiHelper.getServiceObject(refcons2);
+=======
         CheckService cs_cons2 = (CheckService) osgiHelper.getRawServiceObject(refcons2);
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         Properties props2 = cs_cons2.getProps();
         FooService fscons2 = (FooService) props2.get("object");
 
@@ -159,13 +175,21 @@ public class CustomStrategyTest extends Common {
         // Check objects
         refcons1 = ipojoHelper.getServiceReferenceByName(CheckService.class.getName(), cons1.getInstanceName());
         assertNotNull("Cons1 Service available", refcons1);
+<<<<<<< HEAD
+        cs_cons1 = (CheckService) osgiHelper.getServiceObject(refcons1);
+=======
         cs_cons1 = (CheckService) osgiHelper.getRawServiceObject(refcons1);
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         props = cs_cons1.getProps();
         Object fscons3 = (FooService) props.get("object");
 
         refcons2 = ipojoHelper.getServiceReferenceByName(CheckService.class.getName(), cons2.getInstanceName());
         assertNotNull("Cons2 Service available", refcons2);
+<<<<<<< HEAD
+        cs_cons2 = (CheckService) osgiHelper.getServiceObject(refcons2);
+=======
         cs_cons2 = (CheckService) osgiHelper.getRawServiceObject(refcons2);
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         props2 = cs_cons2.getProps();
         Object fscons4 = (FooService) props2.get("object");
 
@@ -194,7 +218,11 @@ public class CustomStrategyTest extends Common {
         ServiceReference refcons1 = ipojoHelper.getServiceReferenceByName(CheckService.class.getName(), cons1.getInstanceName());
         assertNotNull("Cons1 Service available", refcons1);
 
+<<<<<<< HEAD
+        CheckService cs_cons1 = (CheckService) osgiHelper.getServiceObject(refcons1);
+=======
         CheckService cs_cons1 = (CheckService) osgiHelper.getRawServiceObject(refcons1);
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         Properties props = cs_cons1.getProps();
         Long id = (Long) props.get("id");
         FooService fscons1 = (FooService) props.get("object");
@@ -207,7 +235,11 @@ public class CustomStrategyTest extends Common {
         ServiceReference refcons2 = ipojoHelper.getServiceReferenceByName(CheckService.class.getName(), cons3.getInstanceName());
         assertNotNull("Cons2 Service available", refcons2);
 
+<<<<<<< HEAD
+        CheckService cs_cons2 = (CheckService) osgiHelper.getServiceObject(refcons2);
+=======
         CheckService cs_cons2 = (CheckService) osgiHelper.getRawServiceObject(refcons2);
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         Properties props2 = cs_cons2.getProps();
         Long id2 = (Long) props2.get("id");
         FooService fscons2 = (FooService) props2.get("object");

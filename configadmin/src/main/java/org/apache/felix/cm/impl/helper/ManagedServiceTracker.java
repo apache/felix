@@ -19,15 +19,21 @@
 package org.apache.felix.cm.impl.helper;
 
 
+<<<<<<< HEAD
+=======
 import java.security.AccessController;
 import java.security.PrivilegedActionException;
 import java.security.PrivilegedExceptionAction;
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 import java.util.Dictionary;
 import java.util.Hashtable;
 
 import org.apache.felix.cm.impl.ConfigurationManager;
 import org.osgi.framework.ServiceReference;
+<<<<<<< HEAD
+=======
 import org.osgi.service.cm.ConfigurationException;
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 import org.osgi.service.cm.ManagedService;
 
 
@@ -149,7 +155,11 @@ public class ManagedServiceTracker extends BaseTracker<ManagedService>
         {
             try
             {
+<<<<<<< HEAD
+                srv.updated( properties );
+=======
                 updated( service, srv, properties );
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
                 configs.record( configPid, null, revision );
             }
             catch ( Throwable t )
@@ -161,6 +171,9 @@ public class ManagedServiceTracker extends BaseTracker<ManagedService>
                 this.ungetRealService( service );
             }
         }
+<<<<<<< HEAD
+   }
+=======
     }
 
 
@@ -189,4 +202,5 @@ public class ManagedServiceTracker extends BaseTracker<ManagedService>
             service.updated( properties );
         }
     }
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 }

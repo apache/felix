@@ -16,7 +16,10 @@
 
 package org.apache.felix.scr.impl.manager;
 
+<<<<<<< HEAD
+=======
 import org.osgi.framework.ServiceEvent;
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 import org.osgi.framework.ServiceReference;
 
 /**
@@ -48,7 +51,11 @@ import org.osgi.framework.ServiceReference;
  * @ThreadSafe
  * @version $Id: c14b8d47026b6bd4ba1f2db7bf7e755d00fc6f6a $
  */
+<<<<<<< HEAD
+public interface ServiceTrackerCustomizer<S, T> {
+=======
 public interface ServiceTrackerCustomizer<S, T, U extends ServiceEvent> {
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 	/**
 	 * A service is being added to the {@code ServiceTracker}.
 	 * 
@@ -70,7 +77,11 @@ public interface ServiceTrackerCustomizer<S, T, U extends ServiceEvent> {
 	 */
 	public T addingService( ServiceReference<S> reference );
 
+<<<<<<< HEAD
+    public void addedService( ServiceReference<S> reference, T service, int trackingCount );
+=======
     public void addedService( ServiceReference<S> reference, T service, int trackingCount, int serviceCount, U event );
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 
 	/**
 	 * A service tracked by the {@code ServiceTracker} has been modified.
@@ -80,11 +91,18 @@ public interface ServiceTrackerCustomizer<S, T, U extends ServiceEvent> {
 	 * {@code ServiceTracker} has had it properties modified.
 	 *
      * @param reference The reference to the service that has been modified.
+<<<<<<< HEAD
+     * @param service The service object for the specified referenced service.
+     * @param trackingCount
+     */
+	public void modifiedService( ServiceReference<S> reference, T service, int trackingCount );
+=======
 	 * @param service The service object for the specified referenced service.
 	 * @param trackingCount
 	 * @param event TODO
      */
 	public void modifiedService( ServiceReference<S> reference, T service, int trackingCount, U event );
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 
 	/**
 	 * A service tracked by the {@code ServiceTracker} has been removed.
@@ -94,10 +112,17 @@ public interface ServiceTrackerCustomizer<S, T, U extends ServiceEvent> {
 	 * {@code ServiceTracker}.
 	 *
      * @param reference The reference to the service that has been removed.
+<<<<<<< HEAD
+     * @param service The service object for the specified referenced service.
+     * @param trackingCount
+     */
+	public void removedService( ServiceReference<S> reference, T service, int trackingCount );
+=======
 	 * @param service The service object for the specified referenced service.
 	 * @param trackingCount
 	 * @param event TODO
      */
 	public void removedService( ServiceReference<S> reference, T service, int trackingCount, U event );
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 
 }

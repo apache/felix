@@ -1,4 +1,8 @@
+<<<<<<< HEAD
+Copyright 2013 The Apache Software Foundation
+=======
 Copyright 2015 The Apache Software Foundation
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 
 This software was developed at the Apache Software Foundation
 (http://www.apache.org) and may have dependencies on other
@@ -8,14 +12,22 @@ I. Included Third-Party Software
 
 This product includes software developed at
 The OSGi Alliance (http://www.osgi.org/).
+<<<<<<< HEAD
+Copyright (c) OSGi Alliance (2000, 2012).
+=======
 Copyright (c) OSGi Alliance (2000, 2014).
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 Licensed under the Apache License 2.0.
 
 II. Used Third-Party Software
 
 This product uses software developed at
 The OSGi Alliance (http://www.osgi.org/).
+<<<<<<< HEAD
+Copyright (c) OSGi Alliance (2000, 2012).
+=======
 Copyright (c) OSGi Alliance (2000, 2014).
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 Licensed under the Apache License 2.0.
 
 III. License Summary

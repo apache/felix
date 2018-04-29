@@ -20,7 +20,11 @@
     <parent>
         <groupId>org.apache.felix</groupId>
         <artifactId>felix-parent</artifactId>
+<<<<<<< HEAD
+        <version>1.2.1</version>
+=======
         <version>4</version>
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         <relativePath>../pom/pom.xml</relativePath>
     </parent>
     <modelVersion>4.0.0</modelVersion>
@@ -29,6 +33,10 @@
     <description>
         Provide remote access to Felix Shell or Gogo.
     </description>
+<<<<<<< HEAD
+    <version>1.1.3-SNAPSHOT</version>
+    <artifactId>org.apache.felix.shell.remote</artifactId>
+=======
     <version>1.2.1-SNAPSHOT</version>
     <artifactId>org.apache.felix.shell.remote</artifactId>
 
@@ -38,6 +46,7 @@
       <url>http://svn.apache.org/repos/asf/felix/shell.remote</url>
   </scm>
 
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     <dependencies>
         <dependency>
             <groupId>org.osgi</groupId>
@@ -50,14 +59,24 @@
             <version>4.0.0</version>
         </dependency>
         <dependency>
+<<<<<<< HEAD
+            <groupId>${pom.groupId}</groupId>
+=======
             <groupId>${project.groupId}</groupId>
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
             <artifactId>org.apache.felix.shell</artifactId>
             <version>1.0.0</version>
         </dependency>
         <dependency>
+<<<<<<< HEAD
+            <groupId>${pom.groupId}</groupId>
+            <artifactId>org.apache.felix.gogo.runtime</artifactId>
+            <version>0.6.1</version>
+=======
             <groupId>${project.groupId}</groupId>
             <artifactId>org.apache.felix.gogo.runtime</artifactId>
             <version>1.0.0</version>
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         </dependency>
     </dependencies>
     <build>
@@ -69,7 +88,11 @@
                 <extensions>true</extensions>
                 <configuration>
                     <instructions>
+<<<<<<< HEAD
+                        <Bundle-SymbolicName>${pom.artifactId}</Bundle-SymbolicName>
+=======
                         <Bundle-SymbolicName>${project.artifactId}</Bundle-SymbolicName>
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
                         <Bundle-Category>console</Bundle-Category>
                         <Bundle-Activator>
                             org.apache.felix.shell.remote.Activator
@@ -78,7 +101,11 @@
                             org.apache.felix.shell.remote.*
                         </Private-Package>
                         <DynamicImport-Package>
+<<<<<<< HEAD
+                            org.apache.felix.service.command; status="provisional",org.apache.felix.shell,org.osgi.service.log
+=======
                             org.apache.felix.service.command,org.apache.felix.shell,org.osgi.service.log
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
                         </DynamicImport-Package>
                         <Include-Resource>META-INF/LICENSE=LICENSE,META-INF/NOTICE=NOTICE,META-INF/DEPENDENCIES=DEPENDENCIES</Include-Resource>
                     </instructions>

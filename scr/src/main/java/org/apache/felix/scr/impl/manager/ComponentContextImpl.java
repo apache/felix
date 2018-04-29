@@ -19,15 +19,27 @@
 package org.apache.felix.scr.impl.manager;
 
 
+<<<<<<< HEAD
+import java.util.Arrays;
+import java.util.Dictionary;
+=======
 import java.util.Comparator;
 import java.util.Dictionary;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.TreeMap;
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.felix.scr.component.ExtComponentContext;
+<<<<<<< HEAD
+import org.apache.felix.scr.impl.BundleComponentActivator;
+import org.apache.felix.scr.impl.helper.ReadOnlyDictionary;
+import org.osgi.framework.Bundle;
+import org.osgi.framework.BundleContext;
+import org.osgi.framework.ServiceReference;
+=======
 import org.apache.felix.scr.impl.helper.ComponentServiceObjectsHelper;
 import org.apache.felix.scr.impl.helper.ReadOnlyDictionary;
 import org.apache.felix.scr.impl.logger.ComponentLogger;
@@ -36,6 +48,7 @@ import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceReference;
 import org.osgi.framework.ServiceRegistration;
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 import org.osgi.service.component.ComponentInstance;
 import org.osgi.service.log.LogService;
 
@@ -47,6 +60,26 @@ import org.osgi.service.log.LogService;
 public class ComponentContextImpl<S> implements ExtComponentContext {
 
     private final SingleComponentManager<S> m_componentManager;
+<<<<<<< HEAD
+    
+    private final EdgeInfo[] edgeInfos;
+    
+    private final ComponentInstance m_componentInstance = new ComponentInstanceImpl(this);
+    
+    private final Bundle m_usingBundle;
+    
+    private final S m_implementationObject;
+    
+    private volatile boolean m_implementationAccessible;
+    
+    private final CountDownLatch accessibleLatch = new CountDownLatch(1);
+
+    ComponentContextImpl( SingleComponentManager<S> componentManager, Bundle usingBundle, S implementationObject )
+    {
+        m_componentManager = componentManager;
+        m_usingBundle = usingBundle;
+        m_implementationObject = implementationObject;
+=======
 
     private final EdgeInfo[] edgeInfos;
 
@@ -74,11 +107,17 @@ public class ComponentContextImpl<S> implements ExtComponentContext {
         m_componentManager = componentManager;
         m_usingBundle = usingBundle;
         m_serviceRegistration = serviceRegistration;
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         edgeInfos = new EdgeInfo[componentManager.getComponentMetadata().getDependencies().size()];
         for (int i = 0; i< edgeInfos.length; i++)
         {
             edgeInfos[i] = new EdgeInfo();
         }
+<<<<<<< HEAD
+    }
+    
+    void setImplementationAccessible(boolean implementationAccessible)
+=======
         this.serviceObjectsHelper = new ComponentServiceObjectsHelper(usingBundle.getBundleContext());
     }
 
@@ -104,6 +143,7 @@ public class ComponentContextImpl<S> implements ExtComponentContext {
 
 
     public void setImplementationAccessible(boolean implementationAccessible)
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     {
         this.m_implementationAccessible = implementationAccessible;
         if (implementationAccessible)
@@ -111,23 +151,61 @@ public class ComponentContextImpl<S> implements ExtComponentContext {
             accessibleLatch.countDown();
         }
     }
+<<<<<<< HEAD
+    
+=======
 
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     EdgeInfo getEdgeInfo(DependencyManager<S, ?> dm)
     {
         int index = dm.getIndex();
         return edgeInfos[index];
     }
 
+<<<<<<< HEAD
+=======
     ServiceRegistration<S> getServiceRegistration()
     {
         return m_serviceRegistration;
     }
 
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     protected SingleComponentManager<S> getComponentManager()
     {
         return m_componentManager;
     }
 
+<<<<<<< HEAD
+    public final Dictionary<String, Object> getProperties()
+    {
+        // 112.12.3.5 The Dictionary is read-only and cannot be modified
+        Dictionary<String, Object> ctxProperties = m_componentManager.getProperties();
+        return new ReadOnlyDictionary<String, Object>( ctxProperties );
+    }
+
+
+    public Object locateService( String name )
+    {
+        DependencyManager<S, ?> dm = m_componentManager.getDependencyManager( name );
+        return ( dm != null ) ? dm.getService() : null;
+    }
+
+
+    public Object locateService( String name, ServiceReference ref )
+    {
+        DependencyManager<S, ?> dm = m_componentManager.getDependencyManager( name );
+        return ( dm != null ) ? dm.getService( ref ) : null;
+    }
+
+
+    public Object[] locateServices( String name )
+    {
+        DependencyManager dm = m_componentManager.getDependencyManager( name );
+        return ( dm != null ) ? dm.getServices() : null;
+    }
+
+
+=======
     public ComponentMetadata getComponentMetadata()
     {
     	return m_componentManager.getComponentMetadata();
@@ -192,18 +270,26 @@ public class ComponentContextImpl<S> implements ExtComponentContext {
 
 
     @Override
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     public BundleContext getBundleContext()
     {
         return m_componentManager.getBundleContext();
     }
 
 
+<<<<<<< HEAD
+=======
     @Override
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     public Bundle getUsingBundle()
     {
         return m_usingBundle;
     }
 
+<<<<<<< HEAD
+
+    public ComponentInstance getComponentInstance()
+=======
     public ComponentLogger getLogger()
     {
         return this.m_componentManager.getLogger();
@@ -212,11 +298,37 @@ public class ComponentContextImpl<S> implements ExtComponentContext {
     @SuppressWarnings("unchecked")
     @Override
     public ComponentInstance<S> getComponentInstance()
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     {
         return m_componentInstance;
     }
 
 
+<<<<<<< HEAD
+    public void enableComponent( String name )
+    {
+        BundleComponentActivator activator = m_componentManager.getActivator();
+        if ( activator != null )
+        {
+            activator.enableComponent( name );
+        }
+    }
+
+
+    public void disableComponent( String name )
+    {
+        BundleComponentActivator activator = m_componentManager.getActivator();
+        if ( activator != null )
+        {
+            activator.disableComponent( name );
+        }
+    }
+
+
+    public ServiceReference<S> getServiceReference()
+    {
+        return m_componentManager.getServiceReference();
+=======
     @Override
     public void enableComponent( String name )
     {
@@ -235,17 +347,26 @@ public class ComponentContextImpl<S> implements ExtComponentContext {
     public ServiceReference<S> getServiceReference()
     {
         return m_serviceRegistration == null? null: m_serviceRegistration.getReference();
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     }
 
 
     //---------- Speculative MutableProperties interface ------------------------------
 
+<<<<<<< HEAD
+    public void setServiceProperties(Dictionary properties)
+    {
+        getComponentManager().setServiceProperties(properties );
+    }
+    
+=======
     @Override
     public void setServiceProperties(Dictionary<String, ?> properties)
     {
         getComponentManager().setServiceProperties(properties );
     }
 
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     //---------- ComponentInstance interface support ------------------------------
 
     S getImplementationObject( boolean requireAccessible )
@@ -272,38 +393,60 @@ public class ComponentContextImpl<S> implements ExtComponentContext {
             }
             catch ( InterruptedException e1 )
             {
+<<<<<<< HEAD
+                m_componentManager.log( LogService.LOG_INFO, "Interrupted twice waiting for implementation object to become accessible", e1 );
+=======
                 m_componentManager.getLogger().log( LogService.LOG_INFO, "Interrupted twice waiting for implementation object to become accessible", e1 );
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
             }
             Thread.currentThread().interrupt();
             return null;
         }
         return null;
     }
+<<<<<<< HEAD
+    
+    private static class ComponentInstanceImpl implements ComponentInstance
+    {
+        private final ComponentContextImpl m_componentContext;
+
+        private ComponentInstanceImpl(ComponentContextImpl m_componentContext)
+=======
 
     private static class ComponentInstanceImpl<S> implements ComponentInstance<S>
     {
         private final ComponentContextImpl<S> m_componentContext;
 
         private ComponentInstanceImpl(ComponentContextImpl<S> m_componentContext)
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         {
             this.m_componentContext = m_componentContext;
         }
 
 
+<<<<<<< HEAD
+        public Object getInstance()
+=======
         @Override
         public S getInstance()
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         {
             return m_componentContext.getImplementationObject(true);
         }
 
 
+<<<<<<< HEAD
+=======
         @Override
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         public void dispose()
         {
             m_componentContext.getComponentManager().dispose();
         }
 
     }
+<<<<<<< HEAD
+=======
 
     public synchronized Map<RefPair<?, ?>, Object> getBoundValues(final String key)
     {
@@ -333,4 +476,5 @@ public class ComponentContextImpl<S> implements ExtComponentContext {
                 }
             });
     }
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 }

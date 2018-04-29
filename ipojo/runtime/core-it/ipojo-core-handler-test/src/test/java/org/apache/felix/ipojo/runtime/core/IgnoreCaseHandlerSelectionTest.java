@@ -129,7 +129,11 @@ public class IgnoreCaseHandlerSelectionTest extends Common {
     public void testCreationOfIgnoreCase1() {
           ServiceReference refv1 = ipojoHelper.getServiceReferenceByName(Architecture.class.getName(), "IgnoreCase-1");
           Assert.assertNotNull(refv1);
+<<<<<<< HEAD
+          Architecture arch = (Architecture) osgiHelper.getServiceObject(refv1);
+=======
           Architecture arch = (Architecture) osgiHelper.getRawServiceObject(refv1);
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
           Assert.assertEquals(ComponentInstance.VALID, arch.getInstanceDescription().getState());
 
           HandlerDescription desc = arch.getInstanceDescription()
@@ -146,7 +150,11 @@ public class IgnoreCaseHandlerSelectionTest extends Common {
     public void testCreationOfIgnoreCase2() {
           ServiceReference refv1 = ipojoHelper.getServiceReferenceByName(Architecture.class.getName(), "IgnoreCase-2");
           Assert.assertNotNull(refv1);
+<<<<<<< HEAD
+          Architecture arch = (Architecture) osgiHelper.getServiceObject(refv1);
+=======
           Architecture arch = (Architecture) osgiHelper.getRawServiceObject(refv1);
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
           Assert.assertEquals(ComponentInstance.VALID, arch.getInstanceDescription().getState());
 
           HandlerDescription desc = arch.getInstanceDescription()

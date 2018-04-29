@@ -15,13 +15,21 @@
     <parent>
         <groupId>org.apache.felix</groupId>
         <artifactId>felix-parent</artifactId>
+<<<<<<< HEAD
+        <version>2.1</version>
+=======
         <version>4</version>
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         <relativePath>../../../pom/pom.xml</relativePath>
     </parent>
 
     <artifactId>org.apache.felix.webconsole.plugins.memoryusage</artifactId>
     <packaging>bundle</packaging>
+<<<<<<< HEAD
+    <version>1.0.5-SNAPSHOT</version>
+=======
     <version>1.0.9-SNAPSHOT</version>
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 
     <name>Apache Felix Web Console Memory Usage Plugin</name>
     <description>
@@ -42,7 +50,34 @@
     </scm>
 
     <build>
+<<<<<<< HEAD
+
+        <!-- add UTF-8-to-ISO translated resources -->
+        <resources>
+            <resource>
+                <directory>${basedir}/src/main/resources</directory>
+            </resource>
+            <resource>
+                <directory>target/classes</directory>
+                <includes>
+                    <include>OSGI-INF/**</include>
+                </includes>
+                <filtering>false</filtering>
+            </resource>
+        </resources>
+
         <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <configuration>
+                    <source>1.5</source>
+                    <target>1.5</target>
+                </configuration>
+            </plugin>
+=======
+        <plugins>
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 
             <!-- translate UTF-8 encoded properties files to ISO-8859-1 -->
             <plugin>
@@ -65,7 +100,11 @@
             <plugin>
                 <groupId>org.apache.felix</groupId>
                 <artifactId>maven-bundle-plugin</artifactId>
+<<<<<<< HEAD
+                <version>2.3.4</version>
+=======
                 <version>3.2.0</version>
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
                 <extensions>true</extensions>
                 <configuration>
                     <instructions>
@@ -74,6 +113,26 @@
                         </Bundle-SymbolicName>
                         <Import-Package>
                             javax.management.*,
+<<<<<<< HEAD
+                            org.osgi.framework
+                        </Import-Package>
+                        <DynamicImport-Package>
+                            <!-- logging -->
+                            org.osgi.service.log;version="[1.3,2)",
+
+                            <!-- configuration -->
+                            org.osgi.service.cm;version="[1.2,2)",
+                            org.osgi.service.metatype;version="[1.1,2)",
+
+                            <!-- plug into the web console -->
+                            javax.servlet;
+                            javax.servlet.http;version="[2.3,4)",
+                            org.apache.felix.webconsole;version="[3.0,3.2)",
+
+                            <!-- plug into the traditional Felix shell -->
+                            org.apache.felix.shell;version="[1.0,1.1)"
+                        </DynamicImport-Package>
+=======
                             org.osgi.framework,
                             <!-- configuration -->
                             org.osgi.service.cm;version="[1.2,2)";resolution:="optional",
@@ -87,6 +146,7 @@
                             <!-- plug into the traditional Felix shell -->
                             org.apache.felix.shell;version="[1.0,1.1)";resolution:="optional"
                         </Import-Package>
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
                         <Private-Package>
                             org.apache.felix.webconsole.plugins.memoryusage.*
                         </Private-Package>

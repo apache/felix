@@ -23,29 +23,47 @@ import org.apache.felix.ipojo.manipulator.metadata.annotation.visitor.util.Eleme
 import org.apache.felix.ipojo.metadata.Attribute;
 import org.apache.felix.ipojo.metadata.Element;
 import org.objectweb.asm.AnnotationVisitor;
+<<<<<<< HEAD
+import org.objectweb.asm.Type;
+import org.objectweb.asm.commons.EmptyVisitor;
+=======
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.Type;
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 
 import java.lang.reflect.Array;
 
 /**
  * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
+<<<<<<< HEAD
+public class GenericVisitor extends EmptyVisitor implements AnnotationVisitor {
+    protected Element element;
+
+    public GenericVisitor(Element element) {
+=======
 public class GenericVisitor extends AnnotationVisitor {
     protected Element element;
 
     public GenericVisitor(Element element) {
         super(Opcodes.ASM5);
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         this.element = element;
     }
 
     /**
      * Visit a 'simple' annotation attribute.
      * This method is used for primitive arrays too.
+<<<<<<< HEAD
+     * @param name : attribute name
+     * @param value : attribute value
+     * @see org.objectweb.asm.commons.EmptyVisitor#visit(String, Object)
+=======
      *
      * @param name  : attribute name
      * @param value : attribute value
      * @see org.objectweb.asm.AnnotationVisitor#visit(String, Object)
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
      */
     public void visit(String name, Object value) {
         if (value.getClass().isArray()) {
@@ -76,11 +94,18 @@ public class GenericVisitor extends AnnotationVisitor {
 
     /**
      * Visit a sub-annotation.
+<<<<<<< HEAD
+     * @param name : attribute name.
+     * @param descriptor : annotation description
+     * @return an annotation visitor which will visit the given annotation
+     * @see org.objectweb.asm.commons.EmptyVisitor#visitAnnotation(String, String)
+=======
      *
      * @param name       : attribute name.
      * @param descriptor : annotation description
      * @return an annotation visitor which will visit the given annotation
      * @see org.objectweb.asm.AnnotationVisitor#visitAnnotation(String, String)
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
      */
     public AnnotationVisitor visitAnnotation(String name, String descriptor) {
         // Sub annotations are mapped to sub-elements
@@ -91,10 +116,16 @@ public class GenericVisitor extends AnnotationVisitor {
 
     /**
      * Visit an array attribute.
+<<<<<<< HEAD
+     * @param name : attribute name
+     * @return a visitor which will visit each element of the array
+     * @see org.objectweb.asm.commons.EmptyVisitor#visitArray(String)
+=======
      *
      * @param name : attribute name
      * @return a visitor which will visit each element of the array
      * @see org.objectweb.asm.AnnotationVisitor#visitArray(String)
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
      */
     public AnnotationVisitor visitArray(String name) {
         return new SubArrayVisitor(element, name);
@@ -102,9 +133,14 @@ public class GenericVisitor extends AnnotationVisitor {
 
     /**
      * Visits an enumeration attribute.
+<<<<<<< HEAD
+     * @param name the attribute name
+     * @param desc the enumeration descriptor
+=======
      *
      * @param name  the attribute name
      * @param desc  the enumeration descriptor
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
      * @param value the attribute value
      * @see org.objectweb.asm.AnnotationVisitor#visitEnum(String, String, String)
      */

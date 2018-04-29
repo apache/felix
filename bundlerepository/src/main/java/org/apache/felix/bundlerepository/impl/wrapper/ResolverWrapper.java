@@ -56,7 +56,11 @@ public class ResolverWrapper implements org.osgi.service.obr.Resolver {
         Reason[] r = resolver.getReason(Wrapper.unwrap(resource));
         if (r == null)
         {
+<<<<<<< HEAD
+            return null;
+=======
             return new org.osgi.service.obr.Requirement[0];
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         }
         Requirement[] r2 = new Requirement[r.length];
         for (int reaIdx = 0; reaIdx < r.length; reaIdx++)
@@ -76,7 +80,11 @@ public class ResolverWrapper implements org.osgi.service.obr.Resolver {
         List l = (List) map.get(requirement);
         if (l == null)
         {
+<<<<<<< HEAD
+            return null;
+=======
             return new org.osgi.service.obr.Resource[0];
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         }
         return (org.osgi.service.obr.Resource[]) l.toArray(new org.osgi.service.obr.Resource[l.size()]);
     }

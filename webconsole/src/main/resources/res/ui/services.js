@@ -39,7 +39,10 @@ function entry( /* Object */dataEntry) {
 	  
 	_.find('td:eq(1)').text(dataEntry.types);
 	_.find('td:eq(2)').html('<a href="' + bundlePath + dataEntry.bundleId + '">' + dataEntry.bundleSymbolicName + ' (' + dataEntry.bundleId + ')</a>' );
+<<<<<<< HEAD
+=======
 	_.find('td:eq(3)').text(dataEntry.ranking);
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 }
 
 function showDetails(id) {
@@ -103,7 +106,11 @@ function renderObjectAsTable(/* Object*/ details) {
 		txt += '<tr><td class="aligntop" noWrap="true" style="border:0px none">'
 				+ prop.key
 				+ '</td><td class="aligntop" style="border:0px none">';
+<<<<<<< HEAD
+		if (prop.value) {
+=======
 		if (typeof prop.value !== 'undefined') {
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 			if ($.isArray(prop.value)) {
 				var i = 0;
 				for ( var pi in prop.value) {
@@ -157,8 +164,12 @@ $(document).ready(function() {
 
 	$('#plugin_table').tablesorter( {
 		headers : {
+<<<<<<< HEAD
+			0 : { sorter : 'digit' }
+=======
 			0 : { sorter : 'digit' },
 			3 : { sorter : 'digit' }
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 		},
 		sortList : [ [ 1, 0 ] ],
 		textExtraction : mixedLinksExtraction

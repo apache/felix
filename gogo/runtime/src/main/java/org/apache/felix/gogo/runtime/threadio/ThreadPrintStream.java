@@ -20,6 +20,10 @@ package org.apache.felix.gogo.runtime.threadio;
 
 import java.io.IOException;
 import java.io.PrintStream;
+<<<<<<< HEAD
+import java.io.InputStream;
+=======
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 import java.util.Locale;
 
 public class ThreadPrintStream extends PrintStream
@@ -44,6 +48,11 @@ public class ThreadPrintStream extends PrintStream
 
     /**
      * Access to the root stream through reflection
+<<<<<<< HEAD
+     * 
+     * @return
+=======
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
      */
     public PrintStream getRoot()
     {

@@ -38,7 +38,11 @@ public class Activator extends DependencyActivatorBase {
     public void init(BundleContext context, DependencyManager manager) throws Exception {
     	Dictionary properties = new Properties();
         properties.put(Constants.SERVICE_PID, "org.osgi.deployment.rp.autoconf");
+<<<<<<< HEAD
+        
+=======
 
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         AutoConfResourceProcessor processor = new AutoConfResourceProcessor();
         manager.add(createComponent()
             .setInterface(ResourceProcessor.class.getName(), properties)

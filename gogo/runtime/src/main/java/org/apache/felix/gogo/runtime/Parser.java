@@ -16,6 +16,70 @@
  * specific language governing permissions and limitations
  * under the License.
  */
+<<<<<<< HEAD
+// DWB14: parser loops if // comment at start of program
+// DWB15: allow program to have trailing ';'
+package org.apache.felix.gogo.runtime;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+
+import org.apache.felix.gogo.runtime.Tokenizer.Type;
+
+public class Parser
+{
+    private final Tokenizer tz;
+
+    public Parser(CharSequence program)
+    {
+        tz = new Tokenizer(program);
+    }
+
+    public List<List<List<Token>>> program()
+    {
+        List<List<List<Token>>> program = new ArrayList<List<List<Token>>>();
+        
+        while (tz.next() != Type.EOT)
+        {
+            program.add(pipeline());
+            
+            switch (tz.type())
+            {
+                case SEMICOLON:
+                case NEWLINE:
+                    continue;
+            }
+            
+            break;
+        }
+
+        if (tz.next() != Type.EOT)
+            throw new RuntimeException("Program has trailing text: " + tz.value());
+
+        return program;
+    }
+
+    private List<List<Token>> pipeline()
+    {
+        List<List<Token>> pipeline = new ArrayList<List<Token>>();
+        
+        while (true)
+        {
+            pipeline.add(command());
+            switch (tz.type())
+            {
+                case PIPE:
+                    if (tz.next() == Type.EOT)
+                    {
+                        Token t = tz.token();
+                        throw new EOFError(t.line, t.column, "unexpected EOT after pipe '|'");
+                    }
+                    break;
+
+                default:
+                    return pipeline;
+=======
 package org.apache.felix.gogo.runtime;
 
 import java.util.*;
@@ -270,10 +334,102 @@ public class Parser
                     tokens.add(ex);
                 }
                 push(t);
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
             }
         }
     }
 
+<<<<<<< HEAD
+    private List<Token> command()
+    {
+        List<Token> command = new ArrayList<Token>();
+
+        while (true)
+        {
+            Token t = tz.token();
+            
+            switch (t.type)
+            {
+                case WORD:
+                case CLOSURE:
+                case EXECUTION:
+                case ARRAY:
+                case ASSIGN:
+                    break;
+                    
+                default:
+                    throw new SyntaxError(t.line, t.column, "unexpected token: " + t.type);
+            }
+            
+            command.add(t);
+            
+            switch (tz.next())
+            {
+                case PIPE:
+                case SEMICOLON:
+                case NEWLINE:
+                case EOT:
+                    return command;
+            }
+        }
+    }
+    
+    public void array(List<Token> list, Map<Token, Token> map) throws Exception
+    {
+        Token lt = null;
+        boolean isMap = false;
+
+        while (tz.next() != Type.EOT)
+        {
+            if (isMap)
+            {
+                Token key = lt;
+                lt = null;
+                if (null == key)
+                {
+                    key = tz.token();
+
+                    if (tz.next() != Type.ASSIGN)
+                    {
+                        Token t = tz.token();
+                        throw new SyntaxError(t.line, t.column,
+                            "map expected '=', found: " + t);
+                    }
+
+                    tz.next();
+                }
+
+                Token k = (list.isEmpty() ? key : list.remove(0));
+                Token v = tz.token();
+                map.put(k, v);
+            }
+            else
+            {
+                switch (tz.type())
+                {
+                    case WORD:
+                    case CLOSURE:
+                    case EXECUTION:
+                    case ARRAY:
+                        lt = tz.token();
+                        list.add(lt);
+                        break;
+
+                    case ASSIGN:
+                        if (list.size() == 1)
+                        {
+                            isMap = true;
+                            break;
+                        }
+                        // fall through
+                    default:
+                        lt = tz.token();
+                        throw new SyntaxError(lt.line, lt.column,
+                            "unexpected token in list: " + lt);
+                }
+            }
+        }
+=======
     protected void push(Token t) {
         tz.push(t);
     }
@@ -569,6 +725,7 @@ public class Parser
     protected Token whole(Token b, Token e)
     {
         return tz.text.subSequence(b.start - tz.text.start, e.start + e.length() - tz.text.start);
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     }
 
 }

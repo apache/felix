@@ -18,7 +18,10 @@
     under the License.
 -->
 <components>
+<<<<<<< HEAD
+=======
 
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     <scr:component name="components.mutable.properties"
             xmlns:scr="http://felix.apache.org/xmlns/scr/v1.2.0-felix"
             enabled="true"
@@ -95,6 +98,8 @@
         <property name="p1" value="p1"/>
         <property name="p2" value="p2"/>
     </scr:component>
+<<<<<<< HEAD
+=======
 
    <scr:component name="components.mutable.properties.return2"
             xmlns:scr="http://felix.apache.org/xmlns/scr/v1.2.0-felix"
@@ -128,4 +133,5 @@
                 />
     </scr:component>
 
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 </components>

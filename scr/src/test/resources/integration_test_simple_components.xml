@@ -47,6 +47,9 @@
     <scr:component name="DynamicConfigurationComponent"
         enabled="false" modified="configure">
         <implementation class="org.apache.felix.scr.integration.components.SimpleComponent" />
+<<<<<<< HEAD
+        <property name="service.pid" value="DynamicConfigurationComponent" />
+=======
         <property name="service.pid" value="DynamicConfigurationComponent.description" />
     </scr:component>
 
@@ -61,6 +64,7 @@
         felix:deleteCallsModify="true">
         <implementation class="org.apache.felix.scr.integration.components.SimpleComponent" />
         <property name="service.pid" value="DynamicConfigurationComponentFlag.description" />
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     </scr:component>
 
     <!-- component dynamically updates configuration with a required reference plus target-->
@@ -134,6 +138,8 @@
         </service>
     </scr:component>
 
+<<<<<<< HEAD
+=======
     <scr:component name="DelayedKeepInstancesServiceComponent"
         enabled="false" immediate="false"
         configuration-policy="ignore" 
@@ -146,5 +152,6 @@
         </service>
     </scr:component>
 
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 
 </components>

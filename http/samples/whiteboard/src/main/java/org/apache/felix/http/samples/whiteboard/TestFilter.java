@@ -28,7 +28,11 @@ public class TestFilter
     {
         this.name = name;
     }
+<<<<<<< HEAD
+
+=======
     
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     public void init(FilterConfig config)
         throws ServletException
     {
@@ -51,4 +55,8 @@ public class TestFilter
     {
         System.out.println("## [" + this.name + "] " + message);
     }
+<<<<<<< HEAD
 }
+=======
+}
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368

@@ -94,10 +94,13 @@ class PropertyDescriptor
     {
         return null;
     }
+<<<<<<< HEAD
+=======
 
     public boolean isOptional()
     {
         return false;
     }
     
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 }

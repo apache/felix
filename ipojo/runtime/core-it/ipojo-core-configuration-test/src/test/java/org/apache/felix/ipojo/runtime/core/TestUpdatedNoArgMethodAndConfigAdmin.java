@@ -107,7 +107,11 @@ public class TestUpdatedNoArgMethodAndConfigAdmin extends Common {
         assertEquals("Check baz equality -2", bazP, "zab");
 
         // Get Service
+<<<<<<< HEAD
+        FooService fs = (FooService) osgiHelper.getServiceObject(fooRef);
+=======
         FooService fs = (FooService) osgiHelper.getRawServiceObject(fooRef);
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         Integer updated = (Integer) fs.fooProps().get("updated");
 
         assertEquals("Check updated", 1, updated.intValue());
@@ -125,7 +129,11 @@ public class TestUpdatedNoArgMethodAndConfigAdmin extends Common {
         assertEquals("Check bar equality -1", barP, null);
         assertEquals("Check baz equality -1", bazP, null);
 
+<<<<<<< HEAD
+        ConfigurationAdmin admin = osgiHelper.getServiceObject(ConfigurationAdmin.class);
+=======
         ConfigurationAdmin ad = osgiHelper.getServiceObject(ConfigurationAdmin.class);
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         assertNotNull("Check Configuration Admin availability", admin);
 
         Configuration configuration = admin.getConfiguration(instance2.getInstanceName(),
@@ -151,7 +159,11 @@ public class TestUpdatedNoArgMethodAndConfigAdmin extends Common {
         assertEquals("Check baz equality -2", bazP, "zab");
 
         // Get Service
+<<<<<<< HEAD
+        FooService fs = (FooService) osgiHelper.getServiceObject(fooRef);
+=======
         FooService fs = (FooService) osgiHelper.getRawServiceObject(fooRef);
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         Integer updated = (Integer) fs.fooProps().get("updated");
 
         assertEquals("Check updated", 1, updated.intValue());
@@ -197,7 +209,11 @@ public class TestUpdatedNoArgMethodAndConfigAdmin extends Common {
         assertEquals("Check baz equality", bazP, "zab");
 
         // Check field value
+<<<<<<< HEAD
+        FooService fs = (FooService) osgiHelper.getServiceObject(fooRef);
+=======
         FooService fs = (FooService) osgiHelper.getRawServiceObject(fooRef);
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         Properties p = fs.fooProps();
         fooP = (String) p.get("foo");
         barP = (Integer) p.get("bar");
@@ -249,7 +265,11 @@ public class TestUpdatedNoArgMethodAndConfigAdmin extends Common {
         assertEquals("Check baz equality", bazP, "zab");
 
         // Check field value
+<<<<<<< HEAD
+        FooService fs = (FooService) osgiHelper.getServiceObject(fooRef);
+=======
         FooService fs = (FooService) osgiHelper.getRawServiceObject(fooRef);
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         Properties p = fs.fooProps();
         fooP = (String) p.get("foo");
         barP = (Integer) p.get("bar");
@@ -303,7 +323,11 @@ public class TestUpdatedNoArgMethodAndConfigAdmin extends Common {
         assertEquals("Check baz equality", bazP, "zab");
 
         // Check field value
+<<<<<<< HEAD
+        FooService fs = (FooService) osgiHelper.getServiceObject(fooRef);
+=======
         FooService fs = (FooService) osgiHelper.getRawServiceObject(fooRef);
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         Properties p = fs.fooProps();
         fooP = (String) p.get("foo");
         barP = (Integer) p.get("bar");

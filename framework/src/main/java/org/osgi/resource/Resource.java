@@ -1,5 +1,9 @@
 /*
+<<<<<<< HEAD
+ * Copyright (c) OSGi Alliance (2011, 2012). All Rights Reserved.
+=======
  * Copyright (c) OSGi Alliance (2011, 2013). All Rights Reserved.
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,7 +21,10 @@
 package org.osgi.resource;
 
 import java.util.List;
+<<<<<<< HEAD
+=======
 import org.osgi.annotation.versioning.ConsumerType;
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 
 /**
  * A resource is the representation of a uniquely identified and typed data. A
@@ -30,9 +37,14 @@ import org.osgi.annotation.versioning.ConsumerType;
  * always return the same result.
  * 
  * @ThreadSafe
+<<<<<<< HEAD
+ * @version $Id: 40958d5777ee269d27d58e9f646a4c91bcc6daa4 $
+ */
+=======
  * @author $Id: c7b6462fb53b38ac3071d7ba73af9dad2af6b9ce $
  */
 @ConsumerType
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 public interface Resource {
 	/**
 	 * Returns the capabilities declared by this resource.

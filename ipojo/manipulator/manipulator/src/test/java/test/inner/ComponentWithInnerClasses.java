@@ -21,8 +21,11 @@ package test.inner;
 
 import org.apache.felix.ipojo.annotations.Component;
 
+<<<<<<< HEAD
+=======
 import java.util.concurrent.Callable;
 
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 /**
  * A component containing inner classes.
  */
@@ -44,7 +47,10 @@ public class ComponentWithInnerClasses{
     private void doSomethingPrivately() {
 
     }
+<<<<<<< HEAD
+=======
 
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     private boolean flag;
 
     boolean getFlag() {
@@ -55,6 +61,8 @@ public class ComponentWithInnerClasses{
 
     private String foo = "foo";
 
+<<<<<<< HEAD
+=======
     public static final Callable<Integer> callable = new Callable<Integer>() {
         public Integer call() {
             return 1;
@@ -65,6 +73,7 @@ public class ComponentWithInnerClasses{
         return callable.call();
     }
 
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     private class MyInnerWithANativeMethod {
 
         public String foo() {
@@ -94,7 +103,10 @@ public class ComponentWithInnerClasses{
         public native void baz();
     }
 
+<<<<<<< HEAD
+=======
 
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     private class MyInnerClass {
         public String foo() {
             return ComponentWithInnerClasses.this.foo;

@@ -50,7 +50,11 @@ public class Posix
         }
 
         URI cwd = Shell.cwd(session);
+<<<<<<< HEAD
+        
+=======
 
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         for (String arg : args)
         {
             copy(cwd.resolve(arg), System.out);
@@ -141,7 +145,11 @@ public class Posix
             {
                 URI cwd = Shell.cwd(session);
                 in = (arg == null) ? System.in : cwd.resolve(arg).toURL().openStream();
+<<<<<<< HEAD
+                
+=======
 
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
                 BufferedReader rdr = new BufferedReader(new InputStreamReader(in));
                 int line = 0;
                 String s;
@@ -149,7 +157,11 @@ public class Posix
                 {
                     line++;
                     Matcher matcher = pattern.matcher(s);
+<<<<<<< HEAD
+                    if (!(matcher.find() ^ !opt.isSet("invert-match")))
+=======
                     if (matcher.find() == !opt.isSet("invert-match"))
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
                     {
                         match = true;
                         if (opt.isSet("quiet"))
@@ -180,6 +192,23 @@ public class Posix
 
         return match && status;
     }
+<<<<<<< HEAD
+    
+    public static void copy(URI source, OutputStream out) throws IOException {
+        InputStream in = source.toURL().openStream();
+        try {
+            copy(in, out);
+        } finally {
+            in.close();
+        }
+    }
+
+
+    public static void copy(InputStream in, OutputStream out) throws IOException {
+        byte buf[] = new byte[10240];
+        int len;
+        while ((len = in.read(buf)) > 0) {
+=======
 
     public static void copy(URI source, OutputStream out) throws IOException
     {
@@ -195,6 +224,7 @@ public class Posix
         int len;
         while ((len = in.read(buf)) > 0)
         {
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
             out.write(buf, 0, len);
         }
         out.flush();

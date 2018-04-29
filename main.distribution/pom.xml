@@ -20,13 +20,27 @@
  <parent>
     <groupId>org.apache.felix</groupId>
     <artifactId>felix-parent</artifactId>
+<<<<<<< HEAD
+    <version>2.1</version>
+=======
     <version>3</version>
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     <relativePath>../pom/pom.xml</relativePath>
   </parent>
   <modelVersion>4.0.0</modelVersion>
   <packaging>pom</packaging>
   <name>Apache Felix Main Distribution</name>
   <artifactId>org.apache.felix.main.distribution</artifactId>
+<<<<<<< HEAD
+  <version>4.3.0-SNAPSHOT</version>
+  <properties>
+    <dollar>$</dollar>
+    <framework.version>4.3.0-SNAPSHOT</framework.version>
+    <gogo.runtime.version>0.10.0</gogo.runtime.version>
+    <gogo.shell.version>0.10.0</gogo.shell.version>
+    <gogo.command.version>0.12.0</gogo.command.version>
+    <obr.version>1.6.6</obr.version>
+=======
   <version>5.7.0-SNAPSHOT</version>
   <properties>
     <dollar>$</dollar>
@@ -37,6 +51,7 @@
     <jline.version>3.5.1</jline.version>
     <obr.version>2.0.10</obr.version>
     <jansi.version>1.16</jansi.version>
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
   </properties>
     <scm>
       <connection>scm:svn:http://svn.apache.org/repos/asf/felix/trunk/main.distribution</connection>
@@ -67,8 +82,13 @@
                 </artifactItem>
                 <artifactItem>
                   <groupId>${pom.groupId}</groupId>
+<<<<<<< HEAD
+                  <artifactId>org.apache.felix.gogo.shell</artifactId>
+                  <version>${gogo.shell.version}</version>
+=======
                   <artifactId>org.apache.felix.gogo.jline</artifactId>
                   <version>${gogo.jline.shell.version}</version>
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
                   <type>jar</type>
                   <overWrite>true</overWrite>
                   <outputDirectory>${project.basedir}/bundle</outputDirectory>
@@ -98,6 +118,8 @@
                   <outputDirectory>${project.basedir}/bin</outputDirectory>
 		  <destFileName>felix.jar</destFileName>
                 </artifactItem>
+<<<<<<< HEAD
+=======
                 <artifactItem>
                    <groupId>org.jline</groupId>
                    <artifactId>jline</artifactId>
@@ -114,6 +136,7 @@
                    <overWrite>true</overWrite>
                    <outputDirectory>${project.basedir}/bundle</outputDirectory>
                  </artifactItem>
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
               </artifactItems>
             </configuration>
           </execution>

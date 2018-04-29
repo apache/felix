@@ -32,7 +32,11 @@ public class Console implements Runnable
     private final InputStream in;
     private final PrintStream out;
     private final History history;
+<<<<<<< HEAD
+    private boolean quit;
+=======
     private volatile boolean quit;
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 
     public Console(CommandSession session, History history)
     {
@@ -46,7 +50,11 @@ public class Console implements Runnable
     {
         try
         {
+<<<<<<< HEAD
+            while (!quit)
+=======
             while (!Thread.currentThread().isInterrupted() && !quit)
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
             {
                 CharSequence line = getLine(getPrompt());
 
@@ -95,7 +103,12 @@ public class Console implements Runnable
                             loc = "gogo";
                         }
 
+<<<<<<< HEAD
+                        out.println(loc + ": " + e.getClass().getSimpleName() + ": "
+                            + e.getMessage());
+=======
                         out.println(loc + ": " + e.getClass().getSimpleName() + ": " + e.getMessage());
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
                     }
                 }
                 finally
@@ -145,6 +158,9 @@ public class Console implements Runnable
         while (!quit)
         {
             out.flush();
+<<<<<<< HEAD
+            int c = in.read();
+=======
 
             int c = 0;
             try
@@ -159,6 +175,7 @@ public class Console implements Runnable
                     throw e;
                 }
             }
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 
             switch (c)
             {

@@ -24,13 +24,19 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.felix.ipojo.manipulator.MetadataProvider;
+<<<<<<< HEAD
+=======
 import org.apache.felix.ipojo.manipulator.spi.ModuleProvider;
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 import org.apache.felix.ipojo.manipulator.Reporter;
 import org.apache.felix.ipojo.manipulator.ResourceStore;
 import org.apache.felix.ipojo.manipulator.ResourceVisitor;
 import org.apache.felix.ipojo.manipulator.metadata.annotation.ClassMetadataCollector;
 import org.apache.felix.ipojo.manipulator.metadata.annotation.registry.BindingRegistry;
+<<<<<<< HEAD
+=======
 import org.apache.felix.ipojo.manipulator.spi.provider.CoreModuleProvider;
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 import org.apache.felix.ipojo.metadata.Element;
 import org.objectweb.asm.ClassReader;
 
@@ -50,6 +56,9 @@ public class AnnotationMetadataProvider implements MetadataProvider {
 
     public AnnotationMetadataProvider(final ResourceStore store,
                                       final Reporter reporter) {
+<<<<<<< HEAD
+        this(store, newBindingRegistry(reporter, store), reporter);
+=======
         this(store, new CoreModuleProvider(), reporter);
     }
 
@@ -57,6 +66,7 @@ public class AnnotationMetadataProvider implements MetadataProvider {
                                       final ModuleProvider provider,
                                       final Reporter reporter) {
         this(store, newBindingRegistry(reporter, store, provider), reporter);
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     }
 
     public AnnotationMetadataProvider(final ResourceStore store,

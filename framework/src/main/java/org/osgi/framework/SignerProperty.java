@@ -1,5 +1,9 @@
 /*
+<<<<<<< HEAD
+ * Copyright (c) OSGi Alliance (2009, 2012). All Rights Reserved.
+=======
  * Copyright (c) OSGi Alliance (2009, 2013). All Rights Reserved.
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -26,7 +30,11 @@ import java.util.Map;
  * during filter expression evaluation in the permission implies method.
  * 
  * @Immutable
+<<<<<<< HEAD
+ * @version $Id: 94eea19050b84907f1257d7a12ebf8ab404f4473 $
+=======
  * @author $Id: 53dec4a366c1c419baeb1e3b7d6b2b3bf172ad93 $
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
  */
 final class SignerProperty {
 	private final Bundle	bundle;
@@ -64,7 +72,10 @@ final class SignerProperty {
 	 * @param o SignerProperty to compare against.
 	 * @return true if the DN name chain matches the pattern.
 	 */
+<<<<<<< HEAD
+=======
 	@Override
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 	public boolean equals(Object o) {
 		if (!(o instanceof SignerProperty))
 			return false;
@@ -92,7 +103,10 @@ final class SignerProperty {
 	 * Since the equals method does not obey the general equals contract, this
 	 * method cannot generate hash codes which obey the equals contract.
 	 */
+<<<<<<< HEAD
+=======
 	@Override
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 	public int hashCode() {
 		return 31;
 	}

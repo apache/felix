@@ -17,6 +17,98 @@
 package org.apache.felix.http.base.internal.handler;
 
 import java.io.IOException;
+<<<<<<< HEAD
+import java.util.regex.Pattern;
+
+import javax.servlet.*;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
+import org.apache.felix.http.base.internal.context.ExtServletContext;
+
+public final class FilterHandler
+    extends AbstractHandler implements Comparable<FilterHandler>
+{
+    private final Filter filter;
+    private final Pattern regex;
+    private final int ranking;
+
+    public FilterHandler(ExtServletContext context, Filter filter, String pattern, int ranking)
+    {
+        super(context);
+        this.filter = filter;
+        this.ranking = ranking;
+	    this.regex = Pattern.compile(pattern);
+    }
+
+    public Filter getFilter()
+    {
+        return this.filter;
+    }
+
+    public void init()
+        throws ServletException
+    {
+        String name = "filter_" + getId();
+        FilterConfig config = new FilterConfigImpl(name, getContext(), getInitParams());
+        this.filter.init(config);
+    }
+
+    public void destroy()
+    {
+        this.filter.destroy();
+    }
+
+    public boolean matches(String uri)
+    {
+        // assume root if uri is null
+        if (uri == null) {
+            uri = "/";
+        }
+
+        return this.regex.matcher(uri).matches();
+    }
+
+    public void handle(HttpServletRequest req, HttpServletResponse res, FilterChain chain)
+        throws ServletException, IOException
+    {
+        final boolean matches = matches(req.getPathInfo());
+        if (matches) {
+            doHandle(req, res, chain);
+        } else {
+            chain.doFilter(req, res);
+        }
+    }
+
+    private void doHandle(HttpServletRequest req, HttpServletResponse res, FilterChain chain)
+        throws ServletException, IOException
+    {
+        if (!getContext().handleSecurity(req, res)) {
+            res.sendError(HttpServletResponse.SC_FORBIDDEN);
+        } else {
+            this.filter.doFilter(req, res, chain);
+        }
+    }
+
+    public int compareTo(FilterHandler other)
+    {
+        if (other.ranking == this.ranking)
+        {
+            return 0;
+        }
+
+        return (other.ranking > this.ranking) ? 1 : -1;
+    }
+
+    public int getRanking()
+    {
+        return ranking;
+    }
+
+    public String getPattern()
+    {
+        return regex.toString();
+=======
 
 import javax.annotation.Nonnull;
 import javax.servlet.Filter;
@@ -189,5 +281,6 @@ public abstract class FilterHandler implements Comparable<FilterHandler>
         }
         final FilterHandler other = (FilterHandler) obj;
         return filterInfo.equals(other.filterInfo);
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     }
 }

@@ -18,12 +18,18 @@
  */
 package org.apache.felix.bundlerepository.impl;
 
+<<<<<<< HEAD
+=======
 import java.util.*;
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 import java.util.regex.Pattern;
 
 import org.apache.felix.bundlerepository.Capability;
 import org.apache.felix.bundlerepository.Requirement;
+<<<<<<< HEAD
+=======
 import org.apache.felix.utils.collections.MapToDictionary;
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 import org.apache.felix.utils.filter.FilterImpl;
 import org.osgi.framework.InvalidSyntaxException;
 
@@ -39,18 +45,27 @@ public class RequirementImpl implements Requirement
     private boolean m_optional = false;
     private FilterImpl m_filter = null;
     private String m_comment = null;
+<<<<<<< HEAD
+=======
     private Map<String, Object> m_attributes = Collections.emptyMap();
     private Map<String, String> m_directives = Collections.emptyMap();
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 
     public RequirementImpl()
     {
     }
 
+<<<<<<< HEAD
+    public RequirementImpl(String name) 
+=======
     public RequirementImpl(String name)
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     {
         setName(name);
     }
 
+<<<<<<< HEAD
+=======
     public Map<String, Object> getAttributes()
     {
         return m_attributes;
@@ -70,6 +85,7 @@ public class RequirementImpl implements Requirement
         m_directives = Collections.unmodifiableMap(directives);
     }
 
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     public String getName()
     {
         return m_name;
@@ -106,11 +122,16 @@ public class RequirementImpl implements Requirement
 
     public boolean isSatisfied(Capability capability)
     {
+<<<<<<< HEAD
+        return m_name.equals(capability.getName()) && m_filter.matchCase(capability.getPropertiesAsMap())
+                && (m_filter.toString().indexOf("(mandatory:<*") >= 0 || capability.getPropertiesAsMap().get("mandatory:") == null);
+=======
         Dictionary propertyDict = new MapToDictionary(capability.getPropertiesAsMap());
 
         return m_name.equals(capability.getName()) &&
                 m_filter.match(propertyDict) &&
                 (m_filter.toString().contains("(mandatory:<*") || propertyDict.get("mandatory:") == null);
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     }
 
     public boolean isExtend()

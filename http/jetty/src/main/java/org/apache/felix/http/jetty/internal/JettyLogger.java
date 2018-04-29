@@ -70,12 +70,15 @@ public final class JettyLogger implements Logger
         }
     }
 
+<<<<<<< HEAD
+=======
     @Override
     public void debug(String msg, long value)
     {
         debug(msg, value);
     }
 
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     public void debug(String msg, Throwable throwable)
     {
         if (this.debugEnabled)

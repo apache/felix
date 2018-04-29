@@ -23,7 +23,10 @@ import java.util.concurrent.ThreadFactory;
 
 import org.apache.felix.ipojo.ConfigurationTracker;
 import org.apache.felix.ipojo.EventDispatcher;
+<<<<<<< HEAD
+=======
 import org.apache.felix.ipojo.extender.internal.declaration.service.DeclarationServiceFactory;
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 import org.apache.felix.ipojo.extender.internal.linker.DeclarationLinker;
 import org.apache.felix.ipojo.extender.internal.processor.*;
 import org.apache.felix.ipojo.extender.internal.queue.ExecutorQueueService;
@@ -108,11 +111,14 @@ public class Extender implements BundleActivator {
     private BundleTracker m_tracker;
 
     /**
+<<<<<<< HEAD
+=======
      * Service provided to build declarations through code.
      */
     private DeclarationServiceFactory m_declarationService;
 
     /**
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
      * The iPOJO bundle is starting.
      * This method configures the iPOJO system (internal dispatcher and bundle processing). Then it initiates the
      * bundle processing.
@@ -217,9 +223,12 @@ public class Extender implements BundleActivator {
 
         m_tracker.open();
 
+<<<<<<< HEAD
+=======
         m_declarationService = new DeclarationServiceFactory(context);
         m_declarationService.start();
 
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         m_logger.log(Logger.INFO, "iPOJO Main Extender started");
     }
 
@@ -230,9 +239,12 @@ public class Extender implements BundleActivator {
      * @throws Exception something terrible happen
      */
     public void stop(BundleContext context) throws Exception {
+<<<<<<< HEAD
+=======
 
         m_declarationService.stop();
 
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         m_tracker.close();
 
         m_processor.deactivate(m_bundle);

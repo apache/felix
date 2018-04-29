@@ -21,17 +21,26 @@ package org.apache.felix.cm.impl;
 
 import java.lang.reflect.Array;
 import java.util.ArrayList;
+<<<<<<< HEAD
+=======
 import java.util.Arrays;
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Dictionary;
 import java.util.Enumeration;
+<<<<<<< HEAD
+import java.util.Hashtable;
+import java.util.Iterator;
+import java.util.Map;
+=======
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.SortedMap;
 import java.util.TreeMap;
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 import java.util.Vector;
 
 
@@ -41,13 +50,28 @@ import java.util.Vector;
  * out by the Configuration Admin Service Specification requiring the property
  * names to keep case but to ignore case when accessing the properties.
  */
+<<<<<<< HEAD
+public class CaseInsensitiveDictionary extends Dictionary
+=======
 public class CaseInsensitiveDictionary extends Dictionary<String, Object>
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 {
 
     /**
      * The backend dictionary with lower case keys.
      */
+<<<<<<< HEAD
+    private Hashtable internalMap;
+
+    /**
+     * Mapping of lower case keys to original case keys as last used to set a
+     * property value.
+     */
+    private Hashtable originalKeys;
+
+=======
     private SortedMap<String, Object> internalMap;
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 
     public CaseInsensitiveDictionary()
     {
@@ -57,6 +81,12 @@ public class CaseInsensitiveDictionary extends Dictionary<String, Object>
 
     public CaseInsensitiveDictionary( Dictionary props )
     {
+<<<<<<< HEAD
+        this();
+
+        if ( props != null )
+        {
+=======
         if ( props instanceof CaseInsensitiveDictionary)
         {
             internalMap = new TreeMap<>( ((CaseInsensitiveDictionary) props).internalMap );
@@ -64,12 +94,32 @@ public class CaseInsensitiveDictionary extends Dictionary<String, Object>
         else if ( props != null )
         {
             internalMap = new TreeMap<>( CASE_INSENSITIVE_ORDER );
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
             Enumeration keys = props.keys();
             while ( keys.hasMoreElements() )
             {
                 Object key = keys.nextElement();
 
                 // check the correct syntax of the key
+<<<<<<< HEAD
+                checkKey( key );
+
+                // check uniqueness of key
+                String lowerCase = ( ( String ) key ).toLowerCase();
+                if ( internalMap.containsKey( lowerCase ) )
+                {
+                    throw new IllegalArgumentException( "Key [" + key + "] already present in different case" );
+                }
+
+                // check the value
+                Object value = props.get( key );
+                value = checkValue( value );
+
+                // add the key/value pair
+                internalMap.put( lowerCase, value );
+                originalKeys.put( lowerCase, key );
+            }
+=======
                 String k = checkKey( key );
 
                 // check uniqueness of key
@@ -89,17 +139,28 @@ public class CaseInsensitiveDictionary extends Dictionary<String, Object>
         else
         {
             internalMap = new TreeMap<>( CASE_INSENSITIVE_ORDER );
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         }
     }
 
 
     CaseInsensitiveDictionary( CaseInsensitiveDictionary props, boolean deepCopy )
     {
+<<<<<<< HEAD
+        Hashtable tmp = new Hashtable( Math.max( 2 * props.internalMap.size(), 11 ), 0.75f );
+        if ( deepCopy )
+        {
+            Iterator entries = props.internalMap.entrySet().iterator();
+            while ( entries.hasNext() )
+            {
+                Map.Entry entry = ( Map.Entry ) entries.next();
+=======
         if ( deepCopy )
         {
             internalMap = new TreeMap<>( CASE_INSENSITIVE_ORDER );
             for( Map.Entry<String, Object> entry : props.internalMap.entrySet() )
             {
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
                 Object value = entry.getValue();
                 if ( value.getClass().isArray() )
                 {
@@ -117,15 +178,29 @@ public class CaseInsensitiveDictionary extends Dictionary<String, Object>
                     // Vector. And even though we accept Collection nowadays
                     // there might be clients out there still written against
                     // R4 and R4.1 spec expecting Vector
+<<<<<<< HEAD
+                    value = new Vector( ( Collection ) value );
+                }
+                tmp.put( entry.getKey(), value );
+=======
                     value = new Vector<>( ( Collection ) value );
                 }
                 internalMap.put( entry.getKey(), value );
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
             }
         }
         else
         {
+<<<<<<< HEAD
+            tmp.putAll( props.internalMap );
+        }
+
+        internalMap = tmp;
+        originalKeys = new Hashtable( props.originalKeys );
+=======
             internalMap = new TreeMap<>( props.internalMap );
         }
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     }
 
 
@@ -185,7 +260,11 @@ public class CaseInsensitiveDictionary extends Dictionary<String, Object>
     /*
      * (non-Javadoc)
      *
+<<<<<<< HEAD
+     * @see java.util.Dictionary#put(java.lang.Object, java.lang.Object)
+=======
      * @see java.util.Dictionary#put(java.lang.String, java.lang.Object)
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
      */
     @Override
     public Object put( String key, Object value )
@@ -198,7 +277,13 @@ public class CaseInsensitiveDictionary extends Dictionary<String, Object>
         checkKey( key );
         value = checkValue( value );
 
+<<<<<<< HEAD
+        String lowerCase = String.valueOf( key ).toLowerCase();
+        originalKeys.put( lowerCase, key );
+        return internalMap.put( lowerCase, value );
+=======
         return internalMap.put( key, value );
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     }
 
 
@@ -248,11 +333,38 @@ public class CaseInsensitiveDictionary extends Dictionary<String, Object>
      * If the key does not comply an <code>IllegalArgumentException</code> is
      * thrown.
      *
+<<<<<<< HEAD
+     * @param key
+=======
      * @param keyObject
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
      *            The configuration property key to check.
      * @throws IllegalArgumentException
      *             if the key does not comply with the symbolic-name production.
      */
+<<<<<<< HEAD
+    static void checkKey( Object keyObject )
+    {
+        // check for wrong type or null key
+        if ( !( keyObject instanceof String ) )
+        {
+            throw new IllegalArgumentException( "Key [" + keyObject + "] must be a String" );
+        }
+
+        String key = ( String ) keyObject;
+
+        // check for empty string
+        if ( key.length() == 0 )
+        {
+            throw new IllegalArgumentException( "Key [" + key + "] must not be an empty string" );
+        }
+    }
+
+
+    static Object checkValue( Object value )
+    {
+        Class type;
+=======
     static String checkKey( Object keyObject )
     {
         // check for wrong type or null key
@@ -280,12 +392,16 @@ public class CaseInsensitiveDictionary extends Dictionary<String, Object>
 
     static Object checkValue( Object value )
     {
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         if ( value == null )
         {
             // null is illegal
             throw new IllegalArgumentException( "Value must not be null" );
 
         }
+<<<<<<< HEAD
+        else if ( value.getClass().isArray() )
+=======
 
         Class type = value.getClass();
         // Fast check for simple types
@@ -294,6 +410,7 @@ public class CaseInsensitiveDictionary extends Dictionary<String, Object>
             return value;
         }
         else if ( type.isArray() )
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         {
             // check simple or primitive
             type = value.getClass().getComponentType();
@@ -312,6 +429,32 @@ public class CaseInsensitiveDictionary extends Dictionary<String, Object>
             Collection collection = ( Collection ) value;
             if ( collection.isEmpty() )
             {
+<<<<<<< HEAD
+                throw new IllegalArgumentException( "Collection must not be empty" );
+            }
+
+            // ensure all elements have the same type and to internal list
+            Collection internalValue = new ArrayList( collection.size() );
+            type = null;
+            for ( Iterator ci = collection.iterator(); ci.hasNext(); )
+            {
+                Object el = ci.next();
+                if ( el == null )
+                {
+                    throw new IllegalArgumentException( "Collection must not contain null elements" );
+                }
+                if ( type == null )
+                {
+                    type = el.getClass();
+                }
+                else if ( type != el.getClass() )
+                {
+                    throw new IllegalArgumentException( "Collection element types must not be mixed" );
+                }
+                internalValue.add( el );
+            }
+            value = internalValue;
+=======
                 return Collections.EMPTY_LIST;
             }
             else
@@ -337,6 +480,7 @@ public class CaseInsensitiveDictionary extends Dictionary<String, Object>
                 }
                 value = internalValue;
             }
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         }
         else
         {

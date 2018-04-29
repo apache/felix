@@ -20,6 +20,32 @@ package org.apache.felix.framework.util;
 
 import java.util.Comparator;
 
+<<<<<<< HEAD
+public class StringComparator implements Comparator
+{
+    private final boolean m_isCaseSensitive;
+
+    public StringComparator(boolean b)
+    {
+        m_isCaseSensitive = b;
+    }
+
+    public int compare(Object o1, Object o2)
+    {
+        if (m_isCaseSensitive)
+        {
+            return o1.toString().compareTo(o2.toString());
+        }
+        else
+        {
+            return o1.toString().compareToIgnoreCase(o2.toString());
+        }
+    }
+
+    public boolean isCaseSensitive()
+    {
+        return m_isCaseSensitive;
+=======
 public class StringComparator implements Comparator<String>
 {
 
@@ -69,5 +95,6 @@ public class StringComparator implements Comparator<String>
     private static char toLowerCaseFast( char ch )
     {
         return ( ch >= 'A' && ch <= 'Z' ) ? ( char ) ( ch + 'a' - 'A' ) : ch;
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     }
 }

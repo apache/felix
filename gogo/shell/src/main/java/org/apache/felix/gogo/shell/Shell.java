@@ -19,10 +19,17 @@
 package org.apache.felix.gogo.shell;
 
 import java.io.File;
+<<<<<<< HEAD
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.Reader;
+import java.net.URI;
+=======
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URI;
 import java.net.URL;
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 import java.net.URLConnection;
 import java.nio.CharBuffer;
 import java.util.ArrayList;
@@ -34,7 +41,10 @@ import org.apache.felix.gogo.options.Option;
 import org.apache.felix.gogo.options.Options;
 import org.apache.felix.service.command.CommandProcessor;
 import org.apache.felix.service.command.CommandSession;
+<<<<<<< HEAD
+=======
 import org.osgi.framework.Bundle;
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.BundleException;
 
@@ -49,8 +59,11 @@ public class Shell
     private final CommandProcessor processor;
     private final History history;
 
+<<<<<<< HEAD
+=======
     private volatile Bundle systemBundle;
 
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     public Shell(BundleContext context, CommandProcessor processor)
     {
         this.context = context;
@@ -71,7 +84,10 @@ public class Shell
                 "     --nointeractive       don't start interactive session",
                 "     --login               login shell (same session, reads etc/gosh_profile)",
                 "  -s --noshutdown          don't shutdown framework when script completes",
+<<<<<<< HEAD
+=======
                 "  -q --quiet               don't display message-of-the-day",
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
                 "  -x --xtrace              echo commands before execution",
                 "  -? --help                show help",
                 "If no script-file, an interactive shell is started, type $D to exit." };
@@ -82,9 +98,12 @@ public class Shell
         boolean login = opt.isSet("login");
         boolean interactive = !opt.isSet("nointeractive");
 
+<<<<<<< HEAD
+=======
         // We grab this bundle as early as possible to avoid having to deal with invalid bundleContexts of this bundle during shutdowns...
         systemBundle = context.getBundle(0);
 
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         if (opt.isSet("help"))
         {
             opt.usage();
@@ -100,11 +119,16 @@ public class Shell
             throw opt.usageError("option --command requires argument(s)");
         }
 
+<<<<<<< HEAD
+        CommandSession newSession = (login ? session : processor.createSession(
+            session.getKeyboard(), session.getConsole(), System.err));
+=======
         CommandSession newSession = (login ? session : processor.createSession(session.getKeyboard(), session.getConsole(), System.err));
         // Make some of the given arguments available to the shell itself...
         newSession.put(".gosh_login", login);
         newSession.put(".gosh_interactive", interactive);
         newSession.put(".gosh_quiet", opt.isSet("quiet"));
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 
         if (opt.isSet("xtrace"))
         {
@@ -116,12 +140,16 @@ public class Shell
             URI uri = baseURI.resolve("etc/gosh_profile");
             if (!new File(uri).exists())
             {
+<<<<<<< HEAD
+                uri = getClass().getResource("/gosh_profile").toURI();
+=======
                 URL url = getClass().getResource("/ext/gosh_profile");
                 if (url == null)
                 {
                     url = getClass().getResource("/gosh_profile");
                 }
                 uri = (url == null) ? null : url.toURI();
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
             }
             if (uri != null)
             {
@@ -183,6 +211,12 @@ public class Shell
             result = newSession.execute(program);
         }
 
+<<<<<<< HEAD
+        if (login && interactive && !opt.isSet("noshutdown"))
+        {
+            System.out.println("gosh: stopping framework");
+            shutdown();
+=======
         if (login && interactive)
         {
             if (opt.isSet("noshutdown"))
@@ -194,6 +228,7 @@ public class Shell
                 System.out.println("gosh: stopping shell and framework");
                 shutdown();
             }
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         }
 
         return result;
@@ -206,11 +241,15 @@ public class Shell
 
     private void shutdown() throws BundleException
     {
+<<<<<<< HEAD
+        context.getBundle(0).stop();
+=======
         if (systemBundle != null)
         {
             systemBundle.stop();
             systemBundle = null;
         }
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     }
 
     public Object source(CommandSession session, String script) throws Exception
@@ -236,6 +275,25 @@ public class Shell
 
     private CharSequence readScript(URI script) throws Exception
     {
+<<<<<<< HEAD
+        URLConnection conn = script.toURL().openConnection();
+        int length = conn.getContentLength();
+
+        if (length == -1)
+        {
+            System.err.println("eek! unknown Contentlength for: " + script);
+            length = 10240;
+        }
+
+        InputStream in = conn.getInputStream();
+        CharBuffer cbuf = CharBuffer.allocate(length);
+        Reader reader = new InputStreamReader(in);
+        reader.read(cbuf);
+        in.close();
+        cbuf.rewind();
+
+        return cbuf;
+=======
         CharBuffer buf = CharBuffer.allocate(4096);
         StringBuilder sb = new StringBuilder();
 
@@ -259,6 +317,7 @@ public class Shell
         }
 
         return sb;
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     }
 
     @SuppressWarnings("unchecked")
@@ -285,12 +344,19 @@ public class Shell
         }
     }
 
+<<<<<<< HEAD
+    public String[] history() {
+        Iterator<String> history = this.history.getHistory();
+        List<String> lines = new ArrayList<String>();
+        for (int i = 1; history.hasNext(); i++) {
+=======
     public String[] history()
     {
         Iterator<String> history = this.history.getHistory();
         List<String> lines = new ArrayList<>();
         for (int i = 1; history.hasNext(); i++)
         {
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
             lines.add(String.format("%5d  %s", i, history.next()));
         }
         return lines.toArray(new String[lines.size()]);

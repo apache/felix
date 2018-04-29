@@ -16,6 +16,16 @@
  */
 package org.apache.felix.http.base.internal.handler;
 
+<<<<<<< HEAD
+import javax.servlet.ServletContext;
+import javax.servlet.ServletConfig;
+import java.util.Enumeration;
+import java.util.Collections;
+import java.util.Map;
+
+public final class ServletConfigImpl
+    implements ServletConfig
+=======
 import java.util.Collections;
 import java.util.Enumeration;
 import java.util.Map;
@@ -27,40 +37,59 @@ import javax.servlet.ServletContext;
  * Implementation of the servlet configuration
  */
 public final class ServletConfigImpl implements ServletConfig
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 {
     private final String name;
     private final ServletContext context;
     private final Map<String, String> initParams;
 
+<<<<<<< HEAD
+    public ServletConfigImpl(String name, ServletContext context, Map<String, String> initParams)
+=======
     public ServletConfigImpl(final String name,
             final ServletContext context,
             final Map<String, String> initParams)
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     {
         this.name = name;
         this.context = context;
         this.initParams = initParams;
     }
 
+<<<<<<< HEAD
+=======
     @Override
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     public String getServletName()
     {
         return this.name;
     }
 
+<<<<<<< HEAD
+=======
     @Override
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     public ServletContext getServletContext()
     {
         return this.context;
     }
 
+<<<<<<< HEAD
+    public String getInitParameter(String name)
+=======
     @Override
     public String getInitParameter(final String name)
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     {
         return this.initParams.get(name);
     }
 
+<<<<<<< HEAD
+    public Enumeration getInitParameterNames()
+=======
     @Override
     public Enumeration<String> getInitParameterNames()
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     {
         return Collections.enumeration(this.initParams.keySet());
     }

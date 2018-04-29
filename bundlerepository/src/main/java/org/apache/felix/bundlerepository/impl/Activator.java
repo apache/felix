@@ -20,12 +20,19 @@ package org.apache.felix.bundlerepository.impl;
 
 import java.util.Hashtable;
 
+<<<<<<< HEAD
+=======
 import org.apache.felix.bundlerepository.RepositoryAdmin;
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 import org.apache.felix.bundlerepository.impl.wrapper.Wrapper;
 import org.apache.felix.utils.log.Logger;
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
+<<<<<<< HEAD
+import org.apache.felix.bundlerepository.RepositoryAdmin;
+=======
 import org.osgi.service.repository.Repository;
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 import org.osgi.service.url.URLConstants;
 import org.osgi.service.url.URLStreamHandlerService;
 
@@ -73,11 +80,14 @@ public class Activator implements BundleActivator
             RepositoryAdmin.class.getName(),
             m_repoAdmin, null);
 
+<<<<<<< HEAD
+=======
         // Register the OSGi Repository-spec compliant facade
         context.registerService(
             Repository.class.getName(),
             new OSGiRepositoryImpl(m_repoAdmin), null);
 
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         try
         {
             context.registerService(
@@ -107,6 +117,8 @@ public class Activator implements BundleActivator
 
         try
         {
+<<<<<<< HEAD
+=======
             Hashtable dict = new Hashtable();
             dict.put("osgi.command.scope", "obr");
             dict.put("osgi.command.function", new String[] {
@@ -121,6 +133,7 @@ public class Activator implements BundleActivator
 
         try
         {
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 			Hashtable dict = new Hashtable();
 			dict.put(URLConstants.URL_HANDLER_PROTOCOL, "obr");
 			context.registerService(URLStreamHandlerService.class.getName(),

@@ -18,6 +18,16 @@
  */
 package org.apache.felix.gogo.runtime;
 
+<<<<<<< HEAD
+import junit.framework.TestCase;
+
+import org.apache.felix.gogo.runtime.Parser;
+import org.apache.felix.gogo.runtime.Token;
+import org.apache.felix.service.command.CommandSession;
+import org.apache.felix.service.command.Function;
+
+=======
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -27,6 +37,12 @@ import java.util.Collection;
 import java.util.List;
 import java.util.regex.Pattern;
 
+<<<<<<< HEAD
+public class TestParser extends TestCase
+{
+    int beentheredonethat = 0;
+
+=======
 import org.apache.felix.service.command.Process;
 import org.apache.felix.gogo.runtime.Parser.Pipeline;
 import org.apache.felix.gogo.runtime.Parser.Program;
@@ -59,6 +75,7 @@ public class TestParser extends AbstractParserTest
     }
 
     @Test
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     public void testEvaluatation() throws Exception
     {
         Context c = new Context();
@@ -70,7 +87,10 @@ public class TestParser extends AbstractParserTest
         assertEquals("a", c.execute("((echo a)) | capture"));
     }
 
+<<<<<<< HEAD
+=======
     @Test
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     public void testUnknownCommand() throws Exception
     {
         Context c = new Context();
@@ -85,7 +105,10 @@ public class TestParser extends AbstractParserTest
         }
     }
 
+<<<<<<< HEAD
+=======
     @Test
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     public void testSpecialValues() throws Exception
     {
         Context c = new Context();
@@ -94,7 +117,10 @@ public class TestParser extends AbstractParserTest
         assertEquals(null, c.execute("null"));
     }
 
+<<<<<<< HEAD
+=======
     @Test
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     public void testQuotes() throws Exception
     {
         Context c = new Context();
@@ -121,7 +147,10 @@ public class TestParser extends AbstractParserTest
         assertEquals("a  b ", c.execute("echo \"$d\""));
     }
 
+<<<<<<< HEAD
+=======
     @Test
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     public void testScope() throws Exception
     {
         Context c = new Context();
@@ -130,7 +159,10 @@ public class TestParser extends AbstractParserTest
         assertEquals("file://poo", c.execute("test:echo file://poo"));
     }
 
+<<<<<<< HEAD
+=======
     @Test
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     public void testPipe() throws Exception
     {
         Context c = new Context();
@@ -139,6 +171,19 @@ public class TestParser extends AbstractParserTest
         c.addCommand("grep", this);
         c.addCommand("echoout", this);
         c.execute("myecho = { echoout $args }");
+<<<<<<< HEAD
+        assertEquals("def", c.execute("echo def|grep d.*|capture"));
+        assertEquals("def", c.execute("echoout def|grep d.*|capture"));
+        assertEquals("def", c.execute("myecho def|grep d.*|capture"));
+        assertEquals("def",
+            c.execute("(echoout abc; echoout def; echoout ghi)|grep d.*|capture"));
+        assertEquals("", c.execute("echoout def; echoout ghi | grep d.* | capture"));
+        assertEquals("hello world", c.execute("echo hello world|capture"));
+        assertEquals("defghi",
+            c.execute("(echoout abc; echoout def; echoout ghi)|grep 'def|ghi'|capture"));
+    }
+
+=======
 
         // Disable file name generation to avoid escaping 'd.*'
         c.currentDir(null);
@@ -153,6 +198,7 @@ public class TestParser extends AbstractParserTest
     }
 
     @Test
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     public void testAssignment() throws Exception
     {
         Context c = new Context();
@@ -168,7 +214,10 @@ public class TestParser extends AbstractParserTest
         assertEquals("a", c.execute("a = a; echo ${$a}"));
     }
 
+<<<<<<< HEAD
+=======
     @Test
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     public void testComment() throws Exception
     {
         Context c = new Context();
@@ -176,7 +225,10 @@ public class TestParser extends AbstractParserTest
         assertEquals("1", c.execute("echo 1 // hello"));
     }
 
+<<<<<<< HEAD
+=======
     @Test
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     public void testClosure() throws Exception
     {
         Context c = new Context();
@@ -191,7 +243,10 @@ public class TestParser extends AbstractParserTest
         assertEquals("ca  b", c.execute("e = { echo c$args } ; e 'a  b'"));
     }
 
+<<<<<<< HEAD
+=======
     @Test
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     public void testArray() throws Exception
     {
         Context c = new Context();
@@ -204,6 +259,19 @@ public class TestParser extends AbstractParserTest
         assertEquals(5, c.execute("[1 2 [3 4] 5 6] size"));
     }
 
+<<<<<<< HEAD
+    public void testParentheses()
+    {
+        Parser parser = new Parser("(a|b)|(d|f)");
+        List<List<List<Token>>> p = parser.program();
+        assertEquals("a|b", p.get(0).get(0).get(0).toString());
+
+        parser = new Parser("grep (d.*)|grep (d|f)");
+        p = parser.program();
+        assertEquals("d.*", p.get(0).get(0).get(1).toString());
+    }
+
+=======
     @Test
     public void testParentheses()
     {
@@ -217,6 +285,7 @@ public class TestParser extends AbstractParserTest
     }
 
     @Test
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     public void testEcho() throws Exception
     {
         Context c = new Context();
@@ -252,7 +321,10 @@ public class TestParser extends AbstractParserTest
         return sw.toString();
     }
 
+<<<<<<< HEAD
+=======
     @Test
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     public void testVars() throws Exception
     {
         Context c = new Context();
@@ -263,7 +335,10 @@ public class TestParser extends AbstractParserTest
         assertEquals("a", c.execute("a = a; echo ${a}"));
     }
 
+<<<<<<< HEAD
+=======
     @Test
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     public void testFunny() throws Exception
     {
         Context c = new Context();
@@ -299,7 +374,10 @@ public class TestParser extends AbstractParserTest
         System.out.println(echo(args));
     }
 
+<<<<<<< HEAD
+=======
     @Test
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     public void testContext() throws Exception
     {
         Context c = new Context();
@@ -346,6 +424,52 @@ public class TestParser extends AbstractParserTest
         System.out.println("]");
     }
 
+<<<<<<< HEAD
+    public void testProgram()
+    {
+        List<List<List<Token>>> x = new Parser("abc def|ghi jkl;mno pqr|stu vwx").program();
+        assertEquals("abc", x.get(0).get(0).get(0).toString());
+        assertEquals("def", x.get(0).get(0).get(1).toString());
+        assertEquals("ghi", x.get(0).get(1).get(0).toString());
+        assertEquals("jkl", x.get(0).get(1).get(1).toString());
+        assertEquals("mno", x.get(1).get(0).get(0).toString());
+        assertEquals("pqr", x.get(1).get(0).get(1).toString());
+        assertEquals("stu", x.get(1).get(1).get(0).toString());
+        assertEquals("vwx", x.get(1).get(1).get(1).toString());
+    }
+
+    public void testStatements()
+    {
+        List<List<Token>> x = new Parser("abc def|ghi jkl|mno pqr").program().get(0);
+        assertEquals("abc", x.get(0).get(0).toString());
+        assertEquals("def", x.get(0).get(1).toString());
+        assertEquals("ghi", x.get(1).get(0).toString());
+        assertEquals("jkl", x.get(1).get(1).toString());
+        assertEquals("mno", x.get(2).get(0).toString());
+        assertEquals("pqr", x.get(2).get(1).toString());
+    }
+
+    public void testSimpleValue()
+    {
+        List<Token> x = new Parser(
+            "abc def.ghi http://www.osgi.org?abc=&x=1 [1,2,3] {{{{{{{xyz}}}}}}} (immediate) {'{{{{{'} {\\{} 'abc{}'")
+            .program().get(0).get(0);
+        assertEquals("abc", x.get(0).toString());
+        assertEquals("def.ghi", x.get(1).toString());
+        assertEquals("http://www.osgi.org?abc=&x=1", x.get(2).toString());
+        assertEquals("1,2,3", x.get(3).toString());
+        assertEquals("{{{{{{xyz}}}}}}", x.get(4).toString());
+        assertEquals("immediate", x.get(5).toString());
+        assertEquals("'{{{{{'", x.get(6).toString());
+        assertEquals("\\{", x.get(7).toString());
+        assertEquals("'abc{}'", x.get(8).toString());
+    }
+
+    void each(CommandSession session, Collection<Object> list, Function closure)
+        throws Exception
+    {
+        List<Object> args = new ArrayList<Object>();
+=======
     @Test
     public void testProgram()
     {
@@ -509,6 +633,7 @@ public class TestParser extends AbstractParserTest
         throws Exception
     {
         List<Object> args = new ArrayList<>();
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         args.add(null);
         for (Object x : list)
         {

@@ -21,7 +21,10 @@ package org.apache.felix.resolver;
 import java.util.ArrayList;
 import java.util.List;
 import org.osgi.framework.Version;
+<<<<<<< HEAD
+=======
 import org.osgi.framework.namespace.BundleNamespace;
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 import org.osgi.framework.namespace.IdentityNamespace;
 import org.osgi.framework.namespace.PackageNamespace;
 import org.osgi.resource.Capability;
@@ -91,12 +94,15 @@ public class Util
             .get(Namespace.REQUIREMENT_RESOLUTION_DIRECTIVE));
     }
 
+<<<<<<< HEAD
+=======
     public static boolean isReexport(Requirement req)
     {
         return BundleNamespace.VISIBILITY_REEXPORT.equals(req.getDirectives()
             .get(BundleNamespace.REQUIREMENT_VISIBILITY_DIRECTIVE));
     }
 
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     public static List<Requirement> getDynamicRequirements(List<Requirement> reqs)
     {
         List<Requirement> result = new ArrayList<Requirement>();

@@ -22,7 +22,11 @@
     <parent>
         <groupId>org.apache.felix</groupId>
         <artifactId>felix-parent</artifactId>
+<<<<<<< HEAD
+        <version>2.1</version>
+=======
         <version>4</version>
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         <relativePath>../pom/pom.xml</relativePath>
     </parent>
 
@@ -31,20 +35,35 @@
 
     <name>Apache Felix Metatype Service</name>
     <description>
+<<<<<<< HEAD
+        Implementation of the OSGi Metatype Service Specification 1.2
+    </description>
+    <version>1.0.9-SNAPSHOT</version>
+=======
         Implementation of the OSGi Metatype Service Specification 1.3
     </description>
     <version>1.1.7-SNAPSHOT</version>
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     <dependencies>
         <dependency>
             <groupId>org.osgi</groupId>
             <artifactId>org.osgi.core</artifactId>
+<<<<<<< HEAD
+            <version>4.0.0</version>
+=======
             <version>5.0.0</version>
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
             <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>org.osgi</groupId>
+<<<<<<< HEAD
+            <artifactId>org.osgi.compendium</artifactId>
+            <version>4.3.0</version>
+=======
             <artifactId>osgi.cmpn</artifactId>
             <version>6.0.0</version>
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
             <scope>provided</scope>
         </dependency>
         <dependency>
@@ -65,7 +84,11 @@
             <plugin>
                 <groupId>org.apache.felix</groupId>
                 <artifactId>maven-bundle-plugin</artifactId>
+<<<<<<< HEAD
+                <version>2.3.7</version>
+=======
                 <version>3.3.0</version>
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
                 <extensions>true</extensions>
                 <configuration>
                     <instructions>
@@ -76,10 +99,13 @@
                         <Bundle-DocURL>
                             http://felix.apache.org/site/apache-felix-metatype-service.html
                         </Bundle-DocURL>
+<<<<<<< HEAD
+=======
                         <Import-Package>
                             org.osgi.framework;version="[1.3,2)",
                             *
                         </Import-Package>
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
                         <Export-Package>
                             org.apache.felix.metatype; version=1.2,
                             org.osgi.service.metatype; provide:=true
@@ -91,6 +117,8 @@
                         <Bundle-Activator>
                             org.apache.felix.metatype.internal.Activator
                         </Bundle-Activator>
+<<<<<<< HEAD
+=======
                         <Provide-Capability>
                             osgi.implementation;osgi.implementation="osgi.metatype";version:Version="1.3";
                             uses:="org.osgi.service.metatype",
@@ -99,6 +127,7 @@
                             osgi.service;objectClass:List&lt;String&gt;="org.osgi.service.metatype.MetaTypeService";
                             uses:="org.osgi.service.metatype"
                         </Provide-Capability>
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
                         <Embed-Dependency>
                             kxml2;inline=org/kxml2/io/KXmlParser.class|org/xmlpull/v1/XmlPull**
                         </Embed-Dependency>

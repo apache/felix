@@ -27,9 +27,12 @@ import java.util.Set;
 import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceReference;
 import org.osgi.service.cm.Configuration;
+<<<<<<< HEAD
+=======
 import org.osgi.service.cm.ConfigurationAdmin;
 import org.osgi.service.cm.ConfigurationPermission;
 import org.osgi.service.cm.ReadOnlyConfigurationException;
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 import org.osgi.service.log.LogService;
 
 
@@ -83,8 +86,13 @@ public class ConfigurationAdapter implements Configuration
     {
         // CM 1.4 / 104.13.2.4
         final String bundleLocation = delegatee.getBundleLocation();
+<<<<<<< HEAD
+        delegatee.getConfigurationManager().log( LogService.LOG_DEBUG, "getBundleLocation() ==> {0}", new Object[]
+            { bundleLocation } );
+=======
         //delegatee.getConfigurationManager().log( LogService.LOG_DEBUG, "getBundleLocation() ==> {0}", new Object[]
         //    { bundleLocation } );
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         checkActive();
         configurationAdmin.checkPermission( delegatee.getConfigurationManager(), ( bundleLocation == null ) ? "*" : bundleLocation, true );
         checkDeleted();
@@ -99,9 +107,15 @@ public class ConfigurationAdapter implements Configuration
     @Override
     public void setBundleLocation( String bundleLocation )
     {
+<<<<<<< HEAD
+        delegatee.getConfigurationManager().log( LogService.LOG_DEBUG, "setBundleLocation(bundleLocation={0})",
+            new Object[]
+                { bundleLocation } );
+=======
         Log.logger.log( LogService.LOG_DEBUG, "setBundleLocation(bundleLocation={0})",
                 new Object[]
                         { bundleLocation } );
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 
         // CM 1.4 / 104.13.2.4
         checkActive();
@@ -120,7 +134,11 @@ public class ConfigurationAdapter implements Configuration
     @Override
     public void update() throws IOException
     {
+<<<<<<< HEAD
+        delegatee.getConfigurationManager().log( LogService.LOG_DEBUG, "update()", ( Throwable ) null );
+=======
         Log.logger.log( LogService.LOG_DEBUG, "update()", ( Throwable ) null );
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 
         checkActive();
         checkDeleted();
@@ -136,8 +154,13 @@ public class ConfigurationAdapter implements Configuration
     @Override
     public void update( Dictionary<String, ?> properties ) throws IOException
     {
+<<<<<<< HEAD
+        delegatee.getConfigurationManager().log( LogService.LOG_DEBUG, "update(properties={0})", new Object[]
+            { properties } );
+=======
         Log.logger.log( LogService.LOG_DEBUG, "update(properties={0})", new Object[]
                 { properties } );
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 
         checkActive();
         checkDeleted();
@@ -146,6 +169,23 @@ public class ConfigurationAdapter implements Configuration
     }
 
 
+<<<<<<< HEAD
+    public Dictionary getProperties()
+    {
+        delegatee.getConfigurationManager().log( LogService.LOG_DEBUG, "getProperties()", ( Throwable ) null );
+
+        checkDeleted();
+
+        // return a deep copy since the spec says, that modification of
+        // any value should not modify the internal, stored value
+        return delegatee.getProperties( true );
+    }
+
+
+    public long getChangeCount()
+    {
+        delegatee.getConfigurationManager().log( LogService.LOG_DEBUG, "getChangeCount()", ( Throwable ) null );
+=======
     @Override
     public Dictionary<String, Object> getProperties()
     {
@@ -163,6 +203,7 @@ public class ConfigurationAdapter implements Configuration
     public long getChangeCount()
     {
         //delegatee.getConfigurationManager().log( LogService.LOG_DEBUG, "getChangeCount()", ( Throwable ) null );
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 
         checkDeleted();
 
@@ -177,7 +218,11 @@ public class ConfigurationAdapter implements Configuration
     @Override
     public void delete() throws IOException
     {
+<<<<<<< HEAD
+        delegatee.getConfigurationManager().log( LogService.LOG_DEBUG, "delete()", ( Throwable ) null );
+=======
         Log.logger.log( LogService.LOG_DEBUG, "delete()", ( Throwable ) null );
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 
         checkActive();
         checkDeleted();
@@ -338,7 +383,11 @@ public class ConfigurationAdapter implements Configuration
         if ( !delegatee.isActive() )
         {
             throw new IllegalStateException( "Configuration " + delegatee.getPid()
+<<<<<<< HEAD
+                + " not backed by an active Configuration Admin Service" );
+=======
             + " not backed by an active Configuration Admin Service" );
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         }
     }
 

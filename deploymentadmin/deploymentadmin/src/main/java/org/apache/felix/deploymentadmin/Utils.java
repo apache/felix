@@ -33,15 +33,21 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.jar.Attributes;
+<<<<<<< HEAD
+=======
 import java.util.jar.JarFile;
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 import java.util.jar.Manifest;
 import java.util.jar.Attributes.Name;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
 
 public class Utils {
+<<<<<<< HEAD
+=======
     private static final String MANIFEST_NAME = JarFile.MANIFEST_NAME;
 
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     public static Manifest readManifest(File manifestFile) throws IOException {
         InputStream is = null;
         Manifest mf = null;
@@ -54,6 +60,17 @@ public class Utils {
         }
         return mf;
     }
+<<<<<<< HEAD
+    
+    public static void readUntilEndOfStream(InputStream is) throws IOException {
+        byte[] buffer = new byte[1024];
+        int c = is.read(buffer);
+        while (c != -1) {
+            c = is.read(buffer);
+        }
+    }
+=======
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 
     public static boolean replace(File target, File source) {
         return delete(target, true /* deleteRoot */) && rename(source, target);
@@ -90,10 +107,17 @@ public class Utils {
                 return false;
             }
             finally {
+<<<<<<< HEAD
+                if (!closeSilently(output)) { 
+                    result = false;
+                }
+                if (!closeSilently(input)) { 
+=======
                 if (!closeSilently(output)) {
                     result = false;
                 }
                 if (!closeSilently(input)) {
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
                     result = false;
                 }
             }
@@ -148,7 +172,11 @@ public class Utils {
 
         for (Iterator i = result.iterator(); i.hasNext();) {
             String targetFile = (String) i.next();
+<<<<<<< HEAD
+            if (!"META-INF/MANIFEST.MF".equals(targetFile) && !resultManifest.getEntries().containsKey(targetFile)) {
+=======
             if (!MANIFEST_NAME.equals(targetFile) && !resultManifest.getEntries().containsKey(targetFile)) {
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
                 i.remove();
             }
         }
@@ -166,7 +194,11 @@ public class Utils {
                 result.add(path);
             }
             if (!rename(from, to)) {
+<<<<<<< HEAD
+                throw new IOException("Could not rename " + from + " to "  + to);
+=======
                 throw new IOException("Could not rename " + from + " to " + to);
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
             }
         }
 
@@ -188,11 +220,18 @@ public class Utils {
             }
         }
 
+<<<<<<< HEAD
+        GZIPOutputStream outputStream = new GZIPOutputStream(new FileOutputStream(new File(target, "META-INF/MANIFEST.MF")));
+        try {
+            resultManifest.write(outputStream);
+        } finally {
+=======
         GZIPOutputStream outputStream = new GZIPOutputStream(new FileOutputStream(new File(target, MANIFEST_NAME)));
         try {
             resultManifest.write(outputStream);
         }
         finally {
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
             outputStream.close();
         }
         writeIndex(targetIndex, result);
@@ -212,7 +251,11 @@ public class Utils {
             closeSilently(reader);
         }
     }
+<<<<<<< HEAD
+    
+=======
 
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     static boolean closeSilently(Closeable closeable) {
         if (closeable != null) {
             try {

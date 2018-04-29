@@ -22,13 +22,21 @@
     <parent>
         <groupId>org.apache.felix</groupId>
         <artifactId>org.apache.felix.http.parent</artifactId>
+<<<<<<< HEAD
+        <version>3-SNAPSHOT</version>
+=======
         <version>9</version>
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         <relativePath>../parent/pom.xml</relativePath>
     </parent>
 
     <name>Apache Felix Http Bundle</name>
     <artifactId>org.apache.felix.http.bundle</artifactId>
+<<<<<<< HEAD
+    <version>2.2.3-SNAPSHOT</version>
+=======
     <version>3.0.1-SNAPSHOT</version>
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     <packaging>jar</packaging>
 
     <scm>
@@ -37,10 +45,13 @@
         <url>http://svn.apache.org/viewvc/felix/trunk/http/bundle/</url>
     </scm>
 
+<<<<<<< HEAD
+=======
     <properties>
         <felix.java.version>7</felix.java.version>
     </properties>
 
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     <build>
         <plugins>
             <plugin>
@@ -55,6 +66,15 @@
                             org.apache.felix.http.bundle.internal.CombinedActivator
                         </Bundle-Activator>
                         <Export-Package>
+<<<<<<< HEAD
+                            org.apache.felix.http.api;version${http.api.version};-split-package:=merge-first,
+                            org.apache.felix.http.cometd;version=${project.version};-split-package:=merge-first,
+                            org.osgi.service.http;version=${http.service.version};-split-package:=merge-first,
+                            org.cometd.bayeux;version=${cometd.version};-split-package:=merge-first,
+                            org.cometd.bayeux.client;version=${cometd.version};-split-package:=merge-first,
+                            org.cometd.bayeux.server;version=${cometd.version};-split-package:=merge-first,
+                            javax.servlet.*;version=${servlet.version};-split-package:=merge-first
+=======
                             javax.servlet.*;version=${servlet.version};-split-package:=merge-first,
                             org.osgi.service.http.*;-split-package:=merge-first,
                             org.cometd.bayeux;version=${cometd.version};-split-package:=merge-first,
@@ -63,6 +83,7 @@
                             org.apache.felix.http.api;-split-package:=merge-first,
                             org.apache.felix.http.cometd;-split-package:=merge-first,
                             org.eclipse.jetty.*;version=${version;===;${jetty.version}};-split-package:=merge-first
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
                         </Export-Package>
                         <Private-Package>
                             org.apache.felix.http.base.*;-split-package:=merge-first,
@@ -71,10 +92,23 @@
                             org.apache.felix.http.cometd.*,
                             org.apache.felix.http.jetty.*,
                             org.apache.felix.http.whiteboard.*,
+<<<<<<< HEAD
+                            org.eclipse.jetty.*;-split-package:=merge-first,
+=======
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
                             org.cometd.server.*;-split-package:=merge-first,
                             org.cometd.common.*;-split-package:=merge-first
                         </Private-Package>
                         <Import-Package>
+<<<<<<< HEAD
+                            javax.servlet.*,
+                            org.cometd.bayeux,
+                            org.cometd.bayeux.client,
+                            org.cometd.bayeux.server,
+                            *;resolution:=optional
+                        </Import-Package>
+                    </instructions>
+=======
                         	javax.imageio;resolution:=optional,
                         	javax.sql;resolution:=optional,
                         	org.slf4j.*;resolution:=optional,
@@ -95,6 +129,7 @@
                     </instructions>
                     <!-- Skip baselining -->
                     <skip>true</skip>
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
                 </configuration>
             </plugin>
         </plugins>
@@ -103,6 +138,40 @@
     <dependencies>
         <dependency>
             <groupId>javax.servlet</groupId>
+<<<<<<< HEAD
+            <artifactId>servlet-api</artifactId>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.osgi</groupId>
+            <artifactId>org.osgi.core</artifactId>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.osgi</groupId>
+            <artifactId>org.osgi.compendium</artifactId>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>org.apache.felix.http.bridge</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>org.apache.felix.http.cometd</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>org.apache.felix.http.jetty</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>org.apache.felix.http.whiteboard</artifactId>
+            <version>${project.version}</version>
+=======
             <artifactId>javax.servlet-api</artifactId>
         </dependency>
         <dependency>
@@ -132,6 +201,7 @@
             <groupId>org.apache.felix</groupId>
             <artifactId>org.apache.felix.http.whiteboard</artifactId>
             <version>3.0.0</version>
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         </dependency>
     </dependencies>
 </project>

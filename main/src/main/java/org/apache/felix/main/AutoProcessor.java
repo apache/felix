@@ -6,9 +6,15 @@
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
+<<<<<<< HEAD
+ * 
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ * 
+=======
  *
  *   http://www.apache.org/licenses/LICENSE-2.0
  *
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
  * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
@@ -27,6 +33,11 @@ public class AutoProcessor
 {
     /**
      * The property name used for the bundle directory.
+<<<<<<< HEAD
+    **/
+    public static final String AUTO_DEPLOY_DIR_PROPERY = "felix.auto.deploy.dir";
+    /**
+=======
      * @deprecated use {@link AutoProcessor#AUTO_DEPLOY_DIR_PROPERTY}
     **/
     public static final String AUTO_DEPLOY_DIR_PROPERY = "felix.auto.deploy.dir";
@@ -35,11 +46,21 @@ public class AutoProcessor
     **/
     public static final String AUTO_DEPLOY_DIR_PROPERTY = "felix.auto.deploy.dir";
     /**
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
      * The default name used for the bundle directory.
     **/
     public static final String AUTO_DEPLOY_DIR_VALUE = "bundle";
     /**
      * The property name used to specify auto-deploy actions.
+<<<<<<< HEAD
+    **/
+    public static final String AUTO_DEPLOY_ACTION_PROPERY = "felix.auto.deploy.action";
+    /**
+     * The property name used to specify auto-deploy start level.
+    **/
+    public static final String AUTO_DEPLOY_STARTLEVEL_PROPERY = "felix.auto.deploy.startlevel";
+    /**
+=======
      * @deprecated use {@link AutoProcessor#AUTO_DEPLOY_ACTION_PROPERTY}
     **/
     public static final String AUTO_DEPLOY_ACTION_PROPERY = "felix.auto.deploy.action";
@@ -57,6 +78,7 @@ public class AutoProcessor
     **/
     public static final String AUTO_DEPLOY_STARTLEVEL_PROPERTY = "felix.auto.deploy.startlevel";
     /**
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
      * The name used for the auto-deploy install action.
     **/
     public static final String AUTO_DEPLOY_INSTALL_VALUE = "install";
@@ -103,7 +125,11 @@ public class AutoProcessor
     private static void processAutoDeploy(Map configMap, BundleContext context)
     {
         // Determine if auto deploy actions to perform.
+<<<<<<< HEAD
+        String action = (String) configMap.get(AUTO_DEPLOY_ACTION_PROPERY);
+=======
         String action = (String) configMap.get(AUTO_DEPLOY_ACTION_PROPERTY);
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         action = (action == null) ? "" : action;
         List actionList = new ArrayList();
         StringTokenizer st = new StringTokenizer(action, ",");
@@ -129,12 +155,20 @@ public class AutoProcessor
 
             // Get start level for auto-deploy bundles.
             int startLevel = sl.getInitialBundleStartLevel();
+<<<<<<< HEAD
+            if (configMap.get(AUTO_DEPLOY_STARTLEVEL_PROPERY) != null)
+=======
             if (configMap.get(AUTO_DEPLOY_STARTLEVEL_PROPERTY) != null)
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
             {
                 try
                 {
                     startLevel = Integer.parseInt(
+<<<<<<< HEAD
+                        configMap.get(AUTO_DEPLOY_STARTLEVEL_PROPERY).toString());
+=======
                         configMap.get(AUTO_DEPLOY_STARTLEVEL_PROPERTY).toString());
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
                 }
                 catch (NumberFormatException ex)
                 {
@@ -151,7 +185,11 @@ public class AutoProcessor
             }
 
             // Get the auto deploy directory.
+<<<<<<< HEAD
+            String autoDir = (String) configMap.get(AUTO_DEPLOY_DIR_PROPERY);
+=======
             String autoDir = (String) configMap.get(AUTO_DEPLOY_DIR_PROPERTY);
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
             autoDir = (autoDir == null) ? AUTO_DEPLOY_DIR_VALUE : autoDir;
             // Look in the specified bundle directory to create a list
             // of all JAR files to install.

@@ -152,8 +152,12 @@ function Xdialog(text) {
 	}
 
 	// init dialog
+<<<<<<< HEAD
+	dialog.html(text).dialog('destroy'); // set text & reset dialog
+=======
 	dialog.html(text); // set text & reset dialog
 	if (dialog.is( ":data( 'dialog' )" )) dialog.dialog('destroy');
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 	return dialog;
 }
 
@@ -241,10 +245,13 @@ function Xdialog(text) {
 
 	sb.push(">");
 
+<<<<<<< HEAD
+=======
     if (name == "textarea") {
         sb.push("</textarea>");
     }
 
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 	var el = $(sb.join(""));
 
 	if (cssClass) {

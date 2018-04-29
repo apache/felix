@@ -18,10 +18,20 @@
  */
 package org.apache.felix.ipojo.task;
 
+<<<<<<< HEAD
+import java.io.File;
+
+=======
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 import org.apache.felix.ipojo.manipulator.Pojoization;
 import org.apache.tools.ant.BuildException;
 import org.apache.tools.ant.Project;
 import org.apache.tools.ant.Task;
+<<<<<<< HEAD
+
+/**
+ * iPOJO Ant Task. This Ant task manipulates an input bundle.
+=======
 import org.apache.tools.ant.types.Path;
 import org.apache.tools.ant.types.Reference;
 
@@ -30,10 +40,31 @@ import java.io.File;
 /**
  * iPOJO Ant Task. This Ant task manipulates an input bundle.
  *
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
  * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
 public class IPojoTask extends Task {
 
+<<<<<<< HEAD
+    /** Metadata file. */
+    private File m_metadata;
+
+    /** Input bundle. */
+    private File m_input;
+
+    /** Output bundle. */
+    private File m_output;
+
+    /** Input directory. */
+    private File m_directory;
+
+    /** Input manifest. */
+    private File m_manifest;
+
+    /** Flag describing if we need to ignore annotation of not. */
+    private boolean m_ignoreAnnotations = false;
+
+=======
     /**
      * Metadata file.
      */
@@ -65,6 +96,7 @@ public class IPojoTask extends Task {
     private boolean m_ignoreAnnotations = false;
 
 
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     /**
      * Flag describing if we need or not use local XSD files
      * (i.e. use the {@link org.apache.felix.ipojo.xml.parser.SchemaResolver} or not).
@@ -73,6 +105,9 @@ public class IPojoTask extends Task {
     private boolean m_ignoreLocalXSD = false;
 
     /**
+<<<<<<< HEAD
+     * Set the metadata file.
+=======
      * The classpath.
      */
     private Path m_classpath;
@@ -80,6 +115,7 @@ public class IPojoTask extends Task {
     /**
      * Set the metadata file.
      *
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
      * @param meta : the metadata file.
      */
     public void setMetadata(File meta) {
@@ -88,7 +124,10 @@ public class IPojoTask extends Task {
 
     /**
      * Set the manifest file.
+<<<<<<< HEAD
+=======
      *
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
      * @param manifest : the manifest file.
      */
     public void setManifest(File manifest) {
@@ -97,7 +136,10 @@ public class IPojoTask extends Task {
 
     /**
      * Set the input bundle.
+<<<<<<< HEAD
+=======
      *
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
      * @param in : the input bundle
      */
     public void setInput(File in) {
@@ -106,16 +148,26 @@ public class IPojoTask extends Task {
 
     /**
      * Set the input directory.
+<<<<<<< HEAD
+     * @param dir : the input directory
+     */
+    public void setDir(File dir) {
+        m_directory  = dir;
+=======
      *
      * @param dir : the input directory
      */
     public void setDir(File dir) {
         m_directory = dir;
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     }
 
     /**
      * Set the output bundle.
+<<<<<<< HEAD
+=======
      *
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
      * @param out : the output bundle
      */
     public void setOutput(File out) {
@@ -124,7 +176,10 @@ public class IPojoTask extends Task {
 
     /**
      * Set if we need to ignore annotations or not.
+<<<<<<< HEAD
+=======
      *
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
      * @param flag : true if we need to ignore annotations.
      */
     public void setIgnoreAnnotations(boolean flag) {
@@ -133,7 +188,10 @@ public class IPojoTask extends Task {
 
     /**
      * Set if we need to use embedded XSD files or not.
+<<<<<<< HEAD
+=======
      *
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
      * @param flag : true if we need to ignore embedded XSD files.
      */
     public void setIgnoreEmbeddedSchemas(boolean flag) {
@@ -142,12 +200,19 @@ public class IPojoTask extends Task {
 
     /**
      * Execute the Ant Task.
+<<<<<<< HEAD
+=======
      *
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
      * @see org.apache.tools.ant.Task#execute()
      */
     public void execute() {
 
+<<<<<<< HEAD
+        if (m_input == null  && m_directory == null) {
+=======
         if (m_input == null && m_directory == null) {
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
             throw new BuildException("Neither input bundle nor directory specified");
         }
 
@@ -173,7 +238,11 @@ public class IPojoTask extends Task {
             if (m_input != null) {
                 throw new BuildException("The manifest location cannot be used when manipulating an existing bundle");
             }
+<<<<<<< HEAD
+            if (! m_manifest.exists()) {
+=======
             if (!m_manifest.exists()) {
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
                 throw new BuildException("The manifest file " + m_manifest.getAbsolutePath() + " does not exist");
             }
         }
@@ -182,7 +251,11 @@ public class IPojoTask extends Task {
         if (m_metadata == null) {
             m_metadata = new File("./metadata.xml");
             if (!m_metadata.exists()) {
+<<<<<<< HEAD
+             // Verify if annotations are ignored
+=======
                 // Verify if annotations are ignored
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
                 if (m_ignoreAnnotations) {
                     log("No metadata file found & annotations ignored : nothing to do");
                     return;
@@ -198,11 +271,19 @@ public class IPojoTask extends Task {
             if (!m_metadata.exists()) {
                 throw new BuildException("No metadata file found - the file " + m_metadata.getAbsolutePath() + " does not exist");
             } else {
+<<<<<<< HEAD
+            	if (m_metadata.isDirectory()) {
+            		log("Metadata directory : " + m_metadata.getAbsolutePath());
+            	} else {
+            		log("Metadata file : " + m_metadata.getAbsolutePath());
+            	}
+=======
                 if (m_metadata.isDirectory()) {
                     log("Metadata directory : " + m_metadata.getAbsolutePath());
                 } else {
                     log("Metadata file : " + m_metadata.getAbsolutePath());
                 }
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
             }
         }
 
@@ -217,9 +298,13 @@ public class IPojoTask extends Task {
             }
             if (m_output.exists()) {
                 boolean r = m_output.delete();
+<<<<<<< HEAD
+                if (!r) { throw new BuildException("The file " + m_output.getAbsolutePath() + " cannot be deleted"); }
+=======
                 if (!r) {
                     throw new BuildException("The file " + m_output.getAbsolutePath() + " cannot be deleted");
                 }
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
             }
         }
 
@@ -228,6 +313,15 @@ public class IPojoTask extends Task {
         if (m_ignoreAnnotations) {
             pojo.disableAnnotationProcessing();
         }
+<<<<<<< HEAD
+        if (! m_ignoreLocalXSD) {
+            pojo.setUseLocalXSD();
+        }
+        if (m_input != null) {
+            pojo.pojoization(m_input, m_output, m_metadata);
+        } else {
+            pojo.directoryPojoization(m_directory, m_metadata, m_manifest);
+=======
         if (!m_ignoreLocalXSD) {
             pojo.setUseLocalXSD();
         }
@@ -252,6 +346,7 @@ public class IPojoTask extends Task {
             pojo.pojoization(m_input, m_output, m_metadata, loader);
         } else {
             pojo.directoryPojoization(m_directory, m_metadata, m_manifest, loader);
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         }
         for (int i = 0; i < reporter.getWarnings().size(); i++) {
             log((String) reporter.getWarnings().get(i), Project.MSG_WARN);
@@ -264,7 +359,11 @@ public class IPojoTask extends Task {
             String out;
             if (m_output.getName().equals("_out.jar")) {
                 if (m_input.delete()) {
+<<<<<<< HEAD
+                    if (! m_output.renameTo(m_input)) {
+=======
                     if (!m_output.renameTo(m_input)) {
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
                         log("Cannot rename the output jar to " + m_input.getAbsolutePath(), Project.MSG_WARN);
                     }
                 } else {
@@ -300,6 +399,8 @@ public class IPojoTask extends Task {
         }
     }
 
+<<<<<<< HEAD
+=======
     /**
      * Set the classpath to be used for this packaging.
      *
@@ -344,5 +445,6 @@ public class IPojoTask extends Task {
     }
 
 
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 }
 

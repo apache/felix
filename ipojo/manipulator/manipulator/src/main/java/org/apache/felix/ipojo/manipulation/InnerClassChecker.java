@@ -19,22 +19,36 @@
 
 package org.apache.felix.ipojo.manipulation;
 
+<<<<<<< HEAD
+import org.objectweb.asm.*;
+import org.objectweb.asm.commons.EmptyVisitor;
+
+import java.util.*;
+=======
 import org.objectweb.asm.ClassVisitor;
 import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Opcodes;
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 
 /**
  * Analyze an inner class.
  * This visit collects the methods from the inner class.
  * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
+<<<<<<< HEAD
+public class InnerClassChecker extends EmptyVisitor implements ClassVisitor, Opcodes {
+=======
 public class InnerClassChecker extends ClassVisitor implements Opcodes {
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 
     private final String m_name;
     private final Manipulator m_manipulator;
 
     public InnerClassChecker(String name, Manipulator manipulator) {
+<<<<<<< HEAD
+=======
         super(Opcodes.ASM5);
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         m_name = name;
         m_manipulator = manipulator;
     }
@@ -42,6 +56,10 @@ public class InnerClassChecker extends ClassVisitor implements Opcodes {
     @Override
     public MethodVisitor visitMethod(int access, String name, String desc, String signature, String[] exceptions) {
         // Do not collect static and native method.
+<<<<<<< HEAD
+
+=======
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         if ((access & ACC_STATIC) == ACC_STATIC) {
             return null;
         }

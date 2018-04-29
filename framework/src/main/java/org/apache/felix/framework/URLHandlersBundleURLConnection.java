@@ -122,12 +122,21 @@ class URLHandlersBundleURLConnection extends URLConnection
         // one on the class path.
         m_classPathIdx = url.getPort();
         if (m_classPathIdx < 0)
+<<<<<<< HEAD
         {
             m_classPathIdx = 0;
         }
         if (!((BundleRevisionImpl) m_targetRevision)
             .hasInputStream(m_classPathIdx, url.getPath()))
         {
+=======
+        {
+            m_classPathIdx = 0;
+        }
+        if (!((BundleRevisionImpl) m_targetRevision)
+            .hasInputStream(m_classPathIdx, url.getPath()))
+        {
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
             BundleWiring wiring = m_targetRevision.getWiring();
             ClassLoader cl = (wiring != null) ? wiring.getClassLoader() : null;
             URL newurl = (cl != null) ? cl.getResource(url.getPath()) : null;

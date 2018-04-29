@@ -34,10 +34,13 @@ import java.util.List;
 public class ManipulationEngine {
 
     /**
+<<<<<<< HEAD
+=======
      * The classloader given to the manipulator to load classes.
      */
     private final ClassLoader m_classLoader;
     /**
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
      * List of component types.
      */
     private List<ManipulationUnit> m_manipulationUnits = new ArrayList<ManipulationUnit>();
@@ -57,10 +60,13 @@ public class ManipulationEngine {
      */
     private ManipulationVisitor m_manipulationVisitor;
 
+<<<<<<< HEAD
+=======
     public ManipulationEngine(ClassLoader classLoader) {
         m_classLoader = classLoader;
     }
 
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     /**
      * Add information related to a discovered component that will be manipulated.
      * @param component additional component
@@ -114,7 +120,11 @@ public class ManipulationEngine {
                 // Should always be the case
 
                 // Manipulation preparation
+<<<<<<< HEAD
+                Manipulator manipulator = new Manipulator();
+=======
                 Manipulator manipulator = new Manipulator(m_classLoader);
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
                 try {
                     manipulator.prepare(bytecode);
                 } catch (IOException e) {

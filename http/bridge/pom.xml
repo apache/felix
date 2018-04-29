@@ -22,15 +22,25 @@
     <parent>
         <groupId>org.apache.felix</groupId>
         <artifactId>org.apache.felix.http.parent</artifactId>
+<<<<<<< HEAD
+        <version>3-SNAPSHOT</version>
+=======
         <version>10</version>
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         <relativePath>../parent/pom.xml</relativePath>
     </parent>
 
     <name>Apache Felix Http Bridge</name>
+<<<<<<< HEAD
+    <artifactId>org.apache.felix.http.bridge</artifactId>
+    <version>2.2.3-SNAPSHOT</version>
+    <packaging>jar</packaging>
+=======
     <description>This is an implementation of the OSGi Http Service and the OSGi Http Whiteboard Specification used when run as a web application</description>
     <artifactId>org.apache.felix.http.bridge</artifactId>
     <version>4.0.1-SNAPSHOT</version>
     <packaging>bundle</packaging>
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 
     <scm>
         <connection>scm:svn:http://svn.apache.org/repos/asf/felix/trunk/http/bridge</connection>
@@ -43,23 +53,37 @@
             <plugin>
                 <groupId>org.apache.felix</groupId>
                 <artifactId>maven-bundle-plugin</artifactId>
+<<<<<<< HEAD
+=======
                 <extensions>true</extensions>
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
                 <configuration>
                     <instructions>
                         <Bundle-Activator>
                             org.apache.felix.http.bridge.internal.BridgeActivator
                         </Bundle-Activator>
                         <Export-Package>
+<<<<<<< HEAD
+                            org.apache.felix.http.api;version=${http.api.version},
+                            org.osgi.service.http;version=${http.service.version}
+=======
                             org.osgi.service.http,
                             org.osgi.service.http.context,
                             org.osgi.service.http.runtime,
                             org.osgi.service.http.runtime.dto,
                             org.osgi.service.http.whiteboard
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
                         </Export-Package>
                         <Private-Package>
                             org.apache.felix.http.base.*,
                             org.apache.felix.http.bridge.internal.*
                         </Private-Package>
+<<<<<<< HEAD
+                        <Import-Package>
+                            javax.servlet.*,
+                            *;resolution:=optional
+                        </Import-Package>
+=======
                         <Conditional-Package>
                             org.apache.commons.*
                         </Conditional-Package>
@@ -73,6 +97,7 @@
                             osgi.service;objectClass:List&lt;String&gt;="org.osgi.service.http.runtime.HttpServiceRuntime";
                             uses:="org.osgi.service.http.runtime,org.osgi.service.http.runtime.dto"
                         </Provide-Capability>
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
                     </instructions>
                 </configuration>
             </plugin>
@@ -82,6 +107,30 @@
     <dependencies>
         <dependency>
             <groupId>javax.servlet</groupId>
+<<<<<<< HEAD
+            <artifactId>servlet-api</artifactId>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.osgi</groupId>
+            <artifactId>org.osgi.core</artifactId>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.osgi</groupId>
+            <artifactId>org.osgi.compendium</artifactId>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>org.apache.felix.http.api</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>org.apache.felix.http.base</artifactId>
+            <version>${project.version}</version>
+=======
             <artifactId>javax.servlet-api</artifactId>
         </dependency>
         <dependency>
@@ -114,6 +163,7 @@
             <groupId>org.apache.felix</groupId>
             <artifactId>org.apache.felix.http.base</artifactId>
             <version>4.0.0</version>
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         </dependency>
     </dependencies>
 

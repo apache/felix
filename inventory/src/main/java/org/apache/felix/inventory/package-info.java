@@ -24,5 +24,8 @@
  * @see <a href="http://felix.apache.org/documentation/subprojects/apache-felix-inventory.html">Apache Felix Inventory</a>
  * @version 1.0
  */
+<<<<<<< HEAD
+=======
 @org.osgi.annotation.versioning.Version("1.0")
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 package org.apache.felix.inventory;

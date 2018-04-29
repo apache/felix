@@ -46,13 +46,36 @@ public class Base64Encoder
     **/
     public static String encode(byte[] in, int len) throws IOException
     {
+<<<<<<< HEAD
+        ByteArrayOutputStream baos = null;
+        ByteArrayInputStream bais = null;
+        try
+        {
+            baos = new ByteArrayOutputStream();
+            bais = new ByteArrayInputStream(in);
+=======
         try (ByteArrayOutputStream baos = new ByteArrayOutputStream();
              ByteArrayInputStream bais = new ByteArrayInputStream(in))
         {
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
             encode(bais, baos, len);
             // ASCII byte array to String
             return (new String(baos.toByteArray()));
         }
+<<<<<<< HEAD
+        finally
+        {
+            if (baos != null)
+            {
+                baos.close();
+            }
+            if (bais != null)
+            {
+                bais.close();
+            }
+        }
+=======
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     }
 
     public static void encode(InputStream in, OutputStream out, int len)

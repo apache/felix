@@ -19,11 +19,14 @@
 package org.apache.felix.cm.impl.helper;
 
 
+<<<<<<< HEAD
+=======
 import java.security.AccessControlContext;
 import java.security.AccessController;
 import java.security.DomainCombiner;
 import java.security.Permission;
 import java.security.ProtectionDomain;
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -32,9 +35,13 @@ import java.util.List;
 
 import org.apache.felix.cm.impl.CaseInsensitiveDictionary;
 import org.apache.felix.cm.impl.ConfigurationManager;
+<<<<<<< HEAD
+import org.apache.felix.cm.impl.RankingComparator;
+=======
 import org.apache.felix.cm.impl.Log;
 import org.apache.felix.cm.impl.RankingComparator;
 import org.osgi.framework.Bundle;
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceReference;
 import org.osgi.service.cm.ConfigurationException;
@@ -57,6 +64,10 @@ public abstract class BaseTracker<S> extends ServiceTracker<S, ConfigurationMap<
 
     private final boolean managedServiceFactory;
 
+<<<<<<< HEAD
+
+=======
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     protected BaseTracker( final ConfigurationManager cm, final boolean managedServiceFactory )
     {
         super( cm.getBundleContext(), ( managedServiceFactory ? ManagedServiceFactory.class.getName()
@@ -67,11 +78,18 @@ public abstract class BaseTracker<S> extends ServiceTracker<S, ConfigurationMap<
     }
 
 
+<<<<<<< HEAD
+    public ConfigurationMap<?> addingService( ServiceReference<S> reference )
+    {
+        this.cm.log( LogService.LOG_DEBUG, "Registering service {0}", new String[]
+            { ConfigurationManager.toString( reference ) } );
+=======
     @Override
     public ConfigurationMap<?> addingService( ServiceReference<S> reference )
     {
         Log.logger.log( LogService.LOG_DEBUG, "Registering service {0}", new Object[]
             { reference } );
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 
         final String[] pids = getServicePid( reference );
         final ConfigurationMap<?> configurations = createConfigurationMap( pids );
@@ -83,8 +101,13 @@ public abstract class BaseTracker<S> extends ServiceTracker<S, ConfigurationMap<
     @Override
     public void modifiedService( ServiceReference<S> reference, ConfigurationMap<?> service )
     {
+<<<<<<< HEAD
+        this.cm.log( LogService.LOG_DEBUG, "Modified service {0}", new String[]
+            { ConfigurationManager.toString( reference ) } );
+=======
         Log.logger.log( LogService.LOG_DEBUG, "Modified service {0}", new Object[]
             { reference} );
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 
         String[] pids = getServicePid( reference );
         if ( service.isDifferentPids( pids ) )
@@ -99,8 +122,13 @@ public abstract class BaseTracker<S> extends ServiceTracker<S, ConfigurationMap<
     public void removedService( ServiceReference<S> reference, ConfigurationMap<?> service )
     {
         // just log
+<<<<<<< HEAD
+        this.cm.log( LogService.LOG_DEBUG, "Unregistering service {0}", new String[]
+            { ConfigurationManager.toString( reference ) } );
+=======
         Log.logger.log( LogService.LOG_DEBUG, "Unregistering service {0}", new Object[]
             { reference } );
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     }
 
 
@@ -214,10 +242,17 @@ public abstract class BaseTracker<S> extends ServiceTracker<S, ConfigurationMap<
     }
 
 
+<<<<<<< HEAD
+    protected final Dictionary getProperties( Dictionary<String, ?> rawProperties, ServiceReference service,
+        String configPid, String factoryPid )
+    {
+        Dictionary props = new CaseInsensitiveDictionary( rawProperties );
+=======
     protected final Dictionary<String, Object> getProperties( Dictionary<String, ?> rawProperties, ServiceReference<?> service,
         String configPid, String factoryPid )
     {
         Dictionary<String, Object> props = new CaseInsensitiveDictionary( rawProperties );
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         this.cm.callPlugins( props, service, configPid, factoryPid );
         return props;
     }
@@ -230,6 +265,17 @@ public abstract class BaseTracker<S> extends ServiceTracker<S, ConfigurationMap<
             final ConfigurationException ce = ( ConfigurationException ) error;
             if ( ce.getProperty() != null )
             {
+<<<<<<< HEAD
+                this.cm.log( LogService.LOG_ERROR,
+                    "{0}: Updating property {1} of configuration {2} caused a problem: {3}", new Object[]
+                        { ConfigurationManager.toString( target ), ce.getProperty(), pid, ce.getReason(), ce } );
+            }
+            else
+            {
+                this.cm.log( LogService.LOG_ERROR, "{0}: Updating configuration {1} caused a problem: {2}",
+                    new Object[]
+                        { ConfigurationManager.toString( target ), pid, ce.getReason(), ce } );
+=======
                 Log.logger.log( LogService.LOG_ERROR,
                     "{0}: Updating property {1} of configuration {2} caused a problem: {3}", new Object[]
                         { target , ce.getProperty(), pid, ce.getReason(), ce } );
@@ -239,13 +285,19 @@ public abstract class BaseTracker<S> extends ServiceTracker<S, ConfigurationMap<
                 Log.logger.log( LogService.LOG_ERROR, "{0}: Updating configuration {1} caused a problem: {2}",
                     new Object[]
                         { target, pid, ce.getReason(), ce } );
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
             }
         }
         else
         {
             {
+<<<<<<< HEAD
+                this.cm.log( LogService.LOG_ERROR, "{0}: Unexpected problem updating configuration {1}", new Object[]
+                    { ConfigurationManager.toString( target ), pid, error } );
+=======
                 Log.logger.log( LogService.LOG_ERROR, "{0}: Unexpected problem updating configuration {1}", new Object[]
                     { target, pid, error } );
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
             }
 
         }
@@ -291,6 +343,8 @@ public abstract class BaseTracker<S> extends ServiceTracker<S, ConfigurationMap<
         return null;
     }
 
+<<<<<<< HEAD
+=======
 
     AccessControlContext getAccessControlContext( final Bundle bundle )
     {
@@ -331,4 +385,5 @@ public abstract class BaseTracker<S> extends ServiceTracker<S, ConfigurationMap<
         }
     }
 
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 }

@@ -16,6 +16,9 @@
  */
 package org.apache.felix.http.jetty.internal;
 
+<<<<<<< HEAD
+import org.apache.felix.http.base.internal.AbstractHttpActivator;
+=======
 import java.util.Dictionary;
 import java.util.Hashtable;
 
@@ -25,11 +28,24 @@ import org.osgi.framework.Bundle;
 import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceFactory;
 import org.osgi.framework.ServiceRegistration;
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 
 public final class JettyActivator extends AbstractHttpActivator
 {
     private JettyService jetty;
 
+<<<<<<< HEAD
+    protected void doStart() throws Exception
+    {
+        super.doStart();
+        this.jetty = new JettyService(getBundleContext(), getDispatcherServlet(), getEventDispatcher(), getHttpServiceController());
+        this.jetty.start();
+    }
+
+    protected void doStop() throws Exception
+    {
+        this.jetty.stop();
+=======
     private ServiceRegistration<?> metatypeReg;
     private ServiceRegistration<LoadBalancerCustomizerFactory> loadBalancerCustomizerFactoryReg;
     private ServiceRegistration<?> jettyServiceFactoryReg;
@@ -131,6 +147,7 @@ public final class JettyActivator extends AbstractHttpActivator
             jettyServiceFactoryReg = null;
         }
 
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         super.doStop();
     }
 }

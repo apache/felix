@@ -1,3 +1,5 @@
+<<<<<<< HEAD
+=======
 Changes in 2.1.0
 ----------------
 ** Improvement
@@ -177,6 +179,7 @@ Changes from 1.8 to 1.8.2
     * [FELIX-4317] - SCR implementation should avoid using bundleContext.getBundle()
     * [FELIX-4343] - [DS] rationalize log levels
 
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 Changes from 1.6.2 to 1.8
 ---------------------------
 

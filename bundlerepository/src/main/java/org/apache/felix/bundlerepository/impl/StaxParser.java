@@ -20,8 +20,11 @@ package org.apache.felix.bundlerepository.impl;
 
 import java.io.InputStream;
 import java.io.Reader;
+<<<<<<< HEAD
+=======
 import java.net.URI;
 
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 import javax.xml.stream.Location;
 import javax.xml.stream.XMLInputFactory;
 import javax.xml.stream.XMLStreamConstants;
@@ -71,7 +74,11 @@ public class StaxParser extends RepositoryParser
         return false;
     }
 
+<<<<<<< HEAD
+    public RepositoryImpl parseRepository(InputStream is) throws Exception
+=======
     public RepositoryImpl parseRepository(InputStream is, URI baseUri) throws Exception
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     {
         XMLStreamReader reader = getFactory().createXMLStreamReader(is);
         int event = reader.nextTag();

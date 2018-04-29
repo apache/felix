@@ -27,10 +27,18 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+<<<<<<< HEAD
+import org.apache.felix.webconsole.SimpleWebConsolePlugin;
+import org.apache.felix.webconsole.WebConsoleUtil;
+import org.apache.felix.webconsole.internal.OsgiManagerPlugin;
+import org.json.JSONException;
+import org.json.JSONWriter;
+=======
 import org.apache.felix.utils.json.JSONWriter;
 import org.apache.felix.webconsole.SimpleWebConsolePlugin;
 import org.apache.felix.webconsole.WebConsoleUtil;
 import org.apache.felix.webconsole.internal.OsgiManagerPlugin;
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 import org.osgi.framework.Bundle;
 import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceReference;
@@ -86,6 +94,44 @@ public class LogServlet extends SimpleWebConsolePlugin implements OsgiManagerPlu
     {
         // create status line
         final LogReaderService logReaderService = ( LogReaderService ) this.getService( LogReaderService.class
+<<<<<<< HEAD
+            .getName() );
+
+        JSONWriter jw = new JSONWriter( pw );
+        try
+        {
+            jw.object();
+
+            jw.key( "status" ); //$NON-NLS-1$
+            jw.value( logReaderService == null ? Boolean.FALSE : Boolean.TRUE );
+
+            jw.key( "data" ); //$NON-NLS-1$
+            jw.array();
+
+            if ( logReaderService != null )
+            {
+                int index = 0;
+                for ( Enumeration logEntries = logReaderService.getLog(); logEntries.hasMoreElements()
+                    && index < MAX_LOGS; )
+                {
+                    LogEntry nextLog = ( LogEntry ) logEntries.nextElement();
+                    if ( nextLog.getLevel() <= minLogLevel )
+                    {
+                        logJson( jw, nextLog, index++, traces );
+                    }
+                }
+            }
+
+            jw.endArray();
+
+            jw.endObject();
+
+        }
+        catch ( JSONException je )
+        {
+            throw new IOException( je.toString() );
+        }
+=======
                 .getName() );
 
         JSONWriter jw = new JSONWriter( pw );
@@ -114,6 +160,7 @@ public class LogServlet extends SimpleWebConsolePlugin implements OsgiManagerPlu
         jw.endArray();
 
         jw.endObject();
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 
     }
 
@@ -122,7 +169,11 @@ public class LogServlet extends SimpleWebConsolePlugin implements OsgiManagerPlu
      * @see org.apache.felix.webconsole.AbstractWebConsolePlugin#doGet(javax.servlet.http.HttpServletRequest, javax.servlet.http.HttpServletResponse)
      */
     protected void doGet( HttpServletRequest request, HttpServletResponse response ) throws ServletException,
+<<<<<<< HEAD
+        IOException
+=======
     IOException
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     {
         final int minLevel = WebConsoleUtil.getParameterInt( request, "minLevel", LogService.LOG_DEBUG ); //$NON-NLS-1$
         final String info = request.getPathInfo();
@@ -148,7 +199,11 @@ public class LogServlet extends SimpleWebConsolePlugin implements OsgiManagerPlu
     }
 
 
+<<<<<<< HEAD
+    private static final void logJson( JSONWriter jw, LogEntry info, int index, boolean traces ) throws JSONException
+=======
     private static final void logJson( JSONWriter jw, LogEntry info, int index, boolean traces ) throws IOException
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     {
         jw.object();
         jw.key( "id" ); //$NON-NLS-1$
@@ -200,6 +255,17 @@ public class LogServlet extends SimpleWebConsolePlugin implements OsgiManagerPlu
     {
         switch ( level )
         {
+<<<<<<< HEAD
+            case LogService.LOG_INFO:
+                return "INFO"; //$NON-NLS-1$
+            case LogService.LOG_WARNING:
+                return "WARNING"; //$NON-NLS-1$
+            case LogService.LOG_ERROR:
+                return "ERROR"; //$NON-NLS-1$
+            case LogService.LOG_DEBUG:
+            default:
+                return "DEBUG"; //$NON-NLS-1$
+=======
         case LogService.LOG_INFO:
             return "INFO"; //$NON-NLS-1$
         case LogService.LOG_WARNING:
@@ -209,6 +275,7 @@ public class LogServlet extends SimpleWebConsolePlugin implements OsgiManagerPlu
         case LogService.LOG_DEBUG:
         default:
             return "DEBUG"; //$NON-NLS-1$
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         }
     }
 

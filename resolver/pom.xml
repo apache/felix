@@ -20,7 +20,11 @@
   <parent>
     <groupId>org.apache.felix</groupId>
     <artifactId>felix-parent</artifactId>
+<<<<<<< HEAD
+    <version>2.1</version>
+=======
     <version>3</version>
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     <relativePath>../pom/pom.xml</relativePath>
   </parent>
   <modelVersion>4.0.0</modelVersion>
@@ -29,7 +33,11 @@
   <description>
     Provide OSGi resolver service.
   </description>
+<<<<<<< HEAD
+  <version>1.1.0-SNAPSHOT</version>
+=======
   <version>1.17.0-SNAPSHOT</version>
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
   <artifactId>org.apache.felix.resolver</artifactId>
   <scm>
      <connection>scm:svn:http://svn.apache.org/repos/asf/felix/trunk/resolver</connection>
@@ -42,6 +50,23 @@
       <artifactId>org.osgi.core</artifactId>
       <version>5.0.0</version>
     </dependency>
+<<<<<<< HEAD
+  </dependencies>
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-compiler-plugin</artifactId>
+        <configuration>
+          <target>jsr14</target>
+          <source>1.5</source>
+        </configuration>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.felix</groupId>
+        <artifactId>maven-bundle-plugin</artifactId>
+        <version>2.3.7</version>
+=======
     <dependency>
       <groupId>junit</groupId>
       <artifactId>junit</artifactId>
@@ -64,18 +89,26 @@
         <groupId>org.apache.felix</groupId>
         <artifactId>maven-bundle-plugin</artifactId>
         <version>2.5.4</version>
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         <extensions>true</extensions>
         <configuration>
           <instructions>
             <_sources>true</_sources>
+<<<<<<< HEAD
+            <Bundle-SymbolicName>${pom.artifactId}</Bundle-SymbolicName>
+=======
             <_sourcepath>${project.build.sourceDirectory}</_sourcepath>
             <Bundle-SymbolicName>${project.artifactId}</Bundle-SymbolicName>
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
             <Bundle-Activator>
               org.apache.felix.resolver.Activator
             </Bundle-Activator>
             <Private-Package>org.apache.*</Private-Package>
             <Export-Package>
+<<<<<<< HEAD
+=======
               org.apache.felix.resolver.reason,
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
               org.osgi.service.resolver.*;provide:=true
             </Export-Package>
             <Import-Package>
@@ -102,6 +135,11 @@
           <excludes>
             <exclude>src/**/packageinfo</exclude>
             <exclude>src/main/appended-resources/**</exclude>
+<<<<<<< HEAD
+          </excludes>
+        </configuration>
+      </plugin>
+=======
 			<exclude>src/test/resources/resolution.json</exclude>
             <exclude>src/test/resources/felix-4914.json</exclude>
           </excludes>
@@ -114,6 +152,7 @@
                 <failOnError>false</failOnError>
             </configuration>
       </plugin>
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     </plugins>
   </build>
 </project>

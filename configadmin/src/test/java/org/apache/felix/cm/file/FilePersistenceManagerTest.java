@@ -243,6 +243,8 @@ public class FilePersistenceManagerTest extends TestCase
         check( "=leading equals", "leading equals" );
     }
 
+<<<<<<< HEAD
+=======
 
     // Test expected to always succeed on non-Windows platforms. It may
     // break if FilePersistenceManager.encode does not cope properly
@@ -288,6 +290,7 @@ public class FilePersistenceManagerTest extends TestCase
         }
     }
 
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     private void check( String name, Object value ) throws IOException
     {
         Dictionary props = new Hashtable();
@@ -301,7 +304,11 @@ public class FilePersistenceManagerTest extends TestCase
     {
         fpm.store( pid, props );
 
+<<<<<<< HEAD
+        assertTrue( new File( file, FilePersistenceManager.encodePid( pid ) + ".config" ).exists() );
+=======
         assertTrue( new File( file, fpm.encodePid( pid ) + ".config" ).exists() );
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 
         Dictionary loaded = fpm.load( pid );
         assertNotNull( loaded );

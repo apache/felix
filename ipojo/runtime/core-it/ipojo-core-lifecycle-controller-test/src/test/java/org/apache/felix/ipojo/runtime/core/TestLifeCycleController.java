@@ -54,7 +54,11 @@ public class TestLifeCycleController extends Common {
         // The conf is correct, the PS must be provided
         ServiceReference ref = ipojoHelper.getServiceReferenceByName(CheckService.class.getName(), "under1");
         assertNotNull("Check service availability -1", ref);
+<<<<<<< HEAD
+        CheckService cs = (CheckService) osgiHelper.getServiceObject(ref);
+=======
         CheckService cs = (CheckService) osgiHelper.getRawServiceObject(ref);
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         assertTrue("Check state 1", cs.check());
         bc.ungetService(ref);
 
@@ -67,8 +71,13 @@ public class TestLifeCycleController extends Common {
         }
 
         // The instance should now be invalid 
+<<<<<<< HEAD
+        ref = ipojoHelper.getServiceReferenceByName(CheckService.class.getName(), "under1");
+        assertNull("Check service availability -2", ref);
+=======
         assertFalse("Check service availability -2",
                 ipojoHelper.isServiceAvailableByName(CheckService.class.getName(), "under1"));
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 
         // Reconfigure the instance with a valid configuration
         props.put("conf", "foo"); // Bar is a bad conf
@@ -80,7 +89,11 @@ public class TestLifeCycleController extends Common {
 
         ref = ipojoHelper.getServiceReferenceByName(CheckService.class.getName(), "under1");
         assertNotNull("Check service availability -3", ref);
+<<<<<<< HEAD
+        cs = (CheckService) osgiHelper.getServiceObject(ref);
+=======
         cs = (CheckService) osgiHelper.getRawServiceObject(ref);
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         assertTrue("Check state 2", cs.check());
         bc.ungetService(ref);
 
@@ -104,12 +117,21 @@ public class TestLifeCycleController extends Common {
         ServiceReference ref = ipojoHelper.getServiceReferenceByName(CheckService.class.getName(), "under2");
         assertNotNull("Check service availability -1", ref);
 
+<<<<<<< HEAD
+        System.out.println("CS received : " + osgiHelper.getServiceObject(ref));
+        CheckService cs = (CheckService) osgiHelper.getServiceObject(ref);
+=======
         System.out.println("CS received : " + osgiHelper.getRawServiceObject(ref));
         CheckService cs = (CheckService) osgiHelper.getRawServiceObject(ref);
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         assertNotNull("Assert CS not null", cs);
         try {
             assertFalse("Check state (false)", cs.check());
         } catch (Throwable e) {
+<<<<<<< HEAD
+            e.printStackTrace();
+=======
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
             fail(e.getMessage());
         }
 
@@ -127,7 +149,11 @@ public class TestLifeCycleController extends Common {
 
         ref = ipojoHelper.getServiceReferenceByName(CheckService.class.getName(), "under2");
         assertNotNull("Check service availability -3", ref);
+<<<<<<< HEAD
+        cs = (CheckService) osgiHelper.getServiceObject(ref);
+=======
         cs = (CheckService) osgiHelper.getRawServiceObject(ref);
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         assertTrue("Check state ", cs.check());
         bc.ungetService(ref);
 

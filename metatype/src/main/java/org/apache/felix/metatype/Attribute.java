@@ -57,17 +57,37 @@ public class Attribute extends OptionalAttributes
             else
             {
                 String[] newContent = new String[content.length + added.length];
+<<<<<<< HEAD
+                System.arraycopy( content, 0, newContent, 0, content.length );
+                System.arraycopy( added, 0, newContent, content.length, added.length );
+=======
                 System.arraycopy(content, 0, newContent, 0, content.length);
                 System.arraycopy(added, 0, newContent, content.length, added.length);
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
                 content = newContent;
             }
         }
     }
 
+<<<<<<< HEAD
+
+    public void addContent( String content, boolean split )
+=======
     public void addContent(String content, boolean split)
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     {
         if (content != null)
         {
+<<<<<<< HEAD
+            if ( split )
+            {
+                addContent( AD.splitList( content ) );
+            }
+            else
+            {
+                addContent( new String[]
+                    { content } );
+=======
             if (split)
             {
                 addContent(AD.splitList(content));
@@ -75,7 +95,9 @@ public class Attribute extends OptionalAttributes
             else
             {
                 addContent(new String[] { content });
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
             }
         }
     }
+
 }

@@ -1,5 +1,9 @@
 /*
+<<<<<<< HEAD
+ * Copyright (c) OSGi Alliance (2011, 2012). All Rights Reserved.
+=======
  * Copyright (c) OSGi Alliance (2011, 2013). All Rights Reserved.
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,8 +20,11 @@
 
 package org.osgi.resource;
 
+<<<<<<< HEAD
+=======
 import org.osgi.annotation.versioning.ConsumerType;
 
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 /**
  * A wire connecting a {@link Capability} to a {@link Requirement}.
  * 
@@ -27,9 +34,14 @@ import org.osgi.annotation.versioning.ConsumerType;
  * always return the same result.
  * 
  * @ThreadSafe
+<<<<<<< HEAD
+ * @version $Id: d7ca9a5d3e8dd2277f8243a750e40fbcf79185bd $
+ */
+=======
  * @author $Id: 6c248ea2b9b24f3610a14e5e8deec9cd0b7aa1c9 $
  */
 @ConsumerType
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 public interface Wire {
 	/**
 	 * Returns the {@link Capability} for this wire.

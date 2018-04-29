@@ -18,13 +18,21 @@ package org.apache.felix.http.cometd.internal;
 
 import java.util.Dictionary;
 import java.util.Hashtable;
+<<<<<<< HEAD
+import java.util.Properties;
+=======
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 
 import javax.servlet.http.HttpServlet;
 
 import org.apache.felix.http.base.internal.logger.SystemLogger;
 import org.apache.felix.http.cometd.CometdService;
 import org.cometd.bayeux.server.BayeuxServer;
+<<<<<<< HEAD
+import org.cometd.server.CometdServlet;
+=======
 import org.cometd.server.CometDServlet;
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceReference;
@@ -46,18 +54,30 @@ public final class CometdServiceImpl
     private ServiceRegistration configServiceReg;
     private ServiceTracker httpServiceTracker;
     private ServiceRegistration cometdServiceReg;
+<<<<<<< HEAD
+    private CometdServlet continuationCometdServlet;
+=======
     private CometDServlet continuationCometdServlet;
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 
     public CometdServiceImpl(BundleContext context)
     {
         this.context = context;
         this.config = new CometdConfig(this.context);
     }
+<<<<<<< HEAD
+    
+    public void start()
+        throws Exception
+    {
+        Properties props = new Properties();
+=======
 
     public void start()
         throws Exception
     {
         Dictionary<String, Object> props = new Hashtable<String, Object>();
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         props.put(Constants.SERVICE_PID, PID);
         this.configServiceReg = this.context.registerService(ManagedService.class.getName(), this, props);
 
@@ -77,7 +97,10 @@ public final class CometdServiceImpl
         }
     }
 
+<<<<<<< HEAD
+=======
     @Override
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     public void updated(Dictionary props)
     {
         this.config.update(props);
@@ -90,7 +113,10 @@ public final class CometdServiceImpl
         }
     }
 
+<<<<<<< HEAD
+=======
     @Override
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     public Object addingService(ServiceReference reference)
     {
         Object service = this.context.getService(reference);
@@ -98,14 +124,20 @@ public final class CometdServiceImpl
         return service;
     }
 
+<<<<<<< HEAD
+=======
     @Override
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     public void modifiedService(ServiceReference reference, Object service)
     {
         this.unregister((HttpService)service);
         this.register((HttpService)service);
     }
 
+<<<<<<< HEAD
+=======
     @Override
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     public void removedService(ServiceReference reference, Object service)
     {
         this.unregister((HttpService)service);
@@ -113,7 +145,11 @@ public final class CometdServiceImpl
 
     private void register(HttpService httpService) {
         if (this.continuationCometdServlet == null) {
+<<<<<<< HEAD
+            this.continuationCometdServlet = new CometdServlet();
+=======
             this.continuationCometdServlet = new CometDServlet();
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         }
         try {
           Dictionary dictionary = new Hashtable();
@@ -135,7 +171,10 @@ public final class CometdServiceImpl
         }
     }
 
+<<<<<<< HEAD
+=======
     @Override
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     public BayeuxServer getBayeuxServer() {
         return this.continuationCometdServlet.getBayeux();
     }

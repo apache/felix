@@ -29,7 +29,10 @@ class Logger extends ServiceTracker
     public Logger(BundleContext context)
     {
         super(context, LogService.class.getName(), null);
+<<<<<<< HEAD
+=======
         open();
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     }
 
     public void log(int level, String message)

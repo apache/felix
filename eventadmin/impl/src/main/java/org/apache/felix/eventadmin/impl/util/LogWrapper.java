@@ -135,6 +135,31 @@ public class LogWrapper
     public static void setContext( final BundleContext context )
     {
         LogWrapper logWrapper = LogWrapperLoader.m_singleton;
+<<<<<<< HEAD
+
+        // context is removed, unregister and drop references
+        if ( context == null )
+        {
+            if ( logWrapper.m_logServiceListener != null )
+            {
+                logWrapper.m_context.removeServiceListener( logWrapper.m_logServiceListener );
+                logWrapper.m_logServiceListener = null;
+            }
+            logWrapper.removeLoggerRefs();
+        }
+
+        // set field
+        logWrapper.setBundleContext( context );
+
+        // context is set, register and get existing services
+        if ( context != null )
+        {
+            try
+            {
+                ServiceListener listener = new ServiceListener()
+                {
+                    // Add a newly available LogService reference to the singleton.
+=======
 
         // context is removed, unregister and drop references
         if ( context == null )
@@ -159,6 +184,7 @@ public class LogWrapper
                 {
                     // Add a newly available LogService reference to the singleton.
                     @Override
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
                     public void serviceChanged( final ServiceEvent event )
                     {
                         if ( ServiceEvent.REGISTERED == event.getType() )
@@ -257,7 +283,11 @@ public class LogWrapper
                 // class as well.
                 for (Iterator<ServiceReference> iter = m_loggerRefs.iterator(); iter.hasNext();)
                 {
+<<<<<<< HEAD
+                    final ServiceReference next = (ServiceReference) iter.next();
+=======
                     final ServiceReference next = iter.next();
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 
                     org.osgi.service.log.LogService logger =
                         (org.osgi.service.log.LogService) m_context.getService(next);
@@ -309,7 +339,11 @@ public class LogWrapper
                 // class as well.
                 for (Iterator<ServiceReference> iter = m_loggerRefs.iterator(); iter.hasNext();)
                 {
+<<<<<<< HEAD
+                    final ServiceReference next = (ServiceReference) iter.next();
+=======
                     final ServiceReference next = iter.next();
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 
                     org.osgi.service.log.LogService logger =
                         (org.osgi.service.log.LogService) m_context.getService(next);
@@ -361,7 +395,11 @@ public class LogWrapper
                 // class as well.
                 for (Iterator<ServiceReference> iter = m_loggerRefs.iterator(); iter.hasNext();)
                 {
+<<<<<<< HEAD
+                    final ServiceReference next = (ServiceReference) iter.next();
+=======
                     final ServiceReference next = iter.next();
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 
                     org.osgi.service.log.LogService logger =
                         (org.osgi.service.log.LogService) m_context.getService(next);
@@ -406,7 +444,11 @@ public class LogWrapper
             {
                 return; // don't log
             }
+<<<<<<< HEAD
+            
+=======
 
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
             final String logMsg = "EventAdmin: " + msg;
 
             if (!m_loggerRefs.isEmpty())
@@ -415,7 +457,11 @@ public class LogWrapper
                 // class as well.
                 for (Iterator<ServiceReference> iter = m_loggerRefs.iterator(); iter.hasNext();)
                 {
+<<<<<<< HEAD
+                       final ServiceReference next = (ServiceReference) iter.next();
+=======
                        final ServiceReference next = iter.next();
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 
                     org.osgi.service.log.LogService logger =
                         (org.osgi.service.log.LogService) m_context.getService(next);

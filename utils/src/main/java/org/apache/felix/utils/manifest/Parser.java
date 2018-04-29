@@ -81,6 +81,22 @@ public final class Parser
             String sep = null;
             for (int pieceIdx = pathCount; pieceIdx < pieces.length; pieceIdx++)
             {
+<<<<<<< HEAD
+                // Check if it is a directive.
+                if ((idx = pieces[pieceIdx].indexOf(":=")) >= 0)
+                {
+                    sep = ":=";
+                }
+                // Check if it is an attribute.
+                else if ((idx = pieces[pieceIdx].indexOf("=")) >= 0)
+                {
+                    sep = "=";
+                }
+                // It is an error.
+                else
+                {
+                    throw new IllegalArgumentException("Not a directive/attribute: " + ss[ssIdx]);
+=======
                 if ((idx = pieces[pieceIdx].indexOf("=")) <= 0)
                 {
                     // It is an error.
@@ -96,6 +112,7 @@ public final class Parser
                 else
                 {
                     sep = "=";
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
                 }
 
                 String key = pieces[pieceIdx].substring(0, idx).trim();

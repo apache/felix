@@ -20,6 +20,21 @@
 
 package org.apache.felix.scr.impl.manager;
 
+<<<<<<< HEAD
+import java.util.concurrent.atomic.AtomicReference;
+
+import org.osgi.framework.ServiceReference;
+
+/**
+ * @version $Rev:$ $Date:$
+ */
+public class RefPair<T>
+{
+    private final ServiceReference<T> ref;
+    private AtomicReference<T> serviceObjectRef = new AtomicReference<T>();
+
+    private boolean failed;
+=======
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceObjects;
 import org.osgi.framework.ServiceReference;
@@ -33,6 +48,7 @@ public abstract class RefPair<S, T>
 
     boolean failed;
     volatile boolean deleted;
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 
     public RefPair( ServiceReference<T> ref )
     {
@@ -44,6 +60,27 @@ public abstract class RefPair<S, T>
         return ref;
     }
 
+<<<<<<< HEAD
+    public T getServiceObject()
+    {
+        return serviceObjectRef.get();
+    }
+
+    public boolean setServiceObject( T serviceObject )
+    {
+        boolean set = serviceObjectRef.compareAndSet( null, serviceObject );
+        if ( serviceObject != null)
+        {
+            failed = false;
+        }
+        return set;
+    }
+    
+    public T unsetServiceObject()
+    {
+        return serviceObjectRef.getAndSet( null );
+    }
+=======
     public ServiceObjects<T> getServiceObjects()
     {
         return null;
@@ -56,6 +93,7 @@ public abstract class RefPair<S, T>
     public abstract boolean setServiceObject( ComponentContextImpl<S> key, T serviceObject );
 
     public abstract T unsetServiceObject(ComponentContextImpl<S> key);
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 
     public void setFailed( )
     {
@@ -67,6 +105,13 @@ public abstract class RefPair<S, T>
         return failed;
     }
 
+<<<<<<< HEAD
+
+    @Override
+    public String toString()
+    {
+        return "[RefPair: ref: [" + ref + "] service: [" + serviceObjectRef.get() + "]]";
+=======
     public boolean isDeleted()
     {
         return deleted;
@@ -75,5 +120,6 @@ public abstract class RefPair<S, T>
     public void markDeleted()
     {
         this.deleted = true;
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     }
 }

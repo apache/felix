@@ -234,7 +234,11 @@ public class CompositionMetadata {
             return null;
         }
         byte[] pojo = POJOWriter.dump(clazz, m_name, getFieldList(), getMethodList(), m_handler);
+<<<<<<< HEAD
+        Manipulator manipulator = new Manipulator();
+=======
         Manipulator manipulator = new Manipulator(this.getClass().getClassLoader());
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         try {
             manipulator.prepare(pojo);
             byte[] newclazz = manipulator.manipulate(pojo);

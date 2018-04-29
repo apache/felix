@@ -20,16 +20,25 @@ package org.apache.felix.fileinstall.internal;
 
 import java.io.*;
 import java.net.URI;
+<<<<<<< HEAD
+import java.util.*;
+
+import org.apache.felix.cm.file.ConfigurationHandler;
+=======
 import java.security.AccessController;
 import java.security.PrivilegedAction;
 import java.util.*;
 
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 import org.apache.felix.fileinstall.ArtifactInstaller;
 import org.apache.felix.fileinstall.ArtifactListener;
 import org.apache.felix.fileinstall.internal.Util.Logger;
 import org.apache.felix.utils.collections.DictionaryAsMap;
 import org.apache.felix.utils.properties.InterpolationHelper;
+<<<<<<< HEAD
+=======
 import org.apache.felix.utils.properties.TypedProperties;
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 import org.osgi.framework.*;
 import org.osgi.service.cm.*;
 
@@ -42,7 +51,10 @@ public class ConfigInstaller implements ArtifactInstaller, ConfigurationListener
     private final BundleContext context;
     private final ConfigurationAdmin configAdmin;
     private final FileInstall fileInstall;
+<<<<<<< HEAD
+=======
     private final Map<String, String> pidToFile = new HashMap<>();
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     private ServiceRegistration registration;
 
     ConfigInstaller(BundleContext context, ConfigurationAdmin configAdmin, FileInstall fileInstall)
@@ -54,6 +66,18 @@ public class ConfigInstaller implements ArtifactInstaller, ConfigurationListener
 
     public void init()
     {
+<<<<<<< HEAD
+        if (registration == null)
+        {
+            Properties props = new Properties();
+            registration = this.context.registerService(
+                    new String[] {
+                        ConfigurationListener.class.getName(),
+                        ArtifactListener.class.getName(),
+                        ArtifactInstaller.class.getName()
+                    },
+                    this, props);
+=======
         registration = this.context.registerService(
                 new String[] {
                     ConfigurationListener.class.getName(),
@@ -80,12 +104,21 @@ public class ConfigInstaller implements ArtifactInstaller, ConfigurationListener
         catch (Exception e)
         {
             Util.log( context, Logger.LOG_INFO, "Unable to initialize configurations list", e );
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         }
     }
 
     public void destroy()
     {
+<<<<<<< HEAD
+        if (registration != null)
+        {
+            registration.unregister();
+            registration = null;
+        }
+=======
         registration.unregister();
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     }
 
     public boolean canHandle(File artifact)
@@ -109,6 +142,9 @@ public class ConfigInstaller implements ArtifactInstaller, ConfigurationListener
         deleteConfig(artifact);
     }
 
+<<<<<<< HEAD
+    public void configurationEvent(ConfigurationEvent configurationEvent)
+=======
     public void configurationEvent(final ConfigurationEvent configurationEvent)
     {
         if (System.getSecurityManager() != null)
@@ -131,6 +167,7 @@ public class ConfigInstaller implements ArtifactInstaller, ConfigurationListener
     }
 
     public void doConfigurationEvent(ConfigurationEvent configurationEvent)
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     {
         // Check if writing back configurations has been disabled.
         {
@@ -146,6 +183,52 @@ public class ConfigInstaller implements ArtifactInstaller, ConfigurationListener
             {
                 Configuration config = getConfigurationAdmin().getConfiguration(
                                             configurationEvent.getPid(),
+<<<<<<< HEAD
+                                            configurationEvent.getFactoryPid());
+                Dictionary dict = config.getProperties();
+                String fileName = (String) dict.get( DirectoryWatcher.FILENAME );
+                File file = fileName != null ? fromConfigKey(fileName) : null;
+                if( file != null && file.isFile()   ) {
+                    if( fileName.endsWith( ".cfg" ) )
+                    {
+                        org.apache.felix.utils.properties.Properties props = new org.apache.felix.utils.properties.Properties( file, context );
+                        for( Enumeration e  = dict.keys(); e.hasMoreElements(); )
+                        {
+                            String key = e.nextElement().toString();
+                            if( !Constants.SERVICE_PID.equals(key)
+                                    && !ConfigurationAdmin.SERVICE_FACTORYPID.equals(key)
+                                    && !DirectoryWatcher.FILENAME.equals(key) )
+                            {
+                                String val = dict.get( key ).toString();
+                                props.put( key, val );
+                            }
+                        }
+                        props.save();
+                    }
+                    else if( fileName.endsWith( ".config" ) )
+                    {
+                        OutputStream fos = new FileOutputStream( file );
+                        Properties props = new Properties();
+                        for( Enumeration e  = dict.keys(); e.hasMoreElements(); )
+                        {
+                            String key = e.nextElement().toString();
+                            if( !Constants.SERVICE_PID.equals(key)
+                                    && !ConfigurationAdmin.SERVICE_FACTORYPID.equals(key)
+                                    && !DirectoryWatcher.FILENAME.equals(key) )
+                            {
+                                props.put( key, dict.get( key ) );
+                            }
+                        }
+                        try
+                        {
+                            ConfigurationHandler.write( fos, props );
+                        }
+                        finally
+                        {
+                            fos.close();
+                        }
+                    }
+=======
                                             "?");
                 Dictionary dict = config.getProperties();
                 String fileName = dict != null ? (String) dict.get( DirectoryWatcher.FILENAME ) : null;
@@ -187,6 +270,7 @@ public class ConfigInstaller implements ArtifactInstaller, ConfigurationListener
                     {
                         props.save( fw );
                     }
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
                     // we're just writing out what's already loaded into ConfigAdmin, so
                     // update file checksum since lastModified gets updated when writing
                     fileInstall.updateChecksum(file);
@@ -194,6 +278,9 @@ public class ConfigInstaller implements ArtifactInstaller, ConfigurationListener
             }
             catch (Exception e)
             {
+<<<<<<< HEAD
+                Util.log( context, Util.getGlobalLogLevel(context), Logger.LOG_INFO, "Unable to save configuration", e );
+=======
                 Util.log( context, Logger.LOG_INFO, "Unable to save configuration", e );
             }
         }
@@ -212,12 +299,35 @@ public class ConfigInstaller implements ArtifactInstaller, ConfigurationListener
             catch (Exception e)
             {
                 Util.log( context, Logger.LOG_INFO, "Unable to delete configuration file", e );
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
             }
         }
     }
 
     boolean shouldSaveConfig()
     {
+<<<<<<< HEAD
+        Object obj = this.context.getProperty( DirectoryWatcher.ENABLE_CONFIG_SAVE );
+        if (obj instanceof String)
+        {
+            obj = Boolean.valueOf((String) obj);
+        }
+        if (Boolean.FALSE.equals( obj ))
+        {
+            return false;
+        }
+        else if ( !Boolean.TRUE.equals( obj ))
+        {
+            obj = this.context.getProperty( DirectoryWatcher.DISABLE_CONFIG_SAVE );
+            if (obj instanceof String)
+            {
+                obj = Boolean.valueOf((String) obj);
+            }
+            if( Boolean.FALSE.equals( obj ) )
+            {
+                return false;
+            }
+=======
         String str = this.context.getProperty( DirectoryWatcher.ENABLE_CONFIG_SAVE );
         if (str == null)
         {
@@ -226,16 +336,20 @@ public class ConfigInstaller implements ArtifactInstaller, ConfigurationListener
         if (str != null)
         {
             return Boolean.valueOf(str);
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         }
         return true;
     }
 
+<<<<<<< HEAD
+=======
     String encoding()
     {
         String str = this.context.getProperty( DirectoryWatcher.CONFIG_ENCODING );
         return str != null ? str : "ISO-8859-1";
     }
 
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     ConfigurationAdmin getConfigurationAdmin()
     {
         return configAdmin;
@@ -246,11 +360,43 @@ public class ConfigInstaller implements ArtifactInstaller, ConfigurationListener
      *
      * @param f
      *            Configuration file
+<<<<<<< HEAD
+     * @return
+=======
      * @return <code>true</code> if the configuration has been updated
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
      * @throws Exception
      */
     boolean setConfig(final File f) throws Exception
     {
+<<<<<<< HEAD
+        final Hashtable ht = new Hashtable();
+        final InputStream in = new BufferedInputStream(new FileInputStream(f));
+        try
+        {
+            if ( f.getName().endsWith( ".cfg" ) )
+            {
+                final Properties p = new Properties();
+                in.mark(1);
+                boolean isXml = in.read() == '<';
+                in.reset();
+                if (isXml) {
+                    p.loadFromXML(in);
+                } else {
+                    p.load(in);
+                }
+                InterpolationHelper.performSubstitution((Map) p, context);
+                ht.putAll(p);
+            }
+            else if ( f.getName().endsWith( ".config" ) )
+            {
+                final Dictionary config = ConfigurationHandler.read(in);
+                final Enumeration i = config.keys();
+                while ( i.hasMoreElements() )
+                {
+                    final Object key = i.nextElement();
+                    ht.put(key, config.get(key));
+=======
         final Hashtable<String, Object> ht = new Hashtable<>();
         final InputStream in = new BufferedInputStream(new FileInputStream(f));
         try
@@ -275,6 +421,7 @@ public class ConfigInstaller implements ArtifactInstaller, ConfigurationListener
                 }
                 for (String k : p.keySet()) {
                     ht.put(k, p.get(k));
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
                 }
             }
         }
@@ -286,8 +433,13 @@ public class ConfigInstaller implements ArtifactInstaller, ConfigurationListener
         String pid[] = parsePid(f.getName());
         Configuration config = getConfiguration(toConfigKey(f), pid[0], pid[1]);
 
+<<<<<<< HEAD
+        Dictionary props = config.getProperties();
+        Hashtable old = props != null ? new Hashtable(new DictionaryAsMap(props)) : null;
+=======
         Dictionary<String, Object> props = config.getProperties();
         Hashtable<String, Object> old = props != null ? new Hashtable<String, Object>(new DictionaryAsMap<>(props)) : null;
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         if (old != null) {
         	old.remove( DirectoryWatcher.FILENAME );
         	old.remove( Constants.SERVICE_PID );
@@ -297,12 +449,18 @@ public class ConfigInstaller implements ArtifactInstaller, ConfigurationListener
         if( !ht.equals( old ) )
         {
             ht.put(DirectoryWatcher.FILENAME, toConfigKey(f));
+<<<<<<< HEAD
+            if (config.getBundleLocation() != null)
+            {
+                config.setBundleLocation(null);
+=======
             if (old == null) {
                 Util.log(context, Logger.LOG_INFO, "Creating configuration from " + pid[0]
                         + (pid[1] == null ? "" : "-" + pid[1]) + ".cfg", null);
             } else {
                 Util.log(context, Logger.LOG_INFO, "Updating configuration from " + pid[0]
                         + (pid[1] == null ? "" : "-" + pid[1]) + ".cfg", null);
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
             }
             config.update(ht);
             return true;
@@ -317,15 +475,23 @@ public class ConfigInstaller implements ArtifactInstaller, ConfigurationListener
      * Remove the configuration.
      *
      * @param f
+<<<<<<< HEAD
+     *            File where the configuration in whas defined.
+     * @return
+=======
      *            File where the configuration in was defined.
      * @return <code>true</code>
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
      * @throws Exception
      */
     boolean deleteConfig(File f) throws Exception
     {
         String pid[] = parsePid(f.getName());
+<<<<<<< HEAD
+=======
         Util.log(context, Logger.LOG_INFO, "Deleting configuration from " + pid[0]
                 + (pid[1] == null ? "" : "-" + pid[1]) + ".cfg", null);
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         Configuration config = getConfiguration(toConfigKey(f), pid[0], pid[1]);
         config.delete();
         return true;
@@ -367,6 +533,12 @@ public class ConfigInstaller implements ArtifactInstaller, ConfigurationListener
         Configuration oldConfiguration = findExistingConfiguration(fileName);
         if (oldConfiguration != null)
         {
+<<<<<<< HEAD
+            Util.log(context, Util.getGlobalLogLevel(context),
+                Logger.LOG_DEBUG, "Updating configuration from " + pid
+                + (factoryPid == null ? "" : "-" + factoryPid) + ".cfg", null);
+=======
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
             return oldConfiguration;
         }
         else
@@ -374,11 +546,19 @@ public class ConfigInstaller implements ArtifactInstaller, ConfigurationListener
             Configuration newConfiguration;
             if (factoryPid != null)
             {
+<<<<<<< HEAD
+                newConfiguration = getConfigurationAdmin().createFactoryConfiguration(pid, null);
+            }
+            else
+            {
+                newConfiguration = getConfigurationAdmin().getConfiguration(pid, null);
+=======
                 newConfiguration = getConfigurationAdmin().createFactoryConfiguration(pid, "?");
             }
             else
             {
                 newConfiguration = getConfigurationAdmin().getConfiguration(pid, "?");
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
             }
             return newConfiguration;
         }
@@ -398,6 +578,8 @@ public class ConfigInstaller implements ArtifactInstaller, ConfigurationListener
         }
     }
 
+<<<<<<< HEAD
+=======
     TypedProperties.SubstitutionCallback bundleSubstitution() {
         final InterpolationHelper.SubstitutionCallback cb = new InterpolationHelper.BundleContextSubstitutionCallback(context);
         return new TypedProperties.SubstitutionCallback() {
@@ -408,6 +590,7 @@ public class ConfigInstaller implements ArtifactInstaller, ConfigurationListener
         };
     }
 
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     private String escapeFilterValue(String s) {
         return s.replaceAll("[(]", "\\\\(").
                 replaceAll("[)]", "\\\\)").

@@ -20,6 +20,18 @@ package org.apache.felix.fileinstall.internal;
 
 
 import java.io.File;
+<<<<<<< HEAD
+import java.util.Dictionary;
+import java.util.Hashtable;
+
+import junit.framework.TestCase;
+import org.easymock.EasyMock;
+import org.osgi.framework.Bundle;
+import org.osgi.framework.BundleContext;
+import org.osgi.framework.BundleListener;
+import org.osgi.service.log.LogService;
+import org.osgi.service.packageadmin.PackageAdmin;
+=======
 import java.net.URISyntaxException;
 import java.util.Collection;
 import java.util.HashSet;
@@ -39,6 +51,7 @@ import org.osgi.framework.ServiceReference;
 import org.osgi.framework.startlevel.FrameworkStartLevel;
 import org.osgi.framework.wiring.BundleRevision;
 import org.osgi.service.log.LogService;
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 
 
 /**
@@ -48,17 +61,33 @@ public class DirectoryWatcherTest extends TestCase
 {
 
     private final static String TEST = "test.key";
+<<<<<<< HEAD
+    Dictionary props = new Hashtable();
+    DirectoryWatcher dw;
+    BundleContext mockBundleContext;
+    PackageAdmin mockPackageAdmin;
+    Bundle mockBundle;
+=======
     Map<String, String> props = new Hashtable<String, String>();
     DirectoryWatcher dw;
     BundleContext mockBundleContext;
     Bundle mockBundle;
     Bundle mockSysBundle;
     FrameworkStartLevel mockStartLevel;
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 
 
     protected void setUp() throws Exception
     {
         super.setUp();
+<<<<<<< HEAD
+        mockBundleContext = (BundleContext) EasyMock.createMock(BundleContext.class);
+        mockPackageAdmin = (PackageAdmin) EasyMock.createMock(PackageAdmin.class);
+        mockBundle = (Bundle) EasyMock.createMock(Bundle.class);
+        props.put( DirectoryWatcher.DIR, new File( "target/load" ).getAbsolutePath() );
+
+        // Might get called, but most of the time it doesn't matter whether they do or don't.
+=======
         IMocksControl ctrl = EasyMock.createControl();
         ctrl.makeThreadSafe(true);
         mockBundleContext = ctrl.createMock(BundleContext.class);
@@ -70,25 +99,36 @@ public class DirectoryWatcherTest extends TestCase
         // Might get called, but most of the time it doesn't matter whether they do or don't.
         EasyMock.expect(mockBundleContext.getProperty(DirectoryWatcher.LOG_DEFAULT))
                         .andStubReturn(null);
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         EasyMock.expect(mockBundleContext.getProperty(DirectoryWatcher.LOG_LEVEL))
                         .andStubReturn(null);
         EasyMock.expect(mockBundleContext.getServiceReference(LogService.class.getName()))
                         .andStubReturn(null);
+<<<<<<< HEAD
+=======
         EasyMock.expect(mockBundleContext.getBundle()).andReturn(mockBundle).anyTimes();
         EasyMock.expect(mockBundleContext.getBundle(Constants.SYSTEM_BUNDLE_LOCATION)).andReturn(mockSysBundle).anyTimes();
         EasyMock.expect(mockSysBundle.getState()).andReturn(Bundle.ACTIVE).anyTimes();
         EasyMock.expect(mockSysBundle.adapt(FrameworkStartLevel.class)).andReturn(mockStartLevel).anyTimes();
         EasyMock.expect(mockStartLevel.getStartLevel()).andReturn(50).anyTimes();
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     }
 
 
     public void testGetLongWithNonExistentProperty()
     {
         mockBundleContext.addBundleListener((BundleListener) org.easymock.EasyMock.anyObject());
+<<<<<<< HEAD
+        EasyMock.replay(new Object[]{mockBundleContext});
+        dw = new DirectoryWatcher( props, mockBundleContext );
+        assertEquals( "getLong gives the default value for non-existing properties", 100, dw.getLong( props, TEST, 100 ) );
+        EasyMock.verify(new Object[]{mockBundleContext});
+=======
         EasyMock.replay(mockBundleContext, mockBundle, mockSysBundle, mockStartLevel);
         dw = new DirectoryWatcher( new FileInstall(), props, mockBundleContext );
         assertEquals( "getLong gives the default value for non-existing properties", 100, dw.getLong( props, TEST, 100 ) );
         EasyMock.verify(mockBundleContext);
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     }
 
 
@@ -97,10 +137,17 @@ public class DirectoryWatcherTest extends TestCase
         props.put( TEST, "33" );
 
         mockBundleContext.addBundleListener((BundleListener) org.easymock.EasyMock.anyObject());
+<<<<<<< HEAD
+        EasyMock.replay(new Object[]{mockBundleContext});
+        dw = new DirectoryWatcher( props, mockBundleContext );
+        assertEquals( "getLong retrieves the right property value", 33, dw.getLong( props, TEST, 100 ) );
+        EasyMock.verify(new Object[]{mockBundleContext});
+=======
         EasyMock.replay(mockBundleContext, mockBundle, mockSysBundle, mockStartLevel);
         dw = new DirectoryWatcher( new FileInstall(), props, mockBundleContext );
         assertEquals( "getLong retrieves the right property value", 33, dw.getLong( props, TEST, 100 ) );
         EasyMock.verify(mockBundleContext);
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     }
 
 
@@ -109,20 +156,34 @@ public class DirectoryWatcherTest extends TestCase
         props.put( TEST, "incorrect" );
 
         mockBundleContext.addBundleListener((BundleListener) org.easymock.EasyMock.anyObject());
+<<<<<<< HEAD
+        EasyMock.replay(new Object[]{mockBundleContext});
+        dw = new DirectoryWatcher( props, mockBundleContext );
+        assertEquals( "getLong retrieves the right property value", 100, dw.getLong( props, TEST, 100 ) );
+        EasyMock.verify(new Object[]{mockBundleContext});
+=======
         EasyMock.replay(mockBundleContext, mockBundle, mockSysBundle, mockStartLevel);
         dw = new DirectoryWatcher( new FileInstall(), props, mockBundleContext );
         assertEquals( "getLong retrieves the right property value", 100, dw.getLong( props, TEST, 100 ) );
         EasyMock.verify(mockBundleContext);
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     }
 
 
     public void testGetBooleanWithNonExistentProperty()
     {
         mockBundleContext.addBundleListener((BundleListener) org.easymock.EasyMock.anyObject());
+<<<<<<< HEAD
+        EasyMock.replay(new Object[]{mockBundleContext});
+        dw = new DirectoryWatcher( props, mockBundleContext );
+        assertEquals( "getBoolean gives the default value for non-existing properties", true, dw.getBoolean( props, TEST, true ) );
+        EasyMock.verify(new Object[]{mockBundleContext});
+=======
         EasyMock.replay(mockBundleContext, mockBundle, mockSysBundle, mockStartLevel); 
         dw = new DirectoryWatcher( new FileInstall(), props, mockBundleContext );
         assertEquals( "getBoolean gives the default value for non-existing properties", true, dw.getBoolean( props, TEST, true ) );
         EasyMock.verify(mockBundleContext);
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     }
 
 
@@ -131,10 +192,17 @@ public class DirectoryWatcherTest extends TestCase
         props.put( TEST, "true" );
 
         mockBundleContext.addBundleListener((BundleListener) org.easymock.EasyMock.anyObject());
+<<<<<<< HEAD
+        EasyMock.replay(new Object[]{mockBundleContext});
+        dw = new DirectoryWatcher( props, mockBundleContext );
+        assertEquals( "getBoolean retrieves the right property value", true, dw.getBoolean( props, TEST, false ) );
+        EasyMock.verify(new Object[]{mockBundleContext});
+=======
         EasyMock.replay(mockBundleContext, mockBundle, mockSysBundle, mockStartLevel); 
         dw = new DirectoryWatcher( new FileInstall(), props, mockBundleContext );
         assertEquals( "getBoolean retrieves the right property value", true, dw.getBoolean( props, TEST, false ) );
         EasyMock.verify(mockBundleContext);
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     }
 
 
@@ -143,20 +211,34 @@ public class DirectoryWatcherTest extends TestCase
         props.put( TEST, "incorrect" );
 
         mockBundleContext.addBundleListener((BundleListener) org.easymock.EasyMock.anyObject());
+<<<<<<< HEAD
+        EasyMock.replay(new Object[]{mockBundleContext});
+        dw = new DirectoryWatcher( props, mockBundleContext );
+        assertEquals( "getBoolean retrieves the right property value", false, dw.getBoolean( props, TEST, true ) );
+        EasyMock.verify(new Object[]{mockBundleContext});
+=======
         EasyMock.replay(mockBundleContext, mockBundle, mockSysBundle, mockStartLevel); 
         dw = new DirectoryWatcher( new FileInstall(), props, mockBundleContext );
         assertEquals( "getBoolean retrieves the right property value", false, dw.getBoolean( props, TEST, true ) );
         EasyMock.verify(mockBundleContext);
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     }
 
 
     public void testGetFileWithNonExistentProperty()
     {
         mockBundleContext.addBundleListener((BundleListener) org.easymock.EasyMock.anyObject());
+<<<<<<< HEAD
+        EasyMock.replay(new Object[]{mockBundleContext});
+        dw = new DirectoryWatcher( props, mockBundleContext );
+        assertEquals( "getFile gives the default value for non-existing properties", new File("tmp"), dw.getFile( props, TEST, new File("tmp") ) );
+        EasyMock.verify(new Object[]{mockBundleContext});
+=======
         EasyMock.replay(mockBundleContext, mockBundle, mockSysBundle, mockStartLevel); 
         dw = new DirectoryWatcher( new FileInstall(), props, mockBundleContext );
         assertEquals( "getFile gives the default value for non-existing properties", new File("tmp"), dw.getFile( props, TEST, new File("tmp") ) );
         EasyMock.verify(mockBundleContext);
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     }
 
 
@@ -165,10 +247,17 @@ public class DirectoryWatcherTest extends TestCase
         props.put( TEST, "test" );
 
         mockBundleContext.addBundleListener((BundleListener) org.easymock.EasyMock.anyObject());
+<<<<<<< HEAD
+        EasyMock.replay(new Object[]{mockBundleContext});
+        dw = new DirectoryWatcher( props, mockBundleContext );
+        assertEquals( "getBoolean retrieves the right property value", new File("test"), dw.getFile( props, TEST, new File("tmp") ) );
+        EasyMock.verify(new Object[]{mockBundleContext});
+=======
         EasyMock.replay(mockBundleContext, mockBundle, mockSysBundle, mockStartLevel); 
         dw = new DirectoryWatcher( new FileInstall(), props, mockBundleContext );
         assertEquals( "getBoolean retrieves the right property value", new File("test"), dw.getFile( props, TEST, new File("tmp") ) );
         EasyMock.verify(mockBundleContext);
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     }
 
 
@@ -182,9 +271,15 @@ public class DirectoryWatcherTest extends TestCase
         props.put( DirectoryWatcher.FILTER, ".*\\.cfg" );
 
         mockBundleContext.addBundleListener((BundleListener) org.easymock.EasyMock.anyObject());
+<<<<<<< HEAD
+        EasyMock.replay(new Object[]{mockBundleContext});
+
+        dw = new DirectoryWatcher( props, mockBundleContext );
+=======
         EasyMock.replay(mockBundleContext, mockBundle, mockSysBundle, mockStartLevel); 
 
         dw = new DirectoryWatcher( new FileInstall(), props, mockBundleContext );
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 
         assertEquals( "POLL parameter correctly read", 500l, dw.poll );
         assertEquals( "LOG_LEVEL parameter correctly read", 1, dw.logLevel );
@@ -194,7 +289,11 @@ public class DirectoryWatcherTest extends TestCase
             "src" + File.separatorChar + "test" + File.separatorChar + "resources" ) );
         assertEquals("START_NEW_BUNDLES parameter correctly read", false, dw.startBundles);
         assertEquals( "FILTER parameter correctly read", ".*\\.cfg", dw.filter );
+<<<<<<< HEAD
+        EasyMock.verify(new Object[]{mockBundleContext});
+=======
         EasyMock.verify(mockBundleContext);
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     }
 
 
@@ -203,9 +302,15 @@ public class DirectoryWatcherTest extends TestCase
         props.put( DirectoryWatcher.DIR, new File( "src/test/resources" ).getAbsolutePath() );
 
         mockBundleContext.addBundleListener((BundleListener) org.easymock.EasyMock.anyObject());
+<<<<<<< HEAD
+        EasyMock.replay(new Object[]{mockBundleContext});
+
+        dw = new DirectoryWatcher( props, mockBundleContext );
+=======
         EasyMock.replay(mockBundleContext, mockBundle, mockSysBundle, mockStartLevel); 
 
         dw = new DirectoryWatcher( new FileInstall(), props, mockBundleContext );
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 
         assertTrue( "DIR parameter correctly read", dw.watchedDirectory.getAbsolutePath().endsWith(
             "src" + File.separatorChar + "test" + File.separatorChar + "resources" ) );
@@ -215,13 +320,31 @@ public class DirectoryWatcherTest extends TestCase
                 new File(System.getProperty("java.io.tmpdir")).getAbsolutePath()));
         assertEquals("Default START_NEW_BUNDLES parameter correctly read", true, dw.startBundles);
         assertEquals( "Default FILTER parameter correctly read", null, dw.filter );
+<<<<<<< HEAD
+        EasyMock.verify(new Object[]{mockBundleContext});
+=======
         EasyMock.verify(mockBundleContext);
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     }
 
 
     public void testIsFragment() throws Exception
     {
         mockBundleContext.addBundleListener((BundleListener) org.easymock.EasyMock.anyObject());
+<<<<<<< HEAD
+        EasyMock.expect(mockBundleContext.createFilter((String) EasyMock.anyObject()))
+                        .andReturn(null);
+        EasyMock.expect(Long.valueOf(mockPackageAdmin.getBundleType(mockBundle)))
+                        .andReturn(new Long(PackageAdmin.BUNDLE_TYPE_FRAGMENT));
+        EasyMock.replay(new Object[]{mockBundleContext, mockPackageAdmin, mockBundle});
+
+        FileInstall.padmin = new MockServiceTracker( mockBundleContext, mockPackageAdmin );
+        dw = new DirectoryWatcher( props, mockBundleContext );
+
+        assertTrue( "Fragment type correctly retrieved from Package Admin service", dw.isFragment( mockBundle ) );
+
+        EasyMock.verify(new Object[]{mockBundleContext});
+=======
         BundleRevision mockBundleRevision = EasyMock.createNiceMock(BundleRevision.class);
         EasyMock.expect(mockBundle.adapt(BundleRevision.class)).andReturn(mockBundleRevision);
         EasyMock.expect(mockBundleRevision.getTypes())
@@ -233,6 +356,7 @@ public class DirectoryWatcherTest extends TestCase
         assertTrue( "Fragment type correctly retrieved from Package Admin service", dw.isFragment( mockBundle ) );
 
         EasyMock.verify(mockBundleContext);
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     }
     
     public void testInvalidTempDir() throws Exception
@@ -250,6 +374,17 @@ public class DirectoryWatcherTest extends TestCase
             mockBundleContext.addBundleListener((BundleListener) org.easymock.EasyMock.anyObject());
             EasyMock.expect(mockBundleContext.createFilter((String) EasyMock.anyObject()))
                     .andReturn(null);
+<<<<<<< HEAD
+            EasyMock.expect(Long.valueOf(mockPackageAdmin.getBundleType(mockBundle)))
+                    .andReturn(new Long(PackageAdmin.BUNDLE_TYPE_FRAGMENT));
+            EasyMock.replay(new Object[]{mockBundleContext, mockPackageAdmin, mockBundle});
+    
+            FileInstall.padmin = new MockServiceTracker( mockBundleContext, mockPackageAdmin );
+            
+            try 
+            {
+                dw = new DirectoryWatcher( props, mockBundleContext );
+=======
 
             BundleRevision mockBundleRevision = EasyMock.createNiceMock(BundleRevision.class);
             EasyMock.expect(mockBundle.adapt(BundleRevision.class)).andReturn(mockBundleRevision);
@@ -260,6 +395,7 @@ public class DirectoryWatcherTest extends TestCase
             try
             {
                 dw = new DirectoryWatcher( new FileInstall(), props, mockBundleContext );
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
                 fail("Expected an IllegalStateException");
             } 
             catch (IllegalStateException e)
@@ -273,6 +409,8 @@ public class DirectoryWatcherTest extends TestCase
         }
     }
 
+<<<<<<< HEAD
+=======
     /**
      * Test the {@link DirectoryWatcher#initializeCurrentManagedBundles()} in conjunction with a non opaque Bundle Location.
      * Assert that a new created {@link Artifact} will be added into the {@link DirectoryWatcher#currentManagedArtifacts}.
@@ -447,5 +585,6 @@ public class DirectoryWatcherTest extends TestCase
 
         EasyMock.verify(mockBundleContext, mockBundle,mockServiceReference, mockArtifactListener);
     }
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 
 }

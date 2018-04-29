@@ -33,13 +33,21 @@ public class TestServlet
     {
         this.name = name;
     }
+<<<<<<< HEAD
+
+=======
     
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     @Override
     public void init(ServletConfig config)
         throws ServletException
     {
         doLog("Init with config [" + config + "]");
+<<<<<<< HEAD
+        super.init(config);
+=======
         super.init(config);  
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     }
 
     @Override
@@ -64,4 +72,8 @@ public class TestServlet
     {
         System.out.println("## [" + this.name + "] " + message);
     }
+<<<<<<< HEAD
 }
+=======
+}
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368

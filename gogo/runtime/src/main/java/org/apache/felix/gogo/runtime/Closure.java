@@ -18,6 +18,11 @@
  */
 package org.apache.felix.gogo.runtime;
 
+<<<<<<< HEAD
+import java.io.EOFException;
+import java.util.AbstractList;
+import java.util.ArrayList;
+=======
 import java.io.*;
 import java.nio.ByteBuffer;
 import java.nio.channels.Channel;
@@ -29,11 +34,15 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Iterator;
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
+<<<<<<< HEAD
+import org.apache.felix.gogo.runtime.Tokenizer.Type;
+=======
 import org.apache.felix.service.command.Job.Status;
 import org.apache.felix.gogo.runtime.Parser.Array;
 import org.apache.felix.gogo.runtime.Parser.Executable;
@@ -43,22 +52,35 @@ import org.apache.felix.gogo.runtime.Parser.Program;
 import org.apache.felix.gogo.runtime.Parser.Sequence;
 import org.apache.felix.gogo.runtime.Parser.Statement;
 import org.apache.felix.gogo.runtime.Pipe.Result;
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 import org.apache.felix.service.command.CommandSession;
 import org.apache.felix.service.command.Function;
 
 public class Closure implements Function, Evaluate
 {
+<<<<<<< HEAD
+    public static final String LOCATION = ".location";
+    private static final String DEFAULT_LOCK = ".defaultLock";
+
+    private static final long serialVersionUID = 1L;
+    private static final ThreadLocal<String> location = new ThreadLocal<String>();
+=======
 
     public static final String LOCATION = ".location";
     public static final String PIPE_EXCEPTION = "pipe-exception";
     private static final String DEFAULT_LOCK = ".defaultLock";
 
     private static final ThreadLocal<String> location = new ThreadLocal<>();
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 
     private final CommandSessionImpl session;
     private final Closure parent;
     private final CharSequence source;
+<<<<<<< HEAD
+    private final List<List<List<Token>>> program;
+=======
     private final Program program;
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     private final Object script;
 
     private Token errTok;
@@ -71,6 +93,20 @@ public class Closure implements Function, Evaluate
         this.session = session;
         this.parent = parent;
         this.source = source;
+<<<<<<< HEAD
+        script = session.get("0"); // by convention, $0 is script name
+
+        try
+        {
+            program = new Parser(source).program();
+        }
+        catch (Exception e)
+        {
+            throw setLocation(e);
+        }
+    }
+
+=======
         this.script = session.get("0"); // by convention, $0 is script name
 
         if (source instanceof Program)
@@ -99,6 +135,7 @@ public class Closure implements Function, Evaluate
         this.program = program;
     }
 
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     public CommandSessionImpl session()
     {
         return session;
@@ -146,6 +183,13 @@ public class Closure implements Function, Evaluate
     // implements Function interface
     public Object execute(CommandSession x, List<Object> values) throws Exception
     {
+<<<<<<< HEAD
+        try
+        {
+            location.remove();
+            session.variables.remove(LOCATION);
+            return execute(values);
+=======
         return execute(x, values, null);
     }
 
@@ -167,6 +211,7 @@ public class Closure implements Function, Evaluate
             location.remove();
             session.put(LOCATION, null);
             return execute(values, capturingOutput);
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         }
         catch (Exception e)
         {
@@ -175,18 +220,31 @@ public class Closure implements Function, Evaluate
     }
 
     @SuppressWarnings("unchecked")
+<<<<<<< HEAD
+    private Object execute(List<Object> values) throws Exception
+    {
+        if (null != values)
+        {
+            parmv = values;
+=======
     private Object execute(List<Object> values, Channel capturingOutput) throws Exception
     {
         if (null != values)
         {
             parmv = new ArrayList<>(values);
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
             parms = new ArgList(parmv);
         }
         else if (null != parent)
         {
             // inherit parent closure parameters
+<<<<<<< HEAD
+            parms = parent.parms;
+            parmv = parent.parmv;
+=======
             parmv = parent.parmv != null ? new ArrayList<>(parent.parmv) : null;
             parms = parmv != null ? new ArgList(parmv) : null;
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         }
         else
         {
@@ -194,11 +252,100 @@ public class Closure implements Function, Evaluate
             Object args = session.get("args");
             if (null != args && args instanceof List<?>)
             {
+<<<<<<< HEAD
+                parmv = (List<Object>) args;
+=======
                 parmv = new ArrayList<>((List<Object>) args);
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
                 parms = new ArgList(parmv);
             }
         }
 
+<<<<<<< HEAD
+        Pipe last = null;
+        Object[] mark = Pipe.mark();
+
+        for (List<List<Token>> pipeline : program)
+        {
+            ArrayList<Pipe> pipes = new ArrayList<Pipe>();
+
+            for (List<Token> statement : pipeline)
+            {
+                Pipe current = new Pipe(this, statement);
+
+                if (pipes.isEmpty())
+                {
+                    if (current.out == null)
+                    {
+                        current.setIn(session.in);
+                        current.setOut(session.out);
+                        current.setErr(session.err);
+                    }
+                }
+                else
+                {
+                    Pipe previous = pipes.get(pipes.size() - 1);
+                    previous.connect(current);
+                }
+                pipes.add(current);
+            }
+
+            if (pipes.size() == 1)
+            {
+                pipes.get(0).run();
+            }
+            else if (pipes.size() > 1)
+            {
+                for (Pipe pipe : pipes)
+                {
+                    pipe.start();
+                }
+                try
+                {
+                    for (Pipe pipe : pipes)
+                    {
+                        pipe.join();
+                    }
+                }
+                catch (InterruptedException e)
+                {
+                    for (Pipe pipe : pipes)
+                    {
+                        pipe.interrupt();
+                    }
+                    throw e;
+                }
+            }
+
+            last = pipes.remove(pipes.size() - 1);
+
+            for (Pipe pipe : pipes)
+            {
+                if (pipe.exception != null)
+                {
+                    // can't throw exception, as result is defined by last pipe
+                    Object oloc = session.get(LOCATION);
+                    String loc = (String.valueOf(oloc).contains(":") ? oloc + ": "
+                        : "pipe: ");
+                    session.err.println(loc + pipe.exception);
+                    session.put("pipe-exception", pipe.exception);
+                }
+            }
+
+            if (last.exception != null)
+            {
+                Pipe.reset(mark);
+                throw last.exception;
+            }
+        }
+
+        Pipe.reset(mark); // reset IO in case same thread used for new client
+
+        return last == null ? null : last.result;
+    }
+
+    private Object eval(Object v)
+=======
         Result last = null;
         Operator operator = null;
         for (Iterator<Executable> iterator = program.tokens().iterator(); iterator.hasNext();)
@@ -334,6 +481,7 @@ public class Closure implements Function, Evaluate
     }
 
     static Object eval(Object v)
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     {
         String s = v.toString();
         if ("null".equals(s))
@@ -358,7 +506,10 @@ public class Closure implements Function, Evaluate
             }
             catch (NumberFormatException e)
             {
+<<<<<<< HEAD
+=======
                 // Ignore
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
             }
         }
         return v;
@@ -366,6 +517,42 @@ public class Closure implements Function, Evaluate
 
     public Object eval(final Token t) throws Exception
     {
+<<<<<<< HEAD
+        Object v = null;
+
+        switch (t.type)
+        {
+            case WORD:
+                v = Tokenizer.expand(t, this);
+
+                if (t == v)
+                {
+                    v = eval(v);
+                }
+                break;
+
+            case CLOSURE:
+                v = new Closure(session, this, t);
+                break;
+
+            case EXECUTION:
+                v = new Closure(session, this, t).execute(session, parms);
+                break;
+
+            case ARRAY:
+                v = array(t);
+                break;
+
+            case ASSIGN:
+                v = t.type;
+                break;
+
+            default:
+                throw new SyntaxError(t.line, t.column, "unexpected token: " + t.type);
+        }
+
+        return v;
+=======
         return eval(t, true);
     }
 
@@ -422,6 +609,7 @@ public class Closure implements Function, Evaluate
         {
             throw new IllegalStateException();
         }
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     }
 
     /*
@@ -432,7 +620,11 @@ public class Closure implements Function, Evaluate
      *    <object> // value of <object>
      *    <object> word.. // method call
      */
+<<<<<<< HEAD
+    public Object executeStatement(List<Token> statement) throws Exception
+=======
     public Object executeStatement(Statement statement) throws Exception
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     {
         Object echo = session.get("echo");
         String xtrace = null;
@@ -440,6 +632,38 @@ public class Closure implements Function, Evaluate
         if (echo != null && !"false".equals(echo.toString()))
         {
             // set -x execution trace
+<<<<<<< HEAD
+            StringBuilder buf = new StringBuilder("+");
+            for (Token token : statement)
+            {
+                buf.append(' ');
+                buf.append(token.source());
+            }
+            xtrace = buf.toString();
+            session.err.println(xtrace);
+        }
+
+        List<Object> values = new ArrayList<Object>();
+        errTok = statement.get(0);
+
+        if ((statement.size() > 3) && Type.ASSIGN.equals(statement.get(1).type))
+        {
+            errTok2 = statement.get(2);
+        }
+
+        for (Token t : statement)
+        {
+            Object v = eval(t);
+
+            if ((Type.EXECUTION == t.type) && (statement.size() == 1))
+            {
+                return v;
+            }
+
+            if (parms == v && parms != null)
+            {
+                values.addAll(parms); // explode $args array
+=======
             xtrace = "+" + statement;
             session.perr.println(xtrace);
         }
@@ -469,6 +693,7 @@ public class Closure implements Function, Evaluate
             if (v instanceof ArgList)
             {
                 values.addAll((ArgList) v); // explode $args array
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
             }
             else
             {
@@ -488,7 +713,11 @@ public class Closure implements Function, Evaluate
         }
 
         if (cmd instanceof CharSequence && values.size() > 0
+<<<<<<< HEAD
+            && Type.ASSIGN.equals(values.get(0)))
+=======
                 && Token.eq("=", tokens.get(1)))
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         {
             values.remove(0);
             String scmd = cmd.toString();
@@ -496,7 +725,11 @@ public class Closure implements Function, Evaluate
 
             if (values.size() == 0)
             {
+<<<<<<< HEAD
+                return session.variables.remove(scmd);
+=======
                 return session.put(scmd, null);
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
             }
 
             if (values.size() == 1)
@@ -509,12 +742,20 @@ public class Closure implements Function, Evaluate
                 if (null == cmd)
                 {
                     throw new RuntimeException("Command name evaluates to null: "
+<<<<<<< HEAD
+                        + errTok2);
+=======
                             + errTok2);
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
                 }
 
                 trace2(xtrace, cmd, values);
 
+<<<<<<< HEAD
+                value = bareword(statement.get(2)) ? executeCmd(cmd.toString(), values)
+=======
                 value = bareword(tokens.get(2), cmd) ? executeCmd(cmd.toString(), values)
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
                     : executeMethod(cmd, values);
             }
 
@@ -523,7 +764,11 @@ public class Closure implements Function, Evaluate
 
         trace2(xtrace, cmd, values);
 
+<<<<<<< HEAD
+        return bareword(statement.get(0)) ? executeCmd(cmd.toString(), values)
+=======
         return bareword(tokens.get(0), cmd) ? executeCmd(cmd.toString(), values)
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
             : executeMethod(cmd, values);
     }
 
@@ -544,13 +789,23 @@ public class Closure implements Function, Evaluate
 
             if (!trace2.equals(trace1))
             {
+<<<<<<< HEAD
+                session.err.println("+" + trace2);
+=======
                 session.perr.println("+" + trace2);
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
             }
         }
     }
 
+<<<<<<< HEAD
+    private boolean bareword(Token t) throws Exception
+    {
+        return ((t.type == Type.WORD) && (t == Tokenizer.expand(t, this)) && (eval((Object) t) instanceof String));
+=======
     private boolean bareword(Token t, Object v) {
         return v instanceof CharSequence && Token.eq(t, (CharSequence) v);
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     }
 
     private Object executeCmd(String scmd, List<Object> values) throws Exception
@@ -588,7 +843,11 @@ public class Closure implements Function, Evaluate
                         }
                         finally
                         {
+<<<<<<< HEAD
+                            session.variables.remove(DEFAULT_LOCK);
+=======
                             session.put(DEFAULT_LOCK, null);
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
                         }
                     }
                 }
@@ -614,14 +873,23 @@ public class Closure implements Function, Evaluate
         if (dot)
         {
             Object target = cmd;
+<<<<<<< HEAD
+            ArrayList<Object> args = new ArrayList<Object>();
+=======
             ArrayList<Object> args = new ArrayList<>();
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
             values.remove(0);
 
             for (Object arg : values)
             {
                 if (".".equals(arg))
                 {
+<<<<<<< HEAD
+                    target = Reflective.invoke(session, target,
+                        args.remove(0).toString(), args);
+=======
                     target = invoke(target, args.remove(0).toString(), args);
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
                     args.clear();
                 }
                 else
@@ -635,7 +903,11 @@ public class Closure implements Function, Evaluate
                 return target;
             }
 
+<<<<<<< HEAD
+            return Reflective.invoke(session, target, args.remove(0).toString(), args);
+=======
             return invoke(target, args.remove(0).toString(), args);
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         }
         else if (cmd.getClass().isArray() && values.size() == 1)
         {
@@ -645,6 +917,27 @@ public class Closure implements Function, Evaluate
         }
         else
         {
+<<<<<<< HEAD
+            return Reflective.invoke(session, cmd, values.remove(0).toString(), values);
+        }
+    }
+
+    private Object assignment(String name, Object value)
+    {
+        session.variables.put(name, value);
+        return value;
+    }
+
+    private Object array(Token array) throws Exception
+    {
+        List<Token> list = new ArrayList<Token>();
+        Map<Token, Token> map = new LinkedHashMap<Token, Token>();
+        (new Parser(array)).array(list, map);
+
+        if (map.isEmpty())
+        {
+            List<Object> olist = new ArrayList<Object>();
+=======
             return invoke(cmd, values.remove(0).toString(), values);
         }
     }
@@ -673,16 +966,24 @@ public class Closure implements Function, Evaluate
         if (list != null)
         {
             List<Object> olist = new ArrayList<>();
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
             for (Token t : list)
             {
                 Object oval = eval(t);
                 if (oval.getClass().isArray())
                 {
+<<<<<<< HEAD
+                    for (Object o : (Object[]) oval)
+                    {
+                        olist.add(o);
+                    }
+=======
                     Collections.addAll(olist, (Object[]) oval);
                 }
                 else if (oval instanceof ArgList)
                 {
                     olist.addAll((ArgList) oval);
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
                 }
                 else
                 {
@@ -693,14 +994,22 @@ public class Closure implements Function, Evaluate
         }
         else
         {
+<<<<<<< HEAD
+            Map<Object, Object> omap = new LinkedHashMap<Object, Object>();
+=======
             Map<Object, Object> omap = new LinkedHashMap<>();
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
             for (Entry<Token, Token> e : map.entrySet())
             {
                 Token key = e.getKey();
                 Object k = eval(key);
                 if (!(k instanceof String))
                 {
+<<<<<<< HEAD
+                    throw new SyntaxError(key.line, key.column,
+=======
                     throw new SyntaxError(key.line(), key.column(),
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
                         "map key null or not String: " + key);
                 }
                 omap.put(k, eval(e.getValue()));
@@ -743,6 +1052,63 @@ public class Closure implements Function, Evaluate
 
     public Object put(String key, Object value)
     {
+<<<<<<< HEAD
+        return session.variables.put(key, value);
+    }
+
+    @Override
+    public String toString()
+    {
+        return source.toString().trim().replaceAll("\n+", "\n").replaceAll(
+            "([^\\\\{(\\[])\n", "\\1;").replaceAll("[ \\\\\t\n]+", " ");
+    }
+
+    /**
+     * List that overrides toString() for implicit $args expansion.
+     * Also checks for index out of bounds, so that $1 evaluates to null
+     * rather than throwing IndexOutOfBoundsException.
+     * e.g. x = { a$args }; x 1 2 => a1 2 and not a[1, 2]
+     */
+    class ArgList extends AbstractList<Object>
+    {
+        private List<Object> list;
+
+        public ArgList(List<Object> args)
+        {
+            this.list = args;
+        }
+
+        @Override
+        public String toString()
+        {
+            StringBuilder buf = new StringBuilder();
+            for (Object o : list)
+            {
+                if (buf.length() > 0)
+                    buf.append(' ');
+                buf.append(o);
+            }
+            return buf.toString();
+        }
+
+        @Override
+        public Object get(int index)
+        {
+            return index < list.size() ? list.get(index) : null;
+        }
+
+        @Override
+        public Object remove(int index)
+        {
+            return list.remove(index);
+        }
+
+        @Override
+        public int size()
+        {
+            return list.size();
+        }
+=======
         return session.put(key, value);
     }
 
@@ -768,6 +1134,7 @@ public class Closure implements Function, Evaluate
     {
         return source.toString().trim().replaceAll("\n+", "\n").replaceAll(
             "([^\\\\{}(\\[])[\\s\n]*\n", "$1;").replaceAll("[ \\\\\t\n]+", " ");
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     }
 
 }

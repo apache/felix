@@ -18,12 +18,24 @@
  */
 package org.apache.felix.coordinator.impl;
 
+<<<<<<< HEAD
+import org.apache.felix.coordinator.impl.CoordinationMgr;
+import org.apache.felix.coordinator.impl.CoordinatorImpl;
+import org.apache.felix.service.coordinator.Coordination;
+import org.apache.felix.service.coordinator.CoordinationException;
+import org.apache.felix.service.coordinator.Participant;
+
+import junit.framework.TestCase;
+
+@SuppressWarnings("deprecation")
+=======
 import org.osgi.service.coordinator.Coordination;
 import org.osgi.service.coordinator.CoordinationException;
 import org.osgi.service.coordinator.Participant;
 
 import junit.framework.TestCase;
 
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 public class CoordinatorImplTest extends TestCase
 {
 
@@ -60,12 +72,21 @@ public class CoordinatorImplTest extends TestCase
         try
         {
             c1.end();
+<<<<<<< HEAD
+            fail("Expected CoordinationException.ALREADY_ENDED on end() after fail()");
+        }
+        catch (CoordinationException ce)
+        {
+            // expected already terminated
+            assertEquals(CoordinationException.ALREADY_ENDED, ce.getType());
+=======
             fail("Expected CoordinationException.FAILED on end() after fail()");
         }
         catch (CoordinationException ce)
         {
             // expected failed
             assertEquals(CoordinationException.FAILED, ce.getType());
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         }
 
         final Coordination c2 = coordinator.create(name, 0);
@@ -105,7 +126,11 @@ public class CoordinatorImplTest extends TestCase
         assertEquals(c1, coordinator.pop());
 
         assertNull(coordinator.peek());
+<<<<<<< HEAD
+        coordinator.push(c1);
+=======
         c1.push();
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         assertEquals(c1, coordinator.peek());
 
         c1.end();
@@ -115,6 +140,9 @@ public class CoordinatorImplTest extends TestCase
         assertNotNull(c2);
         assertEquals(name, c2.getName());
         assertEquals(c2, coordinator.peek());
+<<<<<<< HEAD
+        c2.fail(null);
+=======
         c2.fail(new Exception());
         assertNotNull(coordinator.peek());
         try {
@@ -123,6 +151,7 @@ public class CoordinatorImplTest extends TestCase
         } catch (CoordinationException ce) {
             // ignore
         }
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         assertNull(coordinator.peek());
     }
 
@@ -162,6 +191,11 @@ public class CoordinatorImplTest extends TestCase
         assertEquals(c2, coordinator.peek());
 
         c1.end();
+<<<<<<< HEAD
+        assertEquals(c2, coordinator.peek());
+
+        c2.end();
+=======
         assertNull(coordinator.peek());
 
         try
@@ -173,6 +207,7 @@ public class CoordinatorImplTest extends TestCase
         {
             assertEquals(CoordinationException.ALREADY_ENDED, ce.getType());
         }
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         assertNull(coordinator.peek());
     }
 
@@ -206,7 +241,11 @@ public class CoordinatorImplTest extends TestCase
         assertEquals(c2, p21.c);
         assertTrue(p22.ended);
         assertEquals(c2, p22.c);
+<<<<<<< HEAD
+        assertTrue("p21 must be called before p22", p21.time < p22.time);
+=======
         assertTrue("p22 must be called before p21", p22.time < p21.time);
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 
         // assert order of call with two registrations
         final Coordination c3 = coordinator.create(name, 0);
@@ -224,7 +263,11 @@ public class CoordinatorImplTest extends TestCase
         assertEquals(c3, p31.c);
         assertTrue(p32.ended);
         assertEquals(c3, p32.c);
+<<<<<<< HEAD
+        assertTrue("p21 must be called before p22", p31.time < p32.time);
+=======
         assertTrue("p32 must be called before p31", p32.time < p31.time);
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     }
 
     public void test_addParticipant_with_failed()
@@ -237,7 +280,11 @@ public class CoordinatorImplTest extends TestCase
         assertTrue(c1.getParticipants().contains(p1));
         assertEquals(1, c1.getParticipants().size());
 
+<<<<<<< HEAD
+        c1.fail(null);
+=======
         c1.fail(new Exception());
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         assertFalse(p1.ended);
         assertTrue(p1.failed);
         assertEquals(c1, p1.c);
@@ -252,12 +299,20 @@ public class CoordinatorImplTest extends TestCase
         assertTrue(c2.getParticipants().contains(p22));
         assertEquals(2, c2.getParticipants().size());
 
+<<<<<<< HEAD
+        c2.fail(null);
+=======
         c2.fail(new Exception());
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         assertTrue(p21.failed);
         assertEquals(c2, p21.c);
         assertTrue(p22.failed);
         assertEquals(c2, p22.c);
+<<<<<<< HEAD
+        assertTrue("p21 must be called before p22", p21.time < p22.time);
+=======
         assertTrue("p22 must be called before p21", p22.time < p21.time);
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 
         // assert order of call with two registrations
         final Coordination c3 = coordinator.create(name, 0);
@@ -270,12 +325,20 @@ public class CoordinatorImplTest extends TestCase
         assertTrue(c3.getParticipants().contains(p32));
         assertEquals(2, c3.getParticipants().size());
 
+<<<<<<< HEAD
+        c3.fail(null);
+=======
         c3.fail(new Exception());
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         assertTrue(p31.failed);
         assertEquals(c3, p31.c);
         assertTrue(p32.failed);
         assertEquals(c3, p32.c);
+<<<<<<< HEAD
+        assertTrue("p21 must be called before p22", p31.time < p32.time);
+=======
         assertTrue("p31 must be called before p32", p32.time < p31.time);
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     }
 
     public void test_Coordination_timeout() throws InterruptedException
@@ -306,7 +369,11 @@ public class CoordinatorImplTest extends TestCase
         final MockParticipant p1 = new MockParticipant();
 
         // ensure short timeout for participation
+<<<<<<< HEAD
+        mgr.configure(60000, 200);
+=======
         mgr.configure(200);
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 
         final Coordination c1 = coordinator.create(name1, 0);
         c1.addParticipant(p1);
@@ -318,7 +385,10 @@ public class CoordinatorImplTest extends TestCase
 
         Thread c2Thread = new Thread()
         {
+<<<<<<< HEAD
+=======
             @Override
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
             public void run()
             {
                 final Coordination c2 = coordinator.create(name2, 0);
@@ -347,11 +417,19 @@ public class CoordinatorImplTest extends TestCase
         Throwable p1PartFailure = p1.addParticipantFailure;
         if (p1PartFailure == null)
         {
+<<<<<<< HEAD
+            fail("Expecting CoordinationException/UNKNOWN for second participation");
+        }
+        else if (p1PartFailure instanceof CoordinationException)
+        {
+            assertEquals(CoordinationException.UNKNOWN, ((CoordinationException) p1PartFailure).getType());
+=======
             fail("Expecting CoordinationException/FAILED for second participation");
         }
         else if (p1PartFailure instanceof CoordinationException)
         {
             assertEquals(CoordinationException.FAILED, ((CoordinationException) p1PartFailure).getType());
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         }
         else
         {
@@ -365,7 +443,11 @@ public class CoordinatorImplTest extends TestCase
         {
             c2Thread.interrupt();
             c2Thread.join(1000);
+<<<<<<< HEAD
+            assertFalse("Thread for second Coordination did not terminate....", c2Thread.isAlive());
+=======
             assertFalse("Thread for second Coordination did still not terminate....", c2Thread.isAlive());
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         }
     }
 

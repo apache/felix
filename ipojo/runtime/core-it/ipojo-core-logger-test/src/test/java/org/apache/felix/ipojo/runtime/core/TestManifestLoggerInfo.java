@@ -97,6 +97,10 @@ public class TestManifestLoggerInfo extends Common {
         ServiceReference r = ipojoHelper.getServiceReferenceByName(Architecture.class.getName(),
                 "org.apache.felix.ipojo.runtime.core.components.MyComponent-0");
         Assert.assertNotNull(r);
+<<<<<<< HEAD
+        System.out.println(((Architecture) osgiHelper.getServiceObject(r)).getInstanceDescription().getDescription());
+=======
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 
         ServiceReference[] refs = bc.getAllServiceReferences(null, null);
         for (ServiceReference ref : refs) {
@@ -110,8 +114,13 @@ public class TestManifestLoggerInfo extends Common {
         List<String> messages = getMessages(log.getLog());
         System.out.println(messages);
         Assert.assertTrue(messages.contains("Ready"));
+<<<<<<< HEAD
+        Assert.assertTrue(messages.contains("[INFO] org.apache.felix.ipojo.runtime.core.components.MyComponent : Instance org.apache.felix.ipojo.runtime.core.components.MyComponent-0 from factory org.apache.felix.ipojo.runtime.core.components.MyComponent created"));
+        Assert.assertTrue(messages.contains("[INFO] org.apache.felix.ipojo.runtime.core.components.MyComponent : New factory created : org.apache.felix.ipojo.runtime.core.components.MyComponent"));
+=======
 //        Assert.assertTrue(messages.contains("[INFO] org.apache.felix.ipojo.runtime.core.components.MyComponent : Instance org.apache.felix.ipojo.runtime.core.components.MyComponent-0 from factory org.apache.felix.ipojo.runtime.core.components.MyComponent created"));
 //        Assert.assertTrue(messages.contains("[INFO] org.apache.felix.ipojo.runtime.core.components.MyComponent : New factory created : org.apache.felix.ipojo.runtime.core.components.MyComponent"));
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     }
 
     private List<String> getMessages(Enumeration<LogEntry> log2) {

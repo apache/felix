@@ -125,7 +125,11 @@ public abstract class BundleArchiveRevision
      * @return the case-insensitive JAR file manifest header of the revision.
      * @throws java.lang.Exception if any error occurs.
     **/
+<<<<<<< HEAD
+    public abstract Map getManifestHeader() throws Exception;
+=======
     public abstract Map<String, Object> getManifestHeader() throws Exception;
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 
     public abstract Content getContent() throws Exception;
 

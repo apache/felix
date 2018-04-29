@@ -51,7 +51,11 @@ import org.osgi.service.metatype.MetaTypeService;
 class MetaTypeServiceImpl implements MetaTypeService, SynchronousBundleListener
 {
 
+<<<<<<< HEAD
+    private final Map bundleMetaTypeInformation;
+=======
     private final Map<Long, SoftReference<MetaTypeInformationImpl>> bundleMetaTypeInformation;
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 
     private final ManagedServiceTracker managedServiceTracker;
 
@@ -65,7 +69,11 @@ class MetaTypeServiceImpl implements MetaTypeService, SynchronousBundleListener
      */
     MetaTypeServiceImpl( BundleContext bundleContext )
     {
+<<<<<<< HEAD
+        this.bundleMetaTypeInformation = new ConcurrentHashMap();
+=======
         this.bundleMetaTypeInformation = new ConcurrentHashMap<Long, SoftReference<MetaTypeInformationImpl>>();
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 
         bundleContext.addBundleListener( this );
 
@@ -98,11 +106,19 @@ class MetaTypeServiceImpl implements MetaTypeService, SynchronousBundleListener
     {
         if ( event.getType() == BundleEvent.STOPPING )
         {
+<<<<<<< HEAD
+            SoftReference mtir = ( SoftReference ) this.bundleMetaTypeInformation.remove( new Long( event.getBundle()
+                .getBundleId() ) );
+            if ( mtir != null )
+            {
+                MetaTypeInformationImpl mti = ( MetaTypeInformationImpl ) mtir.get();
+=======
             SoftReference<MetaTypeInformationImpl> mtir = this.bundleMetaTypeInformation.remove( new Long( event.getBundle()
                 .getBundleId() ) );
             if ( mtir != null )
             {
                 MetaTypeInformationImpl mti = mtir.get();
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
                 if ( mti != null )
                 {
                     mti.dispose();
@@ -141,7 +157,11 @@ class MetaTypeServiceImpl implements MetaTypeService, SynchronousBundleListener
             }
 
             MetaTypeInformationImpl impl = null;
+<<<<<<< HEAD
+            if ( bundle.getState() == Bundle.ACTIVE )
+=======
             if ( bundle.getState() == Bundle.ACTIVE || bundle.getState() == Bundle.STARTING || bundle.getState() == Bundle.RESOLVED )
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
             {
                 putMetaTypeInformationInternal( bundle, mti );
             }
@@ -270,15 +290,26 @@ class MetaTypeServiceImpl implements MetaTypeService, SynchronousBundleListener
         }
 
         // initial MetaTypeProvider
+<<<<<<< HEAD
+        final ServiceReference refs[] = this.providerTracker.getServiceReferences();
+=======
         final ServiceReference<MetaTypeProvider> refs[] = this.providerTracker.getServiceReferences();
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         if ( refs != null )
         {
             for ( int i = 0; i < refs.length; i++ )
             {
+<<<<<<< HEAD
+                ServiceReference ref = refs[i];
+                if ( bundle.equals( ref.getBundle() ) )
+                {
+                    final MetaTypeProviderHolder holder = ( MetaTypeProviderHolder ) this.providerTracker
+=======
                 ServiceReference<MetaTypeProvider> ref = refs[i];
                 if ( bundle.equals( ref.getBundle() ) )
                 {
                     final MetaTypeProviderHolder holder = this.providerTracker
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
                         .getService( ref );
                     if ( holder.getPids() != null )
                     {
@@ -293,13 +324,22 @@ class MetaTypeServiceImpl implements MetaTypeService, SynchronousBundleListener
         }
 
         this.bundleMetaTypeInformation.put( new Long( bundle.getBundleId() ),
+<<<<<<< HEAD
+            new SoftReference( mti ) );
+=======
             new SoftReference<MetaTypeInformationImpl>( mti ) );
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     }
 
 
     private MetaTypeInformationImpl getMetaTypeInformationInternal( final Bundle bundle )
     {
+<<<<<<< HEAD
+        SoftReference mtir = ( SoftReference ) this.bundleMetaTypeInformation.get( new Long( bundle.getBundleId() ) );
+        return ( MetaTypeInformationImpl ) ( ( mtir == null ) ? null : mtir.get() );
+=======
         SoftReference<MetaTypeInformationImpl> mtir = this.bundleMetaTypeInformation.get( new Long( bundle.getBundleId() ) );
         return ( mtir == null ) ? null : mtir.get();
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     }
 }

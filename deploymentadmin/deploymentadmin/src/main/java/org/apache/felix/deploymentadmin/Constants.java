@@ -18,12 +18,39 @@
  */
 package org.apache.felix.deploymentadmin;
 
+<<<<<<< HEAD
+=======
 import org.osgi.service.deploymentadmin.DeploymentException;
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 import org.osgi.service.deploymentadmin.DeploymentPackage;
 
 public interface Constants extends org.osgi.framework.Constants {
 
     // manifest main attribute header constants
+<<<<<<< HEAD
+    public static final String DEPLOYMENTPACKAGE_SYMBOLICMAME = "DeploymentPackage-SymbolicName";
+    public static final String DEPLOYMENTPACKAGE_VERSION = "DeploymentPackage-Version";
+    public static final String DEPLOYMENTPACKAGE_FIXPACK = "DeploymentPackage-FixPack";
+
+    // manifest 'name' section header constants
+    public static final String RESOURCE_PROCESSOR = "Resource-Processor";
+    public static final String DEPLOYMENTPACKAGE_MISSING = "DeploymentPackage-Missing";
+    public static final String DEPLOYMENTPACKAGE_CUSTOMIZER = "DeploymentPackage-Customizer";
+
+    // event topics and properties
+    public static final String EVENTTOPIC_INSTALL = "org/osgi/service/deployment/INSTALL";
+    public static final String EVENTTOPIC_UNINSTALL = "org/osgi/service/deployment/UNINSTALL";
+    public static final String EVENTTOPIC_COMPLETE = "org/osgi/service/deployment/COMPLETE";
+    
+    public static final String EVENTPROPERTY_DEPLOYMENTPACKAGE_NAME = DeploymentPackage.EVENT_DEPLOYMENTPACKAGE_NAME;
+    public static final String EVENTPROPERTY_DEPLOYMENTPACKAGE_READABLENAME = DeploymentPackage.EVENT_DEPLOYMENTPACKAGE_READABLENAME;
+    public static final String EVENTPROPERTY_DEPLOYMENTPACKAGE_CURRENTVERSION = DeploymentPackage.EVENT_DEPLOYMENTPACKAGE_CURRENTVERSION;
+    public static final String EVENTPROPERTY_DEPLOYMENTPACKAGE_NEXTVERSION = DeploymentPackage.EVENT_DEPLOYMENTPACKAGE_NEXTVERSION;
+    public static final String EVENTPROPERTY_SUCCESSFUL = "successful";
+
+    // miscellaneous constants
+    public static final String BUNDLE_LOCATION_PREFIX = "osgi-dp:";
+=======
     String DEPLOYMENTPACKAGE_SYMBOLICMAME = "DeploymentPackage-SymbolicName";
     String DEPLOYMENTPACKAGE_VERSION = "DeploymentPackage-Version";
     String DEPLOYMENTPACKAGE_FIXPACK = "DeploymentPackage-FixPack";
@@ -72,4 +99,5 @@ public interface Constants extends org.osgi.framework.Constants {
     String BUNDLE_VERSION = org.osgi.framework.Constants.BUNDLE_VERSION;
     String SERVICE_PID = org.osgi.framework.Constants.SERVICE_PID;
 
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 }

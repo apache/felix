@@ -18,6 +18,13 @@
  */
 package org.apache.felix.bundlerepository.impl;
 
+<<<<<<< HEAD
+import java.util.jar.Attributes;
+
+import junit.framework.TestCase;
+import org.apache.felix.bundlerepository.DataModelHelper;
+import org.apache.felix.bundlerepository.Resource;
+=======
 import java.net.URL;
 import java.util.Map;
 import java.util.jar.Attributes;
@@ -33,6 +40,7 @@ import org.osgi.framework.Constants;
 import static org.junit.Assert.*;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 
 public class DataModelHelperTest extends TestCase
 {
@@ -72,6 +80,8 @@ public class DataModelHelperTest extends TestCase
         r.setFilter("(&(package=javax.transaction)(partial=true)(mandatory:<*partial))");
         assertEquals("(&(package=javax.transaction)(partial=true)(mandatory:<*partial))", r.getFilter());
     }
+<<<<<<< HEAD
+=======
 
     public void testCapabilities() throws Exception {
         Attributes attr = new Attributes();
@@ -137,4 +147,5 @@ public class DataModelHelperTest extends TestCase
         assertEquals(repository1.getName(), repository2.getName());
         assertEquals(repository1.getResources().length, repository2.getResources().length);
     }
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 }

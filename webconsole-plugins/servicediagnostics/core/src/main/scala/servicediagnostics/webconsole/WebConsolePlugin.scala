@@ -22,11 +22,20 @@ import java.io.PrintStream
 
 import javax.servlet.http._
 
+<<<<<<< HEAD
+import org.json.JSONObject
+import org.json.JSONArray
+
+=======
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 import org.apache.felix.webconsole.SimpleWebConsolePlugin
 
 import org.apache.felix.servicediagnostics.ServiceDiagnostics
 import org.apache.felix.servicediagnostics.Util._
+<<<<<<< HEAD
+=======
 import org.apache.felix.servicediagnostics.JSON._
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 
 /**
  * This is the Apache Felix WebConsolePlugin implementation.
@@ -55,10 +64,18 @@ class WebConsolePlugin extends SimpleWebConsolePlugin("servicegraph", "Service G
             case "/servicegraph/users" => resp.getWriter.println(json(engine.usingBundles))
             case "/servicegraph/providers" => resp.getWriter.println(json(engine.serviceProviders))
             case "/servicegraph/b2b" => resp.getWriter.println(json(engine.b2b))
+<<<<<<< HEAD
+            case "/servicegraph/notavail" => resp.getWriter.println(new JSONObject()
+                                  .put("notavail", json(engine.notavail))
+                                  .put("unresolved", 
+                                      json(engine.unresolved(
+                                          Option(req.getParameter("optionals")).isDefined))))
+=======
             case "/servicegraph/notavail" => resp.getWriter.println(json(Map(
               "notavail" -> engine.notavail,
               "unresolved" -> engine.unresolved(Option(req.getParameter("optionals")).isDefined)
             )))
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
             case x => super.doGet(req, resp)
           }
 }

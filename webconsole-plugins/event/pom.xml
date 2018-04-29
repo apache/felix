@@ -22,13 +22,21 @@
     <parent>
         <groupId>org.apache.felix</groupId>
         <artifactId>felix-parent</artifactId>
+<<<<<<< HEAD
+        <version>2.1</version>
+=======
         <version>4</version>
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         <relativePath>../../../pom/pom.xml</relativePath>
     </parent>
 
     <artifactId>org.apache.felix.webconsole.plugins.event</artifactId>
     <packaging>bundle</packaging>
+<<<<<<< HEAD
+    <version>1.1.1-SNAPSHOT</version>
+=======
     <version>1.1.9-SNAPSHOT</version>
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 
     <name>Apache Felix Web Console Event Plugin</name>
     <description>
@@ -48,6 +56,16 @@
 			<resource>
 				<directory>${basedir}/src/main/resources</directory>
 			</resource>
+<<<<<<< HEAD
+			<resource>
+				<directory>target/classes</directory>
+				<includes>
+					<include>OSGI-INF/**</include>
+				</includes>
+				<filtering>false</filtering>
+			</resource>
+=======
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 		</resources>
 
         <plugins>
@@ -71,7 +89,11 @@
             <plugin>
                 <groupId>org.apache.felix</groupId>
                 <artifactId>maven-bundle-plugin</artifactId>
+<<<<<<< HEAD
+                <version>2.3.4</version>
+=======
                 <version>3.3.0</version>
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
                 <extensions>true</extensions>
                 <configuration>
                     <instructions>
@@ -81,14 +103,22 @@
                         <Bundle-Activator>
                             org.apache.felix.webconsole.plugins.event.internal.Activator
                         </Bundle-Activator>
+<<<<<<< HEAD
+=======
                         <Import-Package>
                             org.osgi.service.cm;version="[1.2,2)";resolution:=optional,
                             org.osgi.service.event;;version="[1.2,2)",*
                         </Import-Package>
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
                         <Private-Package>
                             org.apache.felix.webconsole.plugins.event.*
                         </Private-Package>
                         <DynamicImport-Package>
+<<<<<<< HEAD
+                            org.osgi.service.event,org.osgi.service.cm,
+                            javax.servlet,javax.servlet.http
+                        </DynamicImport-Package>
+=======
                             org.osgi.service.cm;version="[1.2,2)",
                             javax.servlet,
                             javax.servlet.http
@@ -97,6 +127,7 @@
                         <Embed-Dependency>
                              org.apache.felix.utils;inline=org/apache/felix/utils/json/JSONWriter**
                         </Embed-Dependency>
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
                     </instructions>
                 </configuration>
             </plugin>
@@ -126,12 +157,21 @@
 
         <dependency>
             <groupId>org.osgi</groupId>
+<<<<<<< HEAD
+            <artifactId>org.osgi.core</artifactId>
+            <version>4.0.0</version>
+=======
             <artifactId>osgi.core</artifactId>
             <version>4.3.1</version>
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
             <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>org.osgi</groupId>
+<<<<<<< HEAD
+            <artifactId>org.osgi.compendium</artifactId>
+            <version>4.0.0</version>
+=======
             <artifactId>osgi.cmpn</artifactId>
             <version>4.3.1</version>
             <scope>provided</scope>
@@ -140,6 +180,7 @@
             <groupId>org.apache.felix</groupId>
             <artifactId>org.apache.felix.utils</artifactId>
             <version>1.9.0</version>
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
             <scope>provided</scope>
         </dependency>
     </dependencies>

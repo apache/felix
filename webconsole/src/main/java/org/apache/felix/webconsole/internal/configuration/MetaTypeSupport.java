@@ -17,17 +17,29 @@
 package org.apache.felix.webconsole.internal.configuration;
 
 
+<<<<<<< HEAD
+=======
 import java.io.IOException;
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+<<<<<<< HEAD
+import java.util.List;
+import java.util.Vector;
+
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONWriter;
+=======
 import java.util.Iterator;
 import java.util.List;
 import java.util.Vector;
 
 import org.apache.felix.utils.json.JSONWriter;
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.service.metatype.AttributeDefinition;
@@ -78,7 +90,11 @@ class MetaTypeSupport
 
 
     static void attributeToJson( final JSONWriter json, final PropertyDescriptor ad, final Object propValue )
+<<<<<<< HEAD
+        throws JSONException
+=======
             throws IOException
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     {
         json.object();
 
@@ -102,10 +118,13 @@ class MetaTypeSupport
 
         json.key( "name" ); //$NON-NLS-1$
         json.value( ad.getName() );
+<<<<<<< HEAD
+=======
         json.key( "optional" ); //$NON-NLS-1$
         json.value( ad.isOptional() );
         json.key( "is_set" ); //$NON-NLS-1$
         json.value( propValue != null );
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 
         // attribute type - overwrite metatype provided type
         // if the property name contains "password" and the
@@ -149,6 +168,19 @@ class MetaTypeSupport
         }
         else
         {
+<<<<<<< HEAD
+            value = new JSONArray( toList( value ) );
+            if ( isPassword )
+            {
+                JSONArray tmp = ( JSONArray ) value;
+                for ( int tmpI = 0; tmpI < tmp.length(); tmpI++ )
+                {
+                    tmp.put( tmpI, PASSWORD_PLACEHOLDER_VALUE );
+                }
+            }
+            json.key( "values" ); //$NON-NLS-1$
+            json.value( value );
+=======
             json.key( "values" ); //$NON-NLS-1$
             json.array();
             final List list = toList( value );
@@ -166,6 +198,7 @@ class MetaTypeSupport
                 }
             }
             json.endArray();
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         }
 
         if ( ad.getDescription() != null )
@@ -305,6 +338,29 @@ class MetaTypeSupport
     {
         switch ( type )
         {
+<<<<<<< HEAD
+            case AttributeDefinition.BOOLEAN:
+                return Boolean.valueOf( value );
+            case AttributeDefinition.BYTE:
+                return Byte.valueOf( value );
+            case AttributeDefinition.CHARACTER:
+                char c = ( value.length() > 0 ) ? value.charAt( 0 ) : 0;
+                return new Character( c );
+            case AttributeDefinition.DOUBLE:
+                return Double.valueOf( value );
+            case AttributeDefinition.FLOAT:
+                return Float.valueOf( value );
+            case AttributeDefinition.LONG:
+                return Long.valueOf( value );
+            case AttributeDefinition.INTEGER:
+                return Integer.valueOf( value );
+            case AttributeDefinition.SHORT:
+                return Short.valueOf( value );
+            default:
+                // includes AttributeDefinition.STRING
+                // includes ATTRIBUTE_TYPE_PASSWORD/AttributeDefinition.PASSWORD
+                return value;
+=======
         case AttributeDefinition.BOOLEAN:
             return Boolean.valueOf( value );
         case AttributeDefinition.BYTE:
@@ -326,6 +382,7 @@ class MetaTypeSupport
             // includes AttributeDefinition.STRING
             // includes ATTRIBUTE_TYPE_PASSWORD/AttributeDefinition.PASSWORD
             return value;
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         }
     }
 
@@ -363,6 +420,35 @@ class MetaTypeSupport
         Object array;
         switch ( type )
         {
+<<<<<<< HEAD
+            case AttributeDefinition.BOOLEAN:
+                array = new boolean[size];
+                break;
+            case AttributeDefinition.BYTE:
+                array = new byte[size];
+                break;
+            case AttributeDefinition.CHARACTER:
+                array = new char[size];
+                break;
+            case AttributeDefinition.DOUBLE:
+                array = new double[size];
+                break;
+            case AttributeDefinition.FLOAT:
+                array = new float[size];
+                break;
+            case AttributeDefinition.LONG:
+                array = new long[size];
+                break;
+            case AttributeDefinition.INTEGER:
+                array = new int[size];
+                break;
+            case AttributeDefinition.SHORT:
+                array = new short[size];
+                break;
+            default:
+                // unexpected, but assume string
+                array = new String[size];
+=======
         case AttributeDefinition.BOOLEAN:
             array = new boolean[size];
             break;
@@ -390,6 +476,7 @@ class MetaTypeSupport
         default:
             // unexpected, but assume string
             array = new String[size];
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         }
 
         for ( int i = 0; i < size; i++ )

@@ -20,20 +20,31 @@ package org.apache.felix.bundlerepository.impl;
 
 import java.util.Dictionary;
 import java.util.HashSet;
+<<<<<<< HEAD
+=======
 import java.util.Map;
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 import java.util.Set;
 import java.util.StringTokenizer;
 
 import org.apache.felix.bundlerepository.Capability;
+<<<<<<< HEAD
+=======
 import org.apache.felix.bundlerepository.LocalResource;
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 import org.apache.felix.bundlerepository.Resource;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.Constants;
 import org.osgi.framework.InvalidSyntaxException;
 import org.osgi.framework.ServiceReference;
+<<<<<<< HEAD
+
+public class LocalResourceImpl extends ResourceImpl
+=======
 import org.osgi.framework.wiring.BundleRevision;
 
 public class LocalResourceImpl extends ResourceImpl implements LocalResource
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 {
     private Bundle m_bundle = null;
 
@@ -90,6 +101,51 @@ public class LocalResourceImpl extends ResourceImpl implements LocalResource
                 }
             }
 
+<<<<<<< HEAD
+/* TODO: OBR - Fix system capabilities.
+            // Create a case-insensitive map.
+            Map map = new TreeMap(new Comparator() {
+                public int compare(Object o1, Object o2)
+                {
+                    return o1.toString().compareToIgnoreCase(o2.toString());
+                }
+            });
+            map.put(
+                Constants.FRAMEWORK_VERSION,
+                m_context.getProperty(Constants.FRAMEWORK_VERSION));
+            map.put(
+                Constants.FRAMEWORK_VENDOR,
+                m_context.getProperty(Constants.FRAMEWORK_VENDOR));
+            map.put(
+                Constants.FRAMEWORK_LANGUAGE,
+                m_context.getProperty(Constants.FRAMEWORK_LANGUAGE));
+            map.put(
+                Constants.FRAMEWORK_OS_NAME,
+                m_context.getProperty(Constants.FRAMEWORK_OS_NAME));
+            map.put(
+                Constants.FRAMEWORK_OS_VERSION,
+                m_context.getProperty(Constants.FRAMEWORK_OS_VERSION));
+            map.put(
+                Constants.FRAMEWORK_PROCESSOR,
+                m_context.getProperty(Constants.FRAMEWORK_PROCESSOR));
+//                map.put(
+//                    FelixConstants.FELIX_VERSION_PROPERTY,
+//                    m_context.getProperty(FelixConstants.FELIX_VERSION_PROPERTY));
+            Map[] capMaps = (Map[]) bundleMap.get("capability");
+            if (capMaps == null)
+            {
+                capMaps = new Map[] { map };
+            }
+            else
+            {
+                Map[] newCaps = new Map[capMaps.length + 1];
+                newCaps[0] = map;
+                System.arraycopy(capMaps, 0, newCaps, 1, capMaps.length);
+                capMaps = newCaps;
+            }
+            bundleMap.put("capability", capMaps);
+*/
+=======
             // Add all the OSGi capabilities from the system bundle as repo capabilities
             BundleRevision br = m_bundle.adapt(BundleRevision.class);
             for (org.osgi.resource.Capability cap : br.getCapabilities(null))
@@ -105,6 +161,7 @@ public class LocalResourceImpl extends ResourceImpl implements LocalResource
                 }
                 addCapability(bcap);
             }
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         }
     }
 

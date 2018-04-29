@@ -28,7 +28,11 @@
   <name>Apache Felix Bundle Repository</name>
   <description>Bundle repository service.</description>
   <artifactId>org.apache.felix.bundlerepository</artifactId>
+<<<<<<< HEAD
+  <version>1.6.7-SNAPSHOT</version>
+=======
   <version>2.0.11-SNAPSHOT</version>
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
   <scm>
     <connection>scm:svn:http://svn.apache.org/repos/asf/felix/trunk/bundlerepository</connection>
     <developerConnection>scm:svn:https://svn.apache.org/repos/asf/felix/trunk/bundlerepository</developerConnection>
@@ -38,7 +42,11 @@
     <dependency>
       <groupId>${project.groupId}</groupId>
       <artifactId>org.apache.felix.utils</artifactId>
+<<<<<<< HEAD
+      <version>1.1.1-SNAPSHOT</version>
+=======
       <version>1.11.0-SNAPSHOT</version>
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
       <optional>true</optional>
     </dependency>
     <dependency>
@@ -46,24 +54,30 @@
       <artifactId>org.osgi.service.obr</artifactId>
       <version>1.0.2</version>
       <optional>true</optional>
+<<<<<<< HEAD
+=======
       <exclusions>
         <exclusion>
           <groupId>org.apache.felix</groupId>
           <artifactId>org.osgi.core</artifactId>
         </exclusion>
       </exclusions>
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     </dependency>
     <dependency>
       <groupId>${project.groupId}</groupId>
       <artifactId>org.apache.felix.shell</artifactId>
       <version>1.4.1</version>
       <optional>true</optional>
+<<<<<<< HEAD
+=======
     </dependency>
     <dependency>
       <groupId>${project.groupId}</groupId>
       <artifactId>org.apache.felix.gogo.runtime</artifactId>
       <version>1.0.0</version>
       <optional>true</optional>
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     </dependency>
     <dependency>
       <groupId>net.sf.kxml</groupId>
@@ -80,13 +94,21 @@
     <dependency>
         <groupId>org.osgi</groupId>
         <artifactId>org.osgi.compendium</artifactId>
+<<<<<<< HEAD
+        <version>4.0.0</version>
+=======
         <version>5.0.0</version>
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         <optional>true</optional>
     </dependency>
     <dependency>
        <groupId>org.osgi</groupId>
         <artifactId>org.osgi.core</artifactId>
+<<<<<<< HEAD
+        <version>4.1.0</version>
+=======
         <version>5.0.0</version>
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     </dependency>
     <dependency>
         <groupId>org.codehaus.woodstox</groupId>
@@ -97,8 +119,12 @@
     <dependency>
         <groupId>org.easymock</groupId>
         <artifactId>easymock</artifactId>
+<<<<<<< HEAD
+        <version>2.4</version>
+=======
         <version>3.4</version>
         <scope>test</scope>
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     </dependency>
   </dependencies>
   <build>
@@ -115,21 +141,33 @@
       <plugin>
         <groupId>org.apache.felix</groupId>
         <artifactId>maven-bundle-plugin</artifactId>
+<<<<<<< HEAD
+        <version>2.3.4</version>
+=======
         <version>2.4.0</version>
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         <extensions>true</extensions>
         <configuration>
           <unpackBundle>true</unpackBundle>
           <instructions>
+<<<<<<< HEAD
+            <Export-Package>org.apache.felix.bundlerepository;version="2.0"</Export-Package>
+=======
             <Export-Package>
                 org.osgi.service.repository,
                 org.apache.felix.bundlerepository;version="2.1"
             </Export-Package>
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
             <Private-Package>
                 org.kxml2.io,
                 org.xmlpull.v1,
                 org.apache.felix.bundlerepository.impl.*,
                 org.apache.felix.utils.*
             </Private-Package>
+<<<<<<< HEAD
+            <Import-Package>!javax.xml.parsers,!org.xml.sax,org.osgi.service.log;resolution:=optional,org.osgi.service.obr;resolution:=optional,javax.xml.stream;resolution:=optional,*</Import-Package>
+            <DynamicImport-Package>org.apache.felix.shell</DynamicImport-Package>
+=======
             <!-- The org.osgi.service.repository;resolution:=mandatory seems strange below, but otherwise the maven-bundle-plugin
                  will make that import optional, which we don't want... -->
             <!-- The version range on org.osgi.service.repository is required as we are a provider of the 1.0.0 API. -->
@@ -145,6 +183,7 @@
                 *
             </Import-Package>
             <DynamicImport-Package>org.apache.felix.shell,org.apache.felix.service.command</DynamicImport-Package>
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
             <Bundle-Activator>${project.artifactId}.impl.Activator</Bundle-Activator>
             <Bundle-DocURL>http://felix.apache.org/site/apache-felix-osgi-bundle-repository.html</Bundle-DocURL>
             <Bundle-Url>http://felix.apache.org/site/downloads.cgi</Bundle-Url>
@@ -154,7 +193,10 @@
             <Export-Service>org.apache.felix.bundlerepository.RepositoryAdmin,org.osgi.service.obr.RepositoryAdmin</Export-Service>
             <_versionpolicy>[$(version;==;$(@)),$(version;+;$(@)))</_versionpolicy>
             <Include-Resource>META-INF/LICENSE=LICENSE,META-INF/LICENSE.kxml2=LICENSE.kxml2,META-INF/NOTICE=NOTICE,META-INF/DEPENDENCIES=DEPENDENCIES</Include-Resource>
+<<<<<<< HEAD
+=======
             <Provide-Capability>osgi.implementation;osgi.implementation="osgi.repository";uses:="org.osgi.service.repository";version:Version="1.1",osgi.service;objectClass:List&lt;String&gt;="org.osgi.service.repository.Repository";uses:="org.osgi.service.repository"</Provide-Capability>
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
           </instructions>
         </configuration>
       </plugin>
@@ -173,6 +215,8 @@
           </excludes>
         </configuration>
       </plugin>
+<<<<<<< HEAD
+=======
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-source-plugin</artifactId>
@@ -185,6 +229,7 @@
           </execution>
         </executions>
       </plugin>
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     </plugins>
   </build>
 </project>

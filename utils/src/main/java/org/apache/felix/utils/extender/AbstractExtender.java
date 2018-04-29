@@ -15,6 +15,18 @@
  */
 package org.apache.felix.utils.extender;
 
+<<<<<<< HEAD
+import org.osgi.framework.Bundle;
+import org.osgi.framework.BundleActivator;
+import org.osgi.framework.BundleContext;
+import org.osgi.framework.BundleEvent;
+import org.osgi.framework.Constants;
+import org.osgi.framework.SynchronousBundleListener;
+import org.osgi.util.tracker.BundleTracker;
+import org.osgi.util.tracker.BundleTrackerCustomizer;
+
+=======
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Set;
@@ -25,6 +37,8 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.FutureTask;
 import java.util.concurrent.TimeUnit;
 
+<<<<<<< HEAD
+=======
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
@@ -34,6 +48,7 @@ import org.osgi.framework.SynchronousBundleListener;
 import org.osgi.util.tracker.BundleTracker;
 import org.osgi.util.tracker.BundleTrackerCustomizer;
 
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 /**
  * Base class to write bundle extenders.
  * This extender tracks started bundles (or starting if they have a lazy activation
@@ -163,6 +178,14 @@ public abstract class AbstractExtender implements BundleActivator, BundleTracker
         return Executors.newScheduledThreadPool(3);
     }
 
+<<<<<<< HEAD
+    /**
+     *
+     * @param bundles
+     * @return
+     */
+=======
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     protected Collection<Bundle> chooseBundlesToDestroy(Set<Bundle> bundles) {
         return null;
     }
@@ -218,7 +241,11 @@ public abstract class AbstractExtender implements BundleActivator, BundleTracker
         // For starting bundles, ensure, it's a lazy activation,
         // else we'll wait for the bundle to become ACTIVE
         if (bundle.getState() == Bundle.STARTING) {
+<<<<<<< HEAD
+            String activationPolicyHeader = (String) bundle.getHeaders().get(Constants.BUNDLE_ACTIVATIONPOLICY);
+=======
             String activationPolicyHeader = (String) bundle.getHeaders("").get(Constants.BUNDLE_ACTIVATIONPOLICY);
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
             if (activationPolicyHeader == null || !activationPolicyHeader.startsWith(Constants.ACTIVATION_LAZY)) {
                 // Do not track this bundle yet
                 return;
@@ -316,8 +343,13 @@ public abstract class AbstractExtender implements BundleActivator, BundleTracker
      * Create the extension for the given bundle, or null if the bundle is not to be extended.
      *
      * @param bundle the bundle to extend
+<<<<<<< HEAD
+     * @return
+     * @throws Exception
+=======
      * @return The extension
      * @throws Exception If something goes wrong
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
      */
     protected abstract Extension doCreateExtension(Bundle bundle) throws Exception;
 

@@ -30,7 +30,10 @@ import java.util.Collections;
 import java.util.Set;
 import java.util.jar.JarFile;
 import java.util.jar.JarOutputStream;
+<<<<<<< HEAD
+=======
 import java.util.logging.Level;
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 import java.util.zip.Deflater;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
@@ -51,7 +54,11 @@ public class Util
      */
     public static int getGlobalLogLevel(BundleContext context)
     {
+<<<<<<< HEAD
+        String s = (String) context.getProperty(DirectoryWatcher.LOG_LEVEL);
+=======
         String s = context.getProperty(DirectoryWatcher.LOG_LEVEL);
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         s = (s == null)
             ? System.getProperty(DirectoryWatcher.LOG_LEVEL.toUpperCase().replace('.', '_'))
             : s;
@@ -63,7 +70,10 @@ public class Util
         }
         catch (NumberFormatException ex)
         {
+<<<<<<< HEAD
+=======
             // Ignore
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         }
         return logLevel;
     }
@@ -77,12 +87,17 @@ public class Util
      * @param e
      *            The throwable to log
      */
+<<<<<<< HEAD
+    public static void log(BundleContext context, int logLevel,
+        int msgLevel, String message, Throwable e)
+=======
     public static void log(BundleContext context, int msgLevel, String message, Throwable e)
     {
         getLogger(context).log(getGlobalLogLevel(context), msgLevel, message, e);
     }
 
     public static void log(BundleContext context, int logLevel, int msgLevel, String message, Throwable e)
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     {
         getLogger(context).log(logLevel, msgLevel, message, e);
     }
@@ -100,7 +115,11 @@ public class Util
         }
         catch (Throwable t)
         {
+<<<<<<< HEAD
+            logger = new StdOutLogger();
+=======
             logger = new DefaultLogger(context);
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         }
         return logger;
     }
@@ -118,6 +137,10 @@ public class Util
         void log(int logLevel, int msgLevel, String message, Throwable throwable);
     }
 
+<<<<<<< HEAD
+    static class StdOutLogger implements Logger
+    {
+=======
     static class DefaultLogger implements Logger
     {
         protected BundleContext context;
@@ -133,6 +156,7 @@ public class Util
             logDefault = (s == null) ? DirectoryWatcher.LOG_STDOUT : s;
         }
 
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         public boolean isValidLogger(BundleContext context)
         {
             return true;
@@ -145,6 +169,12 @@ public class Util
             // level.
             if ((logLevel > 0) && (msgLevel <= logLevel))
             {
+<<<<<<< HEAD
+                System.out.println(message + ((throwable == null) ? "" : ": " + throwable));
+                if (throwable != null)
+                {
+                    throwable.printStackTrace(System.out);
+=======
                 if (DirectoryWatcher.LOG_JUL.equals(logDefault))
                 {
                     Level lvl;
@@ -166,16 +196,27 @@ public class Util
                     {
                         throwable.printStackTrace(System.out);
                     }
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
                 }
             }
         }
     }
 
+<<<<<<< HEAD
+    static class OsgiLogger extends StdOutLogger
+    {
+        private BundleContext context;
+
+        OsgiLogger(BundleContext context)
+        {
+            this.context = context;
+=======
     static class OsgiLogger extends DefaultLogger
     {
         OsgiLogger(BundleContext context)
         {
             super(context);
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
             // Now make sure we can access the LogService class
             try
             {
@@ -213,10 +254,18 @@ public class Util
 
         private LogService getLogService()
         {
+<<<<<<< HEAD
+            ServiceReference ref = context.getServiceReference(LogService.class.getName());
+            if (ref != null)
+            {
+                LogService log = (LogService) context.getService(ref);
+                return log;
+=======
             ServiceReference<LogService> ref = context.getServiceReference(LogService.class);
             if (ref != null)
             {
                 return context.getService(ref);
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
             }
             return null;
         }
@@ -224,6 +273,13 @@ public class Util
 
     /**
      * Jar up a directory
+<<<<<<< HEAD
+     *
+     * @param directory
+     * @param zipName
+     * @throws IOException
+=======
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
      */
     public static void jarDir(File directory, File zipName) throws IOException
     {
@@ -265,17 +321,35 @@ public class Util
 
     /**
      * Zip up a directory path
+<<<<<<< HEAD
+     * @param directory
+     * @param zos
+     * @param path
+     * @param exclusions
+     * @throws IOException
+     */
+    public static void zipDir(File directory, ZipOutputStream zos, String path, Set/* <String> */ exclusions) throws IOException
+=======
      */
     public static void zipDir(File directory, ZipOutputStream zos, String path, Set<String> exclusions) throws IOException
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     {
         // get a listing of the directory content
         File[] dirList = directory.listFiles();
         byte[] readBuffer = new byte[8192];
+<<<<<<< HEAD
+        int bytesIn = 0;
+        // loop through dirList, and zip the files
+        for (int i = 0; i < dirList.length; i++)
+        {
+            File f = dirList[i];
+=======
         int bytesIn;
         // loop through dirList, and zip the files
         assert dirList != null;
         for (File f : dirList)
         {
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
             if (f.isDirectory())
             {
                 String prefix = path + f.getName() + "/";
@@ -371,7 +445,10 @@ public class Util
                 }
                 catch ( IOException e )
                 {
+<<<<<<< HEAD
+=======
                     // Ignore
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
                 }
             }
         }

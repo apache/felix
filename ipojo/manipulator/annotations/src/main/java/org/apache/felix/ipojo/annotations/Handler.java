@@ -24,6 +24,8 @@ import java.lang.annotation.Target;
 /**
  * This annotation declares a handler.
  * This annotation is mandatory to declares an iPOJO handler.
+<<<<<<< HEAD
+=======
  * <pre>
  *     {@code @Handler}(
  *         name = "my-handler",
@@ -34,6 +36,7 @@ import java.lang.annotation.Target;
  *     }
  * </pre>
 
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
  * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
 @Target({ElementType.TYPE, ElementType.ANNOTATION_TYPE})
@@ -57,7 +60,11 @@ public @interface Handler {
 
     /**
      * Enable / Disable the architecture exposition.
+<<<<<<< HEAD
+     * Default : false
+=======
      * Default : {@literal false}
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
      */
     boolean architecture() default false;
 }

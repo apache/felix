@@ -19,11 +19,27 @@
 
 package org.apache.felix.webconsole.plugins.scriptconsole.internal;
 
+<<<<<<< HEAD
+import org.apache.commons.io.IOUtils;
+import org.osgi.framework.*;
+import org.osgi.service.log.LogService;
+import org.osgi.util.tracker.ServiceTracker;
+import org.osgi.util.tracker.ServiceTrackerCustomizer;
+
+import javax.script.ScriptEngine;
+import javax.script.ScriptEngineFactory;
+=======
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.URL;
+<<<<<<< HEAD
+import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
+
+=======
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -48,6 +64,7 @@ import org.osgi.service.log.LogService;
 import org.osgi.util.tracker.ServiceTracker;
 import org.osgi.util.tracker.ServiceTrackerCustomizer;
 
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 /**
  * It is based on org.apache.sling.scripting.core.impl.ScriptEngineManagerFactory
  */
@@ -200,6 +217,27 @@ class ScriptEngineManager implements BundleListener, ServiceTrackerCustomizer
         {
             ins = url.openStream();
             BufferedReader reader = new BufferedReader(new InputStreamReader(ins));
+<<<<<<< HEAD
+            String line;
+            while ((line = reader.readLine()) != null)
+            {
+                if (!line.startsWith("#") && line.trim().length() > 0)
+                {
+                    try
+                    {
+                        Class<ScriptEngineFactory> clazz = bundle.loadClass(line);
+                        ScriptEngineFactory spi = clazz.newInstance();
+                        registerFactory(mgr, spi, null);
+                        extensions.addAll(spi.getExtensions());
+                    }
+                    catch (Throwable t)
+                    {
+                        log.log(LogService.LOG_ERROR,
+                            "Cannot register ScriptEngineFactory " + line, t);
+                    }
+                }
+            }
+=======
             for (String className : getClassNames(reader))
             {
                 try
@@ -216,6 +254,7 @@ class ScriptEngineManager implements BundleListener, ServiceTrackerCustomizer
                 }
             }
 
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         }
         catch (IOException ioe)
         {
@@ -254,6 +293,8 @@ class ScriptEngineManager implements BundleListener, ServiceTrackerCustomizer
         }
     }
 
+<<<<<<< HEAD
+=======
     static List<String> getClassNames(BufferedReader reader) throws IOException {
         List<String> classNames = new ArrayList<String>();
         String line;
@@ -273,6 +314,7 @@ class ScriptEngineManager implements BundleListener, ServiceTrackerCustomizer
         return classNames;
     }
 
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     private static Map<Object, Object> getServiceProperties(ServiceReference reference)
     {
         Map<Object, Object> props = new HashMap<Object, Object>();

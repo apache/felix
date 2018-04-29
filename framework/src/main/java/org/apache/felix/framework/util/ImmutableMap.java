@@ -26,6 +26,15 @@ import java.util.Set;
 
 public class ImmutableMap<K, V> extends AbstractMap<K, V>
 {
+<<<<<<< HEAD
+    final Entry<K, V>[] entries;
+
+    public static <K, V> ImmutableMap<K, V> newInstance(Entry<K, V>... entries)
+    {
+        return new ImmutableMap<K, V>(entries);
+    }
+
+=======
     @SuppressWarnings({ "rawtypes" })
     private static final ImmutableMap EMPTY_MAP = new ImmutableMap();
 
@@ -38,6 +47,7 @@ public class ImmutableMap<K, V> extends AbstractMap<K, V>
     }
 
     @SuppressWarnings("unchecked")
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     public static <K, V> ImmutableMap<K, V> newInstance(Map<K, V> entries)
     {
         if (entries instanceof ImmutableMap)
@@ -46,6 +56,12 @@ public class ImmutableMap<K, V> extends AbstractMap<K, V>
         }
         else
         {
+<<<<<<< HEAD
+            return new ImmutableMap<K, V>(entries);
+        }
+    }
+
+=======
             return entries.isEmpty() ? EMPTY_MAP : new ImmutableMap<K, V>(entries);
         }
     }
@@ -56,12 +72,16 @@ public class ImmutableMap<K, V> extends AbstractMap<K, V>
         this.entries = new Entry[0];
     }
 
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     protected ImmutableMap(Entry<K, V>[] entries)
     {
         this.entries = entries.clone();
     }
 
+<<<<<<< HEAD
+=======
     @SuppressWarnings("unchecked")
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     protected ImmutableMap(Map<K, V> map)
     {
         this.entries = map.entrySet().toArray(new Entry[map.size()]);

@@ -10,6 +10,21 @@
  */
 package org.apache.felix.scr.integration;
 
+<<<<<<< HEAD
+import java.util.Iterator;
+
+import javax.inject.Inject;
+
+import junit.framework.TestCase;
+
+import org.apache.felix.scr.Component;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.ops4j.pax.exam.junit.JUnit4TestRunner;
+import org.osgi.framework.BundleContext;
+
+@RunWith(JUnit4TestRunner.class)
+=======
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.ops4j.pax.exam.junit.PaxExam;
@@ -18,11 +33,22 @@ import org.osgi.service.component.runtime.dto.ComponentConfigurationDTO;
 import junit.framework.TestCase;
 
 @RunWith(PaxExam.class)
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 public class ComponentConcurrencyTest extends ComponentTestBase
 {
     static
     {
         // uncomment to enable debugging of this test class
+<<<<<<< HEAD
+//        paxRunnerVmOption = DEBUG_VM_OPTION;
+        descriptorFile = "/integration_test_component_concurrency.xml";
+        COMPONENT_PACKAGE = COMPONENT_PACKAGE + ".concurrency";
+    }
+
+    @Inject
+    protected BundleContext bundleContext;
+
+=======
         //        paxRunnerVmOption = DEBUG_VM_OPTION;
         descriptorFile = "/integration_test_component_concurrency.xml";
         COMPONENT_PACKAGE = COMPONENT_PACKAGE + ".concurrency";
@@ -36,6 +62,7 @@ public class ComponentConcurrencyTest extends ComponentTestBase
         DS_LOGLEVEL = "warn";
     }
 
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     protected static void delay(int secs)
     {
         try
@@ -48,6 +75,33 @@ public class ComponentConcurrencyTest extends ComponentTestBase
     }
 
     @Test
+<<<<<<< HEAD
+    public void test_concurrent_component_activation_using_componentFactories()
+    {
+
+
+        final Component AFactory =
+                findComponentByName( "org.apache.felix.scr.integration.components.concurrency.AFactory" );
+        TestCase.assertNotNull( AFactory );
+        AFactory.enable();
+
+        final Component CFactory =
+                findComponentByName( "org.apache.felix.scr.integration.components.concurrency.CFactory" );
+        TestCase.assertNotNull( CFactory );
+        CFactory.enable();
+
+        delay( 30 );
+        for ( Iterator it = log.foundWarnings().iterator(); it.hasNext();)
+        {
+            String message = ( String ) it.next();
+            if ( message.contains( "FrameworkEvent ERROR" ) ||
+                    message.contains( "Could not get service from ref" ) ||
+                    message.contains( "Failed creating the component instance; see log for reason" ) ||
+                    message.contains( "Cannot create component instance due to failure to bind reference" ))
+            {
+                continue;
+            }
+=======
     public void test_concurrent_component_activation_using_componentFactories() throws Exception
     {
 
@@ -62,6 +116,7 @@ public class ComponentConcurrencyTest extends ComponentTestBase
         }
         for ( String message: log.foundWarnings() )
         {
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
             TestCase.fail( "unexpected warning or error logged: " + message );
         }
     }

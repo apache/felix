@@ -47,7 +47,11 @@ public class DefaultVariableResolver extends HashMap implements VariableResolver
 
 
     /**
+<<<<<<< HEAD
+     * Creates a new variable resolver and initializes both - capacity & load factor
+=======
      * Creates a new variable resolver and initializes both - capacity &amp; load factor
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
      * 
      * @param initialCapacity  the initial capacity of the variable container
      * @param loadFactor the load factor of the variable container

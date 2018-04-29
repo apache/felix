@@ -23,6 +23,18 @@ import java.util.Iterator;
 
 import javax.inject.Inject;
 
+<<<<<<< HEAD
+import junit.framework.TestCase;
+
+import org.apache.felix.scr.Component;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.ops4j.pax.exam.junit.JUnit4TestRunner;
+import org.osgi.framework.BundleContext;
+
+
+@RunWith(JUnit4TestRunner.class)
+=======
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.ops4j.pax.exam.junit.PaxExam;
@@ -33,6 +45,7 @@ import junit.framework.TestCase;
 
 
 @RunWith(PaxExam.class)
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 public class Felix3680_2Test extends ComponentTestBase
 {
     static
@@ -41,10 +54,17 @@ public class Felix3680_2Test extends ComponentTestBase
         //        paxRunnerVmOption = DEBUG_VM_OPTION;
         descriptorFile = "/integration_test_FELIX_3880_2.xml";
         COMPONENT_PACKAGE = COMPONENT_PACKAGE + ".felix3680_2";
+<<<<<<< HEAD
+        
+        restrictedLogging = true;
+        // Comment this for displaying debug messages
+//        DS_LOGLEVEL = "warn";
+=======
 
         restrictedLogging = true;
         // Comment this for displaying debug messages
         //        DS_LOGLEVEL = "warn";
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     }
 
     @Inject
@@ -68,10 +88,18 @@ public class Felix3680_2Test extends ComponentTestBase
     {
         for ( int i = 0; i < 6; i++ )
         {
+<<<<<<< HEAD
+            final Component main = findComponentByName( "org.apache.felix.scr.integration.components.felix3680_2.Main" );
+            TestCase.assertNotNull( main );
+            main.enable();
+            delay( 5 ); //run test for 30 seconds
+            main.disable();
+=======
             final ComponentDescriptionDTO main = findComponentDescriptorByName( "org.apache.felix.scr.integration.components.felix3680_2.Main" );
             enableAndCheck(main);
             delay( 5 ); //run test for 30 seconds
             disableAndCheck(main);
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
             delay(); //async deactivate
             if ( log.getFirstFrameworkThrowable() != null )
             {

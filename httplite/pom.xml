@@ -16,6 +16,22 @@
  specific language governing permissions and limitations
  under the License.
 -->
+<<<<<<< HEAD
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+
+	<parent>
+		<groupId>org.apache.felix</groupId>
+		<artifactId>felix</artifactId>
+		<version>1.0.4</version>
+		<relativePath>../pom/pom.xml</relativePath>
+	</parent>
+
+	<name>Apache Felix Lightweight HTTP Service Reactor</name>
+	<artifactId>org.apache.felix.httplite.reactor</artifactId>
+	<version>1-SNAPSHOT</version>
+=======
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
 	<modelVersion>4.0.0</modelVersion>
         <parent>
@@ -28,16 +44,20 @@
  	<name>Apache Felix Lightweight HTTP Service Reactor</name>
 	<artifactId>org.apache.felix.httplite.reactor</artifactId>
 	<version>0.1.7-SNAPSHOT</version>
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 	<packaging>pom</packaging>	
 
 	<modules>
 		<module>core</module>
 		<module>complete</module>
 	</modules>
+<<<<<<< HEAD
+=======
 	<scm>
 		<connection>scm:svn:http://svn.apache.org/repos/asf/felix/trunk/httplite</connection>
 		<developerConnection>scm:svn:https://svn.apache.org/repos/asf/felix/trunk/httplite</developerConnection>
 		<url>http://svn.apache.org/repos/asf/felix/trunk/httplite</url>
 	</scm>
 	<url>http://felix.apache.org/site/apache-felix-lightweight-http-service.html</url>
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 </project>

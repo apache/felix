@@ -1,5 +1,9 @@
 /*
+<<<<<<< HEAD
+ * Copyright (c) OSGi Alliance (2001, 2012). All Rights Reserved.
+=======
  * Copyright (c) OSGi Alliance (2001, 2013). All Rights Reserved.
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,11 +21,17 @@
 package org.osgi.framework.wiring;
 
 import java.util.Collection;
+<<<<<<< HEAD
+import org.osgi.framework.Bundle;
+import org.osgi.framework.BundleReference;
+import org.osgi.framework.FrameworkListener;
+=======
 import org.osgi.annotation.versioning.ProviderType;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleReference;
 import org.osgi.framework.FrameworkListener;
 import org.osgi.resource.Requirement;
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 
 /**
  * Query and modify wiring information for the framework. The framework wiring
@@ -34,9 +44,15 @@ import org.osgi.resource.Requirement;
  * by calling {@link BundleReference#getBundle()}.
  * 
  * @ThreadSafe
+<<<<<<< HEAD
+ * @noimplement
+ * @version $Id: bff4cdf85c632e2946e18c1640a86e80c069dd37 $
+ */
+=======
  * @author $Id: 1ab9112badc94f802ccda966f7b73584f2a5c412 $
  */
 @ProviderType
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 public interface FrameworkWiring extends BundleReference {
 	/**
 	 * Refreshes the specified bundles. This forces the update (replacement) or
@@ -55,6 +71,22 @@ public interface FrameworkWiring extends BundleReference {
 	 * <li>Compute the {@link #getDependencyClosure(Collection) dependency
 	 * closure} of the specified bundles. If no bundles are specified, compute
 	 * the dependency closure of the {@link #getRemovalPendingBundles() removal
+<<<<<<< HEAD
+	 * pending} bundles.
+	 * 
+	 * <li>Each bundle in the dependency closure that is in the {@code ACTIVE}
+	 * state will be stopped as described in the {@code Bundle.stop} method.
+	 * 
+	 * <li>Each bundle in the dependency closure that is in the {@code RESOLVED}
+	 * state is unresolved and thus moved to the {@code INSTALLED} state. The
+	 * effect of this step is that bundles in the dependency closure are no
+	 * longer {@code RESOLVED}.
+	 * 
+	 * <li>Each bundle in the dependency closure that is in the
+	 * {@code UNINSTALLED} state is removed from the dependency closure and is
+	 * now completely removed from the Framework.
+	 * 
+=======
 	 * pending} bundles.</li>
 	 * <li>Each bundle in the dependency closure that is in the {@code ACTIVE}
 	 * state will be stopped as described in the {@code Bundle.stop} method.</li>
@@ -65,13 +97,18 @@ public interface FrameworkWiring extends BundleReference {
 	 * <li>Each bundle in the dependency closure that is in the
 	 * {@code UNINSTALLED} state is removed from the dependency closure and is
 	 * now completely removed from the Framework.</li>
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 	 * <li>Each bundle in the dependency closure that was in the {@code ACTIVE}
 	 * state prior to Step 2 is started as described in the {@code Bundle.start}
 	 * method, causing all bundles required for the restart to be resolved. It
 	 * is possible that, as a result of the previous steps, packages that were
 	 * previously exported no longer are. Therefore, some bundles may be
 	 * unresolvable until bundles satisfying the dependencies have been
+<<<<<<< HEAD
+	 * installed in the Framework.
+=======
 	 * installed in the Framework.</li>
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 	 * </ol>
 	 * 
 	 * <p>
@@ -169,6 +206,8 @@ public interface FrameworkWiring extends BundleReference {
 	 *         FrameworkWiring.
 	 */
 	Collection<Bundle> getDependencyClosure(Collection<Bundle> bundles);
+<<<<<<< HEAD
+=======
 
 	/**
 	 * Find bundle capabilities that match the given requirement.
@@ -199,4 +238,5 @@ public interface FrameworkWiring extends BundleReference {
 	 * @since 1.2
 	 */
 	Collection<BundleCapability> findProviders(Requirement requirement);
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 }

@@ -23,6 +23,9 @@ import java.lang.annotation.Target;
 
 /**
  * This annotation declares an updated callback.
+<<<<<<< HEAD
+ * Updated callback are called after a reconfiguration.
+=======
  * Updated callback are called after a <a href="http://felix.apache.org/documentation/subprojects/apache-felix-ipojo/apache-felix-ipojo-userguide/describing-components/configuration-handler.html#being-notified-when-a-reconfiguration-is-completed">reconfiguration</a>.
  *
  * Methods annotated with {@code @Updated} must have one of the 2 following signatures:
@@ -39,6 +42,7 @@ import java.lang.annotation.Target;
  *         // The instance was reconfigured, conf is the new configuration.
  *     }
  * </pre>
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
  * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
 @Target({ElementType.METHOD, ElementType.ANNOTATION_TYPE})

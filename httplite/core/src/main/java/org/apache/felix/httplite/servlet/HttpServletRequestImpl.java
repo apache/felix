@@ -61,12 +61,15 @@ import org.apache.felix.httplite.osgi.ServiceRegistrationResolver;
  **/
 public class HttpServletRequestImpl implements HttpServletRequest
 {
+<<<<<<< HEAD
+=======
 
     private static final SimpleDateFormat formatsTemplate[] = {
             new SimpleDateFormat(HttpConstants.HTTP_DATE_FORMAT, Locale.US),
             new SimpleDateFormat("EEEEEE, dd-MMM-yy HH:mm:ss zzz", Locale.US),
             new SimpleDateFormat("EEE MMMM d HH:mm:ss yyyy", Locale.US)
     };
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     /**
      * HTTP Method
      */
@@ -119,9 +122,15 @@ public class HttpServletRequestImpl implements HttpServletRequest
 
 
     /**
+<<<<<<< HEAD
+     * @param socket Socket assocated with request
+     * @param serviceRegistrationResolver 
+     * @param logger
+=======
      * @param socket Socket associated with request
      * @param serviceRegistrationResolver resolver for services. 
      * @param logger the logger
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
      */
     public HttpServletRequestImpl( final Socket socket, final ServiceRegistrationResolver serviceRegistrationResolver,
         final Logger logger )
@@ -825,6 +834,18 @@ public class HttpServletRequestImpl implements HttpServletRequest
             return -1;
         }
 
+<<<<<<< HEAD
+        try
+        {
+            SimpleDateFormat sdf = new SimpleDateFormat(HttpConstants.HTTP_DATE_FORMAT);
+            sdf.setTimeZone(TimeZone.getTimeZone(HttpConstants.HTTP_TIMEZONE));
+            return sdf.parse( headerValue ).getTime();
+        }
+        catch ( ParseException e )
+        {
+            throw new IllegalArgumentException( "Unable to convert to date: " + headerValue );
+        }
+=======
         for (int x = 0; x < formatsTemplate.length; x++) {
         SimpleDateFormat sdf = formatsTemplate[x];
             try {
@@ -838,6 +859,7 @@ public class HttpServletRequestImpl implements HttpServletRequest
         }
         // if none of them work.
         throw new IllegalArgumentException("Unable to convert to date: " + headerValue);
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     }
 
 
@@ -1081,6 +1103,10 @@ public class HttpServletRequestImpl implements HttpServletRequest
 
             if ( nva.length == 2 )
             {
+<<<<<<< HEAD
+                //Deprecated method decode() intentionally used for Java 1.3 compatibility.
+                params.put( URLDecoder.decode( nva[0].trim() ), nva[1].trim() );
+=======
 		// Also decode value, not just name.
 		boolean mustDecodeValue = nva[1].indexOf('+') >= 0 || nva[1].indexOf('%') >= 0;
 		//Deprecated method decode() intentionally used for Java 1.3 compatibility.
@@ -1090,6 +1116,7 @@ public class HttpServletRequestImpl implements HttpServletRequest
                     val = URLDecoder.decode(val);
                 }
                 params.put( URLDecoder.decode( nva[0].trim() ), val );
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
             }
         }
     }

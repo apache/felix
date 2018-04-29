@@ -298,6 +298,8 @@
         <property name="service.pid" value="7.B.0.1.dynamic" />
     </scr:component>
 
+<<<<<<< HEAD
+=======
     <!-- A 1.1 static delayed, B 0..n dynamic immediate. Both should start (B first) and both should have references -->
     <scr:component name="8.A.1.1.static"
         enabled="false"
@@ -336,5 +338,6 @@
         />
         <property name="service.pid" value="8.B.0.n.dynamic" />
     </scr:component>
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 
 </components>

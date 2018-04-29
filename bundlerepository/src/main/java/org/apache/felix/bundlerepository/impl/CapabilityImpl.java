@@ -1,4 +1,8 @@
+<<<<<<< HEAD
+/* 
+=======
 /*
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -18,11 +22,15 @@
  */
 package org.apache.felix.bundlerepository.impl;
 
+<<<<<<< HEAD
+import java.util.*;
+=======
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 
 import org.apache.felix.bundlerepository.Capability;
 import org.apache.felix.bundlerepository.Property;
@@ -30,9 +38,14 @@ import org.apache.felix.bundlerepository.Property;
 public class CapabilityImpl implements Capability
 {
     private String m_name = null;
+<<<<<<< HEAD
+    private final Map m_map = new HashMap();
+    private final List m_list = new ArrayList();
+=======
     private final Map<String, Object> m_attributes = new HashMap<String, Object>();
     private final Map<String, String> m_directives = new HashMap<String, String>();
     private final List<Property> m_propList = new ArrayList<Property>();
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 
     public CapabilityImpl()
     {
@@ -62,23 +75,38 @@ public class CapabilityImpl implements Capability
         m_name = name.intern();
     }
 
+<<<<<<< HEAD
+    public Map getPropertiesAsMap()
+    {
+        return m_map;
+=======
     public Map<String, Object> getPropertiesAsMap()
     {
         return m_attributes;
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     }
 
     public Property[] getProperties()
     {
+<<<<<<< HEAD
+        return (Property[]) m_list.toArray(new Property[m_list.size()]);
+=======
         return m_propList.toArray(new Property[m_propList.size()]);
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     }
 
     public void addProperty(Property prop)
     {
+<<<<<<< HEAD
+        m_map.put(prop.getName().toLowerCase(), prop.getConvertedValue());
+        m_list.add(prop);
+=======
         // m_map.put(prop.getName().toLowerCase(), prop.getConvertedValue()); // TODO is toLowerCase() on the key the right thing to do?
         // However if we definitely need to re-enable the to-lowercasing, the Felix Util FilterImpl supports treating filters
         // case-insensitively
         m_attributes.put(prop.getName(), prop.getConvertedValue());
         m_propList.add(prop);
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     }
 
     public void addProperty(String name, String value)
@@ -93,6 +121,9 @@ public class CapabilityImpl implements Capability
 
     public String toString()
     {
+<<<<<<< HEAD
+        return m_name  + ":" + m_map.toString();
+=======
         return m_name  + ":" + m_attributes.toString();
     }
 
@@ -102,5 +133,6 @@ public class CapabilityImpl implements Capability
 
     public Map<String, String> getDirectives() {
         return Collections.unmodifiableMap(m_directives);
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     }
 }

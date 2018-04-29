@@ -24,7 +24,10 @@ import org.osgi.framework.Constants;
 import org.osgi.framework.Filter;
 import org.osgi.framework.ServiceReference;
 
+<<<<<<< HEAD
+=======
 import java.util.Collection;
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 import java.util.List;
 
 /**
@@ -125,6 +128,8 @@ public class ServiceReferenceUtils {
         return !(ref1 == null || ref2 == null)
                 && ref1.getProperty(Constants.SERVICE_ID).equals(ref2.getProperty(Constants.SERVICE_ID));
     }
+<<<<<<< HEAD
+=======
 
     public static String toString(Collection<? extends ServiceReference> references) {
         if (references == null  || references.isEmpty()) {
@@ -142,4 +147,5 @@ public class ServiceReferenceUtils {
             return buffer.toString();
         }
     }
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 }

@@ -26,15 +26,21 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.PrintStream;
+<<<<<<< HEAD
+=======
 import java.net.URI;
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 import java.net.URL;
 import java.net.URLConnection;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.jar.JarEntry;
 import java.util.jar.JarInputStream;
+<<<<<<< HEAD
+=======
 
 import org.apache.felix.service.command.CommandSession;
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
@@ -42,15 +48,22 @@ import org.osgi.framework.ServiceReference;
 
 public class Util
 {
+<<<<<<< HEAD
+=======
 
 
     static final String CWD = "_cwd";
 
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     public static String getBundleName(Bundle bundle)
     {
         if (bundle != null)
         {
+<<<<<<< HEAD
+            String name = (String) bundle.getHeaders().get(Constants.BUNDLE_NAME);
+=======
             String name = bundle.getHeaders().get(Constants.BUNDLE_NAME);
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
             return (name == null)
                 ? "Bundle " + Long.toString(bundle.getBundleId())
                 : name + " (" + Long.toString(bundle.getBundleId()) + ")";
@@ -90,7 +103,11 @@ public class Util
                     {
                         m_sb.append(", ");
                     }
+<<<<<<< HEAD
+                    m_sb.append(array[i].toString());
+=======
                     m_sb.append(array[i]);
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
                 }
                 return m_sb.toString();
             }
@@ -112,11 +129,19 @@ public class Util
             }
             else if (obj instanceof Double)
             {
+<<<<<<< HEAD
+                return ((Double) obj).toString();
+            }
+            else if (obj instanceof Float)
+            {
+                return ((Float) obj).toString();
+=======
                 return obj.toString();
             }
             else if (obj instanceof Float)
             {
                 return obj.toString();
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
             }
             else if (obj == null)
             {
@@ -130,15 +155,25 @@ public class Util
     }
 
     public static <T> T getService(
+<<<<<<< HEAD
+        BundleContext bc, Class<T> clazz, List<ServiceReference> refs)
+    {
+        ServiceReference ref = bc.getServiceReference(clazz.getName());
+=======
         BundleContext bc, Class<T> clazz, List<ServiceReference<?>> refs)
     {
         @SuppressWarnings("unchecked")
         ServiceReference<T> ref = (ServiceReference<T>) bc.getServiceReference(clazz.getName());
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         if (ref == null)
         {
             return null;
         }
+<<<<<<< HEAD
+        T t = (T) bc.getService(ref);
+=======
         T t = bc.getService(ref);
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         if (t != null)
         {
             refs.add(ref);
@@ -146,7 +181,11 @@ public class Util
         return t;
     }
 
+<<<<<<< HEAD
+    public static void ungetServices(BundleContext bc, List<ServiceReference> refs)
+=======
     public static void ungetServices(BundleContext bc, List<ServiceReference<?>> refs)
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     {
         while (refs.size() > 0)
         {
@@ -189,8 +228,15 @@ public class Util
                 out.println("Downloading " + fileName + ".");
             }
             byte[] buffer = new byte[4096];
+<<<<<<< HEAD
+            int count = 0;
             for (int len = is.read(buffer); len > 0; len = is.read(buffer))
             {
+                count += len;
+=======
+            for (int len = is.read(buffer); len > 0; len = is.read(buffer))
+            {
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
                 os.write(buffer, 0, len);
             }
 
@@ -326,8 +372,13 @@ public class Util
 
     public static List<String> parseSubstring(String value)
     {
+<<<<<<< HEAD
+        List<String> pieces = new ArrayList();
+        StringBuffer ss = new StringBuffer();
+=======
         List<String> pieces = new ArrayList<>();
         StringBuilder ss = new StringBuilder();
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         // int kind = SIMPLE; // assume until proven otherwise
         boolean wasStar = false; // indicates last piece was a star
         boolean leftstar = false; // track if the initial piece is a star
@@ -414,7 +465,11 @@ loop:   for (;;)
 
     public static String unparseSubstring(List<String> pieces)
     {
+<<<<<<< HEAD
+        StringBuffer sb = new StringBuffer();
+=======
         StringBuilder sb = new StringBuilder();
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         for (int i = 0; i < pieces.size(); i++)
         {
             if (i > 0)
@@ -468,7 +523,18 @@ loop:   for (int i = 0; i < len; i++)
             // string ends with it.
             if (i == len - 1)
             {
+<<<<<<< HEAD
+                if (s.endsWith(piece))
+                {
+                    result = true;
+                }
+                else
+                {
+                    result = false;
+                }
+=======
                 result = s.endsWith(piece);
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
                 break loop;
             }
 
@@ -490,6 +556,9 @@ loop:   for (int i = 0; i < len; i++)
 
         return result;
     }
+<<<<<<< HEAD
+}
+=======
 
     /**
      * Intepret a string as a URI relative to the current working directory.
@@ -516,3 +585,4 @@ loop:   for (int i = 0; i < len; i++)
         return newUri.toString();
     }
 }
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368

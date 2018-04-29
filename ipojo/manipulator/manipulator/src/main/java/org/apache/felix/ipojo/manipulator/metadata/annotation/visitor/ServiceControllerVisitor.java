@@ -22,15 +22,24 @@ package org.apache.felix.ipojo.manipulator.metadata.annotation.visitor;
 import org.apache.felix.ipojo.metadata.Attribute;
 import org.apache.felix.ipojo.metadata.Element;
 import org.objectweb.asm.AnnotationVisitor;
+<<<<<<< HEAD
+import org.objectweb.asm.Type;
+import org.objectweb.asm.commons.EmptyVisitor;
+=======
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.Type;
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 
 /**
  * Parses a @ServiceController annotation.
  * @see org.apache.felix.ipojo.annotations.ServiceController
  * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
+<<<<<<< HEAD
+public class ServiceControllerVisitor extends EmptyVisitor implements AnnotationVisitor {
+=======
 public class ServiceControllerVisitor extends AnnotationVisitor {
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 
     /**
      * Parent element.
@@ -48,7 +57,10 @@ public class ServiceControllerVisitor extends AnnotationVisitor {
      * @param field : field name.
      */
     public ServiceControllerVisitor(String field, Element provides) {
+<<<<<<< HEAD
+=======
         super(Opcodes.ASM5);
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         this.provides = provides;
         controller.addAttribute(new Attribute("field", field));
     }

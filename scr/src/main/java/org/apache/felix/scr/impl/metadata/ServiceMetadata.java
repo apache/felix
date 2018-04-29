@@ -19,6 +19,10 @@
 package org.apache.felix.scr.impl.metadata;
 
 import java.util.ArrayList;
+<<<<<<< HEAD
+import java.util.Iterator;
+=======
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 import java.util.List;
 
 /**
@@ -28,6 +32,53 @@ import java.util.List;
  */
 public class ServiceMetadata {
 
+<<<<<<< HEAD
+	// 112.4.6 Flag that indicates if the service is a ServiceFactory
+	private boolean m_serviceFactory = false;
+
+	// List of provided interfaces
+	private List<String> m_provides = new ArrayList<String>();
+
+	// Flag that indicates if this metadata has been validated and has become immutable
+	private boolean m_validated = false;
+
+	/**
+	 * Setter for the servicefactory attribute of the service element
+	 *
+	 * @param serviceFactory
+	 */
+	public void setServiceFactory(boolean serviceFactory) {
+		if(m_validated) {
+			return;
+		}
+
+		m_serviceFactory = serviceFactory;
+	}
+
+	/**
+	 * Add a provided interface to this service
+	 *
+	 * @param provide a String containing the name of the provided interface
+	 */
+	public void addProvide(String provide) {
+		if(m_validated) {
+			return;
+		}
+
+		m_provides.add(provide);
+	}
+
+	/**
+	 * Return the flag that defines if it is a service factory or not
+	 *
+	 * @return a boolean flag
+	 */
+	public boolean isServiceFactory() {
+		return m_serviceFactory;
+	}
+
+	/**
+=======
     public enum Scope { singleton, bundle, prototype}
 
     // 112.4.6 Flag that indicates if the service is a ServiceFactory
@@ -82,6 +133,7 @@ public class ServiceMetadata {
     }
 
     /**
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
      * Returns the implemented interfaces
      *
      * @return the implemented interfaces as a string array
@@ -99,6 +151,9 @@ public class ServiceMetadata {
         if ( m_provides.size() == 0 )
         {
             throw componentMetadata
+<<<<<<< HEAD
+                .validationFailure( "At least one provided interface must be declared in the service element" );
+=======
             .validationFailure( "At least one provided interface must be declared in the service element" );
         }
         for ( String provide: m_provides )
@@ -131,6 +186,7 @@ public class ServiceMetadata {
             {
                 throw componentMetadata.validationFailure("Service scope may be only 'singleton' 'bundle' or 'prototype' not " + m_scopeName);
             }
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         }
         m_validated = true;
     }

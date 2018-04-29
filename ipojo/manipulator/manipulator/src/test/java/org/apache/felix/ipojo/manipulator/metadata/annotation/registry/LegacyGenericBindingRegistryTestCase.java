@@ -40,9 +40,15 @@ import junit.framework.TestCase;
  */
 public class LegacyGenericBindingRegistryTestCase extends TestCase {
 
+<<<<<<< HEAD
+    public static final String AN_IGNORED_ANNOTATION = "[an.ignored.Annotation;";
+    public static final String RECOGNISED_IPOJO_ANNOTATION = "[a.recognised.ipojo.Annotation;";
+    public static final String RECOGNISED_HANDLER_ANNOTATION = "[a.recognised.handler.Annotation;";
+=======
     public static final String AN_IGNORED_ANNOTATION = "[Lan.ignored.Annotation;";
     public static final String RECOGNISED_IPOJO_ANNOTATION = "[La.recognised.ipojo.Annotation;";
     public static final String RECOGNISED_HANDLER_ANNOTATION = "[La.recognised.handler.Annotation;";
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 
     @Mock
     private BindingRegistry delegate;

@@ -52,6 +52,8 @@ public class InstanceDSLTest extends TestCase {
         String cn = ConfigurationProcessor.getClassNameFromResource("/org/apache/felix/ipojo/Pojo.class");
         Assert.assertEquals(cn, "org.apache.felix.ipojo.Pojo");
     }
+<<<<<<< HEAD
+=======
 
     /**
      * Test for FELIX-4490.
@@ -99,4 +101,5 @@ public class InstanceDSLTest extends TestCase {
             // OK
         }
     }
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 }

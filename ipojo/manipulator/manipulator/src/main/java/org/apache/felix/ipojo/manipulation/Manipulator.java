@@ -24,7 +24,10 @@ import org.apache.felix.ipojo.metadata.Element;
 import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.ClassWriter;
 import org.objectweb.asm.Opcodes;
+<<<<<<< HEAD
+=======
 import org.objectweb.asm.util.CheckClassAdapter;
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -38,10 +41,13 @@ import java.util.*;
  */
 public class Manipulator {
     /**
+<<<<<<< HEAD
+=======
      * A classloader used to compute frames.
      */
     private final ClassLoader m_classLoader;
     /**
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
      * Store the visited fields : [name of the field, type of the field].
      */
     private Map<String, String> m_fields;
@@ -81,11 +87,14 @@ public class Manipulator {
      */
     private String m_className;
 
+<<<<<<< HEAD
+=======
     public Manipulator(ClassLoader loader) {
         // No classloader set, use current one.
         m_classLoader = loader;
     }
 
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     /**
      * Checks the given bytecode, determines if the class was already manipulated, and collect the metadata about the
      * class.
@@ -127,6 +136,19 @@ public class Manipulator {
     public byte[] manipulate(byte[] origin) throws IOException {
         if (!m_alreadyManipulated) {
             InputStream is2 = new ByteArrayInputStream(origin);
+<<<<<<< HEAD
+            ClassReader cr0 = new ClassReader(is2);
+            ClassWriter cw0 = new ClassWriter(ClassWriter.COMPUTE_MAXS);
+            //CheckClassAdapter ch = new CheckClassAdapter(cw0);
+            MethodCreator process = new MethodCreator(cw0, this);
+            if (m_version >= Opcodes.V1_6) {
+                cr0.accept(process, ClassReader.EXPAND_FRAMES);
+            } else {
+                cr0.accept(process, 0);
+            }
+            is2.close();
+            return cw0.toByteArray();
+=======
             ClassReader reader = new ClassReader(is2);
             ClassWriter writer = new ClassLoaderAwareClassWriter(ClassWriter.COMPUTE_FRAMES, m_className, m_superClass,
                     m_classLoader);
@@ -138,6 +160,7 @@ public class Manipulator {
             }
             is2.close();
             return writer.toByteArray();
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         } else {
             return origin;
         }
@@ -272,7 +295,11 @@ public class Manipulator {
             InputStream is1 = new ByteArrayInputStream(bytecode);
 
             ClassReader cr = new ClassReader(is1);
+<<<<<<< HEAD
+            ClassWriter cw = new ClassWriter(ClassWriter.COMPUTE_MAXS);
+=======
             ClassWriter cw = new ClassLoaderAwareClassWriter(ClassWriter.COMPUTE_FRAMES, inner, null, m_classLoader);
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
             InnerClassAdapter adapter = new InnerClassAdapter(inner, cw, m_className, this);
             if (m_version >= Opcodes.V1_6) {
                 cr.accept(adapter, ClassReader.EXPAND_FRAMES);

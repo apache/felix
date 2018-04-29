@@ -28,6 +28,33 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+<<<<<<< HEAD
+public final class ResourceServlet extends HttpServlet
+{
+    private final String path;
+
+    public ResourceServlet(String path)
+    {
+        this.path = path;
+    }
+
+    @Override
+    protected void doGet(HttpServletRequest req, HttpServletResponse res) throws ServletException, IOException
+    {
+        String target = req.getPathInfo();
+        if (target == null)
+        {
+            target = "";
+        }
+
+        if (!target.startsWith("/"))
+        {
+            target += "/" + target;
+        }
+
+        String resName = this.path + target;
+        URL url = getServletContext().getResource(resName);
+=======
 /**
  * The resource servlet
  */
@@ -51,6 +78,7 @@ public final class ResourceServlet extends HttpServlet
         final String resName = (target == null ? this.prefix : this.prefix + target);
 
         final URL url = getServletContext().getResource(resName);
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 
         if (url == null)
         {
@@ -62,17 +90,27 @@ public final class ResourceServlet extends HttpServlet
         }
     }
 
+<<<<<<< HEAD
+    private void handle(HttpServletRequest req, HttpServletResponse res, URL url, String resName) throws IOException
+    {
+        String contentType = getServletContext().getMimeType(resName);
+=======
     private void handle(final HttpServletRequest req,
             final HttpServletResponse res, final URL url, final String resName)
     throws IOException
     {
         final String contentType = getServletContext().getMimeType(resName);
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         if (contentType != null)
         {
             res.setContentType(contentType);
         }
 
+<<<<<<< HEAD
+        long lastModified = getLastModified(url);
+=======
         final long lastModified = getLastModified(url);
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         if (lastModified != 0)
         {
             res.setDateHeader("Last-Modified", lastModified);
@@ -88,26 +126,44 @@ public final class ResourceServlet extends HttpServlet
         }
     }
 
+<<<<<<< HEAD
+    private long getLastModified(URL url)
+=======
     private long getLastModified(final URL url)
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     {
         long lastModified = 0;
 
         try
         {
+<<<<<<< HEAD
+            URLConnection conn = url.openConnection();
+            lastModified = conn.getLastModified();
+        }
+        catch (Exception e)
+=======
             final URLConnection conn = url.openConnection();
             lastModified = conn.getLastModified();
         }
         catch (final Exception e)
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         {
             // Do nothing
         }
 
         if (lastModified == 0)
         {
+<<<<<<< HEAD
+            String filepath = url.getPath();
+            if (filepath != null)
+            {
+                File f = new File(filepath);
+=======
             final String filepath = url.getPath();
             if (filepath != null)
             {
                 final File f = new File(filepath);
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
                 if (f.exists())
                 {
                     lastModified = f.lastModified();
@@ -126,7 +182,11 @@ public final class ResourceServlet extends HttpServlet
         return resTimestamp == 0 || modSince == -1 || resTimestamp > modSince;
     }
 
+<<<<<<< HEAD
+    private void copyResource(URL url, HttpServletResponse res) throws IOException
+=======
     private void copyResource(final URL url, final HttpServletResponse res) throws IOException
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     {
         URLConnection conn = null;
         OutputStream os = null;
@@ -138,7 +198,11 @@ public final class ResourceServlet extends HttpServlet
 
             is = conn.getInputStream();
             os = res.getOutputStream();
+<<<<<<< HEAD
+            // FELIX-3987 content length should be set *before* any streaming is done 
+=======
             // FELIX-3987 content length should be set *before* any streaming is done
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
             // as headers should be written before the content is actually written...
             int len = getContentLength(conn);
             if (len >= 0)
@@ -168,20 +232,32 @@ public final class ResourceServlet extends HttpServlet
         }
     }
 
+<<<<<<< HEAD
+    private int getContentLength(URLConnection conn)
+=======
     private int getContentLength(final URLConnection conn)
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     {
         int length = -1;
 
         length = conn.getContentLength();
         if (length < 0)
         {
+<<<<<<< HEAD
+            // Unknown, try whether it is a file, and if so, use the file 
+=======
             // Unknown, try whether it is a file, and if so, use the file
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
             // API to get the length of the content...
             String path = conn.getURL().getPath();
             if (path != null)
             {
                 File f = new File(path);
+<<<<<<< HEAD
+                // In case more than 2GB is streamed 
+=======
                 // In case more than 2GB is streamed
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
                 if (f.length() < Integer.MAX_VALUE)
                 {
                     length = (int) f.length();

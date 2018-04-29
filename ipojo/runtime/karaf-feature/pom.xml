@@ -30,7 +30,11 @@
     <modelVersion>4.0.0</modelVersion>
 
     <artifactId>org.apache.felix.ipojo.features</artifactId>
+<<<<<<< HEAD
+    <version>1.11.1-SNAPSHOT</version>
+=======
     <version>1.12.2-SNAPSHOT</version>
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 
     <name>Apache Felix iPOJO Karaf Features</name>
     <description>Apache Karaf Features to provision Apache Felix iPOJO</description>

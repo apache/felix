@@ -20,6 +20,10 @@ package org.apache.felix.cm.integration;
 
 
 import java.io.IOException;
+<<<<<<< HEAD
+import java.util.Dictionary;
+import java.util.Hashtable;
+=======
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Dictionary;
@@ -27,6 +31,7 @@ import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Vector;
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 
 import junit.framework.TestCase;
 
@@ -1262,6 +1267,8 @@ public class ConfigurationBaseTest extends ConfigurationTestBase
             getConfigurationAdmin().getConfiguration( pid, null ).delete();
         }
     }
+<<<<<<< HEAD
+=======
 
    @Test
     public void test_collection_property_order() throws IOException, BundleException
@@ -1323,4 +1330,5 @@ public class ConfigurationBaseTest extends ConfigurationTestBase
             TestCase.assertEquals( i + "th element must be " + string, string, actualI.next() );
         }
     }
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 }

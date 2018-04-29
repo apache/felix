@@ -1,3 +1,5 @@
+<<<<<<< HEAD
+=======
 <!-- 
   Licensed to the Apache Software Foundation (ASF) under one
   or more contributor license agreements.  See the NOTICE file
@@ -16,6 +18,7 @@
   specific language governing permissions and limitations
   under the License.
 -->
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 <MetaData xmlns='http://www.osgi.org/xmlns/metatype/v1.0.0'>
 	<OCD name='ocd' id='ocd'>
 		<AD id='default_group' type='STRING' cardinality='0' />

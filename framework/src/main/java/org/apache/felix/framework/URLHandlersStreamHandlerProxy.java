@@ -101,7 +101,11 @@ public class URLHandlersStreamHandlerProxy extends URLStreamHandler
         }
         catch (Exception ex)
         {
+<<<<<<< HEAD
+            throw new RuntimeException(ex.getMessage());
+=======
             throw new RuntimeException(ex.getMessage(), ex);
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         }
 
         Method open_connection_proxy = null;
@@ -168,7 +172,11 @@ public class URLHandlersStreamHandlerProxy extends URLStreamHandler
         }
         catch (Exception ex)
         {
+<<<<<<< HEAD
+            throw new IllegalStateException("Stream handler unavailable due to: " + ex.getMessage());
+=======
             throw new IllegalStateException("Stream handler unavailable due to: " + ex.getMessage(), ex);
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         }
     }
 
@@ -189,7 +197,11 @@ public class URLHandlersStreamHandlerProxy extends URLStreamHandler
         }
         catch (Exception ex)
         {
+<<<<<<< HEAD
+            throw new IllegalStateException("Stream handler unavailable due to: " + ex.getMessage());
+=======
             throw new IllegalStateException("Stream handler unavailable due to: " + ex.getMessage(), ex);
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         }
     }
 
@@ -211,7 +223,11 @@ public class URLHandlersStreamHandlerProxy extends URLStreamHandler
         }
         catch (Exception ex)
         {
+<<<<<<< HEAD
+            throw new IllegalStateException("Stream handler unavailable due to: " + ex.getMessage());
+=======
             throw new IllegalStateException("Stream handler unavailable due to: " + ex.getMessage(), ex);
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         }
     }
 
@@ -233,7 +249,11 @@ public class URLHandlersStreamHandlerProxy extends URLStreamHandler
         }
         catch (Exception ex)
         {
+<<<<<<< HEAD
+            throw new IllegalStateException("Stream handler unavailable due to: " + ex.getMessage());
+=======
             throw new IllegalStateException("Stream handler unavailable due to: " + ex.getMessage(), ex);
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         }
     }
 
@@ -255,7 +275,8 @@ public class URLHandlersStreamHandlerProxy extends URLStreamHandler
         }
         catch (Exception ex)
         {
-            throw new IllegalStateException("Stream handler unavailable due to: " + ex.getMessage(), ex);
+<<<<<<< HEAD
+            throw new IllegalStateException("Stream handler unavailable due to: " + ex.getMessage());
         }
     }
 
@@ -268,6 +289,114 @@ public class URLHandlersStreamHandlerProxy extends URLStreamHandler
         }
         if (svc instanceof URLStreamHandlerService)
         {
+            return ((URLStreamHandlerService) svc).openConnection(url);
+        }
+        try
+        {
+            if ("http".equals(url.getProtocol()) &&
+                "felix.extensions".equals(url.getHost()) &&
+                9 == url.getPort())
+            {
+                try
+                {
+                    Object handler =  m_action.getDeclaredField(
+                        ExtensionManager.class, "m_extensionManager", null);
+
+                    if (handler != null)
+                    {
+                        return (URLConnection) m_action.invoke(
+                            m_action.getMethod(handler.getClass(),
+                            "openConnection", new Class[]{URL.class}), handler,
+                            new Object[]{url});
+                    }
+
+                    throw new IOException("Extensions not supported or ambiguous context.");
+                }
+                catch (IOException ex)
+                {
+                    throw ex;
+                }
+                catch (Exception ex)
+                {
+                    throw new IOException(ex.getMessage());
+                }
+            }
+            return (URLConnection) OPEN_CONNECTION.invoke(svc, new Object[]{url});
+        }
+        catch (IOException ex)
+        {
+            throw ex;
+        }
+        catch (Exception ex)
+        {
+            throw new IllegalStateException("Stream handler unavailable due to: " + ex.getMessage());
+        }
+    }
+
+    protected URLConnection openConnection(URL url, java.net.Proxy proxy) throws IOException
+=======
+            throw new IllegalStateException("Stream handler unavailable due to: " + ex.getMessage(), ex);
+        }
+    }
+
+    protected URLConnection openConnection(URL url) throws IOException
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
+    {
+        Object svc = getStreamHandlerService();
+        if (svc == null)
+        {
+            throw new MalformedURLException("Unknown protocol: " + url.toString());
+        }
+        if (svc instanceof URLStreamHandlerService)
+        {
+<<<<<<< HEAD
+            Method method;
+            try
+            {
+                method = svc.getClass().getMethod("openConnection", URL_PROXY_CLASS);
+            }
+            catch (NoSuchMethodException e)
+            {
+                RuntimeException rte = new UnsupportedOperationException(e.getMessage());
+                rte.initCause(e);
+                throw rte;
+            }
+            try
+            {
+                m_action.setAccesssible(method);
+                return (URLConnection) method.invoke(svc, new Object[]{url, proxy});
+            }
+            catch (Exception e)
+            {
+                if (e instanceof IOException)
+                {
+                    throw (IOException) e;
+                }
+                throw new IOException(e.getMessage());
+            }
+        }
+        try
+        {
+            return (URLConnection) OPEN_CONNECTION_PROXY.invoke(svc, new Object[]{url, proxy});
+        }
+        catch (Exception ex)
+        {
+            if (ex instanceof IOException)
+            {
+                throw (IOException) ex;
+            }
+            throw new IllegalStateException("Stream handler unavailable due to: " + ex.getMessage());
+        }
+    }
+
+    // We use this thread local to detect whether we have a reentrant entry to the parseURL
+    // method. This can happen do to some difference between gnu/classpath and sun jvms
+    // For more see inside the method.
+    private static final ThreadLocal m_loopCheck = new ThreadLocal();
+    protected void parseURL(URL url, String spec, int start, int limit)
+    {
+        Object svc = getStreamHandlerService();
+=======
             return ((URLStreamHandlerService) svc).openConnection(url);
         }
         try
@@ -367,6 +496,7 @@ public class URLHandlersStreamHandlerProxy extends URLStreamHandler
     protected void parseURL(URL url, String spec, int start, int limit)
     {
         Object svc = getStreamHandlerService();
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         if (svc == null)
         {
             throw new IllegalStateException(
@@ -428,7 +558,11 @@ public class URLHandlersStreamHandlerProxy extends URLStreamHandler
             }
             catch (Exception ex)
             {
+<<<<<<< HEAD
+                throw new IllegalStateException("Stream handler unavailable due to: " + ex.getMessage());
+=======
                 throw new IllegalStateException("Stream handler unavailable due to: " + ex.getMessage(), ex);
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
             }
         }
     }
@@ -452,7 +586,11 @@ public class URLHandlersStreamHandlerProxy extends URLStreamHandler
         }
         catch (Exception ex)
         {
+<<<<<<< HEAD
+            throw new IllegalStateException("Stream handler unavailable due to: " + ex.getMessage());
+=======
             throw new IllegalStateException("Stream handler unavailable due to: " + ex.getMessage(), ex);
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         }
     }
 
@@ -467,6 +605,7 @@ public class URLHandlersStreamHandlerProxy extends URLStreamHandler
         URL url, String protocol, String host, int port, String file, String ref)
     {
         super.setURL(url, protocol, host, port, file, ref);
+<<<<<<< HEAD
     }
 
     protected String toExternalForm(URL url)
@@ -474,6 +613,15 @@ public class URLHandlersStreamHandlerProxy extends URLStreamHandler
         return toExternalForm(url, getStreamHandlerService());
     }
 
+=======
+    }
+
+    protected String toExternalForm(URL url)
+    {
+        return toExternalForm(url, getStreamHandlerService());
+    }
+
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     private String toExternalForm(URL url, Object svc)
     {
         if (svc == null)
@@ -514,7 +662,11 @@ public class URLHandlersStreamHandlerProxy extends URLStreamHandler
                }
                else
                {
+<<<<<<< HEAD
+                   throw new IllegalStateException("Unknown throwable: " + t);
+=======
                    throw new IllegalStateException("Unknown throwable: " + t, t);
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
                }
             }
         }
@@ -526,7 +678,11 @@ public class URLHandlersStreamHandlerProxy extends URLStreamHandler
             // case it can -- hence, we catch the NPE and do the work
             // ourselvs. The only difference is that we check whether the
             // URL.getFile() is null or not.
+<<<<<<< HEAD
+            StringBuffer answer = new StringBuffer();
+=======
             StringBuilder answer = new StringBuilder();
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
             answer.append(url.getProtocol());
             answer.append(':');
             String authority = url.getAuthority();
@@ -551,7 +707,11 @@ public class URLHandlersStreamHandlerProxy extends URLStreamHandler
         }
         catch (Exception ex)
         {
+<<<<<<< HEAD
+            throw new IllegalStateException("Stream handler unavailable due to: " + ex.getMessage());
+=======
             throw new IllegalStateException("Stream handler unavailable due to: " + ex.getMessage(), ex);
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         }
     }
 
@@ -572,13 +732,30 @@ public class URLHandlersStreamHandlerProxy extends URLStreamHandler
         {
             // Get the framework instance associated with call stack.
             Object framework = URLHandlers.getFrameworkFromContext();
+<<<<<<< HEAD
+         
+=======
 
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
             if (framework == null)
             {
                 return m_builtIn;
             }
 
 
+<<<<<<< HEAD
+            Object service = null;
+            if (framework instanceof Felix)
+            {
+                service = ((Felix) framework).getStreamHandlerService(m_protocol);
+            }
+            else
+            {
+                service = m_action.invoke(
+                    m_action.getDeclaredMethod(framework.getClass(), "getStreamHandlerService", STRING_TYPES),
+                    framework, new Object[]{m_protocol});
+            }
+=======
             Object service;
             if (framework instanceof Felix)
             {
@@ -590,6 +767,7 @@ public class URLHandlersStreamHandlerProxy extends URLStreamHandler
                     m_action.getDeclaredMethod(framework.getClass(), "getStreamHandlerService", STRING_TYPES),
                     framework, new Object[]{m_protocol});
             }
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 
             if (service == null)
             {
@@ -605,6 +783,16 @@ public class URLHandlersStreamHandlerProxy extends URLStreamHandler
                 new URLHandlersStreamHandlerProxy(service, m_action));
         }
         catch (ThreadDeath td)
+<<<<<<< HEAD
+        {
+            throw td;
+        }
+        catch (Throwable t)
+        {
+            // In case that we are inside tomcat - the problem is that the webapp classloader
+            // creates a new url to load a class. This gets us to this method. Now, if we
+            // trigger a classload while executing tomcat is creating a new url and we end-up with
+=======
         {
             throw td;
         }
@@ -613,6 +801,7 @@ public class URLHandlersStreamHandlerProxy extends URLStreamHandler
             // In case that we are inside tomcat - the problem is that the webapp classloader
             // creates a new url to load a class. This gets us to this method. Now, if we
             // trigger a classload while executing, tomcat is creating a new url and we end-up with
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
             // a loop which is cut short after two iterations (because of a circularclassload).
             // We catch this exception (and all others) and just return the built-in handler
             // (if we have any) as this way we at least eventually get started (this just means
@@ -627,9 +816,30 @@ public class URLHandlersStreamHandlerProxy extends URLStreamHandler
         Class[] types = method.getParameterTypes();
         if (m_service == null)
         {
+<<<<<<< HEAD
+
+            Class[] types = method.getParameterTypes();
+            if (m_service == null)
+            {
+                return m_action.invoke(m_action.getMethod(this.getClass(), method.getName(), types), this, params);
+            }
+            if ("parseURL".equals(method.getName()))
+            {
+                types[0] = m_service.getClass().getClassLoader().loadClass(
+                    URLStreamHandlerSetter.class.getName());
+                params[0] = Proxy.newProxyInstance(
+                    m_service.getClass().getClassLoader(), new Class[]{types[0]},
+                    (URLHandlersStreamHandlerProxy) params[0]);
+            }
+            return m_action.invokeDirect(m_action.getDeclaredMethod(m_service.getClass(),
+                method.getName(), types), m_service, params);
+        }
+        catch (Exception ex)
+=======
             return m_action.invoke(m_action.getMethod(this.getClass(), method.getName(), types), this, params);
         }
         if ("parseURL".equals(method.getName()))
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         {
             types[0] = m_service.getClass().getClassLoader().loadClass(
                 URLStreamHandlerSetter.class.getName());

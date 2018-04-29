@@ -1,5 +1,9 @@
 /*
+<<<<<<< HEAD
+ * Copyright (c) OSGi Alliance (2012). All Rights Reserved.
+=======
  * Copyright (c) OSGi Alliance (2012, 2013). All Rights Reserved.
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -66,7 +70,11 @@ import org.osgi.resource.Namespace;
  * capability.
  * 
  * @Immutable
+<<<<<<< HEAD
+ * @version $Id: aa3cc744c7b9c21d908260f456567ab8a6de1430 $
+=======
  * @author $Id: a7cbf04c393bfaaa7515804a8ab6b9ebfd72fbe5 $
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
  */
 public final class HostNamespace extends AbstractWiringNamespace {
 
@@ -132,7 +140,11 @@ public final class HostNamespace extends AbstractWiringNamespace {
 
 	/**
 	 * The requirement directive used to specify the type of the extension
+<<<<<<< HEAD
+	 * fragment.
+=======
 	 * fragment. The default value is {@link #EXTENSION_FRAMEWORK framework}.
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 	 * 
 	 * @see #EXTENSION_FRAMEWORK
 	 * @see #EXTENSION_BOOTCLASSPATH

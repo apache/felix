@@ -26,18 +26,42 @@ import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceReference;
 import org.osgi.util.tracker.ServiceTracker;
 
+<<<<<<< HEAD
+public class MBeanServerTracker extends ServiceTracker
+=======
 public class MBeanServerTracker extends ServiceTracker<MBeanServer, MBeanContainer>
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 {
 
     private final Server server;
 
     public MBeanServerTracker(final BundleContext context, final Server server)
     {
+<<<<<<< HEAD
+        super(context, MBeanServer.class.getName(), null);
+=======
         super(context, MBeanServer.class, null);
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         this.server = server;
     }
 
     @Override
+<<<<<<< HEAD
+    public Object addingService(ServiceReference reference)
+    {
+        MBeanServer server = (MBeanServer) super.addingService(reference);
+        MBeanContainer mBeanContainer = new MBeanContainer(server);
+        this.server.getContainer().addEventListener(mBeanContainer);
+        return mBeanContainer;
+    }
+
+    @Override
+    public void removedService(ServiceReference reference, Object service)
+    {
+        MBeanContainer mBeanContainer = (MBeanContainer) service;
+        this.server.getContainer().removeEventListener(mBeanContainer);
+        super.removedService(reference, mBeanContainer.getMBeanServer());
+=======
     public MBeanContainer addingService(ServiceReference<MBeanServer> reference)
     {
         MBeanServer server = (MBeanServer) super.addingService(reference);
@@ -62,5 +86,6 @@ public class MBeanServerTracker extends ServiceTracker<MBeanServer, MBeanContain
             this.server.removeEventListener(service);
             super.removedService(reference, service);
         }
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     }
 }

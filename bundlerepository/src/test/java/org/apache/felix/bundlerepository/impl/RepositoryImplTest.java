@@ -19,6 +19,12 @@
 package org.apache.felix.bundlerepository.impl;
 
 import java.net.URL;
+<<<<<<< HEAD
+import java.util.Dictionary;
+import java.util.Hashtable;
+
+import junit.framework.TestCase;
+=======
 import java.util.Collections;
 import java.util.Dictionary;
 import java.util.Hashtable;
@@ -26,6 +32,7 @@ import java.util.Map;
 
 import junit.framework.TestCase;
 
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 import org.apache.felix.bundlerepository.Repository;
 import org.apache.felix.bundlerepository.Resource;
 import org.apache.felix.utils.log.Logger;
@@ -36,8 +43,11 @@ import org.osgi.framework.BundleListener;
 import org.osgi.framework.Filter;
 import org.osgi.framework.ServiceListener;
 import org.osgi.framework.ServiceReference;
+<<<<<<< HEAD
+=======
 import org.osgi.framework.wiring.BundleRevision;
 import org.osgi.resource.Capability;
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 
 public class RepositoryImplTest extends TestCase
 {
@@ -75,7 +85,11 @@ public class RepositoryImplTest extends TestCase
         URL url = getClass().getResource("/referral1_repository.xml");
 
         RepositoryAdminImpl repoAdmin = createRepositoryAdmin();
+<<<<<<< HEAD
+        RepositoryImpl repo = (RepositoryImpl) repoAdmin.addRepository(url, 1);
+=======
         RepositoryImpl repo = repoAdmin.addRepository(url, 1);
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         Referral[] refs = repo.getReferrals();
 
         assertNotNull("Expect referrals", refs);
@@ -97,9 +111,14 @@ public class RepositoryImplTest extends TestCase
 
     private RepositoryAdminImpl createRepositoryAdmin() throws Exception
     {
+<<<<<<< HEAD
+        BundleContext bundleContext = (BundleContext) EasyMock.createMock(BundleContext.class);
+        Bundle systemBundle = (Bundle) EasyMock.createMock(Bundle.class);
+=======
         BundleContext bundleContext = EasyMock.createMock(BundleContext.class);
         Bundle systemBundle = EasyMock.createMock(Bundle.class);
         BundleRevision systemBundleRevision = EasyMock.createMock(BundleRevision.class);
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 
         Activator.setContext(bundleContext);
         EasyMock.expect(bundleContext.getProperty((String) EasyMock.anyObject())).andReturn(null).anyTimes();
@@ -108,8 +127,11 @@ public class RepositoryImplTest extends TestCase
         EasyMock.expect(systemBundle.getRegisteredServices()).andReturn(null);
         EasyMock.expect(new Long(systemBundle.getBundleId())).andReturn(new Long(0)).anyTimes();
         EasyMock.expect(systemBundle.getBundleContext()).andReturn(bundleContext);
+<<<<<<< HEAD
+=======
         EasyMock.expect(systemBundleRevision.getCapabilities(null)).andReturn(Collections.<Capability>emptyList());
         EasyMock.expect(systemBundle.adapt(BundleRevision.class)).andReturn(systemBundleRevision);
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         bundleContext.addBundleListener((BundleListener) EasyMock.anyObject());
         bundleContext.addServiceListener((ServiceListener) EasyMock.anyObject());
         EasyMock.expect(bundleContext.getBundles()).andReturn(new Bundle[] { systemBundle });
@@ -123,11 +145,16 @@ public class RepositoryImplTest extends TestCase
             public boolean matchCase(Dictionary dictionary) {
                 return true;
             }
+<<<<<<< HEAD
+        }).anyTimes();
+        EasyMock.replay(new Object[] { bundleContext, systemBundle });
+=======
             public boolean matches(Map<String, ?> map) {
                 return true;
             }
         }).anyTimes();
         EasyMock.replay(new Object[] { bundleContext, systemBundle, systemBundleRevision });
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 
         RepositoryAdminImpl repoAdmin = new RepositoryAdminImpl(bundleContext, new Logger(bundleContext));
 

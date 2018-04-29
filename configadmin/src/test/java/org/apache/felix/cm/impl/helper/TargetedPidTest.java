@@ -19,6 +19,14 @@
 package org.apache.felix.cm.impl.helper;
 
 
+<<<<<<< HEAD
+import java.util.Dictionary;
+import java.util.Hashtable;
+
+import junit.framework.TestCase;
+
+=======
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 import org.apache.felix.cm.MockBundle;
 import org.apache.felix.cm.MockBundleContext;
 import org.apache.felix.cm.MockServiceReference;
@@ -29,8 +37,11 @@ import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceReference;
 import org.osgi.framework.Version;
 
+<<<<<<< HEAD
+=======
 import junit.framework.TestCase;
 
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 
 public class TargetedPidTest
 {
@@ -163,7 +174,10 @@ public class TargetedPidTest
         BundleContext ctx = new MockBundleContext();
         return new MockBundle( ctx, location )
         {
+<<<<<<< HEAD
+=======
             @Override
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
             public String getSymbolicName()
             {
                 return symbolicName;
@@ -171,8 +185,19 @@ public class TargetedPidTest
 
 
             @Override
+<<<<<<< HEAD
+            public Dictionary getHeaders()
+            {
+                return new Hashtable<String, Object>()
+                {
+                    {
+                        put( Constants.BUNDLE_VERSION, version.toString() );
+                    }
+                };
+=======
             public Version getVersion() {
                 return version;
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
             }
         };
     }

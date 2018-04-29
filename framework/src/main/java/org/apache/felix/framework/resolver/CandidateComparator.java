@@ -19,22 +19,43 @@
 package org.apache.felix.framework.resolver;
 
 import java.util.Comparator;
+<<<<<<< HEAD
+=======
 
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 import org.apache.felix.framework.wiring.BundleCapabilityImpl;
 import org.osgi.framework.Constants;
 import org.osgi.framework.Version;
 import org.osgi.framework.wiring.BundleCapability;
 import org.osgi.framework.wiring.BundleRevision;
+<<<<<<< HEAD
+
+public class CandidateComparator implements Comparator<BundleCapability>
+{
+    public int compare(BundleCapability cap1, BundleCapability cap2)
+=======
 import org.osgi.resource.Capability;
 
 public class CandidateComparator implements Comparator<Capability>
 {
     public int compare(Capability cap1, Capability cap2)
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     {
         // First check resolved state, since resolved capabilities have priority
         // over unresolved ones. Compare in reverse order since we want to sort
         // in descending order.
         int c = 0;
+<<<<<<< HEAD
+        if ((cap1.getRevision().getWiring() != null)
+            && (cap2.getRevision().getWiring() == null))
+        {
+            c = -1;
+        }
+        else if ((cap1.getRevision().getWiring() == null)
+            && (cap2.getRevision().getWiring() != null))
+        {
+            c = 1;
+=======
 
         BundleCapability bcap1 = null;
         BundleCapability bcap2 = null;
@@ -55,6 +76,7 @@ public class CandidateComparator implements Comparator<Capability>
             {
                 c = 1;
             }
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         }
 
         // Compare revision capabilities.
@@ -95,6 +117,17 @@ public class CandidateComparator implements Comparator<Capability>
         }
 
         // Finally, compare bundle identity.
+<<<<<<< HEAD
+        if (c == 0)
+        {
+            if (cap1.getRevision().getBundle().getBundleId() <
+                cap2.getRevision().getBundle().getBundleId())
+            {
+                c = -1;
+            }
+            else if (cap1.getRevision().getBundle().getBundleId() >
+                cap2.getRevision().getBundle().getBundleId())
+=======
         if (c == 0 && bcap1 != null && bcap2 != null)
         {
             if (bcap1.getRevision().getBundle().getBundleId() <
@@ -104,6 +137,7 @@ public class CandidateComparator implements Comparator<Capability>
             }
             else if (bcap1.getRevision().getBundle().getBundleId() >
                 bcap2.getRevision().getBundle().getBundleId())
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
             {
                 c = 1;
             }

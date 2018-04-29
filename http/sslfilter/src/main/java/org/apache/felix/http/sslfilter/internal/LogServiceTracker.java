@@ -18,31 +18,46 @@
  */
 package org.apache.felix.http.sslfilter.internal;
 
+<<<<<<< HEAD
+=======
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Map;
 import java.util.TreeMap;
 
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceReference;
 import org.osgi.service.log.LogService;
 import org.osgi.util.tracker.ServiceTracker;
 
 /**
+<<<<<<< HEAD
+=======
  *
  *
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
  * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
 public class LogServiceTracker extends ServiceTracker
 {
+<<<<<<< HEAD
+=======
     private final Map<ServiceReference, LogService> logServices = new TreeMap<ServiceReference, LogService>(Collections.reverseOrder());
 
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     public LogServiceTracker(BundleContext context)
     {
         super(context, LogService.class.getName(), null);
     }
 
     @Override
+<<<<<<< HEAD
+    public Object addingService(ServiceReference reference)
+    {
+        LogService result = (LogService) super.addingService(reference);
+        SystemLogger.setLogService(result);
+=======
     public Object addingService(final ServiceReference reference)
     {
         final LogService result = (LogService) super.addingService(reference);
@@ -52,10 +67,16 @@ public class LogServiceTracker extends ServiceTracker
                 SystemLogger.setLogService(logServices.values().iterator().next());
             }
         }
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         return result;
     }
 
     @Override
+<<<<<<< HEAD
+    public void removedService(ServiceReference reference, Object service)
+    {
+        SystemLogger.setLogService(null);
+=======
     public void removedService(final ServiceReference reference, final Object service)
     {
         synchronized ( logServices ) {
@@ -67,6 +88,7 @@ public class LogServiceTracker extends ServiceTracker
                 SystemLogger.setLogService(services.iterator().next());
             }
         }
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         super.removedService(reference, service);
     }
 }

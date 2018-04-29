@@ -82,12 +82,16 @@ public class MetaAnnotationBindingRegistry extends CompletableBindingRegistry {
             bytes = m_store.read(type.getInternalName().concat(".class"));
         } catch (IOException e) {
             // Annotation type cannot be read
+<<<<<<< HEAD
+            m_reporter.trace("Could not read bytecode for @%s", type.getClassName());
+=======
             m_reporter.trace("Could not read bytecode for @%s.", type.getClassName());
             return emptyList();
         } catch (IllegalStateException e) {
             m_reporter.trace("Could not read bytecode for @%s because the bundle is not in a state allowing read " +
                             "operations.",
                     type.getClassName());
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
             return emptyList();
         }
         AnnotationParser parser = new AnnotationParser();
@@ -151,7 +155,12 @@ public class MetaAnnotationBindingRegistry extends CompletableBindingRegistry {
                 (handler.getValue() == null)) {
             // No attributes specified, use annotation type as element's source
             element = Elements.buildElement(type);
+<<<<<<< HEAD
+        } else if ((handler.getNamespace() == null) &&
+                (handler.getValue() != null)) {
+=======
         } else if ((handler.getNamespace() == null)) {
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
             // Namespace attribute is omitted
             element = Elements.buildElement(handler.getValue());
         } else {

@@ -1,5 +1,9 @@
 /*
+<<<<<<< HEAD
+ * Copyright (c) OSGi Alliance (2000, 2012). All Rights Reserved.
+=======
  * Copyright (c) OSGi Alliance (2000, 2013). All Rights Reserved.
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -32,7 +36,11 @@ import java.util.EventObject;
  * @Immutable
  * @see BundleListener
  * @see SynchronousBundleListener
+<<<<<<< HEAD
+ * @version $Id: 9e2102212eb526b5f11fdde4b0fc5c171a0b39c8 $
+=======
  * @author $Id: cd49848213816c4f76541b70be12ac3af7900972 $
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
  */
 
 public class BundleEvent extends EventObject {
@@ -201,6 +209,18 @@ public class BundleEvent extends EventObject {
 	/**
 	 * Returns the type of lifecyle event. The type values are:
 	 * <ul>
+<<<<<<< HEAD
+	 * <li>{@link #INSTALLED}
+	 * <li>{@link #RESOLVED}
+	 * <li>{@link #LAZY_ACTIVATION}
+	 * <li>{@link #STARTING}
+	 * <li>{@link #STARTED}
+	 * <li>{@link #STOPPING}
+	 * <li>{@link #STOPPED}
+	 * <li>{@link #UPDATED}
+	 * <li>{@link #UNRESOLVED}
+	 * <li>{@link #UNINSTALLED}
+=======
 	 * <li>{@link #INSTALLED}</li>
 	 * <li>{@link #RESOLVED}</li>
 	 * <li>{@link #LAZY_ACTIVATION}</li>
@@ -211,6 +231,7 @@ public class BundleEvent extends EventObject {
 	 * <li>{@link #UPDATED}</li>
 	 * <li>{@link #UNRESOLVED}</li>
 	 * <li>{@link #UNINSTALLED}</li>
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 	 * </ul>
 	 * 
 	 * @return The type of lifecycle event.

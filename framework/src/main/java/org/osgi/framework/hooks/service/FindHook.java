@@ -1,5 +1,9 @@
 /*
+<<<<<<< HEAD
+ * Copyright (c) OSGi Alliance (2008, 2012). All Rights Reserved.
+=======
  * Copyright (c) OSGi Alliance (2008, 2013). All Rights Reserved.
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,7 +21,10 @@
 package org.osgi.framework.hooks.service;
 
 import java.util.Collection;
+<<<<<<< HEAD
+=======
 import org.osgi.annotation.versioning.ConsumerType;
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceReference;
 
@@ -29,9 +36,15 @@ import org.osgi.framework.ServiceReference;
  * (get service references) operations.
  * 
  * @ThreadSafe
+<<<<<<< HEAD
+ * @version $Id: 45612d6a10a25ca0b40ba695eb8dba21c2c78c24 $
+ */
+
+=======
  * @author $Id: 4325a49f8c29ac9e7f32e8450db26148bbda5642 $
  */
 @ConsumerType
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 public interface FindHook {
 	/**
 	 * Find hook method. This method is called during the service find operation

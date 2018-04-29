@@ -96,10 +96,17 @@ class JarRevision extends BundleArchiveRevision
         }
     }
 
+<<<<<<< HEAD
+    public Map getManifestHeader() throws Exception
+    {
+        // Create a case insensitive map of manifest attributes.
+        Map headers = new StringMap();
+=======
     public Map<String, Object> getManifestHeader() throws Exception
     {
         // Create a case insensitive map of manifest attributes.
         Map<String, Object> headers = new StringMap();
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         // Read and parse headers.
         getMainAttributes(headers, m_zipFile);
         return headers;
@@ -194,7 +201,11 @@ class JarRevision extends BundleArchiveRevision
     // The idea is to not open the jar file as a java.util.jarfile but
     // read the mainfest from the zipfile directly and parse it manually
     // to use less memory and be faster.
+<<<<<<< HEAD
+    private static void getMainAttributes(Map result, WeakZipFile zipFile) throws Exception
+=======
     private static void getMainAttributes(Map<String, Object> result, WeakZipFile zipFile) throws Exception
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     {
         ZipEntry entry = zipFile.getEntry("META-INF/MANIFEST.MF");
 

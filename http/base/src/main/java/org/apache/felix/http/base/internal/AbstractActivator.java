@@ -16,20 +16,48 @@
  */
 package org.apache.felix.http.base.internal;
 
+<<<<<<< HEAD
+import org.osgi.framework.BundleActivator;
+import org.osgi.framework.BundleContext;
+import org.apache.felix.http.base.internal.logger.SystemLogger;
+import org.apache.felix.http.base.internal.logger.LogServiceLogger;
+=======
 import org.apache.felix.http.base.internal.logger.SystemLogger;
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 
 public abstract class AbstractActivator
     implements BundleActivator
 {
+<<<<<<< HEAD
+    private BundleContext context;
+    private LogServiceLogger logger;
+=======
     private volatile BundleContext context;
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 
     protected final BundleContext getBundleContext()
     {
         return this.context;
     }
 
+<<<<<<< HEAD
+    public final void start(BundleContext context)
+        throws Exception
+    {
+        this.context = context;
+        this.logger = new LogServiceLogger(context);
+        SystemLogger.setLogService(this.logger);
+        doStart();
+    }
+
+    public final void stop(BundleContext context)
+        throws Exception
+    {
+        doStop();
+        this.logger.close();
+=======
     @Override
     public final void start(final BundleContext context)
         throws Exception
@@ -45,11 +73,16 @@ public abstract class AbstractActivator
     {
         doStop();
         SystemLogger.destroy();
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     }
 
     protected abstract void doStart()
         throws Exception;
 
     protected abstract void doStop()
+<<<<<<< HEAD
+        throws Exception;   
+=======
         throws Exception;
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 }

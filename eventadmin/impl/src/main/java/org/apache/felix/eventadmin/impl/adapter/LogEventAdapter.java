@@ -101,7 +101,10 @@ public class LogEventAdapter extends AbstractAdapter implements ServiceListener
         }
     }
 
+<<<<<<< HEAD
+=======
     @Override
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     public void destroy(BundleContext context) {
         context.removeServiceListener(this);
     }
@@ -155,7 +158,11 @@ public class LogEventAdapter extends AbstractAdapter implements ServiceListener
                     // compendium is taking place (i.e., the log entry is adapted to
                     // an event and posted via the EventAdmin)
 
+<<<<<<< HEAD
+                    final Dictionary properties = new Hashtable();
+=======
                     final Dictionary<String, Object> properties = new Hashtable<String, Object>();
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 
                     final Bundle bundle = entry.getBundle();
 

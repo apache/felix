@@ -22,7 +22,10 @@
 # -> MANIFEST.MF
 (org.osgi.framework.PackagePermission "org.osgi.service.log" "import")
 (org.osgi.framework.PackagePermission "org.osgi.framework" "import")
+<<<<<<< HEAD
+=======
 (org.osgi.framework.PackagePermission "org.osgi.util.tracker" "import")
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 (org.osgi.framework.PackagePermission "org.osgi.service.cm" "import,exportonly")
 (org.osgi.framework.PackagePermission "org.apache.felix.cm" "import,exportonly")
 (org.osgi.framework.PackagePermission "org.apache.felix.cm.file" "import,exportonly")
@@ -40,6 +43,12 @@
 
 # Handle persistent configuration files
 # -> FilePersistenceManager
+<<<<<<< HEAD
+(java.util.PropertyPermission "user.dir" "read")
+(java.io.FilePermission "-" "read,write,execute,delete")
+# -> ConfigurationManager
+(org.osgi.framework.ServicePermission "org.apache.felix.cm.PersistenceManager" "register")
+=======
 (java.util.PropertyPermission "os.name" "read")
 (java.util.PropertyPermission "user.dir" "read")
 (java.io.FilePermission "-" "read,write,execute,delete")
@@ -54,3 +63,4 @@
 (org.osgi.framework.PackagePermission "org.osgi.service.coordinator" "import")
 (org.osgi.framework.ServicePermission "org.osgi.service.coordinator.*" "get")
 (org.osgi.service.coordinator.CoordinationPermission "*" "initiate,participate")
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368

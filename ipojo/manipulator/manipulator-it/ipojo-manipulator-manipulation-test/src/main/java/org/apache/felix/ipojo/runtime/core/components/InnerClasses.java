@@ -25,7 +25,10 @@ import org.apache.felix.ipojo.runtime.core.services.Job;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
+<<<<<<< HEAD
+=======
 import java.util.concurrent.Callable;
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 
 public class InnerClasses implements CheckService {
     
@@ -55,12 +58,15 @@ public class InnerClasses implements CheckService {
         return true;
     }
 
+<<<<<<< HEAD
+=======
     private static final Callable<Integer> callable = new Callable<Integer>() {
         public Integer call() {
             return 1;
         }
     };
 
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     public Properties getProps() {
         Properties props = new Properties();
         props.put("publicInner", new PublicNested().doSomething());
@@ -70,12 +76,16 @@ public class InnerClasses implements CheckService {
         props.put("constructorInner", new ConstructorNested().doSomething());
         props.put("staticInner", new StaticNested().doSomething());
         props.put("packageStaticInner", new PackageStaticNested().doSomething());
+<<<<<<< HEAD
+        
+=======
         try {
             props.put("call", callable.call());
         } catch (Exception e) {
             // Ignore.
         }
 
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         Job anonymous = new Job()  {
             public Map doSomething() {
                 Map map = new HashMap();

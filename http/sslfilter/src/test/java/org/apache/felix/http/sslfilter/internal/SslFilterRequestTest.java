@@ -21,7 +21,10 @@ package org.apache.felix.http.sslfilter.internal;
 import static junit.framework.Assert.assertEquals;
 import static junit.framework.Assert.assertFalse;
 import static junit.framework.Assert.assertTrue;
+<<<<<<< HEAD
+=======
 import static org.apache.felix.http.sslfilter.internal.SslFilterConstants.HDR_X_FORWARDED_PORT;
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -82,6 +85,8 @@ public class SslFilterRequestTest
         assertEquals("https://some/page", sreq.getRequestURL().toString());
         assertEquals("https://some/page", req.getRequestURL().toString());
     }
+<<<<<<< HEAD
+=======
     
     @Test
     public void test_getServerPort() throws Exception
@@ -115,4 +120,5 @@ public class SslFilterRequestTest
         assertEquals(4502, sreq.getServerPort());
         
     }
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 }

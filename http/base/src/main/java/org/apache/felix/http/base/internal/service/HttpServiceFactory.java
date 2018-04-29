@@ -16,6 +16,42 @@
  */
 package org.apache.felix.http.base.internal.service;
 
+<<<<<<< HEAD
+import javax.servlet.ServletContext;
+import javax.servlet.ServletContextAttributeListener;
+
+import org.apache.felix.http.base.internal.handler.HandlerRegistry;
+import org.osgi.framework.Bundle;
+import org.osgi.framework.ServiceFactory;
+import org.osgi.framework.ServiceRegistration;
+
+public final class HttpServiceFactory
+    implements ServiceFactory
+{
+    private final ServletContext context;
+    private final ServletContextAttributeListener attributeListener;
+    private final HandlerRegistry handlerRegistry;
+    private final boolean sharedContextAttributes;
+
+    public HttpServiceFactory(ServletContext context, HandlerRegistry handlerRegistry,
+        ServletContextAttributeListener attributeListener, boolean sharedContextAttributes)
+    {
+        this.context = context;
+        this.attributeListener = attributeListener;
+        this.handlerRegistry = handlerRegistry;
+        this.sharedContextAttributes = sharedContextAttributes;
+    }
+
+    public Object getService(Bundle bundle, ServiceRegistration reg)
+    {
+        return new HttpServiceImpl(bundle, this.context, this.handlerRegistry, this.attributeListener,
+            this.sharedContextAttributes);
+    }
+
+    public void ungetService(Bundle bundle, ServiceRegistration reg, Object service)
+    {
+        ((HttpServiceImpl)service).unregisterAll();
+=======
 import java.util.Hashtable;
 
 import javax.annotation.Nonnull;
@@ -160,5 +196,6 @@ public final class HttpServiceFactory
     {
         String prop = this.bundleContext.getProperty(property);
         return (prop != null) ? Boolean.valueOf(prop).booleanValue() : false;
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     }
 }

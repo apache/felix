@@ -1,5 +1,9 @@
 /*
+<<<<<<< HEAD
+ * Copyright (c) OSGi Alliance (2002, 2012). All Rights Reserved.
+=======
  * Copyright (c) OSGi Alliance (2002, 2013). All Rights Reserved.
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,11 +20,15 @@
 
 package org.osgi.service.url;
 
+<<<<<<< HEAD
+import java.net.*;
+=======
 import java.net.InetAddress;
 import java.net.URL;
 import java.net.URLConnection;
 import java.net.URLStreamHandler;
 import org.osgi.annotation.versioning.ConsumerType;
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 
 /**
  * Abstract implementation of the {@code URLStreamHandlerService} interface. All
@@ -31,14 +39,22 @@ import org.osgi.annotation.versioning.ConsumerType;
  * {@code setURL} and {@code parseURL(URLStreamHandlerSetter,...)} methods.
  * 
  * @ThreadSafe
+<<<<<<< HEAD
+ * @version $Id: b86572a4f13b7bb4a343ac4d6b6fb3487e01bd31 $
+ */
+=======
  * @author $Id: 79cfc45d97b037436d50bda26111109bd5d42a37 $
  */
 @ConsumerType
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 public abstract class AbstractURLStreamHandlerService extends URLStreamHandler implements URLStreamHandlerService {
 	/**
 	 * @see "java.net.URLStreamHandler.openConnection"
 	 */
+<<<<<<< HEAD
+=======
 	@Override
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 	public abstract URLConnection openConnection(URL u) throws java.io.IOException;
 
 	/**
@@ -56,7 +72,11 @@ public abstract class AbstractURLStreamHandlerService extends URLStreamHandler i
 	 *        invoked for the specified URL.
 	 * @see "java.net.URLStreamHandler.parseURL"
 	 */
+<<<<<<< HEAD
+	public void parseURL(URLStreamHandlerSetter realHandler, URL u, String spec, int start, int limit) {
+=======
 	public void parseURL(@SuppressWarnings("hiding") URLStreamHandlerSetter realHandler, URL u, String spec, int start, int limit) {
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 		this.realHandler = realHandler;
 		parseURL(u, spec, start, limit);
 	}
@@ -66,7 +86,10 @@ public abstract class AbstractURLStreamHandlerService extends URLStreamHandler i
 	 * 
 	 * @see "java.net.URLStreamHandler.toExternalForm"
 	 */
+<<<<<<< HEAD
+=======
 	@Override
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 	public String toExternalForm(URL u) {
 		return super.toExternalForm(u);
 	}
@@ -76,7 +99,10 @@ public abstract class AbstractURLStreamHandlerService extends URLStreamHandler i
 	 * 
 	 * @see "java.net.URLStreamHandler.equals(URL,URL)"
 	 */
+<<<<<<< HEAD
+=======
 	@Override
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 	public boolean equals(URL u1, URL u2) {
 		return super.equals(u1, u2);
 	}
@@ -86,7 +112,10 @@ public abstract class AbstractURLStreamHandlerService extends URLStreamHandler i
 	 * 
 	 * @see "java.net.URLStreamHandler.getDefaultPort"
 	 */
+<<<<<<< HEAD
+=======
 	@Override
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 	public int getDefaultPort() {
 		return super.getDefaultPort();
 	}
@@ -96,7 +125,10 @@ public abstract class AbstractURLStreamHandlerService extends URLStreamHandler i
 	 * 
 	 * @see "java.net.URLStreamHandler.getHostAddress"
 	 */
+<<<<<<< HEAD
+=======
 	@Override
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 	public InetAddress getHostAddress(URL u) {
 		return super.getHostAddress(u);
 	}
@@ -106,7 +138,10 @@ public abstract class AbstractURLStreamHandlerService extends URLStreamHandler i
 	 * 
 	 * @see "java.net.URLStreamHandler.hashCode(URL)"
 	 */
+<<<<<<< HEAD
+=======
 	@Override
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 	public int hashCode(URL u) {
 		return super.hashCode(u);
 	}
@@ -116,7 +151,10 @@ public abstract class AbstractURLStreamHandlerService extends URLStreamHandler i
 	 * 
 	 * @see "java.net.URLStreamHandler.hostsEqual"
 	 */
+<<<<<<< HEAD
+=======
 	@Override
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 	public boolean hostsEqual(URL u1, URL u2) {
 		return super.hostsEqual(u1, u2);
 	}
@@ -126,7 +164,10 @@ public abstract class AbstractURLStreamHandlerService extends URLStreamHandler i
 	 * 
 	 * @see "java.net.URLStreamHandler.sameFile"
 	 */
+<<<<<<< HEAD
+=======
 	@Override
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 	public boolean sameFile(URL u1, URL u2) {
 		return super.sameFile(u1, u2);
 	}
@@ -139,7 +180,10 @@ public abstract class AbstractURLStreamHandlerService extends URLStreamHandler i
 	 * @deprecated This method is only for compatibility with handlers written
 	 *             for JDK 1.1.
 	 */
+<<<<<<< HEAD
+=======
 	@SuppressWarnings("javadoc")
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 	protected void setURL(URL u, String proto, String host, int port, String file, String ref) {
 		realHandler.setURL(u, proto, host, port, file, ref);
 	}
@@ -151,7 +195,10 @@ public abstract class AbstractURLStreamHandlerService extends URLStreamHandler i
 	 * 
 	 * @see "java.net.URLStreamHandler.setURL(URL,String,String,int,String,String,String,String)"
 	 */
+<<<<<<< HEAD
+=======
 	@Override
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 	protected void setURL(URL u, String proto, String host, int port, String auth, String user, String path, String query, String ref) {
 		realHandler.setURL(u, proto, host, port, auth, user, path, query, ref);
 	}

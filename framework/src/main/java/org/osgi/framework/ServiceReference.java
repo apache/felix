@@ -1,5 +1,9 @@
 /*
+<<<<<<< HEAD
+ * Copyright (c) OSGi Alliance (2000, 2012). All Rights Reserved.
+=======
  * Copyright (c) OSGi Alliance (2000, 2013). All Rights Reserved.
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,7 +21,10 @@
 package org.osgi.framework;
 
 import java.util.Dictionary;
+<<<<<<< HEAD
+=======
 import org.osgi.annotation.versioning.ProviderType;
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 
 /**
  * A reference to a service.
@@ -47,11 +54,19 @@ import org.osgi.annotation.versioning.ProviderType;
  * @see BundleContext#getServiceReferences(Class, String)
  * @see BundleContext#getServiceReferences(String, String)
  * @see BundleContext#getService(ServiceReference)
+<<<<<<< HEAD
+ * @ThreadSafe
+ * @noimplement
+ * @version $Id: 75352193f9f11a2c19692890153c6ff91611023b $
+ */
+
+=======
  * @see BundleContext#getServiceObjects(ServiceReference)
  * @ThreadSafe
  * @author $Id: a56f8df70e8c74a76a1ef02b714b4612bc064ecc $
  */
 @ProviderType
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 public interface ServiceReference<S> extends Comparable<Object> {
 	/**
 	 * Returns the property value to which the specified property key is mapped

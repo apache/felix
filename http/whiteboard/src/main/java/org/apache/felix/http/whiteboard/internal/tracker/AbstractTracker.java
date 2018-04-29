@@ -16,6 +16,25 @@
  */
 package org.apache.felix.http.whiteboard.internal.tracker;
 
+<<<<<<< HEAD
+import org.osgi.util.tracker.ServiceTracker;
+import org.osgi.framework.BundleContext;
+import org.osgi.framework.ServiceReference;
+
+public abstract class AbstractTracker<T>
+    extends ServiceTracker
+{
+    public AbstractTracker(BundleContext context, Class<T> clz)
+    {
+        super(context, clz.getName(), null);
+    }
+
+    @Override
+    @SuppressWarnings("unchecked")
+    public final Object addingService(ServiceReference ref)
+    {
+        T service = (T)super.addingService(ref);
+=======
 import org.apache.felix.http.base.internal.logger.SystemLogger;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
@@ -55,11 +74,33 @@ public abstract class AbstractTracker<T>
     public final T addingService(final ServiceReference<T> ref)
     {
         T service = super.addingService(ref);
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         added(service, ref);
         return service;
     }
 
     @Override
+<<<<<<< HEAD
+    @SuppressWarnings("unchecked")
+    public final void modifiedService(ServiceReference ref, Object service)
+    {
+        super.modifiedService(ref, service);
+    }
+
+    @Override
+    @SuppressWarnings("unchecked")
+    public final void removedService(ServiceReference ref, Object service)
+    {
+        super.removedService(ref, service);
+        removed((T) service, ref);
+    }
+
+    protected abstract void modified(T service, ServiceReference ref);
+
+    protected abstract void added(T service, ServiceReference ref);
+
+    protected abstract void removed(T service, ServiceReference ref);
+=======
     public final void modifiedService(final ServiceReference<T> ref, T service)
     {
         removed(service, ref);
@@ -76,4 +117,5 @@ public abstract class AbstractTracker<T>
     protected abstract void added(T service, ServiceReference<T> ref);
 
     protected abstract void removed(T service, ServiceReference<T> ref);
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 }

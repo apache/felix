@@ -60,22 +60,34 @@ public class MetaDataReader
      * Specification 4.2. We still have to support this namespace for
      * backwards compatibility.
      */
+<<<<<<< HEAD
+    private static final String NAMESPACE_1_0 = "http://www.osgi.org/xmlns/metatype/v1.0.0";
+=======
     static final String NAMESPACE_1_0 = "http://www.osgi.org/xmlns/metatype/v1.0.0";
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 
     /**
      * The XML Namespace for Metatype 1.1 descriptors.
      */
+<<<<<<< HEAD
+    private static final String NAMESPACE_1_1 = "http://www.osgi.org/xmlns/metatype/v1.1.0";
+=======
     static final String NAMESPACE_1_1 = "http://www.osgi.org/xmlns/metatype/v1.1.0";
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 
     /**
      * The XML Namespace for Metatype 1.2 descriptors.
      */
+<<<<<<< HEAD
+    private static final String NAMESPACE_1_2 = "http://www.osgi.org/xmlns/metatype/v1.2.0";
+=======
     static final String NAMESPACE_1_2 = "http://www.osgi.org/xmlns/metatype/v1.2.0";
 
     /**
      * The XML Namespace for Metatype 1.3 descriptors.
      */
     static final String NAMESPACE_1_3 = "http://www.osgi.org/xmlns/metatype/v1.3.0";
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 
     /** The XML parser used to read the XML documents */
     private KXmlParser parser = new KXmlParser();
@@ -84,12 +96,28 @@ public class MetaDataReader
     private URL documentURL;
 
     /** Sets of attributes belonging to XML elements. */
+<<<<<<< HEAD
+    private final Set AD_ATTRIBUTES = new HashSet( Arrays.asList( new String[]
+        { "name", "description", "id", "type", "cardinality", "min", "max", "default", "required" } ) );
+    private final Set ATTRIBUTE_ATTRIBUTES = new HashSet( Arrays.asList( new String[]
+        { "adref", "content" } ) );
+    private final Set DESIGNATE_ATTRIBUTES = new HashSet( Arrays.asList( new String[]
+        { "pid", "factoryPid", "bundle", "optional", "merge" } ) );
+    private final Set DESIGNATEOBJECT_ATTRIBUTES = new HashSet( Arrays.asList( new String[]
+        { "ocdref" } ) );
+    private final Set METADATA_ATTRIBUTES = new HashSet( Arrays.asList( new String[]
+        { "localization" } ) );
+    private final Set OCD_ATTRIBUTES = new HashSet( Arrays.asList( new String[]
+        { "name", "description", "id" } ) );
+
+=======
     private static final Set<String> AD_ATTRIBUTES = new HashSet<String>(Arrays.asList(new String[] { "name", "description", "id", "type", "cardinality", "min", "max", "default", "required" }));
     private static final Set<String> ATTRIBUTE_ATTRIBUTES = new HashSet<String>(Arrays.asList(new String[] { "adref", "content" }));
     private static final Set<String> DESIGNATE_ATTRIBUTES = new HashSet<String>(Arrays.asList(new String[] { "pid", "factoryPid", "bundle", "optional", "merge" }));
     private static final Set<String> DESIGNATEOBJECT_ATTRIBUTES = new HashSet<String>(Arrays.asList(new String[] { "ocdref" }));
     private static final Set<String> METADATA_ATTRIBUTES = new HashSet<String>(Arrays.asList(new String[] { "localization" }));
     private static final Set<String> OCD_ATTRIBUTES = new HashSet<String>(Arrays.asList(new String[] { "name", "description", "id" }));
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 
     /**
      * Parses the XML document provided by the <code>url</code>. The XML document
@@ -107,13 +135,30 @@ public class MetaDataReader
      * @throws IOException If an I/O error occurs accessing the stream or
      *      parsing the XML document.
      */
+<<<<<<< HEAD
+    public MetaData parse( URL url ) throws IOException
+=======
     public MetaData parse(URL url) throws IOException
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     {
         this.documentURL = url;
         InputStream ins = null;
         try
         {
             ins = url.openStream();
+<<<<<<< HEAD
+            this.parser.setProperty( "http://xmlpull.org/v1/doc/properties.html#location", url.toString() );
+            MetaData md = this.parse( ins );
+            if ( md != null )
+            {
+                md.setSource( url );
+            }
+            return md;
+        }
+        catch ( XmlPullParserException e )
+        {
+            throw new IOException( "XML parsing exception while reading metadata: " + e.getMessage() );
+=======
 
             this.parser.setProperty("http://xmlpull.org/v1/doc/properties.html#location", url.toString());
             MetaData md = parse(ins);
@@ -126,6 +171,7 @@ public class MetaDataReader
         catch (XmlPullParserException e)
         {
             throw new IOException("XML parsing exception while reading metadata: " + e.getMessage());
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         }
         finally
         {
@@ -145,6 +191,22 @@ public class MetaDataReader
     }
 
     /**
+     * Checks if this document has a meta type name space.
+     *
+     * @throws IOException when there the meta type name space is not valid
+     */
+    private void checkMetatypeNamespace() throws IOException
+    {
+        final String namespace = this.parser.getNamespace();
+        if ( namespace != null && namespace.length() > 0 && !NAMESPACE_1_0.equals( namespace )
+            && !NAMESPACE_1_1.equals( namespace ) && !NAMESPACE_1_2.equals( namespace ) )
+        {
+            throw new IOException( "Unsupported Namespace " + namespace );
+        }
+    }
+
+
+    /**
      * Parses the XML document in the given input stream.
      * <p>
      * This method starts reading at the current position of the input stream
@@ -159,11 +221,35 @@ public class MetaDataReader
      * @throws IOException If an I/O error occurs accessing the stream or
      *      parsing the XML document.
      */
+<<<<<<< HEAD
+    public MetaData parse( InputStream ins ) throws IOException
+=======
     public MetaData parse(InputStream ins) throws IOException
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     {
         MetaData mti = null;
         try
         {
+<<<<<<< HEAD
+            this.parser.setFeature( KXmlParser.FEATURE_PROCESS_NAMESPACES, true );
+
+            // set the parser input, use null encoding to force detection with <?xml?>
+            this.parser.setInput( ins, null );
+
+            int eventType = this.parser.getEventType();
+            while ( eventType != XmlPullParser.END_DOCUMENT )
+            {
+                if ( eventType == XmlPullParser.START_TAG )
+                {
+                    if ( "MetaData".equals( this.parser.getName() ) )
+                    {
+                        checkMetatypeNamespace();
+                        mti = this.readMetaData();
+                    }
+                    else
+                    {
+                        this.ignoreElement();
+=======
             this.parser.setFeature(KXmlParser.FEATURE_PROCESS_NAMESPACES, true);
             // set the parser input, use null encoding to force detection with <?xml?>
             this.parser.setInput(ins, null);
@@ -181,14 +267,21 @@ public class MetaDataReader
                     else
                     {
                         ignoreElement();
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
                     }
                 }
                 eventType = this.parser.next();
             }
         }
+<<<<<<< HEAD
+        catch ( XmlPullParserException e )
+        {
+            throw new IOException( "XML parsing exception while reading metadata: " + e.getMessage() );
+=======
         catch (XmlPullParserException e)
         {
             throw new IOException("XML parsing exception while reading metadata: " + e.getMessage());
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         }
 
         return mti;
@@ -226,6 +319,21 @@ public class MetaDataReader
         }
     }
 
+    private void readOptionalAttributes( OptionalAttributes entity, Set attributes )
+    {
+        int count = this.parser.getAttributeCount();
+        for ( int i = 0; i < count; i++ )
+        {
+            String name = this.parser.getAttributeName( i );
+            if ( !attributes.contains( name ) )
+            {
+                String value = this.parser.getAttributeValue( i );
+                entity.addOptionalAttribute( name, value );
+            }
+        }
+    }
+
+
     private MetaData readMetaData() throws IOException, XmlPullParserException
     {
         checkMetatypeNamespace();
@@ -235,6 +343,8 @@ public class MetaDataReader
         mti.setLocalePrefix(getOptionalAttribute("localization"));
 
         readOptionalAttributes(mti, METADATA_ATTRIBUTES);
+
+        readOptionalAttributes( mti, METADATA_ATTRIBUTES );
 
         int eventType = this.parser.next();
         while (eventType != XmlPullParser.END_DOCUMENT)
@@ -278,6 +388,8 @@ public class MetaDataReader
         ocd.setDescription(getOptionalAttribute("description"));
 
         readOptionalAttributes(ocd, OCD_ATTRIBUTES);
+
+        readOptionalAttributes( ocd, OCD_ATTRIBUTES );
 
         int eventType = this.parser.next();
         while (eventType != XmlPullParser.END_DOCUMENT)
@@ -338,6 +450,21 @@ public class MetaDataReader
 
     private Designate readDesignate() throws IOException, XmlPullParserException
     {
+<<<<<<< HEAD
+        final String pid = this.getOptionalAttribute( "pid" );
+        final String factoryPid = this.getOptionalAttribute( "factoryPid" );
+        if ( pid == null && factoryPid == null )
+        {
+            missingAttribute( "pid or factoryPid" );
+        }
+
+        Designate designate = this.createDesignate();
+        designate.setPid( pid );
+        designate.setFactoryPid( factoryPid );
+        designate.setBundleLocation( this.getOptionalAttribute( "bundle" ) );
+        designate.setOptional( this.getOptionalAttribute( "optional", false ) );
+        designate.setMerge( this.getOptionalAttribute( "merge", false ) );
+=======
         final String pid = getOptionalAttribute("pid");
         final String factoryPid = getOptionalAttribute("factoryPid");
         if (pid == null && factoryPid == null)
@@ -353,6 +480,9 @@ public class MetaDataReader
         designate.setMerge(getOptionalAttribute("merge", false));
 
         readOptionalAttributes(designate, DESIGNATE_ATTRIBUTES);
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
+
+        readOptionalAttributes( designate, DESIGNATE_ATTRIBUTES );
 
         int eventType = this.parser.next();
         while (eventType != XmlPullParser.END_DOCUMENT)
@@ -398,6 +528,22 @@ public class MetaDataReader
 
     private AD readAD() throws IOException, XmlPullParserException
     {
+<<<<<<< HEAD
+        AD ad = this.createAD();
+        ad.setID( this.getRequiredAttribute( "id" ) );
+        ad.setName( this.getOptionalAttribute( "name" ) );
+        ad.setDescription( this.getOptionalAttribute( "description" ) );
+        ad.setType( this.getRequiredAttribute( "type" ) );
+        ad.setCardinality( this.getOptionalAttribute( "cardinality", 0 ) );
+        ad.setMin( this.getOptionalAttribute( "min" ) );
+        ad.setMax( this.getOptionalAttribute( "max" ) );
+        ad.setDefaultValue( this.getOptionalAttribute( "default" ) );
+        ad.setRequired( this.getOptionalAttribute( "required", true ) );
+
+        readOptionalAttributes( ad, AD_ATTRIBUTES );
+
+        Map options = new LinkedHashMap();
+=======
         AD ad = createAD();
         ad.setID(getRequiredAttribute("id"));
         ad.setName(getOptionalAttribute("name"));
@@ -412,6 +558,7 @@ public class MetaDataReader
         readOptionalAttributes(ad, AD_ATTRIBUTES);
 
         Map<String, String> options = new LinkedHashMap<String, String>();
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         int eventType = this.parser.next();
         while (eventType != XmlPullParser.END_DOCUMENT)
         {
@@ -451,6 +598,11 @@ public class MetaDataReader
             ad.setDefaultValue(dfltValue);
         }
 
+        // reset value to force an options check (FELIX-3884)
+        if ( ad.getDefaultValue() != null )
+        {
+            ad.setDefaultValue( ad.getDefaultValue() );
+        }
         return ad;
     }
 
@@ -460,6 +612,8 @@ public class MetaDataReader
         oh.setOcdRef(getRequiredAttribute("ocdref"));
 
         readOptionalAttributes(oh, DESIGNATEOBJECT_ATTRIBUTES);
+
+        readOptionalAttributes( oh, DESIGNATEOBJECT_ATTRIBUTES );
 
         int eventType = this.parser.next();
         while (eventType != XmlPullParser.END_DOCUMENT)
@@ -493,11 +647,19 @@ public class MetaDataReader
 
     private Attribute readAttribute() throws IOException, XmlPullParserException
     {
+<<<<<<< HEAD
+        Attribute ah = this.createAttribute();
+        ah.setAdRef( this.getRequiredAttribute( "adref" ) );
+        ah.addContent( this.getOptionalAttribute( "content" ), true );
+
+        readOptionalAttributes( ah, ATTRIBUTE_ATTRIBUTES );
+=======
         Attribute ah = createAttribute();
         ah.setAdRef(getRequiredAttribute("adref"));
         ah.addContent(getOptionalAttribute("content"), true);
 
         readOptionalAttributes(ah, ATTRIBUTE_ATTRIBUTES);
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 
         int eventType = this.parser.next();
         while (eventType != XmlPullParser.END_DOCUMENT)
@@ -507,7 +669,11 @@ public class MetaDataReader
             {
                 if ("Value".equals(tagName))
                 {
+<<<<<<< HEAD
+                    ah.addContent( this.parser.nextText(), false );
+=======
                     ah.addContent(this.parser.nextText(), false);
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
                     eventType = this.parser.getEventType();
                 }
                 else

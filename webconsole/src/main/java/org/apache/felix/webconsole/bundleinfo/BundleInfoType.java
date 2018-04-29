@@ -22,7 +22,11 @@ import java.net.URL;
 
 /**
  * This pre-java 5 enum defines all valid bundle information value types.
+<<<<<<< HEAD
+ * 
+=======
  *
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
  * @author Valentin Valchev
  */
 public final class BundleInfoType
@@ -34,7 +38,11 @@ public final class BundleInfoType
      * with <code>&lt;protocol&gt;://</code> the link will be considered as
      * external. Otherwise the link should be absolute link to a local Servlet
      * and must always start with <code>/</code>.
+<<<<<<< HEAD
+     * 
+=======
      *
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
      * for security reasons, the protocol cannot be <code>file</code> for
      * external links.
      */
@@ -65,7 +73,11 @@ public final class BundleInfoType
 
     /**
      * Returns the name of the type.
+<<<<<<< HEAD
+     * 
+=======
      *
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
      * @return the type name
      */
     public final String getName()
@@ -77,7 +89,11 @@ public final class BundleInfoType
     /**
      * That method is used to validate if the object is correct for the
      * specified type.
+<<<<<<< HEAD
+     * 
+=======
      *
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
      * @param value
      *            the value that will be validated.
      */
@@ -93,19 +109,31 @@ public final class BundleInfoType
             if ( idx == -1 )
             {
                 if ( !val.startsWith( "/" ) ) //$NON-NLS-1$
+<<<<<<< HEAD
+                    throw new IllegalArgumentException( "Invalid local link" );
+=======
                     throw new IllegalArgumentException( "Invalid local link: " + val );
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
             }
             else
             {
                 // check external link
                 if ( val.substring( 0, idx ).equalsIgnoreCase( "file" ) ) //$NON-NLS-1$
+<<<<<<< HEAD
+                    throw new IllegalArgumentException( "External link cannot use file protocol" );
+=======
                     throw new IllegalArgumentException( "External link cannot use file protocol: " + value );
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
             }
         }
         else if ( this == RESOURCE )
         {
             if ( !( value instanceof URL ) )
+<<<<<<< HEAD
+                throw new IllegalArgumentException( "Invalid URL" );
+=======
                 throw new IllegalArgumentException( "Invalid URL: " + value );
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         }
     }
 

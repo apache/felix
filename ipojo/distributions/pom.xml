@@ -25,7 +25,11 @@
 
     <groupId>org.apache.felix</groupId>
     <artifactId>org.apache.felix.ipojo.distributions</artifactId>
+<<<<<<< HEAD
+    <version>1.9.0-SNAPSHOT</version>
+=======
     <version>1.10.2-SNAPSHOT</version>
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 
     <packaging>pom</packaging>
 
@@ -34,7 +38,14 @@
     </description>
 
     <modules>
+<<<<<<< HEAD
+        <module>ipojo-felix-quicktart</module>
         <module>ipojo-webconsole-quicktart</module>
+        <module>ten-minutes-tutorial</module>
+        <module>maven-tutorial</module>
+=======
+        <module>ipojo-webconsole-quicktart</module>
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         <module>handler-tutorial</module>
     </modules>
 
@@ -79,7 +90,11 @@
                 <plugin>
                     <groupId>org.apache.felix</groupId>
                     <artifactId>maven-ipojo-plugin</artifactId>
+<<<<<<< HEAD
+                    <version>1.8.6</version>
+=======
                     <version>1.10.0</version>
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
                 </plugin>
                 <plugin>
                     <artifactId>maven-assembly-plugin</artifactId>

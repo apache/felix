@@ -19,8 +19,13 @@
 <project>
   <parent>
     <groupId>org.apache.felix</groupId>
+<<<<<<< HEAD
+    <artifactId>felix</artifactId>
+    <version>1.0.4</version>
+=======
     <artifactId>felix-parent</artifactId>
     <version>4</version>
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     <relativePath>../../pom/pom.xml</relativePath>
   </parent>
 
@@ -67,7 +72,16 @@
         <extensions>true</extensions>
         <configuration>
           <instructions>
+<<<<<<< HEAD
+            <Private-Package>${pom.artifactId}.*</Private-Package>
+            <Import-Package>*</Import-Package>
+            <Bundle-SymbolicName>${pom.artifactId}</Bundle-SymbolicName>
+            <Bundle-Description>${description}</Bundle-Description>
             <Bundle-Vendor>The Apache Software Foundation</Bundle-Vendor>
+            <Service-Component>OSGI-INF/component.xml</Service-Component>
+=======
+            <Bundle-Vendor>The Apache Software Foundation</Bundle-Vendor>
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
           </instructions>
         </configuration>
       </plugin>

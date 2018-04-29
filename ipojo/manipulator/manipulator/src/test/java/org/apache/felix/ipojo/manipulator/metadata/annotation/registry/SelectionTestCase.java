@@ -78,7 +78,11 @@ public class SelectionTestCase extends TestCase {
     public void testSelectionOnClassNodeOnly() throws Exception {
 
         AbsBindingModule module = new MonoBindingModule(OnTypeOnly.class);
+<<<<<<< HEAD
+        module.configure();
+=======
         module.load();
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         registry.addBindings(module);
 
         // Verifications
@@ -91,7 +95,11 @@ public class SelectionTestCase extends TestCase {
     public void testSelectionOnFieldNodeOnly() throws Exception {
 
         AbsBindingModule module = new MonoBindingModule(OnFieldOnly.class);
+<<<<<<< HEAD
+        module.configure();
+=======
         module.load();
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         registry.addBindings(module);
 
         // Verifications
@@ -105,7 +113,11 @@ public class SelectionTestCase extends TestCase {
     public void testSelectionOnMethodNodeOnly() throws Exception {
 
         AbsBindingModule module = new MonoBindingModule(OnMethodOnly.class);
+<<<<<<< HEAD
+        module.configure();
+=======
         module.load();
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         registry.addBindings(module);
 
         // Verifications
@@ -119,7 +131,11 @@ public class SelectionTestCase extends TestCase {
     public void testSelectionOnMethodParameterOnly() throws Exception {
 
         AbsBindingModule module = new MonoBindingModule(OnParameterOnly.class);
+<<<<<<< HEAD
+        module.configure();
+=======
         module.load();
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         registry.addBindings(module);
 
         // Verifications
@@ -133,7 +149,11 @@ public class SelectionTestCase extends TestCase {
     public void testSelectionOBothMethodAndParameter() throws Exception {
 
         AbsBindingModule module = new MonoBindingModule(OnBothMethodAndParameter.class);
+<<<<<<< HEAD
+        module.configure();
+=======
         module.load();
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         registry.addBindings(module);
 
         // Verifications

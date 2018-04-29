@@ -31,9 +31,14 @@ public abstract class AbstractService implements Lifecycle {
 
     /**
      * The bundle context.
+<<<<<<< HEAD
+     */
+    private final BundleContext m_bundleContext;
+=======
      * To let sub-classes retrieve the used bundle context, this member is {@literal protected}.
      */
     protected final BundleContext m_bundleContext;
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     /**
      * The service specification.
      */
@@ -94,6 +99,8 @@ public abstract class AbstractService implements Lifecycle {
     protected ServiceRegistration<?> getRegistration() {
         return m_registration;
     }
+<<<<<<< HEAD
+=======
 
     /**
      * Is this service registered or not ?
@@ -101,4 +108,5 @@ public abstract class AbstractService implements Lifecycle {
     public boolean isRegistered() {
         return m_registration != null;
     }
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 }

@@ -20,7 +20,10 @@ package org.apache.felix.servicediagnostics.shell
 
 import org.apache.felix.servicediagnostics.ServiceDiagnostics
 import org.apache.felix.servicediagnostics.Util._
+<<<<<<< HEAD
+=======
 import org.apache.felix.servicediagnostics.JSON._
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 
 // old shell
 import org.apache.felix.shell.Command
@@ -58,6 +61,15 @@ class CLI extends Command
     // for old shell
     override def execute(commandLine:String, out:PrintStream, err:PrintStream) = commandLine.split(" ").toList.tail match {
         case "users"::Nil => 
+<<<<<<< HEAD
+            out.println(json(engine.usingBundles).toString(2))
+        case "providers"::Nil => 
+            out.println(json(engine.serviceProviders).toString(2))
+        case "b2b"::Nil => 
+            out.println(json(engine.b2b).toString(2))
+        case "notavail"::Nil => 
+            out.println(json(engine.notavail).toString(2))
+=======
             out.println(json(engine.usingBundles))
         case "providers"::Nil => 
             out.println(json(engine.serviceProviders))
@@ -65,6 +77,7 @@ class CLI extends Command
             out.println(json(engine.b2b))
         case "notavail"::Nil => 
             out.println(json(engine.notavail))
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         case "loops"::tail => tail match {
             case "-o"::Nil => showloops(out, true)
             case _  => showloops(out, false)
@@ -74,7 +87,11 @@ class CLI extends Command
 
     def showloops(out:PrintStream, o:Boolean) = {
         val unresolved = engine.unresolved(o) // map(comp -> list(comp))
+<<<<<<< HEAD
+        out.println(json(unresolved).toString(2))
+=======
         out.println(json(unresolved))
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         def follow(n:String, stack:Set[String] = Set()) :Set[String] = 
             if (stack contains n) stack 
             else unresolved.get(n) match {

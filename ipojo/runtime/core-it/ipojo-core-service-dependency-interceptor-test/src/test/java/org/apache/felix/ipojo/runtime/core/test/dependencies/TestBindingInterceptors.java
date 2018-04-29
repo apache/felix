@@ -58,7 +58,11 @@ public class TestBindingInterceptors extends Common {
         ServiceReference ref = osgiHelper.waitForService(CheckService.class.getName(),
                 "(instance.name=" + instance.getInstanceName() + ")",
                 1000, true);
+<<<<<<< HEAD
+        CheckService check = (CheckService) osgiHelper.getServiceObject(ref);
+=======
         CheckService check = (CheckService) osgiHelper.getRawServiceObject(ref);
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 
         assertThat(check.check());
 
@@ -89,7 +93,11 @@ public class TestBindingInterceptors extends Common {
         ServiceReference ref = osgiHelper.waitForService(CheckService.class.getName(),
                 "(instance.name=" + instance.getInstanceName() + ")",
                 1000, true);
+<<<<<<< HEAD
+        CheckService check = (CheckService) osgiHelper.getServiceObject(ref);
+=======
         CheckService check = (CheckService) osgiHelper.getRawServiceObject(ref);
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 
         assertThat(check.check());
 
@@ -147,7 +155,11 @@ public class TestBindingInterceptors extends Common {
         ServiceReference ref = osgiHelper.waitForService(CheckService.class.getName(),
                 "(instance.name=" + instance.getInstanceName() + ")",
                 1000, true);
+<<<<<<< HEAD
+        CheckService check = (CheckService) osgiHelper.getServiceObject(ref);
+=======
         CheckService check = (CheckService) osgiHelper.getRawServiceObject(ref);
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 
         assertThat(check.check());
 

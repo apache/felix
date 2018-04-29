@@ -95,10 +95,21 @@ public class FileMetadataProvider implements MetadataProvider {
             // Sanity check, should be OK, but we never know ...
             InputStream stream = null;
             URL url = file.toURI().toURL();
+<<<<<<< HEAD
+            if (url == null) {
+                m_reporter.warn("Cannot find the metadata file : " + m_source.getAbsolutePath());
+            } else {
+                stream = url.openStream();
+                StreamMetadataProvider provider = new StreamMetadataProvider(stream, m_reporter);
+                provider.setValidateUsingLocalSchemas(m_validateUsingLocalSchemas);
+                metadata.addAll(provider.getMetadatas());
+            }
+=======
             stream = url.openStream();
             StreamMetadataProvider provider = new StreamMetadataProvider(stream, m_reporter);
             provider.setValidateUsingLocalSchemas(m_validateUsingLocalSchemas);
             metadata.addAll(provider.getMetadatas());
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         } catch (MalformedURLException e) {
             m_reporter.error("Cannot open the metadata input stream from " + m_source.getAbsolutePath() + ": " + e.getMessage());
         } catch (IOException e) {

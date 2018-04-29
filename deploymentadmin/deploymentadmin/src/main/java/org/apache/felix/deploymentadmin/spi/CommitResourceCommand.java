@@ -29,16 +29,26 @@ import org.osgi.service.deploymentadmin.spi.ResourceProcessorException;
 import org.osgi.service.log.LogService;
 
 /**
+<<<<<<< HEAD
+ * Command that commits all the resource processors that were added to the command.
+=======
  * Command that commits all the resource processors that were added to the
  * command.
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
  */
 public class CommitResourceCommand extends Command {
 
     private final List m_processors = new ArrayList();
 
+<<<<<<< HEAD
+    public void execute(DeploymentSessionImpl session) throws DeploymentException {
+        for (ListIterator i = m_processors.listIterator(m_processors.size()); i.hasPrevious();) {
+    		ResourceProcessor processor = (ResourceProcessor) i.previous();
+=======
     protected void doExecute(DeploymentSessionImpl session) throws Exception {
         for (ListIterator i = m_processors.listIterator(m_processors.size()); i.hasPrevious();) {
             ResourceProcessor processor = (ResourceProcessor) i.previous();
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
             try {
                 processor.prepare();
             }
@@ -46,13 +56,21 @@ public class CommitResourceCommand extends Command {
                 session.getLog().log(LogService.LOG_ERROR, "Preparing commit for resource processor failed", e);
                 // Check what error code we got...
                 if (e.getCode() == ResourceProcessorException.CODE_PREPARE) {
+<<<<<<< HEAD
+                    throw new DeploymentException(DeploymentException.CODE_COMMIT_ERROR, "Preparing commit for resource processor failed!", e);
+=======
                     throw new DeploymentException(CODE_COMMIT_ERROR, "Preparing commit for resource processor failed!", e);
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
                 }
                 throw new DeploymentException(e.getCode(), "Preparing commit for resource processor failed!", e);
             }
             catch (Exception e) {
                 session.getLog().log(LogService.LOG_ERROR, "Preparing commit for resource processor failed", e);
+<<<<<<< HEAD
+                throw new DeploymentException(DeploymentException.CODE_OTHER_ERROR, "Preparing commit for resource processor failed", e);
+=======
                 throw new DeploymentException(CODE_OTHER_ERROR, "Preparing commit for resource processor failed", e);
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
             }
         }
         for (ListIterator i = m_processors.listIterator(m_processors.size()); i.hasPrevious();) {
@@ -77,20 +95,31 @@ public class CommitResourceCommand extends Command {
             catch (Exception e) {
                 // We cannot throw an exception, see OSGi spec.
                 session.getLog().log(LogService.LOG_ERROR, "Rollback of resource processor '" + processor + "' failed", e);
+<<<<<<< HEAD
+            } finally {
+=======
             }
             finally {
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
                 i.remove();
             }
         }
     }
 
     /**
+<<<<<<< HEAD
+     * Add a resource processor, all resource processors that are added will be committed when the command is executed.
+     *
+     * @param processor The resource processor to add.
+     * @return true if the resource processor was added, false if it was already added.
+=======
      * Add a resource processor, all resource processors that are added will be
      * committed when the command is executed.
      * 
      * @param processor The resource processor to add.
      * @return true if the resource processor was added, false if it was already
      *         added.
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
      */
     public boolean addResourceProcessor(ResourceProcessor processor) {
         for (Iterator i = m_processors.iterator(); i.hasNext();) {

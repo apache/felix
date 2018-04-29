@@ -26,6 +26,9 @@ import org.apache.felix.ipojo.ComponentInstance;
 import org.apache.felix.ipojo.architecture.Architecture;
 import org.apache.felix.ipojo.architecture.InstanceDescription;
 import org.apache.felix.ipojo.test.online.components.Consumer;
+<<<<<<< HEAD
+import org.apache.felix.ipojo.test.online.components.MyProvider;
+=======
 import org.apache.felix.ipojo.test.online.components.FrenchHelloService;
 import org.apache.felix.ipojo.test.online.components.GermanHelloService;
 import org.apache.felix.ipojo.test.online.components.MyProvider;
@@ -34,6 +37,7 @@ import org.apache.felix.ipojo.test.online.module.Activator;
 import org.apache.felix.ipojo.test.online.module.Type;
 import org.apache.felix.ipojo.test.online.module.Type2;
 import org.apache.felix.ipojo.test.online.module.TypeModule;
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 import org.apache.felix.ipojo.test.online.services.Hello;
 import org.junit.After;
 import org.junit.Assert;
@@ -46,7 +50,11 @@ import org.ops4j.pax.exam.Option;
 import org.ops4j.pax.exam.junit.PaxExam;
 import org.ops4j.pax.exam.spi.reactors.ExamReactorStrategy;
 import org.ops4j.pax.exam.spi.reactors.PerClass;
+<<<<<<< HEAD
+import org.ops4j.pax.exam.spi.reactors.PerMethod;
+=======
 import org.ops4j.pax.tinybundles.core.InnerClassStrategy;
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 import org.ops4j.pax.tinybundles.core.TinyBundles;
 import org.osgi.framework.*;
 import org.osgi.service.url.URLStreamHandlerService;
@@ -60,6 +68,10 @@ import java.io.IOException;
 import java.io.InputStream;
 
 import static org.ops4j.pax.exam.CoreOptions.*;
+<<<<<<< HEAD
+import static org.ops4j.pax.exam.MavenUtils.asInProject;
+=======
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 
 
 @RunWith(PaxExam.class)
@@ -85,8 +97,11 @@ public class OnlineManipulatorTest {
         String providerWithoutMetadata = providerWithoutMetadata();
         String consumerWithMetadata = consumerWithMetadata();
         String consumerWithoutMetadata = consumerWithoutMetadata();
+<<<<<<< HEAD
+=======
         String providerUsingModules = providerUsingModules();
         String providerUsingAnnotatedStereotype = providerUsingAnnotatedStereotype();
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 
         return options(
                 cleanCaches(),
@@ -100,24 +115,35 @@ public class OnlineManipulatorTest {
                                 .add(Hello.class)
                                 .set(Constants.BUNDLE_SYMBOLICNAME, "ServiceInterface")
                                 .set(Constants.EXPORT_PACKAGE, "org.apache.felix.ipojo.test.online.services")
+<<<<<<< HEAD
+                                .build()
+=======
                                 .build(),
                         moduleBundle()
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
                 ),
 
                 systemProperty("providerWithMetadata").value(providerWithMetadata),
                 systemProperty("providerWithMetadataInMetaInf").value(providerWithMetadataInMetaInf),
                 systemProperty("providerWithoutMetadata").value(providerWithoutMetadata),
+<<<<<<< HEAD
+                systemProperty("consumerWithMetadata").value(consumerWithMetadata),
+                systemProperty("consumerWithoutMetadata").value(consumerWithoutMetadata),
+=======
                 systemProperty("providerUsingAnnotations").value(providerUsingAnnotation()),
                 systemProperty("consumerWithMetadata").value(consumerWithMetadata),
                 systemProperty("consumerWithoutMetadata").value(consumerWithoutMetadata),
                 systemProperty("providerUsingModules").value(providerUsingModules),
                 systemProperty("providerUsingAnnotatedStereotype").value(providerUsingAnnotatedStereotype),
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 
                 systemProperty("org.knopflerfish.osgi.registerserviceurlhandler").value("true")
         );
 
     }
 
+<<<<<<< HEAD
+=======
     private InputStream moduleBundle() {
         return TinyBundles.bundle()
                 .add(Activator.class)
@@ -135,6 +161,7 @@ public class OnlineManipulatorTest {
                 .build();
     }
 
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     @Before
     public void before() {
         helper = new OSGiHelper(context);
@@ -218,6 +245,8 @@ public class OnlineManipulatorTest {
     }
 
     @Test
+<<<<<<< HEAD
+=======
     public void installProviderUsingAnnotations() throws BundleException, InvalidSyntaxException, IOException {
         String url = context.getProperty("providerUsingAnnotations");
         Assert.assertNotNull(url);
@@ -233,6 +262,7 @@ public class OnlineManipulatorTest {
     }
 
     @Test
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     public void installConsumerWithMetadata() throws BundleException, InvalidSyntaxException, IOException {
         String url = context.getProperty("providerWithoutMetadata");
         Assert.assertNotNull(url);
@@ -286,6 +316,8 @@ public class OnlineManipulatorTest {
         bundle2.uninstall();
     }
 
+<<<<<<< HEAD
+=======
     @Test
     public void testManipulatorModuleRegisteredAsServicesAreLoaded() throws Exception {
 
@@ -318,6 +350,7 @@ public class OnlineManipulatorTest {
 
     }
 
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     /**
      * Gets a regular bundle containing metadata file
      *
@@ -378,6 +411,8 @@ public class OnlineManipulatorTest {
     }
 
     /**
+<<<<<<< HEAD
+=======
      * Gets a provider bundle which does not contain the metadata file and using annotations.
      *
      * @return the url of the bundle without metadata
@@ -399,6 +434,7 @@ public class OnlineManipulatorTest {
     }
 
     /**
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
      * Gets a consumer bundle using annotation containing the instance
      * declaration in the metadata.
      *
@@ -419,6 +455,8 @@ public class OnlineManipulatorTest {
     }
 
     /**
+<<<<<<< HEAD
+=======
      * Gets a consumer bundle using annotation containing the instance
      * declaration in the metadata.
      *
@@ -450,6 +488,7 @@ public class OnlineManipulatorTest {
     }
 
     /**
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
      * Gets a consumer bundle using annotation that does not contain
      * metadata
      *

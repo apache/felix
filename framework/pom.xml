@@ -20,13 +20,30 @@
   <parent>
     <groupId>org.apache.felix</groupId>
     <artifactId>felix-parent</artifactId>
+<<<<<<< HEAD
+    <version>2.1</version>
+=======
     <version>3</version>
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     <relativePath>../pom/pom.xml</relativePath>
   </parent>
   <modelVersion>4.0.0</modelVersion>
   <packaging>bundle</packaging>
   <name>Apache Felix Framework</name>
   <artifactId>org.apache.felix.framework</artifactId>
+<<<<<<< HEAD
+  <version>4.3.0-SNAPSHOT</version>
+  <dependencies>
+  </dependencies>
+  <properties>
+    <dollar>$</dollar>
+  </properties>
+    <scm>
+      <connection>scm:svn:http://svn.apache.org/repos/asf/felix/trunk/framework</connection>
+      <developerConnection>scm:svn:https://svn.apache.org/repos/asf/felix/trunk/framework</developerConnection>
+      <url>http://svn.apache.org/repos/asf/felix/framework</url>
+    </scm>
+=======
   <version>5.7.0-SNAPSHOT</version>
   <properties>
     <dollar>$</dollar>
@@ -38,17 +55,37 @@
       <url>http://svn.apache.org/repos/asf/felix/framework</url>
   </scm>
 
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
   <build>
     <plugins>
       <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-compiler-plugin</artifactId>
+        <configuration>
+          <target>1.5</target>
+          <source>1.5</source>
+        </configuration>
+      </plugin>
+
+      <plugin>
         <groupId>org.apache.felix</groupId>
         <artifactId>maven-bundle-plugin</artifactId>
+<<<<<<< HEAD
+        <version>2.3.5</version>
+=======
         <version>2.5.0</version>
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         <extensions>true</extensions>
         <configuration>
           <instructions>
             <Bundle-SymbolicName>org.apache.felix.framework</Bundle-SymbolicName>
             <Bundle-Name>Apache Felix Framework</Bundle-Name>
+<<<<<<< HEAD
+            <Bundle-Description>OSGi R4 framework implementation.</Bundle-Description>
+            <Bundle-Vendor>The Apache Software Foundation</Bundle-Vendor>
+            <Export-Package>org.osgi.framework.*;-split-package:=merge-first,org.osgi.resource,org.osgi.service.*,org.osgi.util.tracker</Export-Package>
+            <Private-Package>org.apache.felix.framework.*</Private-Package>
+=======
             <Bundle-Description>OSGi R6 framework implementation.</Bundle-Description>
             <Bundle-Vendor>The Apache Software Foundation</Bundle-Vendor>
             <Export-Package>
@@ -63,6 +100,7 @@
                 org.osgi.dto
             </Export-Package>
             <Private-Package>org.apache.felix.framework.*, org.apache.felix.resolver.*</Private-Package>
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
             <Import-Package>!*</Import-Package>
           </instructions>
         </configuration>
@@ -90,6 +128,8 @@
               </excludes>
             </configuration>
       </plugin>
+<<<<<<< HEAD
+=======
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-source-plugin</artifactId>
@@ -109,6 +149,7 @@
                 <failOnError>false</failOnError>
             </configuration>
       </plugin>
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     </plugins>
     <resources>
       <resource>
@@ -117,6 +158,8 @@
       </resource>
     </resources>
   </build>
+<<<<<<< HEAD
+=======
   <dependencies>
     <dependency>
        <groupId>org.osgi</groupId>
@@ -143,4 +186,5 @@
         <scope>test</scope>
     </dependency>
   </dependencies>
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 </project>

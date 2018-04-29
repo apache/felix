@@ -16,6 +16,14 @@
  */
 package org.apache.felix.http.samples.whiteboard;
 
+<<<<<<< HEAD
+import org.osgi.framework.BundleActivator;
+import org.osgi.framework.BundleContext;
+import org.osgi.framework.ServiceRegistration;
+import javax.servlet.Servlet;
+import javax.servlet.Filter;
+import java.util.Hashtable;
+=======
 import java.util.Dictionary;
 import java.util.Hashtable;
 
@@ -26,10 +34,46 @@ import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
 import org.osgi.service.http.context.ServletContextHelper;
 import org.osgi.service.http.whiteboard.HttpWhiteboardConstants;
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 
 public final class Activator
     implements BundleActivator
 {
+<<<<<<< HEAD
+    private ServiceRegistration reg1;
+    private ServiceRegistration reg2;
+    private ServiceRegistration reg3;
+    private ServiceRegistration reg4;
+    
+    public void start(BundleContext context)
+        throws Exception
+    {
+        Hashtable<String, String> props = new Hashtable<String, String>();
+        props.put("alias", "/");
+        this.reg1 = context.registerService(Servlet.class.getName(), new TestServlet("servlet1"), props);
+
+        props = new Hashtable<String, String>();
+        props.put("alias", "/other");
+        this.reg2 = context.registerService(Servlet.class.getName(), new TestServlet("servlet2"), props);
+
+        props = new Hashtable<String, String>();
+        props.put("pattern", ".*");
+        this.reg3 = context.registerService(Filter.class.getName(), new TestFilter("filter1"), props);
+
+        props = new Hashtable<String, String>();
+        props.put("pattern", "/other/.*");
+        props.put("service.ranking", "100");
+        this.reg4 = context.registerService(Filter.class.getName(), new TestFilter("filter2"), props);
+    }
+
+    public void stop(BundleContext context)
+        throws Exception
+    {
+        this.reg1.unregister();
+        this.reg2.unregister();
+        this.reg3.unregister();
+        this.reg4.unregister();
+=======
 
     @Override
     public void start(BundleContext context)
@@ -80,5 +124,6 @@ public final class Activator
         throws Exception
     {
         // nothing to do, services are unregistered automatically
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     }
 }

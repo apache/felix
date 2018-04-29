@@ -17,6 +17,12 @@
 package org.apache.felix.http.whiteboard.internal.tracker;
 
 import javax.servlet.Filter;
+<<<<<<< HEAD
+import org.apache.felix.http.whiteboard.internal.manager.ExtenderManager;
+import org.osgi.framework.BundleContext;
+import org.osgi.framework.ServiceReference;
+
+=======
 
 import org.apache.felix.http.whiteboard.HttpWhiteboardConstants;
 import org.apache.felix.http.whiteboard.internal.manager.ExtenderManager;
@@ -25,11 +31,34 @@ import org.osgi.framework.InvalidSyntaxException;
 import org.osgi.framework.ServiceReference;
 
 @SuppressWarnings("deprecation")
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 public final class FilterTracker
     extends AbstractTracker<Filter>
 {
     private final ExtenderManager manager;
 
+<<<<<<< HEAD
+    public FilterTracker(BundleContext context, ExtenderManager manager)
+    {
+        super(context, Filter.class);
+        this.manager = manager;
+    }
+
+    protected void added(Filter service, ServiceReference ref)
+    {
+        this.manager.add(service, ref);
+    }
+
+    protected void modified(Filter service, ServiceReference ref)
+    {
+        removed(service, ref);
+        added(service, ref);
+    }
+
+    protected void removed(Filter service, ServiceReference ref)
+    {
+        this.manager.remove(ref);
+=======
     private static org.osgi.framework.Filter createFilter(final BundleContext btx)
     {
         try
@@ -62,5 +91,6 @@ public final class FilterTracker
     protected void removed(final Filter service, final ServiceReference<Filter> ref)
     {
         this.manager.removeFilter(ref);
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     }
 }

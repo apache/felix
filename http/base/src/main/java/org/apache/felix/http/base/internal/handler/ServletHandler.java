@@ -16,6 +16,32 @@
  */
 package org.apache.felix.http.base.internal.handler;
 
+<<<<<<< HEAD
+import javax.servlet.Servlet;
+import javax.servlet.ServletException;
+import javax.servlet.ServletConfig;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import org.apache.felix.http.base.internal.context.ExtServletContext;
+import java.io.IOException;
+
+public final class ServletHandler
+    extends AbstractHandler implements Comparable<ServletHandler>
+{
+    private final String alias;
+    private final Servlet servlet;
+
+    public ServletHandler(ExtServletContext context, Servlet servlet, String alias)
+    {
+        super(context);
+        this.alias = alias;
+        this.servlet = servlet;
+    }
+
+    public String getAlias()
+    {
+        return this.alias;
+=======
 import java.io.File;
 import java.io.IOException;
 
@@ -102,10 +128,69 @@ public abstract class ServletHandler implements Comparable<ServletHandler>
     public ExtServletContext getContext()
     {
         return this.context;
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     }
 
     public Servlet getServlet()
     {
+<<<<<<< HEAD
+        return this.servlet;
+    }
+
+    public void init()
+        throws ServletException
+    {
+        String name = "servlet_" + getId();
+        ServletConfig config = new ServletConfigImpl(name, getContext(), getInitParams());
+        this.servlet.init(config);
+    }
+
+    public void destroy()
+    {
+        this.servlet.destroy();
+    }
+
+    public boolean matches(String uri)
+    {
+        if (uri == null) {
+            return this.alias.equals("/");
+        } else if (this.alias.equals("/")) {
+            return uri.startsWith(this.alias);
+        } else {
+            return uri.equals(this.alias) || uri.startsWith(this.alias + "/");
+        }
+    }
+
+    public boolean handle(HttpServletRequest req, HttpServletResponse res)
+        throws ServletException, IOException
+    {
+        final boolean matches = matches(req.getPathInfo());
+        if (matches) {
+            doHandle(req, res);
+        }
+
+        return matches;
+    }
+
+    private void doHandle(HttpServletRequest req, HttpServletResponse res)
+        throws ServletException, IOException
+    {
+        // set a sensible status code in case handleSecurity returns false
+        // but fails to send a response
+        res.setStatus(HttpServletResponse.SC_FORBIDDEN);
+        if (getContext().handleSecurity(req, res))
+        {
+            // reset status to OK for further processing
+            res.setStatus(HttpServletResponse.SC_OK);
+
+            this.servlet.service(new ServletHandlerRequest(req, this.alias), res);
+        }
+    }
+
+    public int compareTo(ServletHandler other)
+    {
+        return other.alias.length() - this.alias.length();
+=======
         return servlet;
     }
 
@@ -232,5 +317,6 @@ public abstract class ServletHandler implements Comparable<ServletHandler>
     public Bundle getMultipartSecurityContext()
     {
         return null;
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     }
 }

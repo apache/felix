@@ -21,12 +21,20 @@ package org.apache.felix.webconsole.internal.core;
 
 import java.io.File;
 import java.io.FileInputStream;
+<<<<<<< HEAD
+=======
 import java.io.IOException;
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 import java.io.InputStream;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.felix.webconsole.SimpleWebConsolePlugin;
 import org.osgi.framework.Bundle;
+<<<<<<< HEAD
+import org.osgi.framework.BundleException;
+import org.osgi.service.log.LogService;
+import org.osgi.service.packageadmin.PackageAdmin;
+=======
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.BundleException;
 import org.osgi.framework.FrameworkEvent;
@@ -34,6 +42,7 @@ import org.osgi.framework.FrameworkListener;
 import org.osgi.service.log.LogService;
 import org.osgi.service.packageadmin.PackageAdmin;
 import org.osgi.service.startlevel.StartLevel;
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 
 
 abstract class BaseUpdateInstallHelper implements Runnable
@@ -77,11 +86,14 @@ abstract class BaseUpdateInstallHelper implements Runnable
     {
         return plugin;
     }
+<<<<<<< HEAD
+=======
     
     protected Bundle getTargetBundle()
     {
         return null;
     }
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 
 
     /**
@@ -116,6 +128,12 @@ abstract class BaseUpdateInstallHelper implements Runnable
 
     public final void run()
     {
+<<<<<<< HEAD
+        // wait some time for the request to settle
+        sleepSilently( 500L );
+
+=======
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         // now deploy the resolved bundles
         try
         {
@@ -125,6 +143,17 @@ abstract class BaseUpdateInstallHelper implements Runnable
             // invalid by the time we want to call the update
             PackageAdmin pa = ( refreshPackages ) ? ( PackageAdmin ) getService( PackageAdmin.class.getName() ) : null;
 
+<<<<<<< HEAD
+            Bundle bundle = doRun();
+
+            if ( pa != null && bundle != null )
+            {
+                // wait for asynchronous bundle start tasks to finish
+                sleepSilently( 2000L );
+
+                pa.refreshPackages( new Bundle[]
+                    { bundle } );
+=======
             // same for the startlevel
             StartLevel startLevel = null;
             
@@ -215,6 +244,7 @@ abstract class BaseUpdateInstallHelper implements Runnable
                         }
                     }
                 }
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
             }
         }
         catch ( Exception e )
@@ -246,6 +276,17 @@ abstract class BaseUpdateInstallHelper implements Runnable
     }
 
 
+<<<<<<< HEAD
+    protected void sleepSilently( long msecs )
+    {
+        try
+        {
+            Thread.sleep( msecs );
+        }
+        catch ( InterruptedException ie )
+        {
+            // don't care
+=======
     /**
      * This is an utility method that issues refresh package instruction to the framework.
      *
@@ -337,6 +378,7 @@ abstract class BaseUpdateInstallHelper implements Runnable
                 }
             }
 
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         }
     }
 }

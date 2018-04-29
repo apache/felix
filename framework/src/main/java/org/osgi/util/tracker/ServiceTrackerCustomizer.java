@@ -1,5 +1,9 @@
 /*
+<<<<<<< HEAD
+ * Copyright (c) OSGi Alliance (2000, 2012). All Rights Reserved.
+=======
  * Copyright (c) OSGi Alliance (2000, 2013). All Rights Reserved.
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,7 +20,10 @@
 
 package org.osgi.util.tracker;
 
+<<<<<<< HEAD
+=======
 import org.osgi.annotation.versioning.ConsumerType;
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 import org.osgi.framework.ServiceReference;
 
 /**
@@ -46,9 +53,14 @@ import org.osgi.framework.ServiceReference;
  * @param <S> The type of the service being tracked.
  * @param <T> The type of the tracked object.
  * @ThreadSafe
+<<<<<<< HEAD
+ * @version $Id: c14b8d47026b6bd4ba1f2db7bf7e755d00fc6f6a $
+ */
+=======
  * @author $Id: 0c3333455f7d80a7793c77ac9671baa4a02a89b9 $
  */
 @ConsumerType
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 public interface ServiceTrackerCustomizer<S, T> {
 	/**
 	 * A service is being added to the {@code ServiceTracker}.

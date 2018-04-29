@@ -20,16 +20,24 @@ package org.apache.felix.gogo.runtime;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Array;
+<<<<<<< HEAD
+=======
 import java.lang.reflect.Field;
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Arrays;
+<<<<<<< HEAD
+import java.util.HashSet;
+import java.util.List;
+=======
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 import java.util.Set;
 
 import org.apache.felix.service.command.CommandSession;
@@ -39,19 +47,35 @@ public final class Reflective
 {
     public final static Object NO_MATCH = new Object();
     public final static String MAIN = "_main";
+<<<<<<< HEAD
+    public final static Set<String> KEYWORDS = new HashSet<String>(
+        Arrays.asList(new String[] { "abstract", "continue", "for", "new", "switch",
+=======
     public final static Set<String> KEYWORDS = new HashSet<>(
         Arrays.asList("abstract", "continue", "for", "new", "switch",
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
                 "assert", "default", "goto", "package", "synchronized", "boolean", "do",
                 "if", "private", "this", "break", "double", "implements", "protected",
                 "throw", "byte", "else", "import", "public", "throws", "case", "enum",
                 "instanceof", "return", "transient", "catch", "extends", "int", "short",
                 "try", "char", "final", "interface", "static", "void", "class",
                 "finally", "long", "strictfp", "volatile", "const", "float", "native",
+<<<<<<< HEAD
+                "super", "while" }));
+=======
                 "super", "while"));
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 
     /**
      * invokes the named method on the given target using the supplied args,
      * which are converted if necessary.
+<<<<<<< HEAD
+     * @param session
+     * @param target
+     * @param name
+     * @param args
+=======
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
      * @return the result of the invoked method
      * @throws Exception
      */
@@ -59,9 +83,14 @@ public final class Reflective
         List<Object> args) throws Exception
     {
         Method[] methods = target.getClass().getMethods();
+<<<<<<< HEAD
+        name = name.toLowerCase();
+
+=======
         name = name.toLowerCase(Locale.ENGLISH);
 
         String org = name;
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         String get = "get" + name;
         String is = "is" + name;
         String set = "set" + name;
@@ -76,7 +105,11 @@ public final class Reflective
             Method[] staticMethods = ((Class<?>) target).getMethods();
             for (Method m : staticMethods)
             {
+<<<<<<< HEAD
+                String mname = m.getName().toLowerCase();
+=======
                 String mname = m.getName().toLowerCase(Locale.ENGLISH);
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
                 if (mname.equals(name) || mname.equals(get) || mname.equals(set)
                     || mname.equals(is) || mname.equals(MAIN))
                 {
@@ -89,22 +122,38 @@ public final class Reflective
         Method bestMethod = null;
         Object[] bestArgs = null;
         int lowestMatch = Integer.MAX_VALUE;
+<<<<<<< HEAD
+        ArrayList<Class<?>[]> possibleTypes = new ArrayList<Class<?>[]>();
+
+        for (Method m : methods)
+        {
+            String mname = m.getName().toLowerCase();
+=======
         ArrayList<Class<?>[]> possibleTypes = new ArrayList<>();
 
         for (Method m : methods)
         {
             String mname = m.getName().toLowerCase(Locale.ENGLISH);
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
             if (mname.equals(name) || mname.equals(get) || mname.equals(set)
                 || mname.equals(is) || mname.equals(MAIN))
             {
                 Class<?>[] types = m.getParameterTypes();
+<<<<<<< HEAD
+                ArrayList<Object> xargs = new ArrayList<Object>(args);
+=======
                 ArrayList<Object> xargs = new ArrayList<>(args);
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 
                 // pass command name as argv[0] to main, so it can handle
                 // multiple commands
                 if (mname.equals(MAIN))
                 {
+<<<<<<< HEAD
+                    xargs.add(0, name);
+=======
                     xargs.add(0, org);
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
                 }
 
                 Object[] parms = new Object[types.length];
@@ -149,6 +198,9 @@ public final class Reflective
         }
         else
         {
+<<<<<<< HEAD
+            ArrayList<String> list = new ArrayList<String>();
+=======
             if (args.isEmpty())
             {
                 Field[] fields;
@@ -170,6 +222,7 @@ public final class Reflective
                 }
             }
             ArrayList<String> list = new ArrayList<>();
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
             for (Class<?>[] types : possibleTypes)
             {
                 StringBuilder buf = new StringBuilder();
@@ -205,13 +258,23 @@ public final class Reflective
      * transform name/value parameters into ordered argument list.
      * params: --param2, value2, --flag1, arg3
      * args: true, value2, arg3
+<<<<<<< HEAD
+     * @param method
+     * @param params
+=======
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
      * @return new ordered list of args.
      */
     private static List<Object> transformParameters(Method method, List<Object> in)
     {
         Annotation[][] pas = method.getParameterAnnotations();
+<<<<<<< HEAD
+        ArrayList<Object> out = new ArrayList<Object>();
+        ArrayList<Object> parms = new ArrayList<Object>(in);
+=======
         ArrayList<Object> out = new ArrayList<>();
         ArrayList<Object> parms = new ArrayList<>(in);
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 
         for (Annotation as[] : pas)
         {
@@ -260,12 +323,27 @@ public final class Reflective
      * the arguments of the method call. First, an attempt is made to convert
      * each argument. If this fails, a check is made to see if varargs can be
      * applied. This happens when the last method argument is an array.
+<<<<<<< HEAD
+     *
+     * @param session
+     * @param target
+     * @param m
+     * @param types
+     * @param out
+     * @param in
+     * @return -1 if arguments can't be coerced; 0 if no coercion was necessary; > 0 if coercion was needed.
+=======
      * @return -1 if arguments can't be coerced; 0 if no coercion was necessary;
      *          > 0 if coercion was needed.
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
      */
     private static int coerce(CommandSession session, Object target, Method m,
         Class<?> types[], Object out[], List<Object> in)
     {
+<<<<<<< HEAD
+        in = transformParameters(m, in);
+        if (in == null)
+=======
         List<Object> cnvIn = new ArrayList<>();
         List<Object> cnvIn2 = new ArrayList<>();
         int different = 0;
@@ -291,11 +369,22 @@ public final class Reflective
             cnvIn2 = transformParameters(m, cnvIn2);
         }
         if (cnvIn == null || cnvIn2 == null)
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         {
             // missing parameter argument?
             return -1;
         }
 
+<<<<<<< HEAD
+        int[] convert = { 0 };
+
+        // Check if the command takes a session
+        if ((types.length > 0) && types[0].isInterface()
+            && types[0].isAssignableFrom(session.getClass()))
+        {
+            in.add(0, session);
+        }
+=======
         int res;
 
         res = docoerce(session, target, m, types, out, cnvIn);
@@ -346,6 +435,7 @@ public final class Reflective
                               Class<?> types[], Object out[], List<Object> in)
     {
         int[] convert = { 0 };
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 
         int i = 0;
         while (i < out.length)
@@ -353,7 +443,11 @@ public final class Reflective
             out[i] = null;
 
             // Try to convert one argument
+<<<<<<< HEAD
+            if (in.size() == 0)
+=======
             if (in.size() == 0 || i == types.length - 1 && types[i].isArray() && in.size() > 1)
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
             {
                 out[i] = NO_MATCH;
             }
@@ -417,11 +511,21 @@ public final class Reflective
 
     /**
      * converts given argument to specified type and increments convert[0] if any conversion was needed.
+<<<<<<< HEAD
+     * @param session
+     * @param type
+     * @param arg
+=======
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
      * @param convert convert[0] is incremented according to the conversion needed,
      * to allow the "best" conversion to be determined.
      * @return converted arg or NO_MATCH if no conversion possible.
      */
+<<<<<<< HEAD
+    private static Object coerce(CommandSession session, Class<?> type, Object arg,
+=======
     public static Object coerce(CommandSession session, Class<?> type, Object arg,
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         int[] convert)
     {
         if (arg == null)
@@ -461,19 +565,29 @@ public final class Reflective
         // all following conversions cost 2 points
         convert[0] += 2;
 
+<<<<<<< HEAD
+        Object converted = session.convert(type, arg);
+=======
         Object converted = ((CommandSessionImpl) session).doConvert(type, arg);
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         if (converted != null)
         {
             return converted;
         }
 
+<<<<<<< HEAD
+        String string = arg.toString();
+=======
         String string = toString(arg);
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 
         if (type.isAssignableFrom(String.class))
         {
             return string;
         }
 
+<<<<<<< HEAD
+=======
         if (type.isEnum())
         {
             for (Object o : type.getEnumConstants())
@@ -485,6 +599,7 @@ public final class Reflective
             }
         }
 
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         if (type.isPrimitive())
         {
             type = primitiveToObject(type);
@@ -506,6 +621,8 @@ public final class Reflective
         return NO_MATCH;
     }
 
+<<<<<<< HEAD
+=======
     private static String toString(Object arg)
     {
         if (arg instanceof Map)
@@ -570,6 +687,7 @@ public final class Reflective
         }
     }
 
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     private static Class<?> primitiveToObject(Class<?> type)
     {
         if (type == boolean.class)

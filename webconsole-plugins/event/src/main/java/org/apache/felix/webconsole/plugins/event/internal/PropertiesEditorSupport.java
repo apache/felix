@@ -16,9 +16,13 @@
  */
 package org.apache.felix.webconsole.plugins.event.internal;
 
+<<<<<<< HEAD
+import java.util.Hashtable;
+=======
 import java.util.Dictionary;
 import java.util.Hashtable;
 import java.util.StringTokenizer;
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 
 import javax.servlet.http.HttpServletRequest;
 
@@ -35,11 +39,19 @@ public class PropertiesEditorSupport
 
     /**
      * Converts the properties from the request to a key-value hashtable.
+<<<<<<< HEAD
+     * 
+     * @param request the request to process
+     * @return the converted properties
+     */
+    public static final Hashtable convertProperties(HttpServletRequest request)
+=======
      *
      * @param request the request to process
      * @return the converted properties
      */
     public static final Dictionary convertProperties(HttpServletRequest request)
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     {
         String keys[] = request.getParameterValues("key"); //$NON-NLS-1$
         String vals[] = request.getParameterValues("val"); //$NON-NLS-1$
@@ -85,16 +97,23 @@ public class PropertiesEditorSupport
         }
         else if ("char".equals(type)) //$NON-NLS-1$
         {
+<<<<<<< HEAD
+            return Character.valueOf(value.toString().charAt(0));
+=======
             return new Character(value.toString().charAt(0));
         }
         else if ("byte array".equals(type)) //$NON-NLS-1$
         {
             return decodeHex(value.toString());
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         }
         else
         {
             throw new IllegalArgumentException("Unsupported type!");
         }
+<<<<<<< HEAD
+        // TODO: hex, base64, sha1
+=======
     }
 
     private static final byte[] decodeHex(String data)
@@ -108,6 +127,7 @@ public class PropertiesEditorSupport
             bs[i++] = Integer.decode(next).byteValue();
         }
         return bs;
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     }
 
 }

@@ -39,7 +39,12 @@ class DynamicBindings
 
     private final PersistenceManager persistenceManager;
 
+<<<<<<< HEAD
+    private final Dictionary bindings;
+
+=======
     private final Dictionary<String, String> bindings;
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 
     DynamicBindings( BundleContext bundleContext, PersistenceManager persistenceManager ) throws IOException
     {
@@ -62,7 +67,11 @@ class DynamicBindings
             for ( Enumeration ke = bindings.keys(); ke.hasMoreElements(); )
             {
                 final String pid = ( String ) ke.nextElement();
+<<<<<<< HEAD
+                final String location = ( String ) bindings.get( pid );
+=======
                 final String location = bindings.get( pid );
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
                 if ( !locations.contains( location ) )
                 {
                     removedKeys.add( pid );
@@ -84,7 +93,11 @@ class DynamicBindings
         }
         else
         {
+<<<<<<< HEAD
+            this.bindings = new Hashtable();
+=======
             this.bindings = new Hashtable<>();
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         }
 
     }
@@ -94,7 +107,11 @@ class DynamicBindings
     {
         synchronized ( this )
         {
+<<<<<<< HEAD
+            return ( String ) this.bindings.get( pid );
+=======
             return this.bindings.get( pid );
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         }
     }
 

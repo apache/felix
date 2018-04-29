@@ -138,7 +138,11 @@ public class TestUpdatedMethodAndManagedService extends Common {
         conf.put("baz", "zab");
         conf.put("bar", new Integer(2));
         conf.put("foo", "foo");
+<<<<<<< HEAD
+        ManagedService ms = (ManagedService) osgiHelper.getServiceObject(msRef);
+=======
         ManagedService ms = (ManagedService) osgiHelper.getRawServiceObject(msRef);
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         try {
             ms.updated(conf);
         } catch (ConfigurationException e) {
@@ -155,7 +159,11 @@ public class TestUpdatedMethodAndManagedService extends Common {
         assertEquals("Check baz equality -2", bazP, "zab");
 
         // Get Service
+<<<<<<< HEAD
+        FooService fs = (FooService) osgiHelper.getServiceObject(fooRef);
+=======
         FooService fs = (FooService) osgiHelper.getRawServiceObject(fooRef);
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         Integer updated = (Integer) fs.fooProps().get("updated");
         Dictionary dict = (Dictionary) fs.fooProps().get("lastupdated");
 
@@ -185,7 +193,11 @@ public class TestUpdatedMethodAndManagedService extends Common {
         conf.put("baz", "zab");
         conf.put("bar", new Integer(2));
         conf.put("foo", "foo");
+<<<<<<< HEAD
+        ManagedService ms = (ManagedService) osgiHelper.getServiceObject(msRef);
+=======
         ManagedService ms = (ManagedService) osgiHelper.getRawServiceObject(msRef);
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         try {
             ms.updated(conf);
         } catch (ConfigurationException e) {
@@ -202,7 +214,11 @@ public class TestUpdatedMethodAndManagedService extends Common {
         assertEquals("Check baz equality -2", bazP, "zab");
 
         // Get Service
+<<<<<<< HEAD
+        FooService fs = (FooService) osgiHelper.getServiceObject(fooRef);
+=======
         FooService fs = (FooService) osgiHelper.getRawServiceObject(fooRef);
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         Integer updated = (Integer) fs.fooProps().get("updated");
         Dictionary dict = (Dictionary) fs.fooProps().get("lastupdated");
 
@@ -212,7 +228,11 @@ public class TestUpdatedMethodAndManagedService extends Common {
         conf.put("baz", "zab2");
         conf.put("foo", "oof2");
         conf.put("bar", new Integer(0));
+<<<<<<< HEAD
+        ms = (ManagedService) osgiHelper.getServiceObject(msRef);
+=======
         ms = (ManagedService) osgiHelper.getRawServiceObject(msRef);
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         try {
             ms.updated(conf);
         } catch (ConfigurationException e) {
@@ -248,7 +268,11 @@ public class TestUpdatedMethodAndManagedService extends Common {
         conf.put("baz", "zab");
         conf.put("foo", "oof");
         conf.put("bar", new Integer(0));
+<<<<<<< HEAD
+        ManagedService ms = (ManagedService) osgiHelper.getServiceObject(msRef);
+=======
         ManagedService ms = (ManagedService) osgiHelper.getRawServiceObject(msRef);
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         try {
             ms.updated(conf);
         } catch (ConfigurationException e) {
@@ -266,7 +290,11 @@ public class TestUpdatedMethodAndManagedService extends Common {
         assertEquals("Check baz equality", bazP, "zab");
 
         // Check field value
+<<<<<<< HEAD
+        FooService fs = (FooService) osgiHelper.getServiceObject(fooRef);
+=======
         FooService fs = (FooService) osgiHelper.getRawServiceObject(fooRef);
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         Properties p = fs.fooProps();
         fooP = (String) p.get("foo");
         barP = (Integer) p.get("bar");
@@ -283,7 +311,11 @@ public class TestUpdatedMethodAndManagedService extends Common {
         conf.put("baz", "zab2");
         conf.put("foo", "oof2");
         conf.put("bar", new Integer(0));
+<<<<<<< HEAD
+        ms = (ManagedService) osgiHelper.getServiceObject(msRef);
+=======
         ms = (ManagedService) osgiHelper.getRawServiceObject(msRef);
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         try {
             ms.updated(conf);
         } catch (ConfigurationException e) {
@@ -319,7 +351,11 @@ public class TestUpdatedMethodAndManagedService extends Common {
         conf.put("baz", "zab");
         conf.put("foo", "oof");
         conf.put("bar", new Integer(0));
+<<<<<<< HEAD
+        ManagedService ms = (ManagedService) osgiHelper.getServiceObject(msRef);
+=======
         ManagedService ms = (ManagedService) osgiHelper.getRawServiceObject(msRef);
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         try {
             ms.updated(conf);
         } catch (ConfigurationException e) {
@@ -337,7 +373,11 @@ public class TestUpdatedMethodAndManagedService extends Common {
         assertEquals("Check baz equality", bazP, "zab");
 
         // Check field value
+<<<<<<< HEAD
+        FooService fs = (FooService) osgiHelper.getServiceObject(fooRef);
+=======
         FooService fs = (FooService) osgiHelper.getRawServiceObject(fooRef);
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         Properties p = fs.fooProps();
         fooP = (String) p.get("foo");
         barP = (Integer) p.get("bar");
@@ -354,7 +394,11 @@ public class TestUpdatedMethodAndManagedService extends Common {
         conf.put("baz", "zab2");
         conf.put("foo", "oof2");
         conf.put("bar", new Integer(0));
+<<<<<<< HEAD
+        ms = (ManagedService) osgiHelper.getServiceObject(msRef);
+=======
         ms = (ManagedService) osgiHelper.getRawServiceObject(msRef);
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         try {
             ms.updated(conf);
         } catch (ConfigurationException e) {

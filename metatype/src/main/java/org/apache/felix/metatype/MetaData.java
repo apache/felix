@@ -18,8 +18,14 @@
  */
 package org.apache.felix.metatype;
 
+<<<<<<< HEAD
+
+import java.net.URL;
+import java.util.HashMap;
+=======
 import java.net.URL;
 import java.util.ArrayList;
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -34,9 +40,16 @@ public class MetaData extends OptionalAttributes
 {
     private String namespace;
     private String localePrefix;
+<<<<<<< HEAD
+    private Map objectClassDefinitions;
+    private Map designates;
+    private URL source;
+
+=======
     private Map /* String -> OCD */ objectClassDefinitions;
     private List /* Designate */ designates;
     private URL source;
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 
     public String getLocalePrefix()
     {
@@ -62,8 +75,13 @@ public class MetaData extends OptionalAttributes
                 objectClassDefinitions = new LinkedHashMap();
             }
 
+<<<<<<< HEAD
+            objectClassDefinitions.put( objectClassDefinition.getID(), objectClassDefinition );
+            objectClassDefinition.setMetadata( this );
+=======
             objectClassDefinitions.put(objectClassDefinition.getID(), objectClassDefinition);
             objectClassDefinition.setMetadata(this);
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         }
     }
 
@@ -81,15 +99,37 @@ public class MetaData extends OptionalAttributes
                 designates = new ArrayList();
             }
 
+<<<<<<< HEAD
+            if ( designate.getFactoryPid() != null )
+            {
+                designates.put( designate.getFactoryPid(), designate );
+            }
+            else
+            {
+                designates.put( designate.getPid(), designate );
+            }
+        }
+    }
+
+
+=======
             designates.add(designate);
         }
     }
 
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     public URL getSource()
     {
         return source;
     }
 
+<<<<<<< HEAD
+
+    public void setSource( URL source )
+    {
+        this.source = source;
+    }
+=======
     public void setSource(URL source)
     {
         this.source = source;
@@ -104,4 +144,5 @@ public class MetaData extends OptionalAttributes
     {
         this.namespace = namespace;
     }
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 }

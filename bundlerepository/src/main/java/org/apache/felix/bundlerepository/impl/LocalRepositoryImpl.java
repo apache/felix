@@ -26,6 +26,10 @@ import org.osgi.framework.AllServiceListener;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.BundleEvent;
+<<<<<<< HEAD
+import org.osgi.framework.InvalidSyntaxException;
+=======
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 import org.osgi.framework.ServiceEvent;
 import org.osgi.framework.SynchronousBundleListener;
 import org.apache.felix.bundlerepository.*;
@@ -35,7 +39,11 @@ public class LocalRepositoryImpl implements Repository, SynchronousBundleListene
     private final BundleContext m_context;
     private final Logger m_logger;
     private long m_snapshotTimeStamp = 0;
+<<<<<<< HEAD
+    private Map m_localResourceList = new HashMap();
+=======
     private Map<Long, Resource> m_localResourceList = new HashMap<Long, Resource>();
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 
     public LocalRepositoryImpl(BundleContext context, Logger logger)
     {
@@ -46,11 +54,19 @@ public class LocalRepositoryImpl implements Repository, SynchronousBundleListene
 
     public void bundleChanged(BundleEvent event)
     {
+<<<<<<< HEAD
+        if (event.getType() == BundleEvent.INSTALLED)
+        {
+            synchronized (this)
+            {
+                addBundle(event.getBundle(), m_logger);
+=======
         if (event.getType() == BundleEvent.INSTALLED || event.getType() == BundleEvent.UPDATED)
         {
             synchronized (this)
             {
                 addBundle(event.getBundle());
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
                 m_snapshotTimeStamp = System.currentTimeMillis();
             }
         }
@@ -58,7 +74,11 @@ public class LocalRepositoryImpl implements Repository, SynchronousBundleListene
         {
             synchronized (this)
             {
+<<<<<<< HEAD
+                removeBundle(event.getBundle(), m_logger);
+=======
                 removeBundle(event.getBundle());
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
                 m_snapshotTimeStamp = System.currentTimeMillis();
             }
         }
@@ -72,14 +92,23 @@ public class LocalRepositoryImpl implements Repository, SynchronousBundleListene
         {
             synchronized (this)
             {
+<<<<<<< HEAD
+                removeBundle(bundle, m_logger);
+                addBundle(bundle, m_logger);
+=======
                 removeBundle(bundle);
                 addBundle(bundle);
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
                 m_snapshotTimeStamp = System.currentTimeMillis();
             }
         }
     }
 
+<<<<<<< HEAD
+    private void addBundle(Bundle bundle, Logger logger)
+=======
     private void addBundle(Bundle bundle)
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     {
         /*
          * Concurrency note: This method MUST be called in a context which
@@ -92,10 +121,26 @@ public class LocalRepositoryImpl implements Repository, SynchronousBundleListene
         {
             return;
         }
+<<<<<<< HEAD
+        try
+        {
+            m_localResourceList.put(new Long(bundle.getBundleId()), new LocalResourceImpl(bundle));
+        }
+        catch (InvalidSyntaxException ex)
+        {
+            // This should never happen since we are generating filters,
+            // but ignore the resource if it does occur.
+            m_logger.log(Logger.LOG_WARNING, ex.getMessage(), ex);
+        }
+    }
+
+    private void removeBundle(Bundle bundle, Logger logger)
+=======
         m_localResourceList.put(bundle.getBundleId(), new LazyLocalResourceImpl(bundle, m_logger));
     }
 
     private void removeBundle(Bundle bundle)
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     {
         /*
          * Concurrency note: This method MUST be called in a context which
@@ -103,7 +148,11 @@ public class LocalRepositoryImpl implements Repository, SynchronousBundleListene
          * corruption.
          */
 
+<<<<<<< HEAD
+        m_localResourceList.remove(new Long(bundle.getBundleId()));
+=======
         m_localResourceList.remove(bundle.getBundleId());
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     }
 
     public void dispose()
@@ -129,7 +178,11 @@ public class LocalRepositoryImpl implements Repository, SynchronousBundleListene
 
     public synchronized Resource[] getResources()
     {
+<<<<<<< HEAD
+        return (Resource[]) m_localResourceList.values().toArray(new Resource[m_localResourceList.size()]);
+=======
         return m_localResourceList.values().toArray(new Resource[m_localResourceList.size()]);
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     }
 
     private void initialize()
@@ -149,7 +202,11 @@ public class LocalRepositoryImpl implements Repository, SynchronousBundleListene
             bundles = m_context.getBundles();
             for (int i = 0; (bundles != null) && (i < bundles.length); i++)
             {
+<<<<<<< HEAD
+                addBundle(bundles[i], m_logger);
+=======
                 addBundle(bundles[i]);
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
             }
 
             m_snapshotTimeStamp = System.currentTimeMillis();

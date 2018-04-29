@@ -6,7 +6,11 @@
 try {
 
   # ensure gogo commands are found first
+<<<<<<< HEAD
+  SCOPE = gogo:*
+=======
   SCOPE = 'gogo:*'
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 
   # add methods on BundleContext object as commands
   #addcommand context ${.context} (${.context} class)
@@ -30,8 +34,13 @@ try {
   # set prompt
   prompt = 'g! '
 
+<<<<<<< HEAD
+  # print welcome message
+  cat ($0 resolve motd)
+=======
   # print welcome message, unless we're explicitly told not to...
   if { $.gosh_quiet } { } { cat ($0 resolve motd) }
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 } {
     echo "$0: ERROR: $exception"
 }

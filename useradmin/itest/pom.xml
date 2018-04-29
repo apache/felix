@@ -41,6 +41,15 @@
 	<dependencies>
 		<dependency>
 			<groupId>org.osgi</groupId>
+<<<<<<< HEAD
+			<artifactId>org.osgi.core</artifactId>
+			<version>${osgi.version}</version>
+			<scope>provided</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.osgi</groupId>
+=======
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 			<artifactId>org.osgi.compendium</artifactId>
 			<version>${osgi.version}</version>
 		</dependency>
@@ -58,6 +67,8 @@
 		</dependency>
 		<dependency>
 			<groupId>org.apache.felix</groupId>
+<<<<<<< HEAD
+=======
 			<artifactId>org.apache.felix.useradmin.mongodb</artifactId>
 			<version>1.0.2-SNAPSHOT</version>
 			<scope>test</scope>
@@ -70,6 +81,7 @@
         </dependency>
 		<dependency>
 			<groupId>org.apache.felix</groupId>
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 			<artifactId>org.apache.felix.dependencymanager</artifactId>
 			<version>3.0.0</version>
 			<scope>test</scope>

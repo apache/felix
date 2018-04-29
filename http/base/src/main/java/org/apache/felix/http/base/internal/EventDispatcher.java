@@ -18,13 +18,26 @@
  */
 package org.apache.felix.http.base.internal;
 
+<<<<<<< HEAD
+import javax.servlet.http.HttpSessionAttributeListener;
+import javax.servlet.http.HttpSessionBindingEvent;
+import javax.servlet.http.HttpSessionEvent;
+=======
 import javax.servlet.http.HttpSessionEvent;
 import javax.servlet.http.HttpSessionIdListener;
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 import javax.servlet.http.HttpSessionListener;
 
 /**
  * The <code>EventDispatcher</code> dispatches events sent from the servlet
  * container (embedded Jetty or container in which the framework is running
+<<<<<<< HEAD
+ * in bridged mode) to any {@link HttpSessionAttributeListener} or
+ * {@link HttpSessionListener} services.
+ */
+public class EventDispatcher implements HttpSessionAttributeListener, HttpSessionListener
+{
+=======
  * in bridged mode) to any {@link HttpSessionListener} or
  * {@link HttpSessionListener} services.
  *
@@ -35,6 +48,7 @@ import javax.servlet.http.HttpSessionListener;
 public class EventDispatcher implements HttpSessionListener, HttpSessionIdListener
 {
     private volatile boolean active = false;
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 
     private final HttpServiceController controller;
 
@@ -43,6 +57,31 @@ public class EventDispatcher implements HttpSessionListener, HttpSessionIdListen
         this.controller = controller;
     }
 
+<<<<<<< HEAD
+    public void sessionCreated(HttpSessionEvent se)
+    {
+        controller.getSessionListener().sessionCreated(se);
+    }
+
+    public void sessionDestroyed(HttpSessionEvent se)
+    {
+        controller.getSessionListener().sessionDestroyed(se);
+    }
+
+    public void attributeAdded(HttpSessionBindingEvent se)
+    {
+        controller.getSessionAttributeListener().attributeAdded(se);
+    }
+
+    public void attributeRemoved(HttpSessionBindingEvent se)
+    {
+        controller.getSessionAttributeListener().attributeRemoved(se);
+    }
+
+    public void attributeReplaced(HttpSessionBindingEvent se)
+    {
+        controller.getSessionAttributeListener().attributeReplaced(se);
+=======
     public void setActive(final boolean flag)
     {
         this.active = flag;
@@ -72,5 +111,6 @@ public class EventDispatcher implements HttpSessionListener, HttpSessionIdListen
         {
             controller.getSessionIdListener().sessionIdChanged(event, oldSessionId);
         }
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     }
 }

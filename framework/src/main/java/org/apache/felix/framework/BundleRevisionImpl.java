@@ -28,13 +28,21 @@ import java.util.Collections;
 import java.util.Enumeration;
 import java.util.List;
 import java.util.Map;
+<<<<<<< HEAD
+=======
 
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 import org.apache.felix.framework.cache.Content;
 import org.apache.felix.framework.util.FelixConstants;
 import org.apache.felix.framework.util.SecureAction;
 import org.apache.felix.framework.util.Util;
 import org.apache.felix.framework.util.manifestparser.ManifestParser;
+<<<<<<< HEAD
+import org.apache.felix.framework.util.manifestparser.R4Library;
+import org.osgi.framework.Bundle;
+=======
 import org.apache.felix.framework.util.manifestparser.NativeLibrary;
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 import org.osgi.framework.BundleException;
 import org.osgi.framework.Constants;
 import org.osgi.framework.Version;
@@ -52,7 +60,11 @@ public class BundleRevisionImpl implements BundleRevision, Resource
     public final static int LAZY_ACTIVATION = 1;
 
     private final String m_id;
+<<<<<<< HEAD
+    private final Map m_headerMap;
+=======
     private final Map<String, Object> m_headerMap;
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 
     private final String m_manifestVersion;
     private final boolean m_isExtension;
@@ -62,12 +74,20 @@ public class BundleRevisionImpl implements BundleRevision, Resource
 
     private final List<BundleCapability> m_declaredCaps;
     private final List<BundleRequirement> m_declaredReqs;
+<<<<<<< HEAD
+    private final List<R4Library> m_declaredNativeLibs;
+=======
     private final List<NativeLibrary> m_declaredNativeLibs;
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     private final int m_declaredActivationPolicy;
     private final List<String> m_activationIncludes;
     private final List<String> m_activationExcludes;
 
+<<<<<<< HEAD
+    private final Bundle m_bundle;
+=======
     private final BundleImpl m_bundle;
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 
     private Content m_content;
     private List<Content> m_contentPath;
@@ -80,11 +100,22 @@ public class BundleRevisionImpl implements BundleRevision, Resource
     /**
      * This constructor is used by the extension manager, since it needs
      * a constructor that does not throw an exception.
+<<<<<<< HEAD
+     * @param logger
+     * @param bundle
+     * @param id
+     * @param bootPkgs
+     * @param bootPkgWildcards
+     * @throws org.osgi.framework.BundleException
+     */
+    public BundleRevisionImpl(Bundle bundle, String id)
+=======
      * @param bundle
      * @param id
      * @throws org.osgi.framework.BundleException
      */
     public BundleRevisionImpl(BundleImpl bundle, String id)
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     {
         m_bundle = bundle;
         m_id = id;
@@ -95,8 +126,13 @@ public class BundleRevisionImpl implements BundleRevision, Resource
         m_isExtension = false;
         m_isFragment = false;
         m_version = null;
+<<<<<<< HEAD
+        m_declaredCaps = Collections.EMPTY_LIST;
+        m_declaredReqs = Collections.EMPTY_LIST;
+=======
         m_declaredCaps = Collections.emptyList();
         m_declaredReqs = Collections.emptyList();
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         m_declaredNativeLibs = null;
         m_declaredActivationPolicy = EAGER_ACTIVATION;
         m_activationExcludes = null;
@@ -104,7 +140,11 @@ public class BundleRevisionImpl implements BundleRevision, Resource
     }
 
     BundleRevisionImpl(
+<<<<<<< HEAD
+        Bundle bundle, String id, Map headerMap, Content content)
+=======
         BundleImpl bundle, String id, Map<String, Object> headerMap, Content content)
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         throws BundleException
     {
         m_bundle = bundle;
@@ -113,8 +153,13 @@ public class BundleRevisionImpl implements BundleRevision, Resource
         m_content = content;
 
         ManifestParser mp = new ManifestParser(
+<<<<<<< HEAD
+            ((BundleImpl) bundle).getFramework().getLogger(),
+            ((BundleImpl) bundle).getFramework().getConfig(),
+=======
             bundle.getFramework().getLogger(),
             bundle.getFramework().getConfig(),
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
             this,
             m_headerMap);
 
@@ -123,7 +168,11 @@ public class BundleRevisionImpl implements BundleRevision, Resource
         // system bundle directly later on.
         m_manifestVersion = mp.getManifestVersion();
         m_version = mp.getBundleVersion();
+<<<<<<< HEAD
+        m_declaredCaps = mp.isExtension() ? Collections.EMPTY_LIST : mp.getCapabilities();
+=======
         m_declaredCaps = mp.getCapabilities();
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         m_declaredReqs = mp.getRequirements();
         m_declaredNativeLibs = mp.getLibraries();
         m_declaredActivationPolicy = mp.getActivationPolicy();
@@ -198,7 +247,11 @@ public class BundleRevisionImpl implements BundleRevision, Resource
 
     static List<Capability> asCapabilityList(List reqs)
     {
+<<<<<<< HEAD
+        return (List<Capability>) reqs;
+=======
         return reqs;
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     }
 
     public List<BundleCapability> getDeclaredCapabilities(String namespace)
@@ -225,7 +278,11 @@ public class BundleRevisionImpl implements BundleRevision, Resource
 
     static List<Requirement> asRequirementList(List reqs)
     {
+<<<<<<< HEAD
+        return (List<Requirement>) reqs;
+=======
         return reqs;
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     }
 
     public List<BundleRequirement> getDeclaredRequirements(String namespace)
@@ -255,7 +312,11 @@ public class BundleRevisionImpl implements BundleRevision, Resource
         return m_wiring;
     }
 
+<<<<<<< HEAD
+    public Bundle getBundle()
+=======
     public BundleImpl getBundle()
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     {
         return m_bundle;
     }
@@ -264,7 +325,11 @@ public class BundleRevisionImpl implements BundleRevision, Resource
     // Implementating details.
     //
 
+<<<<<<< HEAD
+    public Map getHeaders()
+=======
     public Map<String, Object> getHeaders()
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     {
         return m_headerMap;
     }
@@ -279,7 +344,11 @@ public class BundleRevisionImpl implements BundleRevision, Resource
         return m_manifestVersion;
     }
 
+<<<<<<< HEAD
+    public List<R4Library> getDeclaredNativeLibraries()
+=======
     public List<NativeLibrary> getDeclaredNativeLibraries()
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     {
         return m_declaredNativeLibs;
     }
@@ -368,11 +437,15 @@ public class BundleRevisionImpl implements BundleRevision, Resource
         List<Content> fragmentContents = null;
         if (m_wiring != null)
         {
+<<<<<<< HEAD
+            fragments = Util.getFragments(m_wiring);
+=======
             // Get fragments and their contents from the wiring.
             // Note that we don't use Util.getFragments() here because
             // the wiring returns parallel arrays and the utility method
             // doesn't necessarily return the correct order.
             fragments = m_wiring.getFragments();
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
             fragmentContents = m_wiring.getFragmentContents();
         }
         if (fragments != null)
@@ -513,9 +586,12 @@ public class BundleRevisionImpl implements BundleRevision, Resource
         // each bundle class path entry...this isn't very
         // clean or meaningful, but the Spring guys want it.
         final List<Content> contentPath = getContentPath();
+<<<<<<< HEAD
+=======
         if (contentPath == null)
             return Collections.enumeration(Collections.emptyList());
 
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         if (name.equals("/"))
         {
             for (int i = 0; i < contentPath.size(); i++)
@@ -637,11 +713,19 @@ public class BundleRevisionImpl implements BundleRevision, Resource
             return m_secureAction.createURL(null,
                 FelixConstants.BUNDLE_URL_PROTOCOL + "://" +
                 m_id + ":" + port + path,
+<<<<<<< HEAD
+                ((BundleImpl) getBundle()).getFramework().getBundleStreamHandler());
+        }
+        catch (MalformedURLException ex)
+        {
+            ((BundleImpl) m_bundle).getFramework().getLogger().log(
+=======
                 getBundle().getFramework().getBundleStreamHandler());
         }
         catch (MalformedURLException ex)
         {
             m_bundle.getFramework().getLogger().log(
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
                 m_bundle,
                 Logger.LOG_ERROR,
                 "Unable to create resource URL.",
@@ -673,6 +757,10 @@ public class BundleRevisionImpl implements BundleRevision, Resource
     @Override
     public String toString()
     {
+<<<<<<< HEAD
+        return m_id;
+=======
         return m_bundle.toString() + "(R " + m_id + ")";
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     }
 }

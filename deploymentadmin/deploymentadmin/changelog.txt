@@ -1,3 +1,5 @@
+<<<<<<< HEAD
+=======
 Release 0.9.8
 -------------
 
@@ -20,6 +22,7 @@ FELIX-4410 Exceptions during rollback are not always properly handled
 FELIX-4463 DA does not consistently handle non-unique resources
 FELIX-4466 Deployment Admin does not always fire events
 
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 Release 0.9.4
 -------------
 

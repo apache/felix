@@ -18,6 +18,28 @@
  */
 package org.apache.felix.coordinator.impl;
 
+<<<<<<< HEAD
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.TimerTask;
+
+import org.apache.felix.service.coordinator.Coordination;
+import org.apache.felix.service.coordinator.CoordinationException;
+import org.apache.felix.service.coordinator.Coordinator;
+import org.apache.felix.service.coordinator.Participant;
+import org.osgi.framework.Bundle;
+
+@SuppressWarnings("deprecation")
+public class CoordinatorImpl implements Coordinator
+{
+
+    private final Bundle owner;
+
+    private final CoordinationMgr mgr;
+
+    private final HashSet<Coordination> coordinations;
+
+=======
 import java.security.Permission;
 import java.util.Collection;
 import java.util.Iterator;
@@ -43,10 +65,15 @@ public class CoordinatorImpl implements Coordinator
     /** The coordination mgr. */
     private final CoordinationMgr mgr;
 
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     CoordinatorImpl(final Bundle owner, final CoordinationMgr mgr)
     {
         this.owner = owner;
         this.mgr = mgr;
+<<<<<<< HEAD
+        this.coordinations = new HashSet<Coordination>();
+=======
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     }
 
     /**
@@ -60,6 +87,53 @@ public class CoordinatorImpl implements Coordinator
      */
     void dispose()
     {
+<<<<<<< HEAD
+        final Coordination[] active;
+        synchronized (coordinations)
+        {
+            if (coordinations.isEmpty())
+            {
+                active = null;
+            }
+            else
+            {
+                active = coordinations.toArray(new CoordinationImpl[coordinations.size()]);
+                coordinations.clear();
+            }
+        }
+
+        if (active != null)
+        {
+            Throwable reason = new Exception("Coordinator service released");
+            for (int i = 0; i < active.length; i++)
+            {
+                active[i].fail(reason);
+            }
+        }
+    }
+
+    public Coordination create(final String name, final int timeout)
+    {
+        // TODO: check permission
+        Coordination c = mgr.create(this, name, timeout);
+        synchronized (coordinations)
+        {
+            coordinations.add(c);
+        }
+        return c;
+    }
+
+    public Collection<Coordination> getCoordinations()
+    {
+        // TODO: check permission
+        return mgr.getCoordinations();
+    }
+
+    public boolean fail(Throwable reason)
+    {
+        // TODO: check permission
+        CoordinationImpl current = (CoordinationImpl) peek();
+=======
         this.mgr.dispose(this.owner);
     }
 
@@ -183,6 +257,7 @@ public class CoordinatorImpl implements Coordinator
     public boolean fail(final Throwable reason)
     {
         CoordinationImpl current = (CoordinationImpl)mgr.peek();
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         if (current != null)
         {
             return current.fail(reason);
@@ -190,6 +265,29 @@ public class CoordinatorImpl implements Coordinator
         return false;
     }
 
+<<<<<<< HEAD
+    public Coordination peek()
+    {
+        // TODO: check permission
+        return mgr.peek();
+    }
+
+    public Coordination begin(final String name, final int timeoutInMillis)
+    {
+        // TODO: check permission
+        return push(create(name, timeoutInMillis));
+    }
+
+    public Coordination pop()
+    {
+        // TODO: check permission
+        return mgr.pop();
+    }
+
+    public boolean addParticipant(Participant participant) throws CoordinationException
+    {
+        // TODO: check permission
+=======
     /**
      * @see org.osgi.service.coordinator.Coordinator#peek()
      */
@@ -242,6 +340,7 @@ public class CoordinatorImpl implements Coordinator
      */
     public boolean addParticipant(final Participant participant)
     {
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         Coordination current = peek();
         if (current != null)
         {
@@ -251,6 +350,12 @@ public class CoordinatorImpl implements Coordinator
         return false;
     }
 
+<<<<<<< HEAD
+    public Coordination getCoordination(long id)
+    {
+        // TODO: check permission
+        return mgr.getCoordinationById(id);
+=======
     /**
      * @see org.osgi.service.coordinator.Coordinator#getCoordination(long)
      */
@@ -267,10 +372,26 @@ public class CoordinatorImpl implements Coordinator
             }
         }
         return c;
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     }
 
     //----------
 
+<<<<<<< HEAD
+    Coordination push(Coordination c)
+    {
+        // TODO: check permission
+        return mgr.push(c);
+    }
+
+    void unregister(final CoordinationImpl c)
+    {
+        mgr.unregister(c);
+        synchronized (coordinations)
+        {
+            coordinations.remove(c);
+        }
+=======
     void push(final CoordinationImpl c)
     {
         mgr.push(c);
@@ -279,6 +400,7 @@ public class CoordinatorImpl implements Coordinator
     void unregister(final CoordinationImpl c, final boolean removeFromStack)
     {
         mgr.unregister(c, removeFromStack);
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     }
 
     void schedule(final TimerTask task, final long deadLine)
@@ -295,6 +417,8 @@ public class CoordinatorImpl implements Coordinator
     {
         mgr.releaseParticipant(p);
     }
+<<<<<<< HEAD
+=======
 
     Bundle getBundle()
     {
@@ -310,4 +434,5 @@ public class CoordinatorImpl implements Coordinator
 	{
 		return this.mgr.endNestedCoordinations(c);
 	}
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 }

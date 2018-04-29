@@ -76,6 +76,60 @@ public class Logger extends org.apache.felix.resolver.Logger
 
     public final void log(ServiceReference sr, int level, String msg, Throwable throwable)
     {
+<<<<<<< HEAD
+        // TODO: Find a way to log to a log service inside the framework.
+        // The issue is that we log messages while holding framework
+        // internal locks -- hence, when a log service calls back into 
+        // the framework (e.g., by loading a class) we might deadlock. 
+        // One instance of this problem is tracked in FELIX-536.
+        // For now we just disable logging to log services inside the
+        // framework. 
+
+        // m_context = context;
+        // startListeningForLogService();
+=======
+        _log(null, sr, level, msg, throwable);
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
+    }
+
+    public final void log(Bundle bundle, int level, String msg)
+    {
+<<<<<<< HEAD
+        _log(null, null, level, msg, null);
+=======
+        _log(bundle, null, level, msg, null);
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
+    }
+
+    public final void log(Bundle bundle, int level, String msg, Throwable throwable)
+    {
+<<<<<<< HEAD
+        _log(null, null, level, msg, throwable);
+=======
+        _log(bundle, null, level, msg, throwable);
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
+    }
+
+    protected void _log(
+            Bundle bundle, ServiceReference sr, int level,
+            String msg, Throwable throwable)
+    {
+<<<<<<< HEAD
+        _log(null, sr, level, msg, null);
+=======
+        if (getLogLevel() >= level)
+        {
+            // Default logging action.
+            doLog(bundle, sr, level, msg, throwable);
+        }
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
+    }
+
+    protected void doLog(
+        Bundle bundle, ServiceReference sr, int level,
+        String msg, Throwable throwable)
+    {
+<<<<<<< HEAD
         _log(null, sr, level, msg, throwable);
     }
 
@@ -89,21 +143,25 @@ public class Logger extends org.apache.felix.resolver.Logger
         _log(bundle, null, level, msg, throwable);
     }
 
-    protected void _log(
-            Bundle bundle, ServiceReference sr, int level,
-            String msg, Throwable throwable)
-    {
-        if (getLogLevel() >= level)
-        {
-            // Default logging action.
-            doLog(bundle, sr, level, msg, throwable);
-        }
-    }
-
     protected void doLog(
         Bundle bundle, ServiceReference sr, int level,
         String msg, Throwable throwable)
     {
+        String s = "";
+        if (sr != null)
+        {
+            s = s + "SvcRef "  + sr + " ";
+        }
+        else if (bundle != null)
+        {
+            s = s + "Bundle " + bundle.toString() + " ";
+        }
+        s = s + msg;
+        if (throwable != null)
+        {
+            s = s + " (" + throwable + ")";
+        }
+=======
         StringBuilder s = new StringBuilder();
         if (sr != null)
         {
@@ -138,6 +196,7 @@ public class Logger extends org.apache.felix.resolver.Logger
 
     protected void doLogOut(int level, String s, Throwable throwable)
     {
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         switch (level)
         {
             case LOG_DEBUG:
@@ -166,8 +225,68 @@ public class Logger extends org.apache.felix.resolver.Logger
         }
     }
 
+<<<<<<< HEAD
+    private void _log(
+        Bundle bundle, ServiceReference sr, int level,
+        String msg, Throwable throwable)
+    {
+        // Save our own copy just in case it changes. We could try to do
+        // more conservative locking here, but let's be optimistic.
+        Object[] logger = m_logger;
+
+        if (m_logLevel >= level)
+        {
+            // Use the log service if available.
+            if (logger != null)
+            {
+                _logReflectively(logger, sr, level, msg, throwable);
+            }
+            // Otherwise, default logging action.
+            else
+            {
+                doLog(bundle, sr, level, msg, throwable);
+            }
+        }
+    }
+
+    private void _logReflectively(
+        Object[] logger, ServiceReference sr, int level, String msg, Throwable throwable)
+    {
+        if (logger != null)
+        {
+            Object[] params = {
+                sr, new Integer(level), msg, throwable
+            };
+            try
+            {
+                ((Method) logger[LOGGER_METHOD_IDX]).invoke(logger[LOGGER_OBJECT_IDX], params);
+            }
+            catch (InvocationTargetException ex)
+            {
+                System.err.println("Logger: " + ex);
+            }
+            catch (IllegalAccessException ex)
+            {
+                System.err.println("Logger: " + ex);
+            }
+        }
+    }
+
+    /**
+     * This method is called when the system bundle context is set;
+     * it simply adds a service listener so that the system bundle can track
+     * log services to be used as the back end of the logging mechanism. It also
+     * attempts to get an existing log service, if present, but in general
+     * there will never be a log service present since the system bundle is
+     * started before every other bundle.
+    **/
+    private synchronized void startListeningForLogService()
+    {
+        // Add a service listener for log services.
+=======
     protected void doLogReflectively(int level, String msg, Throwable throwable)
     {
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         try
         {
             ((Method) m_logger[1]).invoke(

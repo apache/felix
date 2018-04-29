@@ -35,13 +35,19 @@ class ComponentActorThread implements Runnable
     // sentinel task to terminate this thread
     private static final Runnable TERMINATION_TASK = new Runnable()
     {
+<<<<<<< HEAD
+=======
         @Override
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         public void run()
         {
         }
 
 
+<<<<<<< HEAD
+=======
         @Override
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         public String toString()
         {
             return "Component Actor Terminator";
@@ -56,7 +62,11 @@ class ComponentActorThread implements Runnable
 
     ComponentActorThread( final ScrLogger log )
     {
+<<<<<<< HEAD
+        tasks = new LinkedList();
+=======
         logger = log;
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     }
 
 
@@ -68,7 +78,11 @@ class ComponentActorThread implements Runnable
     @Override
     public void run()
     {
+<<<<<<< HEAD
+        Activator.log( LogService.LOG_DEBUG, null, "Starting ComponentActorThread", null );
+=======
         logger.log( LogService.LOG_DEBUG, "Starting ComponentActorThread", null );
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 
         for ( ;; )
         {
@@ -84,7 +98,11 @@ class ComponentActorThread implements Runnable
                     }
                     catch ( InterruptedException ie )
                     {
+<<<<<<< HEAD
+                        Thread.currentThread().interrupt();
+=======
                         interrupted = true;
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
                         // don't care
                     }
                     finally
@@ -104,17 +122,29 @@ class ComponentActorThread implements Runnable
                 // return if the task is this thread itself
                 if ( task == TERMINATION_TASK )
                 {
+<<<<<<< HEAD
+                    Activator.log( LogService.LOG_DEBUG, null, "Shutting down ComponentActorThread", null );
+=======
                     logger.log( LogService.LOG_DEBUG, "Shutting down ComponentActorThread", null );
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
                     return;
                 }
 
                 // otherwise execute the task, log any issues
+<<<<<<< HEAD
+                Activator.log( LogService.LOG_DEBUG, null, "Running task: " + task, null );
+=======
                 logger.log( LogService.LOG_DEBUG, "Running task: " + task, null );
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
                 task.run();
             }
             catch ( Throwable t )
             {
+<<<<<<< HEAD
+                Activator.log( LogService.LOG_ERROR, null, "Unexpected problem executing task " + task, t );
+=======
                 logger.log( LogService.LOG_ERROR, "Unexpected problem executing task " + task, t );
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
             }
             finally
             {
@@ -136,13 +166,20 @@ class ComponentActorThread implements Runnable
         {
             while ( !tasks.isEmpty() )
             {
+<<<<<<< HEAD
+=======
                 boolean interrupted = Thread.interrupted();
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
                 try
                 {
                     tasks.wait();
                 }
                 catch ( InterruptedException e )
                 {
+<<<<<<< HEAD
+                    Thread.currentThread().interrupt();
+                    Activator.log( LogService.LOG_ERROR, null, "Interrupted exception waiting for queue to empty", e );
+=======
                     interrupted = true;
                     logger.log(LogService.LOG_ERROR,
                         "Interrupted exception waiting for queue to empty", e);
@@ -153,6 +190,7 @@ class ComponentActorThread implements Runnable
                     { // restore interrupt status
                         Thread.currentThread().interrupt();
                     }
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
                 }
             }
         }
@@ -167,8 +205,13 @@ class ComponentActorThread implements Runnable
             // append to the task queue
             tasks.add( task );
 
+<<<<<<< HEAD
+            Activator.log( LogService.LOG_DEBUG, null, "Adding task [{0}] as #{1} in the queue" 
+                    , new Object[] {task, tasks.size()}, null );
+=======
             logger.log( LogService.LOG_DEBUG, "Adding task [{0}] as #{1} in the queue", null,
                     task, tasks.size(), null );
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 
             // notify the waiting thread
             tasks.notifyAll();

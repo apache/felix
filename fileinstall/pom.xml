@@ -20,7 +20,11 @@
   <parent>
     <groupId>org.apache.felix</groupId>
     <artifactId>felix-parent</artifactId>
+<<<<<<< HEAD
+    <version>2</version>
+=======
     <version>3</version>
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     <relativePath>../pom/pom.xml</relativePath>
   </parent>
 	
@@ -29,26 +33,41 @@
   <name>Apache Felix File Install</name>
   <description>A utility to automatically install bundles from a directory.</description>
   <url>http://felix.apache.org/site/apache-felix-file-install.html</url>
+<<<<<<< HEAD
+  <version>3.3.0-SNAPSHOT</version>
+=======
   <version>3.6.5-SNAPSHOT</version>
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
   <artifactId>org.apache.felix.fileinstall</artifactId>
   <scm>
     <connection>scm:svn:http://svn.apache.org/repos/asf/felix/trunk/fileinstall</connection>
     <developerConnection>scm:svn:https://svn.apache.org/repos/asf/felix/trunk/fileinstall</developerConnection>
     <url>http://svn.apache.org/repos/asf/felix/fileinstall</url>
   </scm>
+<<<<<<< HEAD
+=======
   <properties>
     <felix.java.version>7</felix.java.version>
   </properties>
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
   <dependencies>
     <dependency>
       <groupId>org.osgi</groupId>
       <artifactId>org.osgi.core</artifactId>
+<<<<<<< HEAD
+      <version>4.1.0</version>
+=======
       <version>4.3.1</version>
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
       <scope>provided</scope>
     </dependency>
     <dependency>
       <groupId>org.osgi</groupId>
       <artifactId>org.osgi.compendium</artifactId>
+<<<<<<< HEAD
+      <version>4.1.0</version>
+      <scope>provided</scope>
+=======
       <version>4.3.1</version>
       <scope>provided</scope>
     </dependency>
@@ -61,7 +80,35 @@
       <groupId>org.apache.felix</groupId>
       <artifactId>org.apache.felix.utils</artifactId>
       <version>1.10.5-SNAPSHOT</version>
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     </dependency>
+    <dependency>
+      <groupId>org.apache.felix</groupId>
+      <artifactId>org.apache.felix.configadmin</artifactId>
+      <version>1.2.8</version>
+      <scope>provided</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.felix</groupId>
+      <artifactId>org.apache.felix.utils</artifactId>
+      <version>1.5.0-SNAPSHOT</version>
+      <scope>provided</scope>
+    </dependency>
+      <!-- sources -->
+      <dependency>
+          <groupId>org.apache.felix</groupId>
+          <artifactId>org.apache.felix.configadmin</artifactId>
+          <version>1.2.8</version>
+          <classifier>sources</classifier>
+          <optional>true</optional>
+      </dependency>
+      <dependency>
+          <groupId>org.apache.felix</groupId>
+          <artifactId>org.apache.felix.utils</artifactId>
+          <version>1.2.0</version>
+          <classifier>sources</classifier>
+          <optional>true</optional>
+      </dependency>
   </dependencies>
   <build>
     <plugins>
@@ -92,9 +139,12 @@
             <Import-Package>
                 org.osgi.service.log;resolution:=optional,
                 org.osgi.service.cm;resolution:=optional,
+<<<<<<< HEAD
+=======
                 !org.apache.felix.fileinstall,
                 !org.apache.felix.cm.file,
                 !org.apache.felix.utils.*,
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
                 *
             </Import-Package>
             <Bundle-Activator>org.apache.felix.fileinstall.internal.FileInstall</Bundle-Activator>
@@ -105,7 +155,12 @@
             </Bundle-DocURL>
             <_versionpolicy>[$(version;==;$(@)),$(version;+;$(@)))</_versionpolicy>
             <Embed-Dependency>
+<<<<<<< HEAD
+                org.apache.felix.configadmin;inline="org/apache/felix/cm/file/ConfigurationHandler.*",
+                org.apache.felix.utils;inline="org/apache/felix/utils/collections/DictionaryAsMap*.*"
+=======
                 org.apache.felix.utils;inline="org/apache/felix/utils/collections/DictionaryAsMap*.class"
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
             </Embed-Dependency>
           </instructions>
         </configuration>
@@ -194,6 +249,70 @@
         <artifactId>maven-javadoc-plugin</artifactId>
         <configuration>
           <additionalparam>-Xdoclint:none</additionalparam>
+        </configuration>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-source-plugin</artifactId>
+        <executions>
+          <execution>
+            <id>attach-sources</id>
+            <goals>
+              <goal>jar</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-shade-plugin</artifactId>
+        <executions>
+          <execution>
+            <phase>package</phase>
+            <goals>
+              <goal>shade</goal>
+            </goals>
+            <configuration>
+              <artifactSet>
+                <includes>
+                  <include>org.apache.felix:org.apache.felix.configadmin</include>
+                  <include>org.apache.felix:org.apache.felix.utils</include>
+                </includes>
+              </artifactSet>
+              <filters>
+                <filter>
+                  <artifact>org.apache.felix:org.apache.felix.configadmin</artifact>
+                  <includes>
+                    <include>**/ConfigurationHandler.*</include>
+                  </includes>
+                </filter>
+                <filter>
+                  <artifact>org.apache.felix:org.apache.felix.utils</artifact>
+                  <includes>
+                    <include>**/DictionaryAsMap.*</include>
+                  </includes>
+                </filter>
+              </filters>
+              <createSourcesJar>true</createSourcesJar>
+              <promoteTransitiveDependencies>true</promoteTransitiveDependencies>
+              <createDependencyReducedPom>true</createDependencyReducedPom>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
+        <groupId>org.codehaus.mojo</groupId>
+        <artifactId>rat-maven-plugin</artifactId>
+        <configuration>
+          <excludeSubProjects>false</excludeSubProjects>
+          <useEclipseDefaultExcludes>true</useEclipseDefaultExcludes>
+          <useMavenDefaultExcludes>true</useMavenDefaultExcludes>
+          <excludes>
+            <param>doc/*</param>
+            <param>maven-eclipse.xml</param>
+            <param>.checkstyle</param>
+            <param>.externalToolBuilders/*</param>
+          </excludes>
         </configuration>
       </plugin>
     </plugins>

@@ -18,15 +18,28 @@
  */
 package org.apache.felix.ipojo.plugin;
 
+<<<<<<< HEAD
+import java.io.ByteArrayInputStream;
+import java.io.File;
+import java.io.InputStream;
+import java.util.Arrays;
+import java.util.List;
+
+import org.apache.felix.ipojo.manipulator.Pojoization;
+import org.apache.felix.ipojo.manipulator.Reporter;
+=======
 import org.apache.felix.ipojo.manipulator.Pojoization;
 import org.apache.felix.ipojo.manipulator.Reporter;
 import org.apache.felix.ipojo.manipulator.util.Classpath;
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 import org.apache.maven.artifact.Artifact;
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.project.MavenProject;
 import org.apache.maven.project.MavenProjectHelper;
 
+<<<<<<< HEAD
+=======
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.InputStream;
@@ -35,6 +48,7 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 /**
  * Packages an OSGi jar "bundle" as an "iPOJO bundle".
  *
@@ -42,7 +56,11 @@ import java.util.Set;
  * @version $Rev$, $Date$
  * @goal ipojo-bundle
  * @phase package
+<<<<<<< HEAD
+ * @requiresDependencyResolution runtime
+=======
  * @requiresDependencyResolution test
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
  * @description manipulate an OSGi bundle jar to build an iPOJO bundle
  * @threadSafe
  */
@@ -67,7 +85,10 @@ public class ManipulatorMojo extends AbstractMojo {
 
     /**
      * Location of the metadata file or iPOJO metadata configuration.
+<<<<<<< HEAD
+=======
      *
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
      * @parameter alias="metadata"
      */
     private String m_metadata;
@@ -97,7 +118,10 @@ public class ManipulatorMojo extends AbstractMojo {
 
     /**
      * Used for attaching new artifacts.
+<<<<<<< HEAD
+=======
      *
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
      * @component
      * @required
      */
@@ -105,21 +129,30 @@ public class ManipulatorMojo extends AbstractMojo {
 
     /**
      * Project types which this plugin supports.
+<<<<<<< HEAD
+=======
      *
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
      * @parameter
      */
     private List<String> m_supportedProjectTypes = Arrays.asList(new String[]{"bundle", "jar", "war"});
 
     /**
      * Ignore annotations parameter.
+<<<<<<< HEAD
+=======
      *
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
      * @parameter alias="ignoreAnnotations" default-value="false"
      */
     private boolean m_ignoreAnnotations;
 
     /**
      * Ignore embedded XSD parameter.
+<<<<<<< HEAD
+=======
      *
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
      * @parameter alias="IgnoreEmbeddedSchemas" default-value="false"
      */
     private boolean m_ignoreEmbeddedXSD;
@@ -130,7 +163,10 @@ public class ManipulatorMojo extends AbstractMojo {
 
     /**
      * Execute method : this method launches the pojoization.
+<<<<<<< HEAD
+=======
      *
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
      * @throws MojoExecutionException : an exception occurs during the manipulation.
      * @see org.apache.maven.plugin.AbstractMojo#execute()
      */
@@ -152,6 +188,8 @@ public class ManipulatorMojo extends AbstractMojo {
         File metadata = null; // Metadata File or directory containing the metadata files.
         InputStream is = null; //Use if contained in the configuration
 
+<<<<<<< HEAD
+=======
         // Create the ClassPath and classloader.
         Set<Artifact> artifacts = m_project.getArtifacts();
         Set<String> urls = new LinkedHashSet<String>();
@@ -168,6 +206,7 @@ public class ManipulatorMojo extends AbstractMojo {
         getLog().debug("Compute classpath: " + urls);
         Classpath classpath = new Classpath(urls);
 
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         if (isXML()) {
             is = new ByteArrayInputStream(m_metadata.getBytes());
         } else {
@@ -181,7 +220,11 @@ public class ManipulatorMojo extends AbstractMojo {
                 } else {
                     // Else check target/classes/metadata.xml
                     File meta = new File(m_outputDirectory + File.separator + "metadata.xml");
+<<<<<<< HEAD
+                    if (! meta.exists()) {
+=======
                     if (!meta.exists()) {
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
                         // If it still does not exist, try ./metadata.xml
                         meta = new File(m_project.getBasedir() + File.separator + "metadata.xml");
                     }
@@ -196,7 +239,11 @@ public class ManipulatorMojo extends AbstractMojo {
             } else {
                 // metadata path set.
                 File m = new File(m_project.getBasedir(), m_metadata);
+<<<<<<< HEAD
+                if (! m.exists()) {
+=======
                 if (!m.exists()) {
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
                     throw new MojoExecutionException("The metadata file does not exist : " + m.getAbsolutePath());
                 }
                 metadata = m;
@@ -223,16 +270,26 @@ public class ManipulatorMojo extends AbstractMojo {
         if (m_inputClassifier == null) {
             in = m_project.getArtifact().getFile();
             getLog().info("Input Bundle File : " + in.getAbsolutePath());
+<<<<<<< HEAD
+            if (! in.exists()) {
+=======
             if (!in.exists()) {
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
                 throw new MojoExecutionException("The specified bundle file does not exist : " + in.getAbsolutePath());
             }
         } else {
             // Look from attached artifacts.
             @SuppressWarnings("unchecked")
             List<Artifact> attached = m_project.getAttachedArtifacts();
+<<<<<<< HEAD
+            for (int i = 0; in == null  && attached != null  && i < attached.size(); i++) {
+                Artifact artifact = attached.get(i);
+                if (artifact.hasClassifier()  && m_inputClassifier.equals(artifact.getClassifier())) {
+=======
             for (int i = 0; in == null && attached != null && i < attached.size(); i++) {
                 Artifact artifact = attached.get(i);
                 if (artifact.hasClassifier() && m_inputClassifier.equals(artifact.getClassifier())) {
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
                     in = artifact.getFile();
                 }
             }
@@ -243,7 +300,11 @@ public class ManipulatorMojo extends AbstractMojo {
             }
 
             getLog().info("Input Bundle File : " + in.getAbsolutePath());
+<<<<<<< HEAD
+            if (! in.exists()) {
+=======
             if (!in.exists()) {
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
                 throw new MojoExecutionException("The specified bundle file does not exist : " + in.getAbsolutePath());
             }
         }
@@ -252,22 +313,36 @@ public class ManipulatorMojo extends AbstractMojo {
 
         Reporter reporter = new MavenReporter(getLog());
         Pojoization pojo = new Pojoization(reporter);
+<<<<<<< HEAD
+        if (m_ignoreAnnotations) { pojo.disableAnnotationProcessing(); }
+        if (!m_ignoreEmbeddedXSD) { pojo.setUseLocalXSD(); }
+=======
         if (m_ignoreAnnotations) {
             pojo.disableAnnotationProcessing();
         }
         if (!m_ignoreEmbeddedXSD) {
             pojo.setUseLocalXSD();
         }
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 
         // Executes the pojoization.
         if (is == null) {
             if (metadata == null) { // No metadata.
+<<<<<<< HEAD
+                pojo.pojoization(in, out, (File) null); // Only annotations
+            } else {
+                pojo.pojoization(in, out, metadata); // Metadata set
+            }
+        } else  { // In-Pom metadata.
+            pojo.pojoization(in, out, is);
+=======
                 pojo.pojoization(in, out, (File) null, classpath.createClassLoader()); // Only annotations
             } else {
                 pojo.pojoization(in, out, metadata, classpath.createClassLoader()); // Metadata set
             }
         } else { // In-Pom metadata.
             pojo.pojoization(in, out, is, classpath.createClassLoader());
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         }
 
         for (int i = 0; i < reporter.getWarnings().size(); i++) {
@@ -284,7 +359,11 @@ public class ManipulatorMojo extends AbstractMojo {
         } else {
             // Usual behavior
             if (in.delete()) {
+<<<<<<< HEAD
+                if (! out.renameTo(in)) {
+=======
                 if (!out.renameTo(in)) {
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
                     getLog().warn("Cannot rename the manipulated jar file");
                 }
             } else {
@@ -305,6 +384,10 @@ public class ManipulatorMojo extends AbstractMojo {
             getLog().info("Set the Sax driver to org.apache.xerces.parsers.SAXParser");
             System.setProperty("org.xml.sax.driver", "org.apache.xerces.parsers.SAXParser");
         }
+<<<<<<< HEAD
+
+=======
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     }
 
 }

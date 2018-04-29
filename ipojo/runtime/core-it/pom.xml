@@ -27,7 +27,11 @@
     <modelVersion>4.0.0</modelVersion>
 
     <artifactId>org.apache.felix.ipojo.runtime.core-it</artifactId>
+<<<<<<< HEAD
+    <version>1.11.1-SNAPSHOT</version>
+=======
     <version>1.12.2-SNAPSHOT</version>
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     <name>Apache Felix iPOJO Runtime Project ~ Core Integration Tests</name>
     <packaging>pom</packaging>
 
@@ -38,11 +42,19 @@
         <exam.version>3.0.1</exam.version>
         <url.version>1.5.1</url.version>
 
+<<<<<<< HEAD
+        <felix.version>4.2.0</felix.version>
+        <equinox.version>3.9.0.v20130529-1710</equinox.version>
+        <knoperflerfish.version>6.0.2</knoperflerfish.version>
+
+        <manipulator.version>1.11.0</manipulator.version>
+=======
         <felix.version>4.4.1</felix.version>
         <equinox.version>3.10.0.v20140606-1445</equinox.version>
         <knoperflerfish.version>7.1.2</knoperflerfish.version>
 
         <manipulator.version>1.12.1</manipulator.version>
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     </properties>
 
     <modules>
@@ -51,7 +63,10 @@
         <module>ipojo-core-configuration-admin-test</module>
         <module>ipojo-core-configuration-processor-test</module>
         <module>ipojo-core-configuration-test</module>
+<<<<<<< HEAD
+=======
         <module>ipojo-core-declaration-test</module>
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         <module>ipojo-core-external-handlers-test</module>
         <module>ipojo-core-factory-test</module>
         <module>ipojo-core-factory-version-test</module>
@@ -66,7 +81,10 @@
         <module>ipojo-core-service-dependency-timeout-test</module>
         <module>ipojo-core-service-dependency-interceptor-test</module>
         <module>ipojo-core-service-providing-test</module>
+<<<<<<< HEAD
+=======
         <module>ipojo-core-context-injection-test</module>
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         <module>ipojo-api-test</module>
         <module>ipojo-compatibility-test</module>
     </modules>
@@ -215,12 +233,15 @@
             <artifactId>tinybundles-ipojo</artifactId>
             <version>0.3.0</version>
             <scope>test</scope>
+<<<<<<< HEAD
+=======
             <exclusions>
                 <exclusion>
                     <groupId>asm</groupId>
                     <artifactId>asm-all</artifactId>
                 </exclusion>
             </exclusions>
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         </dependency>
 
         <dependency>
@@ -232,20 +253,42 @@
         <dependency>
             <groupId>org.apache.felix</groupId>
             <artifactId>org.apache.felix.ipojo</artifactId>
+<<<<<<< HEAD
+            <version>1.11.1-SNAPSHOT</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.osgi</groupId>
+                    <artifactId>org.osgi.core</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.osgi</groupId>
+                    <artifactId>org.osgi.compendium</artifactId>
+                </exclusion>
+            </exclusions>
+=======
             <version>1.12.2-SNAPSHOT</version>
             <scope>provided</scope>
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         </dependency>
 
         <dependency>
             <groupId>org.apache.felix</groupId>
             <artifactId>org.apache.felix.ipojo.annotations</artifactId>
+<<<<<<< HEAD
+            <version>${manipulator.version}</version>
+=======
             <version>1.12.1</version>
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         </dependency>
 
         <dependency>
             <groupId>org.apache.felix</groupId>
             <artifactId>org.apache.felix.configadmin</artifactId>
+<<<<<<< HEAD
+            <version>1.6.0</version>
+=======
             <version>1.8.0</version>
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
             <scope>test</scope>
         </dependency>
 
@@ -258,7 +301,11 @@
         <dependency>
             <groupId>org.ow2.chameleon.testing</groupId>
             <artifactId>osgi-helpers</artifactId>
+<<<<<<< HEAD
+            <version>0.6.1</version>
+=======
             <version>0.6.2</version>
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
             <exclusions>
                 <exclusion>
                     <groupId>org.osgi</groupId>

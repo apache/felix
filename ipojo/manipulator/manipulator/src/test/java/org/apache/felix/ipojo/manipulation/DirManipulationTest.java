@@ -21,9 +21,18 @@ package org.apache.felix.ipojo.manipulation;
 
 import java.io.BufferedReader;
 import java.io.File;
+<<<<<<< HEAD
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.IOException;
+import java.util.jar.Manifest;
+=======
+import java.io.FileOutputStream;
+import java.io.FileReader;
+import java.io.IOException;
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 
 import org.apache.felix.ipojo.manipulator.Pojoization;
 import org.junit.Test;
@@ -82,7 +91,11 @@ public class DirManipulationTest extends TestCase {
 		os.close();
 
 		// Issue directory manipulation
+<<<<<<< HEAD
+		pojoizator.directoryPojoization(tmpDir, null, manifestFile);
+=======
 		pojoizator.directoryPojoization(tmpDir, null, manifestFile, null);
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 
 		// Check if supplied manifest file is altered in place
 		BufferedReader fi = new BufferedReader(new FileReader(manifestFile));

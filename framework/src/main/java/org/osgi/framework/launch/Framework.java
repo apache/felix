@@ -1,5 +1,9 @@
 /*
+<<<<<<< HEAD
+ * Copyright (c) OSGi Alliance (2008, 2012). All Rights Reserved.
+=======
  * Copyright (c) OSGi Alliance (2008, 2014). All Rights Reserved.
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,12 +23,18 @@ package org.osgi.framework.launch;
 import java.io.InputStream;
 import java.net.URL;
 import java.util.Enumeration;
+<<<<<<< HEAD
+=======
 import org.osgi.annotation.versioning.ProviderType;
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleException;
 import org.osgi.framework.Constants;
 import org.osgi.framework.FrameworkEvent;
+<<<<<<< HEAD
+=======
 import org.osgi.framework.FrameworkListener;
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 
 /**
  * A Framework instance. A Framework is also known as a System Bundle.
@@ -35,6 +45,14 @@ import org.osgi.framework.FrameworkListener;
  * instance.
  * 
  * @ThreadSafe
+<<<<<<< HEAD
+ * @noimplement
+ * @version $Id: e76240d5de584d1666880d9bc358571a76cbd8fb $
+ */
+public interface Framework extends Bundle {
+
+	/**
+=======
  * @author $Id: 25b603f31ba381c47a8db8a9f2e006e13588877a $
  */
 @ProviderType
@@ -58,6 +76,7 @@ public interface Framework extends Bundle {
 	void init() throws BundleException;
 
 	/**
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 	 * Initialize this Framework. After calling this method, this Framework
 	 * must:
 	 * <ul>
@@ -72,8 +91,11 @@ public interface Framework extends Bundle {
 	 * {@code ConditionalPermissionAdmin}.</li>
 	 * <li>Be {@link #adapt(Class) adaptable} to the OSGi defined types to which
 	 * a system bundle can be adapted.</li>
+<<<<<<< HEAD
+=======
 	 * <li>Have called the {@code start} method of the extension bundle
 	 * activator for all resolved extension bundles.</li>
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 	 * </ul>
 	 * 
 	 * <p>
@@ -84,6 +106,8 @@ public interface Framework extends Bundle {
 	 * This method does nothing if called when this Framework is in the
 	 * {@link #STARTING}, {@link #ACTIVE} or {@link #STOPPING} states.
 	 * 
+<<<<<<< HEAD
+=======
 	 * <p>
 	 * All framework events fired by this method method are also delivered to
 	 * the specified FrameworkListeners in the order they are specified before
@@ -95,6 +119,7 @@ public interface Framework extends Bundle {
 	 *        listeners do not need to be otherwise registered with the
 	 *        framework. If a specified listener is registered with the
 	 *        framework, it will be notified twice for each framework event.
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 	 * @throws BundleException If this Framework could not be initialized.
 	 * @throws SecurityException If the Java Runtime Environment supports
 	 *         permissions and the caller does not have the appropriate
@@ -102,9 +127,15 @@ public interface Framework extends Bundle {
 	 *         manager already installed and the
 	 *         {@link Constants#FRAMEWORK_SECURITY} configuration property is
 	 *         set.
+<<<<<<< HEAD
+	 * 
+	 */
+	void init() throws BundleException;
+=======
 	 * @since 1.2
 	 */
 	void init(FrameworkListener... listeners) throws BundleException;
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 
 	/**
 	 * Wait until this Framework has completely stopped. The {@code stop} and
@@ -360,6 +391,8 @@ public interface Framework extends Bundle {
 	URL getEntry(String path);
 
 	/**
+<<<<<<< HEAD
+=======
 	 * Returns the time when the set of bundles in this framework was last
 	 * modified. The set of bundles is considered to be modified when a bundle
 	 * is installed, updated or uninstalled.
@@ -374,6 +407,7 @@ public interface Framework extends Bundle {
 	long getLastModified();
 
 	/**
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 	 * Returns {@code null} as a framework implementation does not have a proper
 	 * bundle from which to return entries.
 	 * 

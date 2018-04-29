@@ -20,9 +20,13 @@ package org.apache.felix.scr.impl.parser;
 
 public class ParseException extends Exception
 {
+<<<<<<< HEAD
+    public ParseException(String msg, Exception originalException) {
+=======
 	private static final long serialVersionUID = 7476908955452692098L;
 
 	public ParseException(String msg, Exception originalException) {
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         super(msg, originalException);
     }
     

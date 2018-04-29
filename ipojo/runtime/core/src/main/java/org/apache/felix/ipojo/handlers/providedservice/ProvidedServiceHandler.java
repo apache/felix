@@ -289,14 +289,21 @@ public class ProvidedServiceHandler extends PrimitiveHandler {
      * @throws ConfigurationException : the checked provided service is not correct.
      */
     private boolean checkProvidedService(ProvidedService svc) throws ConfigurationException {
+<<<<<<< HEAD
+=======
         Set<ClassLoader> classloaders = new LinkedHashSet<ClassLoader>();
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         for (int i = 0; i < svc.getServiceSpecifications().length; i++) {
             String specName = svc.getServiceSpecifications()[i];
 
             // Check service level dependencies
             try {
+<<<<<<< HEAD
+                Class spec = getInstanceManager().getFactory().loadClass(specName);
+=======
                 Class spec = load(specName, classloaders);
                 classloaders.add(spec.getClassLoader());
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
                 Field specField = spec.getField("specification");
                 Object specif = specField.get(null);
                 if (specif instanceof String) {
@@ -314,7 +321,11 @@ public class ProvidedServiceHandler extends PrimitiveHandler {
                     throw new ConfigurationException("Service Providing: The specification field of the service specification " + svc.getServiceSpecifications()[i] + " needs to be a String");
                 }
             } catch (NoSuchFieldException e) {
+<<<<<<< HEAD
+                return true; // No specification field
+=======
                 // Ignore it, keep and going.
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
             } catch (ClassNotFoundException e) {
                 throw new ConfigurationException("Service Providing: The service specification " + svc.getServiceSpecifications()[i] + " cannot be loaded", e);
             } catch (IllegalArgumentException e) {
@@ -329,6 +340,8 @@ public class ProvidedServiceHandler extends PrimitiveHandler {
         return true;
     }
 
+<<<<<<< HEAD
+=======
     private Class load(String specName, Set<ClassLoader> classloaders) throws ClassNotFoundException {
         try {
             return getInstanceManager().getFactory().loadClass(specName);
@@ -345,6 +358,7 @@ public class ProvidedServiceHandler extends PrimitiveHandler {
         throw new ClassNotFoundException(specName);
     }
 
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     /**
      * Look for the implementation (i.e. component) dependency for the given service-level requirement metadata.
      * @param element : the service-level requirement metadata
@@ -430,9 +444,14 @@ public class ProvidedServiceHandler extends PrimitiveHandler {
         // Verify that the field name correspond to a dependency
         for (ProvidedService svc : m_providedServices) {
             boolean update = false;
+<<<<<<< HEAD
+            for (int j = 0; j < svc.getProperties().length; j++) {
+                Property prop = svc.getProperties()[j];
+=======
             // Retrieve a copy of the properties.
             final Property[] properties = svc.getProperties();
             for (Property prop : properties) {
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
                 if (fieldName.equals(prop.getField()) && !prop.getValue().equals(value)) {
                     // it is the associated property
                     prop.setValue(value);

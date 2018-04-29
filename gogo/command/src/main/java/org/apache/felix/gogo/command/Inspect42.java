@@ -30,7 +30,10 @@ import org.osgi.service.packageadmin.ExportedPackage;
 import org.osgi.service.packageadmin.PackageAdmin;
 import org.osgi.service.packageadmin.RequiredBundle;
 
+<<<<<<< HEAD
+=======
 @SuppressWarnings("deprecation")
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 public class Inspect42
 {
     public static final String LEGACY_PACKAGE_NAMESPACE = "package";
@@ -96,7 +99,11 @@ public class Inspect42
         {
             if (separatorNeeded)
             {
+<<<<<<< HEAD
+                System.out.println("");
+=======
                 System.out.println();
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
             }
             String title = b + " provides:";
             System.out.println(title);
@@ -138,7 +145,11 @@ public class Inspect42
         {
             if (separatorNeeded)
             {
+<<<<<<< HEAD
+                System.out.println("");
+=======
                 System.out.println();
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
             }
             String title = b + " requires:";
             System.out.println(title);
@@ -176,7 +187,11 @@ public class Inspect42
         boolean matches = false;
 
         // Keep track of service references.
+<<<<<<< HEAD
+        List<ServiceReference> refs = new ArrayList();
+=======
         List<ServiceReference<?>> refs = new ArrayList<>();
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 
         // Fragments cannot export packages.
         if (!isFragment(b))
@@ -243,7 +258,11 @@ public class Inspect42
         boolean matches = false;
 
         // Keep track of service references.
+<<<<<<< HEAD
+        List<ServiceReference> refs = new ArrayList();
+=======
         List<ServiceReference<?>> refs = new ArrayList<>();
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 
         // Fragments cannot import packages.
         if (!isFragment(b))
@@ -299,7 +318,11 @@ public class Inspect42
         boolean matches = false;
 
         // Keep track of service references.
+<<<<<<< HEAD
+        List<ServiceReference> refs = new ArrayList();
+=======
         List<ServiceReference<?>> refs = new ArrayList<>();
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 
         // Fragments cannot be required.
         if (!isFragment(b))
@@ -372,7 +395,11 @@ public class Inspect42
         boolean matches = false;
 
         // Keep track of service references.
+<<<<<<< HEAD
+        List<ServiceReference> refs = new ArrayList();
+=======
         List<ServiceReference<?>> refs = new ArrayList<>();
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 
         // Fragments cannot require bundles.
         if (!isFragment(b))
@@ -422,7 +449,11 @@ public class Inspect42
         boolean matches = false;
 
         // Keep track of service references.
+<<<<<<< HEAD
+        List<ServiceReference> refs = new ArrayList();
+=======
         List<ServiceReference<?>> refs = new ArrayList<>();
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 
         // Get package admin service.
         PackageAdmin pa = Util.getService(bc, PackageAdmin.class, refs);
@@ -481,7 +512,11 @@ public class Inspect42
         boolean matches = false;
 
         // Keep track of service references.
+<<<<<<< HEAD
+        List<ServiceReference> refs = new ArrayList();
+=======
         List<ServiceReference<?>> refs = new ArrayList<>();
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 
         // Get package admin service.
         PackageAdmin pa = Util.getService(bc, PackageAdmin.class, refs);

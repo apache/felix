@@ -1,0 +1,74 @@
+<?xml version="1.0"?>
+
+<!--
+  ~ Licensed to the Apache Software Foundation (ASF) under one
+  ~ or more contributor license agreements.  See the NOTICE file
+  ~ distributed with this work for additional information
+  ~ regarding copyright ownership.  The ASF licenses this file
+  ~ to you under the Apache License, Version 2.0 (the
+  ~ "License"); you may not use this file except in compliance
+  ~ with the License.  You may obtain a copy of the License at
+  ~
+  ~ http://www.apache.org/licenses/LICENSE-2.0
+  ~
+  ~ Unless required by applicable law or agreed to in writing,
+  ~ software distributed under the License is distributed on an
+  ~ "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+  ~ KIND, either express or implied.  See the License for the
+  ~ specific language governing permissions and limitations
+  ~ under the License.
+  -->
+
+<project name="spell.checker" default="package" basedir="">
+	
+	<property name="src.dir" value="src"/>
+	<property name="lib.dir" value="libs"/>
+	<property name="build.dir" value="output/classes"/>
+	<property name="output.dir" value="output"/>
+	
+	<taskdef resource="aQute/bnd/ant/taskdef.properties"
+		      classpath="../tasks/bnd-${bnd.version}.jar"/>
+	<taskdef name="ipojo" classpath="../tasks/org.apache.felix.ipojo.ant-${ipojo.ant.version}.jar"
+		classname="org.apache.felix.ipojo.task.IPojoTask"/>
+	
+	<target name="clean">
+		<delete dir="${build.dir}"/>
+		<delete dir="${output.dir}"/>
+		<delete dir="${lib.dir}"/>
+	</target>
+	
+	<target name="buildclasspath">
+		<copy file="../spell.services/output/spell.services.jar" todir="${lib.dir}"/>
+        <copy file="../tasks/org.apache.felix.ipojo.ant-${ipojo.ant.version}.jar" todir="${lib.dir}"/>
+	</target>
+
+    <path id="classpath">
+        <fileset dir="${lib.dir}" includes="**/*.jar"/>
+    </path>
+
+	<target name="compile" depends="clean, buildclasspath">
+	<mkdir dir="${output.dir}"/>
+		<mkdir dir="${build.dir}"/>
+
+		<javac   srcdir="${src.dir}"
+		         destdir="${build.dir}"
+		         debug="on"
+				 classpathref="classpath"
+		  />
+
+	</target>
+
+	<target name="package" depends="compile">
+		<bnd
+	   	  classpath="${build.dir}" 
+	      failok="false" 
+	      exceptions="true" 
+	      files="${ant.project.name}.bnd"
+		  output="${output.dir}"/>
+		
+		<ipojo
+				input="${output.dir}/${ant.project.name}.jar"
+		/>
+	</target>
+
+</project>

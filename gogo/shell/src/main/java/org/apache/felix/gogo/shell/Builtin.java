@@ -162,7 +162,12 @@ public class Builtin
         return Class.forName(name);
     }
 
+<<<<<<< HEAD
+    public void set(CommandSession session, String[] argv) throws Exception
+    {
+=======
     public void set(CommandSession session, String[] argv) {
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         final String[] usage = {
                 "set - show session variables",
                 "Usage: set [OPTIONS] [PREFIX]",
@@ -194,7 +199,11 @@ public class Builtin
         else
         {
             boolean all = opt.isSet("all");
+<<<<<<< HEAD
+            for (String key : new TreeSet<String>(Shell.getVariables(session)))
+=======
             for (String key : new TreeSet<>(Shell.getVariables(session)))
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
             {
                 if (!key.startsWith(prefix))
                     continue;
@@ -208,7 +217,11 @@ public class Builtin
 
                 if (target != null)
                 {
+<<<<<<< HEAD
+                    Class<? extends Object> clazz = target.getClass();
+=======
                     Class<?> clazz = target.getClass();
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
                     type = clazz.getSimpleName();
                     value = target.toString();
                 }
@@ -253,7 +266,11 @@ public class Builtin
 
         if (opt.isSet("list"))
         {
+<<<<<<< HEAD
+            list = new ArrayList<String>();
+=======
             list = new ArrayList<>();
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         }
 
         boolean first = true;
@@ -330,7 +347,11 @@ public class Builtin
 
         if (optScope != null || (args.isEmpty() && all))
         {
+<<<<<<< HEAD
+            Set<String> snames = new TreeSet<String>();
+=======
             Set<String> snames = new TreeSet<>();
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 
             for (String sname : (getCommands(session)))
             {
@@ -350,7 +371,11 @@ public class Builtin
 
         if (args.size() == 0)
         {
+<<<<<<< HEAD
+            Map<String, Integer> scopes = new TreeMap<String, Integer>();
+=======
             Map<String, Integer> scopes = new TreeMap<>();
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 
             for (String sname : getCommands(session))
             {
@@ -378,7 +403,11 @@ public class Builtin
         final String MAIN = "_main"; // FIXME: must match Reflective.java
 
         StringBuilder buf = new StringBuilder();
+<<<<<<< HEAD
+        Set<String> cmds = new LinkedHashSet<String>();
+=======
         Set<String> cmds = new LinkedHashSet<>();
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 
         // get all commands
         if ((colon != -1) || (session.get(name) != null))
@@ -563,7 +592,11 @@ public class Builtin
             target = method.invoke(target, (Object[])null);
         }
 
+<<<<<<< HEAD
+        ArrayList<Method> list = new ArrayList<Method>();
+=======
         ArrayList<Method> list = new ArrayList<>();
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         Class<?> tc = (target instanceof Class<?>) ? (Class<?>) target
             : target.getClass();
         Method[] methods = tc.getMethods();
@@ -582,6 +615,17 @@ public class Builtin
         return list;
     }
 
+<<<<<<< HEAD
+    private final static Set<String> KEYWORDS = new HashSet<String>(
+        Arrays.asList(new String[] { "abstract", "continue", "for", "new", "switch",
+                "assert", "default", "goto", "package", "synchronized", "boolean", "do",
+                "if", "private", "this", "break", "double", "implements", "protected",
+                "throw", "byte", "else", "import", "public", "throws", "case", "enum",
+                "instanceof", "return", "transient", "catch", "extends", "int", "short",
+                "try", "char", "final", "interface", "static", "void", "class",
+                "finally", "long", "strictfp", "volatile", "const", "float", "native",
+                "super", "while" }));
+=======
     private final static Set<String> KEYWORDS = new HashSet<>(
             Arrays.asList("abstract", "continue", "for", "new", "switch",
                     "assert", "default", "goto", "package", "synchronized", "boolean", "do",
@@ -591,5 +635,6 @@ public class Builtin
                     "try", "char", "final", "interface", "static", "void", "class",
                     "finally", "long", "strictfp", "volatile", "const", "float", "native",
                     "super", "while"));
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 
 }

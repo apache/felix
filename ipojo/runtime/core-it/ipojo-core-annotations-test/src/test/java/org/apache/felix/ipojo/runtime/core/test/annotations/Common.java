@@ -25,7 +25,10 @@ import org.ops4j.pax.exam.options.DefaultCompositeOption;
 import org.ow2.chameleon.testing.helpers.BaseTest;
 
 import static org.ops4j.pax.exam.CoreOptions.mavenBundle;
+<<<<<<< HEAD
+=======
 import static org.ow2.chameleon.testing.helpers.FestAssertOption.festAssertAsInProject;
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 
 /**
  * Bootstrap the test from this project
@@ -35,8 +38,12 @@ public class Common extends BaseTest {
     @Override
     protected Option[] getCustomOptions() {
         return new Option[] {
+<<<<<<< HEAD
+                eventadmin()
+=======
                 eventadmin(),
                 festAssertAsInProject()
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         };
     }
 

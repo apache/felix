@@ -27,7 +27,11 @@
     <packaging>bundle</packaging>
     <name>Apache Felix iPOJO Gogo Command</name>
     <artifactId>org.apache.felix.ipojo.gogo</artifactId>
+<<<<<<< HEAD
+    <version>1.11.1-SNAPSHOT</version>
+=======
     <version>1.12.2-SNAPSHOT</version>
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 
     <description>
         Provides commands for the Gogo shell to introspect the iPOJO ecosystem.
@@ -40,30 +44,47 @@
         <dependency>
             <groupId>org.apache.felix</groupId>
             <artifactId>org.apache.felix.ipojo</artifactId>
+<<<<<<< HEAD
+            <version>1.11.1-SNAPSHOT</version>
+=======
             <version>1.12.2-SNAPSHOT</version>
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         </dependency>
         <dependency>
             <groupId>org.apache.felix</groupId>
             <artifactId>org.apache.felix.ipojo.annotations</artifactId>
+<<<<<<< HEAD
+            <version>1.10.0</version>
+=======
             <version>1.12.1</version>
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         </dependency>
         <dependency>
             <groupId>org.osgi</groupId>
             <artifactId>org.osgi.core</artifactId>
             <version>4.2.0</version>
+<<<<<<< HEAD
+=======
             <scope>provided</scope>
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         </dependency>
         <dependency>
             <groupId>org.osgi</groupId>
             <artifactId>org.osgi.compendium</artifactId>
             <version>4.0.0</version>
+<<<<<<< HEAD
+=======
             <scope>provided</scope>
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         </dependency>
         <dependency>
             <groupId>org.apache.felix</groupId>
             <artifactId>org.apache.felix.gogo.runtime</artifactId>
             <version>0.6.1</version>
+<<<<<<< HEAD
+=======
             <scope>provided</scope>
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         </dependency>
     </dependencies>
     <build>

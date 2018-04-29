@@ -19,6 +19,11 @@
 
 package org.apache.felix.jaas.internal;
 
+<<<<<<< HEAD
+import static javax.security.auth.login.AppConfigurationEntry.LoginModuleControlFlag;
+
+=======
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 import java.util.Collections;
 import java.util.Map;
 
@@ -29,6 +34,24 @@ import org.apache.sling.commons.osgi.PropertiesUtil;
 import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceReference;
 
+<<<<<<< HEAD
+final class OsgiLoginModuleProvider implements LoginModuleProvider
+{
+    private final LoginModuleFactory delegate;
+    private final int ranking;
+    private final LoginModuleControlFlag flag;
+    private final String realmName;
+    private final ServiceReference serviceReference;
+
+    public OsgiLoginModuleProvider(ServiceReference sr, LoginModuleFactory delegate)
+    {
+        this.delegate = delegate;
+        this.ranking = PropertiesUtil.toInteger(sr.getProperty(Constants.SERVICE_RANKING), 0);
+        this.flag = ControlFlag.from(
+            (String) sr.getProperty(LoginModuleFactory.JAAS_CONTROL_FLAG)).flag();
+        this.realmName = (String) sr.getProperty(LoginModuleFactory.JAAS_REALM_NAME);
+        this.serviceReference = sr;
+=======
 import static javax.security.auth.login.AppConfigurationEntry.LoginModuleControlFlag;
 
 final class OsgiLoginModuleProvider implements LoginModuleProvider
@@ -57,6 +80,7 @@ final class OsgiLoginModuleProvider implements LoginModuleProvider
         this.ranking = PropertiesUtil.toInteger(rankingProperty, 0);
         this.flag = ControlFlag.from((String) serviceReference.getProperty(LoginModuleFactory.JAAS_CONTROL_FLAG)).flag();
         this.realmName = Util.trimToNull((String) serviceReference.getProperty(LoginModuleFactory.JAAS_REALM_NAME));
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     }
 
     public Map<String, ?> options()

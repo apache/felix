@@ -18,6 +18,9 @@
  */
 package org.apache.felix.deploymentadmin.itest;
 
+<<<<<<< HEAD
+import org.apache.felix.deploymentadmin.itest.util.DeploymentPackageBuilder;
+=======
 import static org.apache.felix.deploymentadmin.itest.util.CertificateUtil.createSelfSignedCert;
 
 import java.io.File;
@@ -27,12 +30,16 @@ import org.apache.felix.deploymentadmin.itest.util.CertificateUtil.KeyType;
 import org.apache.felix.deploymentadmin.itest.util.CertificateUtil.SignerInfo;
 import org.apache.felix.deploymentadmin.itest.util.DeploymentPackageBuilder;
 import org.apache.felix.deploymentadmin.itest.util.DeploymentPackageBuilder.JarManifestManipulatingFilter;
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.ops4j.pax.exam.junit.PaxExam;
 import org.osgi.framework.Bundle;
+<<<<<<< HEAD
+=======
 import org.osgi.service.deploymentadmin.BundleInfo;
 import org.osgi.service.deploymentadmin.DeploymentException;
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 import org.osgi.service.deploymentadmin.DeploymentPackage;
 
 /**
@@ -40,6 +47,11 @@ import org.osgi.service.deploymentadmin.DeploymentPackage;
  */
 @RunWith(PaxExam.class)
 public class InstallDeploymentPackageTest extends BaseIntegrationTest {
+<<<<<<< HEAD
+
+    /**
+     * Tests that adding the dependency for a bundle in an update package causes the depending bundle to be resolved and started.
+=======
     /**
      * FELIX-518 - Test that DP with localization and signature files are properly deployed.
      */
@@ -115,14 +127,22 @@ public class InstallDeploymentPackageTest extends BaseIntegrationTest {
     /**
      * Tests that adding the dependency for a bundle in an update package causes the depending bundle to be resolved and
      * started.
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
      */
     @Test
     public void testInstallBundleWithDependencyInPackageUpdateOk() throws Exception {
         DeploymentPackageBuilder dpBuilder = createNewDeploymentPackageBuilder("1.0.0");
         // missing bundle1 as dependency...
+<<<<<<< HEAD
+        dpBuilder
+            .add(dpBuilder.createBundleResource().setUrl(getTestBundle("bundle2")));
+
+        DeploymentPackage dp1 = m_deploymentAdmin.installDeploymentPackage(dpBuilder.generate());
+=======
         dpBuilder.add(dpBuilder.createBundleResource().setUrl(getTestBundleURL("bundle2")));
 
         DeploymentPackage dp1 = installDeploymentPackage(dpBuilder);
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         assertNotNull("No deployment package returned?!", dp1);
 
         awaitRefreshPackagesEvent();
@@ -134,10 +154,17 @@ public class InstallDeploymentPackageTest extends BaseIntegrationTest {
 
         dpBuilder = createDeploymentPackageBuilder(dpBuilder.getSymbolicName(), "1.0.1");
         dpBuilder
+<<<<<<< HEAD
+            .add(dpBuilder.createBundleResource().setUrl(getTestBundle("bundle2")))
+            .add(dpBuilder.createBundleResource().setUrl(getTestBundle("bundle1")));
+
+        DeploymentPackage dp2 = m_deploymentAdmin.installDeploymentPackage(dpBuilder.generate());
+=======
             .add(dpBuilder.createBundleResource().setUrl(getTestBundleURL("bundle2")))
             .add(dpBuilder.createBundleResource().setUrl(getTestBundleURL("bundle1")));
 
         DeploymentPackage dp2 = installDeploymentPackage(dpBuilder);
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         assertNotNull("No deployment package returned?!", dp2);
 
         awaitRefreshPackagesEvent();
@@ -147,15 +174,26 @@ public class InstallDeploymentPackageTest extends BaseIntegrationTest {
     }
 
     /**
+<<<<<<< HEAD
+     * Tests that installing a bundle with a dependency installed by another deployment package is not started, but is resolved.
+=======
      * Tests that installing a bundle with a dependency installed by another deployment package is not started, but is
      * resolved.
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
      */
     @Test
     public void testInstallBundleWithDependencyInSeparatePackageOk() throws Exception {
         DeploymentPackageBuilder dpBuilder = createNewDeploymentPackageBuilder("1.0.0");
+<<<<<<< HEAD
+        dpBuilder
+            .add(dpBuilder.createBundleResource().setUrl(getTestBundle("bundle2")));
+
+        DeploymentPackage dp1 = m_deploymentAdmin.installDeploymentPackage(dpBuilder.generate());
+=======
         dpBuilder.add(dpBuilder.createBundleResource().setUrl(getTestBundleURL("bundle2")));
 
         DeploymentPackage dp1 = installDeploymentPackage(dpBuilder);
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         assertNotNull("No deployment package returned?!", dp1);
 
         awaitRefreshPackagesEvent();
@@ -169,9 +207,16 @@ public class InstallDeploymentPackageTest extends BaseIntegrationTest {
 
         dpBuilder = createNewDeploymentPackageBuilder("1.0.0");
         // as missing bundle1...
+<<<<<<< HEAD
+        dpBuilder
+            .add(dpBuilder.createBundleResource().setUrl(getTestBundle("bundle1")));
+
+        DeploymentPackage dp2 = m_deploymentAdmin.installDeploymentPackage(dpBuilder.generate());
+=======
         dpBuilder.add(dpBuilder.createBundleResource().setUrl(getTestBundleURL("bundle1")));
 
         DeploymentPackage dp2 = installDeploymentPackage(dpBuilder);
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         assertNotNull("No deployment package returned?!", dp2);
 
         awaitRefreshPackagesEvent();
@@ -195,10 +240,17 @@ public class InstallDeploymentPackageTest extends BaseIntegrationTest {
 
         DeploymentPackageBuilder dpBuilder = createNewDeploymentPackageBuilder("1.0.0");
         dpBuilder
+<<<<<<< HEAD
+            .add(dpBuilder.createBundleResource().setUrl(getTestBundle("bundle1")))
+            .add(dpBuilder.createBundleResource().setUrl(getTestBundle("bundle3")));
+
+        DeploymentPackage dp = m_deploymentAdmin.installDeploymentPackage(dpBuilder.generate());
+=======
             .add(dpBuilder.createBundleResource().setUrl(getTestBundleURL("bundle1")))
             .add(dpBuilder.createBundleResource().setUrl(getTestBundleURL("bundle3")));
 
         DeploymentPackage dp = installDeploymentPackage(dpBuilder);
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         assertNotNull("No deployment package returned?!", dp);
 
         awaitRefreshPackagesEvent();
@@ -210,21 +262,36 @@ public class InstallDeploymentPackageTest extends BaseIntegrationTest {
         // the bundle threw an exception during start, so it is not active...
         assertFalse(isBundleActive(dp.getBundle(getSymbolicName("bundle3"))));
 
+<<<<<<< HEAD
+        assertEquals("Expected a single deployment package?!", 1, m_deploymentAdmin.listDeploymentPackages().length);
+    }
+
+    /**
+     * Tests that installing a bundle along with a fragment bundle succeeds (DA should not try to start the fragment, see FELIX-4167).
+=======
         assertEquals("Expected a single deployment package?!", 1, countDeploymentPackages());
     }
 
     /**
      * Tests that installing a bundle along with a fragment bundle succeeds (DA should not try to start the fragment,
      * see FELIX-4167).
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
      */
     @Test
     public void testInstallBundleWithFragmentOk() throws Exception {
         DeploymentPackageBuilder dpBuilder = createNewDeploymentPackageBuilder("1.0.0");
         dpBuilder
+<<<<<<< HEAD
+            .add(dpBuilder.createBundleResource().setUrl(getTestBundle("bundle1")))
+            .add(dpBuilder.createBundleResource().setUrl(getTestBundle("fragment1")));
+
+        DeploymentPackage dp = m_deploymentAdmin.installDeploymentPackage(dpBuilder.generate());
+=======
             .add(dpBuilder.createBundleResource().setUrl(getTestBundleURL("bundle1")))
             .add(dpBuilder.createBundleResource().setUrl(getTestBundleURL("fragment1")));
 
         DeploymentPackage dp = installDeploymentPackage(dpBuilder);
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         assertNotNull("No deployment package returned?!", dp);
 
         awaitRefreshPackagesEvent();
@@ -235,7 +302,11 @@ public class InstallDeploymentPackageTest extends BaseIntegrationTest {
         assertTrue(isBundleActive(dp.getBundle(getSymbolicName("bundle1"))));
         assertFalse(isBundleActive(dp.getBundle(getSymbolicName("fragment1"))));
 
+<<<<<<< HEAD
+        assertEquals("Expected a single deployment package?!", 1, m_deploymentAdmin.listDeploymentPackages().length);
+=======
         assertEquals("Expected a single deployment package?!", 1, countDeploymentPackages());
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     }
 
     /**
@@ -244,9 +315,16 @@ public class InstallDeploymentPackageTest extends BaseIntegrationTest {
     @Test
     public void testInstallBundleWithMissingDependencyOk() throws Exception {
         DeploymentPackageBuilder dpBuilder = createNewDeploymentPackageBuilder("1.0.0");
+<<<<<<< HEAD
+        dpBuilder
+            .add(dpBuilder.createBundleResource().setUrl(getTestBundle("bundle2")));
+
+        DeploymentPackage dp = m_deploymentAdmin.installDeploymentPackage(dpBuilder.generate());
+=======
         dpBuilder.add(dpBuilder.createBundleResource().setUrl(getTestBundleURL("bundle2")));
 
         DeploymentPackage dp = installDeploymentPackage(dpBuilder);
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         assertNotNull("No deployment package returned?!", dp);
 
         awaitRefreshPackagesEvent();
@@ -259,6 +337,10 @@ public class InstallDeploymentPackageTest extends BaseIntegrationTest {
         assertTrue(isBundleInstalled(dp.getBundle(getSymbolicName("bundle2"))));
     }
 
+<<<<<<< HEAD
+
+=======
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     /**
      * Tests that installing a bundle along with other (non-bundle) artifacts succeeds.
      */
@@ -266,11 +348,21 @@ public class InstallDeploymentPackageTest extends BaseIntegrationTest {
     public void testInstallBundleWithOtherArtifactsOk() throws Exception {
         DeploymentPackageBuilder dpBuilder = createNewDeploymentPackageBuilder("1.0.0");
         dpBuilder
+<<<<<<< HEAD
+            .add(dpBuilder.createResourceProcessorResource().setUrl(getTestBundle("rp1")))
+            .add(
+                dpBuilder.createResource().setResourceProcessorPID(TEST_FAILING_BUNDLE_RP1)
+                    .setUrl(getTestResource("test-config1.xml")))
+            .add(dpBuilder.createBundleResource().setUrl(getTestBundle("bundle3")));
+
+        DeploymentPackage dp = m_deploymentAdmin.installDeploymentPackage(dpBuilder.generate());
+=======
             .add(dpBuilder.createResourceProcessorResource().setUrl(getTestBundleURL("rp1")))
             .add(dpBuilder.createResource().setResourceProcessorPID(TEST_FAILING_BUNDLE_RP1).setUrl(getTestResource("test-config1.xml")))
             .add(dpBuilder.createBundleResource().setUrl(getTestBundleURL("bundle3")));
 
         DeploymentPackage dp = installDeploymentPackage(dpBuilder);
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         assertNotNull("No deployment package returned?!", dp);
 
         awaitRefreshPackagesEvent();
@@ -279,7 +371,11 @@ public class InstallDeploymentPackageTest extends BaseIntegrationTest {
         assertBundleExists(getSymbolicName("rp1"), "1.0.0");
         assertBundleExists(getSymbolicName("bundle3"), "1.0.0");
 
+<<<<<<< HEAD
+        assertEquals("Expected a single deployment package?!", 1, m_deploymentAdmin.listDeploymentPackages().length);
+=======
         assertEquals("Expected a single deployment package?!", 1, countDeploymentPackages());
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     }
 
     /**
@@ -288,9 +384,16 @@ public class InstallDeploymentPackageTest extends BaseIntegrationTest {
     @Test
     public void testInstallSingleValidBundleOk() throws Exception {
         DeploymentPackageBuilder dpBuilder = createNewDeploymentPackageBuilder("1.0.0");
+<<<<<<< HEAD
+        dpBuilder
+            .add(dpBuilder.createBundleResource().setUrl(getTestBundle("bundle1")));
+
+        DeploymentPackage dp = m_deploymentAdmin.installDeploymentPackage(dpBuilder.generate());
+=======
         dpBuilder.add(dpBuilder.createBundleResource().setUrl(getTestBundleURL("bundle1")));
 
         DeploymentPackage dp = installDeploymentPackage(dpBuilder);
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         assertNotNull("No deployment package returned?!", dp);
 
         awaitRefreshPackagesEvent();
@@ -308,10 +411,17 @@ public class InstallDeploymentPackageTest extends BaseIntegrationTest {
     public void testInstallTwoValidBundlesOk() throws Exception {
         DeploymentPackageBuilder dpBuilder = createNewDeploymentPackageBuilder("1.0.0");
         dpBuilder
+<<<<<<< HEAD
+            .add(dpBuilder.createBundleResource().setUrl(getTestBundle("bundle1")))
+            .add(dpBuilder.createBundleResource().setUrl(getTestBundle("bundle2")));
+
+        DeploymentPackage dp = m_deploymentAdmin.installDeploymentPackage(dpBuilder.generate());
+=======
             .add(dpBuilder.createBundleResource().setUrl(getTestBundleURL("bundle1")))
             .add(dpBuilder.createBundleResource().setUrl(getTestBundleURL("bundle2")));
 
         DeploymentPackage dp = installDeploymentPackage(dpBuilder);
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         assertNotNull("No deployment package returned?!", dp);
 
         awaitRefreshPackagesEvent();
@@ -326,17 +436,28 @@ public class InstallDeploymentPackageTest extends BaseIntegrationTest {
     }
 
     /**
+<<<<<<< HEAD
+     * Tests that if an exception is thrown during the uninstall of a bundle, the installation/update continues and succeeds.
+=======
      * Tests that if an exception is thrown during the uninstall of a bundle, the installation/update continues and
      * succeeds.
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
      */
     @Test
     public void testUninstallBundleWithExceptionThrownInStopCauseNoRollbackOk() throws Exception {
         DeploymentPackageBuilder dpBuilder = createNewDeploymentPackageBuilder("1.0.0");
         dpBuilder
+<<<<<<< HEAD
+            .add(dpBuilder.createBundleResource().setUrl(getTestBundle("bundle1")))
+            .add(dpBuilder.createBundleResource().setUrl(getTestBundle("bundle3")));
+
+        DeploymentPackage dp = m_deploymentAdmin.installDeploymentPackage(dpBuilder.generate());
+=======
             .add(dpBuilder.createBundleResource().setUrl(getTestBundleURL("bundle1")))
             .add(dpBuilder.createBundleResource().setUrl(getTestBundleURL("bundle3")));
 
         DeploymentPackage dp = installDeploymentPackage(dpBuilder);
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         assertNotNull("No deployment package returned?!", dp);
 
         awaitRefreshPackagesEvent();
@@ -347,10 +468,17 @@ public class InstallDeploymentPackageTest extends BaseIntegrationTest {
 
         dpBuilder = dpBuilder.create("1.0.1");
         dpBuilder
+<<<<<<< HEAD
+            .add(dpBuilder.createBundleResource().setUrl(getTestBundle("bundle1")))
+            .add(dpBuilder.createBundleResource().setUrl(getTestBundle("bundle2")));
+
+        dp = m_deploymentAdmin.installDeploymentPackage(dpBuilder.generate());
+=======
             .add(dpBuilder.createBundleResource().setUrl(getTestBundleURL("bundle1")))
             .add(dpBuilder.createBundleResource().setUrl(getTestBundleURL("bundle2")));
 
         dp = installDeploymentPackage(dpBuilder);
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         assertNotNull("No deployment package returned?!", dp);
 
         assertBundleExists(getSymbolicName("bundle1"), "1.0.0");
@@ -360,7 +488,11 @@ public class InstallDeploymentPackageTest extends BaseIntegrationTest {
         assertTrue(isBundleActive(dp.getBundle(getSymbolicName("bundle1"))));
         assertTrue(isBundleActive(dp.getBundle(getSymbolicName("bundle2"))));
 
+<<<<<<< HEAD
+        assertEquals("Expected a single deployment package?!", 1, m_deploymentAdmin.listDeploymentPackages().length);
+=======
         assertEquals("Expected a single deployment package?!", 1, countDeploymentPackages());
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     }
 
     /**
@@ -370,10 +502,17 @@ public class InstallDeploymentPackageTest extends BaseIntegrationTest {
     public void testUpdateBundleWithExceptionThrownInStopCauseNoRollbackOk() throws Exception {
         DeploymentPackageBuilder dpBuilder = createNewDeploymentPackageBuilder("1.0.0");
         dpBuilder
+<<<<<<< HEAD
+            .add(dpBuilder.createBundleResource().setUrl(getTestBundle("bundle1")))
+            .add(dpBuilder.createBundleResource().setUrl(getTestBundle("bundle3")));
+
+        DeploymentPackage dp = m_deploymentAdmin.installDeploymentPackage(dpBuilder.generate());
+=======
             .add(dpBuilder.createBundleResource().setUrl(getTestBundleURL("bundle1")))
             .add(dpBuilder.createBundleResource().setUrl(getTestBundleURL("bundle3")));
 
         DeploymentPackage dp = installDeploymentPackage(dpBuilder);
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         assertNotNull("No deployment package returned?!", dp);
 
         awaitRefreshPackagesEvent();
@@ -384,11 +523,19 @@ public class InstallDeploymentPackageTest extends BaseIntegrationTest {
 
         dpBuilder = createDeploymentPackageBuilder(dpBuilder.getSymbolicName(), "1.0.1");
         dpBuilder
+<<<<<<< HEAD
+            .add(dpBuilder.createBundleResource().setUrl(getTestBundle("bundle1")))
+            .add(dpBuilder.createBundleResource().setUrl(getTestBundle("bundle2")))
+            .add(dpBuilder.createBundleResource().setUrl(getTestBundle("bundle3")));
+
+        dp = m_deploymentAdmin.installDeploymentPackage(dpBuilder.generate());
+=======
             .add(dpBuilder.createBundleResource().setUrl(getTestBundleURL("bundle1")))
             .add(dpBuilder.createBundleResource().setUrl(getTestBundleURL("bundle2")))
             .add(dpBuilder.createBundleResource().setUrl(getTestBundleURL("bundle3")));
 
         dp = installDeploymentPackage(dpBuilder);
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         assertNotNull("No deployment package returned?!", dp);
 
         assertBundleExists(getSymbolicName("bundle1"), "1.0.0");
@@ -399,6 +546,9 @@ public class InstallDeploymentPackageTest extends BaseIntegrationTest {
         assertTrue(isBundleActive(dp.getBundle(getSymbolicName("bundle2"))));
         assertTrue(isBundleActive(dp.getBundle(getSymbolicName("bundle3"))));
 
+<<<<<<< HEAD
+        assertEquals("Expected a single deployment package?!", 1, m_deploymentAdmin.listDeploymentPackages().length);
+=======
         assertEquals("Expected a single deployment package?!", 1, countDeploymentPackages());
     }
 
@@ -605,5 +755,6 @@ public class InstallDeploymentPackageTest extends BaseIntegrationTest {
         assertTrue("File not restored?!", new File(dataArea, "file1").exists());
         assertTrue("File not restored?!", new File(dataArea, "file2").exists());
         assertTrue("File not restored?!", new File(dataArea, "file3").exists());
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     }
 }

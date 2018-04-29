@@ -25,7 +25,11 @@ import java.util.Dictionary;
 import java.util.List;
 import java.util.Map;
 
+<<<<<<< HEAD
+import org.apache.felix.ipojo.manipulation.MethodCreator;
+=======
 import org.apache.felix.ipojo.manipulation.ClassManipulator;
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 import org.objectweb.asm.Type;
 import org.objectweb.asm.tree.MethodNode;
 
@@ -53,8 +57,13 @@ public class Names {
      * the prefix.
      */
     public static String computeEffectiveMethodName(String name) {
+<<<<<<< HEAD
+        if (name != null && name.startsWith(MethodCreator.PREFIX)) {
+            return name.substring(MethodCreator.PREFIX.length());
+=======
         if (name != null && name.startsWith(ClassManipulator.PREFIX)) {
             return name.substring(ClassManipulator.PREFIX.length());
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         } else {
             return name;
         }

@@ -202,8 +202,12 @@ public class ConfigurationProcessor implements BundleProcessor {
                     fields().ofType(Instance.class).in(configuration).map();
             for (Map.Entry<Field, Instance> entry : fields.entrySet()) {
                 Instance instance = entry.getValue();
+<<<<<<< HEAD
+                instance.nameIfUnnamed(entry.getKey().getName());
+=======
                 instance.nameIfUnnamed(entry.getKey().getName())
                         .with("instance.bundle.context").setto(bundle.getBundleContext());
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
                 instances.add(instance);
             }
 
@@ -222,9 +226,13 @@ public class ConfigurationProcessor implements BundleProcessor {
                             .getKey().getName() + " of class " + entry.getKey().getDeclaringClass() + " threw an " +
                             "exception", entry.getValue().error());
                 } else {
+<<<<<<< HEAD
+                    instance.nameIfUnnamed(entry.getKey().getName());
+=======
                     instance
                             .nameIfUnnamed(entry.getKey().getName())
                             .with("instance.bundle.context").setto(bundle.getBundleContext());
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
                     instances.add(instance);
                 }
             }

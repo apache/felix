@@ -29,13 +29,21 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+<<<<<<< HEAD
+=======
 import org.apache.felix.utils.json.JSONWriter;
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 import org.apache.felix.webconsole.DefaultVariableResolver;
 import org.apache.felix.webconsole.SimpleWebConsolePlugin;
 import org.apache.felix.webconsole.WebConsoleConstants;
 import org.apache.felix.webconsole.WebConsoleUtil;
 import org.apache.felix.webconsole.internal.OsgiManagerPlugin;
 import org.apache.felix.webconsole.internal.Util;
+<<<<<<< HEAD
+import org.json.JSONException;
+import org.json.JSONWriter;
+=======
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
@@ -131,11 +139,19 @@ public class ServicesServlet extends SimpleWebConsolePlugin implements OsgiManag
     }
 
     public void deactivate() {
+<<<<<<< HEAD
+	if ( null != bipReg )
+	{
+	    bipReg.unregister();
+	    bipReg = null;
+	}
+=======
         if ( null != bipReg )
         {
             bipReg.unregister();
             bipReg = null;
         }
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         super.deactivate();
     }
 
@@ -151,7 +167,11 @@ public class ServicesServlet extends SimpleWebConsolePlugin implements OsgiManag
         String filterStr = filter.toString();
         try
         {
+<<<<<<< HEAD
+            ServiceReference[] refs = getBundleContext().getAllServiceReferences( null, filterStr );
+=======
             ServiceReference[] refs = BundleContextUtil.getWorkingBundleContext(this.getBundleContext()).getAllServiceReferences( null, filterStr );
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
             if ( refs == null || refs.length != 1 )
             {
                 return null;
@@ -175,7 +195,11 @@ public class ServicesServlet extends SimpleWebConsolePlugin implements OsgiManag
         }
         try
         {
+<<<<<<< HEAD
+            final ServiceReference[] refs = getBundleContext().getAllServiceReferences( null, filter );
+=======
             final ServiceReference[] refs = BundleContextUtil.getWorkingBundleContext(this.getBundleContext()).getAllServiceReferences( null, filter );
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
             if ( refs != null )
             {
                 return refs;
@@ -212,7 +236,11 @@ public class ServicesServlet extends SimpleWebConsolePlugin implements OsgiManag
 
 
     private void renderJSON( final HttpServletResponse response, final ServiceReference service, final Locale locale )
+<<<<<<< HEAD
+        throws IOException
+=======
             throws IOException
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     {
         response.setContentType( "application/json" );
         response.setCharacterEncoding( "UTF-8" );
@@ -221,6 +249,10 @@ public class ServicesServlet extends SimpleWebConsolePlugin implements OsgiManag
         writeJSON( pw, service, locale, null);
     }
 
+<<<<<<< HEAD
+
+    private void serviceDetails( JSONWriter jw, ServiceReference service ) throws JSONException
+=======
     private void keyVal( JSONWriter jw, String key, Object val) throws IOException
     {
         if ( val != null )
@@ -233,6 +265,7 @@ public class ServicesServlet extends SimpleWebConsolePlugin implements OsgiManag
     }
 
     private void serviceDetails( JSONWriter jw, ServiceReference service ) throws IOException
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     {
         String[] keys = service.getPropertyKeys();
 
@@ -244,6 +277,21 @@ public class ServicesServlet extends SimpleWebConsolePlugin implements OsgiManag
             String key = keys[i];
             if ( Constants.SERVICE_PID.equals( key ) )
             {
+<<<<<<< HEAD
+                WebConsoleUtil.keyVal( jw, "Service PID", service.getProperty( key ) );
+            }
+            else if ( Constants.SERVICE_DESCRIPTION.equals( key ) )
+            {
+                WebConsoleUtil.keyVal( jw, "Service Description", service.getProperty( key ) );
+            }
+            else if ( Constants.SERVICE_VENDOR.equals( key ) )
+            {
+                WebConsoleUtil.keyVal( jw, "Service Vendor", service.getProperty( key ) );
+            }
+            else if ( !Constants.OBJECTCLASS.equals( key ) && !Constants.SERVICE_ID.equals( key ) )
+            {
+                WebConsoleUtil.keyVal( jw, key, service.getProperty( key ) );
+=======
                 keyVal(jw, "Service PID", service.getProperty( key ));
             }
             else if ( Constants.SERVICE_DESCRIPTION.equals( key ) )
@@ -257,6 +305,7 @@ public class ServicesServlet extends SimpleWebConsolePlugin implements OsgiManag
             else if ( !Constants.OBJECTCLASS.equals( key ) && !Constants.SERVICE_ID.equals( key ) )
             {
                 keyVal(jw, key, service.getProperty( key ));
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
             }
 
         }
@@ -266,7 +315,11 @@ public class ServicesServlet extends SimpleWebConsolePlugin implements OsgiManag
     }
 
 
+<<<<<<< HEAD
+    private void usingBundles( JSONWriter jw, ServiceReference service, Locale locale ) throws JSONException
+=======
     private void usingBundles( JSONWriter jw, ServiceReference service, Locale locale ) throws IOException
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     {
         jw.key( "usingBundles" );
         jw.array();
@@ -287,8 +340,12 @@ public class ServicesServlet extends SimpleWebConsolePlugin implements OsgiManag
     }
 
 
+<<<<<<< HEAD
+    private void serviceInfo( JSONWriter jw, ServiceReference service, boolean details, final Locale locale ) throws JSONException
+=======
     private void serviceInfo( JSONWriter jw, ServiceReference service, boolean details, final Locale locale )
             throws IOException
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     {
         jw.object();
         jw.key( "id" );
@@ -297,6 +354,9 @@ public class ServicesServlet extends SimpleWebConsolePlugin implements OsgiManag
         jw.value( propertyAsString( service, Constants.OBJECTCLASS ) );
         jw.key( "pid" );
         jw.value( propertyAsString( service, Constants.SERVICE_PID ) );
+<<<<<<< HEAD
+
+=======
         jw.key( "ranking" );
         final Object ranking = service.getProperty(Constants.SERVICE_RANKING);
         if ( ranking != null )
@@ -307,6 +367,7 @@ public class ServicesServlet extends SimpleWebConsolePlugin implements OsgiManag
         {
             jw.value("");
         }
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         bundleInfo( jw, service.getBundle(), locale );
 
         if ( details )
@@ -319,8 +380,12 @@ public class ServicesServlet extends SimpleWebConsolePlugin implements OsgiManag
     }
 
 
+<<<<<<< HEAD
+    private void bundleInfo( final JSONWriter jw, final Bundle bundle, final Locale locale ) throws JSONException
+=======
     private void bundleInfo( final JSONWriter jw, final Bundle bundle, final Locale locale )
             throws IOException
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     {
         jw.key( "bundleId" );
         jw.value( bundle.getBundleId() );
@@ -340,12 +405,50 @@ public class ServicesServlet extends SimpleWebConsolePlugin implements OsgiManag
 
 
     private void writeJSON( final Writer pw, final ServiceReference service, final boolean fullDetails, final Locale locale, final String filter )
+<<<<<<< HEAD
+        throws IOException
+=======
             throws IOException
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     {
         final ServiceReference[] allServices = this.getServices(filter);
         final String statusLine = getStatusLine( allServices );
 
         final ServiceReference[] services = ( service != null ) ? new ServiceReference[]
+<<<<<<< HEAD
+            { service } : allServices;
+
+        final JSONWriter jw = new JSONWriter( pw );
+
+        try
+        {
+            jw.object();
+
+            jw.key( "status" );
+            jw.value( statusLine );
+
+            jw.key( "serviceCount" );
+            jw.value( allServices.length );
+
+            jw.key( "data" );
+
+            jw.array();
+
+            for ( int i = 0; i < services.length; i++ )
+            {
+                serviceInfo( jw, services[i], fullDetails || service != null, locale );
+            }
+
+            jw.endArray();
+
+            jw.endObject();
+
+        }
+        catch ( JSONException je )
+        {
+            throw new IOException( je.toString() );
+        }
+=======
                 { service } : allServices;
 
                 final JSONWriter jw = new JSONWriter( pw );
@@ -370,6 +473,7 @@ public class ServicesServlet extends SimpleWebConsolePlugin implements OsgiManag
                 jw.endArray();
 
                 jw.endObject();
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 
     }
 
@@ -378,7 +482,11 @@ public class ServicesServlet extends SimpleWebConsolePlugin implements OsgiManag
      * @see org.apache.felix.webconsole.AbstractWebConsolePlugin#doGet(javax.servlet.http.HttpServletRequest, javax.servlet.http.HttpServletResponse)
      */
     protected void doGet( HttpServletRequest request, HttpServletResponse response ) throws ServletException,
+<<<<<<< HEAD
+        IOException
+=======
     IOException
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     {
         if (request.getPathInfo().indexOf("/res/") == -1)
         { // not resource
@@ -419,8 +527,16 @@ public class ServicesServlet extends SimpleWebConsolePlugin implements OsgiManag
         vars.put( "bundlePath", appRoot +  "/" + BundlesServlet.NAME + "/" );
         vars.put( "drawDetails", String.valueOf(reqInfo.serviceRequested));
         vars.put( "__data__", w.toString() );
+<<<<<<< HEAD
+        vars.put( "filter", filter == null ? "" : filter);
+
+        response.getWriter().print( TEMPLATE );
+    }
+
+=======
         vars.put( "filter", filter == null ? "" : WebConsoleUtil.escapeHtml(filter));
 
         response.getWriter().print( TEMPLATE );
     }
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 }

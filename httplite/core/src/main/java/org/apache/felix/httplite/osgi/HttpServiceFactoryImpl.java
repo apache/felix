@@ -53,8 +53,13 @@ public class HttpServiceFactoryImpl implements ServiceFactory
 	private final HashMap m_servletMap;
 
     /**
+<<<<<<< HEAD
+     * @param logger
+     * @param m_server
+=======
      * @param logger the logger
      * @param m_server the server oject
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
      */
     public HttpServiceFactoryImpl(final Logger logger, final Server m_server)
     {
@@ -98,8 +103,13 @@ public class HttpServiceFactoryImpl implements ServiceFactory
     /**
      * Provide a unique string to represent a given registration.
      * 
+<<<<<<< HEAD
+     * @param bundle
+     * @param registration
+=======
      * @param bundle the containing OSGi bundle
      * @param registration the service registration
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
      * @return
      */
     private String serializeRegistration(final Bundle bundle,

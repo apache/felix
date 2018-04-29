@@ -20,16 +20,29 @@ package org.apache.felix.scr.impl.metadata;
 
 
 import java.lang.reflect.Array;
+<<<<<<< HEAD
+import junit.framework.TestCase;
+
+import org.apache.felix.scr.impl.MockLogger;
+import org.osgi.service.component.ComponentException;
+
+=======
 import java.util.List;
 
 import org.osgi.service.component.ComponentException;
 
 import junit.framework.TestCase;
 
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 
 public class ComponentMetadataTest extends TestCase
 {
 
+<<<<<<< HEAD
+    private MockLogger logger = new MockLogger();
+
+=======
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 
     // test various combinations of component metadata with respect to
     //  -- immediate: true, false, unset
@@ -41,24 +54,40 @@ public class ComponentMetadataTest extends TestCase
     {
         // immediate is default true if no service element is defined
         final ComponentMetadata cm0 = createComponentMetadata( null, null );
+<<<<<<< HEAD
+        cm0.validate( logger );
+=======
         cm0.validate( );
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         assertTrue( "Component without service must be immediate", cm0.isImmediate() );
 
         // immediate is explicit true
         final ComponentMetadata cm1 = createComponentMetadata( Boolean.TRUE, null );
+<<<<<<< HEAD
+        cm1.validate( logger );
+=======
         cm1.validate( );
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         assertTrue( "Component must be immediate", cm1.isImmediate() );
 
         // immediate is explicit true
         final ComponentMetadata cm2 = createComponentMetadata( Boolean.TRUE, null );
         cm2.setService( createServiceMetadata( null ) );
+<<<<<<< HEAD
+        cm2.validate( logger );
+=======
         cm2.validate( );
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         assertTrue( "Component must be immediate", cm2.isImmediate() );
 
         // immediate is explicit true
         final ComponentMetadata cm3 = createComponentMetadata( Boolean.TRUE, null );
         cm3.setService( createServiceMetadata( Boolean.FALSE ) );
+<<<<<<< HEAD
+        cm3.validate( logger );
+=======
         cm3.validate( );
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         assertTrue( "Component must be immediate", cm3.isImmediate() );
 
         // validation failure of immediate with service factory
@@ -66,7 +95,11 @@ public class ComponentMetadataTest extends TestCase
         cm4.setService( createServiceMetadata( Boolean.TRUE ) );
         try
         {
+<<<<<<< HEAD
+            cm4.validate( logger );
+=======
             cm4.validate( );
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
             fail( "Expect validation failure for immediate service factory" );
         }
         catch ( ComponentException ce )
@@ -81,44 +114,72 @@ public class ComponentMetadataTest extends TestCase
         // immediate is default false if service element is defined
         final ComponentMetadata cm0 = createComponentMetadata( null, null );
         cm0.setService( createServiceMetadata( null ) );
+<<<<<<< HEAD
+        cm0.validate( logger );
+=======
         cm0.validate(  );
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         assertFalse( "Component with service must be delayed", cm0.isImmediate() );
 
         // immediate is default false if service element is defined
         final ComponentMetadata cm1 = createComponentMetadata( null, null );
         cm1.setService( createServiceMetadata( Boolean.TRUE ) );
+<<<<<<< HEAD
+        cm1.validate( logger );
+=======
         cm1.validate(  );
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         assertFalse( "Component with service must be delayed", cm1.isImmediate() );
 
         // immediate is default false if service element is defined
         final ComponentMetadata cm2 = createComponentMetadata( null, null );
         cm2.setService( createServiceMetadata( Boolean.FALSE ) );
+<<<<<<< HEAD
+        cm2.validate( logger );
+=======
         cm2.validate(  );
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         assertFalse( "Component with service must be delayed", cm2.isImmediate() );
 
         // immediate is false if service element is defined
         final ComponentMetadata cm3 = createComponentMetadata( Boolean.FALSE, null );
         cm3.setService( createServiceMetadata( null ) );
+<<<<<<< HEAD
+        cm3.validate( logger );
+=======
         cm3.validate(  );
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         assertFalse( "Component with service must be delayed", cm3.isImmediate() );
 
         // immediate is false if service element is defined
         final ComponentMetadata cm4 = createComponentMetadata( Boolean.FALSE, null );
         cm4.setService( createServiceMetadata( Boolean.TRUE ) );
+<<<<<<< HEAD
+        cm4.validate( logger );
+=======
         cm4.validate(  );
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         assertFalse( "Component with service must be delayed", cm4.isImmediate() );
 
         // immediate is false if service element is defined
         final ComponentMetadata cm5 = createComponentMetadata( Boolean.FALSE, null );
         cm5.setService( createServiceMetadata( Boolean.FALSE ) );
+<<<<<<< HEAD
+        cm5.validate( logger );
+=======
         cm5.validate(  );
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         assertFalse( "Component with service must be delayed", cm5.isImmediate() );
 
         // explicit delayed fails when there is no service
         final ComponentMetadata cm6 = createComponentMetadata( Boolean.FALSE, null );
         try
         {
+<<<<<<< HEAD
+            cm6.validate( logger );
+=======
             cm6.validate(  );
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
             fail( "Expect validation failure for delayed component without service" );
         }
         catch ( ComponentException ce )
@@ -132,19 +193,31 @@ public class ComponentMetadataTest extends TestCase
     {
         // immediate is default false if factory is defined
         final ComponentMetadata cm0 = createComponentMetadata( null, "factory" );
+<<<<<<< HEAD
+        cm0.validate( logger );
+=======
         cm0.validate(  );
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         assertFalse( "Component with factory must be delayed", cm0.isImmediate() );
 
         // immediate is false if factory is defined
         final ComponentMetadata cm1 = createComponentMetadata( Boolean.FALSE, "factory" );
+<<<<<<< HEAD
+        cm1.validate( logger );
+=======
         cm1.validate(  );
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         assertFalse( "Component with factory must be delayed", cm1.isImmediate() );
 
         // immediate is default false if factory is defined
         final ComponentMetadata cm2 = createComponentMetadata( Boolean.TRUE, "factory" );
         try
         {
+<<<<<<< HEAD
+            cm2.validate( logger );
+=======
             cm2.validate(  );
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
             fail( "Expect validation failure for immediate factory component" );
         }
         catch ( ComponentException ce )
@@ -155,13 +228,21 @@ public class ComponentMetadataTest extends TestCase
         // immediate is default false if factory is defined
         final ComponentMetadata cm10 = createComponentMetadata( null, "factory" );
         cm10.setService( createServiceMetadata( null ) );
+<<<<<<< HEAD
+        cm10.validate( logger );
+=======
         cm10.validate(  );
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         assertFalse( "Component with factory must be delayed", cm10.isImmediate() );
 
         // immediate is false if factory is defined
         final ComponentMetadata cm11 = createComponentMetadata( Boolean.FALSE, "factory" );
         cm11.setService( createServiceMetadata( null ) );
+<<<<<<< HEAD
+        cm11.validate( logger );
+=======
         cm11.validate(  );
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         assertFalse( "Component with factory must be delayed", cm11.isImmediate() );
 
         // immediate is default false if factory is defined
@@ -169,7 +250,11 @@ public class ComponentMetadataTest extends TestCase
         cm12.setService( createServiceMetadata( null ) );
         try
         {
+<<<<<<< HEAD
+            cm12.validate( logger );
+=======
             cm12.validate(  );
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
             fail( "Expect validation failure for immediate factory component" );
         }
         catch ( ComponentException ce )
@@ -180,13 +265,21 @@ public class ComponentMetadataTest extends TestCase
         // immediate is default false if factory is defined
         final ComponentMetadata cm20 = createComponentMetadata( null, "factory" );
         cm20.setService( createServiceMetadata( Boolean.FALSE ) );
+<<<<<<< HEAD
+        cm20.validate( logger );
+=======
         cm20.validate(  );
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         assertFalse( "Component with factory must be delayed", cm20.isImmediate() );
 
         // immediate is false if factory is defined
         final ComponentMetadata cm21 = createComponentMetadata( Boolean.FALSE, "factory" );
         cm21.setService( createServiceMetadata( Boolean.FALSE ) );
+<<<<<<< HEAD
+        cm21.validate( logger );
+=======
         cm21.validate(  );
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         assertFalse( "Component with factory must be delayed", cm21.isImmediate() );
 
         // immediate is default false if factory is defined
@@ -194,7 +287,11 @@ public class ComponentMetadataTest extends TestCase
         cm22.setService( createServiceMetadata( Boolean.FALSE ) );
         try
         {
+<<<<<<< HEAD
+            cm22.validate( logger );
+=======
             cm22.validate(  );
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
             fail( "Expect validation failure for immediate factory component" );
         }
         catch ( ComponentException ce )
@@ -207,7 +304,11 @@ public class ComponentMetadataTest extends TestCase
         cm30.setService( createServiceMetadata( Boolean.TRUE ) );
         try
         {
+<<<<<<< HEAD
+            cm30.validate( logger );
+=======
             cm30.validate(  );
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
             fail( "Expect validation failure for factory component with service factory" );
         }
         catch ( ComponentException ce )
@@ -220,7 +321,11 @@ public class ComponentMetadataTest extends TestCase
         cm31.setService( createServiceMetadata( Boolean.TRUE ) );
         try
         {
+<<<<<<< HEAD
+            cm31.validate( logger );
+=======
             cm31.validate(  );
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
             fail( "Expect validation failure for factory component with service factory" );
         }
         catch ( ComponentException ce )
@@ -233,7 +338,11 @@ public class ComponentMetadataTest extends TestCase
         cm32.setService( createServiceMetadata( Boolean.TRUE ) );
         try
         {
+<<<<<<< HEAD
+            cm32.validate( logger );
+=======
             cm32.validate(  );
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
             fail( "Expect validation failure for immediate factory component with service factory" );
         }
         catch ( ComponentException ce )
@@ -250,7 +359,11 @@ public class ComponentMetadataTest extends TestCase
         cm1.setName( null );
         try
         {
+<<<<<<< HEAD
+            cm1.validate( logger );
+=======
             cm1.validate(  );
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
             fail( "Expected validation failure for DS 1.0 component without name" );
         }
         catch ( ComponentException ce )
@@ -264,7 +377,11 @@ public class ComponentMetadataTest extends TestCase
     {
         final ComponentMetadata cm1 = createComponentMetadata11( Boolean.TRUE, null );
         cm1.setName( null );
+<<<<<<< HEAD
+        cm1.validate( logger );
+=======
         cm1.validate(  );
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         assertEquals( "Expected name to equal implementation class name", cm1.getImplementationClassName(),
             cm1.getName() );
     }
@@ -273,26 +390,42 @@ public class ComponentMetadataTest extends TestCase
     public void test_component_activate_ds10()
     {
         final ComponentMetadata cm1 = createComponentMetadata( Boolean.TRUE, null );
+<<<<<<< HEAD
+        cm1.validate( logger );
+=======
         cm1.validate(  );
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         assertEquals( "Activate method name", "activate", cm1.getActivate() );
         assertFalse( "Activate method expected to not be declared", cm1.isActivateDeclared() );
 
         final ComponentMetadata cm2 = createComponentMetadata( Boolean.TRUE, null );
         cm2.setActivate( "someMethod" );
+<<<<<<< HEAD
+        failDS10Validation( cm2, "activate", logger );
+=======
         failDS10Validation( cm2, "activate" );
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     }
 
 
     public void test_component_activate_ds11()
     {
         final ComponentMetadata cm1 = createComponentMetadata11( Boolean.TRUE, null );
+<<<<<<< HEAD
+        cm1.validate( logger );
+=======
         cm1.validate(  );
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         assertEquals( "Activate method name", "activate", cm1.getActivate() );
         assertFalse( "Activate method expected to not be declared", cm1.isActivateDeclared() );
 
         final ComponentMetadata cm2 = createComponentMetadata11( Boolean.TRUE, null );
         cm2.setActivate( "someMethod" );
+<<<<<<< HEAD
+        cm2.validate( logger );
+=======
         cm2.validate(  );
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         assertEquals( "Activate method name", "someMethod", cm2.getActivate() );
         assertTrue( "Activate method expected to be declared", cm2.isActivateDeclared() );
     }
@@ -301,26 +434,42 @@ public class ComponentMetadataTest extends TestCase
     public void test_component_deactivate_ds10()
     {
         final ComponentMetadata cm1 = createComponentMetadata( Boolean.TRUE, null );
+<<<<<<< HEAD
+        cm1.validate( logger );
+=======
         cm1.validate(  );
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         assertEquals( "Deactivate method name", "deactivate", cm1.getDeactivate() );
         assertFalse( "Deactivate method expected to not be declared", cm1.isDeactivateDeclared() );
 
         final ComponentMetadata cm2 = createComponentMetadata( Boolean.TRUE, null );
         cm2.setDeactivate( "someMethod" );
+<<<<<<< HEAD
+        failDS10Validation( cm2, "deactivate", logger );
+=======
         failDS10Validation( cm2, "deactivate" );
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     }
 
 
     public void test_component_deactivate_ds11()
     {
         final ComponentMetadata cm1 = createComponentMetadata11( Boolean.TRUE, null );
+<<<<<<< HEAD
+        cm1.validate( logger );
+=======
         cm1.validate(  );
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         assertEquals( "Deactivate method name", "deactivate", cm1.getDeactivate() );
         assertFalse( "Deactivate method expected to not be declared", cm1.isDeactivateDeclared() );
 
         final ComponentMetadata cm2 = createComponentMetadata11( Boolean.TRUE, null );
         cm2.setDeactivate( "someMethod" );
+<<<<<<< HEAD
+        cm2.validate( logger );
+=======
         cm2.validate(  );
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         assertEquals( "Deactivate method name", "someMethod", cm2.getDeactivate() );
         assertTrue( "Deactivate method expected to be declared", cm2.isDeactivateDeclared() );
     }
@@ -329,24 +478,40 @@ public class ComponentMetadataTest extends TestCase
     public void test_component_modified_ds10()
     {
         final ComponentMetadata cm1 = createComponentMetadata( Boolean.TRUE, null );
+<<<<<<< HEAD
+        cm1.validate( logger );
+=======
         cm1.validate(  );
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         assertNull( "Modified method name", cm1.getModified() );
 
         final ComponentMetadata cm2 = createComponentMetadata( Boolean.TRUE, null );
         cm2.setModified( "someName" );
+<<<<<<< HEAD
+        failDS10Validation( cm2, "modified", logger );
+=======
         failDS10Validation( cm2, "modified" );
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     }
 
 
     public void test_component_modified_ds11()
     {
         final ComponentMetadata cm1 = createComponentMetadata11( Boolean.TRUE, null );
+<<<<<<< HEAD
+        cm1.validate( logger );
+=======
         cm1.validate(  );
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         assertNull( "Modified method name", cm1.getModified() );
 
         final ComponentMetadata cm2 = createComponentMetadata11( Boolean.TRUE, null );
         cm2.setModified( "someMethod" );
+<<<<<<< HEAD
+        cm2.validate( logger );
+=======
         cm2.validate(  );
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         assertEquals( "Modified method name", "someMethod", cm2.getModified() );
     }
 
@@ -354,12 +519,31 @@ public class ComponentMetadataTest extends TestCase
     public void test_component_configuration_policy_ds10()
     {
         final ComponentMetadata cm1 = createComponentMetadata( Boolean.TRUE, null );
+<<<<<<< HEAD
+        cm1.validate( logger );
+=======
         cm1.validate(  );
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         assertEquals( "Configuration policy", ComponentMetadata.CONFIGURATION_POLICY_OPTIONAL,
             cm1.getConfigurationPolicy() );
 
         final ComponentMetadata cm2 = createComponentMetadata( Boolean.TRUE, null );
         cm2.setConfigurationPolicy( ComponentMetadata.CONFIGURATION_POLICY_IGNORE );
+<<<<<<< HEAD
+        failDS10Validation( cm2, "configuration-policy", logger );
+
+        final ComponentMetadata cm3 = createComponentMetadata( Boolean.TRUE, null );
+        cm3.setConfigurationPolicy( ComponentMetadata.CONFIGURATION_POLICY_OPTIONAL );
+        failDS10Validation( cm3, "configuration-policy", logger );
+
+        final ComponentMetadata cm4 = createComponentMetadata( Boolean.TRUE, null );
+        cm4.setConfigurationPolicy( ComponentMetadata.CONFIGURATION_POLICY_REQUIRE );
+        failDS10Validation( cm4, "configuration-policy", logger );
+
+        final ComponentMetadata cm5 = createComponentMetadata( Boolean.TRUE, null );
+        cm5.setConfigurationPolicy( "undefined" );
+        failDS10Validation( cm5, "configuration-policy", logger );
+=======
         failDS10Validation( cm2, "configuration-policy" );
 
         final ComponentMetadata cm3 = createComponentMetadata( Boolean.TRUE, null );
@@ -373,31 +557,48 @@ public class ComponentMetadataTest extends TestCase
         final ComponentMetadata cm5 = createComponentMetadata( Boolean.TRUE, null );
         cm5.setConfigurationPolicy( "undefined" );
         failDS10Validation( cm5, "configuration-policy" );
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     }
 
 
     public void test_component_configuration_policy_ds11()
     {
         final ComponentMetadata cm1 = createComponentMetadata11( Boolean.TRUE, null );
+<<<<<<< HEAD
+        cm1.validate( logger );
+=======
         cm1.validate(  );
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         assertEquals( "Configuration policy", ComponentMetadata.CONFIGURATION_POLICY_OPTIONAL,
             cm1.getConfigurationPolicy() );
 
         final ComponentMetadata cm2 = createComponentMetadata11( Boolean.TRUE, null );
         cm2.setConfigurationPolicy( ComponentMetadata.CONFIGURATION_POLICY_IGNORE );
+<<<<<<< HEAD
+        cm2.validate( logger );
+=======
         cm2.validate(  );
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         assertEquals( "Configuration policy", ComponentMetadata.CONFIGURATION_POLICY_IGNORE,
             cm2.getConfigurationPolicy() );
 
         final ComponentMetadata cm3 = createComponentMetadata11( Boolean.TRUE, null );
         cm3.setConfigurationPolicy( ComponentMetadata.CONFIGURATION_POLICY_OPTIONAL );
+<<<<<<< HEAD
+        cm3.validate( logger );
+=======
         cm3.validate(  );
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         assertEquals( "Configuration policy", ComponentMetadata.CONFIGURATION_POLICY_OPTIONAL,
             cm3.getConfigurationPolicy() );
 
         final ComponentMetadata cm4 = createComponentMetadata11( Boolean.TRUE, null );
         cm4.setConfigurationPolicy( ComponentMetadata.CONFIGURATION_POLICY_REQUIRE );
+<<<<<<< HEAD
+        cm4.validate( logger );
+=======
         cm4.validate(  );
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         assertEquals( "Configuration policy", ComponentMetadata.CONFIGURATION_POLICY_REQUIRE,
             cm4.getConfigurationPolicy() );
 
@@ -405,7 +606,11 @@ public class ComponentMetadataTest extends TestCase
         cm5.setConfigurationPolicy( "undefined" );
         try
         {
+<<<<<<< HEAD
+            cm5.validate( logger );
+=======
             cm5.validate(  );
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
             fail( "Expected validation failure due to undefined configuration policy" );
         }
         catch ( ComponentException ce )
@@ -421,7 +626,11 @@ public class ComponentMetadataTest extends TestCase
         final ComponentMetadata cm1 = createComponentMetadata( Boolean.TRUE, null );
         cm1.addDependency( createReferenceMetadata( "name1" ) );
         cm1.addDependency( createReferenceMetadata( "name2" ) );
+<<<<<<< HEAD
+        cm1.validate( logger );
+=======
         cm1.validate(  );
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     }
 
 
@@ -433,7 +642,11 @@ public class ComponentMetadataTest extends TestCase
         cm2.addDependency( createReferenceMetadata( "name1" ) );
         try
         {
+<<<<<<< HEAD
+            cm2.validate( logger );
+=======
             cm2.validate(  );
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
             fail( "Expect validation failure for duplicate reference name" );
         }
         catch ( ComponentException ee )
@@ -450,7 +663,11 @@ public class ComponentMetadataTest extends TestCase
         cm3.addDependency( createReferenceMetadata( null ) );
         try
         {
+<<<<<<< HEAD
+            cm3.validate( logger );
+=======
             cm3.validate(  );
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
             fail( "Expect validation failure for DS 1.0 reference without name" );
         }
         catch ( ComponentException ce )
@@ -466,7 +683,11 @@ public class ComponentMetadataTest extends TestCase
         final ComponentMetadata cm4 = createComponentMetadata11( Boolean.TRUE, null );
         final ReferenceMetadata rm4 = createReferenceMetadata( null );
         cm4.addDependency( rm4 );
+<<<<<<< HEAD
+        cm4.validate( logger );
+=======
         cm4.validate(  );
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         assertEquals( "Reference name defaults to interface", rm4.getInterface(), rm4.getName() );
     }
 
@@ -480,7 +701,11 @@ public class ComponentMetadataTest extends TestCase
         cm3.addDependency( rm3 );
 
         // according to DS 1.2 must fail validation (FELIX-3648)
+<<<<<<< HEAD
+        failDS10Validation( cm3, "updated", logger );
+=======
         failDS10Validation( cm3, "updated" );
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     }
 
 
@@ -493,7 +718,11 @@ public class ComponentMetadataTest extends TestCase
         cm3.addDependency( rm3 );
 
         // according to DS 1.2 must fail validation (FELIX-3648)
+<<<<<<< HEAD
+        failDS10Validation( cm3, "updated", logger );
+=======
         failDS10Validation( cm3, "updated" );
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     }
 
 
@@ -502,11 +731,19 @@ public class ComponentMetadataTest extends TestCase
         // updated method accepted for DS 1.1-felix
         final ReferenceMetadata rm3 = createReferenceMetadata( "test" );
         rm3.setUpdated( "my_updated_method" );
+<<<<<<< HEAD
+        final ComponentMetadata cm3 = createComponentMetadata( XmlHandler.DS_VERSION_1_1_FELIX, Boolean.TRUE, null );
+        cm3.addDependency( rm3 );
+
+        // validates fine and logs no message
+        cm3.validate( logger );
+=======
         final ComponentMetadata cm3 = createComponentMetadata( DSVersion.DS11Felix, Boolean.TRUE, null );
         cm3.addDependency( rm3 );
 
         // validates fine and logs no message
         cm3.validate( );
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 
         assertEquals( "my_updated_method", rm3.getUpdated() );
     }
@@ -517,11 +754,19 @@ public class ComponentMetadataTest extends TestCase
         // updated method accepted for DS 1.2
         final ReferenceMetadata rm3 = createReferenceMetadata( "test" );
         rm3.setUpdated( "my_updated_method" );
+<<<<<<< HEAD
+        final ComponentMetadata cm3 = createComponentMetadata( XmlHandler.DS_VERSION_1_2, Boolean.TRUE, null );
+        cm3.addDependency( rm3 );
+
+        // validates fine and logs no message
+        cm3.validate( logger );
+=======
         final ComponentMetadata cm3 = createComponentMetadata( DSVersion.DS12, Boolean.TRUE, null );
         cm3.addDependency( rm3 );
 
         // validates fine and logs no message
         cm3.validate( );
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 
         assertEquals( "my_updated_method", rm3.getUpdated() );
     }
@@ -533,7 +778,11 @@ public class ComponentMetadataTest extends TestCase
         cm.setImplementationClassName( "second.implementation.class" );
         try
         {
+<<<<<<< HEAD
+            cm.validate( logger );
+=======
             cm.validate(  );
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
             fail( "Expect validation failure for duplicate implementation element" );
         }
         catch ( ComponentException ce )
@@ -549,7 +798,11 @@ public class ComponentMetadataTest extends TestCase
         cm.setImplementationClassName( "second.implementation.class" );
         try
         {
+<<<<<<< HEAD
+            cm.validate( logger );
+=======
             cm.validate(  );
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
             fail( "Expect validation failure for duplicate implementation element" );
         }
         catch ( ComponentException ce )
@@ -566,7 +819,11 @@ public class ComponentMetadataTest extends TestCase
         cm.setService( createServiceMetadata( Boolean.TRUE ) );
         try
         {
+<<<<<<< HEAD
+            cm.validate( logger );
+=======
             cm.validate( );
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
             fail( "Expect validation failure for duplicate service element" );
         }
         catch ( ComponentException ce )
@@ -583,7 +840,11 @@ public class ComponentMetadataTest extends TestCase
         cm.setService( createServiceMetadata( Boolean.TRUE ) );
         try
         {
+<<<<<<< HEAD
+            cm.validate( logger );
+=======
             cm.validate( );
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
             fail( "Expect validation failure for duplicate service element" );
         }
         catch ( ComponentException ce )
@@ -599,7 +860,11 @@ public class ComponentMetadataTest extends TestCase
         cm.addProperty( createPropertyMetadata( null, null, "" ) );
         try
         {
+<<<<<<< HEAD
+            cm.validate( logger );
+=======
             cm.validate( );
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
             fail( "Expect validation failure for missing property name" );
         }
         catch ( ComponentException ce )
@@ -615,7 +880,11 @@ public class ComponentMetadataTest extends TestCase
         cm.addProperty( createPropertyMetadata( null, null, "" ) );
         try
         {
+<<<<<<< HEAD
+            cm.validate( logger );
+=======
             cm.validate( );
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
             fail( "Expect validation failure for missing property name" );
         }
         catch ( ComponentException ce )
@@ -630,7 +899,11 @@ public class ComponentMetadataTest extends TestCase
         final ComponentMetadata cm = createComponentMetadata( null, null );
         PropertyMetadata prop = createPropertyMetadata( "x", "Char", Integer.toString( 'x' ) );
         cm.addProperty( prop );
+<<<<<<< HEAD
+        cm.validate( logger );
+=======
         cm.validate( );
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         assertTrue( prop.getValue() instanceof Character );
         assertEquals( new Character( 'x' ), prop.getValue() );
     }
@@ -642,7 +915,11 @@ public class ComponentMetadataTest extends TestCase
         cm.addProperty( createPropertyMetadata( "x", "Char", "x" ) );
         try
         {
+<<<<<<< HEAD
+            cm.validate( logger );
+=======
             cm.validate( );
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
             fail( "Expect validation failure for illegal property type Char" );
         }
         catch ( ComponentException ce )
@@ -714,8 +991,13 @@ public class ComponentMetadataTest extends TestCase
       ComponentMetadata cm = createComponentMetadata11( null, null );
         try
         {
+<<<<<<< HEAD
+          cm.setConfigurationPid( "configurationPid" );
+          cm.validate( logger );
+=======
           cm.setConfigurationPid( new String[] {"configurationPid"} );
           cm.validate( );
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
           fail( "Expect validation failure for illegal configuration-pid usage in ds 1.1 namespace" );
         }
         catch ( ComponentException ce )
@@ -726,8 +1008,13 @@ public class ComponentMetadataTest extends TestCase
         cm = createComponentMetadata12( null, null );
         try
         {
+<<<<<<< HEAD
+          cm.setConfigurationPid( "configurationPid" );
+          cm.validate( logger );
+=======
           cm.setConfigurationPid( new String[] {"configurationPid"} );
           cm.validate( );
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         }
         catch ( ComponentException ce )
         {
@@ -738,6 +1025,18 @@ public class ComponentMetadataTest extends TestCase
 
     public void test_get_configuration_pid_method()
     {
+<<<<<<< HEAD
+        doTest_get_configuration_pid_method(XmlHandler.DS_VERSION_1_0);
+        doTest_get_configuration_pid_method(XmlHandler.DS_VERSION_1_1);
+        doTest_get_configuration_pid_method(XmlHandler.DS_VERSION_1_2);
+    }
+
+    private void doTest_get_configuration_pid_method(int specVersion)
+    {
+        // Make sure that getConfigurationPid returns the default component name (implementation class name).
+        // We only do this kind of test if spec is greater than ds 1.0, because in ds 1.0, the component name is mandatory.
+        if (specVersion > XmlHandler.DS_VERSION_1_0)
+=======
         doTest_get_configuration_pid_method(DSVersion.DS10);
         doTest_get_configuration_pid_method(DSVersion.DS11);
         doTest_get_configuration_pid_method(DSVersion.DS12);
@@ -748,22 +1047,34 @@ public class ComponentMetadataTest extends TestCase
         // Make sure that getConfigurationPid returns the default component name (implementation class name).
         // We only do this kind of test if spec is greater than ds 1.0, because in ds 1.0, the component name is mandatory.
         if ( specVersion.isDS11() )
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         {
             ComponentMetadata cm = new ComponentMetadata( specVersion );
             try
             {
                 cm.setImplementationClassName("implementation.class");
                 cm.setName( null );
+<<<<<<< HEAD
+                cm.validate( logger );
+=======
                 cm.validate( );
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
             }
             catch ( ComponentException ce )
             {
                 fail( "Expect correct validation for unnamed component" );
             }
+<<<<<<< HEAD
+            String pid = cm.getConfigurationPid();
+            assertNotNull( "Expect non-null configuration pid when component name is not specified", pid );
+            assertEquals( "Expect configuration-pid to be equals to component implementation",
+                          "implementation.class", cm.getConfigurationPid() );
+=======
             List<String> pid = cm.getConfigurationPid();
             assertFalse( "Expect non-null configuration pid when component name is not specified", pid.isEmpty() );
             assertEquals( "Expect configuration-pid to be equals to component implementation",
                           "implementation.class", pid.get( 0 ) );
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         }
 
         // Make sure that getConfigurationPid returns the name of the component, if specified
@@ -772,16 +1083,27 @@ public class ComponentMetadataTest extends TestCase
         {
             cm.setImplementationClassName("implementation.class");
             cm.setName("my.component.name");
+<<<<<<< HEAD
+            cm.validate( logger );
+=======
             cm.validate( );
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         }
         catch ( ComponentException ce )
         {
             fail( "Expect correct validation for named component" );
         }
+<<<<<<< HEAD
+        String pid = cm.getConfigurationPid();
+        assertNotNull( "Expect non-null configuration pid when component name is specified", pid );
+        assertEquals( "Expect configuration-pid to be equals to component name",
+                      "my.component.name", cm.getConfigurationPid() );
+=======
         List<String> pid = cm.getConfigurationPid();
         assertFalse( "Expect non-null configuration pid when component name is not specified", pid.isEmpty() );
         assertEquals( "Expect configuration-pid to be equals to component name",
                       "my.component.name", pid.get( 0 ) );
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     }
 
     public void test_property_character_ds11() throws ComponentException
@@ -789,7 +1111,11 @@ public class ComponentMetadataTest extends TestCase
         final ComponentMetadata cm = createComponentMetadata11( null, null );
         PropertyMetadata prop = createPropertyMetadata( "x", "Character", Integer.toString( 'x' ) );
         cm.addProperty( prop );
+<<<<<<< HEAD
+        cm.validate( logger );
+=======
         cm.validate( );
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         assertTrue( prop.getValue() instanceof Character );
         assertEquals( new Character( 'x' ), prop.getValue() );
     }
@@ -798,11 +1124,20 @@ public class ComponentMetadataTest extends TestCase
     //---------- Helper methods
 
     // method also used by XmlHandlerTest
+<<<<<<< HEAD
+    static void failDS10Validation( final ComponentMetadata metadata, final String expectedValidationReason,
+        final MockLogger logger )
+    {
+        try
+        {
+            metadata.validate( logger );
+=======
     static void failDS10Validation( final ComponentMetadata metadata, final String expectedValidationReason )
     {
         try
         {
             metadata.validate( );
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
             fail( "Expected validation failure for Component " + metadata.getName() + " containing '"
                 + expectedValidationReason + "'" );
         }
@@ -816,9 +1151,15 @@ public class ComponentMetadataTest extends TestCase
 
 
     // Creates Component Metadata for the given namespace
+<<<<<<< HEAD
+    private ComponentMetadata createComponentMetadata( int nameSpaceCode, Boolean immediate, String factory )
+    {
+        ComponentMetadata meta = new ComponentMetadata( nameSpaceCode );
+=======
     private ComponentMetadata createComponentMetadata( DSVersion dsVersion, Boolean immediate, String factory )
     {
         ComponentMetadata meta = new ComponentMetadata( dsVersion );
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         meta.setName( "place.holder" );
         meta.setImplementationClassName( "place.holder.implementation" );
         if ( immediate != null )
@@ -836,20 +1177,32 @@ public class ComponentMetadataTest extends TestCase
     // Creates DS 1.0 Component Metadata
     private ComponentMetadata createComponentMetadata( Boolean immediate, String factory )
     {
+<<<<<<< HEAD
+        return createComponentMetadata( XmlHandler.DS_VERSION_1_0, immediate, factory );
+=======
         return createComponentMetadata( DSVersion.DS10, immediate, factory );
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     }
 
 
     // Creates DS 1.1 Component Metadata
     private ComponentMetadata createComponentMetadata11( Boolean immediate, String factory )
     {
+<<<<<<< HEAD
+        return createComponentMetadata( XmlHandler.DS_VERSION_1_1, immediate, factory );
+=======
         return createComponentMetadata( DSVersion.DS11, immediate, factory );
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     }
 
     // Creates DS 1.2 Component Metadata
     private ComponentMetadata createComponentMetadata12( Boolean immediate, String factory )
     {
+<<<<<<< HEAD
+        return createComponentMetadata( XmlHandler.DS_VERSION_1_2, immediate, factory );
+=======
         return createComponentMetadata( DSVersion.DS12, immediate, factory );
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     }
 
     private ServiceMetadata createServiceMetadata( Boolean serviceFactory )

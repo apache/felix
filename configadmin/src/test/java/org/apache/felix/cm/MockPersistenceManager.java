@@ -18,6 +18,10 @@
  */
 package org.apache.felix.cm;
 
+<<<<<<< HEAD
+
+=======
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 import java.io.IOException;
 import java.util.Collections;
 import java.util.Dictionary;
@@ -25,32 +29,59 @@ import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Map;
 
+<<<<<<< HEAD
+
+public class MockPersistenceManager implements PersistenceManager
+{
+
+    private final Map configs = new HashMap();
+
+
+    public void delete( String pid )
+=======
 public class MockPersistenceManager implements PersistenceManager
 {
     private final Map<String, Dictionary<String, Object>> configs = new HashMap<>();
 
     @Override
     public void delete( final String pid )
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     {
         configs.remove( pid );
     }
 
+<<<<<<< HEAD
+
+    public boolean exists( String pid )
+=======
     @Override
     public boolean exists( final String pid )
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     {
         return configs.containsKey( pid );
     }
 
+<<<<<<< HEAD
+
+=======
     @Override
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     public Enumeration getDictionaries()
     {
         return Collections.enumeration( configs.values() );
     }
 
+<<<<<<< HEAD
+
+    public Dictionary load( String pid ) throws IOException
+    {
+        Dictionary config = ( Dictionary ) configs.get( pid );
+=======
     @Override
     public Dictionary load( final String pid ) throws IOException
     {
         Dictionary config = configs.get( pid );
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         if ( config != null )
         {
             return config;
@@ -59,9 +90,17 @@ public class MockPersistenceManager implements PersistenceManager
         throw new IOException( "No such configuration: " + pid );
     }
 
+<<<<<<< HEAD
+
+=======
     @Override
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     public void store( String pid, Dictionary properties )
     {
         configs.put( pid, properties );
     }
+<<<<<<< HEAD
+
+=======
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 }

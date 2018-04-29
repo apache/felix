@@ -82,7 +82,11 @@ public interface PersistenceManager
      * @return The dictionary for the identifier. This must not be
      *      <code>null</code> but may be empty.
      *
+<<<<<<< HEAD
+     * @throws IOException If an error occurrs loading the dictionary. An
+=======
      * @throws IOException If an error occurs loading the dictionary. An
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
      *      <code>IOException</code> must also be thrown if no dictionary
      *      exists for the given identifier.
      */
@@ -107,7 +111,11 @@ public interface PersistenceManager
      *
      * @return A possibly empty Enumeration of all dictionaries.
      *
+<<<<<<< HEAD
+     * @throws IOException If an error occurrs getting the dictionaries.
+=======
      * @throws IOException If an error occurs getting the dictionaries.
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
      */
     Enumeration getDictionaries() throws IOException;
 
@@ -123,7 +131,11 @@ public interface PersistenceManager
      * @param pid The identifier of the dictionary.
      * @param properties The <code>Dictionary</code> to store.
      *
+<<<<<<< HEAD
+     * @throws IOException If an error occurrs storing the dictionary. If this
+=======
      * @throws IOException If an error occurs storing the dictionary. If this
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
      *      exception is thrown, it is expected, that
      *      {@link #exists(String) exists(pid} returns <code>false</code>.
      */
@@ -134,9 +146,15 @@ public interface PersistenceManager
      * Removes the <code>Dictionary</code> for the given <code>pid</code>. If
      * such a dictionary does not exist, this method has no effect.
      *
+<<<<<<< HEAD
+     * @param pid The identifier of the dictionary to delet.
+     *
+     * @throws IOException If an error occurrs deleting the dictionary. This
+=======
      * @param pid The identifier of the dictionary to delete.
      *
      * @throws IOException If an error occurs deleting the dictionary. This
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
      *      exception must not be thrown if no dictionary with the given
      *      identifier exists.
      */

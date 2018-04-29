@@ -18,6 +18,31 @@
  */
 package org.apache.felix.coordinator.impl;
 
+<<<<<<< HEAD
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.TimerTask;
+
+import org.apache.felix.service.coordinator.Coordination;
+import org.apache.felix.service.coordinator.CoordinationException;
+import org.apache.felix.service.coordinator.Participant;
+
+@SuppressWarnings("deprecation")
+public class CoordinationImpl implements Coordination
+{
+
+    /** Active */
+    private static final int ACTIVE = 1;
+
+    /** Coordination termination started */
+    private static final int TERMINATING = 2;
+
+    /** Coordination completed */
+    private static final int TERMINATED = 3;
+=======
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -51,6 +76,7 @@ public class CoordinationImpl implements Coordination
     }
 
     private final WeakReference<CoordinationHolder> holderRef;
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 
     private final CoordinatorImpl owner;
 
@@ -58,10 +84,44 @@ public class CoordinationImpl implements Coordination
 
     private final String name;
 
+<<<<<<< HEAD
+    // TODO: timeout must be enforced
+=======
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     private long deadLine;
 
     /**
      * Access to this field must be synchronized as long as the expected state
+<<<<<<< HEAD
+     * is {@link #ACTIVE}. Once the state has changed, further updates to this
+     * instance will not take place any more and the state will only be modified
+     * by the thread successfully setting the state to {@link #TERMINATING}.
+     */
+    private volatile int state;
+
+    private Throwable failReason;
+
+    private ArrayList<Participant> participants;
+
+    private HashMap<Class<?>, Object> variables;
+
+    private TimerTask timeoutTask;
+
+    private Thread initiatorThread;
+
+    public CoordinationImpl(final CoordinatorImpl owner, final long id, final String name, final int timeOutInMs)
+    {
+        // TODO: validate name against Bundle Symbolic Name pattern
+
+        this.owner = owner;
+        this.id = id;
+        this.name = name;
+        this.state = ACTIVE;
+        this.participants = new ArrayList<Participant>();
+        this.variables = new HashMap<Class<?>, Object>();
+        this.deadLine = (timeOutInMs > 0) ? System.currentTimeMillis() + timeOutInMs : 0;
+        this.initiatorThread = Thread.currentThread();
+=======
      * is {@link State#ACTIVE}. Once the state has changed, further updates to this
      * instance will not take place any more and the state will only be modified
      * by the thread successfully setting the state to {@link State#TERMINATING}.
@@ -103,26 +163,37 @@ public class CoordinationImpl implements Coordination
         this.deadLine = (timeOutInMs > 0) ? System.currentTimeMillis() + timeOutInMs : 0;
         holder.setCoordination(this);
         this.holderRef = new WeakReference<CoordinationHolder>(holder);
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 
         scheduleTimeout(deadLine);
     }
 
+<<<<<<< HEAD
+=======
     /**
      * @see org.osgi.service.coordinator.Coordination#getId()
      */
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     public long getId()
     {
         return this.id;
     }
 
+<<<<<<< HEAD
+=======
     /**
      * @see org.osgi.service.coordinator.Coordination#getName()
      */
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     public String getName()
     {
         return name;
     }
 
+<<<<<<< HEAD
+    public boolean fail(Throwable reason)
+    {
+=======
     /**
      * @see org.osgi.service.coordinator.Coordination#fail(java.lang.Throwable)
      */
@@ -133,10 +204,16 @@ public class CoordinationImpl implements Coordination
         {
             throw new IllegalArgumentException("Reason must not be null");
         }
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         if (startTermination())
         {
             this.failReason = reason;
 
+<<<<<<< HEAD
+            // consider failure reason (if not null)
+            for (Participant part : participants)
+            {
+=======
             final List<Participant> releaseList = new ArrayList<Participant>();
             synchronized ( this.participants )
             {
@@ -147,26 +224,41 @@ public class CoordinationImpl implements Coordination
             for (int i=releaseList.size()-1;i>=0;i--)
             {
                 final Participant part = releaseList.get(i);
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
                 try
                 {
                     part.failed(this);
                 }
+<<<<<<< HEAD
+                catch (Exception e)
+                {
+                    // TODO: log
+=======
                 catch (final Exception e)
                 {
                     LogWrapper.getLogger()
                         .log(LogWrapper.LOG_ERROR, "Participant threw exception during call to fail()", e);
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
                 }
 
                 // release the participant for other coordinations
                 owner.releaseParticipant(part);
             }
 
+<<<<<<< HEAD
+            state = TERMINATED;
+
+            synchronized (this)
+            {
+                this.notifyAll();
+=======
             this.owner.unregister(this, false);
             state = State.FAILED;
 
             synchronized (this.waitLock)
             {
                 this.waitLock.notifyAll();
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
             }
 
             return true;
@@ -174,6 +266,22 @@ public class CoordinationImpl implements Coordination
         return false;
     }
 
+<<<<<<< HEAD
+    public void end()
+    {
+        if (startTermination())
+        {
+            boolean partialFailure = false;
+            for (Participant part : participants)
+            {
+                try
+                {
+                    part.ended(this);
+                }
+                catch (Exception e)
+                {
+                    // TODO: log
+=======
     /**
      * @see org.osgi.service.coordinator.Coordination#end()
      */
@@ -221,6 +329,7 @@ public class CoordinationImpl implements Coordination
                 {
                     LogWrapper.getLogger()
                         .log(LogWrapper.LOG_ERROR, "Participant threw exception during call to fail()", e);
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
                     partialFailure = true;
                 }
 
@@ -228,6 +337,15 @@ public class CoordinationImpl implements Coordination
                 owner.releaseParticipant(part);
             }
 
+<<<<<<< HEAD
+            state = TERMINATED;
+
+            synchronized (this)
+            {
+                this.notifyAll();
+            }
+
+=======
             state = State.TERMINATED;
 
             synchronized (this.waitLock)
@@ -242,18 +360,22 @@ public class CoordinationImpl implements Coordination
                 throw new CoordinationException("Nested coordination failed", this,
                         CoordinationException.FAILED, this.failReason);
             }
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
             if (partialFailure)
             {
                 throw new CoordinationException("One or more participants threw while ending the coordination", this,
                     CoordinationException.PARTIALLY_ENDED);
             }
         }
+<<<<<<< HEAD
+=======
         else if ( state == State.FAILED )
         {
             this.owner.unregister(this, true);
             state = State.TERMINATED;
             throw new CoordinationException("Coordination failed", this, CoordinationException.FAILED, failReason);
         }
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         else
         {
             // already terminated
@@ -263,39 +385,75 @@ public class CoordinationImpl implements Coordination
     }
 
 
+<<<<<<< HEAD
+    public Collection<Participant> getParticipants()
+    {
+=======
     /**
      * @see org.osgi.service.coordinator.Coordination#getParticipants()
      */
     public List<Participant> getParticipants()
     {
         this.owner.checkPermission(name, CoordinationPermission.INITIATE);
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         // synchronize access to the state to prevent it from being changed
         // while we create a copy of the participant list
         synchronized (this)
         {
+<<<<<<< HEAD
+            if (state == ACTIVE)
+            {
+                return new ArrayList<Participant>(participants);
+=======
             if (state == State.ACTIVE)
             {
                 synchronized ( this.participants )
                 {
                     return new ArrayList<Participant>(participants);
                 }
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
             }
         }
 
         return Collections.<Participant> emptyList();
     }
 
+<<<<<<< HEAD
+    public Throwable getFailure()
+    {
+=======
     /**
      * @see org.osgi.service.coordinator.Coordination#getFailure()
      */
     public Throwable getFailure()
     {
         this.owner.checkPermission(name, CoordinationPermission.INITIATE);
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         return failReason;
     }
 
 
     /**
+<<<<<<< HEAD
+     * Adds the participant to the end of the list of participants of this
+     * coordination.
+     * <p>
+     * This method blocks if the given participant is currently participating in
+     * another coordination.
+     * <p>
+     * Participants can only be added to a coordination if it is active.
+     *
+     * @throws org.apache.felix.service.coordination.CoordinationException if
+     *             the participant cannot currently participate in this
+     *             coordination
+     */
+    public void addParticipant(Participant p)
+    {
+
+        // ensure participant only pariticipates on a single coordination
+        // this blocks until the participant can participate or until
+        // a timeout occurrs (or a deadlock is detected)
+=======
      * @see org.osgi.service.coordinator.Coordination#addParticipant(org.osgi.service.coordinator.Participant)
      */
     public void addParticipant(final Participant p)
@@ -307,6 +465,7 @@ public class CoordinationImpl implements Coordination
         // ensure participant only participates on a single coordination
         // this blocks until the participant can participate or until
         // a timeout occurs (or a deadlock is detected)
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         owner.lockParticipant(p, this);
 
         // synchronize access to the state to prevent it from being changed
@@ -318,6 +477,14 @@ public class CoordinationImpl implements Coordination
                 owner.releaseParticipant(p);
 
                 throw new CoordinationException("Cannot add Participant " + p + " to terminated Coordination", this,
+<<<<<<< HEAD
+                    (getFailure() != null) ? CoordinationException.FAILED : CoordinationException.ALREADY_ENDED);
+            }
+
+            if (!participants.contains(p))
+            {
+                participants.add(p);
+=======
                     (getFailure() != null) ? CoordinationException.FAILED : CoordinationException.ALREADY_ENDED, getFailure());
             }
 
@@ -337,10 +504,61 @@ public class CoordinationImpl implements Coordination
                     participants.add(p);
                 }
 
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
             }
         }
     }
 
+<<<<<<< HEAD
+    public Map<Class<?>, ?> getVariables()
+    {
+        return variables;
+    }
+
+    public long extendTimeout(long timeOutInMs)
+    {
+        synchronized (this)
+        {
+            if (isTerminated())
+            {
+                throw new CoordinationException("Cannot extend timeout on terminated Coordination", this,
+                    (getFailure() != null) ? CoordinationException.FAILED : CoordinationException.ALREADY_ENDED);
+            }
+
+            if (timeOutInMs > 0)
+            {
+                this.deadLine += timeOutInMs;
+                scheduleTimeout(this.deadLine);
+            }
+
+            return this.deadLine;
+        }
+    }
+
+    /**
+     * Returns whether the coordination has ended.
+     * <p>
+     * The return value of <code>false</code> may be a transient situation if
+     * the coordination is in the process of terminating.
+     */
+    public boolean isTerminated()
+    {
+        return state != ACTIVE;
+    }
+
+    public Thread getThread()
+    {
+        return initiatorThread;
+    }
+
+    public void join(long timeoutInMillis) throws InterruptedException
+    {
+        synchronized (this)
+        {
+            if (!isTerminated())
+            {
+                this.wait(timeoutInMillis);
+=======
     /**
      * @see org.osgi.service.coordinator.Coordination#getVariables()
      */
@@ -414,10 +632,19 @@ public class CoordinationImpl implements Coordination
             synchronized ( this.waitLock )
             {
                 this.waitLock.wait(timeOutInMs);
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
             }
         }
     }
 
+<<<<<<< HEAD
+    public Coordination push()
+    {
+        // TODO: Check whether this has already been pushed !
+        // throw new CoordinationException("Coordination already pushed", this, CoordinationException.ALREADY_PUSHED);
+
+        return owner.push(this);
+=======
     /**
      * @see org.osgi.service.coordinator.Coordination#push()
      */
@@ -454,6 +681,7 @@ public class CoordinationImpl implements Coordination
             c = ((CoordinationImpl)c).holderRef.get();
         }
         return c;
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     }
 
     //-------
@@ -462,14 +690,28 @@ public class CoordinationImpl implements Coordination
      * Initiates a coordination timeout. Called from the timer task scheduled by
      * the {@link #scheduleTimeout(long)} method.
      * <p>
+<<<<<<< HEAD
+     * This method is inteded to only be called from the scheduled timer task.
+     */
+    void timeout()
+=======
      * This method is intended to only be called from the scheduled timer task.
      */
     private void timeout()
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     {
         // Fail the Coordination upon timeout
         fail(TIMEOUT);
     }
 
+<<<<<<< HEAD
+    long getDeadLine()
+    {
+        return this.deadLine;
+    }
+
+=======
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     /**
      * If this coordination is still active, this method initiates the
      * termination of the coordination by setting the state to
@@ -484,9 +726,16 @@ public class CoordinationImpl implements Coordination
      */
     private synchronized boolean startTermination()
     {
+<<<<<<< HEAD
+        if (state == ACTIVE)
+        {
+            state = TERMINATING;
+            owner.unregister(this);
+=======
         if (state == State.ACTIVE)
         {
             state = State.TERMINATING;
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
             scheduleTimeout(-1);
             return true;
         }
@@ -524,6 +773,8 @@ public class CoordinationImpl implements Coordination
             owner.schedule(timeoutTask, deadLine);
         }
     }
+<<<<<<< HEAD
+=======
 
 	@Override
 	public int hashCode()
@@ -556,4 +807,5 @@ public class CoordinationImpl implements Coordination
     public Coordination getHolder() {
         return this.holderRef.get();
     }
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
 }

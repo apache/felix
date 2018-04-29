@@ -229,7 +229,11 @@ public class AD extends OptionalAttributes
      */
     public void setDefaultValue(String defaultValue)
     {
+<<<<<<< HEAD
+        this.setDefaultValue( splitList(defaultValue) );
+=======
         setDefaultValue(splitList(defaultValue), Math.abs(this.cardinality));
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     }
 
     /**
@@ -248,6 +252,50 @@ public class AD extends OptionalAttributes
         this.max = max;
     }
 
+<<<<<<< HEAD
+    /**
+     * @param values the defaultValue to set
+     */
+    public void setDefaultValue(String[] values)
+    {
+        if ( values != null )
+        {
+            int count = 0;
+            for(int i=0; i<values.length; i++)
+            {
+                if ( "".equals(ADValidator.validate(this, values[i])) )
+                {
+                    count++;
+                }
+                else
+                {
+                    values[i] = null;
+                }
+            }
+            if ( count == 0 )
+            {
+                values = null;
+            }
+            else if ( count != values.length )
+            {
+                String[] filterValues = new String[count];
+                int index = 0;
+                for(int i=0; i<values.length; i++)
+                {
+                    if ( values[i] != null )
+                    {
+                        filterValues[index] = values[i];
+                        index++;
+                    }
+                }
+                values = filterValues;
+            }
+        }
+        this.defaultValue = values;
+    }
+
+=======
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     /**
      * @param isRequired the isRequired to set
      */
@@ -282,7 +330,11 @@ public class AD extends OptionalAttributes
         {
             return AttributeDefinition.BYTE;
         }
+<<<<<<< HEAD
+        else if ("Char".equals(typeString))
+=======
         else if ("Character".equals(typeString) || "Char".equals(typeString))
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         {
             return AttributeDefinition.CHARACTER;
         }
@@ -313,10 +365,17 @@ public class AD extends OptionalAttributes
         {
             return new String[] { "" };
         }
+<<<<<<< HEAD
 
         List strings = new ArrayList();
         StringBuffer sb = new StringBuffer();
 
+=======
+
+        List strings = new ArrayList();
+        StringBuffer sb = new StringBuffer();
+
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
         int length = listString.length();
         boolean escaped = false;
         int spaceCount = 0;
@@ -325,9 +384,15 @@ public class AD extends OptionalAttributes
         {
             char ch = listString.charAt(i);
             final boolean isWhitespace = Character.isWhitespace(ch);
+<<<<<<< HEAD
+            if ( start )
+            {
+                if ( isWhitespace )
+=======
             if (start)
             {
                 if (isWhitespace)
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
                 {
                     continue;
                 }
@@ -339,6 +404,25 @@ public class AD extends OptionalAttributes
                 {
                     escaped = true;
                     continue;
+<<<<<<< HEAD
+                }
+            }
+            else if (ch == ',')
+            {
+                if (!escaped)
+                {
+                    // unescaped comma, this is a string delimiter...
+                    strings.add(sb.toString());
+                    sb.setLength(0);
+                    start = true;
+                    spaceCount = 0;
+                    continue;
+                }
+            } else if ( ch == ' ')
+            {
+                // space is only ignored at beginning and end but not if escaped
+                if (!escaped )
+=======
                 }
             }
             else if (ch == ',')
@@ -357,20 +441,31 @@ public class AD extends OptionalAttributes
             {
                 // space is only ignored at beginning and end but not if escaped
                 if (!escaped)
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
                 {
                     spaceCount++;
                     continue;
                 }
             }
+<<<<<<< HEAD
+            else if (isWhitespace )
+=======
             else if (isWhitespace)
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
             {
                 // Other whitespaces are ignored...
                 continue;
             }
 
+<<<<<<< HEAD
+            if ( spaceCount > 0)
+            {
+                for(int m = 0; m<spaceCount; m++)
+=======
             if (spaceCount > 0)
             {
                 for (int m = 0; m < spaceCount; m++)
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
                 {
                     sb.append(" ");
                 }
@@ -426,6 +521,8 @@ public class AD extends OptionalAttributes
         return null;
     }
 
+<<<<<<< HEAD
+=======
     /**
      * @param values the defaultValue to set
      */
@@ -468,6 +565,7 @@ public class AD extends OptionalAttributes
         this.defaultValue = values;
     }
 
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     private static class ComparableBoolean implements Comparable
     {
         private boolean value;

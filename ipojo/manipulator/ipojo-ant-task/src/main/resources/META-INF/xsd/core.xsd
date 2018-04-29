@@ -408,6 +408,8 @@
             </xs:simpleType>
         </xs:attribute>
     </xs:complexType>
+<<<<<<< HEAD
+=======
     <xs:complexType name="ContextType">
         <xs:annotation>
             <xs:documentation>Allows injecting the OSGi bundle context into the component.
@@ -450,6 +452,7 @@
             </xs:simpleType>
         </xs:attribute>
     </xs:complexType>
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     <xs:element name="provides" type="ProvidesType" id="provides"/>
     <xs:complexType name="ProvidesType">
         <xs:annotation>
@@ -581,7 +584,10 @@
         </xs:attribute>
     </xs:complexType>
     <xs:element name="callback" type="CallbackType" id="callback"/>
+<<<<<<< HEAD
+=======
     <xs:element name="context" type="ContextType" id="context"/>
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
     <xs:element name="controller" type="ControllerType" id="controller">
         <xs:annotation>
             <xs:documentation/>
@@ -678,7 +684,11 @@
         </xs:attribute>
         <xs:attribute name="id" type="xs:string" use="optional">
             <xs:annotation>
+<<<<<<< HEAD
+                <xs:documentation>id of the service dependency. The id allows to indentify and to refert to
+=======
                 <xs:documentation>id of the service dependency. The id allows to identify and to refer to
+>>>>>>> 502e622adcc798bcbd433d6b42ca78673cfab368
                     this dependency.
                 </xs:documentation>
             </xs:annotation>
