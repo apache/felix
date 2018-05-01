@@ -49,7 +49,7 @@ import java.util.Map;
  * The <code>ConfigurationHandler</code> class implements configuration reading
  * form a <code>java.io.InputStream</code> and writing to a
  * <code>java.io.OutputStream</code> on behalf of the
- * {@link FilePersistenceManager} class.
+ * {@code FilePersistenceManager} class.
  *
  * <pre>
  * cfg = prop &quot;=&quot; value .

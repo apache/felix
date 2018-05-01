@@ -245,7 +245,7 @@ public class JSONWriter
 
     /**
      * @see Writer#flush()
-     * @throws IOException
+     * @throws IOException when the underlying writer throws an exception.
      */
     public void flush() throws IOException
     {
