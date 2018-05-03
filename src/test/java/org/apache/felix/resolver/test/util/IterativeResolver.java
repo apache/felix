@@ -192,4 +192,9 @@ public class IterativeResolver implements Resolver {
         }
     }
 
+    public Map<Resource, List<Wire>> resolveDynamic(ResolveContext context,
+        Wiring hostWiring, Requirement dynamicRequirement) throws ResolutionException
+    {
+        throw new UnsupportedOperationException();
+    }
 }

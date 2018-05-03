@@ -186,17 +186,15 @@ class Candidates
                 addCandidates(result.candidates);
                 result.candidates = null;
                 result.remaining = null;
-                if ((rc instanceof FelixResolveContext) && !Util.isFragment(resource))
+                Collection<Resource> relatedResources = rc.findRelatedResources(resource);
+                m_session.setRelatedResources(resource, relatedResources);
+                for (Resource relatedResource : relatedResources)
                 {
-                    Collection<Resource> ondemandFragments = ((FelixResolveContext) rc).getOndemandResources(resource);
-                    for (Resource fragment : ondemandFragments)
+                    if (m_session.isValidRelatedResource(relatedResource))
                     {
-                        if (m_session.isValidOnDemandResource(fragment))
-                        {
-                            // This resource is a valid on demand resource;
-                            // populate it now, consider it optional
-                            toPopulate.addFirst(fragment);
-                        }
+                        // This resource is a valid related resource;
+                        // populate it now, consider it optional
+                        toPopulate.addFirst(relatedResource);
                     }
                 }
                 continue;
@@ -1239,14 +1237,14 @@ class Candidates
                         for (Requirement dependent : dependents)
                         {
                             CandidateSelector dependentSelector = m_candidateMap.get(
-                                dependent);
+                                    dependent);
                             // If the dependent selector only has one capability left then check if
                             // the current candidate is the selector's current candidate.
                             if (dependentSelector != null
-                                && dependentSelector.getRemainingCandidateCount() <= 1)
+                                    && dependentSelector.getRemainingCandidateCount() <= 1)
                             {
                                 if (current.equals(
-                                    dependentSelector.getCurrentCandidate()))
+                                        dependentSelector.getCurrentCandidate()))
                                 {
                                     // return false since we do not want to allow this requirement
                                     // to substitute the capability

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) OSGi Alliance (2010, 2012). All Rights Reserved.
+ * Copyright (c) OSGi Alliance (2010, 2016). All Rights Reserved.
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,25 +15,26 @@
  */
 
 /**
- * Resolver Service Package Version 1.0.
- * 
+ * Resolver Service Package Version 1.1.
  * <p>
  * Bundles wishing to use this package must list the package in the
  * Import-Package header of the bundle's manifest. This package has two types of
  * users: the consumers that use the API in this package and the providers that
  * implement the API in this package.
- * 
  * <p>
  * Example import for consumers using the API in this package:
  * <p>
- * {@code  Import-Package: org.osgi.service.resolver; version="[1.0,2.0)"}
+ * {@code  Import-Package: org.osgi.service.resolver; version="[1.1,2.0)"}
  * <p>
  * Example import for providers implementing the API in this package:
  * <p>
- * {@code  Import-Package: org.osgi.service.resolver; version="[1.0,1.1)"}
+ * {@code  Import-Package: org.osgi.service.resolver; version="[1.1,1.2)"}
  * 
- * @version $Id: db1706d83ca104187f77cb1feb7cf52b92b3740d $
+ * @author $Id: 6ac829e72173e50ab58bedd13edd66a1b50e58bd $
  */
 
+@Version("1.1")
 package org.osgi.service.resolver;
+
+import org.osgi.annotation.versioning.Version;
 
