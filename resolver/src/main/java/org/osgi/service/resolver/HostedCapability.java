@@ -1,5 +1,5 @@
 /*
- * Copyright (c) OSGi Alliance (2012). All Rights Reserved.
+ * Copyright (c) OSGi Alliance (2012, 2015). All Rights Reserved.
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,6 +16,7 @@
 
 package org.osgi.service.resolver;
 
+import org.osgi.annotation.versioning.ProviderType;
 import org.osgi.resource.Capability;
 import org.osgi.resource.Resource;
 
@@ -32,9 +33,9 @@ import org.osgi.resource.Resource;
  * capability can actually be hosted multiple times.
  * 
  * @ThreadSafe
- * @noimplement
- * @version $Id: db698baa07e2ee8b5467871239adb5f0806dc183 $
+ * @author $Id: e6a6917f6cdb5021a7a5cf858a08a98677183606 $
  */
+@ProviderType
 public interface HostedCapability extends Capability {
 
 	/**
@@ -42,6 +43,7 @@ public interface HostedCapability extends Capability {
 	 * 
 	 * @return The Resource that hosts this Capability.
 	 */
+	@Override
 	Resource getResource();
 
 	/**
