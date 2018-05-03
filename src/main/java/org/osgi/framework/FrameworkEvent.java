@@ -1,5 +1,5 @@
 /*
- * Copyright (c) OSGi Alliance (2004, 2013). All Rights Reserved.
+ * Copyright (c) OSGi Alliance (2004, 2016). All Rights Reserved.
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,6 +17,7 @@
 package org.osgi.framework;
 
 import java.util.EventObject;
+
 import org.osgi.framework.startlevel.FrameworkStartLevel;
 import org.osgi.framework.wiring.FrameworkWiring;
 
@@ -33,7 +34,7 @@ import org.osgi.framework.wiring.FrameworkWiring;
  * 
  * @Immutable
  * @see FrameworkListener
- * @author $Id: 7b74a68311acf2116ccf21e589ece0ce2cd383ba $
+ * @author $Id: b3072b2d058e70389a52e342ed5f8647b930b8f1 $
  */
 
 public class FrameworkEvent extends EventObject {
@@ -167,6 +168,19 @@ public class FrameworkEvent extends EventObject {
 	 * @since 1.5
 	 */
 	public final static int	WAIT_TIMEDOUT					= 0x00000200;
+
+	/**
+	 * The Framework has stopped and the framework requires a new class loader
+	 * to restart.
+	 * <p>
+	 * This event is fired when the Framework has been stopped because of a stop
+	 * operation on the system bundle and the framework requires a new class
+	 * loader to be used to restart. For example, if a framework extension
+	 * bundle has been refreshed. The source of this event is the System Bundle.
+	 * 
+	 * @since 1.9
+	 */
+	public final static int	STOPPED_SYSTEM_REFRESHED		= 0x00000400;
 
 	/**
 	 * Creates a Framework event.

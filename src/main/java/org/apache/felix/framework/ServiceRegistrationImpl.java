@@ -25,6 +25,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Dictionary;
 import java.util.Enumeration;
+import java.util.Hashtable;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -286,7 +287,7 @@ class ServiceRegistrationImpl implements ServiceRegistration
                     ungetFactoryUnchecked(relBundle, svcObj);
                 }
             }
-            catch (Exception ex)
+            catch (Throwable ex)
             {
                 m_registry.getLogger().log(
                     m_bundle,
@@ -692,6 +693,11 @@ class ServiceRegistrationImpl implements ServiceRegistration
 
             // If ranks are equal, then sort by service id in descending order.
             return (id.compareTo(otherId) < 0) ? 1 : -1;
+        }
+
+        @Override
+        public Dictionary<String, Object> getProperties() {
+            return new Hashtable<String, Object>(ServiceRegistrationImpl.this.m_propMap);
         }
     }
 

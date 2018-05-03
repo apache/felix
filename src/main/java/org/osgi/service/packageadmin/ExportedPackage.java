@@ -1,5 +1,5 @@
 /*
- * Copyright (c) OSGi Alliance (2001, 2013). All Rights Reserved.
+ * Copyright (c) OSGi Alliance (2001, 2014). All Rights Reserved.
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -45,7 +45,7 @@ import org.osgi.framework.Version;
  * @noimplement
  * @deprecated The PackageAdmin service has been replaced by the
  *             <code>org.osgi.framework.wiring</code> package.
- * @author $Id: e04a2beb3de2afff4cb01747e589c04b5e0f0cc8 $
+ * @author $Id: f4cdb9e84ce788c16d5304166a2b9eeecb5fabf3 $
  */
 public interface ExportedPackage {
 	/**
@@ -85,7 +85,7 @@ public interface ExportedPackage {
 	 * 
 	 * @return The version of this exported package, or {@code null} if no
 	 *         version information is available.
-	 * @deprecated As of 1.2, replaced by {@link #getVersion()}.
+	 * @deprecated As of 1.2. Replaced by {@link #getVersion()}.
 	 */
 	public String getSpecificationVersion();
 

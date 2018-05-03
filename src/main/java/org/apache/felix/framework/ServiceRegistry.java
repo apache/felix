@@ -376,6 +376,20 @@ public class ServiceRegistry
                         if (holder != usage.m_svcHolderRef.get())
                             holder = null;
                     }
+                    if (svcObj != null && isPrototype)
+                    {
+                        UsageCount existingUsage = obtainUsageCount(bundle, ref, svcObj, null);
+                        if (existingUsage != null && existingUsage != usage)
+                        {
+                            flushUsageCount(bundle, ref, usage);
+                            usage = existingUsage;
+                            incrementToPositiveValue(usage.m_count);
+                            if ( isServiceObjects )
+                            {
+                                incrementToPositiveValue(usage.m_serviceObjectsCount);
+                            }
+                        }
+                    }
                 }
             }
         }
@@ -477,8 +491,7 @@ public class ServiceRegistry
                                 try
                                 {
                                     // Remove reference from usages array.
-                                    ((ServiceRegistrationImpl.ServiceReferenceImpl) ref)
-                                        .getRegistration().ungetService(bundle, svc);
+                                    reg.ungetService(bundle, svc);
                                 }
                                 finally 
                                 {

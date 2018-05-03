@@ -18,15 +18,13 @@
  */
 package org.apache.felix.framework.cache;
 
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.Map;
-import java.util.jar.Manifest;
-
 import org.apache.felix.framework.Logger;
 import org.apache.felix.framework.util.StringMap;
 import org.apache.felix.framework.util.WeakZipFileFactory;
+
+import java.io.File;
+import java.io.IOException;
+import java.util.Map;
 
 /**
  * <p>
@@ -69,35 +67,14 @@ class DirectoryRevision extends BundleArchiveRevision
         }
     }
 
-    public synchronized Map<String, Object> getManifestHeader()
+    public Map<String, Object> getManifestHeader()
         throws Exception
     {
-        // Read the header file from the reference directory.
-        InputStream is = null;
-
-        try
-        {
-            // Open manifest file.
-            is = BundleCache.getSecureAction()
-                .getFileInputStream(new File(m_refDir, "META-INF/MANIFEST.MF"));
-            // Error if no jar file.
-            if (is == null)
-            {
-                throw new IOException("No manifest file found.");
-            }
-
-            // Get manifest.
-            Manifest mf = new Manifest(is);
-            // Create a case insensitive map of manifest attributes.
-            return new StringMap(mf.getMainAttributes());
-        }
-        finally
-        {
-            if (is != null) is.close();
-        }
+        File manifest = new File(m_refDir, "META-INF/MANIFEST.MF");
+        return manifest.isFile() ? BundleCache.getMainAttributes(new StringMap(), BundleCache.getSecureAction().getFileInputStream(manifest), manifest.length()) : null;
     }
 
-    public synchronized Content getContent() throws Exception
+    public Content getContent() throws Exception
     {
         return new DirectoryContent(getLogger(), getConfig(), m_zipFactory,
             this, getRevisionRootDir(), m_refDir);

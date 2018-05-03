@@ -34,12 +34,12 @@ import java.util.regex.Pattern;
 
 import org.apache.felix.framework.Logger;
 import org.apache.felix.framework.util.FelixConstants;
-import org.apache.felix.framework.util.VersionRange;
 import org.osgi.framework.BundleException;
 import org.osgi.framework.Constants;
 import org.osgi.framework.Filter;
 import org.osgi.framework.FrameworkUtil;
 import org.osgi.framework.Version;
+import org.osgi.framework.VersionRange;
 
 public class NativeLibraryClause
 {
@@ -123,7 +123,7 @@ public class NativeLibraryClause
     /**
      * Initialize the processor and os name aliases from Felix Config.
      *
-     * @param config
+     * @param configMap
      */
     public static synchronized void initializeNativeAliases(Map configMap)
     {
@@ -321,8 +321,8 @@ public class NativeLibraryClause
         {
             try
             {
-                VersionRange range = VersionRange.parse(osversions[i]);
-                if (range.isInRange(currentOSVersion))
+                VersionRange range = new VersionRange(osversions[i]);
+                if (range.includes(currentOSVersion))
                 {
                     return true;
                 }
@@ -755,8 +755,8 @@ public class NativeLibraryClause
                 String s = value.substring(1, value.length() - 1);
                 String vlo = s.substring(0, s.indexOf(',')).trim();
                 String vhi = s.substring(s.indexOf(',') + 1, s.length()).trim();
-                return new VersionRange(new Version(cleanupVersion(vlo)), (value.charAt(0) == '['), new Version(
-                    cleanupVersion(vhi)), (value.charAt(value.length() - 1) == ']')).toString();
+                return new VersionRange(value.charAt(0), new Version(cleanupVersion(vlo)), new Version(
+                    cleanupVersion(vhi)), value.charAt(value.length() - 1)).toString();
             }
 
             catch (Exception ex)

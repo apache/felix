@@ -18,13 +18,6 @@
  */
 package org.apache.felix.framework;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-
 import org.osgi.dto.DTO;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
@@ -48,6 +41,7 @@ import org.osgi.framework.wiring.dto.BundleRevisionDTO;
 import org.osgi.framework.wiring.dto.BundleWireDTO;
 import org.osgi.framework.wiring.dto.BundleWiringDTO;
 import org.osgi.framework.wiring.dto.BundleWiringDTO.NodeDTO;
+import org.osgi.framework.wiring.dto.FrameworkWiringDTO;
 import org.osgi.resource.Capability;
 import org.osgi.resource.Requirement;
 import org.osgi.resource.Resource;
@@ -58,6 +52,15 @@ import org.osgi.resource.dto.CapabilityRefDTO;
 import org.osgi.resource.dto.RequirementDTO;
 import org.osgi.resource.dto.RequirementRefDTO;
 import org.osgi.resource.dto.WireDTO;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 /**
  * Creates various DTOs provided by the core framework.
@@ -109,6 +112,10 @@ public class DTOFactory
         else if (type == FrameworkStartLevelDTO.class && bundle instanceof Framework)
         {
             return type.cast(createFrameworkStartLevelDTO((Framework) bundle));
+        }
+        else if (type == FrameworkWiringDTO.class && bundle instanceof Felix)
+        {
+            return type.cast(createFrameworkWiringDTO((Felix) bundle));
         }
         return null;
     }
@@ -199,7 +206,7 @@ public class DTOFactory
     private static BundleWiringDTO createBundleWiringDTO(Bundle bundle)
     {
         BundleWiring bw = bundle.adapt(BundleWiring.class);
-        return createBundleWiringDTO(bw);
+        return bw != null ? createBundleWiringDTO(bw) : null;
     }
 
     private static BundleWiringDTO createBundleWiringDTO(BundleWiring wiring)
@@ -236,7 +243,8 @@ public class DTOFactory
     {
         NodeDTO node = new BundleWiringDTO.NodeDTO();
         node.id = getWiringID(bw);
-        nodes.add(node);
+
+        addNodeDTO(node, nodes);
 
         node.current = bw.isCurrent();
         node.inUse = bw.isInUse();
@@ -401,6 +409,38 @@ public class DTOFactory
         return dto;
     }
 
+    private static FrameworkWiringDTO createFrameworkWiringDTO(Felix framework)
+    {
+        FrameworkWiringDTO dto = new FrameworkWiringDTO();
+
+        dto.resources = new HashSet<BundleRevisionDTO>();
+        dto.wirings = new HashSet<NodeDTO>();
+
+        Set<Bundle> bundles = new LinkedHashSet<Bundle>(Arrays.asList(framework.getBundles()));
+        bundles.addAll(framework.getRemovalPendingBundles());
+
+        for (Bundle bundle : bundles)
+        {
+            addBundleWiring(bundle, dto.resources, dto.wirings);
+        }
+
+        return dto;
+    }
+
+    private static void addBundleWiring(Bundle bundle, Set<BundleRevisionDTO> resources, Set<NodeDTO> wirings)
+    {
+        BundleRevisions brs = bundle.adapt(BundleRevisions.class);
+
+        for (BundleRevision revision : brs.getRevisions())
+        {
+            BundleWiring wiring = revision.getWiring();
+            if (wiring != null)
+            {
+                createBundleWiringNodeDTO(wiring, resources, wirings);
+            }
+        }
+    }
+
     private static void addBundleRevisionDTO(BundleRevisionDTO dto, Set<BundleRevisionDTO> resources)
     {
         for (BundleRevisionDTO r : resources)
@@ -409,6 +449,16 @@ public class DTOFactory
                 return;
         }
         resources.add(dto);
+    }
+
+    private static void addNodeDTO(NodeDTO dto, Set<NodeDTO> nodes)
+    {
+        for (NodeDTO nodeDTO : nodes)
+        {
+            if (nodeDTO.id == dto.id)
+                return;
+        }
+        nodes.add(dto);
     }
 
     private static void addWiringNodeIfNotPresent(BundleWiring bw, Set<BundleRevisionDTO> resources, Set<NodeDTO> nodes)
@@ -450,6 +500,19 @@ public class DTOFactory
         {
             return value;
         }
+        else if (value instanceof List)
+        {
+            List result = new ArrayList();
+            for (Object v : ((List) value))
+            {
+                Object vv = convertAttrToDTO(v);
+                if (vv != null)
+                {
+                    result.add(vv);
+                }
+            }
+            return result.isEmpty() ? null : result;
+        }
         else
         {
             return null;
@@ -459,11 +522,16 @@ public class DTOFactory
     private static boolean isPermissibleAttribute(Class clazz)
     {
         return clazz == Boolean.class || clazz == String.class
-                || DTO.class.isAssignableFrom(clazz);
+                || DTO.class.isAssignableFrom(clazz) || Number.class.isAssignableFrom(clazz);
     }
 
     private static int getWiringID(Wiring bw)
     {
+        Resource res = bw.getResource();
+        if (res != null)
+        {
+            return getResourceIDAndAdd(res, null);
+        }
         return bw.hashCode();
     }
 

@@ -22,12 +22,11 @@ import java.util.Collections;
 import java.util.Map;
 import org.apache.felix.framework.capabilityset.CapabilitySet;
 import org.apache.felix.framework.capabilityset.SimpleFilter;
-import org.apache.felix.framework.util.ImmutableMap;
+import org.apache.felix.framework.util.Util;
 import org.osgi.framework.Constants;
 import org.osgi.framework.wiring.BundleCapability;
 import org.osgi.framework.wiring.BundleRequirement;
 import org.osgi.framework.wiring.BundleRevision;
-import org.osgi.resource.Resource;
 
 public class BundleRequirementImpl implements BundleRequirement
 {
@@ -44,8 +43,8 @@ public class BundleRequirementImpl implements BundleRequirement
     {
         m_revision = revision;
         m_namespace = namespace;
-        m_dirs = ImmutableMap.newInstance(dirs);
-        m_attrs = ImmutableMap.newInstance(attrs);
+        m_dirs =  Util.newImmutableMap(dirs);
+        m_attrs =  Util.newImmutableMap(attrs);
         m_filter = filter;
 
         // Find resolution import directives.

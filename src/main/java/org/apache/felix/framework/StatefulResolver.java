@@ -578,26 +578,10 @@ class StatefulResolver
                                 BundleRevision.PACKAGE_NAMESPACE,
                                 Collections.EMPTY_MAP,
                                 attrs);
-                        List<BundleCapability> candidates = findProvidersInternal(record, req, false, true);
+                        final List<BundleCapability> candidates = findProvidersInternal(record, req, false, true);
 
                         // Try to find a dynamic requirement that matches the capabilities.
-                        BundleRequirementImpl dynReq = null;
-                        for (int dynIdx = 0;
-                             (candidates.size() > 0) && (dynReq == null) && (dynIdx < dynamics.size());
-                             dynIdx++)
-                        {
-                            for (Iterator<BundleCapability> itCand = candidates.iterator();
-                                 (dynReq == null) && itCand.hasNext(); )
-                            {
-                                Capability cap = itCand.next();
-                                if (CapabilitySet.matches(
-                                        cap,
-                                        ((BundleRequirementImpl) dynamics.get(dynIdx)).getFilter()))
-                                {
-                                    dynReq = (BundleRequirementImpl) dynamics.get(dynIdx);
-                                }
-                            }
-                        }
+                        final BundleRequirementImpl dynReq = findDynamicRequirement(dynamics, candidates);
 
                         // If we found a matching dynamic requirement, then filter out
                         // any candidates that do not match it.
@@ -608,7 +592,7 @@ class StatefulResolver
                             {
                                 Capability cap = itCand.next();
                                 if (!CapabilitySet.matches(
-                                        cap, dynReq.getFilter()))
+                                    cap, dynReq.getFilter()))
                                 {
                                     itCand.remove();
                                 }
@@ -619,15 +603,24 @@ class StatefulResolver
                             candidates.clear();
                         }
 
-                        wireMap = m_resolver.resolve(
+                        Map<Resource, Wiring> wirings = getWirings();
+
+                        wireMap = dynReq != null && wirings.containsKey(revision) ? m_resolver.resolveDynamic(
                             new ResolveContextImpl(
                                 this,
-                                getWirings(),
+                                wirings,
                                 record,
                                 Collections.<BundleRevision>emptyList(),
                                 Collections.<BundleRevision>emptyList(),
-                                getFragments()),
-                            revision, dynReq, new ArrayList<Capability>(candidates));
+                                getFragments())
+                            {
+                                @Override
+                                public List<Capability> findProviders(Requirement br)
+                                {
+                                    return (List) (br == dynReq ? candidates : super.findProviders(br));
+                                }
+                            },
+                            revision.getWiring(), dynReq) : Collections.<Resource, List<Wire>>emptyMap();
                     }
                     catch (ResolutionException ex)
                     {
@@ -699,6 +692,24 @@ class StatefulResolver
         }
 
         return provider;
+    }
+
+    private BundleRequirementImpl findDynamicRequirement(List<BundleRequirement> dynamics, List<BundleCapability> candidates)
+    {
+        for (int dynIdx = 0; (candidates.size() > 0)  && (dynIdx < dynamics.size()); dynIdx++)
+        {
+            for (Iterator<BundleCapability> itCand = candidates.iterator(); itCand.hasNext(); )
+            {
+                Capability cap = itCand.next();
+                if (CapabilitySet.matches(
+                    cap,
+                    ((BundleRequirementImpl) dynamics.get(dynIdx)).getFilter()))
+                {
+                    return (BundleRequirementImpl) dynamics.get(dynIdx);
+                }
+            }
+        }
+        return null;
     }
 
     private ResolverHookRecord prepareResolverHooks(
@@ -1633,41 +1644,6 @@ class StatefulResolver
             }
         }
         return fragments;
-    }
-
-    void checkNativeLibraries(BundleRevision revision) throws ResolveException
-    {
-        // Next, try to resolve any native code, since the revision is
-        // not resolvable if its native code cannot be loaded.
-        List<NativeLibrary> libs = ((BundleRevisionImpl) revision).getDeclaredNativeLibraries();
-        if (libs != null)
-        {
-            String msg = null;
-            // Verify that all native libraries exist in advance; this will
-            // throw an exception if the native library does not exist.
-            for (int libIdx = 0; (msg == null) && (libIdx < libs.size()); libIdx++)
-            {
-                String entryName = libs.get(libIdx).getEntryName();
-                if (entryName != null)
-                {
-                    if (!((BundleRevisionImpl) revision).getContent().hasEntry(entryName))
-                    {
-                        msg = "Native library does not exist: " + entryName;
-                    }
-                }
-            }
-            // If we have a zero-length native library array, then
-            // this means no native library class could be selected
-            // so we should fail to resolve.
-            if (libs.isEmpty())
-            {
-                msg = "No matching native libraries found.";
-            }
-            if (msg != null)
-            {
-                throw new ResolveException(msg, revision, null);
-            }
-        }
     }
 
     private synchronized Set<BundleRevision> getUnresolvedRevisions()

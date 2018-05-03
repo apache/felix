@@ -25,6 +25,7 @@ import java.net.InetAddress;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.net.URLConnection;
+import java.security.Permission;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Enumeration;
@@ -70,6 +71,9 @@ public class URLHandlersTest extends TestCase
         {
             final Bundle bundle = f.getBundleContext().installBundle(bundleFile.toURI().toString());
             bundle.start();
+            URL url = bundle.getEntry(TestURLHandlersActivator.class.getName().replace(".", "/") + ".class");
+            url.openStream();
+            new URL(url.toExternalForm()).openStream();
         }
         finally
         {
@@ -116,6 +120,40 @@ public class URLHandlersTest extends TestCase
         bundle.stop();
         bundle.start();
         f.stop();
+    }
+
+    public void testURLHandlersWithSecurity() throws Exception
+    {
+        System.setSecurityManager(new SecurityManager()
+        {
+            @Override
+            public void checkPermission(Permission perm) {}
+        });
+        try
+        {
+            testURLHandlers();
+        }
+        finally
+        {
+            System.setSecurityManager(null);
+        }
+    }
+
+    public void testURLHandlersWithClassLoaderIsolationWithSecurity() throws Exception
+    {
+        System.setSecurityManager(new SecurityManager()
+        {
+            @Override
+            public void checkPermission(Permission perm) {}
+        });
+        try
+        {
+            testURLHandlersWithClassLoaderIsolation();
+        }
+        finally
+        {
+            System.setSecurityManager(null);
+        }
     }
 
     public static class DelegatingClassLoader extends ClassLoader

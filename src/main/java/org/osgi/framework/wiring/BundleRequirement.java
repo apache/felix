@@ -1,5 +1,5 @@
 /*
- * Copyright (c) OSGi Alliance (2010, 2013). All Rights Reserved.
+ * Copyright (c) OSGi Alliance (2010, 2015). All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -26,7 +26,7 @@ import org.osgi.resource.Requirement;
  * revision}.
  * 
  * @ThreadSafe
- * @author $Id: ac0578af567754bcd12c63a350c06afdd1bfec05 $
+ * @author $Id: f7e73311cfc384905cb65d9d24b12304291be2d8 $
  */
 @ProviderType
 public interface BundleRequirement extends Requirement {
@@ -54,6 +54,7 @@ public interface BundleRequirement extends Requirement {
 	 * 
 	 * @return The namespace of this requirement.
 	 */
+	@Override
 	String getNamespace();
 
 	/**
@@ -68,6 +69,7 @@ public interface BundleRequirement extends Requirement {
 	 *         this requirement, or an empty map if this requirement has no
 	 *         directives.
 	 */
+	@Override
 	Map<String, String> getDirectives();
 
 	/**
@@ -81,6 +83,7 @@ public interface BundleRequirement extends Requirement {
 	 *         this requirement, or an empty map if this requirement has no
 	 *         attributes.
 	 */
+	@Override
 	Map<String, Object> getAttributes();
 
 	/**
@@ -93,5 +96,6 @@ public interface BundleRequirement extends Requirement {
 	 *         if this requirement is synthesized.
 	 * @since 1.1
 	 */
+	@Override
 	BundleRevision getResource();
 }

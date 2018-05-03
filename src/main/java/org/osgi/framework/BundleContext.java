@@ -1,5 +1,5 @@
 /*
- * Copyright (c) OSGi Alliance (2000, 2014). All Rights Reserved.
+ * Copyright (c) OSGi Alliance (2000, 2018). All Rights Reserved.
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -85,7 +85,7 @@ import org.osgi.annotation.versioning.ProviderType;
  * Environment supports permissions.
  * 
  * @ThreadSafe
- * @author $Id: fbf0b18296a0b85d628ee8c47d0f0f213a914e48 $
+ * @author $Id: 6c43d322b8ea2137c094ce10e1f33e9c54519dd6 $
  */
 @ProviderType
 public interface BundleContext extends BundleReference {
@@ -116,6 +116,7 @@ public interface BundleContext extends BundleReference {
 	 *         {@code BundleContext}.
 	 * @throws IllegalStateException If this BundleContext is no longer valid.
 	 */
+	@Override
 	Bundle getBundle();
 
 	/**
@@ -404,7 +405,7 @@ public interface BundleContext extends BundleReference {
 	 * <li>A property named {@link Constants#SERVICE_SCOPE} identifying the
 	 * scope of the service.</li>
 	 * <li>A property named {@link Constants#SERVICE_BUNDLEID} identifying the
-	 * the context bundle.</li>
+	 * context bundle.</li>
 	 * </ul>
 	 * Properties with these names in the specified {@code Dictionary} will be
 	 * ignored.</li>
