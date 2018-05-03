@@ -28,8 +28,7 @@ import java.util.Set;
 
 import org.apache.felix.framework.StatefulResolver.ResolverHookRecord;
 import org.apache.felix.framework.resolver.CandidateComparator;
-import org.apache.felix.resolver.FelixResolveContext;
-import org.apache.felix.resolver.ResolverImpl;
+import org.apache.felix.framework.util.Util;
 import org.osgi.framework.namespace.HostNamespace;
 import org.osgi.framework.namespace.PackageNamespace;
 import org.osgi.framework.wiring.BundleCapability;
@@ -46,7 +45,7 @@ import org.osgi.service.resolver.ResolveContext;
 /**
  * 
  */
-public class ResolveContextImpl extends ResolveContext implements FelixResolveContext
+public class ResolveContextImpl extends ResolveContext
 {
     private final StatefulResolver m_state;
     private final Map<Resource, Wiring> m_wirings;
@@ -82,7 +81,28 @@ public class ResolveContextImpl extends ResolveContext implements FelixResolveCo
 
     public Collection<Resource> getOndemandResources(Resource host)
     {
-        return new ArrayList<Resource>(m_ondemand);
+        List<Resource> result = new ArrayList<Resource>();
+        for (BundleRevision revision : m_ondemand)
+        {
+            for (BundleRequirement req : revision.getDeclaredRequirements(null))
+            {
+                if (req.getNamespace().equals(BundleRevision.HOST_NAMESPACE))
+                {
+                    for (Capability cap : host.getCapabilities(null))
+                    {
+                        if (cap.getNamespace().equals(BundleRevision.HOST_NAMESPACE))
+                        {
+                            if (req.matches((BundleCapability) cap))
+                            {
+                                result.add(revision);
+                                break;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        return result;
     }
 
     @Override
@@ -127,43 +147,37 @@ public class ResolveContextImpl extends ResolveContext implements FelixResolveCo
     }
 
 	@Override
-	public Collection<Wire> getSubstitutionWires(Wiring wiring) {
+	public List<Wire> getSubstitutionWires(Wiring wiring) {
 		// TODO: this is calculating information that probably has been calculated 
 		// already or at least could be calculated quicker taking into account the
 		// current state. We need to revisit this.
 		Set<String> exportNames = new HashSet<String>();
         for (Capability cap : wiring.getResource().getCapabilities(null))
         {
-            if (PackageNamespace.PACKAGE_NAMESPACE.equals(cap.getNamespace()))
+            if (cap.getNamespace().equals(PackageNamespace.PACKAGE_NAMESPACE))
             {
                 exportNames.add(
                     (String) cap.getAttributes().get(PackageNamespace.PACKAGE_NAMESPACE));
             }
         }
         // Add fragment exports
-        for (Wire wire : wiring.getProvidedResourceWires(null))
+        for (Wire wire : wiring.getProvidedResourceWires(HostNamespace.HOST_NAMESPACE))
         {
-            if (HostNamespace.HOST_NAMESPACE.equals(wire.getCapability().getNamespace()))
+            for (Capability cap : wire.getRequirement().getResource().getCapabilities(null))
             {
-                for (Capability cap : wire.getRequirement().getResource().getCapabilities(
-                    null))
+                if (cap.getNamespace().equals(PackageNamespace.PACKAGE_NAMESPACE))
                 {
-                    if (PackageNamespace.PACKAGE_NAMESPACE.equals(cap.getNamespace()))
-                    {
-                        exportNames.add((String) cap.getAttributes().get(
-                            PackageNamespace.PACKAGE_NAMESPACE));
-                    }
+                    exportNames.add((String) cap.getAttributes().get(
+                        PackageNamespace.PACKAGE_NAMESPACE));
                 }
             }
         }
-        Collection<Wire> substitutionWires = new ArrayList<Wire>();
+        List<Wire> substitutionWires = new ArrayList<Wire>();
         for (Wire wire : wiring.getRequiredResourceWires(null))
         {
-            if (PackageNamespace.PACKAGE_NAMESPACE.equals(
-                wire.getCapability().getNamespace()))
+            if (wire.getCapability().getNamespace().equals(PackageNamespace.PACKAGE_NAMESPACE))
             {
-                if (exportNames.contains(wire.getCapability().getAttributes().get(
-                    PackageNamespace.PACKAGE_NAMESPACE)))
+                if (exportNames.contains(wire.getCapability().getAttributes().get(PackageNamespace.PACKAGE_NAMESPACE)))
                 {
                     substitutionWires.add(wire);
                 }
@@ -171,4 +185,15 @@ public class ResolveContextImpl extends ResolveContext implements FelixResolveCo
         }
         return substitutionWires;
 	}
+
+    @Override
+    public Collection<Resource> findRelatedResources(Resource resource) {
+        return !Util.isFragment(resource) ? getOndemandResources(resource) : Collections.<Resource>emptyList();
+    }
+
+    @Override
+    public void onCancel(Runnable callback) {
+        // TODO: implement session cancel
+        super.onCancel(callback);
+    }
 }

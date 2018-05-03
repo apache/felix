@@ -61,7 +61,6 @@ public abstract class BundleArchiveRevision
      * @param revisionRootDir the root directory to be used by the revision
      *        subclass for storing any state.
      * @param location the location string associated with the revision.
-     * @param trustedCaCerts the trusted CA certificates if any.
      * @throws Exception if any errors occur.
     **/
     public BundleArchiveRevision(Logger logger, Map configMap, File revisionRootDir, String location)

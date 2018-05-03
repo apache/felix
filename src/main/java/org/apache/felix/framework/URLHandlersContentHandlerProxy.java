@@ -18,6 +18,8 @@
  */
 package org.apache.felix.framework;
 
+import org.apache.felix.framework.util.SecureAction;
+
 import java.io.IOException;
 import java.net.ContentHandler;
 import java.net.ContentHandlerFactory;
@@ -25,7 +27,6 @@ import java.net.URLConnection;
 import java.util.StringTokenizer;
 import java.util.concurrent.ConcurrentHashMap;
 
-import org.apache.felix.framework.util.SecureAction;
 import static org.apache.felix.framework.util.Util.putIfAbsentAndReturn;
 
 /**
@@ -55,7 +56,7 @@ class URLHandlersContentHandlerProxy extends ContentHandler
     private static final Class[] STRING_TYPES = new Class[]{String.class};
 
     private static final String CONTENT_HANDLER_PACKAGE_PROP = "java.content.handler.pkgs";
-    private static final String DEFAULT_CONTENT_HANDLER_PACKAGE = "sun.net.www.content|com.ibm.oti.net.www.content|gnu.java.net.content|org.apache.harmony.luni.internal.net.www.content|COM.newmonics.www.content";
+    private static final String DEFAULT_CONTENT_HANDLER_PACKAGE = "sun.net.www.content|sun.awt.www.content|com.ibm.oti.net.www.content|gnu.java.net.content|org.apache.harmony.luni.internal.net.www.content|COM.newmonics.www.content";
 
     private static final ConcurrentHashMap<String, ContentHandler> m_builtIn = new ConcurrentHashMap<String, ContentHandler>();
     private static final String m_pkgs;

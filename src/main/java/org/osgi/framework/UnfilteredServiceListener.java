@@ -1,5 +1,5 @@
 /*
- * Copyright (c) OSGi Alliance (2011, 2013). All Rights Reserved.
+ * Copyright (c) OSGi Alliance (2011, 2015). All Rights Reserved.
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -66,9 +66,10 @@ import org.osgi.framework.hooks.service.ListenerHook;
  * @see ServicePermission
  * @ThreadSafe
  * @since 1.7
- * @author $Id: c68fe7ab0c3461256613d22dd666f17f87597dfe $
+ * @author $Id: ed5080773ff2a67f5f2ebf98628b7f14be115f73 $
  */
 @ConsumerType
+@FunctionalInterface
 public interface UnfilteredServiceListener extends ServiceListener {
 	// This is a marker interface
 }

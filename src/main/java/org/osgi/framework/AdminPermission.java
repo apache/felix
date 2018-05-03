@@ -1,5 +1,5 @@
 /*
- * Copyright (c) OSGi Alliance (2000, 2013). All Rights Reserved.
+ * Copyright (c) OSGi Alliance (2000, 2017). All Rights Reserved.
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -92,7 +92,7 @@ import java.util.Map;
  * Filter attribute names are processed in a case sensitive manner.
  * 
  * @ThreadSafe
- * @author $Id: 2a803b07dcdc9af47ca0cb208d96fcd9c0bcfb0c $
+ * @author $Id: 7906054ba14028f4c0dc21610dfd8b86ae3ffa00 $
  */
 
 public final class AdminPermission extends BasicPermission {
@@ -298,7 +298,7 @@ public final class AdminPermission extends BasicPermission {
 		if (bundle == null) {
 			throw new IllegalArgumentException("bundle must not be null");
 		}
-		StringBuffer sb = new StringBuffer("(id=");
+		StringBuilder sb = new StringBuilder("(id=");
 		sb.append(bundle.getBundleId());
 		sb.append(")");
 		return sb.toString();
@@ -565,9 +565,7 @@ public final class AdminPermission extends BasicPermission {
 		try {
 			return FrameworkUtil.createFilter(filterString);
 		} catch (InvalidSyntaxException e) {
-			IllegalArgumentException iae = new IllegalArgumentException("invalid filter");
-			iae.initCause(e);
-			throw iae;
+			throw new IllegalArgumentException("invalid filter", e);
 		}
 	}
 
@@ -672,7 +670,7 @@ public final class AdminPermission extends BasicPermission {
 	public String getActions() {
 		String result = actions;
 		if (result == null) {
-			StringBuffer sb = new StringBuffer();
+			StringBuilder sb = new StringBuilder();
 
 			int mask = action_mask;
 			if ((mask & ACTION_CLASS) == ACTION_CLASS) {
@@ -843,8 +841,9 @@ public final class AdminPermission extends BasicPermission {
 		try {
 			final Map<String, Object> map = new HashMap<String, Object>(4);
 			AccessController.doPrivileged(new PrivilegedAction<Void>() {
+				@Override
 				public Void run() {
-					map.put("id", new Long(bundle.getBundleId()));
+					map.put("id", Long.valueOf(bundle.getBundleId()));
 					map.put("location", bundle.getLocation());
 					String name = bundle.getSymbolicName();
 					if (name != null) {

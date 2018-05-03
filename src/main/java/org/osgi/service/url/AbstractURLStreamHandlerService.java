@@ -1,5 +1,5 @@
 /*
- * Copyright (c) OSGi Alliance (2002, 2013). All Rights Reserved.
+ * Copyright (c) OSGi Alliance (2002, 2015). All Rights Reserved.
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -31,7 +31,7 @@ import org.osgi.annotation.versioning.ConsumerType;
  * {@code setURL} and {@code parseURL(URLStreamHandlerSetter,...)} methods.
  * 
  * @ThreadSafe
- * @author $Id: 79cfc45d97b037436d50bda26111109bd5d42a37 $
+ * @author $Id: 71ce6a3846e0b82b2e096ae7617c2af7a1297f0e $
  */
 @ConsumerType
 public abstract class AbstractURLStreamHandlerService extends URLStreamHandler implements URLStreamHandlerService {
@@ -56,6 +56,7 @@ public abstract class AbstractURLStreamHandlerService extends URLStreamHandler i
 	 *        invoked for the specified URL.
 	 * @see "java.net.URLStreamHandler.parseURL"
 	 */
+	@Override
 	public void parseURL(@SuppressWarnings("hiding") URLStreamHandlerSetter realHandler, URL u, String spec, int start, int limit) {
 		this.realHandler = realHandler;
 		parseURL(u, spec, start, limit);
@@ -139,7 +140,7 @@ public abstract class AbstractURLStreamHandlerService extends URLStreamHandler i
 	 * @deprecated This method is only for compatibility with handlers written
 	 *             for JDK 1.1.
 	 */
-	@SuppressWarnings("javadoc")
+	@Override
 	protected void setURL(URL u, String proto, String host, int port, String file, String ref) {
 		realHandler.setURL(u, proto, host, port, file, ref);
 	}

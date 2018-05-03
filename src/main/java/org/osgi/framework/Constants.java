@@ -1,5 +1,5 @@
 /*
- * Copyright (c) OSGi Alliance (2000, 2014). All Rights Reserved.
+ * Copyright (c) OSGi Alliance (2000, 2018). All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -29,7 +29,7 @@ import org.osgi.framework.launch.Framework;
  * otherwise indicated.
  * 
  * @since 1.1
- * @author $Id: 6873c6f7d537ddbe39a6a2eba107ca3c2de49ce5 $
+ * @author $Id: 41e648afb56767a610f279a9c7effef47dfcbf2e $
  */
 @ProviderType
 public interface Constants {
@@ -783,9 +783,8 @@ public interface Constants {
 	 * Manifest header directive value identifying a reexport visibility type. A
 	 * reexport visibility type indicates any packages that are exported by the
 	 * required bundle are re-exported by the requiring bundle. Any arbitrary
-	 * arbitrary matching attributes with which they were exported by the
-	 * required bundle are deleted.
-	 * 
+	 * matching attributes with which they were exported by the required bundle
+	 * are deleted.
 	 * <p>
 	 * The directive value is encoded in the Require-Bundle manifest header
 	 * like:
@@ -814,7 +813,6 @@ public interface Constants {
 	 * 
 	 * @see #FRAGMENT_HOST
 	 * @see #EXTENSION_FRAMEWORK
-	 * @see #EXTENSION_BOOTCLASSPATH
 	 * @since 1.3
 	 */
 	String	EXTENSION_DIRECTIVE						= "extension";
@@ -840,7 +838,6 @@ public interface Constants {
 	 * Manifest header directive value identifying the type of extension
 	 * fragment. An extension fragment type of bootclasspath indicates that the
 	 * extension fragment is to be loaded by the boot class loader.
-	 * 
 	 * <p>
 	 * The directive value is encoded in the Fragment-Host manifest header like:
 	 * 
@@ -850,6 +847,7 @@ public interface Constants {
 	 * 
 	 * @see #EXTENSION_DIRECTIVE
 	 * @since 1.3
+	 * @deprecated As of 1.9.
 	 */
 	String	EXTENSION_BOOTCLASSPATH					= "bootclasspath";
 
@@ -1809,4 +1807,76 @@ public interface Constants {
 	 * @since 1.8
 	 */
 	String	BUNDLE_LICENSE							= "Bundle-License";
+
+	/**
+	 * Manifest header identifying the bundle's developers.
+	 * <p>
+	 * The header value may be retrieved from the {@code Dictionary} object
+	 * returned by the {@code Bundle.getHeaders} method.
+	 * 
+	 * @since 1.9
+	 */
+	String	BUNDLE_DEVELOPERS						= "Bundle-Developers";
+
+	/**
+	 * Manifest header identifying the bundle's software configuration
+	 * management system.
+	 * <p>
+	 * The header value may be retrieved from the {@code Dictionary} object
+	 * returned by the {@code Bundle.getHeaders} method.
+	 * 
+	 * @since 1.9
+	 */
+	String	BUNDLE_SCM								= "Bundle-SCM";
+
+	/**
+	 * Service property identifying the monotonically increasing change count of
+	 * a service.
+	 * <p>
+	 * A service may optional provide this property to indicate there has been a
+	 * change in some data provided by the service. The change count must be
+	 * incremented with a positive value every time the data provided by the
+	 * service is changed. The service announces the modified change count by
+	 * updating its service properties with the new value for this service
+	 * property.
+	 * <p>
+	 * The value of this property must be of type {@code Long}.
+	 * 
+	 * @since 1.9
+	 */
+	String	SERVICE_CHANGECOUNT						= "service.changecount";
+
+	/**
+	 * Intent supported by Remote Services implementations that support Basic
+	 * Remote Services as defined for the {@code osgi.basic} intent.
+	 * 
+	 * @since 1.9
+	 */
+	String	INTENT_BASIC							= "osgi.basic";
+
+	/**
+	 * Intent supported by Remote Service implementations that support
+	 * Asynchronous Remote Services as defined for the {@code osgi.async}
+	 * intent.
+	 * 
+	 * @since 1.9
+	 */
+	String	INTENT_ASYNC							= "osgi.async";
+
+	/**
+	 * Intent supported by Remote Service implementation that provide
+	 * confidential communications as defined for the {@code osgi.confidential}
+	 * intent.
+	 * 
+	 * @since 1.9
+	 */
+	String	INTENT_CONFIDENTIAL						= "osgi.confidential";
+
+	/**
+	 * Intent supported by Remote Service implementations that provide private
+	 * communications as defined for the {@code osgi.private} intent.
+	 * 
+	 * @since 1.9
+	 */
+	String	INTENT_PRIVATE							= "osgi.private";
 }

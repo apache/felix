@@ -18,8 +18,24 @@
  */
 package org.apache.felix.framework.util;
 
+import org.apache.felix.framework.Felix;
+import org.apache.felix.framework.Logger;
+import org.apache.felix.framework.cache.BundleArchiveRevision;
+import org.apache.felix.framework.cache.BundleCache;
+import org.osgi.framework.Bundle;
+import org.osgi.framework.Constants;
+import org.osgi.framework.ServiceReference;
+import org.osgi.framework.Version;
+import org.osgi.framework.wiring.BundleCapability;
+import org.osgi.framework.wiring.BundleRequirement;
+import org.osgi.framework.wiring.BundleRevision;
+import org.osgi.framework.wiring.BundleWire;
+import org.osgi.framework.wiring.BundleWiring;
+import org.osgi.resource.Resource;
+
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -29,25 +45,16 @@ import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Properties;
+import java.util.Random;
 import java.util.Set;
+import java.util.TreeSet;
 import java.util.concurrent.ConcurrentHashMap;
-
-import org.apache.felix.framework.Felix;
-import org.apache.felix.framework.Logger;
-import org.osgi.framework.Bundle;
-import org.osgi.framework.Constants;
-import org.osgi.framework.ServiceReference;
-import org.osgi.framework.wiring.BundleCapability;
-import org.osgi.framework.wiring.BundleRequirement;
-import org.osgi.framework.wiring.BundleRevision;
-import org.osgi.framework.wiring.BundleWire;
-import org.osgi.framework.wiring.BundleWiring;
-import org.osgi.resource.Resource;
 
 public class Util
 {
@@ -86,15 +93,79 @@ public class Util
                     Logger.LOG_ERROR, "Unable to load any configuration properties.", ex);
             }
         }
-        return initializeJPMS(defaultProperties);
+        return defaultProperties;
     }
 
-    private static Properties initializeJPMS(Properties properties)
+    public static void initializeJPMSEE(String javaVersion, Properties properties, Logger logger)
     {
+        try
+        {
+            Version version = new Version(javaVersion);
+
+            if (version.getMajor() >= 9)
+            {
+                StringBuilder eecap = new StringBuilder(", osgi.ee; osgi.ee=\"OSGi/Minimum\"; version:List<Version>=\"1.0,1.1,1.2\",osgi.ee; osgi.ee=\"JavaSE\"; version:List<Version>=\"1.0,1.1,1.2,1.3,1.4,1.5,1.6,1.7,1.8,9");
+                for (int i = 10; i <= version.getMajor();i++)
+                {
+                    eecap.append(',').append(Integer.toString(version.getMajor()));
+                }
+                eecap.append("\",osgi.ee; osgi.ee=\"JavaSE/compact1\"; version:List<Version>=\"1.8,9");
+                for (int i = 10; i <= version.getMajor();i++)
+                {
+                    eecap.append(',').append(Integer.toString(version.getMajor()));
+                }
+                eecap.append("\",osgi.ee; osgi.ee=\"JavaSE/compact2\"; version:List<Version>=\"1.8,9");
+                for (int i = 10; i <= version.getMajor();i++)
+                {
+                    eecap.append(',').append(Integer.toString(version.getMajor()));
+                }
+                eecap.append("\",osgi.ee; osgi.ee=\"JavaSE/compact3\"; version:List<Version>=\"1.8,9");
+                for (int i = 10; i <= version.getMajor();i++)
+                {
+                    eecap.append(',').append(Integer.toString(version.getMajor()));
+                }
+                eecap.append("\"");
+
+                StringBuilder ee = new StringBuilder();
+
+                for (int i = version.getMajor(); i > 9;i--)
+                {
+                    ee.append("JavaSE-").append(Integer.toString(i)).append(',');
+                }
+
+                ee.append("JavaSE-9,JavaSE-1.8,JavaSE-1.7,JavaSE-1.6,J2SE-1.5,J2SE-1.4,J2SE-1.3,J2SE-1.2,JRE-1.1,JRE-1.0,OSGi/Minimum-1.2,OSGi/Minimum-1.1,OSGi/Minimum-1.0");
+
+                properties.put("ee-jpms", ee.toString());
+
+                properties.put("eecap-jpms", eecap.toString());
+            }
+
+            properties.put("felix.detect.java.specification.version", version.getMajor() < 9 ? ("1." + (version.getMinor() > 6 ? version.getMinor() : 6)) : Integer.toString(version.getMajor()));
+
+            if (version.getMajor() < 9)
+            {
+                properties.put("felix.detect.java.version", String.format("0.0.0.JavaSE_001_%03d", version.getMinor() > 6 ? version.getMinor() : 6));
+            }
+            else
+            {
+                properties.put("felix.detect.java.version", String.format("0.0.0.JavaSE_%03d", version.getMajor()));
+            }
+        }
+        catch (Exception ex)
+        {
+            logger.log(Logger.LOG_ERROR, "Exception parsing java version", ex);
+        }
+    }
+
+    public static Map<String, Set<String>> initializeJPMS(Properties properties)
+    {
+        Map<String,Set<String>> exports = null;
         try
         {
             Class<?> c_ModuleLayer = Felix.class.getClassLoader().loadClass("java.lang.ModuleLayer");
             Class<?> c_Module = Felix.class.getClassLoader().loadClass("java.lang.Module");
+            Class<?> c_Descriptor = Felix.class.getClassLoader().loadClass("java.lang.module.ModuleDescriptor");
+            Class<?> c_Exports = Felix.class.getClassLoader().loadClass("java.lang.module.ModuleDescriptor$Exports");
             Method m_getLayer = c_Module.getMethod("getLayer");
             Method m_getModule = Class.class.getMethod("getModule");
             Method m_canRead = c_Module.getMethod("canRead", c_Module);
@@ -108,28 +179,45 @@ public class Util
                 moduleLayer = c_ModuleLayer.getMethod("boot").invoke(null);
             }
 
+            Set<String> modules = new TreeSet<String>();
+            exports = new HashMap<String, Set<String>>();
             for (Object module : ((Iterable) c_ModuleLayer.getMethod("modules").invoke(moduleLayer)))
             {
                 if ((Boolean) m_canRead.invoke(self, module))
                 {
                     Object name = m_getName.invoke(module);
                     properties.put("felix.detect.jpms." + name, name);
+                    modules.add("felix.jpms." + name);
+                    Set<String> pkgs = new HashSet<String>();
+
+                    Object descriptor = c_Module.getMethod("getDescriptor").invoke(module);
+
+                    for (Object export :((Set) c_Descriptor.getMethod("exports").invoke(descriptor)))
+                    {
+                        if (((Set) c_Exports.getMethod("targets").invoke(export)).isEmpty())
+                        {
+                            pkgs.add((String) c_Exports.getMethod("source").invoke(export));
+                        }
+                    }
+                    if (!pkgs.isEmpty())
+                    {
+                        exports.put("felix.jpms." + c_Descriptor.getMethod("toNameAndVersion").invoke(descriptor), pkgs);
+                    }
                 }
             }
+
             properties.put("felix.detect.jpms", "jpms");
+            String modulesString = "";
+            for (String module : modules) {
+                modulesString += "${" + module + "}";
+            }
+            properties.put("jre-jpms", modulesString);
         }
         catch (Exception ex)
         {
             // Not much we can do - probably not on java9
         }
-        return properties;
-    }
-
-    public static String getDefaultProperty(Logger logger, String name)
-    {
-        Properties props = loadDefaultProperties(logger);
-        // Perform variable substitution for property.
-        return getPropertyWithSubs(props, name);
+        return exports;
     }
 
     public static String getPropertyWithSubs(Properties props, String name)
@@ -141,13 +229,7 @@ public class Util
         return value;
     }
 
-    public static Map<String, String> getDefaultPropertiesWithPrefix(Logger logger, String prefix)
-    {
-        Properties props = loadDefaultProperties(logger);
-        return getDefaultPropertiesWithPrefix(props, prefix);
-    }
-
-    public static Map<String, String> getDefaultPropertiesWithPrefix(Properties props, String prefix)
+    public static Map<String, String> getPropertiesWithPrefix(Properties props, String prefix)
     {
         Map<String, String> result = new HashMap<String, String>();
 
@@ -300,7 +382,7 @@ public class Util
      * loaders of any interfaces it implements and the class loaders of
      * all super classes.
      * </p>
-     * @param svcObj the class that is the root of the search.
+     * @param clazz the class that is the root of the search.
      * @param name the name of the class to load.
      * @return the loaded class or <tt>null</tt> if it could not be
      *         loaded.
@@ -376,37 +458,10 @@ public class Util
         return allow;
     }
 
-    /**
-     * Returns all the capabilities from a module that has a specified namespace.
-     *
-     * @param br    module providing capabilities
-     * @param namespace capability namespace
-     * @return array of matching capabilities or empty if none found
-     */
-    public static List<BundleCapability> getCapabilityByNamespace(
-        BundleRevision br, String namespace)
-    {
-        final List<BundleCapability> matching = new ArrayList();
-        final List<BundleCapability> caps = (br.getWiring() != null)
-            ? br.getWiring().getCapabilities(null)
-            : br.getDeclaredCapabilities(null);
-        if (caps != null)
-        {
-            for (BundleCapability cap : caps)
-            {
-                if (cap.getNamespace().equals(namespace))
-                {
-                    matching.add(cap);
-                }
-            }
-        }
-        return matching;
-    }
-
     public static List<BundleRequirement> getDynamicRequirements(
         List<BundleRequirement> reqs)
     {
-        List<BundleRequirement> result = new ArrayList<BundleRequirement>();
+        List<BundleRequirement> result = null;
         if (reqs != null)
         {
             for (BundleRequirement req : reqs)
@@ -414,6 +469,10 @@ public class Util
                 String resolution = req.getDirectives().get(Constants.RESOLUTION_DIRECTIVE);
                 if ((resolution != null) && resolution.equals("dynamic"))
                 {
+                    if (result == null)
+                    {
+                        result = new ArrayList<BundleRequirement>();
+                    }
                     result.add(req);
                 }
             }
@@ -734,7 +793,7 @@ public class Util
     /**
      * Checks if the provided module definition declares a fragment host.
      *
-     * @param module the module to check
+     * @param revision the module to check
      * @return <code>true</code> if the module declares a fragment host, <code>false</code>
      *      otherwise.
      */
@@ -788,11 +847,18 @@ public class Util
      *
      * @return an UUID instance.
      */
-    public static String randomUUID() {
-        byte[] data;
-        // lock on the class to protect lazy init
-        SecureRandom rng = new SecureRandom();
-        rng.nextBytes(data = new byte[16]);
+    public static String randomUUID(boolean secure) {
+        byte[] data = new byte[16];
+        if (secure)
+        {
+            SecureRandom rng = new SecureRandom();
+            rng.nextBytes(data);
+        }
+        else
+        {
+            Random rng = new Random();
+            rng.nextBytes(data);
+        }
         long mostSigBits = (data[0] & 0xFFL) << 56;
         mostSigBits |= (data[1] & 0xFFL) << 48;
         mostSigBits |= (data[2] & 0xFFL) << 40;
@@ -890,5 +956,82 @@ public class Util
     {
         V result = map.putIfAbsent(key, value);
         return result != null ? result : value;
+    }
+
+    public static String getFrameworkUUIDFromURL(String host)
+    {
+        if (host != null)
+        {
+            int idx = host.indexOf('_');
+            if (idx > 0)
+            {
+                return host.substring(0, idx);
+            }
+        }
+        return null;
+    }
+
+    public static String getRevisionIdFromURL(String host)
+    {
+        if (host != null)
+        {
+            int idx = host.indexOf('_');
+            if (idx > 0 && idx < host.length())
+            {
+                return host.substring(idx + 1);
+            }
+            else
+            {
+                return host;
+            }
+        }
+        return null;
+    }
+
+    public static Map<String, Object> getMultiReleaseAwareManifestHeaders(String version, BundleArchiveRevision revision) throws Exception
+    {
+        Map<String, Object> manifest = revision.getManifestHeader();
+        if (manifest == null)
+        {
+            throw new FileNotFoundException("META-INF/MANIFEST.MF");
+        }
+        if ("true".equals(manifest.get("Multi-Release")))
+        {
+            for (int major = Version.parseVersion(version).getMajor(); major >= 9; major--)
+            {
+                byte[] versionManifestInput = revision.getContent()
+                    .getEntryAsBytes("META-INF/versions/" + major + "/OSGI-INF/MANIFEST.MF");
+
+                if (versionManifestInput != null)
+                {
+                    Map<String, Object> versionManifest = BundleCache.getMainAttributes(
+                        new StringMap(), new ByteArrayInputStream(versionManifestInput), versionManifestInput.length);
+
+                    if (versionManifest.get(Constants.IMPORT_PACKAGE) != null)
+                    {
+                        manifest.put(Constants.IMPORT_PACKAGE, versionManifest.get(Constants.IMPORT_PACKAGE));
+                    }
+                    if (versionManifest.get(Constants.REQUIRE_CAPABILITY) != null)
+                    {
+                        manifest.put(Constants.REQUIRE_CAPABILITY, versionManifest.get(Constants.REQUIRE_CAPABILITY));
+                    }
+                    break;
+                }
+            }
+        }
+        return manifest;
+    }
+
+    private static final List EMPTY_LIST = Collections.unmodifiableList(Collections.EMPTY_LIST);
+    private static final Map EMPTY_MAP = Collections.unmodifiableMap(Collections.EMPTY_MAP);
+
+    public static <T> List<T> newImmutableList(List<T> list)
+    {
+        return list == null || list.isEmpty() ? EMPTY_LIST : Collections.unmodifiableList(list);
+    }
+
+    public static <K,V> Map<K,V> newImmutableMap(Map<K,V> map)
+    {
+        return map == null || map.isEmpty() ? EMPTY_MAP : Collections.unmodifiableMap(map);
     }
 }
