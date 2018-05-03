@@ -1,5 +1,5 @@
 /*
- * Copyright (c) OSGi Alliance (2012, 2014). All Rights Reserved.
+ * Copyright (c) OSGi Alliance (2012, 2015). All Rights Reserved.
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -96,6 +96,7 @@ public interface PrototypeServiceFactory<S> extends ServiceFactory<S> {
 	 *         the classes named when the service was registered.
 	 * @see ServiceObjects#getService()
 	 */
+	@Override
 	public S getService(Bundle bundle, ServiceRegistration<S> registration);
 
 	/**
@@ -120,5 +121,6 @@ public interface PrototypeServiceFactory<S> extends ServiceFactory<S> {
 	 *        method.
 	 * @see ServiceObjects#ungetService(Object)
 	 */
+	@Override
 	public void ungetService(Bundle bundle, ServiceRegistration<S> registration, S service);
 }

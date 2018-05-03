@@ -40,11 +40,6 @@ class URLHandlersBundleURLConnection extends URLConnection
     private String m_contentType;
     private InputStream m_is;
 
-    public URLHandlersBundleURLConnection(URL url)
-    {
-        super(url);
-    }
-
     public URLHandlersBundleURLConnection(URL url, Felix framework)
         throws IOException
     {
@@ -66,7 +61,7 @@ class URLHandlersBundleURLConnection extends URLConnection
         // one from the call context.
         if (m_framework == null)
         {
-            Object tmp = URLHandlers.getFrameworkFromContext();
+            Object tmp = URLHandlers.getFrameworkFromContext(Util.getFrameworkUUIDFromURL(url.getHost()));
             if (tmp instanceof Felix)
             {
                 m_framework = (Felix) tmp;
@@ -82,7 +77,7 @@ class URLHandlersBundleURLConnection extends URLConnection
         // The URL is constructed like this:
         //     bundle://<revision-id>:<bundle-classpath-index>/<resource-path>
         // Where <revision-id> = <bundle-id>.<revision>
-        long bundleId = Util.getBundleIdFromRevisionId(url.getHost());
+        long bundleId = Util.getBundleIdFromRevisionId(Util.getRevisionIdFromURL(url.getHost()));
         Bundle bundle = m_framework.getBundle(bundleId);
         if (bundle == null)
         {

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) OSGi Alliance (2000, 2013). All Rights Reserved.
+ * Copyright (c) OSGi Alliance (2000, 2015). All Rights Reserved.
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -35,9 +35,10 @@ import org.osgi.annotation.versioning.ConsumerType;
  * 
  * @see FrameworkEvent
  * @NotThreadSafe
- * @author $Id: 97c76c64c6e6595ad445dcc2d8083d52540f73b8 $
+ * @author $Id: a8e5255b2b18c9ba60cf82d6e16a296667017399 $
  */
 @ConsumerType
+@FunctionalInterface
 public interface FrameworkListener extends EventListener {
 
 	/**

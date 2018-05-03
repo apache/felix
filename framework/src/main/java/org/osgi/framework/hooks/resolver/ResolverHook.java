@@ -1,5 +1,5 @@
 /*
- * Copyright (c) OSGi Alliance (2010, 2013). All Rights Reserved.
+ * Copyright (c) OSGi Alliance (2010, 2018). All Rights Reserved.
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -51,9 +51,8 @@ import org.osgi.framework.wiring.FrameworkWiring;
  * stop calling the resolver hook instance provided by the unregistered hook
  * factory and the current resolve process must fail. If possible, an exception
  * must be thrown to the caller of the API which triggered the resolve process.
- * In cases where the the caller is not available a framework event of type
- * error should be fired.</li>
- * 
+ * In cases where the caller is not available a framework event of type error
+ * should be fired.</li>
  * <li>For each registered hook factory call the
  * {@link ResolverHookFactory#begin(Collection)} method to inform the hooks
  * about a resolve process beginning and to obtain a Resolver Hook instance that
@@ -131,7 +130,7 @@ import org.osgi.framework.wiring.FrameworkWiring;
  * 
  * @see ResolverHookFactory
  * @NotThreadSafe
- * @author $Id: 7b2a0a5dbec7b0e999112ae324d050fcf190fa5d $
+ * @author $Id: 6c1f3732d22b088e9f8a80c17e70e61862abf1c4 $
  */
 @ConsumerType
 public interface ResolverHook {

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) OSGi Alliance (2007, 2013). All Rights Reserved.
+ * Copyright (c) OSGi Alliance (2007, 2017). All Rights Reserved.
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,6 +18,8 @@ package org.osgi.util.tracker;
 
 import java.util.HashMap;
 import java.util.Map;
+
+import org.osgi.annotation.versioning.ConsumerType;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.BundleEvent;
@@ -44,9 +46,10 @@ import org.osgi.framework.SynchronousBundleListener;
  * 
  * @param <T> The type of the tracked object.
  * @ThreadSafe
- * @author $Id: 9a1b57568a8be735292700584f4eb936fc80f2ff $
+ * @author $Id: ac16c218a0df059303f253a33523f753000623c4 $
  * @since 1.4
  */
+@ConsumerType
 public class BundleTracker<T> implements BundleTrackerCustomizer<T> {
 	/* set this to true to compile in debug messages */
 	static final boolean				DEBUG	= false;
@@ -217,6 +220,7 @@ public class BundleTracker<T> implements BundleTrackerCustomizer<T> {
 	 * @return The specified bundle.
 	 * @see BundleTrackerCustomizer#addingBundle(Bundle, BundleEvent)
 	 */
+	@Override
 	public T addingBundle(Bundle bundle, BundleEvent event) {
 		@SuppressWarnings("unchecked")
 		T result = (T) bundle;
@@ -241,6 +245,7 @@ public class BundleTracker<T> implements BundleTrackerCustomizer<T> {
 	 * @param object The customized object for the specified Bundle.
 	 * @see BundleTrackerCustomizer#modifiedBundle(Bundle, BundleEvent, Object)
 	 */
+	@Override
 	public void modifiedBundle(Bundle bundle, BundleEvent event, T object) {
 		/* do nothing */
 	}
@@ -263,6 +268,7 @@ public class BundleTracker<T> implements BundleTrackerCustomizer<T> {
 	 * @param object The customized object for the specified bundle.
 	 * @see BundleTrackerCustomizer#removedBundle(Bundle, BundleEvent, Object)
 	 */
+	@Override
 	public void removedBundle(Bundle bundle, BundleEvent event, T object) {
 		/* do nothing */
 	}
@@ -280,11 +286,10 @@ public class BundleTracker<T> implements BundleTrackerCustomizer<T> {
 			return null;
 		}
 		synchronized (t) {
-			int length = t.size();
-			if (length == 0) {
+			if (t.isEmpty()) {
 				return null;
 			}
-			return t.copyKeys(new Bundle[length]);
+			return t.copyKeys(new Bundle[0]);
 		}
 	}
 
@@ -426,6 +431,7 @@ public class BundleTracker<T> implements BundleTrackerCustomizer<T> {
 		 * 
 		 * @param event {@code BundleEvent} object from the framework.
 		 */
+		@Override
 		public void bundleChanged(final BundleEvent event) {
 			/*
 			 * Check if we had a delayed call (which could happen when we

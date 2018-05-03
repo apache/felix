@@ -37,9 +37,9 @@ import java.util.concurrent.ConcurrentSkipListMap;
 
 import org.apache.felix.framework.util.SecureAction;
 import org.apache.felix.framework.util.StringComparator;
-import org.apache.felix.framework.util.VersionRange;
 import org.apache.felix.framework.wiring.BundleCapabilityImpl;
 import org.osgi.framework.Version;
+import org.osgi.framework.VersionRange;
 import org.osgi.framework.wiring.BundleCapability;
 import org.osgi.resource.Capability;
 
@@ -409,7 +409,7 @@ public class CapabilitySet
 
             if(rhs != null && rhs instanceof VersionRange)
             {
-                return ((VersionRange)rhs).isInRange((Version)lhs);
+                return ((VersionRange)rhs).includes((Version)lhs);
             }
         }
 
@@ -595,7 +595,7 @@ public class CapabilitySet
             }
             else if(lhs instanceof Version && rhsString.indexOf(',') >= 0)
             {
-                rhs = VersionRange.parse(rhsString);
+                rhs = new VersionRange(rhsString);
             }
             else
             {

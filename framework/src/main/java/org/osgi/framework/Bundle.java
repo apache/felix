@@ -1,5 +1,5 @@
 /*
- * Copyright (c) OSGi Alliance (2000, 2013). All Rights Reserved.
+ * Copyright (c) OSGi Alliance (2000, 2018). All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -75,7 +75,7 @@ import org.osgi.framework.wiring.FrameworkWiring;
  * bundle id} and is greater if it has a higher bundle id.
  * 
  * @ThreadSafe
- * @author $Id: 81a8f18b2fcc7810817cd19f6d5e0709db1c1d12 $
+ * @author $Id: 545299bc454bb01ef73a14693ffec76a13430eea $
  */
 @ProviderType
 public interface Bundle extends Comparable<Bundle> {
@@ -399,8 +399,8 @@ public interface Bundle extends Comparable<Bundle> {
 	 * before continuing. If this does not occur in a reasonable time, a
 	 * {@code BundleException} is thrown to indicate this bundle was unable to
 	 * be stopped.</li>
-	 * <li>If the {@link #STOP_TRANSIENT} option is not set then then set this
-	 * bundle's persistent autostart setting to to <em>Stopped</em>. When the
+	 * <li>If the {@link #STOP_TRANSIENT} option is not set then set this
+	 * bundle's persistent autostart setting to <em>Stopped</em>. When the
 	 * Framework is restarted and this bundle's autostart setting is
 	 * <em>Stopped</em>, this bundle must not be automatically started.</li>
 	 * <li>If this bundle's state is not {@code STARTING} or {@code ACTIVE} then

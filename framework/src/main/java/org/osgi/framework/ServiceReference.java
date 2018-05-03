@@ -1,5 +1,5 @@
 /*
- * Copyright (c) OSGi Alliance (2000, 2013). All Rights Reserved.
+ * Copyright (c) OSGi Alliance (2000, 2017). All Rights Reserved.
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,6 +17,7 @@
 package org.osgi.framework;
 
 import java.util.Dictionary;
+
 import org.osgi.annotation.versioning.ProviderType;
 
 /**
@@ -49,7 +50,7 @@ import org.osgi.annotation.versioning.ProviderType;
  * @see BundleContext#getService(ServiceReference)
  * @see BundleContext#getServiceObjects(ServiceReference)
  * @ThreadSafe
- * @author $Id: a56f8df70e8c74a76a1ef02b714b4612bc064ecc $
+ * @author $Id: 1454244c30992b7a52ac3838b03bc584c3495816 $
  */
 @ProviderType
 public interface ServiceReference<S> extends Comparable<Object> {
@@ -179,5 +180,36 @@ public interface ServiceReference<S> extends Comparable<Object> {
 	 *         instance as this {@code ServiceReference}.
 	 * @since 1.4
 	 */
+	@Override
 	public int compareTo(Object reference);
+
+	/**
+	 * Returns a copy of the properties of the service referenced by this
+	 * {@code ServiceReference} object.
+	 * <p>
+	 * This method will continue to return the properties after the service has
+	 * been unregistered. This is so references to unregistered services (for
+	 * example, {@code ServiceReference} objects stored in the log) can still be
+	 * interrogated.
+	 * <p>
+	 * The returned {@code Dictionary} object:
+	 * <ul>
+	 * <li>Must map property values by using property keys in a
+	 * <i>case-insensitive manner</i>.</li>
+	 * <li>Must return property keys is a <i>case-preserving</i> manner. This
+	 * means that the keys must have the same case as the corresponding key in
+	 * the properties {@code Dictionary} that was passed to the
+	 * {@link BundleContext#registerService(String[],Object,Dictionary)} or
+	 * {@link ServiceRegistration#setProperties(Dictionary)} methods.</li>
+	 * <li>Is the property of the caller and can be modified by the caller but
+	 * any changes are not reflected in the properties of the service.
+	 * {@link ServiceRegistration#setProperties(Dictionary)} must be called to
+	 * modify the properties of the service.</li>
+	 * </ul>
+	 * 
+	 * @return A copy of the properties of the service referenced by this
+	 *         {@code ServiceReference} object
+	 * @since 1.9
+	 */
+	public Dictionary<String,Object> getProperties();
 }

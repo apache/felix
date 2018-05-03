@@ -1,5 +1,5 @@
 /*
- * Copyright (c) OSGi Alliance (2001, 2013). All Rights Reserved.
+ * Copyright (c) OSGi Alliance (2001, 2015). All Rights Reserved.
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -29,7 +29,7 @@ import org.osgi.framework.Bundle;
  * 
  * @ThreadSafe
  * @noimplement
- * @author $Id: 4aad25d2f145d9a2d24825bc481dcc254b74ed51 $
+ * @author $Id: 1de8679fcf7df57b019a93219f6b82222eb1525e $
  * @deprecated This service has been replaced by the
  *             <code>org.osgi.framework.wiring</code> package.
  * @see org.osgi.service.packageadmin.ExportedPackage
@@ -53,6 +53,7 @@ public interface PackageAdmin {
 	 * @throws IllegalArgumentException If the specified {@code Bundle} was
 	 *         not created by the same framework instance that registered this
 	 *         {@code PackageAdmin} service.
+	 * @deprecated
 	 */
 	public ExportedPackage[] getExportedPackages(Bundle bundle);
 
@@ -64,6 +65,7 @@ public interface PackageAdmin {
 	 * @return An array of the exported packages, or {@code null} if no
 	 *         exported packages with the specified name exists.
 	 * @since 1.2
+	 * @deprecated
 	 */
 	public ExportedPackage[] getExportedPackages(String name);
 
@@ -79,6 +81,7 @@ public interface PackageAdmin {
 	 * @return The exported package, or {@code null} if no exported
 	 *         package with the specified name exists.
 	 * @see #getExportedPackages(String)
+	 * @deprecated
 	 */
 	public ExportedPackage getExportedPackage(String name);
 
@@ -186,6 +189,7 @@ public interface PackageAdmin {
 	 * @return An array of required bundles or {@code null} if no
 	 *         required bundles exist for the specified symbolic name.
 	 * @since 1.2
+	 * @deprecated
 	 */
 	public RequiredBundle[] getRequiredBundles(String symbolicName);
 
@@ -259,7 +263,7 @@ public interface PackageAdmin {
 	 *         this {@code PackageAdmin} service.
 	 * @since 1.2
 	 */
-	public Bundle getBundle(Class clazz);
+	public Bundle getBundle(Class<?> clazz);
 
 	/**
 	 * Bundle type indicating the bundle is a fragment bundle.

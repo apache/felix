@@ -26,13 +26,11 @@ import java.util.Map;
 import java.util.Set;
 import java.util.StringTokenizer;
 import org.apache.felix.framework.capabilityset.SimpleFilter;
-import org.apache.felix.framework.util.ImmutableMap;
 import org.apache.felix.framework.util.Util;
 import org.apache.felix.framework.util.manifestparser.ManifestParser;
 import org.osgi.framework.Constants;
 import org.osgi.framework.wiring.BundleCapability;
 import org.osgi.framework.wiring.BundleRevision;
-import org.osgi.resource.Resource;
 
 public class BundleCapabilityImpl implements BundleCapability
 {
@@ -52,8 +50,8 @@ public class BundleCapabilityImpl implements BundleCapability
     {
         m_namespace = namespace;
         m_revision = revision;
-        m_dirs = ImmutableMap.newInstance(dirs);
-        m_attrs = ImmutableMap.newInstance(attrs);
+        m_dirs = Util.newImmutableMap(dirs);
+        m_attrs = Util.newImmutableMap(attrs);
 
         // Find all export directives: uses, mandatory, include, and exclude.
 

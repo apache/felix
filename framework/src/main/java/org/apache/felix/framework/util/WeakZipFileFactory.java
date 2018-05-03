@@ -25,7 +25,13 @@ import java.lang.ref.SoftReference;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Enumeration;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.Semaphore;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
@@ -44,7 +50,7 @@ public class WeakZipFileFactory
 
     private final List<WeakZipFile> m_zipFiles = new ArrayList<WeakZipFile>();
     private final List<WeakZipFile> m_openFiles = new ArrayList<WeakZipFile>();
-    private final Mutex m_globalMutex = new Mutex();
+    private final Lock m_globalMutex = new ReentrantLock();
     private final int m_limit;
 
     /**
@@ -73,15 +79,7 @@ public class WeakZipFileFactory
 
         if (m_limit > 0)
         {
-            try
-            {
-                m_globalMutex.down();
-            }
-            catch (InterruptedException ex)
-            {
-                Thread.currentThread().interrupt();
-                throw new IOException("Interrupted while acquiring global zip file mutex.");
-            }
+            m_globalMutex.lock();
 
             try
             {
@@ -102,7 +100,7 @@ public class WeakZipFileFactory
             }
             finally
             {
-                m_globalMutex.up();
+                m_globalMutex.unlock();
             }
         }
 
@@ -115,15 +113,7 @@ public class WeakZipFileFactory
      **/
     List<WeakZipFile> getZipZiles()
     {
-        try
-        {
-            m_globalMutex.down();
-        }
-        catch (InterruptedException ex)
-        {
-            Thread.currentThread().interrupt();
-            return Collections.EMPTY_LIST;
-        }
+        m_globalMutex.lock();
 
         try
         {
@@ -131,7 +121,7 @@ public class WeakZipFileFactory
         }
         finally
         {
-            m_globalMutex.up();
+            m_globalMutex.unlock();
         }
     }
 
@@ -141,15 +131,7 @@ public class WeakZipFileFactory
      **/
     List<WeakZipFile> getOpenZipZiles()
     {
-        try
-        {
-            m_globalMutex.down();
-        }
-        catch (InterruptedException ex)
-        {
-            Thread.currentThread().interrupt();
-            return Collections.EMPTY_LIST;
-        }
+        m_globalMutex.lock();
 
         try
         {
@@ -157,7 +139,7 @@ public class WeakZipFileFactory
         }
         finally
         {
-            m_globalMutex.up();
+            m_globalMutex.unlock();
         }
     }
 
@@ -169,11 +151,11 @@ public class WeakZipFileFactory
     public class WeakZipFile
     {
         private final File m_file;
-        private final Mutex m_localMutex = new Mutex();
-        private ZipFile m_zipFile;
-        private int m_status = OPEN;
-        private long m_timestamp;
-        private volatile SoftReference<List<ZipEntry>> m_entries;
+        private final Lock m_localMutex = new ReentrantLock(false);
+        private volatile ZipFile m_zipFile;
+        private volatile int m_status = OPEN;
+        private volatile long m_timestamp;
+        private volatile SoftReference<LinkedHashMap<String, ZipEntry>> m_entries;
 
         /**
          * Constructor is private since instances need to be centrally
@@ -200,8 +182,21 @@ public class WeakZipFileFactory
 
             try
             {
-                ZipEntry ze = null;
-                ze = m_zipFile.getEntry(name);
+                LinkedHashMap<String, ZipEntry> entries = getEntries(false);
+                ZipEntry ze;
+                if (entries != null)
+                {
+                    ze = entries.get(name);
+                    if (ze == null)
+                    {
+                        ze = entries.get(name + "/");
+                    }
+                }
+                else
+                {
+                    ze = m_zipFile.getEntry(name);
+                }
+
                 if ((ze != null) && (ze.getSize() == 0) && !ze.isDirectory())
                 {
                     //The attempts to fix an apparent bug in the JVM in versions
@@ -217,7 +212,10 @@ public class WeakZipFileFactory
             }
             finally
             {
-                m_localMutex.up();
+                if (m_limit > 0)
+                {
+                    m_localMutex.unlock();
+                }
             }
         }
 
@@ -231,43 +229,71 @@ public class WeakZipFileFactory
 
             try
             {
-                List<ZipEntry> entries = null;
-                if (m_entries != null)
-                {
-                    entries = m_entries.get();
-                }
-                if (entries == null)
-                {
-                    synchronized (this)
-                    {
-                        if (m_entries != null)
-                        {
-                            entries = m_entries.get();
-                        }
-                        if (entries == null)
-                        {
-                            // We need to suck in all of the entries since the zip
-                            // file may get weakly closed during iteration. Technically,
-                            // this may not be 100% correct either since if the zip file
-                            // gets weakly closed and reopened, then the zip entries
-                            // will be from a different zip file. It is not clear if this
-                            // will cause any issues.
-                            Enumeration<? extends ZipEntry> e = m_zipFile.entries();
-                            entries = new ArrayList<ZipEntry>();
-                            while (e.hasMoreElements())
-                            {
-                                entries.add(e.nextElement());
-                            }
-                            m_entries = new SoftReference<List<ZipEntry>>(entries);
-                        }
-                    }
-                }
-                return Collections.enumeration(entries);
+                LinkedHashMap<String, ZipEntry> entries = getEntries(true);
+                return Collections.enumeration(entries.values());
             }
             finally
             {
-                m_localMutex.up();
+                if (m_limit > 0)
+                {
+                    m_localMutex.unlock();
+                }
             }
+        }
+
+        public Enumeration<String> names()
+        {
+            ensureZipFileIsOpen();
+
+            try
+            {
+                LinkedHashMap<String, ZipEntry> entries = getEntries(true);
+                return Collections.enumeration(entries.keySet());
+            }
+            finally
+            {
+                if (m_limit > 0)
+                {
+                    m_localMutex.unlock();
+                }
+            }
+        }
+
+        private LinkedHashMap<String, ZipEntry> getEntries(boolean create)
+        {
+            LinkedHashMap<String, ZipEntry> entries = null;
+            if (m_entries != null)
+            {
+                entries = m_entries.get();
+            }
+            if (entries == null && create)
+            {
+                synchronized (m_zipFile)
+                {
+                    if (m_entries != null)
+                    {
+                        entries = m_entries.get();
+                    }
+                    if (entries == null)
+                    {
+                        // We need to suck in all of the entries since the zip
+                        // file may get weakly closed during iteration. Technically,
+                        // this may not be 100% correct either since if the zip file
+                        // gets weakly closed and reopened, then the zip entries
+                        // will be from a different zip file. It is not clear if this
+                        // will cause any issues.
+                        Enumeration<? extends ZipEntry> e = m_zipFile.entries();
+                        entries = new LinkedHashMap<String, ZipEntry>();
+                        while (e.hasMoreElements())
+                        {
+                            ZipEntry entry = e.nextElement();
+                            entries.put(entry.getName(), entry);
+                        }
+                        m_entries = new SoftReference<LinkedHashMap<String, ZipEntry>>(entries);
+                    }
+                }
+            }
+            return entries;
         }
 
         /**
@@ -283,11 +309,14 @@ public class WeakZipFileFactory
             try
             {
                 InputStream is = m_zipFile.getInputStream(ze);
-                return new WeakZipInputStream(ze.getName(), is);
+                return m_limit == 0 ? is : new WeakZipInputStream(ze.getName(), is);
             }
             finally
             {
-                m_localMutex.up();
+                if (m_limit > 0)
+                {
+                    m_localMutex.unlock();
+                }
             }
         }
 
@@ -297,16 +326,7 @@ public class WeakZipFileFactory
          */
         void closeWeakly()
         {
-            try
-            {
-                m_globalMutex.down();
-            }
-            catch (InterruptedException ex)
-            {
-                Thread.currentThread().interrupt();
-                throw new IllegalStateException(
-                    "Interrupted while acquiring global zip file mutex.");
-            }
+            m_globalMutex.lock();
 
             try
             {
@@ -314,7 +334,7 @@ public class WeakZipFileFactory
             }
             finally
             {
-                m_globalMutex.up();
+                m_globalMutex.unlock();
             }
         }
 
@@ -325,16 +345,7 @@ public class WeakZipFileFactory
          */
         private void _closeWeakly()
         {
-            try
-            {
-                m_localMutex.down();
-            }
-            catch (InterruptedException ex)
-            {
-                Thread.currentThread().interrupt();
-                throw new IllegalStateException(
-                    "Interrupted while acquiring local zip file mutex.");
-            }
+            m_localMutex.lock();
 
             try
             {
@@ -358,7 +369,7 @@ public class WeakZipFileFactory
             }
             finally
             {
-                m_localMutex.up();
+                m_localMutex.unlock();
             }
         }
 
@@ -371,27 +382,8 @@ public class WeakZipFileFactory
         {
             if (m_limit > 0)
             {
-                try
-                {
-                    m_globalMutex.down();
-                }
-                catch (InterruptedException ex)
-                {
-                    Thread.currentThread().interrupt();
-                    throw new IllegalStateException(
-                        "Interrupted while acquiring global zip file mutex.");
-                }
-                try
-                {
-                    m_localMutex.down();
-                }
-                catch (InterruptedException ex)
-                {
-                    m_globalMutex.up();
-                    Thread.currentThread().interrupt();
-                    throw new IllegalStateException(
-                        "Interrupted while acquiring local zip file mutex.");
-                }
+                m_globalMutex.lock();
+                m_localMutex.lock();
             }
 
             try
@@ -405,8 +397,11 @@ public class WeakZipFileFactory
             }
             finally
             {
-                m_localMutex.up();
-                m_globalMutex.up();
+                if (m_limit > 0)
+                {
+                    m_localMutex.unlock();
+                    m_globalMutex.unlock();
+                }
             }
         }
 
@@ -442,21 +437,12 @@ public class WeakZipFileFactory
             }
 
             // Get mutex for zip file.
-            try
-            {
-                m_localMutex.down();
-            }
-            catch (InterruptedException ex)
-            {
-                Thread.currentThread().interrupt();
-                throw new IllegalStateException(
-                    "Interrupted while acquiring local zip file mutex.");
-            }
+            m_localMutex.lock();
 
             // If zip file is closed, then just return null.
             if (m_status == CLOSED)
             {
-                m_localMutex.up();
+                m_localMutex.unlock();
                 throw new IllegalStateException("Zip file is closed: " + m_file);
             }
 
@@ -468,35 +454,17 @@ public class WeakZipFileFactory
             IOException cause = null;
             if (m_status == WEAKLY_CLOSED)
             {
-                m_localMutex.up();
+                m_localMutex.unlock();
 
-                try
-                {
-                    m_globalMutex.down();
-                }
-                catch (InterruptedException ex)
-                {
-                    Thread.currentThread().interrupt();
-                    throw new IllegalStateException(
-                        "Interrupted while acquiring global zip file mutex.");
-                }
-                try
-                {
-                    m_localMutex.down();
-                }
-                catch (InterruptedException ex)
-                {
-                    m_globalMutex.up();
-                    Thread.currentThread().interrupt();
-                    throw new IllegalStateException(
-                        "Interrupted while acquiring local zip file mutex.");
-                }
+                m_globalMutex.lock();
+
+                m_localMutex.lock();
 
                 // Double check status since it may have changed.
                 if (m_status == CLOSED)
                 {
-                    m_localMutex.up();
-                    m_globalMutex.up();
+                    m_localMutex.unlock();
+                    m_globalMutex.unlock();
                     throw new IllegalStateException("Zip file is closed: " + m_file);
                 }
                 else if (m_status == WEAKLY_CLOSED)
@@ -512,14 +480,14 @@ public class WeakZipFileFactory
                 }
 
                 // Release the global mutex, since it should no longer be necessary.
-                m_globalMutex.up();
+                m_globalMutex.unlock();
             }
 
             // It is possible that reopening the zip file failed, so we check
             // for that case and throw an exception.
             if (m_zipFile == null)
             {
-                m_localMutex.up();
+                m_localMutex.unlock();
                 IllegalStateException ise =
                     new IllegalStateException("Zip file is closed: " + m_file);
                 if (cause != null)
@@ -579,9 +547,9 @@ public class WeakZipFileFactory
         class WeakZipInputStream extends InputStream
         {
             private final String m_entryName;
-            private InputStream m_is;
-            private int m_currentPos = 0;
-            private ZipFile m_zipFileSnapshot;
+            private volatile InputStream m_is;
+            private volatile int m_currentPos = 0;
+            private volatile ZipFile m_zipFileSnapshot;
 
             WeakZipInputStream(String entryName, InputStream is)
             {
@@ -630,7 +598,10 @@ public class WeakZipFileFactory
                     }
                     catch (IOException ex)
                     {
-                        m_localMutex.up();
+                        if (m_limit > 0)
+                        {
+                            m_localMutex.unlock();
+                        }
                         throw ex;
                     }
                 }
@@ -646,7 +617,10 @@ public class WeakZipFileFactory
                 }
                 finally
                 {
-                    m_localMutex.up();
+                    if (m_limit > 0)
+                    {
+                        m_localMutex.unlock();
+                    }
                 }
             }
 
@@ -665,21 +639,11 @@ public class WeakZipFileFactory
                 }
                 finally
                 {
-                    m_localMutex.up();
+                    if (m_limit > 0)
+                    {
+                        m_localMutex.unlock();
+                    }
                 }
-            }
-
-            @Override
-            public void mark(int i)
-            {
-                // Not supported.
-            }
-
-            @Override
-            public boolean markSupported()
-            {
-                // Not supported.
-                return false;
             }
 
             public int read() throws IOException
@@ -696,7 +660,10 @@ public class WeakZipFileFactory
                 }
                 finally
                 {
-                    m_localMutex.up();
+                    if (m_limit > 0)
+                    {
+                        m_localMutex.unlock();
+                    }
                 }
             }
 
@@ -715,7 +682,10 @@ public class WeakZipFileFactory
                 }
                 finally
                 {
-                    m_localMutex.up();
+                    if (m_limit > 0)
+                    {
+                        m_localMutex.unlock();
+                    }
                 }
             }
 
@@ -734,14 +704,11 @@ public class WeakZipFileFactory
                 }
                 finally
                 {
-                    m_localMutex.up();
+                    if (m_limit > 0)
+                    {
+                        m_localMutex.unlock();
+                    }
                 }
-            }
-
-            @Override
-            public void reset() throws IOException
-            {
-                throw new IOException("Unsupported operation");
             }
 
             @Override
@@ -759,7 +726,10 @@ public class WeakZipFileFactory
                 }
                 finally
                 {
-                    m_localMutex.up();
+                    if (m_limit > 0)
+                    {
+                        m_localMutex.unlock();
+                    }
                 }
             }
         }

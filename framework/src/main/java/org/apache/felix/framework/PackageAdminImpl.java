@@ -20,10 +20,10 @@ package org.apache.felix.framework;
 
 import java.util.*;
 import org.apache.felix.framework.util.Util;
-import org.apache.felix.framework.util.VersionRange;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.Constants;
 import org.osgi.framework.Version;
+import org.osgi.framework.VersionRange;
 import org.osgi.framework.wiring.BundleRevision;
 import org.osgi.framework.wiring.BundleRevisions;
 import org.osgi.framework.wiring.BundleWire;
@@ -75,7 +75,7 @@ public class PackageAdminImpl implements PackageAdmin
     **/
     public Bundle[] getBundles(String symbolicName, String versionRange)
     {
-        VersionRange vr = (versionRange == null) ? null : VersionRange.parse(versionRange);
+        VersionRange vr = (versionRange == null) ? null : new VersionRange(versionRange);
         Bundle[] bundles = m_felix.getBundles();
         List list = new ArrayList();
         for (int i = 0; (bundles != null) && (i < bundles.length); i++)
@@ -84,7 +84,7 @@ public class PackageAdminImpl implements PackageAdmin
             if ((sym != null) && sym.equals(symbolicName))
             {
                 Version v = bundles[i].adapt(BundleRevision.class).getVersion();
-                if ((vr == null) || vr.isInRange(v))
+                if ((vr == null) || vr.includes(v))
                 {
                     list.add(bundles[i]);
                 }

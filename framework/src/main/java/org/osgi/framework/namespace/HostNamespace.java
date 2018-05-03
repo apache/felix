@@ -1,5 +1,5 @@
 /*
- * Copyright (c) OSGi Alliance (2012, 2013). All Rights Reserved.
+ * Copyright (c) OSGi Alliance (2012, 2014). All Rights Reserved.
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -66,7 +66,7 @@ import org.osgi.resource.Namespace;
  * capability.
  * 
  * @Immutable
- * @author $Id: a7cbf04c393bfaaa7515804a8ab6b9ebfd72fbe5 $
+ * @author $Id: 9f789ca25dafcf9d5e9a4f45d377f943d62b134a $
  */
 public final class HostNamespace extends AbstractWiringNamespace {
 
