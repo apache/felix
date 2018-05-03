@@ -20,7 +20,7 @@
  <parent>
     <groupId>org.apache.felix</groupId>
     <artifactId>felix-parent</artifactId>
-    <version>3</version>
+    <version>5</version>
     <relativePath>../pom/pom.xml</relativePath>
   </parent>
   <modelVersion>4.0.0</modelVersion>
@@ -37,7 +37,7 @@
     <dependency>
       <groupId>${project.groupId}</groupId>
       <artifactId>org.apache.felix.framework</artifactId>
-      <version>5.7.0-SNAPSHOT</version>
+      <version>5.9.0-SNAPSHOT</version>
     </dependency>
   </dependencies>
   <properties>
