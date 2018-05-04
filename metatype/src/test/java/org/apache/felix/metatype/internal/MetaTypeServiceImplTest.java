@@ -22,8 +22,6 @@ package org.apache.felix.metatype.internal;
 import java.util.Dictionary;
 import java.util.Hashtable;
 
-import junit.framework.TestCase;
-
 import org.apache.felix.metatype.MockBundleContext;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
@@ -34,6 +32,8 @@ import org.osgi.service.metatype.MetaTypeInformation;
 import org.osgi.service.metatype.MetaTypeProvider;
 import org.osgi.service.metatype.MetaTypeService;
 import org.osgi.service.metatype.ObjectClassDefinition;
+
+import junit.framework.TestCase;
 
 
 /**
@@ -48,6 +48,7 @@ public class MetaTypeServiceImplTest extends TestCase
     BundleContext bundleContext;
 
 
+    @Override
     protected void setUp() throws Exception
     {
         super.setUp();
@@ -56,6 +57,7 @@ public class MetaTypeServiceImplTest extends TestCase
     }
 
 
+    @Override
     protected void tearDown() throws Exception
     {
         bundleContext.getBundle().stop();
