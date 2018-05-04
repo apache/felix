@@ -20,7 +20,7 @@
     <parent>
         <groupId>org.apache.felix</groupId>
         <artifactId>felix-parent</artifactId>
-        <version>4</version>
+        <version>5</version>
         <relativePath>../../pom/pom.xml</relativePath>
     </parent>
     <modelVersion>4.0.0</modelVersion>
@@ -44,7 +44,6 @@
         <bundle.file.name>
             ${bundle.build.name}/${project.build.finalName}.jar
         </bundle.file.name>
-        <felix.java.version>7</felix.java.version>
         <!-- This is a placeholder to enable perf tests with the perftest profile -->
         <additional.ittests>NONE</additional.ittests>
     </properties>
@@ -59,7 +58,7 @@
         <dependency>
             <groupId>org.osgi</groupId>
             <artifactId>org.osgi.service.event</artifactId>
-            <version>1.4.0-SNAPSHOT</version>
+            <version>1.4.0</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
@@ -72,7 +71,8 @@
         <dependency>
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>
-            <scope>provided</scope>
+            <version>4.12</version>
+            <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.jmock</groupId>
@@ -229,12 +229,4 @@
             </properties>
         </profile>
     </profiles>
-
-    <repositories>
-        <repository>
-            <id>osgi-snapshots</id>
-            <name>OSGi Snapshot Repository</name>
-            <url>https://oss.sonatype.org/content/repositories/osgi/</url>
-        </repository>
-    </repositories>    
 </project>
