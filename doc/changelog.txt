@@ -1,3 +1,9 @@
+Changes from 1.10.4 to 1.11.0
+-----------------------------
+** New Functionality
+    * FELIX-5838 Add OSGi Resource implementations to Felix Utils
+    * FELIX-5839 Add xml and json repositories implemenation
+
 Changes from 1.10.2 to 1.10.4
 ----------------------------
 ** Bug
