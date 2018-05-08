@@ -1,3 +1,9 @@
+Changes in 1.9.2
+----------------
+** Bug
+    * [FELIX-5845] : org.apache.felix.cm.impl.persistence.PersistenceManagerProxy broken
+
+
 Changes in 1.9.0
 ----------------
 ** Improvement

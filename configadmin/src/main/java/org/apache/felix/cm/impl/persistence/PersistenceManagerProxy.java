@@ -225,9 +225,9 @@ public class PersistenceManagerProxy implements ExtPersistenceManager
                     final String factoryPid = (String)next.get(ConfigurationAdmin.SERVICE_FACTORYPID);
                     if ( factoryPid != null )
                     {
-                        for(final String targetFactoryPid : targetedFactoryPids)
+                        for(final String targetedFactoryPid : targetedFactoryPids)
                         {
-                            if ( targetedFactoryPids.equals(factoryPid) )
+                            if ( targetedFactoryPid.equals(factoryPid) )
                             {
                                 pids.add(pid);
                                 break;
