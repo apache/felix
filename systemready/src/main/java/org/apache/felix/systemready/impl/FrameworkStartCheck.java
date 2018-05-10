@@ -23,6 +23,7 @@ import org.apache.felix.systemready.SystemReadyCheck;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.FrameworkEvent;
+import org.osgi.framework.startlevel.FrameworkStartLevel;
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.ConfigurationPolicy;
@@ -42,7 +43,6 @@ public class FrameworkStartCheck implements SystemReadyCheck {
 
     public static final String FRAMEWORK_STARTED = "Framework started";
     public static final String FRAMEWORK_START_CHECK_NAME = "Framework Start Check";
-
     @ObjectClassDefinition(
             name="OSGi Installer System Ready Check",
             description="System ready that waits for the framework started OSGi event"
@@ -56,8 +56,6 @@ public class FrameworkStartCheck implements SystemReadyCheck {
 
     private final Logger log = LoggerFactory.getLogger(getClass());
     private BundleContext bundleContext;
-
-    private int count = 0;
     private Status state;
 
     @Activate
@@ -69,7 +67,7 @@ public class FrameworkStartCheck implements SystemReadyCheck {
             // The system bundle was already started when I joined
             this.state = new Status(Status.State.GREEN, FRAMEWORK_STARTED);
         } else {
-            this.state = new Status(Status.State.YELLOW, "No OSGi Framework events received so far");
+            this.state = new Status(Status.State.YELLOW, "No OSGi Framework events received so far. " + getFrameworkDetails());
         }
         log.info("Activated");
     }
@@ -91,10 +89,14 @@ public class FrameworkStartCheck implements SystemReadyCheck {
 
     public void frameworkEvent(FrameworkEvent event) {
         if (event.getType() == FrameworkEvent.STARTLEVEL_CHANGED) {
-            this.count ++;
-            this.state = new Status(Status.State.YELLOW, "Received " + count + " startlevel changes so far");
+            this.state = new Status(Status.State.YELLOW, getFrameworkDetails());
         } else if (event.getType() == FrameworkEvent.STARTED) {
             this.state = new Status(Status.State.GREEN, FRAMEWORK_STARTED);
         } // TODO: RED on timeout?
+    }
+
+    private String getFrameworkDetails() {
+        FrameworkStartLevel fsl = bundleContext.getBundle(0).adapt(FrameworkStartLevel.class);
+        return String.format("Framework is at start level {} in state {}", fsl.getStartLevel(), fsl.getBundle().getState());
     }
 }
