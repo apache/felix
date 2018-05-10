@@ -28,11 +28,12 @@ import java.util.ArrayList;
 import java.util.Dictionary;
 import java.util.Hashtable;
 import java.util.List;
+
 import org.junit.Assert;
 import org.junit.Test;
 
 public class ConfigurationHandlerTest {
-    
+
     private static final String SERVICE_PID = "service.pid";
 
     private static final String PAR_1 = "mongouri";
@@ -55,143 +56,143 @@ public class ConfigurationHandlerTest {
         Assert.assertEquals(VAL_1, dict.get(PAR_1));
         Assert.assertEquals(VAL_2, dict.get(PAR_2).toString());
     }
- 
-    
+
+
     @Test
     public void test_writeArray() throws IOException {
         OutputStream out = new ByteArrayOutputStream();
-        Dictionary< String, Object> properties = new Hashtable< String, Object>();
+        Dictionary< String, Object> properties = new Hashtable<>();
         properties.put(SERVICE_PID , new String [] {"foo", "bar"});
         ConfigurationHandler.write(out, properties);
         String entry = new String(((ByteArrayOutputStream)out).toByteArray(),"UTF-8");
         Assert.assertEquals("service.pid=[ \\\r\n  \"foo\", \\\r\n  \"bar\", \\\r\n  ]\r\n", entry);
     }
-    
+
     @Test
     public void test_writeEmptyCollection() throws IOException {
         OutputStream out = new ByteArrayOutputStream();
-        Dictionary< String, Object> properties = new Hashtable< String, Object>();
+        Dictionary< String, Object> properties = new Hashtable<>();
         properties.put(SERVICE_PID , new ArrayList());
         ConfigurationHandler.write(out, properties);
         String entry = new String(((ByteArrayOutputStream)out).toByteArray(),"UTF-8");
         Assert.assertEquals("service.pid=( \\\r\n)\r\n", entry);
     }
-    
+
     @Test
     public void test_writeCollection() throws IOException {
         OutputStream out = new ByteArrayOutputStream();
-        Dictionary< String, Object> properties = new Hashtable< String, Object>();
+        Dictionary< String, Object> properties = new Hashtable<>();
         List list = new ArrayList<String>(){{
             add("foo");
             add("bar");
         }};
-        
+
         properties.put(SERVICE_PID , list);
         ConfigurationHandler.write(out, properties);
         String entry = new String(((ByteArrayOutputStream)out).toByteArray(),"UTF-8");
         Assert.assertEquals("service.pid=( \\\r\n  \"foo\", \\\r\n  \"bar\", \\\r\n)\r\n", entry);
     }
-    
+
     @Test
     public void test_writeSimpleString() throws IOException {
         OutputStream out = new ByteArrayOutputStream();
-        Dictionary< String, String> properties = new Hashtable< String, String>();
+        Dictionary< String, String> properties = new Hashtable<>();
         properties.put(SERVICE_PID, "com.adobe.granite.foo.Bar");
         ConfigurationHandler.write(out, properties);
         String entry = new String(((ByteArrayOutputStream)out).toByteArray(),"UTF-8");
         Assert.assertEquals("service.pid=\"com.adobe.granite.foo.Bar\"\r\n", entry);
     }
-    
+
     @Test
     public void test_writeInteger() throws IOException {
         OutputStream out = new ByteArrayOutputStream();
-        Dictionary< String, Integer> properties = new Hashtable< String, Integer>();
+        Dictionary< String, Integer> properties = new Hashtable<>();
         properties.put(SERVICE_PID, 1000);
         ConfigurationHandler.write(out, properties);
         String entry = new String(((ByteArrayOutputStream)out).toByteArray(),"UTF-8");
         Assert.assertEquals("service.pid=I\"1000\"\r\n", entry);
     }
-    
+
     @Test
     public void test_writeLong() throws IOException {
         OutputStream out = new ByteArrayOutputStream();
-        Dictionary< String, Long> properties = new Hashtable< String, Long>();
+        Dictionary< String, Long> properties = new Hashtable<>();
         properties.put(SERVICE_PID, 1000L);
         ConfigurationHandler.write(out, properties);
         String entry = new String(((ByteArrayOutputStream)out).toByteArray(),"UTF-8");
         Assert.assertEquals("service.pid=L\"1000\"\r\n", entry);
     }
-    
+
     @Test
     public void test_writeFloat() throws IOException {
         OutputStream out = new ByteArrayOutputStream();
-        Dictionary< String, Float> properties = new Hashtable< String, Float>();
+        Dictionary< String, Float> properties = new Hashtable<>();
         properties.put(SERVICE_PID, 3.6f);
         ConfigurationHandler.write(out, properties);
         String entry = new String(((ByteArrayOutputStream)out).toByteArray(),"UTF-8");
         Assert.assertEquals("service.pid=F\"1080452710\"\r\n", entry);
     }
-    
+
     @Test
     public void test_writeDouble() throws IOException {
         OutputStream out = new ByteArrayOutputStream();
-        Dictionary< String, Double> properties = new Hashtable< String, Double>();
+        Dictionary< String, Double> properties = new Hashtable<>();
         properties.put(SERVICE_PID, 3.6d);
         ConfigurationHandler.write(out, properties);
         String entry = new String(((ByteArrayOutputStream)out).toByteArray(),"UTF-8");
         Assert.assertEquals("service.pid=D\"4615288898129284301\"\r\n", entry);
     }
-    
+
     @Test
     public void test_writeByte() throws IOException {
         OutputStream out = new ByteArrayOutputStream();
-        Dictionary< String, Byte> properties = new Hashtable< String, Byte>();
+        Dictionary< String, Byte> properties = new Hashtable<>();
         properties.put(SERVICE_PID, new Byte("10"));
         ConfigurationHandler.write(out, properties);
         String entry = new String(((ByteArrayOutputStream)out).toByteArray(),"UTF-8");
         Assert.assertEquals("service.pid=X\"10\"\r\n", entry);
     }
-    
+
     @Test
     public void test_writeShort() throws IOException {
         OutputStream out = new ByteArrayOutputStream();
-        Dictionary< String, Short> properties = new Hashtable< String, Short>();
+        Dictionary< String, Short> properties = new Hashtable<>();
         properties.put(SERVICE_PID, (short)10);
         ConfigurationHandler.write(out, properties);
         String entry = new String(((ByteArrayOutputStream)out).toByteArray(),"UTF-8");
         Assert.assertEquals("service.pid=S\"10\"\r\n", entry);
     }
-    
+
     @Test
     public void test_writeChar() throws IOException {
         OutputStream out = new ByteArrayOutputStream();
-        Dictionary< String, Character> properties = new Hashtable< String, Character>();
+        Dictionary< String, Character> properties = new Hashtable<>();
         properties.put(SERVICE_PID, 'c');
         ConfigurationHandler.write(out, properties);
         String entry = new String(((ByteArrayOutputStream)out).toByteArray(),"UTF-8");
         Assert.assertEquals("service.pid=C\"c\"\r\n", entry);
     }
-    
+
     @Test
     public void test_writeBoolean() throws IOException {
         OutputStream out = new ByteArrayOutputStream();
-        Dictionary< String, Boolean> properties = new Hashtable< String, Boolean>();
+        Dictionary< String, Boolean> properties = new Hashtable<>();
         properties.put(SERVICE_PID, true);
         ConfigurationHandler.write(out, properties);
         String entry = new String(((ByteArrayOutputStream)out).toByteArray(),"UTF-8");
         Assert.assertEquals("service.pid=B\"true\"\r\n", entry);
     }
-    
+
     @Test
     public void test_writeSimpleStringWithError() throws IOException {
         OutputStream out = new ByteArrayOutputStream();
-        Dictionary< String, String> properties = new Hashtable< String, String>();
+        Dictionary< String, String> properties = new Hashtable<>();
         properties.put("foo.bar", "com.adobe.granite.foo.Bar");
         ConfigurationHandler.write(out, properties);
         String entry = new String(((ByteArrayOutputStream)out).toByteArray(),"UTF-8");
         Assert.assertEquals("foo.bar=\"com.adobe.granite.foo.Bar\"\r\n", entry);
     }
-       
+
     @Test
     public void test_readArray() throws IOException {
         String entry = "service.pid=[ \\\r\n  \"foo\", \\\r\n  \"bar\", \\\r\n  ]\r\n";
@@ -200,16 +201,16 @@ public class ConfigurationHandlerTest {
         Assert.assertEquals(1, dictionary.size());
         Assert.assertArrayEquals(new String [] {"foo", "bar"}, (String [])dictionary.get(SERVICE_PID));
     }
-    
+
     @Test
     public void test_readEmptyCollection() throws IOException {
         String entry = "service.pid=( \\\r\n)\r\n";
         InputStream stream = new ByteArrayInputStream(entry.getBytes(StandardCharsets.UTF_8));
         Dictionary dictionary = ConfigurationHandler.read(stream);
         Assert.assertEquals(1, dictionary.size());
-        Assert.assertEquals(new ArrayList(), (ArrayList)dictionary.get(SERVICE_PID));
+        Assert.assertEquals(new ArrayList(), dictionary.get(SERVICE_PID));
     }
-    
+
     @Test
     public void test_readCollection() throws IOException {
         String entry = "service.pid=( \\\r\n  \"foo\", \\\r\n  \"bar\", \\\r\n)\r\n";
@@ -220,9 +221,9 @@ public class ConfigurationHandlerTest {
             add("foo");
             add("bar");
         }};
-        Assert.assertEquals(list, (ArrayList)dictionary.get(SERVICE_PID));
+        Assert.assertEquals(list, dictionary.get(SERVICE_PID));
     }
-    
+
     @Test
     public void test_readSimpleString() throws IOException {
         String entry = "service.pid=\"com.adobe.granite.foo.Bar\"\r\n";
@@ -231,7 +232,7 @@ public class ConfigurationHandlerTest {
         Assert.assertEquals(1, dictionary.size());
         Assert.assertEquals( "com.adobe.granite.foo.Bar", dictionary.get(SERVICE_PID));
     }
-    
+
     @Test
     public void test_readSimpleStrings() throws IOException {
         String entry = "service.pid=\"com.adobe.granite.foo.Bar\"\r\nfoo.bar=\"com.adobe.granite.foo.Baz\"\r\n";
@@ -241,7 +242,7 @@ public class ConfigurationHandlerTest {
         Assert.assertEquals( "com.adobe.granite.foo.Bar", dictionary.get(SERVICE_PID));
         Assert.assertNotNull(dictionary.get("foo.bar"));
     }
-    
+
     @Test
     public void test_readInteger() throws IOException {
         String entry = "service.pid=I\"1000\"\r\n";
@@ -250,7 +251,7 @@ public class ConfigurationHandlerTest {
         Assert.assertEquals(1, dictionary.size());
         Assert.assertEquals( 1000, dictionary.get(SERVICE_PID));
     }
-    
+
     @Test
     public void test_readLong() throws IOException {
         String entry = "service.pid=L\"1000\"\r\n";
@@ -259,7 +260,7 @@ public class ConfigurationHandlerTest {
         Assert.assertEquals(1, dictionary.size());
         Assert.assertEquals( 1000L, dictionary.get(SERVICE_PID));
     }
-    
+
     @Test
     public void test_readFloat() throws IOException {
         String entry = "service.pid=F\"1080452710\"\r\n";
@@ -268,7 +269,7 @@ public class ConfigurationHandlerTest {
         Assert.assertEquals(1, dictionary.size());
         Assert.assertEquals( 3.6f, dictionary.get(SERVICE_PID));
     }
-    
+
     @Test
     public void test_readDouble() throws IOException {
         String entry = "service.pid=D\"4615288898129284301\"\r\n";
@@ -277,7 +278,7 @@ public class ConfigurationHandlerTest {
         Assert.assertEquals(1, dictionary.size());
         Assert.assertEquals( 3.6d, dictionary.get(SERVICE_PID));
     }
-    
+
     @Test
     public void test_readByte() throws IOException {
         String entry = "service.pid=X\"10\"\r\n";
@@ -286,7 +287,7 @@ public class ConfigurationHandlerTest {
         Assert.assertEquals(1, dictionary.size());
         Assert.assertEquals((byte)10 , dictionary.get(SERVICE_PID));
     }
-    
+
     @Test
     public void test_readShort() throws IOException {
         String entry = "service.pid=S\"10\"\r\n";
@@ -295,7 +296,7 @@ public class ConfigurationHandlerTest {
         Assert.assertEquals(1, dictionary.size());
         Assert.assertEquals((short)10 , dictionary.get(SERVICE_PID));
     }
-    
+
     @Test
     public void test_readChar() throws IOException {
         String entry = "service.pid=C\"c\"\r\n";
@@ -304,7 +305,7 @@ public class ConfigurationHandlerTest {
         Assert.assertEquals(1, dictionary.size());
         Assert.assertEquals('c' , dictionary.get(SERVICE_PID));
     }
-    
+
     @Test
     public void test_readBoolean() throws IOException {
         String entry = "service.pid=B\"true\"\r\n";
@@ -313,5 +314,22 @@ public class ConfigurationHandlerTest {
         Assert.assertEquals(1, dictionary.size());
         Assert.assertEquals(true , dictionary.get(SERVICE_PID));
     }
+
+    @Test
+    public void test_backslash() throws IOException {
+        final String VALUE = "val\\ue\\\\";
+        final Dictionary<String, Object> dict = new Hashtable<>();
+        dict.put("key", VALUE);
+        try (final ByteArrayOutputStream out = new ByteArrayOutputStream()) {
+            ConfigurationHandler.write(out, dict);
+
+            try (final ByteArrayInputStream ins = new ByteArrayInputStream(out.toByteArray())) {
+                final Dictionary<String, Object> read = ConfigurationHandler.read(ins);
+
+                Assert.assertNotNull(read.get("key"));
+                Assert.assertEquals(VALUE, read.get("key"));
+            }
+        }
+    }
 }
-  
+
