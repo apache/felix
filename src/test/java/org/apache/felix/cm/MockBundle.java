@@ -51,7 +51,7 @@ public class MockBundle implements Bundle
 
 
     @Override
-    public Enumeration findEntries( String arg0, String arg1, boolean arg2 )
+    public Enumeration<URL> findEntries( String arg0, String arg1, boolean arg2 )
     {
         return null;
     }
@@ -79,21 +79,21 @@ public class MockBundle implements Bundle
 
 
     @Override
-    public Enumeration getEntryPaths( String arg0 )
+    public Enumeration<String> getEntryPaths( String arg0 )
     {
         return null;
     }
 
 
     @Override
-    public Dictionary getHeaders()
+    public Dictionary<String, String> getHeaders()
     {
         return null;
     }
 
 
     @Override
-    public Dictionary getHeaders( String arg0 )
+    public Dictionary<String, String> getHeaders( String arg0 )
     {
         return null;
     }
@@ -114,7 +114,7 @@ public class MockBundle implements Bundle
 
 
     @Override
-    public ServiceReference[] getRegisteredServices()
+    public ServiceReference<?>[] getRegisteredServices()
     {
         return null;
     }
@@ -128,14 +128,14 @@ public class MockBundle implements Bundle
 
 
     @Override
-    public Enumeration getResources( String arg0 )
+    public Enumeration<URL> getResources( String arg0 )
     {
         return null;
     }
 
 
     @Override
-    public ServiceReference[] getServicesInUse()
+    public ServiceReference<?>[] getServicesInUse()
     {
         return null;
     }
@@ -163,7 +163,7 @@ public class MockBundle implements Bundle
 
 
     @Override
-    public Class loadClass( String arg0 ) throws ClassNotFoundException
+    public Class<?> loadClass( String arg0 ) throws ClassNotFoundException
     {
         throw new ClassNotFoundException( arg0 );
     }

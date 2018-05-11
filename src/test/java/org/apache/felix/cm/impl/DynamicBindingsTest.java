@@ -19,21 +19,28 @@
 package org.apache.felix.cm.impl;
 
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
+
 import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.Field;
 import java.util.Dictionary;
 
-import junit.framework.TestCase;
-
 import org.apache.felix.cm.MockBundle;
 import org.apache.felix.cm.MockBundleContext;
 import org.apache.felix.cm.file.FilePersistenceManager;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 
 
-public class DynamicBindingsTest extends TestCase
+public class DynamicBindingsTest
 {
 
     private File configLocation;
@@ -44,34 +51,26 @@ public class DynamicBindingsTest extends TestCase
 
     private static final String PID1 = "test.pid.1";
 
-    private static final String PID2 = "test.pid.2";
-
     private static final String LOCATION1 = "test://location.1";
 
-    private static final String LOCATION2 = "test://location.2";
-
-
-    protected void setUp() throws Exception
+    @Before
+    public void setUp() throws Exception
     {
-        super.setUp();
-
         configLocation = new File( "target/config." + System.currentTimeMillis() );
         persistenceManager = new FilePersistenceManager( configLocation.getAbsolutePath() );
 
         bindingsFile = new File( configLocation, DynamicBindings.BINDINGS_FILE_NAME + ".config" );
     }
 
-
-    protected void tearDown() throws Exception
+    @After
+    public void tearDown() throws Exception
     {
         bindingsFile.delete();
         configLocation.delete();
-
-        super.tearDown();
     }
 
 
-    public void test_no_bindings() throws IOException
+    @Test public void test_no_bindings() throws IOException
     {
 
         // ensure there is no file
@@ -79,14 +78,14 @@ public class DynamicBindingsTest extends TestCase
 
         final BundleContext ctx = new MockBundleContext();
         final DynamicBindings dm = new DynamicBindings( ctx, persistenceManager );
-        final Dictionary bindings = getBindings( dm );
+        final Dictionary<String, Object> bindings = getBindings( dm );
 
         assertNotNull( bindings );
         assertTrue( bindings.isEmpty() );
     }
 
 
-    public void test_store_bindings() throws IOException
+    @Test public void test_store_bindings() throws IOException
     {
         // ensure there is no file
         bindingsFile.delete();
@@ -99,14 +98,15 @@ public class DynamicBindingsTest extends TestCase
 
         assertTrue( bindingsFile.exists() );
 
-        final Dictionary bindings = persistenceManager.load( DynamicBindings.BINDINGS_FILE_NAME );
+        @SuppressWarnings("unchecked")
+        final Dictionary<String, Object> bindings = persistenceManager.load( DynamicBindings.BINDINGS_FILE_NAME );
         assertNotNull( bindings );
         assertEquals( 1, bindings.size() );
         assertEquals( LOCATION1, bindings.get( PID1 ) );
     }
 
 
-    public void test_store_and_load_bindings() throws IOException
+    @Test public void test_store_and_load_bindings() throws IOException
     {
         // ensure there is no file
         bindingsFile.delete();
@@ -123,14 +123,14 @@ public class DynamicBindingsTest extends TestCase
         assertEquals( LOCATION1, dm.getLocation( PID1 ) );
 
         // low level check
-        final Dictionary bindings = getBindings( dm );
+        final Dictionary<String, Object> bindings = getBindings( dm );
         assertNotNull( bindings );
         assertEquals( 1, bindings.size() );
         assertEquals( LOCATION1, bindings.get( PID1 ) );
     }
 
 
-    public void test_store_and_load_bindings_with_cleanup() throws IOException
+    @Test public void test_store_and_load_bindings_with_cleanup() throws IOException
     {
         // ensure there is no file
         bindingsFile.delete();
@@ -146,19 +146,20 @@ public class DynamicBindingsTest extends TestCase
         assertNull( dm.getLocation( PID1 ) );
 
         // low level check
-        final Dictionary bindings = getBindings( dm );
+        final Dictionary<String, Object> bindings = getBindings( dm );
         assertNotNull( bindings );
         assertTrue( bindings.isEmpty() );
     }
 
 
-    private static Dictionary getBindings( DynamicBindings dm )
+    @SuppressWarnings("unchecked")
+    private static Dictionary<String, Object> getBindings( DynamicBindings dm )
     {
         try
         {
             final Field bindings = dm.getClass().getDeclaredField( "bindings" );
             bindings.setAccessible( true );
-            return ( Dictionary ) bindings.get( dm );
+            return ( Dictionary<String, Object> ) bindings.get( dm );
         }
         catch ( Throwable t )
         {
@@ -169,6 +170,7 @@ public class DynamicBindingsTest extends TestCase
 
     private static class DMTestMockBundleContext extends MockBundleContext
     {
+        @Override
         public Bundle[] getBundles()
         {
             return new Bundle[]

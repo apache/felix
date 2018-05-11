@@ -41,12 +41,14 @@ public class MockPersistenceManager implements PersistenceManager
         return configs.containsKey( pid );
     }
 
+    @SuppressWarnings("rawtypes")
     @Override
     public Enumeration getDictionaries()
     {
         return Collections.enumeration( configs.values() );
     }
 
+    @SuppressWarnings("rawtypes")
     @Override
     public Dictionary load( final String pid ) throws IOException
     {
@@ -59,6 +61,7 @@ public class MockPersistenceManager implements PersistenceManager
         throw new IOException( "No such configuration: " + pid );
     }
 
+    @SuppressWarnings({ "rawtypes", "unchecked" })
     @Override
     public void store( String pid, Dictionary properties )
     {

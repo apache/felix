@@ -19,6 +19,10 @@
 package org.apache.felix.cm.impl;
 
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
+
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
@@ -26,12 +30,13 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Vector;
 
-import junit.framework.TestCase;
+import org.junit.Test;
 
 
-public class CaseInsensitiveDictionaryTest extends TestCase
+public class CaseInsensitiveDictionaryTest
 {
 
+    @Test
     public void testLocaleIndependence() {
         Locale defaultLocal = Locale.getDefault();
         CaseInsensitiveDictionary dict = new CaseInsensitiveDictionary();
@@ -54,6 +59,7 @@ public class CaseInsensitiveDictionaryTest extends TestCase
     }
 
 
+    @Test
     public void testCheckValueNull()
     {
         // null which must throw IllegalArgumentException
@@ -70,6 +76,7 @@ public class CaseInsensitiveDictionaryTest extends TestCase
     }
 
 
+    @Test
     public void testCheckValueSimple()
     {
         internalTestCheckValue( "String" );
@@ -84,6 +91,7 @@ public class CaseInsensitiveDictionaryTest extends TestCase
     }
 
 
+    @Test
     public void testCheckValueSimpleArray()
     {
         internalTestCheckValue( new String[]
@@ -107,6 +115,7 @@ public class CaseInsensitiveDictionaryTest extends TestCase
     }
 
 
+    @Test
     public void testCheckValuePrimitiveArray()
     {
         internalTestCheckValue( new long[]
@@ -128,64 +137,73 @@ public class CaseInsensitiveDictionaryTest extends TestCase
     }
 
 
+    @Test
     public void testCheckValueSimpleVector()
     {
-        internalTestCheckValue( "String", Vector.class );
-        internalTestCheckValue( new Integer( 1 ), Vector.class );
-        internalTestCheckValue( new Long( 1 ), Vector.class );
-        internalTestCheckValue( new Float( 1 ), Vector.class );
-        internalTestCheckValue( new Double( 1 ), Vector.class );
-        internalTestCheckValue( new Byte( ( byte ) 1 ), Vector.class );
-        internalTestCheckValue( new Short( ( short ) 1 ), Vector.class );
-        internalTestCheckValue( new Character( 'a' ), Vector.class );
-        internalTestCheckValue( Boolean.TRUE, Vector.class );
+        internalTestCheckValueVector( "String", String.class );
+        internalTestCheckValueVector( new Integer( 1 ), Integer.class );
+        internalTestCheckValueVector( new Long( 1 ), Long.class );
+        internalTestCheckValueVector( new Float( 1 ), Float.class );
+        internalTestCheckValueVector( new Double( 1 ), Double.class );
+        internalTestCheckValueVector( new Byte( ( byte ) 1 ), Byte.class );
+        internalTestCheckValueVector( new Short( ( short ) 1 ), Short.class );
+        internalTestCheckValueVector( new Character( 'a' ), Character.class );
+        internalTestCheckValueVector( Boolean.TRUE, Boolean.class );
     }
 
-
+    @Test
     public void testCheckValueSimpleSet()
     {
-        internalTestCheckValue( "String", HashSet.class );
-        internalTestCheckValue( new Integer( 1 ), HashSet.class );
-        internalTestCheckValue( new Long( 1 ), HashSet.class );
-        internalTestCheckValue( new Float( 1 ), HashSet.class );
-        internalTestCheckValue( new Double( 1 ), HashSet.class );
-        internalTestCheckValue( new Byte( ( byte ) 1 ), HashSet.class );
-        internalTestCheckValue( new Short( ( short ) 1 ), HashSet.class );
-        internalTestCheckValue( new Character( 'a' ), HashSet.class );
-        internalTestCheckValue( Boolean.TRUE, HashSet.class );
+        internalTestCheckValueSet( "String", String.class );
+        internalTestCheckValueSet( new Integer( 1 ), Integer.class );
+        internalTestCheckValueSet( new Long( 1 ), Long.class );
+        internalTestCheckValueSet( new Float( 1 ), Float.class );
+        internalTestCheckValueSet( new Double( 1 ), Double.class );
+        internalTestCheckValueSet( new Byte( ( byte ) 1 ), Byte.class );
+        internalTestCheckValueSet( new Short( ( short ) 1 ), Short.class );
+        internalTestCheckValueSet( new Character( 'a' ), Character.class );
+        internalTestCheckValueSet( Boolean.TRUE, Boolean.class );
     }
 
 
+    @Test
     public void testCheckValueSimpleArrayList()
     {
-        internalTestCheckValue( "String", ArrayList.class );
-        internalTestCheckValue( new Integer( 1 ), ArrayList.class );
-        internalTestCheckValue( new Long( 1 ), ArrayList.class );
-        internalTestCheckValue( new Float( 1 ), ArrayList.class );
-        internalTestCheckValue( new Double( 1 ), ArrayList.class );
-        internalTestCheckValue( new Byte( ( byte ) 1 ), ArrayList.class );
-        internalTestCheckValue( new Short( ( short ) 1 ), ArrayList.class );
-        internalTestCheckValue( new Character( 'a' ), ArrayList.class );
-        internalTestCheckValue( Boolean.TRUE, ArrayList.class );
+        internalTestCheckValueList( "String", String.class );
+        internalTestCheckValueList( new Integer( 1 ), Integer.class );
+        internalTestCheckValueList( new Long( 1 ), Long.class );
+        internalTestCheckValueList( new Float( 1 ), Float.class );
+        internalTestCheckValueList( new Double( 1 ), Double.class );
+        internalTestCheckValueList( new Byte( ( byte ) 1 ), Byte.class );
+        internalTestCheckValueList( new Short( ( short ) 1 ), Short.class );
+        internalTestCheckValueList( new Character( 'a' ), Character.class );
+        internalTestCheckValueList( Boolean.TRUE, Boolean.class );
     }
 
 
-    private void internalTestCheckValue( Object value, Class collectionType )
+    private <T> void internalTestCheckValueList( T value, Class<T> collectionType )
     {
-        Collection coll;
-        try
-        {
-            coll = ( Collection ) collectionType.newInstance();
-        }
-        catch ( Throwable t )
-        {
-            throw new IllegalArgumentException( collectionType + " cannot be instantiated as a Collection" );
-        }
+        Collection<T> coll = new ArrayList<>();
 
         coll.add( value );
         internalTestCheckValue( coll );
     }
 
+    private <T> void internalTestCheckValueVector( T value, Class<T> collectionType )
+    {
+        Collection<T> coll = new Vector<>();
+
+        coll.add( value );
+        internalTestCheckValue( coll );
+    }
+
+    private <T> void internalTestCheckValueSet( T value, Class<T> collectionType )
+    {
+        Collection<T> coll = new HashSet<>();
+
+        coll.add( value );
+        internalTestCheckValue( coll );
+    }
 
     private void internalTestCheckValue( Object value )
     {
@@ -197,8 +215,8 @@ public class CaseInsensitiveDictionaryTest extends TestCase
     {
         if ( ( expected instanceof Collection ) && ( actual instanceof Collection ) )
         {
-            Collection eColl = ( Collection ) expected;
-            Collection aColl = ( Collection ) actual;
+            Collection<?> eColl = ( Collection<?> ) expected;
+            Collection<?> aColl = ( Collection<?> ) actual;
             if ( eColl.size() != aColl.size() )
             {
                 fail( "Unexpected size. expected:" + eColl.size() + ", actual: " + aColl.size() );
@@ -207,7 +225,7 @@ public class CaseInsensitiveDictionaryTest extends TestCase
             // create a list from the expected collection and remove
             // all values from the actual collection, this should get
             // an empty collection
-            List eList = new ArrayList( eColl );
+            List<?> eList = new ArrayList<>( eColl );
             eList.removeAll( aColl );
             assertTrue( "Collections do not match. expected:" + eColl + ", actual: " + aColl, eList.isEmpty() );
         }
@@ -218,6 +236,7 @@ public class CaseInsensitiveDictionaryTest extends TestCase
     }
 
 
+    @Test
     public void testValidKeys()
     {
         CaseInsensitiveDictionary.checkKey( "a" );
@@ -231,6 +250,7 @@ public class CaseInsensitiveDictionaryTest extends TestCase
     }
 
 
+    @Test
     public void testKeyDots()
     {
         // FELIX-2184 these keys are all valid (but not recommended)
@@ -243,7 +263,7 @@ public class CaseInsensitiveDictionaryTest extends TestCase
         CaseInsensitiveDictionary.checkKey( ".a.b.c" );
     }
 
-
+    @Test
     public void testKeyIllegalCharacters()
     {
         testFailingKey( null );

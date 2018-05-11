@@ -70,6 +70,7 @@ public class MockBundleContext implements BundleContext
      * org.osgi.framework.BundleContext#addBundleListener(org.osgi.framework
      * .BundleListener)
      */
+    @Override
     public void addBundleListener( BundleListener arg0 )
     {
     }
@@ -81,6 +82,7 @@ public class MockBundleContext implements BundleContext
      * org.osgi.framework.BundleContext#addFrameworkListener(org.osgi.framework
      * .FrameworkListener)
      */
+    @Override
     public void addFrameworkListener( FrameworkListener arg0 )
     {
     }
@@ -92,6 +94,7 @@ public class MockBundleContext implements BundleContext
      * org.osgi.framework.BundleContext#addServiceListener(org.osgi.framework
      * .ServiceListener)
      */
+    @Override
     public void addServiceListener( ServiceListener arg0 )
     {
     }
@@ -103,6 +106,7 @@ public class MockBundleContext implements BundleContext
      * org.osgi.framework.BundleContext#addServiceListener(org.osgi.framework
      * .ServiceListener, java.lang.String)
      */
+    @Override
     public void addServiceListener( ServiceListener arg0, String arg1 )
     {
     }
@@ -112,6 +116,7 @@ public class MockBundleContext implements BundleContext
      * (non-Javadoc)
      * @see org.osgi.framework.BundleContext#createFilter(java.lang.String)
      */
+    @Override
     public Filter createFilter( String arg0 )
     {
         return null;
@@ -124,7 +129,8 @@ public class MockBundleContext implements BundleContext
      * org.osgi.framework.BundleContext#getAllServiceReferences(java.lang.String
      * , java.lang.String)
      */
-    public ServiceReference[] getAllServiceReferences( String arg0, String arg1 )
+    @Override
+    public ServiceReference<?>[] getAllServiceReferences( String arg0, String arg1 )
     {
         return null;
     }
@@ -134,6 +140,7 @@ public class MockBundleContext implements BundleContext
      * (non-Javadoc)
      * @see org.osgi.framework.BundleContext#getBundle()
      */
+    @Override
     public Bundle getBundle()
     {
         return null;
@@ -144,6 +151,7 @@ public class MockBundleContext implements BundleContext
      * (non-Javadoc)
      * @see org.osgi.framework.BundleContext#getBundle(long)
      */
+    @Override
     public Bundle getBundle( long arg0 )
     {
         return null;
@@ -154,6 +162,7 @@ public class MockBundleContext implements BundleContext
      * (non-Javadoc)
      * @see org.osgi.framework.BundleContext#getBundles()
      */
+    @Override
     public Bundle[] getBundles()
     {
         return new Bundle[0];
@@ -164,6 +173,7 @@ public class MockBundleContext implements BundleContext
      * (non-Javadoc)
      * @see org.osgi.framework.BundleContext#getDataFile(java.lang.String)
      */
+    @Override
     public File getDataFile( String arg0 )
     {
         return null;
@@ -174,6 +184,7 @@ public class MockBundleContext implements BundleContext
      * (non-Javadoc)
      * @see org.osgi.framework.BundleContext#getProperty(java.lang.String)
      */
+    @Override
     public String getProperty( String name )
     {
         return properties.getProperty( name );
@@ -185,6 +196,7 @@ public class MockBundleContext implements BundleContext
      * @seeorg.osgi.framework.BundleContext#getService(org.osgi.framework.
      * ServiceReference)
      */
+    @Override
     public <S> S getService( ServiceReference<S> reference )
     {
         return null;
@@ -196,7 +208,8 @@ public class MockBundleContext implements BundleContext
      * @see
      * org.osgi.framework.BundleContext#getServiceReference(java.lang.String)
      */
-    public ServiceReference getServiceReference( String arg0 )
+    @Override
+    public ServiceReference<?> getServiceReference( String arg0 )
     {
         return null;
     }
@@ -208,7 +221,8 @@ public class MockBundleContext implements BundleContext
      * org.osgi.framework.BundleContext#getServiceReferences(java.lang.String,
      * java.lang.String)
      */
-    public ServiceReference[] getServiceReferences( String arg0, String arg1 )
+    @Override
+    public ServiceReference<?>[] getServiceReferences( String arg0, String arg1 )
     {
         return null;
     }
@@ -218,6 +232,7 @@ public class MockBundleContext implements BundleContext
      * (non-Javadoc)
      * @see org.osgi.framework.BundleContext#installBundle(java.lang.String)
      */
+    @Override
     public Bundle installBundle( String arg0 )
     {
         return null;
@@ -229,6 +244,7 @@ public class MockBundleContext implements BundleContext
      * @see org.osgi.framework.BundleContext#installBundle(java.lang.String,
      * java.io.InputStream)
      */
+    @Override
     public Bundle installBundle( String arg0, InputStream arg1 )
     {
         return null;
@@ -240,6 +256,7 @@ public class MockBundleContext implements BundleContext
      * @see org.osgi.framework.BundleContext#registerService(java.lang.String[],
      * java.lang.Object, java.util.Dictionary)
      */
+    @Override
     public ServiceRegistration<?> registerService( String[] clazzes, Object service, Dictionary<String, ?> properties )
     {
         return null;
@@ -251,6 +268,7 @@ public class MockBundleContext implements BundleContext
      * @see org.osgi.framework.BundleContext#registerService(java.lang.String,
      * java.lang.Object, java.util.Dictionary)
      */
+    @Override
     public ServiceRegistration<?> registerService( String clazz, Object service, Dictionary<String, ?> properties )
     {
         return null;
@@ -263,6 +281,7 @@ public class MockBundleContext implements BundleContext
      * org.osgi.framework.BundleContext#removeBundleListener(org.osgi.framework
      * .BundleListener)
      */
+    @Override
     public void removeBundleListener( BundleListener arg0 )
     {
     }
@@ -274,6 +293,7 @@ public class MockBundleContext implements BundleContext
      * org.osgi.framework.BundleContext#removeFrameworkListener(org.osgi.framework
      * .FrameworkListener)
      */
+    @Override
     public void removeFrameworkListener( FrameworkListener arg0 )
     {
     }
@@ -285,6 +305,7 @@ public class MockBundleContext implements BundleContext
      * org.osgi.framework.BundleContext#removeServiceListener(org.osgi.framework
      * .ServiceListener)
      */
+    @Override
     public void removeServiceListener( ServiceListener arg0 )
     {
     }
@@ -295,36 +316,42 @@ public class MockBundleContext implements BundleContext
      * @seeorg.osgi.framework.BundleContext#ungetService(org.osgi.framework.
      * ServiceReference)
      */
+    @Override
     public boolean ungetService( ServiceReference<?> reference )
     {
         return false;
     }
 
 
+    @Override
     public <S> ServiceRegistration<S> registerService( Class<S> clazz, S service, Dictionary<String, ?> properties )
     {
         return null;
     }
 
 
+    @Override
     public <S> ServiceReference<S> getServiceReference( Class<S> clazz )
     {
         return null;
     }
 
 
+    @Override
     public <S> Collection<ServiceReference<S>> getServiceReferences( Class<S> clazz, String filter )
     {
         return null;
     }
 
 
+    @Override
     public Bundle getBundle( String location )
     {
         return null;
     }
 
 
+    @Override
     public <S> ServiceRegistration<S> registerService(Class<S> clazz, ServiceFactory<S> factory,
             Dictionary<String, ?> properties)
     {
@@ -332,6 +359,7 @@ public class MockBundleContext implements BundleContext
     }
 
 
+    @Override
     public <S> ServiceObjects<S> getServiceObjects(ServiceReference<S> reference)
     {
         return null;

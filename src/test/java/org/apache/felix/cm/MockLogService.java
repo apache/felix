@@ -30,25 +30,29 @@ import org.osgi.service.log.LogService;
 public class MockLogService implements LogService
 {
 
+    @Override
     public void log( int logLevel, String message )
     {
         System.err.print( toMessageLine( logLevel, message ) );
     }
 
 
+    @Override
     public void log( int logLevel, String message, Throwable t )
     {
         log( logLevel, message );
     }
 
 
-    public void log( ServiceReference ref, int logLevel, String message )
+    @Override
+    public void log( @SuppressWarnings("rawtypes") ServiceReference ref, int logLevel, String message )
     {
         log( logLevel, message );
     }
 
 
-    public void log( ServiceReference ref, int logLevel, String message, Throwable t )
+    @Override
+    public void log( @SuppressWarnings("rawtypes") ServiceReference ref, int logLevel, String message, Throwable t )
     {
         log( logLevel, message );
     }
