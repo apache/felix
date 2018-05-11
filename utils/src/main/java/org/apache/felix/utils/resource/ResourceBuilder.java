@@ -85,9 +85,9 @@ public final class ResourceBuilder {
 
     private static ResourceImpl doBuild(ResourceImpl resource, String uri, Map<String, String> headerMap, boolean removeServiceRequirements) throws BundleException {
         // Verify that only manifest version 2 is specified.
-        String manifestVersion = getManifestVersion(headerMap);
-        if (manifestVersion == null || !manifestVersion.equals("2")) {
-            throw new BundleException("Unsupported 'Bundle-ManifestVersion' value: " + manifestVersion);
+        String manifestVersion = getBundleManifestVersion(headerMap);
+        if (!"2".equals(manifestVersion)) {
+            throw new BundleException("Bundle-ManifestVersion must be 2 but is: " + manifestVersion);
         }
 
         //
@@ -777,9 +777,8 @@ public final class ResourceBuilder {
         return capList;
     }
 
-    private static String getManifestVersion(Map<String, String> headerMap) {
-        String manifestVersion = headerMap.get(Constants.BUNDLE_MANIFESTVERSION);
-        return (manifestVersion == null) ? "1" : manifestVersion.trim();
+    private static String getBundleManifestVersion(Map<String, String> headerMap) {
+        return headerMap.get(Constants.BUNDLE_MANIFESTVERSION);
     }
 
     private static ParsedHeaderClause parseBundleSymbolicName(Map<String, String> headerMap) throws BundleException {
