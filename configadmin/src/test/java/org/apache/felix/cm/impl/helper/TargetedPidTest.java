@@ -58,13 +58,13 @@ public class TargetedPidTest
         final String location = "loc:" + symbolicName;
 
         final Bundle b1 = createBundle( symbolicName, version, location );
-        final ServiceReference r1 = createServiceReference( b1, pid );
+        final ServiceReference<?> r1 = createServiceReference( b1, pid );
 
-        final ServiceReference rn = createServiceReference( createBundle( symbolicName + "_", version, location ), pid );
-        final ServiceReference rv = createServiceReference(
+        final ServiceReference<?> rn = createServiceReference( createBundle( symbolicName + "_", version, location ), pid );
+        final ServiceReference<?> rv = createServiceReference(
             createBundle( symbolicName, new Version( "0.2.0" ), location ), pid );
-        final ServiceReference rl = createServiceReference( createBundle( symbolicName, version, location + "_" ), pid );
-        final ServiceReference rnone = createServiceReference( null, pid );
+        final ServiceReference<?> rl = createServiceReference( createBundle( symbolicName, version, location + "_" ), pid );
+        final ServiceReference<?> rnone = createServiceReference( null, pid );
 
         final TargetedPID p1 = new TargetedPID( String.format( "%s", pid ) );
 
@@ -85,13 +85,13 @@ public class TargetedPidTest
         final String location = "loc:" + symbolicName;
 
         final Bundle b1 = createBundle( symbolicName, version, location );
-        final ServiceReference r1 = createServiceReference( b1, pid );
+        final ServiceReference<?> r1 = createServiceReference( b1, pid );
 
-        final ServiceReference rn = createServiceReference( createBundle( symbolicName + "_", version, location ), pid );
-        final ServiceReference rv = createServiceReference(
+        final ServiceReference<?> rn = createServiceReference( createBundle( symbolicName + "_", version, location ), pid );
+        final ServiceReference<?> rv = createServiceReference(
             createBundle( symbolicName, new Version( "0.2.0" ), location ), pid );
-        final ServiceReference rl = createServiceReference( createBundle( symbolicName, version, location + "_" ), pid );
-        final ServiceReference rnone = createServiceReference( null, pid );
+        final ServiceReference<?> rl = createServiceReference( createBundle( symbolicName, version, location + "_" ), pid );
+        final ServiceReference<?> rnone = createServiceReference( null, pid );
 
         final TargetedPID p1 = new TargetedPID( String.format( "%s|%s", pid, symbolicName ) );
 
@@ -112,13 +112,13 @@ public class TargetedPidTest
         final String location = "loc:" + symbolicName;
 
         final Bundle b1 = createBundle( symbolicName, version, location );
-        final ServiceReference r1 = createServiceReference( b1, pid );
+        final ServiceReference<?> r1 = createServiceReference( b1, pid );
 
-        final ServiceReference rn = createServiceReference( createBundle( symbolicName + "_", version, location ), pid );
-        final ServiceReference rv = createServiceReference(
+        final ServiceReference<?> rn = createServiceReference( createBundle( symbolicName + "_", version, location ), pid );
+        final ServiceReference<?> rv = createServiceReference(
             createBundle( symbolicName, new Version( "0.2.0" ), location ), pid );
-        final ServiceReference rl = createServiceReference( createBundle( symbolicName, version, location + "_" ), pid );
-        final ServiceReference rnone = createServiceReference( null, pid );
+        final ServiceReference<?> rl = createServiceReference( createBundle( symbolicName, version, location + "_" ), pid );
+        final ServiceReference<?> rnone = createServiceReference( null, pid );
 
         final TargetedPID p1 = new TargetedPID( String.format( "%s|%s|%s", pid, symbolicName, version ) );
 
@@ -140,13 +140,13 @@ public class TargetedPidTest
         final String location = "loc:" + symbolicName;
 
         final Bundle b1 = createBundle( symbolicName, version, location );
-        final ServiceReference r1 = createServiceReference( b1, pid );
+        final ServiceReference<?> r1 = createServiceReference( b1, pid );
 
-        final ServiceReference rn = createServiceReference( createBundle( symbolicName + "_", version, location ), pid );
-        final ServiceReference rv = createServiceReference(
+        final ServiceReference<?> rn = createServiceReference( createBundle( symbolicName + "_", version, location ), pid );
+        final ServiceReference<?> rv = createServiceReference(
             createBundle( symbolicName, new Version( "0.2.0" ), location ), pid );
-        final ServiceReference rl = createServiceReference( createBundle( symbolicName, version, location + "_" ), pid );
-        final ServiceReference rnone = createServiceReference( null, pid );
+        final ServiceReference<?> rl = createServiceReference( createBundle( symbolicName, version, location + "_" ), pid );
+        final ServiceReference<?> rnone = createServiceReference( null, pid );
 
         final TargetedPID p1 = new TargetedPID( String.format( "%s|%s|%s|%s", pid, symbolicName, version, location ) );
 
@@ -180,7 +180,7 @@ public class TargetedPidTest
 
     ServiceReference<?> createServiceReference( final Bundle bundle, final Object pids )
     {
-        return new MockServiceReference()
+        return new MockServiceReference<Object>()
         {
             @Override
             public Bundle getBundle()

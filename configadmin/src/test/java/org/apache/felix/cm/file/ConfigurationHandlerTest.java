@@ -51,7 +51,8 @@ public class ConfigurationHandlerTest {
     @Test
     public void testComments() throws IOException
     {
-        final Dictionary dict = ConfigurationHandler.read(new ByteArrayInputStream(CONFIG.getBytes("UTF-8")));
+        @SuppressWarnings("unchecked")
+        final Dictionary<String, Object> dict = ConfigurationHandler.read(new ByteArrayInputStream(CONFIG.getBytes("UTF-8")));
         Assert.assertEquals(2, dict.size());
         Assert.assertEquals(VAL_1, dict.get(PAR_1));
         Assert.assertEquals(VAL_2, dict.get(PAR_2).toString());
@@ -72,7 +73,7 @@ public class ConfigurationHandlerTest {
     public void test_writeEmptyCollection() throws IOException {
         OutputStream out = new ByteArrayOutputStream();
         Dictionary< String, Object> properties = new Hashtable<>();
-        properties.put(SERVICE_PID , new ArrayList());
+        properties.put(SERVICE_PID , new ArrayList<String>());
         ConfigurationHandler.write(out, properties);
         String entry = new String(((ByteArrayOutputStream)out).toByteArray(),"UTF-8");
         Assert.assertEquals("service.pid=( \\\r\n)\r\n", entry);
@@ -82,10 +83,9 @@ public class ConfigurationHandlerTest {
     public void test_writeCollection() throws IOException {
         OutputStream out = new ByteArrayOutputStream();
         Dictionary< String, Object> properties = new Hashtable<>();
-        List list = new ArrayList<String>(){{
-            add("foo");
-            add("bar");
-        }};
+        List<String> list = new ArrayList<>();
+        list.add("foo");
+        list.add("bar");
 
         properties.put(SERVICE_PID , list);
         ConfigurationHandler.write(out, properties);
@@ -197,7 +197,8 @@ public class ConfigurationHandlerTest {
     public void test_readArray() throws IOException {
         String entry = "service.pid=[ \\\r\n  \"foo\", \\\r\n  \"bar\", \\\r\n  ]\r\n";
         InputStream stream = new ByteArrayInputStream(entry.getBytes(StandardCharsets.UTF_8));
-        Dictionary dictionary = ConfigurationHandler.read(stream);
+        @SuppressWarnings("unchecked")
+        Dictionary<String, Object> dictionary = ConfigurationHandler.read(stream);
         Assert.assertEquals(1, dictionary.size());
         Assert.assertArrayEquals(new String [] {"foo", "bar"}, (String [])dictionary.get(SERVICE_PID));
     }
@@ -206,21 +207,22 @@ public class ConfigurationHandlerTest {
     public void test_readEmptyCollection() throws IOException {
         String entry = "service.pid=( \\\r\n)\r\n";
         InputStream stream = new ByteArrayInputStream(entry.getBytes(StandardCharsets.UTF_8));
-        Dictionary dictionary = ConfigurationHandler.read(stream);
+        @SuppressWarnings("unchecked")
+        Dictionary<String, Object> dictionary = ConfigurationHandler.read(stream);
         Assert.assertEquals(1, dictionary.size());
-        Assert.assertEquals(new ArrayList(), dictionary.get(SERVICE_PID));
+        Assert.assertEquals(new ArrayList<String>(), dictionary.get(SERVICE_PID));
     }
 
     @Test
     public void test_readCollection() throws IOException {
         String entry = "service.pid=( \\\r\n  \"foo\", \\\r\n  \"bar\", \\\r\n)\r\n";
         InputStream stream = new ByteArrayInputStream(entry.getBytes(StandardCharsets.UTF_8));
-        Dictionary dictionary = ConfigurationHandler.read(stream);
+        @SuppressWarnings("unchecked")
+        Dictionary<String, Object> dictionary = ConfigurationHandler.read(stream);
         Assert.assertEquals(1, dictionary.size());
-        List list = new ArrayList<String>(){{
-            add("foo");
-            add("bar");
-        }};
+        List<String> list = new ArrayList<>();
+        list.add("foo");
+        list.add("bar");
         Assert.assertEquals(list, dictionary.get(SERVICE_PID));
     }
 
@@ -228,7 +230,8 @@ public class ConfigurationHandlerTest {
     public void test_readSimpleString() throws IOException {
         String entry = "service.pid=\"com.adobe.granite.foo.Bar\"\r\n";
         InputStream stream = new ByteArrayInputStream(entry.getBytes(StandardCharsets.UTF_8));
-        Dictionary dictionary = ConfigurationHandler.read(stream);
+        @SuppressWarnings("unchecked")
+        Dictionary<String, Object> dictionary = ConfigurationHandler.read(stream);
         Assert.assertEquals(1, dictionary.size());
         Assert.assertEquals( "com.adobe.granite.foo.Bar", dictionary.get(SERVICE_PID));
     }
@@ -237,7 +240,8 @@ public class ConfigurationHandlerTest {
     public void test_readSimpleStrings() throws IOException {
         String entry = "service.pid=\"com.adobe.granite.foo.Bar\"\r\nfoo.bar=\"com.adobe.granite.foo.Baz\"\r\n";
         InputStream stream = new ByteArrayInputStream(entry.getBytes(StandardCharsets.UTF_8));
-        Dictionary dictionary = ConfigurationHandler.read(stream);
+        @SuppressWarnings("unchecked")
+        Dictionary<String, Object> dictionary = ConfigurationHandler.read(stream);
         Assert.assertEquals(2, dictionary.size());
         Assert.assertEquals( "com.adobe.granite.foo.Bar", dictionary.get(SERVICE_PID));
         Assert.assertNotNull(dictionary.get("foo.bar"));
@@ -247,7 +251,8 @@ public class ConfigurationHandlerTest {
     public void test_readInteger() throws IOException {
         String entry = "service.pid=I\"1000\"\r\n";
         InputStream stream = new ByteArrayInputStream(entry.getBytes(StandardCharsets.UTF_8));
-        Dictionary dictionary = ConfigurationHandler.read(stream);
+        @SuppressWarnings("unchecked")
+        Dictionary<String, Object> dictionary = ConfigurationHandler.read(stream);
         Assert.assertEquals(1, dictionary.size());
         Assert.assertEquals( 1000, dictionary.get(SERVICE_PID));
     }
@@ -256,7 +261,8 @@ public class ConfigurationHandlerTest {
     public void test_readLong() throws IOException {
         String entry = "service.pid=L\"1000\"\r\n";
         InputStream stream = new ByteArrayInputStream(entry.getBytes(StandardCharsets.UTF_8));
-        Dictionary dictionary = ConfigurationHandler.read(stream);
+        @SuppressWarnings("unchecked")
+        Dictionary<String, Object> dictionary = ConfigurationHandler.read(stream);
         Assert.assertEquals(1, dictionary.size());
         Assert.assertEquals( 1000L, dictionary.get(SERVICE_PID));
     }
@@ -265,7 +271,8 @@ public class ConfigurationHandlerTest {
     public void test_readFloat() throws IOException {
         String entry = "service.pid=F\"1080452710\"\r\n";
         InputStream stream = new ByteArrayInputStream(entry.getBytes(StandardCharsets.UTF_8));
-        Dictionary dictionary = ConfigurationHandler.read(stream);
+        @SuppressWarnings("unchecked")
+        Dictionary<String, Object> dictionary = ConfigurationHandler.read(stream);
         Assert.assertEquals(1, dictionary.size());
         Assert.assertEquals( 3.6f, dictionary.get(SERVICE_PID));
     }
@@ -274,7 +281,8 @@ public class ConfigurationHandlerTest {
     public void test_readDouble() throws IOException {
         String entry = "service.pid=D\"4615288898129284301\"\r\n";
         InputStream stream = new ByteArrayInputStream(entry.getBytes(StandardCharsets.UTF_8));
-        Dictionary dictionary = ConfigurationHandler.read(stream);
+        @SuppressWarnings("unchecked")
+        Dictionary<String, Object> dictionary = ConfigurationHandler.read(stream);
         Assert.assertEquals(1, dictionary.size());
         Assert.assertEquals( 3.6d, dictionary.get(SERVICE_PID));
     }
@@ -283,7 +291,8 @@ public class ConfigurationHandlerTest {
     public void test_readByte() throws IOException {
         String entry = "service.pid=X\"10\"\r\n";
         InputStream stream = new ByteArrayInputStream(entry.getBytes(StandardCharsets.UTF_8));
-        Dictionary dictionary = ConfigurationHandler.read(stream);
+        @SuppressWarnings("unchecked")
+        Dictionary<String, Object> dictionary = ConfigurationHandler.read(stream);
         Assert.assertEquals(1, dictionary.size());
         Assert.assertEquals((byte)10 , dictionary.get(SERVICE_PID));
     }
@@ -292,7 +301,8 @@ public class ConfigurationHandlerTest {
     public void test_readShort() throws IOException {
         String entry = "service.pid=S\"10\"\r\n";
         InputStream stream = new ByteArrayInputStream(entry.getBytes(StandardCharsets.UTF_8));
-        Dictionary dictionary = ConfigurationHandler.read(stream);
+        @SuppressWarnings("unchecked")
+        Dictionary<String, Object> dictionary = ConfigurationHandler.read(stream);
         Assert.assertEquals(1, dictionary.size());
         Assert.assertEquals((short)10 , dictionary.get(SERVICE_PID));
     }
@@ -301,7 +311,8 @@ public class ConfigurationHandlerTest {
     public void test_readChar() throws IOException {
         String entry = "service.pid=C\"c\"\r\n";
         InputStream stream = new ByteArrayInputStream(entry.getBytes(StandardCharsets.UTF_8));
-        Dictionary dictionary = ConfigurationHandler.read(stream);
+        @SuppressWarnings("unchecked")
+        Dictionary<String, Object> dictionary = ConfigurationHandler.read(stream);
         Assert.assertEquals(1, dictionary.size());
         Assert.assertEquals('c' , dictionary.get(SERVICE_PID));
     }
@@ -310,7 +321,8 @@ public class ConfigurationHandlerTest {
     public void test_readBoolean() throws IOException {
         String entry = "service.pid=B\"true\"\r\n";
         InputStream stream = new ByteArrayInputStream(entry.getBytes(StandardCharsets.UTF_8));
-        Dictionary dictionary = ConfigurationHandler.read(stream);
+        @SuppressWarnings("unchecked")
+        Dictionary<String, Object> dictionary = ConfigurationHandler.read(stream);
         Assert.assertEquals(1, dictionary.size());
         Assert.assertEquals(true , dictionary.get(SERVICE_PID));
     }
@@ -324,6 +336,7 @@ public class ConfigurationHandlerTest {
             ConfigurationHandler.write(out, dict);
 
             try (final ByteArrayInputStream ins = new ByteArrayInputStream(out.toByteArray())) {
+                @SuppressWarnings("unchecked")
                 final Dictionary<String, Object> read = ConfigurationHandler.read(ins);
 
                 Assert.assertNotNull(read.get("key"));

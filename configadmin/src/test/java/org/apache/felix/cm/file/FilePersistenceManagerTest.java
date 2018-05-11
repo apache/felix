@@ -19,6 +19,11 @@
 package org.apache.felix.cm.file;
 
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
@@ -31,26 +36,24 @@ import java.util.Enumeration;
 import java.util.Hashtable;
 import java.util.Vector;
 
-import junit.framework.Assert;
-import junit.framework.TestCase;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
 
-
-public class FilePersistenceManagerTest extends TestCase
+public class FilePersistenceManagerTest
 {
     private File file = new File( System.getProperty( "java.io.tmpdir" ), "config" );
 
     private FilePersistenceManager fpm;
 
-
-    protected void setUp() throws Exception
+    @Before
+    public void setUp() throws Exception
     {
-        super.setUp();
-
         fpm = new FilePersistenceManager( file.getAbsolutePath() );
     }
 
-
-    protected void tearDown() throws Exception
+    @After
+    public void tearDown() throws Exception
     {
         File[] children = file.listFiles();
         for ( int i = 0; children != null && i < children.length; i++ )
@@ -58,11 +61,9 @@ public class FilePersistenceManagerTest extends TestCase
             children[i].delete();
         }
         file.delete();
-
-        super.tearDown();
     }
 
-
+    @Test
     public void testPidPlain()
     {
         assertEquals( "plain", fpm.encodePid( "plain" ) );
@@ -75,6 +76,7 @@ public class FilePersistenceManagerTest extends TestCase
             fpm.encodePid( "encode/ % /path" ) );
     }
 
+    @Test
     public void testPidEncodingCollision() {
         // assert a == encode(a) ==> encode(a) == encode(encode(a))
         final String plain = "plain";
@@ -91,6 +93,7 @@ public class FilePersistenceManagerTest extends TestCase
         assertFalse( encode.equals( fpm.encodePid( fpm.encodePid( encode ) ) ) );
     }
 
+    @Test
     public void testPidDeviceNameEncodingWindows()  {
         // assert proper encoding of windows device file names (FELIX-4302)
         String oldOsName = System.getProperty( "os.name" );
@@ -110,6 +113,7 @@ public class FilePersistenceManagerTest extends TestCase
         }
     }
 
+    @Test
     public void testPidDeviceNameEncodingNonWindows()  {
         // assert no encoding of windows device file names (FELIX-4302)
         String oldOsName = System.getProperty( "os.name" );
@@ -129,12 +133,14 @@ public class FilePersistenceManagerTest extends TestCase
         }
     }
 
+    @Test
     public void testCreateDir()
     {
         assertTrue( file.isDirectory() );
     }
 
 
+    @Test
     public void testSimple() throws IOException
     {
         check( "String", "String Value" );
@@ -149,6 +155,7 @@ public class FilePersistenceManagerTest extends TestCase
     }
 
 
+    @Test
     public void testQuoting() throws IOException
     {
         check( "QuotingSeparators", "\\()[]{}.,=\"\"''" );
@@ -158,6 +165,7 @@ public class FilePersistenceManagerTest extends TestCase
     }
 
 
+    @Test
     public void testArray() throws IOException
     {
         check( "StringArray", new String[]
@@ -169,6 +177,7 @@ public class FilePersistenceManagerTest extends TestCase
     }
 
 
+    @Test
     public void testEmptyArray() throws IOException
     {
         check( "StringArray", new String[0] );
@@ -178,24 +187,27 @@ public class FilePersistenceManagerTest extends TestCase
     }
 
 
+    @Test
     public void testVector() throws IOException
     {
-        check( "StringVector", new Vector( Arrays.asList( new String[]
+        check( "StringVector", new Vector<>( Arrays.asList( new String[]
                                                                      { "one", "two", "three" } ) ) );
-        check( "IntegerVector", new Vector( Arrays.asList( new Integer[]
+        check( "IntegerVector", new Vector<>( Arrays.asList( new Integer[]
                                                                        { new Integer( 0 ), new Integer( 1 ), new Integer( 2 ) } ) ) );
     }
 
 
+    @Test
     public void testEmptyVector() throws IOException
     {
-        check( "StringArray", new Vector() );
-        check( "IntArray", new Vector() );
-        check( "CharArray", new Vector() );
-        check( "ShortArray", new Vector() );
+        check( "StringArray", new Vector<String>() );
+        check( "IntArray", new Vector<Integer>() );
+        check( "CharArray", new Vector<Character>() );
+        check( "ShortArray", new Vector<Short>() );
     }
 
 
+    @Test
     public void testList() throws IOException
     {
         check( "StringList", Arrays.asList( new String[]
@@ -205,18 +217,20 @@ public class FilePersistenceManagerTest extends TestCase
     }
 
 
+    @Test
     public void testEmptyList() throws IOException
     {
-        check( "StringArray", new ArrayList(0) );
-        check( "IntArray", new ArrayList(0) );
-        check( "CharArray", new ArrayList(0) );
-        check( "ShortArray", new ArrayList(0) );
+        check( "StringArray", new ArrayList<String>(0) );
+        check( "IntArray", new ArrayList<Integer>(0) );
+        check( "CharArray", new ArrayList<Character>(0) );
+        check( "ShortArray", new ArrayList<Short>(0) );
     }
 
 
+    @Test
     public void testMultiValue() throws IOException
     {
-        Dictionary props = new Hashtable();
+        Dictionary<String, Object> props = new Hashtable<>();
         props.put( "String", "String Value" );
         props.put( "Integer", new Integer( 2 ) );
         props.put( "Long", new Long( 2 ) );
@@ -235,6 +249,7 @@ public class FilePersistenceManagerTest extends TestCase
 
     // test configuration keys not conforming to the recommended specification
     // for configuration keys in OSGi CM 1.3, 104.4.2, Configuration Properties
+    @Test
     public void testNonSpecKeys() throws IOException {
         check( "with\ttab", "the value" );
         check( "with blank", "the value" );
@@ -247,6 +262,7 @@ public class FilePersistenceManagerTest extends TestCase
     // Test expected to always succeed on non-Windows platforms. It may
     // break if FilePersistenceManager.encode does not cope properly
     // with Windows device names (see FELIX-4302)
+    @Test
     public void testWindowsSpecialNames() throws IOException
     {
         check( "prefixLPT1", "lpt1" );
@@ -256,9 +272,10 @@ public class FilePersistenceManagerTest extends TestCase
         check( "LPT1", "lpt1" );
     }
 
+    @Test
     public void testKeyOrderInFile() throws IOException
     {
-        Dictionary props = new Hashtable();
+        Dictionary<String, Object> props = new Hashtable<>();
         // The following keys are stored as "c, a, b" in HashTable based
         // due to their hash code
         props.put( "a_first", "a" );
@@ -273,11 +290,11 @@ public class FilePersistenceManagerTest extends TestCase
         try
         {
             String previousLine = breader.readLine();
-            while ( previousLine != null) 
+            while ( previousLine != null)
             {
                 String line = breader.readLine();
                 if (line != null) {
-                    Assert.assertTrue( previousLine.compareTo( line ) < 0 );
+                    assertTrue( previousLine.compareTo( line ) < 0 );
                 }
                 previousLine = line;
             }
@@ -290,26 +307,27 @@ public class FilePersistenceManagerTest extends TestCase
 
     private void check( String name, Object value ) throws IOException
     {
-        Dictionary props = new Hashtable();
+        Dictionary<String, Object> props = new Hashtable<>();
         props.put( name, value );
 
         check( name, props );
     }
 
 
-    private void check( String pid, Dictionary props ) throws IOException
+    private void check( String pid, Dictionary<String, Object> props ) throws IOException
     {
         fpm.store( pid, props );
 
         assertTrue( new File( file, fpm.encodePid( pid ) + ".config" ).exists() );
 
-        Dictionary loaded = fpm.load( pid );
+        @SuppressWarnings("unchecked")
+        Dictionary<String, Object> loaded = fpm.load( pid );
         assertNotNull( loaded );
         assertEquals( props.size(), loaded.size() );
 
-        for ( Enumeration pe = props.keys(); pe.hasMoreElements(); )
+        for ( Enumeration<String> pe = props.keys(); pe.hasMoreElements(); )
         {
-            String key = ( String ) pe.nextElement();
+            String key = pe.nextElement();
             checkValues( props.get( key ), loaded.get( key ) );
         }
     }
