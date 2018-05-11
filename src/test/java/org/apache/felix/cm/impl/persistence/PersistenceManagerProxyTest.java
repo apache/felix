@@ -18,6 +18,8 @@
  */
 package org.apache.felix.cm.impl.persistence;
 
+import static org.junit.Assert.assertEquals;
+
 import java.util.Collection;
 import java.util.Dictionary;
 import java.util.Hashtable;
@@ -25,9 +27,8 @@ import java.util.Hashtable;
 import org.apache.felix.cm.MockNotCachablePersistenceManager;
 import org.apache.felix.cm.PersistenceManager;
 import org.apache.felix.cm.impl.SimpleFilter;
+import org.junit.Test;
 import org.osgi.framework.Constants;
-
-import junit.framework.TestCase;
 
 
 /**
@@ -36,10 +37,10 @@ import junit.framework.TestCase;
  * <p>
  * @see <a href="https://issues.apache.org/jira/browse/FELIX-4930">FELIX-4930</a>
  */
-public class PersistenceManagerProxyTest extends TestCase
+public class PersistenceManagerProxyTest
 {
     @SuppressWarnings({ "rawtypes", "unchecked" })
-    public void test_caching_is_avoided() throws Exception {
+    @Test public void test_caching_is_avoided() throws Exception {
         String pid = "testDefaultPersistenceManager";
         SimpleFilter filter = SimpleFilter.parse("(&(service.pid=" + pid + ")(property1=value1))");
 

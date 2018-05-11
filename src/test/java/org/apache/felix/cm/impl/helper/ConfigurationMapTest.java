@@ -22,9 +22,9 @@ package org.apache.felix.cm.impl.helper;
 import java.util.HashMap;
 import java.util.Map;
 
-import junit.framework.TestCase;
-
 import org.junit.Test;
+
+import junit.framework.TestCase;
 
 
 public class ConfigurationMapTest
@@ -33,7 +33,7 @@ public class ConfigurationMapTest
     @Test
     public void test_accepts()
     {
-        ConfigurationMap holder = new TestConfigurationMap( new String[]
+        ConfigurationMap<String> holder = new TestConfigurationMap( new String[]
             { "a", "b", "c" } );
 
         TestCase.assertTrue( holder.accepts( "a" ) );
@@ -46,7 +46,7 @@ public class ConfigurationMapTest
     @Test
     public void test_isDifferentPids_null_null()
     {
-        ConfigurationMap holder = new TestConfigurationMap( null );
+        ConfigurationMap<String> holder = new TestConfigurationMap( null );
         TestCase.assertFalse( "Expect both pids null to be the same", holder.isDifferentPids( null ) );
     }
 
@@ -54,7 +54,7 @@ public class ConfigurationMapTest
     @Test
     public void test_isDifferentPids_null_notNull()
     {
-        ConfigurationMap holder = new TestConfigurationMap( null );
+        ConfigurationMap<String> holder = new TestConfigurationMap( null );
         TestCase.assertTrue( "Expect not same for one pid not null", holder.isDifferentPids( new String[]
             { "entry" } ) );
     }
@@ -63,7 +63,7 @@ public class ConfigurationMapTest
     @Test
     public void test_isDifferentPids_notNull_null()
     {
-        ConfigurationMap holder = new TestConfigurationMap( new String[]
+        ConfigurationMap<String> holder = new TestConfigurationMap( new String[]
             { "entry" } );
         TestCase.assertTrue( "Expect not same for one pid not null", holder.isDifferentPids( null ) );
     }
@@ -81,13 +81,13 @@ public class ConfigurationMapTest
         final String[] pids30 =
             { "a", "b", "c" };
 
-        final ConfigurationMap holder10 = new TestConfigurationMap( pids10 );
+        final ConfigurationMap<String> holder10 = new TestConfigurationMap( pids10 );
         TestCase.assertFalse( holder10.isDifferentPids( pids10 ) );
         TestCase.assertFalse( holder10.isDifferentPids( pids11 ) );
         TestCase.assertTrue( holder10.isDifferentPids( pids20 ) );
         TestCase.assertTrue( holder10.isDifferentPids( pids30 ) );
 
-        final ConfigurationMap holder20 = new TestConfigurationMap( pids20 );
+        final ConfigurationMap<String> holder20 = new TestConfigurationMap( pids20 );
         TestCase.assertTrue( holder20.isDifferentPids( pids10 ) );
         TestCase.assertTrue( holder20.isDifferentPids( pids11 ) );
         TestCase.assertFalse( holder20.isDifferentPids( pids20 ) );
@@ -110,7 +110,7 @@ public class ConfigurationMapTest
         @Override
         protected Map<String, String> createMap( int size )
         {
-            return new HashMap<String, String>( size );
+            return new HashMap<>( size );
         }
 
 

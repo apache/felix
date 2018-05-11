@@ -18,14 +18,17 @@
  */
 package org.apache.felix.cm.file;
 
+import static org.junit.Assert.assertEquals;
+
 import java.io.File;
 
-import junit.framework.TestCase;
-
 import org.apache.felix.cm.MockBundleContext;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
 import org.osgi.framework.BundleContext;
 
-public class FilePersistenceManagerConstructorTest extends TestCase
+public class FilePersistenceManagerConstructorTest
 {
 
     /** The current working directory for the tests */
@@ -40,26 +43,25 @@ public class FilePersistenceManagerConstructorTest extends TestCase
     /** the previous working directory to return to on tearDown */
     private String oldWorkingDirectory;
 
-    protected void setUp() throws Exception
+    @Before
+    public void setUp() throws Exception
     {
-        super.setUp();
-
         String testDir = new File(TEST_WORKING_DIRECTORY).getAbsolutePath();
 
         oldWorkingDirectory = System.getProperty( "user.dir" );
         System.setProperty( "user.dir", testDir );
     }
 
-    protected void tearDown() throws Exception
+    @After
+    public void tearDown() throws Exception
     {
         System.setProperty( "user.dir", oldWorkingDirectory );
-
-        super.tearDown();
     }
 
     /**
      * Test method for {@link org.apache.felix.cm.file.FilePersistenceManager#FilePersistenceManager(java.lang.String)}.
      */
+    @Test
     public void testFilePersistenceManagerString()
     {
         // variables used in these tests
@@ -86,6 +88,7 @@ public class FilePersistenceManagerConstructorTest extends TestCase
     /**
      * Test method for {@link org.apache.felix.cm.file.FilePersistenceManager#FilePersistenceManager(org.osgi.framework.BundleContext, java.lang.String)}.
      */
+    @Test
     public void testFilePersistenceManagerBundleContextString()
     {
         // variables used in these tests
@@ -181,6 +184,7 @@ public class FilePersistenceManagerConstructorTest extends TestCase
             this.dataArea = dataArea;
         }
 
+        @Override
         public File getDataFile( String path )
         {
             return (dataArea != null) ? new File(dataArea, path) : null;

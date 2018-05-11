@@ -19,6 +19,9 @@
 package org.apache.felix.cm.impl;
 
 
+import static org.junit.Assert.assertSame;
+import static org.junit.Assert.assertTrue;
+
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -27,22 +30,21 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
 
+import org.junit.Test;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceReference;
 import org.osgi.service.cm.ConfigurationPlugin;
 
-import junit.framework.TestCase;
 
-
-public class RankingComparatorTest extends TestCase
+public class RankingComparatorTest
 {
 
     private final Comparator<ServiceReference<?>> srvRank = RankingComparator.SRV_RANKING;
     private final Comparator<ServiceReference<?>> cmRank = RankingComparator.CM_RANKING;
 
 
-    public void test_service_ranking_no_property()
+    @Test public void test_service_ranking_no_property()
     {
         ServiceReference<?> r1 = new MockServiceReference().setProperty( Constants.SERVICE_RANKING, null );
         ServiceReference<?> r2 = new MockServiceReference().setProperty( Constants.SERVICE_RANKING, null );
@@ -74,7 +76,7 @@ public class RankingComparatorTest extends TestCase
     }
 
 
-    public void test_service_ranking_property()
+    @Test public void test_service_ranking_property()
     {
         ServiceReference<?> r1 = new MockServiceReference().setProperty( Constants.SERVICE_RANKING, new Integer( 100 ) );
         ServiceReference<?> r2 = new MockServiceReference().setProperty( Constants.SERVICE_RANKING, new Integer( -100 ) );
@@ -94,7 +96,7 @@ public class RankingComparatorTest extends TestCase
     }
 
 
-    public void test_service_cm_ranking_property()
+    @Test public void test_service_cm_ranking_property()
     {
         ServiceReference<?> r1 = new MockServiceReference()
             .setProperty( ConfigurationPlugin.CM_RANKING, new Integer( 100 ) );
@@ -116,7 +118,7 @@ public class RankingComparatorTest extends TestCase
     }
 
 
-    public void test_service_ranking_sort()
+    @Test public void test_service_ranking_sort()
     {
         ServiceReference<?> r1 = new MockServiceReference().setProperty( Constants.SERVICE_RANKING, new Integer( 100 ) );
         ServiceReference<?> r2 = new MockServiceReference().setProperty( Constants.SERVICE_RANKING, new Integer( -100 ) );
@@ -136,13 +138,13 @@ public class RankingComparatorTest extends TestCase
     }
 
 
-    public void test_service_ranking_set()
+    @Test public void test_service_ranking_set()
     {
         ServiceReference<?> r1 = new MockServiceReference().setProperty( Constants.SERVICE_RANKING, new Integer( 100 ) );
         ServiceReference<?> r2 = new MockServiceReference().setProperty( Constants.SERVICE_RANKING, new Integer( -100 ) );
         ServiceReference<?> r3 = new MockServiceReference().setProperty( Constants.SERVICE_RANKING, null );
 
-        Set<ServiceReference<?>> refSet = new TreeSet<ServiceReference<?>>( srvRank );
+        Set<ServiceReference<?>> refSet = new TreeSet<>( srvRank );
         refSet.add( r1 );
         refSet.add( r2 );
         refSet.add( r3 );
@@ -154,7 +156,7 @@ public class RankingComparatorTest extends TestCase
     }
 
 
-    public void test_service_cm_ranking_sort()
+    @Test public void test_service_cm_ranking_sort()
     {
         ServiceReference<?> r1 = new MockServiceReference()
             .setProperty( ConfigurationPlugin.CM_RANKING, new Integer( 100 ) );
@@ -176,7 +178,7 @@ public class RankingComparatorTest extends TestCase
     }
 
 
-    public void test_service_cm_ranking_set()
+    @Test public void test_service_cm_ranking_set()
     {
         ServiceReference<?> r1 = new MockServiceReference()
             .setProperty( ConfigurationPlugin.CM_RANKING, new Integer( 100 ) );
@@ -184,7 +186,7 @@ public class RankingComparatorTest extends TestCase
             new Integer( -100 ) );
         ServiceReference<?> r3 = new MockServiceReference().setProperty( ConfigurationPlugin.CM_RANKING, null );
 
-        Set<ServiceReference<?>> refSet = new TreeSet<ServiceReference<?>>( cmRank );
+        Set<ServiceReference<?>> refSet = new TreeSet<>( cmRank );
         refSet.add( r1 );
         refSet.add( r2 );
         refSet.add( r3 );
@@ -200,7 +202,7 @@ public class RankingComparatorTest extends TestCase
 
         static long id = 0;
 
-        private final Map<String, Object> props = new HashMap<String, Object>();
+        private final Map<String, Object> props = new HashMap<>();
 
         {
             props.put( Constants.SERVICE_ID, new Long( id ) );
