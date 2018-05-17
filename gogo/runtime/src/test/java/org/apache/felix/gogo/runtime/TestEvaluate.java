@@ -20,17 +20,34 @@ package org.apache.felix.gogo.runtime;
 
 import java.nio.file.Path;
 
-public interface Evaluate
-{
-    Object eval(Token t) throws Exception;
-    
-    Object get(String key);
-    
-    Object put(String key, Object value);
+public class TestEvaluate implements Evaluate {
+    @Override
+    public Object eval(Token t) throws Exception {
+        return null;
+    }
 
-    Object expr(Token t);
+    @Override
+    public Object get(String key) {
+        return null;
+    }
 
-    Path currentDir();
+    @Override
+    public Object put(String key, Object value) {
+        return null;
+    }
 
-    ClassLoader classLoader();
+    @Override
+    public Object expr(Token t) {
+        return null;
+    }
+
+    @Override
+    public Path currentDir() {
+        return null;
+    }
+
+    @Override
+    public ClassLoader classLoader() {
+        return getClass().getClassLoader();
+    }
 }

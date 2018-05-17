@@ -34,11 +34,7 @@ public class ExpanderTest {
 
     @Test
     public void testSubscriptOnArrays() throws  Exception {
-        Evaluate evaluate = new Evaluate() {
-            @Override
-            public Object eval(Token t) {
-                return null;
-            }
+        Evaluate evaluate = new TestEvaluate() {
             @Override
             public Object get(String key) {
                 switch (key) {
@@ -51,18 +47,6 @@ public class ExpanderTest {
                 }
                 return null;
             }
-            @Override
-            public Object put(String key, Object value) {
-                return null;
-            }
-            @Override
-            public Object expr(Token t) {
-                return null;
-            }
-            @Override
-            public Path currentDir() {
-                return null;
-            }
         };
 
         assertEquals(3, Expander.expand("${a[1]}", evaluate));
@@ -72,38 +56,13 @@ public class ExpanderTest {
 
     @Test
     public void testOctalAndHex() throws Exception {
-        Evaluate evaluate = new Evaluate() {
-            @Override
-            public Object eval(Token t) {
-                return null;
-            }
-            @Override
-            public Object get(String key) {
-                return null;
-            }
-            @Override
-            public Object put(String key, Object value) {
-                return null;
-            }
-            @Override
-            public Object expr(Token t) {
-                return null;
-            }
-            @Override
-            public Path currentDir() {
-                return null;
-            }
-        };
+        Evaluate evaluate = new TestEvaluate();
         assertEquals("\033\033", Expander.expand("$'\\033\\u001B'", evaluate));
     }
 
     @Test
     public void testSortingFlags() throws Exception {
-        Evaluate evaluate = new Evaluate() {
-            @Override
-            public Object eval(Token t) {
-                return null;
-            }
+        Evaluate evaluate = new TestEvaluate() {
             @Override
             public Object get(String key) {
                 switch (key) {
@@ -116,18 +75,6 @@ public class ExpanderTest {
                     case "d":
                         return Arrays.asList("foo1", "foo02", "Foo2", "Foo3", "foo20", "foo23");
                 }
-                return null;
-            }
-            @Override
-            public Object put(String key, Object value) {
-                return null;
-            }
-            @Override
-            public Object expr(Token t) {
-                return null;
-            }
-            @Override
-            public Path currentDir() {
                 return null;
             }
         };
@@ -146,24 +93,12 @@ public class ExpanderTest {
     @Test
     public void testGenerateFiles() throws IOException {
         final Path testdir = Paths.get(".").toAbsolutePath().resolve("target/testdir").normalize();
-        Evaluate evaluate = new Evaluate() {
-            @Override
-            public Object eval(Token t) {
-                return null;
-            }
+        Evaluate evaluate = new TestEvaluate() {
             @Override
             public Object get(String key) {
                 if ("HOME".equals(key)) {
                     return testdir.resolve("Users/gogo");
                 }
-                return null;
-            }
-            @Override
-            public Object put(String key, Object value) {
-                return null;
-            }
-            @Override
-            public Object expr(Token t) {
                 return null;
             }
             @Override

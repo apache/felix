@@ -49,6 +49,7 @@ import java.util.TreeSet;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.apache.felix.gogo.runtime.Reflective;
 import org.apache.felix.service.command.Job;
 import org.apache.felix.service.command.Process;
 import org.apache.felix.gogo.runtime.CommandSessionImpl;
@@ -121,7 +122,7 @@ public class Builtin {
         if (name instanceof Class<?>) {
             clazz = (Class<?>) name;
         } else {
-            clazz = loadClass(name.toString());
+            clazz = loadClass(session, name.toString());
         }
 
         for (Constructor<?> c : clazz.getConstructors()) {
@@ -161,17 +162,17 @@ public class Builtin {
                 + " to any of " + Arrays.asList(clazz.getConstructors()));
     }
 
-    private Class<?> loadClass(String name) throws ClassNotFoundException {
+    private Class<?> loadClass(CommandSession session, String name) throws ClassNotFoundException {
         if (!name.contains(".")) {
             for (String p : packages) {
                 String pkg = p + "." + name;
                 try {
-                    return Class.forName(pkg);
+                    return Class.forName(pkg, true, session.classLoader());
                 } catch (ClassNotFoundException e) {
                 }
             }
         }
-        return Class.forName(name);
+        return Class.forName(name, true, session.classLoader());
     }
 
     public void set(CommandSession session, String[] argv) {
