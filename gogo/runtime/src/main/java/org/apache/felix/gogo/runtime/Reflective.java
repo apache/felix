@@ -437,7 +437,8 @@ public final class Reflective
 
         if (type.isArray() && arg instanceof Collection)
         {
-            return ((Collection) arg).toArray();
+            Collection col = (Collection) arg;
+            return col.toArray((Object[]) Array.newInstance(type.getComponentType(), col.size()));
         }
 
         if (type.isAssignableFrom(List.class) && arg.getClass().isArray())
