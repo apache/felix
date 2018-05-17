@@ -33,6 +33,44 @@ import static org.junit.Assert.assertNotNull;
 public class ExpanderTest {
 
     @Test
+    public void testSubscriptOnArrays() throws  Exception {
+        Evaluate evaluate = new Evaluate() {
+            @Override
+            public Object eval(Token t) {
+                return null;
+            }
+            @Override
+            public Object get(String key) {
+                switch (key) {
+                    case "a":
+                        return new Object[] { 1, 3 };
+                    case "b":
+                        return new int[] { 1, 3 };
+                    case "c":
+                        return Arrays.asList(1, 3);
+                }
+                return null;
+            }
+            @Override
+            public Object put(String key, Object value) {
+                return null;
+            }
+            @Override
+            public Object expr(Token t) {
+                return null;
+            }
+            @Override
+            public Path currentDir() {
+                return null;
+            }
+        };
+
+        assertEquals(3, Expander.expand("${a[1]}", evaluate));
+        assertEquals(3, Expander.expand("${b[1]}", evaluate));
+        assertEquals(3, Expander.expand("${c[1]}", evaluate));
+    }
+
+    @Test
     public void testOctalAndHex() throws Exception {
         Evaluate evaluate = new Evaluate() {
             @Override

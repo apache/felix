@@ -19,12 +19,14 @@
 package org.apache.felix.gogo.runtime;
 
 import java.io.IOException;
+import java.lang.reflect.Array;
 import java.nio.file.FileVisitOption;
 import java.nio.file.FileVisitResult;
 import java.nio.file.FileVisitor;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.attribute.BasicFileAttributes;
+import java.util.AbstractList;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -1478,6 +1480,33 @@ public class Expander extends BaseTokenizer
                             int iLeft = Integer.parseInt(sLeft);
                             List list = (List) val;
                             val = list.get(nLeft ? list.size() - 1 - iLeft : iLeft);
+                        }
+                    }
+                    else if (val != null && val.getClass().isArray())
+                    {
+                        if (sLeft.equals("@") || sLeft.equals("*"))
+                        {
+                            Object array = val;
+                            List<Object> l = new AbstractList<Object>()
+                            {
+                                @Override
+                                public Object get(int index)
+                                {
+                                    return Array.get(array, index);
+                                }
+                                @Override
+                                public int size()
+                                {
+                                    return Array.getLength(array);
+                                }
+                            };
+                            val = new ArgList(l);
+                        }
+                        else
+                        {
+                            int iLeft = Integer.parseInt(sLeft);
+                            Object array = val;
+                            val = Array.get(array, iLeft);
                         }
                     }
                     else if (val != null)
