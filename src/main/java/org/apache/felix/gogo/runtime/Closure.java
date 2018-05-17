@@ -751,6 +751,11 @@ public class Closure implements Function, Evaluate
         return isSet(CommandSession.OPTION_NO_GLOB, false) ? null : session().currentDir();
     }
 
+    @Override
+    public ClassLoader classLoader() {
+        return session.classLoader();
+    }
+
     protected boolean isSet(String name, boolean def) {
         Object v = session.get(name);
         if (v instanceof Boolean) {

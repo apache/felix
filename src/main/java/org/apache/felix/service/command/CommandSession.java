@@ -35,6 +35,10 @@ public interface CommandSession extends AutoCloseable
 
     void currentDir(Path path);
 
+    ClassLoader classLoader();
+
+    void classLoader(ClassLoader classLoader);
+
     /**
      * Execute a program in this session.
      *

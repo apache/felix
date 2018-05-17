@@ -54,7 +54,7 @@ public class TestTokenizer
 
     public TestTokenizer()
     {
-        evaluate = new Evaluate()
+        evaluate = new TestEvaluate()
         {
             public Object eval(Token t) {
                 throw new UnsupportedOperationException("eval not implemented.");

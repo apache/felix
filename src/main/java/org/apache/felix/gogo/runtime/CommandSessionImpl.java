@@ -86,6 +86,7 @@ public class CommandSessionImpl implements CommandSession, Converter
     private final ExecutorService executor;
 
     private Path currentDir;
+    private ClassLoader classLoader;
 
     protected CommandSessionImpl(CommandProcessorImpl shell, CommandSessionImpl parent)
     {
@@ -139,6 +140,16 @@ public class CommandSessionImpl implements CommandSession, Converter
     public void currentDir(Path path)
     {
         currentDir = path;
+    }
+
+    public ClassLoader classLoader()
+    {
+        return classLoader != null ? classLoader : getClass().getClassLoader();
+    }
+
+    public void classLoader(ClassLoader classLoader)
+    {
+        this.classLoader = classLoader;
     }
 
     public void close()
@@ -468,6 +479,17 @@ public class CommandSessionImpl implements CommandSession, Converter
 
     public Object doConvert(Class<?> desiredType, Object in)
     {
+        if (desiredType == Class.class)
+        {
+            try
+            {
+                return Class.forName(in.toString(), true, classLoader());
+            }
+            catch (ClassNotFoundException e)
+            {
+                return null;
+            }
+        }
         return processor.doConvert(desiredType, in);
     }
 
