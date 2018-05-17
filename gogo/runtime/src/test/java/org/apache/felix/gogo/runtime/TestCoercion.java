@@ -18,6 +18,9 @@
  */
 package org.apache.felix.gogo.runtime;
 
+import java.util.Arrays;
+import java.util.List;
+
 import org.apache.felix.service.command.CommandSession;
 import org.apache.felix.service.command.Descriptor;
 import org.apache.felix.service.command.Parameter;
@@ -129,6 +132,16 @@ public class TestCoercion extends AbstractParserTest
         return loc;
     }
 
+    public String methodarray(Object[] array)
+    {
+        return Arrays.toString(array);
+    }
+
+    public String methodlist(List<Object> array)
+    {
+        return array.toString();
+    }
+
     @Test
     public void testBestCoercion() throws Exception
     {
@@ -148,6 +161,26 @@ public class TestCoercion extends AbstractParserTest
 
         assertEquals("mymethod '1.10'", "1.10", c.execute("mymethod '1.10'"));
         assertEquals("mymethod 1.10", "1.10", c.execute("mymethod 1.10"));
+    }
+
+    @Test
+    public void testListToArray() throws Exception
+    {
+        Context c = new Context();
+        c.addCommand("methodarray", this);
+        c.set("a", Arrays.asList(1, 3));
+
+        assertEquals("methodarray [1 3]", "[1, 3]", c.execute("methodarray $a"));
+    }
+
+    @Test
+    public void testArrayToList() throws Exception
+    {
+        Context c = new Context();
+        c.addCommand("methodlist", this);
+        c.set("a", new int[] { 1, 3 });
+
+        assertEquals("methodlist [1 3]", "[1, 3]", c.execute("methodlist $a"));
     }
 
     @Descriptor("list all installed bundles")

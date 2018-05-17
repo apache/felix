@@ -23,6 +23,7 @@ import java.lang.reflect.Array;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.util.AbstractList;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -432,6 +433,29 @@ public final class Reflective
         if (type.isAssignableFrom(arg.getClass()))
         {
             return arg;
+        }
+
+        if (type.isArray() && arg instanceof Collection)
+        {
+            return ((Collection) arg).toArray();
+        }
+
+        if (type.isAssignableFrom(List.class) && arg.getClass().isArray())
+        {
+            return new AbstractList<Object>()
+            {
+                @Override
+                public Object get(int index)
+                {
+                    return Array.get(arg, index);
+                }
+
+                @Override
+                public int size()
+                {
+                    return Array.getLength(arg);
+                }
+            };
         }
 
         if (type.isArray())
