@@ -83,7 +83,7 @@ public class Builtin
 
     // FIXME: the "new" command should be provided by runtime,
     // so it can leverage same argument coercion mechanism, used to invoke methods.
-    public Object _new(Object name, Object[] argv) throws Exception
+    public Object _new(CommandSession session, Object name, Object[] argv) throws Exception
     {
         Class<?> clazz = null;
 
@@ -93,7 +93,7 @@ public class Builtin
         }
         else
         {
-            clazz = loadClass(name.toString());
+            clazz = loadClass(session, name.toString());
         }
 
         for (Constructor<?> c : clazz.getConstructors())
@@ -143,7 +143,7 @@ public class Builtin
             + " to any of " + Arrays.asList(clazz.getConstructors()));
     }
 
-    private Class<?> loadClass(String name) throws ClassNotFoundException
+    private Class<?> loadClass(CommandSession session, String name) throws ClassNotFoundException
     {
         if (!name.contains("."))
         {
@@ -152,14 +152,14 @@ public class Builtin
                 String pkg = p + "." + name;
                 try
                 {
-                    return Class.forName(pkg);
+                    return Class.forName(pkg, true, session.classLoader());
                 }
                 catch (ClassNotFoundException e)
                 {
                 }
             }
         }
-        return Class.forName(name);
+        return Class.forName(name, true, session.classLoader());
     }
 
     public void set(CommandSession session, String[] argv) {
