@@ -1,0 +1,130 @@
+<!--
+    Licensed to the Apache Software Foundation (ASF) under one
+    or more contributor license agreements.  See the NOTICE file
+    distributed with this work for additional information
+    regarding copyright ownership.  The ASF licenses this file
+    to you under the Apache License, Version 2.0 (the
+    "License"); you may not use this file except in compliance
+    with the License.  You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+    Unless required by applicable law or agreed to in writing,
+    software distributed under the License is distributed on an
+    "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+    KIND, either express or implied.  See the License for the
+    specific language governing permissions and limitations
+    under the License.
+-->
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+
+    <modelVersion>4.0.0</modelVersion>
+    <parent>
+        <groupId>org.apache.felix</groupId>
+        <artifactId>felix-parent</artifactId>
+        <version>4</version>
+        <relativePath>../pom/pom.xml</relativePath>
+    </parent>
+
+    <name>Apache Felix Logback Reactor</name>
+    <artifactId>org.apache.felix.logback.reactor</artifactId>
+    <version>1.0.0-SNAPSHOT</version>
+    <packaging>pom</packaging>
+
+    <scm>
+        <connection>scm:svn:http://svn.apache.org/repos/asf/felix/trunk/logback</connection>
+        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/felix/trunk/logback</developerConnection>
+        <url>http://svn.apache.org/viewvc/felix/trunk/logback/</url>
+    </scm>
+
+    <properties>
+        <bnd.version>4.0.0</bnd.version>
+    </properties>
+
+    <modules>
+        <module>logback</module>
+        <module>itests</module>
+    </modules>
+
+    <build>
+        <defaultGoal>install</defaultGoal>
+        <pluginManagement>
+            <plugins>
+                <plugin>
+                    <groupId>biz.aQute.bnd</groupId>
+                    <artifactId>bnd-indexer-maven-plugin</artifactId>
+                    <version>${bnd.version}</version>
+                    <executions>
+                        <execution>
+                            <id>index</id>
+                            <goals>
+                                <goal>index</goal>
+                            </goals>
+                        </execution>
+                    </executions>
+                </plugin>
+                <plugin>
+                    <groupId>biz.aQute.bnd</groupId>
+                    <artifactId>bnd-maven-plugin</artifactId>
+                    <version>${bnd.version}</version>
+                    <executions>
+                        <execution>
+                            <id>bnd-process</id>
+                            <goals>
+                                <goal>bnd-process</goal>
+                            </goals>
+                        </execution>
+                    </executions>
+                </plugin>
+                <plugin>
+                    <groupId>biz.aQute.bnd</groupId>
+                    <artifactId>bnd-resolver-maven-plugin</artifactId>
+                    <version>${bnd.version}</version>
+                    <configuration>
+                        <includeOptional>false</includeOptional>
+                    </configuration>
+                    <executions>
+                        <execution>
+                            <id>resolve</id>
+                            <goals>
+                                <goal>resolve</goal>
+                            </goals>
+                            <phase>package</phase>
+                        </execution>
+                    </executions>
+                </plugin>
+                <plugin>
+                    <groupId>biz.aQute.bnd</groupId>
+                    <artifactId>bnd-testing-maven-plugin</artifactId>
+                    <version>${bnd.version}</version>
+                    <executions>
+                        <execution>
+                            <id>testing</id>
+                            <goals>
+                                <goal>testing</goal>
+                            </goals>
+                        </execution>
+                    </executions>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-compiler-plugin</artifactId>
+                    <configuration>
+                        <source>1.8</source>
+                        <target>1.8</target>
+                    </configuration>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-jar-plugin</artifactId>
+                    <version>3.0.1</version>
+                    <configuration>
+                        <archive>
+                            <manifestFile>${project.build.outputDirectory}/META-INF/MANIFEST.MF</manifestFile>
+                        </archive>
+                    </configuration>
+                </plugin>
+            </plugins>
+        </pluginManagement>
+    </build>
+</project>

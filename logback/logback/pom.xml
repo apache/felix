@@ -1,0 +1,180 @@
+<!--
+ Licensed to the Apache Software Foundation (ASF) under one
+ or more contributor license agreements.  See the NOTICE file
+ distributed with this work for additional information
+ regarding copyright ownership.  The ASF licenses this file
+ to you under the Apache License, Version 2.0 (the
+ "License"); you may not use this file except in compliance
+ with the License.  You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+ Unless required by applicable law or agreed to in writing,
+ software distributed under the License is distributed on an
+ "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ KIND, either express or implied.  See the License for the
+ specific language governing permissions and limitations
+ under the License.
+-->
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+    <parent>
+        <groupId>org.apache.felix</groupId>
+        <artifactId>org.apache.felix.logback.reactor</artifactId>
+        <version>1.0.0-SNAPSHOT</version>
+        <relativePath>..</relativePath>
+    </parent>
+
+    <modelVersion>4.0.0</modelVersion>
+    <packaging>bundle</packaging>
+    <name>Apache Felix Logback Backend Integration</name>
+    <description>
+        A simple integration of the OSGi R7 Log (1.4) service to Logback backend.
+    </description>
+    <version>1.0.0-SNAPSHOT</version>
+    <artifactId>org.apache.felix.logback</artifactId>
+
+    <dependencies>
+        <dependency>
+            <groupId>org.osgi</groupId>
+            <artifactId>org.osgi.service.log</artifactId>
+            <version>1.4.0</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>ch.qos.logback</groupId>
+            <artifactId>logback-classic</artifactId>
+            <version>1.2.0</version>
+        </dependency>
+        <dependency>
+            <groupId>org.eclipse.platform</groupId>
+            <artifactId>org.eclipse.osgi</artifactId>
+            <version>3.13.0</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.osgi</groupId>
+            <artifactId>osgi.core</artifactId>
+            <version>6.0.0</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.osgi</groupId>
+            <artifactId>org.osgi.annotation.bundle</artifactId>
+            <version>1.0.0</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.osgi</groupId>
+            <artifactId>org.osgi.annotation.versioning</artifactId>
+            <version>1.1.0</version>
+            <scope>provided</scope>
+        </dependency>
+    </dependencies>
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>com.googlecode.maven-download-plugin</groupId>
+                <artifactId>download-maven-plugin</artifactId>
+                <version>1.4.0</version>
+                <executions>
+                    <execution>
+                        <id>get-equinox-3.13.0</id>
+                        <phase>pre-integration-test</phase>
+                        <goals>
+                            <goal>wget</goal>
+                        </goals>
+                        <configuration>
+                            <url>http://download.eclipse.org/eclipse/updates/4.8milestones/S-4.8RC2-201805240900/plugins/org.eclipse.osgi_3.13.0.v20180409-1500.jar</url>
+                            <outputDirectory>${project.build.directory}/equinox</outputDirectory>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>get-equinox-3.13.0-sources</id>
+                        <phase>pre-integration-test</phase>
+                        <goals>
+                            <goal>wget</goal>
+                        </goals>
+                        <configuration>
+                            <url>http://download.eclipse.org/eclipse/updates/4.8milestones/S-4.8RC2-201805240900/plugins/org.eclipse.osgi.source_3.13.0.v20180409-1500.jar</url>
+                            <outputDirectory>${project.build.directory}/equinox</outputDirectory>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-install-plugin</artifactId>
+                <version>2.5.2</version>
+                <executions>
+                    <execution>
+                        <id>install-equinox</id>
+                        <phase>pre-integration-test</phase>
+                        <goals>
+                            <goal>install-file</goal>
+                        </goals>
+                        <configuration>
+                            <repositoryLayout>default</repositoryLayout>
+                            <groupId>org.eclipse.platform</groupId>
+                            <artifactId>org.eclipse.osgi</artifactId>
+                            <version>3.13.0</version>
+                            <file>${project.build.directory}/equinox/org.eclipse.osgi_3.13.0.v20180409-1500.jar</file>
+                            <packaging>jar</packaging>
+                            <generatePom>true</generatePom>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>install-equinox-sources</id>
+                        <phase>pre-integration-test</phase>
+                        <goals>
+                            <goal>install-file</goal>
+                        </goals>
+                        <configuration>
+                            <repositoryLayout>default</repositoryLayout>
+                            <groupId>org.eclipse.platform</groupId>
+                            <artifactId>org.eclipse.osgi</artifactId>
+                            <version>3.13.0</version>
+                            <file>${project.build.directory}/equinox/org.eclipse.osgi.source_3.13.0.v20180409-1500.jar</file>
+                            <packaging>jar</packaging>
+                            <classifier>sources</classifier>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <configuration>
+                    <source>1.8</source>
+                    <target>1.8</target>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.felix</groupId>
+                <artifactId>maven-bundle-plugin</artifactId>
+                <version>3.5.0</version>
+                <extensions>true</extensions>
+                <configuration>
+                    <instructions>
+                        <Bundle-Activator>org.apache.felix.logback.internal.Activator</Bundle-Activator>
+                        <Import-Package>!org.eclipse.osgi.internal.hookregistry, *</Import-Package>
+                    </instructions>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>rat-maven-plugin</artifactId>
+                <configuration>
+                    <excludeSubProjects>false</excludeSubProjects>
+                    <useEclipseDefaultExcludes>true</useEclipseDefaultExcludes>
+                    <useMavenDefaultExcludes>true</useMavenDefaultExcludes>
+                    <excludes>
+                        <param>doc/*</param>
+                        <param>maven-eclipse.xml</param>
+                        <param>.checkstyle</param>
+                        <param>.externalToolBuilders/*</param>
+                    </excludes>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+</project>

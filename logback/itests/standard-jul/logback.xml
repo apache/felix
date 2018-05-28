@@ -1,0 +1,50 @@
+<!--
+/**
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+-->
+
+<configuration>
+    <!--  scan="true" scanPeriod="5 seconds" debug="true"> -->
+    <contextListener class="ch.qos.logback.classic.jul.LevelChangePropagator">
+        <resetJUL>true</resetJUL>
+    </contextListener>
+
+    <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <!-- <pattern>%d{HH:mm:ss.SSS} [%.15thread] %-5level %logger{36}:%line - %msg%n</pattern> -->
+            <pattern>%-5level %logger{1000}:%line - %msg%n</pattern>
+        </encoder>
+    </appender>
+    <appender name="FILE" class="ch.qos.logback.core.FileAppender">
+        <file>target/test.log</file>
+        <encoder>
+            <pattern>%level|%logger{1000}|%msg%n</pattern>
+        </encoder>
+    </appender>
+
+    <logger name="Events.Bundle" level="ERROR"/>
+    <logger name="Events.Framework" level="ERROR"/>
+    <logger name="Events.Service" level="ERROR"/>
+    <logger name="LogService" level="ERROR"/>
+
+    <logger name="Events.Service.org.apache.logback.itests" level="INFO"/>
+    <logger name="LogService.org.apache.logback.itests" level="OFF"/>
+
+    <logger name="org.apache.felix.logback.test" level="DEBUG" />
+
+    <root level="ERROR">
+        <appender-ref ref="STDOUT" />
+        <appender-ref ref="FILE" />
+    </root>
+</configuration>

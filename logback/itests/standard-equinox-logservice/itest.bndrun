@@ -1,0 +1,23 @@
+-standalone: target/index.xml
+-runee: JavaSE-1.8
+-resolve.effective: resolve, active
+
+-runfw: org.eclipse.osgi
+
+-runrequires:\
+    osgi.identity;filter:='(osgi.identity=ch.qos.logback.classic)',\
+    osgi.identity;filter:='(osgi.identity=org.apache.felix.logback)',\
+    osgi.identity;filter:='(osgi.identity=org.apache.felix.logback.itests.standard.equinox.logservice)'
+
+-runproperties: \
+    eclipse.log.enabled=false,\
+    logback.configurationFile=file:${.}/logback.xml
+
+-runbundles: \
+    org.apache.felix.logback;version='[1.0.0,1.0.1)',\
+    slf4j.api;version='[1.7.25,1.7.26)',\
+    ch.qos.logback.classic;version='[1.2.3,1.2.4)',\
+    ch.qos.logback.core;version='[1.2.3,1.2.4)',\
+    osgi.enroute.hamcrest.wrapper;version='[1.3.0,1.3.1)',\
+    osgi.enroute.junit.wrapper;version='[4.12.0,4.12.1)',\
+    org.apache.felix.logback.itests.standard.equinox.logservice;version='[1.0.0,1.0.1)'
