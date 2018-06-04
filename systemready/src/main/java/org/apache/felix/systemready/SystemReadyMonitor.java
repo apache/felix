@@ -23,6 +23,9 @@ package org.apache.felix.systemready;
  * The aggregated state is the worst state of all checks.
  */
 public interface SystemReadyMonitor  {
+
+    String PID = "org.apache.felix.systemready.SystemReadyMonitor";
+
     /**
      * @return true if aggregated state is GREEN
      */

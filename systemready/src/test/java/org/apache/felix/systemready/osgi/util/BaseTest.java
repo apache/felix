@@ -25,6 +25,11 @@ import static org.ops4j.pax.exam.cm.ConfigurationAdminOptions.newConfiguration;
 
 import javax.inject.Inject;
 
+import org.apache.felix.systemready.SystemReadyMonitor;
+import org.apache.felix.systemready.impl.ComponentsCheck;
+import org.apache.felix.systemready.impl.FrameworkStartCheck;
+import org.apache.felix.systemready.impl.ServicesCheck;
+import org.apache.felix.systemready.impl.servlet.SystemReadyServlet;
 import org.ops4j.pax.exam.CoreOptions;
 import org.ops4j.pax.exam.Option;
 import org.osgi.framework.BundleContext;
@@ -66,19 +71,19 @@ public class BaseTest {
     }
     
     public Option servicesCheckConfig(String... services) {
-        return newConfiguration("ServicesCheck")
+        return newConfiguration(ServicesCheck.PID)
                 .put("services.list", services)
                 .asOption();
     }
     
     public Option componentsCheckConfig(String... components) {
-        return newConfiguration("ComponentsCheck")
+        return newConfiguration(ComponentsCheck.PID)
                 .put("components.list", components)
                 .asOption();
     }
     
     public Option monitorConfig() {
-        return newConfiguration("SystemReadyMonitor")
+        return newConfiguration(SystemReadyMonitor.PID)
                 .put("poll.interval", 50)
                 .asOption();
     }
@@ -91,7 +96,7 @@ public class BaseTest {
     }
 
     public Option servletConfig(String path) {
-        return newConfiguration("SystemReadyServlet")
+        return newConfiguration(SystemReadyServlet.PID)
                 .put("osgi.http.whiteboard.servlet.pattern", path)
                 .asOption();
     }
@@ -121,7 +126,7 @@ public class BaseTest {
     }
 
     public void disableFrameworkStartCheck() {
-        disableComponent("FrameworkStartCheck");
+        disableComponent(FrameworkStartCheck.PID);
     }
 
 }

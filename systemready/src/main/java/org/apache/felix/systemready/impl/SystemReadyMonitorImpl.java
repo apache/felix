@@ -47,7 +47,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 @Component(
-        name = "SystemReadyMonitor"
+        name = SystemReadyMonitor.PID
 )
 @Designate(ocd = SystemReadyMonitorImpl.Config.class)
 public class SystemReadyMonitorImpl implements SystemReadyMonitor {

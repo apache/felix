@@ -29,6 +29,7 @@ import javax.inject.Inject;
 
 import org.apache.felix.systemready.Status;
 import org.apache.felix.systemready.SystemReadyCheck;
+import org.apache.felix.systemready.impl.ComponentsCheck;
 import org.apache.felix.systemready.osgi.examples.CompWithoutService2;
 import org.apache.felix.systemready.osgi.util.BaseTest;
 import org.apache.felix.systemready.osgi.examples.CompWithoutService;
@@ -46,7 +47,7 @@ import org.osgi.service.cm.ConfigurationAdmin;
 public class ComponentsCheckTest extends BaseTest {
 
     @Inject
-    @Filter("(component.name=ComponentsCheck)")
+    @Filter("(component.name=" + ComponentsCheck.PID + ")")
     SystemReadyCheck check;
     
     @Inject
