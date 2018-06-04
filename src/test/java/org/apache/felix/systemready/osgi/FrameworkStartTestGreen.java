@@ -25,6 +25,7 @@ import javax.inject.Inject;
 
 import org.apache.felix.systemready.Status;
 import org.apache.felix.systemready.SystemReadyCheck;
+import org.apache.felix.systemready.impl.FrameworkStartCheck;
 import org.apache.felix.systemready.osgi.util.BaseTest;
 import org.junit.Assert;
 import org.junit.Test;
@@ -35,17 +36,17 @@ import org.ops4j.pax.exam.junit.PaxExam;
 import org.ops4j.pax.exam.util.Filter;
 
 @RunWith(PaxExam.class)
-public class FrameworkStartTest extends BaseTest {
+public class FrameworkStartTestGreen extends BaseTest {
 
     @Inject
-    @Filter("(component.name=FrameworkStartCheck)")
+    @Filter("(component.name=" + FrameworkStartCheck.PID + ")")
     SystemReadyCheck check;
 
     @Configuration
     public Option[] configuration() {
         return new Option[] {
                 baseConfiguration(),
-                newConfiguration("FrameworkStartCheck")
+                newConfiguration(FrameworkStartCheck.PID)
                         .asOption()
         };
     }

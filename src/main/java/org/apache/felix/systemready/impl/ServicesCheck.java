@@ -40,11 +40,13 @@ import org.osgi.service.metatype.annotations.Designate;
 import org.osgi.service.metatype.annotations.ObjectClassDefinition;
 
 @Component(
-        name = "ServicesCheck",
+        name = ServicesCheck.PID,
         configurationPolicy = ConfigurationPolicy.REQUIRE
 )
 @Designate(ocd=ServicesCheck.Config.class)
 public class ServicesCheck implements SystemReadyCheck {
+
+    public static final String PID = "org.apache.felix.systemready.impl.ServicesCheck";
 
     @ObjectClassDefinition(
             name="Services Registered System Ready Check",

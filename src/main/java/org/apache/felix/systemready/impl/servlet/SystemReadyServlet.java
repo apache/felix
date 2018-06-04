@@ -46,7 +46,7 @@ import org.slf4j.LoggerFactory;
  * Provide aggregated ready information using a servlet
  */
 @Component(
-        name = "SystemReadyServlet",
+        name = SystemReadyServlet.PID,
         service = Servlet.class,
         property = {
                 HttpWhiteboardConstants.HTTP_WHITEBOARD_SERVLET_PATTERN + "=" + "/system/console/ready",
@@ -55,6 +55,9 @@ import org.slf4j.LoggerFactory;
 )
 @Designate(ocd=SystemReadyServlet.Config.class)
 public class SystemReadyServlet extends HttpServlet {
+
+    public static final String PID = "org.apache.felix.systemready.impl.servlet.SystemReadyServlet";
+
     private static final long serialVersionUID = 1L;
 
     @ObjectClassDefinition(

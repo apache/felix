@@ -18,50 +18,42 @@
  */
 package org.apache.felix.systemready.osgi;
 
-import static org.hamcrest.Matchers.containsString;
-import static org.hamcrest.Matchers.equalTo;
-import static org.hamcrest.Matchers.is;
-import static org.junit.Assert.assertThat;
-
-import javax.inject.Inject;
-
-import org.apache.felix.systemready.SystemReadyCheck;
 import org.apache.felix.systemready.Status;
-import org.apache.felix.systemready.Status.State;
-import org.apache.felix.systemready.impl.ServicesCheck;
+import org.apache.felix.systemready.SystemReadyCheck;
+import org.apache.felix.systemready.impl.FrameworkStartCheck;
 import org.apache.felix.systemready.osgi.util.BaseTest;
+import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.ops4j.pax.exam.Configuration;
 import org.ops4j.pax.exam.Option;
 import org.ops4j.pax.exam.junit.PaxExam;
 import org.ops4j.pax.exam.util.Filter;
-import org.osgi.service.component.runtime.ServiceComponentRuntime;
+
+import javax.inject.Inject;
+
+import static org.ops4j.pax.exam.cm.ConfigurationAdminOptions.newConfiguration;
 
 @RunWith(PaxExam.class)
-public class ServicesCheckTest extends BaseTest {
+public class FrameworkStartTestYellow extends BaseTest {
 
     @Inject
-    @Filter("(component.name=" + ServicesCheck.PID + ")")
+    @Filter("(component.name=" + FrameworkStartCheck.PID + ")")
     SystemReadyCheck check;
 
     @Configuration
     public Option[] configuration() {
         return new Option[] {
                 baseConfiguration(),
-                servicesCheckConfig(Runnable.class.getName(), ServiceComponentRuntime.class.getName()),
+                newConfiguration(FrameworkStartCheck.PID)
+                        .put("target.start.level", 100)
+                        .asOption()
         };
     }
 
     @Test
     public void test() {
         Status status = check.getStatus();
-        assertThat(status.getState(),  is(State.YELLOW));
-        assertThat(status.getDetails(), containsString("Missing service without matching DS component: java.lang.Runnable"));
-        context.registerService(Runnable.class, () -> {}, null);
-        Status status2 = check.getStatus();
-        System.out.println(status2);
-        assertThat(status2.getState(),  is(State.GREEN));
-        assertThat(status2.getDetails(), equalTo(""));
+        Assert.assertEquals(Status.State.YELLOW, status.getState());
     }
 }

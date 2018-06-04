@@ -39,11 +39,13 @@ import org.osgi.service.metatype.annotations.Designate;
 import org.osgi.service.metatype.annotations.ObjectClassDefinition;
 
 @Component(
-        name = "ComponentsCheck",
+        name = ComponentsCheck.PID,
         configurationPolicy = ConfigurationPolicy.REQUIRE
 )
 @Designate(ocd=ComponentsCheck.Config.class)
 public class ComponentsCheck implements SystemReadyCheck {
+
+    public static final String PID = "org.apache.felix.systemready.impl.ComponentsCheck";
 
     @ObjectClassDefinition(
             name="DS Components System Ready Check",
