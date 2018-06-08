@@ -136,19 +136,31 @@
     <xsl:template name="service-capability">
         <xsl:param name="interface"/>
         <xsl:param name="attributes" select="''"/>
-        <xsl:value-of select="concat('Provide-Capability: osgi.service;effective:=active;',
-                                         'objectClass=', $interface, ';',
-                                         $attributes,
-                                         $nl)"/>
+        <xsl:choose>
+            <xsl:when test="string-length($attributes)>0">
+                <xsl:value-of select="concat('Provide-Capability: osgi.service;effective:=active;',
+                                         'objectClass=', $interface, ';', $attributes, $nl)"/>
+            </xsl:when>
+            <xsl:otherwise>
+                <xsl:value-of select="concat('Provide-Capability: osgi.service;effective:=active;',
+                                         'objectClass=', $interface, $nl)"/>
+            </xsl:otherwise>
+        </xsl:choose>
     </xsl:template>
 
     <xsl:template name="service-requirement">
         <xsl:param name="interface"/>
         <xsl:param name="attributes" select="''"/>
-        <xsl:value-of select="concat('Require-Capability: osgi.service;effective:=active;',
-                                         'objectClass=', $interface, ';',
-                                         $attributes,
-                                         $nl)"/>
+        <xsl:choose>
+            <xsl:when test="string-length($attributes)>0">
+                <xsl:value-of select="concat('Require-Capability: osgi.service;effective:=active;',
+                                         'objectClass=', $interface, ';', $attributes, $nl)"/>
+            </xsl:when>
+            <xsl:otherwise>
+                <xsl:value-of select="concat('Require-Capability: osgi.service;effective:=active;',
+                                         'objectClass=', $interface, $nl)"/>
+            </xsl:otherwise>
+        </xsl:choose>
     </xsl:template>
 
 </xsl:stylesheet>

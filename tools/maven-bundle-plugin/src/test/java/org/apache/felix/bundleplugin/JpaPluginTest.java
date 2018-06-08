@@ -35,7 +35,7 @@ public class JpaPluginTest {
                         "        <jta-data-source>osgi:service/jdbc/h2DS</jta-data-source>\n" +
                         "    </persistence-unit>\n" +
                         "</persistence>";
-        String expectedReqs = "osgi.extender;osgi.extender=aries.jpa,osgi.service;effective:=active;objectClass=javax.transaction.TransactionManager;";
+        String expectedReqs = "osgi.extender;osgi.extender=aries.jpa,osgi.service;effective:=active;objectClass=javax.transaction.TransactionManager";
         assertTransformation(xmlStr, expectedReqs);
     }
 
@@ -46,7 +46,7 @@ public class JpaPluginTest {
                         "        <jta-data-source>osgi:service/javax.sql.DataSource/(&amp;(db=mydb)(version=3.1))</jta-data-source>\n" +
                         "    </persistence-unit>\n" +
                         "</persistence>";
-        String expectedReqs = "osgi.extender;osgi.extender=aries.jpa,osgi.service;effective:=active;objectClass=javax.sql.DataSource;filter:=\"(&(db=mydb)(version=3.1))\",osgi.service;effective:=active;objectClass=javax.transaction.TransactionManager;";
+        String expectedReqs = "osgi.extender;osgi.extender=aries.jpa,osgi.service;effective:=active;objectClass=javax.transaction.TransactionManager,osgi.service;effective:=active;objectClass=javax.sql.DataSource;filter:=\"(&(db=mydb)(version=3.1))\"";
         assertTransformation(xmlStr, expectedReqs);
     }
 
@@ -68,5 +68,6 @@ public class JpaPluginTest {
         plugin.analyzeJar(analyzer);
 
         assertEquals(expectedReqs, analyzer.getProperty("Require-Capability"));
+
     }
 }
