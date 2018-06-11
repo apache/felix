@@ -68,7 +68,7 @@
 		</dependency>
 		<dependency>
 			<groupId>org.ops4j.pax.exam</groupId>
-			<artifactId>pax-exam-container-native</artifactId>
+			<artifactId>pax-exam-container-forked</artifactId>
 			<version>4.9.2</version>
 			<scope>test</scope>
 		</dependency>
@@ -132,46 +132,6 @@
 
 	<build>
 		<plugins>
-			<plugin>
-				<groupId>biz.aQute.bnd</groupId>
-				<artifactId>bnd-maven-plugin</artifactId>
-			</plugin>
-
-			<plugin>
-				<groupId>org.ops4j.pax.exam</groupId>
-				<artifactId>exam-maven-plugin</artifactId>
-				<version>4.9.2</version>
-				<configuration>
-					<configClass>org.apache.felix.fileinstall.plugins.installer.test.InstallerIntegrationTest</configClass>
-				</configuration>
-				<executions>
-					<execution>
-						<goals>
-							<goal>start-container</goal>
-							<goal>stop-container</goal>
-						</goals>
-					</execution>
-				</executions>
-			</plugin>
-
-			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-failsafe-plugin</artifactId>
-				<version>2.12</version>
-				<executions>
-					<execution>
-						<goals>
-							<goal>integration-test</goal>
-						</goals>
-					</execution>
-				</executions>
-				<configuration>
-					<forkMode>always</forkMode>
-					<parallel>none</parallel>
-					<threadCount>1</threadCount>
-				</configuration>
-			</plugin>
-
 			<!-- Generate a dependency map, used by PAX Exam to find correct bundle versions. -->
 			<plugin>
 				<groupId>org.apache.servicemix.tooling</groupId>
@@ -217,6 +177,23 @@
 									</pluginExecutionFilter>
 									<action>
 										<ignore></ignore>
+									</action>
+								</pluginExecution>
+								<pluginExecution>
+									<pluginExecutionFilter>
+										<groupId>org.apache.maven.plugins</groupId>
+                						<artifactId>maven-antrun-plugin</artifactId>
+										<versionRange>
+											[1.8,)
+										</versionRange>
+										<goals>
+											<goal>
+												run
+											</goal>
+										</goals>
+									</pluginExecutionFilter>
+									<action>
+									    <ignore/>
 									</action>
 								</pluginExecution>
 							</pluginExecutions>
