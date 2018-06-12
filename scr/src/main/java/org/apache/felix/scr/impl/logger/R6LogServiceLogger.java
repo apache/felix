@@ -18,6 +18,7 @@
  */
 package org.apache.felix.scr.impl.logger;
 
+import org.apache.felix.scr.impl.manager.ScrConfiguration;
 import org.osgi.service.log.LogService;
 
 /**
@@ -27,15 +28,18 @@ class R6LogServiceLogger implements InternalLogger
 {
     private final LogService logService;
 
-    public R6LogServiceLogger(final LogService logService)
+    private final ScrConfiguration config;
+
+    public R6LogServiceLogger(final LogService logService, final ScrConfiguration config)
     {
         this.logService = logService;
+        this.config = config;
     }
 
     @Override
     public boolean isLogEnabled(final int level)
     {
-        return true;
+        return config.getLogLevel() >= level;
     }
 
     @SuppressWarnings("deprecation")

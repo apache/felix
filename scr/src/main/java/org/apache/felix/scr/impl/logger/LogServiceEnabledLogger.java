@@ -59,7 +59,7 @@ abstract class LogServiceEnabledLogger extends AbstractLogger
                     if ( logService != null )
                     {
                         hasService = true;
-                        final LogServiceSupport lsl = new LogServiceSupport(bundleContext.getBundle(), logService);
+                        final LogServiceSupport lsl = new LogServiceSupport(bundleContext.getBundle(), logService, config);
                         return lsl;
                     }
                 }
