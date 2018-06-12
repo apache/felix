@@ -34,11 +34,32 @@ class LogServiceSupport
 
     private final Bundle bundle;
 
+    private static boolean checkForLoggerFactory(Class<?> clazz)
+    {
+        while ( clazz != null )
+        {
+            final Class<?>[] is = clazz.getInterfaces();
+            for(final Class<?> c : is)
+            {
+                if ( "org.osgi.service.log.LoggerFactory".equals(c.getName()) )
+                {
+                    return true;
+                }
+                if ( checkForLoggerFactory(c) )
+                {
+                    return true;
+                }
+            }
+            clazz = clazz.getSuperclass();
+        }
+        return false;
+    }
+
     public LogServiceSupport(final Bundle bundle, final Object logService)
     {
         this.logService = (LogService) logService;
         this.bundle = bundle;
-        this.r7Enabled = "org.osgi.service.log.LoggerFactory".equals(this.logService.getClass().getSuperclass().getName());
+        this.r7Enabled = checkForLoggerFactory(this.logService.getClass());
     }
 
     InternalLogger getLogger()
