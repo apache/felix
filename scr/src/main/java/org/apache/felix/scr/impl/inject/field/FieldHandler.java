@@ -513,7 +513,8 @@ public class FieldHandler
                 //??? this resolves which we need.... better way?
                 if ( rawParameter.getServiceObject() == null
                   && handler.fieldExists( rawParameter.getComponentContext().getLogger() )
-                  && (handler.valueType == ValueType.ref_serviceType || handler.valueType == ValueType.ref_tuple ) )
+                  && (handler.valueType == ValueType.ref_serviceType || handler.valueType == ValueType.ref_tuple 
+                      || handler.valueType == ValueType.ref_logger || handler.valueType == ValueType.ref_formatterLogger) )
                 {
                     return rawParameter.getServiceObject(context);
                 }
