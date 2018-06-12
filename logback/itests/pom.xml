@@ -119,7 +119,7 @@
         <dependency>
             <groupId>org.eclipse.platform</groupId>
             <artifactId>org.eclipse.osgi</artifactId>
-            <version>3.13.0</version>
+            <version>${equinox.version}</version>
             <scope>runtime</scope>
         </dependency>
         <dependency>

@@ -22,7 +22,7 @@
     <parent>
         <groupId>org.apache.felix</groupId>
         <artifactId>felix-parent</artifactId>
-        <version>4</version>
+        <version>5</version>
         <relativePath>../pom/pom.xml</relativePath>
     </parent>
 
@@ -39,6 +39,8 @@
 
     <properties>
         <bnd.version>4.0.0</bnd.version>
+        <equinox.p2downloadpath>http://download.eclipse.org/eclipse/updates/4.8milestones/S-4.8RC2-201805240900/plugins/</equinox.p2downloadpath>
+        <equinox.version>3.13.0.v20180409-1500</equinox.version>
     </properties>
 
     <modules>
@@ -47,6 +49,76 @@
     </modules>
 
     <build>
+        <plugins>
+            <plugin>
+                <groupId>com.googlecode.maven-download-plugin</groupId>
+                <artifactId>download-maven-plugin</artifactId>
+                <version>1.4.0</version>
+                <executions>
+                    <execution>
+                        <id>get-equinox-3.13.0</id>
+                        <phase>clean</phase>
+                        <goals>
+                            <goal>wget</goal>
+                        </goals>
+                        <configuration>
+                            <url>${equinox.p2downloadpath}org.eclipse.osgi_${equinox.version}.jar</url>
+                            <outputDirectory>${project.build.directory}/equinox</outputDirectory>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>get-equinox-3.13.0-sources</id>
+                        <phase>clean</phase>
+                        <goals>
+                            <goal>wget</goal>
+                        </goals>
+                        <configuration>
+                            <url>${equinox.p2downloadpath}org.eclipse.osgi.source_${equinox.version}.jar</url>
+                            <outputDirectory>${project.build.directory}/equinox</outputDirectory>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-install-plugin</artifactId>
+                <version>2.5.2</version>
+                <executions>
+                    <execution>
+                        <id>install-equinox</id>
+                        <phase>clean</phase>
+                        <goals>
+                            <goal>install-file</goal>
+                        </goals>
+                        <configuration>
+                            <repositoryLayout>default</repositoryLayout>
+                            <groupId>org.eclipse.platform</groupId>
+                            <artifactId>org.eclipse.osgi</artifactId>
+                            <version>${equinox.version}</version>
+                            <file>${project.build.directory}/equinox/org.eclipse.osgi_${equinox.version}.jar</file>
+                            <packaging>jar</packaging>
+                            <generatePom>true</generatePom>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>install-equinox-sources</id>
+                        <phase>clean</phase>
+                        <goals>
+                            <goal>install-file</goal>
+                        </goals>
+                        <configuration>
+                            <repositoryLayout>default</repositoryLayout>
+                            <groupId>org.eclipse.platform</groupId>
+                            <artifactId>org.eclipse.osgi</artifactId>
+                            <version>${equinox.version}</version>
+                            <file>${project.build.directory}/equinox/org.eclipse.osgi.source_${equinox.version}.jar</file>
+                            <packaging>jar</packaging>
+                            <classifier>sources</classifier>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
         <defaultGoal>install</defaultGoal>
         <pluginManagement>
             <plugins>
