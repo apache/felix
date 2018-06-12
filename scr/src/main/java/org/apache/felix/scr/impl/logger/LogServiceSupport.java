@@ -18,6 +18,7 @@
  */
 package org.apache.felix.scr.impl.logger;
 
+import org.apache.felix.scr.impl.manager.ScrConfiguration;
 import org.osgi.framework.Bundle;
 import org.osgi.service.log.LogService;
 
@@ -33,6 +34,8 @@ class LogServiceSupport
     private final LogService logService;
 
     private final Bundle bundle;
+
+    private final ScrConfiguration config;
 
     private static boolean checkForLoggerFactory(Class<?> clazz)
     {
@@ -55,11 +58,12 @@ class LogServiceSupport
         return false;
     }
 
-    public LogServiceSupport(final Bundle bundle, final Object logService)
+    public LogServiceSupport(final Bundle bundle, final Object logService, final ScrConfiguration config)
     {
         this.logService = (LogService) logService;
         this.bundle = bundle;
         this.r7Enabled = checkForLoggerFactory(this.logService.getClass());
+        this.config = config;
     }
 
     InternalLogger getLogger()
@@ -68,7 +72,7 @@ class LogServiceSupport
         {
             return new R7LogServiceLogger(this.bundle, this.logService, null);
         }
-        return new R6LogServiceLogger(this.logService);
+        return new R6LogServiceLogger(this.logService, config);
     }
 
     InternalLogger getLogger(final String className)
@@ -77,6 +81,6 @@ class LogServiceSupport
         {
             return new R7LogServiceLogger(this.bundle, this.logService, className);
         }
-        return new R6LogServiceLogger(this.logService);
+        return new R6LogServiceLogger(this.logService, config);
     }
 }
