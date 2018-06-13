@@ -38,6 +38,11 @@ class R6LogServiceLogger implements InternalLogger
         return true;
     }
 
+    @Override
+    public boolean checkScrConfig() {
+        return true;
+    }
+
     @SuppressWarnings("deprecation")
     @Override
     public void log(final int level, final String message, final Throwable ex)

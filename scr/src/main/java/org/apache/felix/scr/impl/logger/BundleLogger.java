@@ -40,6 +40,10 @@ public class BundleLogger extends LogServiceEnabledLogger
     {
         return new InternalLogger()
         {
+            @Override
+            public boolean checkScrConfig() {
+                return parent.getLogger().checkScrConfig();
+            }
 
             @Override
             public void log(final int level, final String message, final Throwable ex)

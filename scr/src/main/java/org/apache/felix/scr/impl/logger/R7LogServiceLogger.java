@@ -36,6 +36,11 @@ class R7LogServiceLogger implements InternalLogger
     }
 
     @Override
+    public boolean checkScrConfig() {
+        return false;
+    }
+
+    @Override
     public boolean isLogEnabled(final int level)
     {
         switch ( level )
