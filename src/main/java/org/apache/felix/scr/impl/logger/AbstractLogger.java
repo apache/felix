@@ -68,8 +68,9 @@ public abstract class AbstractLogger
      */
     public boolean isLogEnabled(final int level)
     {
-        return config.getLogLevel() >= level
-               && getLogger().isLogEnabled(level);
+        final InternalLogger l = getLogger();
+        return (!l.checkScrConfig() || config.getLogLevel() >= level)
+               && l.isLogEnabled(level);
     }
 
     /**

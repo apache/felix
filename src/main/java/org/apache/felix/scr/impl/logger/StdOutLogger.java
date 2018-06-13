@@ -27,6 +27,12 @@ import org.osgi.service.log.LogService;
  */
 class StdOutLogger implements InternalLogger
 {
+
+    @Override
+    public boolean checkScrConfig() {
+        return true;
+    }
+
     @Override
     public void log(final int level, final String message, final Throwable ex)
     {

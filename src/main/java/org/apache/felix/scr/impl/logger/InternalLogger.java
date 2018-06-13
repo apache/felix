@@ -23,4 +23,6 @@ interface InternalLogger {
     void log(int level, String message, Throwable exception);
 
     boolean isLogEnabled(int level);
+
+    boolean checkScrConfig();
 }
