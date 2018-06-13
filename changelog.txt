@@ -1,23 +1,31 @@
+Changes in 2.1.2
+----------------
+** Bug
+    * [FELIX-5866] - SCR does not respect the log level set in LoggerAdmin
+    * [FELIX-5865] - SCR r7 logging support doesn't work on equinox framework
+    * [FELIX-5867] - Reference field of type Logger for service LoggerFactory is always null
+
+
 Changes in 2.1.0
 ----------------
 ** Improvement
-    * [FELIX-5354] Implement Declarative Service Updates for OSGi R7
-    * [FELIX-5454] Service properties for ComponentFactory (OSGi R7)
-    * [FELIX-5455] Constructor Injection (OSGi R7)
-    * [FELIX-5456] Field injection of component activation objects (OSGi R7)
-    * [FELIX-5457] Logger support (OSGi R7)
-    * [FELIX-5458] Improved ConfigurationPlugin Support (OSGi R7)
-    * [FELIX-5460] DTO Updates (OSGi R7)
-    * [FELIX-5557] Updates to section 112.8.2.2 Coercing Component Property Values (OSGi R7)
-    * [FELIX-5559] Add change count property to runtime service (OSGi R7)
-    * [FELIX-5590] Add support for single value annotations and new key mapping (OSGi R7)
-    * [FELIX-5695] Use Java 7 as base version
-    * [FELIX-5696] Separate metatype provider from managed service
+    * [FELIX-5354] - Implement Declarative Service Updates for OSGi R7
+    * [FELIX-5454] - Service properties for ComponentFactory (OSGi R7)
+    * [FELIX-5455] - Constructor Injection (OSGi R7)
+    * [FELIX-5456] - Field injection of component activation objects (OSGi R7)
+    * [FELIX-5457] - Logger support (OSGi R7)
+    * [FELIX-5458] - Improved ConfigurationPlugin Support (OSGi R7)
+    * [FELIX-5460] - DTO Updates (OSGi R7)
+    * [FELIX-5557] - Updates to section 112.8.2.2 Coercing Component Property Values (OSGi R7)
+    * [FELIX-5559] - Add change count property to runtime service (OSGi R7)
+    * [FELIX-5590] - Add support for single value annotations and new key mapping (OSGi R7)
+    * [FELIX-5695] - Use Java 7 as base version
+    * [FELIX-5696] - Separate metatype provider from managed service
 ** Bug
-    * [FELIX-5769] SCR should not bind prototype_required reference to bundle scope service
-    * [FELIX-5775] Service properties not updated for lazy service when configuration changes
-    * [FELIX-5507] ConfigurationAdmin might not be visible to SCR implementation
-    * [FELIX-5543] Component property types must implement java.lang.annotation.Annotation methods properly
+    * [FELIX-5769] - SCR should not bind prototype_required reference to bundle scope service
+    * [FELIX-5775] - Service properties not updated for lazy service when configuration changes
+    * [FELIX-5507] - ConfigurationAdmin might not be visible to SCR implementation
+    * [FELIX-5543] - Component property types must implement java.lang.annotation.Annotation methods properly
 
 
 Changes from 2.0.12 to 2.0.14
@@ -31,131 +39,131 @@ Changes from 2.0.12 to 2.0.14
 Changes from 2.0.10 to 2.0.12
 -----------------------------
 ** Bug
-    * [FELIX-5416] Endless loop throwing InterruptedException when shutting down framework
-    * [FELIX-5627] Class loading issues while finding fields causes an NPE
-    * [FELIX-5628] Global lock in FieldHandler.NotResolved::resolve method can cause deadlock
+    * [FELIX-5416] - Endless loop throwing InterruptedException when shutting down framework
+    * [FELIX-5627] - Class loading issues while finding fields causes an NPE
+    * [FELIX-5628] - Global lock in FieldHandler.NotResolved::resolve method can cause deadlock
 
 
 Changes from 2.0.8 to 2.0.10
 ----------------------------
 ** Improvement
-    * [FELIX-5568] SCR contains compact3 profile code
+    * [FELIX-5568] - SCR contains compact3 profile code
 ** Bug
-    * [FELIX-5572] Reference target filter fails when using field strategy for multiple cardinality reference with multiple component instances
-    * [FELIX-5615] Global lock in BaseMethod.NotResolved::resolve method can cause deadlock
-    * [FELIX-5613] SCR bundle fails to start without Config Admin
+    * [FELIX-5572] - Reference target filter fails when using field strategy for multiple cardinality reference with multiple component instances
+    * [FELIX-5615] - Global lock in BaseMethod.NotResolved::resolve method can cause deadlock
+    * [FELIX-5613] - SCR bundle fails to start without Config Admin
 
 
 Changes from 2.0.6 to 2.0.8
 ---------------------------
 ** Improvement
-    * [FELIX-5459] Use Java 6 as minimum version
-    * [FELIX-5374] Reduce severity of log message from SCR when there is no metatype
-    * [FELIX-5474] Do not call no-arg Bundle.getHeaders() method
-    * [FELIX-5360] Strange loading of org.apache.felix.service.command.Descriptor
+    * [FELIX-5459] - Use Java 6 as minimum version
+    * [FELIX-5374] - Reduce severity of log message from SCR when there is no metatype
+    * [FELIX-5474] - Do not call no-arg Bundle.getHeaders() method
+    * [FELIX-5360] - Strange loading of org.apache.felix.service.command.Descriptor
 
 
 Changes from 2.0.4 to 2.0.6
 ---------------------------
 ** Bug
-    * [FELIX-5315] Unexpected release of ConfigurationAdmin service in RegionConfigurationSupport
-    * [FELIX-5316] Updating from SCR 2.0.2 to SCR 2.0.4 leads to null pointers
-    * [FELIX-5318] SCR causes startup to wait when bundle uninstall itself in activator
+    * [FELIX-5315] - Unexpected release of ConfigurationAdmin service in RegionConfigurationSupport
+    * [FELIX-5316] - Updating from SCR 2.0.2 to SCR 2.0.4 leads to null pointers
+    * [FELIX-5318] - SCR causes startup to wait when bundle uninstall itself in activator
 
 
 Changes from 2.0.2 to 2.0.4
 ---------------------------
 ** Improvement
-    * [FELIX-5257] Improve formatting of command list output
-    * [FELIX-5243] Make the code more reusable
-    * [FELIX-5194] Pay attention if configuration change count doesn't change
-    * [FELIX-5174] Logging involving Configuration should show change count
-    * [FELIX-5129] ScrInfo info should more explicitly indicatte there are no component configurations
-    * [FELIX-4607] Configure with nested annotations/interfaces
+    * [FELIX-5257] - Improve formatting of command list output
+    * [FELIX-5243] - Make the code more reusable
+    * [FELIX-5194] - Pay attention if configuration change count doesn't change
+    * [FELIX-5174] - Logging involving Configuration should show change count
+    * [FELIX-5129] - ScrInfo info should more explicitly indicatte there are no component configurations
+    * [FELIX-4607] - Configure with nested annotations/interfaces
 
 ** Bug
-    * [FELIX-5300] ServiceComponentRuntime should not throw IllegalStateException
-    * [FELIX-5276] Possible hang when unbind method alters service properties
-    * [FELIX-5270] Configuration race between update and delete
-    * [FELIX-5264] Configuration updates may be missed
-    * [FELIX-5256] Object conversion should pass through unrecognized classes of the same type
-    * [FELIX-5220] Alarmist logging when bundle stops before we've activated it
-    * [FELIX-5213] ComponentContext.getServiceReference returns null though service registered
-    * [FELIX-5202] ServiceComponentRuntimeImpl NPE with subsystems/regions
-    * [FELIX-5186] Alarmist logging on asynchronous service changes
-    * [FELIX-5080] gogo info command left out Implementation-Class
-    * [FELIX-5079] Not enough configuration listeners to deal with regions
-    * [FELIX-5044] (felix-extensions) Service property changes during service registration get ignored
-    * [FELIX-5040] Get system bundle by location, not number, for global extender true
-    * [FELIX-5032] IndexOutOfBoundsException in SCR ComponentTestBase class
-    * [FELIX-4538] Problem with stale references with "triangle" of static references
-    * [FELIX-4417] Circular references detected but not resolved if one of the references in the cycle has optional cardinality
-    * [FELIX-4237] Updating a configuration may deactivate/active component multiple times
-    * [FELIX-1824] Cirular References are not currently explicitly checked and detected
+    * [FELIX-5300] - ServiceComponentRuntime should not throw IllegalStateException
+    * [FELIX-5276] - Possible hang when unbind method alters service properties
+    * [FELIX-5270] - Configuration race between update and delete
+    * [FELIX-5264] - Configuration updates may be missed
+    * [FELIX-5256] - Object conversion should pass through unrecognized classes of the same type
+    * [FELIX-5220] - Alarmist logging when bundle stops before we've activated it
+    * [FELIX-5213] - ComponentContext.getServiceReference returns null though service registered
+    * [FELIX-5202] - ServiceComponentRuntimeImpl NPE with subsystems/regions
+    * [FELIX-5186] - Alarmist logging on asynchronous service changes
+    * [FELIX-5080] - gogo info command left out Implementation-Class
+    * [FELIX-5079] - Not enough configuration listeners to deal with regions
+    * [FELIX-5044] - (felix-extensions) Service property changes during service registration get ignored
+    * [FELIX-5040] - Get system bundle by location, not number, for global extender true
+    * [FELIX-5032] - IndexOutOfBoundsException in SCR ComponentTestBase class
+    * [FELIX-4538] - Problem with stale references with "triangle" of static references
+    * [FELIX-4417] - Circular references detected but not resolved if one of the references in the cycle has optional cardinality
+    * [FELIX-4237] - Updating a configuration may deactivate/active component multiple times
+    * [FELIX-1824] - Cirular References are not currently explicitly checked and detected
 
 
 Changes from 2.0.0 to 2.0.2
 ---------------------------
 ** Improvement
-    * [FELIX-5001] scr:list Gogo command should display component configurations
-    * [FELIX-5020] Don't log exception if metatype is not available
+    * [FELIX-5001] - scr:list Gogo command should display component configurations
+    * [FELIX-5020] - Don't log exception if metatype is not available
 
 ** Bug
-    * [FELIX-5028] ServiceFactory for components might return null
+    * [FELIX-5028] - ServiceFactory for components might return null
 
 
 Changes from 1.8.2 to 2.0.0
 ---------------------------
 ** Improvement
-    * [FELIX-4949] [RFC-190] Implement prototype_required
-    * [FELIX-4918] Implement searching for event methods according to 112.3.2
-    * [FELIX-4916] Provide service capability
-    * [FELIX-4787] Update DS Implementation to R6
-    * [FELIX-4769  [RFC190/212] Implement ComponentServiceObjects
-    * [FELIX-4634] [RFC212] Implement replace strategy
-    * [FELIX-4633] [RFC212] Implement update strategy
-    * [FELIX-4632] [RFC212] Make properties map passed to event methods comparable
-    * [FELIX-4631] [R6/RFC212] Implement field injection
-    * [FELIX-4537] use a bnd.bnd file for bnd configuration
-    * [FELIX-4507] "persistent" factory components
-    * [FELIX-4506] Control felix optional extensions through xml attributes in component descriptor
-    * [FELIX-4467] Option to use system bundle context for tracking bundles
-    * [FELIX-4412] Add Provide-Capability for declarative services bundle
-    * [FELIX-4406] [R6/rfc190] support 1.3 namespace
-    * [FELIX-4405] [R6rfc190] support prototype scope
-    * [FELIX-4404] [R6/rfc190] implement additional event method signature single Map
-    * [FELIX-4403] [R6/rfc190] implement configuration through annotation instances
-    * [FELIX-4402] [R6/rfc190] implement multiple pid support
-    * [FELIX-4401] [R6/rfc190] Implement runtime/introspection/console based on DTOs
-    * [FELIX-4391] R6/rfc190 Support <refname>.cardinality.minimum configuration property
+    * [FELIX-4949] - [RFC-190] Implement prototype_required
+    * [FELIX-4918] - Implement searching for event methods according to 112.3.2
+    * [FELIX-4916] - Provide service capability
+    * [FELIX-4787] - Update DS Implementation to R6
+    * [FELIX-4769  - [RFC190/212] Implement ComponentServiceObjects
+    * [FELIX-4634] - [RFC212] Implement replace strategy
+    * [FELIX-4633] - [RFC212] Implement update strategy
+    * [FELIX-4632] - [RFC212] Make properties map passed to event methods comparable
+    * [FELIX-4631] - [R6/RFC212] Implement field injection
+    * [FELIX-4537] - use a bnd.bnd file for bnd configuration
+    * [FELIX-4507] - "persistent" factory components
+    * [FELIX-4506] - Control felix optional extensions through xml attributes in component descriptor
+    * [FELIX-4467] - Option to use system bundle context for tracking bundles
+    * [FELIX-4412] - Add Provide-Capability for declarative services bundle
+    * [FELIX-4406] - [R6/rfc190] support 1.3 namespace
+    * [FELIX-4405] - [R6rfc190] support prototype scope
+    * [FELIX-4404] - [R6/rfc190] implement additional event method signature single Map
+    * [FELIX-4403] - [R6/rfc190] implement configuration through annotation instances
+    * [FELIX-4402] - [R6/rfc190] implement multiple pid support
+    * [FELIX-4401] - [R6/rfc190] Implement runtime/introspection/console based on DTOs
+    * [FELIX-4391] - R6/rfc190 Support <refname>.cardinality.minimum configuration property
 
 ** Bug
-    * [FELIX-4990] Only first factoy configuration is used
-    * [FELIX-4968] With configuration annotations, coercion exceptions are thrown at the wrong time.
-    * [FELIX-4967] Configuration annotations need to handle char and char[]
-    * [FELIX-4965] Configuration annotations with invalid members handled incorrectly
-    * [FELIX-4964] Reactivate component at most once per service event
-    * [FELIX-4957] [RFC-212] Various issues with field references
-    * [FELIX-4951] [RFC-190] Correct pid handling
-    * [FELIX-4950] [RFC-190] Within a component instance for each reference to the same service the same object needs to be injected
-    * [FELIX-4883] ServiceComponentRuntime.getComponentConfigurationDTOs NullPointerException
-    * [FELIX-4843] ScrInfo impl misses the first provided service
-    * [FELIX-4835] Use bnd 2.3 (via maven-bundle-plugin 2.5.3) to avoid java 8 import problems
-    * [FELIX-4793] Components with an empty configuration are created even if configuration is required or available
-    * [FELIX-4792] Handle Errors on component initialization
-    * [FELIX-4790] SCR MutablePropertiesTest fails when run with framework 4.6.0
-    * [FELIX-4789] SCR Felix4188Test fails when run with framework 4.4.1 or newer
-    * [FELIX-4785] Incompatible SCR API
-    * [FELIX-4768] [RFC190/212] Reference can specify both method and field
-    * [FELIX-4753] Timing issues with bundle context configuration and CM configuration taking effect.
-    * [FELIX-4686] If component is declared with 1.3 NS and ds.factory.enabled = true, validation error occors
-    * [FELIX-4585] SCR will create an additional component instance when ComponentContext.enableComponent is called
-    * [FELIX-4563] target filters in xml reference element are not turned into properties
-    * [FELIX-4536] [R6rfc190] service.pid property aggregates pids from all configurations.
-    * [FELIX-4469] shell command "scr help" does not work without parameter
-    * [FELIX-4447] Regression in ScrShellCommand (NPE caused by falsy regex)
-    * [FELIX-4396] for factory components, configuration changes should affect existing instances
-    * [FELIX-4149] Do not directly support modifying service registration properties
+    * [FELIX-4990] - Only first factoy configuration is used
+    * [FELIX-4968] - With configuration annotations, coercion exceptions are thrown at the wrong time.
+    * [FELIX-4967] - Configuration annotations need to handle char and char[]
+    * [FELIX-4965] - Configuration annotations with invalid members handled incorrectly
+    * [FELIX-4964] - Reactivate component at most once per service event
+    * [FELIX-4957] - [RFC-212] Various issues with field references
+    * [FELIX-4951] - [RFC-190] Correct pid handling
+    * [FELIX-4950] - [RFC-190] Within a component instance for each reference to the same service the same object needs to be injected
+    * [FELIX-4883] - ServiceComponentRuntime.getComponentConfigurationDTOs NullPointerException
+    * [FELIX-4843] - ScrInfo impl misses the first provided service
+    * [FELIX-4835] - Use bnd 2.3 (via maven-bundle-plugin 2.5.3) to avoid java 8 import problems
+    * [FELIX-4793] - Components with an empty configuration are created even if configuration is required or available
+    * [FELIX-4792] - Handle Errors on component initialization
+    * [FELIX-4790] - SCR MutablePropertiesTest fails when run with framework 4.6.0
+    * [FELIX-4789] - SCR Felix4188Test fails when run with framework 4.4.1 or newer
+    * [FELIX-4785] - Incompatible SCR API
+    * [FELIX-4768] - [RFC190/212] Reference can specify both method and field
+    * [FELIX-4753] - Timing issues with bundle context configuration and CM configuration taking effect.
+    * [FELIX-4686] - If component is declared with 1.3 NS and ds.factory.enabled = true, validation error occors
+    * [FELIX-4585] - SCR will create an additional component instance when ComponentContext.enableComponent is called
+    * [FELIX-4563] - target filters in xml reference element are not turned into properties
+    * [FELIX-4536] - [R6rfc190] service.pid property aggregates pids from all configurations.
+    * [FELIX-4469] - shell command "scr help" does not work without parameter
+    * [FELIX-4447] - Regression in ScrShellCommand (NPE caused by falsy regex)
+    * [FELIX-4396] - for factory components, configuration changes should affect existing instances
+    * [FELIX-4149] - Do not directly support modifying service registration properties
 
 
 Changes from 1.8 to 1.8.2
