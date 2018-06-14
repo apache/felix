@@ -29,6 +29,7 @@ import java.io.Reader;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
+import java.net.HttpURLConnection;
 import java.net.URI;
 import java.net.URL;
 import java.net.URLConnection;
@@ -200,22 +201,29 @@ public class Shell {
     }
 
     public static CharSequence readScript(URI script) throws Exception {
-        URLConnection conn = script.toURL().openConnection();
-        int length = conn.getContentLength();
+        CharBuffer buf = CharBuffer.allocate(4096);
+        StringBuilder sb = new StringBuilder();
 
-        if (length == -1) {
-            System.err.println("eek! unknown Contentlength for: " + script);
-            length = 10240;
+        URLConnection conn = script.toURL().openConnection();
+
+        try (InputStreamReader in = new InputStreamReader(conn.getInputStream()))
+        {
+            while (in.read(buf) > 0)
+            {
+                buf.flip();
+                sb.append(buf);
+                buf.clear();
+            }
+        }
+        finally
+        {
+            if (conn instanceof HttpURLConnection)
+            {
+                ((HttpURLConnection) conn).disconnect();
+            }
         }
 
-        InputStream in = conn.getInputStream();
-        CharBuffer cbuf = CharBuffer.allocate(length);
-        Reader reader = new InputStreamReader(in);
-        reader.read(cbuf);
-        in.close();
-        cbuf.rewind();
-
-        return cbuf;
+        return sb;
     }
 
     @SuppressWarnings("unchecked")
