@@ -22,7 +22,6 @@
         <groupId>org.apache.felix</groupId>
         <artifactId>felix-parent</artifactId>
         <version>5</version>
-        <relativePath>../../pom/pom.xml</relativePath>
     </parent>
     <modelVersion>4.0.0</modelVersion>
     <packaging>pom</packaging>
@@ -30,6 +29,12 @@
     <description>Apache Felix Gogo Subproject</description>
     <artifactId>gogo-parent</artifactId>
     <version>4-SNAPSHOT</version>
+
+    <scm>
+        <connection>scm:svn:http://svn.apache.org/repos/asf/felix/trunk/gogo/gogo-parent</connection>
+        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/felix/trunk/gogo/gogo-parent</developerConnection>
+        <url>http://svn.apache.org/repos/asf/felix/gogo/gogo-parent</url>
+    </scm>
 
     <dependencyManagement>
         <dependencies>
@@ -52,9 +57,15 @@
                 <scope>test</scope>
             </dependency>
             <dependency>
+                <groupId>org.easymock</groupId>
+                <artifactId>easymock</artifactId>
+                <version>3.4</version>
+                <scope>test</scope>
+            </dependency>
+            <dependency>
                 <groupId>org.mockito</groupId>
                 <artifactId>mockito-core</artifactId>
-                <version>2.2.0</version>
+                <version>2.2.29</version>
                 <scope>test</scope>
             </dependency>
         </dependencies>
@@ -69,14 +80,6 @@
         <pluginManagement>
             <plugins>
                 <plugin>
-                    <groupId>org.apache.maven.plugins</groupId>
-                    <artifactId>maven-release-plugin</artifactId>
-                    <configuration>
-                        <autoVersionSubmodules>true</autoVersionSubmodules>
-                        <preparationGoals>clean verify install</preparationGoals>
-                    </configuration>
-                </plugin>
-                <plugin>
                     <groupId>org.apache.felix</groupId>
                     <artifactId>maven-bundle-plugin</artifactId>
                     <version>3.5.0</version>
@@ -84,14 +87,6 @@
                 </plugin>
             </plugins>
         </pluginManagement>
-        <plugins>
-            <plugin>
-                <artifactId>maven-compiler-plugin</artifactId>
-                <configuration>
-                    <source>1.8</source>
-                    <target>1.8</target>
-                </configuration>
-            </plugin>
-        </plugins>
     </build>
+
 </project>
