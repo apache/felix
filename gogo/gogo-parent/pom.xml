@@ -28,12 +28,12 @@
     <name>Apache Felix Gogo</name>
     <description>Apache Felix Gogo Subproject</description>
     <artifactId>gogo-parent</artifactId>
-    <version>4-SNAPSHOT</version>
+    <version>4</version>
 
     <scm>
-        <connection>scm:svn:http://svn.apache.org/repos/asf/felix/trunk/gogo/gogo-parent</connection>
-        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/felix/trunk/gogo/gogo-parent</developerConnection>
-        <url>http://svn.apache.org/repos/asf/felix/gogo/gogo-parent</url>
+        <connection>scm:svn:http://svn.apache.org/repos/asf/felix/releases/gogo-parent-4</connection>
+        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/felix/releases/gogo-parent-4</developerConnection>
+        <url>scm:svn:https://svn.apache.org/repos/asf/felix/releases/gogo-parent-4</url>
     </scm>
 
     <dependencyManagement>
