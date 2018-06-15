@@ -328,21 +328,6 @@ class ExtensionManager implements Content
                 }
             }
         }
-        if(sysprops != null && "true".equalsIgnoreCase(felix._getProperty(FelixConstants.USE_PROPERTY_SUBSTITUTION_IN_SYSTEMPACKAGES)) )
-        {
-            defaultProperties.put(Constants.FRAMEWORK_SYSTEMPACKAGES, sysprops);
-            config.put(Constants.FRAMEWORK_SYSTEMPACKAGES, Util.getPropertyWithSubs(defaultProperties, Constants.FRAMEWORK_SYSTEMPACKAGES));
-        }
-        else if (sysprops == null)
-        {
-            config.put(Constants.FRAMEWORK_SYSTEMPACKAGES, Util.getPropertyWithSubs(defaultProperties, Constants.FRAMEWORK_SYSTEMPACKAGES));
-        }
-
-        String syscaps = felix._getProperty(Constants.FRAMEWORK_SYSTEMCAPABILITIES);
-        if(syscaps == null)
-        {
-            config.put(Constants.FRAMEWORK_SYSTEMCAPABILITIES, Util.getPropertyWithSubs(defaultProperties, Constants.FRAMEWORK_SYSTEMCAPABILITIES));
-        }
 
         for (Map.Entry entry : defaultProperties.entrySet())
         {
@@ -350,6 +335,21 @@ class ExtensionManager implements Content
             {
                 config.put(entry.getKey(), entry.getValue());
             }
+        }
+
+        if(sysprops != null && "true".equalsIgnoreCase(felix._getProperty(FelixConstants.USE_PROPERTY_SUBSTITUTION_IN_SYSTEMPACKAGES)) )
+        {
+            config.put(Constants.FRAMEWORK_SYSTEMPACKAGES, Util.getPropertyWithSubs(Util.toProperties(config), Constants.FRAMEWORK_SYSTEMPACKAGES));
+        }
+        else if (sysprops == null)
+        {
+            config.put(Constants.FRAMEWORK_SYSTEMPACKAGES, Util.getPropertyWithSubs(Util.toProperties(config), Constants.FRAMEWORK_SYSTEMPACKAGES));
+        }
+
+        String syscaps = felix._getProperty(Constants.FRAMEWORK_SYSTEMCAPABILITIES);
+        if(syscaps == null)
+        {
+            config.put(Constants.FRAMEWORK_SYSTEMCAPABILITIES, Util.getPropertyWithSubs(Util.toProperties(config), Constants.FRAMEWORK_SYSTEMCAPABILITIES));
         }
 
         m_systemBundleRevision.update(config);
