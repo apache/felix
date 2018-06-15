@@ -29,12 +29,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Enumeration;
 import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Properties;
@@ -183,6 +179,14 @@ public class DirectoryContent implements Content
         // entries are relative to the root of the bundle.
         entryName = (entryName.startsWith("/")) ? entryName.substring(1) : entryName;
 
+        if (entryName.trim().startsWith(".." + File.separatorChar) ||
+            entryName.contains(File.separator + ".." + File.separatorChar) ||
+            entryName.trim().endsWith(File.separator + "..") ||
+            entryName.trim().equals(".."))
+        {
+            return null;
+        }
+
         // Any embedded JAR files will be extracted to the embedded directory.
         File embedDir = new File(m_rootDir, m_dir.getName() + EMBEDDED_DIRECTORY);
 
@@ -202,18 +206,7 @@ public class DirectoryContent implements Content
                 (entryName.lastIndexOf('/') >= 0)
                     ? entryName.substring(0, entryName.lastIndexOf('/'))
                     : entryName);
-            synchronized (m_revisionLock)
-            {
-                if (!BundleCache.getSecureAction().fileExists(extractDir))
-                {
-                    if (!BundleCache.getSecureAction().mkdirs(extractDir))
-                    {
-                        m_logger.log(
-                            Logger.LOG_ERROR,
-                            "Unable to extract embedded directory.");
-                    }
-                }
-            }
+
             return new JarContent(
                 m_logger, m_configMap, m_zipFactory, m_revisionLock,
                 extractDir, file, null);
@@ -232,6 +225,14 @@ public class DirectoryContent implements Content
         // Remove any leading slash, since all bundle class path
         // entries are relative to the root of the bundle.
         entryName = (entryName.startsWith("/")) ? entryName.substring(1) : entryName;
+
+        if (entryName.trim().startsWith(".." + File.separatorChar) ||
+            entryName.contains(File.separator + ".." + File.separatorChar) ||
+            entryName.trim().endsWith(File.separator + "..") ||
+            entryName.trim().equals(".."))
+        {
+            return null;
+        }
 
         // Any embedded native library files will be extracted to the lib directory.
         File libDir = new File(m_rootDir, m_dir.getName() + LIBRARY_DIRECTORY);

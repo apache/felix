@@ -208,6 +208,13 @@ public class JarContent implements Content
         // Remove any leading slash.
         entryName = (entryName.startsWith("/")) ? entryName.substring(1) : entryName;
 
+        if (entryName.trim().startsWith(".." + File.separatorChar) ||
+            entryName.contains(File.separator + ".." + File.separatorChar) ||
+            entryName.trim().endsWith(File.separator + "..") ||
+            entryName.trim().equals(".."))
+        {
+            return null;
+        }
         // Any embedded JAR files will be extracted to the embedded directory.
         // Since embedded JAR file names may clash when extracting from multiple
         // embedded JAR files, the embedded directory is per embedded JAR file.
@@ -220,52 +227,50 @@ public class JarContent implements Content
         // directory in the bundle JAR file. Ignore any entries
         // that do not exist per the spec.
         ZipEntry ze = m_zipFile.getEntry(entryName);
+
         if ((ze != null) && ze.isDirectory())
         {
-            File extractDir = new File(embedDir, entryName);
-
-            // Extracting an embedded directory file impacts all other existing
-            // contents for this revision, so we have to grab the revision
-            // lock first before trying to create a directory for an embedded
-            // directory to avoid a race condition.
-            synchronized (m_revisionLock)
-            {
-                if (!BundleCache.getSecureAction().fileExists(extractDir))
-                {
-                    if (!BundleCache.getSecureAction().mkdirs(extractDir))
-                    {
-                        m_logger.log(
-                            Logger.LOG_ERROR,
-                            "Unable to extract embedded directory.");
-                    }
-                }
-            }
             return new ContentDirectoryContent(this, entryName);
         }
         else if ((ze != null) && ze.getName().endsWith(".jar"))
         {
             File extractJar = new File(embedDir, entryName);
 
-            // Extracting the embedded JAR file impacts all other existing
-            // contents for this revision, so we have to grab the revision
-            // lock first before trying to extract the embedded JAR file
-            // to avoid a race condition.
-            synchronized (m_revisionLock)
+            try
             {
-                try
+                if (!BundleCache.getSecureAction().fileExists(extractJar))
                 {
-                    extractEmbeddedJar(entryName);
+                    // Extracting the embedded JAR file impacts all other existing
+                    // contents for this revision, so we have to grab the revision
+                    // lock first before trying to extract the embedded JAR file
+                    // to avoid a race condition.
+                    synchronized (m_revisionLock)
+                    {
+                        if (!BundleCache.getSecureAction().fileExists(extractJar))
+                        {
+                            // Make sure that the embedded JAR's parent directory exists;
+                            // it may be in a sub-directory.
+                            File jarDir = extractJar.getParentFile();
+                            if (!BundleCache.getSecureAction().fileExists(jarDir) && !BundleCache.getSecureAction().mkdirs(jarDir))
+                            {
+                                throw new IOException("Unable to create embedded JAR directory.");
+                            }
+
+                            // Extract embedded JAR into its directory.
+                            BundleCache.copyStreamToFile(m_zipFile.getInputStream(ze), extractJar);
+                        }
+                    }
                 }
-                catch (Exception ex)
-                {
-                    m_logger.log(
-                        Logger.LOG_ERROR,
-                        "Unable to extract embedded JAR file.", ex);
-                }
+                return new JarContent(
+                    m_logger, m_configMap, m_zipFactory, m_revisionLock,
+                    extractJar.getParentFile(), extractJar, null);
             }
-            return new JarContent(
-                m_logger, m_configMap, m_zipFactory, m_revisionLock,
-                extractJar.getParentFile(), extractJar, null);
+            catch (Exception ex)
+            {
+                m_logger.log(
+                    Logger.LOG_ERROR,
+                    "Unable to extract embedded JAR file.", ex);
+            }
         }
 
         // The entry could not be found, so return null.
@@ -280,6 +285,14 @@ public class JarContent implements Content
 
         // Remove any leading slash.
         entryName = (entryName.startsWith("/")) ? entryName.substring(1) : entryName;
+
+        if (entryName.trim().startsWith(".." + File.separatorChar) ||
+            entryName.contains(File.separator + ".." + File.separatorChar) ||
+            entryName.trim().endsWith(File.separator + "..") ||
+            entryName.trim().equals(".."))
+        {
+            return null;
+        }
 
         // Any embedded native libraries will be extracted to the lib directory.
         // Since embedded library file names may clash when extracting from multiple
@@ -383,54 +396,6 @@ public class JarContent implements Content
     public File getFile()
     {
         return m_file;
-    }
-
-    /**
-     * This method extracts an embedded JAR file from the bundle's
-     * JAR file.
-     * @param jarPath the path to the embedded JAR file inside the bundle JAR file.
-    **/
-    private void extractEmbeddedJar(String jarPath)
-        throws Exception
-    {
-        // Remove leading slash if present.
-        jarPath = (jarPath.length() > 0) && (jarPath.charAt(0) == '/')
-            ? jarPath.substring(1) : jarPath;
-
-        // Any embedded JAR files will be extracted to the embedded directory.
-        // Since embedded JAR file names may clash when extracting from multiple
-        // embedded JAR files, the embedded directory is per embedded JAR file.
-        File embedDir = new File(m_rootDir, m_file.getName() + EMBEDDED_DIRECTORY);
-        File jarFile = new File(embedDir, jarPath);
-
-        if (!BundleCache.getSecureAction().fileExists(jarFile))
-        {
-            // Make sure class path entry is a JAR file.
-            ZipEntry ze = m_zipFile.getEntry(jarPath);
-            if (ze == null)
-            {
-                return;
-            }
-            // If the zip entry is a directory, then ignore it since
-            // we don't need to extact it; otherwise, it points to an
-            // embedded JAR file, so extract it.
-            else if (!ze.isDirectory())
-            {
-                // Make sure that the embedded JAR's parent directory exists;
-                // it may be in a sub-directory.
-                File jarDir = jarFile.getParentFile();
-                if (!BundleCache.getSecureAction().fileExists(jarDir))
-                {
-                    if (!BundleCache.getSecureAction().mkdirs(jarDir))
-                    {
-                        throw new IOException("Unable to create embedded JAR directory.");
-                    }
-                }
-
-                // Extract embedded JAR into its directory.
-                BundleCache.copyStreamToFile(m_zipFile.getInputStream(ze), jarFile);
-            }
-        }
     }
 
     private static class DevNullRunnable implements Runnable

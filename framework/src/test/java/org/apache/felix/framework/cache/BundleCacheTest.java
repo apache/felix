@@ -96,6 +96,60 @@ public class BundleCacheTest extends TestCase
         createJar(archiveFile, jarFile);
     }
 
+    public void testNoZipSlip() throws Exception
+    {
+        File bundle = new File(filesDir, "slip");
+        Manifest manifest = new Manifest();
+        manifest.getMainAttributes().putValue("Manifest-Version", "v1");
+        manifest.getMainAttributes().putValue(Constants.BUNDLE_MANIFESTVERSION, "2");
+        manifest.getMainAttributes().putValue(Constants.BUNDLE_SYMBOLICNAME, "slip");
+
+        JarOutputStream output = new JarOutputStream(new FileOutputStream(bundle),manifest);
+
+        output.putNextEntry(new ZipEntry("../../bar.jar"));
+
+        output.write(BundleCache.read(new FileInputStream(jarFile), jarFile.length()));
+
+        output.closeEntry();
+
+        output.close();
+
+        BundleArchive archive = cache.create(1, 1, "slip", new FileInputStream(bundle));
+
+        testNoZipSlip(archive);
+
+        archive = cache.create(1, 1, bundle.toURI().toURL().toString(), null);
+
+        testNoZipSlip(archive);
+
+        archive = cache.create(1, 1, "reference:" + bundle.toURI().toURL().toString(), null);
+
+        testNoZipSlip(archive);
+
+        File dir = new File(filesDir, "exploded");
+
+        dir.mkdirs();
+
+        File test = new File(dir, "../../bar.jar");
+        test.createNewFile();
+        test.deleteOnExit();
+
+        archive = cache.create(1, 1, "reference:" + dir.toURI().toURL().toString(), null);
+
+        testNoZipSlip(archive);
+    }
+
+    public void testNoZipSlip(BundleArchive archive) throws Exception
+    {
+        Content content = archive.getCurrentRevision().getContent().getEntryAsContent("../../bar.jar");
+
+        assertNull(content);
+
+        String lib = archive.getCurrentRevision().getContent().getEntryAsNativeLibrary("../../bar.jar");
+
+        assertNull(lib);
+    }
+
     public void testDirectoryReference() throws Exception
     {
         testBundle("reference:" + archiveFile.toURI().toURL(), null);
