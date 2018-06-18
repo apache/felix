@@ -107,22 +107,22 @@ public class Util
                 StringBuilder eecap = new StringBuilder(", osgi.ee; osgi.ee=\"OSGi/Minimum\"; version:List<Version>=\"1.0,1.1,1.2\",osgi.ee; osgi.ee=\"JavaSE\"; version:List<Version>=\"1.0,1.1,1.2,1.3,1.4,1.5,1.6,1.7,1.8,9");
                 for (int i = 10; i <= version.getMajor();i++)
                 {
-                    eecap.append(',').append(Integer.toString(version.getMajor()));
+                    eecap.append(',').append(Integer.toString(i));
                 }
                 eecap.append("\",osgi.ee; osgi.ee=\"JavaSE/compact1\"; version:List<Version>=\"1.8,9");
                 for (int i = 10; i <= version.getMajor();i++)
                 {
-                    eecap.append(',').append(Integer.toString(version.getMajor()));
+                    eecap.append(',').append(Integer.toString(i));
                 }
                 eecap.append("\",osgi.ee; osgi.ee=\"JavaSE/compact2\"; version:List<Version>=\"1.8,9");
                 for (int i = 10; i <= version.getMajor();i++)
                 {
-                    eecap.append(',').append(Integer.toString(version.getMajor()));
+                    eecap.append(',').append(Integer.toString(i));
                 }
                 eecap.append("\",osgi.ee; osgi.ee=\"JavaSE/compact3\"; version:List<Version>=\"1.8,9");
                 for (int i = 10; i <= version.getMajor();i++)
                 {
-                    eecap.append(',').append(Integer.toString(version.getMajor()));
+                    eecap.append(',').append(Integer.toString(i));
                 }
                 eecap.append("\"");
 
