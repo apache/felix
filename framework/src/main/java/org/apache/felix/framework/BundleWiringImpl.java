@@ -19,7 +19,6 @@
 package org.apache.felix.framework;
 
 import org.apache.felix.framework.cache.Content;
-import org.apache.felix.framework.cache.JarContent;
 import org.apache.felix.framework.capabilityset.SimpleFilter;
 import org.apache.felix.framework.resolver.ResourceNotFoundException;
 import org.apache.felix.framework.util.CompoundEnumeration;
@@ -55,7 +54,6 @@ import org.osgi.service.resolver.ResolutionException;
 
 import java.io.IOException;
 import java.lang.reflect.Constructor;
-import java.lang.reflect.Method;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.security.AccessController;
@@ -1348,52 +1346,6 @@ public class BundleWiringImpl implements BundleWiring
         return (parent == null) ? m_bootClassLoader : parent;
     }
 
-    private static final Constructor m_dexFileClassConstructor;
-    private static final Method m_dexFileClassLoadDex;
-    private static final Method m_dexFileClassLoadClass;
-
-    static
-    {
-        Constructor dexFileClassConstructor = null;
-        Method dexFileClassLoadDex = null;
-        Method dexFileClassLoadClass = null;
-        try
-        {
-            Class dexFileClass;
-            try
-            {
-                dexFileClass = Class.forName("dalvik.system.DexFile");
-            }
-            catch (Exception ex)
-            {
-                dexFileClass = Class.forName("android.dalvik.DexFile");
-            }
-
-            try
-            {
-                dexFileClassLoadDex = dexFileClass.getMethod("loadDex",
-                        new Class[]{String.class, String.class, Integer.TYPE});
-            }
-            catch (Exception ex)
-            {
-                // Nothing we need to do
-            }
-            dexFileClassConstructor = dexFileClass.getConstructor(
-                    new Class[] { java.io.File.class });
-            dexFileClassLoadClass = dexFileClass.getMethod("loadClass",
-                    new Class[] { String.class, ClassLoader.class });
-        }
-        catch (Throwable ex)
-        {
-            dexFileClassConstructor = null;
-            dexFileClassLoadDex = null;
-            dexFileClassLoadClass = null;
-        }
-        m_dexFileClassConstructor = dexFileClassConstructor;
-        m_dexFileClassLoadDex = dexFileClassLoadDex;
-        m_dexFileClassLoadClass = dexFileClassLoadClass;
-    }
-
     public Class getClassByDelegation(String name) throws ClassNotFoundException
     {
         // We do not call getClassLoader().loadClass() for arrays because
@@ -1992,7 +1944,6 @@ public class BundleWiringImpl implements BundleWiring
         // loader or not.
         private volatile boolean m_isActivationTriggered = false;
 
-        private final Map m_jarContentToDexFile;
         private Object[][] m_cachedLibs = new Object[0][];
         private static final int LIBNAME_IDX = 0;
         private static final int LIBPATH_IDX = 1;
@@ -2003,14 +1954,6 @@ public class BundleWiringImpl implements BundleWiring
         public BundleClassLoader(BundleWiringImpl wiring, ClassLoader parent, Logger logger)
         {
             super(parent);
-            if (m_dexFileClassLoadClass != null)
-            {
-                m_jarContentToDexFile = new HashMap();
-            }
-            else
-            {
-                m_jarContentToDexFile = null;
-            }
             m_wiring = wiring;
             m_logger = logger;
         }
@@ -2393,40 +2336,23 @@ public class BundleWiringImpl implements BundleWiring
             }
 
             Class clazz = null;
-
-            // If we can load the class from a dex file do so
-            if (content instanceof JarContent)
+            // If we have a security context, then use it to
+            // define the class with it for security purposes,
+            // otherwise define the class without a protection domain.
+            if (m_wiring.m_revision.getProtectionDomain() != null)
             {
-                try
-                {
-                    clazz = getDexFileClass((JarContent) content, name, this);
-                }
-                catch (Exception ex)
-                {
-                    // Looks like we can't
-                }
+                clazz = defineClass(name, bytes, 0, bytes.length,
+                    m_wiring.m_revision.getProtectionDomain());
             }
-
-            if (clazz == null)
+            else
             {
-                // If we have a security context, then use it to
-                // define the class with it for security purposes,
-                // otherwise define the class without a protection domain.
-                if (m_wiring.m_revision.getProtectionDomain() != null)
-                {
-                    clazz = defineClass(name, bytes, 0, bytes.length,
-                        m_wiring.m_revision.getProtectionDomain());
-                }
-                else
-                {
-                    clazz = defineClass(name, bytes, 0, bytes.length);
-                }
-                if (wci != null)
-                {
-                    wci.completeDefine(clazz);
-                    wci.setState(WovenClass.DEFINED);
-                    callWovenClassListeners(felix, wovenClassListeners, wci);
-                }
+                clazz = defineClass(name, bytes, 0, bytes.length);
+            }
+            if (wci != null)
+            {
+                wci.completeDefine(clazz);
+                wci.setState(WovenClass.DEFINED);
+                callWovenClassListeners(felix, wovenClassListeners, wci);
             }
 
             // At this point if we have a trigger class, then the deferred
@@ -2532,50 +2458,6 @@ public class BundleWiringImpl implements BundleWiring
                 };
             }
             return new Object[] {null, null, null, null, null, null};
-        }
-
-        private Class getDexFileClass(JarContent content, String name, ClassLoader loader)
-                throws Exception
-        {
-            if (m_jarContentToDexFile == null)
-            {
-                return null;
-            }
-
-            Object dexFile = null;
-
-            if (!m_jarContentToDexFile.containsKey(content))
-            {
-                try
-                {
-                    if (m_dexFileClassLoadDex != null)
-                    {
-                        dexFile = m_dexFileClassLoadDex.invoke(null,
-                                new Object[]{content.getFile().getAbsolutePath(),
-                                        content.getFile().getAbsolutePath() + ".dex", new Integer(0)});
-                    }
-                    else
-                    {
-                        dexFile = m_dexFileClassConstructor.newInstance(
-                                new Object[] { content.getFile() });
-                    }
-                }
-                finally
-                {
-                    m_jarContentToDexFile.put(content, dexFile);
-                }
-            }
-            else
-            {
-                dexFile = m_jarContentToDexFile.get(content);
-            }
-
-            if (dexFile != null)
-            {
-                return (Class) m_dexFileClassLoadClass.invoke(dexFile,
-                        new Object[] { name.replace('.','/'), loader });
-            }
-            return null;
         }
 
         @Override
