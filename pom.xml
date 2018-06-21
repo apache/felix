@@ -20,7 +20,7 @@
     <parent>
         <groupId>org.apache.felix</groupId>
         <artifactId>org.apache.felix.logback.reactor</artifactId>
-        <version>1.0.0</version>
+        <version>1.0.1-SNAPSHOT</version>
         <relativePath>..</relativePath>
     </parent>
 
@@ -30,13 +30,13 @@
     <description>
         A simple integration of the OSGi R7 Log (1.4) service to Logback backend.
     </description>
-    <version>1.0.0</version>
+    <version>1.0.1-SNAPSHOT</version>
     <artifactId>org.apache.felix.logback</artifactId>
 
     <scm>
-        <connection>scm:svn:http://svn.apache.org/repos/asf/felix/releases/org.apache.felix.logback.reactor-1.0.0/logback</connection>
-        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/felix/releases/org.apache.felix.logback.reactor-1.0.0/logback</developerConnection>
-        <url>http://svn.apache.org/viewvc/felix/releases/org.apache.felix.logback.reactor-1.0.0/logback</url>
+        <connection>scm:svn:http://svn.apache.org/repos/asf/felix/trunk/logback/logback</connection>
+        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/felix/trunk/logback/logback</developerConnection>
+        <url>http://svn.apache.org/viewvc/felix/trunk/logback/logback/</url>
     </scm>
 
     <dependencies>
