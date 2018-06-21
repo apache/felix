@@ -33,6 +33,12 @@
     <version>1.0.0-SNAPSHOT</version>
     <artifactId>org.apache.felix.logback</artifactId>
 
+    <scm>
+        <connection>scm:svn:http://svn.apache.org/repos/asf/felix/trunk/logback/logback</connection>
+        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/felix/trunk/logback/logback</developerConnection>
+        <url>http://svn.apache.org/viewvc/felix/trunk/logback/logback/</url>
+    </scm>
+
     <dependencies>
         <dependency>
             <groupId>org.osgi</groupId>
