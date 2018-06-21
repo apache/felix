@@ -11,8 +11,9 @@
     ch.qos.logback.classic;version='[1.2.3,1.2.4)',\
     ch.qos.logback.core;version='[1.2.3,1.2.4)',\
     slf4j.api;version='[1.7.25,1.7.26)',\
-    org.apache.felix.log;version=latest,\
     org.apache.felix.logback;version=latest
+
+#    org.apache.felix.log;version=latest,\
 
 -runproperties: \
     logback.configurationFile=file:${.}/logback.xml
