@@ -45,6 +45,7 @@
 
     <modules>
         <module>logback</module>
+        <module>itests</module>
     </modules>
 
     <build>
@@ -198,13 +199,4 @@
             </plugins>
         </pluginManagement>
     </build>
-
-    <profiles>
-        <profile>
-            <id>itests</id>
-            <modules>
-                <module>itests</module>
-            </modules>
-        </profile>
-    </profiles>
 </project>
