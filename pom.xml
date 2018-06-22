@@ -19,9 +19,9 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
     <parent>
         <groupId>org.apache.felix</groupId>
-        <artifactId>org.apache.felix.logback.reactor</artifactId>
-        <version>1.0.0-SNAPSHOT</version>
-        <relativePath>..</relativePath>
+        <artifactId>felix-parent</artifactId>
+        <version>5</version>
+        <relativePath>../../pom/pom.xml</relativePath>
     </parent>
 
     <modelVersion>4.0.0</modelVersion>
@@ -38,6 +38,10 @@
         <developerConnection>scm:svn:https://svn.apache.org/repos/asf/felix/trunk/logback/logback</developerConnection>
         <url>http://svn.apache.org/viewvc/felix/trunk/logback/logback/</url>
     </scm>
+
+    <properties>
+        <equinox.version>3.12.100</equinox.version>
+    </properties>
 
     <dependencies>
         <dependency>
