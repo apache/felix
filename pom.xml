@@ -20,7 +20,7 @@
     <parent>
         <groupId>org.apache.felix</groupId>
         <artifactId>org.apache.felix.logback.reactor</artifactId>
-        <version>1.0.1-SNAPSHOT</version>
+        <version>1.0.0-SNAPSHOT</version>
         <relativePath>..</relativePath>
     </parent>
 
@@ -30,7 +30,7 @@
     <description>
         A simple integration of the OSGi R7 Log (1.4) service to Logback backend.
     </description>
-    <version>1.0.1-SNAPSHOT</version>
+    <version>1.0.0-SNAPSHOT</version>
     <artifactId>org.apache.felix.logback</artifactId>
 
     <scm>
