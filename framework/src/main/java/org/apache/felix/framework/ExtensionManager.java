@@ -337,7 +337,7 @@ class ExtensionManager implements Content
             }
         }
 
-        if(sysprops != null && "true".equalsIgnoreCase(felix._getProperty(FelixConstants.USE_PROPERTY_SUBSTITUTION_IN_SYSTEMPACKAGES)) )
+        if(sysprops != null && "true".equalsIgnoreCase(felix._getProperty(FelixConstants.USE_PROPERTY_SUBSTITUTION_IN_SYSTEMPACKAGES)))
         {
             config.put(Constants.FRAMEWORK_SYSTEMPACKAGES, Util.getPropertyWithSubs(Util.toProperties(config), Constants.FRAMEWORK_SYSTEMPACKAGES));
         }
@@ -346,10 +346,26 @@ class ExtensionManager implements Content
             config.put(Constants.FRAMEWORK_SYSTEMPACKAGES, Util.getPropertyWithSubs(Util.toProperties(config), Constants.FRAMEWORK_SYSTEMPACKAGES));
         }
 
+        String syspropsExtra = felix._getProperty(Constants.FRAMEWORK_SYSTEMPACKAGES_EXTRA);
+        if (syspropsExtra != null && "true".equalsIgnoreCase(felix._getProperty(FelixConstants.USE_PROPERTY_SUBSTITUTION_IN_SYSTEMPACKAGES)))
+        {
+            config.put(Constants.FRAMEWORK_SYSTEMPACKAGES_EXTRA, Util.getPropertyWithSubs(Util.toProperties(config), Constants.FRAMEWORK_SYSTEMPACKAGES_EXTRA));
+        }
+
         String syscaps = felix._getProperty(Constants.FRAMEWORK_SYSTEMCAPABILITIES);
-        if(syscaps == null)
+        if(syscaps != null && "true".equalsIgnoreCase(felix._getProperty(FelixConstants.USE_PROPERTY_SUBSTITUTION_IN_SYSTEMPACKAGES)))
         {
             config.put(Constants.FRAMEWORK_SYSTEMCAPABILITIES, Util.getPropertyWithSubs(Util.toProperties(config), Constants.FRAMEWORK_SYSTEMCAPABILITIES));
+        }
+        else if(syscaps == null)
+        {
+            config.put(Constants.FRAMEWORK_SYSTEMCAPABILITIES, Util.getPropertyWithSubs(Util.toProperties(config), Constants.FRAMEWORK_SYSTEMCAPABILITIES));
+        }
+
+        String syscapsExtra = felix._getProperty(Constants.FRAMEWORK_SYSTEMCAPABILITIES_EXTRA);
+        if (syscapsExtra != null && "true".equalsIgnoreCase(felix._getProperty(FelixConstants.USE_PROPERTY_SUBSTITUTION_IN_SYSTEMPACKAGES)))
+        {
+            config.put(Constants.FRAMEWORK_SYSTEMCAPABILITIES_EXTRA, Util.getPropertyWithSubs(Util.toProperties(config), Constants.FRAMEWORK_SYSTEMCAPABILITIES_EXTRA));
         }
 
         m_systemBundleRevision.update(config);
@@ -914,18 +930,12 @@ class ExtensionManager implements Content
             // We must construct the system bundle's export metadata.
             // Get configuration property that specifies which class path
             // packages should be exported by the system bundle.
-            String syspkgs =
-                "true".equalsIgnoreCase(configProps.getProperty(FelixConstants.USE_PROPERTY_SUBSTITUTION_IN_SYSTEMPACKAGES)) ?
-                    Util.getPropertyWithSubs(configProps, FelixConstants.FRAMEWORK_SYSTEMPACKAGES) :
-                    configProps.getProperty(FelixConstants.FRAMEWORK_SYSTEMPACKAGES);
+            String syspkgs = configProps.getProperty(FelixConstants.FRAMEWORK_SYSTEMPACKAGES);
 
             syspkgs = (syspkgs == null) ? "" : syspkgs;
 
             // If any extra packages are specified, then append them.
-            String pkgextra =
-                "true".equalsIgnoreCase(configProps.getProperty(FelixConstants.USE_PROPERTY_SUBSTITUTION_IN_SYSTEMPACKAGES)) ?
-                    Util.getPropertyWithSubs(configProps, FelixConstants.FRAMEWORK_SYSTEMPACKAGES_EXTRA) :
-                    configProps.getProperty(FelixConstants.FRAMEWORK_SYSTEMPACKAGES_EXTRA);
+            String pkgextra = configProps.getProperty(FelixConstants.FRAMEWORK_SYSTEMPACKAGES_EXTRA);
 
             syspkgs = ((pkgextra == null) || (pkgextra.trim().length() == 0))
                 ? syspkgs : syspkgs + (pkgextra.trim().startsWith(",") ? pkgextra : "," + pkgextra);
@@ -934,15 +944,16 @@ class ExtensionManager implements Content
 
             // The system bundle alsp provides framework generic capabilities
             // as well as arbitrary user-defined generic capabilities. We must
-            // construct the system bundle's capabilitie metadata. Get the
+            // construct the system bundle's capabilities metadata. Get the
             // configuration property that specifies which capabilities should
             // be provided by the system bundle.
-            String syscaps = Util.getPropertyWithSubs(configProps, Constants.FRAMEWORK_SYSTEMCAPABILITIES);
+            String syscaps = configProps.getProperty(Constants.FRAMEWORK_SYSTEMCAPABILITIES);
 
             syscaps = (syscaps == null) ? "" : syscaps;
 
             // If any extra capabilities are specified, then append them.
-            String capextra = Util.getPropertyWithSubs(configProps, Constants.FRAMEWORK_SYSTEMCAPABILITIES_EXTRA);
+            String capextra = configProps.getProperty(Constants.FRAMEWORK_SYSTEMCAPABILITIES_EXTRA);
+
             syscaps = ((capextra == null) || (capextra.trim().length() == 0))
                 ? syscaps : syscaps + (capextra.trim().startsWith(",") ? capextra : "," + capextra);
 
