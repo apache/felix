@@ -30,13 +30,13 @@
     <description>
         A simple integration of the OSGi R7 Log (1.4) service to Logback backend.
     </description>
-    <version>1.0.0-SNAPSHOT</version>
+    <version>1.0.0</version>
     <artifactId>org.apache.felix.logback</artifactId>
 
     <scm>
-        <connection>scm:svn:http://svn.apache.org/repos/asf/felix/trunk/logback/logback</connection>
-        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/felix/trunk/logback/logback</developerConnection>
-        <url>http://svn.apache.org/viewvc/felix/trunk/logback/logback/</url>
+        <connection>scm:svn:http://svn.apache.org/repos/asf/felix/releases/org.apache.felix.logback-1.0.0</connection>
+        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/felix/releases/org.apache.felix.logback-1.0.0</developerConnection>
+        <url>http://svn.apache.org/viewvc/felix/releases/org.apache.felix.logback-1.0.0</url>
     </scm>
 
     <properties>
