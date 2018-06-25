@@ -18,7 +18,6 @@
  */
 package org.apache.felix.systemready.osgi;
 
-import static org.junit.Assert.assertEquals;
 import static org.ops4j.pax.exam.cm.ConfigurationAdminOptions.newConfiguration;
 
 import javax.inject.Inject;
