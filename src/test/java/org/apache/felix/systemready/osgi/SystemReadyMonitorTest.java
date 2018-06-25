@@ -32,6 +32,7 @@ import org.apache.felix.systemready.CheckStatus;
 import org.apache.felix.systemready.Status;
 import org.apache.felix.systemready.SystemReadyCheck;
 import org.apache.felix.systemready.SystemReadyMonitor;
+import org.apache.felix.systemready.SystemStatus;
 import org.apache.felix.systemready.osgi.examples.TestSystemReadyCheck;
 import org.apache.felix.systemready.osgi.util.BaseTest;
 import org.awaitility.Awaitility;
@@ -49,7 +50,7 @@ public class SystemReadyMonitorTest extends BaseTest {
     @Inject
     SystemReadyMonitor monitor;
 
-    private final ConditionFactory wait = await().atMost(1000, TimeUnit.MILLISECONDS);
+    private final ConditionFactory wait = await();
 
     @Configuration
     public Option[] configuration() throws MalformedURLException {
@@ -90,7 +91,6 @@ public class SystemReadyMonitorTest extends BaseTest {
         assertNumChecks(1);
         wait.until(monitor::isReady, is(false));
 
-
         // register a second check
         TestSystemReadyCheck check2 = new TestSystemReadyCheck();
         context.registerService(SystemReadyCheck.class, check2, null);
@@ -106,6 +106,10 @@ public class SystemReadyMonitorTest extends BaseTest {
     }
 
     private void assertNumChecks(int expectedNum) {
-        wait.until(() -> monitor.getStatus().getCheckStates().size(), is(expectedNum));
+        wait.until(this::numChecks, is(expectedNum));
+    }
+
+    private int numChecks() {
+        return monitor.getStatus().getCheckStates().size();
     }
 }

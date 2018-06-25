@@ -18,7 +18,10 @@
  */
 package org.apache.felix.systemready.impl;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.List;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -27,11 +30,10 @@ import java.util.stream.Collectors;
 
 import org.apache.felix.systemready.CheckStatus;
 import org.apache.felix.systemready.Status;
-import org.apache.felix.systemready.SystemReadyCheck;
 import org.apache.felix.systemready.SystemReady;
+import org.apache.felix.systemready.SystemReadyCheck;
 import org.apache.felix.systemready.SystemReadyMonitor;
 import org.apache.felix.systemready.SystemStatus;
-import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceRegistration;
 import org.osgi.service.component.annotations.Activate;
@@ -77,17 +79,17 @@ public class SystemReadyMonitorImpl implements SystemReadyMonitor {
     
     private AtomicReference<SystemStatus> systemState;
 
-    private static final CheckStatus frameworkStartingStatus = new CheckStatus("implicit check",
-            new Status(Status.State.YELLOW, "Framework is starting"));
-
+    public SystemReadyMonitorImpl() {
+        SystemStatus initialStatus = new SystemStatus(Status.State.YELLOW, Collections.emptyList());
+        this.systemState = new AtomicReference<>(initialStatus);
+    }
 
     @Activate
     public void activate(BundleContext context, final Config config) {
         this.context = context;
-        this.systemState = new AtomicReference<>(new SystemStatus(Status.State.YELLOW, Collections.emptyList()));
         this.executor = Executors.newSingleThreadScheduledExecutor();
         this.executor.scheduleAtFixedRate(this::check, 0, config.poll_interval(), TimeUnit.MILLISECONDS);
-        log.info("Activated");
+        log.info("Activated. Running checks every {} ms.", config.poll_interval());
     }
 
     @Deactivate
@@ -113,21 +115,20 @@ public class SystemReadyMonitorImpl implements SystemReadyMonitor {
 
     private void check() {
         Status.State prevState = systemState.get().getState();
-        List<CheckStatus> statuses = (isFrameworkStartingAndCheckMissing()) ? Arrays.asList(frameworkStartingStatus) : evaluateAllChecks();
+        List<SystemReadyCheck> currentChecks = new ArrayList<>(checks);
+        List<String> checkNames = currentChecks.stream().map(check -> check.getName()).collect(Collectors.toList());
+        log.debug("Running system checks {}", checkNames);
+        List<CheckStatus> statuses = evaluateAllChecks(currentChecks);
         Status.State currState = Status.State.worstOf(statuses.stream().map(status -> status.getStatus().getState()));
         this.systemState.set(new SystemStatus(currState, statuses));
         if (currState != prevState) {
             manageMarkerService(currState);
         }
+        log.debug("Checks finished");
     }
 
-    private boolean isFrameworkStartingAndCheckMissing() {
-        return (checks.stream().noneMatch(c -> c.getClass().equals(FrameworkStartCheck.class)))
-                && (context.getBundle(0).getState() != Bundle.ACTIVE);
-    }
-
-    private List<CheckStatus> evaluateAllChecks() {
-        return checks.stream()
+    private List<CheckStatus> evaluateAllChecks(List<SystemReadyCheck> currentChecks) {
+        return currentChecks.stream()
                 .map(SystemReadyMonitorImpl::getStatus)
                 .sorted(Comparator.comparing(CheckStatus::getCheckName))
                 .collect(Collectors.toList());

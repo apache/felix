@@ -23,6 +23,9 @@ import static org.ops4j.pax.exam.CoreOptions.mavenBundle;
 import static org.ops4j.pax.exam.CoreOptions.systemProperty;
 import static org.ops4j.pax.exam.cm.ConfigurationAdminOptions.newConfiguration;
 
+import java.util.Optional;
+import java.util.function.Predicate;
+
 import javax.inject.Inject;
 
 import org.apache.felix.systemready.SystemReadyMonitor;
@@ -35,12 +38,14 @@ import org.ops4j.pax.exam.Option;
 import org.osgi.framework.BundleContext;
 import org.osgi.service.component.runtime.ServiceComponentRuntime;
 import org.osgi.service.component.runtime.dto.ComponentDescriptionDTO;
-
-import java.util.Optional;
-import java.util.function.Predicate;
+import org.osgi.util.promise.Promise;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 
 public class BaseTest {
+    private Logger log = LoggerFactory.getLogger(this.getClass());
+    
     @Inject
     public BundleContext context;
 
@@ -84,7 +89,7 @@ public class BaseTest {
     
     public Option monitorConfig() {
         return newConfiguration(SystemReadyMonitor.PID)
-                .put("poll.interval", 50)
+                .put("poll.interval", 100)
                 .asOption();
     }
     
@@ -122,7 +127,13 @@ public class BaseTest {
 
     public void disableComponent(String name) {
         ComponentDescriptionDTO desc = getComponentDesc(name);
-        scr.disableComponent(desc);
+        log.info("Deactivating component {}", desc.name);
+        Promise<Void> promise = scr.disableComponent(desc);
+        try {
+            promise.getValue();
+        } catch (Exception e) {
+            throw new RuntimeException(e.getMessage(), e);
+        }
     }
 
     public void disableFrameworkStartCheck() {

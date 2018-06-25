@@ -23,20 +23,15 @@ import org.apache.felix.systemready.SystemReadyCheck;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
-import org.osgi.framework.FrameworkEvent;
 import org.osgi.framework.startlevel.FrameworkStartLevel;
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.ConfigurationPolicy;
-import org.osgi.service.component.annotations.Deactivate;
 import org.osgi.service.metatype.annotations.AttributeDefinition;
 import org.osgi.service.metatype.annotations.Designate;
 import org.osgi.service.metatype.annotations.ObjectClassDefinition;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.util.ArrayList;
-import java.util.List;
 
 @Component(
         name = FrameworkStartCheck.PID,
@@ -92,16 +87,9 @@ public class FrameworkStartCheck implements SystemReadyCheck {
             } catch (NumberFormatException e) {
                 log.info("Ignoring {} as it can't be parsed: {}", targetStartLevelKey, e.getMessage());
             }
-        } else {
-            log.info("Ignoring target.start.level.prop.name because it's not set.");
         }
 
         log.info("Activated");
-    }
-
-    @Deactivate
-    protected void deactivate() throws InterruptedException {
-        this.bundleContext = null;
     }
 
     @Override
@@ -115,7 +103,8 @@ public class FrameworkStartCheck implements SystemReadyCheck {
         FrameworkStartLevel fsl = systemBundle.adapt(FrameworkStartLevel.class);
         String message = String.format("Start level: %d; Target start level: %d; Framework state: %d",
                 fsl.getStartLevel(), targetStartLevel, fsl.getBundle().getState());
-        if ((systemBundle.getState() == Bundle.ACTIVE) && (fsl.getStartLevel() >= targetStartLevel)) {
+        boolean started = (systemBundle.getState() == Bundle.ACTIVE) && (fsl.getStartLevel() >= targetStartLevel);
+        if (started) {
             return new Status(Status.State.GREEN, FRAMEWORK_STARTED + message);
         } else {
             return new Status(Status.State.YELLOW, FRAMEWORK_NOT_STARTED + message);

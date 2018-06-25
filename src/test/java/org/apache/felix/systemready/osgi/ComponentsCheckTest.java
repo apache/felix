@@ -19,7 +19,6 @@
 package org.apache.felix.systemready.osgi;
 
 import static org.hamcrest.Matchers.containsString;
-import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertThat;
 import static org.ops4j.pax.tinybundles.core.TinyBundles.bundle;
 
@@ -30,9 +29,9 @@ import javax.inject.Inject;
 import org.apache.felix.systemready.Status;
 import org.apache.felix.systemready.SystemReadyCheck;
 import org.apache.felix.systemready.impl.ComponentsCheck;
+import org.apache.felix.systemready.osgi.examples.CompWithoutService;
 import org.apache.felix.systemready.osgi.examples.CompWithoutService2;
 import org.apache.felix.systemready.osgi.util.BaseTest;
-import org.apache.felix.systemready.osgi.examples.CompWithoutService;
 import org.apache.felix.systemready.osgi.util.BndDSOptions;
 import org.hamcrest.Matchers;
 import org.junit.Test;

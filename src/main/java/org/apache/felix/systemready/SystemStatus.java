@@ -21,11 +21,10 @@ package org.apache.felix.systemready;
 import java.util.Collection;
 
 public class SystemStatus {
-    Status.State state;
-    Collection<CheckStatus> checkStates;
+    private Status.State state;
+    private Collection<CheckStatus> checkStates;
     
     public SystemStatus(Status.State state, Collection<CheckStatus> checkStates) {
-        super();
         this.state = state;
         this.checkStates = checkStates;
     }
