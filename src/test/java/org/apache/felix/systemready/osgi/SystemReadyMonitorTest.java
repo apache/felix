@@ -32,7 +32,6 @@ import org.apache.felix.systemready.CheckStatus;
 import org.apache.felix.systemready.Status;
 import org.apache.felix.systemready.SystemReadyCheck;
 import org.apache.felix.systemready.SystemReadyMonitor;
-import org.apache.felix.systemready.SystemStatus;
 import org.apache.felix.systemready.osgi.examples.TestSystemReadyCheck;
 import org.apache.felix.systemready.osgi.util.BaseTest;
 import org.awaitility.Awaitility;

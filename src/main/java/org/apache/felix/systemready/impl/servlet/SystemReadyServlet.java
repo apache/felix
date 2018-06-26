@@ -50,7 +50,6 @@ import org.slf4j.LoggerFactory;
         service = Servlet.class,
         property = {
                 HttpWhiteboardConstants.HTTP_WHITEBOARD_SERVLET_PATTERN + "=" + "/system/console/ready",
-                HttpWhiteboardConstants.HTTP_WHITEBOARD_CONTEXT_SELECT + "=" + "(osgi.http.whiteboard.context.name=org.osgi.service.http)"
         }
 )
 @Designate(ocd=SystemReadyServlet.Config.class)
