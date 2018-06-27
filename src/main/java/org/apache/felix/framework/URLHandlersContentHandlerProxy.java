@@ -144,7 +144,7 @@ class URLHandlersContentHandlerProxy extends ContentHandler
     {
         ContentHandler result = m_builtIn.get(m_mimeType);
 
-        if (result == null)
+        if (result != null)
         {
             return result;
         }

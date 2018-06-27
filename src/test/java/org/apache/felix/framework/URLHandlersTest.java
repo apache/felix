@@ -21,6 +21,7 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.ContentHandler;
 import java.net.InetAddress;
 import java.net.URL;
 import java.net.URLClassLoader;
@@ -52,6 +53,7 @@ import org.osgi.service.url.URLStreamHandlerSetter;
  */
 public class URLHandlersTest extends TestCase
 {
+
     public void testURLHandlers() throws Exception
     {
         String mf = "Bundle-SymbolicName: url.test\n"
@@ -61,7 +63,7 @@ public class URLHandlersTest extends TestCase
             + "Manifest-Version: 1.0\n"
             + Constants.BUNDLE_ACTIVATOR + ": " + TestURLHandlersActivator.class.getName() + "\n\n";
 
-        File bundleFile = createBundle(mf, TestURLHandlersActivator.class);
+        File bundleFile = createBundle(mf, TestURLHandlersActivator.class, UC.class);
 
         Framework f = createFramework();
         f.init();
@@ -103,7 +105,7 @@ public class URLHandlersTest extends TestCase
             + "Manifest-Version: 1.0\n"
             + Constants.BUNDLE_ACTIVATOR + ": " + TestURLHandlersActivator.class.getName();
 
-        File bundleFile = createBundle(mf, TestURLHandlersActivator.class);
+        File bundleFile = createBundle(mf, TestURLHandlersActivator.class, UC.class);
 
         final Bundle bundle = f.getBundleContext().installBundle(bundleFile.toURI().toString());
         bundle.start();
@@ -202,14 +204,40 @@ public class URLHandlersTest extends TestCase
             return super.defineClass(name, buffer, 0, buffer.length, null);
         }
     }
-
-    public static class TestURLHandlersActivator implements BundleActivator, URLStreamHandlerService
+    public static class UC extends URLConnection
     {
+        public UC(URL u)
+        {
+            super(u);
+        }
+
+        @Override
+        public void connect() throws IOException
+        {
+
+        }
+
+        @Override
+        public String getContentType()
+        {
+            return "test";
+        }
+
+        @Override
+        public InputStream getInputStream() throws IOException
+        {
+            return null;
+        }
+    }
+
+    public static class TestURLHandlersActivator extends ContentHandler implements BundleActivator, URLStreamHandlerService
+    {
+
         private volatile ServiceRegistration m_reg = null;
 
         public URLConnection openConnection(URL u) throws IOException
         {
-            return null;//throw new UnsupportedOperationException("Not supported yet.");
+            return new UC(u);//throw new UnsupportedOperationException("Not supported yet.");
         }
 
         public void parseURL(URLStreamHandlerSetter realHandler, URL u, String spec, int start, int limit)
@@ -260,7 +288,7 @@ public class URLHandlersTest extends TestCase
                 new URL("test" + System.identityHashCode(TestURLHandlersActivator.this) + ":").openConnection();
                 throw new Exception("Unexpected url resolve");
             }
-            catch (Exception ex)
+            catch (IOException ex)
             {
                 // pass
             }
@@ -272,7 +300,54 @@ public class URLHandlersTest extends TestCase
 
             new URL("test" + System.identityHashCode(TestURLHandlersActivator.this) + ":").openConnection();
 
-            reg.unregister();
+
+
+            try
+            {
+                if (new URL("test" + System.identityHashCode(TestURLHandlersActivator.this) + ":").getContent() != null)
+                {
+                    throw new Exception("Unexpected content resolve");
+                }
+            }
+            catch (IOException ex)
+            {
+                // pass
+            }
+
+            props = new Hashtable<String, String>();
+            props.put(URLConstants.URL_CONTENT_MIMETYPE, "test");
+
+            try
+            {
+                ServiceRegistration reg2 = context.registerService(ContentHandler.class, this, props);
+
+                try
+                {
+                    if (new URL("test" + System.identityHashCode(TestURLHandlersActivator.this) + ":").getContent() != this)
+                    {
+                        throw new Exception("Unexpected content");
+                    }
+                }
+                finally
+                {
+                    reg2.unregister();
+                }
+                try
+                {
+                    if (new URL("test" + System.identityHashCode(TestURLHandlersActivator.this) + ":").getContent() != null)
+                    {
+                        throw new Exception("Unexpected content resolve");
+                    }
+                }
+                catch (IOException ex)
+                {
+                    // pass
+                }
+            }
+            finally
+            {
+                reg.unregister();
+            }
 
             try
             {
@@ -295,7 +370,7 @@ public class URLHandlersTest extends TestCase
                     + "Manifest-Version: 1.0\n"
                     + Constants.BUNDLE_ACTIVATOR + ": " + TestURLHandlersActivator.class.getName() + "\n\n";
 
-                File bundleFile = createBundle(mf, TestURLHandlersActivator.class);
+                File bundleFile = createBundle(mf, TestURLHandlersActivator.class, UC.class);
 
                 bundle2 = context.installBundle(bundleFile.toURI().toURL().toString());
             }
@@ -370,6 +445,12 @@ public class URLHandlersTest extends TestCase
             {
                 m_reg.unregister();
             }
+        }
+
+        @Override
+        public Object getContent(URLConnection urlc) throws IOException
+        {
+            return this;
         }
     }
 
