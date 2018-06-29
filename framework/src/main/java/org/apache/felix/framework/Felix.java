@@ -4841,9 +4841,6 @@ public class Felix extends BundleImpl implements Framework
             FelixConstants.FRAMEWORK_VENDOR,
             FelixConstants.FRAMEWORK_VENDOR_VALUE);
         m_configMutableMap.put(
-            FelixConstants.FRAMEWORK_LANGUAGE,
-            System.getProperty("user.language"));
-        m_configMutableMap.put(
             FelixConstants.SUPPORTS_FRAMEWORK_EXTENSION,
             ExtensionManager.m_extenderFramework != null ? "true" : "false");
         m_configMutableMap.put(
@@ -4857,12 +4854,28 @@ public class Felix extends BundleImpl implements Framework
             ExtensionManager.m_extenderBoot != null ? "true" : "false");
 
         String s = null;
-        s = NativeLibraryClause.normalizeOSName(System.getProperty("os.name"));
-        m_configMutableMap.put(FelixConstants.FRAMEWORK_OS_NAME, s);
-        s = NativeLibraryClause.normalizeProcessor(System.getProperty("os.arch"));
-        m_configMutableMap.put(FelixConstants.FRAMEWORK_PROCESSOR, s);
-        m_configMutableMap.put(FelixConstants.FRAMEWORK_OS_VERSION,
-            NativeLibraryClause.normalizeOSVersion(System.getProperty("os.version")));
+        if (!m_configMutableMap.containsKey(FelixConstants.FRAMEWORK_OS_NAME))
+        {
+            s = NativeLibraryClause.normalizeOSName(System.getProperty("os.name"));
+            m_configMutableMap.put(FelixConstants.FRAMEWORK_OS_NAME, s);
+        }
+        
+        if ( !m_configMutableMap.containsKey(FelixConstants.FRAMEWORK_PROCESSOR))
+        {
+            s = NativeLibraryClause.normalizeProcessor(System.getProperty("os.arch"));
+            m_configMutableMap.put(FelixConstants.FRAMEWORK_PROCESSOR, s);
+        }
+        
+        if ( !m_configMutableMap.containsKey(FelixConstants.FRAMEWORK_OS_VERSION))
+        {
+            m_configMutableMap.put(FelixConstants.FRAMEWORK_OS_VERSION,
+                NativeLibraryClause.normalizeOSVersion(System.getProperty("os.version")));
+        }
+        if (!m_configMutableMap.containsKey(FelixConstants.FRAMEWORK_LANGUAGE))
+        {
+            m_configMutableMap.put(FelixConstants.FRAMEWORK_LANGUAGE,
+                System.getProperty("user.language"));
+        }
         m_configMutableMap.put(
             FelixConstants.FELIX_VERSION_PROPERTY, getFrameworkVersion());
 
