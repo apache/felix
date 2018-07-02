@@ -20,15 +20,17 @@ package org.apache.felix.log;
 
 import java.util.Enumeration;
 
+import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleEvent;
 import org.osgi.framework.BundleListener;
 import org.osgi.framework.FrameworkEvent;
 import org.osgi.framework.FrameworkListener;
 import org.osgi.framework.ServiceEvent;
 import org.osgi.framework.ServiceListener;
+import org.osgi.framework.ServiceReference;
 import org.osgi.service.log.LogEntry;
+import org.osgi.service.log.LogLevel;
 import org.osgi.service.log.LogListener;
-import org.osgi.service.log.LogService;
 
 /**
  * Class used to represent the log.  This class is used by the implementations
@@ -79,6 +81,17 @@ final class Log implements BundleListener, FrameworkListener, ServiceListener
         m_size = 0;
     }
 
+    void log(
+        final String name,
+        final Bundle bundle,
+        final ServiceReference<?> sr,
+        final LogLevel level,
+        final String message,
+        final Throwable exception) {
+
+        addEntry(new LogEntryImpl(name, bundle, sr, level, message, exception, getStackTraceElement()));
+    }
+
     /**
      * Adds the entry to the log.
      * @param entry the entry to add to the log
@@ -88,7 +101,7 @@ final class Log implements BundleListener, FrameworkListener, ServiceListener
         if (m_maxSize != 0)
         {
             // add the entry to the historic log
-            if (m_storeDebug || entry.getLevel() != LogService.LOG_DEBUG)
+            if (m_storeDebug || entry.getLogLevel() != LogLevel.DEBUG)
             {
                 // create a new node for the entry
                 LogNode node = new LogNode(entry);
@@ -172,7 +185,7 @@ final class Log implements BundleListener, FrameworkListener, ServiceListener
      * Returns an enumeration of all the entries in the log most recent first.
      * @return an enumeration of all the entries in the log most recent first
      */
-    synchronized Enumeration getEntries()
+    synchronized Enumeration<LogEntry> getEntries()
     {
         return new LogNodeEnumeration(m_head, m_tail);
     }
@@ -205,13 +218,13 @@ final class Log implements BundleListener, FrameworkListener, ServiceListener
             }
         }
 
-        LogEntry entry = new LogEntryImpl(event.getBundle(),
+        log(
+            "Events.Framework",
+            event.getBundle(),
             null,
-            (eventType == FrameworkEvent.ERROR) ? LogService.LOG_ERROR : LogService.LOG_INFO,
+            (eventType == FrameworkEvent.ERROR) ? LogLevel.ERROR : LogLevel.INFO,
             message,
             event.getThrowable());
-
-        addEntry(entry);
     }
 
     /** The messages returned for the bundle events. */
@@ -245,14 +258,27 @@ final class Log implements BundleListener, FrameworkListener, ServiceListener
 
         if (message != null)
         {
-            LogEntry entry = new LogEntryImpl(event.getBundle(),
+            log(
+                "Events.Bundle",
+                event.getBundle(),
                 null,
-                LogService.LOG_INFO,
+                LogLevel.INFO,
                 message,
                 null);
-
-            addEntry(entry);
         }
+    }
+
+    public static StackTraceElement getStackTraceElement() {
+        StackTraceElement[] elements = Thread.currentThread().getStackTrace();
+        if (elements.length == 0) {
+            return null;
+        }
+        for (int i = 1; i < elements.length; i++) {
+            if (!elements[i].getClassName().startsWith("org.apache.felix.log")) {
+                return elements[i];
+            }
+        }
+        return elements[1];
     }
 
     /** The messages returned for the service events. */
@@ -280,12 +306,12 @@ final class Log implements BundleListener, FrameworkListener, ServiceListener
             }
         }
 
-        LogEntry entry = new LogEntryImpl(event.getServiceReference().getBundle(),
+        log(
+            "Events.Service",
+            event.getServiceReference().getBundle(),
             event.getServiceReference(),
-            (eventType == ServiceEvent.MODIFIED) ? LogService.LOG_DEBUG : LogService.LOG_INFO,
+            (eventType == ServiceEvent.MODIFIED) ? LogLevel.DEBUG : LogLevel.INFO,
             message,
             null);
-
-        addEntry(entry);
     }
 }

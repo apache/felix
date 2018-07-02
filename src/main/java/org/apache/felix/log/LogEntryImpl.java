@@ -18,9 +18,15 @@
  */
 package org.apache.felix.log;
 
+import java.io.PrintWriter;
+import java.io.StringWriter;
+import java.util.concurrent.atomic.AtomicLong;
+
 import org.osgi.framework.Bundle;
 import org.osgi.framework.ServiceReference;
 import org.osgi.service.log.LogEntry;
+import org.osgi.service.log.LogLevel;
+import org.osgi.service.log.LogService;
 
 /**
  * Implementation of the OSGi {@link LogEntry} interface.  See section 101
@@ -37,39 +43,99 @@ import org.osgi.service.log.LogEntry;
  */
 final class LogEntryImpl implements LogEntry
 {
+    /** The sequence number generator. */
+    private static final AtomicLong m_sequenceGenerator = new AtomicLong();
+
+    /** The name of the logger used to create the LogEntry. */
+    private final String m_name;
     /** The bundle that created the LogEntry object. */
     private final Bundle m_bundle;
     /** The exception associated with this LogEntry object. */
     private final Throwable m_exception;
     /** The severity level of this LogEntry object. */
-    private final int m_level;
+    private final LogLevel m_level;
+    private final int m_legacyLevel;
     /** The message associated with this LogEntry object. */
     private final String m_message;
     /** The service reference associated with this LogEntry object. */
-    private final ServiceReference m_serviceReference;
+    private final ServiceReference<?> m_serviceReference;
     /** The system time in milliseconds when this LogEntry object was created. */
     private final long m_time;
+    /** The sequence of the LogEntry. */
+    private final long m_sequence;
+    /** The information about the Thread which logged the message. */
+    private final String m_threadInfo;
+    /** The StackTraceElement where the message was originally logged. */
+    private final StackTraceElement m_stackTraceElement;
+
+    private volatile String _toString;
 
     /**
      * Create a new instance.
+     * @param name the name of the logger used to create the LogEntry
      * @param bundle the bundle that created the LogEntry object
      * @param sr the service reference to associate with this LogEntry object
      * @param level the severity level for this LogEntry object
      * @param message the message to associate with this LogEntry object
      * @param exception the exception to associate with this LogEntry object
      */
-    LogEntryImpl(final Bundle bundle,
-        final ServiceReference sr,
-        final int level,
+    LogEntryImpl(
+        final String name,
+        final Bundle bundle,
+        final ServiceReference<?> sr,
+        final LogLevel level,
         final String message,
-        final Throwable exception)
+        final Throwable exception,
+        final StackTraceElement stackTraceElement)
     {
+        this.m_name = name;
         this.m_bundle = bundle;
         this.m_exception = LogException.getException(exception);
         this.m_level = level;
+        this.m_legacyLevel = level.ordinal();
         this.m_message = message;
         this.m_serviceReference = sr;
         this.m_time = System.currentTimeMillis();
+        this.m_sequence = m_sequenceGenerator.getAndIncrement();
+        this.m_threadInfo = Thread.currentThread().getName();
+        this.m_stackTraceElement = stackTraceElement;
+    }
+
+    @SuppressWarnings("deprecation")
+    LogEntryImpl(
+        final String name,
+        final Bundle bundle,
+        final ServiceReference<?> sr,
+        final int legacyLevel,
+        final String message,
+        final Throwable exception,
+        final StackTraceElement stackTraceElement)
+    {
+        this.m_name = name;
+        this.m_bundle = bundle;
+        this.m_exception = LogException.getException(exception);
+        LogLevel level = LogLevel.TRACE;
+        switch (legacyLevel) {
+            case LogService.LOG_ERROR:
+                level = LogLevel.ERROR;
+                break;
+            case LogService.LOG_WARNING:
+                level = LogLevel.WARN;
+                break;
+            case LogService.LOG_INFO:
+                level = LogLevel.INFO;
+                break;
+            case LogService.LOG_DEBUG:
+                level = LogLevel.DEBUG;
+        }
+        this.m_level = level;
+        this.m_legacyLevel = ((level == LogLevel.TRACE) ? legacyLevel : level.ordinal());
+        this.m_message = message;
+        this.m_serviceReference = sr;
+        this.m_time = System.currentTimeMillis();
+        this.m_sequence = m_sequenceGenerator.getAndIncrement();
+        this.m_threadInfo = Thread.currentThread().getName();
+        this.m_stackTraceElement = stackTraceElement;
     }
 
     /**
@@ -89,7 +155,7 @@ final class LogEntryImpl implements LogEntry
      * this LogEntry object; <code>null</code> if no {@link ServiceReference} object
      * was provided
      */
-    public ServiceReference getServiceReference()
+    public ServiceReference<?> getServiceReference()
     {
         return m_serviceReference;
     }
@@ -107,7 +173,11 @@ final class LogEntryImpl implements LogEntry
      */
     public int getLevel()
     {
-        return m_level;
+        if (m_legacyLevel != m_level.ordinal()) {
+            return m_legacyLevel;
+        }
+
+        return m_level.ordinal();
     }
 
     /**
@@ -147,4 +217,49 @@ final class LogEntryImpl implements LogEntry
     {
         return m_time;
     }
+
+    @Override
+    public LogLevel getLogLevel() {
+        return m_level;
+    }
+
+    @Override
+    public String getLoggerName() {
+        return m_name;
+    }
+
+    @Override
+    public long getSequence() {
+        return m_sequence;
+    }
+
+    @Override
+    public String getThreadInfo() {
+        return m_threadInfo;
+    }
+
+    @Override
+    public StackTraceElement getLocation() {
+        return m_stackTraceElement;
+    }
+
+    @Override
+    public String toString() {
+        if (_toString == null) {
+            _toString = m_time + "#" + m_sequence + " [" + m_threadInfo + "] " + m_level +
+                " (" + m_legacyLevel + ") [" + m_bundle.getBundleId() + ":" + m_name + "] " +
+                    m_stackTraceElement.getClassName() + ":" +
+                    m_stackTraceElement.getLineNumber() + " > " + m_message +
+                        (m_exception != null ? "\n" + exceptionString(m_exception) : "");
+        }
+        return _toString;
+    }
+
+    String exceptionString(Throwable t) {
+        StringWriter sw = new StringWriter();
+        PrintWriter pw = new PrintWriter(sw);
+        t.printStackTrace(pw);
+        return sw.toString();
+    }
+
 }

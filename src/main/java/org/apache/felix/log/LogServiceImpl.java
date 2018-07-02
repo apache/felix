@@ -19,28 +19,32 @@
 package org.apache.felix.log;
 
 import org.osgi.framework.Bundle;
+import org.osgi.framework.BundleContext;
+import org.osgi.framework.FrameworkUtil;
 import org.osgi.framework.ServiceReference;
 import org.osgi.service.log.LogService;
+import org.osgi.service.log.Logger;
 
 /**
  * Implementation of the OSGi {@link LogService}.
  */
 final class LogServiceImpl implements LogService
 {
-    /** The log implementation. */
-    private final Log m_log;
     /** The bundle associated with this implementation. */
     private final Bundle m_bundle;
+    /** The logger admin impl. */
+    private final LoggerAdminImpl m_loggerAdminImpl;
 
     /**
      * Create a new instance.
      * @param log the log implementation
      * @param bundle the bundle associated with this implementation
+     * @param serviceReference
      */
-    LogServiceImpl(final Log log, final Bundle bundle)
+    LogServiceImpl(final Bundle bundle, final LoggerAdminImpl loggerAdminImpl)
     {
-        this.m_log = log;
         this.m_bundle = bundle;
+        this.m_loggerAdminImpl = loggerAdminImpl;
     }
 
     /**
@@ -74,7 +78,7 @@ final class LogServiceImpl implements LogService
      * @param level the level to log the message at
      * @param message the message to log
      */
-    public void log(final ServiceReference sr,
+    public void log(final ServiceReference<?> sr,
         final int level,
         final String message)
     {
@@ -89,15 +93,73 @@ final class LogServiceImpl implements LogService
      * @param message the message to log
      * @param exception the exception to log
      */
-    public void log(final ServiceReference sr,
+    @SuppressWarnings("deprecation")
+    public void log(final ServiceReference<?> sr,
         final int level,
         final String message,
         final Throwable exception)
     {
-        m_log.addEntry(new LogEntryImpl((sr != null) ? sr.getBundle() : m_bundle,
-            sr,
-            level,
-            message,
-            exception));
+        LoggerImpl logger = (LoggerImpl)m_loggerAdminImpl.getLogger(m_bundle, "LogService", Logger.class);
+
+        switch (level) {
+            case LogService.LOG_DEBUG:
+                logger.debug(message, sr, exception);
+                break;
+            case LogService.LOG_ERROR:
+                logger.error(message, sr, exception);
+                break;
+            case LogService.LOG_INFO:
+                logger.info(message, sr, exception);
+                break;
+            case LogService.LOG_WARNING:
+                logger.warn(message, sr, exception);
+                break;
+            default:
+                logger.log(level, message, sr, exception);
+        }
     }
+
+    @Override
+    public Logger getLogger(String name) {
+        return m_loggerAdminImpl.getLogger(m_bundle, name, Logger.class);
+    }
+
+    @Override
+    public Logger getLogger(Class<?> clazz) {
+        LogService logService = getLogService(clazz);
+        return logService.getLogger(clazz.getName());
+    }
+
+    @Override
+    public <L extends Logger> L getLogger(String name, Class<L> loggerType) {
+        return m_loggerAdminImpl.getLogger(m_bundle, name, loggerType);
+    }
+
+    @Override
+    public <L extends Logger> L getLogger(Class<?> clazz, Class<L> loggerType) {
+        LogService logService = getLogService(clazz);
+        return logService.getLogger(clazz.getName(), loggerType);
+    }
+
+    @Override
+    public <L extends Logger> L getLogger(Bundle bundle, String name, Class<L> loggerType) {
+        LogService logService = getLogService(bundle);
+        return logService.getLogger(name, loggerType);
+    }
+
+    private LogService getLogService(Bundle bundle) {
+        if (((bundle.getState() & Bundle.ACTIVE) != Bundle.ACTIVE) &&
+            ((bundle.getState() & Bundle.RESOLVED) != Bundle.RESOLVED)) {
+            throw new IllegalArgumentException("Bundle " + bundle + " is not resolved.");
+        }
+        BundleContext bundleContext = bundle.getBundleContext();
+        ServiceReference<LogService> serviceReference = bundleContext.getServiceReference(LogService.class);
+        return bundleContext.getService(serviceReference);
+    }
+
+    private LogService getLogService(Class<?> clazz) {
+        Bundle bundle = FrameworkUtil.getBundle(clazz);
+        return getLogService(bundle);
+    }
+
 }

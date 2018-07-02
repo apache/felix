@@ -34,9 +34,9 @@ import org.osgi.service.log.LogListener;
 final class LogListenerThread extends Thread
 {
     // The list of entries waiting to be delivered to the log listeners.
-    private final List m_entriesToDeliver = new ArrayList();
+    private final List<LogEntry> m_entriesToDeliver = new ArrayList<>();
     // The list of listeners.
-    private final List m_listeners = new ArrayList();
+    private final List<LogListener> m_listeners = new ArrayList<>();
 
     LogListenerThread() {
         super("FelixLogListener");
@@ -110,7 +110,7 @@ final class LogListenerThread extends Thread
     {
         while (!isInterrupted())
         {
-            List entriesToDeliver = new ArrayList();
+            List<LogEntry> entriesToDeliver = new ArrayList<>();
             synchronized (m_entriesToDeliver)
             {
                 if (m_entriesToDeliver.isEmpty())
@@ -121,46 +121,47 @@ final class LogListenerThread extends Thread
                     }
                     catch (InterruptedException e)
                     {
-                        // the interrupt-flag is cleared; so, let's play nice and 
+                        // the interrupt-flag is cleared; so, let's play nice and
                         // interrupt this thread again to stop it...
                         interrupt();
                     }
                 }
-                else 
+                else
                 {
                     // Copy all current entries and deliver them in a single go...
                     entriesToDeliver.addAll(m_entriesToDeliver);
                     m_entriesToDeliver.clear();
                 }
             }
-            
+
             if (!entriesToDeliver.isEmpty())
             {
                 // Take a snapshot of all current listeners and deliver all
                 // pending messages to them...
-                List listeners = new ArrayList();
-                synchronized (m_listeners) 
+                List<LogListener> listeners = new ArrayList<>();
+                synchronized (m_listeners)
                 {
                     listeners.addAll(m_listeners);
                 }
 
-                Iterator entriesIt = entriesToDeliver.iterator();
-                while (entriesIt.hasNext()) 
+                Iterator<LogEntry> entriesIt = entriesToDeliver.iterator();
+                while (entriesIt.hasNext())
                 {
-                    LogEntry entry = (LogEntry) entriesIt.next();
-                    
-                    Iterator listenerIt = listeners.iterator();
+                    LogEntry entry = entriesIt.next();
+
+                    Iterator<LogListener> listenerIt = listeners.iterator();
                     while (listenerIt.hasNext())
                     {
-                        LogListener listener = (LogListener) listenerIt.next();
-                        
+                        LogListener listener = listenerIt.next();
+
                         try
                         {
                             listener.logged(entry);
                         }
                         catch (Throwable t)
                         {
-                            // catch and discard any exceptions thrown by the listener
+                            System.err.println("Logger failed to log with " + t.getMessage());
+                            t.printStackTrace(System.err);
                         }
                     }
                 }

@@ -26,7 +26,7 @@ import org.osgi.service.log.LogEntry;
  * Implementation of the {@link Enumeration} interface for a linked list of
  * {@link LogNode} entries.
  */
-final class LogNodeEnumeration implements Enumeration
+final class LogNodeEnumeration implements Enumeration<LogEntry>
 {
     /** The next node. */
     private LogNode m_next;
@@ -57,7 +57,7 @@ final class LogNodeEnumeration implements Enumeration
      * Returns the current element and moves onto the next element.
      * @return the current element
      */
-    public Object nextElement()
+    public LogEntry nextElement()
     {
         LogEntry result = null;
 

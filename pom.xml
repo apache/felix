@@ -20,7 +20,7 @@
   <parent>
     <groupId>org.apache.felix</groupId>
     <artifactId>felix-parent</artifactId>
-    <version>1.2.1</version>
+    <version>5</version>
     <relativePath>../pom/pom.xml</relativePath>
   </parent>
   <modelVersion>4.0.0</modelVersion>
@@ -31,52 +31,68 @@
   </description>
   <version>1.1.0-SNAPSHOT</version>
   <artifactId>org.apache.felix.log</artifactId>
+
+  <properties>
+    <maven.compiler.source>1.7</maven.compiler.source>
+    <maven.compiler.target>1.7</maven.compiler.target>
+  </properties>
+
   <dependencies>
     <dependency>
       <groupId>org.osgi</groupId>
-      <artifactId>org.osgi.core</artifactId>
-      <version>4.1.0</version>
+      <artifactId>osgi.core</artifactId>
+      <version>6.0.0</version>
     </dependency>
     <dependency>
       <groupId>org.osgi</groupId>
-      <artifactId>org.osgi.compendium</artifactId>
-      <version>4.1.0</version>
+      <artifactId>org.osgi.service.cm</artifactId>
+      <version>1.6.0</version>
     </dependency>
-  </dependencies>
+    <dependency>
+      <groupId>org.osgi</groupId>
+      <artifactId>org.osgi.service.log</artifactId>
+      <version>1.4.0</version>
+    </dependency>
+   </dependencies>
   <build>
     <plugins>
       <plugin>
         <groupId>org.apache.felix</groupId>
         <artifactId>maven-bundle-plugin</artifactId>
-        <version>2.3.4</version>
+        <version>3.5.0</version>
         <extensions>true</extensions>
         <configuration>
           <instructions>
-            <Export-Package>org.osgi.service.log</Export-Package>
+            <Export-Package>org.osgi.service.log,org.osgi.service.log.admin</Export-Package>
             <Private-Package>org.apache.felix.log</Private-Package>
             <Bundle-SymbolicName>${pom.artifactId}</Bundle-SymbolicName>
             <Bundle-Activator>${pom.artifactId}.Activator</Bundle-Activator>
             <Bundle-Vendor>The Apache Software Foundation</Bundle-Vendor>
             <Export-Service>org.osgi.service.log.LogService,org.osgi.service.log.LogReaderService</Export-Service>
             <Include-Resource>META-INF/LICENSE=LICENSE,META-INF/NOTICE=NOTICE,META-INF/DEPENDENCIES=DEPENDENCIES</Include-Resource>
+            <Provide-Capability><![CDATA[
+                osgi.service;objectClass:List<String>="org.osgi.service.log.admin.LoggerAdmin";uses:="org.osgi.service.log,org.osgi.service.log.admin",
+                osgi.service;objectClass:List<String>="org.osgi.service.log.LogReaderService";uses:="org.osgi.service.log,org.osgi.service.log.admin",
+                osgi.service;objectClass:List<String>="org.osgi.service.log.LogService,org.osgi.service.log.LoggerFactory";uses:="org.osgi.service.log,org.osgi.service.log.admin"
+            ]]></Provide-Capability>
           </instructions>
         </configuration>
       </plugin>
        <plugin>
-		<groupId>org.codehaus.mojo</groupId>
-		<artifactId>rat-maven-plugin</artifactId>
-		<configuration>
-			<excludeSubProjects>false</excludeSubProjects>
-			<useEclipseDefaultExcludes>true</useEclipseDefaultExcludes>
-			<useMavenDefaultExcludes>true</useMavenDefaultExcludes>
-			<excludes>
-				<param>doc/*</param>
-				<param>maven-eclipse.xml</param>
-				<param>.checkstyle</param>
-				<param>.externalToolBuilders/*</param>
-			</excludes>
-		</configuration>
-	   </plugin>
+        <groupId>org.codehaus.mojo</groupId>
+        <artifactId>rat-maven-plugin</artifactId>
+        <configuration>
+            <excludeSubProjects>false</excludeSubProjects>
+            <useEclipseDefaultExcludes>true</useEclipseDefaultExcludes>
+            <useMavenDefaultExcludes>true</useMavenDefaultExcludes>
+            <excludes>
+                <param>doc/*</param>
+                <param>maven-eclipse.xml</param>
+                <param>.checkstyle</param>
+                <param>.externalToolBuilders/*</param>
+            </excludes>
+        </configuration>
+    </plugin>
     </plugins>
   </build>
 </project>

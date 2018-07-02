@@ -21,23 +21,24 @@ package org.apache.felix.log;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.ServiceFactory;
 import org.osgi.framework.ServiceRegistration;
+import org.osgi.service.log.LogService;
 
 /**
  * {@link ServiceFactory} implementation for {@link LogService}.  Associates
  * an individual {@link LogService} with a {@link Bundle}.
  */
-final class LogServiceFactory implements ServiceFactory
+final class LogServiceFactory implements ServiceFactory<LogService>
 {
-    /** The log to associate the service implementations with. */
-    private final Log m_log;
+    /** The logger admin impl. */
+    private final LoggerAdminImpl m_loggerAdminImpl;
 
     /**
      * Create a new instance.
      * @param log the log to associate the service implementations with.,
      */
-    LogServiceFactory(final Log log)
+    LogServiceFactory(final LoggerAdminImpl loggerAdminImpl)
     {
-        m_log = log;
+        m_loggerAdminImpl = loggerAdminImpl;
     }
 
     /**
@@ -46,10 +47,10 @@ final class LogServiceFactory implements ServiceFactory
      * @param registration the service registration
      * @return the log service implementation for the specified bundle
      */
-    public Object getService(final Bundle bundle,
-        final ServiceRegistration registration)
+    public LogService getService(final Bundle bundle,
+        final ServiceRegistration<LogService> registration)
     {
-        return new LogServiceImpl(m_log, bundle);
+        return new LogServiceImpl(bundle, m_loggerAdminImpl);
     }
 
     /**
@@ -60,8 +61,8 @@ final class LogServiceFactory implements ServiceFactory
      * @param service the service to release
      */
     public void ungetService(final Bundle bundle,
-        final ServiceRegistration registration,
-        final Object service)
+        final ServiceRegistration<LogService> registration,
+        final LogService service)
     {
         // do nothing
     }
