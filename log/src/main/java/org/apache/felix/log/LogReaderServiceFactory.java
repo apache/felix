@@ -21,12 +21,13 @@ package org.apache.felix.log;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.ServiceFactory;
 import org.osgi.framework.ServiceRegistration;
+import org.osgi.service.log.LogReaderService;
 
 /**
  * {@link ServiceFactory} implementation for {@link LogReaderService}.  Associates
  * an individual {@link LogReaderService} with a {@link Bundle}.
  */
-final class LogReaderServiceFactory implements ServiceFactory
+final class LogReaderServiceFactory implements ServiceFactory<LogReaderService>
 {
     /** The log to associate the service implementations with. */
     private final Log m_log;
@@ -46,8 +47,8 @@ final class LogReaderServiceFactory implements ServiceFactory
      * @param registration the service registration
      * @return the log reader service implementation for the specified bundle
      */
-    public Object getService(final Bundle bundle,
-        final ServiceRegistration registration)
+    public LogReaderService getService(final Bundle bundle,
+        final ServiceRegistration<LogReaderService> registration)
     {
         return new LogReaderServiceImpl(m_log);
     }
@@ -60,8 +61,8 @@ final class LogReaderServiceFactory implements ServiceFactory
      * @param service the service to release
      */
     public void ungetService(final Bundle bundle,
-        final ServiceRegistration registration,
-        final Object service)
+        final ServiceRegistration<LogReaderService> registration,
+        final LogReaderService service)
     {
         ((LogReaderServiceImpl) service).removeAllLogListeners();
     }

@@ -23,6 +23,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Vector;
 
+import org.osgi.service.log.LogEntry;
 import org.osgi.service.log.LogListener;
 import org.osgi.service.log.LogReaderService;
 
@@ -41,7 +42,7 @@ final class LogReaderServiceImpl implements LogReaderService
     /** The log implementation. */
     private final Log m_log;
     /** The listeners associated with this service. */
-    private final List m_listeners = new Vector();
+    private final List<LogListener> m_listeners = new Vector<>();
 
     /**
      * Create a new instance.
@@ -87,7 +88,7 @@ final class LogReaderServiceImpl implements LogReaderService
      * entry first.
      * @return an enumeration of the {@link LogEntry} objects that have been stored
      */
-    public Enumeration getLog()
+    public Enumeration<LogEntry> getLog()
     {
         return m_log.getEntries();
     }
@@ -97,10 +98,10 @@ final class LogReaderServiceImpl implements LogReaderService
      */
     synchronized void removeAllLogListeners()
     {
-        Iterator listenerIt = m_listeners.iterator();
+        Iterator<LogListener> listenerIt = m_listeners.iterator();
         while (listenerIt.hasNext())
         {
-            LogListener listener = (LogListener) listenerIt.next();
+            LogListener listener = listenerIt.next();
             m_log.removeListener(listener);
         }
     }

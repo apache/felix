@@ -28,6 +28,9 @@ package org.apache.felix.log;
  */
 final class LogException extends Exception
 {
+
+    private static final long serialVersionUID = 1296580652284691039L;
+
     /** The class name of the original exception. */
     private final String m_className;
     /** The message from the original exception. */
