@@ -30,13 +30,13 @@
   <version>5.7.0-SNAPSHOT</version>
   <properties>
     <dollar>$</dollar>
-    <framework.version>5.6.10</framework.version>
-    <gogo.runtime.version>1.0.10</gogo.runtime.version>
-    <gogo.jline.shell.version>1.0.10</gogo.jline.shell.version>
+    <framework.version>6.0.0</framework.version>
+    <gogo.runtime.version>1.1.0</gogo.runtime.version>
+    <gogo.jline.shell.version>1.1.0</gogo.jline.shell.version>
     <gogo.command.version>1.0.2</gogo.command.version>
-    <jline.version>3.5.1</jline.version>
+    <jline.version>3.7.0</jline.version>
     <obr.version>2.0.10</obr.version>
-    <jansi.version>1.16</jansi.version>
+    <jansi.version>1.17.1</jansi.version>
   </properties>
     <scm>
       <connection>scm:svn:http://svn.apache.org/repos/asf/felix/trunk/main.distribution</connection>
