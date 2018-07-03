@@ -1,3 +1,15 @@
+2.0.0
+-----
+
+** New Feature
+    * [FELIX-5482] - Contribute Resolver 1.1 implementation for OSGi R7
+
+1.16.0
+------
+
+** Improvement
+    * [FELIX-5782] - allow resolver errors to be introspected
+
 1.14.0
 ------
 
