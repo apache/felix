@@ -18,28 +18,19 @@
  */
 package org.apache.felix.log;
 
-import java.io.IOException;
 import java.util.Dictionary;
 import java.util.Hashtable;
 
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
-import org.osgi.framework.InvalidSyntaxException;
-import org.osgi.framework.ServiceReference;
 import org.osgi.framework.ServiceRegistration;
-import org.osgi.service.cm.Configuration;
-import org.osgi.service.cm.ConfigurationAdmin;
-import org.osgi.service.cm.ConfigurationEvent;
-import org.osgi.service.cm.ConfigurationListener;
 import org.osgi.service.log.LogLevel;
 import org.osgi.service.log.LogReaderService;
 import org.osgi.service.log.LogService;
 import org.osgi.service.log.LoggerFactory;
 import org.osgi.service.log.admin.LoggerAdmin;
 import org.osgi.service.log.admin.LoggerContext;
-import org.osgi.util.tracker.ServiceTracker;
-import org.osgi.util.tracker.ServiceTrackerCustomizer;
 
 /**
  * The bundle activator for the OSGi log service (see section 101 of the service
@@ -77,8 +68,8 @@ public final class Activator implements BundleActivator
     private Log m_log;
     /** The LoggerAdmin. */
     private LoggerAdminImpl m_loggerAdmin;
-    /** ConfigurationAdmin tracker */
-    private ServiceTracker<ConfigurationAdmin, ConfigurationAdmin> m_cmtracker;
+    /** The Configuration listener. */
+    private ConfigurationListenerImpl m_configurationListener;
 
     /**
      * Returns the maximum size for the log.
@@ -164,41 +155,11 @@ public final class Activator implements BundleActivator
             serviceRegistration.getReference().getProperty(Constants.SERVICE_ID));
         context.registerService(LoggerAdmin.class.getName(), m_loggerAdmin, properties);
 
-        // create the cm tracker
-        m_cmtracker = new ServiceTracker<ConfigurationAdmin, ConfigurationAdmin>(
-            context, ConfigurationAdmin.class, new CMLogCustomizer(context));
-
-        m_cmtracker.open();
-
-        context.registerService(
-            ConfigurationListener.class.getName(),
-            new ConfigurationListener() {
-
-                @Override
-                public void configurationEvent(ConfigurationEvent event) {
-                    String pid = event.getPid();
-                    String configName = null;
-                    if (pid.startsWith("org.osgi.service.log.admin|")) {
-                        configName = pid.substring("org.osgi.service.log.admin|".length());
-                    }
-
-                    switch (event.getType()) {
-                        case ConfigurationEvent.CM_DELETED:
-                            m_loggerAdmin.updateConfiguration(configName, null);
-                            break;
-                        case ConfigurationEvent.CM_LOCATION_CHANGED:
-                        case ConfigurationEvent.CM_UPDATED:
-                            ConfigurationAdmin cm = m_cmtracker.getService(event.getReference());
-                            try {
-                                Configuration configuration = cm.getConfiguration(pid);
-                                m_loggerAdmin.updateConfiguration(configName, configuration.getProperties());
-                            } catch (IOException e) {
-                                m_log.log(Activator.class.getName(), context.getBundle(), null, LogLevel.ERROR, "An error occured while LogService was getting configuration from cm.", e);
-                            }
-                    }
-                }
-
-            }, null);
+        try {
+            m_configurationListener = new ConfigurationListenerImpl(context, m_log, m_loggerAdmin);
+        } catch (Exception e) {
+            m_log.log(getClass().getName(), context.getBundle(), null, LogLevel.ERROR, "An error occured while setting up the configuration listener.", e);
+        }
     }
 
     /**
@@ -208,61 +169,12 @@ public final class Activator implements BundleActivator
      */
     public void stop(final BundleContext context) throws Exception
     {
-        // close the cm tracker
-        m_cmtracker.close();
+        // close the configuration listener
+        if (m_configurationListener != null) {
+            m_configurationListener.close();
+        }
         // close the log
         m_log.close();
-    }
-
-    class CMLogCustomizer implements ServiceTrackerCustomizer<ConfigurationAdmin, ConfigurationAdmin> {
-
-        private final BundleContext m_context;
-
-        public CMLogCustomizer(BundleContext context) {
-            m_context = context;
-        }
-
-        @Override
-        public ConfigurationAdmin addingService(ServiceReference<ConfigurationAdmin> reference) {
-            ConfigurationAdmin cm = m_context.getService(reference);
-            // configure ROOT context
-            updateContext(null, "org.osgi.service.log.admin", cm, false);
-            // configure bundle contexts
-            for (String name : m_loggerAdmin.getLoggerContextNames()) {
-                String pid = "org.osgi.service.log.admin|" + name;
-                updateContext(name, pid, cm, false);
-            }
-            return cm;
-        }
-
-        @Override
-        public void modifiedService(ServiceReference<ConfigurationAdmin> reference, ConfigurationAdmin service) {
-        }
-
-        @Override
-        public void removedService(ServiceReference<ConfigurationAdmin> reference, ConfigurationAdmin cm) {
-            // un-configure bundle contexts
-            for (String name : m_loggerAdmin.getLoggerContextNames()) {
-                String pid = "org.osgi.service.log.admin|" + name;
-                updateContext(name, pid, cm, true);
-            }
-            // un-configure ROOT context
-            updateContext(null, "org.osgi.service.log.admin", cm, true);
-        }
-
-        private void updateContext(String name, String pid, ConfigurationAdmin cm, boolean delete) {
-            try {
-                Configuration[] configurations = cm.listConfigurations(String.format("(%s=%s)", Constants.SERVICE_PID, pid));
-
-                if (configurations != null && configurations.length > 0) {
-                    m_loggerAdmin.updateConfiguration(name, delete ? null : configurations[0].getProperties());
-                }
-            }
-            catch (IOException | InvalidSyntaxException e) {
-                m_log.log(Activator.class.getName(), m_context.getBundle(), null, LogLevel.ERROR, "An error occured while LogService was getting configuration from cm.", e);
-            }
-        }
-
     }
 
 }
