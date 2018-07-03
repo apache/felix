@@ -1,3 +1,41 @@
+Changes from 5.6.10 to 6.0.0
+----------------------------
+
+** New Feature
+    * [FELIX-5791] - Support OSGi R7 framework features
+
+** Sub-task
+    * [FELIX-5792] - Implement java.* import and exports
+    * [FELIX-5796] - Implement multi-release jar support
+    * [FELIX-5797] - Implement extension bundle imports
+    * [FELIX-5798] - Implement FrameworkWiringDTO
+    * [FELIX-5811] - Prevent bundles from providing ee capabilities
+
+** Bug
+    * [FELIX-5799] - Fix bugs in Service Factory unregister callback handling
+    * [FELIX-5807] - Do not hide the cause when a problem occurs in URLHandlersStreamHandlerProxy
+    * [FELIX-5810] - URLHandlers ContentHandler fails to load sun.net.www.content on Java 9
+    * [FELIX-5870] - Handle relative path elements in bundle classpath
+    * [FELIX-5874] - URLHandlersContentHandlerProxy.getBuiltIn always returns null
+    * [FELIX-5875] - org.osgi.framework.os.name et.al. are not obeyed
+
+** Improvement
+    * [FELIX-5800] - Improve calculation of available system bundle exports
+    * [FELIX-5803] - Auto refresh uninstalled bundle graph if possible
+    * [FELIX-5804] - Improve framework lookup for bundle protocol urls
+    * [FELIX-5808] - Clean-up bundlecache manifest parsing and entry reading
+    * [FELIX-5809] - Capture context for bundle: protocol urls if possible
+    * [FELIX-5816] - Switch to java.util.Random for startup performance
+    * [FELIX-5818] - Only resolve fragments that are required on dynamic import
+    * [FELIX-5823] - Remove support for old multi-file bundle cache format.
+    * [FELIX-5824] - Use VersionRange from OSGi and remove our own impl.
+    * [FELIX-5825] - Use ReentrantLock inside WeakZipFileFactory/WeakZipFile and use less synchronized.
+    * [FELIX-5826] - Remove FelixBundleContext interface
+    * [FELIX-5827] - Use less synchronized in the BundleWiring and BundleClassloader
+    * [FELIX-5828] - Remove android support.
+    * [FELIX-5829] - Delete ImmutableMap/List
+    * [FELIX-5877] - Add missing org.w3c.dom exports for java < 9
+
 Changes from 5.6.8 to 5.6.10
 ----------------------------
 
