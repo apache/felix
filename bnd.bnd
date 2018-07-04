@@ -1,6 +1,4 @@
-Export-Package: \
-	org.apache.felix.systemready,\
-	org.apache.felix.systemready.rootcause
+
 Import-Package: \
 	javax.servlet*;resolution:=optional,\
 	*
