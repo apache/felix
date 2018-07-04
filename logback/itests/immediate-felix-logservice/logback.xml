@@ -38,8 +38,8 @@
     <logger name="Events.Service" level="ERROR"/>
     <logger name="LogService" level="ERROR"/>
 
-    <logger name="Events.Service.org.apache.logback.itests" level="INFO"/>
-    <logger name="LogService.org.apache.logback.itests" level="OFF"/>
+    <logger name="Events.Service.org.apache.felix.logback.itests" level="INFO"/>
+    <logger name="LogService.org.apache.felix.logback.itests" level="OFF"/>
 
     <logger name="org.apache.felix.logback.test" level="DEBUG" />
 

@@ -20,19 +20,39 @@ package org.apache.felix.logback.test;
 
 import org.apache.felix.logback.test.helper.LogTestHelper;
 import org.junit.Test;
-// import org.slf4j.Logger;
-// import org.slf4j.LoggerFactory;
+import org.osgi.framework.BundleContext;
+import org.osgi.framework.FrameworkUtil;
+import org.osgi.framework.ServiceReference;
+import org.osgi.framework.ServiceRegistration;
+import org.osgi.service.log.Logger;
 
 public class LogServiceTest extends LogTestHelper {
 
     @Test
     public void test() {
-        // long time = System.nanoTime();
-        // Logger logger = LoggerFactory.getLogger(getClass());
-        // if (logger.isInfoEnabled()) {
-        //     logger.info(time + "");
-        // }
-        // assertLog("INFO", getClass().getName(), time);
+        long time = System.nanoTime();
+        Logger logger = getLogger(getClass());
+        if (logger.isInfoEnabled()) {
+            logger.info(time + "");
+        }
+        assertLog("INFO", getClass().getName(), time);
+    }
+
+    @Test
+    public void service() {
+        BundleContext bundleContext = FrameworkUtil.getBundle(getClass()).getBundleContext();
+        ServiceRegistration<Integer> registration = bundleContext.registerService(Integer.class, new Integer(25), null);
+
+        ServiceReference<Integer> reference = registration.getReference();
+        String refString = reference.toString();
+
+        try {
+            assertLog("INFO|Events.Service.org.apache.felix.logback.itests.immediate.felix.logservice|ServiceEvent REGISTERED " + refString);
+        }
+        finally {
+            registration.unregister();
+            assertLog("INFO|Events.Service.org.apache.felix.logback.itests.immediate.felix.logservice|ServiceEvent UNREGISTERING " + refString);
+        }
     }
 
 }
