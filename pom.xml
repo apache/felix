@@ -1,0 +1,89 @@
+<!--
+ Licensed to the Apache Software Foundation (ASF) under one
+ or more contributor license agreements.  See the NOTICE file
+ distributed with this work for additional information
+ regarding copyright ownership.  The ASF licenses this file
+ to you under the Apache License, Version 2.0 (the
+ "License"); you may not use this file except in compliance
+ with the License.  You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+ Unless required by applicable law or agreed to in writing,
+ software distributed under the License is distributed on an
+ "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ KIND, either express or implied.  See the License for the
+ specific language governing permissions and limitations
+ under the License.
+-->
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+  <parent>
+    <groupId>org.apache.felix</groupId>
+    <artifactId>felix-parent</artifactId>
+    <version>5</version>
+    <relativePath>../pom/pom.xml</relativePath>
+  </parent>
+  <modelVersion>4.0.0</modelVersion>
+  <packaging>bundle</packaging>
+  <name>Apache Felix Log Service Framework Extension Fragment</name>
+  <description>
+    This framework extension fragment is used to load the Felix Log Service when placing it on the framework classpath. This artifact should also be on the framework classpath.
+  </description>
+  <version>1.0.0-SNAPSHOT</version>
+  <artifactId>org.apache.felix.log.extension</artifactId>
+
+  <properties>
+    <maven.compiler.source>1.7</maven.compiler.source>
+    <maven.compiler.target>1.7</maven.compiler.target>
+  </properties>
+
+  <dependencies>
+    <dependency>
+      <groupId>org.osgi</groupId>
+      <artifactId>osgi.core</artifactId>
+      <version>6.0.0</version>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.felix</groupId>
+      <artifactId>org.apache.felix.log</artifactId>
+      <version>1.1.0-SNAPSHOT</version>
+    </dependency>
+   </dependencies>
+  <build>
+      <plugins>
+      <plugin>
+        <groupId>org.apache.felix</groupId>
+        <artifactId>maven-bundle-plugin</artifactId>
+        <version>3.5.0</version>
+        <extensions>true</extensions>
+        <configuration>
+          <instructions>
+            <Export-Package></Export-Package>
+            <Import-Package></Import-Package>
+            <Private-Package>${pom.artifactId}</Private-Package>
+            <Bundle-SymbolicName>${pom.artifactId}</Bundle-SymbolicName>
+            <Fragment-Host>org.apache.felix.framework;extension:="framework"</Fragment-Host>
+            <ExtensionBundle-Activator>org.apache.felix.log.extension.Activator</ExtensionBundle-Activator>
+            <Bundle-Vendor>The Apache Software Foundation</Bundle-Vendor>
+            <Include-Resource>META-INF/LICENSE=LICENSE,META-INF/NOTICE=NOTICE,META-INF/DEPENDENCIES=DEPENDENCIES</Include-Resource>
+          </instructions>
+        </configuration>
+      </plugin>
+       <plugin>
+        <groupId>org.codehaus.mojo</groupId>
+        <artifactId>rat-maven-plugin</artifactId>
+        <configuration>
+            <excludeSubProjects>false</excludeSubProjects>
+            <useEclipseDefaultExcludes>true</useEclipseDefaultExcludes>
+            <useMavenDefaultExcludes>true</useMavenDefaultExcludes>
+            <excludes>
+                <param>doc/*</param>
+                <param>maven-eclipse.xml</param>
+                <param>.checkstyle</param>
+                <param>.externalToolBuilders/*</param>
+            </excludes>
+        </configuration>
+    </plugin>
+    </plugins>
+  </build>
+</project>
