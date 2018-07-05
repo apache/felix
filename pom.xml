@@ -63,12 +63,14 @@
             <Bundle-SymbolicName>${pom.artifactId}</Bundle-SymbolicName>
             <Bundle-Activator>${pom.artifactId}.Activator</Bundle-Activator>
             <Bundle-Vendor>The Apache Software Foundation</Bundle-Vendor>
-            <Export-Service>org.osgi.service.log.LogService,org.osgi.service.log.LogReaderService</Export-Service>
             <Include-Resource>META-INF/LICENSE=LICENSE,META-INF/NOTICE=NOTICE,META-INF/DEPENDENCIES=DEPENDENCIES</Include-Resource>
+            <Require-Capability><![CDATA[
+                osgi.service;filter:="(objectClass=org.osgi.service.cm.ConfigurationAdmin)";effective:=active
+            ]]></Require-Capability>
             <Provide-Capability><![CDATA[
-                osgi.service;objectClass:List<String>="org.osgi.service.log.admin.LoggerAdmin";uses:="org.osgi.service.log,org.osgi.service.log.admin",
                 osgi.service;objectClass:List<String>="org.osgi.service.log.LogReaderService";uses:="org.osgi.service.log,org.osgi.service.log.admin",
-                osgi.service;objectClass:List<String>="org.osgi.service.log.LogService,org.osgi.service.log.LoggerFactory";uses:="org.osgi.service.log,org.osgi.service.log.admin"
+                osgi.service;objectClass:List<String>="org.osgi.service.log.LogService,org.osgi.service.log.LoggerFactory";uses:="org.osgi.service.log,org.osgi.service.log.admin",
+                osgi.service;objectClass:List<String>="org.osgi.service.log.admin.LoggerAdmin";uses:="org.osgi.service.log,org.osgi.service.log.admin"
             ]]></Provide-Capability>
           </instructions>
         </configuration>
