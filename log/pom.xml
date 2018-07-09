@@ -37,6 +37,12 @@
     <maven.compiler.target>1.7</maven.compiler.target>
   </properties>
 
+  <scm>
+    <connection>scm:svn:http://svn.apache.org/repos/asf/felix/trunk/log</connection>
+    <developerConnection>scm:svn:https://svn.apache.org/repos/asf/felix/trunk/log</developerConnection>
+    <url>http://svn.apache.org/viewvc/felix/trunk/log</url>
+  </scm>
+
   <dependencies>
     <dependency>
       <groupId>org.osgi</groupId>
