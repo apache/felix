@@ -12,9 +12,12 @@ Changes from 5.6.10 to 6.0.0
     * [FELIX-5811] - Prevent bundles from providing ee capabilities
 
 ** Bug
+    * [FELIX-5754] - error in default.properties contained in jar org.apache.felix.framework-5.6.10.jar
+    * [FELIX-5759] - StackOverflowError thrown during URL construction
     * [FELIX-5799] - Fix bugs in Service Factory unregister callback handling
     * [FELIX-5807] - Do not hide the cause when a problem occurs in URLHandlersStreamHandlerProxy
     * [FELIX-5810] - URLHandlers ContentHandler fails to load sun.net.www.content on Java 9
+    * [FELIX-5864] - Missing uses constraints for OSGi spec packages
     * [FELIX-5870] - Handle relative path elements in bundle classpath
     * [FELIX-5874] - URLHandlersContentHandlerProxy.getBuiltIn always returns null
     * [FELIX-5875] - org.osgi.framework.os.name et.al. are not obeyed
