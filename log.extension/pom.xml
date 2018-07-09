@@ -29,7 +29,7 @@
   <description>
     This framework extension fragment is used to load the Felix Log Service when placing it on the framework classpath. This artifact should also be on the framework classpath.
   </description>
-  <version>1.0.0</version>
+  <version>1.0.1-SNAPSHOT</version>
   <artifactId>org.apache.felix.log.extension</artifactId>
 
   <properties>
@@ -38,9 +38,9 @@
   </properties>
 
   <scm>
-    <connection>scm:svn:http://svn.apache.org/repos/asf/felix/releases/org.apache.felix.log.extension-1.0.0</connection>
-    <developerConnection>scm:svn:https://svn.apache.org/repos/asf/felix/releases/org.apache.felix.log.extension-1.0.0</developerConnection>
-    <url>http://svn.apache.org/viewvc/felix/releases/org.apache.felix.log.extension-1.0.0</url>
+    <connection>scm:svn:http://svn.apache.org/repos/asf/felix/trunk/log.extension</connection>
+    <developerConnection>scm:svn:https://svn.apache.org/repos/asf/felix/trunk/log.extension</developerConnection>
+    <url>http://svn.apache.org/viewvc/felix/trunk/log.extension</url>
   </scm>
 
   <dependencies>
@@ -52,7 +52,7 @@
     <dependency>
       <groupId>org.apache.felix</groupId>
       <artifactId>org.apache.felix.log</artifactId>
-      <version>1.2.0</version>
+      <version>1.2.1-SNAPSHOT</version>
     </dependency>
    </dependencies>
   <build>
