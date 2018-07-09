@@ -29,7 +29,7 @@
   <description>
     This framework extension fragment is used to load the Felix Log Service when placing it on the framework classpath. This artifact should also be on the framework classpath.
   </description>
-  <version>1.0.0-SNAPSHOT</version>
+  <version>1.0.0</version>
   <artifactId>org.apache.felix.log.extension</artifactId>
 
   <properties>
@@ -38,9 +38,9 @@
   </properties>
 
   <scm>
-    <connection>scm:svn:http://svn.apache.org/repos/asf/felix/trunk/log.extension</connection>
-    <developerConnection>scm:svn:https://svn.apache.org/repos/asf/felix/trunk/log.extension</developerConnection>
-    <url>http://svn.apache.org/viewvc/felix/trunk/log.extension</url>
+    <connection>scm:svn:http://svn.apache.org/repos/asf/felix/releases/org.apache.felix.log.extension-1.0.0</connection>
+    <developerConnection>scm:svn:https://svn.apache.org/repos/asf/felix/releases/org.apache.felix.log.extension-1.0.0</developerConnection>
+    <url>http://svn.apache.org/viewvc/felix/releases/org.apache.felix.log.extension-1.0.0</url>
   </scm>
 
   <dependencies>
@@ -52,7 +52,7 @@
     <dependency>
       <groupId>org.apache.felix</groupId>
       <artifactId>org.apache.felix.log</artifactId>
-      <version>1.1.0-SNAPSHOT</version>
+      <version>1.2.0</version>
     </dependency>
    </dependencies>
   <build>
@@ -64,8 +64,8 @@
         <extensions>true</extensions>
         <configuration>
           <instructions>
-            <Export-Package></Export-Package>
-            <Import-Package></Import-Package>
+            <Export-Package />
+            <Import-Package />
             <Private-Package>${pom.artifactId}</Private-Package>
             <Bundle-SymbolicName>${pom.artifactId}</Bundle-SymbolicName>
             <Fragment-Host>org.apache.felix.framework;extension:="framework"</Fragment-Host>
