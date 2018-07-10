@@ -20,7 +20,9 @@ package org.apache.felix.http.jetty.internal;
 
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.zip.Deflater;
 
+import org.eclipse.jetty.server.handler.gzip.GzipHandler;
 import org.eclipse.jetty.server.session.HouseKeeper;
 import org.osgi.framework.Bundle;
 import org.osgi.service.metatype.AttributeDefinition;
@@ -328,6 +330,88 @@ class ConfigMetaTypeProvider implements MetaTypeProvider
                 null,
                 bundle.getBundleContext().getProperty(JettyConfig.FELIX_HTTP_SERVICE_NAME)));
 
+        adList.add(new AttributeDefinitionImpl(JettyConfig.FELIX_JETTY_GZIP_HANDLER_ENABLE,
+                "Enable GzipHandler",
+                "Whether the server should use a server-wide gzip handler. Default is false.",
+                false,
+                bundle.getBundleContext().getProperty(JettyConfig.FELIX_JETTY_GZIP_HANDLER_ENABLE)));
+        adList.add(new AttributeDefinitionImpl(JettyConfig.FELIX_JETTY_GZIP_MIN_GZIP_SIZE,
+                "Gzip Min Size",
+                String.format("The minimum response size to trigger dynamic compression. Default is %d.", GzipHandler.DEFAULT_MIN_GZIP_SIZE),
+                GzipHandler.DEFAULT_MIN_GZIP_SIZE,
+                bundle.getBundleContext().getProperty(JettyConfig.FELIX_JETTY_GZIP_MIN_GZIP_SIZE)));
+        adList.add(new AttributeDefinitionImpl(JettyConfig.FELIX_JETTY_GZIP_COMPRESSION_LEVEL,
+                "Gzip Compression Level",
+                String.format("The compression level to use. Default is %d.", Deflater.DEFAULT_COMPRESSION),
+                Deflater.DEFAULT_COMPRESSION,
+                bundle.getBundleContext().getProperty(JettyConfig.FELIX_JETTY_GZIP_COMPRESSION_LEVEL)));
+        adList.add(new AttributeDefinitionImpl(JettyConfig.FELIX_JETTY_GZIP_INFLATE_BUFFER_SIZE,
+                "Gzip Inflate Buffer Size",
+                "The size in bytes of the buffer to inflate compressed request, or <= 0 for no inflation. Default is -1.",
+                -1,
+                bundle.getBundleContext().getProperty(JettyConfig.FELIX_JETTY_GZIP_INFLATE_BUFFER_SIZE)));
+        adList.add(new AttributeDefinitionImpl(JettyConfig.FELIX_JETTY_GZIP_SYNC_FLUSH,
+                "Gzip Sync Flush",
+                "True if Deflater#SYNC_FLUSH should be used, else Deflater#NO_FLUSH will be used. Default is false.",
+                false,
+                bundle.getBundleContext().getProperty(JettyConfig.FELIX_JETTY_GZIP_SYNC_FLUSH)));
+        adList.add(new AttributeDefinitionImpl(JettyConfig.FELIX_JETTY_GZIP_EXCLUDED_USER_AGENT,
+                "Gzip Exclude User Agents",
+                "The regular expressions matching additional user agents to exclude. Default is none.",
+                AttributeDefinition.STRING,
+                null,
+                2147483647,
+                null, null,
+                getStringArray(bundle.getBundleContext().getProperty(JettyConfig.FELIX_JETTY_GZIP_EXCLUDED_USER_AGENT))));
+        adList.add(new AttributeDefinitionImpl(JettyConfig.FELIX_JETTY_GZIP_INCLUDED_METHODS,
+                "Gzip Include Methods",
+                "The additional http methods to include in compression. Default is none.",
+                AttributeDefinition.STRING,
+                null,
+                2147483647,
+                null, null,
+                getStringArray(bundle.getBundleContext().getProperty(JettyConfig.FELIX_JETTY_GZIP_INCLUDED_METHODS))));
+        adList.add(new AttributeDefinitionImpl(JettyConfig.FELIX_JETTY_GZIP_EXCLUDED_METHODS,
+                "Gzip Exclude Methods",
+                "The additional http methods to exclude in compression. Default is none.",
+                AttributeDefinition.STRING,
+                null,
+                2147483647,
+                null, null,
+                getStringArray(bundle.getBundleContext().getProperty(JettyConfig.FELIX_JETTY_GZIP_EXCLUDED_METHODS))));
+        adList.add(new AttributeDefinitionImpl(JettyConfig.FELIX_JETTY_GZIP_INCLUDED_PATHS,
+                "Gzip Included Paths",
+                "The additional path specs to include. Inclusion takes precedence over exclusion. Default is none.",
+                AttributeDefinition.STRING,
+                null,
+                2147483647,
+                null, null,
+                getStringArray(bundle.getBundleContext().getProperty(JettyConfig.FELIX_JETTY_GZIP_INCLUDED_PATHS))));
+        adList.add(new AttributeDefinitionImpl(JettyConfig.FELIX_JETTY_GZIP_EXCLUDED_PATHS,
+                "Gzip Excluded Paths",
+                "The additional path specs to exclude. Inclusion takes precedence over exclusion. Default is none.",
+                AttributeDefinition.STRING,
+                null,
+                2147483647,
+                null, null,
+                getStringArray(bundle.getBundleContext().getProperty(JettyConfig.FELIX_JETTY_GZIP_EXCLUDED_PATHS))));
+        adList.add(new AttributeDefinitionImpl(JettyConfig.FELIX_JETTY_GZIP_INCLUDED_MIME_TYPES,
+                "Gzip Included Mime Types",
+                "The included mime types. Inclusion takes precedence over exclusion. Default is none.",
+                AttributeDefinition.STRING,
+                null,
+                2147483647,
+                null, null,
+                getStringArray(bundle.getBundleContext().getProperty(JettyConfig.FELIX_JETTY_GZIP_INCLUDED_MIME_TYPES))));
+        adList.add(new AttributeDefinitionImpl(JettyConfig.FELIX_JETTY_GZIP_EXCLUDED_MIME_TYPES,
+                "Gzip Excluded Mime Types",
+                "The excluded mime types. Inclusion takes precedence over exclusion. Default is none.",
+                AttributeDefinition.STRING,
+                null,
+                2147483647,
+                null, null,
+                getStringArray(bundle.getBundleContext().getProperty(JettyConfig.FELIX_JETTY_GZIP_EXCLUDED_MIME_TYPES))));
+        
         return new ObjectClassDefinition()
         {
 
