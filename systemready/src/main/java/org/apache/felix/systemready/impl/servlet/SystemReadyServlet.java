@@ -49,7 +49,7 @@ import org.slf4j.LoggerFactory;
         name = SystemReadyServlet.PID,
         service = Servlet.class,
         property = {
-                HttpWhiteboardConstants.HTTP_WHITEBOARD_SERVLET_PATTERN + "=" + "/system/console/ready",
+                HttpWhiteboardConstants.HTTP_WHITEBOARD_SERVLET_PATTERN + "=" + "/systemready",
         }
 )
 @Designate(ocd=SystemReadyServlet.Config.class)
@@ -68,7 +68,7 @@ public class SystemReadyServlet extends HttpServlet {
         @AttributeDefinition(name = "Servlet Path")
         String osgi_http_whiteboard_servlet_pattern() default SystemReadyServlet.DEFAULT_PATH;
         
-        @AttributeDefinition(name = "Servlet Context")
+        @AttributeDefinition(name = "Servlet Context select")
         String osgi_http_whiteboard_context_select();
 
     }
