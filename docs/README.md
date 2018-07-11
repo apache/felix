@@ -51,7 +51,7 @@ For an example see the [test case](../src/test/java/org/apache/felix/systemready
 ## Ready servlet
 
 The Ready servlet provides the aggregated state of the system over http in json format.
-It is registered on the path `/system/console/ready`.
+It is registered on the path `/systemready`.
 
 This is an example of a ready system with just the services check.
 ```
@@ -62,6 +62,13 @@ This is an example of a ready system with just the services check.
   ]
 }
 ```
+
+The servlet can be configured using the pid `org.apache.felix.systemready.impl.servlet.SystemReadyServlet`.
+
+You can set the servlet path and the servlet context select filter. The default works for Apache Karaf.
+When using the servlet in Apache Felix Http Whiteboard or Adobe AEM make sure you set the servlet context select too:
+
+    osgi.http.whiteboard.context.select=(osgi.http.whiteboard.context.name=org.osgi.service.http)
 
 ## Root cause command
 
