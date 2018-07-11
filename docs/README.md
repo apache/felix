@@ -65,7 +65,11 @@ This is an example of a ready system with just the services check.
 
 The servlet can be configured using the pid `org.apache.felix.systemready.impl.servlet.SystemReadyServlet`.
 
-You can set the servlet path and the servlet context select filter. The default works for Apache Karaf.
+The default config is
+
+    osgi.http.whiteboard.servlet.pattern=/systemready
+
+You can set the servlet pattern and the servlet context select filter. The default works for Apache Karaf.
 When using the servlet in Apache Felix Http Whiteboard or Adobe AEM make sure you set the servlet context select too:
 
     osgi.http.whiteboard.context.select=(osgi.http.whiteboard.context.name=org.osgi.service.http)
