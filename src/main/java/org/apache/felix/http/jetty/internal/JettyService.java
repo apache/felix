@@ -53,6 +53,7 @@ import org.eclipse.jetty.server.ServerConnector;
 import org.eclipse.jetty.server.SslConnectionFactory;
 import org.eclipse.jetty.server.handler.ContextHandlerCollection;
 import org.eclipse.jetty.server.handler.StatisticsHandler;
+import org.eclipse.jetty.server.handler.gzip.GzipHandler;
 import org.eclipse.jetty.server.session.HouseKeeper;
 import org.eclipse.jetty.server.session.SessionHandler;
 import org.eclipse.jetty.servlet.ServletContextHandler;
@@ -401,6 +402,25 @@ public final class JettyService extends AbstractLifeCycle.AbstractLifeCycleListe
             }
 
             this.server.setHandler(this.parent);
+
+            if (this.config.isGzipHandlerEnabled()) 
+            {
+            	GzipHandler gzipHandler = new GzipHandler();
+            	gzipHandler.setMinGzipSize(this.config.getGzipMinGzipSize());
+            	gzipHandler.setCompressionLevel(this.config.getGzipCompressionLevel());
+            	gzipHandler.setInflateBufferSize(this.config.getGzipInflateBufferSize());
+            	gzipHandler.setSyncFlush(this.config.isGzipSyncFlush());
+            	gzipHandler.addExcludedAgentPatterns(this.config.getGzipExcludedUserAgent());
+            	gzipHandler.addIncludedMethods(this.config.getGzipIncludedMethods());
+            	gzipHandler.addExcludedMethods(this.config.getGzipExcludedMethods());
+            	gzipHandler.addIncludedPaths(this.config.getGzipIncludedPaths());
+            	gzipHandler.addExcludedPaths(this.config.getGzipExcludedPaths());
+            	gzipHandler.addIncludedMimeTypes(this.config.getGzipIncludedMimeTypes());
+            	gzipHandler.addExcludedMimeTypes(this.config.getGzipExcludedMimeTypes());
+                            	
+            	this.server.insertHandler(gzipHandler);
+            }
+            
             this.server.start();
 
             // session id manager is only available after server is started

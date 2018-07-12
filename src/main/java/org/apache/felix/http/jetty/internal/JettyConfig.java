@@ -26,8 +26,10 @@ import java.util.Enumeration;
 import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.List;
+import java.util.zip.Deflater;
 
 import org.apache.felix.http.base.internal.logger.SystemLogger;
+import org.eclipse.jetty.server.handler.gzip.GzipHandler;
 import org.osgi.framework.BundleContext;
 
 public final class JettyConfig
@@ -216,6 +218,42 @@ public final class JettyConfig
     /** Felix specific property to define custom properties for the http runtime service. */
     public static final String FELIX_CUSTOM_HTTP_RUNTIME_PROPERTY_PREFIX = "org.apache.felix.http.runtime.init.";
 
+    /** Felix specific property to specify whether the server should use a server-wide gzip handler (defaults to true) */
+    public static final String FELIX_JETTY_GZIP_HANDLER_ENABLE = "org.apache.felix.jetty.gziphandler.enable";
+    
+    /** Felix specific property to specify the minimum response size to trigger dynamic compression */
+    public static final String FELIX_JETTY_GZIP_MIN_GZIP_SIZE = "org.apache.felix.jetty.gzip.minGzipSize";
+
+    /** Felix specific property to specify the compression level to use to initialize {@link Deflater#setLevel(int)} */
+    public static final String FELIX_JETTY_GZIP_COMPRESSION_LEVEL = "org.apache.felix.jetty.gzip.compressionLevel";
+
+    /** Felix specific property to specify the size in bytes of the buffer to inflate compressed request, or 0 for no inflation. */
+    public static final String FELIX_JETTY_GZIP_INFLATE_BUFFER_SIZE = "org.apache.felix.jetty.gzip.inflateBufferSize";
+
+    /** Felix specific property to specify the {@link Deflater} flush mode to use. */
+    public static final String FELIX_JETTY_GZIP_SYNC_FLUSH = "org.apache.felix.jetty.gzip.syncFlush";
+
+    /** Felix specific property to specify the regular expressions matching user agents to exclude */
+    public static final String FELIX_JETTY_GZIP_EXCLUDED_USER_AGENT = "org.apache.felix.jetty.gzip.excludedUserAgents";
+
+    /** Felix specific property to specify the methods to include in compression */
+    public static final String FELIX_JETTY_GZIP_INCLUDED_METHODS = "org.apache.felix.jetty.gzip.includedMethods";
+
+    /** Felix specific property to specify the methods to exclude from compression */
+    public static final String FELIX_JETTY_GZIP_EXCLUDED_METHODS = "org.apache.felix.jetty.gzip.excludedMethods";
+
+    /** Felix specific property to specify the path specs to include. Inclusion takes precedence over exclusion. */
+    public static final String FELIX_JETTY_GZIP_INCLUDED_PATHS = "org.apache.felix.jetty.gzip.includedPaths";
+
+    /** Felix specific property to specify the path specs to exclude. */
+    public static final String FELIX_JETTY_GZIP_EXCLUDED_PATHS = "org.apache.felix.jetty.gzip.excludedPaths";
+
+    /** Felix specific property to specify the included mime types. Inclusion takes precedence over exclusion. */
+    public static final String FELIX_JETTY_GZIP_INCLUDED_MIME_TYPES = "org.apache.felix.jetty.gzip.includedMimeTypes";
+
+    /** Felix specific property to specify the excluded mime types. */
+    public static final String FELIX_JETTY_GZIP_EXCLUDED_MIME_TYPES = "org.apache.felix.jetty.gzip.excludedMimeTypes";
+    
     private static String validateContextPath(String ctxPath)
     {
         // undefined, empty, or root context path
@@ -543,6 +581,55 @@ public final class JettyConfig
         return getBooleanProperty(FELIX_HTTP_REQUEST_LOG_FILE_LOG_LATENCY, false);
     }
 
+    
+    public boolean isGzipHandlerEnabled() {
+        return getBooleanProperty(FELIX_JETTY_GZIP_HANDLER_ENABLE, false);
+    }
+
+    public int getGzipMinGzipSize() {
+        return getIntProperty(FELIX_JETTY_GZIP_MIN_GZIP_SIZE, GzipHandler.DEFAULT_MIN_GZIP_SIZE);
+    }
+
+    public int getGzipCompressionLevel() {
+        return getIntProperty(FELIX_JETTY_GZIP_COMPRESSION_LEVEL, Deflater.DEFAULT_COMPRESSION);
+    }
+
+    public int getGzipInflateBufferSize() {
+        return getIntProperty(FELIX_JETTY_GZIP_INFLATE_BUFFER_SIZE, -1);
+    }
+
+    public boolean isGzipSyncFlush() {
+        return getBooleanProperty(FELIX_JETTY_GZIP_SYNC_FLUSH, false);
+    }
+
+    public String[] getGzipExcludedUserAgent() {
+        return getStringArrayProperty(FELIX_JETTY_GZIP_EXCLUDED_USER_AGENT, new String[0]);
+    }
+
+    public String[] getGzipIncludedMethods() {
+        return getStringArrayProperty(FELIX_JETTY_GZIP_INCLUDED_METHODS, new String[0]);
+    }
+
+    public String[] getGzipExcludedMethods() {
+        return getStringArrayProperty(FELIX_JETTY_GZIP_EXCLUDED_METHODS, new String[0]);
+    }
+
+    public String[] getGzipIncludedPaths() {
+        return getStringArrayProperty(FELIX_JETTY_GZIP_INCLUDED_PATHS, new String[0]);
+    }
+
+    public String[] getGzipExcludedPaths() {
+        return getStringArrayProperty(FELIX_JETTY_GZIP_EXCLUDED_PATHS, new String[0]);
+    }
+
+    public String[] getGzipIncludedMimeTypes() {
+        return getStringArrayProperty(FELIX_JETTY_GZIP_INCLUDED_MIME_TYPES, new String[0]);
+    }
+
+    public String[] getGzipExcludedMimeTypes() {
+        return getStringArrayProperty(FELIX_JETTY_GZIP_EXCLUDED_MIME_TYPES, new String[0]);
+    }
+    
     public void reset()
     {
         update(null);
