@@ -56,6 +56,48 @@
                     </archive>
                 </configuration>
             </plugin>
+                        <plugin>
+                <groupId>org.apache.rat</groupId>
+                <artifactId>apache-rat-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <phase>verify</phase>
+                        <goals>
+                            <goal>check</goal>
+                        </goals>
+                    </execution>
+                </executions>
+                <configuration>
+                    <excludes>
+                        <exclude>**/target/**/*</exclude>
+                        <exclude>**/appended-resources/**/*</exclude>
+                        <exclude>**/dependency-reduced-pom.xml</exclude>
+                        <exclude>**/velocity.log</exclude>
+                        <exclude>**/DEPENDENCIES</exclude>
+                        <!-- exclude IntelliJ IDEA generated files -->
+                        <exclude>**/*.iml</exclude>
+                        <exclude>**/*.ipr</exclude>
+                        <exclude>**/*.iws</exclude>
+                        <exclude>**/.idea/**/*</exclude>
+                        <!-- exclude Eclipse IDE generated files -->
+                        <exclude>**/.project</exclude>
+                        <exclude>**/.classpath</exclude>
+                        <exclude>**/.settings/**</exclude>
+                        <exclude>**/eclipse-classes/**/*</exclude>
+                        <exclude>**/MANIFEST.MF</exclude>
+                        <exclude>**/*.MF</exclude>
+                        <exclude>.gitignore</exclude>
+                        <exclude>bnd.bnd</exclude>
+                        <exclude>**/*.properties</exclude>
+                        <exclude>README.md</exclude>
+                        <exclude>*.cfg</exclude>
+                        <exclude>derby.log</exclude>
+                        <exclude>**/*.sql</exclude>
+                        <exclude>**/README.md</exclude>
+                        <exclude>**/Readme.md</exclude>
+                    </excludes>
+                </configuration>
+            </plugin>
         </plugins>
     </build>
 
