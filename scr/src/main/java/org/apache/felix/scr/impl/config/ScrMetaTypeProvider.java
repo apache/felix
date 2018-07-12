@@ -73,7 +73,9 @@ class ScrMetaTypeProvider implements MetaTypeProvider
 
         adList.add(new AttributeDefinitionImpl(ScrConfiguration.PROP_LOGLEVEL, "SCR Log Level",
             "Allows limiting the amount of logging information sent to the OSGi LogService."
-                + " Supported values are DEBUG, INFO, WARN, and ERROR. Default is ERROR.", AttributeDefinition.INTEGER,
+                + " Supported values are DEBUG, INFO, WARN, and ERROR. This property is not used"
+                + " if a R7 LogService implementation is available as the log level can be configured"
+                + " through that service. Default is ERROR.", AttributeDefinition.INTEGER,
             new String[]
                 { String.valueOf(this.configuration.getLogLevel()) }, 0, new String[]
                 { "Debug", "Information", "Warnings", "Error" }, new String[]

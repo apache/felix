@@ -14,16 +14,21 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <parent>
-        <groupId>org.apache</groupId>
-        <artifactId>apache</artifactId>
-        <version>19</version>
-        <relativePath/>
+        <groupId>org.apache.felix</groupId>
+        <artifactId>felix-parent</artifactId>
+        <version>5</version>
+        <relativePath />
     </parent>
 
-    <groupId>org.apache.felix</groupId>
     <artifactId>org.apache.felix.systemready</artifactId>
     <version>0.1.0-SNAPSHOT</version>
     <name>Apache Felix - System Ready</name>
+    
+    <scm>
+        <connection>scm:svn:http://svn.apache.org/repos/asf/felix/trunk/systemready</connection>
+        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/felix/trunk/systemready</developerConnection>
+        <url>http://svn.apache.org/viewvc/felix/trunk/systemready</url>
+    </scm>
 
     <build>
         <plugins>
@@ -54,6 +59,69 @@
                     <archive>
                         <manifestFile>${project.build.outputDirectory}/META-INF/MANIFEST.MF</manifestFile>
                     </archive>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.rat</groupId>
+                <artifactId>apache-rat-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <phase>verify</phase>
+                        <goals>
+                            <goal>check</goal>
+                        </goals>
+                    </execution>
+                </executions>
+                <configuration>
+                    <excludes>
+                        <exclude>**/target/**/*</exclude>
+                        <exclude>**/appended-resources/**/*</exclude>
+                        <exclude>**/dependency-reduced-pom.xml</exclude>
+                        <exclude>**/velocity.log</exclude>
+                        <exclude>**/DEPENDENCIES</exclude>
+                        <!-- exclude IntelliJ IDEA generated files -->
+                        <exclude>**/*.iml</exclude>
+                        <exclude>**/*.ipr</exclude>
+                        <exclude>**/*.iws</exclude>
+                        <exclude>**/.idea/**/*</exclude>
+                        <!-- exclude Eclipse IDE generated files -->
+                        <exclude>**/.project</exclude>
+                        <exclude>**/.classpath</exclude>
+                        <exclude>**/.settings/**</exclude>
+                        <exclude>**/eclipse-classes/**/*</exclude>
+                        <exclude>**/MANIFEST.MF</exclude>
+                        <exclude>**/*.MF</exclude>
+                        <exclude>.gitignore</exclude>
+                        <exclude>bnd.bnd</exclude>
+                        <exclude>**/*.properties</exclude>
+                        <exclude>README.md</exclude>
+                        <exclude>*.cfg</exclude>
+                        <exclude>derby.log</exclude>
+                        <exclude>**/*.sql</exclude>
+                        <exclude>**/README.md</exclude>
+                        <exclude>**/Readme.md</exclude>
+                    </excludes>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-javadoc-plugin</artifactId>
+                <configuration>
+                    <attach>true</attach>
+                    <quiet>true</quiet>
+                    <encoding>UTF-8</encoding>
+                    <additionalparam>-Xdoclint:none</additionalparam>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>animal-sniffer-maven-plugin</artifactId>
+                <configuration>
+                    <signature>
+                        <groupId>org.codehaus.mojo.signature</groupId>
+                        <artifactId>java18</artifactId>
+                        <version>1.0</version>
+                    </signature>
                 </configuration>
             </plugin>
         </plugins>
