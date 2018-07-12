@@ -68,8 +68,13 @@ For an example see the [test case](../src/test/java/org/apache/felix/systemready
 The Ready servlet provides the aggregated state of the system over http in json format.
 It is registered on the path `/systemready`.
 
-The servlet returns the HTTP code 200 for system status green and 503 for yellow and red. While the system
-starts the code 404 will be returned while the servlet is not yet present.
+HTTP return codes
+
+code | in case of
+-----|-----------
+200  | system status is GREEN
+503  | system status is YELLOW or RED
+404  | servlet is not yet present
 
 This is an example of a ready system with just the services check.
 ```
