@@ -56,7 +56,7 @@
                     </archive>
                 </configuration>
             </plugin>
-                        <plugin>
+            <plugin>
                 <groupId>org.apache.rat</groupId>
                 <artifactId>apache-rat-plugin</artifactId>
                 <executions>
@@ -96,6 +96,16 @@
                         <exclude>**/README.md</exclude>
                         <exclude>**/Readme.md</exclude>
                     </excludes>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-javadoc-plugin</artifactId>
+                <configuration>
+                    <attach>true</attach>
+                    <quiet>true</quiet>
+                    <encoding>UTF-8</encoding>
+                    <additionalparam>-Xdoclint:none</additionalparam>
                 </configuration>
             </plugin>
         </plugins>
