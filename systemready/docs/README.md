@@ -68,6 +68,9 @@ For an example see the [test case](../src/test/java/org/apache/felix/systemready
 The Ready servlet provides the aggregated state of the system over http in json format.
 It is registered on the path `/systemready`.
 
+The servlet returns the HTTP code 200 for system status green and 503 for yellow and red. While the system
+starts the code 404 will be returned while the servlet is not yet present.
+
 This is an example of a ready system with just the services check.
 ```
 {
@@ -78,16 +81,17 @@ This is an example of a ready system with just the services check.
 }
 ```
 
-The servlet can be configured using the pid `org.apache.felix.systemready.impl.servlet.SystemReadyServlet`.
+Optional configuration pid `org.apache.felix.systemready.impl.servlet.SystemReadyServlet`.
 
-The default config is
+Name                                 | Default      | Description
+-------------------------------------|--------------|----------------
+osgi.http.whiteboard.servlet.pattern | /systemready | Path for the servlet
+osgi.http.whiteboard.context.select  |              | OSGi service filter for the whiteboard context
 
-    osgi.http.whiteboard.servlet.pattern=/systemready
+The default context select filter works for Apache Karaf.
+When using the servlet in Apache Felix Http Whiteboard or Adobe AEM make sure you set the servlet context select to:
 
-You can set the servlet pattern and the servlet context select filter. The default works for Apache Karaf.
-When using the servlet in Apache Felix Http Whiteboard or Adobe AEM make sure you set the servlet context select too:
-
-    osgi.http.whiteboard.context.select=(osgi.http.whiteboard.context.name=org.osgi.service.http)
+    osgi.http.whiteboard.context.select =(osgi.http.whiteboard.context.name=org.osgi.service.http)
 
 ## Root cause command
 
