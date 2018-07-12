@@ -216,6 +216,7 @@ public class ScrConfigurationImpl implements ScrConfiguration
 
     /**
      * Returns the current log level.
+     * Note that this log level is not used with an R7 LogService implementation.
      * @return
      */
     @Override
