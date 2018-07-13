@@ -66,24 +66,12 @@
                             org.osgi.service.http.runtime,
                             org.osgi.service.http.runtime.dto,
                             org.osgi.service.http.whiteboard,
-                            !org.eclipse.jetty,
-                            !org.eclipse.jetty.security.authentication,
-                            !org.eclipse.jetty.util.log.jmx,
-                            !org.eclipse.jetty.version,
-                            org.eclipse.jetty.*,
                             org.apache.felix.http.jetty
                         </Export-Package>
                         <Private-Package>
                             org.apache.felix.http.base.*,
                             org.apache.felix.http.jetty.*,
-                            org.eclipse.jetty,
-                            org.eclipse.jetty.security.authentication,
-                            org.eclipse.jetty.util.log.jmx,
-                            org.eclipse.jetty.version
                         </Private-Package>
-                        <Conditional-Package>
-                            org.apache.commons.*
-                        </Conditional-Package>
                         <Import-Package>
                             javax.imageio;resolution:=optional,
                             javax.sql;resolution:=optional,
@@ -197,6 +185,16 @@
             <version>${jetty.version}</version>
         </dependency>
         <dependency>
+            <groupId>org.eclipse.jetty.http2</groupId>
+            <artifactId>http2-server</artifactId>
+            <version>${jetty.version}</version>
+        </dependency> 
+        <dependency>
+            <groupId>org.eclipse.jetty</groupId>
+            <artifactId>jetty-alpn-server</artifactId>
+            <version>${jetty.version}</version>
+        </dependency>
+        <dependency>
             <groupId>org.osgi</groupId>
             <artifactId>org.osgi.service.http</artifactId>
             <version>1.2.1</version>
@@ -212,16 +210,6 @@
             <groupId>org.apache.felix</groupId>
             <artifactId>org.apache.felix.http.base</artifactId>
             <version>4.0.0</version>
-        </dependency>
-        <dependency>
-            <groupId>commons-fileupload</groupId>
-            <artifactId>commons-fileupload</artifactId>
-            <version>1.3.3</version>
-        </dependency>
-        <dependency>
-            <groupId>commons-io</groupId>
-            <artifactId>commons-io</artifactId>
-            <version>2.6</version>
         </dependency>
   <!-- Testing -->
         <dependency>

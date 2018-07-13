@@ -41,7 +41,9 @@ import javax.servlet.SessionTrackingMode;
 
 import org.apache.felix.http.base.internal.HttpServiceController;
 import org.apache.felix.http.base.internal.logger.SystemLogger;
+import org.eclipse.jetty.alpn.server.ALPNServerConnectionFactory;
 import org.eclipse.jetty.http.HttpVersion;
+import org.eclipse.jetty.http2.server.HTTP2ServerConnectionFactory;
 import org.eclipse.jetty.io.ConnectionStatistics;
 import org.eclipse.jetty.security.HashLoginService;
 import org.eclipse.jetty.server.Connector;
@@ -565,6 +567,27 @@ public final class JettyService extends AbstractLifeCycle.AbstractLifeCycleListe
             httpConfiguration.addCustomizer(customizerWrapper);
         }
 
+        if (this.config.isUseHttp2()) {
+        	//add ALPN factory
+        	SslConnectionFactory alpnConnFactory = new SslConnectionFactory(sslContextFactory, "alpn");
+        	connector.addConnectionFactory(alpnConnFactory);
+        	
+        	ALPNServerConnectionFactory alpn = new ALPNServerConnectionFactory(this.config.getAlpnProtocols());
+        	alpn.setDefaultProtocol(this.config.getAlpnDefaultProtocol());
+        	connector.addConnectionFactory(alpn);
+        	
+            //Configure a HTTP2 on the ssl connector
+            HTTP2ServerConnectionFactory http2factory = new HTTP2ServerConnectionFactory(httpConfiguration);
+            http2factory.setMaxConcurrentStreams(this.config.getHttp2MaxConcurrentStreams());
+            http2factory.setInitialStreamRecvWindow(this.config.getHttp2InitialStreamRecvWindow());
+            http2factory.setInitialSessionRecvWindow(this.config.getHttp2InitialSessionRecvWindow());
+            connector.addConnectionFactory(http2factory);
+
+            //use http/2 cipher comparator
+            sslContextFactory.setCipherComparator(org.eclipse.jetty.http2.HTTP2Cipher.COMPARATOR);
+            sslContextFactory.setUseCipherSuitesOrder(true);
+        }
+        
         configureConnector(connector, this.config.getHttpsPort());
         return startConnector(connector);
     }

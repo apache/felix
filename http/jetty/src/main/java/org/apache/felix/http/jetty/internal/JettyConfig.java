@@ -254,6 +254,25 @@ public final class JettyConfig
     /** Felix specific property to specify the excluded mime types. */
     public static final String FELIX_JETTY_GZIP_EXCLUDED_MIME_TYPES = "org.apache.felix.jetty.gzip.excludedMimeTypes";
     
+    /** Felix specific property to control whether to enable HTTP/2. */
+    public static final String FELIX_HTTP2_ENABLE = "org.apache.felix.http2.enable";
+    
+    /** Felix specific property to specify the max number of concurrent streams per connection  */
+    public static final String FELIX_JETTY_HTTP2_MAX_CONCURRENT_STREAMS = "org.apache.felix.jetty.http2.maxConcurrentStreams";
+    
+    /** Felix specific property to specify the initial stream receive window (client to server)  */
+    public static final String FELIX_JETTY_HTTP2_INITIAL_STREAM_RECV_WINDOW = "org.apache.felix.jetty.http2.initialStreamRecvWindow";
+    
+    /** Felix specific property to specify the initial session receive window (client to server)  */
+    public static final String FELIX_JETTY_HTTP2_INITIAL_SESSION_RECV_WINDOW = "org.apache.felix.jetty.http2.initialSessionRecvWindow";
+    
+    /** Felix specific property to specify the ALPN protocols to consider  */
+    public static final String FELIX_JETTY_ALPN_PROTOCOLS = "org.apache.felix.jetty.alpn.protocols";
+    
+    /** Felix specific property to specify the default protocol when negotiation fails  */
+    public static final String FELIX_JETTY_ALPN_DEFAULT_PROTOCOL = "org.apache.felix.jetty.alpn.defaultProtocol";
+
+    
     private static String validateContextPath(String ctxPath)
     {
         // undefined, empty, or root context path
@@ -507,6 +526,35 @@ public final class JettyConfig
         return useHttps && getHttpsPort() > 0;
     }
 
+    /**
+     * Returns <code>true</code> if HTTP/2 is configured to be used (
+     * {@link #FELIX_HTTP2_ENABLE})
+     */
+    public boolean isUseHttp2()
+    {
+        return getBooleanProperty(FELIX_HTTP2_ENABLE, false);
+    }
+
+    public int getHttp2MaxConcurrentStreams() {
+        return getIntProperty(FELIX_JETTY_HTTP2_MAX_CONCURRENT_STREAMS, 128);
+    }
+
+    public int getHttp2InitialStreamRecvWindow() {
+        return getIntProperty(FELIX_JETTY_HTTP2_INITIAL_STREAM_RECV_WINDOW, 524288);
+    }
+
+    public int getHttp2InitialSessionRecvWindow() {
+        return getIntProperty(FELIX_JETTY_HTTP2_INITIAL_SESSION_RECV_WINDOW, 1048576);
+    }
+
+    public String[] getAlpnProtocols() {
+        return getStringArrayProperty(FELIX_JETTY_ALPN_PROTOCOLS, new String[] {"h2", "http/1.1"} );
+    }
+    
+    public String getAlpnDefaultProtocol() {
+        return getProperty(FELIX_JETTY_ALPN_DEFAULT_PROTOCOL, "http/1.1");
+    }
+    
     public boolean isProxyLoadBalancerConnection()
     {
         return getBooleanProperty(FELIX_PROXY_LOAD_BALANCER_CONNECTION_ENABLE, false);
