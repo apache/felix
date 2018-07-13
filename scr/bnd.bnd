@@ -36,6 +36,7 @@ Import-Package: \
  org.osgi.service.metatype;version="[1.2,2)";resolution:=optional, \
  org.osgi.service.packageadmin;version="[1.2,2)";resolution:=optional, \
  org.osgi.util.function;version="[1.0,2)", \
+ org.osgi.util.promise;version="[1.0,2)", \
  org.apache.felix.service.command;resolution:=optional, \
  org.apache.felix.shell;provide:=true;resolution:=optional, \
  *
