@@ -41,7 +41,10 @@ import org.osgi.framework.BundleException;
 import org.osgi.framework.Constants;
 import org.osgi.framework.FrameworkEvent;
 import org.osgi.framework.Version;
+import org.osgi.framework.namespace.BundleNamespace;
 import org.osgi.framework.namespace.ExecutionEnvironmentNamespace;
+import org.osgi.framework.namespace.HostNamespace;
+import org.osgi.framework.namespace.IdentityNamespace;
 import org.osgi.framework.namespace.NativeNamespace;
 import org.osgi.framework.wiring.BundleCapability;
 import org.osgi.framework.wiring.BundleRequirement;
@@ -91,6 +94,10 @@ class ExtensionManager implements Content
 {
     static final ClassPathExtenderFactory.ClassPathExtender m_extenderFramework;
     static final ClassPathExtenderFactory.ClassPathExtender m_extenderBoot;
+    private static final Set<String> IDENTITY = new HashSet<String>(Arrays.asList(
+        BundleNamespace.BUNDLE_NAMESPACE,
+        HostNamespace.HOST_NAMESPACE,
+        IdentityNamespace.IDENTITY_NAMESPACE));
 
     static
     {
@@ -527,7 +534,15 @@ class ExtensionManager implements Content
 
             felix.getDependencies().addDependent(wire);
 
-            m_systemBundleRevision.appendCapabilities(entry.getKey().getDeclaredExtensionCapabilities(null));
+            List<BundleCapability> caps = new ArrayList<BundleCapability>();
+            for (BundleCapability cap : entry.getKey().getDeclaredCapabilities(null))
+            {
+                if (!IDENTITY.contains(cap.getNamespace()))
+                {
+                    caps.add(cap);
+                }
+            }
+            m_systemBundleRevision.appendCapabilities(caps);
             for (BundleWire w : entry.getValue())
             {
                 if (!w.getRequirement().getNamespace().equals(BundleRevision.HOST_NAMESPACE) &&
@@ -572,11 +587,6 @@ class ExtensionManager implements Content
         // at this point, all revisions left in unresolved are not resolvable
         m_failedExtensions.addAll(m_unresolvedExtensions);
         m_unresolvedExtensions.clear();
-
-        if (!wirings.isEmpty())
-        {
-            felix.getResolver().addRevision(getRevision());
-        }
 
         return result;
     }
@@ -749,14 +759,16 @@ class ExtensionManager implements Content
                 // now loop through the other extensions
                 for (BundleRevisionImpl extension : extensions)
                 {
-                    // check the caps that will be lifted to the system bundle
-                    for (BundleCapability cap : extension.getDeclaredExtensionCapabilities(req.getNamespace()))
+                    for (BundleCapability cap : extension.getDeclaredCapabilities(req.getNamespace()))
                     {
                         if (req.matches(cap))
                         {
                             // we can use a yet unresolved extension (resolved one are implicitly checked by the
                             // system bundle loop above as they would be attached.
-                            wi.add(new BundleWireImpl(m_systemBundleRevision, req, m_systemBundleRevision, cap));
+                            wi.add(new BundleWireImpl(m_systemBundleRevision, req,
+                                // lift identity
+                                IDENTITY.contains(cap.getNamespace()) ?
+                                extension : m_systemBundleRevision, cap));
                             continue outer;
                         }
                     }
@@ -875,7 +887,6 @@ class ExtensionManager implements Content
         private volatile Map m_configMap;
         private final Map m_headerMap = new StringMap();
         private volatile List<BundleCapability> m_capabilities = Collections.EMPTY_LIST;
-        private volatile Set<String> m_exportNames = Collections.EMPTY_SET;
         private volatile Version m_version;
         private volatile BundleWiring m_wiring;
 
@@ -912,6 +923,7 @@ class ExtensionManager implements Content
                 List<BundleCapability> caps = ManifestParser.aliasSymbolicName(mp.getCapabilities(), this);
                 caps.add(buildNativeCapabilites(this, m_configMap));
                 appendCapabilities(caps);
+                m_headerMap.put(Constants.EXPORT_PACKAGE, convertCapabilitiesToHeaders(caps));
             }
             catch (Exception ex)
             {
@@ -967,6 +979,7 @@ class ExtensionManager implements Content
                 caps.add(buildNativeCapabilites(this, m_configMap));
                 m_capabilities = Collections.EMPTY_LIST;
                 appendCapabilities(caps);
+                m_headerMap.put(Constants.EXPORT_PACKAGE, convertCapabilitiesToHeaders(caps));
             }
             catch (Exception ex)
             {
@@ -983,13 +996,11 @@ class ExtensionManager implements Content
             newCaps.addAll(m_capabilities);
             newCaps.addAll(caps);
             m_capabilities = Util.newImmutableList(newCaps);
-            m_headerMap.put(Constants.EXPORT_PACKAGE, convertCapabilitiesToHeaders(newCaps));
         }
 
         private String convertCapabilitiesToHeaders(List<BundleCapability> caps)
         {
             StringBuffer exportSB = new StringBuffer("");
-            Set<String> exportNames = new HashSet<String>();
 
             for (BundleCapability cap : caps)
             {
@@ -1024,14 +1035,8 @@ class ExtensionManager implements Content
                             exportSB.append("\"");
                         }
                     }
-
-                    // Remember exported packages.
-                    exportNames.add(
-                        (String) cap.getAttributes().get(BundleRevision.PACKAGE_NAMESPACE));
                 }
             }
-
-            m_exportNames = exportNames;
 
             return exportSB.toString();
         }
@@ -1166,42 +1171,7 @@ class ExtensionManager implements Content
         @Override
         public Class getClassByDelegation(String name) throws ClassNotFoundException
         {
-            Class clazz = null;
-            String pkgName = Util.getClassPackage(name);
-            if (shouldBootDelegate(pkgName))
-            {
-                try
-                {
-                    // Get the appropriate class loader for delegation.
-                    ClassLoader bdcl = getBootDelegationClassLoader();
-                    clazz = bdcl.loadClass(name);
-                    // If this is a java.* package, then always terminate the
-                    // search; otherwise, continue to look locally if not found.
-                    if (pkgName.startsWith("java.") || (clazz != null))
-                    {
-                        return clazz;
-                    }
-                }
-                catch (ClassNotFoundException ex)
-                {
-                    // If this is a java.* package, then always terminate the
-                    // search; otherwise, continue to look locally if not found.
-                    if (pkgName.startsWith("java."))
-                    {
-                        throw ex;
-                    }
-                }
-            }
-            if (clazz == null)
-            {
-                if (!m_systemBundleRevision.m_exportNames.contains(Util.getClassPackage(name)))
-                {
-                    throw new ClassNotFoundException(name);
-                }
-
-                clazz = getClass().getClassLoader().loadClass(name);
-            }
-            return clazz;
+            return getClass().getClassLoader().loadClass(name);
         }
 
         @Override
