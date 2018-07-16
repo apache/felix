@@ -60,7 +60,6 @@ public class ManifestParser
     private volatile String m_bundleSymbolicName;
     private volatile Version m_bundleVersion;
     private volatile List<BundleCapability> m_capabilities;
-    private volatile List<BundleCapability> m_extensionCapabilities;
     private volatile List<BundleRequirement> m_requirements;
     private volatile List<NativeLibraryClause> m_libraryClauses;
     private volatile boolean m_libraryHeadersOptional = false;
@@ -284,19 +283,8 @@ public class ManifestParser
         m_capabilities = new ArrayList<BundleCapability>(
              capList.size() + exportCaps.size() + provideCaps.size());
         m_capabilities.addAll(capList);
-
-        if (m_isExtension)
-        {
-            m_extensionCapabilities = new ArrayList<BundleCapability>();
-            m_extensionCapabilities.addAll(exportCaps);
-            m_extensionCapabilities.addAll(provideCaps);
-        }
-        else
-        {
-            m_extensionCapabilities = Collections.EMPTY_LIST;
-            m_capabilities.addAll(exportCaps);
-            m_capabilities.addAll(provideCaps);
-        }
+        m_capabilities.addAll(exportCaps);
+        m_capabilities.addAll(provideCaps);
 
         //
         // Parse activation policy.
@@ -2200,10 +2188,5 @@ public class ManifestParser
         }
 
         return aliasCaps;
-    }
-
-    public List<BundleCapability> getExtensionCapabilites()
-    {
-        return m_extensionCapabilities;
     }
 }

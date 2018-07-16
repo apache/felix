@@ -62,7 +62,6 @@ public class BundleRevisionImpl implements BundleRevision, Resource
     private final Version m_version;
 
     private final List<BundleCapability> m_declaredCaps;
-    private final List<BundleCapability> m_declaredExtensionCaps;
     private final List<BundleRequirement> m_declaredReqs;
     private final List<NativeLibrary> m_declaredNativeLibs;
     private final int m_declaredActivationPolicy;
@@ -98,7 +97,6 @@ public class BundleRevisionImpl implements BundleRevision, Resource
         m_isFragment = false;
         m_version = null;
         m_declaredCaps = Collections.emptyList();
-        m_declaredExtensionCaps = Collections.emptyList();
         m_declaredReqs = Collections.emptyList();
         m_declaredNativeLibs = null;
         m_declaredActivationPolicy = EAGER_ACTIVATION;
@@ -129,8 +127,6 @@ public class BundleRevisionImpl implements BundleRevision, Resource
         m_manifestVersion = mp.getManifestVersion();
         m_version = mp.getBundleVersion();
         m_declaredCaps = mp.getCapabilities();
-        m_declaredExtensionCaps = m_isExtension ? ManifestParser.aliasSymbolicName(mp.getExtensionCapabilites(),
-            bundle.getFramework().adapt(BundleRevisionImpl.class)) : Collections.EMPTY_LIST;
         m_declaredReqs = mp.getRequirements();
         m_declaredNativeLibs = mp.getLibraries();
         m_declaredActivationPolicy = mp.getActivationPolicy();
@@ -214,23 +210,6 @@ public class BundleRevisionImpl implements BundleRevision, Resource
         {
             result = new ArrayList<BundleCapability>();
             for (BundleCapability cap : m_declaredCaps)
-            {
-                if (cap.getNamespace().equals(namespace))
-                {
-                    result.add(cap);
-                }
-            }
-        }
-        return result;
-    }
-
-    public List<BundleCapability> getDeclaredExtensionCapabilities(String namespace)
-    {
-        List<BundleCapability> result = m_declaredExtensionCaps;
-        if (namespace != null)
-        {
-            result = new ArrayList<BundleCapability>();
-            for (BundleCapability cap : m_declaredExtensionCaps)
             {
                 if (cap.getNamespace().equals(namespace))
                 {
