@@ -1,5 +1,9 @@
 # OSGi system ready check framework
 
+[![Build Status](https://builds.apache.org/buildStatus/icon?job=Felix%20Systemready)](https://builds.apache.org/job/Felix%20Systemready/)
+[![Test Status](https://img.shields.io/jenkins/t/https/builds.apache.org/job/Felix%20Systemready.svg)](https://builds.apache.org/job/Felix%20Systemready/test_results_analyzer/)
+[![Maven Central](https://maven-badges.herokuapp.com/maven-central/org.apache.felix/org.apache.felix.systemready/badge.svg)](http://search.maven.org/#search%7Cga%7C1%7Cg%3A%22org.apache.felix%22%20a%3A%22org.apache.felix.systemready%22)
+
 In OSGi there is always the question of when a system is fully operational after startup. This project provides a framework to configure and create so called system checks and signal the ready state of an OSGi based system. In addition to the framework, we also provide some generic checks that give a solid basis, like a check waiting for the startup of bundles to finish, as well as certain OSGi services being present. Additionally, root cause analysis in case of error states is conveniently presented. Custom checks can be created to provide in-depth checks for your own functionality.
 
 See [why system ready for some more background on why to use this project](docs/why_systemready.md).
@@ -11,6 +15,8 @@ See [reference documentation](docs/README.md).
 ## Build
 
     mvn clean install
+
+Also check the [Jenkins build](https://builds.apache.org/job/Felix%20Systemready/)
 
 ## Issue reporting
 
