@@ -4953,8 +4953,8 @@ public class Felix extends BundleImpl implements Framework
 
         // Maven uses a '-' to separate the version qualifier,
         // while OSGi uses a '.', so we need to convert to a '.'
-        StringBuffer sb =
-            new StringBuffer(
+        StringBuilder sb =
+            new StringBuilder(
                 props.getProperty(
                     FelixConstants.FELIX_VERSION_PROPERTY, "0.0.0"));
         String toRet = cleanMavenVersion(sb);
@@ -4977,7 +4977,7 @@ public class Felix extends BundleImpl implements Framework
      * @param sb The version to be cleaned
      * @return The cleaned version
      */
-    private static String cleanMavenVersion(StringBuffer sb)
+    private static String cleanMavenVersion(StringBuilder sb)
     {
         int dots = 0;
         for (int i = 0; i < sb.length(); i++)

@@ -141,7 +141,7 @@ public class NativeLibrary
     {
         if (m_libraryFile != null)
         {
-            StringBuffer sb = new StringBuffer();
+            StringBuilder sb = new StringBuilder();
             sb.append(m_libraryFile);
             for (int i = 0; (m_osnames != null) && (i < m_osnames.length); i++)
             {

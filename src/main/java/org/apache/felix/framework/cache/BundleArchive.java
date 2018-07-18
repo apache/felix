@@ -823,7 +823,7 @@ public class BundleArchive
     // used by URI to decode uri components.
     private static String decode(String s) throws UnsupportedEncodingException
     {
-        StringBuffer result = new StringBuffer();
+        StringBuilder result = new StringBuilder();
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         for (int i = 0; i < s.length();)
         {

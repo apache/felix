@@ -778,7 +778,7 @@ public class NativeLibraryClause
 
     private static String cleanupVersion( String version )
     {
-        StringBuffer result = new StringBuffer();
+        StringBuilder result = new StringBuilder();
         Matcher m = FUZZY_VERSION.matcher( version );
         if ( m.matches() )
         {
@@ -834,7 +834,7 @@ public class NativeLibraryClause
     }
 
 
-    private static void cleanupModifier( StringBuffer result, String modifier )
+    private static void cleanupModifier( StringBuilder result, String modifier )
     {
         for ( int i = 0; i < modifier.length(); i++ )
         {

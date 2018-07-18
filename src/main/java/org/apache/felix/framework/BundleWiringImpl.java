@@ -2659,7 +2659,7 @@ public class BundleWiringImpl implements BundleWiring
             {
                 String exporter = wires.get(i).getProviderWiring().getBundle().toString();
 
-                StringBuffer sb = new StringBuffer("*** Package '");
+                StringBuilder sb = new StringBuilder("*** Package '");
                 sb.append(pkgName);
                 sb.append("' is imported by bundle ");
                 sb.append(importer);
@@ -2709,7 +2709,7 @@ public class BundleWiringImpl implements BundleWiring
                 long expId = (exporters.length == 0)
                     ? -1 : Util.getBundleIdFromModuleId(exporters[0].getId());
 
-                StringBuffer sb = new StringBuffer("*** Class '");
+                StringBuilder sb = new StringBuilder("*** Class '");
                 sb.append(name);
                 sb.append("' was not found, but this is likely normal since package '");
                 sb.append(pkgName);
@@ -2764,7 +2764,7 @@ public class BundleWiringImpl implements BundleWiring
             String exporter = (exporters.isEmpty())
                     ? null : exporters.iterator().next().toString();
 
-            StringBuffer sb = new StringBuffer("*** Class '");
+            StringBuilder sb = new StringBuilder("*** Class '");
             sb.append(name);
             sb.append("' was not found, but this is likely normal since package '");
             sb.append(pkgName);
@@ -2809,7 +2809,7 @@ public class BundleWiringImpl implements BundleWiring
 
             String exporter = exports.iterator().next().toString();
 
-            StringBuffer sb = new StringBuffer("*** Class '");
+            StringBuilder sb = new StringBuilder("*** Class '");
             sb.append(name);
             sb.append("' was not found because bundle ");
             sb.append(importer);
@@ -2851,7 +2851,7 @@ public class BundleWiringImpl implements BundleWiring
             BundleRevisionImpl.getSecureAction()
             .getClassLoader(BundleClassLoader.class).loadClass(name);
 
-            StringBuffer sb = new StringBuffer("*** Package '");
+            StringBuilder sb = new StringBuilder("*** Package '");
             sb.append(pkgName);
             sb.append("' is not imported by bundle ");
             sb.append(importer);
@@ -2881,7 +2881,7 @@ public class BundleWiringImpl implements BundleWiring
         // Finally, if there are no imports or exports for the package
         // and it is not available on the system class path, simply
         // log a message saying so.
-        StringBuffer sb = new StringBuffer("*** Class '");
+        StringBuilder sb = new StringBuilder("*** Class '");
         sb.append(name);
         sb.append("' was not found. Bundle ");
         sb.append(importer);

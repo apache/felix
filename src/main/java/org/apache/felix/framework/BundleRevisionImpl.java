@@ -354,7 +354,7 @@ public class BundleRevisionImpl implements BundleRevision, Resource
             }
             catch (Exception ex)
             {
-                ((BundleImpl) m_bundle).getFramework().getLogger().log(
+                m_bundle.getFramework().getLogger().log(
                     m_bundle, Logger.LOG_ERROR, "Unable to get module class path.", ex);
             }
         }
@@ -395,7 +395,6 @@ public class BundleRevisionImpl implements BundleRevision, Resource
     private List calculateContentPath(
         BundleRevision revision, Content content, List<Content> contentList,
         boolean searchFragments)
-        throws Exception
     {
         // Creating the content path entails examining the bundle's
         // class path to determine whether the bundle JAR file itself

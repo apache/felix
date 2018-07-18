@@ -928,7 +928,7 @@ public class Util
         // UUID.toString()
         //
 
-        StringBuffer builder = new StringBuffer(36);
+        StringBuilder builder = new StringBuilder(36);
         String msbStr = Long.toHexString(mostSigBits);
         if (msbStr.length() < 16) {
             int diff = 16 - msbStr.length();

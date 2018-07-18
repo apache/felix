@@ -1000,7 +1000,7 @@ class ExtensionManager implements Content
 
         private String convertCapabilitiesToHeaders(List<BundleCapability> caps)
         {
-            StringBuffer exportSB = new StringBuffer("");
+            StringBuilder exportSB = new StringBuilder();
 
             for (BundleCapability cap : caps)
             {
