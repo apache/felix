@@ -562,7 +562,7 @@ public class CapabilitySet
 
     private static String removeWhitespace(String s)
     {
-        StringBuffer sb = new StringBuffer(s.length());
+        StringBuilder sb = new StringBuilder(s.length());
         for (int i = 0; i < s.length(); i++)
         {
             if (!Character.isWhitespace(s.charAt(i)))

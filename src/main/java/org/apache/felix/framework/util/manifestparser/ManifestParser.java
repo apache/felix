@@ -2030,7 +2030,7 @@ public class ManifestParser
         int STARTQUOTE = 4;
         int ENDQUOTE = 8;
 
-        StringBuffer sb = new StringBuffer();
+        StringBuilder sb = new StringBuilder();
 
         int expecting = (CHAR | DELIMITER | STARTQUOTE);
 

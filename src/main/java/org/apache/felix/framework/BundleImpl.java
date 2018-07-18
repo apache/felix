@@ -560,7 +560,7 @@ class BundleImpl implements Bundle, BundleRevisions
         List<String> result = new ArrayList(4);
 
         StringTokenizer tokens;
-        StringBuffer tempLocale = new StringBuffer(basename);
+        StringBuilder tempLocale = new StringBuilder(basename);
 
         result.add(tempLocale.toString());
 

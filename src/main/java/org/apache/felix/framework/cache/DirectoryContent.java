@@ -353,7 +353,7 @@ public class DirectoryContent implements Content
 
             // Remove the leading path of the reference directory, since the
             // entry paths are supposed to be relative to the root.
-            StringBuffer sb = new StringBuffer(abs);
+            StringBuilder sb = new StringBuilder(abs);
             sb.delete(0, BundleCache.getSecureAction().getAbsolutePath(m_dir).length() + 1);
             // Add a '/' to the end of directory entries.
             if (BundleCache.getSecureAction().isFileDirectory(m_children[m_counter]))
