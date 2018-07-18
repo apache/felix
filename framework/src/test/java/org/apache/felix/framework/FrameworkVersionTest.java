@@ -40,10 +40,10 @@ public class FrameworkVersionTest extends TestCase
 
     private void testFrameworkVersion(String out, String in) throws Exception
     {
-        Method method = Felix.class.getDeclaredMethod("cleanMavenVersion", new Class [] {StringBuffer.class});
+        Method method = Felix.class.getDeclaredMethod("cleanMavenVersion", new Class [] {StringBuilder.class});
         method.setAccessible(true);
 
-        StringBuffer sb = new StringBuffer(in);
+        StringBuilder sb = new StringBuilder(in);
         assertEquals(new Version(out), new Version((String) method.invoke(null, sb)));
     }
 }
