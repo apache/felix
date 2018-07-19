@@ -27,15 +27,7 @@ import java.io.StringWriter;
 import java.io.Writer;
 import java.net.URL;
 import java.net.URLConnection;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Dictionary;
-import java.util.Enumeration;
-import java.util.HashMap;
-import java.util.Hashtable;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 import javax.json.Json;
 import javax.json.JsonArray;
@@ -49,6 +41,7 @@ import javax.json.JsonStructure;
 import javax.json.JsonValue;
 import javax.json.JsonValue.ValueType;
 
+import org.apache.felix.configurator.impl.impl.OrderedDictionary;
 import org.apache.felix.configurator.impl.model.BundleState;
 import org.apache.felix.configurator.impl.model.Config;
 import org.apache.felix.configurator.impl.model.ConfigPolicy;
@@ -201,7 +194,7 @@ public class JSONUtil {
                 int ranking = 0;
                 ConfigPolicy policy = ConfigPolicy.DEFAULT;
 
-                final Dictionary<String, Object> properties = new Hashtable<>();
+                final Dictionary<String, Object> properties = new OrderedDictionary<>();
                 boolean valid = true;
                 for(final String mapKey : mainMap.keySet()) {
                     final Object value = mainMap.get(mapKey);
@@ -375,7 +368,7 @@ public class JSONUtil {
                          }
                          return array;
              // type OBJECT -> return map
-             case OBJECT : final Map<String, Object> map = new HashMap<>();
+             case OBJECT : final Map<String, Object> map = new LinkedHashMap<>();
                            final JsonObject obj = (JsonObject)value;
                            for(final Map.Entry<String, JsonValue> entry : obj.entrySet()) {
                                map.put(entry.getKey(), getValue(entry.getValue()));
