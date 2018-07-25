@@ -27,7 +27,14 @@ import java.io.StringWriter;
 import java.io.Writer;
 import java.net.URL;
 import java.net.URLConnection;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Dictionary;
+import java.util.Enumeration;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 import javax.json.Json;
 import javax.json.JsonArray;
@@ -193,7 +200,7 @@ public class JSONUtil {
                 int ranking = 0;
                 ConfigPolicy policy = ConfigPolicy.DEFAULT;
 
-                final Dictionary<String, Object> properties = new OrderedDictionary<>();
+                final Dictionary<String, Object> properties = new OrderedDictionary();
                 boolean valid = true;
                 for(final String mapKey : mainMap.keySet()) {
                     final Object value = mainMap.get(mapKey);

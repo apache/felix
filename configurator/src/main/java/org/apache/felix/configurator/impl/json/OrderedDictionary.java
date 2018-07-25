@@ -18,18 +18,22 @@
  */
 package org.apache.felix.configurator.impl.json;
 
-import java.util.*;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Dictionary;
+import java.util.Enumeration;
+import java.util.Iterator;
+import java.util.LinkedHashMap;
+import java.util.Map;
+import java.util.Set;
 
 /**
  * A dictionary implementation with predictable iteration order.
  *
  * Actually this class is a simple adapter from the Dictionary interface
  * to a synchronized LinkedHashMap
- *
- * @param <K>
- * @param <V>
  */
-public class OrderedDictionary<K, V> extends Dictionary<K, V> implements Map<K, V> {
+public class OrderedDictionary extends Dictionary<String, Object> implements Map<String, Object> {
     private static class EnumarationImpl<E> implements Enumeration<E> {
         private final Iterator<E> iterator;
 
@@ -48,7 +52,7 @@ public class OrderedDictionary<K, V> extends Dictionary<K, V> implements Map<K, 
         }
     }
 
-    private Map map = Collections.synchronizedMap(new LinkedHashMap());
+    private Map<String, Object> map = Collections.synchronizedMap(new LinkedHashMap<String, Object>());
 
     @Override
     public int size() {
@@ -71,37 +75,37 @@ public class OrderedDictionary<K, V> extends Dictionary<K, V> implements Map<K, 
     }
 
     @Override
-    public Enumeration<K> keys() {
+    public Enumeration<String> keys() {
         return new EnumarationImpl<>(map.keySet().iterator());
     }
 
     @Override
-    public Enumeration<V> elements() {
+    public Enumeration<Object> elements() {
         return new EnumarationImpl<>(map.values().iterator());
     }
 
     @Override
-    public V get(Object key) {
-        return (V) map.get(key);
+    public Object get(Object key) {
+        return map.get(key);
     }
 
     @Override
-    public V put(K key, V value) {
+    public Object put(String key, Object value) {
         // Make sure the value is not null
         if (value == null) {
             throw new NullPointerException();
         }
 
-        return (V) map.put(key, value);
+        return map.put(key, value);
     }
 
     @Override
-    public V remove(Object key) {
-        return (V) map.remove(key);
+    public Object remove(Object key) {
+        return map.remove(key);
     }
 
     @Override
-    public void putAll(Map<? extends K, ? extends V> m) {
+    public void putAll(Map<? extends String, ? extends Object> m) {
         map.putAll(m);
     }
 
@@ -111,17 +115,17 @@ public class OrderedDictionary<K, V> extends Dictionary<K, V> implements Map<K, 
     }
 
     @Override
-    public Set<K> keySet() {
-        return map.entrySet();
+    public Set<String> keySet() {
+        return map.keySet();
     }
 
     @Override
-    public Collection<V> values() {
+    public Collection<Object> values() {
         return map.values();
     }
 
     @Override
-    public Set<Entry<K, V>> entrySet() {
+    public Set<Entry<String, Object>> entrySet() {
         return map.entrySet();
     }
 
