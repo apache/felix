@@ -345,7 +345,12 @@ public class ConfigurationManager implements BundleListener
 
     ConfigurationImpl createFactoryConfiguration( String factoryPid, String location ) throws IOException
     {
-        return cacheConfiguration( createConfiguration( createPid( factoryPid ), factoryPid, location ) );
+        return cacheConfiguration( internalCreateConfiguration( createPid( factoryPid ), factoryPid, location ) );
+    }
+
+    ConfigurationImpl createFactoryConfiguration(String pid, String factoryPid, String location ) throws IOException
+    {
+    	return cacheConfiguration( internalCreateConfiguration( pid, factoryPid, location ) );
     }
 
     /**
@@ -480,7 +485,7 @@ public class ConfigurationManager implements BundleListener
 
         // else create new configuration also setting the bundle location
         // and cache the new configuration
-        config = createConfiguration( pid, null, bundleLocation );
+        config = internalCreateConfiguration( pid, null, bundleLocation );
         return cacheConfiguration( config );
     }
 
@@ -781,7 +786,7 @@ public class ConfigurationManager implements BundleListener
      *             May be thrown if an error occurrs persisting the new
      *             configuration object.
      */
-    ConfigurationImpl createConfiguration( String pid, String factoryPid, String bundleLocation ) throws IOException
+    private ConfigurationImpl internalCreateConfiguration( String pid, String factoryPid, String bundleLocation ) throws IOException
     {
         Log.logger.log( LogService.LOG_DEBUG, "createConfiguration({0}, {1}, {2})", new Object[]
                 { pid, factoryPid, bundleLocation } );
