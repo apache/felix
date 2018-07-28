@@ -348,7 +348,7 @@ public class ConfigurationAdminImpl implements ConfigurationAdmin
         ConfigurationImpl config = configurationManager.getConfiguration( pid );
         if ( config == null )
         {
-            config = configurationManager.createConfiguration( pid, factoryPid, location );
+            config = configurationManager.createFactoryConfiguration( pid, factoryPid, location );
         }
         else
         {
@@ -375,7 +375,7 @@ public class ConfigurationAdminImpl implements ConfigurationAdmin
         ConfigurationImpl config = configurationManager.getConfiguration( pid );
         if ( config == null )
         {
-            config = configurationManager.createConfiguration( pid, factoryPid, null );
+            config = configurationManager.createFactoryConfiguration( pid, factoryPid, null );
 
             // FELIX-3360: configuration creation with implicit binding is dynamic
             config.setDynamicBundleLocation( getBundle().getLocation(), false );
