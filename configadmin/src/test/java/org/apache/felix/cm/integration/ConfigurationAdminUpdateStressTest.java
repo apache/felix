@@ -19,6 +19,7 @@
 package org.apache.felix.cm.integration;
 
 
+import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.Dictionary;
@@ -28,7 +29,7 @@ import java.util.Set;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
-import junit.framework.Assert;
+import org.junit.Assert;
 
 import org.junit.After;
 import org.junit.Before;
@@ -38,6 +39,7 @@ import org.junit.runner.RunWith;
 import org.ops4j.pax.exam.junit.JUnit4TestRunner;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceReference;
+import org.osgi.service.cm.Configuration;
 import org.osgi.service.cm.ConfigurationAdmin;
 import org.osgi.service.cm.ConfigurationException;
 import org.osgi.service.cm.ManagedServiceFactory;
@@ -59,12 +61,13 @@ public class ConfigurationAdminUpdateStressTest extends ConfigurationTestBase im
     public static final int UPDATE_LOOP = 100;
 
     private String _FACTORYPID = "MyPID";
+    private String _FACTORYNAME = "MyName";
 
     private volatile CountDownLatch _factoryConfigCreateLatch;
     private volatile CountDownLatch _factoryConfigUpdateLatch;
     private volatile CountDownLatch _factoryConfigDeleteLatch;
     private volatile CountDownLatch _testLatch;
-    private volatile ServiceTracker _tracker;
+    private volatile ServiceTracker<ConfigurationAdmin, ConfigurationAdmin> _tracker;
 
 
     // ----------------------- Initialization -------------------------------------------
@@ -73,7 +76,7 @@ public class ConfigurationAdminUpdateStressTest extends ConfigurationTestBase im
     public void startup()
     {
         bundleContext.registerService( LogService.class.getName(), this, null );
-        _tracker = new ServiceTracker( bundleContext, ConfigurationAdmin.class.getName(), null );
+        _tracker = new ServiceTracker<>( bundleContext, ConfigurationAdmin.class, null );
         _tracker.open();
     }
 
@@ -108,7 +111,7 @@ public class ConfigurationAdminUpdateStressTest extends ConfigurationTestBase im
     }
 
 
-    public void log( ServiceReference sr, int level, String message )
+    public void log( @SuppressWarnings("rawtypes") ServiceReference sr, int level, String message )
     {
         StringBuilder sb = new StringBuilder();
         sb.append( "[LogService/" + level + "] " );
@@ -117,7 +120,7 @@ public class ConfigurationAdminUpdateStressTest extends ConfigurationTestBase im
     }
 
 
-    public void log( ServiceReference sr, int level, String message, Throwable exception )
+    public void log( @SuppressWarnings("rawtypes") ServiceReference sr, int level, String message, Throwable exception )
     {
         StringBuilder sb = new StringBuilder();
         sb.append( "[LogService/" + level + "] " );
@@ -148,7 +151,7 @@ public class ConfigurationAdminUpdateStressTest extends ConfigurationTestBase im
         _testLatch = new CountDownLatch( 1 );
         try
         {
-            CreateUpdateStress stress = new CreateUpdateStress( bundleContext );
+            CreateStress stress = new CreateUpdateStress( bundleContext );
             stress.start();
 
             if ( !_testLatch.await( 15, TimeUnit.SECONDS ) )
@@ -165,6 +168,31 @@ public class ConfigurationAdminUpdateStressTest extends ConfigurationTestBase im
         {
             Assert.fail( "Test interrupted" );
         }
+    }
+
+    @Test
+    public void testCMUpdateNamedStress()
+    {
+    	_testLatch = new CountDownLatch( 1 );
+    	try
+    	{
+    		CreateStress stress = new CreateUpdateNamedStress( bundleContext );
+    		stress.start();
+    		
+    		if ( !_testLatch.await( 15, TimeUnit.SECONDS ) )
+    		{
+    			
+    			log( LogService.LOG_DEBUG, "create latch: " + _factoryConfigCreateLatch.getCount() );
+    			log( LogService.LOG_DEBUG, "update latch: " + _factoryConfigUpdateLatch.getCount() );
+    			log( LogService.LOG_DEBUG, "delete latch: " + _factoryConfigDeleteLatch.getCount() );
+    			
+    			Assert.fail( "Test did not completed timely" );
+    		}
+    	}
+    	catch ( InterruptedException e )
+    	{
+    		Assert.fail( "Test interrupted" );
+    	}
     }
 
 
@@ -190,7 +218,7 @@ public class ConfigurationAdminUpdateStressTest extends ConfigurationTestBase im
         Set<String> _pids = new HashSet<String>();
 
 
-        public synchronized void updated( String pid, Dictionary properties ) throws ConfigurationException
+        public synchronized void updated( String pid, Dictionary<String, ?> properties ) throws ConfigurationException
         {
             if ( _pids.add( pid ) )
             {
@@ -224,6 +252,8 @@ public class ConfigurationAdminUpdateStressTest extends ConfigurationTestBase im
 
         public void deleted( String pid )
         {
+        	// We need to remove this as the same PID can re-occur after deletion
+        	_pids.remove(pid);
             _factoryConfigDeleteLatch.countDown();
             log( LogService.LOG_DEBUG, "Config deleted; delete latch= " + _factoryConfigDeleteLatch.getCount() );
         }
@@ -239,12 +269,12 @@ public class ConfigurationAdminUpdateStressTest extends ConfigurationTestBase im
      * This class creates/update/delete some factory configuration instances, using a separate thread.
      */
     @Ignore
-    class CreateUpdateStress extends Thread
+    abstract class CreateStress extends Thread
     {
         BundleContext _bc;
 
 
-        CreateUpdateStress( BundleContext bctx )
+        CreateStress( BundleContext bctx )
         {
             _bc = bctx;
         }
@@ -265,10 +295,9 @@ public class ConfigurationAdminUpdateStressTest extends ConfigurationTestBase im
                 for ( int l = 0; l < TEST_LOOP; l++ )
                 {
                     // Create factory configuration
-                    org.osgi.service.cm.Configuration conf = cm.createFactoryConfiguration( _FACTORYPID, null );
                     Hashtable<String, Object> props = new Hashtable<String, Object>();
                     props.put( "foo", "bar" );
-                    conf.update( props );
+                    obtainConfiguration(cm).update( props );
 
                     // Check if our Factory has seen the factory configuration creation
                     if ( !_factoryConfigCreateLatch.await( 10, TimeUnit.SECONDS ) )
@@ -281,8 +310,8 @@ public class ConfigurationAdminUpdateStressTest extends ConfigurationTestBase im
                     {
                         props = new Hashtable<String, Object>();
                         props.put( "foo", "bar" + i );
-                        props.put( "number", new Long( UPDATE_LOOP - i ) );
-                        conf.update( props );
+                        props.put( "number", Long.valueOf( UPDATE_LOOP - i ) );
+                        obtainConfiguration(cm).update( props );
                     }
 
                     // Check if all configuration updates have been caught by our Factory
@@ -292,7 +321,7 @@ public class ConfigurationAdminUpdateStressTest extends ConfigurationTestBase im
                     }
 
                     // Remove factory configuration
-                    conf.delete();
+                    obtainConfiguration(cm).delete();
 
                     // Check if our Factory has seen the configration removal
                     if ( !_factoryConfigDeleteLatch.await( 10, TimeUnit.SECONDS ) )
@@ -311,5 +340,46 @@ public class ConfigurationAdminUpdateStressTest extends ConfigurationTestBase im
             }
             _testLatch.countDown(); // Notify that our test is done
         }
+
+
+		protected abstract org.osgi.service.cm.Configuration obtainConfiguration(ConfigurationAdmin cm)
+				throws Exception;
+
+    }
+    
+    @Ignore
+    class CreateUpdateStress extends CreateStress {
+    	CreateUpdateStress(BundleContext bctx) {
+			super(bctx);
+		}
+
+		protected org.osgi.service.cm.Configuration obtainConfiguration(ConfigurationAdmin cm) 
+				throws Exception {
+			Configuration[] cfgs = cm.listConfigurations("(service.factoryPid=" + _FACTORYPID + ")" );
+			
+			org.osgi.service.cm.Configuration conf;
+			if(cfgs == null) {
+				conf = cm.createFactoryConfiguration( _FACTORYPID, null );
+			} else if (cfgs.length == 1) {
+				conf = cfgs[0];
+			} else {
+				throw new IllegalArgumentException("Only one configuration expected");
+			}
+			
+			return conf;
+		}
+    }
+
+    @Ignore
+    class CreateUpdateNamedStress extends CreateStress {
+    	CreateUpdateNamedStress(BundleContext bctx) {
+    		super(bctx);
+    	}
+    	
+		protected org.osgi.service.cm.Configuration obtainConfiguration(ConfigurationAdmin cm) 
+				throws IOException {
+			org.osgi.service.cm.Configuration conf = cm.getFactoryConfiguration( _FACTORYPID, _FACTORYNAME, null );
+			return conf;
+		}
     }
 }
