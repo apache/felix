@@ -1,3 +1,9 @@
+Changes in 1.9.4
+----------------
+** Bug
+    * [FELIX-5892] : Repeated calls to getFactoryConfiguration return different configuration instances
+
+
 Changes in 1.9.2
 ----------------
 ** Bug
