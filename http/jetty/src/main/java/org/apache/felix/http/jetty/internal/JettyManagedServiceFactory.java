@@ -18,6 +18,7 @@
  */
 package org.apache.felix.http.jetty.internal;
 
+import java.io.Closeable;
 import java.util.Dictionary;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -29,7 +30,7 @@ import org.osgi.framework.BundleContext;
 import org.osgi.service.cm.ConfigurationException;
 import org.osgi.service.cm.ManagedServiceFactory;
 
-public class JettyManagedServiceFactory implements ManagedServiceFactory
+public class JettyManagedServiceFactory implements ManagedServiceFactory, Closeable
 {
 	private final Map<String, JettyServiceStarter> services = new HashMap<>();
 	private final BundleContext context;
@@ -39,7 +40,8 @@ public class JettyManagedServiceFactory implements ManagedServiceFactory
 		this.context = context;
 	}
 
-	public synchronized void stop()
+	@Override
+    public synchronized void close()
 	{
 		final Set<String> pids = new HashSet<>(services.keySet());
 		for (final String pid : pids)

@@ -16,6 +16,7 @@
  */
 package org.apache.felix.http.jetty.internal;
 
+import java.io.Closeable;
 import java.util.Dictionary;
 import java.util.Hashtable;
 
@@ -30,9 +31,11 @@ public final class JettyActivator extends AbstractHttpActivator
 {
     private JettyService jetty;
 
-    private ServiceRegistration<?> metatypeReg;
-    private ServiceRegistration<LoadBalancerCustomizerFactory> loadBalancerCustomizerFactoryReg;
-    private ServiceRegistration<?> jettyServiceFactoryReg;
+    private volatile ServiceRegistration<?> metatypeReg;
+    private volatile ServiceRegistration<LoadBalancerCustomizerFactory> loadBalancerCustomizerFactoryReg;
+    private volatile ServiceRegistration<?> jettyServiceFactoryReg;
+
+    private volatile Closeable managedServiceFactory;
 
     @Override
     protected void doStart() throws Exception
@@ -97,7 +100,14 @@ public final class JettyActivator extends AbstractHttpActivator
                     public Object getService(final Bundle bundle,
                             final ServiceRegistration registration)
                     {
-                        return new JettyManagedServiceFactory(getBundleContext());
+                        synchronized ( jetty )
+                        {
+                            if ( managedServiceFactory == null )
+                            {
+                                managedServiceFactory = new JettyManagedServiceFactory(getBundleContext());
+                            }
+                        }
+                        return managedServiceFactory;
                     }
 
                     @Override
@@ -105,7 +115,7 @@ public final class JettyActivator extends AbstractHttpActivator
                             final ServiceRegistration registration,
                             final Object service)
                     {
-                        ((JettyManagedServiceFactory)service).stop();
+                        // do nothing
                     }
                 }, factoryProps);
 
@@ -114,6 +124,10 @@ public final class JettyActivator extends AbstractHttpActivator
     @Override
     protected void doStop() throws Exception
     {
+        if ( this.managedServiceFactory != null )
+        {
+            this.managedServiceFactory.close();
+        }
         this.jetty.stop();
         if ( metatypeReg != null )
         {
