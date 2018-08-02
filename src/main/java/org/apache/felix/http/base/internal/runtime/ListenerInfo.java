@@ -22,7 +22,7 @@ import java.util.EventListener;
 import java.util.HashSet;
 import java.util.Set;
 
-import javax.annotation.Nonnull;
+import org.jetbrains.annotations.NotNull;
 import javax.servlet.ServletContextAttributeListener;
 import javax.servlet.ServletContextListener;
 import javax.servlet.ServletRequestAttributeListener;
@@ -111,7 +111,7 @@ public class ListenerInfo extends WhiteboardServiceInfo<EventListener>
         return this.types;
     }
 
-    public boolean isListenerType(@Nonnull final String className)
+    public boolean isListenerType(@NotNull final String className)
     {
         for(final String t : this.types)
         {

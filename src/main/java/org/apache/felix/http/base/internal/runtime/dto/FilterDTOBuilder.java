@@ -18,7 +18,7 @@
  */
 package org.apache.felix.http.base.internal.runtime.dto;
 
-import javax.annotation.Nonnull;
+import org.jetbrains.annotations.NotNull;
 import javax.servlet.DispatcherType;
 
 import org.apache.felix.http.base.internal.handler.FilterHandler;
@@ -33,7 +33,7 @@ public final class FilterDTOBuilder
      * @param handlers The filter handler array
      * @return The filter DTO array
      */
-    public static @Nonnull FilterDTO[] build(@Nonnull final FilterHandler[] handlers)
+    public static @NotNull FilterDTO[] build(@NotNull final FilterHandler[] handlers)
     {
         if ( handlers.length == 0 )
         {
@@ -53,7 +53,7 @@ public final class FilterDTOBuilder
      * @param handler The filter handler
      * @return A filter DTO
      */
-    public static @Nonnull FilterDTO build(@Nonnull final FilterHandler handler, final int reason)
+    public static @NotNull FilterDTO build(@NotNull final FilterHandler handler, final int reason)
     {
         final FilterDTO filterDTO = build(handler.getFilterInfo(), reason);
 
@@ -68,7 +68,7 @@ public final class FilterDTOBuilder
      * @param info The filter info
      * @return A filter DTO
      */
-    public static @Nonnull FilterDTO build(@Nonnull final FilterInfo info, final int reason)
+    public static @NotNull FilterDTO build(@NotNull final FilterInfo info, final int reason)
     {
         final FilterDTO filterDTO = (reason != -1 ? new FailedFilterDTO() : new FilterDTO());
 
@@ -89,7 +89,7 @@ public final class FilterDTOBuilder
         return filterDTO;
     }
 
-    private static @Nonnull String[] getNames(@Nonnull final DispatcherType[] dispatcher)
+    private static @NotNull String[] getNames(@NotNull final DispatcherType[] dispatcher)
     {
         final String[] names = new String[dispatcher.length];
         for (int i = 0; i < dispatcher.length; i++)

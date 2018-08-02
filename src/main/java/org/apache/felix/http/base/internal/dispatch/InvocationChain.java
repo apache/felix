@@ -21,7 +21,7 @@ import static javax.servlet.http.HttpServletResponse.SC_OK;
 
 import java.io.IOException;
 
-import javax.annotation.Nonnull;
+import org.jetbrains.annotations.NotNull;
 import javax.servlet.FilterChain;
 import javax.servlet.ServletException;
 import javax.servlet.ServletRequest;
@@ -39,14 +39,14 @@ public class InvocationChain implements FilterChain
 
     private int index = -1;
 
-    public InvocationChain(@Nonnull final ServletHandler servletHandler, @Nonnull final FilterHandler[] filterHandlers)
+    public InvocationChain(@NotNull final ServletHandler servletHandler, @NotNull final FilterHandler[] filterHandlers)
     {
         this.filterHandlers = filterHandlers;
         this.servletHandler = servletHandler;
     }
 
     @Override
-    public final void doFilter(@Nonnull final ServletRequest req, @Nonnull final  ServletResponse res) throws IOException, ServletException
+    public final void doFilter(@NotNull final ServletRequest req, @NotNull final  ServletResponse res) throws IOException, ServletException
     {
         boolean callFinish = false;
         if ( this.index == -1 )

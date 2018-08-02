@@ -19,7 +19,6 @@ package org.apache.felix.http.base.internal.dispatch;
 import java.io.IOException;
 import java.util.Set;
 
-import javax.annotation.CheckForNull;
 import javax.servlet.FilterChain;
 import javax.servlet.FilterConfig;
 import javax.servlet.RequestDispatcher;
@@ -39,6 +38,7 @@ import org.apache.felix.http.base.internal.registry.HandlerRegistry;
 import org.apache.felix.http.base.internal.registry.PathResolution;
 import org.apache.felix.http.base.internal.registry.PerContextHandlerRegistry;
 import org.apache.felix.http.base.internal.whiteboard.WhiteboardManager;
+import org.jetbrains.annotations.Nullable;
 import org.osgi.service.http.whiteboard.Preprocessor;
 
 public final class Dispatcher
@@ -56,7 +56,7 @@ public final class Dispatcher
      * Set or unset the whiteboard manager.
      * @param service The whiteboard manager or {@code null}
      */
-    public void setWhiteboardManager(@CheckForNull final WhiteboardManager service)
+    public void setWhiteboardManager(@Nullable final WhiteboardManager service)
     {
         this.whiteboardManager = service;
     }

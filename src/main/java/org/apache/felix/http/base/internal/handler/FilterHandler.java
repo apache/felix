@@ -18,7 +18,7 @@ package org.apache.felix.http.base.internal.handler;
 
 import java.io.IOException;
 
-import javax.annotation.Nonnull;
+import org.jetbrains.annotations.NotNull;
 import javax.servlet.Filter;
 import javax.servlet.FilterChain;
 import javax.servlet.ServletException;
@@ -128,9 +128,9 @@ public abstract class FilterHandler implements Comparable<FilterHandler>
         return -1;
     }
 
-    public void handle(@Nonnull final ServletRequest req,
-            @Nonnull final ServletResponse res,
-            @Nonnull final FilterChain chain) throws ServletException, IOException
+    public void handle(@NotNull final ServletRequest req,
+            @NotNull final ServletResponse res,
+            @NotNull final FilterChain chain) throws ServletException, IOException
     {
         this.filter.doFilter(req, res, chain);
     }

@@ -19,8 +19,8 @@ package org.apache.felix.http.base.internal.registry;
 import java.util.ArrayList;
 import java.util.List;
 
-import javax.annotation.CheckForNull;
-import javax.annotation.Nonnull;
+import org.jetbrains.annotations.Nullable;
+import org.jetbrains.annotations.NotNull;
 import javax.servlet.ServletContextAttributeEvent;
 import javax.servlet.ServletContextAttributeListener;
 import javax.servlet.ServletContextEvent;
@@ -90,7 +90,7 @@ public final class EventListenerRegistry implements
      *
      * @param listener handler
      */
-    public void addListeners(@Nonnull final ListenerHandler handler)
+    public void addListeners(@NotNull final ListenerHandler handler)
     {
         final int reason = handler.init();
 
@@ -129,7 +129,7 @@ public final class EventListenerRegistry implements
      *
      * @param info
      */
-    public void removeListeners(@Nonnull final ListenerInfo info)
+    public void removeListeners(@NotNull final ListenerInfo info)
     {
         // each listener map returns the same handler, we just need it once to destroy
         ListenerHandler handler = null;
@@ -172,7 +172,7 @@ public final class EventListenerRegistry implements
      * @param info The listener info
      * @return The handler or {@code null}.
      */
-    public @CheckForNull ListenerHandler getServletContextListener(@Nonnull final ListenerInfo info)
+    public @Nullable ListenerHandler getServletContextListener(@NotNull final ListenerInfo info)
     {
         return this.contextListeners.getListenerHandler(info);
     }
@@ -411,7 +411,7 @@ public final class EventListenerRegistry implements
      * @see javax.servlet.http.HttpSessionIdListener#sessionIdChanged(javax.servlet.http.HttpSessionEvent, java.lang.String)
      */
     @Override
-    public void sessionIdChanged(@Nonnull final HttpSessionEvent event, @Nonnull final String oldSessionId) {
+    public void sessionIdChanged(@NotNull final HttpSessionEvent event, @NotNull final String oldSessionId) {
         for (final HttpSessionIdListener l : sessionIdListeners.getActiveListeners())
         {
             try
@@ -443,9 +443,9 @@ public final class EventListenerRegistry implements
     }
 
     public static void contextInitialized(
-            @Nonnull final ListenerInfo info,
-            @Nonnull final ServletContextListener listener,
-            @Nonnull final ServletContextEvent event)
+            @NotNull final ListenerInfo info,
+            @NotNull final ServletContextListener listener,
+            @NotNull final ServletContextEvent event)
     {
         try
         {
@@ -458,9 +458,9 @@ public final class EventListenerRegistry implements
     }
 
     public static void contextDestroyed(
-            @Nonnull final ListenerInfo info,
-            @Nonnull final ServletContextListener listener,
-            @Nonnull final ServletContextEvent event)
+            @NotNull final ListenerInfo info,
+            @NotNull final ServletContextListener listener,
+            @NotNull final ServletContextEvent event)
     {
         try
         {

@@ -18,7 +18,7 @@
  */
 package org.apache.felix.http.base.internal.runtime.dto;
 
-import javax.annotation.Nonnull;
+import org.jetbrains.annotations.NotNull;
 
 import org.apache.felix.http.base.internal.runtime.PreprocessorInfo;
 import org.osgi.service.http.runtime.dto.FailedPreprocessorDTO;
@@ -32,7 +32,7 @@ public final class PreprocessorDTOBuilder
      * @param info The preprocessor info
      * @return A preprocessor DTO
      */
-    public static @Nonnull PreprocessorDTO build(@Nonnull final PreprocessorInfo info, final int reason)
+    public static @NotNull PreprocessorDTO build(@NotNull final PreprocessorInfo info, final int reason)
     {
         final PreprocessorDTO dto = (reason != -1 ? new FailedPreprocessorDTO() : new PreprocessorDTO());
 

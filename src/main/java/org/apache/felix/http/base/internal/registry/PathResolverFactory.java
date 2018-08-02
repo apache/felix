@@ -18,8 +18,8 @@ package org.apache.felix.http.base.internal.registry;
 
 import java.util.regex.Pattern;
 
-import javax.annotation.CheckForNull;
-import javax.annotation.Nonnull;
+import org.jetbrains.annotations.Nullable;
+import org.jetbrains.annotations.NotNull;
 
 import org.apache.felix.http.base.internal.handler.ServletHandler;
 import org.apache.felix.http.base.internal.service.HttpServiceFactory;
@@ -38,7 +38,7 @@ import org.apache.felix.http.base.internal.service.HttpServiceFactory;
  */
 public abstract class PathResolverFactory {
 
-    public static @Nonnull PathResolver createPatternMatcher(@CheckForNull final ServletHandler handler, @Nonnull final String pattern)
+    public static @NotNull PathResolver createPatternMatcher(@Nullable final ServletHandler handler, @NotNull final String pattern)
     {
         if ( pattern.length() == 0 )
         {
@@ -63,7 +63,7 @@ public abstract class PathResolverFactory {
         return new ExactMatcher(handler, pattern);
     }
 
-    public static @Nonnull PathResolver createRegexMatcher(@Nonnull final String regex)
+    public static @NotNull PathResolver createRegexMatcher(@NotNull final String regex)
     {
         return new RegexMatcher(regex);
     }
@@ -346,7 +346,7 @@ public abstract class PathResolverFactory {
         }
 
         @Override
-        public @CheckForNull PathResolution resolve(@Nonnull final String uri) {
+        public @Nullable PathResolution resolve(@NotNull final String uri) {
             if ( pattern.matcher(uri).matches() )
             {
                 final PathResolution pr = new PathResolution();

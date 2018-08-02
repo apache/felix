@@ -22,8 +22,8 @@ import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 
-import javax.annotation.CheckForNull;
-import javax.annotation.Nonnull;
+import org.jetbrains.annotations.Nullable;
+import org.jetbrains.annotations.NotNull;
 import javax.servlet.DispatcherType;
 
 import org.apache.felix.http.base.internal.handler.FilterHandler;
@@ -57,7 +57,7 @@ public final class FilterRegistry
         private final FilterHandler handler;
         private final PathResolver[] resolvers;
 
-        public FilterRegistrationStatus(@Nonnull final FilterHandler handler, @CheckForNull final PathResolver[] resolvers, final int result)
+        public FilterRegistrationStatus(@NotNull final FilterHandler handler, @Nullable final PathResolver[] resolvers, final int result)
         {
             this.handler = handler;
             this.resolvers = resolvers;
@@ -69,12 +69,12 @@ public final class FilterRegistry
             return this.result;
         }
 
-        public @Nonnull FilterHandler getHandler()
+        public @NotNull FilterHandler getHandler()
         {
             return this.handler;
         }
 
-        public @CheckForNull PathResolver[] getResolvers()
+        public @Nullable PathResolver[] getResolvers()
         {
             return this.resolvers;
         }
@@ -94,7 +94,7 @@ public final class FilterRegistry
      * Add a filter.
      * @param handler The handler for the filter
      */
-    public synchronized void addFilter(@Nonnull final FilterHandler handler)
+    public synchronized void addFilter(@NotNull final FilterHandler handler)
     {
         final int result = handler.init();
         PathResolver[] prs = null;
@@ -133,7 +133,7 @@ public final class FilterRegistry
      * @param filterInfo The filter info
      * @param destroy boolean flag indicating whether to call destroy on the filter.
      */
-    public synchronized void removeFilter(@Nonnull final FilterInfo filterInfo, final boolean destroy)
+    public synchronized void removeFilter(@NotNull final FilterInfo filterInfo, final boolean destroy)
     {
         FilterRegistrationStatus found = null;
         final List<FilterRegistrationStatus> newList = new ArrayList<FilterRegistry.FilterRegistrationStatus>(this.filters);
@@ -172,9 +172,9 @@ public final class FilterRegistry
      * @param requestURI The request uri
      * @return The array of filter handlers, might be empty.
      */
-    public @Nonnull FilterHandler[] getFilterHandlers(@CheckForNull final ServletHandler handler,
-            @Nonnull final DispatcherType dispatcherType,
-            @Nonnull final String requestURI)
+    public @NotNull FilterHandler[] getFilterHandlers(@Nullable final ServletHandler handler,
+            @NotNull final DispatcherType dispatcherType,
+            @NotNull final String requestURI)
     {
         final List<FilterHandler> result = new ArrayList<FilterHandler>();
         final List<FilterRegistrationStatus> allFilters = this.filters;

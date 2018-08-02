@@ -19,8 +19,8 @@ package org.apache.felix.http.base.internal.whiteboard;
 import java.util.HashMap;
 import java.util.Map;
 
-import javax.annotation.CheckForNull;
-import javax.annotation.Nonnull;
+import org.jetbrains.annotations.Nullable;
+import org.jetbrains.annotations.NotNull;
 import javax.servlet.ServletContext;
 
 import org.apache.felix.http.base.internal.context.ExtServletContext;
@@ -56,27 +56,27 @@ public class WhiteboardContextHandler implements Comparable<WhiteboardContextHan
     /** The shared part of the servlet context. */
     private volatile ServletContext sharedContext;
 
-    public WhiteboardContextHandler(@Nonnull final ServletContextHelperInfo info,
-            @Nonnull final ServletContext webContext,
-            @Nonnull final Bundle httpBundle)
+    public WhiteboardContextHandler(@NotNull final ServletContextHelperInfo info,
+            @NotNull final ServletContext webContext,
+            @NotNull final Bundle httpBundle)
     {
         this.webContext = webContext;
         this.info = info;
         this.httpBundle = httpBundle;
     }
 
-    public @Nonnull BundleContext getBundleContext()
+    public @NotNull BundleContext getBundleContext()
     {
         return this.httpBundle.getBundleContext();
     }
 
-    public @Nonnull ServletContextHelperInfo getContextInfo()
+    public @NotNull ServletContextHelperInfo getContextInfo()
     {
         return this.info;
     }
 
     @Override
-    public int compareTo(@Nonnull final WhiteboardContextHandler o)
+    public int compareTo(@NotNull final WhiteboardContextHandler o)
     {
         return this.info.compareTo(o.getContextInfo());
     }
@@ -85,7 +85,7 @@ public class WhiteboardContextHandler implements Comparable<WhiteboardContextHan
      * Activate this context.
      * @return {@code true} if it succeeded.
      */
-    public boolean activate(@Nonnull final HandlerRegistry registry)
+    public boolean activate(@NotNull final HandlerRegistry registry)
     {
         this.registry = new PerContextHandlerRegistry(this.info);
         this.sharedContext = new SharedServletContextImpl(webContext,
@@ -109,7 +109,7 @@ public class WhiteboardContextHandler implements Comparable<WhiteboardContextHan
     /**
      * Deactivate this context.
      */
-    public void deactivate(@Nonnull final HandlerRegistry registry)
+    public void deactivate(@NotNull final HandlerRegistry registry)
     {
         registry.remove(this.info);
         this.registry = null;
@@ -118,12 +118,12 @@ public class WhiteboardContextHandler implements Comparable<WhiteboardContextHan
         this.perBundleContextMap.clear();
     }
 
-    public @CheckForNull ServletContext getSharedContext()
+    public @Nullable ServletContext getSharedContext()
     {
         return sharedContext;
     }
 
-    public @CheckForNull ExtServletContext getServletContext(@CheckForNull final Bundle bundle)
+    public @Nullable ExtServletContext getServletContext(@Nullable final Bundle bundle)
     {
         if ( bundle == null )
         {
@@ -162,7 +162,7 @@ public class WhiteboardContextHandler implements Comparable<WhiteboardContextHan
         return null;
     }
 
-    public void ungetServletContext(@Nonnull final Bundle bundle)
+    public void ungetServletContext(@NotNull final Bundle bundle)
     {
         final Long key = bundle.getBundleId();
         synchronized ( this.perBundleContextMap )
@@ -188,7 +188,7 @@ public class WhiteboardContextHandler implements Comparable<WhiteboardContextHan
         }
     }
 
-    public @CheckForNull PerContextHandlerRegistry getRegistry()
+    public @Nullable PerContextHandlerRegistry getRegistry()
     {
         return this.registry;
     }

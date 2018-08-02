@@ -29,8 +29,8 @@ import java.util.TreeSet;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.regex.Pattern;
 
-import javax.annotation.CheckForNull;
-import javax.annotation.Nonnull;
+import org.jetbrains.annotations.Nullable;
+import org.jetbrains.annotations.NotNull;
 
 import org.apache.felix.http.base.internal.handler.ServletHandler;
 import org.apache.felix.http.base.internal.runtime.ServletInfo;
@@ -190,7 +190,7 @@ public final class ErrorPageRegistry
      * @param info The servlet info
      * @return An error registration object if the servlet handles errors
      */
-    public static @CheckForNull ErrorRegistration getErrorRegistration(@Nonnull final ServletInfo info)
+    public static @Nullable ErrorRegistration getErrorRegistration(@NotNull final ServletInfo info)
     {
         if ( info.getErrorPage() != null )
         {
@@ -217,7 +217,7 @@ public final class ErrorPageRegistry
      * Add the servlet for error handling
      * @param handler The servlet handler.
      */
-    public synchronized void addServlet(@Nonnull final ServletHandler handler)
+    public synchronized void addServlet(@NotNull final ServletHandler handler)
     {
         final ErrorRegistration reg = getErrorRegistration(handler.getServletInfo());
         if ( reg != null )
@@ -242,7 +242,7 @@ public final class ErrorPageRegistry
      * Remove the servlet from error handling
      * @param info The servlet info.
      */
-    public synchronized void removeServlet(@Nonnull final ServletInfo info, final boolean destroy)
+    public synchronized void removeServlet(@NotNull final ServletInfo info, final boolean destroy)
     {
         final ErrorRegistration reg = getErrorRegistration(info);
         if ( reg != null )
