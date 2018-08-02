@@ -33,7 +33,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import javax.annotation.Nonnull;
+import org.jetbrains.annotations.NotNull;
 import javax.servlet.FilterChain;
 import javax.servlet.ServletContext;
 import javax.servlet.ServletContextEvent;
@@ -153,7 +153,7 @@ public final class WhiteboardManager
      * Start the whiteboard manager
      * @param containerContext The servlet context
      */
-    public void start(final ServletContext containerContext, @Nonnull final Dictionary<String, Object> httpServiceProps)
+    public void start(final ServletContext containerContext, @NotNull final Dictionary<String, Object> httpServiceProps)
     {
         // runtime service gets the same props for now
         this.serviceRuntime.setAllAttributes(httpServiceProps);
@@ -261,7 +261,7 @@ public final class WhiteboardManager
         this.webContext = null;
     }
 
-    public void sessionDestroyed(@Nonnull final HttpSession session, final Set<String> contextNames)
+    public void sessionDestroyed(@NotNull final HttpSession session, final Set<String> contextNames)
     {
         for(final String contextName : contextNames)
         {
@@ -281,7 +281,7 @@ public final class WhiteboardManager
      * @param oldSessionId The old session id
      * @param contextIds The context ids using that session
      */
-    public void sessionIdChanged(@Nonnull final HttpSessionEvent event, final String oldSessionId, final Set<String> contextNames)
+    public void sessionIdChanged(@NotNull final HttpSessionEvent event, final String oldSessionId, final Set<String> contextNames)
     {
         for(final String contextName : contextNames)
         {
@@ -582,7 +582,7 @@ public final class WhiteboardManager
      * @param info Whiteboard service info
      * @return {@code true} if it matches this http service runtime
      */
-    public boolean addWhiteboardService(@Nonnull final WhiteboardServiceInfo<?> info)
+    public boolean addWhiteboardService(@NotNull final WhiteboardServiceInfo<?> info)
     {
         // no logging and no DTO if other target service
         if ( isMatchingService(info) )

@@ -19,8 +19,8 @@ package org.apache.felix.http.base.internal.dispatch;
 import java.io.IOException;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import javax.annotation.CheckForNull;
-import javax.annotation.Nonnull;
+import org.jetbrains.annotations.Nullable;
+import org.jetbrains.annotations.NotNull;
 import javax.servlet.DispatcherType;
 import javax.servlet.FilterChain;
 import javax.servlet.RequestDispatcher;
@@ -44,10 +44,10 @@ final class ServletResponseWrapper extends HttpServletResponseWrapper
 
     private final String servletName;
 
-    public ServletResponseWrapper(@Nonnull final HttpServletRequest req,
-            @Nonnull final HttpServletResponse res,
-            @CheckForNull final String servletName,
-            @CheckForNull final PerContextHandlerRegistry errorRegistry)
+    public ServletResponseWrapper(@NotNull final HttpServletRequest req,
+            @NotNull final HttpServletResponse res,
+            @Nullable final String servletName,
+            @Nullable final PerContextHandlerRegistry errorRegistry)
     {
         super(res);
         this.request = req;

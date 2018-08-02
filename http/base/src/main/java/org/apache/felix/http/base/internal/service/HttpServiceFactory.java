@@ -18,7 +18,7 @@ package org.apache.felix.http.base.internal.service;
 
 import java.util.Hashtable;
 
-import javax.annotation.Nonnull;
+import org.jetbrains.annotations.NotNull;
 import javax.servlet.ServletContext;
 
 import org.apache.felix.http.base.internal.registry.HandlerRegistry;
@@ -83,7 +83,7 @@ public final class HttpServiceFactory
     }
 
     public void start(final ServletContext context,
-            @Nonnull final Hashtable<String, Object> props)
+            @NotNull final Hashtable<String, Object> props)
     {
         this.httpServiceProps.clear();
         this.httpServiceProps.putAll(props);

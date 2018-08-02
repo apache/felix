@@ -20,7 +20,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 
-import javax.annotation.Nonnull;
+import org.jetbrains.annotations.NotNull;
 import javax.servlet.Servlet;
 import javax.servlet.ServletException;
 
@@ -51,7 +51,7 @@ public final class SharedHttpServiceImpl
     /**
      * Register a filter
      */
-    public boolean registerFilter(@Nonnull final FilterHandler handler)
+    public boolean registerFilter(@NotNull final FilterHandler handler)
     {
         this.handlerRegistry.getRegistry(handler.getContextServiceId()).registerFilter(handler);
         return true;
@@ -60,10 +60,10 @@ public final class SharedHttpServiceImpl
     /**
      * Register a servlet
      */
-    public void registerServlet(@Nonnull final String alias,
-            @Nonnull final ExtServletContext httpContext,
-            @Nonnull final Servlet servlet,
-            @Nonnull final ServletInfo servletInfo) throws ServletException, NamespaceException
+    public void registerServlet(@NotNull final String alias,
+            @NotNull final ExtServletContext httpContext,
+            @NotNull final Servlet servlet,
+            @NotNull final ServletInfo servletInfo) throws ServletException, NamespaceException
     {
         final ServletHandler handler = new HttpServiceServletHandler(httpContext, servletInfo, servlet);
 

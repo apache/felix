@@ -16,8 +16,8 @@
  */
 package org.apache.felix.http.base.internal.registry;
 
-import javax.annotation.CheckForNull;
-import javax.annotation.Nonnull;
+import org.jetbrains.annotations.Nullable;
+import org.jetbrains.annotations.NotNull;
 import javax.servlet.DispatcherType;
 
 import org.apache.felix.http.base.internal.handler.FilterHandler;
@@ -74,7 +74,7 @@ public final class PerContextHandlerRegistry implements Comparable<PerContextHan
      * Registry for a servlet context helper (whiteboard support)
      * @param info The servlet context helper info
      */
-    public PerContextHandlerRegistry(@Nonnull final ServletContextHelperInfo info)
+    public PerContextHandlerRegistry(@NotNull final ServletContextHelperInfo info)
     {
         this.serviceId = info.getServiceId();
         this.ranking = info.getRanking();
@@ -103,7 +103,7 @@ public final class PerContextHandlerRegistry implements Comparable<PerContextHan
     }
 
     @Override
-    public int compareTo(@Nonnull final PerContextHandlerRegistry other)
+    public int compareTo(@NotNull final PerContextHandlerRegistry other)
     {
         final int result = new Integer(other.path.length()).compareTo(this.path.length());
         if ( result == 0 ) {
@@ -119,7 +119,7 @@ public final class PerContextHandlerRegistry implements Comparable<PerContextHan
         return result;
     }
 
-    public String isMatching(@Nonnull final String requestURI)
+    public String isMatching(@NotNull final String requestURI)
     {
         if (requestURI.equals(this.path))
         {
@@ -136,7 +136,7 @@ public final class PerContextHandlerRegistry implements Comparable<PerContextHan
         return null;
     }
 
-    public PathResolution resolve(@Nonnull final String relativeRequestURI)
+    public PathResolution resolve(@NotNull final String relativeRequestURI)
     {
         return this.servletRegistry.resolve(relativeRequestURI);
     }
@@ -153,9 +153,9 @@ public final class PerContextHandlerRegistry implements Comparable<PerContextHan
      * @param requestURI The request uri
      * @return The array of filter handlers, the array might be empty.
      */
-    public @Nonnull FilterHandler[] getFilterHandlers(@CheckForNull final ServletHandler servletHandler,
-            @Nonnull final DispatcherType dispatcherType,
-            @Nonnull final String requestURI)
+    public @NotNull FilterHandler[] getFilterHandlers(@Nullable final ServletHandler servletHandler,
+            @NotNull final DispatcherType dispatcherType,
+            @NotNull final String requestURI)
     {
         return this.filterRegistry.getFilterHandlers(servletHandler, dispatcherType, requestURI);
     }
@@ -166,7 +166,7 @@ public final class PerContextHandlerRegistry implements Comparable<PerContextHan
      * @param exception The optional exception
      * @return The servlet handler or {@code null}.
      */
-    public @CheckForNull ServletHandler getErrorHandler(final int code, @CheckForNull final Throwable exception)
+    public @Nullable ServletHandler getErrorHandler(final int code, @Nullable final Throwable exception)
     {
         return this.errorPageRegistry.get(exception, code);
     }
@@ -201,7 +201,7 @@ public final class PerContextHandlerRegistry implements Comparable<PerContextHan
      * Add a servlet
      * @param handler The servlet handler
      */
-    public void registerServlet(@Nonnull final ServletHandler handler)
+    public void registerServlet(@NotNull final ServletHandler handler)
     {
         this.servletRegistry.addServlet(handler);
         this.errorPageRegistry.addServlet(handler);
@@ -212,7 +212,7 @@ public final class PerContextHandlerRegistry implements Comparable<PerContextHan
      * @param servletInfo The servlet info
      * @param destroy Destroy the servlet
      */
-    public void unregisterServlet(@Nonnull final ServletInfo servletInfo, final boolean destroy)
+    public void unregisterServlet(@NotNull final ServletInfo servletInfo, final boolean destroy)
     {
         this.servletRegistry.removeServlet(servletInfo, destroy);
         this.errorPageRegistry.removeServlet(servletInfo, destroy);
@@ -222,7 +222,7 @@ public final class PerContextHandlerRegistry implements Comparable<PerContextHan
      * Add a filter
      * @param handler The filter handler
      */
-    public void registerFilter(@Nonnull final FilterHandler handler)
+    public void registerFilter(@NotNull final FilterHandler handler)
     {
         this.filterRegistry.addFilter(handler);
     }
@@ -232,7 +232,7 @@ public final class PerContextHandlerRegistry implements Comparable<PerContextHan
      * @param info The filter info
      * @param destroy Destroy the filter
      */
-    public void unregisterFilter(@Nonnull final FilterInfo info, final boolean destroy)
+    public void unregisterFilter(@NotNull final FilterInfo info, final boolean destroy)
     {
         this.filterRegistry.removeFilter(info, destroy);
     }
@@ -241,7 +241,7 @@ public final class PerContextHandlerRegistry implements Comparable<PerContextHan
      * Register listeners
      * @param listenerHandler
      */
-    public void registerListeners(@Nonnull final ListenerHandler listenerHandler)
+    public void registerListeners(@NotNull final ListenerHandler listenerHandler)
     {
         this.eventListenerRegistry.addListeners(listenerHandler);
     }
@@ -251,7 +251,7 @@ public final class PerContextHandlerRegistry implements Comparable<PerContextHan
      *
      * @param info The listener info
      */
-    public void unregisterListeners(@Nonnull final ListenerInfo info)
+    public void unregisterListeners(@NotNull final ListenerInfo info)
     {
         this.eventListenerRegistry.removeListeners(info);
     }

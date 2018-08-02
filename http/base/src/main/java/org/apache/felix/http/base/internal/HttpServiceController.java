@@ -18,7 +18,7 @@ package org.apache.felix.http.base.internal;
 
 import java.util.Hashtable;
 
-import javax.annotation.Nonnull;
+import org.jetbrains.annotations.NotNull;
 import javax.servlet.Servlet;
 import javax.servlet.ServletContext;
 import javax.servlet.http.HttpSessionEvent;
@@ -63,7 +63,7 @@ public final class HttpServiceController
      * Create a new dispatcher servlet
      * @return The dispatcher servlet.
      */
-    public @Nonnull Servlet createDispatcherServlet()
+    public @NotNull Servlet createDispatcherServlet()
     {
         return new DispatcherServlet(this.dispatcher);
     }
@@ -110,7 +110,7 @@ public final class HttpServiceController
      * Start the http and http whiteboard service in the provided context.
      * @param containerContext The container context.
      */
-    public void register(@Nonnull final ServletContext containerContext, @Nonnull final Hashtable<String, Object> props)
+    public void register(@NotNull final ServletContext containerContext, @NotNull final Hashtable<String, Object> props)
     {
         this.registry.init();
 

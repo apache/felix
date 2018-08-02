@@ -23,7 +23,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.NoSuchElementException;
 
-import javax.annotation.Nonnull;
+import org.jetbrains.annotations.NotNull;
 
 import org.apache.felix.http.base.internal.handler.ListenerHandler;
 import org.apache.felix.http.base.internal.runtime.ListenerInfo;
@@ -47,7 +47,7 @@ public class ListenerMap<T extends EventListener> {
         private final int result;
         private final ListenerHandler handler;
 
-        public ListenerRegistrationStatus(@Nonnull final ListenerHandler handler, final int result)
+        public ListenerRegistrationStatus(@NotNull final ListenerHandler handler, final int result)
         {
             this.handler = handler;
             this.result = result;
@@ -58,7 +58,7 @@ public class ListenerMap<T extends EventListener> {
             return this.result;
         }
 
-        public @Nonnull ListenerHandler getHandler()
+        public @NotNull ListenerHandler getHandler()
         {
             return this.handler;
         }
@@ -108,7 +108,7 @@ public class ListenerMap<T extends EventListener> {
         return null;
     }
 
-    public ListenerHandler getListenerHandler(@Nonnull final ListenerInfo info)
+    public ListenerHandler getListenerHandler(@NotNull final ListenerInfo info)
     {
         final List<ListenerRegistrationStatus<T>> list = this.handlers;
         for(final ListenerRegistrationStatus<T> status : list)

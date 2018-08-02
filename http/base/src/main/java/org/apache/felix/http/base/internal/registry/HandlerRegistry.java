@@ -21,8 +21,8 @@ import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 
-import javax.annotation.CheckForNull;
-import javax.annotation.Nonnull;
+import org.jetbrains.annotations.Nullable;
+import org.jetbrains.annotations.NotNull;
 import javax.servlet.DispatcherType;
 
 import org.apache.felix.http.base.internal.handler.FilterHandler;
@@ -85,7 +85,7 @@ public final class HandlerRegistry
      * Remove a context registration.
      * @param info The servlet context helper info
      */
-    public void remove(@Nonnull ServletContextHelperInfo info)
+    public void remove(@NotNull ServletContextHelperInfo info)
     {
         synchronized ( this )
         {
@@ -108,7 +108,7 @@ public final class HandlerRegistry
     /**
      * Add a new context registration.
      */
-    public void add(@Nonnull PerContextHandlerRegistry registry)
+    public void add(@NotNull PerContextHandlerRegistry registry)
     {
         synchronized ( this )
         {
@@ -133,7 +133,7 @@ public final class HandlerRegistry
         return null;
     }
 
-    public @CheckForNull ServletResolution getErrorHandler(@Nonnull final String requestURI,
+    public @Nullable ServletResolution getErrorHandler(@NotNull final String requestURI,
             final Long serviceId,
             final int code,
             final Throwable exception)
@@ -174,9 +174,9 @@ public final class HandlerRegistry
         return null;
     }
 
-    public FilterHandler[] getFilters(@Nonnull final ServletResolution pr,
-            @Nonnull final DispatcherType dispatcherType,
-            @Nonnull String requestURI)
+    public FilterHandler[] getFilters(@NotNull final ServletResolution pr,
+            @NotNull final DispatcherType dispatcherType,
+            @NotNull String requestURI)
     {
         if ( pr != null && pr.handlerRegistry != null )
         {
@@ -185,7 +185,7 @@ public final class HandlerRegistry
         return EMPTY_FILTER_HANDLER;
     }
 
-    public PathResolution resolveServlet(@Nonnull final String requestURI)
+    public PathResolution resolveServlet(@NotNull final String requestURI)
     {
         final List<PerContextHandlerRegistry> regs = this.registrations;
         for(final PerContextHandlerRegistry r : regs)
@@ -213,7 +213,7 @@ public final class HandlerRegistry
      * @param name The servlet name
      * @return The servlet handler or {@code null}
      */
-    public ServletResolution resolveServletByName(final long contextId, @Nonnull final String name)
+    public ServletResolution resolveServletByName(final long contextId, @NotNull final String name)
     {
         final PerContextHandlerRegistry reg = this.getRegistry(contextId);
         if ( reg != null )
@@ -231,8 +231,8 @@ public final class HandlerRegistry
         return null;
     }
 
-    public boolean getRuntimeInfo(@Nonnull final ServletContextDTO dto,
-            @Nonnull final FailedDTOHolder failedDTOHolder)
+    public boolean getRuntimeInfo(@NotNull final ServletContextDTO dto,
+            @NotNull final FailedDTOHolder failedDTOHolder)
     {
         final PerContextHandlerRegistry reg = this.getRegistry(dto.serviceId);
         if ( reg != null )

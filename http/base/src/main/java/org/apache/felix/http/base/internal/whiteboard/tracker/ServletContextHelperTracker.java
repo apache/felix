@@ -19,7 +19,7 @@ package org.apache.felix.http.base.internal.whiteboard.tracker;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-import javax.annotation.Nonnull;
+import org.jetbrains.annotations.NotNull;
 
 import org.apache.felix.http.base.internal.runtime.ServletContextHelperInfo;
 import org.apache.felix.http.base.internal.whiteboard.WhiteboardManager;
@@ -54,7 +54,7 @@ public final class ServletContextHelperTracker extends ServiceTracker<ServletCon
         return null; // we never get here - and if we get an NPE which is fine
     }
 
-    public ServletContextHelperTracker(@Nonnull final BundleContext context, @Nonnull final WhiteboardManager manager)
+    public ServletContextHelperTracker(@NotNull final BundleContext context, @NotNull final WhiteboardManager manager)
     {
         super(context, createFilter(context), null);
         this.contextManager = manager;
@@ -67,26 +67,26 @@ public final class ServletContextHelperTracker extends ServiceTracker<ServletCon
     }
 
     @Override
-    public final ServiceReference<ServletContextHelper> addingService(@Nonnull final ServiceReference<ServletContextHelper> ref)
+    public final ServiceReference<ServletContextHelper> addingService(@NotNull final ServiceReference<ServletContextHelper> ref)
     {
         this.added(ref);
         return ref;
     }
 
     @Override
-    public final void modifiedService(@Nonnull final ServiceReference<ServletContextHelper> ref, @Nonnull final ServiceReference<ServletContextHelper> service)
+    public final void modifiedService(@NotNull final ServiceReference<ServletContextHelper> ref, @NotNull final ServiceReference<ServletContextHelper> service)
     {
         this.removed(ref);
         this.added(ref);
     }
 
     @Override
-    public final void removedService(@Nonnull final ServiceReference<ServletContextHelper> ref, @Nonnull final ServiceReference<ServletContextHelper> service)
+    public final void removedService(@NotNull final ServiceReference<ServletContextHelper> ref, @NotNull final ServiceReference<ServletContextHelper> service)
     {
         this.removed(ref);
     }
 
-    private void added(@Nonnull final ServiceReference<ServletContextHelper> ref)
+    private void added(@NotNull final ServiceReference<ServletContextHelper> ref)
     {
         final ServletContextHelperInfo info = new ServletContextHelperInfo(ref);
         if ( this.contextManager.addContextHelper(info) )
@@ -95,7 +95,7 @@ public final class ServletContextHelperTracker extends ServiceTracker<ServletCon
         }
     }
 
-    private void removed(@Nonnull final ServiceReference<ServletContextHelper> ref)
+    private void removed(@NotNull final ServiceReference<ServletContextHelper> ref)
     {
         final ServletContextHelperInfo info = this.allInfos.get(ref.getProperty(Constants.SERVICE_ID));
         if ( info != null )

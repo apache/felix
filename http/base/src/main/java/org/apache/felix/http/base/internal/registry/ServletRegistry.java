@@ -29,7 +29,7 @@ import java.util.Set;
 import java.util.TreeMap;
 import java.util.concurrent.ConcurrentHashMap;
 
-import javax.annotation.Nonnull;
+import org.jetbrains.annotations.NotNull;
 
 import org.apache.felix.http.base.internal.handler.ServletHandler;
 import org.apache.felix.http.base.internal.runtime.ServletInfo;
@@ -71,7 +71,7 @@ public final class ServletRegistry
      * @param relativeRequestURI The request uri
      * @return A path resolution if a servlet matched, {@code null} otherwise
      */
-    public PathResolution resolve(@Nonnull final String relativeRequestURI)
+    public PathResolution resolve(@NotNull final String relativeRequestURI)
     {
         final List<PathResolver> resolvers = this.activeResolvers;
         for(final PathResolver entry : resolvers)
@@ -104,7 +104,7 @@ public final class ServletRegistry
      *
      * @param handler The servlet handler
      */
-    public synchronized void addServlet(@Nonnull final ServletHandler handler)
+    public synchronized void addServlet(@NotNull final ServletHandler handler)
     {
         // we have to check for every pattern in the info
         // Can be null in case of error-handling servlets and named servlets
@@ -253,7 +253,7 @@ public final class ServletRegistry
      * Remove a servlet
      * @param info The servlet info
      */
-    public synchronized void removeServlet(@Nonnull final ServletInfo info, final boolean destroy)
+    public synchronized void removeServlet(@NotNull final ServletInfo info, final boolean destroy)
     {
         if ( info.getPatterns() != null )
         {
@@ -444,7 +444,7 @@ public final class ServletRegistry
         }
     }
 
-    public ServletHandler resolveByName(final @Nonnull String name)
+    public ServletHandler resolveByName(final @NotNull String name)
     {
         final List<ServletHandler> handlerList = this.servletsByName.get(name);
         if ( handlerList != null )

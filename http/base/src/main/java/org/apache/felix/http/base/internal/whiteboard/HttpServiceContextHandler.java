@@ -19,8 +19,8 @@ package org.apache.felix.http.base.internal.whiteboard;
 import java.util.HashMap;
 import java.util.Map;
 
-import javax.annotation.CheckForNull;
-import javax.annotation.Nonnull;
+import org.jetbrains.annotations.Nullable;
+import org.jetbrains.annotations.NotNull;
 import javax.servlet.ServletContext;
 
 import org.apache.felix.http.base.internal.context.ExtServletContext;
@@ -66,7 +66,7 @@ public class HttpServiceContextHandler extends WhiteboardContextHandler
     }
 
     @Override
-    public @CheckForNull ExtServletContext getServletContext(@CheckForNull final Bundle bundle)
+    public @Nullable ExtServletContext getServletContext(@Nullable final Bundle bundle)
     {
         if ( bundle == null )
         {
@@ -91,7 +91,7 @@ public class HttpServiceContextHandler extends WhiteboardContextHandler
     }
 
     @Override
-    public void ungetServletContext(@Nonnull final Bundle bundle)
+    public void ungetServletContext(@NotNull final Bundle bundle)
     {
         final Long key = bundle.getBundleId();
         synchronized ( this.perBundleContextMap )
