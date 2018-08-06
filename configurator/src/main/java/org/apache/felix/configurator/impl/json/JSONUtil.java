@@ -36,7 +36,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import javax.json.Json;
 import javax.json.JsonArray;
 import javax.json.JsonArrayBuilder;
 import javax.json.JsonNumber;
@@ -265,7 +264,7 @@ public class JSONUtil {
         if ( value instanceof List ) {
             @SuppressWarnings("unchecked")
             final List<Object> list = (List<Object>)value;
-            final JsonArrayBuilder builder = Json.createArrayBuilder();
+            final JsonArrayBuilder builder = new JsonProviderImpl().createArrayBuilder();
             for(final Object obj : list) {
                 if ( obj instanceof String ) {
                     builder.add(obj.toString());
@@ -286,7 +285,7 @@ public class JSONUtil {
         } else if ( value instanceof Map ) {
             @SuppressWarnings("unchecked")
             final Map<String, Object> map = (Map<String, Object>)value;
-            final JsonObjectBuilder builder = Json.createObjectBuilder();
+            final JsonObjectBuilder builder = new JsonProviderImpl().createObjectBuilder();
             for(final Map.Entry<String, Object> entry : map.entrySet()) {
                 if ( entry.getValue() instanceof String ) {
                     builder.add(entry.getKey(), entry.getValue().toString());
