@@ -1,3 +1,9 @@
+Changes in 4.3.6
+----------------
+** Bug
+    * [5893] - JQuery Security bug CVE-2015-9251 in Web Console
+
+
 Changes from 4.3.2 to 4.3.4
 ---------------------------
 ** Bug
