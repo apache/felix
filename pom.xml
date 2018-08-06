@@ -29,7 +29,7 @@
     <artifactId>org.apache.felix.configurator</artifactId>
     <packaging>bundle</packaging>
 
-    <name>Apache Felix Configurer Service</name>
+    <name>Apache Felix Configurator Service</name>
     <description>
         Implementation of the OSGi Configurator Service Specification 1.0
     </description>

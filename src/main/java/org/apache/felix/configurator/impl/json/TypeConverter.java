@@ -28,9 +28,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import javax.json.Json;
 import javax.json.JsonStructure;
 
+import org.apache.johnzon.core.JsonProviderImpl;
 import org.osgi.util.converter.Converter;
 import org.osgi.util.converter.ConverterFunction;
 import org.osgi.util.converter.Converters;
@@ -56,7 +56,7 @@ public class TypeConverter {
                         if ( obj instanceof Map || obj instanceof List ) {
                             final JsonStructure json = JSONUtil.build(obj);
                             final StringWriter w = new StringWriter();
-                            Json.createWriter(w).write(json);
+                            new JsonProviderImpl().createWriter(w).write(json);
                             return w.toString();
                         }
                         return CANNOT_HANDLE;
