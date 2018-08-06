@@ -18,6 +18,7 @@
  */
 package org.apache.felix.configurator.impl.json;
 
+import java.io.Serializable;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Dictionary;
@@ -33,7 +34,10 @@ import java.util.Set;
  * Actually this class is a simple adapter from the Dictionary interface
  * to a synchronized LinkedHashMap
  */
-public class OrderedDictionary extends Dictionary<String, Object> implements Map<String, Object> {
+public class OrderedDictionary extends Dictionary<String, Object> implements Map<String, Object>, Serializable {
+     
+    private static final long serialVersionUID = -525111601546803041L;
+
     private static class EnumarationImpl<E> implements Enumeration<E> {
         private final Iterator<E> iterator;
 
