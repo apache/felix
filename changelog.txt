@@ -1,3 +1,9 @@
+Changes in 4.3.8
+----------------
+** Improvement
+    * [5901] - Update to latest jQuery UI 1.12.1
+
+
 Changes in 4.3.6
 ----------------
 ** Bug
