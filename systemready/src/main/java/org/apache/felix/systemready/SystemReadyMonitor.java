@@ -27,12 +27,7 @@ public interface SystemReadyMonitor  {
     String PID = "org.apache.felix.systemready.SystemReadyMonitor";
 
     /**
-     * @return true if aggregated state is GREEN
-     */
-    boolean isReady();
-    
-    /**
      * @return detailed system state
      */
-    SystemStatus getStatus();
+    SystemStatus getStatus(StateType stateType);
 }

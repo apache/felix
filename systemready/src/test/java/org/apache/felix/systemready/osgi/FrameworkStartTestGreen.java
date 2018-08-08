@@ -22,7 +22,7 @@ import static org.ops4j.pax.exam.cm.ConfigurationAdminOptions.newConfiguration;
 
 import javax.inject.Inject;
 
-import org.apache.felix.systemready.Status;
+import org.apache.felix.systemready.CheckStatus;
 import org.apache.felix.systemready.SystemReadyCheck;
 import org.apache.felix.systemready.impl.FrameworkStartCheck;
 import org.apache.felix.systemready.osgi.util.BaseTest;
@@ -52,7 +52,7 @@ public class FrameworkStartTestGreen extends BaseTest {
 
     @Test
     public void test() {
-        Status status = check.getStatus();
-        Assert.assertEquals(Status.State.GREEN, status.getState());
+        CheckStatus status = check.getStatus();
+        Assert.assertEquals(CheckStatus.State.GREEN, status.getState());
     }
 }

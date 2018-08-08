@@ -18,7 +18,8 @@
  */
 package org.apache.felix.systemready.impl;
 
-import org.apache.felix.systemready.Status;
+import org.apache.felix.systemready.CheckStatus;
+import org.apache.felix.systemready.StateType;
 import org.apache.felix.systemready.SystemReadyCheck;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
@@ -64,33 +65,42 @@ public class FrameworkStartCheck implements SystemReadyCheck {
                         "It takes precedence over the target.start.level config. " +
                         "If the startlevel cannot be derived from the osgi property, this config attribute is ignored.")
         String target_start_level_prop_name() default "";
+        
+        @AttributeDefinition(name = "Check type") 
+        StateType type() default StateType.ALIVE;
 
     }
 
     private final Logger log = LoggerFactory.getLogger(getClass());
     private BundleContext bundleContext;
     private long targetStartLevel;
+	private StateType type;
 
     @Activate
     protected void activate(final BundleContext ctx, final Config config) throws InterruptedException {
         this.bundleContext = ctx;
-        final FrameworkStartLevel fsl = bundleContext.getBundle(Constants.SYSTEM_BUNDLE_ID).adapt(FrameworkStartLevel.class);
+        this.targetStartLevel = getTargetStartLevel(config);
+        this.type = config.type();
+        log.info("Activated");
+    }
+
+	private long getTargetStartLevel(final Config config) {
+		final FrameworkStartLevel fsl = bundleContext.getBundle(Constants.SYSTEM_BUNDLE_ID).adapt(FrameworkStartLevel.class);
         final long initial = fsl.getInitialBundleStartLevel();
         // get the configured target start level, otherwise use the initial bundle start level
-        this.targetStartLevel = config.target_start_level() > 0 ? config.target_start_level() : initial + 1;
+        long tStartLevel = config.target_start_level() > 0 ? config.target_start_level() : initial + 1;
 
         // overwrite with the value from #target_start_level_prop_name if present
         final String targetStartLevelKey = config.target_start_level_prop_name();
         if (null != targetStartLevelKey && !targetStartLevelKey.trim().isEmpty()) {
             try {
-                this.targetStartLevel = Long.valueOf(bundleContext.getProperty(targetStartLevelKey));
+                tStartLevel = Long.valueOf(bundleContext.getProperty(targetStartLevelKey));
             } catch (NumberFormatException e) {
                 log.info("Ignoring {} as it can't be parsed: {}", targetStartLevelKey, e.getMessage());
             }
         }
-
-        log.info("Activated");
-    }
+        return tStartLevel;
+	}
 
     @Override
     public String getName() {
@@ -98,16 +108,17 @@ public class FrameworkStartCheck implements SystemReadyCheck {
     }
 
     @Override
-    public Status getStatus() {
+    public CheckStatus getStatus() {
         Bundle systemBundle = bundleContext.getBundle(Constants.SYSTEM_BUNDLE_ID);
         FrameworkStartLevel fsl = systemBundle.adapt(FrameworkStartLevel.class);
         String message = String.format("Start level: %d; Target start level: %d; Framework state: %d",
                 fsl.getStartLevel(), targetStartLevel, fsl.getBundle().getState());
         boolean started = (systemBundle.getState() == Bundle.ACTIVE) && (fsl.getStartLevel() >= targetStartLevel);
         if (started) {
-            return new Status(Status.State.GREEN, FRAMEWORK_STARTED + message);
+            return new CheckStatus(getName(), type, CheckStatus.State.GREEN, FRAMEWORK_STARTED + message);
         } else {
-            return new Status(Status.State.YELLOW, FRAMEWORK_NOT_STARTED + message);
+            return new CheckStatus(getName(), type, CheckStatus.State.YELLOW, FRAMEWORK_NOT_STARTED + message);
         }
     }
+
 }

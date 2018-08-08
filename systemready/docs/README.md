@@ -63,10 +63,12 @@ This report can be queried by calling the service. Additionally the system ready
 
 For an example see the [test case](../src/test/java/org/apache/felix/systemready/core/osgi/SystemReadyMonitorTest.java).
 
-## Ready servlet
+## Ready and alive servlets
 
 The Ready servlet provides the aggregated state of the system over http in json format.
 It is registered on the path `/systemready`.
+
+The alive servlet provides the aggregated alive state of the system and is registered by default on `/systemalive`.
 
 HTTP return codes
 
@@ -86,7 +88,8 @@ This is an example of a ready system with just the services check.
 }
 ```
 
-Optional configuration pid `org.apache.felix.systemready.impl.servlet.SystemReadyServlet`.
+Optional configuration pid for ready servlet `org.apache.felix.systemready.impl.servlet.SystemReadyServlet`.
+Optional configuration pid for alive servlet `org.apache.felix.systemready.impl.servlet.SystemAliveServlet`.
 
 Name                                 | Default      | Description
 -------------------------------------|--------------|----------------

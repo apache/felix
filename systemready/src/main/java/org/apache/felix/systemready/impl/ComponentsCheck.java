@@ -22,7 +22,8 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import org.apache.felix.systemready.Status;
+import org.apache.felix.systemready.CheckStatus;
+import org.apache.felix.systemready.StateType;
 import org.apache.felix.systemready.SystemReadyCheck;
 import org.apache.felix.systemready.rootcause.DSComp;
 import org.apache.felix.systemready.rootcause.DSRootCause;
@@ -31,7 +32,6 @@ import org.osgi.framework.BundleContext;
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.ConfigurationPolicy;
-import org.osgi.service.component.annotations.Deactivate;
 import org.osgi.service.component.annotations.Reference;
 import org.osgi.service.component.runtime.ServiceComponentRuntime;
 import org.osgi.service.metatype.annotations.AttributeDefinition;
@@ -56,34 +56,36 @@ public class ComponentsCheck implements SystemReadyCheck {
 
         @AttributeDefinition(name = "Components list", description = "The components that need to come up before this check reports GREEN")
         String[] components_list();
+        
+        @AttributeDefinition(name = "Check type") 
+        StateType type() default StateType.ALIVE;
 
     }
 
     private List<String> componentsList;
     
-    DSRootCause analyzer;
+    private DSRootCause analyzer;
 
+    private StateType type;
+    
     @Reference
     ServiceComponentRuntime scr;
+
 
     @Activate
     public void activate(final BundleContext ctx, final Config config) throws InterruptedException {
         this.analyzer = new DSRootCause(scr);
+        this.type = config.type();
         componentsList = Arrays.asList(config.components_list());
     }
 
-    @Deactivate
-    protected void deactivate() {
-    }
-
-
     @Override
     public String getName() {
-        return "Components Check";
+        return "Components Check " + componentsList;
     }
 
     @Override
-    public Status getStatus() {
+    public CheckStatus getStatus() {
         StringBuilder details = new StringBuilder();
         List<DSComp> watchedComps = scr.getComponentDescriptionDTOs().stream()
             .filter(desc -> componentsList.contains(desc.name))
@@ -93,13 +95,14 @@ public class ComponentsCheck implements SystemReadyCheck {
             throw new IllegalStateException("Not all named components could be found");
         };
         watchedComps.stream().forEach(dsComp -> addDetails(dsComp, details));
-        final Status.State state = Status.State.worstOf(watchedComps.stream().map(this::status));
-        return new Status(state, details.toString());
+        final CheckStatus.State state = CheckStatus.State.worstOf(watchedComps.stream().map(this::status));
+        return new CheckStatus(getName(), type, state, details.toString());
     }
     
-    private Status.State status(DSComp component) {
+    private CheckStatus.State status(DSComp component) {
         boolean missingConfig = component.config == null && "require".equals(component.desc.configurationPolicy);
-        return (missingConfig || !component.unsatisfied.isEmpty()) ? Status.State.YELLOW : Status.State.GREEN;
+        boolean unsatisfied = !component.unsatisfied.isEmpty();
+        return (missingConfig || unsatisfied) ? CheckStatus.State.YELLOW : CheckStatus.State.GREEN;
     }
 
     private void addDetails(DSComp component, StringBuilder details) {

@@ -18,9 +18,9 @@
  */
 package org.apache.felix.systemready.osgi;
 
+import static org.awaitility.Awaitility.await;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.Matchers.equalTo;
-import static org.hamcrest.Matchers.notNullValue;
 import static org.hamcrest.core.StringContains.containsString;
 import static org.junit.Assert.assertThat;
 
@@ -32,10 +32,14 @@ import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URL;
+import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
 import javax.inject.Inject;
 
+import org.apache.felix.systemready.CheckStatus;
+import org.apache.felix.systemready.CheckStatus.State;
+import org.apache.felix.systemready.StateType;
 import org.apache.felix.systemready.SystemReadyMonitor;
 import org.apache.felix.systemready.osgi.util.BaseTest;
 import org.awaitility.Awaitility;
@@ -44,10 +48,14 @@ import org.junit.runner.RunWith;
 import org.ops4j.pax.exam.Configuration;
 import org.ops4j.pax.exam.Option;
 import org.ops4j.pax.exam.junit.PaxExam;
+import org.ops4j.pax.exam.spi.reactors.ExamReactorStrategy;
+import org.ops4j.pax.exam.spi.reactors.PerMethod;
 
 @RunWith(PaxExam.class)
+@ExamReactorStrategy(PerMethod.class)
 public class ServletTest extends BaseTest {
-    public static final String SERVLET_PATH = "/servlet/path";
+    public static final String READY_SERVLET_PATH = "/readyservlet/path";
+	private static final String ALIVE_SERVLET_PATH = "/aliveservlet/path";
     @Inject
     SystemReadyMonitor monitor;
 
@@ -55,29 +63,46 @@ public class ServletTest extends BaseTest {
     public Option[] configuration() {
         return new Option[] {
                 baseConfiguration(),
-                servletConfig(SERVLET_PATH),
+                readyServletConfig(READY_SERVLET_PATH),
+                aliveServletConfig(ALIVE_SERVLET_PATH),
                 httpService(),
                 monitorConfig(),
-                servicesCheckConfig(Runnable.class.getName())
+                servicesCheckConfig(StateType.ALIVE, Runnable.class.getName()),
+                servicesCheckConfig(StateType.READY, Consumer.class.getName())
         };
     }
 
     @Test
-    public void test() throws IOException, InterruptedException {
+    public void testServlets() throws IOException, InterruptedException {
         disableFrameworkStartCheck();
 
         Awaitility.pollInSameThread();
-        Awaitility.await().until(monitor::isReady, is(false));
-        String content = Awaitility.await().until(() -> readFromUrl(getUrl(SERVLET_PATH), 503), notNullValue());
-        System.out.println(content);
-        assertThat(content, containsString("\"systemStatus\": \"YELLOW\""));
+        
+        waitState(StateType.READY, CheckStatus.State.YELLOW);
+        await().until(() -> readFromUrl(getUrl(ALIVE_SERVLET_PATH), 503), containsString("\"systemStatus\": \"YELLOW\""));
+        await().until(() -> readFromUrl(getUrl(READY_SERVLET_PATH), 503), containsString("\"systemStatus\": \"YELLOW\""));
         context.registerService(Runnable.class, () -> {}, null);
-        System.out.println(content);
-        Awaitility.await().until(monitor::isReady, is(true));
-        String content2 = Awaitility.await().until(() -> readFromUrl(getUrl(SERVLET_PATH), 200), notNullValue());
-        assertThat(content2, containsString("\"systemStatus\": \"GREEN\""));
-    }
+        waitState(StateType.ALIVE, State.GREEN);
+        waitState(StateType.READY, State.YELLOW);
 
+        await().until(() -> readFromUrl(getUrl(ALIVE_SERVLET_PATH), 200), containsString("\"systemStatus\": \"GREEN\""));
+        await().until(() -> readFromUrl(getUrl(READY_SERVLET_PATH), 503), containsString("\"systemStatus\": \"YELLOW\""));
+
+        context.registerService(Consumer.class, input -> {}, null);
+        
+        waitState(StateType.ALIVE, State.GREEN);
+        waitState(StateType.READY, State.GREEN);
+        
+        await().until(() -> readFromUrl(getUrl(ALIVE_SERVLET_PATH), 200), containsString("\"systemStatus\": \"GREEN\""));
+        await().until(() -> readFromUrl(getUrl(READY_SERVLET_PATH), 200), containsString("\"systemStatus\": \"GREEN\""));
+    }
+    
+    
+
+	private void waitState(StateType type, State expectedState) {
+		Awaitility.await().until(() -> monitor.getStatus(type).getState(), is(expectedState));
+	}
+    
     private String getUrl(String path) {
         return URI.create("http://localhost:8080").resolve(path).toString();
     }

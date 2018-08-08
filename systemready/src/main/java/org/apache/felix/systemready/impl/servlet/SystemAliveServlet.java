@@ -41,32 +41,32 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Provide aggregated ready information using a servlet
+ * Provide aggregated alive information using a servlet
  */
 @Component(
-        name = SystemReadyServlet.PID,
+        name = SystemAliveServlet.PID,
         service = Servlet.class,
         property = {
-                HttpWhiteboardConstants.HTTP_WHITEBOARD_SERVLET_PATTERN + "=" + SystemReadyServlet.DEFAULT_PATH,
+                HttpWhiteboardConstants.HTTP_WHITEBOARD_SERVLET_PATTERN + "=" + SystemAliveServlet.DEFAULT_PATH,
         }
 )
-@Designate(ocd=SystemReadyServlet.Config.class)
-public class SystemReadyServlet extends HttpServlet {
-    public static final String PID = "org.apache.felix.systemready.impl.servlet.SystemReadyServlet";
-    public static final String DEFAULT_PATH = "/systemready";
+@Designate(ocd=SystemAliveServlet.Config.class)
+public class SystemAliveServlet extends HttpServlet {
+    public static final String PID = "org.apache.felix.systemready.impl.servlet.SystemAliveServlet";
+    public static final String DEFAULT_PATH = "/systemalive";
 
-    private static final Logger LOG = LoggerFactory.getLogger(SystemReadyServlet.class);
+    private static final Logger LOG = LoggerFactory.getLogger(SystemAliveServlet.class);
 
     private static final long serialVersionUID = 1L;
 
     @ObjectClassDefinition(
-            name ="System Ready Servlet",
-            description="Servlet exposing a http endpoint for retrieving the ready status"
+            name ="System Alive Servlet",
+            description="Servlet exposing a http endpoint for retrieving the alive status"
     )
     public @interface Config {
 
         @AttributeDefinition(name = "Servlet Path")
-        String osgi_http_whiteboard_servlet_pattern() default SystemReadyServlet.DEFAULT_PATH;
+        String osgi_http_whiteboard_servlet_pattern() default SystemAliveServlet.DEFAULT_PATH;
         
         @AttributeDefinition(name = "Servlet Context select")
         String osgi_http_whiteboard_context_select();
@@ -82,7 +82,7 @@ public class SystemReadyServlet extends HttpServlet {
     protected void activate(final BundleContext ctx, final Map<String, Object> properties, final Config config) {
         final String path = config.osgi_http_whiteboard_servlet_pattern();
         LOG.info("Registered servlet to listen on {}", path);
-        reporter = new StatusReporter(monitor, StateType.READY);
+        reporter = new StatusReporter(monitor, StateType.ALIVE);
     }
 
     @Override

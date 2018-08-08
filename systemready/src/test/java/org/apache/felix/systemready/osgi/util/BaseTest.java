@@ -28,13 +28,16 @@ import java.util.function.Predicate;
 
 import javax.inject.Inject;
 
+import org.apache.felix.systemready.StateType;
 import org.apache.felix.systemready.SystemReadyMonitor;
 import org.apache.felix.systemready.impl.ComponentsCheck;
 import org.apache.felix.systemready.impl.FrameworkStartCheck;
 import org.apache.felix.systemready.impl.ServicesCheck;
+import org.apache.felix.systemready.impl.servlet.SystemAliveServlet;
 import org.apache.felix.systemready.impl.servlet.SystemReadyServlet;
 import org.ops4j.pax.exam.CoreOptions;
 import org.ops4j.pax.exam.Option;
+import org.ops4j.pax.exam.cm.ConfigurationAdminOptions;
 import org.osgi.framework.BundleContext;
 import org.osgi.service.component.runtime.ServiceComponentRuntime;
 import org.osgi.service.component.runtime.dto.ComponentDescriptionDTO;
@@ -75,9 +78,10 @@ public class BaseTest {
         );
     }
     
-    public Option servicesCheckConfig(String... services) {
-        return newConfiguration(ServicesCheck.PID)
+    public Option servicesCheckConfig(StateType type, String... services) {
+        return ConfigurationAdminOptions.factoryConfiguration(ServicesCheck.PID)
                 .put("services.list", services)
+                .put("type", type.name())
                 .asOption();
     }
     
@@ -100,8 +104,14 @@ public class BaseTest {
                 );
     }
 
-    public Option servletConfig(String path) {
+    public Option readyServletConfig(String path) {
         return newConfiguration(SystemReadyServlet.PID)
+                .put("osgi.http.whiteboard.servlet.pattern", path)
+                .asOption();
+    }
+    
+    public Option aliveServletConfig(String path) {
+        return newConfiguration(SystemAliveServlet.PID)
                 .put("osgi.http.whiteboard.servlet.pattern", path)
                 .asOption();
     }

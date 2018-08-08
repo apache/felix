@@ -26,8 +26,9 @@ import static org.junit.Assert.assertThat;
 import javax.inject.Inject;
 
 import org.apache.felix.systemready.SystemReadyCheck;
-import org.apache.felix.systemready.Status;
-import org.apache.felix.systemready.Status.State;
+import org.apache.felix.systemready.CheckStatus;
+import org.apache.felix.systemready.CheckStatus.State;
+import org.apache.felix.systemready.StateType;
 import org.apache.felix.systemready.impl.ServicesCheck;
 import org.apache.felix.systemready.osgi.util.BaseTest;
 import org.junit.Test;
@@ -49,17 +50,17 @@ public class ServicesCheckTest extends BaseTest {
     public Option[] configuration() {
         return new Option[] {
                 baseConfiguration(),
-                servicesCheckConfig(Runnable.class.getName(), ServiceComponentRuntime.class.getName()),
+                servicesCheckConfig(StateType.ALIVE, Runnable.class.getName(), ServiceComponentRuntime.class.getName()),
         };
     }
 
     @Test
     public void test() {
-        Status status = check.getStatus();
+        CheckStatus status = check.getStatus();
         assertThat(status.getState(),  is(State.YELLOW));
         assertThat(status.getDetails(), containsString("Missing service without matching DS component: java.lang.Runnable"));
         context.registerService(Runnable.class, () -> {}, null);
-        Status status2 = check.getStatus();
+        CheckStatus status2 = check.getStatus();
         System.out.println(status2);
         assertThat(status2.getState(),  is(State.GREEN));
         assertThat(status2.getDetails(), equalTo(""));

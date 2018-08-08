@@ -29,7 +29,8 @@ import java.util.concurrent.TimeUnit;
 import javax.inject.Inject;
 
 import org.apache.felix.systemready.CheckStatus;
-import org.apache.felix.systemready.Status;
+import org.apache.felix.systemready.CheckStatus.State;
+import org.apache.felix.systemready.StateType;
 import org.apache.felix.systemready.SystemReadyCheck;
 import org.apache.felix.systemready.SystemReadyMonitor;
 import org.apache.felix.systemready.osgi.examples.TestSystemReadyCheck;
@@ -65,43 +66,47 @@ public class SystemReadyMonitorTest extends BaseTest {
 
         Awaitility.setDefaultPollDelay(0, TimeUnit.MILLISECONDS);
         assertNumChecks(0);
-        wait.until(monitor::isReady, is(true));
+        wait.until(this::getState, is(State.GREEN));
 
         TestSystemReadyCheck check = new TestSystemReadyCheck();
         context.registerService(SystemReadyCheck.class, check, null);
         assertNumChecks(1);
-        wait.until(monitor::isReady, is(false));
+        wait.until(this::getState, is(State.YELLOW));
 
         // make the status green
-        check.setInternalState(Status.State.GREEN);
-        wait.until(monitor::isReady, is(true));
+        check.setInternalState(CheckStatus.State.GREEN);
+        wait.until(this::getState, is(State.GREEN));
 
         // make the status fail and check that the monitor handles that
         check.exception();
-        wait.until(monitor::isReady, is(false));
+        wait.until(this::getState, is(State.RED));
         assertNumChecks(1);
 
-        CheckStatus status = monitor.getStatus().getCheckStates().iterator().next();
-        assertThat(status.getCheckName(), is(check.getClass().getName()));
-        assertThat(status.getStatus().getState(), Matchers.is(Status.State.RED));
-        assertThat(status.getStatus().getDetails(), containsString("Failure"));
+        CheckStatus status = monitor.getStatus(StateType.READY).getCheckStates().iterator().next();
+        assertThat(status.getCheckName(), is(check.getName()));
+        assertThat(status.getState(), Matchers.is(CheckStatus.State.RED));
+        assertThat(status.getDetails(), containsString("Failure"));
 
-        check.setInternalState(Status.State.RED);
+        check.setInternalState(CheckStatus.State.RED);
         assertNumChecks(1);
-        wait.until(monitor::isReady, is(false));
+        wait.until(this::getState, is(State.RED));
 
         // register a second check
         TestSystemReadyCheck check2 = new TestSystemReadyCheck();
         context.registerService(SystemReadyCheck.class, check2, null);
         assertNumChecks(2);
-        wait.until(monitor::isReady, is(false));
+        wait.until(this::getState, is(State.RED));
 
-        check2.setInternalState(Status.State.GREEN);
-        wait.until(monitor::isReady, is(false));
+        check2.setInternalState(CheckStatus.State.GREEN);
+        wait.until(this::getState, is(State.RED));
 
-        check.setInternalState(Status.State.GREEN);
-        wait.until(monitor::isReady, is(true));
+        check.setInternalState(CheckStatus.State.GREEN);
+        wait.until(this::getState, is(State.GREEN));
 
+    }
+    
+    private State getState() {
+    	return monitor.getStatus(StateType.READY).getState();
     }
 
     private void assertNumChecks(int expectedNum) {
@@ -109,6 +114,6 @@ public class SystemReadyMonitorTest extends BaseTest {
     }
 
     private int numChecks() {
-        return monitor.getStatus().getCheckStates().size();
+        return monitor.getStatus(StateType.READY).getCheckStates().size();
     }
 }

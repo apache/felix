@@ -18,25 +18,64 @@
  */
 package org.apache.felix.systemready;
 
-/**
- * Wrapper for storing the name of a check and its {{Status}}
- */
+import static java.util.stream.Collectors.minBy;
+
+import java.util.stream.Stream;
+
 public class CheckStatus {
+    // Be aware that the order of the enum declarations matters for the Comparator
+    public enum State { RED, YELLOW, GREEN;
+        /**
+         * returns {{GREEN}} for {{true}} and {{YELLOW}} for {{false}}
+         */
+        public static State fromBoolean(boolean ready) {
+            return (ready) ? State.GREEN : State.YELLOW;
+        }
+        
+        public static State worstOf(Stream<State> states) {
+            return states.collect(minBy(State::compareTo)).orElse(State.GREEN);
+        }
+    }
+    
     private String checkName;
-    private Status status;
+    
+    private StateType type;
 
-    public CheckStatus(String checkName, Status status) {
-        this.checkName = checkName;
-        this.status = status;
+    private State state;
+
+    private String details;
+    
+    public CheckStatus(String checkName, StateType type, State state, String details) {
+		this.checkName = checkName;
+		this.type = type;
+		this.state = state;
+        this.details = details;
     }
-
+    
     public String getCheckName() {
-        return checkName;
+		return checkName;
+	}
+    
+    
+    public StateType getType() {
+		return type;
+	}
+    
+    public State getState() {
+        return state;
+    }
+    
+    public String getDetails() {
+        return details;
     }
 
-    public Status getStatus() {
-        return status;
+    @Override
+    public String toString() {
+        return "CheckStatus{" +
+                "state=" + state +
+                ", details='" + details + '\'' +
+                '}';
     }
-
-
+    
+    
 }
