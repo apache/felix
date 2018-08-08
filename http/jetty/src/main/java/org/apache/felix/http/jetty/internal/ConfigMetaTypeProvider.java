@@ -412,6 +412,41 @@ class ConfigMetaTypeProvider implements MetaTypeProvider
                 null, null,
                 getStringArray(bundle.getBundleContext().getProperty(JettyConfig.FELIX_JETTY_GZIP_EXCLUDED_MIME_TYPES))));
         
+        adList.add(new AttributeDefinitionImpl(JettyConfig.FELIX_HTTP2_ENABLE,
+                "Enable Http/2",
+                "Whether to enable HTTP/2. Default is false.",
+                false,
+                bundle.getBundleContext().getProperty(JettyConfig.FELIX_HTTP2_ENABLE)));
+        adList.add(new AttributeDefinitionImpl(JettyConfig.FELIX_JETTY_HTTP2_MAX_CONCURRENT_STREAMS,
+                "Http/2 Max Concurrent Streams",
+                "The max number of concurrent streams per connection. Default is 128.",
+                128,
+                bundle.getBundleContext().getProperty(JettyConfig.FELIX_JETTY_HTTP2_MAX_CONCURRENT_STREAMS)));
+        adList.add(new AttributeDefinitionImpl(JettyConfig.FELIX_JETTY_HTTP2_INITIAL_STREAM_RECV_WINDOW,
+                "Http/2 Initial Stream Recieve Window",
+                "The initial stream receive window (client to server). Default is 524288.",
+                524288,
+                bundle.getBundleContext().getProperty(JettyConfig.FELIX_JETTY_HTTP2_INITIAL_STREAM_RECV_WINDOW)));
+        adList.add(new AttributeDefinitionImpl(JettyConfig.FELIX_JETTY_HTTP2_INITIAL_SESSION_RECV_WINDOW,
+                "Http/2 Initial Session Recieve Window",
+                "The initial session receive window (client to server). Default is 1048576.",
+                1048576,
+                bundle.getBundleContext().getProperty(JettyConfig.FELIX_JETTY_HTTP2_INITIAL_SESSION_RECV_WINDOW)));
+        
+        adList.add(new AttributeDefinitionImpl(JettyConfig.FELIX_JETTY_ALPN_PROTOCOLS,
+                "ALPN Protocols",
+                "The ALPN protocols to consider. Default is h2, http/1.1.",
+                AttributeDefinition.STRING,
+                new String[] {"h2", "http/1.1"},
+                2147483647,
+                null, null,
+                getStringArray(bundle.getBundleContext().getProperty(JettyConfig.FELIX_JETTY_ALPN_PROTOCOLS))));
+        adList.add(new AttributeDefinitionImpl(JettyConfig.FELIX_JETTY_ALPN_DEFAULT_PROTOCOL,
+                "ALPN Default Protocol",
+                "The default protocol when negotiation fails. Default is http/1.1.",
+                "http/1.1",
+                bundle.getBundleContext().getProperty(JettyConfig.FELIX_JETTY_ALPN_DEFAULT_PROTOCOL)));
+        
         return new ObjectClassDefinition()
         {
 
