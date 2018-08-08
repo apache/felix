@@ -57,7 +57,7 @@ public class FrameworkStartCheck implements SystemReadyCheck {
         long timeout() default 1000;
 
         @AttributeDefinition(name = "Target start level", description = "The target start level at which the Framework " +
-                "is considered started. If zero or negative, it will default to the default bundle start level + 1")
+                "is considered started. If zero or negative, it will default to the default bundle start level")
         int target_start_level() default 0;
 
         @AttributeDefinition(name = "Target start level OSGi property name",
@@ -88,7 +88,7 @@ public class FrameworkStartCheck implements SystemReadyCheck {
 		final FrameworkStartLevel fsl = bundleContext.getBundle(Constants.SYSTEM_BUNDLE_ID).adapt(FrameworkStartLevel.class);
         final long initial = fsl.getInitialBundleStartLevel();
         // get the configured target start level, otherwise use the initial bundle start level
-        long tStartLevel = config.target_start_level() > 0 ? config.target_start_level() : initial + 1;
+        long tStartLevel = config.target_start_level() > 0 ? config.target_start_level() : initial;
 
         // overwrite with the value from #target_start_level_prop_name if present
         final String targetStartLevelKey = config.target_start_level_prop_name();
