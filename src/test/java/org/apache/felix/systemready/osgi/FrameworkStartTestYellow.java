@@ -18,7 +18,7 @@
  */
 package org.apache.felix.systemready.osgi;
 
-import org.apache.felix.systemready.Status;
+import org.apache.felix.systemready.CheckStatus;
 import org.apache.felix.systemready.SystemReadyCheck;
 import org.apache.felix.systemready.impl.FrameworkStartCheck;
 import org.apache.felix.systemready.osgi.util.BaseTest;
@@ -53,7 +53,7 @@ public class FrameworkStartTestYellow extends BaseTest {
 
     @Test
     public void test() {
-        Status status = check.getStatus();
-        Assert.assertEquals(Status.State.YELLOW, status.getState());
+        CheckStatus status = check.getStatus();
+        Assert.assertEquals(CheckStatus.State.YELLOW, status.getState());
     }
 }

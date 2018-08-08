@@ -39,6 +39,6 @@ public interface SystemReadyCheck {
      *
      * @return the state of the system
      */
-    Status getStatus();
+    CheckStatus getStatus();
 
 }

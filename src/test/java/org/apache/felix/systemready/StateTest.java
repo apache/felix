@@ -29,11 +29,11 @@ public class StateTest {
     
     @Test
     public void testCompare() {
-        assertThat(worstOf(Status.State.GREEN, Status.State.YELLOW), equalTo(Status.State.YELLOW));
-        assertThat(worstOf(Status.State.GREEN, Status.State.YELLOW, Status.State.RED), equalTo(Status.State.RED));
+        assertThat(worstOf(CheckStatus.State.GREEN, CheckStatus.State.YELLOW), equalTo(CheckStatus.State.YELLOW));
+        assertThat(worstOf(CheckStatus.State.GREEN, CheckStatus.State.YELLOW, CheckStatus.State.RED), equalTo(CheckStatus.State.RED));
     }
 
-    private Status.State worstOf(Status.State...states) {
-        return Status.State.worstOf(Arrays.asList(states).stream());
+    private CheckStatus.State worstOf(CheckStatus.State...states) {
+        return CheckStatus.State.worstOf(Arrays.asList(states).stream());
     }
 }

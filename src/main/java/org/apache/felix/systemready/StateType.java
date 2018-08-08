@@ -18,27 +18,6 @@
  */
 package org.apache.felix.systemready;
 
-import java.util.Collection;
-import java.util.stream.Stream;
-
-import org.apache.felix.systemready.CheckStatus.State;
-
-public class SystemStatus {
-    private Collection<CheckStatus> checkStates;
-	private State state;
-    
-    public SystemStatus(Collection<CheckStatus> checkStates) {
-        this.checkStates = checkStates;
-        Stream<State> states = checkStates.stream()
-        		.map(status -> status.getState());
-        this.state = CheckStatus.State.worstOf(states);
-    }
-
-    public CheckStatus.State getState() {
-        return this.state;
-    }
-    
-    public Collection<CheckStatus> getCheckStates() {
-        return checkStates;
-    }
+public enum StateType {
+	ALIVE, READY;
 }

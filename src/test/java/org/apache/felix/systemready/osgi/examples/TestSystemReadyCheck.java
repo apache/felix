@@ -20,8 +20,9 @@ package org.apache.felix.systemready.osgi.examples;
 
 import java.util.concurrent.atomic.AtomicReference;
 
-import org.apache.felix.systemready.Status;
-import org.apache.felix.systemready.Status.State;
+import org.apache.felix.systemready.CheckStatus;
+import org.apache.felix.systemready.CheckStatus.State;
+import org.apache.felix.systemready.StateType;
 import org.apache.felix.systemready.SystemReadyCheck;
 
 public class TestSystemReadyCheck implements SystemReadyCheck {
@@ -39,9 +40,9 @@ public class TestSystemReadyCheck implements SystemReadyCheck {
     }
 
     @Override
-    public Status getStatus() {
+    public CheckStatus getStatus() {
         if (null == ex.get()) {
-            return new Status(state, state.name());
+            return new CheckStatus(getName(), StateType.READY, state, state.name());
         } else {
             throw ex.get();
         }

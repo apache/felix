@@ -18,14 +18,20 @@
  */
 package org.apache.felix.systemready.impl;
 
+import static java.util.function.Function.identity;
 import static java.util.stream.Collectors.toList;
+import static java.util.stream.Collectors.toMap;
 
-import java.util.*;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 
+import org.apache.felix.systemready.CheckStatus;
+import org.apache.felix.systemready.CheckStatus.State;
+import org.apache.felix.systemready.StateType;
 import org.apache.felix.systemready.SystemReadyCheck;
 import org.apache.felix.systemready.rootcause.DSComp;
-import org.apache.felix.systemready.Status;
-import org.apache.felix.systemready.Status.State;
 import org.apache.felix.systemready.rootcause.DSRootCause;
 import org.apache.felix.systemready.rootcause.RootCausePrinter;
 import org.osgi.framework.BundleContext;
@@ -57,26 +63,29 @@ public class ServicesCheck implements SystemReadyCheck {
         @AttributeDefinition(name = "Services list", description = "The services that need to be registered for the check to pass")
         String[] services_list();
 
+        @AttributeDefinition(name = "Check type") 
+        StateType type() default StateType.ALIVE;
     }
 
     private List<String> servicesList;
 
     private Map<String, Tracker> trackers;
     
-    DSRootCause analyzer;
+    private DSRootCause analyzer;
+
+    private StateType type;
 
     @Reference
     private ServiceComponentRuntime scr;
 
+
     @Activate
     public void activate(final BundleContext ctx, final Config config) throws InterruptedException {
-        analyzer = new DSRootCause(scr);
-        trackers = new HashMap<>();
-        servicesList = Arrays.asList(config.services_list());
-        for (String serviceName : servicesList) {
-            Tracker tracker = new Tracker(ctx, serviceName);
-            trackers.put(serviceName, tracker); 
-        }
+        this.analyzer = new DSRootCause(scr);
+        this.servicesList = Arrays.asList(config.services_list());
+        this.trackers = this.servicesList.stream()
+        	.collect(toMap(identity(), serviceName -> new Tracker(ctx, serviceName)));
+        this.type = config.type();
     }
 
     @Deactivate
@@ -92,11 +101,11 @@ public class ServicesCheck implements SystemReadyCheck {
     }
 
     @Override
-    public Status getStatus() {
+    public CheckStatus getStatus() {
         boolean allPresent = trackers.values().stream().allMatch(Tracker::present);
         // TODO: RED on timeouts
-        final Status.State state = State.fromBoolean(allPresent);
-        return new Status(state, getDetails()); // TODO: out of sync? do we care?
+        final CheckStatus.State state = State.fromBoolean(allPresent);
+        return new CheckStatus(getName(), type, state, getDetails()); // TODO: out of sync? do we care?
     }
 
     private String getDetails() {

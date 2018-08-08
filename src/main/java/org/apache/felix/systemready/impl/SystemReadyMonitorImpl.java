@@ -19,6 +19,7 @@
 package org.apache.felix.systemready.impl;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
@@ -29,7 +30,8 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 
 import org.apache.felix.systemready.CheckStatus;
-import org.apache.felix.systemready.Status;
+import org.apache.felix.systemready.CheckStatus.State;
+import org.apache.felix.systemready.StateType;
 import org.apache.felix.systemready.SystemReady;
 import org.apache.felix.systemready.SystemReadyCheck;
 import org.apache.felix.systemready.SystemReadyMonitor;
@@ -77,11 +79,11 @@ public class SystemReadyMonitorImpl implements SystemReadyMonitor {
 
     private ScheduledExecutorService executor;
     
-    private AtomicReference<SystemStatus> systemState;
+    private AtomicReference<Collection<CheckStatus>> curStates;
 
     public SystemReadyMonitorImpl() {
-        SystemStatus initialStatus = new SystemStatus(Status.State.YELLOW, Collections.emptyList());
-        this.systemState = new AtomicReference<>(initialStatus);
+    	CheckStatus checkStatus = new CheckStatus("dummy", StateType.READY, State.YELLOW, "");
+        this.curStates = new AtomicReference<>(Collections.singleton(checkStatus));
     }
 
     @Activate
@@ -99,28 +101,23 @@ public class SystemReadyMonitorImpl implements SystemReadyMonitor {
 
     @Override
     /**
-     * Returns whether the system is ready or not
-     */
-    public boolean isReady() {
-        return systemState.get().getState() == Status.State.GREEN;
-    }
-
-    @Override
-    /**
      * Returns a map of the statuses of all the checks
      */
-    public SystemStatus getStatus() {
-        return systemState.get();
+    public SystemStatus getStatus(StateType stateType) {
+    	Collection<CheckStatus> filtered = stateType == StateType.READY ? curStates.get() :
+    		curStates.get().stream()
+    			.filter(status -> status.getType() == StateType.ALIVE).collect(Collectors.toList());
+        return new SystemStatus(filtered);
     }
 
     private void check() {
-        Status.State prevState = systemState.get().getState();
+        CheckStatus.State prevState = getStatus(StateType.READY).getState();
         List<SystemReadyCheck> currentChecks = new ArrayList<>(checks);
         List<String> checkNames = currentChecks.stream().map(check -> check.getName()).collect(Collectors.toList());
         log.debug("Running system checks {}", checkNames);
         List<CheckStatus> statuses = evaluateAllChecks(currentChecks);
-        Status.State currState = Status.State.worstOf(statuses.stream().map(status -> status.getStatus().getState()));
-        this.systemState.set(new SystemStatus(currState, statuses));
+		this.curStates.set(statuses);
+		State currState = getStatus(StateType.READY).getState();
         if (currState != prevState) {
             manageMarkerService(currState);
         }
@@ -134,8 +131,8 @@ public class SystemReadyMonitorImpl implements SystemReadyMonitor {
                 .collect(Collectors.toList());
     }
     
-    private void manageMarkerService(Status.State currState) {
-        if (currState == Status.State.GREEN) {
+    private void manageMarkerService(CheckStatus.State currState) {
+        if (currState == CheckStatus.State.GREEN) {
             SystemReady readyService = new SystemReady() {
             };
             sreg = context.registerService(SystemReady.class, readyService, null);
@@ -146,9 +143,9 @@ public class SystemReadyMonitorImpl implements SystemReadyMonitor {
 
     private static final CheckStatus getStatus(SystemReadyCheck c) {
         try {
-            return new CheckStatus(c.getName(), c.getStatus());
+            return c.getStatus();
         } catch (Throwable e) {
-            return new CheckStatus(c.getClass().getName(), new Status(Status.State.RED, e.getMessage()));
+            return new CheckStatus(c.getName(), StateType.READY, CheckStatus.State.RED, e.getMessage());
         }
     }
 

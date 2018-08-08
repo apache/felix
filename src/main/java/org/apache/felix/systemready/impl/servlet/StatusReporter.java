@@ -18,38 +18,32 @@
  */
 package org.apache.felix.systemready.impl.servlet;
 
+import java.io.IOException;
 import java.io.PrintWriter;
-import java.util.stream.Collectors;
+
+import javax.servlet.http.HttpServletResponse;
 
 import org.apache.felix.systemready.CheckStatus;
+import org.apache.felix.systemready.StateType;
+import org.apache.felix.systemready.SystemReadyMonitor;
 import org.apache.felix.systemready.SystemStatus;
 
-public class StatusWriterJson {
+class StatusReporter {
+	private SystemReadyMonitor monitor;
+	private StateType type;
+		
+	public StatusReporter(SystemReadyMonitor monitor, StateType type) {
+		super();
+		this.monitor = monitor;
+		this.type = type;
+	}
 
-    private PrintWriter writer;
-
-    public StatusWriterJson(PrintWriter writer) {
-        this.writer = writer;
-    }
-    
-    public void write(SystemStatus systemState) {
-        writer.println("{");
-        writer.println(String.format("  \"systemStatus\": \"%s\", ", systemState.getState().name()));
-        writer.println("  \"checks\": [");
-        String states = systemState.getCheckStates().stream()
-                .map(this:: getStatus)
-                .collect(Collectors.joining(",\n"));
-        writer.println(states);
-        writer.println("  ]");
-        writer.println("}");
-    }
-
-    private String getStatus(CheckStatus status) {
-        return String.format(
-                "    { \"check\": \"%s\", \"status\": \"%s\", \"details\": \"%s\" }", 
-                status.getCheckName(),
-                status.getState().name(), 
-                status.getDetails());
-    }
-
+	public void reportState(HttpServletResponse response) throws IOException {
+		SystemStatus systemState = this.monitor.getStatus(type);
+        if (! (systemState.getState() == CheckStatus.State.GREEN)) {
+            response.setStatus(HttpServletResponse.SC_SERVICE_UNAVAILABLE);
+        }
+        PrintWriter writer = response.getWriter();
+        new StatusWriterJson(writer).write(systemState);
+	}
 }

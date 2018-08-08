@@ -26,7 +26,7 @@ import java.io.IOException;
 
 import javax.inject.Inject;
 
-import org.apache.felix.systemready.Status;
+import org.apache.felix.systemready.CheckStatus;
 import org.apache.felix.systemready.SystemReadyCheck;
 import org.apache.felix.systemready.impl.ComponentsCheck;
 import org.apache.felix.systemready.osgi.examples.CompWithoutService;
@@ -66,14 +66,14 @@ public class ComponentsCheckTest extends BaseTest {
 
     @Test
     public void test() throws IOException {
-        Status status = check.getStatus();
-        assertThat(status.getState(),  Matchers.is(Status.State.YELLOW));
+        CheckStatus status = check.getStatus();
+        assertThat(status.getState(),  Matchers.is(CheckStatus.State.YELLOW));
         assertThat(status.getDetails(), containsString("unsatisfied references"));
         //configAdmin.getConfiguration("CompWithoutService").update();
         context.registerService(Runnable.class, () -> {}, null);
-        Status status2 = check.getStatus();
+        CheckStatus status2 = check.getStatus();
         System.out.println(status2);
-        assertThat(status2.getState(),  Matchers.is(Status.State.GREEN));
+        assertThat(status2.getState(),  Matchers.is(CheckStatus.State.GREEN));
         assertThat(status2.getDetails(), containsString(" satisfied"));
     }
 }
