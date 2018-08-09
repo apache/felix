@@ -16,7 +16,6 @@
 package org.osgi.service.log;
 
 import org.osgi.annotation.versioning.ProviderType;
-import org.osgi.framework.Bundle;
 
 /**
  * This is a stripped down copy of the LogService 1.4 API (R7). It's
@@ -26,6 +25,7 @@ import org.osgi.framework.Bundle;
 @ProviderType
 public interface LoggerFactory {
 
-	<L extends Logger> L getLogger(Bundle bundle, String name,
-			Class<L> loggerType);
+    <L extends Logger> L getLogger(String name,
+            Class<L> loggerType);
+
 }
