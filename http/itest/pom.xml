@@ -15,7 +15,7 @@
 	<parent>
 		<groupId>org.apache.felix</groupId>
 		<artifactId>org.apache.felix.http.parent</artifactId>
-		<version>11-SNAPSHOT</version>
+		<version>11</version>
 		<relativePath>../parent/pom.xml</relativePath>
 	</parent>
 
@@ -35,7 +35,7 @@
 		<pax.exam.version>4.11.0</pax.exam.version>
 		<pax.url.aether.version>2.5.2</pax.url.aether.version>
 		<http.servlet.api.version>1.1.2</http.servlet.api.version>
-		<http.jetty.version>4.0.3-SNAPSHOT</http.jetty.version>
+		<http.jetty.version>4.0.5-SNAPSHOT</http.jetty.version>
 	</properties>
 
     <build>
