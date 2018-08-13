@@ -402,8 +402,8 @@ public final class BundleDNParser
             result.addAll((List) iter.next());
         }
 
-        return (X509Certificate[]) result.toArray(new X509Certificate[result
-            .size()]);
+        return (X509Certificate[]) (!result.isEmpty() ? result.toArray(new X509Certificate[result
+            .size()]) : null);
     }
 
     private boolean isRevoked(Certificate certificate)
