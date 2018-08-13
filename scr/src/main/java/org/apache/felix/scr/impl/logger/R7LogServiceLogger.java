@@ -32,7 +32,7 @@ class R7LogServiceLogger implements InternalLogger
 
     public R7LogServiceLogger(final Bundle bundle, final LogService loggerFactory, final String name)
     {
-        this.logger = ((LoggerFactory)loggerFactory).getLogger(name, Logger.class);
+        this.logger = ((LoggerFactory)loggerFactory).getLogger(name == null ? Logger.ROOT_LOGGER_NAME : name, Logger.class);
     }
 
     @Override

@@ -1,7 +1,8 @@
-Changes in 2.1.2
+Changes in 2.1.6
 ----------------
 ** Bug
     * [FELIX-5902] - java.lang.IllegalArgumentException: Bundle org.apache.felix.scr is not resolved with R7 LogService
+    * [FELIX-5904] - SCR is creating a logger instance using name "null"
 
 
 Changes in 2.1.2

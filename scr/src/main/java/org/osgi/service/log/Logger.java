@@ -25,6 +25,8 @@ import org.osgi.annotation.versioning.ProviderType;
 @ProviderType
 public interface Logger {
 
+    String ROOT_LOGGER_NAME = "ROOT";
+
 	boolean isDebugEnabled();
 
 	void debug(String message);
