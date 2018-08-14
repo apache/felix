@@ -39,6 +39,8 @@ class StatusReporter {
 	}
 
 	public void reportState(HttpServletResponse response) throws IOException {
+		response.setContentType("application/json");
+		response.setCharacterEncoding("UTF-8");
 		SystemStatus systemState = this.monitor.getStatus(type);
         if (! (systemState.getState() == CheckStatus.State.GREEN)) {
             response.setStatus(HttpServletResponse.SC_SERVICE_UNAVAILABLE);
