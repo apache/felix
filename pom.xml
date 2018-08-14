@@ -20,7 +20,7 @@
     </parent>
 
     <artifactId>org.apache.felix.systemready</artifactId>
-    <version>0.3.0-SNAPSHOT</version>
+    <version>0.4.0</version>
     <name>Apache Felix - System Ready</name>
     
     <properties>
@@ -30,9 +30,9 @@
     </properties>
     
     <scm>
-        <connection>scm:svn:http://svn.apache.org/repos/asf/felix/trunk/systemready</connection>
-        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/felix/trunk/systemready</developerConnection>
-        <url>http://svn.apache.org/viewvc/felix/trunk/systemready</url>
+        <connection>scm:svn:http://svn.apache.org/repos/asf/felix/releases/org.apache.felix.systemready-0.4.0</connection>
+        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/felix/releases/org.apache.felix.systemready-0.4.0</developerConnection>
+        <url>http://svn.apache.org/viewvc/felix/releases/org.apache.felix.systemready-0.4.0</url>
     </scm>
 
     <build>
