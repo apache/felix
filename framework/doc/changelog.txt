@@ -1,3 +1,10 @@
+Changes from 6.0.0 to 6.0.1
+---------------------------
+
+** Bug
+    * [FELIX-5886] - Error logged by org.apache.felix.framework.BundleWiringImpl.getClassByDelegation
+    * [FELIX-5889] - Extension Bundle capabilities do not index correctly
+
 Changes from 5.6.10 to 6.0.0
 ----------------------------
 
