@@ -1,3 +1,9 @@
+Changes in 1.9.6
+----------------
+** Bug
+    * [FELIX-5908] : NoClassDefFoundError for the CM Security Domain combiner
+
+ 
 Changes in 1.9.4
 ----------------
 ** Bug

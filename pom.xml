@@ -133,6 +133,13 @@
             <version>2.6.0</version>
             <scope>test</scope>
         </dependency>
+        <!-- The forked container is needed so that we can use Java security in the tests -->
+        <dependency>
+            <groupId>org.ops4j.pax.exam</groupId>
+            <artifactId>pax-exam-container-forked</artifactId>
+            <version>2.6.0</version>
+            <scope>test</scope>
+        </dependency>
         <dependency>
             <groupId>org.ops4j.pax.exam</groupId>
             <artifactId>pax-exam-link-mvn</artifactId>
@@ -167,6 +174,12 @@
             <groupId>org.apache.felix</groupId>
             <artifactId>org.apache.felix.framework</artifactId>
             <version>5.6.1</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.felix</groupId>
+            <artifactId>org.apache.felix.framework.security</artifactId>
+            <version>2.7.0-SNAPSHOT</version>
             <scope>test</scope>
         </dependency>
     </dependencies>
