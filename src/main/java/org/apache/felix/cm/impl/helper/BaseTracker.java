@@ -298,16 +298,19 @@ public abstract class BaseTracker<S> extends ServiceTracker<S, ConfigurationMap<
     }
 
     private static class CMDomainCombiner implements DomainCombiner {
-        private final Bundle bundle;
+        private final CMProtectionDomain domain;
 
         CMDomainCombiner(Bundle bundle) {
-            this.bundle = bundle;
+        	
+        	// FELIX-5908 - Eagerly instantiate this class 
+        	// to avoid a potential NoClassDefFoundError 
+            this.domain = new CMProtectionDomain(bundle);
         }
 
         @Override
         public ProtectionDomain[] combine(ProtectionDomain[] arg0,
                                           ProtectionDomain[] arg1) {
-            return new ProtectionDomain[] { new CMProtectionDomain(bundle) };
+            return new ProtectionDomain[] { domain };
         }
 
     }
