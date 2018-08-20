@@ -129,7 +129,10 @@ public final class ProxyServlet
     @Override
     public void destroy()
     {
-        this.tracker.close();
+        if ( this.tracker != null ) {
+            this.tracker.close();
+            this.tracker = null;
+        }
         super.destroy();
     }
 
