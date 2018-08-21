@@ -24,7 +24,7 @@ import java.util.stream.Collectors;
 import org.apache.felix.systemready.CheckStatus;
 import org.apache.felix.systemready.SystemStatus;
 
-public class StatusWriterJson {
+class StatusWriterJson {
 
     private PrintWriter writer;
 
