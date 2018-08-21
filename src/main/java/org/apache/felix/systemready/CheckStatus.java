@@ -22,13 +22,12 @@ import static java.util.stream.Collectors.minBy;
 
 import java.util.stream.Stream;
 
-public class CheckStatus {
-    // Be aware that the order of the enum declarations matters for the Comparator
-    public enum State { RED, YELLOW, GREEN;
-        /**
-         * returns {{GREEN}} for {{true}} and {{YELLOW}} for {{false}}
-         */
-        public static State fromBoolean(boolean ready) {
+public final class CheckStatus {
+    public enum State { 
+    	// Be aware that the order of the enum declarations matters for the Comparator
+    	RED, YELLOW, GREEN;
+
+    	public static State fromBoolean(boolean ready) {
             return (ready) ? State.GREEN : State.YELLOW;
         }
         
@@ -37,13 +36,13 @@ public class CheckStatus {
         }
     }
     
-    private String checkName;
+    private final String checkName;
     
-    private StateType type;
+    private final StateType type;
 
-    private State state;
+    private final State state;
 
-    private String details;
+    private final String details;
     
     public CheckStatus(String checkName, StateType type, State state, String details) {
 		this.checkName = checkName;
