@@ -369,7 +369,7 @@ class StatefulResolver
                     new BundlePermission(cap.getRevision().getSymbolicName(), BundlePermission.PROVIDE)) ||
                     !((reqRevision == null) ||
                         ((BundleProtectionDomain) reqRevision.getProtectionDomain()).impliesDirect(
-                            new BundlePermission(reqRevision.getSymbolicName(), BundlePermission.REQUIRE))
+                            new BundlePermission(cap.getRevision().getSymbolicName(), BundlePermission.REQUIRE))
                     ))
                 {
                     return true;
@@ -379,7 +379,7 @@ class StatefulResolver
             {
                 if (!((BundleProtectionDomain) reqRevision.getProtectionDomain())
                     .impliesDirect(new BundlePermission(
-                        reqRevision.getSymbolicName(),
+                        cap.getRevision().getSymbolicName(),
                         BundlePermission.FRAGMENT))
                 || !((BundleProtectionDomain) ((BundleRevisionImpl) cap.getRevision()).getProtectionDomain())
                     .impliesDirect(new BundlePermission(
