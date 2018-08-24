@@ -1080,9 +1080,9 @@ class BundleImpl implements Bundle, BundleRevisions
         Object sm = System.getSecurityManager();
         if ((sm != null) && (getFramework().getSecurityProvider() != null))
         {
-            Class caller = m_smEx.getClassContext()[3];
-            if (((Felix.m_secureAction.getClassLoader(caller) != m_classloader) ||
-                !caller.getName().startsWith("org.apache.felix.framework.")))
+            Class[] classes = m_smEx.getClassContext();
+            if (classes.length < 3 || ((Felix.m_secureAction.getClassLoader(classes[3]) != m_classloader) ||
+                !classes[3].getName().startsWith("org.apache.felix.framework.")))
             {
                 ((SecurityManager) sm).checkPermission(
                     new AdaptPermission(type.getName(), this, AdaptPermission.ADAPT));

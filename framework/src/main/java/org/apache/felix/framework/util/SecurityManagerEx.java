@@ -26,8 +26,12 @@ package org.apache.felix.framework.util;
 **/
 public class SecurityManagerEx extends SecurityManager
 {
+    // In Android apparently getClassContext returns null - we work around this by returning an empty array in that case.
+    private static final Class[] EMPTY_CLASSES = new Class[0];
+
     public Class[] getClassContext()
     {
-        return super.getClassContext();
+        Class[] result = super.getClassContext();
+        return result != null ? result : EMPTY_CLASSES;
     }
 }
