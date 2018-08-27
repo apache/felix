@@ -52,6 +52,7 @@ import org.apache.maven.shared.dependency.graph.traversal.FilteringDependencyNod
 public abstract class AbstractDependencyFilter
 {
     private static final Pattern MISSING_KEY_PATTERN = Pattern.compile( "(^|,)\\p{Blank}*(!)?\\p{Blank}*([a-zA-Z]+=)" );
+    private static final String PLACEHOLDER = "$$PLACEHOLDER$$";
 
     /**
      * Dependency Graph.
@@ -234,12 +235,15 @@ public abstract class AbstractDependencyFilter
                 }
                 else if ( "classifier".equals( attr.getKey() ) )
                 {
-                    filter = new DependencyFilter( attr.getValue() )
+                    // bnd-4.0.0+ no longer accepts empty instructions. However maven expects
+                    // the classifier can be an empty value, so use a placeholder for this
+                    // scenario.
+                    filter = new DependencyFilter( ( "".equals(attr.getValue()) ) ? PLACEHOLDER : attr.getValue() )
                     {
                         @Override
                         public boolean include( Artifact dependency )
                         {
-                            return super.matches( dependency.getClassifier() );
+                            return super.matches( ( ( dependency.getClassifier() == null ) || ( "".equals( dependency.getClassifier() ) ) ) ? PLACEHOLDER : dependency.getClassifier() );
                         }
                     };
                 }
