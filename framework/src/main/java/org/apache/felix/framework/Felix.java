@@ -4878,6 +4878,14 @@ public class Felix extends BundleImpl implements Framework
         }
         m_configMutableMap.put(
             FelixConstants.FELIX_VERSION_PROPERTY, getFrameworkVersion());
+        if (!m_configMutableMap.containsKey(FelixConstants.FELIX_REQUIRE_DEX_PROPERTY)) {
+            boolean requireDex = false;
+            try {
+                requireDex = (Class.forName("dalvik.system.PathClassLoader") != null);
+            } catch (ClassNotFoundException e){}
+            m_configMutableMap.put(FelixConstants.FELIX_REQUIRE_DEX_PROPERTY,
+                    requireDex ? "true" : "false");
+        }
 
         Properties defaultProperties = Util.loadDefaultProperties(m_logger);
 

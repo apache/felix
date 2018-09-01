@@ -41,6 +41,7 @@ import org.osgi.framework.hooks.weaving.WeavingException;
 import org.osgi.framework.hooks.weaving.WeavingHook;
 import org.osgi.framework.hooks.weaving.WovenClass;
 import org.osgi.framework.hooks.weaving.WovenClassListener;
+import org.osgi.framework.namespace.BundleNamespace;
 import org.osgi.framework.namespace.IdentityNamespace;
 import org.osgi.framework.wiring.BundleCapability;
 import org.osgi.framework.wiring.BundleRequirement;
@@ -52,8 +53,15 @@ import org.osgi.resource.Requirement;
 import org.osgi.resource.Wire;
 import org.osgi.service.resolver.ResolutionException;
 
+import java.io.BufferedReader;
+import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.lang.reflect.Constructor;
+import java.lang.reflect.Method;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.security.AccessController;
@@ -114,6 +122,8 @@ public class BundleWiringImpl implements BundleWiring
     private volatile List<BundleRequirement> m_wovenReqs = null;
 
     private volatile BundleClassLoader m_classLoader;
+    private volatile ClassLoader m_dexClassLoader;
+    private boolean m_requireDex;
 
     // Bundle-specific class loader for boot delegation.
     private final ClassLoader m_bootClassLoader;
@@ -186,6 +196,7 @@ public class BundleWiringImpl implements BundleWiring
         m_importedPkgs = importedPkgs;
         m_requiredPkgs = requiredPkgs;
         m_wires =  Util.newImmutableList(wires);
+        m_requireDex = m_configMap.get(FelixConstants.FELIX_REQUIRE_DEX_PROPERTY).equals("true");
 
         // We need to sort the fragments and add ourself as a dependent of each one.
         // We also need to create an array of fragment contents to attach to our
@@ -721,8 +732,7 @@ public class BundleWiringImpl implements BundleWiring
         }
     }
 
-    private synchronized ClassLoader _getClassLoaderInternal()
-    {
+    private synchronized ClassLoader _getClassLoaderInternal() {
         // Only try to create the class loader if the bundle
         // is not disposed.
         if (!m_isDisposed && (m_classLoader == null))
@@ -733,7 +743,9 @@ public class BundleWiringImpl implements BundleWiring
                     @Override
                     public BundleClassLoader run()
                     {
-                        return new BundleClassLoader(BundleWiringImpl.this, determineParentClassLoader(), m_logger);
+                        return new BundleClassLoader(BundleWiringImpl.this,
+                                        determineParentClassLoader(),
+                                        m_logger);
                     }
                 }
             );
@@ -1266,6 +1278,7 @@ public class BundleWiringImpl implements BundleWiring
         if (cfg.equalsIgnoreCase(Constants.FRAMEWORK_BUNDLE_PARENT_APP))
         {
             parent = BundleRevisionImpl.getSecureAction().getSystemClassLoader();
+
         }
         else if (cfg.equalsIgnoreCase(Constants.FRAMEWORK_BUNDLE_PARENT_EXT))
         {
@@ -1360,6 +1373,10 @@ public class BundleWiringImpl implements BundleWiring
         if (isFiltered(name))
         {
             throw new ClassNotFoundException(name);
+        }
+
+        if(m_requireDex) {
+            return getPathClassLoader().loadClass(name);
         }
 
         ClassLoader cl = getClassLoaderInternal();
@@ -1552,17 +1569,20 @@ public class BundleWiringImpl implements BundleWiring
                 {
                     if (isClass)
                     {
-                        ClassLoader cl = getClassLoaderInternal();
-                        if (cl == null)
-                        {
-                            throw new ClassNotFoundException(
-                                    "Unable to load class '"
-                                            + name
-                                            + "' because the bundle wiring for "
-                                            + m_revision.getSymbolicName()
-                                            + " is no longer valid.");
+                        if (m_requireDex) {
+                            result = getPathClassLoader().loadClass(name);
+                        } else {
+                            ClassLoader cl = getClassLoaderInternal();
+                            if (cl == null) {
+                                throw new ClassNotFoundException(
+                                        "Unable to load class '"
+                                                + name
+                                                + "' because the bundle wiring for "
+                                                + m_revision.getSymbolicName()
+                                                + " is no longer valid.");
+                            }
+                            result = ((BundleClassLoader) cl).findClass(name);
                         }
-                        result = ((BundleClassLoader) cl).findClass(name);
                     }
                     else
                     {
@@ -1893,6 +1913,140 @@ public class BundleWiringImpl implements BundleWiring
         }
         return true;
     }
+
+    protected ClassLoader getPathClassLoader() {
+        // only valid for andoid bundles
+        if (m_dexClassLoader == null) {
+            Class clazz;
+            Object classLoader = null;
+            try {
+                clazz = Class.forName("dalvik.system.PathClassLoader");
+                Constructor ctor = clazz.getConstructor(String.class, String.class, ClassLoader.class);
+                classLoader = ctor.newInstance(getBundleRevisionJarPath(),
+                        createBundleRevisionNativeLibrary(),
+                        //getBundle().getBundleContext().getBundle((long)0).getClass().getClassLoader());
+                        this.getClassLoader());
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+            m_dexClassLoader = (ClassLoader)classLoader;
+        }
+        return m_dexClassLoader;
+    }
+    private String getBundleRevisionJarPath() {
+        return getBundleRevisionRootDir() + "/bundle.jar";
+    }
+    private String getBundleRevisionRootDir() {
+        return getBundle().getArchive().getCurrentRevision().getRevisionRootDir().getAbsolutePath();
+    }
+    // creates a folder to store native libraries contained in the bundle revision, populates it
+    // with the native library code for this os architecture and return a path string to them.
+    private String createBundleRevisionNativeLibrary() {
+        String path = "";
+        Bundle bundle = getBundle();
+        File revisionNativeLibFile = new File(getBundleRevisionRootDir(),"lib");
+        if (revisionNativeLibFile.exists()) {
+            // if lib file already exists, then it already been poplated, so all we
+            // have to do is to return the paths
+            path = revisionNativeLibFile.getPath();
+            File[] libDirFile = revisionNativeLibFile.listFiles();
+            for (File libFile: libDirFile) {
+                if (libFile.isDirectory()) path += File.pathSeparator + libFile.getAbsolutePath();
+            }
+        } else {
+            // copy all so's found at bundle/lib/{os.arch}
+            String osArch = (String) m_configMap.get(Constants.FRAMEWORK_PROCESSOR);
+            File revisionNativeArchLibFile = new File(revisionNativeLibFile, osArch);
+            Enumeration e = bundle.findEntries("lib/" + osArch, "*.so", true);
+            if (e != null && e.hasMoreElements()) {
+                populateNativeLib(e, revisionNativeArchLibFile, null);
+                path += (path.isEmpty()) ? revisionNativeArchLibFile.getAbsolutePath() :
+                        File.pathSeparator + revisionNativeArchLibFile.getAbsolutePath();
+            }
+            if (osArch.equalsIgnoreCase("x86-64")) {
+                // x86-64 special case
+                // we also add x86 code as long as they don't already exist in x86-64 dir
+                File revisionNativeX86LibFile = new File(revisionNativeLibFile, "x86");
+                e = bundle.findEntries("lib/x86", "*.so", true);
+                if (e != null && e.hasMoreElements()) {
+                    populateNativeLib(e, revisionNativeX86LibFile, revisionNativeArchLibFile);
+                    path += (path.isEmpty()) ? revisionNativeX86LibFile.getAbsolutePath() :
+                            File.pathSeparator + revisionNativeX86LibFile.getAbsolutePath();
+                }
+            }
+            // copy all so's found at bundle root
+            e = bundle.findEntries("", "*.so", false);
+            boolean soAdded = false;
+            if (e != null && e.hasMoreElements()) {
+                populateNativeLib(e, revisionNativeLibFile,null);
+                path += (path.isEmpty()) ? revisionNativeLibFile.getAbsolutePath() :
+                        File.pathSeparator + revisionNativeLibFile.getAbsolutePath();
+                soAdded = true;
+            }
+            // copy all so's found at bundle/lib
+            e = bundle.findEntries("lib", "*.so", false);
+            if (e != null && e.hasMoreElements()) {
+                populateNativeLib(e, revisionNativeLibFile, null);
+                if (soAdded == false)
+                    path += (path.isEmpty()) ? revisionNativeLibFile.getAbsolutePath() :
+                            File.pathSeparator + revisionNativeLibFile.getAbsolutePath();
+            }
+        }
+        return (path.equals(""))?null:path;
+    }
+
+    private void populateNativeLib(Enumeration<URL> e, File revisionLib, File noDupLib) {
+        if (!revisionLib.exists()) revisionLib.mkdirs();
+        while (e.hasMoreElements()) {
+            URL url = e.nextElement();
+            if (noDupLib == null) {
+                copyNativeCodeToLib(url, revisionLib);
+            } else {
+                File file = new File(noDupLib,url.getPath());
+                if (!file.exists()) {
+                    copyNativeCodeToLib(url, revisionLib);
+                }
+
+            }
+        }
+    }
+
+    private void copyNativeCodeToLib (URL osLibUrl, File revisionLib) {
+        try {
+            String libName = osLibUrl.getPath();
+            int i =  libName.lastIndexOf("/");
+            if (i > -1) libName = libName.substring(i+1);
+            File osLibFile = new File (revisionLib, libName);
+            if (osLibFile.exists() == false) {
+                osLibFile.createNewFile();
+                InputStream inStream = new java.io.BufferedInputStream(osLibUrl.openStream());
+                FileOutputStream out = new FileOutputStream(osLibFile);
+                int nbytes = 0;
+                byte[] buffer = new byte[100000];
+
+                try {
+                    while ((nbytes = inStream.read(buffer)) != -1) {
+                        out.write(buffer, 0, nbytes);
+                    }
+                } finally {
+                    if (inStream != null) {
+                        inStream.close();
+                    }
+                    if (out != null) {
+                        out.close();
+                    }
+                }
+            } else {
+                m_logger.log(getBundle(),org.apache.felix.resolver.Logger.LOG_WARNING,
+                        "duplicate native code libraries found");
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+            m_logger.log(getBundle(), org.apache.felix.resolver.Logger.LOG_ERROR,
+                    "error loading native code library");
+        }
+    }
+
 
     static class ToLocalUrlEnumeration implements Enumeration
     {
