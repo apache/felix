@@ -69,10 +69,20 @@
 /* New Category Based Navigation Tree (FELIX-3769) */
 #navmenu {
      width: auto;
+     padding: 2px;
 }
 
 #navmenu li.ui-menu-item {
      width: auto;
+}
+
+#navmenu li.ui-menu-item a {
+    text-decoration: none;
+    display: block;
+    padding: 2px .4em;
+    line-height: 1.5;
+    zoom: 1;
+    font-weight: normal;
 }
 
 #navmenu li.navMenuItem-0 {

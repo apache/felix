@@ -7,7 +7,7 @@
 	<title>${brand.name} - ${head.title}</title>
 
 	<link href="${appRoot}/res/lib/reset-min.css" rel="stylesheet" type="text/css" />
-	<link href="${appRoot}/res/lib/themes/base/jquery-ui.css" rel="stylesheet" type="text/css" />
+	<link href="${appRoot}/res/lib/themes/smoothness/jquery-ui.css" rel="stylesheet" type="text/css" />
 	<link href="${brand.css}" rel="stylesheet" type="text/css" />
 	${head.cssLinks}
 
@@ -21,7 +21,7 @@
 	<script src="${appRoot}/res/lib/jquery-3.3.1.js"></script>
 	<script src="${appRoot}/res/lib/jquery-migrate-3.0.0.js"></script>
 	<script src="${appRoot}/res/lib/jquery-ui-1.12.1.js"></script>
-	<script src="${appRoot}/res/lib/jquery-ui-i18n-1.7.2.js" type="text/javascript"></script>
+	<script src="${appRoot}/res/lib/jquery-ui-i18n-1.12.1.js" type="text/javascript"></script>
 	<script src="${appRoot}/res/lib/jquery.cookies-2.2.0.js" type="text/javascript"></script>
 	<script src="${appRoot}/res/lib/jquery.tablesorter-2.0.3.js" type="text/javascript"></script>
 	<script src="${appRoot}/res/lib/autosize.min.js" type="text/javascript"></script>
@@ -34,7 +34,10 @@
                 position: {
                     my: "left top",
                     at: "left bottom"
-                } 
+                },
+                classes: {
+                    "ui-menu": "ui-corner-all"
+                }
             });
         });
         
