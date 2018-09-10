@@ -38,7 +38,7 @@ function initStaticWidgets(elem) {
 	el.find('input[type=text], input[type=password], input[type=file]').addClass('inputText');
 
 	// make buttones nicer by applying equal width - not working in IE ;(
-	el.find('button, input[type=submit], input[type=reset], input[type=button]').each(function(i) {
+	el.find('button, input[type=submit], input[type=reset], input[type=button]').not(".ui-dialog-titlebar-close").each(function(i) {
 		var txt = $(this).text();
 		var apply = txt && txt.length > 1;
 		if (apply) $(this).css('min-width', '8em');

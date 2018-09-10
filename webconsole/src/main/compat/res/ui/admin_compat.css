@@ -164,7 +164,7 @@ background-color: #8dbdd8;
  * This backwards compatible statusline class is configured as a copy of the
  * basic theme statline/ui-state-highlight classes.
  */
-div.statusline {
+div.statline {
     margin-bottom:0.5em !important;
     margin-top:0.5em !important;
     padding:0.2em;
