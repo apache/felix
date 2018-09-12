@@ -74,7 +74,7 @@ public class ConfigAdminSecurityTest extends ConfigurationBaseTest
                 frameworkProperty( FRAMEWORK_STORAGE_CLEAN ).value( FRAMEWORK_STORAGE_CLEAN_ONFIRSTINIT ),
                 frameworkProperty( FRAMEWORK_SECURITY ).value( FRAMEWORK_SECURITY_OSGI ),
                 systemProperty( "java.security.policy" ).value( policyFile.getAbsolutePath() ),
-                mavenBundle( "org.apache.felix", "org.apache.felix.framework.security", "2.7.0-SNAPSHOT" )
+                mavenBundle( "org.apache.felix", "org.apache.felix.framework.security", "2.6.1" )
         );
     }
     
