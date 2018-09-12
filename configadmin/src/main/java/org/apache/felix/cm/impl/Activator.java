@@ -18,12 +18,15 @@
  */
 package org.apache.felix.cm.impl;
 
+import java.security.AccessController;
+import java.security.PrivilegedAction;
 import java.util.Dictionary;
 import java.util.Hashtable;
 
 import org.apache.felix.cm.PersistenceManager;
 import org.apache.felix.cm.file.FilePersistenceManager;
 import org.apache.felix.cm.impl.persistence.PersistenceManagerTracker;
+import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.BundleException;
@@ -149,6 +152,25 @@ public class Activator implements BundleActivator
         {
             this.filepmRegistration.unregister();
             this.filepmRegistration = null;
+        }
+    }
+
+    public static String getLocation(final Bundle bundle)
+    {
+        if (System.getSecurityManager() != null)
+        {
+            return AccessController.doPrivileged(new PrivilegedAction<String>()
+            {
+                @Override
+                public String run()
+                {
+                    return bundle.getLocation();
+                }
+            });
+        }
+        else
+        {
+            return bundle.getLocation();
         }
     }
 }

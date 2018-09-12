@@ -20,6 +20,8 @@ package org.apache.felix.cm.impl;
 
 
 import java.io.IOException;
+import java.security.AccessController;
+import java.security.PrivilegedAction;
 import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -383,7 +385,7 @@ public class ConfigurationManager implements BundleListener
             names[i--] = targetedPid.toString();
             targetedPid.append( '|' ).append( serviceBundle.getVersion().toString() );
             names[i--] = targetedPid.toString();
-            targetedPid.append( '|' ).append( serviceBundle.getLocation() );
+            targetedPid.append( '|' ).append( Activator.getLocation(serviceBundle) );
             names[i--] = targetedPid.toString();
 
             for ( String candidate : names )
@@ -394,7 +396,7 @@ public class ConfigurationManager implements BundleListener
                     // check visibility to use and dynamically bind
                     if ( canReceive( serviceBundle, config.getBundleLocation() ) )
                     {
-                        config.tryBindLocation( serviceBundle.getLocation() );
+                        config.tryBindLocation( Activator.getLocation(serviceBundle) );
                         return config;
                     }
 
@@ -522,7 +524,7 @@ public class ConfigurationManager implements BundleListener
                         LogService.LOG_DEBUG,
                         "Omitting configuration {0}: No permission for bundle {1} on configuration bound to {2}",
                         new Object[]
-                                { pid, configurationAdmin.getBundle().getLocation(),
+                                { pid, Activator.getLocation(configurationAdmin.getBundle()),
                                         config.get( ConfigurationAdmin.SERVICE_BUNDLELOCATION ) } );
                 continue;
             }
@@ -659,7 +661,7 @@ public class ConfigurationManager implements BundleListener
     {
         if ( event.getType() == BundleEvent.UNINSTALLED && handleBundleEvents )
         {
-            final String location = event.getBundle().getLocation();
+            final String location = Activator.getLocation(event.getBundle());
 
             // we only reset dynamic bindings, which are only present in
             // cached configurations, hence only consider cached configs here
@@ -825,7 +827,7 @@ public class ConfigurationManager implements BundleListener
             targetedPid.append( '|' ).append( serviceBundle.getVersion().toString() );
             factories.add( 0, targetedPid.toString() );
 
-            targetedPid.append( '|' ).append( serviceBundle.getLocation() );
+            targetedPid.append( '|' ).append( Activator.getLocation(serviceBundle) );
             factories.add( 0, targetedPid.toString() );
         }
 
@@ -990,7 +992,7 @@ public class ConfigurationManager implements BundleListener
         if ( location == null )
         {
             Log.logger.log( LogService.LOG_DEBUG, "canReceive=true; bundle={0}; configuration=(unbound)", new Object[]
-                    { bundle.getLocation() } );
+                    { Activator.getLocation(bundle) } );
             return true;
         }
         else if ( location.startsWith( "?" ) )
@@ -1002,21 +1004,21 @@ public class ConfigurationManager implements BundleListener
                         ConfigurationPermission.TARGET ) );
                 Log.logger.log( LogService.LOG_DEBUG, "canReceive={0}: bundle={1}; configuration={2} (SecurityManager check)",
                         new Object[]
-                                { new Boolean( hasPermission ), bundle.getLocation(), location } );
+                                { new Boolean( hasPermission ), Activator.getLocation(bundle), location } );
                 return hasPermission;
             }
 
             Log.logger.log( LogService.LOG_DEBUG, "canReceive=true; bundle={0}; configuration={1} (no SecurityManager)",
                     new Object[]
-                            { bundle.getLocation(), location } );
+                            { Activator.getLocation(bundle), location } );
             return true;
         }
         else
         {
             // single location, must match
-            final boolean hasPermission = location.equals( bundle.getLocation() );
+            final boolean hasPermission = location.equals( Activator.getLocation(bundle) );
             Log.logger.log( LogService.LOG_DEBUG, "canReceive={0}: bundle={1}; configuration={2}", new Object[]
-                    { new Boolean( hasPermission ), bundle.getLocation(), location } );
+                    { new Boolean( hasPermission ), Activator.getLocation(bundle), location } );
             return hasPermission;
         }
     }
@@ -1227,7 +1229,7 @@ public class ConfigurationManager implements BundleListener
             }
 
             // 104.4.2 Dynamic Binding
-            config.tryBindLocation( serviceBundle.getLocation() );
+            config.tryBindLocation( Activator.getLocation(serviceBundle) );
 
             // update the service with the configuration (if non-null)
             if ( rawProperties != null )
@@ -1368,7 +1370,7 @@ public class ConfigurationManager implements BundleListener
                                     { srList.get(0) } );
                     return;
                 }
-                config.tryBindLocation( bundle.getLocation() );
+                config.tryBindLocation( Activator.getLocation(bundle) );
 
                 final String configBundleLocation = config.getBundleLocation();
 
@@ -1520,7 +1522,7 @@ public class ConfigurationManager implements BundleListener
                     // service if the config has been unbound causing this update
                     if ( isVisible )
                     {
-                        config.tryBindLocation( srBundle.getLocation() );
+                        config.tryBindLocation( Activator.getLocation(srBundle) );
                     }
 
                     if ( wasVisible && !isVisible )
@@ -1664,7 +1666,24 @@ public class ConfigurationManager implements BundleListener
 
                 try
                 {
-                    listeners[serviceIndex].configurationEvent( getConfigurationEvent() );
+                    if ( System.getSecurityManager() != null )
+                    {
+                        AccessController.doPrivileged(
+                            new PrivilegedAction<Object>()
+                            {
+                                @Override
+                                public Void run()
+                                {
+                                    listeners[serviceIndex].configurationEvent(getConfigurationEvent());
+                                    return null;
+                                }
+                            }, BaseTracker.getAccessControlContext(listenerProvider[serviceIndex])
+                        );
+                    }
+                    else
+                    {
+                        listeners[serviceIndex].configurationEvent(getConfigurationEvent());
+                    }
                 }
                 catch ( Throwable t )
                 {

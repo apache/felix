@@ -54,7 +54,7 @@ class DynamicBindings
             final Bundle[] bundles = bundleContext.getBundles();
             for ( int i = 0; i < bundles.length; i++ )
             {
-                locations.add( bundles[i].getLocation() );
+                locations.add( Activator.getLocation(bundles[i]) );
             }
 
             // collect pids whose location is not installed any more

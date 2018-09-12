@@ -292,7 +292,7 @@ public abstract class BaseTracker<S> extends ServiceTracker<S, ConfigurationMap<
     }
 
 
-    AccessControlContext getAccessControlContext( final Bundle bundle )
+    public static AccessControlContext getAccessControlContext( final Bundle bundle )
     {
         return new AccessControlContext(AccessController.getContext(), new CMDomainCombiner(bundle));
     }
