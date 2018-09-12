@@ -19,6 +19,7 @@
 package org.apache.felix.cm.impl.helper;
 
 
+import org.apache.felix.cm.impl.Activator;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.ServiceReference;
 
@@ -156,7 +157,7 @@ public class TargetedPID
         }
 
         // assert bundle location match
-        return this.location == null || this.location.equals( serviceBundle.getLocation() );
+        return this.location == null || this.location.equals( Activator.getLocation(serviceBundle) );
     }
 
 
