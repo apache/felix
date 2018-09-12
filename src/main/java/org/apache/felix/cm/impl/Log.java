@@ -240,7 +240,7 @@ public class Log
         if ( provider != null )
         {
             buf.append( ", bundle=" ).append( provider.getBundleId() );
-            buf.append( '/' ).append( provider.getLocation() );
+            buf.append( '/' ).append( Activator.getLocation(provider) );
         }
         else
         {
