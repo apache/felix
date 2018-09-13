@@ -44,7 +44,7 @@ import org.osgi.service.component.ComponentException;
 public class Annotations
 {
     /** Capture all methods defined by the annotation interface */
-    private static final Set<Method> ANNOTATION_METHODS = new HashSet<Method>();
+    private static final Set<Method> ANNOTATION_METHODS = new HashSet<>();
     static
     {
         for(final Method m : Annotation.class.getMethods())
@@ -140,22 +140,22 @@ public class Annotations
     {
         final boolean isSingleElementAnn = isSingleElementAnnotation(clazz);
         final String prefix = getPrefix(clazz);
-        final Map<String, Object> m = new HashMap<String, Object>();
+        final Map<String, Object> m = new HashMap<>();
 
-        final Map<String, Method> complexFields = new HashMap<String, Method>();
+        final Map<String, Method> complexFields = new HashMap<>();
         for ( final Method method: clazz.getMethods() )
         {
             final String name = method.getName();
-            final String key;
+            final String mapped;
             if ( isSingleElementAnn && name.equals(VALUE_METHOD) )
             {
-                key = mapTypeNameToKey(clazz.getSimpleName());
+                mapped = mapTypeNameToKey(clazz.getSimpleName());
             }
             else
             {
-                final String mapped = mapIdentifierToKey(name);
-                key = (prefix == null ? mapped : prefix.concat(mapped));
+                mapped = mapIdentifierToKey(name);
             }
+            final String key = (prefix == null ? mapped : prefix.concat(mapped));
 
             Object raw = props.get(key);
             Class<?> returnType = method.getReturnType();
@@ -240,7 +240,7 @@ public class Annotations
 
     private static Map<String, List<Map<String, Object>>> extractSubMaps(Collection<String> keys, Map<String, Object> map)
     {
-        Map<String, List<Map<String, Object>>> result = new HashMap<String, List<Map<String, Object>>>();
+        Map<String, List<Map<String, Object>>> result = new HashMap<>();
         //Form a regexp to recognize all the keys as prefixes in the map keys.
         StringBuilder b = new StringBuilder("(");
         for (String key: keys)
@@ -262,7 +262,7 @@ public class Annotations
                 List<Map<String, Object>> subMapsForKey = result.get(key);
                 if (subMapsForKey == null)
                 {
-                    subMapsForKey = new ArrayList<Map<String, Object>>();
+                    subMapsForKey = new ArrayList<>();
                     result.put(key, subMapsForKey);
                 }
                 //make sure there is room for the possible new submap
