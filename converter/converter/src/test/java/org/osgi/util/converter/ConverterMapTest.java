@@ -551,6 +551,13 @@ public class ConverterMapTest {
         assertEquals("987", m2.get("continue"));
     }
 
+    @Test
+    public void testSingleElementAnnotationPrefix() {
+        final Converter converter = Converters.standardConverter();
+        final TestValue testValue = converter.convert(Collections.singletonMap("my.prefix.test.value", true)).to(TestValue.class);
+        assertTrue(testValue.value());
+    }
+    
     private <K,V> Map.Entry<K,V> getMapEntry(Map<K,V> map) {
         assertEquals("This method assumes a map of size 1", 1, map.size());
         return map.entrySet().iterator().next();
@@ -579,6 +586,12 @@ public class ConverterMapTest {
     	long somethingElse() default -87;
     }
 
+    @interface TestValue {
+        static final String PREFIX_ = "my.prefix.";
+
+        boolean value();
+    }
+    
     private static class Foo {
         private final int value;
 
