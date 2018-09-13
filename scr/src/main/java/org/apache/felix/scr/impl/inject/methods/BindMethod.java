@@ -658,7 +658,9 @@ implements org.apache.felix.scr.impl.inject.ReferenceMethod
         //??? this resolves which we need.... better way?
         if ( parameters.getServiceObject() == null && methodExists( parameters.getComponentContext().getLogger() ) )
         {
-            if ( m_paramTypes.contains(ValueUtils.ValueType.ref_serviceType) ) {
+            if ( m_paramTypes.contains(ValueUtils.ValueType.ref_serviceType)
+                 || m_paramTypes.contains(ValueUtils.ValueType.ref_logger)
+                 || m_paramTypes.contains(ValueUtils.ValueType.ref_formatterLogger)) {
                 return parameters.getServiceObject(context);
             }
         }

@@ -272,7 +272,10 @@ public class ComponentConstructor<S>
                         if ( !refPair.isDeleted() && !refPair.isFailed() )
                         {
                             if ( refPair.getServiceObject(componentContext) == null
-                                    && (constructorArgTypes[i] == ValueType.ref_serviceType || constructorArgTypes[i] == ValueType.ref_tuple ) )
+                                    && (constructorArgTypes[i] == ValueType.ref_serviceType
+                                    || constructorArgTypes[i] == ValueType.ref_tuple
+                                    || constructorArgTypes[i] == ValueType.ref_logger
+                                    || constructorArgTypes[i] == ValueType.ref_formatterLogger) )
                             {
                                 refPair.getServiceObject(componentContext, componentContext.getBundleContext());
                             }
