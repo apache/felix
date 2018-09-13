@@ -133,7 +133,7 @@ public class AnnotationTest extends TestCase
 
     private Map<String, Object> allValues()
     {
-        Map<String, Object> values = new HashMap<String, Object>();
+        Map<String, Object> values = new HashMap<>();
         values.put("bool", "true");
         values.put("byt", 12l);
         values.put("cha", 'c');
@@ -151,7 +151,7 @@ public class AnnotationTest extends TestCase
 
     public void testA1NoValues() throws Exception
     {
-        Map<String, Object> values = new HashMap<String, Object>();
+        Map<String, Object> values = new HashMap<>();
 
         Object o = Annotations.toObject( A1.class, values, mockBundle(), false);
         assertTrue("expected an A1", o instanceof A1);
@@ -245,7 +245,7 @@ public class AnnotationTest extends TestCase
 
     public void testA1ArraysNoValues() throws Exception
     {
-        Map<String, Object> values = new HashMap<String, Object>();
+        Map<String, Object> values = new HashMap<>();
 
         Object o = Annotations.toObject( A1Arrays.class, values, mockBundle(), false);
         assertTrue("expected an A1Arrays", o instanceof A1Arrays);
@@ -300,7 +300,7 @@ public class AnnotationTest extends TestCase
 
     private Map<String, Object> arrayValues()
     {
-        Map<String, Object> values = new HashMap<String, Object>();
+        Map<String, Object> values = new HashMap<>();
         values.put("bool", new boolean[] {true, false});
         values.put("byt", new byte[] {12, 3});
         values.put("cha", new char[] {'c', 'h', 'a', 'r'});
@@ -325,7 +325,7 @@ public class AnnotationTest extends TestCase
     public void testA1ArrayFromCollection() throws Exception
     {
         Map<String, Object> values = arrayValues();
-        Map<String, Object> collectionValues = new HashMap<String, Object>();
+        Map<String, Object> collectionValues = new HashMap<>();
         for (Map.Entry<String, Object> entry: values.entrySet())
         {
             collectionValues.put(entry.getKey(), toList(entry.getValue()));
@@ -336,7 +336,7 @@ public class AnnotationTest extends TestCase
 
     private List<?> toList(Object value)
     {
-        List<Object> result = new ArrayList<Object>();
+        List<Object> result = new ArrayList<>();
         for (int i = 0; i < Array.getLength(value); i++)
         {
             result.add(Array.get(value, i));
@@ -596,7 +596,7 @@ public class AnnotationTest extends TestCase
 
     public void testOddClasses() throws Exception
     {
-        Map<String, Object> values = new HashMap<String, Object>();
+        Map<String, Object> values = new HashMap<>();
         values.put("odd1", new Odd("one"));
         values.put("odd2", Collections.singletonList(new Odd("two")));
         values.put("odd3", new Odd[] {new Odd("three"), new Odd("four")});
@@ -642,6 +642,12 @@ public class AnnotationTest extends TestCase
         String value();
     }
 
+    public @interface SingleElementTest {
+        String PREFIX_ = "org.apache.";
+
+        String value();
+    }
+
     public void testSingleElementAnnotation() throws Exception
     {
         assertFalse(Annotations.isSingleElementAnnotation(Map.class));
@@ -649,6 +655,7 @@ public class AnnotationTest extends TestCase
         assertTrue(Annotations.isSingleElementAnnotation(SETest2.class));
         assertFalse(Annotations.isSingleElementAnnotation(SETest3.class));
         assertFalse(Annotations.isSingleElementAnnotation(SETest4.class));
+        assertTrue(Annotations.isSingleElementAnnotation(SingleElementTest.class));
     }
 
     public void testGetPrefix() throws Exception
@@ -664,19 +671,29 @@ public class AnnotationTest extends TestCase
 
     public void testMappingWithPrefix() throws Exception
     {
-        final Map<String, Object> values = new HashMap<String, Object>();
+        final Map<String, Object> values = new HashMap<>();
         values.put("foo", false);
         values.put("org.apache.foo", true);
         values.put("values", "false-values");
         values.put("org.apache.values", "true-values");
         values.put("value", "false-value");
-        values.put("prefix.test", "true-value");
+        values.put("org.apache.prefix.test", "true-value");
 
         final PrefixTest o = Annotations.toObject( PrefixTest.class, values, mockBundle(), true);
         assertEquals("true-value", o.value());
         assertEquals(1, o.values().length);
         assertEquals("true-values", o.values()[0]);
         assertEquals(true, o.foo());
+    }
+
+    public void testMappingWithPrefixSingleValue() throws Exception
+    {
+        final Map<String, Object> values = new HashMap<>();
+        values.put("value", "false-value");
+        values.put("org.apache.single.element.test", "true-value");
+
+        final SingleElementTest o = Annotations.toObject( SingleElementTest.class, values, mockBundle(), true);
+        assertEquals("true-value", o.value());
     }
 
     private void assertOdd(String expectedContent, Object actual) {
