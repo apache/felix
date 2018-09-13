@@ -34,7 +34,9 @@ import java.io.IOException;
 import java.util.Dictionary;
 import java.util.Hashtable;
 
+import org.apache.felix.cm.integration.helper.ConfigurationListenerTestActivator;
 import org.apache.felix.cm.integration.helper.ManagedServiceFactoryTestActivator3;
+import org.apache.felix.cm.integration.helper.ManagedServiceFactoryTestActivator4;
 import org.apache.felix.cm.integration.helper.NestedURLStreamHandler;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -160,5 +162,83 @@ public class ConfigAdminSecurityTest extends ConfigurationBaseTest
     	TestCase.assertEquals( 0, tester.numManagedServiceUpdatedCalls );
     	TestCase.assertEquals( 1, tester.numManagedServiceFactoryUpdatedCalls );
     	TestCase.assertEquals( 1, tester.numManagedServiceFactoryDeleteCalls );
+    }
+    
+    @Test
+    public void test_secure_configuration_client_has_perm_we_do_not() throws BundleException, IOException
+    {
+        final String factoryPid = "test_secure_configuration_client_has_perm_we_do_not";
+        bundle = installBundle( factoryPid, ManagedServiceFactoryTestActivator4.class );
+        bundle.start();
+        delay();
+
+        final Configuration config = createFactoryConfiguration( factoryPid, null, true );
+        final String pid = config.getPid();
+        delay();
+
+        // ==> configuration supplied to the service ms1
+        final ManagedServiceFactoryTestActivator4 tester = ManagedServiceFactoryTestActivator4.INSTANCE;
+        Dictionary<?, ?> props = tester.configs.get( pid );
+        TestCase.assertNotNull( props );
+        TestCase.assertEquals( pid, props.get( Constants.SERVICE_PID ) );
+        TestCase.assertEquals( factoryPid, props.get( ConfigurationAdmin.SERVICE_FACTORYPID ) );
+        TestCase.assertNull( props.get( ConfigurationAdmin.SERVICE_BUNDLELOCATION ) );
+        TestCase.assertEquals( PROP_NAME, props.get( PROP_NAME ) );
+        TestCase.assertTrue( props.get( "port" ) != null );
+        TestCase.assertTrue( ( (Integer) props.get( "port" ) ) > 0 );
+        TestCase.assertEquals( 0, tester.numManagedServiceUpdatedCalls );
+        TestCase.assertEquals( 1, tester.numManagedServiceFactoryUpdatedCalls );
+        TestCase.assertEquals( 0, tester.numManagedServiceFactoryDeleteCalls );
+
+        // delete
+        config.delete();
+        delay();
+
+        // ==> update with null
+        TestCase.assertNull( tester.configs.get( pid ) );
+        TestCase.assertEquals( 0, tester.numManagedServiceUpdatedCalls );
+        TestCase.assertEquals( 1, tester.numManagedServiceFactoryUpdatedCalls );
+        TestCase.assertEquals( 1, tester.numManagedServiceFactoryDeleteCalls );
+    }
+
+    @Test
+    public void test_secure_configuration_listener_has_perm_we_do_not() throws BundleException, IOException
+    {
+    	final String pid = "test_secure_configuration_listener_has_perm_we_do_not";
+    	bundle = installBundle( pid, ConfigurationListenerTestActivator.class );
+    	bundle.start();
+    	delay();
+    	
+    	final Configuration config = configure( pid, null, true );
+    	delay();
+    	
+    	// ==> configuration supplied to the service ms1
+    	final ConfigurationListenerTestActivator tester = ConfigurationListenerTestActivator.INSTANCE;
+    	Dictionary<?, ?> props = tester.configs.get( pid );
+    	TestCase.assertNotNull( props );
+    	TestCase.assertEquals( pid, props.get( Constants.SERVICE_PID ) );
+    	TestCase.assertNull( props.get( ConfigurationAdmin.SERVICE_BUNDLELOCATION ) );
+    	TestCase.assertEquals( PROP_NAME, props.get( PROP_NAME ) );
+    	TestCase.assertTrue( props.get( "port" ) != null );
+    	TestCase.assertTrue( ( (Integer) props.get( "port" ) ) > 0 );
+    	TestCase.assertEquals( 0, tester.numManagedServiceUpdatedCalls );
+    	TestCase.assertEquals( 0, tester.numManagedServiceFactoryUpdatedCalls );
+    	TestCase.assertEquals( 0, tester.numManagedServiceFactoryDeleteCalls );
+    	TestCase.assertEquals( 1, tester.numListenerUpdatedCalls );
+    	TestCase.assertEquals( 0, tester.numListenerDeleteCalls );
+    	TestCase.assertEquals( 1, tester.numListenerLocationChangedCalls );
+    	
+    	// delete
+    	config.delete();
+    	delay();
+    	
+    	// ==> update with null
+    	TestCase.assertNull( tester.configs.get( pid ) );
+    	TestCase.assertEquals( 0, tester.numManagedServiceUpdatedCalls );
+    	TestCase.assertEquals( 0, tester.numManagedServiceFactoryUpdatedCalls );
+    	TestCase.assertEquals( 0, tester.numManagedServiceFactoryDeleteCalls );
+    	TestCase.assertEquals( 1, tester.numListenerUpdatedCalls );
+    	TestCase.assertEquals( 1, tester.numListenerDeleteCalls );
+    	TestCase.assertEquals( 1, tester.numListenerLocationChangedCalls );
     }
 }
