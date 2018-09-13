@@ -3,7 +3,6 @@ Changes in 1.9.6
 ** Bug
     * [FELIX-5908] : NoClassDefFoundError for the CM Security Domain combiner
     * [FELIX-5918] : AccessControlExceptions in ConfigurationAdmin methods
-    * [FELIX-5910] : Set correct AccessControlContext when firing events
 
 
 Changes in 1.9.4
