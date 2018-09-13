@@ -19,6 +19,12 @@
 package org.apache.felix.scr.impl.manager;
 
 import java.io.IOException;
+import java.security.AccessControlContext;
+import java.security.AccessController;
+import java.security.DomainCombiner;
+import java.security.Permission;
+import java.security.PrivilegedAction;
+import java.security.ProtectionDomain;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Dictionary;
@@ -34,6 +40,7 @@ import org.apache.felix.scr.impl.metadata.TargetedPID;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
+import org.osgi.framework.FrameworkUtil;
 import org.osgi.framework.InvalidSyntaxException;
 import org.osgi.framework.ServiceReference;
 import org.osgi.framework.ServiceRegistration;
@@ -86,9 +93,26 @@ public abstract class RegionConfigurationSupport
         ConfigurationListener serviceDelegator = new ConfigurationListener()
         {
             @Override
-            public void configurationEvent(ConfigurationEvent event)
+            public void configurationEvent(final ConfigurationEvent event)
             {
-                RegionConfigurationSupport.this.configurationEvent(event);
+                if ( System.getSecurityManager() != null )
+                {
+                    AccessController.doPrivileged(
+                        new PrivilegedAction<Object>()
+                        {
+                            @Override
+                            public Void run()
+                            {
+                                RegionConfigurationSupport.this.configurationEvent(event);
+                                return null;
+                            }
+                        }, getAccessControlContext(FrameworkUtil.getBundle(this.getClass()))
+                    );
+                }
+                else
+                {
+                    RegionConfigurationSupport.this.configurationEvent(event);
+                }
             }
         };
         this.m_registration = caBundleContext.registerService(ConfigurationListener.class, serviceDelegator, props );
@@ -665,4 +689,45 @@ public abstract class RegionConfigurationSupport
         return bundleContext.getService( caReference );
     }
 
+    public static AccessControlContext getAccessControlContext( final Bundle bundle )
+    {
+        return new AccessControlContext(AccessController.getContext(), new CMDomainCombiner(bundle));
+    }
+
+    private static class CMDomainCombiner implements DomainCombiner
+    {
+
+        private final CMProtectionDomain domain;
+
+        CMDomainCombiner(final Bundle bundle)
+        {
+            this.domain = new CMProtectionDomain(bundle);
+        }
+
+        @Override
+        public ProtectionDomain[] combine(final ProtectionDomain[] arg0,
+                final ProtectionDomain[] arg1) {
+            return new ProtectionDomain[] { domain };
+        }
+
+    }
+
+    private static class CMProtectionDomain extends ProtectionDomain {
+
+        private final Bundle bundle;
+
+        CMProtectionDomain(final Bundle bundle) {
+            super(null, null);
+            this.bundle = bundle;
+        }
+
+        @Override
+        public boolean implies(final Permission permission) {
+            try {
+                return bundle.hasPermission(permission);
+            } catch (IllegalStateException e) {
+                return false;
+            }
+        }
+    }
 }
