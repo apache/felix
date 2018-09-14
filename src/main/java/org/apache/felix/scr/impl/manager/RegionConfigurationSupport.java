@@ -63,19 +63,19 @@ public abstract class RegionConfigurationSupport
 
     private final AtomicInteger referenceCount = new AtomicInteger( 1 );
 
-    // the service m_registration of the ConfigurationListener service
-    private ServiceRegistration<ConfigurationListener> m_registration;
+    // the service registration of the ConfigurationListener service
+    private volatile ServiceRegistration<ConfigurationListener> m_registration;
 
     /**
      *
      * @param bundleContext of the ConfigurationAdmin we are tracking
      * @param registry
      */
-    public RegionConfigurationSupport(final ScrLogger logger, ServiceReference<ConfigurationAdmin> reference)
+    public RegionConfigurationSupport(final ScrLogger logger, final ServiceReference<ConfigurationAdmin> reference)
     {
         this.logger = logger;
         this.caReference = reference;
-        Bundle bundle = reference.getBundle();
+        final Bundle bundle = reference.getBundle();
         this.bundleId = bundle.getBundleId();
         this.caBundleContext = bundle.getBundleContext();
     }
@@ -83,19 +83,22 @@ public abstract class RegionConfigurationSupport
     public void start()
     {
         // register as listener for configurations
-        Dictionary<String, Object> props = new Hashtable<>();
+        final Dictionary<String, Object> props = new Hashtable<>();
         props.put( Constants.SERVICE_DESCRIPTION, "Declarative Services Configuration Support Listener" );
         props.put( Constants.SERVICE_VENDOR, "The Apache Software Foundation" );
 
         // If RegionConfigurationSupport *directly* implements ConfigurationListener then we get NoClassDefFoundError
         // when SCR is started without a wiring to an exporter of Config Admin API. This construction allows the
         // class loading exception to be caught and confined.
-        ConfigurationListener serviceDelegator = new ConfigurationListener()
-        {
-            @Override
-            public void configurationEvent(final ConfigurationEvent event)
+        final ConfigurationListener serviceDelegator;
+        if ( System.getSecurityManager() != null ) {
+            final Bundle scrBundle = FrameworkUtil.getBundle(this.getClass());
+            final AccessControlContext acc = new AccessControlContext(AccessController.getContext(), new CMDomainCombiner(scrBundle));
+
+            serviceDelegator = new ConfigurationListener()
             {
-                if ( System.getSecurityManager() != null )
+                @Override
+                public void configurationEvent(final ConfigurationEvent event)
                 {
                     AccessController.doPrivileged(
                         new PrivilegedAction<Object>()
@@ -106,15 +109,22 @@ public abstract class RegionConfigurationSupport
                                 RegionConfigurationSupport.this.configurationEvent(event);
                                 return null;
                             }
-                        }, getAccessControlContext(FrameworkUtil.getBundle(this.getClass()))
-                    );
+                        }, acc);
                 }
-                else
+            };
+        }
+        else
+        {
+            serviceDelegator = new ConfigurationListener()
+            {
+
+                @Override
+                public void configurationEvent(final ConfigurationEvent event)
                 {
                     RegionConfigurationSupport.this.configurationEvent(event);
                 }
-            }
-        };
+            };
+        }
         this.m_registration = caBundleContext.registerService(ConfigurationListener.class, serviceDelegator, props );
     }
 
@@ -687,11 +697,6 @@ public abstract class RegionConfigurationSupport
     private ConfigurationAdmin getConfigAdmin(BundleContext bundleContext)
     {
         return bundleContext.getService( caReference );
-    }
-
-    public static AccessControlContext getAccessControlContext( final Bundle bundle )
-    {
-        return new AccessControlContext(AccessController.getContext(), new CMDomainCombiner(bundle));
     }
 
     private static class CMDomainCombiner implements DomainCombiner
