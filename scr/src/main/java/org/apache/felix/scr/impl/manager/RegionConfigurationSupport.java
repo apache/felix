@@ -19,7 +19,6 @@
 package org.apache.felix.scr.impl.manager;
 
 import java.io.IOException;
-import java.security.AccessControlContext;
 import java.security.AccessController;
 import java.security.DomainCombiner;
 import java.security.Permission;
@@ -40,7 +39,6 @@ import org.apache.felix.scr.impl.metadata.TargetedPID;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
-import org.osgi.framework.FrameworkUtil;
 import org.osgi.framework.InvalidSyntaxException;
 import org.osgi.framework.ServiceReference;
 import org.osgi.framework.ServiceRegistration;
@@ -92,9 +90,6 @@ public abstract class RegionConfigurationSupport
         // class loading exception to be caught and confined.
         final ConfigurationListener serviceDelegator;
         if ( System.getSecurityManager() != null ) {
-            final Bundle scrBundle = FrameworkUtil.getBundle(this.getClass());
-            final AccessControlContext acc = new AccessControlContext(AccessController.getContext(), new CMDomainCombiner(scrBundle));
-
             serviceDelegator = new ConfigurationListener()
             {
                 @Override
@@ -109,7 +104,7 @@ public abstract class RegionConfigurationSupport
                                 RegionConfigurationSupport.this.configurationEvent(event);
                                 return null;
                             }
-                        }, acc);
+                        });
                 }
             };
         }
