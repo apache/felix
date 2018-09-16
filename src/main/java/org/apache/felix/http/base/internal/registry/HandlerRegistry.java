@@ -21,14 +21,15 @@ import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 
-import org.jetbrains.annotations.Nullable;
-import org.jetbrains.annotations.NotNull;
 import javax.servlet.DispatcherType;
 
+import org.apache.felix.http.base.internal.HttpConfig;
 import org.apache.felix.http.base.internal.handler.FilterHandler;
 import org.apache.felix.http.base.internal.handler.ServletHandler;
 import org.apache.felix.http.base.internal.runtime.ServletContextHelperInfo;
 import org.apache.felix.http.base.internal.runtime.dto.FailedDTOHolder;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import org.osgi.service.http.runtime.dto.ServletContextDTO;
 
 /**
@@ -44,12 +45,24 @@ public final class HandlerRegistry
     /** Current list of context registrations. */
     private volatile List<PerContextHandlerRegistry> registrations = Collections.emptyList();
 
+    private final HttpConfig config;
+
+    public HandlerRegistry(final HttpConfig config)
+    {
+        this.config = config;
+    }
+
+    public HttpConfig getConfig()
+    {
+        return this.config;
+    }
+
     /**
      * Register default context registry for Http Service
      */
     public void init()
     {
-        this.add(new PerContextHandlerRegistry());
+        this.add(new PerContextHandlerRegistry(config));
     }
 
     /**
@@ -70,7 +83,7 @@ public final class HandlerRegistry
 
         synchronized ( this )
         {
-            list = new ArrayList<PerContextHandlerRegistry>(this.registrations);
+            list = new ArrayList<>(this.registrations);
             this.registrations = Collections.emptyList();
 
         }
@@ -89,7 +102,7 @@ public final class HandlerRegistry
     {
         synchronized ( this )
         {
-            final List<PerContextHandlerRegistry> updatedList = new ArrayList<PerContextHandlerRegistry>(this.registrations);
+            final List<PerContextHandlerRegistry> updatedList = new ArrayList<>(this.registrations);
             final Iterator<PerContextHandlerRegistry> i = updatedList.iterator();
             while ( i.hasNext() )
             {
@@ -112,7 +125,7 @@ public final class HandlerRegistry
     {
         synchronized ( this )
         {
-            final List<PerContextHandlerRegistry> updatedList = new ArrayList<PerContextHandlerRegistry>(this.registrations);
+            final List<PerContextHandlerRegistry> updatedList = new ArrayList<>(this.registrations);
             updatedList.add(registry);
             Collections.sort(updatedList);
 

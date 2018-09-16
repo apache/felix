@@ -34,6 +34,7 @@ import java.util.Set;
 import javax.servlet.http.HttpSession;
 import javax.servlet.http.HttpSessionListener;
 
+import org.apache.felix.http.base.internal.HttpConfig;
 import org.apache.felix.http.base.internal.context.ExtServletContext;
 import org.junit.Test;
 import org.mockito.Mockito;
@@ -127,11 +128,20 @@ public class HttpSessionWrapperTest
         when(context.getServletContextName()).thenReturn("default");
         when(context.getHttpSessionListener()).thenReturn(listener);
 
-        final HttpSession contextSession = new HttpSessionWrapper(containerSession, context, false);
+        final HttpConfig config = new HttpConfig();
+        config.setInvalidateContainerSession(false);
+        final HttpSession contextSession = new HttpSessionWrapper(containerSession, context, config, false);
         // invalidate context session and verify that invalidate is not called on the container session
         contextSession.invalidate();
         assertTrue(attributes.isEmpty());
         Mockito.verify(containerSession, Mockito.never()).invalidate();
+
+        config.setInvalidateContainerSession(true);
+        final HttpSession newSession = new HttpSessionWrapper(containerSession, context, config, false);
+        // invalidate context session and verify that invalidate is called on the container session
+        newSession.invalidate();
+        assertTrue(attributes.isEmpty());
+        Mockito.verify(containerSession).invalidate();
     }
 
 }

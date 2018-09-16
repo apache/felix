@@ -19,14 +19,14 @@ package org.apache.felix.http.base.internal.whiteboard;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.jetbrains.annotations.Nullable;
-import org.jetbrains.annotations.NotNull;
 import javax.servlet.ServletContext;
 
 import org.apache.felix.http.base.internal.context.ExtServletContext;
 import org.apache.felix.http.base.internal.registry.HandlerRegistry;
 import org.apache.felix.http.base.internal.registry.PerContextHandlerRegistry;
 import org.apache.felix.http.base.internal.runtime.ServletContextHelperInfo;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceObjects;
@@ -48,7 +48,7 @@ public class WhiteboardContextHandler implements Comparable<WhiteboardContextHan
     private final Bundle httpBundle;
 
     /** A map of all created servlet contexts. Each bundle gets it's own instance. */
-    private final Map<Long, ContextHolder> perBundleContextMap = new HashMap<Long, ContextHolder>();
+    private final Map<Long, ContextHolder> perBundleContextMap = new HashMap<>();
 
     /** The corresponding handler registry. */
     private volatile PerContextHandlerRegistry registry;
@@ -87,7 +87,7 @@ public class WhiteboardContextHandler implements Comparable<WhiteboardContextHan
      */
     public boolean activate(@NotNull final HandlerRegistry registry)
     {
-        this.registry = new PerContextHandlerRegistry(this.info);
+        this.registry = new PerContextHandlerRegistry(this.info, registry.getConfig());
         this.sharedContext = new SharedServletContextImpl(webContext,
                 info.getName(),
                 info.getPath(),
@@ -147,7 +147,7 @@ public class WhiteboardContextHandler implements Comparable<WhiteboardContextHan
                         holder.servletContext = new PerBundleServletContextImpl(bundle,
                                 this.sharedContext,
                                 service,
-                                this.registry.getEventListenerRegistry());
+                                this.registry);
                         this.perBundleContextMap.put(key, holder);
                     }
                 }

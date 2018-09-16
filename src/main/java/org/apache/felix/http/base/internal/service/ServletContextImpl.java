@@ -48,6 +48,7 @@ import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSessionAttributeListener;
 import javax.servlet.http.HttpSessionListener;
 
+import org.apache.felix.http.base.internal.HttpConfig;
 import org.apache.felix.http.base.internal.context.ExtServletContext;
 import org.apache.felix.http.base.internal.dispatch.RequestDispatcherImpl;
 import org.apache.felix.http.base.internal.dispatch.RequestInfo;
@@ -552,6 +553,12 @@ public class ServletContextImpl implements ExtServletContext
         	dispatcher = null;
         }
         return dispatcher;
+    }
+
+    @Override
+    public HttpConfig getConfig()
+    {
+        return this.handlerRegistry.getConfig();
     }
 
     private String normalizePath(String path)

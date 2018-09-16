@@ -16,10 +16,9 @@
  */
 package org.apache.felix.http.base.internal.registry;
 
-import org.jetbrains.annotations.Nullable;
-import org.jetbrains.annotations.NotNull;
 import javax.servlet.DispatcherType;
 
+import org.apache.felix.http.base.internal.HttpConfig;
 import org.apache.felix.http.base.internal.handler.FilterHandler;
 import org.apache.felix.http.base.internal.handler.ListenerHandler;
 import org.apache.felix.http.base.internal.handler.ServletHandler;
@@ -29,6 +28,8 @@ import org.apache.felix.http.base.internal.runtime.ServletContextHelperInfo;
 import org.apache.felix.http.base.internal.runtime.ServletInfo;
 import org.apache.felix.http.base.internal.runtime.dto.FailedDTOHolder;
 import org.apache.felix.http.base.internal.service.HttpServiceFactory;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import org.osgi.service.http.runtime.dto.ServletContextDTO;
 
 /**
@@ -59,11 +60,15 @@ public final class PerContextHandlerRegistry implements Comparable<PerContextHan
 
     private final EventListenerRegistry eventListenerRegistry = new EventListenerRegistry();
 
+    private final HttpConfig config;
+
+
     /**
      * Default http service registry
      */
-    public PerContextHandlerRegistry()
+    public PerContextHandlerRegistry(@NotNull final HttpConfig config)
     {
+        this.config = config;
         this.serviceId = HttpServiceFactory.HTTP_SERVICE_CONTEXT_SERVICE_ID;
         this.ranking = Integer.MAX_VALUE;
         this.path = "/";
@@ -74,8 +79,9 @@ public final class PerContextHandlerRegistry implements Comparable<PerContextHan
      * Registry for a servlet context helper (whiteboard support)
      * @param info The servlet context helper info
      */
-    public PerContextHandlerRegistry(@NotNull final ServletContextHelperInfo info)
+    public PerContextHandlerRegistry(@NotNull final ServletContextHelperInfo info, @NotNull final HttpConfig config)
     {
+        this.config = config;
         this.serviceId = info.getServiceId();
         this.ranking = info.getRanking();
         this.path = info.getPath();
@@ -92,6 +98,11 @@ public final class PerContextHandlerRegistry implements Comparable<PerContextHan
     public long getContextServiceId()
     {
         return this.serviceId;
+    }
+
+    public HttpConfig getConfig()
+    {
+        return this.config;
     }
 
     public void removeAll()
