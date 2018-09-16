@@ -329,7 +329,7 @@ public abstract class BaseIntegrationTest
                 mavenBundle("org.apache.felix", "org.apache.felix.configadmin").version("1.8.14").startLevel(START_LEVEL_SYSTEM_BUNDLES),
                 mavenBundle("org.apache.felix", "org.apache.felix.http.servlet-api", System.getProperty("http.servlet.api.version")).startLevel(START_LEVEL_SYSTEM_BUNDLES),
                 mavenBundle("org.apache.felix", ORG_APACHE_FELIX_HTTP_JETTY, System.getProperty("http.jetty.version")).startLevel(START_LEVEL_SYSTEM_BUNDLES),
-                mavenBundle("org.apache.felix", "org.apache.felix.http.whiteboard", "3.0.1-SNAPSHOT").startLevel(START_LEVEL_SYSTEM_BUNDLES),
+                mavenBundle("org.apache.felix", "org.apache.felix.http.whiteboard", "4.0.0").startLevel(START_LEVEL_SYSTEM_BUNDLES),
 
                 mavenBundle("org.apache.httpcomponents", "httpcore-osgi", "4.4.6").startLevel(START_LEVEL_SYSTEM_BUNDLES),
                 mavenBundle("org.apache.httpcomponents", "httpclient-osgi", "4.5.3").startLevel(START_LEVEL_SYSTEM_BUNDLES),
