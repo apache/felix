@@ -28,6 +28,7 @@ import java.util.Map;
 import java.util.jar.Manifest;
 
 import org.apache.commons.io.FileUtils;
+import org.apache.felix.maven.osgicheck.impl.checks.ConsumerProviderTypeCheck;
 import org.apache.felix.maven.osgicheck.impl.checks.ImportExportCheck;
 import org.apache.felix.maven.osgicheck.impl.checks.SCRCheck;
 import org.apache.felix.maven.osgicheck.impl.featureutil.ManifestUtil;
@@ -147,7 +148,7 @@ public class CheckMojo extends AbstractMojo {
 
                 final File dir = rootDir;
 
-                final Class<?>[] checks = new Class<?>[] {ImportExportCheck.class, SCRCheck.class};
+                final Class<?>[] checks = new Class<?>[] {ImportExportCheck.class, SCRCheck.class, ConsumerProviderTypeCheck.class};
                 for(final Class<?> c : checks) {
                     final Check check = (Check)c.newInstance();
                     check.check(new CheckContext() {
