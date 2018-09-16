@@ -5,6 +5,7 @@ Changes in 2.1.8
     * [FELIX-5926] - Logger instance is not set for constructor and reference injection
     * [FELIX-5929] - Failed activation state not reported in DTOs
     * [FELIX-5930] - Service reference is missing in DTO
+    * [FELIX-5905] - SCR cannot access method getLogger from LogService R7
 
 
 Changes in 2.1.6
