@@ -322,6 +322,8 @@ public class ValueUtils {
             Exception error = null;
             try {
                 final Method m = factory.getClass().getMethod("getLogger", new Class[] {Bundle.class, String.class, Class.class});
+                // FELIX-5905
+                m.setAccessible(true);
                 return m.invoke(factory, new Object[] {componentContext.getBundleContext().getBundle(), componentType, targetType});
             } catch (final NoSuchMethodException | SecurityException | IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
                 error = e;
