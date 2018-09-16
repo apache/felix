@@ -61,11 +61,12 @@ class ComponentConfigurationPrinter implements InventoryPrinter
     /**
      * @see org.apache.felix.inventory.InventoryPrinter#print(java.io.PrintWriter, org.apache.felix.inventory.Format, boolean)
      */
+    @Override
     public void print(PrintWriter pw, Format format, boolean isZip)
     {
-        final List<ComponentDescriptionDTO> noConfig = new ArrayList<ComponentDescriptionDTO>();
-        final List<ComponentDescriptionDTO> disabled = new ArrayList<ComponentDescriptionDTO>();
-        final List<ComponentConfigurationDTO> configurations = new ArrayList<ComponentConfigurationDTO>();
+        final List<ComponentDescriptionDTO> noConfig = new ArrayList<>();
+        final List<ComponentDescriptionDTO> disabled = new ArrayList<>();
+        final List<ComponentConfigurationDTO> configurations = new ArrayList<>();
 
         final Collection<ComponentDescriptionDTO> descs = scrService.getComponentDescriptionDTOs();
         for(final ComponentDescriptionDTO d : descs)
@@ -172,7 +173,7 @@ class ComponentConfigurationPrinter implements InventoryPrinter
             pw.println("Component Configurations:");
             pw.println(SEP);
             // order components by id
-            TreeMap<Long, ComponentConfigurationDTO> componentMap = new TreeMap<Long, ComponentConfigurationDTO>();
+            TreeMap<Long, ComponentConfigurationDTO> componentMap = new TreeMap<>();
             for(final ComponentConfigurationDTO cfg : configurations)
             {
                 componentMap.put(new Long(cfg.id), cfg);
@@ -197,7 +198,7 @@ class ComponentConfigurationPrinter implements InventoryPrinter
         pw.println("  Bundle=" + cfg.description.bundle.symbolicName + " ("
                 + cfg.description.bundle.id + ")");
         pw.println("  State=" + toStateString(cfg.state));
-        if ( cfg.state == ComponentConfigurationDTO.FAILED_ACTIVATION && cfg.failure != null ) {
+        if ( cfg.state == ComponentConfigurationDTO.FAILED_ACTIVATION ) {
             pw.println("  Failure=" + cfg.failure);
         }
         pw.println("  DefaultState="
@@ -341,7 +342,7 @@ class ComponentConfigurationPrinter implements InventoryPrinter
         {
 
             pw.println("  Properties=");
-            TreeSet<String> keys = new TreeSet<String>(props.keySet());
+            TreeSet<String> keys = new TreeSet<>(props.keySet());
             for (Iterator<String> ki = keys.iterator(); ki.hasNext();)
             {
                 String key = ki.next();
@@ -356,7 +357,7 @@ class ComponentConfigurationPrinter implements InventoryPrinter
         }
         if ( cfg == null && description.factoryProperties != null ) {
             pw.println("  FactoryProperties=");
-            TreeSet<String> keys = new TreeSet<String>(description.factoryProperties.keySet());
+            TreeSet<String> keys = new TreeSet<>(description.factoryProperties.keySet());
             for (Iterator<String> ki = keys.iterator(); ki.hasNext();)
             {
                 String key = ki.next();

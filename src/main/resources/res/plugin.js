@@ -149,7 +149,11 @@ function renderDetails( data ) {
 					i++;
 				}
 			} else {
-				txt = txt + prop.value;
+				if ( prop.key == "serviceId" ) {
+					txt = txt + '<a href="../services/' + prop.value + '">' + prop.value + '</a>';
+				} else {
+					txt = txt + prop.value;					
+				}
 			}
 		} else {
 			txt = txt + '\u00a0';
