@@ -22,6 +22,7 @@ import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.zip.Deflater;
 
+import org.apache.felix.http.base.internal.HttpConfig;
 import org.eclipse.jetty.server.handler.gzip.GzipHandler;
 import org.eclipse.jetty.server.session.HouseKeeper;
 import org.osgi.framework.Bundle;
@@ -411,7 +412,17 @@ class ConfigMetaTypeProvider implements MetaTypeProvider
                 2147483647,
                 null, null,
                 getStringArray(bundle.getBundleContext().getProperty(JettyConfig.FELIX_JETTY_GZIP_EXCLUDED_MIME_TYPES))));
-        
+        adList.add(new AttributeDefinitionImpl(HttpConfig.PROP_INVALIDATE_SESSION,
+                "Invalidate Container Session",
+                "If this property is set, the container session is automatically validated.",
+                HttpConfig.DEFAULT_INVALIDATE_SESSION,
+                bundle.getBundleContext().getProperty(HttpConfig.PROP_INVALIDATE_SESSION)));
+        adList.add(new AttributeDefinitionImpl(HttpConfig.PROP_UNIQUE_SESSION_ID,
+                "Unique Session Id",
+                "If this property is set, each http context gets a unique session id (derived from the container session).",
+                HttpConfig.DEFAULT_UNIQUE_SESSION_ID,
+                bundle.getBundleContext().getProperty(HttpConfig.PROP_UNIQUE_SESSION_ID)));
+
         return new ObjectClassDefinition()
         {
 

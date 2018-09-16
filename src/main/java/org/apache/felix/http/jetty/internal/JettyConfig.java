@@ -28,6 +28,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.zip.Deflater;
 
+import org.apache.felix.http.base.internal.HttpConfig;
 import org.apache.felix.http.base.internal.logger.SystemLogger;
 import org.eclipse.jetty.server.handler.gzip.GzipHandler;
 import org.osgi.framework.BundleContext;
@@ -220,7 +221,7 @@ public final class JettyConfig
 
     /** Felix specific property to specify whether the server should use a server-wide gzip handler (defaults to true) */
     public static final String FELIX_JETTY_GZIP_HANDLER_ENABLE = "org.apache.felix.jetty.gziphandler.enable";
-    
+
     /** Felix specific property to specify the minimum response size to trigger dynamic compression */
     public static final String FELIX_JETTY_GZIP_MIN_GZIP_SIZE = "org.apache.felix.jetty.gzip.minGzipSize";
 
@@ -253,7 +254,7 @@ public final class JettyConfig
 
     /** Felix specific property to specify the excluded mime types. */
     public static final String FELIX_JETTY_GZIP_EXCLUDED_MIME_TYPES = "org.apache.felix.jetty.gzip.excludedMimeTypes";
-    
+
     private static String validateContextPath(String ctxPath)
     {
         // undefined, empty, or root context path
@@ -581,7 +582,7 @@ public final class JettyConfig
         return getBooleanProperty(FELIX_HTTP_REQUEST_LOG_FILE_LOG_LATENCY, false);
     }
 
-    
+
     public boolean isGzipHandlerEnabled() {
         return getBooleanProperty(FELIX_JETTY_GZIP_HANDLER_ENABLE, false);
     }
@@ -629,7 +630,7 @@ public final class JettyConfig
     public String[] getGzipExcludedMimeTypes() {
         return getStringArrayProperty(FELIX_JETTY_GZIP_EXCLUDED_MIME_TYPES, new String[0]);
     }
-    
+
     public void reset()
     {
         update(null);
@@ -645,6 +646,12 @@ public final class JettyConfig
         {
 			props.put(FELIX_HTTP_SERVICE_NAME, getHttpServiceName());
         }
+
+        props.put(HttpConfig.PROP_INVALIDATE_SESSION, getBooleanProperty(HttpConfig.PROP_INVALIDATE_SESSION,
+                HttpConfig.DEFAULT_INVALIDATE_SESSION));
+        props.put(HttpConfig.PROP_UNIQUE_SESSION_ID, getBooleanProperty(HttpConfig.PROP_UNIQUE_SESSION_ID,
+                HttpConfig.DEFAULT_UNIQUE_SESSION_ID));
+
         addCustomServiceProperties(props);
     }
 
