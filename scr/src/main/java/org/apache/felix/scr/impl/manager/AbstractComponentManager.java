@@ -1429,8 +1429,13 @@ public abstract class AbstractComponentManager<S> implements ComponentManager<S>
     public abstract void getComponentManagers(List<AbstractComponentManager<S>> cms);
 
     @Override
-    public ServiceReference<S> getRegisteredServiceReference()
+    public final ServiceReference<S> getRegisteredServiceReference()
     {
+        final ServiceRegistration<S> reg = registrationManager.getServiceRegistration();
+        if ( reg != null )
+        {
+            return reg.getReference();
+        }
         return null;
     }
 }

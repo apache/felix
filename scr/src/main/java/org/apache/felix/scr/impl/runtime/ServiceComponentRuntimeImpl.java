@@ -210,7 +210,7 @@ public class ServiceComponentRuntimeImpl implements ServiceComponentRuntime
         dto.state = manager.getSpecState();
         // DS 1.4
         if ( dto.state == ComponentConfigurationDTO.ACTIVE
-                || dto.state == ComponentConfigurationDTO.SATISFIED )
+             || dto.state == ComponentConfigurationDTO.SATISFIED )
         {
                dto.service = serviceReferenceToDTO(manager.getRegisteredServiceReference());
         }
@@ -289,7 +289,7 @@ public class ServiceComponentRuntimeImpl implements ServiceComponentRuntime
         dto.id = (Long) serviceRef.getProperty(Constants.SERVICE_ID);
         dto.properties = deepCopy( serviceRef );
         Bundle[] usingBundles = serviceRef.getUsingBundles();
-        if (usingBundles != null)
+        if (usingBundles != null && usingBundles.length > 0 )
         {
             long[] usingBundleIds = new long[usingBundles.length];
             for (int i = 0; i < usingBundles.length; i++)
