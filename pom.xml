@@ -33,7 +33,7 @@
 
     <properties>
         <maven.version>3.5.0</maven.version>
-        <felix.java.version>7</felix.java.version>
+        <felix.java.version>8</felix.java.version>
     </properties>
 
     <prerequisites>
@@ -81,6 +81,11 @@
     </build>
 
     <dependencies>
+        <dependency>
+            <groupId>org.ow2.asm</groupId>
+            <artifactId>asm-all</artifactId>
+            <version>5.2</version>
+        </dependency>
         <dependency>
             <groupId>org.apache.maven</groupId>
             <artifactId>maven-core</artifactId>
