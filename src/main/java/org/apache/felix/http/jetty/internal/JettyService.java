@@ -44,6 +44,7 @@ import org.apache.felix.http.base.internal.logger.SystemLogger;
 import org.eclipse.jetty.http.HttpVersion;
 import org.eclipse.jetty.io.ConnectionStatistics;
 import org.eclipse.jetty.security.HashLoginService;
+import org.eclipse.jetty.security.UserStore;
 import org.eclipse.jetty.server.Connector;
 import org.eclipse.jetty.server.HttpConfiguration;
 import org.eclipse.jetty.server.HttpConnectionFactory;
@@ -376,7 +377,11 @@ public final class JettyService extends AbstractLifeCycle.AbstractLifeCycleListe
             }
             this.server.addLifeCycleListener(this);
 
-            this.server.addBean(new HashLoginService("OSGi HTTP Service Realm"));
+            // FELIX-5931 : PropertyUserStore used as default by HashLoginService has changed in 9.4.12.v20180830
+            //              and fails without a config, therefore using plain UserStore
+            final HashLoginService loginService = new HashLoginService("OSGi HTTP Service Realm");
+            loginService.setUserStore(new UserStore());
+            this.server.addBean(loginService);
 
             this.parent = new ContextHandlerCollection();
 
@@ -403,7 +408,7 @@ public final class JettyService extends AbstractLifeCycle.AbstractLifeCycleListe
 
             this.server.setHandler(this.parent);
 
-            if (this.config.isGzipHandlerEnabled()) 
+            if (this.config.isGzipHandlerEnabled())
             {
             	GzipHandler gzipHandler = new GzipHandler();
             	gzipHandler.setMinGzipSize(this.config.getGzipMinGzipSize());
@@ -417,10 +422,10 @@ public final class JettyService extends AbstractLifeCycle.AbstractLifeCycleListe
             	gzipHandler.addExcludedPaths(this.config.getGzipExcludedPaths());
             	gzipHandler.addIncludedMimeTypes(this.config.getGzipIncludedMimeTypes());
             	gzipHandler.addExcludedMimeTypes(this.config.getGzipExcludedMimeTypes());
-                            	
+
             	this.server.insertHandler(gzipHandler);
             }
-            
+
             this.server.start();
 
             // session id manager is only available after server is started
