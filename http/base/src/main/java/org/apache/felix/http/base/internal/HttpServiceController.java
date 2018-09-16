@@ -18,7 +18,6 @@ package org.apache.felix.http.base.internal;
 
 import java.util.Hashtable;
 
-import org.jetbrains.annotations.NotNull;
 import javax.servlet.Servlet;
 import javax.servlet.ServletContext;
 import javax.servlet.http.HttpSessionEvent;
@@ -31,6 +30,7 @@ import org.apache.felix.http.base.internal.handler.HttpSessionWrapper;
 import org.apache.felix.http.base.internal.registry.HandlerRegistry;
 import org.apache.felix.http.base.internal.service.HttpServiceFactory;
 import org.apache.felix.http.base.internal.whiteboard.WhiteboardManager;
+import org.jetbrains.annotations.NotNull;
 import org.osgi.framework.BundleContext;
 
 public final class HttpServiceController
@@ -42,12 +42,14 @@ public final class HttpServiceController
     private final HttpServiceFactory httpServiceFactory;
     private final WhiteboardManager whiteboardManager;
 
+    private final HttpConfig config = new HttpConfig();
+
     private volatile HttpSessionListener httpSessionListener;
 
     public HttpServiceController(final BundleContext bundleContext)
     {
         this.bundleContext = bundleContext;
-        this.registry = new HandlerRegistry();
+        this.registry = new HandlerRegistry(config);
         this.dispatcher = new Dispatcher(this.registry);
         this.eventDispatcher = new EventDispatcher(this);
         this.httpServiceFactory = new HttpServiceFactory(this.bundleContext, this.registry);
@@ -112,6 +114,8 @@ public final class HttpServiceController
      */
     public void register(@NotNull final ServletContext containerContext, @NotNull final Hashtable<String, Object> props)
     {
+        this.config.configure(props);
+
         this.registry.init();
 
         this.httpServiceFactory.start(containerContext, props);

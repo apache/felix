@@ -42,8 +42,9 @@ import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSessionAttributeListener;
 import javax.servlet.http.HttpSessionListener;
 
+import org.apache.felix.http.base.internal.HttpConfig;
 import org.apache.felix.http.base.internal.context.ExtServletContext;
-import org.apache.felix.http.base.internal.registry.EventListenerRegistry;
+import org.apache.felix.http.base.internal.registry.PerContextHandlerRegistry;
 import org.apache.felix.http.base.internal.util.MimeTypes;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.wiring.BundleWiring;
@@ -60,17 +61,17 @@ public class PerBundleServletContextImpl implements ExtServletContext {
     private final Bundle bundle;
     private final ServletContext delegatee;
     private final ServletContextHelper contextHelper;
-    private final EventListenerRegistry eventListenerRegistry;
+    private final PerContextHandlerRegistry handlerRegistry;
 
     public PerBundleServletContextImpl(final Bundle bundle,
             final ServletContext sharedContext,
             final ServletContextHelper delegatee,
-            final EventListenerRegistry eventListenerRegistry)
+            final PerContextHandlerRegistry handlerRegistry)
     {
         this.bundle = bundle;
         this.delegatee = sharedContext;
         this.contextHelper = delegatee;
-        this.eventListenerRegistry = eventListenerRegistry;
+        this.handlerRegistry = handlerRegistry;
     }
 
     @Override
@@ -90,25 +91,31 @@ public class PerBundleServletContextImpl implements ExtServletContext {
     @Override
     public HttpSessionListener getHttpSessionListener()
     {
-        return this.eventListenerRegistry;
+        return this.handlerRegistry.getEventListenerRegistry();
     }
 
     @Override
     public HttpSessionAttributeListener getHttpSessionAttributeListener()
     {
-        return this.eventListenerRegistry;
+        return this.handlerRegistry.getEventListenerRegistry();
     }
 
     @Override
     public ServletRequestListener getServletRequestListener()
     {
-        return this.eventListenerRegistry;
+        return this.handlerRegistry.getEventListenerRegistry();
     }
 
     @Override
     public ServletRequestAttributeListener getServletRequestAttributeListener()
     {
-        return this.eventListenerRegistry;
+        return this.handlerRegistry.getEventListenerRegistry();
+    }
+
+    @Override
+    public HttpConfig getConfig()
+    {
+        return this.handlerRegistry.getConfig();
     }
 
     @Override

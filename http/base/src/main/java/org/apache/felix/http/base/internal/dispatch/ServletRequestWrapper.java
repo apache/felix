@@ -264,7 +264,7 @@ final class ServletRequestWrapper extends HttpServletRequestWrapper
         {
             return null;
         }
-        return new HttpSessionWrapper(session, this.servletContext, false);
+        return new HttpSessionWrapper(session, this.servletContext, this.servletContext.getConfig(), false);
     }
 
     @Override

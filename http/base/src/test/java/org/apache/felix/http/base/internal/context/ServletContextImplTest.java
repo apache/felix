@@ -45,6 +45,7 @@ import javax.servlet.descriptor.JspConfigDescriptor;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.apache.felix.http.base.internal.HttpConfig;
 import org.apache.felix.http.base.internal.handler.ListenerHandler;
 import org.apache.felix.http.base.internal.registry.EventListenerRegistry;
 import org.apache.felix.http.base.internal.registry.HandlerRegistry;
@@ -134,7 +135,7 @@ public class ServletContextImplTest
     private class MockServletContext implements ServletContext
     {
 
-        private Dictionary<String, Object> attributes = new Hashtable<String, Object>();
+        private Dictionary<String, Object> attributes = new Hashtable<>();
 
         @Override
         public FilterRegistration.Dynamic addFilter(String name, Class<? extends Filter> type)
@@ -467,7 +468,7 @@ public class ServletContextImplTest
         ServletContext globalContext = new MockServletContext();
         this.httpContext = Mockito.mock(HttpContext.class);
         this.listener = new AttributeListener();
-        final HandlerRegistry reg = new HandlerRegistry();
+        final HandlerRegistry reg = new HandlerRegistry(new HttpConfig());
         reg.init();
         contextRegistry = reg.getRegistry(HttpServiceFactory.HTTP_SERVICE_CONTEXT_SERVICE_ID);
         final EventListenerRegistry eventReg = contextRegistry.getEventListenerRegistry();
@@ -578,7 +579,7 @@ public class ServletContextImplTest
     @Test
     public void testGetResourcePaths()
     {
-        HashSet<String> paths = new HashSet<String>(Arrays.asList("/some/path/1", "/some/path/2"));
+        HashSet<String> paths = new HashSet<>(Arrays.asList("/some/path/1", "/some/path/2"));
         Mockito.when(this.bundle.getEntryPaths("some/path")).thenReturn(Collections.enumeration(paths));
 
         Set<String> set = this.context.getResourcePaths("/some/path");

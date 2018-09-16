@@ -25,6 +25,7 @@ import java.util.Collections;
 import javax.servlet.Servlet;
 import javax.servlet.ServletConfig;
 
+import org.apache.felix.http.base.internal.HttpConfig;
 import org.apache.felix.http.base.internal.handler.HttpServiceServletHandler;
 import org.apache.felix.http.base.internal.handler.ServletHandler;
 import org.apache.felix.http.base.internal.runtime.ServletInfo;
@@ -38,7 +39,7 @@ import org.osgi.service.http.runtime.dto.ServletDTO;
 
 public class HandlerRegistryTest
 {
-    private final HandlerRegistry registry = new HandlerRegistry();
+    private final HandlerRegistry registry = new HandlerRegistry(new HttpConfig());
 
     @Test public void testInitialSetup()
     {

@@ -34,6 +34,7 @@ import javax.servlet.http.HttpSessionBindingListener;
 import javax.servlet.http.HttpSessionContext;
 import javax.servlet.http.HttpSessionEvent;
 
+import org.apache.felix.http.base.internal.HttpConfig;
 import org.apache.felix.http.base.internal.context.ExtServletContext;
 
 /**
@@ -86,6 +87,13 @@ public class HttpSessionWrapper implements HttpSession
      * Is this a new session?
      */
     private final boolean isNew;
+
+    /**
+     * Session handling configuration
+     */
+    private final HttpConfig config;
+
+
 
     public static boolean hasSession(final String contextName, final HttpSession session)
     {
@@ -144,8 +152,10 @@ public class HttpSessionWrapper implements HttpSession
      */
     public HttpSessionWrapper(final HttpSession session,
             final ExtServletContext context,
+            final HttpConfig config,
             final boolean terminate)
     {
+        this.config = config;
         this.delegate = session;
         this.context = context;
         this.sessionId = context.getServletContextName();
@@ -263,6 +273,10 @@ public class HttpSessionWrapper implements HttpSession
     public String getId()
     {
         this.checkInvalid();
+        if ( this.config.isUniqueSessionId() )
+        {
+            return this.delegate.getId().concat("-").concat(this.sessionId);
+        }
         return this.delegate.getId();
     }
 
@@ -325,6 +339,16 @@ public class HttpSessionWrapper implements HttpSession
 
             if ( name.startsWith(this.keyPrefix) ) {
                 this.removeAttribute(name.substring(this.keyPrefix.length()));
+            }
+        }
+
+        if ( this.config.isInvalidateContainerSession() )
+        {
+            // if the session is empty we can invalidate
+            final Enumeration<String> remainingNames = this.delegate.getAttributeNames();
+            if ( !remainingNames.hasMoreElements() )
+            {
+                this.delegate.invalidate();
             }
         }
 

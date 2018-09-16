@@ -22,6 +22,7 @@ import java.util.Hashtable;
 
 import javax.servlet.ServletContext;
 
+import org.apache.felix.http.base.internal.HttpConfig;
 import org.apache.felix.http.base.internal.registry.HandlerRegistry;
 import org.junit.Assert;
 import org.junit.Test;
@@ -44,7 +45,7 @@ public class HttpServiceFactoryTest {
                 return FrameworkUtil.createFilter((String) invocation.getArguments()[0]);
             }
         });
-        final HandlerRegistry reg = new HandlerRegistry();
+        final HandlerRegistry reg = new HandlerRegistry(new HttpConfig());
         reg.init();
         HttpServiceFactory hsf = new HttpServiceFactory(bc, reg);
 

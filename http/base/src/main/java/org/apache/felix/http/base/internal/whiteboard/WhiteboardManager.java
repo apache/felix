@@ -33,7 +33,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import org.jetbrains.annotations.NotNull;
 import javax.servlet.FilterChain;
 import javax.servlet.ServletContext;
 import javax.servlet.ServletContextEvent;
@@ -81,6 +80,7 @@ import org.apache.felix.http.base.internal.whiteboard.tracker.PreprocessorTracke
 import org.apache.felix.http.base.internal.whiteboard.tracker.ResourceTracker;
 import org.apache.felix.http.base.internal.whiteboard.tracker.ServletContextHelperTracker;
 import org.apache.felix.http.base.internal.whiteboard.tracker.ServletTracker;
+import org.jetbrains.annotations.NotNull;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
@@ -269,7 +269,7 @@ public final class WhiteboardManager
             if ( handler != null )
             {
                 final ExtServletContext context = handler.getServletContext(this.httpBundleContext.getBundle());
-                new HttpSessionWrapper(session, context, true).invalidate();
+                new HttpSessionWrapper(session, context, this.registry.getConfig(), true).invalidate();
                 handler.ungetServletContext(this.httpBundleContext.getBundle());
             }
         }
