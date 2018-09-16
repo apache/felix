@@ -6,6 +6,7 @@ Changes in 2.1.8
     * [FELIX-5929] - Failed activation state not reported in DTOs
     * [FELIX-5930] - Service reference is missing in DTO
     * [FELIX-5905] - SCR cannot access method getLogger from LogService R7
+    * [FELIX-5910] - Set correct AccessControlContext when receiving configuration events
 
 
 Changes in 2.1.6
