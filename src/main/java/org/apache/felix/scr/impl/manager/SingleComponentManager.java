@@ -920,7 +920,6 @@ public class SingleComponentManager<S> extends AbstractComponentManager<S> imple
                     if ( result == null )
                     {
                         success = false;
-                        setState(previousState, State.failed);
                     }
                     else
                     {
