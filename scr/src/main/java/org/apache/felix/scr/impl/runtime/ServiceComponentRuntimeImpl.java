@@ -209,13 +209,15 @@ public class ServiceComponentRuntimeImpl implements ServiceComponentRuntime
         dto.properties = new HashMap<>(manager.getProperties());//TODO deep copy?
         dto.state = manager.getSpecState();
         // DS 1.4
-        if ( dto.state == ComponentConfigurationDTO.FAILED_ACTIVATION )
+        if ( dto.state == ComponentConfigurationDTO.ACTIVE
+                || dto.state == ComponentConfigurationDTO.SATISFIED )
         {
-            dto.failure = manager.getFailureReason();
+               dto.service = serviceReferenceToDTO(manager.getRegisteredServiceReference());
         }
-        else if ( dto.state == ComponentConfigurationDTO.ACTIVE || dto.state == ComponentConfigurationDTO.SATISFIED )
+        if ( manager.getFailureReason() != null )
         {
-            dto.service = serviceReferenceToDTO(manager.getRegisteredServiceReference());
+            dto.state = ComponentConfigurationDTO.FAILED_ACTIVATION;
+            dto.failure = manager.getFailureReason();
         }
         return dto;
     }

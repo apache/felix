@@ -81,8 +81,7 @@ public abstract class AbstractComponentManager<S> implements ComponentManager<S>
         disabled(-1, false, false, false),
         unsatisfiedReference(ComponentConfigurationDTO.UNSATISFIED_REFERENCE, true, false, false),
         satisfied(ComponentConfigurationDTO.SATISFIED, true, true, false),
-        active(ComponentConfigurationDTO.ACTIVE, true, true, true),
-        failed(ComponentConfigurationDTO.FAILED_ACTIVATION, true, true, false);
+        active(ComponentConfigurationDTO.ACTIVE, true, true, true);
 
         private final int specState;
 
@@ -1373,24 +1372,25 @@ public abstract class AbstractComponentManager<S> implements ComponentManager<S>
         return this.failureReason;
     }
 
+    /**
+     * Set the activation failure reason
+     * @param e The exception which caused the activation to fail
+     */
     public void setFailureReason(final Throwable e)
     {
-        if ( e != null )
-        {
-            final StringWriter sw = new StringWriter();
-            final PrintWriter pw = new PrintWriter(sw);
-            e.printStackTrace(pw);
-            pw.flush();
-            this.failureReason = sw.toString();
-        }
+        final StringWriter sw = new StringWriter();
+        final PrintWriter pw = new PrintWriter(sw);
+        e.printStackTrace(pw);
+        pw.flush();
+        this.failureReason = sw.toString();
     }
 
-    void setState(State previousState, State newState)
+    void setState(final State previousState, final State newState)
     {
         if (state.compareAndSet(previousState, newState))
         {
             m_container.getLogger().log(LogService.LOG_DEBUG, "Changed state from {0} to {1}", null, previousState, newState );
-            if ( newState != State.failed )
+            if ( newState == State.active || newState == State.unsatisfiedReference )
             {
                 this.failureReason = null;
             }
