@@ -67,7 +67,6 @@
                             org.osgi.service.http.runtime.dto,
                             org.osgi.service.http.whiteboard,
                             !org.eclipse.jetty,
-                            !org.eclipse.jetty.security.authentication,
                             !org.eclipse.jetty.util.log.jmx,
                             !org.eclipse.jetty.version,
                             org.eclipse.jetty.*,
