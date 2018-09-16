@@ -1001,15 +1001,4 @@ public class SingleComponentManager<S> extends AbstractComponentManager<S> imple
     {
         cms.add(this);
     }
-
-    @Override
-    public ServiceReference<S> getRegisteredServiceReference()
-    {
-        final ComponentContextImpl<S> ctx = this.m_componentContext;
-        if ( ctx != null )
-        {
-            return ctx.getServiceReference();
-        }
-        return null;
-    }
 }
