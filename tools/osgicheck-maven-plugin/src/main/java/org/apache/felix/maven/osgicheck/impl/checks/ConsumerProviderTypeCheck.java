@@ -33,6 +33,7 @@ import org.apache.felix.maven.osgicheck.impl.featureutil.ManifestUtil;
 import org.apache.felix.maven.osgicheck.impl.featureutil.PackageInfo;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.objectweb.asm.ClassReader;
+import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.tree.AnnotationNode;
 import org.objectweb.asm.tree.ClassNode;
 
@@ -54,7 +55,8 @@ public class ConsumerProviderTypeCheck implements Check {
     }
 
     private boolean exclude(final File f) {
-        return f.getName().equals("package-info.class");
+        // skip package info and inner classes
+        return f.getName().equals("package-info.class") || f.getName().contains("$");
     }
 
     @Override
@@ -89,7 +91,12 @@ public class ConsumerProviderTypeCheck implements Check {
 
             classReader.accept(classNode, SKIP_CODE | SKIP_DEBUG | SKIP_FRAMES);
 
-            // create descriptions
+            if ((classNode.access & Opcodes.ACC_INTERFACE) == 0) {
+                // not an interface
+                ctx.getLog().debug("Skipping non interface class " + className );
+                return;
+            }
+
             final List<String> annotations = extractAnnotation(classNode);
             for(final String s : annotations) {
                 ctx.getLog().debug("Found annotation " + s );
