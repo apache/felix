@@ -39,14 +39,14 @@ import org.objectweb.asm.tree.ClassNode;
 /**
  * The following checks are performed:
  * <ul>
- *   <li>If a package is exported, the interfaces must be marked with either ConsumerType or ProviderType
+ *   <li>If a package is exported, the classes must be marked with either ConsumerType or ProviderType
  * </ul>
  */
 public class ConsumerProviderTypeCheck implements Check {
 
     @Override
     public String getName() {
-        return "typecheck";
+        return "exportannotation";
     }
 
     private boolean include(final File f) {

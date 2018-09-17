@@ -150,59 +150,69 @@ public class CheckMojo extends AbstractMojo {
 
                 final Class<?>[] checks = new Class<?>[] {ImportExportCheck.class, SCRCheck.class, ConsumerProviderTypeCheck.class};
                 for(final Class<?> c : checks) {
+                    // instantiate
                     final Check check = (Check)c.newInstance();
-                    check.check(new CheckContext() {
 
-                        private final Map<String, String> conf;
-                        {
-                            if ( configuration != null ) {
-                                final Xpp3Dom cfg = configuration.getChild(check.getName());
-                                if ( cfg != null ) {
-                                    final Map<String, String> map = new HashMap<>();
-                                    for(final Xpp3Dom child : cfg.getChildren()) {
-                                        map.put(child.getName(), child.getValue());
-                                    }
-                                    conf = map;
-                                } else {
-                                    conf = Collections.emptyMap();
-                                }
-                            } else {
-                                conf = Collections.emptyMap();
+                    // extract configuration
+                    final Map<String, String> config;
+                    if ( configuration != null ) {
+                        final Xpp3Dom cfg = configuration.getChild(check.getName());
+                        if ( cfg != null ) {
+                            final Map<String, String> map = new HashMap<>();
+                            for(final Xpp3Dom child : cfg.getChildren()) {
+                                map.put(child.getName(), child.getValue());
                             }
-                            getLog().debug("Configuration for " + check.getName() + " : " + conf);
+                            config = map;
+                        } else {
+                            config = Collections.emptyMap();
                         }
+                    } else {
+                        config = Collections.emptyMap();
+                    }
+                    getLog().debug("Configuration for " + check.getName() + " : " + config);
 
-                        @Override
-                        public File getRootDir() {
-                            return dir;
-                        }
+                    final String skip = config.get("skip");
+                    if ( !Boolean.valueOf(skip) ) {
+                        getLog().debug("Executing " + check.getName() + "...");
+                        check.check(new CheckContext() {
 
-                        @Override
-                        public Manifest getManifest() {
-                            return mf;
-                        }
+                            private final Map<String, String> conf = config;
 
-                        @Override
-                        public Map<String, String> getConfiguration() {
-                            return conf;
-                        }
+                            @Override
+                            public File getRootDir() {
+                                return dir;
+                            }
 
-                        @Override
-                        public Log getLog() {
-                            return CheckMojo.this.getLog();
-                        }
+                            @Override
+                            public Manifest getManifest() {
+                                return mf;
+                            }
 
-                        @Override
-                        public void reportWarning(String message) {
-                            warnings.add(message);
-                        }
+                            @Override
+                            public Map<String, String> getConfiguration() {
+                                return conf;
+                            }
 
-                        @Override
-                        public void reportError(String message) {
-                            errors.add(message);
-                        }
+                            @Override
+                            public Log getLog() {
+                                return CheckMojo.this.getLog();
+                            }
 
-                    });
+                            @Override
+                            public void reportWarning(String message) {
+                                warnings.add(message);
+                            }
+
+                            @Override
+                            public void reportError(String message) {
+                                errors.add(message);
+                            }
+
+                        });
+                        getLog().debug("Finished " + check.getName() + "...");
+                    } else {
+                        getLog().debug("Skipping executing " + check.getName());
+                    }
                 }
             } catch (final InstantiationException | IllegalAccessException e) {
                 throw new MojoExecutionException(e.getMessage(), e);
