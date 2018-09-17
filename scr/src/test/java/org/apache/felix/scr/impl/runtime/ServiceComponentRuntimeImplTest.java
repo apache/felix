@@ -21,8 +21,6 @@ package org.apache.felix.scr.impl.runtime;
 import java.lang.reflect.Method;
 import java.util.Arrays;
 
-import junit.framework.TestCase;
-
 import org.mockito.Mockito;
 import org.osgi.dto.DTO;
 import org.osgi.framework.Bundle;
@@ -31,48 +29,11 @@ import org.osgi.framework.ServiceReference;
 import org.osgi.framework.dto.BundleDTO;
 import org.osgi.framework.dto.ServiceReferenceDTO;
 
+import junit.framework.TestCase;
+
 public class ServiceComponentRuntimeImplTest extends TestCase
 {
-
-    /* in case behavior is supposed to actually involve copying
-    public void testCopy()
-    {
-        ServiceComponentRuntimeImpl scr = new ServiceComponentRuntimeImpl(null, null);
-        assertEquals(1, scr.convert(1));
-        assertEquals("foo", scr.convert("foo"));
-        equalCopy(new int[] {1, 2, 3}, scr);
-        equalCopy(new byte[] {1, 2, 3}, scr);
-        equalCopy(new String[] {"1", "2", "3"}, scr);
-        equalCopy(new Long[] {1l, 2l, 3l}, scr);
-    }
-
-    private void equalCopy(Object o1, ServiceComponentRuntimeImpl scr)
-    {
-        Object o2 = scr.convert(o1);
-        assertEquals("expected same length", Array.getLength(o1), Array.getLength(o2));
-        assertEquals("expceted same component type", o1.getClass().getComponentType(), o2.getClass().getComponentType());
-        for (int i = 0; i < Array.getLength(o1); i++)
-        {
-            assertEquals("expected same value at " + i, Array.get(o1, i), Array.get(o2, i));
-        }
-
-    }
-    */
-
-    public void testNullBundleServiceReferenceDTO() throws Exception
-    {
-        ServiceReference<?> sr = Mockito.mock(ServiceReference.class);
-        Mockito.when(sr.getProperty(Constants.SERVICE_ID)).thenReturn(327L);
-        Mockito.when(sr.getPropertyKeys()).thenReturn(new String[] {});
-
-        ServiceComponentRuntimeImpl scr = new ServiceComponentRuntimeImpl(null, null);
-        Method m = scr.getClass().getDeclaredMethod("serviceReferenceToDTO", ServiceReference.class);
-        m.setAccessible(true);
-        ServiceReferenceDTO dto = (ServiceReferenceDTO) m.invoke(scr, sr);
-        assertEquals(-1, dto.bundle);
-    }
-
-    public void testNullBundleServiceReferenceDTO2() throws Exception
+    public void testBundleServiceReferenceDTO() throws Exception
     {
         Bundle b = Mockito.mock(Bundle.class);
         Mockito.when(b.getBundleId()).thenReturn(42L);
@@ -82,11 +43,21 @@ public class ServiceComponentRuntimeImplTest extends TestCase
         Mockito.when(sr.getPropertyKeys()).thenReturn(new String[] {});
         Mockito.when(sr.getBundle()).thenReturn(b);
 
+        ServiceReferenceDTO one = new ServiceReferenceDTO();
+        one.id = 5;
+        ServiceReferenceDTO two = new ServiceReferenceDTO();
+        two.id = 825;
+        ServiceReferenceDTO three = new ServiceReferenceDTO();
+        three.id = 19;
+        ServiceReferenceDTO real = new ServiceReferenceDTO();
+        real.id = 327;
+
+        Mockito.when(b.adapt(ServiceReferenceDTO[].class)).thenReturn(new ServiceReferenceDTO[] {one, two, real, three});
         ServiceComponentRuntimeImpl scr = new ServiceComponentRuntimeImpl(null, null);
         Method m = scr.getClass().getDeclaredMethod("serviceReferenceToDTO", ServiceReference.class);
         m.setAccessible(true);
         ServiceReferenceDTO dto = (ServiceReferenceDTO) m.invoke(scr, sr);
-        assertEquals(42, dto.bundle);
+        assertEquals(real, dto);
     }
 
     public void testConvert()
