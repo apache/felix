@@ -30,13 +30,13 @@
     <description>This is an implementation of the OSGi Http Service and the OSGi Http Whiteboard Specification</description>
 
     <artifactId>org.apache.felix.http.jetty</artifactId>
-    <version>4.0.5-SNAPSHOT</version>
+    <version>4.0.6</version>
     <packaging>bundle</packaging>
     
     <scm>
-        <connection>scm:svn:http://svn.apache.org/repos/asf/felix/trunk/http/jetty</connection>
-        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/felix/trunk/http/jetty</developerConnection>
-        <url>http://svn.apache.org/viewvc/felix/trunk/http/jetty/</url>
+        <connection>scm:svn:http://svn.apache.org/repos/asf/felix/releases/org.apache.felix.http.jetty-4.0.6</connection>
+        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/felix/releases/org.apache.felix.http.jetty-4.0.6</developerConnection>
+        <url>http://svn.apache.org/viewvc/felix/releases/org.apache.felix.http.jetty-4.0.6</url>
     </scm>
     
     <properties>
