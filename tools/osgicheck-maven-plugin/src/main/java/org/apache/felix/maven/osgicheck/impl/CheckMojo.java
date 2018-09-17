@@ -49,6 +49,11 @@ import org.codehaus.plexus.archiver.manager.NoSuchArchiverException;
 import org.osgi.framework.Constants;
 
 
+/**
+ * This plugin checks various aspects of your OSGi project like proper use
+ * of versioning, best practices use of annotations for Declarative Services
+ * and others.
+ */
 @Mojo(
         name = "check",
         defaultPhase = LifecyclePhase.VERIFY,
@@ -64,13 +69,17 @@ public class CheckMojo extends AbstractMojo {
     }
 
     /**
-     * The mode
+     * The mode to be used by each check. The value can be {@code OFF} to
+     * disable this plugin, {@code DEFAULT} to print warnings and fail on
+     * errors, {@code STRICT} to print warnings and fail on both errors and
+     * warnings, or {@code ERRORS_ONLY} to only print errors and fail on errors.
      */
     @Parameter(defaultValue = "DEFAULT")
     protected Mode mode;
 
     /**
-     * The configuration for the checks - currently not used
+     * The configuration for the checks. This can be used to specify the mode
+     * per plugin.
      * The configurations can be specified as a CDATA section with an XML
      * tree for each check. The root name of the tree is the name of the
      * check.
@@ -133,8 +142,8 @@ public class CheckMojo extends AbstractMojo {
             pomCfg = Xpp3DomBuilder.build(new StringReader("<c>" + config + "</c>"));
         }
         final Xpp3Dom configuration = pomCfg;
-        final List<String> warnings = new ArrayList<>();
-        final List<String> errors = new ArrayList<>();
+
+        final List<CheckResult> results = new ArrayList<>();
 
         try {
             final Manifest mf = ManifestUtil.getManifest(bundle);
@@ -171,9 +180,15 @@ public class CheckMojo extends AbstractMojo {
                     }
                     getLog().debug("Configuration for " + check.getName() + " : " + config);
 
-                    final String skip = config.get("skip");
-                    if ( !Boolean.valueOf(skip) ) {
+                    final CheckResult result = new CheckResult();
+                    result.mode = this.mode;
+                    if ( config.get("mode") != null ) {
+                        result.mode = Mode.valueOf(config.get("mode"));
+                    }
+
+                    if ( result.mode != Mode.OFF ) {
                         getLog().debug("Executing " + check.getName() + "...");
+
                         check.check(new CheckContext() {
 
                             private final Map<String, String> conf = config;
@@ -200,15 +215,17 @@ public class CheckMojo extends AbstractMojo {
 
                             @Override
                             public void reportWarning(String message) {
-                                warnings.add(message);
+                                result.warnings.add(message);
                             }
 
                             @Override
                             public void reportError(String message) {
-                                errors.add(message);
+                                result.errors.add(message);
                             }
 
                         });
+                        results.add(result);
+
                         getLog().debug("Finished " + check.getName() + "...");
                     } else {
                         getLog().debug("Skipping executing " + check.getName());
@@ -226,20 +243,31 @@ public class CheckMojo extends AbstractMojo {
             throw new MojoExecutionException(ioe.getMessage(), ioe);
         }
 
-        if ( mode != Mode.ERRORS_ONLY ) {
-            for(final String msg : warnings) {
-                getLog().warn(msg);
+        // print warnings from all checks were enabled
+        for(final CheckResult result : results) {
+            if ( result.mode != Mode.ERRORS_ONLY ) {
+                for(final String msg : result.warnings) {
+                    getLog().warn(msg);
+                }
             }
         }
-        for(final String msg : errors) {
-            getLog().error(msg);
+
+        // print all errors
+        boolean hasErrors = false;
+        for(final CheckResult result : results) {
+            for(final String msg : result.errors) {
+                hasErrors = true;
+                getLog().error(msg);
+            }
         }
 
-        if ( !errors.isEmpty() ) {
+        if ( hasErrors ) {
             throw new MojoExecutionException("Check detected errors. See log output for error messages.");
         }
-        if ( mode == Mode.STRICT && !warnings.isEmpty() ) {
-            throw new MojoExecutionException("Check detected warnings and strict mode is enabled. See log output for warning messages.");
+        for(final CheckResult result : results) {
+            if ( result.mode == Mode.STRICT && !result.warnings.isEmpty() ) {
+                throw new MojoExecutionException("Check detected warnings and strict mode is enabled. See log output for warning messages.");
+            }
         }
     }
 
@@ -260,5 +288,13 @@ public class CheckMojo extends AbstractMojo {
         zipUnarchiver.extract();
 
         return rootDir;
+    }
+
+    public static class CheckResult {
+
+        public Mode mode;
+
+        public final List<String> warnings = new ArrayList<>();
+        public final List<String> errors = new ArrayList<>();
     }
 }
