@@ -79,9 +79,16 @@ public class ConfiguratorTest {
     }
 
     private Bundle setupBundle(final long id) throws Exception {
+        return setupBundle(id, String.valueOf(id));
+    }
+
+    private long lastModified = 1;
+
+    private Bundle setupBundle(final long id, final String jsonName) throws Exception {
         final Bundle b = mock(Bundle.class);
         when(b.getBundleId()).thenReturn(id);
-        when(b.getLastModified()).thenReturn(5L);
+        when(b.getLastModified()).thenReturn(lastModified);
+        lastModified++;
         when(b.getState()).thenReturn(Bundle.ACTIVE);
         final BundleWiring wiring = mock(BundleWiring.class);
         when(b.adapt(BundleWiring.class)).thenReturn(wiring);
@@ -93,7 +100,7 @@ public class ConfiguratorTest {
         when(wiring.getBundle()).thenReturn(bundle);
         when(wiring.getRequiredWires(Util.NS_OSGI_EXTENDER)).thenReturn(Collections.singletonList(wire));
         final Vector<URL> urls = new Vector<>();
-        urls.add(this.getClass().getResource("/bundles/" + id + ".json"));
+        urls.add(this.getClass().getResource("/bundles/" + jsonName + ".json"));
         when(b.findEntries("OSGI-INF/configurator", "*.json", false)).thenReturn(urls.elements());
 
         final BundleContext bContext = mock(BundleContext.class);
@@ -132,6 +139,39 @@ public class ConfiguratorTest {
 
         verify(c1).delete();
         verify(c2).delete();
+    }
+
+    @Test public void testSimpleAddUpdate() throws Exception {
+        final Bundle bV1 = setupBundle(2);
+        final Bundle bV2 = setupBundle(2, "2a");
+
+        Configuration c1 = mock(Configuration.class);
+        Configuration c2 = mock(Configuration.class);
+        when(configurationAdmin.getConfiguration("a", "?")).thenReturn(c1);
+        when(configurationAdmin.getConfiguration("b", "?")).thenReturn(c2);
+
+        when(c1.getChangeCount()).thenReturn(1L);
+        when(c2.getChangeCount()).thenReturn(1L);
+        configurator.processAddBundle(bV1);
+
+        configurator.process();
+
+        when(configurationAdmin.listConfigurations("(" + Constants.SERVICE_PID + "=a)")).thenReturn(new Configuration[] {c1});
+        when(configurationAdmin.listConfigurations("(" + Constants.SERVICE_PID + "=b)")).thenReturn(new Configuration[] {c2});
+
+        configurator.processAddBundle(bV2);
+        configurator.process();
+
+        final Dictionary<String, Object> props1 = new Hashtable<>();
+        props1.put("foo", "bar2");
+        final Dictionary<String, Object> props2 = new Hashtable<>();
+        props2.put("foo", "bar3");
+
+        InOrder inorder = inOrder(c1);
+        inorder.verify(c1).updateIfDifferent(props1);
+        inorder.verify(c1).updateIfDifferent(props2);
+        inorder.verify(c1).getChangeCount();
+        inorder.verifyNoMoreInteractions();
     }
 
     @Test public void testSimpleRankingRemove() throws Exception {
