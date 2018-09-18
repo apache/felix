@@ -64,8 +64,10 @@ public class Activator implements BundleActivator
 
     /**
      * The name of the framework context property defining the persistence
-     * manager to be used. If not specified, the old behaviour is used
-     * and all available pms are used
+     * manager to be used. If this property is not set or empty, the built-in
+     * persistence manager (named file) is used. If it is specified it refers
+     * to the name property of a persistence manager and that persistence manager
+     * needs to be registered.
      *
      * @see #start(BundleContext)
      */
