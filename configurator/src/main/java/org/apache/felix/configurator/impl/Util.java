@@ -91,9 +91,9 @@ public class Util {
 
     public static String getSHA256(final String value) {
         try {
-            StringBuilder builder = new StringBuilder();
-            MessageDigest md = MessageDigest.getInstance("SHA-256");
-            for (byte b : md.digest(value.getBytes("UTF-8")) ) {
+            final StringBuilder builder = new StringBuilder();
+            final MessageDigest md = MessageDigest.getInstance("SHA-256");
+            for (final byte b : md.digest(value.getBytes("UTF-8")) ) {
                 builder.append(String.format("%02x", b));
             }
             return builder.toString();

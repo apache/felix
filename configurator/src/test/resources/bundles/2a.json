@@ -1,8 +1,13 @@
 {
     "a" : {
+              ":configurator:policy" : "force",
               "foo" : "bar3"
           },
     "b" : {
-              "x" : "y2"
+              "x" : "y3"
+          },
+    "c" : {
+              "c" : "2"
           }
+          
 }
