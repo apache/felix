@@ -33,12 +33,12 @@
     <description>
         Implementation of the OSGi Configurator Service Specification 1.0
     </description>
-    <version>1.0.5-SNAPSHOT</version>
+    <version>1.0.6</version>
 
     <scm>
-        <connection>scm:svn:http://svn.apache.org/repos/asf/felix/trunk/configurator</connection>
-        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/felix/trunk/configurator</developerConnection>
-        <url>http://svn.apache.org/viewvc/felix/trunk/configurator</url>
+        <connection>scm:svn:http://svn.apache.org/repos/asf/felix/releases/org.apache.felix.configurator-1.0.6</connection>
+        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/felix/releases/org.apache.felix.configurator-1.0.6</developerConnection>
+        <url>http://svn.apache.org/viewvc/felix/releases/org.apache.felix.configurator-1.0.6</url>
     </scm>
 
     <build>
