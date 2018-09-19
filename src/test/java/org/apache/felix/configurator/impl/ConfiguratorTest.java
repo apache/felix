@@ -145,32 +145,57 @@ public class ConfiguratorTest {
         final Bundle bV1 = setupBundle(2);
         final Bundle bV2 = setupBundle(2, "2a");
 
+        // initial - no configuration
         Configuration c1 = mock(Configuration.class);
         Configuration c2 = mock(Configuration.class);
-        when(configurationAdmin.getConfiguration("a", "?")).thenReturn(c1);
-        when(configurationAdmin.getConfiguration("b", "?")).thenReturn(c2);
-
+        Configuration c3 = mock(Configuration.class);
         when(c1.getChangeCount()).thenReturn(1L);
         when(c2.getChangeCount()).thenReturn(1L);
-        configurator.processAddBundle(bV1);
+        when(c3.getChangeCount()).thenReturn(1L);
+        when(configurationAdmin.getConfiguration("a", "?")).thenReturn(c1);
+        when(configurationAdmin.getConfiguration("b", "?")).thenReturn(c2);
+        when(configurationAdmin.getConfiguration("c", "?")).thenReturn(c3);
 
+        configurator.processAddBundle(bV1);
         configurator.process();
 
-        when(configurationAdmin.listConfigurations("(" + Constants.SERVICE_PID + "=a)")).thenReturn(new Configuration[] {c1});
-        when(configurationAdmin.listConfigurations("(" + Constants.SERVICE_PID + "=b)")).thenReturn(new Configuration[] {c2});
+        final Dictionary<String, Object> props1a = new Hashtable<>();
+        props1a.put("foo", "bar2");
+        final Dictionary<String, Object> props1b = new Hashtable<>();
+        props1b.put("x", "y2");
+        final Dictionary<String, Object> props1c = new Hashtable<>();
+        props1c.put("c", "1");
+
+        InOrder inorder = inOrder(c1,c2,c3);
+        inorder.verify(c1).updateIfDifferent(props1a);
+        inorder.verify(c1).getChangeCount();
+        inorder.verify(c2).updateIfDifferent(props1b);
+        inorder.verify(c2).getChangeCount();
+        inorder.verify(c3).updateIfDifferent(props1c);
+        inorder.verify(c3).getChangeCount();
+        inorder.verifyNoMoreInteractions();
+
+        // c1 and c2 are changed manually -> increase change count, c3 is not changed manually
+        when(c1.getChangeCount()).thenReturn(2L);
+        when(c2.getChangeCount()).thenReturn(2L);
+        when(configurationAdmin.listConfigurations("(service.pid=a)")).thenReturn(new Configuration[] {c1});
+        when(configurationAdmin.listConfigurations("(service.pid=b)")).thenReturn(new Configuration[] {c2});
+        when(configurationAdmin.listConfigurations("(service.pid=c)")).thenReturn(new Configuration[] {c3});
 
         configurator.processAddBundle(bV2);
         configurator.process();
 
-        final Dictionary<String, Object> props1 = new Hashtable<>();
-        props1.put("foo", "bar2");
-        final Dictionary<String, Object> props2 = new Hashtable<>();
-        props2.put("foo", "bar3");
+        final Dictionary<String, Object> props2a = new Hashtable<>();
+        props2a.put("foo", "bar3");
+        final Dictionary<String, Object> props2c = new Hashtable<>();
+        props2c.put("c", "2");
 
-        InOrder inorder = inOrder(c1);
-        inorder.verify(c1).updateIfDifferent(props1);
-        inorder.verify(c1).updateIfDifferent(props2);
+        inorder = inOrder(c1, c2, c3);
+        inorder.verify(c1).updateIfDifferent(props2a);
         inorder.verify(c1).getChangeCount();
+        inorder.verify(c2).getChangeCount();
+        inorder.verify(c3).updateIfDifferent(props2c);
+        inorder.verify(c3).getChangeCount();
         inorder.verifyNoMoreInteractions();
     }
 
@@ -180,16 +205,20 @@ public class ConfiguratorTest {
 
         Configuration c1 = mock(Configuration.class);
         Configuration c2 = mock(Configuration.class);
+        Configuration c3 = mock(Configuration.class);
         when(configurationAdmin.getConfiguration("a", "?")).thenReturn(c1);
         when(configurationAdmin.getConfiguration("b", "?")).thenReturn(c2);
+        when(configurationAdmin.getConfiguration("c", "?")).thenReturn(c3);
 
         when(c1.getChangeCount()).thenReturn(1L);
         when(c2.getChangeCount()).thenReturn(1L);
+        when(c3.getChangeCount()).thenReturn(1L);
         configurator.processAddBundle(b2);
         configurator.process();
 
         when(configurationAdmin.listConfigurations("(" + Constants.SERVICE_PID + "=a)")).thenReturn(new Configuration[] {c1});
         when(configurationAdmin.listConfigurations("(" + Constants.SERVICE_PID + "=b)")).thenReturn(new Configuration[] {c2});
+        when(configurationAdmin.listConfigurations("(" + Constants.SERVICE_PID + "=c)")).thenReturn(new Configuration[] {c3});
 
         final Dictionary<String, Object> props1 = new Hashtable<>();
         props1.put("foo", "bar2");

@@ -112,6 +112,7 @@ public class ConfigList implements Serializable, Iterable<Config> {
     public void addAll(final ConfigList configs) {
         for(final Config cfg : configs) {
             // search if we already have this configuration
+
             for(final Config current : this.configurations) {
                 if ( current.getBundleId() == cfg.getBundleId()
                   && current.getProperties().equals(cfg.getProperties()) ) {
@@ -122,6 +123,7 @@ public class ConfigList implements Serializable, Iterable<Config> {
                     break;
                 }
             }
+
             this.hasChanges = true;
             this.configurations.add(cfg);
         }
