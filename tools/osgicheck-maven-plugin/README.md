@@ -18,14 +18,12 @@ Add this plugin to your plugins section to enable checking your project:
                 </goals>
                 <configuration>
                      <mode>[DEFAULT|STRICT|ERRORS_ONLY|OFF]</mode>
-                     <!-- config needs to be specified as a cdata section -->
                      <config>
-                        <![CDATA[
-                            <name_of_the_check_task>
-                               <skip>[false|true]</skip>
-                               <!-- task specific configuration -->
-                            </name_of_the_check_task>
-                        ]]>
+                        <check>
+                            <name>[name_of_the_check]</name>
+                            <mode>[DEFAULT|STRICT|ERRORS_ONLY|OFF]</mode>
+                            <!-- Additional check configuration -->
+                        </check>
                      </config>
                 </configuration>
             </execution>

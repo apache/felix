@@ -18,13 +18,14 @@ package org.apache.felix.maven.osgicheck.impl;
 
 import java.io.File;
 import java.io.IOException;
-import java.io.StringReader;
 import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.jar.Manifest;
 
 import org.apache.commons.io.FileUtils;
@@ -41,8 +42,6 @@ import org.apache.maven.plugins.annotations.LifecyclePhase;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.project.MavenProject;
-import org.apache.maven.shared.utils.xml.Xpp3Dom;
-import org.apache.maven.shared.utils.xml.Xpp3DomBuilder;
 import org.codehaus.plexus.archiver.UnArchiver;
 import org.codehaus.plexus.archiver.manager.ArchiverManager;
 import org.codehaus.plexus.archiver.manager.NoSuchArchiverException;
@@ -80,12 +79,12 @@ public class CheckMojo extends AbstractMojo {
     /**
      * The configuration for the checks. This can be used to specify the mode
      * per plugin.
-     * The configurations can be specified as a CDATA section with an XML
-     * tree for each check. The root name of the tree is the name of the
-     * check.
+     * This is a list of maps. Each map is a configuration for a check.
+     * The name of the check needs to be provided through the "name" property.
+     * The mode can be changed with the "mode" property for just this check.
      */
     @Parameter
-    protected String config;
+    protected Map<String, String>[] config;
 
     /**
      * The Maven project
@@ -137,11 +136,34 @@ public class CheckMojo extends AbstractMojo {
         getLog().debug("Checking " + bundle);
 
         // configuration
-        Xpp3Dom pomCfg = null;
-        if ( config != null && !config.trim().isEmpty() ) {
-            pomCfg = Xpp3DomBuilder.build(new StringReader("<c>" + config + "</c>"));
+        final Map<String, Map<String,String>> configurations = new HashMap<>();
+        final Set<String> configNames = new HashSet<>();
+        if ( config != null ) {
+            for(final Map<String, String> c : config) {
+                final String name = c.remove("name");
+                if ( name == null ) {
+                    throw new MojoExecutionException("Name needs to be specified for a check configuration.");
+                }
+                configNames.add(name);
+                configurations.put(name, c);
+            }
         }
-        final Xpp3Dom configuration = pomCfg;
+
+        final Class<?>[] checkClasses = new Class<?>[] {ImportExportCheck.class, SCRCheck.class, ConsumerProviderTypeCheck.class};
+        final Check[] checks = new Check[checkClasses.length];
+        int i = 0;
+        for(final Class<?> c : checkClasses) {
+            try {
+                checks[i] = (Check)c.newInstance();
+                configNames.remove(checks[i].getName());
+                i++;
+            } catch (final InstantiationException | IllegalAccessException e) {
+                throw new MojoExecutionException(e.getMessage(), e);
+            }
+        }
+        if ( !configNames.isEmpty() ) {
+            throw new MojoExecutionException("Configurations for unknown checks: " + configNames);
+        }
 
         final List<CheckResult> results = new ArrayList<>();
 
@@ -157,33 +179,21 @@ public class CheckMojo extends AbstractMojo {
 
                 final File dir = rootDir;
 
-                final Class<?>[] checks = new Class<?>[] {ImportExportCheck.class, SCRCheck.class, ConsumerProviderTypeCheck.class};
-                for(final Class<?> c : checks) {
-                    // instantiate
-                    final Check check = (Check)c.newInstance();
+                for(final Check check : checks) {
 
                     // extract configuration
-                    final Map<String, String> config;
-                    if ( configuration != null ) {
-                        final Xpp3Dom cfg = configuration.getChild(check.getName());
-                        if ( cfg != null ) {
-                            final Map<String, String> map = new HashMap<>();
-                            for(final Xpp3Dom child : cfg.getChildren()) {
-                                map.put(child.getName(), child.getValue());
-                            }
-                            config = map;
-                        } else {
-                            config = Collections.emptyMap();
-                        }
-                    } else {
-                        config = Collections.emptyMap();
+                    Map<String, String> checkConfig = configurations.get(check.getName());
+                    if ( checkConfig == null ) {
+                        checkConfig = Collections.emptyMap();
                     }
-                    getLog().debug("Configuration for " + check.getName() + " : " + config);
+                    final Map<String, String> cc = checkConfig;
+
+                    getLog().debug("Configuration for " + check.getName() + " : " + cc);
 
                     final CheckResult result = new CheckResult();
                     result.mode = this.mode;
-                    if ( config.get("mode") != null ) {
-                        result.mode = Mode.valueOf(config.get("mode"));
+                    if ( cc.get("mode") != null ) {
+                        result.mode = Mode.valueOf(cc.remove("mode"));
                     }
 
                     if ( result.mode != Mode.OFF ) {
@@ -191,7 +201,7 @@ public class CheckMojo extends AbstractMojo {
 
                         check.check(new CheckContext() {
 
-                            private final Map<String, String> conf = config;
+                            private final Map<String, String> conf = cc;
 
                             @Override
                             public File getRootDir() {
@@ -231,8 +241,6 @@ public class CheckMojo extends AbstractMojo {
                         getLog().debug("Skipping executing " + check.getName());
                     }
                 }
-            } catch (final InstantiationException | IllegalAccessException e) {
-                throw new MojoExecutionException(e.getMessage(), e);
             } finally {
                 if ( rootDir != null ) {
                     FileUtils.deleteDirectory(rootDir);
