@@ -32,7 +32,7 @@
  *
  * @author $Id$
  */
-@Version("1.0.1")
+@Version("1.0.2")
 package org.osgi.util.converter;
 
 import org.osgi.annotation.versioning.Version;
