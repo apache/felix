@@ -23,7 +23,7 @@
     </parent>
     
     <artifactId>osgicheck-maven-plugin</artifactId>
-    <version>0.1.0-SNAPSHOT</version>
+    <version>0.1.0</version>
     <packaging>maven-plugin</packaging>
 
     <name>Apache Felix OSGi Check Maven Plugin</name>
@@ -37,9 +37,9 @@
     </properties>
 
     <scm>
-        <connection>scm:svn:https://svn.apache.org/repos/asf/felix/trunk/tools/osgicheck-maven-plugin</connection>
-        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/felix/trunk/tools/osgicheck-maven-plugin</developerConnection>
-        <url>scm:svn:https://svn.apache.org/repos/asf/felix/trunk/tools/osgicheck-maven-plugin</url>
+        <connection>scm:svn:https://svn.apache.org/repos/asf/felix/releases/osgicheck-maven-plugin-0.1.0</connection>
+        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/felix/releases/osgicheck-maven-plugin-0.1.0</developerConnection>
+        <url>scm:svn:https://svn.apache.org/repos/asf/felix/releases/osgicheck-maven-plugin-0.1.0</url>
     </scm>
 
     <prerequisites>
