@@ -1,7 +1,14 @@
+Changes in 1.2.2
+----------------
+** Bug
+    * [FELIX-5963] - Metatype XML Namespace 1.4 not supported
+
+
 Changes in 1.2.0
 ----------------
 ** Improvement
     * [FELIX-5779] - Update metatype to R7 (version 1.4)
+
 
 Changes from 1.1.4 to 1.1.6
 ---------------------------

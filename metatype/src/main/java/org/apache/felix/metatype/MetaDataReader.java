@@ -77,6 +77,11 @@ public class MetaDataReader
      */
     static final String NAMESPACE_1_3 = "http://www.osgi.org/xmlns/metatype/v1.3.0";
 
+    /**
+     * The XML Namespace for Metatype 1.3 descriptors.
+     */
+    static final String NAMESPACE_1_4 = "http://www.osgi.org/xmlns/metatype/v1.4.0";
+
     /** The XML parser used to read the XML documents */
     private KXmlParser parser = new KXmlParser();
     private String namespace = NAMESPACE_1_0;
@@ -84,12 +89,12 @@ public class MetaDataReader
     private URL documentURL;
 
     /** Sets of attributes belonging to XML elements. */
-    private static final Set<String> AD_ATTRIBUTES = new HashSet<String>(Arrays.asList(new String[] { "name", "description", "id", "type", "cardinality", "min", "max", "default", "required" }));
-    private static final Set<String> ATTRIBUTE_ATTRIBUTES = new HashSet<String>(Arrays.asList(new String[] { "adref", "content" }));
-    private static final Set<String> DESIGNATE_ATTRIBUTES = new HashSet<String>(Arrays.asList(new String[] { "pid", "factoryPid", "bundle", "optional", "merge" }));
-    private static final Set<String> DESIGNATEOBJECT_ATTRIBUTES = new HashSet<String>(Arrays.asList(new String[] { "ocdref" }));
-    private static final Set<String> METADATA_ATTRIBUTES = new HashSet<String>(Arrays.asList(new String[] { "localization" }));
-    private static final Set<String> OCD_ATTRIBUTES = new HashSet<String>(Arrays.asList(new String[] { "name", "description", "id" }));
+    private static final Set<String> AD_ATTRIBUTES = new HashSet<>(Arrays.asList(new String[] { "name", "description", "id", "type", "cardinality", "min", "max", "default", "required" }));
+    private static final Set<String> ATTRIBUTE_ATTRIBUTES = new HashSet<>(Arrays.asList(new String[] { "adref", "content" }));
+    private static final Set<String> DESIGNATE_ATTRIBUTES = new HashSet<>(Arrays.asList(new String[] { "pid", "factoryPid", "bundle", "optional", "merge" }));
+    private static final Set<String> DESIGNATEOBJECT_ATTRIBUTES = new HashSet<>(Arrays.asList(new String[] { "ocdref" }));
+    private static final Set<String> METADATA_ATTRIBUTES = new HashSet<>(Arrays.asList(new String[] { "localization" }));
+    private static final Set<String> OCD_ATTRIBUTES = new HashSet<>(Arrays.asList(new String[] { "name", "description", "id" }));
 
     /**
      * Parses the XML document provided by the <code>url</code>. The XML document
@@ -204,7 +209,11 @@ public class MetaDataReader
         final String namespace = this.parser.getNamespace();
         if (namespace != null && !"".equals(namespace.trim()))
         {
-            if (!NAMESPACE_1_0.equals(namespace) && !NAMESPACE_1_1.equals(namespace) && !NAMESPACE_1_2.equals(namespace) && !NAMESPACE_1_3.equals(namespace))
+            if (!NAMESPACE_1_0.equals(namespace)
+                && !NAMESPACE_1_1.equals(namespace)
+                && !NAMESPACE_1_2.equals(namespace)
+                && !NAMESPACE_1_3.equals(namespace)
+                && !NAMESPACE_1_4.equals(namespace))
             {
                 throw new IOException("Unsupported Namespace: '" + namespace + "'");
             }
@@ -411,7 +420,7 @@ public class MetaDataReader
 
         readOptionalAttributes(ad, AD_ATTRIBUTES);
 
-        Map<String, String> options = new LinkedHashMap<String, String>();
+        Map<String, String> options = new LinkedHashMap<>();
         int eventType = this.parser.next();
         while (eventType != XmlPullParser.END_DOCUMENT)
         {
@@ -597,6 +606,10 @@ public class MetaDataReader
         else if (NAMESPACE_1_3.equals(this.namespace))
         {
             return 13;
+        }
+        else if (NAMESPACE_1_4.equals(this.namespace))
+        {
+            return 14;
         }
         // Undetermined...
         return Integer.MAX_VALUE;
