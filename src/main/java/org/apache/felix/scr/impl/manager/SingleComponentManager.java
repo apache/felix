@@ -137,14 +137,21 @@ public class SingleComponentManager<S> extends AbstractComponentManager<S> imple
            getLogger().log( LogService.LOG_DEBUG, "Set implementation object for component", null );
 
             //notify that component was successfully created so any optional circular dependencies can be retried
-            m_container.getActivator().missingServicePresent( getServiceReference() );
+           try
+           {
+                m_container.getActivator().missingServicePresent( getServiceReference() );
+           }
+           catch ( final IllegalStateException ise )
+           {
+               return false;
+           }
         }
         return true;
     }
 
 
     @Override
-    protected void deleteComponent( int reason )
+    protected void deleteComponent( final int reason )
     {
         if ( !isStateLocked() )
         {
@@ -356,7 +363,27 @@ public class SingleComponentManager<S> extends AbstractComponentManager<S> imple
             componentContext.setImplementationAccessible( true );
             //call to leaveCreate must be done here since the change in service properties may cause a getService,
             //so the threadLocal must be cleared first.
-            m_container.getActivator().leaveCreate(getServiceReference());
+            try
+            {
+                m_container.getActivator().leaveCreate(getServiceReference());
+            }
+            catch ( final IllegalStateException ise)
+            {
+                // already unregistered again
+                this.setFailureReason(ise);
+
+                for ( DependencyManager<S, ?> md: getReversedDependencyManagers() )
+                {
+                    md.close( componentContext, componentContext.getEdgeInfo( md ) );
+                }
+
+                if ( implementationObject != null )
+                {
+                    // make sure the implementation object is not available
+                    setter.resetImplementationObject( implementationObject );
+                }
+                return null;
+            }
 
             //this may cause a getService as properties now match a filter.
             setServiceProperties( result, null );
@@ -840,24 +867,35 @@ public class SingleComponentManager<S> extends AbstractComponentManager<S> imple
     }
 
     @Override
-    public S getService( Bundle bundle, ServiceRegistration<S> serviceRegistration )
+    public S getService( final Bundle bundle, final ServiceRegistration<S> serviceRegistration )
     {
-        if ( m_container.getActivator().enterCreate( serviceRegistration.getReference() ) )
+        ServiceReference<S> ref = null;
+        try
         {
+            ref = serviceRegistration.getReference();
+        }
+        catch ( final IllegalStateException ise)
+        {
+            // sanity test for service already unregistered
             return null;
         }
-        obtainStateLock();
+        if ( m_container.getActivator().enterCreate( ref ) )
+        {
+            // circular dependency
+            return null;
+        }
         try
         {
-            m_useCount.incrementAndGet();
-        }
-        finally
-        {
-            releaseStateLock( );
-        }
-        boolean decrement = true;
-        try
-        {
+            obtainStateLock();
+            try
+            {
+                m_useCount.incrementAndGet();
+            }
+            finally
+            {
+                releaseStateLock( );
+            }
+            boolean decrement = true;
             try
             {
                 boolean success = getServiceInternal(serviceRegistration);
@@ -871,20 +909,19 @@ public class SingleComponentManager<S> extends AbstractComponentManager<S> imple
                 {
                     return null;
                 }
+
             }
             finally
             {
-                //This is backup.  Normally done in createComponent.
-                m_container.getActivator().leaveCreate(serviceRegistration.getReference());
+                if ( decrement )
+                {
+                    ungetService( bundle, serviceRegistration, null );
+                }
             }
-
         }
         finally
         {
-            if ( decrement )
-            {
-                ungetService( bundle, serviceRegistration, null );
-            }
+            m_container.getActivator().leaveCreate( ref );
         }
     }
 
@@ -970,7 +1007,7 @@ public class SingleComponentManager<S> extends AbstractComponentManager<S> imple
     }
 
     @Override
-    public void ungetService( Bundle bundle, ServiceRegistration<S> serviceRegistration, S o )
+    public void ungetService( final Bundle bundle, final ServiceRegistration<S> serviceRegistration, final S o )
     {
         obtainStateLock( );
         try
@@ -980,7 +1017,7 @@ public class SingleComponentManager<S> extends AbstractComponentManager<S> imple
             // be kept (FELIX-3039)
             if (  m_useCount.decrementAndGet() == 0 && !isImmediate() && !keepInstances() )
             {
-                State previousState = getState();
+                final State previousState = getState();
                 deleteComponent( ComponentConstants.DEACTIVATION_REASON_UNSPECIFIED );
                 setState(previousState, State.satisfied);
             }

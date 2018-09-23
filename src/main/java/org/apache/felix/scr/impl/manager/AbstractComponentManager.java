@@ -125,8 +125,9 @@ public abstract class AbstractComponentManager<S> implements ComponentManager<S>
 
     //true for normal spec factory instances. False for "persistent" factory instances and obsolete use of factory component with factory configurations.
     protected final boolean m_factoryInstance;
+
     // the ID of this component
-    private long m_componentId;
+    private volatile long m_componentId;
 
     private final ComponentMethods<S> m_componentMethods;
 
@@ -136,8 +137,6 @@ public abstract class AbstractComponentManager<S> implements ComponentManager<S>
     private volatile boolean m_dependencyManagersInitialized;
 
     private final AtomicInteger m_trackingCount = new AtomicInteger();
-
-    // The ServiceRegistration is now tracked in the RegistrationManager
 
     private final ReentrantLock m_stateLock;
 
@@ -151,7 +150,7 @@ public abstract class AbstractComponentManager<S> implements ComponentManager<S>
     private final AtomicReference<State> state = new AtomicReference<>(State.disabled);
 
     //service event tracking
-    private int m_floor;
+    private volatile int m_floor;
 
     private volatile int m_ceiling;
 
@@ -164,16 +163,23 @@ public abstract class AbstractComponentManager<S> implements ComponentManager<S>
     private volatile String failureReason;
 
     /**
-     * The constructor receives both the activator and the metadata
+     * The constructor receives both the container and the methods.
      *
-     * @param container
-     * @param componentMethods
+     * @param container The component container
+     * @param componentMethods The component methods
      */
     protected AbstractComponentManager(ComponentContainer<S> container, ComponentMethods<S> componentMethods)
     {
         this(container, componentMethods, false);
     }
 
+    /**
+     * The constructor receives both the container and the methods.
+     *
+     * @param container The component container
+     * @param componentMethods The component methods
+     * @param factoryInstance Flag whether this is a factory instance
+     */
     protected AbstractComponentManager(ComponentContainer<S> container, ComponentMethods<S> componentMethods, boolean factoryInstance)
     {
         m_enabledLatchRef.get().resolve(null);
@@ -182,7 +188,7 @@ public abstract class AbstractComponentManager<S> implements ComponentManager<S>
         m_componentMethods = componentMethods;
         m_componentId = -1;
 
-        ComponentMetadata metadata = container.getComponentMetadata();
+        final ComponentMetadata metadata = container.getComponentMetadata();
 
         m_dependencyManagers = loadDependencyManagers(metadata);
 
@@ -731,17 +737,27 @@ public abstract class AbstractComponentManager<S> implements ComponentManager<S>
 
             if ((isImmediate() || getComponentMetadata().isFactory()))
             {
-                ServiceRegistration<S> serviceRegistration = registrationManager.getServiceRegistration();
-                if ( serviceRegistration != null )
+                final ServiceRegistration<S> serviceRegistration = registrationManager.getServiceRegistration();
+                ServiceReference<S> ref = null;
+                try
                 {
-                    m_container.getActivator().enterCreate( serviceRegistration.getReference() );
+                    ref = serviceRegistration == null ? null : serviceRegistration.getReference();
+                }
+                catch ( final IllegalStateException ise )
+                {
+                    // catch service already being unregistered again
+                }
+
+                if ( ref != null )
+                {
+                    m_container.getActivator().enterCreate( ref );
                     try
                     {
                         getServiceInternal( serviceRegistration );
                     }
                     finally
                     {
-                        m_container.getActivator().leaveCreate( serviceRegistration.getReference() );
+                        m_container.getActivator().leaveCreate( ref );
                     }
                 }
                 else
@@ -1043,7 +1059,14 @@ public abstract class AbstractComponentManager<S> implements ComponentManager<S>
             //see if our service has been requested but returned null....
             m_container.getLogger().log( LogService.LOG_DEBUG, "Notifying possible clients that service might be available with activator {0}", null,
                 m_container.getActivator()  );
-            m_container.getActivator().missingServicePresent( registrationManager.getServiceRegistration().getReference() );
+            try
+            {
+                m_container.getActivator().missingServicePresent( registrationManager.getServiceRegistration().getReference() );
+            }
+            catch ( final IllegalStateException ise)
+            {
+                // service has been unregistered
+            }
         }
 
     }
@@ -1099,30 +1122,30 @@ public abstract class AbstractComponentManager<S> implements ComponentManager<S>
         return allowed;
     }
 
-    private List<DependencyManager<S, ?>> loadDependencyManagers(ComponentMetadata metadata)
+    private List<DependencyManager<S, ?>> loadDependencyManagers(final ComponentMetadata metadata)
     {
-        List<DependencyManager<S, ?>> depMgrList = new ArrayList<>(
-                metadata.getDependencies().size());
 
         // If this component has got dependencies, create dependency managers for each one of them.
-        if (metadata.getDependencies().size() != 0)
+        if (!metadata.getDependencies().isEmpty())
         {
+            final List<DependencyManager<S, ?>> depMgrList = new ArrayList<>(metadata.getDependencies().size());
             int index = 0;
-            for (ReferenceMetadata currentdependency : metadata.getDependencies())
+            for (final ReferenceMetadata currentdependency : metadata.getDependencies())
             {
                 @SuppressWarnings({ "unchecked", "rawtypes" })
-                DependencyManager<S, ?> depmanager = new DependencyManager(this, currentdependency, index++);
+                final DependencyManager<S, ?> depmanager = new DependencyManager(this, currentdependency, index++);
 
                 depMgrList.add(depmanager);
             }
+            return depMgrList;
         }
 
-        return depMgrList;
+        return Collections.emptyList();
     }
 
-    final void updateTargets(Map<String, Object> properties)
+    final void updateTargets(final Map<String, Object> properties)
     {
-        for (DependencyManager<S, ?> dm : getDependencyManagers())
+        for (final DependencyManager<S, ?> dm : getDependencyManagers())
         {
             dm.setTargetFilter(properties);
         }
@@ -1434,7 +1457,14 @@ public abstract class AbstractComponentManager<S> implements ComponentManager<S>
         final ServiceRegistration<S> reg = registrationManager.getServiceRegistration();
         if ( reg != null )
         {
-            return reg.getReference();
+            try
+            {
+                return reg.getReference();
+            }
+            catch ( final IllegalStateException ise)
+            {
+                // service has just been unregistered, return null
+            }
         }
         return null;
     }
