@@ -125,6 +125,17 @@ public class MetaDataReaderTest extends TestCase
         assertNull(mti.getObjectClassDefinitions());
     }
 
+    public void testWithNamespace_1_4_0() throws IOException, XmlPullParserException
+    {
+        String empty = "<metatype:MetaData xmlns:metatype=\"" + MetaDataReader.NAMESPACE_1_4 + "\" " + "xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" ></metatype:MetaData>";
+        MetaData mti = read(empty);
+
+        assertNotNull(mti);
+        assertEquals(MetaDataReader.NAMESPACE_1_4, mti.getNamespace());
+        assertNull(mti.getLocalePrefix());
+        assertNull(mti.getObjectClassDefinitions());
+    }
+
     public void testWithInvalidNamespaceUri()
     {
         String empty = "<metatype:MetaData xmlns:metatype=\"http://www.osgi.org/xmlns/datatype/v1.0.0\" " + "xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" ></metatype:MetaData>";
