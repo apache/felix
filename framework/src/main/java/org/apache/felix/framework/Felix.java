@@ -106,6 +106,9 @@ import java.util.StringTokenizer;
 import java.util.TreeMap;
 import java.util.TreeSet;
 import java.util.WeakHashMap;
+import java.util.concurrent.locks.Condition;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 
 public class Felix extends BundleImpl implements Framework
 {
@@ -131,7 +134,11 @@ public class Felix extends BundleImpl implements Framework
 
     // Lock object used to determine if an individual bundle
     // lock or the global lock can be acquired.
-    private final Object[] m_bundleLock = new Object[0];
+    private final Lock m_lock = new ReentrantLock();
+    // Notifies changes in the waiting condition of global lock acquisition
+    private final Condition m_globalLockCondition = m_lock.newCondition();
+    // Notifies changes in the waiting condition of bundle lock acquisition
+    private final Condition m_bundleLockCondition = m_lock.newCondition();
     // Keeps track of threads wanting to acquire the global lock.
     private final List<Thread> m_globalLockWaitersList = new ArrayList<Thread>();
     // The thread currently holding the global lock.
@@ -5489,10 +5496,15 @@ public class Felix extends BundleImpl implements Framework
 
     void setBundleStateAndNotify(BundleImpl bundle, int state)
     {
-        synchronized (m_bundleLock)
+        m_lock.lock();
+        try
         {
             bundle.__setState(state);
-            m_bundleLock.notifyAll();
+            m_bundleLockCondition.signalAll();
+        }
+        finally
+        {
+            m_lock.unlock();
         }
     }
 
@@ -5508,7 +5520,8 @@ public class Felix extends BundleImpl implements Framework
     void acquireBundleLock(BundleImpl bundle, int desiredStates)
         throws IllegalStateException
     {
-        synchronized (m_bundleLock)
+        m_lock.lock();
+        try
         {
             // Wait if the desired bundle is already locked by someone else
             // or if any thread has the global lock, unless the current thread
@@ -5536,7 +5549,7 @@ public class Felix extends BundleImpl implements Framework
 
                 try
                 {
-                    m_bundleLock.wait();
+                    m_bundleLockCondition.await();
                 }
                 catch (InterruptedException ex)
                 {
@@ -5555,6 +5568,10 @@ public class Felix extends BundleImpl implements Framework
             // Acquire the bundle lock.
             bundle.lock();
         }
+        finally
+        {
+            m_lock.unlock();
+        }
     }
 
     /**
@@ -5565,7 +5582,8 @@ public class Felix extends BundleImpl implements Framework
     **/
     void releaseBundleLock(BundleImpl bundle)
     {
-        synchronized (m_bundleLock)
+        m_lock.lock();
+        try
         {
             // Unlock the bundle.
             bundle.unlock();
@@ -5573,8 +5591,12 @@ public class Felix extends BundleImpl implements Framework
             // then remove it from the held lock map.
             if (bundle.getLockingThread() == null)
             {
-                m_bundleLock.notifyAll();
+                m_bundleLockCondition.signalAll();
             }
+        }
+        finally
+        {
+            m_lock.unlock();
         }
     }
 
@@ -5590,7 +5612,8 @@ public class Felix extends BundleImpl implements Framework
     **/
     boolean acquireGlobalLock()
     {
-        synchronized (m_bundleLock)
+        m_lock.lock();
+        try
         {
             // Wait as long as some other thread holds the global lock
             // and the current thread is not interrupted.
@@ -5605,11 +5628,11 @@ public class Felix extends BundleImpl implements Framework
                 // recheck for potential deadlock in acquireBundleLock()
                 // if this thread was holding a bundle lock and is now
                 // trying to promote it to a global lock.
-                m_bundleLock.notifyAll();
+                m_bundleLockCondition.signalAll();
                 // Now wait for the global lock.
                 try
                 {
-                    m_bundleLock.wait();
+                    m_globalLockCondition.await();
                 }
                 catch (InterruptedException ex)
                 {
@@ -5637,6 +5660,10 @@ public class Felix extends BundleImpl implements Framework
 
             return !interrupted;
         }
+        finally
+        {
+            m_lock.unlock();
+        }
     }
 
     /**
@@ -5646,7 +5673,8 @@ public class Felix extends BundleImpl implements Framework
     **/
     void releaseGlobalLock()
     {
-        synchronized (m_bundleLock)
+        m_lock.lock();
+        try
         {
             // Decrement the current thread's global lock count;
             if (m_globalLockThread == Thread.currentThread())
@@ -5655,7 +5683,8 @@ public class Felix extends BundleImpl implements Framework
                 if (m_globalLockCount == 0)
                 {
                     m_globalLockThread = null;
-                    m_bundleLock.notifyAll();
+                    m_globalLockCondition.signalAll();
+                    m_bundleLockCondition.signalAll();
                 }
             }
             else
@@ -5663,6 +5692,10 @@ public class Felix extends BundleImpl implements Framework
                 throw new IllegalStateException(
                     "The current thread doesn't own the global lock.");
             }
+        }
+        finally
+        {
+            m_lock.unlock();
         }
     }
 
