@@ -133,6 +133,10 @@ public class CheckMojo extends AbstractMojo {
 
     private void doExecute() throws MojoExecutionException, MojoFailureException {
         final File bundle = this.getBundle();
+        if ( bundle == null ) {
+            throw new MojoExecutionException("This mojo requires the project artifact to be built to perform the check." +
+                "Make sure to create your bundle before running this plugin.");
+        }
         getLog().debug("Checking " + bundle);
 
         // configuration
