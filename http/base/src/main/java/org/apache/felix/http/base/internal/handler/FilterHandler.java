@@ -18,7 +18,6 @@ package org.apache.felix.http.base.internal.handler;
 
 import java.io.IOException;
 
-import org.jetbrains.annotations.NotNull;
 import javax.servlet.Filter;
 import javax.servlet.FilterChain;
 import javax.servlet.ServletException;
@@ -28,6 +27,7 @@ import javax.servlet.ServletResponse;
 import org.apache.felix.http.base.internal.context.ExtServletContext;
 import org.apache.felix.http.base.internal.logger.SystemLogger;
 import org.apache.felix.http.base.internal.runtime.FilterInfo;
+import org.jetbrains.annotations.NotNull;
 import org.osgi.service.http.runtime.dto.DTOConstants;
 
 /**
@@ -89,9 +89,13 @@ public abstract class FilterHandler implements Comparable<FilterHandler>
     public String getName()
     {
         String name = this.filterInfo.getName();
-        if (name == null && filter != null )
+        if (name == null)
         {
-            name = filter.getClass().getName();
+            final Filter local = this.filter;
+            if ( local != null )
+            {
+                name = local.getClass().getName();
+            }
         }
         return name;
     }
@@ -115,7 +119,7 @@ public abstract class FilterHandler implements Comparable<FilterHandler>
 
         try
         {
-            filter.init(new FilterConfigImpl(getName(), getContext(), getFilterInfo().getInitParameters()));
+            this.filter.init(new FilterConfigImpl(getName(), getContext(), getFilterInfo().getInitParameters()));
         }
         catch (final Exception e)
         {
@@ -132,7 +136,15 @@ public abstract class FilterHandler implements Comparable<FilterHandler>
             @NotNull final ServletResponse res,
             @NotNull final FilterChain chain) throws ServletException, IOException
     {
-        this.filter.doFilter(req, res, chain);
+        final Filter local = this.filter;
+        if ( local != null )
+        {
+            local.doFilter(req, res, chain);
+        }
+        else
+        {
+            throw new ServletException("Filter has been unregistered.");
+        }
     }
 
     public boolean destroy()

@@ -117,7 +117,15 @@ public abstract class ServletHandler implements Comparable<ServletHandler>
     public void handle(final ServletRequest req, final ServletResponse res)
             throws ServletException, IOException
     {
-        this.servlet.service(req, res);
+        final Servlet local = this.servlet;
+        if ( local != null )
+        {
+            local.service(req, res);
+        }
+        else
+        {
+            throw new ServletException("Servlet has been unregistered");
+        }
     }
 
     public ServletInfo getServletInfo()
@@ -128,9 +136,13 @@ public abstract class ServletHandler implements Comparable<ServletHandler>
     public String getName()
     {
         String name = this.servletInfo.getName();
-        if (name == null && servlet != null )
+        if (name == null )
         {
-            name = servlet.getClass().getName();
+            final Servlet local = this.servlet;
+            if ( local != null )
+            {
+                name = local.getClass().getName();
+            }
         }
         return name;
     }
