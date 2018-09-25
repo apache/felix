@@ -18,7 +18,6 @@ package org.apache.felix.http.base.internal.handler;
 
 import java.io.IOException;
 
-import org.jetbrains.annotations.NotNull;
 import javax.servlet.FilterChain;
 import javax.servlet.ServletContext;
 import javax.servlet.ServletException;
@@ -27,6 +26,7 @@ import javax.servlet.ServletResponse;
 
 import org.apache.felix.http.base.internal.logger.SystemLogger;
 import org.apache.felix.http.base.internal.runtime.PreprocessorInfo;
+import org.jetbrains.annotations.NotNull;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceReference;
 import org.osgi.service.http.runtime.dto.DTOConstants;
@@ -130,7 +130,15 @@ public class PreprocessorHandler implements Comparable<PreprocessorHandler>
             @NotNull final ServletResponse res,
             @NotNull final FilterChain chain) throws ServletException, IOException
     {
-        this.preprocessor.doFilter(req, res, chain);
+        final Preprocessor local = this.preprocessor;
+        if ( local != null )
+        {
+            local.doFilter(req, res, chain);
+        }
+        else
+        {
+            throw new ServletException("Preprocessor has been unregistered");
+        }
     }
 
     public boolean dispose()
