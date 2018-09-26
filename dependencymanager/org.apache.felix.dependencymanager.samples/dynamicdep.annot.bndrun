@@ -14,7 +14,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
--runfw: org.apache.felix.framework;version='[5.2.0,5.2.0]'
+-runfw: ${felix.framework}
 -runee: JavaSE-1.8
 -runsystemcapabilities: ${native_capability}
 
@@ -27,7 +27,6 @@
 	${configadmin},\
 	${eventadmin},\
 	${webconsole},\
-	${bndlib},\
 	org.apache.felix.dependencymanager;version=latest,\
 	org.apache.felix.dependencymanager.shell;version=latest,\
 	org.apache.felix.dependencymanager.runtime;version=latest,\

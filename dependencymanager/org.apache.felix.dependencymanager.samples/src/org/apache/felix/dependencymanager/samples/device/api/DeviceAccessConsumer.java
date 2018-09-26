@@ -29,7 +29,7 @@ public class DeviceAccessConsumer {
     volatile LogService log;
 
     void add(Map<String, Object> props, DeviceAccess deviceAccess) {
-        log.log(LogService.LOG_WARNING, "DeviceAccessConsumer: Handling device access: id=" + props.get("device.id") 
+        log.log(LogService.LOG_WARNING, "DeviceAccessConsumer: Handling device access: id=" + props.get("device.access.id") 
             + "\n\t device=" + deviceAccess.getDevice() 
             + "\n\t device parameter=" + deviceAccess.getDeviceParameter()
             + "\n\t device access properties=" + props);

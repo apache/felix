@@ -102,15 +102,17 @@ echo "                          CHECK SIGNATURES AND DIGESTS                    
 echo "################################################################################"
 
 cd ${tmpDir}/org.apache.felix.dependencymanager-${version}
-for f in `find . -type f | grep -v '\.\(asc\|sha\?\|md5\)$'`; do
+for f in `find . -type f | grep -v '\.\(asc\|sha1\|sha512\|md5\)$'`; do
     echo "checking $f" 
 
     echo -e "    ASC: \c"
     checkSig $f
     echo -e "    MD5: \c"
     checkSum $f "$f.md5" MD5
-    echo -e "    SHA: \c"
-    checkSum $f "$f.sha" SHA512
+    echo -e "    SHA1: \c"
+    checkSum $f "$f.sha1" SHA1
+    echo -e "    SHA512: \c"
+    checkSum $f "$f.sha512" SHA512
     echo ""
 done
 

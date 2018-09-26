@@ -49,7 +49,8 @@ public class Felix4050 {
         void run();
     }
 
-    @Component(properties = {@Property(name = "type", value = "b1")})
+    @Component
+    @Property(name = "type", value = "b1")
     public static class B1 implements B {
         public void run() {
         }

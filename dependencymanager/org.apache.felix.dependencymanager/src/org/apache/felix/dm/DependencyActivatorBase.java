@@ -18,6 +18,9 @@
  */
 package org.apache.felix.dm;
 
+import java.util.function.Consumer;
+
+import org.apache.felix.dm.compat.DependencyActivatorBaseCompat;
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
 
@@ -30,7 +33,7 @@ import org.osgi.framework.BundleContext;
  * 
  * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
-public abstract class DependencyActivatorBase implements BundleActivator {
+public abstract class DependencyActivatorBase extends DependencyActivatorBaseCompat implements BundleActivator {
     private BundleContext m_context;
     private DependencyManager m_manager;
     private Logger m_logger;
@@ -72,6 +75,7 @@ public abstract class DependencyActivatorBase implements BundleActivator {
         m_context = context;
         m_logger = new Logger(context);
         m_manager = new DependencyManager(context, m_logger);
+        setDependencyManager(m_manager);
         init(m_context, m_manager);
     }
 
@@ -122,10 +126,48 @@ public abstract class DependencyActivatorBase implements BundleActivator {
      * 
      * @return the new component
      */
-    public Component createComponent() {
+    public Component<?> createComponent() {
         return m_manager.createComponent();
     }
     
+    /**
+     * Creates a new bundle adapter component.
+     * 
+     * @return the bundle adapter component
+     */
+    public BundleComponent createBundleComponent() {
+        return m_manager.createBundleComponent();
+    }
+    
+    /**
+     * Creates a new aspect component.
+     * 
+     * @return the aspect component
+     * @see DependencyManager#createAspectComponent()
+     */
+    public AspectComponent createAspectComponent() {
+        return m_manager.createAspectComponent();
+    }
+
+    /**
+     * Creates a new adapter service.
+     * 
+     * @return the adapter service
+     * @see DependencyManager#createAdapterService(Class, String)
+     */
+    public AdapterComponent createAdapterComponent() {
+        return m_manager.createAdapterComponent();
+    }
+
+    /**
+     * Creates a new factory configuration component.
+     * @return the factory configuration component
+     * @see DependencyManager#createFactoryComponent()
+     */
+    public FactoryComponent createFactoryComponent() {
+        return m_manager.createFactoryComponent();
+    }
+
     /**
      * Creates a new service dependency.
      * 
@@ -182,213 +224,12 @@ public abstract class DependencyActivatorBase implements BundleActivator {
     }
 
     /**
-     * Creates a new aspect service.
+     * Creates a new resource adapter component.
      * 
-     * @return the aspect service
-     * @see DependencyManager#createAspectService(Class, String, int, String)
+     * @return the resource adapter component
      */
-    public Component createAspectService(Class<?> serviceInterface, String serviceFilter, int ranking, String attributeName) {
-        return m_manager.createAspectService(serviceInterface, serviceFilter, ranking, attributeName);
-    }
-    
-    /**
-     * Creates a new aspect service.
-     * 
-     * @return the aspect service
-     * @see DependencyManager#createAspectService(Class, String, int)
-     */
-    public Component createAspectService(Class<?> serviceInterface, String serviceFilter, int ranking) {
-        return m_manager.createAspectService(serviceInterface, serviceFilter, ranking);
-    }
-    
-    /**
-     * Creates a new aspect service.
-     * 
-     * @return the aspect service
-     * @see DependencyManager#createAspectService(Class, String, int, String, String, String)
-     */
-    public Component createAspectService(Class<?> serviceInterface, String serviceFilter, int ranking, String add, String change, String remove) {
-        return m_manager.createAspectService(serviceInterface, serviceFilter, ranking, add, change, remove);
+    public ResourceComponent createResourceComponent() {
+        return m_manager.createResourceComponent();
     }
 
-    /**
-     * Creates a new aspect service.
-     * 
-     * @return the aspect service
-     * @see DependencyManager#createAspectService(Class, String, int, String, String, String, String)
-     */
-    public Component createAspectService(Class<?> serviceInterface, String serviceFilter, int ranking, String add, String change, String remove, String swap) {    
-        return m_manager.createAspectService(serviceInterface, serviceFilter, ranking, add, change, remove, swap);
-    }
-    	
-    /**
-     * Creates a new aspect service.
-     * 
-     * @return the aspect service
-     * @see DependencyManager#createAspectService(Class, String, int, Object, String, String, String, String)
-     */
-    public Component createAspectService(Class<?> serviceInterface, String serviceFilter, int ranking, Object callbackInstance, String add, String change, String remove, String swap) {    
-        return m_manager.createAspectService(serviceInterface, serviceFilter, ranking, callbackInstance, add, change, remove, swap);
-    }
-        
-    /**
-     * Creates a new adapter service.
-     * 
-     * @return the adapter service
-     * @see DependencyManager#createAdapterService(Class, String)
-     */
-    public Component createAdapterService(Class<?> serviceInterface, String serviceFilter) {
-        return m_manager.createAdapterService(serviceInterface, serviceFilter);
-    }
-    
-    /**
-     * Creates a new adapter service.
-     * 
-     * @return the adapter service
-     * @see DependencyManager#createAdapterService(Class, String, String)
-     */
-    public Component createAdapterService(Class<?> serviceInterface, String serviceFilter, String autoConfig) {
-        return m_manager.createAdapterService(serviceInterface, serviceFilter, autoConfig);
-    }
-    
-    /**
-     * Creates a new adapter service.
-     * 
-     * @return the adapter service
-     * @see DependencyManager#createAdapterService(Class, String, String, String, String)
-     */
-    public Component createAdapterService(Class<?> serviceInterface, String serviceFilter, String add, String change, String remove) {
-        return m_manager.createAdapterService(serviceInterface, serviceFilter, add, change, remove);
-    }
-    
-    /**
-     * Creates a new adapter service.
-     * @return the adapter service
-     * @see DependencyManager#createAdapterService(Class, String, String, String, String, String)
-     */
-    public Component createAdapterService(Class<?> serviceInterface, String serviceFilter, String add, String change, String remove, String swap) {
-        return m_manager.createAdapterService(serviceInterface, serviceFilter, add, change, remove, swap);
-    }  
-    
-    /**
-     * Creates a new adapter service.
-     * @return the adapter service
-     * @see DependencyManager#createAdapterService(Class, String, String, Object, String, String, String, String, boolean)
-     */
-    public Component createAdapterService(Class<?> serviceInterface, String serviceFilter, 
-        String autoConfig, Object callbackInstance, String add, String change, String remove, String swap) {
-       return m_manager.createAdapterService(serviceInterface, serviceFilter, autoConfig, callbackInstance, add, change, remove, swap, true);
-    }
-
-    /**
-     * Creates a new adapter service.
-     * @return the adapter service
-     * @see DependencyManager#createAdapterService(Class, String, String, Object, String, String, String, String, boolean)
-     */
-    public Component createAdapterService(Class<?> serviceInterface, String serviceFilter, 
-        String autoConfig, Object callbackInstance, String add, String change, String remove, String swap, boolean propagate) {
-       return m_manager.createAdapterService(serviceInterface, serviceFilter, autoConfig, callbackInstance, add, change, remove, swap, propagate);
-    }
-
-   /**
-     * Creates a new resource adapter service.
-     * 
-     * @return the resource adapter service
-     */
-    public Component createResourceAdapter(String resourceFilter, boolean propagate, Object callbackInstance, String callbackChanged) {
-        return m_manager.createResourceAdapterService(resourceFilter, propagate, callbackInstance, callbackChanged);
-    }
-
-    /**
-     * Creates a new resource adapter service.
-     * 
-     * @return the resource adapter service
-     */
-    public Component createResourceAdapter(String resourceFilter, boolean propagate, Object callbackInstance, String callbackSet, String callbackChanged) {
-        return m_manager.createResourceAdapterService(resourceFilter, propagate, callbackInstance, callbackSet, callbackChanged);
-    }
-    
-    /**
-     * Creates a new resource adapter service.
-     * 
-     * @return the resource adapter service
-     */
-    public Component createResourceAdapter(String resourceFilter, Object propagateCallbackInstance, String propagateCallbackMethod, Object callbackInstance, String callbackChanged) {
-        return m_manager.createResourceAdapterService(resourceFilter, propagateCallbackInstance, propagateCallbackMethod, callbackInstance, null, callbackChanged);
-    }
-    
-    /**
-     * Creates a new resource adapter service.
-     * 
-     * @return the resource adapter service
-     */
-    public Component createResourceAdapter(String resourceFilter, Object propagateCallbackInstance, String propagateCallbackMethod, Object callbackInstance, String callbackSet, String callbackChanged) {
-        return m_manager.createResourceAdapterService(resourceFilter, propagateCallbackInstance, propagateCallbackMethod, callbackInstance, callbackSet, callbackChanged);
-    }
-    
-    /**
-     * Creates a new bundle adapter service.
-     * 
-     * @return the bundle adapter service
-     */
-    public Component createBundleAdapterService(int bundleStateMask, String bundleFilter, boolean propagate) {
-        return m_manager.createBundleAdapterService(bundleStateMask, bundleFilter, propagate);
-    }
-
-    /**
-     * Creates a new bundle adapter service, using a specific callback instance
-     * 
-     * @return the bundle adapter service
-     */
-    public Component createBundleAdapterService(int bundleStateMask, String bundleFilter, boolean propagate,
-    		Object callbackInstance, String add, String change, String remove) {
-        return m_manager.createBundleAdapterService(bundleStateMask, bundleFilter, propagate, callbackInstance, add, change, remove);
-    }
-
-    /**
-     * Creates a new factory configuration adapter service.
-     * 
-     * @return the factory configuration adapter service
-     */
-    public Component createFactoryConfigurationAdapterService(String factoryPid, String update, boolean propagate) {
-        return m_manager.createFactoryConfigurationAdapterService(factoryPid, update, propagate);
-    }
-    
-    /**
-     * Creates a new factory configuration adapter service, using a specific callback instance
-     * 
-     * @return the factory configuration adapter service
-     */
-    public Component createFactoryConfigurationAdapterService(String factoryPid, String update, boolean propagate, Object callbackInstance) {
-        return m_manager.createFactoryConfigurationAdapterService(factoryPid, update, propagate, callbackInstance);
-    }
-  
-    /**
-     * Creates a new factory configuration adapter service, using a specific callback instance
-     * 
-     * @return the factory configuration adapter service
-     * @see DependencyManager#createFactoryConfigurationAdapterService(String, String, boolean, Class)
-     */
-    public Component createFactoryConfigurationAdapterService(String factoryPid, String update, boolean propagate, Class<?> configType) {
-        return m_manager.createFactoryConfigurationAdapterService(factoryPid, update, propagate, configType);
-    }
-
-    /**
-     * Creates a new factory configuration adapter service, using a specific callback instance
-     * 
-     * @return the factory configuration adapter service
-     * @see DependencyManager#createFactoryConfigurationAdapterService(String, String, boolean, Object, Class)
-     */
-    public Component createFactoryConfigurationAdapterService(String factoryPid, String update, boolean propagate, Object callbackInstance, Class<?> configType) {
-        return m_manager.createFactoryConfigurationAdapterService(factoryPid, update, propagate, callbackInstance, configType);
-    }
-
-    /**
-     * Creates a new factory configuration adapter service.
-     * 
-     * @return the factory configuration adapter service
-     */
-    public Component createFactoryConfigurationAdapterService(String factoryPid, String update, boolean propagate, String heading, String desc, String localization, PropertyMetaData[] propertiesMetaData) {
-        return m_manager.createAdapterFactoryConfigurationService(factoryPid, update, propagate, heading, desc, localization, propertiesMetaData);
-    }
 }

@@ -44,11 +44,13 @@ public class ExtraAdapterServiceProperties {
     public interface Provider2 {
     }
 
-    @Component(properties = {@Property(name = "foo", value = "bar")})
+    @Component
+    @Property(name = "foo", value = "bar")
     public static class ProviderImpl implements Provider {
     }
 
-    @AdapterService(provides = Provider2.class, properties = {@Property(name = "foo2", value = "bar2")}, adapteeService = Provider.class)
+    @AdapterService(provides = Provider2.class, adapteeService = Provider.class)
+    @Property(name = "foo2", value = "bar2")
     public static class Provider2Impl implements Provider2 {
         protected Provider m_adaptee;
 

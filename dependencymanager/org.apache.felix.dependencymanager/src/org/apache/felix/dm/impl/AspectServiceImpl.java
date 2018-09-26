@@ -23,6 +23,7 @@ import java.util.Enumeration;
 import java.util.Hashtable;
 import java.util.List;
 
+import org.apache.felix.dm.AspectComponent;
 import org.apache.felix.dm.Component;
 import org.apache.felix.dm.DependencyManager;
 import org.apache.felix.dm.ServiceDependency;
@@ -33,33 +34,55 @@ import org.osgi.framework.ServiceReference;
 /**
  * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
-public class AspectServiceImpl extends FilterComponent {
+public class AspectServiceImpl extends FilterComponent<AspectComponent> implements AspectComponent {
 	
-	private final String m_add;
-	private final String m_change;
-	private final String m_remove;
-	private final String m_swap;
-	private final int m_ranking;
-    private final Object m_dependencyCallbackInstance;
-    
-	public AspectServiceImpl(DependencyManager dm, Class<?> aspectInterface, String aspectFilter, int ranking, String autoConfig, Object callbackInstance, String add, String change, String remove, String swap) {
+	private volatile String m_add;
+	private volatile String m_change;
+	private volatile String m_remove;
+	private volatile String m_swap;
+	private volatile int m_ranking;
+    private volatile Object m_dependencyCallbackInstance;
+	private volatile Class<?> m_serviceInterface;
+	private volatile String m_serviceFilter;
+	private volatile String m_aspectAutoConfig;
+        
+	public AspectServiceImpl(DependencyManager dm) {
 		super(dm.createComponent());
-		m_ranking = ranking;
-		m_add = add;
-		m_change = change;
-		m_remove = remove;
-		m_swap = swap;
-		m_dependencyCallbackInstance = callbackInstance;
-		
-		m_component.setImplementation(new AspectImpl(aspectInterface, autoConfig))
-			.add(dm.createServiceDependency()
-				   .setService(aspectInterface, createDependencyFilterForAspect(aspectFilter))
-				   .setAutoConfig(false)
-				   .setCallbacks("added", "removed"))
-				   .setCallbacks("init", null, "stop", null);
-		
-//		m_component.setDebug("aspectfactory-" + m_ranking);
 	}
+	
+    public AspectServiceImpl setAspect(Class<?> serviceInterface, String filter, int ranking) {
+        m_serviceInterface = serviceInterface;
+        m_serviceFilter = filter;
+        m_ranking = ranking;
+        return this;
+    }
+    public AspectServiceImpl setAspectField(String autoConfig) {
+        m_aspectAutoConfig = autoConfig;
+        return this;
+    }
+    public AspectServiceImpl setAspectCallbacks(String add, String change, String remove, String swap) {
+        m_add = add;
+        m_change = change;
+        m_remove = remove;
+        m_swap = swap;
+        return this;
+    }
+    public AspectServiceImpl setAspectCallbackInstance(Object callbackInstance) {
+        m_dependencyCallbackInstance = callbackInstance;
+        return this;
+    }
+    
+    @Override
+    protected void startInitial() {
+    	DependencyManager dm = getDependencyManager();
+		m_component
+		  	.setImplementation(new AspectImpl(m_serviceInterface, m_aspectAutoConfig))
+		  	.setCallbacks("init", null, "stop", null)
+			.add(dm.createServiceDependency()
+		  		   .setService(m_serviceInterface, createDependencyFilterForAspect(m_serviceFilter))
+	               .setAutoConfig(false)
+	               .setCallbacks("added", "removed"));		    
+    }
 	
 	private String createDependencyFilterForAspect(String aspectFilter) {
         // we only want to match services which are not themselves aspects
@@ -133,6 +156,7 @@ public class AspectServiceImpl extends FilterComponent {
                 .setFactory(m_factory, m_factoryCreateMethod) // if not set, no effect
                 .setComposition(m_compositionInstance, m_compositionMethod) // if not set, no effect
                 .setCallbacks(m_callbackObject, m_init, m_start, m_stop, m_destroy) // if not set, no effect
+                .setScope(m_scope)
                 .add(aspectDependency);
             
             //service.setDebug("aspectimpl-" + m_ranking);

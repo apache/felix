@@ -50,7 +50,7 @@ import java.util.concurrent.Executor;
  * 
  * <li> Now let's describe which thread is executing the jobs scheduled in a Component <code>Serial Queue</code>: 
  * When a job (J1) is scheduled in the queue while it is empty, then the current thread becomes the "master"
- * and will immediately execute the </code>Serial Queue</code> tasks (synchronously). And if another thread 
+ * and will immediately execute the <code>Serial Queue</code> tasks (synchronously). And if another thread 
  * triggers another event concurrently while the "master" thread is executing the job J1, then a job (J2) 
  * for this new event is just enqueued in the <code>Serial Queue</code>, but the other thread returns 
  * immediately to the caller, and the job J2 will then be executed by the "master" thread (after J1).
@@ -99,15 +99,15 @@ import java.util.concurrent.Executor;
  * 
  * <blockquote><pre>
  * org.apache.felix.dependencymanager.parallel=*   
- *      -> means all components must be cached until a ComponentExecutorFactory comes up.
+ *      means all components must be cached until a ComponentExecutorFactory comes up.
  * 
  * org.apache.felix.dependencymanager.parallel=foo.bar, foo.zoo
- *      -> means only components whose implementation class names are starting with "foo.bar" or "foo.zoo" 
+ *      means only components whose implementation class names are starting with "foo.bar" or "foo.zoo" 
  *      must be handled using an Executor returned by the ComponentExecutorFactory service. Other Components
  *      will be handled normally, as when there is no ComponentExecutorFactory available.
  * 
  * org.apache.felix.dependencymanager.parallel=!foo.threadpool, *
- *      -> means all components must be delayed until the ComponentExecutorFactory comes up, except the 
+ *      means all components must be delayed until the ComponentExecutorFactory comes up, except the 
  *      components whose implementations class names are starting with "foo.threadpool" prefix). 
  * </pre></blockquote>
  * 

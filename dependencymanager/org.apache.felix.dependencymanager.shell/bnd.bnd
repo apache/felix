@@ -15,7 +15,7 @@
 # limitations under the License.
 #
 -buildpath: \
-	org.mockito.mockito-all;version=1.9,\
+	${mockito},\
 	org.apache.felix.dependencymanager;version=latest,\
 	${junit},\
 	osgi.core;version=6.0,\
@@ -24,10 +24,14 @@
 Private-Package: \
 	org.apache.felix.dm.shell
 Bundle-Activator:org.apache.felix.dm.shell.Activator
-Bundle-Version: 4.0.6
+Bundle-Version: 4.0.7
 Include-Resource: META-INF/=resources/
 Bundle-Name: Apache Felix Dependency Manager Shell
 Bundle-Description: Gogo Shell commands for Apache Felix Dependency Manager
 Bundle-Category: osgi
 Bundle-License: http://www.apache.org/licenses/LICENSE-2.0.txt
 Bundle-Vendor: The Apache Software Foundation 
+-testpath: \
+	${junit},\
+	${mockito},\
+	org.objenesis;version=2.2

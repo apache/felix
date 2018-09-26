@@ -29,8 +29,7 @@ import java.lang.annotation.Target;
  * the original service, and allows you to execute some code before invoking the original service ...
  * The aspect will be applied to any service that matches the specified interface and filter and 
  * will be registered with the same interface and properties as the original service, plus any 
- * extra properties you supply here. It will also inherit all dependencies, 
- * and if you declare the original service as a member it will be injected.
+ * extra properties you supply here. If you declare the original service as a member it will be injected.
  * 
  * <p> For "add", "change", "remove" callbacks, the following method signatures are supported:
  * 
@@ -79,10 +78,9 @@ import java.lang.annotation.Target;
  * <pre>
  * 
  * &#64;AspectService(ranking=10))
- * &#64;Property(name="param", value="value")
  * class AspectService implements InterceptedService {
  *     // The service we are intercepting (injected by reflection)
- *     protected InterceptedService intercepted;
+ *     volatile InterceptedService intercepted;
  *   
  *     public void doWork() {
  *        intercepted.doWork();
@@ -112,6 +110,7 @@ public @interface AspectService
     /**
      * Sets Additional properties to use with the aspect service registration
      * @return the aspect service properties.
+     * @deprecated you can apply {@link Property} annotation directly on the component class.
      */
     Property[] properties() default {};
     
@@ -124,7 +123,7 @@ public @interface AspectService
     
     /**
      * Sets the field name where to inject the original service. By default, the original service is injected
-     * in any attributes in the aspect implementation that are of the same type as the aspect interface.
+     * in any attributes of the aspect implementation that are of the same type as the aspect interface.
      * @return the field used to inject the original service
      */
     String field() default "";
@@ -163,4 +162,13 @@ public @interface AspectService
      * @return the aspect service factory method
      */
     String factoryMethod() default "";
+    
+	/**
+	 * The service scope for the service of this Component.
+	 * 
+	 * <p>
+	 * If not specified, the {@link ServiceScope#SINGLETON singleton} service
+	 * scope is used. 
+	 */
+	ServiceScope scope() default ServiceScope.SINGLETON;
 }

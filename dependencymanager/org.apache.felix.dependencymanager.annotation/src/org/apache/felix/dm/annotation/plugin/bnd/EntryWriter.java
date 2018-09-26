@@ -115,6 +115,22 @@ public class EntryWriter
         checkType(param.toString());
         m_params.put(param.toString(), Arrays.asList(values));
     }
+    
+    /**
+     * Adds a List of Strings in this descriptor entry.
+     */
+    public void put(EntryParam param, List<String> values)
+    {
+        checkType(param.toString());
+        m_params.put(param.toString(), values);
+    }
+
+    /**
+     * Returns a parameter value (either a String, or a List<String>).
+     */
+    public Object getParameter(EntryParam param) {
+    	return m_params.get(param.toString());
+    }
 
     /**
      * Adds a property in this descriptor entry.

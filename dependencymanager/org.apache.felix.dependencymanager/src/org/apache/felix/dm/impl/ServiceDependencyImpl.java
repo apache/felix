@@ -41,6 +41,7 @@ import org.apache.felix.dm.tracker.ServiceTrackerCustomizer;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
 import org.osgi.framework.InvalidSyntaxException;
+import org.osgi.framework.ServiceObjects;
 import org.osgi.framework.ServiceReference;
 
 /**
@@ -530,6 +531,7 @@ public class ServiceDependencyImpl extends AbstractDependency<ServiceDependency>
                 {m_trackedServiceName, Dictionary.class}, 
                 {Dictionary.class, m_trackedServiceName}, 
                 {Object.class},
+                {ServiceObjects.class},
                 {}},
             
             new Supplier[][]{
@@ -549,6 +551,7 @@ public class ServiceDependencyImpl extends AbstractDependency<ServiceDependency>
                 new Supplier<?>[] {() -> se.getEvent(), () -> properties.get()},
                 new Supplier<?>[] {() -> properties.get(), () -> se.getEvent()},
                 new Supplier<?>[] {() -> se.getEvent()},
+                new Supplier<?>[] {() -> se.getServiceObjects()},
                 {}},
             true // log if method is not found
         );
@@ -571,6 +574,8 @@ public class ServiceDependencyImpl extends AbstractDependency<ServiceDependency>
             		{Component.class, ServiceReference.class, Object.class, ServiceReference.class, Object.class},
             		{ServiceReference.class, ServiceReference.class},
             		{Component.class, ServiceReference.class, ServiceReference.class},
+            		{ServiceObjects.class, ServiceObjects.class},
+            		{Component.class, ServiceObjects.class, ServiceObjects.class},
             	}, 
 	            
 	            new Supplier[][]{
@@ -583,7 +588,9 @@ public class ServiceDependencyImpl extends AbstractDependency<ServiceDependency>
             		new Supplier<?>[] {() -> m_component, () -> previous.getReference(), () -> previous.getEvent(), () -> current.getReference(), () -> current.getEvent()}, 
             		new Supplier<?>[] {() -> m_component, () -> previous.getReference(), () -> previous.getEvent(), () -> current.getReference(), () -> current.getEvent()}, 
             		new Supplier<?>[] {() -> previous.getReference(), () -> current.getReference()}, 
-            		new Supplier<?>[] {() -> m_component, () -> previous.getReference(), () -> current.getReference()}
+            		new Supplier<?>[] {() -> m_component, () -> previous.getReference(), () -> current.getReference()},
+            		new Supplier<?>[] {() -> previous.getServiceObjects(), () -> current.getServiceObjects()}, 
+            		new Supplier<?>[] {() -> m_component, () -> previous.getServiceObjects(), () -> current.getServiceObjects()}            		
             	},
             		
             	true); // log if not found

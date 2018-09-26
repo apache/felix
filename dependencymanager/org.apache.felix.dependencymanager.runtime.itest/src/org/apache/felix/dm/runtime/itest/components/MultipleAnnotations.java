@@ -63,7 +63,8 @@ public class MultipleAnnotations {
         public void doService();
     }
 
-    @Component(properties = {@Property(name = "foo", value = "bar")})
+    @Component
+    @Property(name = "foo", value = "bar")
     public static class ServiceProvider implements ServiceInterface {
         @ServiceDependency(filter="(name=" + ENSURE + ")")
         volatile Ensure m_sequencer;

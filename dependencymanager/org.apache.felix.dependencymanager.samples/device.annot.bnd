@@ -18,5 +18,3 @@ Private-Package:  \
 	org.apache.felix.dependencymanager.samples.device.annot
 Bundle-Description: Dependency Manager device example with annotations
 Bundle-Name: Dependency Manager Device Example With Annotations
--plugin: org.apache.felix.dm.annotation.plugin.bnd.AnnotationPlugin;log=debug;\
-  path:=${workspace}/org.apache.felix.dependencymanager.annotation/generated/org.apache.felix.dependencymanager.annotation.jar

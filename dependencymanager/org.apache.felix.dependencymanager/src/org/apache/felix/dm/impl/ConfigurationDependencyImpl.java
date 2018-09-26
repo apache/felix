@@ -41,6 +41,7 @@ import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceRegistration;
 import org.osgi.service.cm.ConfigurationException;
 import org.osgi.service.cm.ManagedService;
+import org.osgi.service.metatype.MetaTypeProvider;
 
 /**
  * Implementation for a configuration dependency.
@@ -51,13 +52,14 @@ public class ConfigurationDependencyImpl extends AbstractDependency<Configuratio
     private volatile Dictionary<String, Object> m_settings;
 	private volatile String m_pid;
 	private ServiceRegistration<?> m_registration;
-	private volatile Class<?> m_configType;
+	private volatile Class<?>[] m_configTypes;
     private volatile MetaTypeProviderImpl m_metaType;
 	private boolean m_mayInvokeUpdateCallback;
 	private final Logger m_logger;
 	private final BundleContext m_context;
 	private volatile boolean m_needsInstance = true;
 	private volatile boolean m_optional;
+	private volatile boolean m_needsInstanceCalled;
 
     public ConfigurationDependencyImpl() {
         this(null, null);
@@ -77,7 +79,7 @@ public class ConfigurationDependencyImpl extends AbstractDependency<Configuratio
 	    m_logger = prototype.m_logger;
         m_metaType = prototype.m_metaType != null ? new MetaTypeProviderImpl(prototype.m_metaType, this, null) : null;
         m_needsInstance = prototype.needsInstance();
-        m_configType = prototype.m_configType;
+        m_configTypes = prototype.m_configTypes;
 	}
 		
 	@Override
@@ -111,7 +113,7 @@ public class ConfigurationDependencyImpl extends AbstractDependency<Configuratio
      * We check if callback instance is null, in this case, the callback will be invoked on the instantiated component.
      */
     public ConfigurationDependencyImpl setCallback(Object instance, String callback) {
-        boolean needsInstantiatedComponent = (instance == null);
+        boolean needsInstantiatedComponent = (m_needsInstanceCalled) ? m_needsInstance : (instance == null);
     	return setCallback(instance, callback, needsInstantiatedComponent);
     }
 
@@ -122,7 +124,7 @@ public class ConfigurationDependencyImpl extends AbstractDependency<Configuratio
      */
     public ConfigurationDependencyImpl setCallback(Object instance, String callback, boolean needsInstance) {
         super.setCallbacks(instance, callback, null);
-        m_needsInstance = needsInstance;
+        needsInstance(needsInstance);
         return this;
     }
         
@@ -132,7 +134,7 @@ public class ConfigurationDependencyImpl extends AbstractDependency<Configuratio
     public ConfigurationDependency setCallback(String callback, Class<?> configType) {
         Objects.nonNull(configType);
         setCallback(callback);
-        m_configType = configType;
+        m_configTypes = configType == null ? null : new Class<?>[] { configType };
         m_pid = (m_pid == null) ? configType.getName() : m_pid;
         return this;
     }
@@ -144,7 +146,7 @@ public class ConfigurationDependencyImpl extends AbstractDependency<Configuratio
     public ConfigurationDependency setCallback(Object instance, String callback, Class<?> configType) {
         Objects.nonNull(configType);
         setCallback(instance, callback);
-        m_configType = configType;
+        m_configTypes = configType == null ? null : new Class<?>[] { configType };
         m_pid = (m_pid == null) ? configType.getName() : m_pid;
         return this;
     }
@@ -155,10 +157,26 @@ public class ConfigurationDependencyImpl extends AbstractDependency<Configuratio
      */
     public ConfigurationDependencyImpl setCallback(Object instance, String callback, Class<?> configType, boolean needsInstance) {
         setCallback(instance, callback, needsInstance);
-        m_configType = configType;
+        m_configTypes = configType == null ? null : new Class<?>[] { configType };
         return this;
     }
     
+    /**
+     * Specifies if the component instance must be started when this dependency is started. True by default.
+     */
+    @Override
+    public ConfigurationDependencyImpl needsInstance(boolean needsInstance) {
+    	m_needsInstance = needsInstance;
+    	m_needsInstanceCalled = true;
+        return this;
+    }
+    
+    @Override
+    public ConfigurationDependencyImpl setConfigType(Class<?> ... configTypes) {
+    	m_configTypes = configTypes;
+    	return this;
+    }
+
     /**
      * This method indicates to ComponentImpl if the component must be instantiated when this Dependency is started.
      * If the callback has to be invoked on the component instance, then the component
@@ -170,7 +188,7 @@ public class ConfigurationDependencyImpl extends AbstractDependency<Configuratio
     public boolean needsInstance() {
         return m_needsInstance;
     }
-
+    
     @Override
     public void start() {
         BundleContext context = m_component.getBundleContext();
@@ -180,8 +198,12 @@ public class ConfigurationDependencyImpl extends AbstractDependency<Configuratio
 	        ManagedService ms = this;
 	        if (m_metaType != null) {
 	            ms = m_metaType;
+	            props.put(MetaTypeProvider.METATYPE_PID, m_pid);
+	            String[] ifaces = new String[] { ManagedService.class.getName(), MetaTypeProvider.class.getName() };
+	            m_registration = context.registerService(ifaces, ms, toR6Dictionary(props));
+	        } else {
+	            m_registration = context.registerService(ManagedService.class.getName(), ms, toR6Dictionary(props));
 	        }
-	        m_registration = context.registerService(ManagedService.class.getName(), ms, toR6Dictionary(props));
         }
         super.start();
     }
@@ -339,33 +361,63 @@ public class ConfigurationDependencyImpl extends AbstractDependency<Configuratio
             break;
         }
     }
+     
+    private static <T> T[] concat(T first, T[] second) {
+    	  T[] result = Arrays.copyOf(second, second.length + 1);
+    	  result[0] = first;
+    	  System.arraycopy(second, 0, result, 1, second.length);
+    	  return result;
+    }
     
-    /**
-     * Creates the various signatures and arguments combinations used for the configuration-type style callbacks.
-     * 
-     * @param service the service for which the callback should be applied;
-     * @param configType the configuration type to use (can be <code>null</code>);
-     * @param settings the actual configuration settings.
-     */
-    static CallbackTypeDef createCallbackType(Logger logger, Component service, Class<?> configType, Dictionary<?, ?> settings) {
+    private static <T> T[] concat(T first, T second, T[] third) {
+  	  T[] result = Arrays.copyOf(third, third.length + 2);
+  	  result[0] = first;
+  	  result[1] = second;
+  	  System.arraycopy(third, 0, result, 2, third.length);
+  	  return result;
+    }
+    
+    static CallbackTypeDef createCallbackType(Logger logger, Component service, Class<?>[] configTypes, Dictionary<?, ?> settings) {
         Class<?>[][] sigs = new Class[][] { { Dictionary.class }, { Component.class, Dictionary.class }, {} };
         Object[][] args = new Object[][] { { settings }, { service, settings }, {} };
 
-        if (configType != null) {
+        if (configTypes != null && configTypes.length > 0 && configTypes[0] != null) {
             try {
                 // if the configuration is null, it means we are losing it, and since we pass a null dictionary for other callback
                 // (that accepts a Dictionary), then we should have the same behavior and also pass a null conf proxy object when
                 // the configuration is lost.
-                Object configurable = settings != null ? Configurable.create(configType, settings) : null;
-                
-                logger.debug("Using configuration-type injecting using %s as possible configType.", configType.getSimpleName());
-
-                sigs = new Class[][] { { Dictionary.class }, { Component.class, Dictionary.class }, { Component.class, configType }, { configType }, {} };
-                args = new Object[][] { { settings }, { service, settings }, { service, configurable }, { configurable }, {} };
+            	Dictionary<String, Object> declaredServiceProperties = ServiceUtil.toR6Dictionary(EMPTY_PROPERTIES);
+            	if (service instanceof ComponentImpl) {
+            		declaredServiceProperties = ((ComponentImpl) service).getDeclaredServiceProperties();
+            	}            	
+            	Object[] configurables = new Object[configTypes.length];
+            	for (int i = 0 ; i < configTypes.length; i ++) {
+            		configurables[i] = settings != null ? Configurable.create(configTypes[i], settings, declaredServiceProperties) : null;
+                    logger.debug("Using configuration-type injecting using %s as possible configType.", configTypes[i].getSimpleName());
+            	}            	
+            	
+                sigs = new Class[][] { 
+                    { Dictionary.class }, 
+                    { Component.class, Dictionary.class }, 
+                    concat(Component.class, configTypes), 
+                    configTypes , 
+                    concat(Dictionary.class, configTypes),
+                    concat(Component.class, Dictionary.class, configTypes),
+                    {}
+                };
+                args = new Object[][] { 
+                    { settings }, 
+                    { service, settings }, 
+                    concat(service, configurables), 
+                    configurables,
+                    concat(settings, configurables),
+                    concat(service, settings, configurables),
+                    {}
+                };
             }
             catch (Exception e) {
                 // This is not something we can recover from, use the defaults above...
-                logger.warn("Failed to create configurable for configuration type %s!", e, configType);
+                logger.warn("Failed to create configurable for configuration type %s!", e, configTypes != null ? Arrays.toString(configTypes) : null);
             }
         }
 
@@ -384,18 +436,19 @@ public class ConfigurationDependencyImpl extends AbstractDependency<Configuratio
             // adapter.
             
             Object mainComponentInstance = m_component.getInstance();
-            if (mainComponentInstance instanceof AbstractDecorator) {
+            if (mainComponentInstance instanceof AbstractDecorator || m_component.injectionDisabled()) {
                 return;
             }
             
             Object[] instances = super.getInstances(); // never null, either the callback instance or the component instances            
             
-            CallbackTypeDef callbackInfo = createCallbackType(m_logger, m_component, m_configType, settings);
+            CallbackTypeDef callbackInfo = createCallbackType(m_logger, m_component, m_configTypes, settings);
             boolean callbackFound = false;
             for (int i = 0; i < instances.length; i++) {
                 try {
-                    InvocationUtil.invokeCallbackMethod(instances[i], m_add, callbackInfo.m_sigs, callbackInfo.m_args);
-                    callbackFound |= true;
+                	// Only inject if the component instance is not a prototype instance
+                	InvocationUtil.invokeCallbackMethod(instances[i], m_add, callbackInfo.m_sigs, callbackInfo.m_args);
+                	callbackFound |= true;
                 }
                 catch (NoSuchMethodException e) {
                     // if the method does not exist, ignore it

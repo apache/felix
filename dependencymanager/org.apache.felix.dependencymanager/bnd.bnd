@@ -15,7 +15,7 @@
 # limitations under the License.
 #
 -buildpath: \
-	org.mockito.mockito-all;version=1.9,\
+	${mockito},\
 	${junit},\
 	osgi.core;version=6.0,\
 	osgi.cmpn;version=6.0,\
@@ -27,11 +27,12 @@ Private-Package: \
 	org.apache.felix.dm.impl.metatype
 Export-Package:  \
 	org.apache.felix.dm,\
+	org.apache.felix.dm.compat,\
 	org.apache.felix.dm.tracker,\
 	org.apache.felix.dm.context,\
 	org.apache.felix.dm.diagnostics
 Include-Resource: META-INF/=resources/
-Import-Package: !org.junit,!org.mockito.*,*
+Import-Package: !org.junit,!org.mockito.*,org.osgi.framework;version="[1.8, 2)",*
 Bundle-Activator: org.apache.felix.dm.impl.Activator
 Bundle-Version: 4.5.0
 Bundle-Name: Apache Felix Dependency Manager
@@ -40,3 +41,8 @@ Bundle-License: http://www.apache.org/licenses/LICENSE-2.0.txt
 Bundle-DocURL: http://felix.apache.org/documentation/subprojects/apache-felix-dependency-manager.html
 Bundle-Vendor: The Apache Software Foundation
 Bundle-Category: osgi
+
+-testpath: \
+	${junit},\
+	${mockito},\
+	org.objenesis;version=2.2

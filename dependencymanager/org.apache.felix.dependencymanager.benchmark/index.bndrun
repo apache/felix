@@ -26,7 +26,7 @@
     org.apache.felix.dependencymanager.benchmark.dependencymanager.parallel;version=latest,\
     org.apache.felix.dependencymanager.benchmark.controller;version=latest
 	
--runfw: org.apache.felix.framework;version='[5.2.0,5.2.0]'
+-runfw: ${felix.framework}
 
 -runproperties:  \
 	ds.loglevel=warn,\

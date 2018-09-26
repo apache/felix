@@ -22,8 +22,18 @@
  */
 import aQute.bnd.build.Workspace
 
+buildscript {
+  repositories {
+    mavenCentral()
+  }
+
+  dependencies {
+    classpath bnd_plugin
+  }
+}
+
 // Our release number, which has to be monotonically incremented each time we make a new release.
-ext.dmRelease = "r11"
+ext.dmRelease = "r12"
 
 // Our Apache svn Staging repo
 ext.svnStagingPath = "https://dist.apache.org/repos/dist/dev/felix"
@@ -74,35 +84,28 @@ rat {
 Workspace workspace
 workspace = Workspace.getWorkspace(".")
 
-task makeStaging << {
+task makeStaging {
+    doLast {
     description = 'Packages the source and binary distributions.'
 
     // Package source and source bin dependencies distributions.
     logger.lifecycle("    Packaging source distributions.")
     def topdir="org.apache.felix.dependencymanager-" + dmRelease
     ant.zip(destfile: "staging/"+topdir+'-src.zip') {
-		zipfileset(dir: '../cnf', prefix: topdir+"-src/cnf", includes: ".project,.classpath,src/**,*.bnd,ext/**")
+		zipfileset(dir: '../cnf', prefix: topdir+"-src/cnf", includes: ".project,.classpath,src/**,*.bnd,*.mvn,ext/**")
 		zipfileset(dir: '..', prefix: topdir+"-src", includes: '*.gradle,*.properties')
 		zipfileset(dir: 'resources/src', prefix: topdir+"-src", includes: '*')
+		ant.zipfileset(dir: '..', prefix: topdir+"-src", includes: 'gradlew')
+    		ant.zipfileset(dir: '../.gradle-wrapper', prefix: topdir+"-src/.gradle-wrapper", includes: 'gradle-wrapper.properties')
 		new File('.').eachFile { 
-	    	if(new File(it, 'bnd.bnd').exists()) {	    		
+	    	    if(new File(it, 'bnd.bnd').exists()) {	    		
     			def bndProject = workspace.getProject(it.name)
     			if (! bndProject.isNoBundles() && ! bndProject.getName().endsWith(".benchmark")) {
-    		    	zipfileset(dir: "../${bndProject.name}", prefix: topdir+"-src/${bndProject.name}",
-    			       		   includes: "*.gradle,.project,.classpath,.settings/**,src/**,test/**,*.bnd,*.bndrun,run-*/conf/**,resources/**,README*")
+    		    	    zipfileset(dir: "../${bndProject.name}", prefix: topdir+"-src/${bndProject.name}",
+    			    	       includes: "*.gradle,.project,.classpath,.settings/**,src/**,test/**,*.bnd,*.bndrun,run-*/conf/**,resources/**,README*")
     			}
-	   		}
+	   	    }
 		}
-    }
-
-    // Package binary dependencies, needed to build the source distributions.
-    logger.lifecycle("    Packaging binary dependencies.")    
-    ant.zip(destfile: "staging/"+topdir+"-deps.zip") {
-    	ant.zipfileset(dir: '..', prefix: topdir+"-src", includes: 'gradlew')
-    	ant.zipfileset(dir: '../gradle', prefix: topdir+"-src/gradle", includes: '**')    	
-		ant.zipfileset(dir: 'resources/deps', prefix: topdir+"-src", includes: '*')
-		ant.zipfileset(dir: '../cnf', prefix: topdir+"-src/cnf",
-		    		   includes: 'buildrepo/**,localrepo/**,releaserepo/**,nonosgi-repo/**,plugins/**,gradle/**')
     }
 
     // Package binaries as a simple collection of bundles. We use same license files as for src distrib.
@@ -120,7 +123,7 @@ task makeStaging << {
     }
 
     // Before adding all latest released bundles in the binary distribution, check if they contain proper license files.
-	logger.lifecycle("    Checking META-INF mandatory files.")
+    logger.lifecycle("    Checking META-INF mandatory files.")
     released.each { jarfile -> 
     	if (jarfile.isFile()) {
        		new ByteArrayOutputStream().withStream { os ->
@@ -161,48 +164,69 @@ task makeStaging << {
             }
         }
     }
-}
-
-// Sign staging directory 
-task signStaging << {
-    description = 'Signs the local staging distribution.'
-	fileTree("staging").visit { FileVisitDetails details -> 
-		logger.lifecycle("    Signing " + details.file.path)
-		ant.exec(executable: 'gpg', dir: 'staging') { 
-	    	ant.arg(line: '--armor')
-	    	ant.arg(line: '--output')
-	    	ant.arg(line: details.file.name + ".asc")
-	    	ant.arg(line: "--detach-sig")
-	    	ant.arg(line: details.file.name)
-		}
-
-		ant.exec(executable: 'gpg', dir: 'staging', output: "staging/" + details.file.name + ".md5") { 
-	    	ant.arg(line: '--print-md')
-	    	ant.arg(line: 'MD5')
-	    	ant.arg(line: details.file.name)
-		}
-
-		ant.exec(executable: 'gpg', dir: 'staging', output: "staging/" + details.file.name + ".sha") {
-	    	ant.arg(line: '--print-md')
-	    	ant.arg(line: 'SHA512')
-	    	ant.arg(line: details.file.name)
-		}
     }
 }
 
 
+ 
+
+// Sign staging directory (you must use "--no-daemon" gradle option)
+task signStaging {
+  doLast {
+    	ant.input(message: 'Enter PGP password:', addproperty: 'pass')
+
+        description = 'Signs the local staging distribution.'
+	fileTree("staging").visit { FileVisitDetails details -> 
+		logger.lifecycle("    Signing " + details.file.path)
+		ant.exec(executable: 'gpg', dir: 'staging') {
+			ant.arg(line: '--batch')
+			ant.arg(line: '--passphrase')
+			ant.arg(line: ant.properties.pass)
+	    		ant.arg(line: '--armor')
+	    		ant.arg(line: '--output')
+	    		ant.arg(line: details.file.name + ".asc")
+	    		ant.arg(line: "--detach-sig")
+	    		ant.arg(line: details.file.name)
+		}
+
+		ant.exec(executable: 'gpg', dir: 'staging', output: "staging/" + details.file.name + ".md5") { 
+	    		ant.arg(line: '--print-md')
+	    		ant.arg(line: 'MD5')
+	    		ant.arg(line: details.file.name)
+		}
+
+		ant.exec(executable: 'gpg', dir: 'staging', output: "staging/" + details.file.name + ".sha1") {
+	    		ant.arg(line: '--print-md')
+	    		ant.arg(line: 'SHA1')
+	    		ant.arg(line: details.file.name)
+		}
+
+		ant.exec(executable: 'gpg', dir: 'staging', output: "staging/" + details.file.name + ".sha512") {
+	    		ant.arg(line: '--print-md')
+	    		ant.arg(line: 'SHA512')
+	    		ant.arg(line: details.file.name)
+		}
+	}
+    }
+}
+
+
+
 // Moves the source and binary distributions to staging.
-task commitToStaging << {
+task commitToStaging {
+  doLast {
     description = 'Commits the local staging to the Apache svn staging repository.'
     getProject().exec { 
     	commandLine 'svn', 
 		'import', 'staging', svnStagingPath + "/org.apache.felix.dependencymanager-" + dmRelease + "/", 
 		'-m', "Staging Apache Felix Dependency Manager release " + dmRelease + "."
     }
+  }
 }
 
 // Promotes the staged distributions to release
-task promoteToRelease << {
+task promoteToRelease {
+  doLast {
     description = 'Moves the staging repository to the Apache release repository.'
 
     // Move all artifacts from the staging repo to the release repo
@@ -231,27 +255,33 @@ task promoteToRelease << {
 		'rm', svnStagingPath+"/org.apache.felix.dependencymanager-" + dmRelease, "-m", 
 		"Releasing Apache Felix Dependency Manager release " + dmRelease + "."
     }
+  }
 }
 
 // Removes the staged distributions from staging
-task deleteFromStaging << {
+task deleteFromStaging {
+  doLast {
     description = 'Cancels the staged distribution from the Apache staging repository.'
     getProject().exec { 
     	commandLine 'svn',
 		'delete', svnStagingPath+"/org.apache.felix.dependencymanager-" + dmRelease + "/",
 		"-m", "Removing Apache Felix Dependency Manager release " + dmRelease + " from staging."
     }
+  }
 }
 
 // Clean staging directory
-task clean(overwrite: true) << { 
+
+clean.doLast {
     new File("release/staging").deleteDir()
     new File("rat-report.xml").delete()
 }
 
 // Only clean the staging directory
-task cleanStaging << {
+task cleanStaging {
+  doLast {
     description = 'Clean the local staging directory.'
     new File("release/staging").deleteDir()
     new File("release/staging-copy").deleteDir()
+  }
 }

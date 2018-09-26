@@ -59,13 +59,15 @@ public class PropagateAnnotation {
         }
     }
 
-    @Component(provides = {Producer.class}, properties = {@Property(name = "foo", value = "bar")})
+    @Component(provides = Producer.class)
+    @Property(name = "foo", value = "bar")
     public static class Producer {
         @ServiceDependency(propagate = true)
         volatile Producer2 m_producer;
     }
 
-    @Component(provides = {Producer2.class}, properties = {@Property(name = "foo2", value = "bar2")})
+    @Component(provides = Producer2.class)
+    @Property(name = "foo2", value = "bar2")
     public static class Producer2 {
     }
 }

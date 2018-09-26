@@ -20,6 +20,7 @@ package org.apache.felix.dm;
 
 import java.util.Dictionary;
 
+import org.osgi.annotation.versioning.ProviderType;
 import org.osgi.framework.ServiceRegistration;
 
 
@@ -31,8 +32,44 @@ import org.osgi.framework.ServiceRegistration;
  * 
  * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
-public interface Component {
-    /**
+@ProviderType
+public interface Component<T extends Component<T>> extends AbstractComponent {
+    
+	/**
+	 * Component service scopes
+	 */
+	enum ServiceScope {
+		/**
+		 * When the component is registered as a service, it must be registered as a
+		 * singleton: only a single instance of the component must be
+		 * used for all service consumers. SINGLETON scope is the default scope.
+		 */
+        SINGLETON,
+        
+    	/**
+    	 * When the component is registered as a service, it must be registered as a
+    	 * bundle scope service and an instance of the component must be created for
+    	 * each bundle using the service.
+    	 */
+        BUNDLE,
+        
+    	/**
+    	 * When the component is registered as a service, it must be registered as a
+    	 * prototype scope service and an instance of the component must be created
+    	 * for each distinct request for the service.
+    	 */
+        PROTOTYPE
+    }
+
+	/**
+	 * Sets the component scope.
+	 * @param scope the component scope (default=SINGLETON)
+	 * 
+	 * @return this component
+	 */
+    T setScope(ServiceScope scope);
+    
+   /**
      * Sets the implementation for this component. You can actually specify
      * an instance you have instantiated manually, or a <code>Class</code>
      * that will be instantiated using its default constructor when the
@@ -63,7 +100,7 @@ public interface Component {
      * @return this component
      * @see ComponentStateListener
      */
-	public Component setImplementation(Object implementation);
+	public T setImplementation(Object implementation);
 
     /**
      * Adds dependency(ies) to this component, atomically. If the component is already active or if you add
@@ -74,28 +111,28 @@ public interface Component {
      * @param dependencies the dependencies to add.
      * @return this component
      */
-	public Component add(Dependency ... dependencies);
+	public T add(Dependency ... dependencies);
 	
 	/**
 	 * Removes a dependency from the component.
 	 * @param d the dependency to remove
 	 * @return this component
 	 */
-	public Component remove(Dependency d);
+	public T remove(Dependency d);
 
     /**
      * Adds a component state listener to this component.
      * 
      * @param listener the state listener
      */
-	public Component add(ComponentStateListener listener);
+	public T add(ComponentStateListener listener);
 
     /**
      * Removes a component state listener from this component.
      * 
      * @param listener the state listener
      */
-	public Component remove(ComponentStateListener listener);
+	public T remove(ComponentStateListener listener);
 
     /**
      * Sets the public interface under which this component should be registered
@@ -105,7 +142,7 @@ public interface Component {
      * @param properties the properties for this service
      * @return this component
      */
-	public Component setInterface(String serviceName, Dictionary<?,?> properties);
+	public T setInterface(String serviceName, Dictionary<?,?> properties);
 
     /**
      * Sets the public interfaces under which this component should be registered
@@ -115,9 +152,29 @@ public interface Component {
      * @param properties the properties for these services
      * @return this component
      */
-	public Component setInterface(String[] serviceNames, Dictionary<?, ?> properties);
+	public T setInterface(String[] serviceNames, Dictionary<?, ?> properties);
 
     /**
+     * Sets the public interface under which this component should be registered
+     * in the OSGi service registry.
+     *  
+     * @param serviceName the name of the service interface
+     * @param properties the properties for this service
+     * @return this component
+     */
+	public T setInterface(Class<?> serviceName, Dictionary<?,?> properties);
+
+    /**
+     * Sets the public interfaces under which this component should be registered
+     * in the OSGi service registry.
+     *  
+     * @param serviceNames the names of the service interface
+     * @param properties the properties for these services
+     * @return this component
+     */
+	public T setInterface(Class<?>[] serviceNames, Dictionary<?, ?> properties);
+
+	/**
      * Configures auto configuration of injected classes in the component instance.
      * The following injections are currently performed, unless you explicitly
      * turn them off:
@@ -131,7 +188,7 @@ public interface Component {
      * @param clazz the class (from the list above)
      * @param autoConfig <code>false</code> to turn off auto configuration
      */
-	public Component setAutoConfig(Class<?> clazz, boolean autoConfig);
+	public T setAutoConfig(Class<?> clazz, boolean autoConfig);
 
     /**
      * Configures auto configuration of injected classes in the component instance.
@@ -140,7 +197,7 @@ public interface Component {
      * @param instanceName the name of the instance to inject the class into
      * @see #setAutoConfig(Class, boolean)
      */
-	public Component setAutoConfig(Class<?> clazz, String instanceName);
+	public T setAutoConfig(Class<?> clazz, String instanceName);
 
     /**
      * Returns the service registration for this component. The method
@@ -154,40 +211,12 @@ public interface Component {
 	public ServiceRegistration getServiceRegistration();
 
     /**
-     * Returns the instance that make up this component. If the component has a composition of instances,
-     * then the first instance of the composition is returned. Null is returned if the component has not 
-     * even been instantiated.
-     * 
-     * @return the component instances
-     */
-	public <T> T getInstance();
-
-    /**
-     * Returns the composition instances that make up this component, or just the
-     * component instance if it does not have a composition, or an empty array if
-     * the component has not even been instantiated.
-     * 
-     * @return the component instances
-     */
-	public Object[] getInstances();
-
-    /**
-     * Returns the component service properties.
-     * The returned dictionary is either empty if no service properties were defined for this component,
-     * or copy of the existing service properties associated with this component.
-     * 
-     * @return a copy of the service properties associated to this component or an empty dictionary 
-     *         if no service properties were defined for this component.
-     */
-	public <K,V> Dictionary<K,V> getServiceProperties();
-
-    /**
      * Sets the service properties associated with the component. If the service
      * was already registered, it will be updated.
      * 
      * @param serviceProperties the properties
      */
-	public Component setServiceProperties(Dictionary<?, ?> serviceProperties);
+	public T setServiceProperties(Dictionary<?, ?> serviceProperties);
 
     /**
      * Sets the names of the methods used as callbacks. These methods, when found, are
@@ -205,7 +234,7 @@ public interface Component {
      * @param destroy the name of the destroy method
      * @return the component
      */
-	public Component setCallbacks(String init, String start, String stop, String destroy);
+	public T setCallbacks(String init, String start, String stop, String destroy);
 
     /**
      * Sets the names of the methods used as callbacks. These methods, when found, are
@@ -220,7 +249,7 @@ public interface Component {
      *
      * @return this component
      */
-	public Component setCallbacks(Object instance, String init, String start, String stop, String destroy);
+	public T setCallbacks(Object instance, String init, String start, String stop, String destroy);
 
     /**
      * Sets the factory to use to create the implementation. You can specify
@@ -235,7 +264,7 @@ public interface Component {
      * @param createMethod the name of the create method
      * @return this component
      */
-	public Component setFactory(Object factory, String createMethod);
+	public T setFactory(Object factory, String createMethod);
 
     /**
      * Sets the factory to use to create the implementation. You specify the
@@ -250,7 +279,7 @@ public interface Component {
      * @param createMethod the name of the create method
      * @return this component
      */
-	public Component setFactory(String createMethod);
+	public T setFactory(String createMethod);
 
     /**
      * Sets the instance and method to invoke to get back all instances that
@@ -262,7 +291,7 @@ public interface Component {
      * @param getMethod the method to invoke
      * @return this component
      */
-	public Component setComposition(Object instance, String getMethod);
+	public T setComposition(Object instance, String getMethod);
 
     /**
      * Sets the method to invoke on the service implementation to get back all
@@ -273,24 +302,12 @@ public interface Component {
      * @param getMethod the method to invoke
      * @return this component
      */
-	public Component setComposition(String getMethod);
+	public T setComposition(String getMethod);
 
-    /**
-     * Returns the dependency manager associated with this component.
-     * @return the dependency manager associated with this component.
-     */
-	public DependencyManager getDependencyManager();
-
-	/**
-	 * Returns the component description (dependencies, service provided, etc ...).
-	 * @return the component description (dependencies, service provided, etc ...).
-	 */
-	public ComponentDeclaration getComponentDeclaration();
-	
 	/**
 	 * Activate debug for this component. Informations related to dependency processing will be displayed
 	 * using osgi log service, our to standard output if no log service is currently available.
 	 * @param label
 	 */
-	public Component setDebug(String label);
+	public T setDebug(String label);
 }

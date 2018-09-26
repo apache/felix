@@ -67,5 +67,8 @@ public enum Params
     registered, 
     unregistered,
     configType,
-    dereference
+    configTypes,
+    dereference,
+    scope,
+    bundle
 }

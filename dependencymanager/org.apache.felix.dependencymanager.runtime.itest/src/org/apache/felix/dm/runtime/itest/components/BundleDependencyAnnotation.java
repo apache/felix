@@ -95,8 +95,8 @@ public class BundleDependencyAnnotation {
     /**
      * A BundleAdapter test, which adapts the dependency manager bundle to the ServiceInterface service.
      */
-    @BundleAdapterService(filter = "(Bundle-SymbolicName=" + METATYPE_BSN + ")", stateMask = Bundle.INSTALLED
-            | Bundle.RESOLVED | Bundle.ACTIVE, propagate = true, properties = {@Property(name = "foo", value = "bar")})
+    @BundleAdapterService(filter = "(Bundle-SymbolicName=" + METATYPE_BSN + ")", stateMask = Bundle.INSTALLED | Bundle.RESOLVED | Bundle.ACTIVE, propagate = true)
+    @Property(name = "foo", value = "bar")
     public static class ServiceProvider implements ServiceInterface {
         // Adapted bundle (injected by reflection).
         protected volatile Bundle m_bundle;

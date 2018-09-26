@@ -18,13 +18,25 @@
  */
 package org.apache.felix.dm.impl;
 
-import static org.apache.felix.dm.impl.Configurable.*;
-import static org.junit.Assert.*;
+import static org.apache.felix.dm.impl.Configurable.create;
+import static org.junit.Assert.assertArrayEquals;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 
-import org.apache.felix.dm.impl.Configurable;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.Queue;
+import java.util.Set;
+import java.util.SortedMap;
+import java.util.Stack;
+import java.util.TreeMap;
+
 import org.junit.Test;
-
-import java.util.*;
 
 /**
  * Test cases for {@link Configurable}.

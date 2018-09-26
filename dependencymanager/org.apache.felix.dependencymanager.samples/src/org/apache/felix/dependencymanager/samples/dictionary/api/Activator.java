@@ -20,6 +20,7 @@ package org.apache.felix.dependencymanager.samples.dictionary.api;
 
 import java.util.Hashtable;
 
+import org.apache.felix.dm.Component;
 import org.apache.felix.dm.DependencyActivatorBase;
 import org.apache.felix.dm.DependencyManager;
 import org.apache.felix.service.command.CommandProcessor;
@@ -32,26 +33,33 @@ import org.osgi.service.log.LogService;
 public class Activator extends DependencyActivatorBase {
     @Override
     public void init(BundleContext context, DependencyManager dm) throws Exception {
-        // Create the factory configuration for our DictionaryImpl service.
-        dm.add(createFactoryConfigurationAdapterService(DictionaryConfiguration.class.getName(), "updated", true, DictionaryConfiguration.class)
-            .setInterface(DictionaryService.class.getName(), null)
-            .setImplementation(DictionaryImpl.class)
-            .add(createServiceDependency().setService(LogService.class))); // NullObject 
+        // Create the factory configuration for our DictionaryImpl service.    
+    	String  pid = DictionaryConfiguration.class.getName();
+    	Class<?> type = DictionaryConfiguration.class;
+        Component factoryComponent = createFactoryComponent()
+        	.setFactoryPid(pid).setPropagate(true).setConfigType(type)
+        	.setInterface(DictionaryService.class.getName(), null)
+        	.setImplementation(DictionaryImpl.class)
+        	.add(createServiceDependency().setService(LogService.class)); // NullObject 
+        dm.add(factoryComponent);
         
-        // Create the Dictionary Aspect
-        dm.add(createAspectService(DictionaryService.class, "(lang=en)", 10)
+        // Create the Dictionary Aspect        
+        Component aspect = createAspectComponent()
+        	.setAspect(DictionaryService.class, "(lang=en)", 10)
             .setImplementation(DictionaryAspect.class)
-            .add(createConfigurationDependency().setPid(DictionaryAspectConfiguration.class.getName()).setCallback("updated", DictionaryConfiguration.class))
-            .add(createServiceDependency().setService(LogService.class))); // NullObject
+            .add(createConfigurationDependency().setPid(DictionaryAspectConfiguration.class.getName()).setCallback("updated", DictionaryConfiguration.class))                
+            .add(createServiceDependency().setService(LogService.class)); // NullObject
+        dm.add(aspect);
         
         // Create the SpellChecker component
         Hashtable<String, Object> props = new Hashtable<>();
         props.put(CommandProcessor.COMMAND_SCOPE, "dictionary");
         props.put(CommandProcessor.COMMAND_FUNCTION, new String[] { "spellcheck" });
-        dm.add(createComponent()
+        Component spellcheck = createComponent()
             .setImplementation(SpellChecker.class)
             .setInterface(SpellChecker.class.getName(), props)
             .add(createServiceDependency().setService(DictionaryService.class).setRequired(true))
-            .add(createServiceDependency().setService(LogService.class))); // NullObject
+            .add(createServiceDependency().setService(LogService.class)); // NullObject
+        dm.add(spellcheck);
     }
 }

@@ -34,8 +34,8 @@ public class DeviceAccessConsumer {
     
     // Injected after all required dependencies have been injected (including our logger)
     @ServiceDependency(required=false)
-    void add(Map<String, Object> props, DeviceAccess deviceAccess) {
-        log.log(LogService.LOG_WARNING, "Handling device access: id=" + props.get("device.id") 
+    void add(DeviceAccess deviceAccess, Map<String, Object> props) {
+        log.log(LogService.LOG_WARNING, "Handling device access: id=" + props.get("device.access.id") 
             + "\n\t device=" + deviceAccess.getDevice() 
             + "\n\t device parameter=" + deviceAccess.getDeviceParameter()
             + "\n\t device access properties=" + props);

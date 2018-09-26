@@ -18,6 +18,7 @@
  */
 package org.apache.felix.dm.impl;
 
+import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
@@ -39,6 +40,11 @@ import org.osgi.service.cm.ConfigurationException;
  * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
 public class InvocationUtil {
+	/**
+	 * Constant Used to get empty constructor by reflection. 
+	 */
+    private static final Class<?>[] VOID = new Class[] {};
+    
     private static final Map<Key, Method> m_methodCache;
     static {
         int size = 4096;
@@ -58,6 +64,31 @@ public class InvocationUtil {
     @FunctionalInterface
     public interface ConfigurationHandler {
         public void handle() throws Exception;
+    }
+    
+    /**
+     * Represents a component instance
+     */
+    public static final class ComponentInstance {
+    	/**
+    	 * The component instance
+    	 */
+    	public final Object m_instance;
+    	
+    	/**
+    	 * The index of the consutror used when creating the component instance
+    	 */
+    	public final int m_ctorIndex;
+    	
+    	/**
+    	 * creates a component instance
+    	 * @param instance the component instance
+    	 * @param ctorIndex the index of the CallbackTypeDef used when creating the component instance
+    	 */
+    	public ComponentInstance(Object instance, int ctorIndex) {
+    		m_instance = instance;
+    		m_ctorIndex = ctorIndex;
+    	}
     }
     
     /**
@@ -224,6 +255,27 @@ public class InvocationUtil {
     }
 
     /**
+     * Gets a callback method on a class. The code will search for a callback method with
+     * the supplied name and any of the supplied signatures in order, get the first one it finds.
+     * 
+     * @param instance the instance to invoke the method on
+     * @param methodName the name of the method
+     * @param signatures the ordered list of signatures to look for
+     * @return the method found, or null
+     */
+    public static Method getCallbackMethod(Class<?> type, String methodName, Class<?>[][] signatures) {
+        Class<?> currentClazz = type;
+        while (currentClazz != null && currentClazz != Object.class) {
+        	Method m = getMethod(currentClazz, methodName, signatures, false);
+        	if (m != null) {
+        		return m;
+        	}
+            currentClazz = currentClazz.getSuperclass();
+        }
+        return null;
+    }
+
+    /**
      * Get a method on an instance.
      * TODO: rework this class to avoid code duplication with invokeMethod !
      * 
@@ -249,6 +301,25 @@ public class InvocationUtil {
             clazz = object.getClass();
         }
         
+        return getMethod(clazz, name, signatures, isSuper);
+    }
+    
+    /**
+     * Get a method on an instance.
+     * TODO: rework this class to avoid code duplication with invokeMethod !
+     * 
+     * @param object the instance to invoke the method on
+     * @param clazz the class of the instance
+     * @param name the name of the method
+     * @param signatures the signatures to look for in order
+     * @param isSuper <code>true</code> if this is a superclass and we should therefore not look for private methods
+     * @return the found method, or null if not found
+     */
+    private static Method getMethod(Class<?> clazz, String name, Class<?>[][] signatures, boolean isSuper) {
+        if (clazz == null) {
+            throw new IllegalArgumentException("Class cannot be null");
+        }
+                
         Method m = null;
         for (int i = 0; i < signatures.length; i++) {
             Class<?>[] signature = signatures[i];
@@ -258,6 +329,58 @@ public class InvocationUtil {
             }
         }
         return m;
+    }
+
+    public static ComponentInstance createInstance(Class<?> clazz, CallbackTypeDef ctorArgs) throws Exception {    			
+    	Constructor<?>[] ctors = clazz.getConstructors(); 
+    	for (int index = 0; index < ctorArgs.m_sigs.length; index ++) {
+    		Class<?>[] sigs = ctorArgs.m_sigs[index];    		
+    		for (Constructor<?> ctor : ctors) {    	
+    			Class<?>[] ctorParamTypes = ctor.getParameterTypes(); 
+    			if (Arrays.equals(sigs, ctorParamTypes)) {
+    				ctor.setAccessible(true);
+    				Object instance = ctor.newInstance(ctorArgs.m_args[index]);
+    				return new ComponentInstance(instance, index);
+    			}
+    		}
+    	}
+    	throw new InstantiationException("No suitable constructor found for class " + clazz.getName());    	
+    }
+    
+    /**
+     * Instantiates a component. The first public constructor which contains any of the specified arguments is used.
+     * @param clazz the class name used to instantiate the component
+     * @param ctorArgs constructor arguments. An empty map means the first public constructor is used.
+     * @return the component instance
+     */
+    public static Object createInstance(Class<?> clazz, Map<Class<?>, Object> ctorArgs) throws SecurityException, NoSuchMethodException, InstantiationException, IllegalAccessException, IllegalArgumentException, InvocationTargetException {    			
+    	if (ctorArgs.size() == 0) {
+    		Constructor<?> ctor = clazz.getConstructor(VOID);
+    		ctor.setAccessible(true);
+			return ctor.newInstance();
+    	}
+    	
+    	Constructor<?>[] ctors = clazz.getConstructors(); 
+    	for (Constructor<?> ctor : ctors) {
+			Class<?>[] ctorParamTypes = ctor.getParameterTypes();
+			boolean match = true;
+			for (Class<?> ctopParamType : ctorParamTypes) {
+				if (ctorArgs.get(ctopParamType) == null) {
+					match = false;
+					break;
+				}
+			}
+			if (match) {
+				Object[] paramValues = new Object[ctorParamTypes.length];
+				int index = 0;
+				for (Class<?> ctorParamType : ctorParamTypes) {
+					paramValues[index ++] = ctorArgs.get(ctorParamType);
+				}
+				ctor.setAccessible(true);
+				return ctor.newInstance(paramValues);
+			}
+    	}
+    	throw new InstantiationException("No suitable constructor found for class " + clazz.getName());    	
     }
     
     private static Method getDeclaredMethod(Class<?> clazz, String name, Class<?>[] signature, boolean isSuper) {
@@ -387,4 +510,5 @@ public class InvocationUtil {
             }
         }
     }
+
 }

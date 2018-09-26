@@ -26,6 +26,17 @@ import java.net.URL;
  * provider. These dependencies then react on them becoming available or not. Use cases for such dependencies
  * are resources that are embedded in bundles, in a workspace or some remote or local repository, etc.
  * 
+ * When a resource is injected using callbacks, the following method signatures are supported:
+ * <p>
+ * <pre>{@code
+ * (Component, URL, Dictionary)
+ * (Component, URL)
+ * (Component) 
+ * (URL, Dictionary)
+ * (URL)
+ * (Object)
+ * }</pre>
+ * 
  * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
 public interface ResourceDependency extends Dependency, ComponentDependencyDeclaration, ResourceHandler {

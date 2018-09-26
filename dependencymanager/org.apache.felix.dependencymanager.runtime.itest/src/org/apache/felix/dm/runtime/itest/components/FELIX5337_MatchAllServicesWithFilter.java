@@ -25,8 +25,8 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import org.apache.felix.dm.annotation.api.Component;
 import org.apache.felix.dm.annotation.api.Property;
 import org.apache.felix.dm.annotation.api.ServiceDependency;
-import org.apache.felix.dm.annotation.api.ServiceDependency.Any;
 import org.apache.felix.dm.annotation.api.Start;
+import org.apache.felix.dm.annotation.api.ServiceDependency.Any;
 import org.apache.felix.dm.itest.util.Ensure;
 import org.junit.Assert;
 

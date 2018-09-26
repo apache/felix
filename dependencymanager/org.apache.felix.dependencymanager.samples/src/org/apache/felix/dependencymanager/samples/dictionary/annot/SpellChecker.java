@@ -18,6 +18,8 @@
  */
 package org.apache.felix.dependencymanager.samples.dictionary.annot;
 
+import java.util.Collection;
+import java.util.Collections;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
 import org.apache.felix.dm.annotation.api.Component;
@@ -37,9 +39,9 @@ import org.osgi.service.log.LogService;
  * 
  * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
-@Component(provides = { SpellChecker.class }, properties = {
-        @Property(name = CommandProcessor.COMMAND_SCOPE, value = "dictionary.annotation"),
-        @Property(name = CommandProcessor.COMMAND_FUNCTION, value = "spellcheck" ) })
+@Component(provides = SpellChecker.class)
+@Property(name = CommandProcessor.COMMAND_SCOPE, value = "dictionary.annotation")
+@Property(name = CommandProcessor.COMMAND_FUNCTION, value = "spellcheck" )
 public class SpellChecker {
     /**
      * We'll use the OSGi log service for logging. If no log service is available, then we'll use a NullObject.
@@ -50,8 +52,8 @@ public class SpellChecker {
     /**
      * We'll store all Dictionaries in a concurrent list, in order to avoid method synchronization.
      */
-    @ServiceDependency(service = DictionaryService.class)
-    private final Iterable<DictionaryService> m_dictionaries = new ConcurrentLinkedQueue<>();
+    @ServiceDependency
+    private final Collection<DictionaryService> m_dictionaries = new ConcurrentLinkedQueue<>();
 
     /**
      * Lifecycle method callback, used to check if our service has been activated.

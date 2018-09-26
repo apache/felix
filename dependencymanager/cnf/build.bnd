@@ -1,4 +1,3 @@
-#
 # Licensed to the Apache Software Foundation (ASF) under one or more
 # contributor license agreements.  See the NOTICE file distributed with
 # this work for additional information regarding copyright ownership.
@@ -15,78 +14,49 @@
 # limitations under the License.
 #
 
-########################
-## BND BUILD SETTINGS ##
-########################
+#
+# Set here bnd repositories
+#
+-plugin.1.Release: aQute.bnd.deployer.repository.LocalIndexedRepo; \
+    name=Release; \
+    local=${workspace}/cnf/releaserepo; \
+    pretty=true
 
+-plugin.2.Local: aQute.bnd.deployer.repository.LocalIndexedRepo; \
+    name=Local; \
+    local=${workspace}/cnf/localrepo; \
+    pretty=true
+		
+-plugin.3.Repository: aQute.bnd.repository.maven.provider.MavenBndRepository; \
+    releaseUrl = 'https://repo1.maven.org/maven2'; \
+    name = Repository; \
+    index = ${.}/repository.mvn; \
+    noupdateOnRelease=true
 
-## Global defaults are loaded from the bnd library (as shown below), place your
-## specific settings here. Additional settings are inherited from ext/*.bnd and
-## they will be overridden by anything you specify in this file.
-
-## General Options
-#project.dependson:     ${p-dependson;:}
-#project.bootclasspath: ${p-bootclasspath;:}
-#project.buildpath:     ${p-buildpath;:}
-#project.sourcepath:    ${p-sourcepath;:}
-#project.allsourcepath: ${p-allsourcepath;:}
-#project.output:        ${p-output}
-#project.testpath:      ${p-testpath;:}
-
-#-verbose:              false
-#project:               ${basedir}
-#src:                   src
-#bin:                   bin
-#testsrc:               test
-#testbin:               bin_test
-#test-reports:          test-reports
-#target-dir:            generated
-#target:                ${project}/${target-dir}
-#build:                 ${workspace}/cnf
-#p:                     ${basename;${project}}
-#project.name:          ${p}
-#plugin-dir:            ${build}/plugins
-
-## Java Compiler Options
-#java:                  java
-#javac:                 javac
-javac.source:          1.8
-javac.target:          1.8
-#javac.profile:
-#javac.debug:           on
-
-## Bnd Options
--sources:               true
-#-sourcepath:           ${project}/src
-
-
-## Properties from ext/*.bnd can be referenced in order to extend them. For
-## example, to add one additional plugin to the list defined in
-## ext/repositories.bnd:
-# -plugin: ${ext.repositories.-plugin}, org.example.MyPlugin
-
-
-## To enable baselining, uncomment the following lines:
+#
+# configure release and baseline repos
+#
+-releaserepo: Release
+-baselinerepo: Repository
 -baseline: *
 
-## If you use git, you might want to uncomment the following lines:
-# Git-Descriptor:       ${system-allow-fail;git describe --dirty --always}
-# Git-SHA:              ${system-allow-fail;git rev-list -1 HEAD}
-# -diffignore:          Git-Descriptor,Git-SHA
+#
+# Set here the maven group id for the workspace bundles
+#
+-pom: groupid = org.apache.felix
 
-##
+#
+# Don't include sources in generated bundles
+#
+-sources: true
+
+#
+# Java parameters
+#
+javac.source: 1.8
+javac.target: 1.8
+
+#
 # Removes some headers in order to reduce binary diff between same bundles that are not changed between subsequent releases.
-# see FELIX-4915
 #
 -removeheaders: Bnd-LastModified,Tool,Created-By,Include-Resource
-
-# Make baselining issues a warning instead of error when using Eclipse
-fixuptype: ${if;${is;${gestalt;batch};batch};error;warning}
-
--fixupmessages: \
-  "Baseline ...";is:=${fixuptype},\
-  "The bundle version ...";is:=${fixuptype},\
-  "The baseline version ...";is:=${fixuptype}
-
-# Generates poms in artifacts.
--pom: groupid = org.apache.felix

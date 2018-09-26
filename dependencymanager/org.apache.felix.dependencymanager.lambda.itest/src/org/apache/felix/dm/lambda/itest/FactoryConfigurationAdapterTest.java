@@ -78,7 +78,7 @@ public class FactoryConfigurationAdapterTest extends TestBase
         m.add(s4);
         
         // Wait for step 8: the AdapterService consumer has been injected with the AdapterService, and has called the doService method.
-        m_ensure.waitForStep(8, 10000);
+        m_ensure.waitForStep(8, 1000000);
         
         // Modify configuration.
         configurator.update("key", "value2");

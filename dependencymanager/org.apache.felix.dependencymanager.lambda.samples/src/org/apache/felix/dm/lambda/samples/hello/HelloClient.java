@@ -46,7 +46,7 @@ public class HelloClient {
 	 * which is injected in the m_log class field (possibly with a NullObject in case the LogService is unavailable).
 	 */
 	void start() {
-		System.out.println("HelliClient started");
+		System.out.println("HelloClient started");
 	}
 	
 	/**

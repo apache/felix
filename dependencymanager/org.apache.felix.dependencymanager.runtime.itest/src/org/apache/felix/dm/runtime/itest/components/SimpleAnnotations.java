@@ -43,7 +43,9 @@ public class SimpleAnnotations {
      * Provides a <code>Runnable</code> service, which is required by the
      * {@link Consumer} class.
      */
-    @Component(properties = {@Property(name = "foo", value = "bar"), @Property(name="type", value="SimpleAnnotations")})
+    @Component
+    @Property(name = "foo", value = "bar")
+    @Property(name="type", value="SimpleAnnotations")
     public static class Producer implements Runnable {
         public final static String ENSURE = "SimpleAnnotations.Producer";
         

@@ -69,7 +69,8 @@ public class AdapterAnnotation {
         }
     }
 
-    @AdapterService(adapteeService = S1.class, properties = { @Property(name = "adapter", value = "true") })
+    @Property(name = "adapter", value = "true")
+    @AdapterService(adapteeService = S1.class)
     public static class S1ToS3AdapterAutoConfig implements S3 {
         public static final String ENSURE = "AdapterAnnotation.autoConfig";
 
@@ -128,7 +129,8 @@ public class AdapterAnnotation {
         }
     }
 
-    @AdapterService(adapteeService = S1.class, properties = { @Property(name = "adapter", value = "true") }, field = "m_s1")
+    @AdapterService(adapteeService = S1.class, field = "m_s1")
+    @Property(name = "adapter", value = "true")
     public static class S1ToS3AdapterAutoConfigField implements S3 {
         public final static String ENSURE = "AdapterAnnotation.autoConfig.field";
         // This is the adapted service
@@ -143,7 +145,8 @@ public class AdapterAnnotation {
         }
     }
 
-    @AdapterService(adapteeService = S1.class, properties = { @Property(name = "adapter", value = "true") }, added = "bind", removed = "removed")
+    @AdapterService(adapteeService = S1.class, added = "bind", removed = "removed")
+    @Property(name = "adapter", value = "true")
     public static class S1ToS3AdapterCallback implements S3 {
         public final static String ENSURE = "AdapterAnnotation.callback";
         // This is the adapted service
@@ -170,7 +173,8 @@ public class AdapterAnnotation {
         }
     }
 
-    @Component(properties = { @Property(name = "param1", value = "value1") })
+    @Component
+    @Property(name = "param1", value = "value1")
     public static class S1Impl implements S1 {
         public final static String ENSURE = "AdapterAnnotation.S1Impl";
 

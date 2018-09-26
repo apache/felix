@@ -142,15 +142,17 @@ public class DependencyBuilder
 
     private Dependency createConfigurationDependency(Bundle b, DependencyManager dm) throws Exception
     {
-        String confProxyType = m_metaData.getString(Params.configType, null);
+        String configType = m_metaData.getString(Params.configType, null);
+        String[] configTypes = m_metaData.getStrings(Params.configTypes, null);
+        configTypes = configTypes == null ? ((configType != null) ? new String[] { configType } : null) : configTypes;
         String pid = m_metaData.getString(Params.pid);
         boolean propagate = "true".equals(m_metaData.getString(Params.propagate, "false"));
         String callback = m_metaData.getString(Params.updated, "updated");
         boolean required = "true".equals(m_metaData.getString(Params.required, "true"));
-        return createConfigurationDependency(dm, b, pid, callback, confProxyType, propagate, required);
+        return createConfigurationDependency(dm, b, pid, callback, configTypes, propagate, required);
     }
 
-    private Dependency createConfigurationDependency(DependencyManager dm, Bundle b, String pid, String callback, String confProxyType, boolean propagate, boolean required) 
+   private Dependency createConfigurationDependency(DependencyManager dm, Bundle b, String pid, String callback, String[] configTypes, boolean propagate, boolean required)
         throws ClassNotFoundException
     {
         if (pid == null)
@@ -160,17 +162,19 @@ public class DependencyBuilder
         }
         ConfigurationDependency cd = dm.createConfigurationDependency();
         cd.setPid(pid);
-        if (confProxyType != null) 
-        {
-            Class<?> confProxyTypeClass = b.loadClass(confProxyType); 
-            cd.setCallback(callback, confProxyTypeClass);            
-        }
-        else
-        {
-            cd.setCallback(callback);            
-        }
-        cd.setPropagate(propagate);
+        cd.setCallback(callback);
+        cd.setPropagate(propagate, true /* configuration will override default service properties */);
         cd.setRequired(required);
+        
+        if (configTypes != null) 
+        {
+            Class<?>[] configTypeClasses = new Class<?>[configTypes.length];
+            for (int i = 0; i < configTypes.length; i ++)
+            {
+                configTypeClasses[i] = b.loadClass(configTypes[i]);
+            }
+            cd.setConfigType(configTypeClasses);            
+        }        
         return cd;
     }
 

@@ -14,7 +14,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
--runfw: org.apache.felix.framework;version='[5.2.0,5.2.0]'
+-runfw: ${felix.framework}
 -runee: JavaSE-1.8
 -runsystemcapabilities: ${native_capability}
 
@@ -30,8 +30,9 @@
 	${bndlib},\
 	org.apache.felix.dependencymanager;version=latest,\
 	org.apache.felix.dependencymanager.shell;version=latest,\
-	org.apache.felix.dependencymanager.runtime;version=latest,\
-    org.apache.felix.dependencymanager.samples.dictionary.api;version=latest
+	org.apache.felix.dependencymanager.samples.dictionary.api;version=latest,\
+	slf4j.simple;version=1.7.7,\
+	slf4j.api;version=1.7.7
 
 -runproperties:  \
 	org.apache.felix.dependencymanager.loglevel=2,\

@@ -51,16 +51,17 @@ public class FactoryConfigurationAdapterServiceBuilder extends AbstractBuilder
         String[] provides = srvMeta.getStrings(Params.provides, null);
         Dictionary<String, Object> properties = srvMeta.getDictionary(Params.properties, null);
         boolean propagate = "true".equals(srvMeta.getString(Params.propagate, "false"));
-        String configProxyClassName = srvMeta.getString(Params.configType, null);
-
+        Class<?>[] configTypes = getConfigTypes(b, srvMeta);        
         Component c = null;
+                
+        c = dm.createFactoryComponent()
+            .setFactoryPid(factoryPid)
+            .setUpdated(updated)
+            .setPropagate(propagate)
+            .setConfigType(configTypes);
         
-        Class<?> configProxyClass = configProxyClassName != null ? b.loadClass(configProxyClassName) : null;
-        c = dm.createFactoryConfigurationAdapterService(factoryPid, updated, propagate, null, configProxyClass);
-
         c.setInterface(provides, properties);
-        String factoryMethod = srvMeta.getString(Params.factoryMethod, null);
-        
+        String factoryMethod = srvMeta.getString(Params.factoryMethod, null);        
         
         if (factoryMethod == null)
         {
@@ -78,5 +79,26 @@ public class FactoryConfigurationAdapterServiceBuilder extends AbstractBuilder
         // Adds dependencies (except named dependencies, which are managed by the lifecycle handler).
         addUnamedDependencies(b, dm, c, srvMeta, depsMeta);
         dm.add(c);
-    }    
+    }
+
+    private Class<?>[] getConfigTypes(Bundle b, MetaData srvMeta) throws ClassNotFoundException
+    {
+        String configType = srvMeta.getString(Params.configType, null);
+        if (configType != null)
+        {
+            return new Class<?>[] { b.loadClass(configType) };
+        }
+
+        String[] configTypes = srvMeta.getStrings(Params.configTypes, null);
+        if (configTypes != null)
+        {
+            Class<?>[] configTypeClasses = new Class<?>[configTypes.length];
+            for (int i = 0; i < configTypes.length; i++)
+            {
+                configTypeClasses[i] = b.loadClass(configTypes[i]);
+            }
+            return configTypeClasses;
+        }
+        return null;
+    }
 }

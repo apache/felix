@@ -62,7 +62,8 @@ public class ServiceTestWthPublisher {
         }
     }
 
-    @Component(properties = {@Property(name = "foo", value = "bar")})
+    @Component
+    @Property(name = "foo", value = "bar")
     public static class ProviderImpl implements Provider {
         @LifecycleController
         volatile Runnable m_publisher; // injected and used to register our service

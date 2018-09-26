@@ -18,7 +18,7 @@
  */
 package org.apache.felix.dm.tracker;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertArrayEquals;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -27,8 +27,6 @@ import java.util.List;
 import java.util.Properties;
 
 import org.apache.felix.dm.DependencyManager;
-import org.apache.felix.dm.tracker.ServiceTracker;
-import org.apache.felix.dm.tracker.ServiceTrackerCustomizer;
 import org.apache.felix.dm.tracker.ServiceTracker.Tracked;
 import org.junit.Test;
 import org.osgi.framework.Bundle;

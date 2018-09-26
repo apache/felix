@@ -21,8 +21,6 @@ package test;
 import org.apache.felix.dm.Component;
 import org.apache.felix.dm.ComponentState;
 import org.apache.felix.dm.ComponentStateListener;
-import org.apache.felix.dm.Dependency;
-import org.apache.felix.dm.context.AbstractDependency;
 import org.apache.felix.dm.impl.ComponentImpl;
 import org.junit.Assert;
 import org.junit.Test;

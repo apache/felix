@@ -54,6 +54,20 @@ public interface PropertyMetaData {
      * the special case of a 0 cardinality, meaning a single value, does not allow arrays or vectors of 0 elements. 
      */
     public PropertyMetaData setDefaults(String[] defaults);
+    
+    /**
+     * Returns some defaults for this property. The object must be of the appropriate type as defined by the cardinality and getType(). 
+     * The return type is a list of String  objects that can be converted to the appropriate type. The cardinality of the return 
+     * array must follow the absolute cardinality of this type. E.g. if the cardinality = 0, the array must contain 1 element. 
+     * If the cardinality is 1, it must contain 0 or 1 elements. If it is -5, it must contain from 0 to max 5 elements. Note that 
+     * the special case of a 0 cardinality, meaning a single value, does not allow arrays or vectors of 0 elements. 
+     */
+    public default PropertyMetaData setDefaults(String def, String ... defaults) {
+        String[] copy = new String[1 + defaults.length];
+        copy[0] = def;
+        System.arraycopy(defaults, 0, copy, 1, defaults.length);
+        return setDefaults(copy);
+    }
 
     /**
      * Returns the property description. The description may be localized and must describe the semantics of this type and any 

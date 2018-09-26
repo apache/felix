@@ -40,7 +40,8 @@ public class ExtraServiceProperties {
     public interface Provider {
     }
 
-    @Component(properties = {@Property(name = "foo", value = "bar")})
+    @Component
+    @Property(name = "foo", value = "bar")
     public static class ProviderImpl implements Provider {
         @Start
         Map<String, String> start() {

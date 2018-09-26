@@ -135,14 +135,14 @@ public class BndLogger extends Logger {
         return logEnabled.ordinal() >= Level.Error.ordinal();
     }
 
-    public void error(String content, Object ... args) {
-        m_reporter.error(content, args);
-        logErr(String.format(content, args), null);
-    }
-
     public void error(String content, Throwable err, Object ... args) {
         m_reporter.error(content, args);
         logErr(String.format(content, args), err);
+    }
+
+    public void error(String content, Object ... args) {
+        m_reporter.error(content, args);
+        logErr(String.format(content, args), null);
     }
 
     /**

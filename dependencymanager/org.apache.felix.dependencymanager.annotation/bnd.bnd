@@ -14,15 +14,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-Bundle-Version: 4.2.1
+Bundle-Version: 5.0.0
 -buildpath: \
-	biz.aQute.bndlib;version=2.4,\
 	osgi.core;version=6.0,\
-	osgi.cmpn;version=6.0
-Private-Package: \
-	org.apache.felix.dm.annotation.plugin.bnd
-Export-Package: \
-	org.apache.felix.dm.annotation.api
+	osgi.cmpn;version=6.0,\
+	biz.aQute.bndlib;version=3.5
+Private-Package: org.apache.felix.dm.annotation.plugin.bnd
+Export-Package: org.apache.felix.dm.annotation.api
 Include-Resource: META-INF/=resources/
 Bundle-Name: Apache Felix Dependency Manager Annotations
 Bundle-Description: Annotations for Apache Felix Dependency Manager
