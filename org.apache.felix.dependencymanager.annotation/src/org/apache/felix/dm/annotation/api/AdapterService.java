@@ -24,7 +24,7 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * Annotates an Adapater service. Adapters, like {@link AspectService}, are used to "extend" 
+ * Annotates an Adapater service component. Adapters, like {@link AspectService}, are used to "extend" 
  * existing services, and can publish different services based on the existing one. 
  * An example would be implementing a management interface for an existing service, etc .... 
  * <p>When you annotate an adapter class with the <code>@AdapterService</code> annotation, it will be applied 
@@ -72,19 +72,33 @@ import java.lang.annotation.Target;
  * 
  * <p> Here, the AdapterService is registered into the OSGI registry each time an AdapteeService
  * is found from the registry. The AdapterImpl class adapts the AdapteeService to the AdapterService.
- * The AdapterService will also have a service property (param=value), and will also include eventual
- * service properties found from the AdapteeService:
+ * The AdapterService will also have the following service property: p1=v1, p2=v2 :
  * <blockquote>
  * <pre>
  * 
+ * interface AdapteeService {
+ *     void method1();
+ *     void method2();
+ * }
+ * 
+ * &#64;Component
+ * &#64;Property(name="p1", value="v1")
+ * class Adaptee implements AdapteeService {
+ *     ...
+ * } 
+ * 
+ * interface AdapterService {
+ *     void doWork();
+ * }
+ * 
  * &#64;AdapterService(adapteeService = AdapteeService.class)
- * &#64;Property(name="param", value="value")
+ * &#64;Property(name="p2", value="v2")
  * class AdapterImpl implements AdapterService {
  *     // The service we are adapting (injected by reflection)
- *     protected AdapteeService adaptee;
+ *     volatile AdapteeService adaptee;
  *   
  *     public void doWork() {
- *        adaptee.mehod1();
+ *        adaptee.method1();
  *        adaptee.method2();
  *     }
  * }
@@ -100,6 +114,7 @@ public @interface AdapterService
     /**
      * Sets the adapter service interface(s). By default, the directly implemented interface(s) is (are) used.
      * @return the adapter service interface(s)
+     * @deprecated you can apply {@link Property} annotation directly on the component class.
      */
     Class<?>[] provides() default {};
 
@@ -131,7 +146,7 @@ public @interface AdapterService
     
     /**
      * Sets the field name where to inject the original service. By default, the original service is injected
-     * in any attributes in the aspect implementation that are of the same type as the aspect interface.
+     * in any attributes of the adapter implementation that are of the same type as the adaptee interface.
      * @return the field used to inject the original service
      */
     String field() default "";
@@ -168,4 +183,13 @@ public @interface AdapterService
      * @return the service propagation flag
      */
     boolean propagate() default true;
+    
+	/**
+	 * The service scope for the service of this Component.
+	 * 
+	 * <p>
+	 * If not specified, the {@link ServiceScope#SINGLETON singleton} service
+	 * scope is used. 
+	 */
+	ServiceScope scope() default ServiceScope.SINGLETON;
 }

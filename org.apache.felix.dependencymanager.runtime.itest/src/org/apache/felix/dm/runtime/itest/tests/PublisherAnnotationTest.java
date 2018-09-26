@@ -22,10 +22,7 @@ import org.apache.felix.dm.itest.util.Ensure;
 import org.apache.felix.dm.itest.util.TestBase;
 import org.apache.felix.dm.runtime.itest.components.AdapterServiceTestWithPublisher;
 import org.apache.felix.dm.runtime.itest.components.BundleAdapterServiceTestWithPublisher;
-import org.apache.felix.dm.runtime.itest.components.ComponentFactoryServiceTestWthPublisher;
 import org.apache.felix.dm.runtime.itest.components.FactoryConfigurationAdapterServiceTestWithPublisher;
-import org.apache.felix.dm.runtime.itest.components.FactoryServiceTestWthPublisher;
-import org.apache.felix.dm.runtime.itest.components.ResourceAdapterServiceTestWithPublisher;
 import org.apache.felix.dm.runtime.itest.components.ServiceTestWthPublisher;
 import org.osgi.framework.ServiceRegistration;
 
@@ -46,28 +43,6 @@ public class PublisherAnnotationTest extends TestBase {
     }
 
     /**
-     * A Service instantiated from a FactorySet, and which registers/unregisters its service,
-     * using the @ServiceLifecycle annotation.
-     */
-    public void testFactoryServiceWithPublisher() {
-        Ensure e = new Ensure();
-        ServiceRegistration sr = register(e, FactoryServiceTestWthPublisher.ENSURE);
-        e.waitForStep(5, 10000);
-        sr.unregister();
-    }
-
-    /**
-     * A Service instantiated from a DM ComponentFactory, and which registers/unregisters its service,
-     * using the @ServiceLifecycle annotation.
-     */
-    public void testComponentFactoryServiceWithPublisher() {
-        Ensure e = new Ensure();
-        ServiceRegistration sr = register(e, ComponentFactoryServiceTestWthPublisher.ENSURE);
-        e.waitForStep(5, 10000);
-        sr.unregister();
-    }
-
-    /**
      * Test an AdapterService which provides its interface using a @ServiceLifecycle.
      */
     public void testAdapterServiceWithPublisher() {
@@ -83,16 +58,6 @@ public class PublisherAnnotationTest extends TestBase {
     public void testBundleAdapterServiceWithPublisher() {
         Ensure e = new Ensure();
         ServiceRegistration sr = register(e, BundleAdapterServiceTestWithPublisher.ENSURE);
-        e.waitForStep(5, 10000);
-        sr.unregister();
-    }
-
-    /**
-     * Test a ResourceAdapterService which provides its interface using a @ServiceLifecycle.
-     */
-    public void TestResourceAdapterServiceWithPublisher() {
-        Ensure e = new Ensure();
-        ServiceRegistration sr = register(e, ResourceAdapterServiceTestWithPublisher.ENSURE);
         e.waitForStep(5, 10000);
         sr.unregister();
     }

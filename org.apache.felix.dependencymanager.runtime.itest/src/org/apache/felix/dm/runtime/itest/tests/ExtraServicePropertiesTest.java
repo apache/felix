@@ -21,8 +21,6 @@ package org.apache.felix.dm.runtime.itest.tests;
 import org.apache.felix.dm.itest.util.Ensure;
 import org.apache.felix.dm.itest.util.TestBase;
 import org.apache.felix.dm.runtime.itest.components.ExtraAdapterServiceProperties;
-import org.apache.felix.dm.runtime.itest.components.ExtraComponentFactoryServiceProperties;
-import org.apache.felix.dm.runtime.itest.components.ExtraFactoryServiceProperties;
 import org.apache.felix.dm.runtime.itest.components.ExtraServiceProperties;
 import org.osgi.framework.ServiceRegistration;
 
@@ -41,26 +39,6 @@ public class ExtraServicePropertiesTest extends TestBase {
         Ensure e = new Ensure();
         ServiceRegistration sr = register(e, ExtraServiceProperties.ENSURE);
         e.waitForStep(2, 10000);
-        sr.unregister();
-    }
-
-    /**
-     * Tests if a Service instantiated by a Factory set can provide its service properties from its start method.
-     */
-    public void testExtraFactoryServiceProperties() {
-        Ensure e = new Ensure();
-        ServiceRegistration sr = register(e, ExtraFactoryServiceProperties.ENSURE);
-        e.waitForStep(3, 10000);
-        sr.unregister();
-    }
-    
-    /**
-     * Tests if a Service instantiated by a DM ComponentFactory can provide its service properties from its start method.
-     */
-    public void testExtraComponentFactoryServiceProperties() {
-        Ensure e = new Ensure();
-        ServiceRegistration sr = register(e, ExtraComponentFactoryServiceProperties.ENSURE);
-        e.waitForStep(3, 10000);
         sr.unregister();
     }
 

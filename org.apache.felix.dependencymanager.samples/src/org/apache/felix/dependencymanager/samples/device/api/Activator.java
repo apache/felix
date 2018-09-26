@@ -34,7 +34,8 @@ public class Activator extends DependencyActivatorBase {
         createDeviceAndParameter(dm, 1);
         createDeviceAndParameter(dm, 2);
 
-        dm.add(createAdapterService(Device.class, null)
+        dm.add(createAdapterComponent()
+        	.setAdaptee(Device.class, null)
             .setImplementation(DeviceAccessImpl.class)
             .setInterface(DeviceAccess.class.getName(), null));
         

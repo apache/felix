@@ -18,13 +18,15 @@
  */
 package org.apache.felix.dependencymanager.samples.device.annot;
 
+import java.io.IOException;
 import java.util.Dictionary;
 import java.util.Hashtable;
 
 import org.apache.felix.dm.annotation.api.Component;
 import org.apache.felix.dm.annotation.api.ServiceDependency;
 import org.apache.felix.dm.annotation.api.Start;
-import org.apache.felix.dm.runtime.api.ComponentFactory;
+import org.osgi.service.cm.Configuration;
+import org.osgi.service.cm.ConfigurationAdmin;
 import org.osgi.service.log.LogService;
 
 /**
@@ -34,32 +36,31 @@ import org.osgi.service.log.LogService;
  */
 @Component
 public class DeviceAndParameterFactory {
-    @ServiceDependency(filter = "(" + Component.FACTORY_NAME + "=Device)")
-    volatile ComponentFactory m_deviceFactory;
-
-    @ServiceDependency(filter = "(" + Component.FACTORY_NAME + "=DeviceParameter)")
-    volatile ComponentFactory m_deviceParameterFactory;
-
+	@ServiceDependency
+	ConfigurationAdmin cm;
+	
     @ServiceDependency
     volatile LogService log;
 
     @Start
-    public void start() {
+    public void start() throws IOException {
         log.log(LogService.LOG_INFO, "DeviceAndParameterFactory.start");
         for (int i = 0; i < 2; i++) {
             createDeviceAndParameter(i);
         }
     }
 
-    private void createDeviceAndParameter(int id) {
+    private void createDeviceAndParameter(int id) throws IOException {
         log.log(LogService.LOG_INFO, "DeviceAndParameterFactory: creating Device/DeviceParameter with id=" + id);
 
         Dictionary<String, Object> device = new Hashtable<>();
         device.put("device.id", new Integer(id));
-        m_deviceFactory.newInstance(device);
+        Configuration deviceConf = cm.createFactoryConfiguration("device", "?");
+        deviceConf.update(device);
 
         Dictionary<String, Object> param = new Hashtable<>();
         param.put("device.id", new Integer(id));
-        m_deviceParameterFactory.newInstance(param);
+        Configuration paramConf = cm.createFactoryConfiguration("device.parameter", "?");
+        paramConf.update(param);
     }
 }

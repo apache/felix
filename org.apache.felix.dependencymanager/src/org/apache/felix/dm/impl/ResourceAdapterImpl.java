@@ -23,9 +23,11 @@ import java.util.Enumeration;
 import java.util.Hashtable;
 import java.util.List;
 
+import org.apache.felix.dm.BundleComponent;
 import org.apache.felix.dm.Component;
 import org.apache.felix.dm.ComponentStateListener;
 import org.apache.felix.dm.DependencyManager;
+import org.apache.felix.dm.ResourceComponent;
 import org.apache.felix.dm.ResourceDependency;
 import org.apache.felix.dm.context.DependencyContext;
 
@@ -35,67 +37,63 @@ import org.apache.felix.dm.context.DependencyContext;
  * 
  * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
-public class ResourceAdapterImpl extends FilterComponent {
-    private final Object m_callbackInstance;
-    private final String m_callbackChanged;
-    private final String m_callbackAdded;
-    private final String m_resourceFilter;
-    
-    /**
-     * Creates a new Resource Adapter Service implementation.
-     * @param dm the dependency manager used to create our internal adapter service
-     */
-    public ResourceAdapterImpl(DependencyManager dm, String resourceFilter, boolean propagate, Object callbackInstance, String callbackSet, String callbackChanged) {
+public class ResourceAdapterImpl extends FilterComponent<ResourceComponent> implements ResourceComponent {
+    private volatile Object m_callbackInstance;
+    private volatile String m_callbackChanged;
+    private volatile String m_callbackAdded;
+    private volatile String m_resourceFilter;
+    private volatile boolean m_propagate = true;
+    private volatile Object m_propagateCallbackInstance;
+    private volatile String m_propagateCallbackMethod;
+
+    public ResourceAdapterImpl(DependencyManager dm) {
         super(dm.createComponent()); // This service will be filtered by our super class, allowing us to take control.
-        m_callbackInstance = callbackInstance;
-        m_callbackAdded = callbackSet;
-        m_callbackChanged = callbackChanged;
-        m_resourceFilter = resourceFilter;
-        m_component.setImplementation(new ResourceAdapterDecorator(propagate))
-            .add(dm.createResourceDependency()
-                 .setFilter(resourceFilter)
-                 .setAutoConfig(false)
-                 .setCallbacks("added", "removed"))
-            .setCallbacks("init", null, "stop", null);
     }
-    
-    public ResourceAdapterImpl(DependencyManager dm, String resourceFilter, Object propagateCallbackInstance, String propagateCallbackMethod, Object callbackInstance, String callbackSet, String callbackChanged) {
-        super(dm.createComponent()); // This service will be filtered by our super class, allowing us to take control.
-        m_callbackInstance = callbackInstance;
-        m_callbackAdded = callbackSet;
-        m_callbackChanged = callbackChanged;
-        m_resourceFilter = resourceFilter;
-        m_component.setImplementation(new ResourceAdapterDecorator(propagateCallbackInstance, propagateCallbackMethod))
-            .add(dm.createResourceDependency()
-                 .setFilter(resourceFilter)
-                 .setAutoConfig(false)
-                 .setCallbacks("added", "removed"))
-            .setCallbacks("init", null, "stop", null);
-    }   
-    
+
+	public ResourceComponent setResourceFilter(String filter) {
+		m_resourceFilter = filter;
+		return this;
+	}
+            
+	public ResourceComponent setPropagate(boolean propagate) {
+		m_propagate = propagate;
+		return this;
+	}
+	
+	public ResourceComponent setPropagate(Object propagateCbInstance, String propagateCbMethod) {
+		m_propagateCallbackInstance = propagateCbInstance;
+		m_propagateCallbackMethod = propagateCbMethod;
+		return this;
+	}
+
+	public ResourceComponent setBundleCallbacks(String add, String change) {
+		m_callbackAdded = add;
+		m_callbackChanged = change;
+		return this;
+	}
+
+	public ResourceComponent setBundleCallbackInstance(Object callbackInstance) {
+		m_callbackInstance = callbackInstance;
+		return this;
+	}
+
+    @Override
+    protected void startInitial() {
+        DependencyManager dm = getDependencyManager();
+        m_component.setImplementation(new ResourceAdapterDecorator())
+        .add(dm.createResourceDependency()
+             .setFilter(m_resourceFilter)
+             .setAutoConfig(false)
+             .setCallbacks("added", "removed"))
+        .setCallbacks("init", null, "stop", null);
+    }
+        
     public String getName() {
         return "Resource Adapter" + ((m_resourceFilter != null) ? " with filter " + m_resourceFilter : "");
     }
 
     public class ResourceAdapterDecorator extends AbstractDecorator {
-        private final boolean m_propagate;
-        private final Object m_propagateCallbackInstance;
-        private final String m_propagateCallbackMethod;
-
-        public ResourceAdapterDecorator(boolean propagate) {
-            this(propagate, null, null);
-        }
-
-        public ResourceAdapterDecorator(Object propagateCallbackInstance, String propagateCallbackMethod) {
-            this(true, propagateCallbackInstance, propagateCallbackMethod);
-        }
         
-        private ResourceAdapterDecorator(boolean propagate, Object propagateCallbackInstance, String propagateCallbackMethod) {
-            m_propagate = propagate;
-            m_propagateCallbackInstance = propagateCallbackInstance;
-            m_propagateCallbackMethod = propagateCallbackMethod;
-        }
-
         public Component createService(Object[] properties) {
             URL resource = (URL) properties[0]; 
             Hashtable<String, Object> props = new Hashtable<>();
@@ -120,12 +118,13 @@ public class ResourceAdapterImpl extends FilterComponent {
             } else {
                 resourceDependency.setPropagate(m_propagate);
             }
-            Component service = m_manager.createComponent()
+            Component<?> service = m_manager.createComponent()
                 .setInterface(m_serviceInterfaces, props)
                 .setImplementation(m_serviceImpl)
                 .setFactory(m_factory, m_factoryCreateMethod) // if not set, no effect
                 .setComposition(m_compositionInstance, m_compositionMethod) // if not set, no effect
                 .setCallbacks(m_callbackObject, m_init, m_start, m_stop, m_destroy) // if not set, no effect
+                .setScope(m_scope)
                 .add(resourceDependency);
             
             configureAutoConfigState(service, m_component);

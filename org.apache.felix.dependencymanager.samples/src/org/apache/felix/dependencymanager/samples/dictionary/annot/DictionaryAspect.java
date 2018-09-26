@@ -44,12 +44,17 @@ public class DictionaryAspect implements DictionaryService {
      */
     @ServiceDependency(required = false)
     private LogService m_log;
+    
+    /**
+     * Our Configuration PID
+     */
+    final static String PID = "dictionary.aspect";
 
     /**
      * Defines a configuration dependency for retrieving our english custom words (by default,
      * our PID is our full class name).
      */
-    @ConfigurationDependency(propagate = false)
+    @ConfigurationDependency(pid=PID, propagate = false)
     protected void updated(DictionaryAspectConfiguration cnf) {
         if (cnf != null) {
             m_words.clear();

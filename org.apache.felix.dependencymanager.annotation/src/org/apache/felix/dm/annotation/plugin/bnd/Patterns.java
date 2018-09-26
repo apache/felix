@@ -70,6 +70,9 @@ public class Patterns
     // Pattern used to parse a field whose type is BundleContext
     public final static Pattern BUNDLE_CONTEXT = Pattern.compile("Lorg/osgi/framework/BundleContext;");
 
+    // Pattern used to parse a field whose type is BundleContext
+    public final static Pattern BUNDLE = Pattern.compile("Lorg/osgi/framework/Bundle;");
+
     // Pattern used to parse a field whose type is DependencyManager
     public final static Pattern DEPENDENCY_MANAGER = Pattern.compile("Lorg/apache/felix/dm/DependencyManager;");
     
@@ -81,6 +84,64 @@ public class Patterns
 
     // Pattern used to check if a method returns a Map
     public final static Pattern METHOD_RETURN_MAP = Pattern.compile("\\(\\)Ljava/util/Map;");
+    
+    // Pattern to detect a configuration updated callback without any config types, like for instance:
+    // updated(Dictionary)
+    // updated(Component, Dictionary)
+    public final static Pattern UPDATED_NO_CONFIG_TYPES = Pattern.compile
+    		("\\(((Ljava/util/Dictionary;)|(Lorg/apache/felix/dm/Component;Ljava/util/Dictionary;))\\)V");
+
+    // Pattern to detect a configuration updated callback with some config types, like for instance:
+    // updated(ConfigType1, ConfigType2, ...)
+    // updated(Dictionary, ConfigType1, ConfigType2, ...)
+    // updated(Component, Dictionary, ConfigType1, ConfigType2, ...)
+    public final static Pattern UPDATED_CONFIG_TYPES = Pattern.compile
+    		("((Ljava/util/Dictionary;)|(Lorg/apache/felix/dm/Component;)|(L([^;]+);))");
+    
+    // Pattern to detect a service dependency type from a method which accepts as argument
+    // a ServiceReference<T> or a ServiceObject<T>
+	static final Pattern GENERIC_TYPES = Pattern.compile(
+			"\\(((Lorg/osgi/framework/ServiceReference;)|(Lorg/osgi/framework/ServiceObjects;))+\\)(V)");
+    
+	/**
+	 * Infer service dependency type from a bind method accepting a ServiceReference or a ServiceObject parameter
+	 * @param m_logger 
+	 */
+	public static String inferTypeFromGenericType(String methodDescriptor, String signature, Logger m_logger) {
+		String inferredService = null;
+		String plainType = null;
+		Matcher m = GENERIC_TYPES.matcher(methodDescriptor);
+		
+		if (m.matches()) {
+			if (m.group(2) != null) {
+				plainType = "Lorg/osgi/framework/ServiceReference<";				
+			} else if (m.group(3) != null) {
+				plainType = "Lorg/osgi/framework/ServiceObjects<";				
+			}
+		}
+		
+		if (inferredService == null && signature != null && plainType != null) {
+			int start = signature.indexOf(plainType);
+			if (start > -1) {
+				start += plainType.length();
+				String[] sigs = signature.substring(start).split("[<;>]");
+				if (sigs.length > 0) {
+					String sig = sigs[0];
+					if (sig.startsWith("-")) {
+						inferredService = Object.class.getName();
+					} else {
+						int index = sig.startsWith("+") ? 2 : 1;
+						inferredService = sig.substring(index).replace('/', '.');
+					}
+				}
+			}
+		}
+		
+		m_logger.debug("inferTypeFromGenericType: methodDescriptor=%s, signature=%s, plainType=%s, inferred service=%s", 
+				methodDescriptor, signature, plainType, inferredService);
+		
+		return inferredService;
+	}
 
     /**
      * Parses a class.

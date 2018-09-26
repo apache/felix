@@ -72,8 +72,8 @@ public class BundleAdapterServiceTestWithPublisher {
         }
     }
 
-    @BundleAdapterService(properties = {@Property(name = "foo", value = "bar")}, filter = "(Bundle-SymbolicName=" + Utils.DM_BSN + ")", stateMask = Bundle.INSTALLED
-            | Bundle.RESOLVED | Bundle.ACTIVE, propagate = true)
+    @BundleAdapterService(filter = "(Bundle-SymbolicName=" + Utils.DM_BSN + ")", stateMask = Bundle.INSTALLED | Bundle.RESOLVED | Bundle.ACTIVE, propagate = true)            
+    @Property(name = "foo", value = "bar")
     public static class ProviderImpl implements Provider {
         @LifecycleController
         volatile Runnable m_publisher; // injected and used to register our service

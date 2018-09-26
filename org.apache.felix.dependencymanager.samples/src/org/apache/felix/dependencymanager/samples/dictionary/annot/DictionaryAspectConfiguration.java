@@ -32,7 +32,7 @@ import org.osgi.service.metatype.annotations.ObjectClassDefinition;
 @ObjectClassDefinition(
 	name="Spell Checker Aspect Dictionary",
     description = "Declare here the list of english words to be added into the default english dictionary",
-    pid="org.apache.felix.dependencymanager.samples.dictionary.annot.DictionaryAspectConfiguration")
+    pid=DictionaryAspect.PID)
 public interface DictionaryAspectConfiguration {
     @AttributeDefinition(description = "Dictionary aspect words")
     List<String> words();

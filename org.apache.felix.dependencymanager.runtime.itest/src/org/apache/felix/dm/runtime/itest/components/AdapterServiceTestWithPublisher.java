@@ -77,7 +77,8 @@ public class AdapterServiceTestWithPublisher {
         }
     }
 
-    @Component(properties = {@Property(name = "foo", value = "bar")})
+    @Component
+    @Property(name = "foo", value = "bar")
     public static class ProviderImpl implements Provider {
         @Start
         Map start() {
@@ -91,7 +92,8 @@ public class AdapterServiceTestWithPublisher {
         }
     }
 
-    @AdapterService(properties = {@Property(name = "foo3", value = "bar3")}, adapteeService = Provider.class)
+    @AdapterService(adapteeService = Provider.class)
+    @Property(name = "foo3", value = "bar3")
     public static class Provider2Impl implements Provider2 {
         @LifecycleController
         volatile Runnable m_publisher; // injected and used to register our service

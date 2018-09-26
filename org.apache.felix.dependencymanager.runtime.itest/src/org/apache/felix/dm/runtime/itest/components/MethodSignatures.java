@@ -25,7 +25,6 @@ import java.util.Map;
 
 import org.apache.felix.dm.annotation.api.Component;
 import org.apache.felix.dm.annotation.api.ConfigurationDependency;
-import org.apache.felix.dm.annotation.api.FactoryConfigurationAdapterService;
 import org.apache.felix.dm.annotation.api.ServiceDependency;
 import org.apache.felix.dm.annotation.api.Start;
 import org.apache.felix.dm.annotation.api.Stop;
@@ -261,7 +260,7 @@ public class MethodSignatures {
 	}
 
 	// This is a factory pid component with an updated callback having the "updated(Dictionary)" signature
-	@FactoryConfigurationAdapterService
+	@Component(factoryPid="org.apache.felix.dm.runtime.itest.components.MethodSignatures$FactoryPidComponent")
 	public static class FactoryPidComponent {
 		Dictionary<String, Object> m_properties;
 		
@@ -286,7 +285,7 @@ public class MethodSignatures {
 	}
 	
 	// This is a factory pid component with an updated callback having the "updated(Component, Dictionary)" signature
-	@FactoryConfigurationAdapterService
+	@Component(factoryPid="org.apache.felix.dm.runtime.itest.components.MethodSignatures$FactoryPidComponent2")
 	public static class FactoryPidComponent2 {
 		Dictionary<String, Object> m_properties;
 		
@@ -312,7 +311,7 @@ public class MethodSignatures {
 	}
 	
 	// This is a factory pid component with an updated callback having the "updated(Config)" signature
-    @FactoryConfigurationAdapterService(configType=Config.class)
+	@Component(factoryPid="org.apache.felix.dm.runtime.itest.components.MethodSignatures$Config")
     public static class FactoryPidComponent3 {
         Config m_properties;
         

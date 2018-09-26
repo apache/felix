@@ -46,6 +46,8 @@ import java.lang.annotation.Target;
  * (Service service, Dictionary properties)
  * (Dictionary properties, Service service)
  * (Object service)
+ * (ServiceReference<T> service)
+ * (ServiceObjects<T> service)
  * }</pre>
  * 
  * <p> For "swap" callbacks, the following method signatures are supported:
@@ -61,7 +63,22 @@ import java.lang.annotation.Target;
  * (Component comp, ServiceReference old, Object old, ServiceReference replace, Object replace)
  * (ServiceReference old, ServiceReference replace)
  * (Component comp, ServiceReference old, ServiceReference replace)
+ * (ServiceObjects old, ServiceObjects replace)
+ * (Component comp, ServiceObjects old, ServiceObjects replace)
  * }</pre>
+ * 
+ * <p> When the dependency is injected on a class field, the following field types are supported:
+ * 
+ * <ul>
+ * <li> a field having the same type as the dependency. If the field may be accessed by anythread, then the field should be declared volatile, in order to ensure visibility 
+ *      when the field is auto injected concurrently.
+ * <li> a field which is assignable to an  {@literal Iterable<T>} where T must match the dependency type. In this case, an Iterable will be injected by DependencyManager before the start 
+ *      callback is called. The Iterable field may then be traversed to inspect the currently available dependency services. The Iterable can possibly be set to a final value 
+ *      so you can choose the Iterable implementation of your choice (for example, a CopyOnWrite ArrayList, or a ConcurrentLinkedQueue).
+ * <li> a {@literal Map<K,V>} where K must match the dependency type and V must exactly equals Dictionary class. In this case, a ConcurrentHashMap will be injected by DependencyManager 
+ *      before the start callback is called. The Map may then be consulted to lookup current available dependency services, including the dependency service properties 
+ *      (the map key holds the dependency services, and the map value holds the dependency service properties). The Map field may be set to a final value so you can choose a Map of your choice (Typically a ConcurrentHashMap). A ConcurrentHashMap is "weakly consistent", meaning that when traversing the elements, you may or may not see any concurrent updates made on the map. So, take care to traverse the map using an iterator on the map entry set, which allows to atomically lookup pairs of Dependency service/Service properties.
+ * </ul>
  * 
  * <h3>Usage Examples</h3>
  * Here, the MyComponent component is injected with a dependency over a "MyDependency" service
@@ -69,10 +86,31 @@ import java.lang.annotation.Target;
  * <blockquote><pre>
  * &#64;Component
  * class MyComponent {
- *     &#64;ServiceDependency(timeout=15000)
- *     MyDependency dependency;
+ *     &#64;ServiceDependency
+ *     volatile MyDependency dependency;
+ * }
  * </pre></blockquote>
  * 
+ * Another example, were we inject multiple dependencies to an Iterable field
+ * 
+ * <blockquote><pre>
+ * &#64;Component
+ * class MyComponent {
+ *     &#64;ServiceDependency
+ *     final Iterable&lt;Dependency&gt; dependencies = new CopyOnWriteArrayList&lt;&gt;();
+ * }
+ * </pre></blockquote>
+ * 
+ * Another example, were we inject multiple dependencies to a Map field, allowing to inspect service dependency properties
+ * (the keys hold the services, and the values hold the associated service properties):
+ * 
+ * <blockquote><pre>
+ * &#64;Component
+ * class MyComponent {
+ *     &#64;ServiceDependency
+ *     final Map&lt;MyDependency, Dictionary&lt;String, Object&gt;&gt; dependencies = new ConcurrentHashMap&lt;&gt;;
+ * }
+ * </pre></blockquote>
  * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
 @Retention(RetentionPolicy.CLASS)
@@ -107,7 +145,8 @@ public @interface ServiceDependency
     Class<?> defaultImpl() default Object.class;
 
     /**
-     * Whether the Service dependency is required or not.
+     * Whether the Service dependency is required or not. When the dependency is optional and if the annotation is declared on a class field, then
+     * a Null Object will be injected in case the dependency is unavailable.
      * @return the required flag
      */
     boolean required() default true;
@@ -194,18 +233,5 @@ public @interface ServiceDependency
      * Any additional service properties specified directly are merged with these.
      * @return true if dependency service properties must be published along with the service, false if not.
      */
-    boolean propagate() default false;
-    
-    /**
-     * Configures whether or not this dependency should internally obtain the service object for all tracked service references.
-     * 
-     * By default, DM internally dereferences all discovered service references (using 
-     * <code>BundleContext.getService(ServiceReference ref)</code> methods. 
-     * However, sometimes, your callback only needs the ServiceReference, and sometimes you don't want to dereference the service.
-     * So, in this case you can use the <code>dereference(false)</code> method in order to tell to DM 
-     * that it should never internally dereference the service dependency internally.
-     * 
-     * @return false if the service must never be dereferenced by dependency manager (internally).
-     */
-    boolean dereference() default true;
+    boolean propagate() default false;    
 }

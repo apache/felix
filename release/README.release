@@ -72,7 +72,9 @@ $ ./gradlew makeStaging (this will create ./release/staging/ directory)
 
 Then you sign archives by invoking the following task:
 
-$ ./gradlew signStaging
+$ ./gradlew signStaging --no-daemon
+
+(you will be asked to enter your PGP key password; don't forget the --no-daemon option, else stdin won't be read)
 
 You can upload the archives and the signatures to our development area, which we use to stage this release candidate. This development area can be found at 
 https://dist.apache.org/repos/dist/dev/felix and adding files to it can be done using "svnpubsub" which is taken care of by the following target:

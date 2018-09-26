@@ -21,6 +21,7 @@ package org.apache.felix.dm.itest.api;
 import java.net.URL;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Dictionary;
 
 import org.junit.Assert;
 import org.apache.felix.dm.ResourceHandler;
@@ -58,7 +59,7 @@ class ResourceProvider {
         for (Map.Entry<ResourceHandler, Filter> e : handlers.entrySet()) {
         	ResourceHandler handler = e.getKey();
         	Filter filter = e.getValue();
-        	if (filter == null || filter.match(ResourceUtil.createProperties(m_resources[resourceIndex]))) {
+        	if (filter == null || filter.match((Dictionary<String, ?>) ResourceUtil.createProperties(m_resources[resourceIndex]))) {
         		handler.changed(m_resources[resourceIndex]);
             }
         }
@@ -78,7 +79,7 @@ class ResourceProvider {
             }
         }
         for (int i = 0; i < m_resources.length; i++) {
-            if (filter == null || filter.match(ResourceUtil.createProperties(m_resources[i]))) {
+            if (filter == null || filter.match((Dictionary<String, ?>) ResourceUtil.createProperties(m_resources[i]))) {
                 synchronized (m_handlers) {
                     m_handlers.put(handler, filter);
                 }
@@ -100,7 +101,7 @@ class ResourceProvider {
     @SuppressWarnings("deprecation")
 	private void removeResources(ResourceHandler handler, Filter filter) {
             for (int i = 0; i < m_resources.length; i++) {
-                if (filter == null || filter.match(ResourceUtil.createProperties(m_resources[i]))) {
+                if (filter == null || filter.match((Dictionary<String, ?>) ResourceUtil.createProperties(m_resources[i]))) {
                     handler.removed(m_resources[i]);
                 }
             }

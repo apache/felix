@@ -38,7 +38,7 @@ import org.osgi.framework.BundleContext;
  * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
 @ProviderType
-public interface ComponentContext extends Component {
+public interface ComponentContext<T extends Component<T>> extends Component<T> {
     /**
      * Returns the Component Executor gate that can be used to ensure proper component event serialization.
      * When you schedule a task in the component executor, your task is executed safely and you do not need
@@ -187,11 +187,16 @@ public interface ComponentContext extends Component {
      * @param config the configuration to wrap, cannot be <code>null</code>.
      * @return an instance of the given type that wraps the given configuration.
      */
-    public <T> T createConfigurationType(Class<T> type, Dictionary<?, ?> config);
+    public <U> U createConfigurationType(Class<U> type, Dictionary<?, ?> config);
                 
     /**
      * Instantiates the component instances.
      * @return this component context.
      */   
     public ComponentContext instantiateComponent();
+    
+    /**
+     * Indicates if the component fields and methods injections are disabled.
+     */
+    public boolean injectionDisabled();
 }

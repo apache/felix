@@ -25,11 +25,11 @@ import org.apache.felix.dm.annotation.api.Component;
 /**
  * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
-@Component(factoryName = "Device", factoryConfigure = "configure")
+@Component(factoryPid = "device")
 public class DeviceImpl implements Device {
     int id;
 
-    void configure(Dictionary<String, Object> configuration) {
+    void updated(Dictionary<String, Object> configuration) {
         this.id = (Integer) configuration.get("device.id");
     }
 

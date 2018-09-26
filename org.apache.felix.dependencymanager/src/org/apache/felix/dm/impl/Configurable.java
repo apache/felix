@@ -18,12 +18,15 @@
  */
 package org.apache.felix.dm.impl;
 
+import java.lang.annotation.Annotation;
 import java.lang.invoke.MethodHandles;
 import java.lang.reflect.Array;
 import java.lang.reflect.Constructor;
+import java.lang.reflect.Field;
 import java.lang.reflect.GenericArrayType;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Proxy;
 import java.lang.reflect.Type;
@@ -34,6 +37,7 @@ import java.util.Collections;
 import java.util.Dictionary;
 import java.util.Enumeration;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -103,14 +107,35 @@ public final class Configurable {
 	static class ConfigHandler implements InvocationHandler {
         private final ClassLoader m_cl;
         private final Map<?, ?> m_config;
+        private Class<?> m_configType;
+        
+        /** Constant for the single element method */
+        private static final String VALUE_METHOD = "value";
 
-        public ConfigHandler(ClassLoader cl, Map<?, ?> config) {
+        /** Constant for the prefix constant. */
+        private static final String PREFIX_CONSTANT = "PREFIX_";
+
+        /** Capture all methods defined by the annotation interface */
+        private static final Set<Method> ANNOTATION_METHODS = new HashSet<Method>();
+        static
+        {
+            for(final Method m : Annotation.class.getMethods())
+            {
+                ANNOTATION_METHODS.add(m);
+            }
+        }
+
+        public ConfigHandler(Class<?> type, ClassLoader cl, Map<?, ?> config) {
+            m_configType = type;
             m_cl = cl;
             m_config = config;
         }
 
         @Override
         public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
+            if (method.getName().equals("toString")) {
+                return m_config.toString();
+            }
             String name = getPropertyName(method.getName());
 
             Object result = convert(method.getGenericReturnType(), name, m_config.get(name), false /* useImplicitDefault */);
@@ -447,8 +472,19 @@ public final class Configurable {
             return result;
         }
         
-        private String getPropertyName(String methodName) {
-            // First, derive the property name from the method name, using simple javabean convention.
+        private String getPropertyName(String methodName) {            
+            // First, check if the config type defines a standard PREFIX_ string.
+            String prefix = getPrefix(m_configType);
+            
+            // If the configuration type is a single valued annotation, derive the property name
+            // from the interface name, using OSGi R7 Scr convention 
+            
+            if (isSingleElementAnnotation(m_configType) && methodName.equals(VALUE_METHOD)) {
+                String propertyName = mapTypeNameToKey(m_configType.getSimpleName());
+                return prefix == null ? propertyName : prefix.concat(propertyName);
+            }
+            
+            // Now, derive the property name from the method name, using simple javabean convention.
             // i.e: fooBar() or getFooBar() will map to "fooBar" property.
             
             String javaBeanMethodName = derivePropertyNameUsingJavaBeanConvention(methodName);
@@ -559,6 +595,104 @@ public final class Configurable {
             }
             return false;
         }
+        
+        // Code derived from Apache Felix SCR (See org.apache.felix.scr.impl.inject.Annotations.java)
+        private String getPrefix(Class<?> clazz)
+        {
+            try
+            {
+                final Field f = clazz.getField(PREFIX_CONSTANT);
+                if ( Modifier.isStatic(f.getModifiers())
+                     && Modifier.isPublic(f.getModifiers())
+                     && Modifier.isFinal(f.getModifiers())
+                     && String.class.isAssignableFrom(f.getType()))
+                {
+                    final Object value = f.get(null);
+                    if ( value != null )
+                    {
+                        return value.toString();
+                    }
+                }
+            }
+            catch ( final Exception ignore)
+            {
+                // ignore
+            }
+            return null;
+        }
+        
+        /**
+         * Check whether the provided type is a single element annotation.
+         * A single element annotation has a method named "value" and all
+         * other annotation methods must have a default value.
+         * @param clazz The provided type
+         * @return {@code true} if the type is a single element annotation.
+         */
+        static public boolean isSingleElementAnnotation(final Class<?> clazz)
+        {
+            boolean result = false;
+            if ( clazz.isAnnotation() )
+            {
+                result = true;
+                boolean hasValue = false;
+                for ( final Method method: clazz.getMethods() )
+                {
+                    // filter out methods from Annotation
+                    boolean isFromAnnotation = false;
+                    for(final Method objMethod : ANNOTATION_METHODS)
+                    {
+                        if ( objMethod.getName().equals(method.getName())
+                          && Arrays.equals(objMethod.getParameterTypes(), method.getParameterTypes()) )
+                        {
+                            isFromAnnotation = true;
+                            break;
+                        }
+                    }
+                    if ( isFromAnnotation )
+                    {
+                        continue;
+                    }
+                    if ( VALUE_METHOD.equals(method.getName()) )
+                    {
+                        hasValue = true;
+                        continue;
+                    }
+                    if ( method.getDefaultValue() == null )
+                    {
+                        result = false;
+                        break;
+                    }
+
+                }
+                if ( result )
+                {
+                    result = hasValue;
+                }
+
+            }
+            return result;
+        }
+
+        static String mapTypeNameToKey(String name)
+        {
+            final StringBuilder sb = new StringBuilder();
+            boolean lastLow = false;
+            for(final char c : name.toCharArray())
+            {
+                if ( lastLow && (Character.isLetter(c) || Character.isDigit(c)) && Character.isUpperCase(c) )
+                {
+                    sb.append('.');
+                }
+                lastLow = false;
+                if ( (Character.isLetter(c) || Character.isDigit(c)) && Character.isLowerCase(c))
+                {
+                    lastLow = true;
+                }
+                sb.append(Character.toLowerCase(c));
+            }
+            return sb.toString();
+        }
+
     }
 
     private static final Boolean DEFAULT_BOOLEAN = Boolean.FALSE;
@@ -574,10 +708,15 @@ public final class Configurable {
      * 
      * @param type the configuration class, cannot be <code>null</code>;
      * @param config the configuration to wrap, cannot be <code>null</code>.
+     * @param serviceProperties the component service properties, cannot be <code>null</code>.
      * @return an instance of the given type that wraps the given configuration.
      */
-    public static <T> T create(Class<T> type, Dictionary<?, ?> config) {
+    public static <T> T create(Class<T> type, Dictionary<?, ?> config, Dictionary<?,?> serviceProperties) {
         Map<Object, Object> map = new HashMap<Object, Object>();
+        for (Enumeration<?> e = serviceProperties.keys(); e.hasMoreElements();) {
+            Object key = e.nextElement();
+            map.put(key, serviceProperties.get(key));
+        }        
         for (Enumeration<?> e = config.keys(); e.hasMoreElements();) {
             Object key = e.nextElement();
             map.put(key, config.get(key));
@@ -594,7 +733,7 @@ public final class Configurable {
      */
     public static <T> T create(Class<T> type, Map<?, ?> config) {
         ClassLoader cl = type.getClassLoader();
-        Object result = Proxy.newProxyInstance(cl, new Class<?>[] { type }, new ConfigHandler(cl, config));
+        Object result = Proxy.newProxyInstance(cl, new Class<?>[] { type }, new ConfigHandler(type, cl, config));
         return type.cast(result);
     }
 }

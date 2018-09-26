@@ -133,7 +133,7 @@ public class FactoryPidAdapterBuilderImpl implements AdapterBase<FactoryPidAdapt
         Class<T> type = Helpers.getLambdaArgType(callback, 0);
         m_factoryPid = m_factoryPid == null ? configType.getName() : m_factoryPid;
         return setComponentCallbackRef(type, (instance, component, props) -> {
-            U configProxy = ((ComponentContext) component).createConfigurationType(configType, props);            
+            U configProxy = ((ComponentContext<?>) component).createConfigurationType(configType, props);            
             callback.accept((T) instance, configProxy); 
         });
     }
@@ -149,7 +149,7 @@ public class FactoryPidAdapterBuilderImpl implements AdapterBase<FactoryPidAdapt
         Class<T> type = Helpers.getLambdaArgType(callback, 0);
         m_factoryPid = m_factoryPid == null ? configType.getName() : m_factoryPid;
         return setComponentCallbackRef(type, (instance, component, props) -> { 
-            U configProxy = ((ComponentContext) component).createConfigurationType(configType, props);            
+            U configProxy = ((ComponentContext<?>) component).createConfigurationType(configType, props);            
             callback.accept((T) instance, configProxy, component); 
         });
     }
@@ -162,7 +162,7 @@ public class FactoryPidAdapterBuilderImpl implements AdapterBase<FactoryPidAdapt
     @Override
     public <T> FactoryPidAdapterBuilder update(Class<T> configType, InstanceCbConfiguration<T> callback) {
         return setInstanceCallbackRef((instance, component, props) -> { 
-            T configProxy = ((ComponentContext) component).createConfigurationType(configType, props);            
+            T configProxy = ((ComponentContext<?>) component).createConfigurationType(configType, props);            
             callback.accept(configProxy);
         });
     }
@@ -175,7 +175,7 @@ public class FactoryPidAdapterBuilderImpl implements AdapterBase<FactoryPidAdapt
     @Override
     public <T> FactoryPidAdapterBuilder update(Class<T> configType, InstanceCbConfigurationComponent<T> callback) {
         return setInstanceCallbackRef((instance, component, props) -> { 
-            T configProxy = ((ComponentContext) component).createConfigurationType(configType, props);            
+            T configProxy = ((ComponentContext<?>) component).createConfigurationType(configType, props);            
             callback.accept(configProxy, component);
         });
     }

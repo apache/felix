@@ -33,8 +33,7 @@ import java.lang.annotation.Target;
  * of the implementation.
  * <p>
  * This annotation may be applied on a method which is part of class annotated with either a {@link Component},
- * {@link AspectService}, {@link AdapterService}, {@link FactoryConfigurationAdapterService} or 
- * {@link ResourceAdapterService} annotation.
+ * {@link AspectService}, or {@link AdapterService}.
  * 
  * <h3>Usage Examples</h3>
  * 
@@ -45,7 +44,8 @@ import java.lang.annotation.Target;
  * <pre>
  *
  * class Helper {
- *     LogService logService; // Injected
+ *     volatile LogService logService; // Injected
+ *     
  *     void start() {} // lifecycle callback
  *     void bind(OtherService otherService) {} // injected
  * }
@@ -76,6 +76,6 @@ import java.lang.annotation.Target;
  */
 @Retention(RetentionPolicy.CLASS)
 @Target(ElementType.METHOD)
-public @interface Composition
+public @interface Composition 
 {
 }

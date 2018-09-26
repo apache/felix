@@ -43,6 +43,7 @@ import org.osgi.framework.ServiceReference;
  * (Service service, Dictionary properties)
  * (Dictionary properties, Service service)
  * (Object service)
+ * (ServiceObjects service)
  * }</pre>
  * 
  * <p> For "swap" callbacks, the following method signatures are supported:
@@ -58,6 +59,8 @@ import org.osgi.framework.ServiceReference;
  * (Component comp, ServiceReference old, Object old, ServiceReference replace, Object replace)
  * (ServiceReference old, ServiceReference replace)
  * (Component comp, ServiceReference old, ServiceReference replace)
+ * (ServiceObjects old, ServiceObjects replace)
+ * (Component comp, ServiceObjects old, ServiceObjects replace)
  * }</pre>
  * 
  * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>

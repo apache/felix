@@ -16,7 +16,7 @@
 #
 javac.source:          1.8
 javac.target:          1.8
-Bundle-Version: 1.1.2
+Bundle-Version: 1.2.0
 -buildpath: \
 	org.apache.felix.dependencymanager;version=latest,\
 	osgi.core;version=6.0,\

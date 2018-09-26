@@ -49,10 +49,13 @@ import org.osgi.annotation.versioning.ProviderType;
  * </ul>
  * 
  * <p> The callback invoked when a configuration dependency is updated can supports the following signatures:<p>
- * <ul><li> updated(Dictionary)
- *     <li> updated(Component, Dictionary)
- *     <li> updated(ConfigurationType)
- *     <li> updated(Component, ConfigurationType)
+ * <ul>
+ * <li>callback(Dictionary) 
+ * <li>callback(Component, Dictionary) 
+ * <li>callback(Component, Configuration ... configTypes) // type safe configuration interface(s)
+ * <li>callback(Configuration ... configTypes) // type safe configuration interface(s)
+ * <li>callback(Dictionary, Configuration ... configTypes) // type safe configuration interfaces(s)
+ * <li>callback(Component, Dictionary, Configuration ... configTypes) // type safe configuration interfaces(s)
  * </ul>
  * 
  * <p> Support for a custom Configuration type is a new feature that allows you to specify an interface that is implemented 
@@ -107,7 +110,6 @@ import org.osgi.annotation.versioning.ProviderType;
  * result in the same map being returned.
  * Instead of a map, you could also define an interface with the methods <tt>getKey1()</tt> and <tt>getKey2</tt> and use
  * that interface as return type instead of a {@link Map}.
- * </p>
  * <p>
  * In case a lookup does not yield a value from the underlying map or dictionary, the following rules are applied:
  * <ol>
@@ -116,7 +118,7 @@ import org.osgi.annotation.versioning.ProviderType;
  * <li>for arrays, collections and maps, an empty array/collection/map is returned;
  * <li>for other interface types that are treated as configuration type a null-object is returned.
  * </ol>
- * </p>
+ * <p>
  * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
 @ProviderType
@@ -212,14 +214,24 @@ public interface ConfigurationDependency extends Dependency, ComponentDependency
     /**
      * Sets propagation of the configuration properties to the service
      * properties. Any additional service properties specified directly are
-     * merged with these.
+     * merged with these. Configuration properties are not propagated by default.
+     * When configuration are propagated, any service properties will be overriden by configuration properties,
+     * unless you invoke <code>setPropagateOverride(false)</code> method.
      */
 	ConfigurationDependency setPropagate(boolean propagate);
 
     /**
+     * Sets propagation of the configuration properties to the service
+     * properties. Any additional service properties specified directly are
+     * merged with these. Configuration properties are not propagated by default.
+     * When configuration are propagated, any service properties will be overriden by configuration properties,
+     * unless you use <code>overrideServiceProperties</code> parameter with a false value.
+     */
+	ConfigurationDependency setPropagate(boolean propagate, boolean overrideServiceProperties);
+
+	/**
      * The label used to display the tab name (or section) where the properties
      * are displayed. Example: "Printer Service".
-     * 
      * @return The label used to display the tab name where the properties are
      *         displayed (may be localized)
      */
@@ -250,7 +262,7 @@ public interface ConfigurationDependency extends Dependency, ComponentDependency
      * Adds a MetaData regarding a given configuration property.
      */
 	ConfigurationDependency add(PropertyMetaData properties);
-	
+		
     /**
      * Sets the required flag which determines if this configuration dependency is required or not.
      * A configuration dependency is required by default.
@@ -259,4 +271,18 @@ public interface ConfigurationDependency extends Dependency, ComponentDependency
      * @return this service dependency
      */
 	ConfigurationDependency setRequired(boolean required);
+	
+	/**
+	 * Specifies if the component instance should be instantiated when this dependency is started.
+	 * The component is always instantiated when a Configuration dependency is defined, except
+	 * if you set a callback instance or if you invoke this method with <code>false</code>
+	 */
+	ConfigurationDependency needsInstance(boolean needsInstance);
+	
+    /**
+     * Sets the configuration property type(s) that are passed to the updated callback parameters
+     * 
+     * @param configType the configuration type(s) that the callback method accepts.
+     */
+    ConfigurationDependency setConfigType(Class<?> ... configType);
 }

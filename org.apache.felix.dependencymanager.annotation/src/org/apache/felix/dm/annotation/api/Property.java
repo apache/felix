@@ -25,8 +25,7 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * Annotation used to describe a property key-value(s) pair. It is used for example when
- * declaring {@link Component#properties()} attribute.<p>
+ * Annotation used to describe a property key-value(s) pair. Such annotation can be applied on components.<p>
  * 
  * Property value(s) type is String by default, and the type is scalar if the value is single-valued, 
  * or an array if the value is multi-valued. You can apply this annotation on a component class multiple times

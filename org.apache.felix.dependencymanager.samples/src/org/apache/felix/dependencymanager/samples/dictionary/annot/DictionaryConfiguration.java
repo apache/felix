@@ -31,7 +31,7 @@ import org.osgi.service.metatype.annotations.ObjectClassDefinition;
  */
 @ObjectClassDefinition(
 	name="Spell Checker Dictionary", 
-	factoryPid = "org.apache.felix.dependencymanager.samples.dictionary.annot.DictionaryConfiguration", 
+	factoryPid = DictionaryImpl.FACTORY_PID, 
 	description = "Declare here some Dictionary instances, allowing to instantiates some DictionaryService services for a given dictionary language")
 public interface DictionaryConfiguration {
     @AttributeDefinition(description = "Describes the dictionary language", defaultValue = "en")

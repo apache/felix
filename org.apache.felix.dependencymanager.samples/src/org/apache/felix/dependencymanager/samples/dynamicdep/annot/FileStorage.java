@@ -28,7 +28,8 @@ import org.osgi.service.log.LogService;
 /**
  * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
-@Component(properties={@Property(name="type", value="file")})
+@Component
+@Property(name="type", value="file")
 public class FileStorage implements Storage {
 	@ServiceDependency
 	volatile LogService log; // injected

@@ -32,11 +32,9 @@ Building and testing Apache Felix Dependency Manager
 - If necessary, configure your https proxy settings:
 
   export GRADLE_OPTS="-Dhttps.proxyHost=www.somehost.org -Dhttps.proxyPort=8080"
+  export http_proxy=www.somehost.org:8080
+  export https_proxy=www.somehost.org:8080
   
-- If you are building a released org.apache.felix.dependencymanager-r<n>-src.zip artifact, then 
-  you also have to unfold the org.apache.felix.dependencymanager-r<n>-deps.zip on the same directory where you have unfolded the source archive.
-  (no need to do this if you have checked out from the felix-trunk).
-
 - Install a recent java8 JDK (the software has been built and tested using java version 1.8.0_74)
 
 - Compile Dependendency Manager annotations bndtools plugin:

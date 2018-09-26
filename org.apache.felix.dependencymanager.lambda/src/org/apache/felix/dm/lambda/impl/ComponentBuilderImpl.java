@@ -38,6 +38,7 @@ import java.util.function.Supplier;
 import java.util.stream.Stream;
 
 import org.apache.felix.dm.Component;
+import org.apache.felix.dm.Component.ServiceScope;
 import org.apache.felix.dm.ComponentStateListener;
 import org.apache.felix.dm.Dependency;
 import org.apache.felix.dm.DependencyManager;
@@ -94,6 +95,12 @@ public class ComponentBuilderImpl implements ComponentBuilder<ComponentBuilderIm
     public ComponentBuilderImpl(Component component, boolean update) {
         m_component = component;
         m_componentUpdated = update;
+    }
+    
+    @Override
+    public ComponentBuilderImpl scope(ServiceScope scope) {
+    	m_component.setScope(scope);
+    	return this;
     }
         
     @Override

@@ -21,6 +21,7 @@ package org.apache.felix.dm.runtime;
 import java.util.List;
 
 import org.apache.felix.dm.Component;
+import org.apache.felix.dm.Component.ServiceScope;
 import org.apache.felix.dm.ComponentState;
 import org.apache.felix.dm.ComponentStateListener;
 import org.apache.felix.dm.Dependency;
@@ -65,6 +66,7 @@ public abstract class AbstractBuilder
             c.setAutoConfig(ServiceRegistration.class, Boolean.FALSE);
             c.setAutoConfig(DependencyManager.class, Boolean.FALSE);
             c.setAutoConfig(Component.class, Boolean.FALSE);
+            c.setAutoConfig(Bundle.class, Boolean.FALSE);
         }
 
         // See if BundleContext must be auto configured.
@@ -103,6 +105,20 @@ public abstract class AbstractBuilder
         if (registered != null || unregistered != null)
         {
             c.add(new RegistrationListener(registered, unregistered));
+        }
+        
+        // See if a service scope is provided
+        String scope = srvMeta.getString(Params.scope, null);
+        if (scope != null) {
+            ServiceScope serviceScope = ServiceScope.valueOf(scope);
+            c.setScope(serviceScope);
+        }
+        
+        // See if Bundle must be auto configured
+        String bundleField = srvMeta.getString(Params.bundle, null);
+        if (bundleField != null)
+        {
+            c.setAutoConfig(Bundle.class, bundleField);
         }
     }
 

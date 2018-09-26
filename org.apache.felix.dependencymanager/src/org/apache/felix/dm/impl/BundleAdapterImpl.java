@@ -22,6 +22,7 @@ import java.util.Enumeration;
 import java.util.Hashtable;
 import java.util.List;
 
+import org.apache.felix.dm.BundleComponent;
 import org.apache.felix.dm.Component;
 import org.apache.felix.dm.ComponentStateListener;
 import org.apache.felix.dm.DependencyManager;
@@ -34,49 +35,63 @@ import org.osgi.framework.Bundle;
  * 
  * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
-public class BundleAdapterImpl extends FilterComponent
+public class BundleAdapterImpl extends FilterComponent<BundleComponent> implements BundleComponent
 {
+    private volatile boolean m_propagate;
+    private volatile int m_bundleStateMask;
+    private volatile String m_bundleFilter;
+    public volatile Object m_cbInstance;
+	public volatile String m_add;
+	public volatile String m_change;
+	public volatile String m_remove;
+
 	/**
      * Creates a new Bundle Adapter Service implementation.
      */
-    public BundleAdapterImpl(DependencyManager dm, int bundleStateMask, String bundleFilter, boolean propagate)
+    public BundleAdapterImpl(DependencyManager dm)
     {
-    	this(dm, bundleStateMask, bundleFilter, propagate, null, null, null, null);
+    	super(dm.createComponent()); // This service will be filtered by our super class, allowing us to take control.  
     }
 
-	public BundleAdapterImpl(DependencyManager dm, int stateMask, String filter, boolean propagate, Object cbInstance, String add, String change, String remove) {
-        super(dm.createComponent()); // This service will be filtered by our super class, allowing us to take control.
+    public BundleComponent setBundleFilter(int bundleStateMask, String bundleFilter) {
+    	m_bundleStateMask = bundleStateMask;
+    	m_bundleFilter = bundleFilter;
+    	return this;
+    }
+            
+    public BundleComponent setBundleCallbacks(String add, String change, String remove) {
+    	m_add = add;
+    	m_change = change;
+    	m_remove = remove;
+    	return this;
+    }
+    
+    public BundleComponent setBundleCallbackInstance(Object callbackInstance) {
+    	m_cbInstance = callbackInstance;
+    	return this;
+    }
+
+    public BundleComponent setPropagate(boolean propagate) {
+    	m_propagate = propagate;
+    	return this;
+    }
+
+    @Override
+    protected void startInitial() {
+        DependencyManager dm = getDependencyManager();
         m_component
-        	.setImplementation(new BundleAdapterDecorator(stateMask, propagate, cbInstance, add, change, remove))
+        	.setImplementation(new BundleAdapterDecorator())
         	.add(dm.createBundleDependency()
-        		   .setFilter(filter)
-        		   .setStateMask(stateMask)
+        		   .setFilter(m_bundleFilter)
+        		   .setStateMask(m_bundleStateMask)
         		   .setCallbacks("added", "removed"))
         	.setCallbacks("init", null, "stop", null);
 	}
 
 	public class BundleAdapterDecorator extends AbstractDecorator {
-        private final boolean m_propagate;
-        private final int m_bundleStateMask;
-        public final Object m_cbInstance;
-    	public final String m_add;
-    	public final String m_change;
-    	public final String m_remove;
-
-        public BundleAdapterDecorator(int bundleStateMask, boolean propagate) {
-            this(bundleStateMask, propagate, null, null, null, null);
-        }
-        
-		public BundleAdapterDecorator(int bundleStateMask, boolean propagate, Object callbackInstance, String add, String change, String remove) {
-            m_bundleStateMask = bundleStateMask;
-            m_propagate = propagate;
-            m_cbInstance = callbackInstance;
-            m_add = add;
-            m_change = change;
-            m_remove = remove;
-        }
-
-		public Component createService(Object[] properties) {
+		
+		@SuppressWarnings("unchecked")
+		public Component<?> createService(Object[] properties) {
             Bundle bundle = (Bundle) properties[0];
             Hashtable<String, Object> props = new Hashtable<>();
             if (m_serviceProperties != null) {
@@ -90,12 +105,13 @@ public class BundleAdapterImpl extends FilterComponent
             // the first dependency is always the dependency on the bundle, which
             // will be replaced with a more specific dependency below
             dependencies.remove(0);
-            Component service = m_manager.createComponent()
+            Component<?> service = m_manager.createComponent()
                 .setInterface(m_serviceInterfaces, props)
                 .setImplementation(m_serviceImpl)
                 .setFactory(m_factory, m_factoryCreateMethod) // if not set, no effect
                 .setComposition(m_compositionInstance, m_compositionMethod) // if not set, no effect
                 .setCallbacks(m_callbackObject, m_init, m_start, m_stop, m_destroy) // if not set, no effect
+                .setScope(m_scope)
                 .add(m_manager.createBundleDependency()
                     .setBundle(bundle)
                     .setStateMask(m_bundleStateMask)
@@ -111,5 +127,6 @@ public class BundleAdapterImpl extends FilterComponent
             configureAutoConfigState(service, m_component);
             return service;
         }
+		
     }
 }

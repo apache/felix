@@ -23,7 +23,6 @@ import java.util.Map;
 
 import org.apache.felix.dm.DependencyManager;
 import org.apache.felix.dm.annotation.api.Component;
-import org.apache.felix.dm.annotation.api.FactoryConfigurationAdapterService;
 import org.apache.felix.dm.annotation.api.Inject;
 import org.apache.felix.dm.annotation.api.Property;
 import org.apache.felix.dm.annotation.api.ServiceDependency;
@@ -78,7 +77,8 @@ public class FactoryConfigurationAdapterAnnotation {
     /**
      * This service is instantiated when a factory configuration is created from ConfigAdmin
      */
-    @FactoryConfigurationAdapterService(factoryPid = "FactoryPidTest", properties = {@Property(name = "foo", value = "bar")}, propagate = true)
+    @Component(factoryPid = "FactoryPidTest", propagate = true)
+    @Property(name = "foo", value = "bar")
     public static class ServiceProvider implements ServiceInterface {
         public final static String ENSURE = "FactoryConfigurationAdapterAnnotation.ServiceProvider";
         

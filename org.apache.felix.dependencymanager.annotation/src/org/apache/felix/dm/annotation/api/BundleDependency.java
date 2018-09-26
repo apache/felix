@@ -42,10 +42,7 @@ import org.osgi.framework.Bundle;
  * <pre>
  * &#64;Component
  * public class SCR {
- *     &#64;BundleDependency(required = false,
- *                       removed = "unloadServiceComponents", 
- *                       filter = "(Service-Component=*)"
- *                       stateMask = Bundle.ACTIVE)
+ *     &#64;BundleDependency(required = false, removed = "unloadServiceComponents", filter = "(Service-Component=*)", stateMask = Bundle.ACTIVE)
  *     void loadServiceComponents(Bundle b) {
  *         String descriptorPaths = (String) b.getHeaders().get("Service-Component");
  *         // load all service component specified in the XML descriptorPaths files ...
@@ -65,13 +62,13 @@ import org.osgi.framework.Bundle;
 public @interface BundleDependency
 {
     /**
-     * Returns the callback method to be invoked when the service have changed.
+     * Returns the callback method to be invoked when the bundle have been updated
      * @return the change callback
      */
     String changed() default "";
 
     /**
-     * Returns the callback method to invoke when the service is lost.
+     * Returns the callback method to invoke when the bundle is lost.
      * @return the remove callback
      */
     String removed() default "";
@@ -83,7 +80,7 @@ public @interface BundleDependency
     boolean required() default true;
     
     /**
-     * Returns the filter dependency
+     * Returns the ldap filter dependency matching some bundle manifest headers 
      * @return the filter
      */
     String filter() default "";

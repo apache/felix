@@ -111,7 +111,7 @@ public class AnnotationPlugin implements AnalyzerPlugin, Plugin {
         }
 
         catch (Throwable t) {
-            m_logger.error("error: " + t.toString(), t);
+            m_logger.error("Dependency Manager Annotation Errors: %s", t, t); 
         }
 
         finally {

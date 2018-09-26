@@ -17,6 +17,7 @@
  * under the License.
  */
 package org.apache.felix.dm.itest.api;
+import org.apache.felix.dm.AdapterComponent;
 import org.apache.felix.dm.Component;
 import org.apache.felix.dm.DependencyManager;
 import org.apache.felix.dm.itest.util.Ensure;
@@ -40,6 +41,7 @@ public class FELI5155_AdapterCallbackInstanceCalledTwice extends TestBase {
             .setImplementation(adapterImpl)
             .add(m.createServiceDependency().setService(S2.class).setRequired(true).setCallbacks(cb, "setS2", null, null, null));
         
+
         m.add(s1);
         m.add(s1Adapter);
         m.add(s2);

@@ -21,7 +21,7 @@ string as parameter, which is checked for proper existence. The SpellChecker cla
 required/multiple (1..N) dependency over every available "DictionaryService" services, which are
 internally used by the SpellChecker command, when checking word existence.
 
-A DictionaryService is defined using a FactoryConfigurationAdapterService , allowing to instantiate
+A DictionaryService is defined using a FactoryComponent , allowing to instantiate
 many "DictionaryService" instances when some configurations are added to the
 "Spell Checker Configuration" factory pid from web
 console. The factory pid configuration metatypes are defined using the bnd "metatype" annotations

@@ -25,7 +25,6 @@ import java.util.Hashtable;
 import java.util.Map;
 
 import org.apache.felix.dm.annotation.api.Component;
-import org.apache.felix.dm.annotation.api.FactoryConfigurationAdapterService;
 import org.apache.felix.dm.annotation.api.Init;
 import org.apache.felix.dm.annotation.api.LifecycleController;
 import org.apache.felix.dm.annotation.api.Property;
@@ -102,7 +101,8 @@ public class FactoryConfigurationAdapterServiceTestWithPublisher {
         }
     }
 
-    @FactoryConfigurationAdapterService(propagate = true, properties = {@Property(name = "foo", value = "bar")}, factoryPid = PID, updated = "updated")
+    @Component(propagate = true, factoryPid = PID, updated = "updated")
+    @Property(name = "foo", value = "bar")
     public static class ProviderImpl implements Provider {
         @LifecycleController
         volatile Runnable m_publisher; // injected and used to register our service

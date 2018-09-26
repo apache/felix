@@ -27,6 +27,8 @@ import org.apache.felix.dm.context.ComponentContext;
 import org.apache.felix.dm.context.Event;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
+import org.osgi.framework.Constants;
+import org.osgi.framework.ServiceObjects;
 import org.osgi.framework.ServiceReference;
 
 /**
@@ -45,6 +47,11 @@ public class ServiceEventImpl extends Event {
      */
 	private final BundleContext m_bundleContext;
 	
+	/**
+	 * The Bundle Context ServiceObjects
+	 */
+	private final ServiceObjects m_serviceObjects;
+
     /**
      * The bundle which has created the service dependency.
      */
@@ -70,6 +77,7 @@ public class ServiceEventImpl extends Event {
 		m_service = service;
 	    m_bundle = ctx.getBundle();
 	    m_bundleContext = ctx.getBundleContext();
+		m_serviceObjects = (m_bundleContext != null) ? m_bundleContext.getServiceObjects(reference) : null;
 		m_reference = reference;
 		m_logger = ctx.getLogger();
     }
@@ -83,7 +91,14 @@ public class ServiceEventImpl extends Event {
     public <T> T getEvent() {
         if (m_service == null) {
         	try {
-    		    m_service = m_bundleContext.getService(m_reference);
+    		    Object scope = m_reference.getProperty(Constants.SERVICE_SCOPE);
+    		    if (Constants.SCOPE_PROTOTYPE.equals(scope)) {
+    		    	if (m_serviceObjects != null) { 
+    		    		m_service = m_serviceObjects.getService();
+    		    	}
+    		    } else {
+    		    	m_service = m_bundleContext.getService(m_reference);
+    		    }
     		    if (m_service == null) {
             		debug(() -> "Service " + m_reference + " unavailable");
     		    }
@@ -113,6 +128,13 @@ public class ServiceEventImpl extends Event {
 	 */
 	public ServiceReference<?> getReference() {
 		return m_reference;
+	}
+	
+	/**
+	 * Returns the reference service object.
+	 */
+	public ServiceObjects getServiceObjects() {
+		return m_serviceObjects;
 	}
 		    
     @SuppressWarnings("unchecked")
@@ -149,7 +171,12 @@ public class ServiceEventImpl extends Event {
         if (m_closed.compareAndSet(false, true)) {
         	if (m_service != null) {
         		try {
-            		m_bundleContext.ungetService(m_reference);
+            		Object scope = m_reference.getProperty(Constants.SERVICE_SCOPE);
+            		if (Constants.SCOPE_PROTOTYPE.equals(scope) && m_serviceObjects != null) {
+            			m_serviceObjects.ungetService(m_service);
+            		} else {
+            			m_bundleContext.ungetService(m_reference);
+            		}
         		} catch (IllegalStateException e) {}
         	}
         }

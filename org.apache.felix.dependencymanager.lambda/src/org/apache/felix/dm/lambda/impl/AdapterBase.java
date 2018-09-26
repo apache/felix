@@ -24,6 +24,7 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
+import org.apache.felix.dm.Component.ServiceScope;
 import org.apache.felix.dm.ComponentStateListener;
 import org.apache.felix.dm.Dependency;
 import org.apache.felix.dm.lambda.BundleDependencyBuilder;
@@ -44,6 +45,11 @@ import org.apache.felix.dm.lambda.callbacks.InstanceCbComponent;
 public interface AdapterBase<B extends ComponentBuilder<B>> extends ComponentBuilder<B> {
 	
     void andThenBuild(Consumer<ComponentBuilder<?>> builder);
+    
+    default B scope(ServiceScope scope) {
+        andThenBuild(compBuilder -> compBuilder.scope(scope));
+        return (B) this;
+    }
     
     default B impl(Object impl) {
         andThenBuild(compBuilder -> compBuilder.impl(impl));

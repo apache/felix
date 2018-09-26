@@ -98,13 +98,10 @@ public class DescriptorGenerator
         Collection<Clazz> expanded = m_analyzer.getClasses("",
                                                            // Parse everything
                                                            QUERY.NAMED.toString(), "*");
-
-        // Create the object which will collect Config Admin MetaTypes.
-        MetaType metaType = new MetaType();
             
         for (Clazz c : expanded)
         {
-            AnnotationCollector reader = new AnnotationCollector(m_logger, metaType);
+            AnnotationCollector reader = new AnnotationCollector(m_logger, m_analyzer);
             reader.baseClass(true);
             m_logger.debug("scanning class %s", c.getClassName());
             c.parseClassFileWithCollector(reader);
@@ -139,11 +136,6 @@ public class DescriptorGenerator
             }
         }
 
-        // If some Meta Types have been parsed, then creates the corresponding resource file.
-        if (metaType.getSize() > 0)
-        {
-            m_metaTypeResource = createMetaTypeResource(metaType);
-        }
         return annotationsFound;
     }
 
@@ -231,20 +223,4 @@ public class DescriptorGenerator
         return new EmbeddedResource(data, 0);
     }
     
-    /**
-     * Creates a bnd resource that contains the generated metatype descriptor.
-     * @param metaType the Object that has collected all meta type informations.
-     * @return the meta type resource
-     * @throws IOException on any errors
-     */
-    private Resource createMetaTypeResource(MetaType metaType) throws IOException
-    {
-        ByteArrayOutputStream out = new ByteArrayOutputStream();
-        PrintWriter pw = new PrintWriter(new OutputStreamWriter(out, "UTF-8"));
-        metaType.writeTo(pw);
-        pw.close();
-        byte[] data = out.toByteArray();
-        out.close();
-        return new EmbeddedResource(data, 0);    
-    }
 }
