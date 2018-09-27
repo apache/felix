@@ -27,7 +27,7 @@ import java.lang.annotation.Target;
  * When defining component service properties, one way to achieve this is to apply the {@link Property} annotation on your component class name.
  * Now, you can also define your own component property type interfaces and apply them directly on your components (instead of the 
  * {@link Property} annotation). The PropertyType annotation is closely similar to standard OSGi r7 declarative service @ComponentPropertyType 
- * (which is also supported when dependency manager annotation API).
+ * (which is also supported by dependency manager annotations).
  * 
  * <h3>Usage Examples</h3>
  * 
