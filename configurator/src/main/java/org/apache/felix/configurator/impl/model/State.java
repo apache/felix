@@ -39,9 +39,9 @@ public class State extends AbstractState implements Serializable {
 
     public static final String FILE_NAME = "state.ser";
 
-    private final Map<Long, Long> bundlesLastModified = new HashMap<>();
+    private Map<Long, Long> bundlesLastModified = new HashMap<>();
 
-    private final Map<Long, Long> bundlesConfigAdminBundleId = new HashMap<>();
+    private Map<Long, Long> bundlesConfigAdminBundleId = new HashMap<>();
 
     private volatile Set<String> initialHashes;
 
@@ -72,8 +72,8 @@ public class State extends AbstractState implements Serializable {
         if ( version < 1 || version > VERSION ) {
             throw new ClassNotFoundException(this.getClass().getName());
         }
-        ReflectionUtil.setField(this, "bundlesLastModified", in.readObject());
-        ReflectionUtil.setField(this, "bundlesConfigAdminBundleId", in.readObject());
+        this.bundlesLastModified =(Map<Long, Long>) in.readObject();
+        this.bundlesConfigAdminBundleId = (Map<Long, Long>) in.readObject();
         initialHashes = (Set<String>) in.readObject();
     }
 
