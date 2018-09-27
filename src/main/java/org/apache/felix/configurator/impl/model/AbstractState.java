@@ -34,7 +34,7 @@ public class AbstractState implements Serializable {
     /** Serialization version. */
     private static final int VERSION = 1;
 
-    private final Map<String, ConfigList> configurationsByPid = new TreeMap<>();
+    private Map<String, ConfigList> configurationsByPid = new TreeMap<>();
 
     /**
      * Serialize the object
@@ -54,13 +54,14 @@ public class AbstractState implements Serializable {
      * - read version id
      * - deserialize fields
      */
+    @SuppressWarnings("unchecked")
     private void readObject(final java.io.ObjectInputStream in)
     throws IOException, ClassNotFoundException {
         final int version = in.readInt();
         if ( version < 1 || version > VERSION ) {
             throw new ClassNotFoundException(this.getClass().getName());
         }
-        ReflectionUtil.setField(this, "configurationsByPid", in.readObject());
+        this.configurationsByPid = (Map<String, ConfigList>) in.readObject();
     }
 
     public void add(final Config c) {

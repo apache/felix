@@ -35,7 +35,7 @@ public class ConfigList implements Serializable, Iterable<Config> {
     /** Serialization version. */
     private static final int VERSION = 1;
 
-    private final List<Config> configurations = new ArrayList<>();
+    private List<Config> configurations = new ArrayList<>();
 
     /** The change count. */
     private volatile long changeCount = -1;
@@ -67,13 +67,14 @@ public class ConfigList implements Serializable, Iterable<Config> {
      * - read version id
      * - deserialize fields
      */
+    @SuppressWarnings("unchecked")
     private void readObject(final java.io.ObjectInputStream in)
     throws IOException, ClassNotFoundException {
         final int version = in.readInt();
         if ( version < 1 || version > VERSION ) {
             throw new ClassNotFoundException(this.getClass().getName());
         }
-        ReflectionUtil.setField(this, "configurations", in.readObject());
+        this.configurations = (List<Config>) in.readObject();
         lastInstalled = (Config) in.readObject();
         this.changeCount = in.readLong();
         this.hasChanges = in.readBoolean();

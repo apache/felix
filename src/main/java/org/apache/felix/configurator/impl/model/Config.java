@@ -32,19 +32,19 @@ public class Config implements Serializable, Comparable<Config> {
     private static final int VERSION = 1;
 
     /** The configuration pid */
-    private final String pid;
+    private String pid;
 
     /** The configuration ranking */
-    private final int ranking;
+    private int ranking;
 
     /** The bundle id. */
-    private final long bundleId;
+    private long bundleId;
 
     /** The configuration policy. */
-    private final ConfigPolicy policy;
+    private ConfigPolicy policy;
 
     /** The configuration properties. */
-    private final Dictionary<String, Object> properties;
+    private Dictionary<String, Object> properties;
 
     /** The index within the list of configurations if several. */
     private volatile int index = 0;
@@ -98,11 +98,11 @@ public class Config implements Serializable, Comparable<Config> {
         if ( version < 1 || version > VERSION ) {
             throw new ClassNotFoundException(this.getClass().getName());
         }
-        ReflectionUtil.setField(this, "pid", in.readObject());
-        ReflectionUtil.setField(this, "properties", in.readObject());
-        ReflectionUtil.setField(this, "policy", ConfigPolicy.valueOf((String)in.readObject()));
-        ReflectionUtil.setField(this, "bundleId", in.readLong());
-        ReflectionUtil.setField(this, "ranking", in.readInt());
+        this.pid = (String) in.readObject();
+        this.properties = (Dictionary<String, Object>) in.readObject();
+        this.policy = ConfigPolicy.valueOf((String)in.readObject());
+        this.bundleId = in.readLong();
+        this.ranking = in.readInt();
         this.index = in.readInt();
         this.state = ConfigState.valueOf((String)in.readObject());
         this.files = (List<File>) in.readObject();
