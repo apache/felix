@@ -9,8 +9,9 @@ Release Notes - Felix - Version org.apache.felix.dependencymanager-r12
     * org.apache.felix.dependencymanager.lambda; version=1.2.0
 
 ** Bug
-    * [FELIX-5683] - getServiceProperties returns null instead of empty dictionary
     * [FELIX-5938] - DM not working with latest Felix Framework
+    * [FELIX-5683] - getServiceProperties returns null instead of empty dictionary
+    * [FELIX-5716] - Dead Lock in DM
 
 ** Improvement
 
