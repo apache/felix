@@ -142,6 +142,9 @@ public interface ResourceDependency extends Dependency, ComponentDependencyDecla
       * <ul><li>Dictionary callback(ServiceReference, Object service) 
       * <li>Dictionary callback(ServiceReference)
       * </ul>
+      * The provided service properties take precedence over the propagated service dependency properties. It means a resource dependency 
+      * property won't override a component service property having the same name.
+      * 
       * @param instance the Object instance which is used to retrieve propagated service properties 
       * @param method the method to invoke for retrieving the properties to be propagated to the service properties.
       * @return this service dependency.

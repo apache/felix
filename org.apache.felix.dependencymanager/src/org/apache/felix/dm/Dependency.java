@@ -73,7 +73,7 @@ public interface Dependency {
     
     /**
      * Determines if the propagated dependency properties must override the component service properties.
-     * By default, propagated service properties don't overrive the component service properties. It means
+     * By default, propagated service properties don't override the component service properties. It means
      * that a given dependency property does not override the same property in the component service properties.
      *  
      * @return true if the dependency service properties are propagated and override the component service properties. 

@@ -137,7 +137,10 @@ public interface AdapterComponent extends Component<AdapterComponent> {
 
     /**
      * Sets if the adaptee service properties should be propagated to the adapter service consumer (true by default)
-     * @param propagate true if the adaptee service properties should be propagated to the adapter service consumers
+     * @param propagate true if the adaptee service properties should be propagated to the adapter service consumers.
+     * The provided adapter service properties take precedence over the propagated adaptee service properties. 
+     * It means an adaptee service property won't override an adapter service property having the same name.
+     * 
      * @return this adapter parameter instance
      */
 	AdapterComponent setPropagate(boolean propagate);

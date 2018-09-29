@@ -88,14 +88,18 @@ public interface ResourceComponent extends Component<ResourceComponent> {
             
     /**
      * Sets if properties from the resource should be propagated to the resource adapter service. true by default.
+     * 
      * @param propagate true if if properties from the resource should be propagated to the resource adapter service.
      * true by default.
+     * The provided resource adapter service properties take precedence over the propagated resource service properties. 
      * @return this ResourceComponent
      */
 	ResourceComponent setPropagate(boolean propagate);
 	
     /**
      * Sets the propagate callback to invoke in order to propagate the resource properties to the adapter service.
+     * The provided resource adapter service properties take precedence over the propagated resource service properties. 
+     * 
      * @param propagateCbInstance the object to invoke the propagate callback method on
      * @param propagateCbMethod the method name to invoke in order to propagate the resource properties to the adapter service.
      * @return this ResourceComponent
@@ -104,6 +108,7 @@ public interface ResourceComponent extends Component<ResourceComponent> {
 
 	/**
 	 * Sets the callbacks to invoke when injecting the resource into the adapter component.
+	 * 
 	 * @param add the method to invoke when injected the resource into the adapter component
 	 * @param change the method to invoke when the resource properties have changed
      * @return this ResourceComponent
