@@ -118,6 +118,8 @@ public interface BundleDependency extends Dependency, ComponentDependencyDeclara
     /**
      * Sets property propagation. If set to <code>true</code> any bundle manifest properties will be added
      * to the service properties of the component that has this dependency (if it registers as a service).
+     * The provided service properties take precedence over the propagated bundle manifest headers. 
+     * It means a bundle manifest header won't override a component service property having the same name.
      * 
      * @param propagate <code>true</code> to propagate the bundle manifest properties
      * @return the bundle dependency
@@ -130,6 +132,9 @@ public interface BundleDependency extends Dependency, ComponentDependencyDeclara
      * <ul><li>Dictionary callback(ServiceReference, Object service) 
      * <li>Dictionary callback(ServiceReference)
      * </ul>
+     * The provided service properties take precedence over the propagated bundle manifest headers. 
+     * It means a bundle manifest header won't override a component service property having the same name.
+     * 
      * @param instance the Object instance which is used to retrieve propagated service properties 
      * @param method the method to invoke for retrieving the properties to be propagated to the service properties.
      * @return this service dependency.

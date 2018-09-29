@@ -302,7 +302,9 @@ public interface ServiceDependency extends Dependency, ComponentDependencyDeclar
     
     /**
      * Sets propagation of the service dependency properties to the provided service properties. Any additional
-     * service properties specified directly are merged with these.
+     * service properties specified directly are merged with these. The provided service properties take precedence over the 
+     * propagated service dependency properties. It means a service dependency property won't override a component service 
+     * property having the same name.
      * 
      * @param propagate true if the dependency service properties should be propagated to the component service properties.
      */

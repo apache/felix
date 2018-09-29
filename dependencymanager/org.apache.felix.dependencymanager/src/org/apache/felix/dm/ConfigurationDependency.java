@@ -215,8 +215,11 @@ public interface ConfigurationDependency extends Dependency, ComponentDependency
      * Sets propagation of the configuration properties to the service
      * properties. Any additional service properties specified directly are
      * merged with these. Configuration properties are not propagated by default.
-     * When configuration are propagated, any service properties will be overriden by configuration properties,
-     * unless you invoke <code>setPropagateOverride(false)</code> method.
+     * When configuration is propagated, component service properties won't be overriden by configuration properties having the same name,
+     * unless you invoke <code>setPropagate(true, false)</code> method.
+     * @param propagate true if configuration properties should be propagated to the component service properties. Configuration 
+     * starting with a dot won't be propagated (because such property is considered as private, see Configuration Admin spec).
+     * @see #setPropagate(boolean, boolean)
      */
 	ConfigurationDependency setPropagate(boolean propagate);
 
@@ -224,8 +227,10 @@ public interface ConfigurationDependency extends Dependency, ComponentDependency
      * Sets propagation of the configuration properties to the service
      * properties. Any additional service properties specified directly are
      * merged with these. Configuration properties are not propagated by default.
-     * When configuration are propagated, any service properties will be overriden by configuration properties,
-     * unless you use <code>overrideServiceProperties</code> parameter with a false value.
+     * @param propagate true if the configuration properties must be propagated to the component service properties. Configuration 
+     * starting with a dot won't be propagated (because such property is considered as private, see Configuration Admin spec).
+     * @param overrideServiceProperties true if propagated configuration properties should override the component service properties 
+     * having the same property name
      */
 	ConfigurationDependency setPropagate(boolean propagate, boolean overrideServiceProperties);
 
