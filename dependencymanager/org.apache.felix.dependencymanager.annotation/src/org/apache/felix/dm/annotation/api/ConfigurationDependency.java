@@ -185,7 +185,10 @@ public @interface ConfigurationDependency
     
     /**
      * Returns true if the configuration properties must be published along with the service. 
-     * Any additional service properties specified directly are merged with these.
+     * Any additional service properties specified directly are merged with these. The configuration
+     * dependency properties take precedence over the component service properties, meaning that a given configuration
+     * property will override the same property that is already present in the component service properties.
+     * 
      * @return true if configuration must be published along with the service, false if not.
      */
     boolean propagate() default false;

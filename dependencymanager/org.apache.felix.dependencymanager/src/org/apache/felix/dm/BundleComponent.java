@@ -110,7 +110,8 @@ public interface BundleComponent extends Component<BundleComponent> {
 	BundleComponent setBundleCallbackInstance(Object callbackInstance);
 
     /**
-     * Sets if the bundle manifest headers should be propagated to the bundle component adapter service consumer (true by default)
+     * Sets if the bundle manifest headers should be propagated to the bundle component adapter service consumer (true by default).
+     * The component service properties take precedence over the propagated bundle manifest headers.
      * @param propagate true if the bundle manifest headers should be propagated to the adapter service consumers
      * @return this BundleComponent
      */
