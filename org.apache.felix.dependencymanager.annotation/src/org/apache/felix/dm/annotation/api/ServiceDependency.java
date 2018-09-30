@@ -231,6 +231,8 @@ public @interface ServiceDependency
     /**
      * Returns true if the dependency service properties must be published along with the service. 
      * Any additional service properties specified directly are merged with these.
+     * The component provided service properties take precedence over the propagated service dependency properties, meaning
+     * that a give component service property overrides the same property included in the propagated service dependency properties.
      * @return true if dependency service properties must be published along with the service, false if not.
      */
     boolean propagate() default false;    

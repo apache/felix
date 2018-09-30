@@ -89,6 +89,8 @@ public @Retention(RetentionPolicy.CLASS)
     
     /**
      * Specifies if manifest headers from the bundle should be propagated to the service properties.
+     * The component service properties take precedence over the propagated bundle manifest headers.
+     * 
      * @return the propagation flag
      */
     boolean propagate() default true;

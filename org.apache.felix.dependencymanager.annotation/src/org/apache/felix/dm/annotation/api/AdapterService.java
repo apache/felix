@@ -180,6 +180,8 @@ public @interface AdapterService
     
     /**
      * Specifies if adaptee service properties should be propagated to the adapter service.
+     * The component provided service properties take precedence over the propagated adaptee service properties, meaning
+     * that a give component service property overrides the same property present in the propagated adaptee service properties.
      * @return the service propagation flag
      */
     boolean propagate() default true;

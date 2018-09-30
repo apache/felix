@@ -92,8 +92,10 @@ public @interface BundleDependency
     int stateMask() default Bundle.INSTALLED | Bundle.RESOLVED | Bundle.ACTIVE;
 
     /**
-     * Specifies if the manifest headers from the bundle should be propagated to 
-     * the service properties.
+     * Specifies if the manifest headers from the bundle should be propagated to the service properties.
+     * The provided service properties take precedence over the propagated bundle manifest headers. 
+     * It means a bundle manifest header won't override a component service property having the same name.
+     * 
      * @return the propagation flag
      */
     boolean propagate() default false;
