@@ -1,4 +1,4 @@
-<!--
+    <!--
  Licensed to the Apache Software Foundation (ASF) under one
  or more contributor license agreements.  See the NOTICE file
  distributed with this work for additional information
@@ -20,14 +20,14 @@
   <parent>
     <groupId>org.apache.felix</groupId>
     <artifactId>felix-parent</artifactId>
-    <version>5</version>
+    <version>6</version>
     <relativePath>../pom/pom.xml</relativePath>
   </parent>
   <modelVersion>4.0.0</modelVersion>
   <packaging>bundle</packaging>
   <name>Apache Felix Log Service</name>
   <description>
-    A simple implementation of the OSGi R4 Log service.
+    A simple implementation of the OSGi R7 Log service.
   </description>
   <version>1.2.1-SNAPSHOT</version>
   <artifactId>org.apache.felix.log</artifactId>
