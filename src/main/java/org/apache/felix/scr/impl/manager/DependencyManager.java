@@ -1657,7 +1657,9 @@ public class DependencyManager<S, T> implements ReferenceManager<S, T>
     {
         // only invoke the unbind method if there is an instance (might be null
         // in the delayed component situation) and the unbind method is declared.
-        boolean doUnbind = componentContext != null && m_dependencyMetadata.getUnbind() != null;
+        boolean doUnbind =
+            componentContext != null &&
+                (m_dependencyMetadata.getField() != null || m_dependencyMetadata.getUnbind() != null);
 
         AtomicInteger trackingCount = new AtomicInteger();
         Collection<RefPair<S, T>> refPairs;
