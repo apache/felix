@@ -674,9 +674,48 @@ public abstract class RegionConfigurationSupport
         String bsn = bundle.getSymbolicName();
         String version = bundle.getVersion().toString();
         String location = escape( bundle.getLocation() );
-        String f = String.format( "(|(%1$s=%2$s)(%1$s=%2$s|%3$s)(%1$s=%2$s|%3$s|%4$s)(%1$s=%2$s|%3$s|%4$s|%5$s))", key,
-            pid, bsn, version, location );
-        return f;
+
+        StringBuilder sb = new StringBuilder();
+
+        sb.append("(|(");
+
+        sb.append(key);
+        sb.append('=');
+        sb.append(pid);
+
+        sb.append(")(");
+
+        sb.append(key);
+        sb.append('=');
+        sb.append(pid);
+        sb.append('|');
+        sb.append(bsn);
+
+        sb.append(")(");
+
+        sb.append(key);
+        sb.append('=');
+        sb.append(pid);
+        sb.append('|');
+        sb.append(bsn);
+        sb.append('|');
+        sb.append(version);
+
+        sb.append(")(");
+
+        sb.append(key);
+        sb.append('=');
+        sb.append(pid);
+        sb.append('|');
+        sb.append(bsn);
+        sb.append('|');
+        sb.append(version);
+        sb.append('|');
+        sb.append(location);
+
+        sb.append("))");
+
+        return sb.toString();
     }
 
     /**
@@ -686,7 +725,41 @@ public abstract class RegionConfigurationSupport
      */
     static final String escape(String value)
     {
-        return value.replaceAll( "([\\\\\\*\\(\\)])", "\\\\$1" );
+        StringBuilder sb = null;
+
+        int index = 0;
+
+        for (int i = 0; i < value.length(); i++) {
+            char c = value.charAt(i);
+
+            switch (c) {
+                case '\\':
+                case '*':
+                case '(':
+                case ')':
+                    if (sb == null) {
+                        sb = new StringBuilder();
+                    }
+
+                    sb.append(value, index, i);
+                    sb.append('\\');
+                    sb.append(c);
+
+                    index = i + 1;
+
+                    break;
+            }
+        }
+
+        if (sb == null) {
+            return value;
+        }
+
+        if (index < value.length()) {
+            sb.append(value, index, value.length());
+        }
+
+        return sb.toString();
     }
 
     private ConfigurationAdmin getConfigAdmin(BundleContext bundleContext)
