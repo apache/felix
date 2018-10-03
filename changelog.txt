@@ -1,3 +1,9 @@
+Changes in 1.9.8
+----------------
+** Bug
+    * [FELIX-5949] : Configuration _updates_ are ignored when using a NotCachablePersistenceManager
+
+
 Changes in 1.9.6
 ----------------
 ** Bug
