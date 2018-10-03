@@ -26,6 +26,8 @@ import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.apache.felix.cm.impl.CaseInsensitiveDictionary;
+
 
 public class MockNotCachablePersistenceManager implements NotCachablePersistenceManager
 {
@@ -77,7 +79,7 @@ public class MockNotCachablePersistenceManager implements NotCachablePersistence
     @Override
     public void store( String pid, @SuppressWarnings("rawtypes") Dictionary properties )
     {
-        configs.put( pid, properties );
+        configs.put( pid, new CaseInsensitiveDictionary( properties ) );
     }
 
 }

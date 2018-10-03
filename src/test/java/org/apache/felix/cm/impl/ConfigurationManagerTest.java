@@ -140,6 +140,56 @@ public class ConfigurationManagerTest
         assertEquals("valueNotCached", conf[0].getProperties(true).get("property1"));
     }
 
+    @Test public void test_listConfigurations_notcached_handlesUpdates() throws Exception
+    {
+        String pid = "testDefaultPersistenceManager";
+        PersistenceManager pm = new MockNotCachablePersistenceManager();
+        Dictionary<String, Object> dictionary = new Hashtable<>();
+        dictionary.put( "property1", "value1" );
+        dictionary.put( Constants.SERVICE_PID, pid );
+        pm.store( pid, dictionary );
+
+        ConfigurationManager configMgr = new ConfigurationManager(new PersistenceManagerProxy(pm), null) {
+            @Override
+            void updated(ConfigurationImpl config, boolean fireEvent) {
+            }
+        };
+
+        ConfigurationImpl[] conf1 = configMgr.listConfigurations(new ConfigurationAdminImpl(configMgr, null), null);
+
+        assertEquals(1, conf1.length);
+        assertEquals(2, conf1[0].getProperties(true).size());
+
+        // internal changecount
+        long revision = conf1[0].getRevision();
+
+        dictionary = new Hashtable<>();
+        dictionary.put("property1", "valueNotCached");
+        dictionary.put( Constants.SERVICE_PID, pid );
+        conf1[0].update(dictionary);
+
+        assertEquals(revision + 1, conf1[0].getRevision());
+
+        ConfigurationImpl[] conf2 = configMgr.listConfigurations(new ConfigurationAdminImpl(configMgr, null), null);
+        assertEquals(1, conf2.length);
+        assertEquals(2, conf2[0].getProperties(true).size());
+
+        assertEquals(revision + 1, conf2[0].getRevision());
+
+        dictionary = new Hashtable<>();
+        dictionary.put("property1", "secondUpdate");
+        dictionary.put( Constants.SERVICE_PID, pid );
+        conf2[0].update(dictionary);
+
+        assertEquals(revision + 2, conf2[0].getRevision());
+
+        ConfigurationImpl[] conf3 = configMgr.listConfigurations(new ConfigurationAdminImpl(configMgr, null), null);
+        assertEquals(1, conf3.length);
+        assertEquals(2, conf3[0].getProperties(true).size());
+
+        assertEquals(revision + 2, conf3[0].getRevision());
+    }
+
     @Test public void testLogNoLogService() throws IOException
     {
         ConfigurationManager configMgr = createConfigurationManagerAndLog( null );
