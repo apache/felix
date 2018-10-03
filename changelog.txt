@@ -2,7 +2,10 @@ Changes in 2.1.10
 -----------------
 ** Bug
     * [FELIX-4260] - IllegalStateException: The service has been unregistered
+	* [FELIX-5947] - ClassLoader memory leak
 
+** Improvement
+    * [FELIX-5948] - Collection of performance and memory optimizations
 
 Changes in 2.1.8
 ----------------
