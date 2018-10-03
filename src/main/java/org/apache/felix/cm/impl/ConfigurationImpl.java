@@ -100,6 +100,8 @@ public class ConfigurationImpl
 
     private static final String PROPERTY_LOCKED = ":org.apache.felix.configadmin.locked:";
 
+    private static final String PROPERTY_REVISION = ":org.apache.felix.configadmin.revision:";
+
     /**
      * The factory PID of this configuration or <code>null</code> if this
      * is not a factory configuration.
@@ -138,9 +140,11 @@ public class ConfigurationImpl
     /**
      * Configuration revision counter incremented each time the
      * {@link #properties} is set (in the constructor or the
-     * {@link #configure(Dictionary)} method. This counter is transient
-     * and not persisted. Thus it is restarted from zero each time
-     * an instance of this class is created.
+     * {@link #configure(Dictionary)} method. This counter is
+     * persisted transparently so that {@link NotCachablePersistenceManager}
+     * can provide a proper change count. The persistence is forward
+     * compatible such that previously persisted configurations are
+     * handled gracefully.
      */
     private volatile long revision;
 
@@ -430,6 +434,8 @@ public class ConfigurationImpl
                     + ", got " + servicePid );
             }
 
+            // we're doing a local update, so override the properties revision
+            properties.put( PROPERTY_REVISION, Long.valueOf(getRevision()) );
             configureFromPersistence( properties );
         }
 
@@ -451,6 +457,7 @@ public class ConfigurationImpl
         setAutoProperties( newProperties, true );
 
         // persist new configuration
+        newProperties.put( PROPERTY_REVISION, Long.valueOf(getRevision()) );
         persistenceManager.store( getPidString(), newProperties );
 
         // finally assign the configuration for use
@@ -528,6 +535,7 @@ public class ConfigurationImpl
         Dictionary<String, Object> props = new Hashtable<>();
         setAutoProperties( props, true );
         props.put( CONFIGURATION_NEW, Boolean.TRUE );
+        props.put( PROPERTY_REVISION, Long.valueOf(getRevision()) );
         persistenceManager.store( getPidString(), props );
     }
 
@@ -562,6 +570,7 @@ public class ConfigurationImpl
             props.remove(PROPERTY_LOCKED);
         }
         // only store now, if this is not a new configuration
+        props.put( PROPERTY_REVISION, Long.valueOf(getRevision()) );
         persistenceManager.store( getPidString(), props );
     }
 
@@ -617,6 +626,7 @@ public class ConfigurationImpl
 
     private void configure( final Dictionary<String, Object> properties )
     {
+        final Object revisionValue = properties == null ? null : properties.get(PROPERTY_REVISION);
         final Object lockedValue = properties == null ? null : properties.get(PROPERTY_LOCKED);
         if ( lockedValue != null )
         {
@@ -646,7 +656,7 @@ public class ConfigurationImpl
         synchronized ( this )
         {
             this.properties = newProperties;
-            this.revision++;
+            this.revision = (revisionValue != null) ? 1 + ((Long)revisionValue).longValue() : ++revision ;
         }
     }
 
@@ -667,6 +677,7 @@ public class ConfigurationImpl
             properties.remove( ConfigurationAdmin.SERVICE_BUNDLELOCATION );
         }
         properties.remove( PROPERTY_LOCKED );
+        properties.remove( PROPERTY_REVISION );
     }
 
 
@@ -676,6 +687,7 @@ public class ConfigurationImpl
         replaceProperty( properties, ConfigurationAdmin.SERVICE_FACTORYPID, factoryPid );
         properties.remove( ConfigurationAdmin.SERVICE_BUNDLELOCATION );
         properties.remove( PROPERTY_LOCKED );
+        properties.remove( PROPERTY_REVISION );
     }
 
 
@@ -683,7 +695,7 @@ public class ConfigurationImpl
             Constants.SERVICE_PID,
             ConfigurationAdmin.SERVICE_FACTORYPID,
             ConfigurationAdmin.SERVICE_BUNDLELOCATION,
-            PROPERTY_LOCKED
+            PROPERTY_LOCKED, PROPERTY_REVISION
     };
 
     static void clearAutoProperties( Dictionary<String, Object> properties )
