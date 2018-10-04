@@ -20,6 +20,7 @@ package org.apache.felix.cm.impl;
 
 
 import java.io.IOException;
+import java.lang.reflect.Method;
 import java.security.AccessController;
 import java.security.PrivilegedAction;
 import java.security.SecureRandom;
@@ -28,6 +29,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Dictionary;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Hashtable;
 import java.util.LinkedList;
 import java.util.List;
@@ -183,6 +185,13 @@ public class ConfigurationManager implements BundleListener
         props.put( Constants.SERVICE_PID, "org.apache.felix.cm.ConfigurationAdmin" );
         props.put( Constants.SERVICE_DESCRIPTION, "Configuration Admin Service Specification 1.6 Implementation" );
         props.put( Constants.SERVICE_VENDOR, "The Apache Software Foundation" );
+        props.put( "osgi.command.scope", "cm" );
+        Set<String> functions = new HashSet<>();
+        for ( Method method : ConfigurationAdmin.class.getDeclaredMethods() )
+        {
+            functions.add(method.getName());
+        }
+        props.put( "osgi.command.function", functions.toArray(new String[0]) );
         configurationAdminRegistration = bundleContext.registerService( ConfigurationAdmin.class, caf, props );
 
         // start handling ManagedService[Factory] services
