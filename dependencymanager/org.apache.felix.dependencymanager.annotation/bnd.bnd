@@ -21,7 +21,7 @@ Bundle-Version: 5.0.0
 	biz.aQute.bndlib;version=3.5
 Private-Package: org.apache.felix.dm.annotation.plugin.bnd
 Export-Package: org.apache.felix.dm.annotation.api
-Include-Resource: META-INF/=resources/
+Include-Resource: META-INF/=resources/,META-INF/changelog.txt=${workspace}/changelog.txt
 Bundle-Name: Apache Felix Dependency Manager Annotations
 Bundle-Description: Annotations for Apache Felix Dependency Manager
 Bundle-Category: osgi

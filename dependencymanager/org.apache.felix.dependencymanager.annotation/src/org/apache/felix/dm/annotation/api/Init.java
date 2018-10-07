@@ -32,8 +32,18 @@ import java.lang.annotation.Target;
  * The purpose of the @Init method is to either declare more dynamic dependencies using the DM API, or to
  * return a Map used to dynamically configure dependencies that are annotated using a <code>name</code> attribute. 
  * 
- * After the init method returns, the added or configured dependencies are then tracked, and when all dynamic 
- * dependencies are injected, then the start method (annotated with @Start) is then invoked.
+ * After the init method returns, the added or configured dependencies are then tracked, and when all 
+ * dependencies are injected, then the start method (annotated with @Start) is invoked.
+ * 
+ * The method annotated with @Init may have the following signatures,
+ * <ol>
+ * <li>void init(Component component)</li>
+ * <li>void init()</li>
+ * <li>Map<String, String> init(Component component)</li>
+ * <li>Map<String, String> init()</li>
+ * </ol>
+ * 
+ * When the init method defines a Component argument, it can then be used by the method to add more dependencie using the Dependency Manager API.
  * 
  * <h3>Usage Examples</h3>
  * In this sample, the "PersistenceImpl" component dynamically configures the "storage" dependency from the "init" method. 
@@ -42,13 +52,8 @@ import java.lang.annotation.Target;
  * 
  * <blockquote>
  * <pre>
- * 
  * &#64;Component
  * public class PersistenceImpl implements Persistence {
- *     // Injected before init.
- *     &#64;ServiceDependency
- *     LogService log;
- *     
  *     // Injected before init.
  *     &#64;ConfigurationDependency
  *     void updated(Dictionary conf) {
@@ -60,20 +65,106 @@ import java.lang.annotation.Target;
  *     // Parsed xml configuration, where we'll get our storage service filter and required dependency flag.
  *     XmlConfiguration _xmlConfiguration;
  *  
- *     // Injected after init (dependency filter is defined dynamically from our init method).
- *     &#64;ServiceDependency(name="storage")
- *     Storage storage;
- * 
  *     // Dynamically configure the dependency declared with a "storage" name.
  *     &#64;Init
  *     Map&#60;String, String&#62; init() {
- *        log.log(LogService.LOG_WARNING, "init: storage type=" + storageType + ", storageRequired=" + storageRequired);
  *        Map&#60;String, String&#62; props = new HashMap&#60;&#62;();
  *        props.put("storage.required", Boolean.toString(_xmlConfiguration.isStorageRequired()))
  *        props.put("storage.filter", "(type=" + _xmlConfiguration.getStorageType() + ")");
  *        return props;       
  *     }
+ *  
+ *     // Injected after init (dependency filter is defined dynamically from our init method).
+ *     &#64;ServiceDependency(name="storage")
+ *     Storage storage;
+ * 
+ *     // All dependencies injected, including dynamic dependencies defined from init method.
+ *     &#64;Start
+ *     void start() {
+ *        log.log(LogService.LOG_WARNING, "start");
+ *     }
+ * 
+ *     &#64;Override
+ *     void store(String key, String value) {
+ *        storage.store(key, value);
+ *     }
+ * }
+ * </pre>
+ * </blockquote>
+ * 
+ * Same example as above, but this time the dependency is added from the init method using the Dependency Manager API:
+ * 
+ * <blockquote>
+ * <pre>
+ * &#64;Component
+ * public class PersistenceImpl implements Persistence {
+ *     // Injected before init.
+ *     &#64;ConfigurationDependency
+ *     void updated(Dictionary conf) {
+ *        if (conf != null) {
+ *           _xmlConfiguration = parseXmlConfiguration(conf.get("xmlConfiguration"));
+ *        }
+ *     }
  *     
+ *     // Parsed xml configuration, where we'll get our storage service filter and required dependency flag.
+ *     XmlConfiguration _xmlConfiguration;
+ *  
+ *     // Dynamically configure the dependency declared with a "storage" name.
+ *     &#64;Init
+ *     void init(org.apache.felix.dm.Comppnent myComponent) {
+ *        boolean required = _xmlConfiguration.isStorageRequired();
+ *        String filter =  _xmlConfiguration.getStorageType();
+ *        DependencyManager dm = myComponent.getDependencyManager();
+ *        myComponent.add(dm.createServiceDependency().setService(Storage.class, filter).setRequired(required));
+ *     }
+ *  
+ *     // Injected after init, later, when the dependency added from the init() method is satisfied
+ *     volatile Storage storage;
+ * 
+ *     // All dependencies injected, including dynamic dependencies defined from init method.
+ *     &#64;Start
+ *     void start() {
+ *        log.log(LogService.LOG_WARNING, "start");
+ *     }
+ * 
+ *     &#64;Override
+ *     void store(String key, String value) {
+ *        storage.store(key, value);
+ *     }
+ * }
+ * </pre>
+ * </blockquote>
+ * 
+ * Same example as above, but this time the dependency is added from the init method using the Dependency Manager Lambda:
+ * 
+ * <blockquote>
+ * <pre>
+ * import static org.apache.felix.dm.lambda.DependencyManagerActivator.component;
+ * 
+ * &#64;Component
+ * public class PersistenceImpl implements Persistence {
+ *     // Injected before init.
+ *     &#64;ConfigurationDependency
+ *     void updated(Dictionary conf) {
+ *        if (conf != null) {
+ *           _xmlConfiguration = parseXmlConfiguration(conf.get("xmlConfiguration"));
+ *        }
+ *     }
+ *     
+ *     // Parsed xml configuration, where we'll get our storage service filter and required dependency flag.
+ *     XmlConfiguration _xmlConfiguration;
+ *  
+ *     // Dynamically configure the dependency declared with a "storage" name.
+ *     &#64;Init
+ *     void init(org.apache.felix.dm.Comppnent myComponent) {
+ *        boolean required = _xmlConfiguration.isStorageRequired();
+ *        String filter =  _xmlConfiguration.getStorageType();
+ *        component(myComponent, comp -> comp.withSvc(Storage.class, filter, required));
+ *     }
+ *  
+ *     // Injected after init, later, when the dependency added from the init() method is satisfied
+ *     volatile Storage storage;
+ * 
  *     // All dependencies injected, including dynamic dependencies defined from init method.
  *     &#64;Start
  *     void start() {

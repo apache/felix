@@ -41,7 +41,7 @@ import java.lang.annotation.Target;
  * (ServiceReference ref, Object service)
  * (ServiceReference ref)
  * (Service service)
- * (Service service, Map propeerties)
+ * (Service service, Map properties)
  * (Map properties, Service, service)
  * (Service service, Dictionary properties)
  * (Dictionary properties, Service service)
@@ -70,7 +70,7 @@ import java.lang.annotation.Target;
  * <p> When the dependency is injected on a class field, the following field types are supported:
  * 
  * <ul>
- * <li> a field having the same type as the dependency. If the field may be accessed by anythread, then the field should be declared volatile, in order to ensure visibility 
+ * <li> a field having the same type as the dependency. If the field may be accessed by any thread, then the field should be declared volatile, in order to ensure visibility 
  *      when the field is auto injected concurrently.
  * <li> a field which is assignable to an  {@literal Iterable<T>} where T must match the dependency type. In this case, an Iterable will be injected by DependencyManager before the start 
  *      callback is called. The Iterable field may then be traversed to inspect the currently available dependency services. The Iterable can possibly be set to a final value 
@@ -88,6 +88,26 @@ import java.lang.annotation.Target;
  * class MyComponent {
  *     &#64;ServiceDependency
  *     volatile MyDependency dependency;
+ * }
+ * </pre></blockquote>
+ * 
+ * The dependency can also be injected using a method callback:
+ * 
+ * <blockquote><pre>
+ * &#64;Component
+ * class MyComponent {
+ *     &#64;ServiceDependency
+ *     void bind(MyDependency dependency) {}
+ * }
+ * </pre></blockquote>
+ * 
+ * Same example as before, but the callback signatures includes service properties:
+ * 
+ * <blockquote><pre>
+ * &#64;Component
+ * class MyComponent {
+ *     &#64;ServiceDependency
+ *     void bind(MyDependency dependency, Map&lt;String, Object&gt; serviceProperties) {}
  * }
  * </pre></blockquote>
  * 

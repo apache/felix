@@ -172,7 +172,7 @@ public interface ServiceDependency extends Dependency, ComponentDependencyDeclar
      * can possibly be set to a final value so you can choose the Iterable implementation of your choice
      * (for example, a CopyOnWrite ArrayList, or a ConcurrentLinkedQueue).
      * 
-     * <li> a <code>Map&#60;K,V&#62;</code> where K must match the dependency type and V must exactly equals <code>Dictionary</code>. 
+     * <li> a <code>Map&#60;K,V&#62;</code> where K must match the dependency type and V must exactly be equal to <code>Dictionary</code>. 
      * In this case, a ConcurrentHashMap will be injected by DependencyManager before the start callback is called.
      * The Map may then be consulted to lookup current available dependency services, including the dependency service
      * properties (the map key holds the dependency service, and the map value holds the dependency service properties).
