@@ -56,7 +56,7 @@ import java.lang.annotation.Target;
  *   
  *     &#64;Start
  *     void start() {
- *         // Our component is starting and is about to be registered in the OSGi registry as a Z service.
+ *         // Our component is starting and is about to be registered in the OSGi registry as a HelloService service.
  *     }   
  * }
  * </pre>

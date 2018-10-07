@@ -25,7 +25,7 @@ Private-Package: \
 	org.apache.felix.dm.shell
 Bundle-Activator:org.apache.felix.dm.shell.Activator
 Bundle-Version: 4.0.7
-Include-Resource: META-INF/=resources/
+Include-Resource: META-INF/=resources/,META-INF/changelog.txt=${workspace}/changelog.txt
 Bundle-Name: Apache Felix Dependency Manager Shell
 Bundle-Description: Gogo Shell commands for Apache Felix Dependency Manager
 Bundle-Category: osgi

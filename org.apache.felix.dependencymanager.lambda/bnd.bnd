@@ -28,4 +28,4 @@ Export-Package: \
 -runfw: org.apache.felix.framework;version='[4.4.1,4.4.1]'
 -runee: JavaSE-1.8
 Private-Package: org.apache.felix.dm.lambda.impl
-Include-Resource: META-INF/=resources/
+Include-Resource: META-INF/=resources/,META-INF/changelog.txt=${workspace}/changelog.txt
