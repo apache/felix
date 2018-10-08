@@ -14,6 +14,7 @@ Release Notes - Felix - Version org.apache.felix.dependencymanager-r12
     * [FELIX-5716] - Dead Lock in DM
     * [FELIX-5768] - DM Lambda stop callback not being called
     * [FELIX-5955] - Move changelog.txt to toplevel project dir
+    * [FELIX-5956] - NPE when invoking a lifecycle runnable method from init method
 
 ** New Feature
     * [FELIX-5336] - Add support for prototype scope services in DM4
@@ -23,6 +24,7 @@ Release Notes - Felix - Version org.apache.felix.dependencymanager-r12
     * [FELIX-5937] - Refactor DM bndtools/gradle project
     * [FELIX-5939] - DM annotations enhancements
     * [FELIX-5941] - DM APi enhancements
+    * [FELIX-5957] - Check if a default implementation is used only on optional dependencies
 
 Release Notes - Felix - Version org.apache.felix.dependencymanager-r11
 ======================================================================
