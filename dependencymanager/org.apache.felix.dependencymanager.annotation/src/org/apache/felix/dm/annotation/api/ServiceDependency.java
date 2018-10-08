@@ -159,7 +159,12 @@ public @interface ServiceDependency
     String filter() default "";
 
     /**
-     * The class for the default implementation, if the dependency is not available.
+     * Sets the default implementation for an <code>optional</code> service dependency. You can use this to supply
+     * your own implementation that will be used instead of a Null Object when the dependency is
+     * not available. This is also convenient if the service dependency is not an interface
+     * (which would cause the Null Object creation to fail) but a class.
+     * Only use this attribute on an optional service dependency applied on a class field.
+     * 
      * @return the default implementation class
      */
     Class<?> defaultImpl() default Object.class;

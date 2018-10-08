@@ -289,10 +289,11 @@ public interface ServiceDependency extends Dependency, ComponentDependencyDeclar
 	public ServiceDependency setService(Class<?> serviceName, ServiceReference serviceReference);
     
     /**
-     * Sets the default implementation for this service dependency. You can use this to supply
+     * Sets the default implementation for an <code>optional</code> service dependency. You can use this to supply
      * your own implementation that will be used instead of a Null Object when the dependency is
      * not available. This is also convenient if the service dependency is not an interface
      * (which would cause the Null Object creation to fail) but a class.
+     * Only use this attribute on an optional service dependency injected on a class field.
      * 
      * @param implementation the instance to use or the class to instantiate if you want to lazily
      *     instantiate this implementation
