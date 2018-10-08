@@ -875,7 +875,7 @@ public class AnnotationCollector extends ClassDataCollector
 
         // defaultImpl attribute
         writer.putClass(annotation, EntryParam.defaultImpl);
-
+        
         // added callback
         writer.putString(annotation, EntryParam.added, (!m_isField) ? m_method : null);
 
@@ -907,6 +907,17 @@ public class AnnotationCollector extends ClassDataCollector
         
         // dereference flag
         writer.putString(annotation, EntryParam.dereference, String.valueOf(doDereference));
+        
+        if (writer.getParameter(EntryParam.defaultImpl) != null) {
+            // If the defaultImpl attribute is set, then check if the required flag is set to false.
+        	if ("true".equals(writer.getParameter(EntryParam.required))) {
+        		throw new IllegalArgumentException("ServiceDependency defaultImpl attribute can't be used on a required dependency from class " + m_currentClassName);
+        	}
+            // If the defaultImpl attribute is set, then check if dependency is applied on a class field
+        	if (! m_isField) {
+        		throw new IllegalArgumentException("ServiceDependency defaultImpl attribute can only be used when the ServiceDependency is applied on a class field from class " + m_currentClassName);
+        	}
+        }
     }
         
     /**
