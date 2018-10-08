@@ -146,8 +146,6 @@ public class ServiceLifecycleHandler
         String starter = m_srvMeta.getString(Params.starter, null);
         String stopper = m_srvMeta.getString(Params.stopper, null);
 
-        List<Dependency> instanceBoundDeps = new ArrayList<>();
-            
         if (starter != null)
         {
             // We'll inject two runnables: one that will start or service, when invoked, and the other
@@ -158,8 +156,9 @@ public class ServiceLifecycleHandler
             // Create a toggle service, used to start/stop our service.
             ToggleServiceDependency toggle = new ToggleServiceDependency();
             AtomicBoolean startFlag = new AtomicBoolean(false);
-            // Add the toggle to the service.
-            instanceBoundDeps.add(toggle);
+            // Add the toggle dependency to the component.
+            c.add(toggle);
+            
             // Inject the runnable that will start our service, when invoked.
             setField(serviceInstance, starter, Runnable.class, new ComponentStarter(componentName, toggle, startFlag));
             if (stopper != null) {
@@ -200,6 +199,7 @@ public class ServiceLifecycleHandler
         
         // Apply name dependency filters possibly returned by the init() method.
         
+        List<Dependency> nameDependencies = new ArrayList<>();
         for (MetaData dependency: m_depsMeta)
         {
             // Check if this dependency has a name, and if we find the name from the 
@@ -236,19 +236,16 @@ public class ServiceLifecycleHandler
                 }
 
                 DependencyBuilder depBuilder = new DependencyBuilder(dependency);
-                Log.instance().info("ServiceLifecycleHandler.init: adding dependency %s into service %s",
-                                   dependency, m_srvMeta);
-                Dependency d = depBuilder.build(m_bundle, dm);
-                instanceBoundDeps.add(d);
+                Log.instance().info("ServiceLifecycleHandler.init: adding dependency %s into service %s", dependency, m_srvMeta);
+                nameDependencies.add(depBuilder.build(m_bundle, dm));
             }            
         }
         
-        // Add all extra dependencies in one shot, in order to calculate state changes for all dependencies at a time.
-        if (instanceBoundDeps.size() > 0) 
+        // Add all extra dependencies
+        if (nameDependencies.size() > 0) 
         {
-            Log.instance().info("ServiceLifecycleHandler.init: adding extra/named dependencies %s",
-                instanceBoundDeps);
-            c.add(instanceBoundDeps.toArray(new Dependency[instanceBoundDeps.size()]));
+            Log.instance().info("ServiceLifecycleHandler.init: adding extra/named dependencies %s", nameDependencies);
+            c.add(nameDependencies.toArray(new Dependency[nameDependencies.size()]));
         }    
 
         // init method fully handled, and all possible named dependencies have been configured. Now, activate the 
