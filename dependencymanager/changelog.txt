@@ -26,6 +26,10 @@ Release Notes - Felix - Version org.apache.felix.dependencymanager-r12
     * [FELIX-5941] - DM APi enhancements
     * [FELIX-5957] - Check if a default implementation is used only on optional dependencies
 
+
+** Task
+    * [FELIX-5960] - Do not supply MD5 checksum
+
 Release Notes - Felix - Version org.apache.felix.dependencymanager-r11
 ======================================================================
 
