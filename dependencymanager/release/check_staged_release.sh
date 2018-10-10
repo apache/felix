@@ -107,8 +107,6 @@ for f in `find . -type f | grep -v '\.\(asc\|sha1\|sha512\|md5\)$'`; do
 
     echo -e "    ASC: \c"
     checkSig $f
-    echo -e "    MD5: \c"
-    checkSum $f "$f.md5" MD5
     echo -e "    SHA1: \c"
     checkSum $f "$f.sha1" SHA1
     echo -e "    SHA512: \c"
