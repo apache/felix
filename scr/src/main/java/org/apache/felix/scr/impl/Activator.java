@@ -151,7 +151,7 @@ public class Activator extends AbstractExtender
 
         // prepare component registry
         m_componentBundles = new HashMap<>();
-        m_componentRegistry = new ComponentRegistry( this.logger );
+        m_componentRegistry = new ComponentRegistry( this.m_configuration, this.logger );
 
         final ServiceComponentRuntimeImpl runtime = new ServiceComponentRuntimeImpl( m_globalContext, m_componentRegistry );
         m_runtime_reg = m_context.registerService( ServiceComponentRuntime.class,

@@ -63,6 +63,12 @@ public class MockScrLogger extends ScrLogger
             }
 
             @Override
+            public long serviceChangecountTimeout()
+            {
+                return 0;
+            }
+
+            @Override
             public int getLogLevel()
             {
                 return LogService.LOG_ERROR;
