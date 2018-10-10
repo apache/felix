@@ -29,7 +29,7 @@ Building and testing Apache Felix Dependency Manager
 
 ** Compilation Using gradle:
 
-- If necessary, configure your https proxy settings:
+- If necessary, configure your https proxy settings, for example:
 
   export GRADLE_OPTS="-Dhttps.proxyHost=www.somehost.org -Dhttps.proxyPort=8080"
   export http_proxy=www.somehost.org:8080
@@ -60,7 +60,7 @@ $ ./gradlew check
 * go to Windows -> Preferences -> Java -> Installed JREs
 * Then add a java8 JRE of your choice.
 
-- Install BndTools 3.0.0
+- Install BndTools 3.4.0
 
 - Open BndTools perspective
 

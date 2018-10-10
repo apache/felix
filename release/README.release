@@ -13,20 +13,17 @@ To create a release you must:
 * Have Subversion installed on your system;
 * Have gpg installed on your system;
 * Have a public key added to the keys file, and committed to [2] 
-* If you are using an http proxy, configure the following:
+* If you are using an http proxy, configure the following; for example:
 
   export GRADLE_OPTS="-Dhttps.proxyHost=www.somehost.org -Dhttps.proxyPort=8080"
+  export http_proxy=www.somehost.org:8080
+  export https_proxy=www.somehost.org:8080
 
 Before you can start staging a release candidate, you must:
 
 * make sure there are no dependencies on snapshots/unreleased versions;
 * increment the ext.dmRelease parameter in release/build.gradle, if not already done, and commit.
-* check if release notes are up-to-date in dm sub projects which are part of the release:
-- org.apache.felix.dependencymanager/resources/changelog.txt
-- org.apache.felix.dependencymanager.annotation/resources/changelog.txt
-- org.apache.felix.dependencymanager.lambda/resources/changelog.txt
-- org.apache.felix.dependencymanager.runtime/resources/changelog.txt
-- org.apache.felix.dependencymanager.shell/resources/changelog.txt
+* check if release notes are up-to-date in the changelog.txt from the top level workspace directory.
 * in the changelog files, also make sure that all bundles which are part of the release are all referenced (bundle names + versions).
 * release the bundles that are part of the dm binary distribution.
 * create a tagged version of the sources in preparation of the release candidate.
@@ -38,7 +35,7 @@ first, release the bundles that are part of the dm binary distribution:
 
 $ ./gradlew release
 
-This will generates some new releases in cnf/releaserepo. Commit the newly created releases and uncommit the previous ones.
+This will generates some new releases in cnf/releaserepo. DO NOT COMMIT.
 
 Create a tagged version
 =======================
@@ -125,15 +122,13 @@ Promoting the release:
 Move the artifacts from the development area to the final release location at 
 https://dist.apache.org/repos/dist/release/felix by invoking the following target:
 
-You can now get back to your felix-trunk bndtools workspace, and import the released bundles, in your "Release" repository.
-Once done, manually svn add the new released bundles, and svn remove the previous bundles (in cnf/releaserepo/...)
-
 $ ./gradlew promoteToRelease
 
 Cancelling the release
 ======================
 
 $ ./gradlew deleteFromStaging
+
 
 [1] http://www.apache.org/dev/release.html
 [2] http://www.apache.org/dist/felix/KEYS
