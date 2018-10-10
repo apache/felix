@@ -85,6 +85,8 @@ public class ScrConfigurationImpl implements ScrConfiguration
 
     private long stopTimeout = DEFAULT_STOP_TIMEOUT_MILLISECONDS;
 
+    private long serviceChangecountTimeout = DEFAULT_SERVICE_CHANGECOUNT_TIMEOUT_MILLISECONDS;
+
     private Boolean globalExtender;
 
     private volatile BundleContext bundleContext;
@@ -171,6 +173,7 @@ public class ScrConfigurationImpl implements ScrConfiguration
                         infoAsService = false;
                         lockTimeout = DEFAULT_LOCK_TIMEOUT_MILLISECONDS;
                         stopTimeout = DEFAULT_STOP_TIMEOUT_MILLISECONDS;
+                        serviceChangecountTimeout = DEFAULT_SERVICE_CHANGECOUNT_TIMEOUT_MILLISECONDS;
                         newGlobalExtender = false;
                     }
                     else
@@ -181,6 +184,7 @@ public class ScrConfigurationImpl implements ScrConfiguration
                         infoAsService = getDefaultInfoAsService();
                         lockTimeout = getDefaultLockTimeout();
                         stopTimeout = getDefaultStopTimeout();
+                        serviceChangecountTimeout = getServiceChangecountTimeout();
                         newGlobalExtender = getDefaultGlobalExtender();
                     }
                 }
@@ -263,6 +267,12 @@ public class ScrConfigurationImpl implements ScrConfiguration
         return globalExtender;
     }
 
+    @Override
+    public long serviceChangecountTimeout()
+    {
+        return serviceChangecountTimeout;
+    }
+
     private boolean getDefaultFactoryEnabled()
     {
         return VALUE_TRUE.equals( bundleContext.getProperty( PROP_FACTORY_ENABLED ) );
@@ -305,6 +315,15 @@ public class ScrConfigurationImpl implements ScrConfiguration
         return Long.parseLong( val );
     }
 
+    private long getServiceChangecountTimeout()
+    {
+        String val = bundleContext.getProperty( PROP_SERVICE_CHANGECOUNT_TIMEOUT );
+        if ( val == null)
+        {
+            return DEFAULT_SERVICE_CHANGECOUNT_TIMEOUT_MILLISECONDS;
+        }
+        return Long.parseLong( val );
+    }
 
     private boolean getDefaultGlobalExtender()
     {

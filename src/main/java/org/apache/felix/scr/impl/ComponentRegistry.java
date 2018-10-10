@@ -43,6 +43,7 @@ import org.apache.felix.scr.impl.manager.ComponentHolder;
 import org.apache.felix.scr.impl.manager.ConfigurableComponentHolder;
 import org.apache.felix.scr.impl.manager.DependencyManager;
 import org.apache.felix.scr.impl.manager.RegionConfigurationSupport;
+import org.apache.felix.scr.impl.manager.ScrConfiguration;
 import org.apache.felix.scr.impl.metadata.ComponentMetadata;
 import org.apache.felix.scr.impl.metadata.TargetedPID;
 import org.osgi.framework.Bundle;
@@ -126,8 +127,11 @@ public class ComponentRegistry
 
     private final ScrLogger m_logger;
 
-    public ComponentRegistry( final ScrLogger logger )
+    private final ScrConfiguration m_configuration;
+
+    public ComponentRegistry( final ScrConfiguration scrConfiguration, final ScrLogger logger )
     {
+        m_configuration = scrConfiguration;
         m_logger = logger;
         m_componentHoldersByName = new HashMap<>();
         m_componentHoldersByPid = new HashMap<>();
@@ -719,29 +723,37 @@ public class ComponentRegistry
                 {
                     this.timer = new Timer();
                 }
-                timer.schedule(new TimerTask()
+                try
                 {
-
-                    @Override
-                    public void run() {
-                        synchronized ( changeCountLock )
+                    timer.schedule(new TimerTask()
                         {
-                            if ( changeCount == count )
-                            {
-                                try
+
+                            @Override
+                            public void run() {
+                                synchronized ( changeCountLock )
                                 {
-                                    registration.setProperties(getServiceRegistrationProperties());
+                                    if ( changeCount == count )
+                                    {
+                                        try
+                                        {
+                                            registration.setProperties(getServiceRegistrationProperties());
+                                        }
+                                        catch ( final IllegalStateException ise)
+                                        {
+                                            // we ignore this as this might happen on shutdown
+                                        }
+                                        timer.cancel();
+                                        timer = null;
+                                    }
                                 }
-                                catch ( final IllegalStateException ise)
-                                {
-                                    // we ignore this as this might happen on shutdown
-                                }
-                                timer.cancel();
-                                timer = null;
                             }
-                        }
-                    }
-                }, 5000L);
+                        }, m_configuration.serviceChangecountTimeout());
+                }
+                catch (Exception e) {
+                    m_logger.log(LogService.LOG_WARNING,
+                        "Service changecount Timer for {0} had a problem", e,
+                        registration.getReference());
+                }
             }
         }
     }

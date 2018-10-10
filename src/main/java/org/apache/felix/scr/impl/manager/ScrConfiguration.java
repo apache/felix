@@ -58,11 +58,15 @@ public interface ScrConfiguration
 
     long DEFAULT_LOCK_TIMEOUT_MILLISECONDS = 5000;
 
+    long DEFAULT_SERVICE_CHANGECOUNT_TIMEOUT_MILLISECONDS = 5000;
+
     long DEFAULT_STOP_TIMEOUT_MILLISECONDS = 60000;
 
     String PROP_LOGLEVEL = "ds.loglevel";
 
     String PROP_GLOBAL_EXTENDER="ds.global.extender";
+
+    String PROP_SERVICE_CHANGECOUNT_TIMEOUT = "ds.service.changecount.timeout";
 
     /**
      * Returns the current log level.
@@ -87,5 +91,10 @@ public interface ScrConfiguration
      * @since 2.1
      */
     boolean globalExtender();
+
+    /**
+     * @since 2.2
+     */
+    long serviceChangecountTimeout();
 
 }
