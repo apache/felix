@@ -88,7 +88,7 @@ task makeStaging {
     doLast {
     description = 'Packages the source and binary distributions.'
 
-    // Package source and source bin dependencies distributions.
+    // Package source distributions.
     logger.lifecycle("    Packaging source distributions.")
     def topdir="org.apache.felix.dependencymanager-" + dmRelease
     ant.zip(destfile: "staging/"+topdir+'-src.zip') {
@@ -96,6 +96,7 @@ task makeStaging {
 		zipfileset(dir: '..', prefix: topdir+"-src", includes: '*.gradle,*.properties')
 		zipfileset(dir: 'resources/src', prefix: topdir+"-src", includes: '*')
 		ant.zipfileset(dir: '..', prefix: topdir+"-src", includes: 'gradlew')
+		ant.zipfileset(dir: '..', prefix: topdir+"-src", includes: 'changelog.txt')
     		ant.zipfileset(dir: '../.gradle-wrapper', prefix: topdir+"-src/.gradle-wrapper", includes: 'gradle-wrapper.properties')
 		new File('.').eachFile { 
 	    	    if(new File(it, 'bnd.bnd').exists()) {	    		
@@ -186,12 +187,6 @@ task signStaging {
 	    		ant.arg(line: '--output')
 	    		ant.arg(line: details.file.name + ".asc")
 	    		ant.arg(line: "--detach-sig")
-	    		ant.arg(line: details.file.name)
-		}
-
-		ant.exec(executable: 'gpg', dir: 'staging', output: "staging/" + details.file.name + ".md5") { 
-	    		ant.arg(line: '--print-md')
-	    		ant.arg(line: 'MD5')
 	    		ant.arg(line: details.file.name)
 		}
 
