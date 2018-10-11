@@ -82,6 +82,14 @@
                     <additionalparam>-Xdoclint:none</additionalparam>
                 </configuration>
             </plugin>
+            <plugin>
+	            <artifactId>maven-surefire-plugin</artifactId>
+                <configuration>
+    			    <systemPropertyVariables>
+            			<org.ops4j.pax.url.mvn.localRepository>${settings.localRepository}</org.ops4j.pax.url.mvn.localRepository>
+        			</systemPropertyVariables>
+    			</configuration>
+            </plugin>
         </plugins>
     </build>
 
@@ -172,6 +180,12 @@
             <version>${exam.version}</version>
             <scope>test</scope>
         </dependency>
+
+        <dependency>
+            <groupId>org.ops4j.pax.url</groupId>
+		    <artifactId>pax-url-aether</artifactId>
+		    <version>2.5.4</version>
+		</dependency>
 
         <dependency>
             <groupId>org.apache.felix</groupId>

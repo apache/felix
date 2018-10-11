@@ -21,7 +21,6 @@ package org.apache.felix.systemready.osgi.util;
 import static org.ops4j.pax.exam.CoreOptions.bundle;
 import static org.ops4j.pax.exam.CoreOptions.mavenBundle;
 import static org.ops4j.pax.exam.CoreOptions.systemProperty;
-import static org.ops4j.pax.exam.CoreOptions.vmOption;
 import static org.ops4j.pax.exam.CoreOptions.when;
 import static org.ops4j.pax.exam.cm.ConfigurationAdminOptions.newConfiguration;
 
@@ -58,16 +57,17 @@ public class BaseTest {
     @Inject
     public ServiceComponentRuntime scr;
 
-    
-
     public Option baseConfiguration() {
+    	String localRepo = System.getProperty("maven.repo.local");
+        if (localRepo != null) {
+            System.setProperty("org.ops4j.pax.url.mvn.localRepository", localRepo);
+        }
         return CoreOptions.composite(
         		
                 systemProperty("pax.exam.invoker").value("junit"),
                 systemProperty("pax.exam.osgi.unresolved.fail").value("true"),
                 systemProperty("logback.configurationFile")
                     .value("src/test/resources/logback.xml"),
-                localRepo(),
                 mavenBundle().groupId("org.slf4j").artifactId("slf4j-api").version("1.7.6"),
                 mavenBundle().groupId("ch.qos.logback").artifactId("logback-core").version("1.0.13"),
                 mavenBundle().groupId("ch.qos.logback").artifactId("logback-classic").version("1.0.13"),
@@ -86,12 +86,9 @@ public class BaseTest {
     }
     
     protected static OptionalCompositeOption localRepo() {
-        String localRepo = System.getProperty("maven.repo.local");
-        if (localRepo == null) {
-            localRepo = System.getProperty("org.ops4j.pax.url.mvn.localRepository");
-        }
-        return when(localRepo != null)
-            .useOptions(vmOption("-Dorg.ops4j.pax.url.mvn.localRepository=" + localRepo));
+        String localRepo = System.getProperty("maven.repo.local", "");
+        return when(localRepo.length() > 0)
+        	.useOptions(systemProperty("org.ops4j.pax.url.mvn.localRepository").value(localRepo));
     }
     
     public Option servicesCheckConfig(StateType type, String... services) {
