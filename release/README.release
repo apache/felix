@@ -28,15 +28,6 @@ Before you can start staging a release candidate, you must:
 * release the bundles that are part of the dm binary distribution.
 * create a tagged version of the sources in preparation of the release candidate.
 
-Release the binary bundles
-==========================
-
-first, release the bundles that are part of the dm binary distribution:
-
-$ ./gradlew release
-
-This will generates some new releases in cnf/releaserepo. DO NOT COMMIT.
-
 Create a tagged version
 =======================
 
@@ -62,6 +53,9 @@ $ ./gradlew org.apache.felix.dependencymanager.annotation:jar
 $ ./gradlew jar
 $ ./gradlew test
 $ ./gradlew check
+$ ./gradlew release
+
+The last command (gradlew release) will create the binary release artifacts in cnf/releaserepo/ directory.
 
 - create the staging:
 
