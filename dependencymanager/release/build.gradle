@@ -214,7 +214,7 @@ task commitToStaging {
     getProject().exec { 
     	commandLine 'svn', 
 		'import', 'staging', svnStagingPath + "/org.apache.felix.dependencymanager-" + dmRelease + "/", 
-		'-m', "Staging Apache Felix Dependency Manager release " + dmRelease + "."
+		'-m', "Staging Apache Felix Dependency Manager release " + dmRelease + ".", "--force-interactive"
     }
   }
 }
