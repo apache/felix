@@ -15,7 +15,7 @@
     <parent>
         <groupId>org.apache.felix</groupId>
         <artifactId>felix-parent</artifactId>
-        <version>5</version>
+        <version>6</version>
         <relativePath />
     </parent>
 
@@ -34,6 +34,20 @@
         <developerConnection>scm:svn:https://svn.apache.org/repos/asf/felix/trunk/systemready</developerConnection>
         <url>http://svn.apache.org/viewvc/felix/trunk/systemready</url>
     </scm>
+    
+    <repositories>
+        <repository>
+            <id>apache.snapshots</id>
+            <name>snapshot plugins</name>
+            <url>http://repository.apache.org/snapshots</url>
+            <releases>
+                <enabled>false</enabled>
+            </releases>
+            <snapshots>
+                <enabled>true</enabled>
+            </snapshots>
+        </repository>
+    </repositories>
 
     <build>
         <plugins>
