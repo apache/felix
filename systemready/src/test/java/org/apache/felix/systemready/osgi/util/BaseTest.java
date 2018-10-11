@@ -67,6 +67,7 @@ public class BaseTest {
                 systemProperty("pax.exam.osgi.unresolved.fail").value("true"),
                 systemProperty("logback.configurationFile")
                     .value("src/test/resources/logback.xml"),
+                localRepo(),
                 mavenBundle().groupId("org.slf4j").artifactId("slf4j-api").version("1.7.6"),
                 mavenBundle().groupId("ch.qos.logback").artifactId("logback-core").version("1.0.13"),
                 mavenBundle().groupId("ch.qos.logback").artifactId("logback-classic").version("1.0.13"),
