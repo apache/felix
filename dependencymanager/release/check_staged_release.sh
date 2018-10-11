@@ -87,8 +87,8 @@ then
     echo "################################################################################"
 
     wget \
-      -e "robots=off" --wait 1 -r -np "--reject=html,txt" "--follow-tags=" \
-      -P "${tmpDir}/org.apache.felix.dependencymanager-${version}" -nH "--cut-dirs=5" --ignore-length --no-check-certificate \
+      -e "robots=off" --wait 1 -nv -r -np "--reject=html,html.tmp,txt" "--follow-tags=" \
+      -P "${tmpDir}/org.apache.felix.dependencymanager-${version}" -nH "--cut-dirs=5" \
       $REL_URL
 else
     echo "################################################################################"
