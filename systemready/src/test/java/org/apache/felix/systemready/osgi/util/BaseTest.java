@@ -21,6 +21,8 @@ package org.apache.felix.systemready.osgi.util;
 import static org.ops4j.pax.exam.CoreOptions.bundle;
 import static org.ops4j.pax.exam.CoreOptions.mavenBundle;
 import static org.ops4j.pax.exam.CoreOptions.systemProperty;
+import static org.ops4j.pax.exam.CoreOptions.vmOption;
+import static org.ops4j.pax.exam.CoreOptions.when;
 import static org.ops4j.pax.exam.cm.ConfigurationAdminOptions.newConfiguration;
 
 import java.util.Optional;
@@ -38,6 +40,7 @@ import org.apache.felix.systemready.impl.servlet.SystemReadyServlet;
 import org.ops4j.pax.exam.CoreOptions;
 import org.ops4j.pax.exam.Option;
 import org.ops4j.pax.exam.cm.ConfigurationAdminOptions;
+import org.ops4j.pax.exam.options.OptionalCompositeOption;
 import org.osgi.framework.BundleContext;
 import org.osgi.service.component.runtime.ServiceComponentRuntime;
 import org.osgi.service.component.runtime.dto.ComponentDescriptionDTO;
@@ -55,9 +58,11 @@ public class BaseTest {
     @Inject
     public ServiceComponentRuntime scr;
 
+    
 
     public Option baseConfiguration() {
         return CoreOptions.composite(
+        		
                 systemProperty("pax.exam.invoker").value("junit"),
                 systemProperty("pax.exam.osgi.unresolved.fail").value("true"),
                 systemProperty("logback.configurationFile")
@@ -77,6 +82,15 @@ public class BaseTest {
                 bundle("reference:file:target/classes/")
 
         );
+    }
+    
+    protected static OptionalCompositeOption localRepo() {
+        String localRepo = System.getProperty("maven.repo.local");
+        if (localRepo == null) {
+            localRepo = System.getProperty("org.ops4j.pax.url.mvn.localRepository");
+        }
+        return when(localRepo != null)
+            .useOptions(vmOption("-Dorg.ops4j.pax.url.mvn.localRepository=" + localRepo));
     }
     
     public Option servicesCheckConfig(StateType type, String... services) {
