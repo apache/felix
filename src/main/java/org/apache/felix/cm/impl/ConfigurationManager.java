@@ -1655,11 +1655,11 @@ public class ConfigurationManager implements BundleListener
         }
 
 
-        private ConfigurationEvent getConfigurationEvent()
+        private ConfigurationEvent getConfigurationEvent(ServiceReference<ConfigurationAdmin> serviceReference)
         {
             if ( event == null )
             {
-                this.event = new ConfigurationEvent( getServiceReference(), type, factoryPid, pid );
+                this.event = new ConfigurationEvent( serviceReference, type, factoryPid, pid );
             }
             return event;
         }
@@ -1673,6 +1673,16 @@ public class ConfigurationManager implements BundleListener
                 Log.logger.log( LogService.LOG_DEBUG, "Sending {0} event for {1} to {2}", new Object[]
                         { getTypeName(), pid, listenerReferences[serviceIndex]} );
 
+                final ServiceReference<ConfigurationAdmin> serviceReference = getServiceReference();
+
+                if (serviceReference == null)
+                {
+                    Log.logger.log( LogService.LOG_WARNING, "No ConfigurationAdmin for delivering configuration event to {0}", new Object[]
+                            { listenerReferences[serviceIndex] } );
+
+                    return;
+                }
+
                 try
                 {
                     if ( System.getSecurityManager() != null )
@@ -1683,7 +1693,7 @@ public class ConfigurationManager implements BundleListener
                                 @Override
                                 public Void run()
                                 {
-                                    listeners[serviceIndex].configurationEvent(getConfigurationEvent());
+                                    listeners[serviceIndex].configurationEvent(getConfigurationEvent(serviceReference));
                                     return null;
                                 }
                             }, BaseTracker.getAccessControlContext(listenerProvider[serviceIndex])
@@ -1691,7 +1701,7 @@ public class ConfigurationManager implements BundleListener
                     }
                     else
                     {
-                        listeners[serviceIndex].configurationEvent(getConfigurationEvent());
+                        listeners[serviceIndex].configurationEvent(getConfigurationEvent(serviceReference));
                     }
                 }
                 catch ( Throwable t )
