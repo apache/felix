@@ -73,6 +73,7 @@ public class BaseTest {
 
                 mavenBundle().groupId("org.apache.felix").artifactId("org.apache.felix.scr").version("2.0.14"),
                 mavenBundle().groupId("org.apache.felix").artifactId("org.apache.felix.configadmin").version("1.8.16"),
+                mavenBundle().groupId("org.apache.felix").artifactId("org.apache.felix.rootcause").version("0.1.0-SNAPSHOT"),
                 bundle("reference:file:target/classes/")
 
         );
