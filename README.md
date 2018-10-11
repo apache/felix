@@ -1,6 +1,6 @@
 # OSGi root cause analysis
 
-[![Build Status](https://builds.apache.org/buildStatus/icon?job=Felix%20Rootcause)](https://builds.apache.org/job/Felix%20Rootcause/)
+[![Build Status](https://builds.apache.org/buildStatus/icon?job=Apache Felix RootCause)](https://builds.apache.org/job/Apache%20Felix%20RootCause/)
 [![Maven Central](https://maven-badges.herokuapp.com/maven-central/org.apache.felix/org.apache.felix.rootcause/badge.svg)](http://search.maven.org/#search%7Cga%7C1%7Cg%3A%22org.apache.felix%22%20a%3A%22org.apache.felix.rootcause%22)
 
 
