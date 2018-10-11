@@ -16,7 +16,16 @@
  * specific language governing permissions and limitations
  * under the License.
  */
+package org.apache.felix.rootcause.examples;
 
-@org.osgi.annotation.versioning.Version("0.1.0")
-@org.osgi.annotation.bundle.Export
-package org.apache.felix.systemready.rootcause;
+import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
+
+@Component(
+        name = "CompWithoutService"
+        )
+public class CompWithoutService {
+
+    @Reference
+    Runnable dummy;
+}

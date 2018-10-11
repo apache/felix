@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.felix.systemready.osgi;
+package org.apache.felix.rootcause;
 
 import static org.hamcrest.Matchers.equalTo;
 import static org.junit.Assert.assertEquals;
@@ -26,17 +26,17 @@ import static org.ops4j.pax.tinybundles.core.TinyBundles.bundle;
 
 import javax.inject.Inject;
 
-import org.apache.felix.systemready.osgi.examples.CompWithCyclicRef;
-import org.apache.felix.systemready.osgi.examples.CompWithMissingConfig;
-import org.apache.felix.systemready.osgi.util.BaseTest;
-import org.apache.felix.systemready.osgi.examples.CompWithMissingRef;
-import org.apache.felix.systemready.osgi.examples.CompWithMissingRef2;
-import org.apache.felix.systemready.osgi.examples.CompWithoutService;
-import org.apache.felix.systemready.osgi.util.BndDSOptions;
-import org.apache.felix.systemready.rootcause.DSComp;
-import org.apache.felix.systemready.rootcause.DSRef;
-import org.apache.felix.systemready.rootcause.DSRootCause;
-import org.apache.felix.systemready.rootcause.RootCausePrinter;
+import org.apache.felix.rootcause.DSComp;
+import org.apache.felix.rootcause.DSRef;
+import org.apache.felix.rootcause.DSRootCause;
+import org.apache.felix.rootcause.RootCausePrinter;
+import org.apache.felix.rootcause.examples.CompWithCyclicRef;
+import org.apache.felix.rootcause.examples.CompWithMissingConfig;
+import org.apache.felix.rootcause.examples.CompWithMissingRef;
+import org.apache.felix.rootcause.examples.CompWithMissingRef2;
+import org.apache.felix.rootcause.examples.CompWithoutService;
+import org.apache.felix.rootcause.util.BaseTest;
+import org.apache.felix.rootcause.util.BndDSOptions;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;

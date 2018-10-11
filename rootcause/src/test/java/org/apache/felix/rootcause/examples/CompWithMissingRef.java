@@ -16,31 +16,17 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.felix.systemready.rootcause;
+package org.apache.felix.rootcause.examples;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
-import org.osgi.service.component.runtime.ServiceComponentRuntime;
-import org.osgi.service.component.runtime.dto.ComponentDescriptionDTO;
 
 @Component(
-        service = RootCauseCommand.class,
-        property = {
-                "osgi.command.scope=ready", //
-                "osgi.command.function=rootcause"
-        }
+        name = "CompWithMissingRef",
+        service = CompWithMissingRef.class
         )
-public class RootCauseCommand {
-    
+public class CompWithMissingRef {
     @Reference
-    ServiceComponentRuntime scr;
-    
-    public DSComp rootcause(String componentName) {
-        ComponentDescriptionDTO cdesc = scr.getComponentDescriptionDTOs().stream()
-            .filter(desc -> desc.name.equals(componentName))
-            .findFirst().get();
-        DSComp rootCause = new DSRootCause(scr).getRootCause(cdesc);
-        new RootCausePrinter().print(rootCause);
-        return rootCause;
-    }
+    CompWithMissingConfig other;
+
 }

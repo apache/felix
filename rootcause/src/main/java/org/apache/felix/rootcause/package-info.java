@@ -16,16 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.felix.systemready.osgi.examples;
 
-import org.osgi.service.component.annotations.Component;
-import org.osgi.service.component.annotations.Reference;
-
-@Component(
-        name = "CompWithMissingRef2",
-        service = CompWithMissingRef2.class
-        )
-public class CompWithMissingRef2 {
-    @Reference
-    CompWithMissingRef other;
-}
+@org.osgi.annotation.versioning.Version("0.1.0")
+@org.osgi.annotation.bundle.Export
+package org.apache.felix.rootcause;

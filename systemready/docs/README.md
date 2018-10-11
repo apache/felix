@@ -101,24 +101,6 @@ When using the servlet in Apache Felix Http Whiteboard or Adobe AEM make sure yo
 
     osgi.http.whiteboard.context.select =(osgi.http.whiteboard.context.name=org.osgi.service.http)
 
-## Root cause command
-
-For quickly checking for a root cause of a problem with a declarative services component there is also a handy command.
-
-`rootcause <ds-compoment-name>`
-
-It prints the top level status of a DS component as well as the tree of DS unsatisfied components it depends on together with their status.
-
-This is a sample output from the DSRootCause tests. It shows the cause of a component that depends on some other components. The root cause of CompWithMissingRef2 not being satisfied is that CompWithMissingConfig is missing its mandatory config.
-
-```
-Component CompWithMissingRef2 unsatisfied references
-  ref other interface CompWithMissingRef
-    Component CompWithMissingRef unsatisfied references
-      ref other interface CompWithMissingConfig
-        Component CompWithMissingConfig missing config on pid [CompWithMissingConfig]
-```
-
 ## Example of using the system ready service framework in Apache Karaf
 
 Download, install and run Apache Karaf 4.1.x. Inside the karaf shell execute this:
@@ -127,7 +109,8 @@ Download, install and run Apache Karaf 4.1.x. Inside the karaf shell execute thi
 feature:install scr http-whiteboard
 config:property-set --pid ServicesCheck services.list org.osgi.service.log.LogService
 config:property-set --pid SystemReadyServlet osgi.http.whiteboard.context.select "(osgi.http.whiteboard.context.name=default)"
-install -s mvn:org.apache.felix/org.apache.felix.systemready/0.1.0-SNAPSHOT
+install -s mvn:org.apache.felix/org.apache.felix.rootcause/0.1.0-SNAPSHOT
+install -s mvn:org.apache.felix/org.apache.felix.systemready/0.5.0-SNAPSHOT
 ```
 
 Point your browser to http://localhost:8181/system/console/ready .

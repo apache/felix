@@ -19,20 +19,20 @@
         <relativePath />
     </parent>
 
-    <artifactId>org.apache.felix.systemready</artifactId>
-    <version>0.5.0-SNAPSHOT</version>
-    <name>Apache Felix - System Ready</name>
-    
+    <artifactId>org.apache.felix.rootcause</artifactId>
+    <version>0.1.0-SNAPSHOT</version>
+    <name>Apache Felix - Root Cause Analysis</name>
+
     <properties>
         <felix.java.version>8</felix.java.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <exam.version>4.11.0</exam.version>
     </properties>
-    
+
     <scm>
-        <connection>scm:svn:http://svn.apache.org/repos/asf/felix/trunk/systemready</connection>
-        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/felix/trunk/systemready</developerConnection>
-        <url>http://svn.apache.org/viewvc/felix/trunk/systemready</url>
+        <connection>scm:svn:http://svn.apache.org/repos/asf/felix/trunk/root-cause</connection>
+        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/felix/trunk/root-cause</developerConnection>
+        <url>http://svn.apache.org/viewvc/felix/trunk/root-cause</url>
     </scm>
 
     <build>
@@ -73,18 +73,6 @@
 
 
     <dependencies>
-    	<dependency>
-            <groupId>org.apache.felix</groupId>
-            <artifactId>org.apache.felix.rootcause</artifactId>
-            <version>0.1.0-SNAPSHOT</version>
-        </dependency>
-        <dependency>
-            <groupId>javax.servlet</groupId>
-            <artifactId>servlet-api</artifactId>
-            <version>2.5</version>
-            <scope>provided</scope>
-            <optional>true</optional>
-        </dependency>
         <dependency>
             <groupId>org.osgi</groupId>
             <artifactId>osgi.cmpn</artifactId>
@@ -109,9 +97,9 @@
             <version>1.7.6</version>
             <scope>provided</scope>
         </dependency>
-        
+
         <!-- Test dependencies -->
-        
+
         <dependency>
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>
@@ -130,14 +118,14 @@
             <version>1.3_1</version>
             <scope>test</scope>
         </dependency>
-        
+
         <dependency>
             <groupId>org.ops4j.pax.exam</groupId>
             <artifactId>pax-exam-container-native</artifactId>
             <version>${exam.version}</version>
             <scope>test</scope>
         </dependency>
- 
+
         <dependency>
             <groupId>org.ops4j.pax.exam</groupId>
             <artifactId>pax-exam-junit4</artifactId>
@@ -151,7 +139,7 @@
             <version>${exam.version}</version>
             <scope>test</scope>
         </dependency>
- 
+
         <dependency>
             <groupId>org.ops4j.pax.exam</groupId>
             <artifactId>pax-exam-link-mvn</artifactId>
@@ -165,14 +153,14 @@
             <version>5.6.10</version>
             <scope>test</scope>
         </dependency>
- 
+
         <dependency>
             <groupId>ch.qos.logback</groupId>
             <artifactId>logback-core</artifactId>
             <version>1.0.13</version>
             <scope>test</scope>
         </dependency>
- 
+
         <dependency>
             <groupId>ch.qos.logback</groupId>
             <artifactId>logback-classic</artifactId>

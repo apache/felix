@@ -16,17 +16,16 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.felix.systemready.osgi.examples;
+package org.apache.felix.rootcause;
 
-import org.osgi.service.component.annotations.Component;
-import org.osgi.service.component.annotations.Reference;
+import java.util.ArrayList;
+import java.util.List;
 
-@Component(
-        name = "CompWithMissingRef",
-        service = CompWithMissingRef.class
-        )
-public class CompWithMissingRef {
-    @Reference
-    CompWithMissingConfig other;
+import org.osgi.dto.DTO;
 
+public class DSRef extends DTO {
+    public String name;
+    public String iface;
+    public String filter;
+    public List<DSComp> candidates = new ArrayList<>();
 }

@@ -16,17 +16,31 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.felix.systemready.rootcause;
+package org.apache.felix.rootcause;
 
-import java.util.ArrayList;
-import java.util.List;
-
-import org.osgi.dto.DTO;
-import org.osgi.service.component.runtime.dto.ComponentConfigurationDTO;
+import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
+import org.osgi.service.component.runtime.ServiceComponentRuntime;
 import org.osgi.service.component.runtime.dto.ComponentDescriptionDTO;
 
-public class DSComp extends DTO {
-    public ComponentDescriptionDTO desc;
-    public ComponentConfigurationDTO config;
-    public List<DSRef> unsatisfied = new ArrayList<>();
+@Component(
+        service = RootCauseCommand.class,
+        property = {
+                "osgi.command.scope=ready", //
+                "osgi.command.function=rootcause"
+        }
+        )
+public class RootCauseCommand {
+    
+    @Reference
+    ServiceComponentRuntime scr;
+    
+    public DSComp rootcause(String componentName) {
+        ComponentDescriptionDTO cdesc = scr.getComponentDescriptionDTOs().stream()
+            .filter(desc -> desc.name.equals(componentName))
+            .findFirst().get();
+        DSComp rootCause = new DSRootCause(scr).getRootCause(cdesc);
+        new RootCausePrinter().print(rootCause);
+        return rootCause;
+    }
 }

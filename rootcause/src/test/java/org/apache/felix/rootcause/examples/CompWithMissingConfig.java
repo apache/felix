@@ -16,13 +16,16 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.felix.systemready.osgi.examples;
+package org.apache.felix.rootcause.examples;
 
 import org.osgi.service.component.annotations.Component;
-import org.osgi.service.component.annotations.Reference;
+import org.osgi.service.component.annotations.ConfigurationPolicy;
 
-@Component(service=CompWithCyclicRef.class)
-public class CompWithCyclicRef {
-    @Reference
-    CompWithCyclicRef ref;
+@Component(
+        service = CompWithMissingConfig.class,
+        name="CompWithMissingConfig",
+        configurationPolicy=ConfigurationPolicy.REQUIRE
+        )
+public class CompWithMissingConfig {
+
 }

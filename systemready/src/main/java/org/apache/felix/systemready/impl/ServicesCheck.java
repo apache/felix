@@ -27,13 +27,13 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
+import org.apache.felix.rootcause.DSComp;
+import org.apache.felix.rootcause.DSRootCause;
+import org.apache.felix.rootcause.RootCausePrinter;
 import org.apache.felix.systemready.CheckStatus;
 import org.apache.felix.systemready.CheckStatus.State;
 import org.apache.felix.systemready.StateType;
 import org.apache.felix.systemready.SystemReadyCheck;
-import org.apache.felix.systemready.rootcause.DSComp;
-import org.apache.felix.systemready.rootcause.DSRootCause;
-import org.apache.felix.systemready.rootcause.RootCausePrinter;
 import org.osgi.framework.BundleContext;
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;

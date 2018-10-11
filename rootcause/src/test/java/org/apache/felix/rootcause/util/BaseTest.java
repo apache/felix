@@ -16,39 +16,25 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.felix.systemready.osgi.util;
+package org.apache.felix.rootcause.util;
 
 import static org.ops4j.pax.exam.CoreOptions.bundle;
 import static org.ops4j.pax.exam.CoreOptions.mavenBundle;
 import static org.ops4j.pax.exam.CoreOptions.systemProperty;
-import static org.ops4j.pax.exam.cm.ConfigurationAdminOptions.newConfiguration;
 
 import java.util.Optional;
 import java.util.function.Predicate;
 
 import javax.inject.Inject;
 
-import org.apache.felix.systemready.StateType;
-import org.apache.felix.systemready.SystemReadyMonitor;
-import org.apache.felix.systemready.impl.ComponentsCheck;
-import org.apache.felix.systemready.impl.FrameworkStartCheck;
-import org.apache.felix.systemready.impl.ServicesCheck;
-import org.apache.felix.systemready.impl.servlet.SystemAliveServlet;
-import org.apache.felix.systemready.impl.servlet.SystemReadyServlet;
 import org.ops4j.pax.exam.CoreOptions;
 import org.ops4j.pax.exam.Option;
-import org.ops4j.pax.exam.cm.ConfigurationAdminOptions;
 import org.osgi.framework.BundleContext;
 import org.osgi.service.component.runtime.ServiceComponentRuntime;
 import org.osgi.service.component.runtime.dto.ComponentDescriptionDTO;
-import org.osgi.util.promise.Promise;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 
 public class BaseTest {
-    private Logger log = LoggerFactory.getLogger(this.getClass());
-    
     @Inject
     public BundleContext context;
 
@@ -73,50 +59,11 @@ public class BaseTest {
 
                 mavenBundle().groupId("org.apache.felix").artifactId("org.apache.felix.scr").version("2.0.14"),
                 mavenBundle().groupId("org.apache.felix").artifactId("org.apache.felix.configadmin").version("1.8.16"),
-                mavenBundle().groupId("org.apache.felix").artifactId("org.apache.felix.rootcause").version("0.1.0-SNAPSHOT"),
                 bundle("reference:file:target/classes/")
 
         );
     }
     
-    public Option servicesCheckConfig(StateType type, String... services) {
-        return ConfigurationAdminOptions.factoryConfiguration(ServicesCheck.PID)
-                .put("services.list", services)
-                .put("type", type.name())
-                .asOption();
-    }
-    
-    public Option componentsCheckConfig(String... components) {
-        return newConfiguration(ComponentsCheck.PID)
-                .put("components.list", components)
-                .asOption();
-    }
-    
-    public Option monitorConfig() {
-        return newConfiguration(SystemReadyMonitor.PID)
-                .put("poll.interval", 100)
-                .asOption();
-    }
-    
-    public Option httpService() {
-        return CoreOptions.composite(
-                mavenBundle("org.apache.felix", "org.apache.felix.http.servlet-api", "1.1.2"),
-                mavenBundle("org.apache.felix", "org.apache.felix.http.jetty", "3.4.8")
-                );
-    }
-
-    public Option readyServletConfig(String path) {
-        return newConfiguration(SystemReadyServlet.PID)
-                .put("osgi.http.whiteboard.servlet.pattern", path)
-                .asOption();
-    }
-    
-    public Option aliveServletConfig(String path) {
-        return newConfiguration(SystemAliveServlet.PID)
-                .put("osgi.http.whiteboard.servlet.pattern", path)
-                .asOption();
-    }
-
     public ComponentDescriptionDTO getComponentDesc(String compName) {
         return getComponentDesc(desc -> desc.name.equals(compName), compName);
     }
@@ -134,21 +81,6 @@ public class BaseTest {
         } else {
             throw new RuntimeException("Component " + label + " not found");
         }
-    }
-
-    public void disableComponent(String name) {
-        ComponentDescriptionDTO desc = getComponentDesc(name);
-        log.info("Deactivating component {}", desc.name);
-        Promise<Void> promise = scr.disableComponent(desc);
-        try {
-            promise.getValue();
-        } catch (Exception e) {
-            throw new RuntimeException(e.getMessage(), e);
-        }
-    }
-
-    public void disableFrameworkStartCheck() {
-        disableComponent(FrameworkStartCheck.PID);
     }
 
 }

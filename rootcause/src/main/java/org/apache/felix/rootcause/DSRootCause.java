@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.felix.systemready.rootcause;
+package org.apache.felix.rootcause;
 
 import java.util.Arrays;
 import java.util.Collection;
