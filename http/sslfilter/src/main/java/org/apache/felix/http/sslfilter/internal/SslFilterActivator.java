@@ -21,8 +21,6 @@ package org.apache.felix.http.sslfilter.internal;
 import java.util.Dictionary;
 import java.util.Hashtable;
 
-import javax.servlet.Filter;
-
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
@@ -32,6 +30,7 @@ import org.osgi.framework.ServiceRegistration;
 import org.osgi.service.cm.ConfigurationException;
 import org.osgi.service.cm.ManagedService;
 import org.osgi.service.http.whiteboard.HttpWhiteboardConstants;
+import org.osgi.service.http.whiteboard.Preprocessor;
 import org.osgi.service.log.LogService;
 
 public class SslFilterActivator implements BundleActivator
@@ -84,7 +83,7 @@ public class SslFilterActivator implements BundleActivator
         properties.put(HttpWhiteboardConstants.HTTP_WHITEBOARD_CONTEXT_SELECT, "(" + HttpWhiteboardConstants.HTTP_WHITEBOARD_CONTEXT_NAME + "=*)");
         properties.put(HttpWhiteboardConstants.HTTP_WHITEBOARD_FILTER_PATTERN, "/");
 
-        this.filterReg = context.registerService(Filter.class.getName(), filter, properties);
+        this.filterReg = context.registerService(Preprocessor.class.getName(), filter, properties);
 
         SystemLogger.log(LogService.LOG_DEBUG, "SSL filter registered...");
     }

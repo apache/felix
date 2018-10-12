@@ -35,10 +35,11 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.osgi.service.cm.ConfigurationException;
+import org.osgi.service.http.whiteboard.Preprocessor;
 import org.osgi.service.log.LogService;
 
 @SuppressWarnings("rawtypes")
-public class SslFilter implements Filter
+public class SslFilter implements  Preprocessor
 {
     public static final String PID = "org.apache.felix.http.sslfilter.SslFilter";
 
