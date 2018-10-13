@@ -1,3 +1,12 @@
+Changes in 1.9.10
+-----------------
+** Bug
+    * [FELIX-5962] - Exception during event processing leaves CM threads alive and holding the JVM running during framework shutdown
+
+** New Feature
+    * [FELIX-5951] - Automatically add ConfigurationAdmin service as a shell command
+
+
 Changes in 1.9.8
 ----------------
 ** Bug
