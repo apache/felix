@@ -117,7 +117,7 @@ public abstract class ComponentTestBase
     protected static String paxRunnerVmOption = null;
 
     //To investigate any problems at all set to "debug"
-    protected static String DS_LOGLEVEL = "debug";
+    protected static String DS_LOGLEVEL = "error";
 
     protected static String bsnVersionUniqueness = "single";
 

@@ -20,6 +20,7 @@
 
 package org.apache.felix.scr.impl.manager;
 
+import java.util.Iterator;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
@@ -63,7 +64,17 @@ public class MultiplePrototypeRefPair<S, T> extends RefPair<S, T>
     @Override
     public T unsetServiceObject(ComponentContextImpl<S> key)
     {
-        return instances.get(key);
+    	if ( key == null )
+    	{
+    		final Iterator<T> iter = instances.values().iterator();
+    		while ( iter.hasNext() ) 
+    		{
+    			this.serviceObjects.ungetService(iter.next());
+    		}
+    		instances.clear();
+    		return null ;
+    	}
+        return instances.remove(key);
     }
 
     @Override
