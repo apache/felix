@@ -292,7 +292,7 @@ public class FactoryConfigurationAdapterImpl extends FilterComponent<FactoryComp
         }
         
         private void invokeUpdated(Component service, CallbackTypeDef callbackInfo) throws Exception {
-        	if (m_component.injectionDisabled()) {
+        	if (((ComponentContext) service).injectionDisabled()) {
         		return;
         	}
             boolean callbackFound = false;

@@ -21,6 +21,7 @@ package org.apache.felix.dm.runtime.itest.tests;
 import org.apache.felix.dm.itest.util.Ensure;
 import org.apache.felix.dm.itest.util.TestBase;
 import org.apache.felix.dm.runtime.itest.components.ScopedServiceAnnotation;
+import org.apache.felix.dm.runtime.itest.components.ScopedServiceWithInitAnnotation;
 import org.osgi.framework.ServiceRegistration;
 
 /**
@@ -34,6 +35,23 @@ public class ScopedServiceAnnotationTest extends TestBase {
     public void testScopedService() throws Throwable {
         Ensure e = new Ensure();
         ServiceRegistration seq = register(e, ScopedServiceAnnotation.ENSURE);
+        // the consumer defines two dependencies, hence two prototype instances are created
+        e.waitForStep(2, 5000);
+        
+        // make sure Consumer has started
+        e.waitForStep(3, 5000);
+
+        // Deactivate service provider
+        seq.unregister();
+        
+        // make sure the two prototypes and the consumer have stopped
+        e.waitForStep(6, 5000);
+        e.ensure();
+    }
+    
+    public void testScopedServiceWithInitMethod() throws Throwable {
+        Ensure e = new Ensure();
+        ServiceRegistration seq = register(e, ScopedServiceWithInitAnnotation.ENSURE);
         // the consumer defines two dependencies, hence two prototype instances are created
         e.waitForStep(2, 5000);
         

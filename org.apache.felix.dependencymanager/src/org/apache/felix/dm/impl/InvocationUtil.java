@@ -76,7 +76,7 @@ public class InvocationUtil {
     	public final Object m_instance;
     	
     	/**
-    	 * The index of the consutror used when creating the component instance
+    	 * The index of the constructor used when creating the component instance
     	 */
     	public final int m_ctorIndex;
     	

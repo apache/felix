@@ -48,8 +48,7 @@ public class ScopedAspectAdaptersServiceTest extends TestBase {
         Component aspect = m.createAspectComponent()
         	.setAspect(Service.class, null, 10)
         	.setScope(ServiceScope.PROTOTYPE)
-            .setFactory(this, "createAspectService")
-            .setCallbacks(null, null, null, null);
+            .setFactory(this, "createAspectService");
         
         m.add(provider);
         m_e.waitForStep(1, 5000); // provider started        

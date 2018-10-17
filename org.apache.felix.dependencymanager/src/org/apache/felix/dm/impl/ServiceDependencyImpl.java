@@ -157,6 +157,7 @@ public class ServiceDependencyImpl extends AbstractDependency<ServiceDependency>
         m_autoConfigInstance = prototype.m_autoConfigInstance;
         m_defaultImplementation = prototype.m_defaultImplementation;
         m_autoConfig = prototype.m_autoConfig;
+        m_obtainServiceBeforeInjection = prototype.m_obtainServiceBeforeInjection;
 	}
 	    	    
     // --- CREATION
@@ -248,7 +249,7 @@ public class ServiceDependencyImpl extends AbstractDependency<ServiceDependency>
 	public Object addingService(@SuppressWarnings("rawtypes") ServiceReference reference) {
 		try {
 			ServiceEventImpl event = new ServiceEventImpl(m_component, reference, null);
-			if (m_obtainServiceBeforeInjection) {
+			if (obtainServiceBeforeInjecting()) {
 				Object service = event.getEvent(); // will dereference the service object.
 				if (service == null) {
 					// service concurrently removed, ignore
@@ -293,7 +294,7 @@ public class ServiceDependencyImpl extends AbstractDependency<ServiceDependency>
 		ServiceEventImpl evt = (ServiceEventImpl) service;
 		ServiceEventImpl newEvt = (ServiceEventImpl) newService;
 		
-		if (m_obtainServiceBeforeInjection) {
+		if (obtainServiceBeforeInjecting()) {
 			try {
 				newEvt.getEvent();
 			} catch (IllegalStateException e) {
@@ -598,5 +599,9 @@ public class ServiceDependencyImpl extends AbstractDependency<ServiceDependency>
     	    m_component.getLogger().err("Could not invoke swap callback", e);
     	}
 	}
+    
+    private boolean obtainServiceBeforeInjecting() {
+    	return m_obtainServiceBeforeInjection && ! m_component.injectionDisabled();
+    }
 	
 }

@@ -363,7 +363,7 @@ public class ComponentImpl implements Component<ComponentImpl>, ComponentContext
         	m_listeners.forEach(clone::add);        	        	                    	
         	int ctorIndex = clone.instantiateComponent(createScopedComponentConstructorArgs(bundle, registration));  
         	// ctorIndex == -1 means we have used a factory to create the component
-        	// if ctorIndex == 0 mneas we have used the first constructor (the one used to inject service registration and bundles
+        	// if ctorIndex == 0 means we have used the first constructor (the one used to inject service registration and bundles
         	if (ctorIndex != 0) { 
         		// we don't have injected the bundle and service registration in the constructor, so inject them in the class fields
         		autoConfigField(clone, ServiceRegistration.class, registration);
@@ -1018,27 +1018,6 @@ public class ComponentImpl implements Component<ComponentImpl>, ComponentContext
         return m_stopwatch;
     }
         
-    /**
-     * Instantiates the component. The method signatures used when using a component constructor or a factory "create" method
-     * depends on the component scope:
-     * 
-     * 1) For SINGLETON scope:
-     * 
-     * When no factory is used, we always use the component default public constructor: ()
-     * When a factory "create" method is used, we try the factory.create with "create()" or "create(Component)" signatures
-     * 
-     * 2) For other scopes (PROTOTYPE,BUNDLE):
-     * 
-     * When no factory is used, we try to instantiate the component using the following constructors:
-     *     (Bundle, ServiceRegistration)
-     *     (Bundle, ServiceRegistration, BundleContext)
-     *     ()
-     *     
-     * When a factory.create method is used, we try the following factory "create" method signatures:
-     * 	   create(Component, Bundle, ServiceRegistration)
-     * 	   create(Component)
-     * 	   create()
-     */
     @Override
     public ComponentContext instantiateComponent() {
     	CallbackTypeDef ctorArgs = null;
@@ -1048,23 +1027,19 @@ public class ComponentImpl implements Component<ComponentImpl>, ComponentContext
     		// When a component scope is singleton, we'll use the following constructor or factory "create" method signatures:
     		ctorArgs = VOID;    			
     		break;
-    		
+    		    		
     	case PROTOTYPE:
     	case BUNDLE:
-    		// for scoped components, If no init callback is defined, we don't instantiate the prototype instance with the real component class, 
-    		// we use a dymmy prototype instance object because there is no need to instantiate the real component prototype object (since there is no init method to invoke).
-			if (m_callbackInit == null) {
-				m_componentInstance = PROTOTYPE_INSTANCE;
-				m_injectionDisabled = true;
-				return this;
-			}
-			
-    		// When a component scope is BUNDLE|PROTOTYPE, we'll use the following constructor or factory "create" method signatures:
-    		ctorArgs = createScopedComponentConstructorArgs(null, null);
+    		if (m_injectionDisabled) {    		
+    			m_componentInstance = PROTOTYPE_INSTANCE;
+    			return this;
+    		} else {
+        		ctorArgs = createScopedComponentConstructorArgs(null, null);
+    		}
     		break;
-    		
-    		default:
-    			throw new IllegalStateException("Invalid scope: " + m_scope);
+
+    	default:
+    		throw new IllegalStateException("Invalid scope: " + m_scope);
 		}
 
     	// Create the factory "create" method signatures types
@@ -1237,6 +1212,7 @@ public class ComponentImpl implements Component<ComponentImpl>, ComponentContext
      **/
     private boolean performTransition(ComponentState oldState, ComponentState newState) {
         if (oldState == ComponentState.INACTIVE && newState == ComponentState.WAITING_FOR_REQUIRED) {
+        	initPrototype();
             startDependencies(m_dependencies);
             notifyListeners(newState);
             return true;
@@ -1972,4 +1948,45 @@ public class ComponentImpl implements Component<ComponentImpl>, ComponentContext
         }
     }    
     
+	private final static Class[][] INIT_SIGNATUTES = new Class[][] { { Component.class }, {} };
+	private final static Class[][] FACTORY_CREATE_SIGNATURES = new Class[][] { {}, { Component.class } };
+    
+    private boolean hasInitMethodWhenNotSingleton() {
+    	if (m_callbackInit == null) {
+    		return false;
+    	}
+		if (m_componentDefinition instanceof Class) {
+			if (null != InvocationUtil.getCallbackMethod((Class<?>) m_componentDefinition, m_callbackInit, INIT_SIGNATUTES)) {
+				return true;				
+			}
+		} else if (m_instanceFactoryCreateMethod != null) {
+			if (m_instanceFactory != null) {
+				Class<?> factoryClass = null;
+			
+				if (m_instanceFactory instanceof Class) {
+					factoryClass = (Class<?>) m_instanceFactory;
+				} else if (m_instanceFactory != null) {
+					factoryClass = m_instanceFactory.getClass();
+				}
+				Method create = InvocationUtil.getCallbackMethod(factoryClass, m_instanceFactoryCreateMethod, FACTORY_CREATE_SIGNATURES);
+				Class<?> componentType = create.getReturnType();
+				if (componentType != null && InvocationUtil.getCallbackMethod(componentType, m_callbackInit, INIT_SIGNATUTES) != null) {
+					return true;
+				}
+			}
+		}
+		return false;
+    }    
+
+    private void initPrototype() {
+    	switch (m_scope) {
+    	case PROTOTYPE:
+    	case BUNDLE:
+    		if (m_callbackInit == null || ! hasInitMethodWhenNotSingleton()) {
+    			// when no init callback is defined, or if the component implementation does not actually has an init method, we disable injection for the component prototype instance.
+    			m_injectionDisabled = true;
+    		}
+    		break;
+    	}
+    }
 }
