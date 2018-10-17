@@ -39,19 +39,19 @@ Building and testing Apache Felix Dependency Manager
 
 - Compile Dependendency Manager annotations bndtools plugin:
   
-$ ./gradlew org.apache.felix.dependencymanager.annotation:jar
+$ ./gradlew --no-daemon org.apache.felix.dependencymanager.annotation:jar
 
 - Compile all other bundles:
  
-$ ./gradlew jar
+$ ./gradlew --no-daemon jar
 
 - run junit tests:
 
-$ ./gradlew test
+$ ./gradlew --no-daemon test
 
 - run integration tests:
 
-$ ./gradlew check
+$ ./gradlew --no-daemon check
 
 ** Compilation Using Eclipse:
 
@@ -60,7 +60,7 @@ $ ./gradlew check
 * go to Windows -> Preferences -> Java -> Installed JREs
 * Then add a java8 JRE of your choice.
 
-- Install BndTools 3.4.0
+- Install BndTools 3.5.0 (or latest)
 
 - Open BndTools perspective
 

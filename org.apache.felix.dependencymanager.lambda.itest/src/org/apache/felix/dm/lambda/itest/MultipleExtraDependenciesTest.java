@@ -40,8 +40,8 @@ public class MultipleExtraDependenciesTest extends TestBase {
          Component c1 = component(m).provides(Service1.class).impl(new MyComponent1(e)).withSvc(Service2.class, srv->srv.autoConfig("m_service2")).build();
          Component c2 = component(m).impl(new MyComponent2(e)).withSvc(Service1.class, srv->srv.required(false).autoConfig(false).add("added")).build();
          Component c3 = component(m).provides(Service2.class).impl(Service2Impl.class).build();
-         Component c4 = component(m).impl(Service3Impl1.class).provides(Service3.class, type -> "xx").build();
-         Component c5 = component(m).impl(Service3Impl2.class).provides(Service3.class, type -> "yy").build();
+         Component c4 = component(m).impl(Service3Impl1.class).provides(Service3.class, "type", "xx").build();
+         Component c5 = component(m).impl(Service3Impl2.class).provides(Service3.class, "type", "yy").build();
 
          System.out.println("\n+++ Adding c2 / MyComponent2");
          m.add(c2);
@@ -74,8 +74,8 @@ public class MultipleExtraDependenciesTest extends TestBase {
         Component c1 = component(m).provides(Service1.class).impl(new MyComponent1(e)).withSvc(Service2.class, srv->srv.autoConfig("m_service2")).build();
         Component c2 = component(m).impl(new MyComponent2(e)).withSvc(Service1.class, srv->srv.required(false).autoConfig(false).add("added")).build();
         Component c3 = component(m).provides(Service2.class).impl(Service2Impl.class).build();
-        Component c4 = component(m).impl(Service3Impl1.class).provides(Service3.class, type -> "xx").build();
-        Component c5 = component(m).impl(Service3Impl2.class).provides(Service3.class, type -> "yy").build();
+        Component c4 = component(m).impl(Service3Impl1.class).provides(Service3.class, "type", "xx").build();
+        Component c5 = component(m).impl(Service3Impl2.class).provides(Service3.class, "type", "yy").build();
 
         System.out.println("\n+++ Adding c2 / MyComponent2");
         m.add(c2);

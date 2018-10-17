@@ -115,7 +115,7 @@ public class AdapterWithModifiedInstanceBoundDependencyTest extends TestBase {
         DependencyManager m = getDM();
         Ensure e = new Ensure();
 
-        Component a = component(m).impl(new AImpl(e)).provides(A.class).properties(foo -> "bar").build();
+        Component a = component(m).impl(new AImpl(e)).provides(A.class).properties("foo", "bar").build();
         Component b = adapter(m, A.class).provides(B.class).impl(new BImpl(e)).add("addA").change("changeA").remove("removeA").build();
         Component c = component(m).impl(new CImpl()).provides(C.class).withSvc(A.class, "(foo=bar)", true).build();
                       
@@ -143,7 +143,7 @@ public class AdapterWithModifiedInstanceBoundDependencyTest extends TestBase {
         DependencyManager m = getDM();
         Ensure e = new Ensure();
 
-        Component a = component(m).impl(new AImpl(e)).provides(A.class).properties(foo -> "bar").build();        
+        Component a = component(m).impl(new AImpl(e)).provides(A.class).properties("foo", "bar").build();        
         Component b = adapter(m, A.class).impl(new BImpl(e)).provides(B.class).add(BImpl::addA).change(BImpl::changeA).remove(BImpl::removeA).build();        
         Component c = component(m).impl(new CImpl()).provides(C.class).withSvc(A.class, s -> s.filter("(foo=bar)")).build();
                       

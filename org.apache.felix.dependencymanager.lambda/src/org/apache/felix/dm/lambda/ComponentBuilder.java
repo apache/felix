@@ -183,6 +183,7 @@ public interface ComponentBuilder<B extends ComponentBuilder<B>> {
 	 * @param properties a list of fluent service properties for the provided service. You can specify a list of lambda expression, each one implementing the
 	 * {@link FluentProperty} interface that allows to define a property name using a lambda parameter.
      * @return this builder.
+     * @deprecated Fluent properties are only supported using java8 and this method will be removed in next DM release
 	 */
 	B provides(Class<?>  iface, FluentProperty ... properties);
 	
@@ -226,6 +227,7 @@ public interface ComponentBuilder<B extends ComponentBuilder<B>> {
      * @param properties a list of fluent service properties for the provided service. You can specify a list of lambda expression, each one implementing the
      * {@link FluentProperty} interface that allows to define a property name using a lambda parameter.
      * @return this builder.
+     * @deprecated Fluent properties are only supported using java8 and this method will be removed in next DM release
      */
     B provides(Class<?>[] ifaces, FluentProperty ... properties);
     
@@ -270,6 +272,7 @@ public interface ComponentBuilder<B extends ComponentBuilder<B>> {
      * @param properties a list of fluent service properties for the provided service. You can specify a list of lambda expression, each one implementing the
      * {@link FluentProperty} interface that allows to define a property name using a lambda parameter.
      * @return this builder.
+     * @deprecated Fluent properties are only supported using java8 and this method will be removed in next DM release
      */
     B provides(String iface, FluentProperty ... properties);
     
@@ -313,6 +316,7 @@ public interface ComponentBuilder<B extends ComponentBuilder<B>> {
      * @param properties a list of fluent service properties for the provided service. You can specify a list of lambda expression, each one implementing the
      * {@link FluentProperty} interface that allows to define a property name using a lambda parameter.
      * @return this builder.
+     * @deprecated Fluent properties are only supported using java8 and this method will be removed in next DM release
      */
     B provides(String[] ifaces, FluentProperty ... properties);
     
@@ -360,6 +364,7 @@ public interface ComponentBuilder<B extends ComponentBuilder<B>> {
      * 
      * @param properties the fluent properties
      * @return this builder
+     * @deprecated Fluent properties are only supported using java8 and this method will be removed in next DM release
      */
     B properties(FluentProperty ... properties);  
 

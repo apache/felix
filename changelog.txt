@@ -1,4 +1,4 @@
-Release Notes - Felix - Version org.apache.felix.dependencymanager-r12
+Release Notes - Felix - Version org.apache.felix.dependencymanager-r13
 ======================================================================
 
 ** List of bundles being part of the release:
@@ -21,6 +21,7 @@ Release Notes - Felix - Version org.apache.felix.dependencymanager-r12
 
 
 ** Improvement
+    * [FELIX-5967] - DM does not support java9+
     * [FELIX-5937] - Refactor DM bndtools/gradle project
     * [FELIX-5939] - DM annotations enhancements
     * [FELIX-5941] - DM APi enhancements

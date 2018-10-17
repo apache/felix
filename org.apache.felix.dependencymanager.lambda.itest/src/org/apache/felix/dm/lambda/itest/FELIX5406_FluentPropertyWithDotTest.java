@@ -32,6 +32,7 @@ public class FELIX5406_FluentPropertyWithDotTest extends TestBase {
     private final Ensure m_ensure = new Ensure();
 
 	public void testFluentServiceProperty() {
+		if (! isJava8()) return;
         final DependencyManager dm = getDM();
         
         component(dm, comp -> comp.factory(ProviderImpl::new).provides(Provider.class, foo -> "bar"));
@@ -42,6 +43,7 @@ public class FELIX5406_FluentPropertyWithDotTest extends TestBase {
 	}
 	
 	public void testFluentServicePropertyWithDot() {
+		if (! isJava8()) return;
         final DependencyManager dm = getDM();
         
         component(dm, comp -> comp.factory(ProviderImpl::new).provides(Provider.class, foo_bar -> "zoo"));
@@ -52,6 +54,7 @@ public class FELIX5406_FluentPropertyWithDotTest extends TestBase {
 	}
 	
 	public void testFluentServicePropertyWithUnderscore() {
+		if (! isJava8()) return;
         final DependencyManager dm = getDM();
         
         component(dm, comp -> comp.factory(ProviderImpl::new).provides(Provider.class, foo__bar -> "zoo"));

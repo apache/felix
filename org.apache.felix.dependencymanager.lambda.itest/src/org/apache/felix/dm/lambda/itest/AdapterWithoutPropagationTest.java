@@ -41,7 +41,7 @@ public class AdapterWithoutPropagationTest extends TestBase {
 
         // The provider has a "foo=bar" property
         ServiceProvider serviceProvider = new ServiceProvider(e);
-        Component provider = component(m).provides(OriginalService.class).properties(foo -> "bar").impl(serviceProvider).build();
+        Component provider = component(m).provides(OriginalService.class).properties("foo", "bar").impl(serviceProvider).build();
 
         // The Adapter will see the "foo=bar" property from the adaptee
         Component adapter = adapter(m, OriginalService.class)
@@ -76,7 +76,7 @@ public class AdapterWithoutPropagationTest extends TestBase {
 
         // The provider has a "foo=bar" property
         ServiceProvider serviceProvider = new ServiceProvider(e);
-        Component provider = component(m).provides(OriginalService.class).properties(foo -> "bar").impl(serviceProvider).build();
+        Component provider = component(m).provides(OriginalService.class).properties("foo", "bar").impl(serviceProvider).build();
 
         // The Adapter will see the "foo=bar" property from the adaptee
         ServiceAdapter saimpl = new ServiceAdapter(e);
