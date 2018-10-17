@@ -101,8 +101,8 @@ public class AdapterWithPropagationTest extends TestBase {
         // helper class that ensures certain steps get executed in sequence
         Ensure e = new Ensure(); 
         
-        Component s1 = component(m).impl(new S1Impl(e)).provides(S1.class).properties(p1 -> "v1", p2 -> "v2overriden").build();
-        Component s1Adapter = adapter(m, S1.class).add("add").change("change").impl(new S1Adapter(e)).provides(S2.class).properties(p2 -> "v2").build();   
+        Component s1 = component(m).impl(new S1Impl(e)).provides(S1.class).properties("p1", "v1", "p2", "v2overriden").build();
+        Component s1Adapter = adapter(m, S1.class).add("add").change("change").impl(new S1Adapter(e)).provides(S2.class).properties("p2", "v2").build();   
         Component s3 = component(m).impl(new S3(e)).withSvc(S2.class, s -> s.add("add").change("change")).build();
                                           
         m.add(s1);

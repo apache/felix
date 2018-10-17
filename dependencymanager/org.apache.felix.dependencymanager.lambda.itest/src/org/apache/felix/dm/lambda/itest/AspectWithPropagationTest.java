@@ -69,7 +69,7 @@ public class AspectWithPropagationTest extends TestBase {
 			public void invoke() {
 			}
         };
-		Component sComp = component(m).impl(s).provides(S.class, p -> "s").build();
+		Component sComp = component(m).impl(s).provides(S.class, "p", "s").build();
 
         // Create SA (aspect of S)
         S sa = new S() {
@@ -77,7 +77,7 @@ public class AspectWithPropagationTest extends TestBase {
 			public void invoke() {
 			}
         };
-        Component saComp = aspect(m, S.class).rank(1).impl(sa).properties(p -> "aspect").build();
+        Component saComp = aspect(m, S.class).rank(1).impl(sa).properties("p", "aspect").build();
                 
         // Create client depending on S
         Object client = new Object() {

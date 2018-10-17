@@ -117,6 +117,10 @@ public abstract class TestBase extends TestCase implements LogService, Framework
     	}
         Assert.assertFalse(errorsLogged());
     }
+    
+    protected boolean isJava8() {
+    	return System.getProperty("java.version", "1.8").startsWith("1.8");
+    }
         
     protected DependencyManager getDM() {
         return m_dm;

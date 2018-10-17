@@ -43,7 +43,7 @@ public class MultipleExtraDependencyTest extends TestBase {
 
         Component sp = component(m)
               .impl(ServiceProvider.class)
-              .provides(ServiceInterface.class, foo -> "bar")
+              .provides(ServiceInterface.class, "foo", "bar")
               .start("start").stop("stop")
               .withSvc(Sequencer.class, srv->srv.autoConfig("m_sequencer"))
               .withSvc(ServiceProvider2.class, srv->srv.add("bind").remove("unbind"))

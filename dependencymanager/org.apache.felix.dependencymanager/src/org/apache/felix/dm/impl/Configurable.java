@@ -20,6 +20,7 @@ package org.apache.felix.dm.impl;
 
 import java.lang.annotation.Annotation;
 import java.lang.invoke.MethodHandles;
+import java.lang.invoke.MethodType;
 import java.lang.reflect.Array;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
@@ -361,16 +362,27 @@ public final class Configurable {
         		// the config type is an annotation: simply invoke the default value
         		def = method.getDefaultValue();
         	} else if (method.isDefault()) {
-        		// The config type is a java8 interface with a default method, invoke it.
-        		// But it's challenging to invoke a default method from a dynamic proxy ... we have to use the MethodHandles.
-        		// see https://zeroturnaround.com/rebellabs/recognize-and-conquer-java-proxies-default-methods-and-method-handles
+        		if (System.getProperty("java.version", "1.8").startsWith("1.8")) {
+        			// The config type is a java8 interface with a default method, invoke it.
+        			// But it's challenging to invoke a default method from a dynamic proxy ... we have to use the MethodHandles.
+        			// see https://zeroturnaround.com/rebellabs/recognize-and-conquer-java-proxies-default-methods-and-method-handles
         		
-                Constructor<MethodHandles.Lookup> constructor = MethodHandles.Lookup.class.getDeclaredConstructor(Class.class, int.class);
-                constructor.setAccessible(true);
-                def = constructor.newInstance(methodClass, MethodHandles.Lookup.PRIVATE)
-                		.unreflectSpecial(method, methodClass)
-                		.bindTo(proxy)
-                		.invokeWithArguments(args);
+        			Constructor<MethodHandles.Lookup> constructor = MethodHandles.Lookup.class.getDeclaredConstructor(Class.class, int.class);
+        			constructor.setAccessible(true);
+        			def = constructor.newInstance(methodClass, MethodHandles.Lookup.PRIVATE)
+        					.unreflectSpecial(method, methodClass)
+        					.bindTo(proxy)
+        					.invokeWithArguments(args);
+        		} else {
+        			// see https://dzone.com/articles/correct-reflective-access-to-interface-default-methods
+        			def = MethodHandles.lookup()
+        					.findSpecial(methodClass,         							
+        								 method.getName(),  
+        								 MethodType.methodType(method.getReturnType(), method.getParameterTypes()),  
+        								 methodClass)
+        					.bindTo(proxy)
+        					.invokeWithArguments();
+        		}
         	}
             return convert(method.getGenericReturnType(), key, def, true /* useImplicitDefault */);
         }

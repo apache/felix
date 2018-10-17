@@ -44,7 +44,7 @@ public class AspectBaseTest extends TestBase {
         ServiceProvider p = new ServiceProvider("a");
         ServiceConsumer c = new ServiceConsumer(e);
         
-        Component sp = component(m).impl(p).provides(ServiceInterface.class).properties(name -> "a").build();
+        Component sp = component(m).impl(p).provides(ServiceInterface.class).properties("name", "a").build();
         Component sc = component(m).impl(c).withSvc(ServiceInterface.class, srv -> srv.add("add").remove("remove").autoConfig("m_service")).build();
         Component sa = aspect(m, ServiceInterface.class).rank(20).impl(ServiceAspect.class).build();
             
@@ -79,7 +79,7 @@ public class AspectBaseTest extends TestBase {
         ServiceProvider p = new ServiceProvider("a");
         ServiceConsumer c = new ServiceConsumer(e);
         
-        Component sp = component(m).impl(p).provides(ServiceInterface.class).properties(name -> "a").build();        
+        Component sp = component(m).impl(p).provides(ServiceInterface.class).properties("name", "a").build();        
         Component sc = component(m)
             .impl(c).withSvc(ServiceInterface.class, srv -> srv.add(c::addRef).remove(c::removeRef).autoConfig("m_service")).build();
         Component sa = aspect(m, ServiceInterface.class).rank(20).impl(ServiceAspect.class).build();
@@ -114,7 +114,7 @@ public class AspectBaseTest extends TestBase {
         // create a service provider and consumer
         ServiceProvider p = new ServiceProvider("a");
         ServiceConsumer c = new ServiceConsumer(e);
-        Component sp = component(m).impl(p).provides(ServiceInterface.class).properties(name -> "a").build();            
+        Component sp = component(m).impl(p).provides(ServiceInterface.class).properties("name", "a").build();            
         Component sc = component(m).impl(c).withSvc(ServiceInterface.class, srv -> srv.add("add").remove("remove").autoConfig("m_service")).build();
         Component sa = aspect(m, ServiceInterface.class).rank(20).impl(ServiceAspect.class).build();
 
@@ -156,7 +156,7 @@ public class AspectBaseTest extends TestBase {
         ServiceProvider p = new ServiceProvider("a");
         ServiceConsumer c = new ServiceConsumer(e);
         
-        Component sp = component(m).impl(p).provides(ServiceInterface.class).properties(name -> "a").build();
+        Component sp = component(m).impl(p).provides(ServiceInterface.class).properties("name", "a").build();
         Component sc = component(m).impl(c).withSvc(ServiceInterface.class, srv -> srv.add(c::addRef).remove(c::removeRef).autoConfig("m_service")).build();
         Component sa = aspect(m, ServiceInterface.class).rank(20).impl(ServiceAspect.class).build();
 
@@ -196,8 +196,8 @@ public class AspectBaseTest extends TestBase {
         
         // create service providers and consumers
         ServiceConsumer c = new ServiceConsumer(e);
-        Component sp = component(m).impl(new ServiceProvider("a")).provides(ServiceInterface.class).properties(name -> "a").build();
-        Component sp2 = component(m).impl(new ServiceProvider("b")).provides(ServiceInterface.class).properties(name -> "b").build();
+        Component sp = component(m).impl(new ServiceProvider("a")).provides(ServiceInterface.class).properties("name", "a").build();
+        Component sp2 = component(m).impl(new ServiceProvider("b")).provides(ServiceInterface.class).properties("name", "b").build();
         Component sc = component(m).impl(c).withSvc(ServiceInterface.class, srv -> srv.add("add").remove("remove")).build();
 
         Component sa = aspect(m, ServiceInterface.class).rank(20).impl(ServiceAspect.class).build();
@@ -238,8 +238,8 @@ public class AspectBaseTest extends TestBase {
         
         // create service providers and consumers
         ServiceConsumer c = new ServiceConsumer(e);
-        Component sp = component(m).impl(new ServiceProvider("a")).provides(ServiceInterface.class).properties(name -> "a").build();
-        Component sp2 = component(m).impl(new ServiceProvider("b")).provides(ServiceInterface.class).properties(name -> "b").build();
+        Component sp = component(m).impl(new ServiceProvider("a")).provides(ServiceInterface.class).properties("name", "a").build();
+        Component sp2 = component(m).impl(new ServiceProvider("b")).provides(ServiceInterface.class).properties("name", "b").build();
         Component sc = component(m).impl(c).withSvc(ServiceInterface.class, srv -> srv.add(c::addRef).remove(c::removeRef)).build();
 
         Component sa = aspect(m, ServiceInterface.class).rank(20).impl(ServiceAspect.class).build();

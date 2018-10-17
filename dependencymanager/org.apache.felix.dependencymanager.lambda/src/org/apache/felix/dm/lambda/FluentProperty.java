@@ -55,6 +55,9 @@ import org.apache.felix.dm.lambda.callbacks.SerializableLambda;
  * <pre>{@code
  * Windows -> Preference -> Compiler -> Classfile Generation -> Store information about method parameters.
  * }</pre>
+ * 
+ * <br>WARNING: this is interface is deprecated, it is only supported when using java8, not on java9+, and we will remove it in next DM release
+ * @deprecated this interface is only supported with java8 and will be removed in next dm release
  */
 @FunctionalInterface
 public interface FluentProperty extends SerializableLambda {
