@@ -1,9 +1,20 @@
+Changes in 2.1.14
+-----------------
+** Bug
+    * [FELIX-5950] - NPE in MultiplePrototypeRefPair.unsetServiceObject
+
+
+Changes in 2.1.12
+-----------------
+** Bug
+    * [FELIX-5959] - Exception on changecount timer timeout
+
+
 Changes in 2.1.10
 -----------------
 ** Bug
     * [FELIX-4260] - IllegalStateException: The service has been unregistered
-	* [FELIX-5947] - ClassLoader memory leak
-
+    * [FELIX-5947] - ClassLoader memory leak
 ** Improvement
     * [FELIX-5948] - Collection of performance and memory optimizations
 

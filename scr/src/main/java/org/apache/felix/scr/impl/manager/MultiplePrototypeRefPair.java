@@ -66,11 +66,18 @@ public class MultiplePrototypeRefPair<S, T> extends RefPair<S, T>
     {
     	if ( key == null )
     	{
-    		final Iterator<T> iter = instances.values().iterator();
-    		while ( iter.hasNext() ) 
-    		{
-    			this.serviceObjects.ungetService(iter.next());
+			try 
+			{
+				final Iterator<T> iter = instances.values().iterator();
+				while ( iter.hasNext() ) 
+				{
+    			    this.serviceObjects.ungetService(iter.next());
+    			} 
     		}
+    		catch (final IllegalStateException ise)
+    		{
+    			// ignore
+   			}
     		instances.clear();
     		return null ;
     	}
