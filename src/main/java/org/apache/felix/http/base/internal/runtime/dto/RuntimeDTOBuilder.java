@@ -42,18 +42,18 @@ public final class RuntimeDTOBuilder
 {
 
     private final RegistryRuntime registry;
-    private final ServiceReference<HttpServiceRuntime> serviceReference;
+    private final ServiceReferenceDTO serviceRefDTO;
 
-    public RuntimeDTOBuilder(final RegistryRuntime registry, final ServiceReference<HttpServiceRuntime> ref)
+    public RuntimeDTOBuilder(final RegistryRuntime registry, final ServiceReferenceDTO srDTO)
     {
         this.registry = registry;
-        this.serviceReference = ref;
+        this.serviceRefDTO = srDTO;
     }
 
     public RuntimeDTO build()
     {
         final RuntimeDTO runtimeDTO = new RuntimeDTO();
-        runtimeDTO.serviceDTO = createServiceDTO();
+        runtimeDTO.serviceDTO = this.serviceRefDTO;
         runtimeDTO.servletContextDTOs = createContextDTOs();
         runtimeDTO.preprocessorDTOs = createPreprocessorDTOs();
 
@@ -66,35 +66,6 @@ public final class RuntimeDTOBuilder
         runtimeDTO.failedPreprocessorDTOs = registry.getFailedDTOHolder().failedPreprocessorDTOs.toArray(new FailedPreprocessorDTO[registry.getFailedDTOHolder().failedPreprocessorDTOs.size()]);
 
         return runtimeDTO;
-    }
-
-    private ServiceReferenceDTO createServiceDTO()
-    {
-        final ServiceReferenceDTO dto = new ServiceReferenceDTO();
-        dto.bundle = this.serviceReference.getBundle().getBundleId();
-        dto.id = (Long) this.serviceReference.getProperty(Constants.SERVICE_ID);
-        final Map<String, Object> props = new HashMap<String, Object>();
-        for (String key : this.serviceReference.getPropertyKeys())
-        {
-            props.put(key, this.serviceReference.getProperty(key));
-        }
-        dto.properties = props;
-
-        final Bundle[] ubs = this.serviceReference.getUsingBundles();
-        if (ubs == null)
-        {
-            dto.usingBundles = new long[0];
-        }
-        else
-        {
-            dto.usingBundles = new long[ubs.length];
-            for (int j=0; j < ubs.length; j++)
-            {
-                dto.usingBundles[j] = ubs[j].getBundleId();
-            }
-        }
-
-        return dto;
     }
 
     private ServletContextDTO[] createContextDTOs()

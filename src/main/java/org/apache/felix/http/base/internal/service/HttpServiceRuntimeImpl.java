@@ -28,8 +28,10 @@ import org.apache.felix.http.base.internal.runtime.dto.RequestInfoDTOBuilder;
 import org.apache.felix.http.base.internal.runtime.dto.RuntimeDTOBuilder;
 import org.apache.felix.http.base.internal.whiteboard.WhiteboardManager;
 import org.osgi.framework.BundleContext;
+import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceReference;
 import org.osgi.framework.ServiceRegistration;
+import org.osgi.framework.dto.ServiceReferenceDTO;
 import org.osgi.service.http.runtime.HttpServiceRuntime;
 import org.osgi.service.http.runtime.dto.RequestInfoDTO;
 import org.osgi.service.http.runtime.dto.RuntimeDTO;
@@ -52,8 +54,10 @@ public final class HttpServiceRuntimeImpl implements HttpServiceRuntime
 
     private volatile long changeCount;
 
-    private volatile ServiceReference<HttpServiceRuntime> serviceReference;
+    private volatile ServiceRegistration<HttpServiceRuntime> serviceReg;
 
+    private volatile ServiceReferenceDTO serviceRefDTO;
+    
     private volatile Timer timer;
 
     private final long updateChangeCountDelay;
@@ -87,9 +91,34 @@ public final class HttpServiceRuntimeImpl implements HttpServiceRuntime
     @Override
     public RuntimeDTO getRuntimeDTO()
     {
-        final RuntimeDTOBuilder runtimeDTOBuilder = new RuntimeDTOBuilder(contextManager.getRuntimeInfo(),
-                this.serviceReference);
-        return runtimeDTOBuilder.build();
+    	if ( this.serviceRefDTO == null )
+    	{
+    		// it might happen that this code is executed in several threads
+    		// but that's very unlikely and even if, fetching the service 
+    		// reference several times is not a big deal
+    		final ServiceRegistration<HttpServiceRuntime> reg = this.serviceReg;
+    		if ( reg != null )
+    		{
+                final long id = (long) reg.getReference().getProperty(Constants.SERVICE_ID);
+                final ServiceReferenceDTO[] dtos = reg.getReference().getBundle().adapt(ServiceReferenceDTO[].class);
+                for(final ServiceReferenceDTO dto : dtos) 
+                {
+                	if ( dto.id == id) 
+                	{
+                		this.serviceRefDTO = dto;
+                		break;
+                	}
+                }
+    			
+    		}
+    	}
+        if ( this.serviceRefDTO != null )
+        {
+            final RuntimeDTOBuilder runtimeDTOBuilder = new RuntimeDTOBuilder(contextManager.getRuntimeInfo(),
+                    this.serviceRefDTO);
+            return runtimeDTOBuilder.build();
+        }
+        throw new IllegalStateException("Service is already unregistered");
     }
 
     @Override
@@ -116,19 +145,43 @@ public final class HttpServiceRuntimeImpl implements HttpServiceRuntime
         attributes = replacement;
     }
 
-    public Dictionary<String, Object> getAttributes()
+    public void register(final BundleContext bundleContext)
     {
-        return attributes;
+        this.serviceReg = bundleContext.registerService(HttpServiceRuntime.class,
+                this,
+                attributes);
     }
-
-    public void setServiceReference(
-            final ServiceReference<HttpServiceRuntime> reference)
+    
+    public void unregister()
     {
-        this.serviceReference = reference;
+    	if ( this.serviceReg != null ) 
+    	{
+        	try
+        	{
+        	    this.serviceReg.unregister();
+        	}
+        	catch ( final IllegalStateException ise)
+        	{
+        		// we just ignore it
+        	}
+        	this.serviceReg = null;    		
+    	}
+    	this.serviceRefDTO = null;
     }
-
-    public void updateChangeCount(final ServiceRegistration<HttpServiceRuntime> reg)
+    
+    public ServiceReference<HttpServiceRuntime> getServiceReference()
     {
+    	final ServiceRegistration<HttpServiceRuntime> reg = this.serviceReg;
+    	if ( reg != null ) 
+    	{
+    		return reg.getReference();
+    	}
+    	return null;
+    }
+    
+    public void updateChangeCount()
+    {
+    	final ServiceRegistration<HttpServiceRuntime> reg = this.serviceReg;
         if ( reg != null )
         {
             boolean setPropsDirectly = false;
@@ -159,7 +212,7 @@ public final class HttpServiceRuntimeImpl implements HttpServiceRuntime
                                 {
                                     try
                                     {
-                                        reg.setProperties(getAttributes());
+                                        reg.setProperties(attributes);
                                     }
                                     catch ( final IllegalStateException ise)
                                     {
@@ -177,7 +230,7 @@ public final class HttpServiceRuntimeImpl implements HttpServiceRuntime
             {
                 try
                 {
-                    reg.setProperties(getAttributes());
+                    reg.setProperties(attributes);
                 }
                 catch ( final IllegalStateException ise)
                 {
