@@ -90,7 +90,6 @@ import org.osgi.framework.ServiceFactory;
 import org.osgi.framework.ServiceReference;
 import org.osgi.framework.ServiceRegistration;
 import org.osgi.service.http.context.ServletContextHelper;
-import org.osgi.service.http.runtime.HttpServiceRuntime;
 import org.osgi.service.http.runtime.HttpServiceRuntimeConstants;
 import org.osgi.service.http.runtime.dto.DTOConstants;
 import org.osgi.service.http.runtime.dto.PreprocessorDTO;
@@ -129,8 +128,6 @@ public final class WhiteboardManager
 
     private volatile ServiceRegistration<ServletContextHelper> defaultContextRegistration;
 
-    private volatile ServiceRegistration<HttpServiceRuntime> runtimeServiceReg;
-
     /**
      * Create a new whiteboard http manager
      *
@@ -160,10 +157,7 @@ public final class WhiteboardManager
 
         this.serviceRuntime.setAttribute(HttpServiceRuntimeConstants.HTTP_SERVICE_ID,
                 Collections.singletonList(this.httpServiceFactory.getHttpServiceServiceId()));
-        this.runtimeServiceReg = this.httpBundleContext.registerService(HttpServiceRuntime.class,
-                serviceRuntime,
-                this.serviceRuntime.getAttributes());
-        this.serviceRuntime.setServiceReference(this.runtimeServiceReg.getReference());
+        this.serviceRuntime.register(this.httpBundleContext);
 
         this.webContext = containerContext;
 
@@ -239,7 +233,7 @@ public final class WhiteboardManager
         }
         this.trackers.clear();
 
-        this.serviceRuntime.setServiceReference(null);
+        this.serviceRuntime.unregister();
 
         this.preprocessorHandlers = Collections.emptyList();
         this.contextMap.clear();
@@ -251,12 +245,6 @@ public final class WhiteboardManager
         {
             this.defaultContextRegistration.unregister();
             this.defaultContextRegistration = null;
-        }
-
-        if ( this.runtimeServiceReg != null )
-        {
-            this.runtimeServiceReg.unregister();
-            this.runtimeServiceReg = null;
         }
         this.webContext = null;
     }
@@ -910,7 +898,7 @@ public final class WhiteboardManager
             try
             {
                 final Filter f = this.httpBundleContext.createFilter(target);
-                return f.match(this.runtimeServiceReg.getReference());
+                return f.match(this.serviceRuntime.getServiceReference());
             }
             catch ( final InvalidSyntaxException ise)
             {
@@ -1027,6 +1015,6 @@ public final class WhiteboardManager
 
     private void updateRuntimeChangeCount()
     {
-        this.serviceRuntime.updateChangeCount(this.runtimeServiceReg);
+        this.serviceRuntime.updateChangeCount();
     }
 }
