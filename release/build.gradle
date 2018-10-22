@@ -238,7 +238,7 @@ task promoteToRelease {
 	    	getProject().exec { 
 				commandLine 'svn',
 				'move', svnStagingPath+"/org.apache.felix.dependencymanager-" + dmRelease + "/" + artifact , 
-				svnReleasePath, '-m', "Releasing Apache Felix Dependency Manager release " + dmRelease + "."
+				svnReleasePath, '-m', "Releasing Apache Felix Dependency Manager release " + dmRelease + ".", "--force-interactive"
 	    	}
 		}
     }
