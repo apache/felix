@@ -1681,7 +1681,9 @@ public class DependencyManager<S, T> implements ReferenceManager<S, T>
             {
                 invokeUnbindMethod(componentContext, boundRef, trackingCount.get(), edgeInfo);
             }
-
+            
+            boundRef.unsetServiceObject(componentContext);
+            
         }
         latch.countDown();
     }
@@ -2320,9 +2322,9 @@ public class DependencyManager<S, T> implements ReferenceManager<S, T>
         }
         if (m_componentManager.getComponentMetadata().getServiceScope() == Scope.singleton)
         {
-            return new SinglePrototypeRefPair<>(m_componentManager.getBundleContext(), serviceReference);
+            return new SinglePrototypeRefPair<>(serviceReference);
         }
-        return new MultiplePrototypeRefPair<>(m_componentManager.getBundleContext(), serviceReference);
+        return new MultiplePrototypeRefPair<>(serviceReference);
     }
 
     private void deactivateComponentManager()
