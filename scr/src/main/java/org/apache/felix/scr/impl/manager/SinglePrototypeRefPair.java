@@ -21,7 +21,6 @@
 package org.apache.felix.scr.impl.manager;
 
 import org.osgi.framework.BundleContext;
-import org.osgi.framework.ServiceObjects;
 import org.osgi.framework.ServiceReference;
 import org.osgi.service.log.LogService;
 
@@ -30,18 +29,9 @@ import org.osgi.service.log.LogService;
  */
 public class SinglePrototypeRefPair<S, T> extends SingleRefPair<S, T>
 {
-    private final ServiceObjects<T> serviceObjects;
-
-    public SinglePrototypeRefPair( BundleContext context, ServiceReference<T> ref )
+    public SinglePrototypeRefPair( ServiceReference<T> ref )
     {
         super(ref);
-        this.serviceObjects = context.getServiceObjects(ref);
-    }
-
-    @Override
-    public ServiceObjects<T> getServiceObjects()
-    {
-        return serviceObjects;
     }
 
     @Override
@@ -53,7 +43,7 @@ public class SinglePrototypeRefPair<S, T> extends SingleRefPair<S, T>
     @Override
     public boolean getServiceObject(ComponentContextImpl<S> key, BundleContext context)
     {
-    	final T service = key.getComponentServiceObjectsHelper().getPrototypeRefInstance(this.getRef(), serviceObjects);
+    	final T service = key.getComponentServiceObjectsHelper().getPrototypeRefInstance(this.getRef());
         if ( service == null )
         {
             setFailed();
@@ -65,9 +55,31 @@ public class SinglePrototypeRefPair<S, T> extends SingleRefPair<S, T>
         if (!setServiceObject(key, service))
         {
             // Another thread got the service before, so unget our
-            serviceObjects.ungetService( service );
+        	doUngetService(key, service);
         }
         return true;
     }
 
+    @Override
+    public T unsetServiceObject(ComponentContextImpl<S> key)
+    {
+    	final T service = super.unsetServiceObject(key);
+    	if ( service != null )
+    	{
+			doUngetService(key, service);
+    	}
+    	return null ;
+    }
+
+	private void doUngetService(ComponentContextImpl<S> key, final T service) {
+		try 
+		{
+			key.getComponentServiceObjectsHelper().getServiceObjects(getRef()).ungetService(service);
+		}
+		catch (final IllegalStateException ise)
+		{
+			// ignore
+		}
+	}
+    
 }
