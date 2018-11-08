@@ -23,6 +23,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.ContentHandler;
 import java.net.InetAddress;
+import java.net.JarURLConnection;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.net.URLConnection;
@@ -300,7 +301,9 @@ public class URLHandlersTest extends TestCase
 
             new URL("test" + System.identityHashCode(TestURLHandlersActivator.this) + ":").openConnection();
 
-
+            if (!(getClass().getProtectionDomain().getCodeSource().getLocation().openConnection() instanceof JarURLConnection)) {
+                throw new Exception("Unexpted Code Source");
+            }
 
             try
             {
@@ -349,14 +352,19 @@ public class URLHandlersTest extends TestCase
                 reg.unregister();
             }
 
+            boolean fail;
             try
             {
                 new URL("test" + System.identityHashCode(TestURLHandlersActivator.this) + ":").openConnection();
-                throw new Exception("Unexpected url resolve");
+                fail = true;
             }
             catch (Exception ex)
             {
                 // pass
+                fail = false;
+            }
+            if (fail) {
+                throw new Exception("Unexpected url resolve");
             }
 
             Bundle bundle2 = null;
@@ -376,35 +384,47 @@ public class URLHandlersTest extends TestCase
             }
             if (bundle2 != null)
             {
+                fail = false;
                 try
                 {
                     new URL("test" + System.identityHashCode(bundle2) + ":").openConnection();
-                    throw new Exception("Unexpected url2 resolve");
+                    fail = true;
                 }
                 catch (Exception ex)
                 {
+                }
+                if (fail) {
+                    throw new Exception("Unexpected url resolve");
                 }
                 bundle2.start();
                 new URL("test" + System.identityHashCode(bundle2) + ":").openConnection();
                 bundle2.stop();
+                fail = false;
                 try
                 {
                     new URL("test" + System.identityHashCode(bundle2) + ":").openConnection();
-                    throw new Exception("Unexpected url2 resolve");
+                    fail = true;
                 }
                 catch (Exception ex)
                 {
+                }
+                if (fail) {
+                    throw new Exception("Unexpected url resolve");
                 }
             }
             else
             {
+                fail = false;
                 try
                 {
                     new URL("test" + System.identityHashCode(context.getBundle()) + ":").openConnection();
-                    throw new Exception("Unexpected url2 resolve");
+                    fail = true;
                 }
                 catch (Exception ex)
                 {
+                }
+                if (fail) {
+                    throw new Exception("Unexpected url2 resolve");
                 }
                 props = new Hashtable();
                 props.put(URLConstants.URL_HANDLER_PROTOCOL, "test" + System.identityHashCode(context.getBundle()));

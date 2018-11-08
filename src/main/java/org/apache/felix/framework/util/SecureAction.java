@@ -20,6 +20,7 @@ package org.apache.felix.framework.util;
 
 import java.io.*;
 import java.lang.reflect.*;
+import java.lang.reflect.Proxy;
 import java.net.*;
 import java.security.*;
 import java.util.Collection;
@@ -1525,6 +1526,28 @@ public class SecureAction
         }
     }
 
+    public Object createProxy(ClassLoader classLoader, 
+            Class<?>[] interfaces, InvocationHandler handler)
+    {
+        if (System.getSecurityManager() != null)
+        {
+            Actions actions = (Actions) m_actions.get();
+            actions.set(Actions.CREATE_PROXY, classLoader, interfaces, handler);
+            try
+            {
+                return AccessController.doPrivileged(actions, m_acc);
+            }
+            catch (PrivilegedActionException e)
+            {
+            	throw (RuntimeException) e.getException();
+            }
+        }
+        else
+        {
+            return Proxy.newProxyInstance(classLoader, interfaces, handler);
+        }
+    }
+
     private static class Actions implements PrivilegedExceptionAction
     {
         public static final int INITIALIZE_CONTEXT_ACTION = 0;
@@ -1585,6 +1608,7 @@ public class SecureAction
         public static final int DELETE_FILEONEXIT_ACTION = 55;
         public static final int INVOKE_WOVEN_CLASS_LISTENER = 56;
         public static final int GET_CANONICAL_PATH = 57;
+        public static final int CREATE_PROXY = 58;
 
         private int m_action = -1;
         private Object m_arg1 = null;
@@ -1845,6 +1869,9 @@ public class SecureAction
                     return null;
                 case GET_CANONICAL_PATH:
                     return ((File) arg1).getCanonicalPath();
+                case CREATE_PROXY:
+                    return Proxy.newProxyInstance((ClassLoader)arg1, (Class<?>[])arg2,
+                            (InvocationHandler) arg3);
             }
 
             return null;

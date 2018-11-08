@@ -4023,10 +4023,12 @@ public class Felix extends BundleImpl implements Framework
     {
         // If the class comes from bundle class loader, then return
         // associated bundle if it is from this framework instance.
-        if (clazz.getClassLoader() instanceof BundleReference)
+        ClassLoader classLoader = m_secureAction.getClassLoader(clazz);
+        
+        if (classLoader instanceof BundleReference)
         {
             // Only return the bundle if it is from this framework.
-            BundleReference br = (BundleReference) clazz.getClassLoader();
+            BundleReference br = (BundleReference) classLoader;
             return ((br.getBundle() instanceof BundleImpl)
                 && (((BundleImpl) br.getBundle()).getFramework() == this))
                     ? br.getBundle() : null;
