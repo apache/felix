@@ -28,6 +28,7 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLConnection;
 import java.net.URLStreamHandler;
+import java.security.PrivilegedAction;
 
 import org.apache.felix.framework.util.SecureAction;
 import org.osgi.service.url.URLStreamHandlerService;
@@ -599,10 +600,11 @@ public class URLHandlersStreamHandlerProxy extends URLStreamHandler
             {
                 return (URLStreamHandlerService) service;
             }
-            return (URLStreamHandlerService) Proxy.newProxyInstance(
-                URLStreamHandlerService.class.getClassLoader(),
-                new Class[]{URLStreamHandlerService.class},
-                new URLHandlersStreamHandlerProxy(service, m_action));
+            
+            return m_action.createProxy(
+                    m_action.getClassLoader(URLStreamHandlerService.class), 
+                    new Class[]{URLStreamHandlerService.class},
+                    new URLHandlersStreamHandlerProxy(service, m_action));
         }
         catch (ThreadDeath td)
         {
@@ -631,11 +633,10 @@ public class URLHandlersStreamHandlerProxy extends URLStreamHandler
         }
         if ("parseURL".equals(method.getName()))
         {
-            types[0] = m_service.getClass().getClassLoader().loadClass(
-                URLStreamHandlerSetter.class.getName());
-            params[0] = Proxy.newProxyInstance(
-                m_service.getClass().getClassLoader(), new Class[]{types[0]},
-                (URLHandlersStreamHandlerProxy) params[0]);
+            ClassLoader loader = m_action.getClassLoader(m_service.getClass());
+            types[0] = loader.loadClass(URLStreamHandlerSetter.class.getName());
+            params[0] = m_action.createProxy(loader, new Class[]{types[0]}, 
+                    (URLHandlersStreamHandlerProxy) params[0]);
         }
         return m_action.invokeDirect(m_action.getDeclaredMethod(m_service.getClass(),
             method.getName(), types), m_service, params);

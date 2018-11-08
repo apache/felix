@@ -26,6 +26,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.lang.ref.WeakReference;
+import java.lang.reflect.InvocationTargetException;
 import java.net.JarURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -53,6 +54,7 @@ import org.osgi.framework.Bundle;
 import org.osgi.framework.PackagePermission;
 
 import org.osgi.framework.wiring.BundleRevision;
+import sun.net.www.protocol.file.FileURLConnection;
 
 public class BundleProtectionDomain extends ProtectionDomain
 {
@@ -210,8 +212,6 @@ public class BundleProtectionDomain extends ProtectionDomain
             }
 
             m_output.closeEntry();
-
-            m_output.flush();
         }
     }
 
@@ -238,100 +238,91 @@ public class BundleProtectionDomain extends ProtectionDomain
     private static final class RevisionAsJarURL extends URLStreamHandler
     {
         private final WeakReference m_revision;
+        private volatile URL url;
 
         private RevisionAsJarURL(BundleRevisionImpl revision)
         {
             m_revision = new WeakReference(revision);
         }
 
-
         @Override
         protected URLConnection openConnection(URL u) throws IOException
         {
-            return new JarURLConnection(u)
-            {
-                @Override
-                public JarFile getJarFile() throws IOException
-                {
-                    BundleRevisionImpl revision = (BundleRevisionImpl) m_revision.get();
+            if (url != null) {
+                return url.openConnection();
+            }
+            BundleRevisionImpl revision = (BundleRevisionImpl) m_revision.get();
 
-                    if (revision != null)
+            if (revision != null)
+            {
+                File target;
+                Content content = revision.getContent();
+                if (content instanceof JarContent)
+                {
+                    target = ((JarContent) content).getFile();
+                }
+                else
+                {
+                    target = Felix.m_secureAction.createTempFile("jar", null, null);
+                    Felix.m_secureAction.deleteFileOnExit(target);
+                    FileOutputStream output = null;
+                    InputStream input = null;
+                    IOException rethrow = null;
+                    try
                     {
-                        Content content = revision.getContent();
-                        if (content instanceof JarContent)
+                        output = new FileOutputStream(target);
+                        input = new BundleInputStream(content);
+                        byte[] buffer = new byte[64 * 1024];
+                        for (int i = input.read(buffer);i != -1; i = input.read(buffer))
                         {
-                            return Felix.m_secureAction.openJarFile(((JarContent) content).getFile());
+                            output.write(buffer,0, i);
                         }
-                        else
+                    }
+                    catch (IOException ex)
+                    {
+                        rethrow = ex;
+                    }
+                    finally
+                    {
+                        if (output != null)
                         {
-                            File target = Felix.m_secureAction.createTempFile("jar", null, null);
-                            Felix.m_secureAction.deleteFileOnExit(target);
-                            FileOutputStream output = null;
-                            InputStream input = null;
-                            IOException rethrow = null;
                             try
                             {
-                                output = new FileOutputStream(target);
-                                input = new BundleInputStream(content);
-                                byte[] buffer = new byte[64 * 1024];
-                                for (int i = input.read(buffer);i != -1; i = input.read(buffer))
-                                {
-                                    output.write(buffer,0, i);
-                                }
+                                output.close();
                             }
                             catch (IOException ex)
                             {
-                                rethrow = ex;
+                                if (rethrow == null)
+                                {
+                                    rethrow = ex;
+                                }
                             }
-                            finally
+                        }
+
+                        if (input != null)
+                        {
+                            try
                             {
-                                if (output != null)
+                                input.close();
+                            }
+                            catch (IOException ex)
+                            {
+                                if (rethrow == null)
                                 {
-                                    try
-                                    {
-                                        output.close();
-                                    }
-                                    catch (IOException ex)
-                                    {
-                                        if (rethrow == null)
-                                        {
-                                            rethrow = ex;
-                                        }
-                                    }
-                                }
-
-                                if (input != null)
-                                {
-                                    try
-                                    {
-                                        input.close();
-                                    }
-                                    catch (IOException ex)
-                                    {
-                                        if (rethrow == null)
-                                        {
-                                            rethrow = ex;
-                                        }
-                                    }
-                                }
-
-                                if (rethrow != null)
-                                {
-                                    throw rethrow;
+                                    rethrow = ex;
                                 }
                             }
-                            return Felix.m_secureAction.openJarFile(target);
+                        }
+
+                        if (rethrow != null)
+                        {
+                            throw rethrow;
                         }
                     }
-                    throw new IOException("Unable to access bundle revision.");
                 }
-
-                @Override
-                public void connect() throws IOException
-                {
-
-                }
-            };
+                return (url = new URL("jar:" + target.toURI().toURL() + "!/")).openConnection();
+            }
+            throw new IOException("Unable to access bundle revision.");
         }
 
         private static boolean getUseCachedURL(final BundleRevisionImpl revision)
@@ -382,31 +373,25 @@ public class BundleProtectionDomain extends ProtectionDomain
             {
                 location = location.substring("reference:".length());
             }
-            URL url;
+
             try
             {
-                url = Felix.m_secureAction.createURL(
-                    Felix.m_secureAction.createURL(null, "jar:", handler), location, null);
+                return Felix.m_secureAction.createURL(
+                    Felix.m_secureAction.createURL(null, "jar:", handler),
+                    location,
+                    handler
+                );
             }
             catch (MalformedURLException ex)
             {
-                url = null;
-            }
+                location =  "jar:" + revision.getEntry("/") + "!/";
 
-            if (url != null && !url.getProtocol().equalsIgnoreCase("jar"))
-            {
-                return url;
+                return Felix.m_secureAction.createURL(
+                    Felix.m_secureAction.createURL(null, "jar:", handler),
+                    location,
+                    handler
+                );
             }
-            else if (url == null)
-            {
-                location = "jar:" + revision.getEntry("/") + "!/";
-            }
-
-            return Felix.m_secureAction.createURL(
-                Felix.m_secureAction.createURL(null, "jar:", handler),
-                location,
-                handler
-            );
         }
     }
 
