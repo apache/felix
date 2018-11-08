@@ -28,7 +28,6 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLConnection;
 import java.net.URLStreamHandler;
-import java.security.PrivilegedAction;
 
 import org.apache.felix.framework.util.SecureAction;
 import org.osgi.service.url.URLStreamHandlerService;

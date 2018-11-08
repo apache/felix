@@ -54,7 +54,6 @@ import org.osgi.framework.Bundle;
 import org.osgi.framework.PackagePermission;
 
 import org.osgi.framework.wiring.BundleRevision;
-import sun.net.www.protocol.file.FileURLConnection;
 
 public class BundleProtectionDomain extends ProtectionDomain
 {
