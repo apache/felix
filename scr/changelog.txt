@@ -2,7 +2,7 @@ Changes in 2.1.14
 -----------------
 ** Bug
     * [FELIX-5950] - NPE in MultiplePrototypeRefPair.unsetServiceObject
-
+    * [FELIX-5974] - Prototype scope references are not released on deactivation
 
 Changes in 2.1.12
 -----------------
