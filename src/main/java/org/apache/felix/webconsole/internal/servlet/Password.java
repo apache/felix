@@ -19,10 +19,10 @@
 package org.apache.felix.webconsole.internal.servlet;
 
 
+import java.math.BigInteger;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
-import java.util.Arrays;
-
+import java.security.SecureRandom;
 
 /**
  * The <code>Password</code> class encapsulates encoding and decoding
@@ -31,22 +31,29 @@ import java.util.Arrays;
  * Encoded hashed passwords are strings of the form
  * <code>{hashAlgorithm}base64-encoded-password-hash</code> where
  * <i>hashAlgorithm</i> is the name of the hash algorithm used to hash
- * the password and <i>base64-encoded-password-hash</i> is the password
- * hashed with the indicated hash algorithm and subsequently encoded in
- * Base64.
+ * the password and <i>password</i> is the password
+ * hashed with the indicated hash algorithm.
  */
 class Password
 {
 
     // the default hash algorithm (part of the Java Platform since 1.4)
     private static final String DEFAULT_HASH_ALGO = "SHA-256";
+    
+    private static final char DELIMITER = '-';
+    
+    private static final int NO_ITERATIONS = 1;
+    
+    private static final int DEFAULT_ITERATIONS = 1000;
+    
+    public static final int DEFAULT_SALT_SIZE = 8;
 
     // the hash algorithm used to hash the password or null
     // if the password is not hashed at all
     private final String hashAlgo;
 
     // the hashed or plain password
-    private final byte[] password;
+    private final String password;
 
 
     /**
@@ -73,17 +80,15 @@ class Password
      */
     static String hashPassword( final String textPassword )
     {
-        final byte[] bytePassword = Base64.getBytesUtf8( textPassword );
-        return hashPassword( DEFAULT_HASH_ALGO, bytePassword );
+        String salt = generateSalt(DEFAULT_SALT_SIZE);
+        return hashPassword( DEFAULT_HASH_ALGO, DEFAULT_ITERATIONS, salt, textPassword  );
     }
-
 
     Password( String textPassword )
     {
         this.hashAlgo = getPasswordHashAlgorithm( textPassword );
-        this.password = getPasswordBytes( textPassword );
+        this.password = getPassword(textPassword);
     }
-
 
     /**
      * Returns {@code true} if this password matches the password
@@ -97,31 +102,46 @@ class Password
      */
     boolean matches( final byte[] toCompare )
     {
-        return Arrays.equals( this.password, hashPassword( toCompare, this.hashAlgo ) );
+        if (this.hashAlgo != null) 
+        {
+            int startPos = 0;
+            String salt = extractSalt(this.password, startPos);
+            int iterations = NO_ITERATIONS;
+            if (salt != null) 
+            {
+                startPos += salt.length()+1;
+                iterations = extractIterations(this.password, startPos);
+               
+            }
+            String hash = hashPassword(this.hashAlgo, iterations, salt, new String(toCompare));
+            final StringBuilder buf = new StringBuilder();
+            return compareSecure(buf.append("{").append(this.hashAlgo).append("}").append(password).toString(), hash);
+        } else {
+            return compareSecure(password, new String(toCompare));
+        }
+        
     }
-
-
-    /**
-     * Returns this password as a string hashed and encoded as described
-     * by the class comment. If this password has not been hashed originally,
-     * the default hash algorithm <i>SHA-256</i> is applied.
-     */
-    public String toString()
+    
+    private static String hashPassword( final String hashAlgorithm, final int iterations, final  String salt, final String password )
     {
-        return hashPassword( this.hashAlgo, this.password );
-    }
+        
+        final StringBuilder buf = new StringBuilder();
+        buf.append( '{' ).append( hashAlgorithm.toLowerCase() ).append( '}' );
+        if (salt != null && !salt.isEmpty()) {
+            buf.append(salt).append(DELIMITER);
+            if (iterations > NO_ITERATIONS) {
+                buf.append(iterations).append(DELIMITER);
+            }
+            final byte[] hashedPassword = hashPassword( password, salt,iterations, hashAlgorithm );
+            buf.append( Base64.newStringUtf8( Base64.encodeBase64( hashedPassword ) ) );
+        } else {
+            // backwards compatible to previous version: no salt, no iterations
+            final byte[] hashedPassword = hashPassword( password, null, NO_ITERATIONS, hashAlgorithm );
+            buf.append( Base64.newStringUtf8( Base64.encodeBase64( hashedPassword ) ) );
+        }
 
-
-    private static String hashPassword( final String hashAlgorithm, final byte[] password )
-    {
-        final String actualHashAlgo = ( hashAlgorithm == null ) ? DEFAULT_HASH_ALGO : hashAlgorithm;
-        final byte[] hashedPassword = hashPassword( password, actualHashAlgo );
-        final StringBuffer buf = new StringBuffer( 2 + actualHashAlgo.length() + hashedPassword.length * 3 );
-        buf.append( '{' ).append( actualHashAlgo.toLowerCase() ).append( '}' );
-        buf.append( Base64.newStringUtf8( Base64.encodeBase64( hashedPassword ) ) );
         return buf.toString();
     }
-
 
     private static String getPasswordHashAlgorithm( final String textPassword )
     {
@@ -135,17 +155,16 @@ class Password
         return null;
     }
 
-
-    private static byte[] getPasswordBytes( final String textPassword )
+    private static String getPassword( final String textPassword )
     {
         final int endHash = getEndOfHashAlgorithm( textPassword );
         if ( endHash >= 0 )
         {
             final String encodedPassword = textPassword.substring( endHash + 1 );
-            return Base64.decodeBase64( encodedPassword );
+            return  encodedPassword;
         }
 
-        return Base64.getBytesUtf8( textPassword );
+        return textPassword;
     }
 
 
@@ -163,23 +182,108 @@ class Password
         return -1;
     }
 
-
-    private static byte[] hashPassword( final byte[] pwd, final String hashAlg )
+    private static byte[] hashPassword( final String pwd, final String salt, final int iterations, final String hashAlg )
     {
-        // no hashing if no hash algorithm
-        if ( hashAlg == null || hashAlg.length() == 0 )
-        {
-            return pwd;
-        }
-
         try
         {
+            StringBuilder data = new StringBuilder();
+            if (salt != null) 
+            {
+                data.append(salt);
+            }
+            data.append(pwd);
+            byte[] bytes =  Base64.getBytesUtf8( data.toString());
             final MessageDigest md = MessageDigest.getInstance( hashAlg );
-            return md.digest( pwd );
+            for (int i = 0; i < iterations; i++) 
+            {
+                md.reset();
+                bytes = md.digest(bytes);
+            }
+            return bytes;
         }
         catch ( NoSuchAlgorithmException e )
         {
             throw new IllegalStateException( "Cannot hash the password: " + e );
         }
     }
+    
+    private static boolean compareSecure( final String a,final String b ) 
+    {
+        int len = a.length();
+        if (len != b.length()) 
+        {
+            return false;
+        }
+        if (len == 0) 
+        {
+            return true;
+        }
+        // don't use conditional operations inside the loop
+        int bits = 0;
+        for (int i = 0; i < len; i++) 
+        {
+            // this will never reset any bits
+            bits |= a.charAt(i) ^ b.charAt(i);
+        }
+        return bits == 0;
+    }
+    
+    private static String generateSalt( final  int saltSize ) 
+    {
+        SecureRandom random = new SecureRandom();
+        byte[] salt = new byte[saltSize];
+        random.nextBytes(salt);
+        return toHex(salt);
+    }
+    
+    private static String toHex( final byte[] array )
+    {
+        BigInteger bi = new BigInteger(1, array);
+        String hex = bi.toString(16);
+        int paddingLength = (array.length * 2) - hex.length();
+        if(paddingLength > 0) 
+        {
+            return String.format("%0" + paddingLength + "d", 0) + hex;
+        }
+        else 
+        {
+            return hex;
+        }
+    }
+    
+    private static String extractSalt( final String hashedPwd, final int start ) 
+    {
+        if (hashedPwd != null) 
+        {
+            int end = hashedPwd.indexOf(DELIMITER, start);
+            if (end > -1) 
+            {
+                return hashedPwd.substring(start, end);
+            }
+        }
+        // no salt
+        return null;
+    }
+    
+    private static int extractIterations( final String hashedPwd, int start ) 
+    {
+        if (hashedPwd != null) 
+        {
+            int end = hashedPwd.indexOf(DELIMITER, start);
+            if (end > -1) 
+            {
+                String str = hashedPwd.substring(start, end);
+                try 
+                {
+                    return Integer.parseInt(str);
+                } catch (NumberFormatException e) 
+                {
+                    //nothing to do
+                }
+            }
+        }
+        // no extra iterations
+        return NO_ITERATIONS;
+    }
+
 }
