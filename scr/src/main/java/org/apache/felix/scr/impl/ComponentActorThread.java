@@ -168,7 +168,7 @@ class ComponentActorThread implements Runnable
             tasks.add( task );
 
             logger.log( LogService.LOG_DEBUG, "Adding task [{0}] as #{1} in the queue", null,
-                    task, tasks.size(), null );
+                    task, tasks.size());
 
             // notify the waiting thread
             tasks.notifyAll();

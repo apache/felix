@@ -191,8 +191,7 @@ public class BundleComponentActivator implements ComponentActivator
         ListenerInfo listenerInfo;
         synchronized ( listenerMap )
         {
-            logger.log( LogService.LOG_DEBUG, "classNameFilter: " + classNameFilter + " event filter: " + eventFilter, null,
-                null, null );
+            logger.log( LogService.LOG_DEBUG, "classNameFilter: " + classNameFilter + " event filter: " + eventFilter, null);
             listenerInfo = listenerMap.get( classNameFilter );
             if ( listenerInfo == null )
             {
