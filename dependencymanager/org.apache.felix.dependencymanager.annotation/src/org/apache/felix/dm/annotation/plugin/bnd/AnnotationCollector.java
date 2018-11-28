@@ -103,7 +103,7 @@ public class AnnotationCollector extends ClassDataCollector
     private final static String A_REGISTERED = Registered.class.getName();
     private final static String A_UNREGISTERED = Unregistered.class.getName();
 
-    private Logger m_logger;
+    private final Logger m_logger;
     private String[] m_interfaces;
     private boolean m_isField;
     private String m_field;
@@ -1588,8 +1588,8 @@ public class AnnotationCollector extends ClassDataCollector
 			Clazz clazz = m_analyzer.findClass(annotation.getName());
 
 			if (clazz == null) {
-				m_logger.warn(
-						"Unable to determine whether the annotation %s applied to type %s is a component property type as it is not on the project build path. If this annotation is a component property type then it must be present on the build path in order to be processed",
+				m_logger.debug(
+						"Unable to find the annotation %s applied to type %s from project build path (ignoring it).",
 						annotation.getName().getFQN(), m_currentClassName);
 				return;
 			}
