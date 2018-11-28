@@ -31,7 +31,7 @@ Export-Package:  \
 	org.apache.felix.dm.tracker,\
 	org.apache.felix.dm.context,\
 	org.apache.felix.dm.diagnostics
-Include-Resource: META-INF/=resources/,META-INF/changelog.txt=${workspace}/changelog.txt
+Include-Resource: META-INF/=resources/,META-INF/changelog.txt=changelog.txt
 Import-Package: !org.junit,!org.mockito.*,org.osgi.framework;version="[1.8, 2)",*
 Bundle-Activator: org.apache.felix.dm.impl.Activator
 Bundle-Version: 4.5.1
