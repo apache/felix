@@ -103,7 +103,7 @@ task makeStaging {
     			def bndProject = workspace.getProject(it.name)
     			if (! bndProject.isNoBundles() && ! bndProject.getName().endsWith(".benchmark")) {
     		    	    zipfileset(dir: "../${bndProject.name}", prefix: topdir+"-src/${bndProject.name}",
-    			    	       includes: "*.gradle,.project,.classpath,.settings/**,src/**,test/**,*.bnd,*.bndrun,run-*/conf/**,resources/**,README*")
+    			    	       includes: "*.gradle,.project,.classpath,.settings/**,src/**,test/**,*.bnd,*.bndrun,run-*/conf/**,resources/**,README*,changelog.txt")
     			}
 	   	    }
 		}
