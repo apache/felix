@@ -146,6 +146,9 @@ task makeStaging {
 
     // Now, add all the latest released bundles in the binary distribution
     ant.zip(destfile: "staging/"+topdir+"-bin.zip") {
+        // include workspace changelog
+	zipfileset(dir: '..', prefix: topdir+"-bin/", includes: "changelog.txt")
+
         // simply include all released bundle.
         released.each {
 	    file=it
