@@ -925,6 +925,9 @@ public class ServiceTracker implements ServiceTrackerCustomizer {
             	TreeSet<ServiceReference> services = m_highestTrackedCache.get(serviceId);
             	if (services != null) {
             		services.remove(reference);
+            		if (services.size() == 0) {
+            			m_highestTrackedCache.remove(serviceId);
+            		}
             	}
 			}
         }
