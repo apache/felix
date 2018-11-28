@@ -23,7 +23,7 @@ Before you can start staging a release candidate, you must:
 
 * make sure there are no dependencies on snapshots/unreleased versions;
 * increment the ext.dmRelease parameter in release/build.gradle, if not already done, and commit.
-* check if release notes are up-to-date in the changelog.txt from the top level workspace directory.
+* check if workspace and module changelogs are up-to-date.
 * in the changelog files, also make sure that all bundles which are part of the release are all referenced (bundle names + versions).
 * release the bundles that are part of the dm binary distribution.
 * create a tagged version of the sources in preparation of the release candidate.
