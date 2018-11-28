@@ -53,15 +53,15 @@ $ ./gradlew org.apache.felix.dependencymanager.annotation:jar
 $ ./gradlew jar
 $ ./gradlew test
 $ ./gradlew check
-$ ./gradlew release
+$ ./gradlew release --no-daemon
 
 The last command (gradlew release) will create the binary release artifacts in cnf/releaserepo/ directory.
 
 - create the staging:
 
-$ ./gradlew makeStaging (this will create ./release/staging/ directory)
+$ ./gradlew makeStaging --no-daemon
 
-Then you sign archives by invoking the following task:
+The above will create ./release/staging/ directory. Then you sign archives by invoking the following task:
 
 $ ./gradlew signStaging --no-daemon
 
