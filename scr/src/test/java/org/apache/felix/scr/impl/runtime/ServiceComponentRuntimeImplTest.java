@@ -20,10 +20,12 @@ package org.apache.felix.scr.impl.runtime;
 
 import java.lang.reflect.Method;
 import java.util.Arrays;
+import java.util.HashMap;
 
 import org.mockito.Mockito;
 import org.osgi.dto.DTO;
 import org.osgi.framework.Bundle;
+import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceReference;
 import org.osgi.framework.dto.BundleDTO;
@@ -51,18 +53,20 @@ public class ServiceComponentRuntimeImplTest extends TestCase
         three.id = 19;
         ServiceReferenceDTO real = new ServiceReferenceDTO();
         real.id = 327;
+        real.properties = new HashMap<>();
 
         Mockito.when(b.adapt(ServiceReferenceDTO[].class)).thenReturn(new ServiceReferenceDTO[] {one, two, real, three});
-        ServiceComponentRuntimeImpl scr = new ServiceComponentRuntimeImpl(null, null);
+        ServiceComponentRuntimeImpl scr = new ServiceComponentRuntimeImpl(Mockito.mock(BundleContext.class), null);
         Method m = scr.getClass().getDeclaredMethod("serviceReferenceToDTO", ServiceReference.class);
         m.setAccessible(true);
         ServiceReferenceDTO dto = (ServiceReferenceDTO) m.invoke(scr, sr);
-        assertEquals(real, dto);
+        assertEquals(real.id, dto.id);
+        assertEquals(real.properties, dto.properties);
     }
 
     public void testConvert()
     {
-        ServiceComponentRuntimeImpl scr = new ServiceComponentRuntimeImpl(null, null);
+        ServiceComponentRuntimeImpl scr = new ServiceComponentRuntimeImpl(Mockito.mock(BundleContext.class), null);
         same("foo", scr);
         same(Boolean.TRUE, scr);
         same(1, scr);

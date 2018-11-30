@@ -18,12 +18,14 @@
  */
 package org.apache.felix.scr.impl.runtime;
 
+import java.lang.ref.SoftReference;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.felix.scr.impl.ComponentRegistry;
 import org.apache.felix.scr.impl.manager.ComponentHolder;
@@ -34,7 +36,11 @@ import org.apache.felix.scr.impl.metadata.ReferenceMetadata;
 import org.osgi.dto.DTO;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
+import org.osgi.framework.BundleEvent;
+import org.osgi.framework.BundleListener;
 import org.osgi.framework.Constants;
+import org.osgi.framework.ServiceEvent;
+import org.osgi.framework.ServiceListener;
 import org.osgi.framework.ServiceReference;
 import org.osgi.framework.dto.BundleDTO;
 import org.osgi.framework.dto.ServiceReferenceDTO;
@@ -47,17 +53,21 @@ import org.osgi.service.component.runtime.dto.UnsatisfiedReferenceDTO;
 import org.osgi.util.promise.Promise;
 import org.osgi.util.promise.Promises;
 
-public class ServiceComponentRuntimeImpl implements ServiceComponentRuntime
+public class ServiceComponentRuntimeImpl implements ServiceComponentRuntime, ServiceListener, BundleListener
 {
     private static final String[] EMPTY = {};
 
     private final BundleContext context;
     private final ComponentRegistry componentRegistry;
 
+    private volatile SoftReference<ConcurrentHashMap<Long, ServiceReferenceDTO[]>> dtoCache = new SoftReference<>(new ConcurrentHashMap<Long, ServiceReferenceDTO[]>());
+
     public ServiceComponentRuntimeImpl(final BundleContext context, final ComponentRegistry componentRegistry)
     {
         this.context = context;
         this.componentRegistry = componentRegistry;
+        this.context.addBundleListener(this);
+        this.context.addServiceListener(this);
     }
 
     /**
@@ -278,17 +288,37 @@ public class ServiceComponentRuntimeImpl implements ServiceComponentRuntime
     {
         if (serviceRef == null)
             return null;
+        final long bundleId = serviceRef.getBundle().getBundleId();
+        ConcurrentHashMap<Long, ServiceReferenceDTO[]> cache = dtoCache.get();
+        if (cache == null) {
+            cache = new ConcurrentHashMap<>();
+            dtoCache = new SoftReference<>(cache);
+        }
+        ServiceReferenceDTO[] dtos = cache.get(bundleId);
+        if (dtos == null) {
+            dtos = serviceRef.getBundle().adapt(ServiceReferenceDTO[].class);
+            if (dtos == null) {
+                dtos = new ServiceReferenceDTO[0];
+            }
+            cache.put(bundleId, dtos);
+        }
         final long id = (Long) serviceRef.getProperty(Constants.SERVICE_ID);
-
-        final ServiceReferenceDTO[] dtos = serviceRef.getBundle().adapt(ServiceReferenceDTO[].class);
-        if ( dtos != null )
+        for (final ServiceReferenceDTO dto : dtos)
         {
-            for(final ServiceReferenceDTO dto : dtos)
+            if (dto.id == id)
             {
-                if ( dto.id == id)
-                {
-                    return dto;
+                // we need to return a copy!
+                final ServiceReferenceDTO result = new ServiceReferenceDTO();
+                result.bundle = dto.bundle;
+                result.id = dto.id;
+                result.properties = new HashMap<>(dto.properties);
+                if (dto.usingBundles != null) {
+                    result.usingBundles = new long[dto.usingBundles.length];
+                    if (dto.usingBundles.length > 0) {
+                        System.arraycopy(dto.usingBundles, 0, result.usingBundles, 0, result.usingBundles.length);
+                    }
                 }
+                return result;
             }
         }
         return null;
@@ -349,17 +379,6 @@ public class ServiceComponentRuntimeImpl implements ServiceComponentRuntime
         for (Map.Entry<String, Object> entry: source.entrySet())
         {
             result.put(entry.getKey(), convert(entry.getValue()));
-        }
-        return result;
-    }
-
-    private Map<String, Object> deepCopy(ServiceReference<?> source)
-    {
-        String[] keys = source.getPropertyKeys();
-        HashMap<String, Object> result = new HashMap<>(keys.length);
-        for (int i = 0; i< keys.length; i++)
-        {
-            result.put(keys[i], convert(source.getProperty(keys[i])));
         }
         return result;
     }
@@ -453,4 +472,26 @@ public class ServiceComponentRuntimeImpl implements ServiceComponentRuntime
             return null;
         }
     }
+
+    @Override
+    public void bundleChanged(final BundleEvent event) {
+        ConcurrentHashMap<Long, ServiceReferenceDTO[]> cache = dtoCache.get();
+        if (cache != null)
+        {
+            cache.remove(event.getBundle().getBundleId());
+        }
+    }
+
+    @Override
+    public void serviceChanged(final ServiceEvent event) {
+        if (event.getServiceReference() != null) {
+            ConcurrentHashMap<Long, ServiceReferenceDTO[]> cache = dtoCache.get();
+            if (cache != null)
+            {
+                cache.remove(event.getServiceReference().getBundle().getBundleId());
+            }
+        }
+    }
+
+
 }
