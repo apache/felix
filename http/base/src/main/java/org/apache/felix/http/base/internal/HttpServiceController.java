@@ -131,8 +131,8 @@ public final class HttpServiceController
     {
         this.dispatcher.setWhiteboardManager(null);
 
-        this.httpServiceFactory.stop();
         this.whiteboardManager.stop();
+        this.httpServiceFactory.stop();
 
         this.registry.shutdown();
         this.httpSessionListener = null;
