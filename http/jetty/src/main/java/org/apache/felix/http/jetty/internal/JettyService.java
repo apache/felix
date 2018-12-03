@@ -791,7 +791,7 @@ public final class JettyService extends AbstractLifeCycle.AbstractLifeCycleListe
             {
                 final Connector connector = connectors[i];
 
-                if (getServerConnector(connector).getHost() == null)
+                if (getServerConnector(connector).getHost() == null || "0.0.0.0".equals(getServerConnector(connector).getHost()))
                 {
                     try
                     {
