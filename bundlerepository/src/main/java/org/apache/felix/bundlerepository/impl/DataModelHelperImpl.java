@@ -428,6 +428,12 @@ public class DataModelHelperImpl implements DataModelHelper
 
     public Resource createResource(final URL bundleUrl) throws IOException
     {
+        return createResource(bundleUrl.openConnection());
+    }
+
+    public ResourceImpl createResource(final URLConnection bundleUrlConnection) throws IOException
+    {
+        final URL bundleUrl = bundleUrlConnection.getURL();
         ResourceImpl resource = createResource(new Headers()
         {
             private final Manifest manifest;
@@ -476,7 +482,7 @@ public class DataModelHelperImpl implements DataModelHelper
             }
             private byte[] loadEntry(String name) throws IOException
             {
-                ZipInputStream zis = new ZipInputStream(FileUtil.openURL(bundleUrl));
+                ZipInputStream zis = new ZipInputStream(FileUtil.openURL(bundleUrlConnection));
                 try
                 {
                     for (ZipEntry e = zis.getNextEntry(); e != null; e = zis.getNextEntry())
