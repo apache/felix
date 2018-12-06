@@ -178,7 +178,7 @@ public abstract class Watcher implements Closeable {
                 Path name = ev.context();
                 Path child = dir.resolve(name);
 
-                debug("Processing event {} on path {}", kind, child);
+                debug("Processing event %s on path %s", kind, child);
 
                 if (kind == OVERFLOW) {
 //                    rescan();
