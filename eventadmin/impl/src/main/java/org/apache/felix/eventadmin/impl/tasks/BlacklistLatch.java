@@ -99,7 +99,7 @@ public class BlacklistLatch {
         {
         	LogWrapper.getLogger().log(
                     LogWrapper.LOG_WARNING,
-                    "Event Task Processing Interrupted. Events may not be recieved in proper order.");
+                    "Event Task Processing Interrupted. Events may not be received in proper order.");
         }
 	}
 
