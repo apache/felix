@@ -22,6 +22,7 @@ import java.util.Iterator;
 import java.util.Map;
 
 import org.apache.felix.bundlerepository.Capability;
+import org.apache.felix.bundlerepository.Repository;
 import org.apache.felix.bundlerepository.Requirement;
 import org.apache.felix.bundlerepository.Resource;
 import org.apache.felix.bundlerepository.impl.CapabilityImpl;
@@ -113,6 +114,10 @@ public class ConvertedResource implements Resource {
 
     public boolean isLocal() {
         return false;
+    }
+    
+    public Repository getRepository() {
+        throw new UnsupportedOperationException();
     }
    
 }

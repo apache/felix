@@ -77,6 +77,6 @@ public class ResourceWrapper implements org.osgi.service.obr.Resource {
     }
 
     public Repository getRepository() {
-        throw new UnsupportedOperationException();
+        return Wrapper.wrap(resource.getRepository());
     }
 }

@@ -122,7 +122,7 @@
           <instructions>
             <Export-Package>
                 org.osgi.service.repository,
-                org.apache.felix.bundlerepository;version="2.1"
+                org.apache.felix.bundlerepository;version="2.2"
             </Export-Package>
             <Private-Package>
                 org.kxml2.io,

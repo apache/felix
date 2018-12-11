@@ -20,6 +20,7 @@ package org.apache.felix.bundlerepository.impl;
 
 import org.apache.felix.bundlerepository.Capability;
 import org.apache.felix.bundlerepository.LocalResource;
+import org.apache.felix.bundlerepository.Repository;
 import org.apache.felix.bundlerepository.Requirement;
 import org.apache.felix.bundlerepository.Resource;
 import org.apache.felix.utils.log.Logger;
@@ -111,4 +112,9 @@ public class LazyLocalResourceImpl implements LocalResource
     public Requirement[] getRequirements() {
         return getResource().getRequirements();
     }
+
+    public Repository getRepository() {
+        return getResource().getRepository();
+    }
+
 }

@@ -147,5 +147,12 @@ public interface Resource
      * preferred over other resources.
      */
     boolean isLocal();
+    
+    /**
+     * Returns the repository containing this resource.
+     * 
+     * @return
+     */
+    public Repository getRepository();
 
 }
