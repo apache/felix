@@ -1,3 +1,6 @@
+Changes from 1.11.0 to 1.11.2
+    * FELIX-5997 Remove hashcode and equals from AbstractCapabilityRequirement to deal with fragment
+
 Changes from 1.10.4 to 1.11.0
 -----------------------------
 ** New Functionality
