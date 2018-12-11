@@ -76,23 +76,6 @@ abstract class AbstractCapabilityRequirement {
         return resource;
     }
 
-
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-        AbstractCapabilityRequirement that = (AbstractCapabilityRequirement) o;
-        return Objects.equals(resource, that.resource) &&
-                Objects.equals(namespace, that.namespace) &&
-                Objects.equals(attributes, that.attributes) &&
-                Objects.equals(directives, that.directives);
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hash(resource, namespace, attributes, directives);
-    }
-
     @Override
     public String toString() {
         return ResourceUtils.toString(getResource(), getNamespace(), getAttributes(), getDirectives());

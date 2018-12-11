@@ -52,12 +52,10 @@ public class CapabilityImplTest extends TestCase {
         assertEquals(res, c1.getResource());
 
         CapabilityImpl c2 = new CapabilityImpl(res, "org.foo.bar", dirs, attrs);
-        assertEquals(c1, c2);
-        assertEquals(c1.hashCode(), c2.hashCode());
+        assertEquals(c1.toString(), c2.toString());
 
         CapabilityImpl c3 = new CapabilityImpl(res, "org.foo.bar2", dirs, attrs);
-        assertNotEquals(c1, c3);
-        assertFalse(c1.hashCode() == c3.hashCode());
+        assertNotEquals(c1.toString(), c3.toString());
     }
 
     public void testCopyCapability() {
@@ -71,6 +69,6 @@ public class CapabilityImplTest extends TestCase {
         assertNotEquals("Should not be equal, the resources are different", c, c2);
 
         CapabilityImpl c3 = new CapabilityImpl(res, c);
-        assertEquals(c, c3);
+        assertEquals(c.toString(), c3.toString());
     }
 }
