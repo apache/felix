@@ -53,12 +53,10 @@ public class RequirementImplTest extends TestCase {
         assertEquals(res, r1.getResource());
 
         RequirementImpl r2 = new RequirementImpl(res, "org.foo.bar", dirs, attrs);
-        assertEquals(r1, r2);
-        assertEquals(r1.hashCode(), r2.hashCode());
+        assertEquals(r1.toString(), r2.toString());
 
         RequirementImpl r3 = new RequirementImpl(res, "org.foo.bar2", dirs, attrs);
-        assertNotEquals(r1, r3);
-        assertNotEquals(r1.hashCode(), r3.hashCode());
+        assertNotEquals(r1.toString(), r3.toString());
     }
 
     public void testRequirementFilter() {
@@ -86,7 +84,7 @@ public class RequirementImplTest extends TestCase {
         assertNotEquals("Should not be equal, the resources are different", r, r2);
 
         RequirementImpl r3 = new RequirementImpl(res1, r);
-        assertEquals(r, r3);
+        assertEquals(r.toString(), r3.toString());
     }
 
     public void testOptional() {
