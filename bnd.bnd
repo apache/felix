@@ -1,0 +1,12 @@
+Bundle-Category: felix
+
+Bundle-Description: ${project.description}
+
+Bundle-DocURL: https://felix.apache.org
+
+Bundle-License: Apache License, Version 2.0
+
+Bundle-Vendor: The Apache Software Foundation
+
+Export-Package: org.apache.felix.hc.*
+
