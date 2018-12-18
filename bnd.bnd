@@ -1,0 +1,17 @@
+Bundle-Category: felix
+
+Bundle-Description: ${project.description}
+
+Bundle-DocURL: https://felix.apache.org
+
+Bundle-License: Apache License, Version 2.0
+
+Bundle-Vendor: The Apache Software Foundation
+
+Import-Package: org.quartz*;resolution:="optional", *
+
+Conditional-Package: org.apache.felix.utils.*
+
+-removeheaders:\
+  Include-Resource,\
+  Private-Package
