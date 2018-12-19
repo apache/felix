@@ -164,7 +164,6 @@ public class BaseTokenizer
         skipSpace(false);
     }
 
-    @SuppressWarnings("StatementWithEmptyBody")
     protected void skipSpace(boolean skipNewLines)
     {
         while (true)
@@ -202,6 +201,7 @@ public class BaseTokenizer
                 {
                     while ((getch() != EOT) && ('\n' != ch))
                     {
+                        //loop
                     }
                     continue;
                 }
@@ -213,6 +213,7 @@ public class BaseTokenizer
 
                     while ((getch() != EOT) && !(('*' == ch) && (peek() == '/')))
                     {
+                        //loop
                     }
 
                     if (EOT == ch)

@@ -486,7 +486,7 @@ public class Pipe implements Callable<Result>, Process
         List<Path> paths = new ArrayList<>();
         if (val instanceof Collection)
         {
-            for (Object o : (Collection) val)
+            for (Object o : (Collection<?>) val)
             {
                 Path p = toPath(o);
                 if (p != null)

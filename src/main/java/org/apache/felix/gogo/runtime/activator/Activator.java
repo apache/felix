@@ -45,15 +45,15 @@ public class Activator implements BundleActivator
 {
     protected CommandProcessorImpl processor;
     private ThreadIOImpl threadio;
-    private ServiceTracker commandTracker;
-    private ServiceTracker converterTracker;
-    private ServiceTracker listenerTracker;
-    private ServiceRegistration processorRegistration;
-    private ServiceRegistration threadioRegistration;
-    
+    private ServiceTracker<?,?> commandTracker;
+    private ServiceTracker<?,?> converterTracker;
+    private ServiceTracker<?,?> listenerTracker;
+    private ServiceRegistration<?> processorRegistration;
+    private ServiceRegistration<?> threadioRegistration;
+
     public static final String CONTEXT = ".context";
 
-    protected ServiceRegistration newProcessor(ThreadIO tio, BundleContext context)
+    protected ServiceRegistration<?> newProcessor(ThreadIO tio, BundleContext context)
     {
         processor = new CommandProcessorImpl(tio);
         try
@@ -81,7 +81,7 @@ public class Activator implements BundleActivator
         threadioRegistration = context.registerService(ThreadIO.class.getName(), threadio, null);
 
         processorRegistration = newProcessor(threadio, context);
-        
+
         commandTracker = trackOSGiCommands(context);
         commandTracker.open();
 
@@ -134,7 +134,7 @@ public class Activator implements BundleActivator
         processor.stop();
     }
 
-    private ServiceTracker trackOSGiCommands(final BundleContext context)
+    private ServiceTracker<?,?> trackOSGiCommands(final BundleContext context)
         throws InvalidSyntaxException
     {
         Filter filter = context.createFilter(String.format("(&(%s=*)(%s=*))",

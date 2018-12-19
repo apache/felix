@@ -400,7 +400,7 @@ public final class Reflective
                      * 1. prefer f() to f(T[]) with empty array
                      * 2. prefer f(T) to f(T[1])
                      * 3. prefer f(T) to f(Object[1]) even if there is a conversion cost for T
-                     * 
+                     *
                      * 1 & 2 require to add 1 to conversion cost, but 3 also needs to match
                      * the conversion cost for T.
                      */
@@ -437,7 +437,7 @@ public final class Reflective
 
         if (type.isArray() && arg instanceof Collection)
         {
-            Collection col = (Collection) arg;
+            Collection<?> col = (Collection<?>) arg;
             return col.toArray((Object[]) Array.newInstance(type.getComponentType(), col.size()));
         }
 
@@ -556,7 +556,7 @@ public final class Reflective
             StringBuilder sb = new StringBuilder();
             sb.append("[");
             boolean first = true;
-            for (Object o : ((Collection) arg))
+            for (Object o : ((Collection<?>) arg))
             {
                 if (!first) {
                     sb.append(" ");

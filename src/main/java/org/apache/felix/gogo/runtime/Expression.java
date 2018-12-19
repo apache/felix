@@ -486,7 +486,7 @@ public class Expression {
          *            Operand 2.
          * @return The result of the comparison.
          */
-        public abstract boolean compare(Comparable v1, Comparable v2);
+        public abstract boolean compare(Comparable<?> v1, Comparable<?> v2);
     }
 
     /**
@@ -787,10 +787,10 @@ public class Expression {
         addOperator(new Operator("**", 40, false) {
             @Override
             public BigDecimal eval(BigDecimal v1, BigDecimal v2) {
-				/*-
-				 * Thanks to Gene Marin:
-				 * http://stackoverflow.com/questions/3579779/how-to-do-a-fractional-power-on-bigdecimal-in-java
-				 */
+                /*-
+                * Thanks to Gene Marin:
+                * http://stackoverflow.com/questions/3579779/how-to-do-a-fractional-power-on-bigdecimal-in-java
+                */
                 int signOf2 = v2.signum();
                 double dn1 = v1.doubleValue();
                 v2 = v2.multiply(new BigDecimal(signOf2)); // n2 is now positive
@@ -827,42 +827,42 @@ public class Expression {
         });
 
         addOperator(new Comparator(">", 10) {
-            @Override @SuppressWarnings("unchecked")
+            @Override @SuppressWarnings({ "unchecked", "rawtypes" })
             public boolean compare(Comparable v1, Comparable v2) {
                 return v1.compareTo(v2) > 0;
             }
         });
 
         addOperator(new Comparator(">=", 10) {
-            @Override @SuppressWarnings("unchecked")
+            @Override @SuppressWarnings({ "unchecked", "rawtypes" })
             public boolean compare(Comparable v1, Comparable v2) {
                 return v1.compareTo(v2) >= 0;
             }
         });
 
         addOperator(new Comparator("<", 10) {
-            @Override @SuppressWarnings("unchecked")
+            @Override @SuppressWarnings({ "unchecked", "rawtypes" })
             public boolean compare(Comparable v1, Comparable v2) {
                 return v1.compareTo(v2) < 0;
             }
         });
 
         addOperator(new Comparator("<=", 10) {
-            @Override @SuppressWarnings("unchecked")
+            @Override @SuppressWarnings({ "unchecked", "rawtypes" })
             public boolean compare(Comparable v1, Comparable v2) {
                 return v1.compareTo(v2) <= 0;
             }
         });
 
         addOperator(new Comparator("==", 7) {
-            @Override @SuppressWarnings("unchecked")
+            @Override @SuppressWarnings({ "unchecked", "rawtypes" })
             public boolean compare(Comparable v1, Comparable v2) {
                 return v1.compareTo(v2) == 0;
             }
         });
 
         addOperator(new Comparator("!=", 7) {
-            @Override @SuppressWarnings("unchecked")
+            @Override @SuppressWarnings({ "unchecked", "rawtypes" })
             public boolean compare(Comparable v1, Comparable v2) {
                 return v1.compareTo(v2) != 0;
             }
@@ -1004,10 +1004,10 @@ public class Expression {
         addFunction(new Function("SQRT", 1) {
             @Override
             public BigDecimal eval(List<BigDecimal> parameters) {
-				/*
-				 * From The Java Programmers Guide To numerical Computing
-				 * (Ronald Mak, 2003)
-				 */
+                /*
+                * From The Java Programmers Guide To numerical Computing
+                * (Ronald Mak, 2003)
+                */
                 BigDecimal x = parameters.get(0);
                 if (x.compareTo(BigDecimal.ZERO) == 0) {
                     return new BigDecimal(0);

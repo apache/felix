@@ -20,6 +20,7 @@ package org.apache.felix.gogo.runtime;
 /**
  * Thrown if an unknown command is entered into a shell or passed on the command line
  */
+@SuppressWarnings("serial")
 public class CommandNotFoundException extends IllegalArgumentException
 {
     private final String command;

@@ -28,11 +28,11 @@ import org.osgi.framework.ServiceReference;
 public class CommandProxy implements Function
 {
     private BundleContext context;
-    private ServiceReference reference;
+    private ServiceReference<?> reference;
     private String function;
     private Object target;
 
-    public CommandProxy(BundleContext context, ServiceReference reference, String function)
+    public CommandProxy(BundleContext context, ServiceReference<?> reference, String function)
     {
         this.context = context;
         this.reference = reference;

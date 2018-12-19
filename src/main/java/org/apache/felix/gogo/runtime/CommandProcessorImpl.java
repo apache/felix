@@ -107,7 +107,7 @@ public class CommandProcessorImpl implements CommandProcessor
                 session.close();
             }
             // Just in case...
-			sessions.clear();
+            sessions.clear();
         }
     }
 
