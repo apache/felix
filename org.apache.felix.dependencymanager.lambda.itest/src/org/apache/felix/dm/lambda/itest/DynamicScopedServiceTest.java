@@ -99,7 +99,7 @@ public class DynamicScopedServiceTest extends TestBase {
             .withSvc(Service.class, svc -> svc.required().add("bind").remove("unbind"))
             .build();
         
-        Component<?> consumer2 = component(m)
+        Component consumer2 = component(m)
             .impl(new ServiceConsumer())
             .withSvc(Service.class, svc -> svc.required().add("bind").remove("unbind"))
             .build();

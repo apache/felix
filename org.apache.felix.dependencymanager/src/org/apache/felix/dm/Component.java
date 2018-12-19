@@ -33,7 +33,7 @@ import org.osgi.framework.ServiceRegistration;
  * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
 @ProviderType
-public interface Component<T extends Component<T>> extends AbstractComponent {
+public interface Component {
     
 	/**
 	 * Component service scopes
@@ -67,7 +67,7 @@ public interface Component<T extends Component<T>> extends AbstractComponent {
 	 * 
 	 * @return this component
 	 */
-    T setScope(ServiceScope scope);
+    Component setScope(ServiceScope scope);
     
    /**
      * Sets the implementation for this component. You can actually specify
@@ -100,7 +100,7 @@ public interface Component<T extends Component<T>> extends AbstractComponent {
      * @return this component
      * @see ComponentStateListener
      */
-	public T setImplementation(Object implementation);
+	Component setImplementation(Object implementation);
 
     /**
      * Adds dependency(ies) to this component, atomically. If the component is already active or if you add
@@ -111,28 +111,28 @@ public interface Component<T extends Component<T>> extends AbstractComponent {
      * @param dependencies the dependencies to add.
      * @return this component
      */
-	public T add(Dependency ... dependencies);
+	Component add(Dependency ... dependencies);
 	
 	/**
 	 * Removes a dependency from the component.
 	 * @param d the dependency to remove
 	 * @return this component
 	 */
-	public T remove(Dependency d);
+	Component remove(Dependency d);
 
     /**
      * Adds a component state listener to this component.
      * 
      * @param listener the state listener
      */
-	public T add(ComponentStateListener listener);
+	Component add(ComponentStateListener listener);
 
     /**
      * Removes a component state listener from this component.
      * 
      * @param listener the state listener
      */
-	public T remove(ComponentStateListener listener);
+	Component remove(ComponentStateListener listener);
 
     /**
      * Sets the public interface under which this component should be registered
@@ -142,7 +142,7 @@ public interface Component<T extends Component<T>> extends AbstractComponent {
      * @param properties the properties for this service
      * @return this component
      */
-	public T setInterface(String serviceName, Dictionary<?,?> properties);
+	Component setInterface(String serviceName, Dictionary<?,?> properties);
 
     /**
      * Sets the public interfaces under which this component should be registered
@@ -152,7 +152,7 @@ public interface Component<T extends Component<T>> extends AbstractComponent {
      * @param properties the properties for these services
      * @return this component
      */
-	public T setInterface(String[] serviceNames, Dictionary<?, ?> properties);
+	Component setInterface(String[] serviceNames, Dictionary<?, ?> properties);
 
     /**
      * Sets the public interface under which this component should be registered
@@ -162,7 +162,7 @@ public interface Component<T extends Component<T>> extends AbstractComponent {
      * @param properties the properties for this service
      * @return this component
      */
-	public T setInterface(Class<?> serviceName, Dictionary<?,?> properties);
+	Component setInterface(Class<?> serviceName, Dictionary<?,?> properties);
 
     /**
      * Sets the public interfaces under which this component should be registered
@@ -172,7 +172,7 @@ public interface Component<T extends Component<T>> extends AbstractComponent {
      * @param properties the properties for these services
      * @return this component
      */
-	public T setInterface(Class<?>[] serviceNames, Dictionary<?, ?> properties);
+	Component setInterface(Class<?>[] serviceNames, Dictionary<?, ?> properties);
 
 	/**
      * Configures auto configuration of injected classes in the component instance.
@@ -188,7 +188,7 @@ public interface Component<T extends Component<T>> extends AbstractComponent {
      * @param clazz the class (from the list above)
      * @param autoConfig <code>false</code> to turn off auto configuration
      */
-	public T setAutoConfig(Class<?> clazz, boolean autoConfig);
+	Component setAutoConfig(Class<?> clazz, boolean autoConfig);
 
     /**
      * Configures auto configuration of injected classes in the component instance.
@@ -197,18 +197,7 @@ public interface Component<T extends Component<T>> extends AbstractComponent {
      * @param instanceName the name of the instance to inject the class into
      * @see #setAutoConfig(Class, boolean)
      */
-	public T setAutoConfig(Class<?> clazz, String instanceName);
-
-    /**
-     * Returns the service registration for this component. The method
-     * will return <code>null</code> if no service registration is
-     * available, for example if this component is not registered as a
-     * service at all.
-     * 
-     * @return the service registration
-     */
-	@SuppressWarnings("rawtypes")
-	public ServiceRegistration getServiceRegistration();
+	Component setAutoConfig(Class<?> clazz, String instanceName);
 
     /**
      * Sets the service properties associated with the component. If the service
@@ -216,7 +205,7 @@ public interface Component<T extends Component<T>> extends AbstractComponent {
      * 
      * @param serviceProperties the properties
      */
-	public T setServiceProperties(Dictionary<?, ?> serviceProperties);
+	Component setServiceProperties(Dictionary<?, ?> serviceProperties);
 
     /**
      * Sets the names of the methods used as callbacks. These methods, when found, are
@@ -234,7 +223,7 @@ public interface Component<T extends Component<T>> extends AbstractComponent {
      * @param destroy the name of the destroy method
      * @return the component
      */
-	public T setCallbacks(String init, String start, String stop, String destroy);
+	Component setCallbacks(String init, String start, String stop, String destroy);
 
     /**
      * Sets the names of the methods used as callbacks. These methods, when found, are
@@ -249,7 +238,7 @@ public interface Component<T extends Component<T>> extends AbstractComponent {
      *
      * @return this component
      */
-	public T setCallbacks(Object instance, String init, String start, String stop, String destroy);
+	Component setCallbacks(Object instance, String init, String start, String stop, String destroy);
 
     /**
      * Sets the factory to use to create the implementation. You can specify
@@ -264,7 +253,7 @@ public interface Component<T extends Component<T>> extends AbstractComponent {
      * @param createMethod the name of the create method
      * @return this component
      */
-	public T setFactory(Object factory, String createMethod);
+	Component setFactory(Object factory, String createMethod);
 
     /**
      * Sets the factory to use to create the implementation. You specify the
@@ -279,7 +268,7 @@ public interface Component<T extends Component<T>> extends AbstractComponent {
      * @param createMethod the name of the create method
      * @return this component
      */
-	public T setFactory(String createMethod);
+	Component setFactory(String createMethod);
 
     /**
      * Sets the instance and method to invoke to get back all instances that
@@ -291,7 +280,7 @@ public interface Component<T extends Component<T>> extends AbstractComponent {
      * @param getMethod the method to invoke
      * @return this component
      */
-	public T setComposition(Object instance, String getMethod);
+	Component setComposition(Object instance, String getMethod);
 
     /**
      * Sets the method to invoke on the service implementation to get back all
@@ -302,12 +291,64 @@ public interface Component<T extends Component<T>> extends AbstractComponent {
      * @param getMethod the method to invoke
      * @return this component
      */
-	public T setComposition(String getMethod);
+	Component setComposition(String getMethod);
 
 	/**
 	 * Activate debug for this component. Informations related to dependency processing will be displayed
 	 * using osgi log service, our to standard output if no log service is currently available.
 	 * @param label
 	 */
-	public T setDebug(String label);
+	Component setDebug(String label);
+	
+    /**
+     * Returns the service registration for this component. The method
+     * will return <code>null</code> if no service registration is
+     * available, for example if this component is not registered as a
+     * service at all.
+     * 
+     * @return the service registration
+     */
+	@SuppressWarnings("rawtypes")
+	ServiceRegistration getServiceRegistration();
+	
+    /**
+     * Returns the instance that make up this component. If the component has a composition of instances,
+     * then the first instance of the composition is returned. Null is returned if the component has not 
+     * even been instantiated.
+     * 
+     * @return the component instances
+     */
+	public <U> U getInstance();
+	
+    /**
+     * Returns the composition instances that make up this component, or just the
+     * component instance if it does not have a composition, or an empty array if
+     * the component has not even been instantiated.
+     * 
+     * @return the component instances
+     */
+	public Object[] getInstances();
+	
+    /**
+     * Returns the component service properties.
+     * The returned dictionary is either empty if no service properties were defined for this component,
+     * or copy of the existing service properties associated with this component.
+     * 
+     * @return a copy of the service properties associated to this component or an empty dictionary 
+     *         if no service properties were defined for this component.
+     */
+	public <K,V> Dictionary<K,V> getServiceProperties();
+	
+    /**
+     * Returns the dependency manager associated with this component.
+     * @return the dependency manager associated with this component.
+     */
+	public DependencyManager getDependencyManager();
+
+	/**
+	 * Returns the component description (dependencies, service provided, etc ...).
+	 * @return the component description (dependencies, service provided, etc ...).
+	 */
+	public ComponentDeclaration getComponentDeclaration();
+
 }

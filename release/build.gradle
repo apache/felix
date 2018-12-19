@@ -33,7 +33,7 @@ buildscript {
 }
 
 // Our release number, which has to be monotonically incremented each time we make a new release.
-ext.dmRelease = "r14"
+ext.dmRelease = "r15"
 
 // Our Apache svn Staging repo
 ext.svnStagingPath = "https://dist.apache.org/repos/dist/dev/felix"

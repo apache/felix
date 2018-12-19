@@ -1,3 +1,16 @@
+Release Notes - Felix - Version org.apache.felix.dependencymanager-r15
+======================================================================
+
+** List of bundles being part of the release:
+    * org.apache.felix.dependencymanager; version=4.6.0
+    * org.apache.felix.dependencymanager.shell; version=4.0.8
+    * org.apache.felix.dependencymanager.runtime; version=4.0.7
+    * org.apache.felix.dependencymanager.annotation; version=5.0.1
+    * org.apache.felix.dependencymanager.lambda; version=1.2.1
+
+** Task
+    * [FELIX-5996] - Remove generic parameter in DM Component interface
+
 Release Notes - Felix - Version org.apache.felix.dependencymanager-r14
 ======================================================================
 

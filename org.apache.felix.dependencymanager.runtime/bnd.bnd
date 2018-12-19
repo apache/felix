@@ -14,7 +14,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-Bundle-Version: 4.0.6
+Bundle-Version: 4.0.7
 -buildpath: \
 	osgi.core;version=4.2,\
 	osgi.cmpn;version=4.2,\
@@ -34,5 +34,3 @@ Bundle-Category: osgi
 Bundle-License: http://www.apache.org/licenses/LICENSE-2.0.txt
 Bundle-Vendor: The Apache Software Foundation
 Bundle-ContactAddress: http://felix.apache.org/documentation/subprojects/apache-felix-dependency-manager.html
-# Work around used to make sure DM api is imported using proper version range (can be removed with bndtools 3)
-Import-Package: org.apache.felix.dm;org.apache.felix.dm.context;version="[4, 5)", *

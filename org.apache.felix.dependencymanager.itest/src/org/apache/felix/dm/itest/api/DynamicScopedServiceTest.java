@@ -89,7 +89,7 @@ public class DynamicScopedServiceTest extends TestBase {
             .setImplementation(new ServiceConsumer())
             .add(m.createServiceDependency().setService(Service.class).setRequired(true).setCallbacks("bind", "unbind"));
         
-        Component<?> consumer2 = m.createComponent()
+        Component consumer2 = m.createComponent()
             .setImplementation(new ServiceConsumer())
             .add(m.createServiceDependency().setService(Service.class).setRequired(true).setCallbacks("bind", "unbind"));
                 

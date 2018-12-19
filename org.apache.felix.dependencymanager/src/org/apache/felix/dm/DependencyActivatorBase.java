@@ -126,7 +126,7 @@ public abstract class DependencyActivatorBase extends DependencyActivatorBaseCom
      * 
      * @return the new component
      */
-    public Component<?> createComponent() {
+    public Component createComponent() {
         return m_manager.createComponent();
     }
     
