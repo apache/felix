@@ -35,6 +35,7 @@ public class Expander extends DefaultExpander {
     }
 
     @Override
+    @SuppressWarnings("unchecked")
     public String expandVar(String word) {
         try {
             Object o = org.apache.felix.gogo.runtime.Expander.expand(

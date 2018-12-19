@@ -21,7 +21,6 @@ package org.apache.felix.gogo.jline.ssh;
 import java.io.CharArrayWriter;
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
@@ -51,6 +50,7 @@ public class ShellCommand implements Command, Runnable, SessionAware {
     private OutputStream out;
     private OutputStream err;
     private ExitCallback callback;
+    @SuppressWarnings("unused")
     private ServerSession session;
     private CommandProcessor processor;
     private Environment env;

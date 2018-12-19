@@ -90,6 +90,7 @@ public class ShellFactoryImpl implements Factory<Command> {
 
         private ExitCallback callback;
 
+        @SuppressWarnings("unused")
         private ServerSession session;
 
         private boolean closed;
@@ -227,6 +228,7 @@ public class ShellFactoryImpl implements Factory<Command> {
                         case OPOST:
                             attr.setOutputFlag(OutputFlag.OPOST, e.getValue() != 0);
                             break;
+                        default:
                     }
                 }
                 terminal.setAttributes(attr);

@@ -49,7 +49,6 @@ import java.util.TreeSet;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import org.apache.felix.gogo.runtime.Reflective;
 import org.apache.felix.service.command.Job;
 import org.apache.felix.service.command.Process;
 import org.apache.felix.gogo.runtime.CommandSessionImpl;

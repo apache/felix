@@ -24,8 +24,6 @@ import java.util.List;
 
 import org.apache.felix.service.command.CommandProcessor;
 import org.apache.felix.service.command.CommandSession;
-import org.apache.sshd.common.NamedFactory;
-import org.apache.sshd.server.Command;
 import org.apache.sshd.server.ServerBuilder;
 import org.apache.sshd.server.SshServer;
 import org.apache.sshd.server.keyprovider.SimpleGeneratorHostKeyProvider;
@@ -41,6 +39,7 @@ public class Ssh {
 
     private final CommandProcessor processor;
     private SshServer server;
+    @SuppressWarnings("unused")
     private Object context;
     private int port;
     private String ip;

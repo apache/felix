@@ -312,6 +312,7 @@ public class TelnetIO {
     //Members
     private InetAddress localAddress;                //address of the host the telnetd is running on
     private boolean noIac = false;                    //describes if IAC was found and if its just processed
+    @SuppressWarnings("unused")
     private boolean initializing;
     private boolean crFlag;
     /**
@@ -693,6 +694,7 @@ public class TelnetIO {
         private boolean WAIT_LM_MODE_ACK = false;
         private boolean WAIT_LM_DO_REPLY_FORWARDMASK = false;
         private boolean WAIT_DO_REPLY_NEWENV = false;
+        @SuppressWarnings("unused")
         private boolean WAIT_NE_SEND_REPLY = false;
 
         /**

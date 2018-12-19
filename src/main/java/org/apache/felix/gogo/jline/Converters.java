@@ -27,7 +27,6 @@ import org.osgi.framework.BundleContext;
 import org.osgi.framework.InvalidSyntaxException;
 import org.osgi.framework.ServiceReference;
 import org.osgi.framework.startlevel.BundleStartLevel;
-import org.osgi.service.startlevel.StartLevel;
 
 public class Converters extends BaseConverters {
     private final BundleContext context;
@@ -44,20 +43,21 @@ public class Converters extends BaseConverters {
                 getState(bundle), level, bundle.getSymbolicName(), bundle.getVersion());
     }
 
-    private CharSequence print(ServiceReference ref) {
+    private CharSequence print(ServiceReference<?> ref) {
         StringBuilder sb = new StringBuilder();
-        Formatter f = new Formatter(sb);
+        try (Formatter f = new Formatter(sb);)
+        {
+            String spid = "";
+            Object pid = ref.getProperty("service.pid");
+            if (pid != null) {
+                spid = pid.toString();
+            }
 
-        String spid = "";
-        Object pid = ref.getProperty("service.pid");
-        if (pid != null) {
-            spid = pid.toString();
+            f.format("%06d %3s %-40s %s", ref.getProperty("service.id"),
+                    ref.getBundle().getBundleId(),
+                    getShortNames((String[]) ref.getProperty("objectclass")), spid);
+            return sb;
         }
-
-        f.format("%06d %3s %-40s %s", ref.getProperty("service.id"),
-                ref.getBundle().getBundleId(),
-                getShortNames((String[]) ref.getProperty("objectclass")), spid);
-        return sb;
     }
 
     private CharSequence getShortNames(String[] list) {
@@ -122,14 +122,14 @@ public class Converters extends BaseConverters {
     private Object convertServiceReference(Object in) throws InvalidSyntaxException {
         String s = in.toString();
         if (s.startsWith("(") && s.endsWith(")")) {
-            ServiceReference refs[] = context.getServiceReferences((String) null, String.format(
+            ServiceReference<?> refs[] = context.getServiceReferences((String) null, String.format(
                     "(|(service.id=%s)(service.pid=%s))", in, in));
             if (refs != null && refs.length > 0) {
                 return refs[0];
             }
         }
 
-        ServiceReference refs[] = context.getServiceReferences((String) null, String.format(
+        ServiceReference<?> refs[] = context.getServiceReferences((String) null, String.format(
                 "(|(service.id=%s)(service.pid=%s))", in, in));
         if (refs != null && refs.length > 0) {
             return refs[0];
@@ -166,13 +166,13 @@ public class Converters extends BaseConverters {
             return print((Bundle) target);
         }
         if (level == LINE && target instanceof ServiceReference) {
-            return print((ServiceReference) target);
+            return print((ServiceReference<?>) target);
         }
         if (level == PART && target instanceof Bundle) {
             return ((Bundle) target).getSymbolicName();
         }
         if (level == PART && target instanceof ServiceReference) {
-            return getShortNames((String[]) ((ServiceReference) target).getProperty("objectclass"));
+            return getShortNames((String[]) ((ServiceReference<?>) target).getProperty("objectclass"));
         }
         return super.format(target, level, converter);
     }
