@@ -217,13 +217,13 @@ public class Inspect
 
         try
         {
-            ServiceReference[] refs = b.getRegisteredServices();
+            ServiceReference<?>[] refs = b.getRegisteredServices();
 
             if ((refs != null) && (refs.length > 0))
             {
                 matches = true;
                 // Print properties for each service.
-                for (ServiceReference ref : refs)
+                for (ServiceReference<?> ref : refs)
                 {
                     // Print object class with "namespace".
                     System.out.println(
@@ -392,13 +392,13 @@ public class Inspect
 
         try
         {
-            ServiceReference[] refs = b.getServicesInUse();
+            ServiceReference<?>[] refs = b.getServicesInUse();
 
             if ((refs != null) && (refs.length > 0))
             {
                 matches = true;
                 // Print properties for each service.
-                for (ServiceReference ref : refs)
+                for (ServiceReference<?> ref : refs)
                 {
                     // Print object class with "namespace".
                     System.out.println(
@@ -436,10 +436,5 @@ public class Inspect
     private static boolean isValidDirection(String direction)
     {
         return (CAPABILITY.startsWith(direction) || REQUIREMENT.startsWith(direction));
-    }
-
-    private static boolean isFragment(Bundle bundle)
-    {
-        return bundle.getHeaders().get(Constants.FRAGMENT_HOST) != null;
     }
 }
