@@ -34,12 +34,15 @@ import java.util.concurrent.TimeUnit;
 import org.apache.felix.service.command.CommandProcessor;
 import org.apache.felix.service.command.CommandSession;
 import org.apache.felix.service.command.Converter;
+import org.osgi.annotation.bundle.Header;
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
+import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceReference;
 import org.osgi.framework.ServiceRegistration;
 import org.osgi.util.tracker.ServiceTracker;
 
+@Header(name = Constants.BUNDLE_ACTIVATOR, value = "${@class}")
 public class Activator implements BundleActivator
 {
     private BundleContext context;

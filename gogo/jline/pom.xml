@@ -20,7 +20,7 @@
     <parent>
         <groupId>org.apache.felix</groupId>
         <artifactId>gogo-parent</artifactId>
-        <version>4</version>
+        <version>5-SNAPSHOT</version>
         <relativePath>../gogo-parent/pom.xml</relativePath>
     </parent>
     <modelVersion>4.0.0</modelVersion>
@@ -36,13 +36,11 @@
     <dependencies>
         <dependency>
             <groupId>org.osgi</groupId>
-            <artifactId>osgi.core</artifactId>
-            <scope>provided</scope>
+            <artifactId>osgi.annotation</artifactId>
         </dependency>
         <dependency>
             <groupId>org.osgi</groupId>
-            <artifactId>osgi.cmpn</artifactId>
-            <scope>provided</scope>
+            <artifactId>osgi.core</artifactId>
         </dependency>
         <dependency>
             <groupId>org.apache.felix</groupId>
@@ -64,12 +62,10 @@
         <dependency>
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>
-            <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.mockito</groupId>
             <artifactId>mockito-core</artifactId>
-            <scope>test</scope>
         </dependency>
     </dependencies>
     <build>
@@ -77,7 +73,6 @@
             <plugin>
                 <groupId>org.apache.felix</groupId>
                 <artifactId>maven-bundle-plugin</artifactId>
-                <extensions>true</extensions>
                 <configuration>
                     <instructions>
                         <Export-Package>
@@ -85,16 +80,9 @@
                         </Export-Package>
                         <Import-Package>
                             !org.apache.felix.gogo.runtime.threadio,
-                            org.apache.felix.service.*;version="[1.0,2.0)",
                             org.jline*;version="[3.0,4)",
                             *
                         </Import-Package>
-                        <Bundle-SymbolicName>${project.artifactId}</Bundle-SymbolicName>
-                        <Bundle-Vendor>The Apache Software Foundation</Bundle-Vendor>
-                        <Bundle-Activator>org.apache.felix.gogo.jline.Activator</Bundle-Activator>
-                        <Include-Resource>{maven-resources},META-INF/LICENSE=LICENSE,META-INF/NOTICE=NOTICE,META-INF/DEPENDENCIES=DEPENDENCIES</Include-Resource>
-                        <_versionpolicy>[$(version;==;$(@)),$(version;+;$(@)))</_versionpolicy>
-                        <_removeheaders>Private-Package,Ignore-Package,Include-Resource</_removeheaders>
                     </instructions>
                 </configuration>
             </plugin>

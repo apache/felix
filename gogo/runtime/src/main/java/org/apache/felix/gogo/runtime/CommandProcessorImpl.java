@@ -36,7 +36,14 @@ import java.util.concurrent.CopyOnWriteArraySet;
 
 import org.apache.felix.service.command.*;
 import org.apache.felix.service.threadio.ThreadIO;
+import org.osgi.annotation.bundle.Capability;
+import org.osgi.namespace.service.ServiceNamespace;
 
+@Capability(
+    namespace = ServiceNamespace.SERVICE_NAMESPACE,
+    attribute = "objectClass='org.apache.felix.service.command.CommandProcessor'",
+    effective = "active"
+)
 public class CommandProcessorImpl implements CommandProcessor
 {
     protected final Set<Converter> converters = new CopyOnWriteArraySet<>();
