@@ -1,0 +1,31 @@
+#    Licensed under the Apache License, Version 2.0 (the "License");
+#    you may not use this file except in compliance with the License.
+#    You may obtain a copy of the License at
+#
+#        http://www.apache.org/licenses/LICENSE-2.0
+#
+#    Unless required by applicable law or agreed to in writing, software
+#    distributed under the License is distributed on an "AS IS" BASIS,
+#    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+#    See the License for the specific language governing permissions and
+#    limitations under the License.
+
+#-runtrace: true
+#-runvm: -Xdebug, "-Xrunjdwp:transport=dt_socket,server=y,suspend=y,address=8000"
+
+-standalone: true
+
+-runrequires: osgi.identity;filter:='(osgi.identity=itest-jline)'
+
+-resolve.effective: resolve, active
+-runee: JavaSE-1.8
+-runfw: org.apache.felix.framework
+-runproperties: \
+    osgi.console=
+
+-runbundles: \
+    itest-jline;version='[0.0.1,0.0.2)',\
+    org.apache.felix.gogo.command;version='[1.1.0,1.1.1)',\
+    org.apache.felix.gogo.jline;version='[1.1.1,1.1.2)',\
+    org.apache.felix.gogo.runtime;version='[1.1.1,1.1.2)',\
+    org.jline;version='[3.7.0,3.7.1)'

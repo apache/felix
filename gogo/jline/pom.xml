@@ -28,11 +28,13 @@
     <name>Apache Felix Gogo JLine Shell</name>
     <artifactId>org.apache.felix.gogo.jline</artifactId>
     <version>1.1.1-SNAPSHOT</version>
+    <url>http://felix.apache.org/</url>
     <scm>
-        <connection>scm:svn:http://svn.apache.org/repos/asf/felix/trunk/gogo/jline</connection>
-        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/felix/trunk/gogo/jline</developerConnection>
-        <url>http://svn.apache.org/repos/asf/felix/gogo/jline</url>
+        <connection>scm:svn:https://svn.apache.org/repos/asf/felix/trunk/gogo/jline/</connection>
+        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/felix/trunk/gogo/jline/</developerConnection>
+        <url>https://svn.apache.org/repos/asf/felix/trunk/gogo/jline/</url>
     </scm>
+
     <dependencies>
         <dependency>
             <groupId>org.osgi</groupId>
