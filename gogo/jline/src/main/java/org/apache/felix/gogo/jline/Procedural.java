@@ -54,27 +54,32 @@ public class Procedural {
         return null;
     }
 
+    @SuppressWarnings("serial")
     protected static class OptionException extends Exception {
         public OptionException(String message, Throwable cause) {
             super(message, cause);
         }
     }
 
+    @SuppressWarnings("serial")
     protected static class HelpException extends Exception {
         public HelpException(String message) {
             super(message);
         }
     }
 
+    @SuppressWarnings("serial")
     protected static class ThrownException extends Exception {
         public ThrownException(Throwable cause) {
             super(cause);
         }
     }
 
+    @SuppressWarnings("serial")
     protected static class BreakException extends Exception {
     }
 
+    @SuppressWarnings("serial")
     protected static class ContinueException extends Exception {
     }
 

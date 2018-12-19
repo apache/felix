@@ -59,6 +59,7 @@ package org.apache.felix.gogo.jline.telnet;
  * @author Dieter Wimberger
  * @version 2.0 (16/07/2006)
  */
+@SuppressWarnings("serial")
 public class BootException extends Exception {
 
     /**

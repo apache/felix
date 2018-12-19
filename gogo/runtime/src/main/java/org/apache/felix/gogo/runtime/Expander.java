@@ -42,7 +42,6 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
 
-@SuppressWarnings("fallthrough")
 public class Expander extends BaseTokenizer
 {
 
@@ -772,7 +771,7 @@ public class Expander extends BaseTokenizer
                     {
                         boolean first = true;
                         buf.append("\"");
-                        for (Object o : ((Collection) expand))
+                        for (Object o : ((Collection<?>) expand))
                         {
                             if (!first)
                             {
@@ -1372,7 +1371,7 @@ public class Expander extends BaseTokenizer
                             if (val1 instanceof Collection)
                             {
                                 List<String> l = new ArrayList<>();
-                                for (Object o : ((Collection) val1))
+                                for (Object o : ((Collection<?>) val1))
                                 {
                                     if (flagG)
                                     {
@@ -1466,19 +1465,19 @@ public class Expander extends BaseTokenizer
                         }
                         else
                         {
-                            val = ((Map) val).get(sLeft);
+                            val = ((Map<?,?>) val).get(sLeft);
                         }
                     }
                     else if (val instanceof List)
                     {
                         if (sLeft.equals("@") || sLeft.equals("*"))
                         {
-                            val = new ArgList((List) val);
+                            val = new ArgList((List<?>) val);
                         }
                         else
                         {
                             int iLeft = Integer.parseInt(sLeft);
-                            List list = (List) val;
+                            List<?> list = (List<?>) val;
                             val = list.get(nLeft ? list.size() - 1 - iLeft : iLeft);
                         }
                     }
@@ -1537,7 +1536,7 @@ public class Expander extends BaseTokenizer
                         int iRight = Integer.parseInt(right.toString());
                         if (val instanceof List)
                         {
-                            List list = (List) val;
+                            List<?> list = (List<?>) val;
                             val = list.subList(nLeft  ? list.size() - iLeft  : iLeft,
                                                nRight ? list.size() - iRight : iRight);
                         }
@@ -1593,11 +1592,11 @@ public class Expander extends BaseTokenizer
             {
                 if (val instanceof Collection)
                 {
-                    val = ((Collection) val).size();
+                    val = ((Collection<?>) val).size();
                 }
                 else if (val instanceof Map)
                 {
-                    val = ((Map) val).size();
+                    val = ((Map<?,?>) val).size();
                 }
                 else if (val != null)
                 {
@@ -1689,7 +1688,7 @@ public class Expander extends BaseTokenizer
                 val = toCollection.apply(val);
                 if (val instanceof Collection)
                 {
-                    List<Object> list;
+                    List<String> list;
                     if (flagn)
                     {
                         final boolean _flagi = flagi;
@@ -1698,7 +1697,7 @@ public class Expander extends BaseTokenizer
                             l.add(String.valueOf(i));
                         }
                         l.sort((s1, s2) -> numericCompare(s1, s2, _flagi));
-                        list = (List) l;
+                        list = l;
                     }
                     else if (flaga)
                     {
@@ -1712,7 +1711,7 @@ public class Expander extends BaseTokenizer
                             l.add(String.valueOf(i));
                         }
                         l.sort(comparator);
-                        list = (List) l;
+                        list = l;
                     }
                     if (flagO)
                     {
@@ -1781,7 +1780,7 @@ public class Expander extends BaseTokenizer
             {
                 if (flagExpand && val instanceof List)
                 {
-                    val = new ArgList((List) val);
+                    val = new ArgList((List<?>) val);
                 }
             }
 
@@ -2103,9 +2102,9 @@ public class Expander extends BaseTokenizer
     }
 
     @SuppressWarnings("unchecked")
-    private Collection<Object> asCollection(Object val)
+    private <T> Collection<T> asCollection(Object val)
     {
-        return (Collection) val;
+        return (Collection<T>) val;
     }
 
     private Collection<Object> toCollection(Object val) {
@@ -2117,7 +2116,7 @@ public class Expander extends BaseTokenizer
     @SuppressWarnings("unchecked")
     private Map<Object, Object> asMap(Object val)
     {
-        return (Map) val;
+        return (Map<Object, Object>) val;
     }
 
     private List<Object> toList(Map<Object, Object> val1, boolean flagk, boolean flagv)

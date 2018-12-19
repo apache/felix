@@ -31,7 +31,7 @@ import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.InvalidSyntaxException;
 import org.osgi.framework.ServiceReference;
-import org.osgi.service.startlevel.StartLevel;
+import org.osgi.framework.startlevel.BundleStartLevel;
 
 public class Converters implements Converter
 {
@@ -45,27 +45,13 @@ public class Converters implements Converter
     private CharSequence print(Bundle bundle)
     {
         // [ ID ] [STATE      ] [ SL ] symname
-        StartLevel sl = null;
-        ServiceReference ref = context.getServiceReference(StartLevel.class.getName());
-        if (ref != null)
-        {
-            sl = (StartLevel) context.getService(ref);
-        }
-
-        if (sl == null)
-        {
-            return String.format("%5d|%-11s|%s (%s)", bundle.getBundleId(),
-                getState(bundle), bundle.getSymbolicName(), bundle.getVersion());
-        }
-
-        int level = sl.getBundleStartLevel(bundle);
-        context.ungetService(ref);
+        int level = bundle.adapt(BundleStartLevel.class).getStartLevel();
 
         return String.format("%5d|%-11s|%5d|%s (%s)", bundle.getBundleId(),
             getState(bundle), level, bundle.getSymbolicName(), bundle.getVersion());
     }
 
-    private CharSequence print(ServiceReference ref)
+    private CharSequence print(ServiceReference<?> ref)
     {
         String spid = "";
         Object pid = ref.getProperty("service.pid");
@@ -188,7 +174,7 @@ public class Converters implements Converter
         String s = in.toString();
         if (s.startsWith("(") && s.endsWith(")"))
         {
-            ServiceReference refs[] = context.getServiceReferences((String) null, String.format(
+            ServiceReference<?> refs[] = context.getServiceReferences((String) null, String.format(
                 "(|(service.id=%s)(service.pid=%s))", in, in));
             if (refs != null && refs.length > 0)
             {
@@ -196,7 +182,7 @@ public class Converters implements Converter
             }
         }
 
-        ServiceReference refs[] = context.getServiceReferences((String) null, String.format(
+        ServiceReference<?> refs[] = context.getServiceReferences((String) null, String.format(
             "(|(service.id=%s)(service.pid=%s))", in, in));
         if (refs != null && refs.length > 0)
         {
@@ -248,7 +234,7 @@ public class Converters implements Converter
         }
         if (level == LINE && target instanceof ServiceReference)
         {
-            return print((ServiceReference) target);
+            return print((ServiceReference<?>) target);
         }
         if (level == PART && target instanceof Bundle)
         {
@@ -256,7 +242,7 @@ public class Converters implements Converter
         }
         if (level == PART && target instanceof ServiceReference)
         {
-            return getShortNames((String[]) ((ServiceReference) target).getProperty("objectclass"));
+            return getShortNames((String[]) ((ServiceReference<?>) target).getProperty("objectclass"));
         }
         return null;
     }

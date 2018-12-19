@@ -124,7 +124,7 @@ public class TestTokenizer
         assertEquals("\n", t.next().toString());
         assertNull(t.next());
     }
-    
+
     @Test
     public void testString() throws Exception
     {
@@ -530,6 +530,7 @@ public class TestTokenizer
         assertNull(t.next());
     }
 
+    @SuppressWarnings({ "rawtypes", "unchecked" })
     private BundleContext createMockContext() throws ClassNotFoundException
     {
         Bundle systemBundle = mock(Bundle.class);

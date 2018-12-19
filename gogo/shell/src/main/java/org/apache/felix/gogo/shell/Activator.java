@@ -29,7 +29,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.felix.service.command.CommandProcessor;
@@ -44,8 +43,8 @@ import org.osgi.util.tracker.ServiceTracker;
 public class Activator implements BundleActivator
 {
     private BundleContext context;
-    private ServiceTracker commandProcessorTracker;
-    private Set<ServiceRegistration> regs;
+    private ServiceTracker<?,?> commandProcessorTracker;
+    private Set<ServiceRegistration<?>> regs;
 
     private volatile ExecutorService executor;
     private volatile StartShellJob shellJob;
@@ -62,14 +61,14 @@ public class Activator implements BundleActivator
     }
 
     public void stop(BundleContext context) {
-        Set<ServiceRegistration> currentRegs;
+        Set<ServiceRegistration<?>> currentRegs;
         synchronized (regs)
         {
             currentRegs = new HashSet<>(regs);
             regs.clear();
         }
 
-        for (ServiceRegistration reg : currentRegs)
+        for (ServiceRegistration<?> reg : currentRegs)
         {
             reg.unregister();
         }
@@ -105,7 +104,7 @@ public class Activator implements BundleActivator
         Dictionary<String, Object> dict = new Hashtable<>();
         dict.put(CommandProcessor.COMMAND_SCOPE, "gogo");
 
-        Set<ServiceRegistration> currentRegs = new HashSet<>();
+        Set<ServiceRegistration<?>> currentRegs = new HashSet<>();
 
         // register converters
         currentRegs.add(context.registerService(Converter.class.getName(), new Converters(context.getBundle(0).getBundleContext()), null));

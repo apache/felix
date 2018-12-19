@@ -142,7 +142,7 @@ public class Highlighter extends DefaultHighlighter {
                     type = Type.Number;
                 } else if (token.charAt(0) == '$') {
                     type = Type.Variable;
-                } else if (((Set) session.get(CommandSessionImpl.CONSTANTS)).contains(token.toString())
+                } else if (((Set<?>) session.get(CommandSessionImpl.CONSTANTS)).contains(token.toString())
                         || Token.eq(token, "null") || Token.eq(token, "false") || Token.eq(token, "true")) {
                     type = Type.Constant;
                 } else {

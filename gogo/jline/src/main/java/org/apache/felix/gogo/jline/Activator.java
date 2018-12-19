@@ -60,7 +60,7 @@ public class Activator implements BundleActivator, SingleServiceListener {
     public void stop(BundleContext context) {
         Iterator<ServiceRegistration<?>> iterator = regs.iterator();
         while (iterator.hasNext()) {
-            ServiceRegistration reg = iterator.next();
+            ServiceRegistration<?> reg = iterator.next();
             reg.unregister();
             iterator.remove();
         }

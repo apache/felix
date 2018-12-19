@@ -378,10 +378,10 @@ public class CommandSessionImpl implements CommandSession, Converter
         if (target instanceof Dictionary)
         {
             Map<Object, Object> result = new HashMap<>();
-            for (Enumeration e = ((Dictionary) target).keys(); e.hasMoreElements();)
+            for (Enumeration<Object> e = ((Dictionary<Object, Object>) target).keys(); e.hasMoreElements();)
             {
                 Object key = e.nextElement();
-                result.put(key, ((Dictionary) target).get(key));
+                result.put(key, ((Dictionary<Object, Object>) target).get(key));
             }
             target = result;
         }
@@ -441,34 +441,36 @@ public class CommandSessionImpl implements CommandSession, Converter
     CharSequence inspect(Object b)
     {
         boolean found = false;
-        Formatter f = new Formatter();
-        Method methods[] = b.getClass().getMethods();
-        for (Method m : methods)
+        try (Formatter f = new Formatter();)
         {
-            try
+            Method methods[] = b.getClass().getMethods();
+            for (Method m : methods)
             {
-                String name = m.getName();
-                if (m.getName().startsWith("get") && !m.getName().equals("getClass") && m.getParameterTypes().length == 0 && Modifier.isPublic(m.getModifiers()))
+                try
                 {
-                    found = true;
-                    name = name.substring(3);
-                    m.setAccessible(true);
-                    Object value = m.invoke(b, (Object[]) null);
-                    f.format(COLUMN, name, format(value, Converter.LINE, this));
+                    String name = m.getName();
+                    if (m.getName().startsWith("get") && !m.getName().equals("getClass") && m.getParameterTypes().length == 0 && Modifier.isPublic(m.getModifiers()))
+                    {
+                        found = true;
+                        name = name.substring(3);
+                        m.setAccessible(true);
+                        Object value = m.invoke(b, (Object[]) null);
+                        f.format(COLUMN, name, format(value, Converter.LINE, this));
+                    }
+                }
+                catch (Exception e)
+                {
+                    // Ignore
                 }
             }
-            catch (Exception e)
+            if (found)
             {
-                // Ignore
+                return (StringBuilder) f.out();
             }
-        }
-        if (found)
-        {
-            return (StringBuilder) f.out();
-        }
-        else
-        {
-            return b.toString();
+            else
+            {
+                return b.toString();
+            }
         }
     }
 
@@ -683,7 +685,7 @@ public class CommandSessionImpl implements CommandSession, Converter
         @Override
         public void interrupt()
         {
-            Future future;
+            Future<?> future;
             List<Job> children;
             synchronized (this)
             {
@@ -791,6 +793,8 @@ public class CommandSessionImpl implements CommandSession, Converter
                 case Foreground:
                     foreground();
                     break;
+                case Created:
+                case Done:
             }
             future = executor.submit(this);
             while (this.status == Status.Foreground)

@@ -104,7 +104,8 @@ public class Posix {
         // TTop function is new in JLine 3.2
         String[] func;
         try {
-            Class cl = TTop.class;
+            @SuppressWarnings("unused")
+            Class<?> cl = TTop.class;
             func = new String[] {
                     "cat", "echo", "grep", "sort", "sleep", "cd", "pwd", "ls",
                     "less", "watch", "nano", "tmux",
@@ -154,6 +155,7 @@ public class Posix {
         }
     }
 
+    @SuppressWarnings("serial")
     protected static class HelpException extends Exception {
         public HelpException(String message) {
             super(message);
@@ -770,6 +772,7 @@ public class Posix {
                 "Usage: clear [OPTIONS]",
                 "  -? --help                    Show help",
         };
+        @SuppressWarnings("unused")
         Options opt = parseOptions(session, usage, argv);
         if (process.isTty(1)) {
             Shell.getTerminal(session).puts(Capability.clear_screen);

@@ -46,7 +46,7 @@ public final class SingleServiceTracker<T> implements ServiceListener {
     private final BundleContext ctx;
     private final String className;
     private final AtomicReference<T> service = new AtomicReference<>();
-    private final AtomicReference<ServiceReference> ref = new AtomicReference<>();
+    private final AtomicReference<ServiceReference<?>> ref = new AtomicReference<>();
     private final AtomicBoolean open = new AtomicBoolean(false);
     private final SingleServiceListener serviceListener;
     private final String filterString;
@@ -77,7 +77,7 @@ public final class SingleServiceTracker<T> implements ServiceListener {
         return service.get();
     }
 
-    public ServiceReference getServiceReference() {
+    public ServiceReference<?> getServiceReference() {
         return ref.get();
     }
 
@@ -97,7 +97,7 @@ public final class SingleServiceTracker<T> implements ServiceListener {
     public void serviceChanged(ServiceEvent event) {
         if (open.get()) {
             if (event.getType() == ServiceEvent.UNREGISTERING) {
-                ServiceReference deadRef = event.getServiceReference();
+                ServiceReference<?> deadRef = event.getServiceReference();
                 if (deadRef.equals(ref.get())) {
                     findMatchingReference(deadRef);
                 }
@@ -107,10 +107,10 @@ public final class SingleServiceTracker<T> implements ServiceListener {
         }
     }
 
-    private void findMatchingReference(ServiceReference original) {
+    private void findMatchingReference(ServiceReference<?> original) {
         try {
             boolean clear = true;
-            ServiceReference[] refs = ctx.getServiceReferences(className, filterString);
+            ServiceReference<?>[] refs = ctx.getServiceReferences(className, filterString);
             if (refs != null && refs.length > 0) {
                 if (refs.length > 1) {
                     Arrays.sort(refs);
@@ -137,7 +137,7 @@ public final class SingleServiceTracker<T> implements ServiceListener {
         }
     }
 
-    private boolean update(ServiceReference deadRef, ServiceReference newRef, T service) {
+    private boolean update(ServiceReference<?> deadRef, ServiceReference<?> newRef, T service) {
         boolean result = false;
         int foundLostReplaced = -1;
 
@@ -177,7 +177,7 @@ public final class SingleServiceTracker<T> implements ServiceListener {
         if (open.compareAndSet(true, false)) {
             ctx.removeServiceListener(this);
 
-            ServiceReference deadRef;
+            ServiceReference<?> deadRef;
             synchronized (this) {
                 deadRef = ref.getAndSet(null);
                 service.set(null);
