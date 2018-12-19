@@ -40,21 +40,10 @@ public class Activator implements BundleActivator
         bc.registerService(
             Basic.class.getName(), new Basic(systemBundleContext), props);
 
-        // Register "inspect" command for R4.3 or R4.2 depending
-        // on the underlying framework.
         props.put("osgi.command.scope", "felix");
         props.put("osgi.command.function", new String[] { "inspect" });
-        try
-        {
-            getClass().getClassLoader().loadClass("org.osgi.framework.wiring.BundleWiring");
-            bc.registerService(
-                Inspect.class.getName(), new Inspect(systemBundleContext), props);
-        }
-        catch (Throwable th)
-        {
-            bc.registerService(
-                Inspect42.class.getName(), new Inspect42(bc), props);
-        }
+        bc.registerService(
+            Inspect.class.getName(), new Inspect(systemBundleContext), props);
 
         props.put("osgi.command.scope", "felix");
         props.put("osgi.command.function", new String[] { "cd", "ls" });

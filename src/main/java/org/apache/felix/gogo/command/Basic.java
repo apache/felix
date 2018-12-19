@@ -32,6 +32,7 @@ import java.util.Arrays;
 import java.util.Date;
 import java.util.Dictionary;
 import java.util.Enumeration;
+import java.util.Formatter;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -48,48 +49,32 @@ import org.osgi.framework.BundleReference;
 import org.osgi.framework.Constants;
 import org.osgi.framework.InvalidSyntaxException;
 import org.osgi.framework.ServiceReference;
+import org.osgi.framework.startlevel.BundleStartLevel;
+import org.osgi.framework.startlevel.FrameworkStartLevel;
+import org.osgi.framework.wiring.FrameworkWiring;
 import org.osgi.service.log.LogEntry;
 import org.osgi.service.log.LogReaderService;
 import org.osgi.service.log.LogService;
-import org.osgi.service.packageadmin.PackageAdmin;
-import org.osgi.service.startlevel.StartLevel;
 
-@SuppressWarnings("deprecation")
 public class Basic
 {
     private final BundleContext m_bc;
+    private final Bundle m_b0;
 
     public Basic(BundleContext bc)
     {
         m_bc = bc;
+        m_b0 = m_bc.getBundle(0);
     }
 
     @Descriptor("query bundle start level")
-    public void bundlelevel(@Descriptor("bundle to query") Bundle bundle)
+    public String bundlelevel(@Descriptor("bundle to query") Bundle bundle)
     {
-        // Keep track of service references.
-        List<ServiceReference<?>> refs = new ArrayList<>();
-
-        // Get start level service.
-        StartLevel sl = Util.getService(m_bc, StartLevel.class, refs);
-        if (sl == null)
-        {
-            System.out.println("Start Level service is unavailable.");
-        }
-        // Get the bundle start level.
-        else
-        {
-            if (bundle != null)
-            {
-                System.out.println(bundle + " is level " + sl.getBundleStartLevel(bundle));
-            }
-        }
-
-        Util.ungetServices(m_bc, refs);
+        return bundle + " is level " + bundle.adapt(BundleStartLevel.class).getStartLevel();
     }
 
     @Descriptor("set bundle start level or initial bundle start level")
-    public void bundlelevel(
+    public String bundlelevel(
         @Descriptor("set the bundle's start level") @Parameter(names = { "-s",
                 "--setlevel" }, presentValue = "true", absentValue = "false") boolean set,
         @Descriptor("set the initial bundle start level") @Parameter(names = { "-i",
@@ -97,37 +82,29 @@ public class Basic
         @Descriptor("target level") int level,
         @Descriptor("target identifiers") Bundle[] bundles)
     {
-        // Keep track of service references.
-        List<ServiceReference<?>> refs = new ArrayList<>();
 
-        // Get start level service.
-        StartLevel sl = Util.getService(m_bc, StartLevel.class, refs);
-        if (sl == null)
+        if (set && initial)
         {
-            System.out.println("Start Level service is unavailable.");
-        }
-        else if (set && initial)
-        {
-            System.out.println("Cannot specify '-s' and '-i' at the same time.");
+            return "Cannot specify '-s' and '-i' at the same time.";
         }
         else if (!set && !initial)
         {
-            System.out.println("Must specify either '-s' or '-i'.");
+            return "Must specify either '-s' or '-i'.";
         }
         else if (level <= 0)
         {
-            System.out.println("Specified start level must be greater than zero.");
+            return "Specified start level must be greater than zero.";
         }
         // Set the initial bundle start level.
         else if (initial)
         {
             if ((bundles != null) && (bundles.length == 0))
             {
-                sl.setInitialBundleStartLevel(level);
+                m_b0.adapt(FrameworkStartLevel.class).setInitialBundleStartLevel(level);
             }
             else
             {
-                System.out.println("Cannot specify bundles when setting initial start level.");
+                return "Cannot specify bundles when setting initial start level.";
             }
         }
         // Set the bundle start level.
@@ -137,83 +114,70 @@ public class Basic
             {
                 for (Bundle bundle : bundles)
                 {
-                    sl.setBundleStartLevel(bundle, level);
+                    bundle.adapt(BundleStartLevel.class).setStartLevel(level);
                 }
             }
             else
             {
-                System.out.println("Must specify target bundles.");
+                return "Must specify target bundles.";
             }
         }
-
-        Util.ungetServices(m_bc, refs);
+        return null;
     }
 
     @Descriptor("query framework active start level")
-    public void frameworklevel()
+    public String frameworklevel()
     {
-        // Keep track of service references.
-        List<ServiceReference<?>> refs = new ArrayList<>();
-
-        // Get start level service.
-        StartLevel sl = Util.getService(m_bc, StartLevel.class, refs);
-        if (sl == null)
-        {
-            System.out.println("Start Level service is unavailable.");
-        }
-        System.out.println("Level is " + sl.getStartLevel());
-        Util.ungetServices(m_bc, refs);
+        return "Level is " + m_b0.adapt(FrameworkStartLevel.class).getStartLevel();
     }
 
     @Descriptor("set framework active start level")
     public void frameworklevel(@Descriptor("target start level") int level)
     {
-        // Keep track of service references.
-        List<ServiceReference<?>> refs = new ArrayList<>();
-
-        // Get start level service.
-        StartLevel sl = Util.getService(m_bc, StartLevel.class, refs);
-        if (sl == null)
-        {
-            System.out.println("Start Level service is unavailable.");
-        }
-        sl.setStartLevel(level);
-        Util.ungetServices(m_bc, refs);
+        m_b0.adapt(FrameworkStartLevel.class).setStartLevel(level);
     }
 
     @Descriptor("display bundle headers")
-    public void headers(@Descriptor("target bundles") Bundle[] bundles)
+    public String headers(@Descriptor("target bundles") Bundle[] bundles)
     {
-        bundles = ((bundles == null) || (bundles.length == 0)) ? m_bc.getBundles()
-            : bundles;
-        for (Bundle bundle : bundles)
-        {
-            String title = Util.getBundleName(bundle);
-            System.out.println("\n" + title);
-            System.out.println(Util.getUnderlineString(title.length()));
-            Dictionary<String, String> dict = bundle.getHeaders();
-            Enumeration<String> keys = dict.keys();
-            while (keys.hasMoreElements())
+        try (Formatter f = new Formatter()) {
+            bundles = ((bundles == null) || (bundles.length == 0)) ? m_bc.getBundles()
+                : bundles;
+            String prefix = "";
+            for (Bundle bundle : bundles)
             {
-                String k = keys.nextElement();
-                String v = dict.get(k);
-                System.out.println(k + " = " + v);
+                String title = Util.getBundleName(bundle);
+                f.format("%s%s%n", prefix, title);
+                f.format("%s%n", Util.getUnderlineString(title.length()));
+                Dictionary<String, String> dict = bundle.getHeaders();
+                Enumeration<String> keys = dict.keys();
+                while (keys.hasMoreElements())
+                {
+                    String k = keys.nextElement();
+                    String v = dict.get(k);
+                    f.format("%s = %s%n", k, v);
+                }
+                prefix = "\n";
             }
+            return f.toString();
         }
     }
 
     @Descriptor("displays available commands")
-    public void help()
+    public String help()
     {
-        Map<String, List<Method>> commands = getCommands();
-        for (String name : commands.keySet())
-        {
-            System.out.println(name);
+        try (Formatter f = new Formatter()) {
+            Map<String, List<Method>> commands = getCommands();
+            for (String name : commands.keySet())
+            {
+                f.format("%s%n", name);
+            }
+            return f.toString();
         }
     }
 
     @Descriptor("displays information about a specific command")
-    public void help(@Descriptor("target command") String name)
+    public String help(@Descriptor("target command") String name)
     {
         Map<String, List<Method>> commands = getCommands();
 
@@ -241,21 +205,26 @@ public class Basic
             methods = commands.get(name);
         }
 
-        if ((methods != null) && (methods.size() > 0))
+        if ((methods == null) || (methods.size() <= 0))
         {
+            return "No methods found matching: " + name;
+        }
+
+        try (Formatter f = new Formatter()) {
+            String prefix = "";
             for (Method m : methods)
             {
                 Descriptor d = m.getAnnotation(Descriptor.class);
                 if (d == null)
                 {
-                    System.out.println("\n" + m.getName());
+                    f.format("%s%s%n", prefix, m.getName());
                 }
                 else
                 {
-                    System.out.println("\n" + m.getName() + " - " + d.value());
+                    f.format("%s%s - %s%n", prefix, m.getName(), d.value());
                 }
 
-                System.out.println("   scope: " + name.substring(0, name.indexOf(':')));
+                f.format("   scope: %s%n", name.substring(0, name.indexOf(':')));
 
                 // Get flags and options.
                 Class<?>[] paramTypes = m.getParameterTypes();
@@ -308,46 +277,47 @@ public class Basic
                 // Print flags and options.
                 if (flags.size() > 0)
                 {
-                    System.out.println("   flags:");
+                    f.format("   flags:%n");
                     for (Entry<String, Parameter> entry : flags.entrySet())
                     {
                         // Print all aliases.
                         String[] names = entry.getValue().names();
-                        System.out.print("      " + names[0]);
+                        f.format("      %s", names[0]);
                         for (int aliasIdx = 1; aliasIdx < names.length; aliasIdx++)
                         {
-                            System.out.print(", " + names[aliasIdx]);
+                            f.format(", %s", names[aliasIdx]);
                         }
-                        System.out.println("   " + flagDescs.get(entry.getKey()));
+                        f.format("   %s%n", flagDescs.get(entry.getKey()));
                     }
                 }
                 if (options.size() > 0)
                 {
-                    System.out.println("   options:");
+                    f.format("   options:%n");
                     for (Entry<String, Parameter> entry : options.entrySet())
                     {
                         // Print all aliases.
                         String[] names = entry.getValue().names();
-                        System.out.print("      " + names[0]);
+                        f.format("      %s", names[0]);
                         for (int aliasIdx = 1; aliasIdx < names.length; aliasIdx++)
                         {
-                            System.out.print(", " + names[aliasIdx]);
+                            f.format(", %s", names[aliasIdx]);
                         }
-                        System.out.println("   "
-                            + optionDescs.get(entry.getKey())
-                            + ((entry.getValue().absentValue() == null) ? ""
-                                : " [optional]"));
+                        f.format("   %s%s%n",
+                            optionDescs.get(entry.getKey()),
+                            ((entry.getValue().absentValue() == null) ? "" : " [optional]"));
                     }
                 }
                 if (params.size() > 0)
                 {
-                    System.out.println("   parameters:");
+                    f.format("   parameters:%n");
                     for (Iterator<String> it = params.iterator(); it.hasNext();)
                     {
-                        System.out.println("      " + it.next() + "   " + it.next());
+                        f.format("      %s   %s%n", it.next(), it.next());
                     }
                 }
+                prefix = "\n";
             }
+            return f.toString();
         }
     }
 
@@ -423,83 +393,83 @@ public class Basic
     }
 
     @Descriptor("install bundle using URLs")
-    public void install(@Descriptor("command session")CommandSession session,
+    public String install(@Descriptor("command session")CommandSession session,
                         @Descriptor("target URLs") String[] urls) throws IOException
     {
-        StringBuilder sb = new StringBuilder();
+        try (Formatter f = new Formatter()) {
 
-        for (String url : urls)
-        {
-            String location = Util.resolveUri(session, url.trim());
-            Bundle bundle = null;
-            try
+            StringBuilder sb = new StringBuilder();
+
+            for (String url : urls)
             {
-                bundle = m_bc.installBundle(location, null);
-            }
-            catch (IllegalStateException ex)
-            {
-                System.err.println(ex.toString());
-            }
-            catch (BundleException ex)
-            {
-                if (ex.getNestedException() != null)
+                String location = Util.resolveUri(session, url.trim());
+                Bundle bundle = null;
+                try
                 {
-                    System.err.println(ex.getNestedException().toString());
+                    bundle = m_bc.installBundle(location, null);
                 }
-                else
+                catch (IllegalStateException ex)
                 {
-                    System.err.println(ex.toString());
+                    f.format("%s%n", ex.toString());
                 }
-            }
-            catch (Exception ex)
-            {
-                System.err.println(ex.toString());
-            }
-            if (bundle != null)
-            {
-                if (sb.length() > 0)
+                catch (BundleException ex)
                 {
-                    sb.append(", ");
+                    if (ex.getNestedException() != null)
+                    {
+                        f.format("%s%n", ex.getNestedException().toString());
+                    }
+                    else
+                    {
+                        f.format("%s%n", ex.toString());
+                    }
                 }
-                sb.append(bundle.getBundleId());
+                catch (Exception ex)
+                {
+                    f.format("%s%n", ex.toString());
+                }
+                if (bundle != null)
+                {
+                    if (sb.length() > 0)
+                    {
+                        sb.append(", ");
+                    }
+                    sb.append(bundle.getBundleId());
+                }
             }
-        }
-        if (sb.toString().indexOf(',') > 0)
-        {
-            System.out.println("Bundle IDs: " + sb.toString());
-        }
-        else if (sb.length() > 0)
-        {
-            System.out.println("Bundle ID: " + sb.toString());
+            if (sb.toString().indexOf(',') > 0)
+            {
+                return "Bundle IDs: " + sb.toString();
+            }
+            else if (sb.length() > 0)
+            {
+                return "Bundle ID: " + sb.toString();
+            }
+            return f.toString();
         }
     }
 
     @Descriptor("list all installed bundles")
-    public void lb(
+    public String lb(
         @Descriptor("show location") @Parameter(names = { "-l", "--location" }, presentValue = "true", absentValue = "false") boolean showLoc,
         @Descriptor("show symbolic name") @Parameter(names = { "-s", "--symbolicname" }, presentValue = "true", absentValue = "false") boolean showSymbolic,
         @Descriptor("show update location") @Parameter(names = { "-u", "--updatelocation" }, presentValue = "true", absentValue = "false") boolean showUpdate)
     {
-        lb(showLoc, showSymbolic, showUpdate, null);
+        return lb(showLoc, showSymbolic, showUpdate, null);
     }
 
     @Descriptor("list installed bundles matching a substring")
-    public void lb(
+    public String lb(
         @Descriptor("show location") @Parameter(names = { "-l", "--location" }, presentValue = "true", absentValue = "false") boolean showLoc,
         @Descriptor("show symbolic name") @Parameter(names = { "-s", "--symbolicname" }, presentValue = "true", absentValue = "false") boolean showSymbolic,
         @Descriptor("show update location") @Parameter(names = { "-u", "--updatelocation" }, presentValue = "true", absentValue = "false") boolean showUpdate,
         @Descriptor("subtring matched against name or symbolic name") String pattern)
     {
-        // Keep track of service references.
-        List<ServiceReference<?>> refs = new ArrayList<>();
-
-        // Get start level service.
-        StartLevel sl = Util.getService(m_bc, StartLevel.class, refs);
-        if (sl == null)
-        {
-            System.out.println("Start Level service is unavailable.");
+        if ((showLoc && showSymbolic && showUpdate) ||
+            (showLoc && showSymbolic) ||
+            (showSymbolic && showUpdate) ||
+            (showLoc && showUpdate)) {
+            return "Only one of -l, -s, -u should be used.";
         }
-
         List<Bundle> found = new ArrayList<>();
 
         if (pattern == null)
@@ -520,15 +490,16 @@ public class Basic
 
         if (found.size() > 0)
         {
-            printBundleList(found.toArray(new Bundle[found.size()]), sl,
-                showLoc, showSymbolic, showUpdate);
+            try (Formatter f = new Formatter()) {
+                printBundleList(found.toArray(new Bundle[found.size()]),
+                    showLoc, showSymbolic, showUpdate, m_b0, f);
+                return f.toString();
+            }
         }
         else
         {
-            System.out.println("No matching bundles found");
+            return "No matching bundles found.";
         }
-
-        Util.ungetServices(m_bc, refs);
     }
 
     private boolean matchBundleName(String name, String pattern)
@@ -537,48 +508,59 @@ public class Basic
     }
 
     @Descriptor("display all matching log entries")
-    public void log(
+    public String log(
         @Descriptor("minimum log level [ debug | info | warn | error ]") String logLevel)
     {
-        log(-1, logLevel);
+        return log(-1, logLevel);
     }
 
     @Descriptor("display some matching log entries")
-    public void log(@Descriptor("maximum number of entries") int maxEntries,
+    public String log(@Descriptor("maximum number of entries") int maxEntries,
         @Descriptor("minimum log level [ debug | info | warn | error ]") String logLevel)
     {
         // Keep track of service references.
         List<ServiceReference<?>> refs = new ArrayList<>();
 
         // Get start level service.
-        LogReaderService lrs = Util.getService(m_bc, LogReaderService.class, refs);
-        if (lrs == null)
-        {
-            System.out.println("Log reader service is unavailable.");
-        }
-        else
-        {
-            @SuppressWarnings("unchecked")
-            Enumeration<LogEntry> entries = lrs.getLog();
-
-            int minLevel = logLevelAsInt(logLevel);
-
-            int index = 0;
-            while (entries.hasMoreElements() && (maxEntries < 0 || index < maxEntries))
+        try {
+            LogReaderService lrs = Util.getService(m_bc, LogReaderService.class, refs);
+            if (lrs == null)
             {
-                LogEntry entry = entries.nextElement();
-                if (entry.getLevel() <= minLevel)
-                {
-                    display(entry);
-                    index++;
+                return "Log reader service is unavailable.";
+            }
+            else
+            {
+                try (Formatter f = new Formatter()) {
+                    @SuppressWarnings("unchecked")
+                    Enumeration<LogEntry> entries = lrs.getLog();
+                    List<LogEntry> select = new ArrayList<>();
+
+                    int minLevel = logLevelAsInt(logLevel);
+
+                    int index = 0;
+                    while (entries.hasMoreElements() && (maxEntries < 0 || index < maxEntries))
+                    {
+                        LogEntry entry = entries.nextElement();
+                        if (entry.getLevel() <= minLevel)
+                        {
+                            select.add(0, entry);
+                            index++;
+                        }
+                    }
+
+                    select.forEach(e -> display(e, f));
+
+                    Util.ungetServices(m_bc, refs);
+                    return f.toString();
                 }
             }
-
-            Util.ungetServices(m_bc, refs);
+        }
+        catch (NoClassDefFoundError ncdfe) {
+            return "Log reader service is unavailable.";
         }
     }
 
-    private void display(LogEntry entry)
+    private void display(LogEntry entry, Formatter f)
     {
         SimpleDateFormat sdf = new SimpleDateFormat("yyyy.MM.dd HH:mm:ss");
 
@@ -601,7 +583,7 @@ public class Basic
             buffer.append(writer.toString());
         }
 
-        System.out.println(buffer.toString());
+        f.format("%s%n", buffer.toString());
     }
 
     private static int logLevelAsInt(String logLevel)
@@ -645,55 +627,31 @@ public class Basic
             bundles = null;
         }
 
-        // Keep track of service references.
-        List<ServiceReference<?>> refs = new ArrayList<>();
-
-        // Get package admin service.
-        PackageAdmin pa = Util.getService(m_bc, PackageAdmin.class, refs);
-        if (pa == null)
-        {
-            System.out.println("Package Admin service is unavailable.");
-        }
-
-        pa.refreshPackages(bundles);
-
-        Util.ungetServices(m_bc, refs);
+        m_b0.adapt(FrameworkWiring.class).refreshBundles(Arrays.asList(bundles));
     }
 
     @Descriptor("resolve bundles")
-    public void resolve(
+    public String resolve(
         @Descriptor("target bundles (can be null or empty)") Bundle[] bundles)
     {
-        if ((bundles != null) && (bundles.length == 0))
+        if (m_b0.adapt(FrameworkWiring.class).resolveBundles(bundles != null ? Arrays.asList(bundles) : null))
         {
-            bundles = null;
+            return "Not all bundles could be resolved.";
         }
-
-        // Keep track of service references.
-        List<ServiceReference<?>> refs = new ArrayList<>();
-
-        // Get package admin service.
-        PackageAdmin pa = Util.getService(m_bc, PackageAdmin.class, refs);
-        if (pa == null)
-        {
-            System.out.println("Package Admin service is unavailable.");
-        }
-
-        if (!pa.resolveBundles(bundles))
-        {
-            System.out.println("Not all bundles could be resolved.");
-        }
-
-        Util.ungetServices(m_bc, refs);
+        return null;
     }
 
     @Descriptor("start bundles")
-    public void start(
+    public String start(
         @Descriptor("start bundle transiently") @Parameter(names = { "-t", "--transient" }, presentValue = "true", absentValue = "false") boolean trans,
         @Descriptor("use declared activation policy") @Parameter(names = { "-p",
                 "--policy" }, presentValue = "true", absentValue = "false") boolean policy,
         @Descriptor("target bundle identifiers or URLs") String[] ss)
     {
+        if ((ss == null) || (ss.length < 1)) {
+            return "Please specify the bundles to start.";
+        }
+
         int options = 0;
 
         // Check for "transient" switch.
@@ -708,9 +666,7 @@ public class Basic
             options |= Bundle.START_ACTIVATION_POLICY;
         }
 
-        // There should be at least one bundle id.
-        if ((ss != null) && (ss.length >= 1))
-        {
+        try (Formatter f = new Formatter()) {
             for (String s : ss)
             {
                 String id = s.trim();
@@ -736,45 +692,41 @@ public class Basic
                     }
                     else
                     {
-                        System.err.println("Bundle ID " + id + " is invalid.");
+                        f.format("Bundle ID '%s'  is invalid.%n", id);
                     }
                 }
                 catch (NumberFormatException ex)
                 {
-                    System.err.println("Unable to parse id '" + id + "'.");
+                    f.format("Unable to parse id '%s'.%n", id);
                 }
                 catch (BundleException ex)
                 {
                     if (ex.getNestedException() != null)
                     {
-                        ex.printStackTrace();
-                        System.err.println(ex.getNestedException().toString());
+                        f.format("%s%n", ex.getNestedException().toString());
                     }
                     else
                     {
-                        System.err.println(ex.toString());
+                        f.format("%s%n", ex.toString());
                     }
                 }
                 catch (Exception ex)
                 {
-                    System.err.println(ex.toString());
+                    f.format("%s%n", ex.toString());
                 }
             }
-        }
-        else
-        {
-            System.err.println("Incorrect number of arguments");
+            return f.toString();
         }
     }
 
     @Descriptor("stop bundles")
-    public void stop(@Descriptor("stop bundle transiently") @Parameter(names = { "-t",
+    public String stop(@Descriptor("stop bundle transiently") @Parameter(names = { "-t",
             "--transient" }, presentValue = "true", absentValue = "false") boolean trans,
         @Descriptor("target bundles") Bundle[] bundles)
     {
         if ((bundles == null) || (bundles.length == 0))
         {
-            System.out.println("Please specify the bundles to stop.");
+            return "Please specify the bundles to stop.";
         }
 
         int options = 0;
@@ -785,187 +737,176 @@ public class Basic
             options |= Bundle.STOP_TRANSIENT;
         }
 
-        for (Bundle bundle : bundles)
-        {
-            try
+        try (Formatter f = new Formatter()) {
+            for (Bundle bundle : bundles)
             {
-                bundle.stop(options);
-            }
-            catch (BundleException ex)
-            {
-                if (ex.getNestedException() != null)
+                try
                 {
-                    System.err.println(ex.getNestedException().toString());
+                    bundle.stop(options);
                 }
-                else
+                catch (BundleException ex)
                 {
-                    System.err.println(ex.toString());
+                    if (ex.getNestedException() != null)
+                    {
+                        f.format("%s%n", ex.getNestedException().toString());
+                    }
+                    else
+                    {
+                        f.format("%s%n", ex.toString());
+                    }
+                }
+                catch (Exception ex)
+                {
+                    f.format("%s%n", ex.toString());
                 }
             }
-            catch (Exception ex)
-            {
-                System.err.println(ex.toString());
-            }
+            return f.toString();
         }
     }
 
     @Descriptor("uninstall bundles")
-    public void uninstall(@Descriptor("target bundles") Bundle[] bundles)
+    public String uninstall(@Descriptor("target bundles") Bundle[] bundles)
     {
         if ((bundles == null) || (bundles.length == 0))
         {
-            System.out.println("Please specify the bundles to uninstall.");
+            return "Please specify the bundles to uninstall.";
         }
-        else
-        {
-            try
+
+        try (Formatter f = new Formatter()) {
+            for (Bundle bundle : bundles)
             {
-                for (Bundle bundle : bundles)
+                try
                 {
                     bundle.uninstall();
                 }
-            }
-            catch (BundleException ex)
-            {
-                if (ex.getNestedException() != null)
+                catch (BundleException ex)
                 {
-                    ex.printStackTrace();
-                    System.err.println(ex.getNestedException().toString());
+                    if (ex.getNestedException() != null)
+                    {
+                        f.format("%s%n", ex.getNestedException().toString());
+                    }
+                    else {
+                        f.format("%s%n", ex.toString());
+                    }
                 }
-                else
+                catch (Exception ex)
                 {
-                    System.err.println(ex.toString());
+                    f.format("%s%n", ex.toString());
                 }
             }
-            catch (Exception ex)
-            {
-                System.err.println(ex.toString());
-            }
+            return f.toString();
         }
     }
 
     @Descriptor("update bundle")
-    public void update(@Descriptor("target bundle") Bundle bundle)
+    public String update(@Descriptor("target bundle") Bundle bundle)
     {
+        if (bundle == null)
+        {
+            return "Must specify a bundle.";
+        }
+
         try
         {
-            // Get the bundle.
-            if (bundle != null)
-            {
-                bundle.update();
-            }
+            bundle.update();
+            return null;
         }
         catch (BundleException ex)
         {
             if (ex.getNestedException() != null)
             {
-                System.err.println(ex.getNestedException().toString());
+                return ex.getNestedException().toString();
             }
-            else
-            {
-                System.err.println(ex.toString());
-            }
+
+            return ex.toString();
         }
         catch (Exception ex)
         {
-            System.err.println(ex.toString());
+            return ex.toString();
         }
     }
 
     @Descriptor("update bundle from URL")
-    public void update(
+    public String update(
             @Descriptor("command session") CommandSession session,
             @Descriptor("target bundle") Bundle bundle,
         @Descriptor("URL from where to retrieve bundle") String location) throws IOException {
-        if (location != null)
+        if (bundle == null)
+        {
+            return "Must specify a bundle.";
+        }
+        if (location == null)
+        {
+            return "Must specify a location.";
+        }
+
+        try
         {
             location = Util.resolveUri(session, location.trim());
-            try
-            {
-                // Get the bundle.
-                if (bundle != null)
-                {
-                    InputStream is = new URL(location).openStream();
-                    bundle.update(is);
-                }
-                else
-                {
-                    System.err.println("Please specify a bundle to update");
-                }
-            }
-            catch (MalformedURLException ex)
-            {
-                System.err.println("Unable to parse URL");
-            }
-            catch (IOException ex)
-            {
-                System.err.println("Unable to open input stream: " + ex);
-            }
-            catch (BundleException ex)
-            {
-                if (ex.getNestedException() != null)
-                {
-                    System.err.println(ex.getNestedException().toString());
-                }
-                else
-                {
-                    System.err.println(ex.toString());
-                }
-            }
-            catch (Exception ex)
-            {
-                System.err.println(ex.toString());
-            }
+            InputStream is = new URL(location).openStream();
+            bundle.update(is);
+            return null;
         }
-        else
+        catch (MalformedURLException ex)
         {
-            System.err.println("Must specify a location.");
+            return "Unable to parse URL";
+        }
+        catch (IOException ex)
+        {
+            return "Unable to open input stream: " + ex;
+        }
+        catch (BundleException ex)
+        {
+            if (ex.getNestedException() != null)
+            {
+                return ex.getNestedException().toString();
+            }
+
+            return ex.toString();
+        }
+        catch (Exception ex)
+        {
+            return ex.toString();
         }
     }
 
     @Descriptor("determines from where a bundle loads a class")
-    public void which(@Descriptor("target bundle") Bundle bundle,
+    public String which(@Descriptor("target bundle") Bundle bundle,
         @Descriptor("target class name") String className)
     {
         if (bundle == null)
         {
-            System.err.println("Please specify a bundle");
+            return "Please specify a bundle";
         }
-        else
+
+        Class<?> clazz = null;
+        try
         {
-            Class<?> clazz = null;
-            try
+            clazz = bundle.loadClass(className);
+            if (clazz.getClassLoader() == null)
             {
-                clazz = bundle.loadClass(className);
-                if (clazz.getClassLoader() == null)
-                {
-                    System.out.println("Loaded from: boot class loader");
-                }
-                else if (clazz.getClassLoader() instanceof BundleReference)
-                {
-                    Bundle p = ((BundleReference) clazz.getClassLoader()).getBundle();
-                    System.out.println("Loaded from: " + p);
-                }
-                else
-                {
-                    System.out.println("Loaded from: " + clazz.getClassLoader());
-                }
+                return "Loaded from: boot class loader";
             }
-            catch (ClassNotFoundException ex)
+            else if (clazz.getClassLoader() instanceof BundleReference)
             {
-                System.out.println("Class not found");
+                Bundle p = ((BundleReference) clazz.getClassLoader()).getBundle();
+                return "Loaded from: " + p;
             }
+            else
+            {
+                return "Loaded from: " + clazz.getClassLoader();
+            }
+        }
+        catch (ClassNotFoundException ex)
+        {
+            return "Class not found";
         }
     }
 
-    private static void printBundleList(Bundle[] bundles, StartLevel startLevel,
-        boolean showLoc, boolean showSymbolic, boolean showUpdate)
+    private static void printBundleList(Bundle[] bundles,
+        boolean showLoc, boolean showSymbolic, boolean showUpdate, Bundle b0, Formatter f)
     {
-        // Display active start level.
-        if (startLevel != null)
-        {
-            System.out.println("START LEVEL " + startLevel.getStartLevel());
-        }
+        f.format("START LEVEL %s%n", b0.adapt(FrameworkStartLevel.class).getStartLevel());
 
         // Determine last column.
         String lastColumn = "Name";
@@ -982,16 +923,7 @@ public class Basic
             lastColumn = "Update location";
         }
 
-        // Print column headers.
-        if (startLevel != null)
-        {
-            System.out.println(String.format("%5s|%-11s|%5s|%s", "ID", "State", "Level",
-                lastColumn));
-        }
-        else
-        {
-            System.out.println(String.format("%5s|%-11s|%s", "ID", "State", lastColumn));
-        }
+        f.format("%5s|%-11s|%5s|%s%n", "ID", "State", "Level", lastColumn);
         for (Bundle bundle : bundles)
         {
             // Get the bundle name or location.
@@ -1023,20 +955,11 @@ public class Basic
                 : name;
 
             // Get the bundle's start level.
-            int level = (startLevel == null) ? -1
-                : startLevel.getBundleStartLevel(bundle);
+            int level = bundle.adapt(BundleStartLevel.class).getStartLevel();
 
-            if (level < 0)
-            {
-                System.out.println(String.format("%5d|%-11s|%s|%s", bundle.getBundleId(),
-                    getStateString(bundle), name, bundle.getVersion()));
-            }
-            else
-            {
-                System.out.println(String.format("%5d|%-11s|%5d|%s|%s",
-                    bundle.getBundleId(), getStateString(bundle), level, name,
-                    bundle.getVersion()));
-            }
+            f.format("%5d|%-11s|%5d|%s|%s%n",
+                bundle.getBundleId(), getStateString(bundle), level, name,
+                bundle.getVersion());
         }
     }
 
