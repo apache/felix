@@ -24,7 +24,14 @@ import java.io.PrintStream;
 import java.util.logging.Logger;
 
 import org.apache.felix.service.threadio.ThreadIO;
+import org.osgi.annotation.bundle.Capability;
+import org.osgi.namespace.service.ServiceNamespace;
 
+@Capability(
+    namespace = ServiceNamespace.SERVICE_NAMESPACE,
+    attribute = "objectClass='org.apache.felix.service.threadio.ThreadIO'",
+    effective = "active"
+)
 public class ThreadIOImpl implements ThreadIO
 {
     static private final Logger log = Logger.getLogger(ThreadIOImpl.class.getName());
