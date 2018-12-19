@@ -19,9 +19,13 @@
 package org.apache.felix.gogo.command;
 
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Formatter;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import org.apache.felix.service.command.Descriptor;
 import org.osgi.framework.Bundle;
@@ -52,15 +56,15 @@ public class Inspect
     }
 
     @Descriptor("inspects bundle capabilities and requirements")
-    public void inspect(
+    public String inspect(
         @Descriptor("('capability' | 'requirement')") String direction,
         @Descriptor("(<namespace> | 'service')") String namespace,
         @Descriptor("target bundles") Bundle[] bundles)
     {
-        inspect(m_bc, direction, namespace, bundles);
+        return inspect(m_bc, direction, namespace, bundles);
     }
 
-    private static void inspect(
+    private static String inspect(
         BundleContext bc, String direction, String namespace, Bundle[] bundles)
     {
         // Verify arguments.
@@ -71,69 +75,58 @@ public class Inspect
 
             if (CAPABILITY.startsWith(direction))
             {
-                printCapabilities(bc, Util.parseSubstring(namespace), bundles);
+                return printCapabilities(bc, Util.parseSubstring(namespace), bundles);
             }
             else
             {
-                printRequirements(bc, Util.parseSubstring(namespace), bundles);
+                return printRequirements(bc, Util.parseSubstring(namespace), bundles);
             }
         }
-        else
-        {
-            if (!isValidDirection(direction))
-            {
-                System.out.println("Invalid argument: " + direction);
-            }
-        }
+
+        return "Invalid argument: " + direction;
     }
 
-    public static void printCapabilities(
+    public static String printCapabilities(
         BundleContext bc, List<String> namespace, Bundle[] bundles)
     {
-        boolean separatorNeeded = false;
-        for (Bundle b : bundles)
-        {
-            if (separatorNeeded)
+        try (Formatter f = new Formatter()) {
+            for (Bundle b : bundles)
             {
-                System.out.println();
-            }
-
-            // Print out any matching generic capabilities.
-            BundleWiring wiring = b.adapt(BundleWiring.class);
-            if (wiring != null)
-            {
-                String title = b + " provides:";
-                System.out.println(title);
-                System.out.println(Util.getUnderlineString(title.length()));
-
-                // Print generic capabilities for matching namespaces.
-                boolean matches = printMatchingCapabilities(wiring, namespace);
-
-                // Handle service capabilities separately, since they aren't part
-                // of the generic model in OSGi.
-                if (matchNamespace(namespace, NONSTANDARD_SERVICE_NAMESPACE))
+                // Print out any matching generic capabilities.
+                BundleWiring wiring = b.adapt(BundleWiring.class);
+                if (wiring != null)
                 {
-                    matches |= printServiceCapabilities(b);
-                }
+                    String title = b + " provides:";
+                    f.format("%s%n%s%n", title, Util.getUnderlineString(title.length()));
 
-                // If there were no capabilities for the specified namespace,
-                // then say so.
-                if (!matches)
+                    // Print generic capabilities for matching namespaces.
+                    boolean matches = printMatchingCapabilities(wiring, namespace, f);
+
+                    // Handle service capabilities separately, since they aren't part
+                    // of the generic model in OSGi.
+                    if (matchNamespace(namespace, NONSTANDARD_SERVICE_NAMESPACE))
+                    {
+                        matches |= printServiceCapabilities(b, f);
+                    }
+
+                    // If there were no capabilities for the specified namespace,
+                    // then say so.
+                    if (!matches)
+                    {
+                        f.format("%s %s%n", Util.unparseSubstring(namespace), EMPTY_MESSAGE);
+                    }
+                }
+                else
                 {
-                    System.out.println(Util.unparseSubstring(namespace) + " " + EMPTY_MESSAGE);
+                    f.format("Bundle %s is not resolved.",
+                        b.getBundleId());
                 }
             }
-            else
-            {
-                System.out.println("Bundle "
-                    + b.getBundleId()
-                    + " is not resolved.");
-            }
-            separatorNeeded = true;
+            return f.toString();
         }
     }
 
-    private static boolean printMatchingCapabilities(BundleWiring wiring, List<String> namespace)
+    private static boolean printMatchingCapabilities(BundleWiring wiring, List<String> namespace, Formatter f)
     {
         List<BundleWire> wires = wiring.getProvidedWires(null);
         Map<BundleCapability, List<BundleWire>> aggregateCaps =
@@ -144,49 +137,75 @@ public class Inspect
         {
             if (matchNamespace(namespace, cap.getNamespace()))
             {
+                if ("osgi.service".equals(cap.getNamespace())) {
+                    continue;
+                }
                 matches = true;
                 List<BundleWire> dependents = aggregateCaps.get(cap);
                 Object keyAttr =
                     cap.getAttributes().get(cap.getNamespace());
-                if (dependents != null)
+                if ("osgi.native".equals(cap.getNamespace()))
                 {
-                    String msg;
-                    if (keyAttr != null)
+                    f.format("%s with properties:%n", cap.getNamespace());
+                    cap.getAttributes().entrySet().stream().sorted(
+                        (e1,e2) -> e1.getKey().compareTo(e2.getKey())
+                    ).forEach(
+                        e -> f.format("   %s = %s%n", e.getKey(), e.getValue())
+                    );
+
+                    if (dependents != null)
                     {
-                        msg = cap.getNamespace()
-                            + "; "
-                            + keyAttr
-                            + " "
-                            + getVersionFromCapability(cap);
+                        f.format("   required by:%n");
+                        dependents.forEach(wire -> f.format("      %s%n", wire.getRequirerWiring().getBundle()));
                     }
                     else
                     {
-                        msg = cap.toString();
+                        f.format("   %s%n", UNUSED_MESSAGE);
                     }
-                    msg = msg + " required by:";
-                    System.out.println(msg);
+                }
+                else if (dependents != null)
+                {
+                    if (keyAttr != null)
+                    {
+                        f.format("%s; %s %s required by:%n",
+                            cap.getNamespace(),
+                            format(keyAttr),
+                            getVersionFromCapability(cap));
+                    }
+                    else
+                    {
+                        f.format("%s required by:%n", cap.toString());
+                    }
                     for (BundleWire wire : dependents)
                     {
-                        System.out.println("   " + wire.getRequirerWiring().getBundle());
+                        f.format("   %s%n", wire.getRequirerWiring().getBundle());
                     }
                 }
                 else if (keyAttr != null)
                 {
-                    System.out.println(cap.getNamespace()
-                        + "; "
-                        + cap.getAttributes().get(cap.getNamespace())
-                        + " "
-                        + getVersionFromCapability(cap)
-                        + " "
-                        + UNUSED_MESSAGE);
+                    f.format("%s; %s %s %s%n",
+                        cap.getNamespace(),
+                        format(keyAttr),
+                        getVersionFromCapability(cap),
+                        UNUSED_MESSAGE);
                 }
                 else
                 {
-                    System.out.println(cap + " " + UNUSED_MESSAGE);
+                    f.format("%s %s%n", cap, UNUSED_MESSAGE);
                 }
             }
         }
         return matches;
+    }
+
+    private static String format(Object object) {
+        if (object.getClass().isArray()) {
+            return Arrays.stream((Object[])object).map(Object::toString).collect(Collectors.joining(","));
+        }
+        else if (object instanceof Collection) {
+            return ((Collection<?>)object).stream().map(Object::toString).collect(Collectors.joining(","));
+        }
+        return String.valueOf(object);
     }
 
     private static Map<BundleCapability, List<BundleWire>> aggregateCapabilities(
@@ -211,7 +230,7 @@ public class Inspect
         return map;
     }
 
-    static boolean printServiceCapabilities(Bundle b)
+    static boolean printServiceCapabilities(Bundle b, Formatter f)
     {
         boolean matches = false;
 
@@ -226,11 +245,9 @@ public class Inspect
                 for (ServiceReference<?> ref : refs)
                 {
                     // Print object class with "namespace".
-                    System.out.println(
-                        NONSTANDARD_SERVICE_NAMESPACE
-                        + "; "
-                        + Util.getValueString(ref.getProperty("objectClass"))
-                        + " with properties:");
+                    f.format("%s; %s with properties:%n",
+                        NONSTANDARD_SERVICE_NAMESPACE,
+                        Util.getValueString(ref.getProperty("objectClass")));
                     // Print service properties.
                     String[] keys = ref.getPropertyKeys();
                     for (String key : keys)
@@ -238,17 +255,16 @@ public class Inspect
                         if (!key.equalsIgnoreCase(Constants.OBJECTCLASS))
                         {
                             Object v = ref.getProperty(key);
-                            System.out.println("   "
-                                + key + " = " + Util.getValueString(v));
+                            f.format("   %s = %s%n", key, Util.getValueString(v));
                         }
                     }
                     Bundle[] users = ref.getUsingBundles();
                     if ((users != null) && (users.length > 0))
                     {
-                        System.out.println("   Used by:");
+                        f.format("   Used by:%n");
                         for (Bundle user : users)
                         {
-                            System.out.println("      " + user);
+                            f.format("      %s%n", user);
                         }
                     }
                 }
@@ -256,58 +272,51 @@ public class Inspect
         }
         catch (Exception ex)
         {
-            System.err.println(ex.toString());
+            f.format("%s%n", ex.toString());
         }
 
         return matches;
     }
 
-    public static void printRequirements(
+    public static String printRequirements(
         BundleContext bc, List<String> namespace, Bundle[] bundles)
     {
-        boolean separatorNeeded = false;
-        for (Bundle b : bundles)
-        {
-            if (separatorNeeded)
+        try (Formatter f = new Formatter()) {
+            for (Bundle b : bundles)
             {
-                System.out.println();
-            }
-
-            // Print out any matching generic requirements.
-            BundleWiring wiring = b.adapt(BundleWiring.class);
-            if (wiring != null)
-            {
-                String title = b + " requires:";
-                System.out.println(title);
-                System.out.println(Util.getUnderlineString(title.length()));
-                boolean matches = printMatchingRequirements(wiring, namespace);
-
-                // Handle service requirements separately, since they aren't part
-                // of the generic model in OSGi.
-                if (matchNamespace(namespace, NONSTANDARD_SERVICE_NAMESPACE))
+                // Print out any matching generic requirements.
+                BundleWiring wiring = b.adapt(BundleWiring.class);
+                if (wiring != null)
                 {
-                    matches |= printServiceRequirements(b);
-                }
+                    String title = b + " requires:";
+                    f.format("%s%n%s%n", title, Util.getUnderlineString(title.length()));
+                    boolean matches = printMatchingRequirements(wiring, namespace, f);
 
-                // If there were no requirements for the specified namespace,
-                // then say so.
-                if (!matches)
+                    // Handle service requirements separately, since they aren't part
+                    // of the generic model in OSGi.
+                    if (matchNamespace(namespace, NONSTANDARD_SERVICE_NAMESPACE))
+                    {
+                        matches |= printServiceRequirements(b, f);
+                    }
+
+                    // If there were no requirements for the specified namespace,
+                    // then say so.
+                    if (!matches)
+                    {
+                        f.format("%s %s%n", Util.unparseSubstring(namespace), EMPTY_MESSAGE);
+                    }
+                }
+                else
                 {
-                    System.out.println(Util.unparseSubstring(namespace) + " " + EMPTY_MESSAGE);
+                    f.format("Bundle %s is not resolved.%n",
+                        b.getBundleId());
                 }
             }
-            else
-            {
-                System.out.println("Bundle "
-                    + b.getBundleId()
-                    + " is not resolved.");
-            }
-
-            separatorNeeded = true;
+            return f.toString();
         }
     }
 
-    private static boolean printMatchingRequirements(BundleWiring wiring, List<String> namespace)
+    private static boolean printMatchingRequirements(BundleWiring wiring, List<String> namespace, Formatter f)
     {
         List<BundleWire> wires = wiring.getRequiredWires(null);
         Map<BundleRequirement, List<BundleWire>> aggregateReqs =
@@ -322,11 +331,9 @@ public class Inspect
                 List<BundleWire> providers = aggregateReqs.get(req);
                 if (providers != null)
                 {
-                    System.out.println(
-                        req.getNamespace()
-                        + "; "
-                        + req.getDirectives().get(Constants.FILTER_DIRECTIVE)
-                        + " resolved by:");
+                    f.format("%s; %s resolved by:%n",
+                        req.getNamespace(),
+                        req.getDirectives().get(Constants.FILTER_DIRECTIVE));
                     for (BundleWire wire : providers)
                     {
                         String msg;
@@ -345,19 +352,15 @@ public class Inspect
                         {
                             msg = wire.getCapability().toString();
                         }
-                        msg = "   " + msg + " from "
-                            + wire.getProviderWiring().getBundle();
-                        System.out.println(msg);
+                        f.format("   %s from %s%n", msg, wire.getProviderWiring().getBundle());
                     }
                 }
                 else
                 {
-                    System.out.println(
-                        req.getNamespace()
-                        + "; "
-                        + req.getDirectives().get(Constants.FILTER_DIRECTIVE)
-                        + " "
-                        + UNRESOLVED_MESSAGE);
+                    f.format("%s; %s %s%n",
+                        req.getNamespace(),
+                        req.getDirectives().get(Constants.FILTER_DIRECTIVE),
+                        UNRESOLVED_MESSAGE);
                 }
             }
         }
@@ -386,7 +389,7 @@ public class Inspect
         return map;
     }
 
-    static boolean printServiceRequirements(Bundle b)
+    static boolean printServiceRequirements(Bundle b, Formatter f)
     {
         boolean matches = false;
 
@@ -401,12 +404,10 @@ public class Inspect
                 for (ServiceReference<?> ref : refs)
                 {
                     // Print object class with "namespace".
-                    System.out.println(
-                        NONSTANDARD_SERVICE_NAMESPACE
-                        + "; "
-                        + Util.getValueString(ref.getProperty("objectClass"))
-                        + " provided by:");
-                    System.out.println("   " + ref.getBundle());
+                    f.format("%s; %s provided by:%n   %s%n",
+                        NONSTANDARD_SERVICE_NAMESPACE,
+                        Util.getValueString(ref.getProperty("objectClass")),
+                        ref.getBundle());
                 }
             }
         }

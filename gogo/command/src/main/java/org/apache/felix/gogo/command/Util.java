@@ -20,15 +20,10 @@ package org.apache.felix.gogo.command;
 
 import java.io.BufferedOutputStream;
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.OutputStream;
-import java.io.PrintStream;
 import java.net.URI;
-import java.net.URL;
-import java.net.URLConnection;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.jar.JarEntry;
@@ -154,65 +149,6 @@ public class Util
         }
     }
 
-    public static void downloadSource(
-        PrintStream out, PrintStream err,
-        URL srcURL, File localDir, boolean extract)
-    {
-        // Get the file name from the URL.
-        String fileName = (srcURL.getFile().lastIndexOf('/') > 0)
-            ? srcURL.getFile().substring(srcURL.getFile().lastIndexOf('/') + 1)
-            : srcURL.getFile();
-
-        try
-        {
-            out.println("Connecting...");
-
-            if (!localDir.exists())
-            {
-                err.println("Destination directory does not exist.");
-            }
-            File file = new File(localDir, fileName);
-
-            OutputStream os = new FileOutputStream(file);
-            URLConnection conn = srcURL.openConnection();
-            Util.setProxyAuth(conn);
-            int total = conn.getContentLength();
-            InputStream is = conn.getInputStream();
-
-            if (total > 0)
-            {
-                out.println("Downloading " + fileName
-                    + " ( " + total + " bytes ).");
-            }
-            else
-            {
-                out.println("Downloading " + fileName + ".");
-            }
-            byte[] buffer = new byte[4096];
-            for (int len = is.read(buffer); len > 0; len = is.read(buffer))
-            {
-                os.write(buffer, 0, len);
-            }
-
-            os.close();
-            is.close();
-
-            if (extract)
-            {
-                is = new FileInputStream(file);
-                JarInputStream jis = new JarInputStream(is);
-                out.println("Extracting...");
-                unjar(jis, localDir);
-                jis.close();
-                file.delete();
-            }
-        }
-        catch (Exception ex)
-        {
-            err.println(ex);
-        }
-    }
-
     public static void unjar(JarInputStream jis, File dir)
         throws IOException
     {
@@ -292,36 +228,6 @@ public class Util
             bos.write(buffer, 0, count);
         }
         bos.close();
-    }
-
-    public static void setProxyAuth(URLConnection conn) throws IOException
-    {
-        // Support for http proxy authentication
-        String auth = System.getProperty("http.proxyAuth");
-        if ((auth != null) && (auth.length() > 0))
-        {
-            if ("http".equals(conn.getURL().getProtocol())
-                || "https".equals(conn.getURL().getProtocol()))
-            {
-                String base64 = Base64Encoder.base64Encode(auth);
-                conn.setRequestProperty("Proxy-Authorization", "Basic " + base64);
-            }
-        }
-    }
-
-    public static InputStream openURL(final URL url) throws IOException
-    {
-        // Do it the manual way to have a chance to
-        // set request properties as proxy auth (EW).
-        return openURL(url.openConnection());
-    }
-
-    public static InputStream openURL(final URLConnection conn) throws IOException
-    {
-        // Do it the manual way to have a chance to
-        // set request properties as proxy auth (EW).
-        setProxyAuth(conn);
-        return conn.getInputStream();
     }
 
     public static List<String> parseSubstring(String value)
