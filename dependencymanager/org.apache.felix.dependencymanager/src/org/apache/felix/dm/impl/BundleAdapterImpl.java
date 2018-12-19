@@ -91,7 +91,7 @@ public class BundleAdapterImpl extends FilterComponent<BundleComponent> implemen
 	public class BundleAdapterDecorator extends AbstractDecorator {
 		
 		@SuppressWarnings("unchecked")
-		public Component<?> createService(Object[] properties) {
+		public Component createService(Object[] properties) {
             Bundle bundle = (Bundle) properties[0];
             Hashtable<String, Object> props = new Hashtable<>();
             if (m_serviceProperties != null) {
@@ -105,7 +105,7 @@ public class BundleAdapterImpl extends FilterComponent<BundleComponent> implemen
             // the first dependency is always the dependency on the bundle, which
             // will be replaced with a more specific dependency below
             dependencies.remove(0);
-            Component<?> service = m_manager.createComponent()
+            Component service = m_manager.createComponent()
                 .setInterface(m_serviceInterfaces, props)
                 .setImplementation(m_serviceImpl)
                 .setFactory(m_factory, m_factoryCreateMethod) // if not set, no effect

@@ -38,7 +38,7 @@ import org.osgi.framework.BundleContext;
  * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
 @ProviderType
-public interface ComponentContext<T extends Component<T>> extends Component<T> {
+public interface ComponentContext extends Component {
     /**
      * Returns the Component Executor gate that can be used to ensure proper component event serialization.
      * When you schedule a task in the component executor, your task is executed safely and you do not need

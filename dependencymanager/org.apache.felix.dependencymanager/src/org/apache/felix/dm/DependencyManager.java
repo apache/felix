@@ -157,7 +157,7 @@ public class DependencyManager extends DependencyManagerCompat {
      * 
      * @return the new component
      */
-    public Component<?> createComponent() {
+    public Component createComponent() {
         return new ComponentImpl(m_context, this, m_logger);
     }
 
@@ -295,7 +295,7 @@ public class DependencyManager extends DependencyManagerCompat {
      * Removes all components and their dependencies.
      */
     public void clear() {
-        for (Component<?> component : m_components.keySet()) {
+        for (Component component : m_components.keySet()) {
             remove(component);
         }
         m_components.clear();

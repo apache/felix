@@ -118,7 +118,7 @@ public class ResourceAdapterImpl extends FilterComponent<ResourceComponent> impl
             } else {
                 resourceDependency.setPropagate(m_propagate);
             }
-            Component<?> service = m_manager.createComponent()
+            Component service = m_manager.createComponent()
                 .setInterface(m_serviceInterfaces, props)
                 .setImplementation(m_serviceImpl)
                 .setFactory(m_factory, m_factoryCreateMethod) // if not set, no effect

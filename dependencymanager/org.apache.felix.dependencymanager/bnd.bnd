@@ -34,7 +34,7 @@ Export-Package:  \
 Include-Resource: META-INF/=resources/,META-INF/changelog.txt=changelog.txt
 Import-Package: !org.junit,!org.mockito.*,org.osgi.framework;version="[1.8, 2)",*
 Bundle-Activator: org.apache.felix.dm.impl.Activator
-Bundle-Version: 4.5.1
+Bundle-Version: 4.6.0
 Bundle-Name: Apache Felix Dependency Manager
 Bundle-Description: Provides dynamic service and component dependency management
 Bundle-License: http://www.apache.org/licenses/LICENSE-2.0.txt
@@ -46,3 +46,11 @@ Bundle-Category: osgi
 	${junit},\
 	${mockito},\
 	org.objenesis;version=2.2
+	
+-fixupmessages.baselining-error-to-warning: \
+    "Baseline mismatch for package org.apache.felix.dm, MAJOR change. Current is 4.6.0, repo is 4.5.0...";is:=warning,\
+    "Baseline mismatch for package org.apache.felix.dm.context, MAJOR change. Current is 4.4.1, repo is 4.4.0...";is:=warning,\
+    "The bundle version \\(4.5.1/4.6.0\\) is too low, must be at least 5.0.0";is:=warning
+
+
+

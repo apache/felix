@@ -75,7 +75,7 @@ import org.osgi.service.log.LogService;
  * 
  * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
-public class ComponentImpl implements Component<ComponentImpl>, ComponentContext<ComponentImpl>, ComponentDeclaration {
+public class ComponentImpl implements Component, ComponentContext, ComponentDeclaration {
     /**
      * NullObject ServiceRegistration that is injected in components that don't provide any services. 
      */
