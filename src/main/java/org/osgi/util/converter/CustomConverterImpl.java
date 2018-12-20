@@ -16,6 +16,9 @@
 
 package org.osgi.util.converter;
 
+import java.lang.reflect.InvocationHandler;
+import java.lang.reflect.Method;
+import java.lang.reflect.Proxy;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -175,7 +178,12 @@ class CustomConverterImpl implements InternalConverter {
 					}
 				}
 
-				return del.to(type);
+				Object result = del.to(type);
+				if (result != null && Proxy.isProxyClass(result.getClass()) && errorHandlers.size() > 0) {
+				    return wrapErrorHandling(result, type);
+				} else {
+				    return result;
+				}
 			} catch (Exception ex) {
 				for (ConverterFunction eh : errorHandlers) {
 					try {
@@ -194,7 +202,48 @@ class CustomConverterImpl implements InternalConverter {
 			}
 		}
 
-		@Override
+		private Object wrapErrorHandling(final Object wrapped, final Type type) {
+		    final Class<?> cls = wrapped.getClass();
+		    return Proxy.newProxyInstance(cls.getClassLoader(), cls.getInterfaces(), new InvocationHandler() {
+                @Override
+                public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
+                    Class< ? > mdDecl = method.getDeclaringClass();
+                    if (mdDecl.equals(Object.class)) {
+                        switch (method.getName()) {
+                            case "equals" :
+                                return proxy == args[0];
+                            case "hashCode" :
+                                return System.identityHashCode(proxy);
+                            case "toString" :
+                                return "Proxy for " + cls;
+                            default :
+                                throw new UnsupportedOperationException("Method "
+                                        + method + " not supported on proxy for "
+                                        + cls);
+                        }
+                    }
+
+                    try {
+                        return method.invoke(wrapped, args);
+                    } catch (Exception ex) {
+                        for (ConverterFunction eh : errorHandlers) {
+                            try {
+                                Object handled = eh.apply(object, type);
+                                if (handled != ConverterFunction.CANNOT_HANDLE)
+                                    return handled;
+                            } catch (RuntimeException re) {
+                                throw re;
+                            } catch (Exception e) {
+                                throw new RuntimeException(e);
+                            }
+                        }
+                    }
+                    return null;
+                }
+            });
+        }
+
+        @Override
 		public String toString() {
 			return to(String.class);
 		}

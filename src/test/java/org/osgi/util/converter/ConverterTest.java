@@ -16,6 +16,13 @@
  */
 package org.osgi.util.converter;
 
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
+import org.osgi.framework.Version;
+import org.osgi.util.converter.MyDTO.Count;
+import org.osgi.util.converter.MyEmbeddedDTO.Alpha;
+
 import java.lang.reflect.Type;
 import java.math.BigDecimal;
 import java.math.BigInteger;
@@ -59,13 +66,6 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
-
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
-import org.osgi.framework.Version;
-import org.osgi.util.converter.MyDTO.Count;
-import org.osgi.util.converter.MyEmbeddedDTO.Alpha;
 
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
@@ -439,6 +439,23 @@ public class ConverterTest {
         } catch (ConversionException ce) {
             // good
         }
+    }
+
+    @Test
+    public void testCustomErrorHandlingProxy() {
+        ConverterFunction errHandler = new ConverterFunction() {
+            @Override
+            public Object apply(Object obj, Type targetType) throws Exception {
+                return 123;
+            }
+        };
+        ConverterBuilder cb = converter.newConverterBuilder();
+        Converter c = cb.errorHandler(errHandler).build();
+
+        Map<?,?> m = new HashMap<>();
+
+        MyIntf i = c.convert(m).to(MyIntf.class);
+        assertEquals(123, i.value());
     }
 
     @Test
