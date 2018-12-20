@@ -228,7 +228,7 @@ class CustomConverterImpl implements InternalConverter {
                     } catch (Exception ex) {
                         for (ConverterFunction eh : errorHandlers) {
                             try {
-                                Object handled = eh.apply(object, type);
+                                Object handled = eh.apply(wrapped, type);
                                 if (handled != ConverterFunction.CANNOT_HANDLE)
                                     return handled;
                             } catch (RuntimeException re) {
