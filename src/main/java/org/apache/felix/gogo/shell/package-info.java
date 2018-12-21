@@ -20,12 +20,14 @@
 @org.osgi.annotation.bundle.Capability(
     attribute = "implementation.name=gogo.shell",
     namespace = "org.apache.felix.gogo",
-    name = "shell.implementation"
+    name = "shell.implementation",
+    version = "1.0.0"
 )
 @Requirement(
     effective = "active",
     namespace = "org.apache.felix.gogo",
-    name = "command.implementation"
+    name = "command.implementation",
+    version = "1.0.0"
 )
 package org.apache.felix.gogo.shell;
 
