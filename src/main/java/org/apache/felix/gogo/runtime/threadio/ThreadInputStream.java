@@ -40,6 +40,7 @@ public class ThreadInputStream extends InputStream
 
     /**
      * Access to the root stream through reflection
+     * @return InputStream
      */
     public InputStream getRoot()
     {

@@ -44,6 +44,7 @@ public class GlobPathMatcher {
 
     /**
      * Create a new instance with the {@link #DEFAULT_PATH_SEPARATOR}.
+     * @param pattern the pattern
      */
     public GlobPathMatcher(String pattern) {
         this(pattern, DEFAULT_PATH_SEPARATOR, true);
@@ -51,7 +52,9 @@ public class GlobPathMatcher {
 
     /**
      * A convenient, alternative constructor to use with a custom path separator.
+     * @param pattern the pattern
      * @param pathSeparator the path separator to use, must not be {@code null}.
+     * @param caseSensitive is case sensitive
      */
     public GlobPathMatcher(String pattern, String pathSeparator, boolean caseSensitive) {
         Objects.requireNonNull(pathSeparator, "'pathSeparator' is required");

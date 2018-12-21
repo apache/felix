@@ -21,11 +21,11 @@ package org.apache.felix.service.command;
 /**
  * A converter is a service that can help create specific object types from a
  * string, and vice versa.
- * <p/>
+ * <p>
  * The shell is capable of coercing arguments to the their proper type. However,
  * sometimes commands require extra help to do this conversion. This service can
  * implement a converter for a number of types.
- * <p/>
+ * <p>
  * The command shell will rank these services in order of service.ranking and
  * will then call them until one of the converters succeeds.
  */
@@ -59,14 +59,14 @@ public interface Converter
 
     /**
      * Convert an object to the desired type.
-     * <p/>
+     * <p>
      * Return null if the conversion can not be done. Otherwise return and
      * object that extends the desired type or implements it.
      *
      * @param desiredType The type that the returned object can be assigned to
      * @param in          The object that must be converted
      * @return An object that can be assigned to the desired type or null.
-     * @throws Exception
+     * @throws Exception on exception
      */
     Object convert(Class<?> desiredType, Object in) throws Exception;
 
@@ -79,7 +79,7 @@ public interface Converter
      * @param level  One of INSPECT, LINE, or PART.
      * @param escape Use this object to format sub ordinate objects.
      * @return A printed object of potentially multiple lines
-     * @throws Exception
+     * @throws Exception on exception
      */
     CharSequence format(Object target, int level, Converter escape) throws Exception;
 }

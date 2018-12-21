@@ -23,7 +23,7 @@ import java.io.PrintStream;
 
 /**
  * Enable multiplexing of the standard IO streams for input, output, and error.
- * <p/>
+ * <p>
  * This service guards the central resource of IO streams. The standard streams
  * are singletons. This service replaces the singletons with special versions that
  * can find a unique stream for each thread. If no stream is associated with a
@@ -35,10 +35,10 @@ public interface ThreadIO
 {
     /**
      * Associate this streams with the current thread.
-     * <p/>
+     * <p>
      * Ensure that when output is performed on System.in, System.out, System.err it
      * will happen on the given streams.
-     * <p/>
+     * <p>
      * The streams will automatically be canceled when the bundle that has gotten
      * this service is stopped or returns this service.
      *
@@ -50,7 +50,7 @@ public interface ThreadIO
 
     /**
      * Cancel the streams associated with the current thread.
-     * <p/>
+     * <p>
      * This method will not do anything when no streams are associated.
      */
     void close();

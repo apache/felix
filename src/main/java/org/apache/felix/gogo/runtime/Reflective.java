@@ -53,8 +53,12 @@ public final class Reflective
     /**
      * invokes the named method on the given target using the supplied args,
      * which are converted if necessary.
+     * @param session the session
+     * @param target the target
+     * @param name the name
+     * @param args the args
      * @return the result of the invoked method
-     * @throws Exception
+     * @throws Exception on exception
      */
     public static Object invoke(CommandSession session, Object target, String name,
         List<Object> args) throws Exception
@@ -418,6 +422,9 @@ public final class Reflective
 
     /**
      * converts given argument to specified type and increments convert[0] if any conversion was needed.
+     * @param session the session
+     * @param type the type
+     * @param arg the arg
      * @param convert convert[0] is incremented according to the conversion needed,
      * to allow the "best" conversion to be determined.
      * @return converted arg or NO_MATCH if no conversion possible.

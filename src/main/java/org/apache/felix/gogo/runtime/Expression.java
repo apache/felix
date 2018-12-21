@@ -95,13 +95,13 @@ import java.util.Stack;
  *
  *  result = new Expression("2.4/PI").setPrecision(128).setRoundingMode(RoundingMode.UP).eval();
  *
- *  result = new Expression("random() > 0.5").eval();
+ *  result = new Expression("random() &gt; 0.5").eval();
  *
- *  result = new Expression("not(x<7 || sqrt(max(x,9)) <= 3))").with("x","22.9").eval();
+ *  result = new Expression("not(x &lt; 7 || sqrt(max(x,9)) &lt;= 3))").with("x","22.9").eval();
  * </pre>
  * <br>
  * <h2>Supported Operators</h2>
- * <table>
+ * <table summary="Mathematical Operators">
  *   <tr><th>Mathematical Operators</th></tr>
  *   <tr><th>Operator</th><th>Description</th></tr>
  *   <tr><td>+</td><td>Additive operator</td></tr>
@@ -112,7 +112,7 @@ import java.util.Stack;
  *   <tr><td>^</td><td>Power operator</td></tr>
  * </table>
  * <br>
- * <table>
+ * <table summary="Boolean Operators">
  *   <tr><th>Boolean Operators<sup>*</sup></th></tr>
  *   <tr><th>Operator</th><th>Description</th></tr>
  *   <tr><td>=</td><td>Equals</td></tr>
@@ -129,7 +129,7 @@ import java.util.Stack;
  * *Boolean operators result always in a BigDecimal value of 1 or 0 (zero). Any non-zero value is treated as a _true_ value. Boolean _not_ is implemented by a function.
  * <br>
  * <h2>Supported Functions</h2>
- * <table>
+ * <table summary="Supported Functions">
  *   <tr><th>Function<sup>*</sup></th><th>Description</th></tr>
  *   <tr><td>NOT(<i>expression</i>)</td><td>Boolean negation, 1 (means true) if the expression is not zero</td></tr>
  *   <tr><td>IF(<i>condition</i>,<i>value_if_true</i>,<i>value_if_false</i>)</td><td>Returns one value if the condition evaluates to true or the other if it evaluates to false</td></tr>
@@ -154,7 +154,7 @@ import java.util.Stack;
  * *Functions names are case insensitive.
  * <br>
  * <h2>Supported Constants</h2>
- * <table>
+ * <table summary="Supported Constants">
  *   <tr><th>Constant</th><th>Description</th></tr>
  *   <tr><td>PI</td><td>The value of <i>PI</i>, exact to 100 digits</td></tr>
  *   <tr><td>TRUE</td><td>The value one</td></tr>
@@ -167,12 +167,12 @@ import java.util.Stack;
  * Parameters are the operator string, its precedence and if it is left associative. The operators `eval()` method will be called with the BigDecimal values of the operands.
  * All existing operators can also be overridden.
  * <br>
- * For example, add an operator `x >> n`, that moves the decimal point of _x_ _n_ digits to the right:
+ * For example, add an operator `x &gt;&gt; n`, that moves the decimal point of _x_ _n_ digits to the right:
  *
  * <pre>
- * Expression e = new Expression("2.1234 >> 2");
+ * Expression e = new Expression("2.1234 &gt;&gt; 2");
  *
- * e.addOperator(e.new Operator(">>", 30, true) {
+ * e.addOperator(e.new Operator("&gt;&gt;", 30, true) {
  *     {@literal @}Override
  *     public BigDecimal eval(BigDecimal v1, BigDecimal v2) {
  *         return v1.movePointRight(v2.toBigInteger().intValue());
@@ -195,7 +195,7 @@ import java.util.Stack;
  *
  * e.addFunction(e.new Function("average", 3) {
  *     {@literal @}Override
- *     public BigDecimal eval(List<BigDecimal> parameters) {
+ *     public BigDecimal eval(List&lt;BigDecimal&gt; parameters) {
  *         BigDecimal sum = parameters.get(0).add(parameters.get(1)).add(parameters.get(2));
  *         return sum.divide(new BigDecimal(3));
  *     }
@@ -643,7 +643,7 @@ public class Expression {
      *
      * @param expression
      *            The expression. E.g. <code>"2.4*sin(3)/(2-4)"</code> or
-     *            <code>"sin(y)>0 & max(z, 3)>3"</code>
+     *            <code>"sin(y)&gt;0 &amp; max(z, 3)&gt;3"</code>
      */
     public Expression(String expression) {
         this.expression = expression;
@@ -1169,6 +1169,7 @@ public class Expression {
     /**
      * Evaluates the expression.
      *
+     * @param variables the variables
      * @return The result of the expression.
      */
     public Object eval(Map<String, Object> variables) {

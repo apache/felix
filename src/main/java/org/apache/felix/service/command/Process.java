@@ -40,16 +40,20 @@ public interface Process
 
     /**
      * Get the job controlling this process
+     * @return Job
      */
     Job job();
 
     /**
      * Check if the given descriptor for the currently running pipe is the terminal or not.
+     * @param fd the fd
+     * @return boolean
      */
     boolean isTty(int fd);
 
     /**
      * Set the error code for the currently running pipe.
+     * @param error the error
      */
     void error(int error);
 
