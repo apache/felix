@@ -1242,6 +1242,33 @@ public class ConverterTest {
 	    	assertEquals(new HashSet<Character>(Arrays.asList('f', 'o')), converted.set());
     }
 
+    @Test
+    public void testMapToInterfaceWithOptionalValue() throws Exception {
+        ConverterBuilder cb = Converters.newConverterBuilder();
+        cb.errorHandler(new ConverterFunction() {
+            @Override
+            public Object apply(Object pObj, Type pTargetType) throws Exception {
+                if ("java.lang.Integer".equals(pTargetType.getTypeName()))
+                {
+                    return 0;
+                }
+                return ConverterFunction.CANNOT_HANDLE;
+            }
+        });
+        Converter convWithErrorHandler = cb.build();
+
+        Map<String, Object> map = new HashMap<String, Object>();
+        map.put("code", "harley");
+        MyIntf2 inter = convWithErrorHandler.convert(map).to(MyIntf2.class);
+        assertEquals("harley", inter.code());
+        assertEquals(Integer.valueOf(0), inter.value());
+    }
+
+    static interface MyIntf2 {
+        String code();
+        Integer value();
+    }
+
     static class MyClass2 {
         private final String value;
         public MyClass2(String v) {
