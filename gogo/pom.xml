@@ -41,6 +41,7 @@
         <module>command</module>
         <module>itest-shell</module>
         <module>itest-jline</module>
+        <module>bom</module>
     </modules>
 
 </project>
