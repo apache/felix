@@ -34,8 +34,8 @@ import org.apache.felix.service.command.CommandSession;
 
 /**
  * Posix-like utilities.
- * 
- * @see http://www.opengroup.org/onlinepubs/009695399/utilities/contents.html
+ *
+ * See http://www.opengroup.org/onlinepubs/009695399/utilities/contents.html
  */
 public class Posix
 {

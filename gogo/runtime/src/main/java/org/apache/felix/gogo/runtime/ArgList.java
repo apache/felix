@@ -25,7 +25,7 @@ import java.util.List;
  * List that overrides toString() for implicit $args expansion.
  * Also checks for index out of bounds, so that $1 evaluates to null
  * rather than throwing IndexOutOfBoundsException.
- * e.g. x = { a$args }; x 1 2 => a1 2 and not a[1, 2]
+ * e.g. x = { a$args }; x 1 2 =&gt; a1 2 and not a[1, 2]
  */
 public class ArgList extends AbstractList<Object>
 {

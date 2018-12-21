@@ -24,7 +24,7 @@ public class ThreadUtils {
     /**
      * Constructs threads with names <code>&lt;prefix&gt;-&lt;pool number&gt;-thread-&lt;thread number&gt;</code>.
      * @param prefix prefix to be used for thread names created by this {@link ThreadFactory}
-     * @return
+     * @return ThreadFactory
      */
     public static ThreadFactory namedThreadFactory(String prefix) {
         return new NamedThreadFactory(prefix);

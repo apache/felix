@@ -29,6 +29,8 @@ public interface Function
     /**
      * Execute this function and return the result.
      *
+     * @param session the session
+     * @param arguments the arguments
      * @return the result from the execution.
      * @throws Exception if anything goes terribly wrong
      */

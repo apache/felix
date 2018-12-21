@@ -24,67 +24,76 @@ public interface Option {
     /**
      * stop parsing on the first unknown option. This allows one parser to get its own options and
      * then pass the remaining options to another parser.
-     * 
-     * @param stopOnBadOption
+     *
+     * @param stopOnBadOption stopOnBadOption
+     * @return Option
      */
     Option setStopOnBadOption(boolean stopOnBadOption);
 
     /**
      * require options to precede args. Default is false, so options can appear between or after
      * args.
-     * 
-     * @param optionsFirst
+     *
+     * @param optionsFirst optionsFirst
+     * @return Option
      */
     Option setOptionsFirst(boolean optionsFirst);
 
     /**
      * parse arguments. If skipArgv0 is true, then parsing begins at arg1. This allows for commands
      * where argv0 is the command name rather than a real argument.
-     * 
-     * @param argv
-     * @param skipArg0
-     * @return
+     *
+     * @param argv argv
+     * @param skipArg0 skipArg0
+     * @return Option
      */
     Option parse(List<?> argv, boolean skipArg0);
 
     /**
      * parse arguments.
-     * 
-     * @see {@link #parse(List, boolean)
-
+     *
+     * See {@link #parse(List, boolean)}
+     *
+     * @param argv the arg
+     * @return Option
      */
     Option parse(List<?> argv);
 
     /**
      * parse arguments.
-     * 
-     * @see {@link #parse(List, boolean)
-
+     *
+     * See {@link #parse(List, boolean)}
+     *
+     * @param argv the arg
+     * @param skipArg0 skipArg0
+     * @return Option
      */
     Option parse(Object[] argv, boolean skipArg0);
 
     /**
      * parse arguments.
-     * 
-     * @see {@link #parse(List, boolean)
-
+     *
+     * See {@link #parse(List, boolean)}
+     *
+     * @param argv argv
+     * @return Option
      */
     Option parse(Object[] argv);
 
     /**
      * test whether specified option has been explicitly set.
-     * 
-     * @param name
-     * @return
+     *
+     * @param name name
+     * @return boolean
      */
     boolean isSet(String name);
 
     /**
      * get value of named option. If multiple options given, this method returns the last one. Use
      * {@link #getList(String)} to get all values.
-     * 
-     * @param name
-     * @return
+     *
+     * @param name the name
+     * @return String
      * @throws IllegalArgumentException
      *             if value is not a String.
      */
@@ -92,8 +101,8 @@ public interface Option {
 
     /**
      * get list of all values for named option.
-     * 
-     * @param name
+     *
+     * @param name the name
      * @return empty list if option not given and no default specified.
      * @throws IllegalArgumentException
      *             if all values are not Strings.
@@ -103,25 +112,25 @@ public interface Option {
     /**
      * get value of named option as an Object. If multiple options given, this method returns the
      * last one. Use {@link #getObjectList(String)} to get all values.
-     * 
-     * @param name
-     * @return
+     *
+     * @param name the name
+     * @return Object
      */
     Object getObject(String name);
 
     /**
      * get list of all Object values for named option.
-     * 
-     * @param name
-     * @return
+     *
+     * @param name the name
+     * @return List&lt;Object&gt;
      */
     List<Object> getObjectList(String name);
 
     /**
      * get value of named option as a Number.
-     * 
-     * @param name
-     * @return
+     *
+     * @param name the name
+     * @return int
      * @throws IllegalArgumentException
      *             if argument is not a Number.
      */
@@ -129,8 +138,8 @@ public interface Option {
 
     /**
      * get remaining non-options args as Strings.
-     * 
-     * @return
+     *
+     * @return List&lt;String&gt;
      * @throws IllegalArgumentException
      *             if args are not Strings.
      */
@@ -138,8 +147,8 @@ public interface Option {
 
     /**
      * get remaining non-options args as Objects.
-     * 
-     * @return
+     *
+     * @return List&lt;Object&gt;
      */
     List<Object> argObjects();
 
@@ -151,8 +160,8 @@ public interface Option {
     /**
      * print specified usage error to System.err. You should explicitly throw the returned
      * exception.
-     * 
-     * @param error
+     *
+     * @param error the error
      * @return IllegalArgumentException
      */
     IllegalArgumentException usageError(String error);

@@ -38,7 +38,7 @@ public interface CommandProcessor
      * A list of method names that may be called for this command provider. A
      * name may end with a *, this will then be calculated from all declared public
      * methods in this service.
-     * <p/>
+     * <p>
      * Help information for the command may be supplied with a space as
      * separation.
      */
@@ -46,11 +46,11 @@ public interface CommandProcessor
 
     /**
      * Create a new command session associated with IO streams.
-     * <p/>
+     * <p>
      * The session is bound to the life cycle of the bundle getting this
      * service. The session will be automatically closed when this bundle is
      * stopped or the service is returned.
-     * <p/>
+     * <p>
      * The shell will provide any available commands to this session and
      * can set additional variables.
      *

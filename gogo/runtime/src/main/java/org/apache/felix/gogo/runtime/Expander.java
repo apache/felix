@@ -47,6 +47,10 @@ public class Expander extends BaseTokenizer
 
     /**
      * expand variables, quotes and escapes in word.
+     * @param word the word
+     * @param eval the eval
+     * @return Object
+     * @throws Exception on exception
      */
     public static Object expand(CharSequence word, Evaluate eval) throws Exception
     {
