@@ -60,7 +60,7 @@ public class Builtin
     {
         return format(session, session.get("_"));    // last result
     }
-    
+
     public CharSequence format(CommandSession session, Object arg)
     {
         CharSequence result = session.format(arg, Converter.INSPECT);
@@ -70,6 +70,9 @@ public class Builtin
 
     /**
      * script access to Options.
+     * @param spec the spec
+     * @param args the args
+     * @return Option
      */
     public Option getopt(List<Object> spec, Object[] args)
     {
@@ -310,7 +313,7 @@ public class Builtin
             opt.usage();
             return true;
         }
-        
+
         boolean all = opt.isSet("all");
 
         String optScope = null;
