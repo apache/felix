@@ -20,4 +20,4 @@
 @RequireGogo
 package org.apache.felix.gogo.itest.shell;
 
-import org.apache.felix.service.command.annotation.RequireGogo;
+import org.apache.felix.service.command.annotations.RequireGogo;

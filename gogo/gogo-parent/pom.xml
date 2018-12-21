@@ -37,6 +37,14 @@
         <url>https://svn.apache.org/repos/asf/felix/trunk/gogo/gogo-parent/</url>
     </scm>
 
+    <properties>
+        <animal.sniffer.skip>true</animal.sniffer.skip>
+        <felix.java.version>8</felix.java.version>
+        <maven.compiler.source>1.8</maven.compiler.source>
+        <maven.compiler.target>1.8</maven.compiler.target>
+        <bnd.version>4.1.0</bnd.version>
+    </properties>
+
     <dependencyManagement>
         <dependencies>
             <dependency>
@@ -76,6 +84,12 @@
                 <scope>test</scope>
             </dependency>
             <dependency>
+                <groupId>org.apache.felix</groupId>
+                <artifactId>org.apache.felix.framework</artifactId>
+                <version>6.0.1</version>
+                <scope>runtime</scope>
+            </dependency>
+            <dependency>
                 <groupId>org.easymock</groupId>
                 <artifactId>easymock</artifactId>
                 <version>3.4</version>
@@ -89,14 +103,6 @@
             </dependency>
         </dependencies>
     </dependencyManagement>
-
-    <properties>
-        <animal.sniffer.skip>true</animal.sniffer.skip>
-        <felix.java.version>8</felix.java.version>
-        <maven.compiler.source>1.8</maven.compiler.source>
-        <maven.compiler.target>1.8</maven.compiler.target>
-        <bnd.version>4.1.0</bnd.version>
-    </properties>
 
     <build>
         <pluginManagement>

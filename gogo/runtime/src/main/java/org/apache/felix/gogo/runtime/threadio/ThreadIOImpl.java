@@ -29,8 +29,7 @@ import org.osgi.namespace.service.ServiceNamespace;
 
 @Capability(
     namespace = ServiceNamespace.SERVICE_NAMESPACE,
-    attribute = "objectClass='org.apache.felix.service.threadio.ThreadIO'",
-    effective = "active"
+    attribute = "objectClass='org.apache.felix.service.threadio.ThreadIO'"
 )
 public class ThreadIOImpl implements ThreadIO
 {

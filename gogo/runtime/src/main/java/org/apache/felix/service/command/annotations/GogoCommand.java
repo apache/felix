@@ -17,16 +17,32 @@
  * under the License.
  */
 
-@org.osgi.annotation.bundle.Capability(
-    namespace = "org.apache.felix.gogo",
-    name = "runtime.implementation",
-    version = "1.0.0"
-)
-@org.osgi.annotation.bundle.Requirement(
-    effective = "active",
-    namespace = "org.apache.felix.gogo",
-    name = "shell.implementation",
-    version = "1.0.0"
-)
-package org.apache.felix.gogo.runtime;
+package org.apache.felix.service.command.annotations;
 
+import static java.lang.annotation.ElementType.TYPE;
+import static java.lang.annotation.RetentionPolicy.CLASS;
+
+import java.lang.annotation.Retention;
+import java.lang.annotation.Target;
+
+import org.osgi.service.component.annotations.ComponentPropertyType;
+
+@ComponentPropertyType
+@RequireGogoWhiteboard
+@Retention(CLASS)
+@Target(TYPE)
+public @interface GogoCommand {
+
+    String PREFIX_ = "osgi.command.";
+
+    /**
+     * @return the scope used to disambiguate command functions
+     */
+    String scope();
+
+    /**
+     * @return the command functions provided by the service
+     */
+    String[] function();
+
+}

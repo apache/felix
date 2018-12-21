@@ -20,6 +20,6 @@
 @RequireGogo(JLINE)
 package org.apache.felix.gogo.itest.jline;
 
-import static org.apache.felix.service.command.annotation.RequireGogo.JLINE;
+import static org.apache.felix.service.command.annotations.RequireGogo.JLINE;
 
-import org.apache.felix.service.command.annotation.RequireGogo;
+import org.apache.felix.service.command.annotations.RequireGogo;

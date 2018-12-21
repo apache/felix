@@ -17,7 +17,7 @@
  * under the License.
  */
 
-package org.apache.felix.service.command.annotation;
+package org.apache.felix.service.command.annotations;
 
 import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
@@ -27,11 +27,8 @@ import org.osgi.annotation.bundle.Requirement;
 
 import static java.lang.annotation.RetentionPolicy.CLASS;
 
-import java.lang.annotation.Documented;
-
 import static java.lang.annotation.ElementType.*;
 
-@Documented
 @Retention(CLASS)
 @Target({TYPE, PACKAGE})
 @Requirement(
