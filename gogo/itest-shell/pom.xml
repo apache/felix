@@ -9,7 +9,7 @@
         <relativePath>../gogo-parent/pom.xml</relativePath>
     </parent>
 
-    <artifactId>itest-shell</artifactId>
+    <artifactId>org.apache.felix.gogo.itest-shell</artifactId>
     <packaging>bundle</packaging>
     <version>0.0.1-SNAPSHOT</version>
     <name>Apache Felix Gogo ITest Shell</name>

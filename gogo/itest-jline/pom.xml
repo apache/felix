@@ -9,7 +9,7 @@
         <relativePath>../gogo-parent/pom.xml</relativePath>
     </parent>
 
-    <artifactId>itest-jline</artifactId>
+    <artifactId>org.apache.felix.gogo.itest-jline</artifactId>
     <packaging>bundle</packaging>
     <version>0.0.1-SNAPSHOT</version>
     <name>Apache Felix Gogo ITest JLine</name>

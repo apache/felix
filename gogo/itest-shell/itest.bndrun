@@ -15,16 +15,13 @@
 
 -standalone: true
 
--runrequires: osgi.identity;filter:='(osgi.identity=itest-shell)'
+-runrequires: osgi.identity;filter:='(osgi.identity=org.apache.felix.gogo.itest-shell)'
 
 -resolve.effective: resolve, active
 -runee: JavaSE-1.8
 -runfw: org.apache.felix.framework
--runproperties: \
-    osgi.console=localhost:11311
-
 -runbundles: \
-    itest-shell;version='[0.0.1,0.0.2)',\
     org.apache.felix.gogo.command;version='[1.1.0,1.1.1)',\
+    org.apache.felix.gogo.itest-shell;version='[0.0.1,0.0.2)',\
     org.apache.felix.gogo.runtime;version='[1.1.1,1.1.2)',\
     org.apache.felix.gogo.shell;version='[1.1.1,1.1.2)'
