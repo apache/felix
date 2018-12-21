@@ -17,16 +17,24 @@
  * under the License.
  */
 
-@org.osgi.annotation.bundle.Capability(
+package org.apache.felix.service.command.annotations;
+
+import java.lang.annotation.Retention;
+import java.lang.annotation.Target;
+
+import org.osgi.annotation.bundle.Requirement;
+
+import static java.lang.annotation.RetentionPolicy.CLASS;
+
+import static java.lang.annotation.ElementType.*;
+
+@Retention(CLASS)
+@Target({TYPE, PACKAGE})
+@Requirement(
+    effective = "active",
     namespace = "org.apache.felix.gogo",
     name = "runtime.implementation",
     version = "1.0.0"
 )
-@org.osgi.annotation.bundle.Requirement(
-    effective = "active",
-    namespace = "org.apache.felix.gogo",
-    name = "shell.implementation",
-    version = "1.0.0"
-)
-package org.apache.felix.gogo.runtime;
-
+public @interface RequireGogoWhiteboard {
+}

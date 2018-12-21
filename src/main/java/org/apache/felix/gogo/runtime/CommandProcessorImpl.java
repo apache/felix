@@ -16,6 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
+
 package org.apache.felix.gogo.runtime;
 
 import java.io.InputStream;
@@ -41,8 +42,7 @@ import org.osgi.namespace.service.ServiceNamespace;
 
 @Capability(
     namespace = ServiceNamespace.SERVICE_NAMESPACE,
-    attribute = "objectClass='org.apache.felix.service.command.CommandProcessor'",
-    effective = "active"
+    attribute = "objectClass='org.apache.felix.service.command.CommandProcessor'"
 )
 public class CommandProcessorImpl implements CommandProcessor
 {
