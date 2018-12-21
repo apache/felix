@@ -19,12 +19,14 @@
 
 @org.osgi.annotation.bundle.Capability(
     namespace = "org.apache.felix.gogo",
-    name = "command.implementation"
+    name = "command.implementation",
+    version = "1.0.0"
 )
 @org.osgi.annotation.bundle.Requirement(
     effective = "active",
     namespace = "org.apache.felix.gogo",
-    name = "runtime.implementation"
+    name = "runtime.implementation",
+    version = "1.0.0"
 )
 package org.apache.felix.gogo.command;
 
