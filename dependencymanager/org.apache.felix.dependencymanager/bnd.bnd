@@ -47,10 +47,7 @@ Bundle-Category: osgi
 	${mockito},\
 	org.objenesis;version=2.2
 	
--fixupmessages.baselining-error-to-warning: \
-    "Baseline mismatch for package org.apache.felix.dm, MAJOR change. Current is 4.6.0, repo is 4.5.0...";is:=warning,\
-    "Baseline mismatch for package org.apache.felix.dm.context, MAJOR change. Current is 4.4.1, repo is 4.4.0...";is:=warning,\
-    "The bundle version \\(4.5.1/4.6.0\\) is too low, must be at least 5.0.0";is:=warning
+
 
 
 

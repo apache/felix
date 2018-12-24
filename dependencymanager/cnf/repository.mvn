@@ -31,11 +31,11 @@ org.apache.felix:org.apache.felix.log:1.0.1
 org.apache.felix:org.apache.felix.metatype:1.1.2
 org.apache.felix:org.apache.felix.http.jetty:3.4.8
 org.apache.felix:org.apache.felix.webconsole:4.3.4
-org.apache.felix:org.apache.felix.dependencymanager:4.5.1
+org.apache.felix:org.apache.felix.dependencymanager:4.6.0
 org.apache.felix:org.apache.felix.dependencymanager.annotation:5.0.1
-org.apache.felix:org.apache.felix.dependencymanager.lambda:1.2.0
-org.apache.felix:org.apache.felix.dependencymanager.runtime:4.0.6
-org.apache.felix:org.apache.felix.dependencymanager.shell:4.0.7
+org.apache.felix:org.apache.felix.dependencymanager.lambda:1.2.1
+org.apache.felix:org.apache.felix.dependencymanager.runtime:4.0.7
+org.apache.felix:org.apache.felix.dependencymanager.shell:4.0.8
 org.jline:jline-builtins:3.3.0
 org.apache.servicemix.bundles:org.apache.servicemix.bundles.junit:4.12_1
 org.mockito:mockito-core:1.10.19
