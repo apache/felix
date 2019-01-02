@@ -78,7 +78,7 @@ public class MetaDataReader
     static final String NAMESPACE_1_3 = "http://www.osgi.org/xmlns/metatype/v1.3.0";
 
     /**
-     * The XML Namespace for Metatype 1.3 descriptors.
+     * The XML Namespace for Metatype 1.4 descriptors.
      */
     static final String NAMESPACE_1_4 = "http://www.osgi.org/xmlns/metatype/v1.4.0";
 
