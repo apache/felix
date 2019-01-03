@@ -24,19 +24,19 @@
     <parent>
         <groupId>org.apache.felix</groupId>
         <artifactId>gogo-parent</artifactId>
-        <version>5-SNAPSHOT</version>
+        <version>5</version>
         <relativePath>../gogo-parent/pom.xml</relativePath>
     </parent>
 
     <packaging>bundle</packaging>
     <name>Apache Felix Gogo Shell</name>
     <artifactId>org.apache.felix.gogo.shell</artifactId>
-    <version>1.1.1-SNAPSHOT</version>
+    <version>1.1.2</version>
     <url>http://felix.apache.org/</url>
     <scm>
-        <connection>scm:svn:https://svn.apache.org/repos/asf/felix/trunk/gogo/shell/</connection>
-        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/felix/trunk/gogo/shell/</developerConnection>
-        <url>https://svn.apache.org/repos/asf/felix/trunk/gogo/shell/</url>
+        <connection>scm:svn:https://svn.apache.org/repos/asf/felix/releases/org.apache.felix.gogo.shell-1.1.2</connection>
+        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/felix/releases/org.apache.felix.gogo.shell-1.1.2</developerConnection>
+        <url>https://svn.apache.org/repos/asf/felix/releases/org.apache.felix.gogo.shell-1.1.2</url>
     </scm>
 
     <dependencies>
@@ -51,7 +51,7 @@
         <dependency>
             <groupId>org.apache.felix</groupId>
             <artifactId>org.apache.felix.gogo.runtime</artifactId>
-            <version>1.1.1-SNAPSHOT</version>
+            <version>1.1.2</version>
         </dependency>
         <dependency>
             <groupId>junit</groupId>
@@ -69,7 +69,7 @@
                 <artifactId>maven-bundle-plugin</artifactId>
                 <configuration>
                     <instructions>
-                        <Export-Package></Export-Package>
+                        <Export-Package />
                     </instructions>
                 </configuration>
             </plugin>
