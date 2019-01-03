@@ -32,7 +32,7 @@
     <name>Apache Felix Gogo BOM</name>
     <description>Apache Felix Gogo Bill Of Materials</description>
     <artifactId>org.apache.felix.gogo.bom</artifactId>
-    <version>1.0.1-SNAPSHOT</version>
+    <version>0.0.1-SNAPSHOT</version>
     <url>http://felix.apache.org/</url>
     <scm>
         <connection>scm:svn:https://svn.apache.org/repos/asf/felix/trunk/gogo/bom/</connection>
@@ -45,24 +45,24 @@
             <dependency>
                 <groupId>org.apache.felix</groupId>
                 <artifactId>org.apache.felix.gogo.command</artifactId>
-                <version>1.1.0-SNAPSHOT</version>
+                <version>1.1.0</version>
                 <scope>runtime</scope>
             </dependency>
             <dependency>
                 <groupId>org.apache.felix</groupId>
                 <artifactId>org.apache.felix.gogo.jline</artifactId>
-                <version>1.1.1-SNAPSHOT</version>
+                <version>1.1.2</version>
                 <scope>runtime</scope>
             </dependency>
             <dependency>
                 <groupId>org.apache.felix</groupId>
                 <artifactId>org.apache.felix.gogo.runtime</artifactId>
-                <version>1.1.1-SNAPSHOT</version>
+                <version>1.1.2</version>
             </dependency>
             <dependency>
                 <groupId>org.apache.felix</groupId>
                 <artifactId>org.apache.felix.gogo.shell</artifactId>
-                <version>1.1.1-SNAPSHOT</version>
+                <version>1.1.2</version>
                 <scope>runtime</scope>
             </dependency>
         </dependencies>
