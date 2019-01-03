@@ -1,4 +1,83 @@
-Changes 0.14.0 to 0.16.0
+Changes 1.1.0 to 1.1.2
+----------------------
+Improvement
+    [FELIX-5970] - Add requirement & capabilities model so gogo can be resolved
+    [FELIX-5999] - cleanup compiler warnings
+    [FELIX-6001] - cleanup compiler warnings
+    [FELIX-6003] - Add some resolver checks to make sure @RequireGogo annotation works for both jline and shell
+    [FELIX-6007] - create a gogo bom
+
+Changes 1.0.12 to 1.1.0
+-----------------------
+New Feature
+    [FELIX-5835] - Upgrade to JDK 8
+    [FELIX-5836] - Upgrade to OSGi r6
+
+Improvement
+    [FELIX-5855] - Support array subscript in expander
+    [FELIX-5856] - Coercion between Object[] and List
+    [FELIX-5857] - Provide a context classloader on the session to help with class loading
+
+Changes 1.0.10 to 1.0.12
+------------------------
+Bug
+    [FELIX-5805] - [gogo][runtime] OOM caused by endless loop when parsing "]"
+    [FELIX-5821] - [gogo][runtime] Hitting Ctrl+C may kill the console output thread
+
+Improvement
+    [FELIX-5726] - Thread create by gogo should be named
+
+Changes 1.0.8 to 1.0.10
+-----------------------
+Bug
+    [FELIX-5706] - Unable to access DTO fields using reflection
+
+Improvement
+    [FELIX-5715] - Central point to allow customization of security related checks
+
+Changes 1.0.6 to 1.0.8
+----------------------
+Bug
+    [FELIX-5637] - [gogo][runtime] Error throwns by commands are swallowed and lost
+    [FELIX-5655] - Possible NPE in Expression.isNumber when passing an empty string
+    [FELIX-5656] - [gogo][runtime] The Expander does not correctly support octal values
+
+Changes 1.0.4 to 1.0.6
+----------------------
+Bug
+    [FELIX-5599] - Allow reusing a closure from a parent session
+
+Improvement
+    [FELIX-5633] - [gogo][runtime] The file name generation should take ~ into account
+    [FELIX-5634] - [gogo][runtime] The file name generation may loop into subtrees for nothing
+
+Changes 1.0.2 to 1.0.4
+----------------------
+Bug
+    [FELIX-5462] - [gogo][runtime] Unable to add a converter using reflection
+    [FELIX-5465] - [gogo][runtime] No way to concatenate arrays
+    [FELIX-5486] - [gogo][runtime] Avoid unnecessary conversions from strings to booleans/integers
+    [FELIX-5541] - ArrayIndexOutOfBoundsException in the parser
+
+Changes 1.0.0 to 1.0.2
+----------------------
+Bug
+    [FELIX-5433] - Interrupting a job should interrupt its children
+    [FELIX-5440] - [gogo] Do not print results at end of pipe
+    [FELIX-5441] - [gogo] Do not print stack traces when inspection can not access fields
+
+Changes 0.16.2 to 1.0.0
+-----------------------
+New Feature
+    [FELIX-5272] - New gogo features
+
+Improvement
+    [FELIX-4970] - all felix poms should advertise their SCM
+
+Task
+    [FELIX-5378] - [gogo] Upgrade packages and bundle to 1.0.0
+
+Changes 0.14.0 to 0.16.2
 ------------------------
 
 ** Bug
@@ -11,7 +90,7 @@ Changes 0.12.1 to 0.14.0
 ------------------------
 
 ** Bug
-    * [FELIX-4637] - Gogo can't cope without several commands with defined service.ranking 
+    * [FELIX-4637] - Gogo can't cope without several commands with defined service.ranking
 
 ** New Feature
     * [FELIX-4671] - Provide an expression parser

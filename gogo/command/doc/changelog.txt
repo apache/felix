@@ -1,12 +1,40 @@
+Changes from 1.0.2 to 1.1.0
+---------------------------
+Bug
+    [FELIX-5143] - Gogo Command bundle should not include org.osgi.service.log classes
+    [FELIX-5958] - gogo command exports org.osgi.service.log
+
+New Feature
+    [FELIX-5835] - Upgrade to JDK 8
+    [FELIX-5836] - Upgrade to OSGi r6
+
+Improvement
+    [FELIX-5969] - remove transitive dependencies from gogo command
+    [FELIX-5970] - Add requirement & capabilities model so gogo can be resolved
+    [FELIX-5999] - cleanup compiler warnings
+    [FELIX-6002] - Remove legacy code in Gogo Command
+    [FELIX-6003] - Add some resolver checks to make sure @RequireGogo annotation works for both jline and shell
+    [FELIX-6007] - create a gogo bom
+
+Changes from 1.0.0 to 1.0.2
+---------------------------
+** Bug
+    * [FELIX-5392] - Gogo-command has mandatory dependency on bundlerepository
+
+Changes from 0.16.0 to 1.0.0
+----------------------------
+** Task
+    * [FELIX-5378] - [gogo] Upgrade packages and bundle to 1.0.0
+
 Changes from 0.14.0 to 0.16.0
 -----------------------------
-** Improvement 
+** Improvement
     * FELIX-5021 [GOGO] Use system bundle to find bundles
     * FELIX-5009 Relative URIs would be nice for install and update
     * FELIX-5008 gogo usage messages could be less confusing
     * FELIX-3499 felix:cd command works only with relative paths
 
-** Bug 
+** Bug
     * FELIX-4969 cd refuses to leave initial directory
 
 Changes from 0.12.0 to 0.14.0
