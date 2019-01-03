@@ -74,7 +74,7 @@
             <dependency>
                 <groupId>org.apache.felix</groupId>
                 <artifactId>org.apache.felix.gogo.bom</artifactId>
-                <version>${gogo.bom.version}</version>
+                <version>0.0.1-SNAPSHOT</version>
                 <scope>import</scope>
                 <type>pom</type>
             </dependency>
