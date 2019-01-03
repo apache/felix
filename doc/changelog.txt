@@ -1,12 +1,41 @@
+Changes from 1.1.0 to 1.1.2
+----------------------------
+Improvement
+    [FELIX-5970] - Add requirement & capabilities model so gogo can be resolved
+    [FELIX-5999] - cleanup compiler warnings
+    [FELIX-6000] - cleanup compiler warnings
+    [FELIX-6003] - Add some resolver checks to make sure @RequireGogo annotation works for both jline and shell
+    [FELIX-6007] - create a gogo bom
+
+Changes from 1.0.0 to 1.1.0
+----------------------------
+New Feature
+    [FELIX-5835] - Upgrade to JDK 8
+    [FELIX-5836] - Upgrade to OSGi r6
+
+Improvement
+    [FELIX-5857] - Provide a context classloader on the session to help with class loading
+
+Changes from 0.12.0 to 1.0.0
+----------------------------
+New Feature
+    [FELIX-5272] - New gogo features
+
+Improvement
+    [FELIX-2536] - Gogo Shell should export org.apache.felix.gogo.options package
+
+Task
+    [FELIX-5378] - [gogo] Upgrade packages and bundle to 1.0.0
+
 Changes from 0.10.0 to 0.12.0
 -----------------------------
-** Improvement 
+** Improvement
     * FELIX-5021 [GOGO] Use system bundle to find bundles
     * FELIX-4529 [Gogo] Let gosh be configured by files contributed by a bundle fragment
     * FELIX-3341 Simple csh-like Command History
     * FELIX-3340 Allow the prompt to be a Function
 
-** Bug 
+** Bug
     * FELIX-4425 Short command in Gogo Shell not working with Java 8
     * FELIX-3706 gogo shell startup failure in busy system
     * FELIX-3703 Race condition in gogo runtime activator
