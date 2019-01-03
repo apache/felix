@@ -1,9 +1,96 @@
+Changes from 1.1.0 to 1.1.2
+----------------------------
+Improvement
+    [FELIX-5970] - Add requirement & capabilities model so gogo can be resolved
+    [FELIX-5999] - cleanup compiler warnings
+    [FELIX-6003] - Add some resolver checks to make sure @RequireGogo annotation works for both jline and shell
+    [FELIX-6007] - create a gogo bom
+
+Changes from 1.0.12 to 1.1.0
+----------------------------
+New Feature
+    [FELIX-5833] - Support for completion of quoted arguments
+    [FELIX-5834] - Upgrade to JLine 3.7.0
+    [FELIX-5835] - Upgrade to JDK 8
+    [FELIX-5836] - Upgrade to OSGi r6
+    [FELIX-5837] - [gogo][jline] Improve styling support
+
+Improvement
+    [FELIX-5857] - Provide a context classloader on the session to help with class loading
+    [FELIX-5869] - [goto][jline] Weird error if the script contains unicode characters
+
+Changes from 1.0.10 to 1.0.12
+-----------------------------
+Improvement
+    [FELIX-5822] - [gogo][jline] Improve syntax of procedural functions
+
+Changes from 1.0.8 to 1.0.10
+----------------------------
+Bug
+    [FELIX-5635] - [gogo][jline] The "cd" command should not attempt to complete multiple directories
+    [FELIX-5714] - ArrayIndexOutOfBoundsException running history | grep
+
+Improvement
+    [FELIX-5651] - Disable Log history in Gogo console
+    [FELIX-5705] - Provide completion for SCR commands
+
+Changes from 1.0.6 to 1.0.8
+---------------------------
+Bug
+    [FELIX-5687] - Do not use the threaded streams when passing the input stream to a command
+
+Changes from 1.0.4 to 1.0.6
+---------------------------
+Bug
+    [FELIX-5600] - System streams are not correctly set when running a new shell
+    [FELIX-5629] - [gogo][jline] When a job is in the foreground, the shell should wait for its completion
+    [FELIX-5631] - [gogo][runtime] The parser indicates wrong repair string when parsing heredocs
+
+Improvement
+    [FELIX-5594] - [gogo][jline] Improve color support for ls/grep and syntax highlighting
+    [FELIX-5596] - Allow to configure the colors for the gogo grep command
+    [FELIX-5598] - [gogo][jline] Support the JLine ttop function if available
+
+Changes from 1.0.2 to 1.0.4
+---------------------------
+Bug
+    [FELIX-5463] - [gogo][jline] The Main class should add a default Function->FunctionInterface converter
+    [FELIX-5498] - [gogo][jline] The shell should display exception thrown from commands
+    [FELIX-5584] - [gogo][jline] Remove dependency on LineReaderImpl
+
+Changes from 1.0.0 to 1.0.2
+---------------------------
+Bug
+    [FELIX-5077] - Gogo shell prints out nasty error on shutdown
+    [FELIX-5388] - Strange Prompt characters in the eclipse console
+    [FELIX-5442] - [gogo][jline] The gosh_script can not resolve the motd file inside the jar
+    [FELIX-5447] - [gogo][jline] Command results should be printed by default
+
+Changes from 0.10.0 to 1.0.0
+----------------------------
+** Bug
+    * [FELIX-5342] - Division by zero in new gogo for jline3
+
+** New Feature
+    * [FELIX-5272] - New gogo features
+
+** Task
+    * [FELIX-5378] - [gogo] Upgrade packages and bundle to 1.0.0
+
 Changes from 0.8.0 to 0.10.0
 ----------------------------
 
 ** Improvement
-    * Added gosh_profile work around for issue with OSGi R4.3 API
+    * Added gosh_profile work around for issue wit.3 API to 1.0.0
       ambiguity.
+      ** Bug
+    * [FELIX-5342] - Division by zero in new gogo for jline3
+
+** New Feature
+    * [FELIX-5272] - New gogo features
+
+** Task
+    * [FELIX-5378] - [gogo] Upgrade packages and bundle to 1.
 
 Changes from 0.6.1 to 0.8.0
 ---------------------------
