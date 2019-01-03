@@ -72,7 +72,7 @@ public class JmxAdjustableStatusHealthCheck {
     @Deactivate
     protected final void deactivate(final ComponentContext context) {
         unregisterMbean();
-        unregisterDynamicTestingHealthCheck();
+        unregisterDynamicHealthCheck();
     }
 
     private void registerMbean() {
@@ -92,9 +92,9 @@ public class JmxAdjustableStatusHealthCheck {
     }
 
     /* synchronized as potentially multiple users can run JMX operations */
-    private synchronized void registerDynamicTestingHealthCheck(Result.Status status, String[] tags) {
-        unregisterDynamicTestingHealthCheck();
-        HealthCheck healthCheck = new DynamicTestingHealthCheck(status);
+    private synchronized void registerDynamicHealthCheck(Result.Status status, String[] tags) {
+        unregisterDynamicHealthCheck();
+        HealthCheck healthCheck = new AdhocStatusOnlyHealthCheck(status);
         Dictionary<String, Object> props = new Hashtable<String, Object>();
         props.put(HealthCheck.NAME, "JMX-adjustable Check");
         props.put(HealthCheck.TAGS, tags);
@@ -104,7 +104,7 @@ public class JmxAdjustableStatusHealthCheck {
     }
 
     /* synchronized as potentially multiple users can run JMX operations */
-    private synchronized void unregisterDynamicTestingHealthCheck() {
+    private synchronized void unregisterDynamicHealthCheck() {
         if (this.healthCheckRegistration != null) {
             this.healthCheckRegistration.unregister();
             this.healthCheckRegistration = null;
@@ -112,11 +112,11 @@ public class JmxAdjustableStatusHealthCheck {
         }
     }
 
-    class DynamicTestingHealthCheck implements HealthCheck {
+    class AdhocStatusOnlyHealthCheck implements HealthCheck {
 
         private final Result.Status status;
 
-        DynamicTestingHealthCheck(Result.Status status) {
+        AdhocStatusOnlyHealthCheck(Result.Status status) {
             this.status = status;
         }
 
@@ -209,15 +209,15 @@ public class JmxAdjustableStatusHealthCheck {
             if (OP_RESET.equals(actionName)) {
                 tags = Arrays.asList("");
                 status = STATUS_INACTIVE;
-                unregisterDynamicTestingHealthCheck();
-                LOG.info("JMX-adjustable Health Check for testing was reset");
+                unregisterDynamicHealthCheck();
+                LOG.info("JMX-adjustable Health Check was reset");
                 return "Reset successful";
             } else if (OP_ADD_CRITICAL_RESULT_FOR_TAGS.equals(actionName)) {
                 String[] newTags = params[0].toString().split("[,; ]+");
                 tags = Arrays.asList(newTags);
                 Status critical = Result.Status.CRITICAL;
                 status = critical.toString();
-                registerDynamicTestingHealthCheck(critical, newTags);
+                registerDynamicHealthCheck(critical, newTags);
                 LOG.info("Activated JMX-adjustable Health Check with status CRITICAL and tags " + StringUtils.join(tags, ","));
                 return "Added check with result CRITICAL";
             } else if (OP_ADD_WARN_RESULT_FOR_TAGS.equals(actionName)) {
@@ -225,7 +225,7 @@ public class JmxAdjustableStatusHealthCheck {
                 tags = Arrays.asList(newTags);
                 Status warn = Result.Status.WARN;
                 status = warn.toString();
-                registerDynamicTestingHealthCheck(warn, newTags);
+                registerDynamicHealthCheck(warn, newTags);
                 LOG.info("Activated JMX-adjustable Health Check with status WARN and tags " + StringUtils.join(tags, ","));
                 return "Added check with result WARN";
             } else {

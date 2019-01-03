@@ -27,6 +27,7 @@ import java.util.Map;
 
 import javax.management.DynamicMBean;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.felix.hc.api.HealthCheck;
 import org.apache.felix.hc.core.impl.executor.ExtendedHealthCheckExecutor;
 import org.osgi.framework.BundleContext;
@@ -174,10 +175,10 @@ public class HealthCheckMBeanCreator {
     }
 
     private Registration getRegistration(final ServiceReference<HealthCheck> ref) {
-        final Object nameObj = ref.getProperty(HealthCheck.MBEAN_NAME);
-        if (nameObj != null) {
+        final String hcMBeanName = (String) ref.getProperty(HealthCheck.MBEAN_NAME);
+        if (StringUtils.isNotBlank(hcMBeanName)) {
             final HealthCheckMBean mbean = new HealthCheckMBean(ref, executor);
-            return new Registration(nameObj.toString().replace(',', '.'), mbean);
+            return new Registration(hcMBeanName.replace(',', '.'), mbean);
         }
         return null;
     }

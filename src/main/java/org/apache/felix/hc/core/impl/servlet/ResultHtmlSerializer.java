@@ -55,7 +55,7 @@ public class ResultHtmlSerializer {
                 "<meta http-equiv='Content-Type' content='text/html; charset=UTF-8' /><style>" + styleString +
                 "</style></head><body><h1>System Health</h1>");
 
-        writer.println("<p><span class=\"" + getClassForStatus(overallResult.getStatus()) + "\"><strong>Overall Result: "
+        writer.println("<p><span class=\"" + getClassForStatus(overallResult.getStatus()) + "\" style=\"padding:4px\"><strong>Overall Result: "
                 + overallResult.getStatus() + "</strong></span></p>");
 
         final DateFormat dfShort = new SimpleDateFormat("HH:mm:ss.SSS");

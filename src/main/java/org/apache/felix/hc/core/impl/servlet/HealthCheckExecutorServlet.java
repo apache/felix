@@ -336,7 +336,7 @@ public class HealthCheckExecutorServlet extends HttpServlet {
             throws IOException {
         response.setContentType(CONTENT_TYPE_HTML);
         response.setCharacterEncoding("UTF-8");
-        response.setHeader(STATUS_HEADER_NAME, overallResult.toString());
+        response.setHeader(STATUS_HEADER_NAME, overallResult.getStatus().toString());
         response.getWriter().append(this.htmlSerializer.serialize(overallResult, executionResults, getHtmlHelpText(), includeDebug));
     }
 
