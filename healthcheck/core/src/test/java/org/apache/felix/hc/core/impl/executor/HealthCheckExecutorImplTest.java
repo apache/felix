@@ -52,7 +52,7 @@ public class HealthCheckExecutorImplTest {
     private HealthCheckFuture future;
 
     @Mock
-    private HealthCheckMetadata HealthCheckMetadata;
+    private HealthCheckMetadata healthCheckMetadata;
 
     @Spy
     private HealthCheckResultCache healthCheckResultCache = new HealthCheckResultCache();
@@ -61,8 +61,9 @@ public class HealthCheckExecutorImplTest {
     public void setup() {
         initMocks(this);
 
-        when(future.getHealthCheckMetadata()).thenReturn(HealthCheckMetadata);
-        when(HealthCheckMetadata.getTitle()).thenReturn("Test Check");
+        when(future.getHealthCheckMetadata()).thenReturn(healthCheckMetadata);
+        when(healthCheckMetadata.getTitle()).thenReturn("Test Check");
+        when(healthCheckMetadata.getResultCacheTtlInMs()).thenReturn(null);
 
         // 2 sec normal timeout
         healthCheckExecutorImpl.setTimeoutInMs(2000L);
@@ -78,7 +79,7 @@ public class HealthCheckExecutorImplTest {
         Collection<HealthCheckExecutionResult> results = new TreeSet<HealthCheckExecutionResult>();
 
         when(future.isDone()).thenReturn(true);
-        ExecutionResult testResult = new ExecutionResult(HealthCheckMetadata, new Result(Result.Status.OK, "test"), 10L);
+        ExecutionResult testResult = new ExecutionResult(healthCheckMetadata, new Result(Result.Status.OK, "test"), 10L);
         when(future.get()).thenReturn(testResult);
 
         healthCheckExecutorImpl.collectResultsFromFutures(futures, results);
@@ -174,6 +175,6 @@ public class HealthCheckExecutorImplTest {
     }
 
     private void addResultToCache(Status status) {
-        healthCheckResultCache.updateWith(new ExecutionResult(HealthCheckMetadata, new Result(status, "Status " + status), 1000));
+        healthCheckResultCache.updateWith(new ExecutionResult(healthCheckMetadata, new Result(status, "Status " + status), 1000));
     }
 }

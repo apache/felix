@@ -8,10 +8,3 @@ Bundle-License: Apache License, Version 2.0
 
 Bundle-Vendor: The Apache Software Foundation
 
-Import-Package: org.quartz*;resolution:="optional", *
-
-Conditional-Package: org.apache.felix.utils.*
-
--removeheaders:\
-  Include-Resource,\
-  Private-Package

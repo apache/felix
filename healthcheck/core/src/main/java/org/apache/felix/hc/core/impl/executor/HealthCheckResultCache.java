@@ -133,7 +133,7 @@ public class HealthCheckResultCache {
     private long getEffectiveTtl(HealthCheckMetadata metadata, long globalTtl) {
         final long ttl;
         Long hcTtl = metadata.getResultCacheTtlInMs();
-        if (hcTtl != null && hcTtl > 0) {
+        if (hcTtl != null && hcTtl > -1) {
             ttl = hcTtl;
         } else {
             ttl = globalTtl;
@@ -150,8 +150,8 @@ public class HealthCheckResultCache {
 
         HealthCheckMetadata healthCheckMetadata = origResult.getHealthCheckMetadata();
         Long warningsStickForMinutes = healthCheckMetadata.getWarningsStickForMinutes();
-        if (warningsStickForMinutes != null) {
-            logger.debug("Taking into account sticky results (up to {} min old) for health check ", warningsStickForMinutes,
+        if (warningsStickForMinutes != null && warningsStickForMinutes > 0) {
+            logger.debug("Taking into account sticky results (up to {} min old) for health check {}", warningsStickForMinutes,
                     healthCheckMetadata.getName());
             List<HealthCheckExecutionResult> nonOkResultsFromPast = new ArrayList<HealthCheckExecutionResult>();
             long cutOffTime = System.currentTimeMillis() - (warningsStickForMinutes * 60 * 1000);

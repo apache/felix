@@ -142,7 +142,7 @@ public class AsyncHealthCheckExecutor implements ServiceListener {
                         quartzCronScheduler = new QuartzCronScheduler(healthCheckExecutorThreadPool);
                         LOG.info("Created quartz scheduler for async HC");
                     } else {
-                        LOG.warn("Can not schedule async health check with cron expression since quartz library is not on classpath");
+                        LOG.warn("Can not schedule async health check '{}' with cron expression '{}' since quartz library is not on classpath", descriptor.getName(), descriptor.getAsyncCronExpression());
                         return false;
                     }
                 }
@@ -194,13 +194,7 @@ public class AsyncHealthCheckExecutor implements ServiceListener {
             if (isAsync(healthCheckMetadata)) {
                 ExecutionResult result = asyncResultsByDescriptor.get(healthCheckMetadata);
                 if (result == null) {
-
-                    result = new ExecutionResult(healthCheckMetadata,
-                            new Result(Result.Status.OK, "Async Health Check with cron expression '"
-                                    + healthCheckMetadata.getAsyncCronExpression() + "' has not yet been executed."),
-                            0L);
-
-                    asyncResults.add(result);
+                    result = handleMissingResult(healthCheckMetadata);
                 }
                 asyncResults.add(result);
                 // remove from HC collection to not execute the check in HealthCheckExecutorImpl
@@ -216,6 +210,27 @@ public class AsyncHealthCheckExecutor implements ServiceListener {
         LOG.debug("Adding {} results from async results", asyncResults.size());
         results.addAll(asyncResults);
 
+    }
+
+    private ExecutionResult handleMissingResult(HealthCheckMetadata healthCheckMetadata) {
+        ExecutionResult result;
+        if(isAsyncCron(healthCheckMetadata)) {
+            if(registeredJobs.containsKey(healthCheckMetadata)) {
+                result = new ExecutionResult(healthCheckMetadata,
+                        new Result(Result.Status.OK, "Async Health Check with cron expression '" + healthCheckMetadata.getAsyncCronExpression() + 
+                                "' has not yet been executed."), 0L);
+            } else {
+                result = new ExecutionResult(healthCheckMetadata,
+                        new Result(Result.Status.WARN, "Async Health Check with cron expression '" + healthCheckMetadata.getAsyncCronExpression() + 
+                                "' is never executed because quartz bundle is missing."), 0L);
+            }
+
+        } else {
+            result = new ExecutionResult(healthCheckMetadata,
+                    new Result(Result.Status.OK, "Async Health Check with interval '" + healthCheckMetadata.getAsyncIntervalInSec() + 
+                            "' has not yet been executed."), 0L);
+        }
+        return result;
     }
 
     public void updateWith(HealthCheckExecutionResult result) {
@@ -234,7 +249,7 @@ public class AsyncHealthCheckExecutor implements ServiceListener {
     }
 
     private boolean isAsyncInterval(HealthCheckMetadata healthCheckMetadata) {
-        return healthCheckMetadata.getAsyncIntervalInSec() != null;
+        return healthCheckMetadata.getAsyncIntervalInSec() != null && healthCheckMetadata.getAsyncIntervalInSec() > 0L;
     }
 
     private boolean classExists(String className) {

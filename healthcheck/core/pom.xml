@@ -58,7 +58,7 @@
             <plugin>
                 <groupId>biz.aQute.bnd</groupId>
                 <artifactId>bnd-maven-plugin</artifactId>
-                <version>4.0.0</version>
+                <version>4.1.0</version>
                 <executions>
                     <execution>
                         <goals>
@@ -80,10 +80,12 @@
             <plugin>
                 <groupId>biz.aQute.bnd</groupId>
                 <artifactId>bnd-baseline-maven-plugin</artifactId>
+                <version>4.1.0</version>
             </plugin>
             <plugin>
                 <groupId>org.jacoco</groupId>
                 <artifactId>jacoco-maven-plugin</artifactId>
+                <version>0.8.2</version>
                 <executions>
                     <execution>
                         <id>prepare-agent-integration</id>
@@ -99,6 +101,7 @@
             <plugin>
                 <groupId>org.apache.servicemix.tooling</groupId>
                 <artifactId>depends-maven-plugin</artifactId>
+                <version>1.4.0</version>
                 <executions>
                     <execution>
                         <goals>
@@ -188,7 +191,7 @@
             <artifactId>org.apache.felix.utils</artifactId>
             <version>1.11.0</version>
             <scope>provided</scope>
-        </dependency>      
+        </dependency>
         
 
         <!-- START test scope dependencies -->
