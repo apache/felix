@@ -32,12 +32,12 @@
     <name>Apache Felix Gogo BOM</name>
     <description>Apache Felix Gogo Bill Of Materials</description>
     <artifactId>org.apache.felix.gogo.bom</artifactId>
-    <version>0.0.1-SNAPSHOT</version>
+    <version>1.0.0</version>
     <url>http://felix.apache.org/</url>
     <scm>
-        <connection>scm:svn:https://svn.apache.org/repos/asf/felix/trunk/gogo/bom/</connection>
-        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/felix/trunk/gogo/bom/</developerConnection>
-        <url>https://svn.apache.org/repos/asf/felix/trunk/gogo/bom/</url>
+        <connection>scm:svn:https://svn.apache.org/repos/asf/felix/releases/org.apache.felix.gogo.bom-1.0.0</connection>
+        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/felix/releases/org.apache.felix.gogo.bom-1.0.0</developerConnection>
+        <url>https://svn.apache.org/repos/asf/felix/releases/org.apache.felix.gogo.bom-1.0.0</url>
     </scm>
 
     <dependencyManagement>
