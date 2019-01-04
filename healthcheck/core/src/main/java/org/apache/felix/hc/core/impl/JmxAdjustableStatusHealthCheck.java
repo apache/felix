@@ -96,7 +96,7 @@ public class JmxAdjustableStatusHealthCheck {
         unregisterDynamicHealthCheck();
         HealthCheck healthCheck = new AdhocStatusOnlyHealthCheck(status);
         Dictionary<String, Object> props = new Hashtable<String, Object>();
-        props.put(HealthCheck.NAME, "JMX-adjustable Check");
+        props.put(HealthCheck.NAME, "JMX Adhoc Result");
         props.put(HealthCheck.TAGS, tags);
 
         healthCheckRegistration = bundleContext.registerService(HealthCheck.class.getName(), healthCheck, props);
@@ -134,6 +134,7 @@ public class JmxAdjustableStatusHealthCheck {
 
         private static final String OP_RESET = "reset";
         private static final String OP_ADD_WARN_RESULT_FOR_TAGS = "addWarnResultForTags";
+        private static final String OP_ADD_TEMPORARILY_UNAVAILABLE_RESULT_FOR_TAGS = "addTemporarilyUnavailableResultForTags";
         private static final String OP_ADD_CRITICAL_RESULT_FOR_TAGS = "addCriticalResultForTags";
 
         private static final String ATT_TAGS = "tags";
@@ -188,9 +189,11 @@ public class JmxAdjustableStatusHealthCheck {
             final List<MBeanOperationInfo> ops = new ArrayList<MBeanOperationInfo>();
             ops.add(new MBeanOperationInfo(OP_RESET, "Resets this testing mechanism and removes the failing HC",
                     new MBeanParameterInfo[0], "java.lang.String", MBeanOperationInfo.ACTION));
-            ops.add(new MBeanOperationInfo(OP_ADD_CRITICAL_RESULT_FOR_TAGS, "Adds a critical result for the given tags",
+            ops.add(new MBeanOperationInfo(OP_ADD_TEMPORARILY_UNAVAILABLE_RESULT_FOR_TAGS, "Adds a TEMPORARILY_UNAVAILABLE result for the given tags",
                     params, "java.lang.String", MBeanOperationInfo.ACTION));
-            ops.add(new MBeanOperationInfo(OP_ADD_WARN_RESULT_FOR_TAGS, "Adds a warn result for the given tags",
+            ops.add(new MBeanOperationInfo(OP_ADD_CRITICAL_RESULT_FOR_TAGS, "Adds a CRITICAL result for the given tags",
+                    params, "java.lang.String", MBeanOperationInfo.ACTION));
+            ops.add(new MBeanOperationInfo(OP_ADD_WARN_RESULT_FOR_TAGS, "Adds a WARN result for the given tags",
                     params, "java.lang.String", MBeanOperationInfo.ACTION));
 
             return new MBeanInfo(this.getClass().getName(),
@@ -206,32 +209,32 @@ public class JmxAdjustableStatusHealthCheck {
         @Override
         public Object invoke(final String actionName, final Object[] params, final String[] signature)
                 throws MBeanException, ReflectionException {
+            
+            Status newStatus = null;
+            
+            tags = params.length > 0 ? Arrays.asList(params[0].toString().split("[,; ]+")) : Arrays.asList("");
+            
             if (OP_RESET.equals(actionName)) {
-                tags = Arrays.asList("");
-                status = STATUS_INACTIVE;
                 unregisterDynamicHealthCheck();
                 LOG.info("JMX-adjustable Health Check was reset");
+                status = STATUS_INACTIVE;
                 return "Reset successful";
+            } else if (OP_ADD_TEMPORARILY_UNAVAILABLE_RESULT_FOR_TAGS.equals(actionName)) {
+                newStatus =  Result.Status.TEMPORARILY_UNAVAILABLE;
             } else if (OP_ADD_CRITICAL_RESULT_FOR_TAGS.equals(actionName)) {
-                String[] newTags = params[0].toString().split("[,; ]+");
-                tags = Arrays.asList(newTags);
-                Status critical = Result.Status.CRITICAL;
-                status = critical.toString();
-                registerDynamicHealthCheck(critical, newTags);
-                LOG.info("Activated JMX-adjustable Health Check with status CRITICAL and tags " + StringUtils.join(tags, ","));
-                return "Added check with result CRITICAL";
+                newStatus =  Result.Status.CRITICAL;
             } else if (OP_ADD_WARN_RESULT_FOR_TAGS.equals(actionName)) {
-                String[] newTags = params[0].toString().split("[,; ]+");
-                tags = Arrays.asList(newTags);
-                Status warn = Result.Status.WARN;
-                status = warn.toString();
-                registerDynamicHealthCheck(warn, newTags);
-                LOG.info("Activated JMX-adjustable Health Check with status WARN and tags " + StringUtils.join(tags, ","));
-                return "Added check with result WARN";
+                newStatus =  Result.Status.WARN;
             } else {
                 throw new MBeanException(
                         new UnsupportedOperationException(getClass().getSimpleName() + " does not support operation " + actionName));
             }
+            
+            status = newStatus.toString();
+            registerDynamicHealthCheck(newStatus, tags.toArray(new String[tags.size()]));
+            LOG.info("Activated JMX-adjustable Health Check with status "+newStatus+" and tags " + StringUtils.join(tags, ","));
+            return "Added check with result "+newStatus;
+        
         }
 
         @Override

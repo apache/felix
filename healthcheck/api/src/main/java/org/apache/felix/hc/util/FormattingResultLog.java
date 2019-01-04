@@ -52,6 +52,10 @@ public class FormattingResultLog extends ResultLog {
         add(createEntry(Result.Status.CRITICAL, format, args));
     }
 
+    public void temporarilyUnavailable(String format, Object... args) {
+        add(createEntry(Result.Status.TEMPORARILY_UNAVAILABLE, format, args));
+    }
+    
     public void healthCheckError(String format, Object... args) {
         add(createEntry(Result.Status.HEALTH_CHECK_ERROR, format, args));
     }

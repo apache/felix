@@ -25,10 +25,11 @@ public class Result implements Iterable<ResultLog.Entry> {
     protected final ResultLog resultLog;
 
     public enum Status {
-        OK, // no problem
-        WARN, // health check detected something wrong but not critical
-        CRITICAL, // health check detected a critical problem
-        HEALTH_CHECK_ERROR // health check did not execute properly
+        OK, // system is fully operational
+        WARN, // attention required but system is operational 
+        TEMPORARILY_UNAVAILABLE, // system is not operational, it may become available soon
+        CRITICAL, // critical problem exists, system should not be used
+        HEALTH_CHECK_ERROR // health check itself did not execute properly (no reliable status is known)
     }
 
     /** Build a single-value Result

@@ -21,10 +21,10 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.TreeMap;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
@@ -55,7 +55,7 @@ import org.slf4j.LoggerFactory;
  * Parameters:
  * <ul>
  * <li>tags: The health check tags to take into account
- * <li>format: html|json|jsonp
+ * <li>format: html|json|jsonp|txt|verbose.txt
  * <li>includeDebug: If true, debug messages from result log are included.
  * <li>callback: For jsonp, the JS callback function name (defaults to "processHealthCheckResults")
  * <li>httpStatus: health check status to http status mapping in format httpStatus=WARN:418,CRITICAL:503,HEALTH_CHECK_ERROR:500.
@@ -123,6 +123,7 @@ public class HealthCheckExecutorServlet extends HttpServlet {
 
     private static final String CACHE_CONTROL_KEY = "Cache-control";
     private static final String CACHE_CONTROL_VALUE = "no-cache";
+    private static final String CORS_ORIGIN_HEADER_NAME = "Access-Control-Allow-Origin";
 
     private String[] servletPaths;
 
@@ -132,8 +133,8 @@ public class HealthCheckExecutorServlet extends HttpServlet {
 
     private String corsAccessControlAllowOrigin;
 
-    private static final String CORS_ORIGIN_HEADER_NAME = "Access-Control-Allow-Origin";
-
+    private Map<Result.Status, Integer> defaultStatusMapping;
+    
     @Reference
     private HttpService httpService;
 
@@ -157,11 +158,18 @@ public class HealthCheckExecutorServlet extends HttpServlet {
         this.servletPath = configuration.servletPath();
         this.disabled = configuration.disabled();
         this.corsAccessControlAllowOrigin = configuration.cors_accessControlAllowOrigin();
+        this.defaultStatusMapping = getStatusMapping(configuration.httpStatusMapping());
 
         LOG.info("servletPath={}", servletPath);
         LOG.info("disabled={}", disabled);
         LOG.info("corsAccessControlAllowOrigin={}", corsAccessControlAllowOrigin);
+        LOG.info("defaultStatusMapping={}", defaultStatusMapping);
 
+        if (disabled) {
+            LOG.info("Health Check Servlet is disabled by configuration");
+            return;
+        }
+        
         Map<String, HttpServlet> servletsToRegister = new LinkedHashMap<String, HttpServlet>();
         servletsToRegister.put(this.servletPath, this);
         servletsToRegister.put(this.servletPath + "." + FORMAT_HTML, new ProxyServlet(FORMAT_HTML));
@@ -169,11 +177,6 @@ public class HealthCheckExecutorServlet extends HttpServlet {
         servletsToRegister.put(this.servletPath + "." + FORMAT_JSONP, new ProxyServlet(FORMAT_JSONP));
         servletsToRegister.put(this.servletPath + "." + FORMAT_TXT, new ProxyServlet(FORMAT_TXT));
         servletsToRegister.put(this.servletPath + "." + FORMAT_VERBOSE_TXT, new ProxyServlet(FORMAT_VERBOSE_TXT));
-
-        if (disabled) {
-            LOG.info("Health Check Servlet is disabled by configuration");
-            return;
-        }
 
         for (final Map.Entry<String, HttpServlet> servlet : servletsToRegister.entrySet()) {
             try {
@@ -237,8 +240,9 @@ public class HealthCheckExecutorServlet extends HttpServlet {
         selector.withNames(names.toArray(new String[0]));
 
         final Boolean includeDebug = Boolean.valueOf(request.getParameter(PARAM_INCLUDE_DEBUG.name));
-        final Map<Result.Status, Integer> statusMapping = request.getParameter(PARAM_HTTP_STATUS.name) != null ? getStatusMapping(request
-                .getParameter(PARAM_HTTP_STATUS.name)) : null;
+        
+        String httpStatusMappingParameterVal = request.getParameter(PARAM_HTTP_STATUS.name);
+        final Map<Result.Status, Integer> statusMapping = httpStatusMappingParameterVal!=null ? getStatusMapping(httpStatusMappingParameterVal) : defaultStatusMapping;
 
         HealthCheckExecutionOptions executionOptions = new HealthCheckExecutionOptions();
         executionOptions.setCombineTagsWithOr(
@@ -263,10 +267,8 @@ public class HealthCheckExecutorServlet extends HttpServlet {
         sendNoCacheHeaders(response);
         sendCorsHeaders(response);
 
-        if (statusMapping != null) {
-            Integer httpStatus = statusMapping.get(overallResult.getStatus());
-            response.setStatus(httpStatus);
-        }
+        Integer httpStatus = statusMapping.get(overallResult.getStatus());
+        response.setStatus(httpStatus);
 
         if (FORMAT_HTML.equals(format)) {
             sendHtmlResponse(overallResult, executionResults, request, response, includeDebug);
@@ -361,8 +363,9 @@ public class HealthCheckExecutorServlet extends HttpServlet {
         return sb.toString();
     }
 
-    Map<Result.Status, Integer> getStatusMapping(String mappingStr) throws ServletException {
-        Map<Result.Status, Integer> statusMapping = new HashMap<Result.Status, Integer>();
+    Map<Result.Status, Integer> getStatusMapping(String mappingStr) {
+        Map<Result.Status, Integer> statusMapping = new TreeMap<Result.Status, Integer>();
+        
         try {
             String[] bits = mappingStr.split("[,]");
             for (String bit : bits) {
@@ -370,7 +373,7 @@ public class HealthCheckExecutorServlet extends HttpServlet {
                 statusMapping.put(Result.Status.valueOf(tuple[0]), Integer.parseInt(tuple[1]));
             }
         } catch (Exception e) {
-            throw new ServletException("Invalid parameter httpStatus=" + mappingStr + " " + e, e);
+            throw new IllegalArgumentException("Invalid parameter httpStatus=" + mappingStr + " " + e, e);
         }
 
         if (!statusMapping.containsKey(Result.Status.OK)) {
@@ -379,16 +382,20 @@ public class HealthCheckExecutorServlet extends HttpServlet {
         if (!statusMapping.containsKey(Result.Status.WARN)) {
             statusMapping.put(Result.Status.WARN, statusMapping.get(Result.Status.OK));
         }
+        if (!statusMapping.containsKey(Result.Status.TEMPORARILY_UNAVAILABLE)) {
+            statusMapping.put(Result.Status.TEMPORARILY_UNAVAILABLE, 503);
+        }
         if (!statusMapping.containsKey(Result.Status.CRITICAL)) {
-            statusMapping.put(Result.Status.CRITICAL, statusMapping.get(Result.Status.WARN));
+            statusMapping.put(Result.Status.CRITICAL, 503);
         }
         if (!statusMapping.containsKey(Result.Status.HEALTH_CHECK_ERROR)) {
-            statusMapping.put(Result.Status.HEALTH_CHECK_ERROR, statusMapping.get(Result.Status.CRITICAL));
+            statusMapping.put(Result.Status.HEALTH_CHECK_ERROR, 500);
         }
         return statusMapping;
     }
 
     private class ProxyServlet extends HttpServlet {
+        private static final long serialVersionUID = 1L;
 
         private final String format;
 
