@@ -66,7 +66,7 @@ import org.slf4j.LoggerFactory;
  * <p>
  * Useful in combination with load balancers. */
 @Component(configurationPolicy = ConfigurationPolicy.REQUIRE)
-@Designate(ocd = HealthCheckExecutorServletConfiguration.class)
+@Designate(ocd = HealthCheckExecutorServletConfiguration.class, factory=true)
 public class HealthCheckExecutorServlet extends HttpServlet {
     private static final long serialVersionUID = 8013511523994541848L;
 
@@ -135,6 +135,11 @@ public class HealthCheckExecutorServlet extends HttpServlet {
 
     private Map<Result.Status, Integer> defaultStatusMapping;
     
+    private long servletDefaultTimeout;
+    private String[] servletDefaultTags;
+    private String defaultFormat;
+    private boolean defaultCombineTagsWithOr;
+    
     @Reference
     private HttpService httpService;
 
@@ -156,15 +161,29 @@ public class HealthCheckExecutorServlet extends HttpServlet {
     @Activate
     protected final void activate(final HealthCheckExecutorServletConfiguration configuration) {
         this.servletPath = configuration.servletPath();
-        this.disabled = configuration.disabled();
-        this.corsAccessControlAllowOrigin = configuration.cors_accessControlAllowOrigin();
-        this.defaultStatusMapping = getStatusMapping(configuration.httpStatusMapping());
-
         LOG.info("servletPath={}", servletPath);
+
+        this.disabled = configuration.disabled();
         LOG.info("disabled={}", disabled);
-        LOG.info("corsAccessControlAllowOrigin={}", corsAccessControlAllowOrigin);
+
+        this.defaultStatusMapping = getStatusMapping(configuration.httpStatusMapping());
         LOG.info("defaultStatusMapping={}", defaultStatusMapping);
 
+        this.servletDefaultTimeout = configuration.timeout();
+        LOG.info("servletDefaultTimeout={}", servletDefaultTimeout);
+
+        this.servletDefaultTags = configuration.tags();
+        LOG.info("servletDefaultTags={}", servletDefaultTags!=null ? Arrays.asList(servletDefaultTags): "<none>");
+        
+        this.defaultCombineTagsWithOr = configuration.combineTagsWithOr();
+        LOG.info("defaultCombineTagsWithOr={}", defaultCombineTagsWithOr);
+        
+        this.defaultFormat = configuration.format();
+        LOG.info("defaultFormat={}", defaultFormat);
+        
+        this.corsAccessControlAllowOrigin = configuration.cors_accessControlAllowOrigin();
+        LOG.info("corsAccessControlAllowOrigin={}", corsAccessControlAllowOrigin);
+        
         if (disabled) {
             LOG.info("Health Check Servlet is disabled by configuration");
             return;
@@ -228,8 +247,9 @@ public class HealthCheckExecutorServlet extends HttpServlet {
             }
         }
         if (tags.size() == 0) {
-            // if not provided via path use parameter or default
-            tags = Arrays.asList(StringUtils.defaultIfEmpty(request.getParameter(PARAM_TAGS.name), "").split(PARAM_SPLIT_REGEX));
+            // if not provided via path use parameter or configured default
+            String tagsParameter = request.getParameter(PARAM_TAGS.name);
+            tags = Arrays.asList(StringUtils.isNotBlank(tagsParameter) ? tagsParameter.split(PARAM_SPLIT_REGEX): servletDefaultTags);
         }
         selector.withTags(tags.toArray(new String[0]));
 
@@ -245,12 +265,17 @@ public class HealthCheckExecutorServlet extends HttpServlet {
         final Map<Result.Status, Integer> statusMapping = httpStatusMappingParameterVal!=null ? getStatusMapping(httpStatusMappingParameterVal) : defaultStatusMapping;
 
         HealthCheckExecutionOptions executionOptions = new HealthCheckExecutionOptions();
-        executionOptions.setCombineTagsWithOr(
-                Boolean.valueOf(StringUtils.defaultString(request.getParameter(PARAM_COMBINE_TAGS_WITH_OR.name), "true")));
+        
+        String paramCombineTagsWithOr = request.getParameter(PARAM_COMBINE_TAGS_WITH_OR.name);
+        executionOptions.setCombineTagsWithOr( paramCombineTagsWithOr!=null ? Boolean.valueOf(paramCombineTagsWithOr) : defaultCombineTagsWithOr);
+        
         executionOptions.setForceInstantExecution(Boolean.valueOf(request.getParameter(PARAM_FORCE_INSTANT_EXECUTION.name)));
+        
         String overrideGlobalTimeoutVal = request.getParameter(PARAM_OVERRIDE_GLOBAL_TIMEOUT.name);
         if (StringUtils.isNumeric(overrideGlobalTimeoutVal)) {
             executionOptions.setOverrideGlobalTimeout(Integer.valueOf(overrideGlobalTimeoutVal));
+        } else if(servletDefaultTimeout > -1) {
+            executionOptions.setOverrideGlobalTimeout((int) servletDefaultTimeout);
         }
 
         List<HealthCheckExecutionResult> executionResults = this.healthCheckExecutor.execute(selector, executionOptions);
@@ -291,7 +316,7 @@ public class HealthCheckExecutorServlet extends HttpServlet {
         String format = splitFormat(pathInfo)[1];
         if (StringUtils.isBlank(format)) {
             // if not provided via extension use parameter or default
-            format = StringUtils.defaultIfEmpty(request.getParameter(PARAM_FORMAT.name), FORMAT_HTML);
+            format = StringUtils.defaultIfEmpty(request.getParameter(PARAM_FORMAT.name), defaultFormat);
         }
         doGet(request, response, format);
     }
