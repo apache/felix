@@ -35,9 +35,9 @@
     <version>1.0.1-SNAPSHOT</version>
     <url>http://felix.apache.org/</url>
     <scm>
-        <connection>scm:svn:https://svn.apache.org/repos/asf/felix/gogo/bom</connection>
-        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/felix/gogo/bom</developerConnection>
-        <url>https://svn.apache.org/repos/asf/felix/gogo/bom</url>
+        <connection>scm:svn:https://svn.apache.org/repos/asf/felix/trunk/gogo/bom/</connection>
+        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/felix/trunk/gogo/bom/</developerConnection>
+        <url>https://svn.apache.org/repos/asf/felix/trunk/gogo/bom/</url>
     </scm>
 
     <dependencyManagement>
