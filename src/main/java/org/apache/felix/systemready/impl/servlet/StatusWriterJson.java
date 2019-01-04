@@ -49,7 +49,7 @@ class StatusWriterJson {
                 "    { \"check\": \"%s\", \"status\": \"%s\", \"details\": \"%s\" }", 
                 status.getCheckName(),
                 status.getState().name(), 
-                status.getDetails());
+                status.getDetails().replace("\n", "\\n"));
     }
 
 }
