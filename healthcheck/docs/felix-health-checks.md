@@ -112,6 +112,18 @@ hc.warningsStickForMinutes | Long | This property will make WARN/CRITICAL result
 
 All service properties are optional.
 
+## General purpose health checks available out-of-the-box 
+
+The following checks are contained in bundle `org.apache.felix.healthcheck.generalchecks` and can be activated by simple configuration:
+
+Default Name | PID | Factory | Description  
+--- | --- | --- | ---
+Disk Space | org.apache.felix.hc.generalchecks.DiskSpaceCheck | yes | Checks for disk space usage at the given paths `diskPaths` and checks them against thresholds `diskUsedThresholdWarn` (default 90%) and diskUsedThresholdCritical (default 97%)
+Memory | org.apache.felix.hc.generalchecks.MemoryCheck | no | Checks for Memory usage - `heapUsedPercentageThresholdWarn` (default 90%) and `heapUsedPercentageThresholdCritical` (default 99%) can be set to control what memory usage produces status `WARN` and `CRITICAL`
+CPU | org.apache.felix.hc.generalchecks.CpuCheck | no | Checks for CPU usage - `cpuPercentageThresholdWarn` (default 95%) can be set to control what CPU usage produces status `WARN` (check never results in `CRITICAL`)
+Thread Usage | org.apache.felix.hc.generalchecks.ThreadUsageCheck | no | Checks via `ThreadMXBean.findDeadlockedThreads()` for deadlocks and analyses the CPU usage of each thread via a configurable time period (`samplePeriodInMs` defaults to 200ms). Uses `cpuPercentageThresholdWarn` (default 95%) to `WARN` about high thread utilisation.   
+Bundles Started | org.apache.felix.hc.generalchecks.BundlesStartedCheck | yes | Checks for started bundles - `includesRegex` and `excludesRegex` control what bundles are checked. 
+
 ## Executing Health Checks
 
 Health Checks can be executed via a [webconsole plugin](#webconsole-plugin), the [health check servlet](#health-check-servlet) or via [JMX](#jmx-access-to-health-checks). `HealthCheck` services can be selected for execution based on their `hc.tags` multi-value service property. 
