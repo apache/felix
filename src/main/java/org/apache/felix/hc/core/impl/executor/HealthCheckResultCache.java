@@ -44,19 +44,10 @@ public class HealthCheckResultCache {
 
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
 
-    private static final List<Status> NOT_OK_STATUS_VALUES = Arrays.asList(Status.WARN, Status.CRITICAL, Status.HEALTH_CHECK_ERROR);
-
     /** The map holding the cached results. */
     private final Map<Long, HealthCheckExecutionResult> cache = new ConcurrentHashMap<Long, HealthCheckExecutionResult>();
 
-    @SuppressWarnings("serial")
-    private final Map<Result.Status, Map<Long, HealthCheckExecutionResult>> cacheOfNotOkResults = new ConcurrentHashMap<Result.Status, Map<Long, HealthCheckExecutionResult>>() {
-        {
-            for (Status status : NOT_OK_STATUS_VALUES) {
-                put(status, new ConcurrentHashMap<Long, HealthCheckExecutionResult>());
-            }
-        }
-    };
+    private final Map<Result.Status, Map<Long, HealthCheckExecutionResult>> cacheOfNotOkResults = new ConcurrentHashMap<Result.Status, Map<Long, HealthCheckExecutionResult>>();
 
     /** Update the cache with the result */
     public void updateWith(HealthCheckExecutionResult result) {
@@ -64,9 +55,14 @@ public class HealthCheckResultCache {
         cache.put(executionResult.getServiceId(), result);
 
         Status status = executionResult.getHealthCheckResult().getStatus();
-        if (status.ordinal() >= Result.Status.WARN.ordinal()) {
+        if (status != Result.Status.OK) {
             logger.debug("Caching {} result for HC {}", status, executionResult.getServiceId());
-            cacheOfNotOkResults.get(status).put(executionResult.getServiceId(), result);
+            Map<Long, HealthCheckExecutionResult> nonOkResultsForStatus = cacheOfNotOkResults.get(status);
+            if(nonOkResultsForStatus==null) {
+                nonOkResultsForStatus = new ConcurrentHashMap<Long, HealthCheckExecutionResult>();
+                cacheOfNotOkResults.put(status, nonOkResultsForStatus);
+            }
+            nonOkResultsForStatus.put(executionResult.getServiceId(), result);
         }
     }
 
@@ -155,7 +151,7 @@ public class HealthCheckResultCache {
                     healthCheckMetadata.getName());
             List<HealthCheckExecutionResult> nonOkResultsFromPast = new ArrayList<HealthCheckExecutionResult>();
             long cutOffTime = System.currentTimeMillis() - (warningsStickForMinutes * 60 * 1000);
-            for (Status status : NOT_OK_STATUS_VALUES) {
+            for (Status status : cacheOfNotOkResults.keySet()) {
                 long hcServiceId = ((ExecutionResult) origResult).getServiceId();
                 HealthCheckExecutionResult nonOkResultFromPast = cacheOfNotOkResults.get(status).get(hcServiceId);
                 if (nonOkResultFromPast == null) {
@@ -201,16 +197,14 @@ public class HealthCheckResultCache {
     /** Clear the whole cache */
     public void clear() {
         this.cache.clear();
-        for (Status status : NOT_OK_STATUS_VALUES) {
-            cacheOfNotOkResults.get(status).clear();
-        }
+        this.cacheOfNotOkResults.clear();
     }
 
     /** Remove entry from cache */
     public void removeCachedResult(final Long serviceId) {
         this.cache.remove(serviceId);
-        for (Status status : NOT_OK_STATUS_VALUES) {
-            cacheOfNotOkResults.get(status).remove(serviceId);
+        for (Map<Long, HealthCheckExecutionResult> cacheOfNotOkResultsForStatus : cacheOfNotOkResults.values()) {
+            cacheOfNotOkResultsForStatus.remove(serviceId);
         }
     }
 

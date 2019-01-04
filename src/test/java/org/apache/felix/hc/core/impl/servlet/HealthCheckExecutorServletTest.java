@@ -89,12 +89,19 @@ public class HealthCheckExecutorServletTest {
     @Mock
     private PrintWriter writer;
 
+    @Mock
+    private HealthCheckExecutorServletConfiguration healthCheckExecutorServletConfig;
+    
     @Before
     public void setup() throws IOException {
         initMocks(this);
 
         doReturn(500L).when(hcServiceRef).getProperty(Constants.SERVICE_ID);
         doReturn(writer).when(response).getWriter();
+        
+        doReturn(true).when(healthCheckExecutorServletConfig).disabled();
+        doReturn("OK:200").when(healthCheckExecutorServletConfig).httpStatusMapping();
+        healthCheckExecutorServlet.activate(healthCheckExecutorServletConfig);
     }
 
     @Test
@@ -222,43 +229,47 @@ public class HealthCheckExecutorServletTest {
     @Test
     public void testGetStatusMapping() throws ServletException {
 
-        Map<Status, Integer> statusMapping = healthCheckExecutorServlet.getStatusMapping("CRITICAL:503");
+        Map<Status, Integer> statusMapping = healthCheckExecutorServlet.getStatusMapping("CRITICAL:500");
         assertEquals(statusMapping.get(Result.Status.OK), (Integer) 200);
         assertEquals(statusMapping.get(Result.Status.WARN), (Integer) 200);
-        assertEquals(statusMapping.get(Result.Status.CRITICAL), (Integer) 503);
-        assertEquals(statusMapping.get(Result.Status.HEALTH_CHECK_ERROR), (Integer) 503);
+        assertEquals(statusMapping.get(Result.Status.TEMPORARILY_UNAVAILABLE), (Integer) 503);
+        assertEquals(statusMapping.get(Result.Status.CRITICAL), (Integer) 500);
+        assertEquals(statusMapping.get(Result.Status.HEALTH_CHECK_ERROR), (Integer) 500);
 
         statusMapping = healthCheckExecutorServlet.getStatusMapping("OK:333");
         assertEquals(statusMapping.get(Result.Status.OK), (Integer) 333);
         assertEquals(statusMapping.get(Result.Status.WARN), (Integer) 333);
-        assertEquals(statusMapping.get(Result.Status.CRITICAL), (Integer) 333);
-        assertEquals(statusMapping.get(Result.Status.HEALTH_CHECK_ERROR), (Integer) 333);
+        assertEquals(statusMapping.get(Result.Status.TEMPORARILY_UNAVAILABLE), (Integer) 503);
+        assertEquals(statusMapping.get(Result.Status.CRITICAL), (Integer) 503);
+        assertEquals(statusMapping.get(Result.Status.HEALTH_CHECK_ERROR), (Integer) 500);
 
-        statusMapping = healthCheckExecutorServlet.getStatusMapping("OK:200,WARN:418,CRITICAL:503,HEALTH_CHECK_ERROR:500");
+        statusMapping = healthCheckExecutorServlet.getStatusMapping("OK:200,WARN:418,CRITICAL:503,TEMPORARILY_UNAVAILABLE:503,HEALTH_CHECK_ERROR:500");
         assertEquals(statusMapping.get(Result.Status.OK), (Integer) 200);
         assertEquals(statusMapping.get(Result.Status.WARN), (Integer) 418);
+        assertEquals(statusMapping.get(Result.Status.TEMPORARILY_UNAVAILABLE), (Integer) 503);
         assertEquals(statusMapping.get(Result.Status.CRITICAL), (Integer) 503);
         assertEquals(statusMapping.get(Result.Status.HEALTH_CHECK_ERROR), (Integer) 500);
 
-        statusMapping = healthCheckExecutorServlet.getStatusMapping("CRITICAL:503,HEALTH_CHECK_ERROR:500");
+        statusMapping = healthCheckExecutorServlet.getStatusMapping("WARN:418,HEALTH_CHECK_ERROR:503");
         assertEquals(statusMapping.get(Result.Status.OK), (Integer) 200);
-        assertEquals(statusMapping.get(Result.Status.WARN), (Integer) 200);
+        assertEquals(statusMapping.get(Result.Status.WARN), (Integer) 418);
+        assertEquals(statusMapping.get(Result.Status.TEMPORARILY_UNAVAILABLE), (Integer) 503);
         assertEquals(statusMapping.get(Result.Status.CRITICAL), (Integer) 503);
-        assertEquals(statusMapping.get(Result.Status.HEALTH_CHECK_ERROR), (Integer) 500);
+        assertEquals(statusMapping.get(Result.Status.HEALTH_CHECK_ERROR), (Integer) 503);
 
     }
 
-    @Test(expected = ServletException.class)
+    @Test(expected = IllegalArgumentException.class)
     public void testGetStatusMappingInvalidToken() throws ServletException {
         healthCheckExecutorServlet.getStatusMapping("CRITICAL");
     }
 
-    @Test(expected = ServletException.class)
+    @Test(expected = IllegalArgumentException.class)
     public void testGetStatusMappingInvalidStatus() throws ServletException {
         healthCheckExecutorServlet.getStatusMapping("INVALID:200");
     }
 
-    @Test(expected = ServletException.class)
+    @Test(expected = IllegalArgumentException.class)
     public void testGetStatusMappingInvalidStatusCode() throws ServletException {
         healthCheckExecutorServlet.getStatusMapping("CRITICAL:xxx");
     }

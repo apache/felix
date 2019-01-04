@@ -30,7 +30,7 @@ import org.osgi.service.metatype.annotations.ObjectClassDefinition;
     int colWidthName() default 30;
 
     @AttributeDefinition(name = "Result Column Width", description = "Column width of health check result (in characters)")
-    int colWidthResult() default 9;
+    int colWidthResult() default 25;
 
     @AttributeDefinition(name = "Timing Column Width", description = "Column width of health check timing (in characters)")
     int colWidthTiming() default 22;

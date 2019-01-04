@@ -30,6 +30,7 @@ import org.osgi.service.metatype.annotations.ObjectClassDefinition;
             + "table td { padding:5px; border-top: 1px solid #ffffff; border-bottom:1px solid #e0e0e0; border-left: 1px solid #e0e0e0; }\n"
             + ".statusOK { background-color:#CCFFCC;}\n"
             + ".statusWARN { background-color:#FFE569;}\n"
+            + ".statusTEMPORARILY_UNAVAILABLE { background-color:#dab6fc;}\n"
             + ".statusCRITICAL { background-color:#F0975A;}\n"
             + ".statusHEALTH_CHECK_ERROR { background-color:#F16D4E;}\n"
             + ".helpText { color:grey; font-size:80%; }\n";
