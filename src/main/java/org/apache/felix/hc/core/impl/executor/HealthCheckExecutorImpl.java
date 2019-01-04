@@ -38,6 +38,7 @@ import java.util.ListIterator;
 import java.util.Map;
 import java.util.Set;
 
+import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.StopWatch;
 import org.apache.felix.hc.api.HealthCheck;
@@ -80,6 +81,8 @@ public class HealthCheckExecutorImpl implements ExtendedHealthCheckExecutor, Ser
     private long longRunningFutureThresholdForRedMs;
 
     private long resultCacheTtlInMs;
+
+    private String[] defaultTags;
 
     private HealthCheckResultCache healthCheckResultCache = new HealthCheckResultCache();
 
@@ -136,6 +139,8 @@ public class HealthCheckExecutorImpl implements ExtendedHealthCheckExecutor, Ser
         if (this.resultCacheTtlInMs <= 0L) {
             this.resultCacheTtlInMs = RESULT_CACHE_TTL_DEFAULT_MS;
         }
+        
+        this.defaultTags = configuration.defaultTags();
 
     }
 
@@ -156,10 +161,13 @@ public class HealthCheckExecutorImpl implements ExtendedHealthCheckExecutor, Ser
     public List<HealthCheckExecutionResult> execute(HealthCheckSelector selector, HealthCheckExecutionOptions options) {
         logger.debug("Starting executing checks for filter selector {} and execution options {}", selector, options);
 
+        if(ArrayUtils.isEmpty(selector.tags())) {
+            logger.debug("Using default tags");
+            selector.withTags(defaultTags);
+        }
         final HealthCheckFilter filter = new HealthCheckFilter(this.bundleContext);
         try {
-            final ServiceReference<HealthCheck>[] healthCheckReferences = filter.getHealthCheckServiceReferences(selector,
-                    options.isCombineTagsWithOr());
+            final ServiceReference<HealthCheck>[] healthCheckReferences = filter.getHealthCheckServiceReferences(selector, options.isCombineTagsWithOr());
 
             return this.execute(healthCheckReferences, options);
         } finally {

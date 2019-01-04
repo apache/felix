@@ -37,4 +37,7 @@ import org.osgi.service.metatype.annotations.ObjectClassDefinition;
 
     @AttributeDefinition(name = "Results Cache TTL in Ms", description = "Result Cache time to live - results will be cached for the given time")
     long resultCacheTtlInMs() default RESULT_CACHE_TTL_DEFAULT_MS;
+
+    @AttributeDefinition(name = "Default Tags", description = "Default tags to be executed if no tags are explicitly supplied")
+    String[] defaultTags() default {"default"};
 }
