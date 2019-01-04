@@ -101,6 +101,8 @@ public class HealthCheckExecutorServletTest {
         
         doReturn(true).when(healthCheckExecutorServletConfig).disabled();
         doReturn("OK:200").when(healthCheckExecutorServletConfig).httpStatusMapping();
+        doReturn(new String[0]).when(healthCheckExecutorServletConfig).tags();
+        doReturn(HealthCheckExecutorServlet.FORMAT_HTML).when(healthCheckExecutorServletConfig).format();
         healthCheckExecutorServlet.activate(healthCheckExecutorServletConfig);
     }
 
