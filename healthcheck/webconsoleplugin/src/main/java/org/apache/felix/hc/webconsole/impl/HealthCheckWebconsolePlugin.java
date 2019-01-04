@@ -33,6 +33,7 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.felix.hc.api.Result;
 import org.apache.felix.hc.api.ResultLog;
 import org.apache.felix.hc.api.execution.HealthCheckExecutionOptions;
@@ -125,7 +126,8 @@ public class HealthCheckWebconsolePlugin extends HttpServlet {
                 // override not set in UI
             }
 
-            Collection<HealthCheckExecutionResult> results = healthCheckExecutor.execute(HealthCheckSelector.tags(tags.split(",")), options);
+            HealthCheckSelector selector = StringUtils.isNotBlank(tags) ? HealthCheckSelector.tags(tags.split(",")) : HealthCheckSelector.empty();
+            Collection<HealthCheckExecutionResult> results = healthCheckExecutor.execute(selector, options);
 
             pw.println("<table class='content healthcheck' cellpadding='0' cellspacing='0' width='100%'>");
             int total = 0;
