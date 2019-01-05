@@ -15,21 +15,22 @@
  * KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
  */
-package org.apache.felix.hc.core.impl;
+package org.apache.felix.hc.generalchecks;
 
 import static org.junit.Assert.assertEquals;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import org.apache.felix.hc.api.Result;
+import org.apache.felix.hc.generalchecks.JmxAttributeCheck;
 import org.junit.Test;
 
 public class JmxAttributeHealthCheckTest {
 
     static void assertJmxValue(String objectName, String attributeName, String constraint, boolean expected) {
-        final JmxAttributeHealthCheck hc = new JmxAttributeHealthCheck();
+        final JmxAttributeCheck hc = new JmxAttributeCheck();
 
-        final JmxAttributeHealthCheckConfiguration configuration = mock(JmxAttributeHealthCheckConfiguration.class);
+        final JmxAttributeCheck.Config configuration = mock(JmxAttributeCheck.Config.class);
         when(configuration.mbean_name()).thenReturn(objectName);
         when(configuration.attribute_name()).thenReturn(attributeName);
         when(configuration.attribute_value_constraint()).thenReturn(constraint);
