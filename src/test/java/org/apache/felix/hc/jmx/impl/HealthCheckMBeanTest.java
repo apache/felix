@@ -17,7 +17,9 @@
  */
 package org.apache.felix.hc.jmx.impl;
 
+import static org.hamcrest.CoreMatchers.containsString;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertThat;
 import static org.junit.Assert.fail;
 
 import java.lang.management.ManagementFactory;
@@ -29,13 +31,11 @@ import javax.management.ObjectName;
 
 import org.apache.felix.hc.api.HealthCheck;
 import org.apache.felix.hc.api.Result;
-import org.apache.felix.hc.api.ResultLog;
 import org.apache.felix.hc.api.execution.HealthCheckExecutionOptions;
 import org.apache.felix.hc.api.execution.HealthCheckExecutionResult;
 import org.apache.felix.hc.api.execution.HealthCheckSelector;
 import org.apache.felix.hc.core.impl.executor.ExtendedHealthCheckExecutor;
 import org.apache.felix.hc.util.HealthCheckMetadata;
-import org.apache.felix.hc.util.SimpleConstraintChecker;
 import org.junit.Test;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.ServiceReference;
@@ -57,18 +57,14 @@ public class HealthCheckMBeanTest {
         }
     };
 
-    private void assertJmxValue(String mbeanName, String attributeName, String constraint, boolean expected) throws Exception {
+    private Object getJmxValue(String mbeanName, String attributeName) throws Exception {
         final MBeanServer jmxServer = ManagementFactory.getPlatformMBeanServer();
         final ObjectName objectName = new ObjectName(mbeanName);
         if (jmxServer.queryNames(objectName, null).size() == 0) {
             fail("MBean not found: " + objectName);
         }
         final Object value = jmxServer.getAttribute(objectName, attributeName);
-        final ResultLog resultLog = new ResultLog();
-        new SimpleConstraintChecker().check(value, constraint, resultLog);
-        assertEquals("Expecting result " + expected + "(" + resultLog + ")", expected,
-                resultLog.getAggregateStatus().equals(Result.Status.OK));
-
+        return value;
     }
 
     @Test
@@ -152,14 +148,15 @@ public class HealthCheckMBeanTest {
         jmxServer.registerMBean(mbean, name);
         try {
             resultOk = true;
-            assertJmxValue(OBJECT_NAME, "ok", "true", true);
+            assertEquals(true, getJmxValue(OBJECT_NAME, "ok"));
 
             Thread.sleep(1500);
             resultOk = false;
-            assertJmxValue(OBJECT_NAME, "ok", "true", false);
+            assertEquals(false, getJmxValue(OBJECT_NAME, "ok"));
 
             Thread.sleep(1500);
-            assertJmxValue(OBJECT_NAME, "log", "contains message=Result is not ok!", true);
+            assertThat(String.valueOf(getJmxValue(OBJECT_NAME, "log")), containsString("message=Result is not ok!"));
+
         } finally {
             jmxServer.unregisterMBean(name);
         }
