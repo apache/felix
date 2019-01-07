@@ -54,10 +54,10 @@ public class BundlesStartedCheck implements HealthCheck {
         @AttributeDefinition(name = "Tags", description = "List of tags for this health check, used to select subsets of health checks for execution e.g. by a composite health check.")
         String[] hc_tags() default {};
 
-        @AttributeDefinition(name = "Includes RegEx", description = "RegEx to select all relevant bundles for this check")
+        @AttributeDefinition(name = "Includes RegEx", description = "RegEx to select all relevant bundles for this check. The RegEx is matched against the symbolic name of the bundle.")
         String includesRegex() default ".*";
 
-        @AttributeDefinition(name = "Excludes RegEx", description = "Optional RegEx to exclude bundles from this check")
+        @AttributeDefinition(name = "Excludes RegEx", description = "Optional RegEx to exclude bundles from this check (matched against symbolic name). Allows to exclude specific bundles from selected set as produced by 'Includes RegEx'.")
         String excludesRegex() default "";
 
         @AttributeDefinition(name = "CRITICAL for inactive bundles", description = "By default inactive bundles produce warnings, if this is set to true inactive bundles produce a CRITICAL result")
