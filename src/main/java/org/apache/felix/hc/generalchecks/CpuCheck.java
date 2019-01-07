@@ -59,7 +59,7 @@ public class CpuCheck implements HealthCheck {
         @AttributeDefinition(name = "Tags", description = "List of tags for this health check, used to select subsets of health checks for execution e.g. by a composite health check.")
         String[] hc_tags() default {};
 
-        @AttributeDefinition(name = "Disk used threshold for WARN", description = "in percent, if disk usage is over this limit the result is WARN")
+        @AttributeDefinition(name = "CPU usage threshold for WARN", description = "in percent, if CPU usage is over this limit the result is WARN")
         long cpuPercentageThresholdWarn() default 95;
 
     }
