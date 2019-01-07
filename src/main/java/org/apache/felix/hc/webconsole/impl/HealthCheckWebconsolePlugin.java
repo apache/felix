@@ -207,9 +207,8 @@ public class HealthCheckWebconsolePlugin extends HttpServlet {
         final WebConsoleHelper c = new WebConsoleHelper(pw);
         pw.print("<form method='get'>");
         pw.println("<table class='content' cellpadding='0' cellspacing='0' width='100%'>");
-        c.titleHtml(TITLE, "To execute health check services, enter "
-                + " an optional list of tags, to select specific health checks, or no tags for all checks."
-                + " Prefix a tag with a minus sign (-) to omit checks having that tag.");
+        c.titleHtml(TITLE, "Enter tags to selected health checks to be executed. Leave empty to execute default checks or use '*' to execute all checks."
+                + " Prefix a tag with a minus sign (-) to omit checks having that tag (can be also used in combination with '*', e.g. '*,-excludedtag').");
 
         c.tr();
         c.tdLabel("Health Check tags (comma-separated)");
