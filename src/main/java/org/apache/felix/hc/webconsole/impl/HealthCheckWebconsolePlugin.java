@@ -18,7 +18,7 @@
 package org.apache.felix.hc.webconsole.impl;
 
 import static org.apache.commons.lang3.StringEscapeUtils.escapeHtml4;
-import static org.apache.felix.hc.util.FormattingResultLog.msHumanReadable;
+import static org.apache.felix.hc.api.FormattingResultLog.msHumanReadable;
 
 import java.io.IOException;
 import java.io.InputStream;
