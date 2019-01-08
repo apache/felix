@@ -17,10 +17,10 @@
  */
 package org.apache.felix.hc.core.impl.executor;
 
+import static org.apache.felix.hc.api.FormattingResultLog.msHumanReadable;
 import static org.apache.felix.hc.core.impl.executor.HealthCheckExecutorImplConfiguration.LONGRUNNING_FUTURE_THRESHOLD_CRITICAL_DEFAULT_MS;
 import static org.apache.felix.hc.core.impl.executor.HealthCheckExecutorImplConfiguration.RESULT_CACHE_TTL_DEFAULT_MS;
 import static org.apache.felix.hc.core.impl.executor.HealthCheckExecutorImplConfiguration.TIMEOUT_DEFAULT_MS;
-import static org.apache.felix.hc.util.FormattingResultLog.msHumanReadable;
 
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
@@ -40,6 +40,7 @@ import java.util.Set;
 
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.time.StopWatch;
+import org.apache.felix.hc.api.FormattingResultLog;
 import org.apache.felix.hc.api.HealthCheck;
 import org.apache.felix.hc.api.Result;
 import org.apache.felix.hc.api.ResultLog;
@@ -50,7 +51,6 @@ import org.apache.felix.hc.api.execution.HealthCheckMetadata;
 import org.apache.felix.hc.api.execution.HealthCheckSelector;
 import org.apache.felix.hc.core.impl.executor.async.AsyncHealthCheckExecutor;
 import org.apache.felix.hc.core.impl.util.HealthCheckFilter;
-import org.apache.felix.hc.util.FormattingResultLog;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
 import org.osgi.framework.InvalidSyntaxException;
@@ -445,7 +445,7 @@ public class HealthCheckExecutorImpl implements ExtendedHealthCheckExecutor, Ser
                 DateFormat df = new SimpleDateFormat("HH:mm:ss.SSS");
                 resultLog.info("*** Result log of last execution finished at {} after {} ***",
                         df.format(lastCachedResult.getFinishedAt()),
-                        FormattingResultLog.msHumanReadable(lastCachedResult.getElapsedTimeInMs()));
+                        msHumanReadable(lastCachedResult.getElapsedTimeInMs()));
                 for (ResultLog.Entry entry : lastCachedResult.getHealthCheckResult()) {
                     resultLog.add(entry);
                 }

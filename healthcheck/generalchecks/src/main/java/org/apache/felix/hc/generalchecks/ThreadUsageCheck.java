@@ -27,10 +27,10 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.felix.hc.annotation.HealthCheckService;
+import org.apache.felix.hc.api.FormattingResultLog;
 import org.apache.felix.hc.api.HealthCheck;
 import org.apache.felix.hc.api.Result;
 import org.apache.felix.hc.api.ResultLog;
-import org.apache.felix.hc.util.FormattingResultLog;
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.ConfigurationPolicy;

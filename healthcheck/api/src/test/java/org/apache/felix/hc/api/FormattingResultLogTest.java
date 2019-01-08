@@ -15,19 +15,30 @@
  * KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
  */
-package org.apache.felix.hc.generalchecks.util;
+package org.apache.felix.hc.api;
 
+import static org.apache.felix.hc.api.FormattingResultLog.bytesHumanReadable;
+import static org.apache.felix.hc.api.FormattingResultLog.msHumanReadable;
 import static org.junit.Assert.assertEquals;
 
 import org.junit.Test;
 
-public class UnitsUtilTest {
+public class FormattingResultLogTest {
 
     @Test
-    public void testFormatBytes() {
-        assertEquals("5.0MB", UnitsUtil.formatBytes(5d*1024*1024));
-        assertEquals("2.0GB", UnitsUtil.formatBytes(2d*1024*1024*1024));
-        assertEquals("706.1kB", UnitsUtil.formatBytes(722998));
+    public void testBytesHumanReadable() {
+        assertEquals("5.0MB", bytesHumanReadable(5d*1024*1024));
+        assertEquals("2.0GB", bytesHumanReadable(2d*1024*1024*1024));
+        assertEquals("706.1kB", bytesHumanReadable(722998));
+    }
+
+    @Test
+    public void testMSHumanReadable() {
+        assertEquals("320ms", msHumanReadable(320));
+        assertEquals("5sec", msHumanReadable(5*1000));
+        assertEquals("1min", msHumanReadable(60*1000));
+        assertEquals("1.2min", msHumanReadable(72*1000));
+        assertEquals("3h", msHumanReadable(3*60*60*1000));
     }
 
 }

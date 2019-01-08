@@ -15,17 +15,15 @@
  * KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
  */
-package org.apache.felix.hc.util;
+package org.apache.felix.hc.api;
 
 import java.text.NumberFormat;
 import java.util.Locale;
 
-import org.apache.felix.hc.api.Result;
-import org.apache.felix.hc.api.ResultLog;
 import org.osgi.annotation.versioning.ProviderType;
 import org.slf4j.helpers.MessageFormatter;
 
-/** Utility that provides a logging-like facade on a ResultLog */
+/** Utility that provides a logging-like facade on a ResultLog. */
 @ProviderType
 public class FormattingResultLog extends ResultLog {
 
@@ -86,4 +84,32 @@ public class FormattingResultLog extends ResultLog {
         String result = format.format(number) + units[magnitude];
         return result;
     }
+    
+
+    /**
+     * Utility method to return any magnitude of bytes in a human readable format using the appropriate unit (kB, MB, GB)
+     * depending on the magnitude of the input.
+     * 
+     * @param size in bytes
+     * @return a human readable result 
+     */
+    public static String bytesHumanReadable(double size) {
+        
+        double step = 1024, current = step;
+        final String SIZES[] = { "kB", "MB", "GB", "TB" };
+        int i;
+        for (i = 0; i < SIZES.length - 1; ++i) {
+            if (size < current * step) {
+                break;
+            }
+            current *= step;
+        }
+
+        String unit = SIZES[i];
+        double value = size / current;
+        String retVal = String.format("%.1f", value) + unit;
+        return retVal;
+    }
+        
+    
 }

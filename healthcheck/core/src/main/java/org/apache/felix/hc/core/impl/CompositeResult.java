@@ -17,7 +17,7 @@
  */
 package org.apache.felix.hc.core.impl;
 
-import static org.apache.felix.hc.util.FormattingResultLog.msHumanReadable;
+import static org.apache.felix.hc.api.FormattingResultLog.msHumanReadable;
 
 import java.util.List;
 

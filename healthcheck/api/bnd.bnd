@@ -8,5 +8,5 @@ Bundle-License: Apache License, Version 2.0
 
 Bundle-Vendor: The Apache Software Foundation
 
-Export-Package: org.apache.felix.hc.*
+Export-Package: org.apache.felix.hc.api.*
 

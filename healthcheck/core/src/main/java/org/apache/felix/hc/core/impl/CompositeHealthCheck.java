@@ -22,6 +22,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import org.apache.felix.hc.api.FormattingResultLog;
 import org.apache.felix.hc.api.HealthCheck;
 import org.apache.felix.hc.api.Result;
 import org.apache.felix.hc.api.Result.Status;
@@ -31,7 +32,6 @@ import org.apache.felix.hc.api.execution.HealthCheckExecutor;
 import org.apache.felix.hc.api.execution.HealthCheckMetadata;
 import org.apache.felix.hc.api.execution.HealthCheckSelector;
 import org.apache.felix.hc.core.impl.util.HealthCheckFilter;
-import org.apache.felix.hc.util.FormattingResultLog;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceReference;

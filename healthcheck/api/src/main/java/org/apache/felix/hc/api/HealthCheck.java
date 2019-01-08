@@ -19,7 +19,9 @@ package org.apache.felix.hc.api;
 
 import org.osgi.annotation.versioning.ConsumerType;
 
-/** Health Check services can be executed and return an execution {@link Result}.
+/** The Health Check SPI provides a means to check a certain system aspect programmatically. Health checks return a result {@link Result}, 
+ * for most cases it is most convenient to use {@link FormattingResultLog} that automatically derives the correct {@link Result.Status} from
+ * the log messages.
  *
  * Clients should not look up health checks directly but rather use the {@link org.apache.felix.hc.api.execution.HealthCheckExecutor}
  * service and executed checks based on tags.
@@ -58,7 +60,6 @@ public interface HealthCheck {
      * disappear but might leave the system at an inconsistent state (e.g. an event queue overflow). */
     String WARNINGS_STICK_FOR_MINUTES = "hc.warningsStickForMinutes";
 
-    /** Execute this health check and return a {@link Result} This is meant to execute quickly, access to external systems, for example,
-     * should be managed asynchronously. */
+    /** Execute this health check and return a {@link Result}.*/
     Result execute();
 }

@@ -17,7 +17,7 @@
  */
 package org.apache.felix.hc.core.impl.executor;
 
-import static org.apache.felix.hc.util.FormattingResultLog.msHumanReadable;
+import static org.apache.felix.hc.api.FormattingResultLog.msHumanReadable;
 
 import java.lang.reflect.InvocationTargetException;
 import java.util.Date;
@@ -28,12 +28,12 @@ import java.util.concurrent.FutureTask;
 import org.apache.commons.lang3.reflect.FieldUtils;
 import org.apache.commons.lang3.reflect.MethodUtils;
 import org.apache.commons.lang3.time.StopWatch;
+import org.apache.felix.hc.api.FormattingResultLog;
 import org.apache.felix.hc.api.HealthCheck;
 import org.apache.felix.hc.api.Result;
 import org.apache.felix.hc.api.ResultLog;
 import org.apache.felix.hc.api.execution.HealthCheckExecutionResult;
 import org.apache.felix.hc.api.execution.HealthCheckMetadata;
-import org.apache.felix.hc.util.FormattingResultLog;
 import org.osgi.framework.BundleContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

@@ -22,8 +22,6 @@ import java.util.Iterator;
 /** The result of executing a {@link HealthCheck} */
 public class Result implements Iterable<ResultLog.Entry> {
 
-    protected final ResultLog resultLog;
-
     public enum Status {
         OK, // system is fully operational
         WARN, // attention required but system is operational 
@@ -31,6 +29,8 @@ public class Result implements Iterable<ResultLog.Entry> {
         CRITICAL, // critical problem exists, system should not be used
         HEALTH_CHECK_ERROR // health check itself did not execute properly (no reliable status is known)
     }
+
+    protected final ResultLog resultLog;
 
     /** Build a single-value Result
      * 
