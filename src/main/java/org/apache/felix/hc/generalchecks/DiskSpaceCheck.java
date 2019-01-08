@@ -17,16 +17,16 @@
  */
 package org.apache.felix.hc.generalchecks;
 
-import static org.apache.felix.hc.generalchecks.util.UnitsUtil.formatBytes;
+import static org.apache.felix.hc.api.FormattingResultLog.bytesHumanReadable;
 
 import java.io.File;
 import java.util.Arrays;
 
 import org.apache.felix.hc.annotation.HealthCheckService;
+import org.apache.felix.hc.api.FormattingResultLog;
 import org.apache.felix.hc.api.HealthCheck;
 import org.apache.felix.hc.api.Result;
 import org.apache.felix.hc.api.ResultLog;
-import org.apache.felix.hc.util.FormattingResultLog;
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.ConfigurationPolicy;
@@ -102,8 +102,8 @@ public class DiskSpaceCheck implements HealthCheck {
             double free = diskPathFile.getUsableSpace();
             double usedPercentage = (total - free) / total * 100d;
 
-            String totalStr = formatBytes(total);
-            String freeStr = formatBytes(free);
+            String totalStr = bytesHumanReadable(total);
+            String freeStr = bytesHumanReadable(free);
             String msg = String.format("Disk Usage %s: %.1f%% of %s used / %s free", diskPathFile.getAbsolutePath(),
                     usedPercentage,
                     totalStr, freeStr);

@@ -17,13 +17,13 @@
  */
 package org.apache.felix.hc.generalchecks;
 
-import static org.apache.felix.hc.generalchecks.util.UnitsUtil.formatBytes;
+import static org.apache.felix.hc.api.FormattingResultLog.bytesHumanReadable;
 
 import org.apache.felix.hc.annotation.HealthCheckService;
+import org.apache.felix.hc.api.FormattingResultLog;
 import org.apache.felix.hc.api.HealthCheck;
 import org.apache.felix.hc.api.Result;
 import org.apache.felix.hc.api.ResultLog.Entry;
-import org.apache.felix.hc.util.FormattingResultLog;
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.ConfigurationPolicy;
@@ -75,11 +75,11 @@ public class MemoryCheck implements HealthCheck {
         Runtime runtime = Runtime.getRuntime();
 
         long freeMemory = runtime.freeMemory();
-        log.debug("Free memory: {}", formatBytes(freeMemory));
+        log.debug("Free memory: {}", bytesHumanReadable(freeMemory));
         long currentlyAllocatedByJVM = runtime.totalMemory();
-        log.debug("Currently allocated memory: {}", formatBytes(currentlyAllocatedByJVM));
+        log.debug("Currently allocated memory: {}", bytesHumanReadable(currentlyAllocatedByJVM));
         long usedMemory = currentlyAllocatedByJVM - freeMemory;
-        log.debug("Used memory: {}", formatBytes(usedMemory));
+        log.debug("Used memory: {}", bytesHumanReadable(usedMemory));
         long maxMemoryAvailableToJVM = runtime.maxMemory();
         
         double memoryUsedPercentage = ((double) usedMemory / maxMemoryAvailableToJVM * 100d);
@@ -89,7 +89,7 @@ public class MemoryCheck implements HealthCheck {
                         memoryUsedPercentage < this.heapUsedPercentageThresholdCritical ? Result.Status.WARN
                                 : Result.Status.CRITICAL;
 
-        String message = String.format("Memory Usage: %.1f%% of %s maximal heap used", memoryUsedPercentage, formatBytes(maxMemoryAvailableToJVM));
+        String message = String.format("Memory Usage: %.1f%% of %s maximal heap used", memoryUsedPercentage, bytesHumanReadable(maxMemoryAvailableToJVM));
 
         log.add(new Entry(status, message));
 
