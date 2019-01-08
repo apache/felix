@@ -25,6 +25,7 @@ import org.osgi.framework.BundleContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+/** Runs health checks that are configured with an interval (ScheduledThreadPoolExecutor.scheduleAtFixedRate()) for asynchronous execution.  */
 public class AsyncHealthCheckIntervalJob extends AsyncHealthCheckJob implements Runnable {
     private static final Logger LOG = LoggerFactory.getLogger(AsyncHealthCheckExecutor.class);
 

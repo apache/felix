@@ -35,7 +35,7 @@ import org.apache.felix.hc.api.execution.HealthCheckSelector;
 import org.apache.felix.hc.core.impl.executor.ExecutionResult;
 import org.apache.felix.hc.core.impl.executor.HealthCheckExecutorThreadPool;
 import org.apache.felix.hc.core.impl.executor.HealthCheckResultCache;
-import org.apache.felix.hc.util.HealthCheckFilter;
+import org.apache.felix.hc.core.impl.util.HealthCheckFilter;
 import org.apache.felix.hc.util.HealthCheckMetadata;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceEvent;
@@ -49,10 +49,7 @@ import org.osgi.service.component.annotations.Reference;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-/** Runs health checks that are configured with a cron expression for asynchronous execution. Used by HealthCheckExecutor.
- * 
- * This implementation uses quartz to support the cron syntax (which is not supported by executors from standard java java.util.concurrent
- * package. */
+/** Runs health checks asynchronously, either via cron or via interval. */
 @Component(service = AsyncHealthCheckExecutor.class, immediate = true)
 public class AsyncHealthCheckExecutor implements ServiceListener {
 
@@ -76,7 +73,7 @@ public class AsyncHealthCheckExecutor implements ServiceListener {
 
         int count = 0;
         HealthCheckFilter healthCheckFilter = new HealthCheckFilter(bundleContext);
-        final ServiceReference[] healthCheckReferences = healthCheckFilter.getHealthCheckServiceReferences(HealthCheckSelector.empty());
+        final ServiceReference[] healthCheckReferences = healthCheckFilter.getHealthCheckServiceReferences(HealthCheckSelector.empty(), false);
         for (ServiceReference serviceReference : healthCheckReferences) {
             HealthCheckMetadata healthCheckMetadata = new HealthCheckMetadata(serviceReference);
             if (isAsync(healthCheckMetadata)) {

@@ -17,10 +17,14 @@
  */
 package org.apache.felix.hc.core.it;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
+import java.io.IOException;
+import java.lang.reflect.Method;
+import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Dictionary;
@@ -32,8 +36,8 @@ import javax.inject.Inject;
 
 import org.apache.felix.hc.api.HealthCheck;
 import org.apache.felix.hc.api.Result;
+import org.apache.felix.hc.api.execution.HealthCheckExecutor;
 import org.apache.felix.hc.api.execution.HealthCheckSelector;
-import org.apache.felix.hc.util.HealthCheckFilter;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -42,6 +46,7 @@ import org.ops4j.pax.exam.Configuration;
 import org.ops4j.pax.exam.Option;
 import org.ops4j.pax.exam.junit.PaxExam;
 import org.osgi.framework.BundleContext;
+import org.osgi.framework.ServiceReference;
 import org.osgi.framework.ServiceRegistration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -51,7 +56,8 @@ public class HealthCheckFilterIT {
 
     private final Logger log = LoggerFactory.getLogger(getClass());
 
-    private HealthCheckFilter filter;
+    @Inject
+    private HealthCheckExecutor executor;
 
     @Inject
     private BundleContext bundleContext;
@@ -91,14 +97,16 @@ public class HealthCheckFilterIT {
     class TestHealthCheck implements HealthCheck {
 
         private final int id;
-        private final ServiceRegistration reg;
+        private final ServiceRegistration<HealthCheck> reg;
+        private final ServiceReference<HealthCheck> serviceRef;
 
         TestHealthCheck(Dictionary<String, Object> props) {
             id = instanceCounter++;
-            reg = bundleContext.registerService(HealthCheck.class.getName(),
-                    this, props);
+            reg = bundleContext.registerService(HealthCheck.class,  this, props);
+            serviceRef = reg.getReference();
             log.info("Registered {} with name {} and tags {}",
                     new Object[] { this, props.get(HealthCheck.NAME), Arrays.toString((String[]) props.get(HealthCheck.TAGS)) });
+            
         }
 
         @Override
@@ -136,6 +144,7 @@ public class HealthCheckFilterIT {
         return U.config();
     }
 
+
     @Before
     public void setup() {
         testServices.add(builder().withTags("foo").withName("test1").build());
@@ -143,7 +152,7 @@ public class HealthCheckFilterIT {
         testServices.add(builder().withTags("foo", "bar").withName("test3").build());
         testServices.add(builder().withTags("other", "thing").withName("test4").build());
         testServices.add(builder().withName("test5").build());
-        filter = new HealthCheckFilter(bundleContext);
+
     }
 
     @After
@@ -153,117 +162,123 @@ public class HealthCheckFilterIT {
         }
     }
 
+    
+    private ServiceReference<HealthCheck>[] callSelectHealthCheckReferences(HealthCheckSelector selector, boolean isCombineTagsWithOr) {
+        return U.callSelectHealthCheckReferences(executor, selector, isCombineTagsWithOr);
+    }
+
+    
     /** @param included true or false, in the same order as testServices */
-    private void assertServices(List<HealthCheck> s, boolean... included) {
+    private void assertServices(ServiceReference<HealthCheck>[] serviceRefs, boolean... included) {
+        List<ServiceReference<HealthCheck>> serviceRefList = Arrays.asList(serviceRefs);
         final Iterator<TestHealthCheck> it = testServices.iterator();
         for (boolean inc : included) {
             final TestHealthCheck thc = it.next();
             if (inc) {
                 assertTrue("Expecting list of services to include " + thc,
-                        s.contains(thc));
+                        serviceRefList.contains(thc.serviceRef));
             } else {
                 assertFalse("Not expecting list of services to include " + thc,
-                        s.contains(thc));
+                        serviceRefList.contains(thc.serviceRef));
             }
         }
     }
 
     @Test
-    public void testSelectorService() {
-        assertNotNull("Expecting HealthCheckSelector service to be provided",
-                filter);
+    public void testSelectorService() throws ClassNotFoundException, IOException, URISyntaxException {
+        assertNotNull("Expecting HealthCheckSelector service to be provided", executor);
     }
-
+    
+    
     @Test
     public void testAllServices() {
-        final List<HealthCheck> s = filter.getHealthChecks(null);
+        ServiceReference<HealthCheck>[] s = callSelectHealthCheckReferences(null, false);
         assertServices(s, true, true, true, true, true);
     }
 
     @Test
     public void testEmptyTags() {
-        final List<HealthCheck> s = filter.getHealthChecks(HealthCheckSelector.tags("", "", ""));
+        ServiceReference<HealthCheck>[] s = callSelectHealthCheckReferences(HealthCheckSelector.tags("", "", ""), false);
         assertServices(s, true, true, true, true, true);
     }
 
     @Test
     public void testFooTag() {
-        final List<HealthCheck> s = filter.getHealthChecks(HealthCheckSelector.tags("foo"));
+        ServiceReference<HealthCheck>[] s = callSelectHealthCheckReferences(HealthCheckSelector.tags("foo"), false);
         assertServices(s, true, false, true, false, false);
     }
 
     @Test
     public void testBarTag() {
-        final List<HealthCheck> s = filter.getHealthChecks(HealthCheckSelector.tags("bar"));
+        ServiceReference<HealthCheck>[] s = callSelectHealthCheckReferences(HealthCheckSelector.tags("bar"), false);
         assertServices(s, false, true, true, false, false);
     }
 
     @Test
     public void testFooAndBar() {
-        final List<HealthCheck> s = filter.getHealthChecks(HealthCheckSelector.tags("foo", "bar"));
+        ServiceReference<HealthCheck>[] s = callSelectHealthCheckReferences(HealthCheckSelector.tags("foo", "bar"), false);
         assertServices(s, false, false, true, false, false);
     }
 
     @Test
     public void testFooMinusBar() {
-        final List<HealthCheck> s = filter
-                .getHealthChecks(HealthCheckSelector.tags("foo", "-bar"));
+        ServiceReference<HealthCheck>[] s = callSelectHealthCheckReferences(HealthCheckSelector.tags("foo", "-bar"), false);
         assertServices(s, true, false, false, false, false);
     }
 
     @Test
     public void testWhitespace() {
-        final List<HealthCheck> s = filter.getHealthChecks(HealthCheckSelector.tags(
-                "\t \n\r foo  \t", "", " \t-bar\n", ""));
+        ServiceReference<HealthCheck>[] s = callSelectHealthCheckReferences(HealthCheckSelector.tags("\t \n\r foo  \t", "", " \t-bar\n", ""), false);
         assertServices(s, true, false, false, false, false);
     }
 
     @Test
     public void testOther() {
-        final List<HealthCheck> s = filter.getHealthChecks(HealthCheckSelector.tags("other"));
+        ServiceReference<HealthCheck>[] s = callSelectHealthCheckReferences(HealthCheckSelector.tags("other"), false);
         assertServices(s, false, false, false, true, false);
     }
 
     @Test
     public void testMinusOther() {
-        final List<HealthCheck> s = filter.getHealthChecks(HealthCheckSelector.tags("-other"));
+        ServiceReference<HealthCheck>[] s = callSelectHealthCheckReferences(HealthCheckSelector.tags("-other"), false);
         assertServices(s, true, true, true, false, true);
     }
 
     @Test
     public void testMinusOtherFoo() {
-        final List<HealthCheck> s = filter.getHealthChecks(HealthCheckSelector.tags("-other",
-                "-foo"));
+        ServiceReference<HealthCheck>[] s = callSelectHealthCheckReferences(HealthCheckSelector.tags("-other",  "-foo"), false);
         assertServices(s, false, true, false, false, true);
     }
 
     @Test
     public void testNoResults() {
-        final List<HealthCheck> s = filter.getHealthChecks(HealthCheckSelector.tags("NOT A TAG"));
-        assertTrue("Expecting no services", s.isEmpty());
+        ServiceReference<HealthCheck>[] s = callSelectHealthCheckReferences(HealthCheckSelector.tags("NOT A TAG"), false);
+        assertEquals("Expecting no services", 0, s.length);
     }
 
     @Test
     public void testSingleName() {
-        final List<HealthCheck> s = filter.getHealthChecks(HealthCheckSelector.names("test1"));
+        ServiceReference<HealthCheck>[] s = callSelectHealthCheckReferences(HealthCheckSelector.names("test1"), false);
         assertServices(s, true, false, false, false, false);
     }
 
     @Test
     public void testMultipleNames() {
-        final List<HealthCheck> s = filter.getHealthChecks(HealthCheckSelector.names("test1", "test3"));
+        ServiceReference<HealthCheck>[] s = callSelectHealthCheckReferences(HealthCheckSelector.names("test1", "test3"), false);
         assertServices(s, true, false, true, false, false);
     }
 
     @Test
     public void testExcludeName() {
-        final List<HealthCheck> s = filter.getHealthChecks(HealthCheckSelector.tags("foo").withNames("-test1"));
+        ServiceReference<HealthCheck>[] s = callSelectHealthCheckReferences(HealthCheckSelector.tags("foo").withNames("-test1"), false);
         assertServices(s, false, false, true, false, false);
     }
 
     @Test
     public void testNameOrTag() {
-        final List<HealthCheck> s = filter.getHealthChecks(HealthCheckSelector.tags("foo").withNames("test4"));
+        ServiceReference<HealthCheck>[] s = callSelectHealthCheckReferences(HealthCheckSelector.tags("foo").withNames("test4"), false);
         assertServices(s, true, false, true, true, false);
     }
+
+
 }

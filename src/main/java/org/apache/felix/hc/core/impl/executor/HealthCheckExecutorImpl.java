@@ -39,7 +39,6 @@ import java.util.Map;
 import java.util.Set;
 
 import org.apache.commons.lang3.ArrayUtils;
-import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.StopWatch;
 import org.apache.felix.hc.api.HealthCheck;
 import org.apache.felix.hc.api.Result;
@@ -49,8 +48,8 @@ import org.apache.felix.hc.api.execution.HealthCheckExecutionResult;
 import org.apache.felix.hc.api.execution.HealthCheckExecutor;
 import org.apache.felix.hc.api.execution.HealthCheckSelector;
 import org.apache.felix.hc.core.impl.executor.async.AsyncHealthCheckExecutor;
+import org.apache.felix.hc.core.impl.util.HealthCheckFilter;
 import org.apache.felix.hc.util.FormattingResultLog;
-import org.apache.felix.hc.util.HealthCheckFilter;
 import org.apache.felix.hc.util.HealthCheckMetadata;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
@@ -88,7 +87,6 @@ public class HealthCheckExecutorImpl implements ExtendedHealthCheckExecutor, Ser
 
     private final Map<HealthCheckMetadata, HealthCheckFuture> stillRunningFutures = new HashMap<HealthCheckMetadata, HealthCheckFuture>();
 
-    // optional dependency on quartz - if not present checks are just executed synchronously
     @Reference
     private AsyncHealthCheckExecutor asyncHealthCheckExecutor;
 
@@ -165,14 +163,18 @@ public class HealthCheckExecutorImpl implements ExtendedHealthCheckExecutor, Ser
             logger.debug("Using default tags");
             selector.withTags(defaultTags);
         }
-        final HealthCheckFilter filter = new HealthCheckFilter(this.bundleContext);
-        try {
-            final ServiceReference<HealthCheck>[] healthCheckReferences = filter.getHealthCheckServiceReferences(selector, options.isCombineTagsWithOr());
+        
+        final ServiceReference<HealthCheck>[] healthCheckReferences = selectHealthCheckReferences(selector, options.isCombineTagsWithOr());
+        List<HealthCheckExecutionResult> results = this.execute(healthCheckReferences, options);
+        return results;
+        
+    }
 
-            return this.execute(healthCheckReferences, options);
-        } finally {
-            filter.dispose();
-        }
+    // not part of interface but called by HealthCheckFilterIT
+    private ServiceReference<HealthCheck>[] selectHealthCheckReferences(HealthCheckSelector selector, boolean isCombineTagsWithOr) {
+        final HealthCheckFilter filter = new HealthCheckFilter(this.bundleContext);
+        final ServiceReference<HealthCheck>[] healthCheckReferences = filter.getHealthCheckServiceReferences(selector, isCombineTagsWithOr);
+        return healthCheckReferences;
     }
 
     /** @see org.apache.felix.hc.core.impl.executor.ExtendedHealthCheckExecutor#execute(org.osgi.framework.ServiceReference) */
@@ -219,14 +221,6 @@ public class HealthCheckExecutorImpl implements ExtendedHealthCheckExecutor, Ser
         if (!options.isForceInstantExecution()) {
             if (asyncHealthCheckExecutor != null) {
                 asyncHealthCheckExecutor.collectAsyncResults(healthCheckDescriptors, results, healthCheckResultCache);
-            } else {
-                for (HealthCheckMetadata hcDescriptior : healthCheckDescriptors) {
-                    if (StringUtils.isNotBlank(hcDescriptior.getAsyncCronExpression())) {
-                        logger.warn(
-                                "Health check '{}' is configured for asynchronous execution, but async executor is not available (quartz bundle missing)",
-                                hcDescriptior.getName());
-                    }
-                }
             }
         }
 

@@ -35,6 +35,10 @@ import org.quartz.SchedulerException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+/** Runs health checks that are configured with a cron expression for asynchronous execution. 
+ * 
+ * This implementation uses quartz to support the cron syntax (which is not supported by executors from standard java java.util.concurrent
+ * package) */
 public class AsyncHealthCheckQuartzCronJob extends AsyncHealthCheckJob implements Runnable {
     private static final Logger LOG = LoggerFactory.getLogger(AsyncHealthCheckExecutor.class);
 
