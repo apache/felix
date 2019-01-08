@@ -17,6 +17,8 @@
  */
 package org.apache.felix.hc.core.impl.servlet;
 
+import static org.apache.felix.hc.api.FormattingResultLog.msHumanReadable;
+
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.text.DateFormat;
@@ -30,7 +32,6 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.felix.hc.api.Result;
 import org.apache.felix.hc.api.ResultLog.Entry;
 import org.apache.felix.hc.api.execution.HealthCheckExecutionResult;
-import org.apache.felix.hc.util.FormattingResultLog;
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 
@@ -111,7 +112,7 @@ public class ResultHtmlSerializer {
             writer.println("</td>");
             Date finishedAt = executionResult.getFinishedAt();
             writer.println("<td>" + (isToday(finishedAt) ? dfShort.format(finishedAt) : dfLong.format(finishedAt)) + "</td>");
-            writer.println("<td>" + FormattingResultLog.msHumanReadable(executionResult.getElapsedTimeInMs()) + "</td>");
+            writer.println("<td>" + msHumanReadable(executionResult.getElapsedTimeInMs()) + "</td>");
 
             writer.println("</tr>");
         }

@@ -17,6 +17,8 @@
  */
 package org.apache.felix.hc.core.impl.servlet;
 
+import static org.apache.felix.hc.api.FormattingResultLog.msHumanReadable;
+
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.List;
@@ -26,7 +28,6 @@ import org.apache.commons.lang3.text.WordUtils;
 import org.apache.felix.hc.api.Result;
 import org.apache.felix.hc.api.ResultLog;
 import org.apache.felix.hc.api.execution.HealthCheckExecutionResult;
-import org.apache.felix.hc.util.FormattingResultLog;
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 import org.slf4j.Logger;
@@ -100,7 +101,7 @@ public class ResultTxtVerboseSerializer {
         resultStr.append(wrappedName + StringUtils.repeat(" ", paddingSize));
         resultStr.append(StringUtils.rightPad(healthCheckResult.getHealthCheckResult().getStatus().toString(), colWidthResult));
         resultStr.append(StringUtils.rightPad("[" + dfShort.format(healthCheckResult.getFinishedAt())
-                + "|" + FormattingResultLog.msHumanReadable(healthCheckResult.getElapsedTimeInMs()) + "]", colWidthTiming));
+                + "|" + msHumanReadable(healthCheckResult.getElapsedTimeInMs()) + "]", colWidthTiming));
 
         boolean isFirst = true;
         for (ResultLog.Entry logEntry : healthCheckResult.getHealthCheckResult()) {

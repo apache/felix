@@ -25,12 +25,12 @@ import static org.mockito.MockitoAnnotations.initMocks;
 
 import java.util.Arrays;
 
+import org.apache.felix.hc.api.FormattingResultLog;
 import org.apache.felix.hc.api.HealthCheck;
 import org.apache.felix.hc.api.Result;
 import org.apache.felix.hc.api.execution.HealthCheckExecutionResult;
 import org.apache.felix.hc.api.execution.HealthCheckMetadata;
 import org.apache.felix.hc.core.impl.executor.ExecutionResult;
-import org.apache.felix.hc.util.FormattingResultLog;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;

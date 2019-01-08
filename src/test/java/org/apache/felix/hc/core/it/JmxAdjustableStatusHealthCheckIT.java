@@ -27,6 +27,7 @@ import java.util.List;
 import javax.inject.Inject;
 import javax.management.DynamicMBean;
 
+import org.apache.felix.hc.api.FormattingResultLog;
 import org.apache.felix.hc.api.HealthCheck;
 import org.apache.felix.hc.api.Result;
 import org.apache.felix.hc.api.ResultLog;
@@ -35,7 +36,6 @@ import org.apache.felix.hc.api.execution.HealthCheckExecutionResult;
 import org.apache.felix.hc.api.execution.HealthCheckExecutor;
 import org.apache.felix.hc.api.execution.HealthCheckSelector;
 import org.apache.felix.hc.core.impl.JmxAdjustableStatusHealthCheck;
-import org.apache.felix.hc.util.FormattingResultLog;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
