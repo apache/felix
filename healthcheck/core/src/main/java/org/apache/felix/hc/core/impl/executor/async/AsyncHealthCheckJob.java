@@ -18,9 +18,9 @@
 package org.apache.felix.hc.core.impl.executor.async;
 
 import org.apache.felix.hc.api.execution.HealthCheckExecutionResult;
+import org.apache.felix.hc.api.execution.HealthCheckMetadata;
 import org.apache.felix.hc.core.impl.executor.HealthCheckFuture;
 import org.apache.felix.hc.core.impl.executor.HealthCheckFuture.Callback;
-import org.apache.felix.hc.util.HealthCheckMetadata;
 import org.osgi.framework.BundleContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

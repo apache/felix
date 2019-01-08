@@ -35,7 +35,7 @@ import org.apache.felix.hc.api.HealthCheck;
 import org.apache.felix.hc.api.Result;
 import org.apache.felix.hc.api.ResultLog;
 import org.apache.felix.hc.api.execution.HealthCheckExecutionResult;
-import org.apache.felix.hc.util.HealthCheckMetadata;
+import org.apache.felix.hc.api.execution.HealthCheckMetadata;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;

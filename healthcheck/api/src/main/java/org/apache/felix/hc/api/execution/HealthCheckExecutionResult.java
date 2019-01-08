@@ -20,7 +20,6 @@ package org.apache.felix.hc.api.execution;
 import java.util.Date;
 
 import org.apache.felix.hc.api.Result;
-import org.apache.felix.hc.util.HealthCheckMetadata;
 import org.osgi.annotation.versioning.ProviderType;
 
 /** Interface for health check executions via the {@link HealthCheckExecutor}. */

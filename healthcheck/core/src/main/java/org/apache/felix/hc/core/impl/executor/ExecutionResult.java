@@ -23,7 +23,7 @@ import java.util.Date;
 import org.apache.felix.hc.api.HealthCheck;
 import org.apache.felix.hc.api.Result;
 import org.apache.felix.hc.api.execution.HealthCheckExecutionResult;
-import org.apache.felix.hc.util.HealthCheckMetadata;
+import org.apache.felix.hc.api.execution.HealthCheckMetadata;
 
 /** The result of executing a {@link HealthCheck}. */
 public class ExecutionResult implements Comparable<ExecutionResult>, HealthCheckExecutionResult {

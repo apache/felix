@@ -29,9 +29,9 @@ import java.io.StringWriter;
 
 import org.apache.felix.hc.api.HealthCheck;
 import org.apache.felix.hc.api.Result;
+import org.apache.felix.hc.api.execution.HealthCheckMetadata;
 import org.apache.felix.hc.core.impl.executor.ExecutionResult;
 import org.apache.felix.hc.util.FormattingResultLog;
-import org.apache.felix.hc.util.HealthCheckMetadata;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
