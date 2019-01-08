@@ -25,7 +25,7 @@ import org.apache.felix.hc.api.Result;
 import org.apache.felix.hc.api.ResultLog;
 import org.apache.felix.hc.api.ResultLog.Entry;
 import org.apache.felix.hc.api.execution.HealthCheckExecutionResult;
-import org.apache.felix.hc.util.HealthCheckMetadata;
+import org.apache.felix.hc.api.execution.HealthCheckMetadata;
 
 public class CompositeResult extends Result {
 

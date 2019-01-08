@@ -21,7 +21,7 @@ import static org.quartz.CronScheduleBuilder.cronSchedule;
 import static org.quartz.JobBuilder.newJob;
 import static org.quartz.TriggerBuilder.newTrigger;
 
-import org.apache.felix.hc.util.HealthCheckMetadata;
+import org.apache.felix.hc.api.execution.HealthCheckMetadata;
 import org.osgi.framework.BundleContext;
 import org.quartz.CronTrigger;
 import org.quartz.Job;
