@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.felix.hc.util;
+package org.apache.felix.hc.core.impl.util;
 
 import static org.apache.felix.hc.api.execution.HealthCheckSelector.empty;
 import static org.apache.felix.hc.api.execution.HealthCheckSelector.names;
@@ -23,6 +23,7 @@ import static org.junit.Assert.assertEquals;
 
 import org.apache.felix.hc.api.HealthCheck;
 import org.apache.felix.hc.api.execution.HealthCheckSelector;
+import org.apache.felix.hc.core.impl.util.HealthCheckFilter;
 import org.junit.Test;
 
 public class HealthCheckFilterTest {

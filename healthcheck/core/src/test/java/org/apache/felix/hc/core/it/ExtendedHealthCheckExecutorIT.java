@@ -34,7 +34,6 @@ import org.apache.felix.hc.api.Result;
 import org.apache.felix.hc.api.execution.HealthCheckExecutionResult;
 import org.apache.felix.hc.api.execution.HealthCheckExecutor;
 import org.apache.felix.hc.api.execution.HealthCheckSelector;
-import org.apache.felix.hc.util.HealthCheckFilter;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -99,8 +98,7 @@ public class ExtendedHealthCheckExecutorIT {
 
     @Test
     public void testSingleExecution() throws Exception {
-        final HealthCheckFilter filter = new HealthCheckFilter(bundleContext);
-        final ServiceReference[] refs = filter.getHealthCheckServiceReferences(HealthCheckSelector.tags(testTag));
+        ServiceReference<HealthCheck>[] refs = U.callSelectHealthCheckReferences(executor, HealthCheckSelector.tags(testTag), false);
         assertNotNull(refs);
         assertEquals(1, refs.length);
 

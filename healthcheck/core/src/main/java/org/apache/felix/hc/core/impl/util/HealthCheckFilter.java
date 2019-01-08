@@ -15,16 +15,9 @@
  * KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
  */
-package org.apache.felix.hc.util;
+package org.apache.felix.hc.core.impl.util;
 
 import static org.apache.felix.hc.api.execution.HealthCheckSelector.empty;
-
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
 
 import org.apache.felix.hc.api.HealthCheck;
 import org.apache.felix.hc.api.execution.HealthCheckSelector;
@@ -45,32 +38,9 @@ public class HealthCheckFilter {
 
     public static final String OMIT_PREFIX = "-";
 
-    private final Set<ServiceReference> usedReferences = new HashSet<ServiceReference>();
-
     /** Create a new filter object */
     public HealthCheckFilter(final BundleContext bc) {
         bundleContext = bc;
-    }
-
-    public List<HealthCheck> getHealthChecks(final HealthCheckSelector selector) {
-        final ServiceReference[] refs = this.getHealthCheckServiceReferences(selector);
-        final List<HealthCheck> result = new ArrayList<HealthCheck>();
-
-        if (refs != null) {
-            final List<ServiceReference> sortedRefs = Arrays.asList(refs);
-            Collections.sort(sortedRefs);
-
-            for (final ServiceReference ref : sortedRefs) {
-                final HealthCheck hc = (HealthCheck) bundleContext.getService(ref);
-                log.debug("Selected HealthCheck service {}", hc);
-                if (hc != null) {
-                    this.usedReferences.add(ref);
-                    result.add(hc);
-                }
-            }
-        }
-
-        return result;
     }
 
     public ServiceReference<HealthCheck>[] getHealthCheckServiceReferences(final HealthCheckSelector selector) {
@@ -101,13 +71,6 @@ public class HealthCheckFilter {
         }
     }
 
-    /** Dispose all used service references */
-    public void dispose() {
-        for (final ServiceReference ref : this.usedReferences) {
-            this.bundleContext.ungetService(ref);
-        }
-        this.usedReferences.clear();
-    }
 
     CharSequence getServiceFilter(HealthCheckSelector selector, boolean combineTagsWithOr) {
         // Build service filter

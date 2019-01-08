@@ -38,7 +38,7 @@ import org.apache.felix.hc.api.execution.HealthCheckExecutionResult;
 import org.apache.felix.hc.api.execution.HealthCheckExecutor;
 import org.apache.felix.hc.api.execution.HealthCheckSelector;
 import org.apache.felix.hc.core.impl.executor.ExecutionResult;
-import org.apache.felix.hc.util.HealthCheckFilter;
+import org.apache.felix.hc.core.impl.util.HealthCheckFilter;
 import org.apache.felix.hc.util.HealthCheckMetadata;
 import org.hamcrest.Description;
 import org.hamcrest.Matcher;

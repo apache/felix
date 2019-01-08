@@ -25,6 +25,7 @@ import org.osgi.framework.BundleContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+/** Abstract class for async execution variants cron/interval. */
 public abstract class AsyncHealthCheckJob implements Runnable {
     private static final Logger LOG = LoggerFactory.getLogger(AsyncHealthCheckJob.class);
 
