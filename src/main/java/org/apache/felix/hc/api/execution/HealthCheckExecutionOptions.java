@@ -33,22 +33,25 @@ public class HealthCheckExecutionOptions {
     /** If activated, this will ensure that asynchronous checks will be executed immediately.
      * 
      * @param forceInstantExecution boolean flag */
-    public void setForceInstantExecution(boolean forceInstantExecution) {
+    public HealthCheckExecutionOptions setForceInstantExecution(boolean forceInstantExecution) {
         this.forceInstantExecution = forceInstantExecution;
+        return this;
     }
 
     /** If activated, the given tags will be combined with a logical "or" instead of "and".
      * 
      * @param combineTagsWithOr boolean flag */
-    public void setCombineTagsWithOr(boolean combineTagsWithOr) {
+    public HealthCheckExecutionOptions setCombineTagsWithOr(boolean combineTagsWithOr) {
         this.combineTagsWithOr = combineTagsWithOr;
+        return this;
     }
 
     /** Allows to override the global timeout for this particular execution of the health check.
      * 
      * @param overrideGlobalTimeout timeout in ms to be used for this execution of the execution */
-    public void setOverrideGlobalTimeout(int overrideGlobalTimeout) {
+    public HealthCheckExecutionOptions setOverrideGlobalTimeout(int overrideGlobalTimeout) {
         this.overrideGlobalTimeout = overrideGlobalTimeout;
+        return this;
     }
 
     /** @return true if instant execution is turned on */
