@@ -173,7 +173,7 @@ public class HealthCheckResultCache {
 
             if (!nonOkResultsFromPast.isEmpty()) {
                 ResultLog resultLog = new ResultLog();
-                resultLog.add(new Entry(Result.Status.OK, "*** Current Result ***"));
+                resultLog.add(new Entry(Result.Status.OK, "*** Current Result: "+origResult.getHealthCheckResult().getStatus()+" ***"));
                 for (ResultLog.Entry entry : origResult.getHealthCheckResult()) {
                     resultLog.add(entry);
                 }
@@ -181,8 +181,8 @@ public class HealthCheckResultCache {
                 for (HealthCheckExecutionResult nonOkResultFromPast : nonOkResultsFromPast) {
                     Status status = nonOkResultFromPast.getHealthCheckResult().getStatus();
                     resultLog.add(
-                            new Entry(Result.Status.WARN,
-                                    "*** Sticky Result " + status + " from " + df.format(nonOkResultFromPast.getFinishedAt()) + " ***"));
+                            new Entry(Result.Status.OK,
+                                    "*** Sticky Result: " + status + " from " + df.format(nonOkResultFromPast.getFinishedAt()) + " ***"));
                     for (ResultLog.Entry entry : nonOkResultFromPast.getHealthCheckResult()) {
                         resultLog.add(entry);
                     }

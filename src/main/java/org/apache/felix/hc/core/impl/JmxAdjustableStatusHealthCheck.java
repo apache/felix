@@ -36,11 +36,10 @@ import javax.management.MBeanParameterInfo;
 import javax.management.ReflectionException;
 
 import org.apache.commons.lang3.StringUtils;
-import org.apache.felix.hc.api.FormattingResultLog;
 import org.apache.felix.hc.api.HealthCheck;
 import org.apache.felix.hc.api.Result;
 import org.apache.felix.hc.api.Result.Status;
-import org.apache.felix.hc.api.ResultLog.Entry;
+import org.apache.felix.hc.core.impl.util.AdhocStatusHealthCheck;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceRegistration;
 import org.osgi.service.component.ComponentContext;
@@ -94,13 +93,12 @@ public class JmxAdjustableStatusHealthCheck {
     /* synchronized as potentially multiple users can run JMX operations */
     private synchronized void registerDynamicHealthCheck(Result.Status status, String[] tags) {
         unregisterDynamicHealthCheck();
-        HealthCheck healthCheck = new AdhocStatusOnlyHealthCheck(status);
+        HealthCheck healthCheck = new AdhocStatusHealthCheck(status, "Set dynamically via JMX bean " + JmxAdjustableStatusHealthCheck.OBJECT_NAME);
         Dictionary<String, Object> props = new Hashtable<String, Object>();
         props.put(HealthCheck.NAME, "JMX Adhoc Result");
         props.put(HealthCheck.TAGS, tags);
 
         healthCheckRegistration = bundleContext.registerService(HealthCheck.class.getName(), healthCheck, props);
-
     }
 
     /* synchronized as potentially multiple users can run JMX operations */
@@ -110,24 +108,6 @@ public class JmxAdjustableStatusHealthCheck {
             this.healthCheckRegistration = null;
             LOG.debug("Unregistered DynamicTestingHealthCheck");
         }
-    }
-
-    class AdhocStatusOnlyHealthCheck implements HealthCheck {
-
-        private final Result.Status status;
-
-        AdhocStatusOnlyHealthCheck(Result.Status status) {
-            this.status = status;
-        }
-
-        @Override
-        public Result execute() {
-            FormattingResultLog resultLog = new FormattingResultLog();
-            resultLog.add(
-                    new Entry(status, "Set dynamically via JMX bean " + OBJECT_NAME));
-            return new Result(resultLog);
-        }
-
     }
 
     private class AdjustableHealthCheckStatusMBean implements DynamicMBean {

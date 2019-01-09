@@ -164,16 +164,17 @@ public class HealthCheckExecutorImpl implements ExtendedHealthCheckExecutor, Ser
             selector.withTags(defaultTags);
         }
         
-        final ServiceReference<HealthCheck>[] healthCheckReferences = selectHealthCheckReferences(selector, options.isCombineTagsWithOr());
+        final ServiceReference<HealthCheck>[] healthCheckReferences = selectHealthCheckReferences(selector, options);
         List<HealthCheckExecutionResult> results = this.execute(healthCheckReferences, options);
         return results;
         
     }
 
-    // not part of interface but called by HealthCheckFilterIT
-    private ServiceReference<HealthCheck>[] selectHealthCheckReferences(HealthCheckSelector selector, boolean isCombineTagsWithOr) {
+    /** @see org.apache.felix.hc.core.impl.executor.ExtendedHealthCheckExecutor#selectHealthCheckReferences(HealthCheckSelector, HealthCheckExecutionOptions) */
+    @Override
+    public ServiceReference<HealthCheck>[] selectHealthCheckReferences(HealthCheckSelector selector, HealthCheckExecutionOptions options) {
         final HealthCheckFilter filter = new HealthCheckFilter(this.bundleContext);
-        final ServiceReference<HealthCheck>[] healthCheckReferences = filter.getHealthCheckServiceReferences(selector, isCombineTagsWithOr);
+        final ServiceReference<HealthCheck>[] healthCheckReferences = filter.getHealthCheckServiceReferences(selector, options.isCombineTagsWithOr());
         return healthCheckReferences;
     }
 
@@ -184,21 +185,21 @@ public class HealthCheckExecutorImpl implements ExtendedHealthCheckExecutor, Ser
         return createResultsForDescriptor(metadata);
     }
 
-    /** Execute a set of health checks */
-    private List<HealthCheckExecutionResult> execute(final ServiceReference<HealthCheck>[] healthCheckReferences,
+    /** @see org.apache.felix.hc.core.impl.executor.ExtendedHealthCheckExecutor#execute(ServiceReference[], HealthCheckExecutionOptions) */
+    @Override
+    public List<HealthCheckExecutionResult> execute(final ServiceReference<HealthCheck>[] healthCheckReferences,
             HealthCheckExecutionOptions options) {
-        final StopWatch stopWatch = new StopWatch();
-        stopWatch.start();
+        final long startTime = System.currentTimeMillis();
 
         final List<HealthCheckExecutionResult> results = new ArrayList<HealthCheckExecutionResult>();
         final List<HealthCheckMetadata> healthCheckDescriptors = getHealthCheckMetadata(healthCheckReferences);
 
         createResultsForDescriptors(healthCheckDescriptors, results, options);
 
-        stopWatch.stop();
         if (logger.isDebugEnabled()) {
-            logger.debug("Time consumed for all checks: {}", msHumanReadable(stopWatch.getTime()));
+            logger.debug("Time consumed for all checks: {}", msHumanReadable(System.currentTimeMillis() - startTime));
         }
+        
         // sort result
         Collections.sort(results, new Comparator<HealthCheckExecutionResult>() {
 

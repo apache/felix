@@ -163,8 +163,8 @@ public class HealthCheckFilterIT {
     }
 
     
-    private ServiceReference<HealthCheck>[] callSelectHealthCheckReferences(HealthCheckSelector selector, boolean isCombineTagsWithOr) {
-        return U.callSelectHealthCheckReferences(executor, selector, isCombineTagsWithOr);
+    private ServiceReference<HealthCheck>[] callSelectHealthCheckReferences(HealthCheckSelector selector) {
+        return U.callSelectHealthCheckReferences(executor, selector);
     }
 
     
@@ -192,91 +192,91 @@ public class HealthCheckFilterIT {
     
     @Test
     public void testAllServices() {
-        ServiceReference<HealthCheck>[] s = callSelectHealthCheckReferences(null, false);
+        ServiceReference<HealthCheck>[] s = callSelectHealthCheckReferences(null);
         assertServices(s, true, true, true, true, true);
     }
 
     @Test
     public void testEmptyTags() {
-        ServiceReference<HealthCheck>[] s = callSelectHealthCheckReferences(HealthCheckSelector.tags("", "", ""), false);
+        ServiceReference<HealthCheck>[] s = callSelectHealthCheckReferences(HealthCheckSelector.tags("", "", ""));
         assertServices(s, true, true, true, true, true);
     }
 
     @Test
     public void testFooTag() {
-        ServiceReference<HealthCheck>[] s = callSelectHealthCheckReferences(HealthCheckSelector.tags("foo"), false);
+        ServiceReference<HealthCheck>[] s = callSelectHealthCheckReferences(HealthCheckSelector.tags("foo"));
         assertServices(s, true, false, true, false, false);
     }
 
     @Test
     public void testBarTag() {
-        ServiceReference<HealthCheck>[] s = callSelectHealthCheckReferences(HealthCheckSelector.tags("bar"), false);
+        ServiceReference<HealthCheck>[] s = callSelectHealthCheckReferences(HealthCheckSelector.tags("bar"));
         assertServices(s, false, true, true, false, false);
     }
 
     @Test
     public void testFooAndBar() {
-        ServiceReference<HealthCheck>[] s = callSelectHealthCheckReferences(HealthCheckSelector.tags("foo", "bar"), false);
+        ServiceReference<HealthCheck>[] s = callSelectHealthCheckReferences(HealthCheckSelector.tags("foo", "bar"));
         assertServices(s, false, false, true, false, false);
     }
 
     @Test
     public void testFooMinusBar() {
-        ServiceReference<HealthCheck>[] s = callSelectHealthCheckReferences(HealthCheckSelector.tags("foo", "-bar"), false);
+        ServiceReference<HealthCheck>[] s = callSelectHealthCheckReferences(HealthCheckSelector.tags("foo", "-bar"));
         assertServices(s, true, false, false, false, false);
     }
 
     @Test
     public void testWhitespace() {
-        ServiceReference<HealthCheck>[] s = callSelectHealthCheckReferences(HealthCheckSelector.tags("\t \n\r foo  \t", "", " \t-bar\n", ""), false);
+        ServiceReference<HealthCheck>[] s = callSelectHealthCheckReferences(HealthCheckSelector.tags("\t \n\r foo  \t", "", " \t-bar\n", ""));
         assertServices(s, true, false, false, false, false);
     }
 
     @Test
     public void testOther() {
-        ServiceReference<HealthCheck>[] s = callSelectHealthCheckReferences(HealthCheckSelector.tags("other"), false);
+        ServiceReference<HealthCheck>[] s = callSelectHealthCheckReferences(HealthCheckSelector.tags("other"));
         assertServices(s, false, false, false, true, false);
     }
 
     @Test
     public void testMinusOther() {
-        ServiceReference<HealthCheck>[] s = callSelectHealthCheckReferences(HealthCheckSelector.tags("-other"), false);
+        ServiceReference<HealthCheck>[] s = callSelectHealthCheckReferences(HealthCheckSelector.tags("-other"));
         assertServices(s, true, true, true, false, true);
     }
 
     @Test
     public void testMinusOtherFoo() {
-        ServiceReference<HealthCheck>[] s = callSelectHealthCheckReferences(HealthCheckSelector.tags("-other",  "-foo"), false);
+        ServiceReference<HealthCheck>[] s = callSelectHealthCheckReferences(HealthCheckSelector.tags("-other",  "-foo"));
         assertServices(s, false, true, false, false, true);
     }
 
     @Test
     public void testNoResults() {
-        ServiceReference<HealthCheck>[] s = callSelectHealthCheckReferences(HealthCheckSelector.tags("NOT A TAG"), false);
+        ServiceReference<HealthCheck>[] s = callSelectHealthCheckReferences(HealthCheckSelector.tags("NOT A TAG"));
         assertEquals("Expecting no services", 0, s.length);
     }
 
     @Test
     public void testSingleName() {
-        ServiceReference<HealthCheck>[] s = callSelectHealthCheckReferences(HealthCheckSelector.names("test1"), false);
+        ServiceReference<HealthCheck>[] s = callSelectHealthCheckReferences(HealthCheckSelector.names("test1"));
         assertServices(s, true, false, false, false, false);
     }
 
     @Test
     public void testMultipleNames() {
-        ServiceReference<HealthCheck>[] s = callSelectHealthCheckReferences(HealthCheckSelector.names("test1", "test3"), false);
+        ServiceReference<HealthCheck>[] s = callSelectHealthCheckReferences(HealthCheckSelector.names("test1", "test3"));
         assertServices(s, true, false, true, false, false);
     }
 
     @Test
     public void testExcludeName() {
-        ServiceReference<HealthCheck>[] s = callSelectHealthCheckReferences(HealthCheckSelector.tags("foo").withNames("-test1"), false);
+        ServiceReference<HealthCheck>[] s = callSelectHealthCheckReferences(HealthCheckSelector.tags("foo").withNames("-test1"));
         assertServices(s, false, false, true, false, false);
     }
 
     @Test
     public void testNameOrTag() {
-        ServiceReference<HealthCheck>[] s = callSelectHealthCheckReferences(HealthCheckSelector.tags("foo").withNames("test4"), false);
+        ServiceReference<HealthCheck>[] s = callSelectHealthCheckReferences(HealthCheckSelector.tags("foo").withNames("test4"));
         assertServices(s, true, false, true, true, false);
     }
 

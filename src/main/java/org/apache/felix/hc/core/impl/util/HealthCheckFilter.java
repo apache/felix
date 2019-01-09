@@ -114,10 +114,10 @@ public class HealthCheckFilter {
                 }
                 if (name.startsWith(HealthCheckFilter.OMIT_PREFIX)) {
                     // ommit tags always have to be added as and-clause
-                    filterBuilder.append("(!(").append(HealthCheck.NAME).append("=").append(name.substring(prefixLen)).append("))");
+                    filterBuilder.append("(!(").append(HealthCheck.NAME).append("=").append(escapeOsgiFilterLiteral(name.substring(prefixLen))).append("))");
                 } else {
                     // names are always ORd
-                    filterBuilderForOrOperator.append("(").append(HealthCheck.NAME).append("=").append(name).append(")");
+                    filterBuilderForOrOperator.append("(").append(HealthCheck.NAME).append("=").append(escapeOsgiFilterLiteral(name)).append(")");
                     addedNameToOrBuilder = true;
                 }
             }
@@ -137,5 +137,9 @@ public class HealthCheckFilter {
         }
         filterBuilder.append(")");
         return filterBuilder;
+    }
+
+    private Object escapeOsgiFilterLiteral(String name) {
+        return name.replace("*", "\\*").replace("(", "\\(").replace(")", "\\)");
     }
 }

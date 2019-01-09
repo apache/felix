@@ -21,23 +21,23 @@ import static org.hamcrest.CoreMatchers.containsString;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.fail;
+import static org.mockito.Mockito.when;
+import static org.mockito.MockitoAnnotations.initMocks;
 
 import java.lang.management.ManagementFactory;
-import java.util.Date;
-import java.util.List;
 
 import javax.management.MBeanServer;
 import javax.management.ObjectName;
 
 import org.apache.felix.hc.api.HealthCheck;
 import org.apache.felix.hc.api.Result;
-import org.apache.felix.hc.api.execution.HealthCheckExecutionOptions;
 import org.apache.felix.hc.api.execution.HealthCheckExecutionResult;
-import org.apache.felix.hc.api.execution.HealthCheckMetadata;
-import org.apache.felix.hc.api.execution.HealthCheckSelector;
 import org.apache.felix.hc.core.impl.executor.ExtendedHealthCheckExecutor;
+import org.junit.Before;
 import org.junit.Test;
-import org.osgi.framework.Bundle;
+import org.mockito.Mock;
+import org.mockito.invocation.InvocationOnMock;
+import org.mockito.stubbing.Answer;
 import org.osgi.framework.ServiceReference;
 
 public class HealthCheckMBeanTest {
@@ -45,105 +45,49 @@ public class HealthCheckMBeanTest {
     private boolean resultOk;
     public static final String OBJECT_NAME = "org.apache.sling.testing:type=HealthCheckMBeanTest";
 
-    private HealthCheck testHealthCheck = new HealthCheck() {
+    @Mock
+    private HealthCheck testHealthCheck;
 
-        @Override
-        public Result execute() {
-            if (resultOk) {
-                return new Result(Result.Status.OK, "Nothing to report, result ok");
-            } else {
-                return new Result(Result.Status.WARN, "Result is not ok!");
+    @Mock
+    private ServiceReference<HealthCheck> ref;
+
+    @Mock
+    private ExtendedHealthCheckExecutor extendedHealthCheckExecutor;
+
+    @Mock
+    private HealthCheckExecutionResult result;
+
+    
+    @Before
+    public void setup() {
+        initMocks(this);
+        
+        when(testHealthCheck.execute()).then(new Answer<Result>() {
+
+            @Override
+            public Result answer(InvocationOnMock invocation) throws Throwable {
+                if (resultOk) {
+                    return new Result(Result.Status.OK, "Nothing to report, result ok");
+                } else {
+                    return new Result(Result.Status.WARN, "Result is not ok!");
+                }
             }
-        }
-    };
+        });
+        
+        when(extendedHealthCheckExecutor.execute(ref)).thenReturn(result);
+        when(result.getHealthCheckResult()).then(new Answer<Result>() {
 
-    private Object getJmxValue(String mbeanName, String attributeName) throws Exception {
-        final MBeanServer jmxServer = ManagementFactory.getPlatformMBeanServer();
-        final ObjectName objectName = new ObjectName(mbeanName);
-        if (jmxServer.queryNames(objectName, null).size() == 0) {
-            fail("MBean not found: " + objectName);
-        }
-        final Object value = jmxServer.getAttribute(objectName, attributeName);
-        return value;
+            @Override
+            public Result answer(InvocationOnMock invocation) throws Throwable {
+                return testHealthCheck.execute();
+            }
+        });
     }
 
     @Test
     public void testBean() throws Exception {
-        final ServiceReference ref = new ServiceReference() {
-
-            @Override
-            public boolean isAssignableTo(Bundle bundle, String className) {
-                return false;
-            }
-
-            @Override
-            public Bundle[] getUsingBundles() {
-                return null;
-            }
-
-            @Override
-            public String[] getPropertyKeys() {
-                return null;
-            }
-
-            @Override
-            public Object getProperty(String key) {
-                return null;
-            }
-
-            @Override
-            public Bundle getBundle() {
-                return null;
-            }
-
-            @Override
-            public int compareTo(Object reference) {
-                return 0;
-            }
-        };
-        final HealthCheckMBean mbean = new HealthCheckMBean(ref, new ExtendedHealthCheckExecutor() {
-
-            @Override
-            public HealthCheckExecutionResult execute(ServiceReference ref) {
-                return new HealthCheckExecutionResult() {
-
-                    @Override
-                    public Result getHealthCheckResult() {
-                        return testHealthCheck.execute();
-                    }
-
-                    @Override
-                    public HealthCheckMetadata getHealthCheckMetadata() {
-                        return null;
-                    }
-
-                    @Override
-                    public Date getFinishedAt() {
-                        return null;
-                    }
-
-                    @Override
-                    public long getElapsedTimeInMs() {
-                        return 0;
-                    }
-
-                    @Override
-                    public boolean hasTimedOut() {
-                        return false;
-                    }
-                };
-            }
-
-            @Override
-            public List<HealthCheckExecutionResult> execute(HealthCheckSelector selector) {
-                return null;
-            }
-
-            @Override
-            public List<HealthCheckExecutionResult> execute(HealthCheckSelector selector, HealthCheckExecutionOptions options) {
-                return null;
-            }
-        });
+        
+        final HealthCheckMBean mbean = new HealthCheckMBean(ref, extendedHealthCheckExecutor);
         final ObjectName name = new ObjectName(OBJECT_NAME);
         jmxServer.registerMBean(mbean, name);
         try {
@@ -161,5 +105,17 @@ public class HealthCheckMBeanTest {
             jmxServer.unregisterMBean(name);
         }
     }
+    
+
+    private Object getJmxValue(String mbeanName, String attributeName) throws Exception {
+        final MBeanServer jmxServer = ManagementFactory.getPlatformMBeanServer();
+        final ObjectName objectName = new ObjectName(mbeanName);
+        if (jmxServer.queryNames(objectName, null).size() == 0) {
+            fail("MBean not found: " + objectName);
+        }
+        final Object value = jmxServer.getAttribute(objectName, attributeName);
+        return value;
+    }
+    
 
 }
