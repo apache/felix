@@ -123,7 +123,7 @@ Memory | org.apache.felix.hc.generalchecks.MemoryCheck | no | Checks for Memory 
 CPU | org.apache.felix.hc.generalchecks.CpuCheck | no | Checks for CPU usage - `cpuPercentageThresholdWarn` (default 95%) can be set to control what CPU usage produces status `WARN` (check never results in `CRITICAL`)
 Thread Usage | org.apache.felix.hc.generalchecks.ThreadUsageCheck | no | Checks via `ThreadMXBean.findDeadlockedThreads()` for deadlocks and analyses the CPU usage of each thread via a configurable time period (`samplePeriodInMs` defaults to 200ms). Uses `cpuPercentageThresholdWarn` (default 95%) to `WARN` about high thread utilisation.   
 Bundles Started | org.apache.felix.hc.generalchecks.BundlesStartedCheck | yes | Checks for started bundles - `includesRegex` and `excludesRegex` control what bundles are checked. 
-JMX Attribute Check | org.apache.felix.hc.generalchecks.JmxAttributeCheckk | yes | Allows to check an arbitrary JMX attribute (using the configured mbean `mbean.name`'s attribute `attribute.name`) against a given constraint `attribute.value.constraint`
+JMX Attribute Check | org.apache.felix.hc.generalchecks.JmxAttributeCheckk | yes | Allows to check an arbitrary JMX attribute (using the configured mbean `mbean.name`'s attribute `attribute.name`) against a given constraint `attribute.value.constraint`. Can check multiple attributes by providing additional config properties with numbers:  `mbean2.name`' `attribute2.name` and `attribute2.value.constraint`.
 
 
 ## Executing Health Checks
