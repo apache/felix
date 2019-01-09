@@ -20,10 +20,10 @@ package org.apache.felix.hc.annotation;
 import org.osgi.service.component.annotations.ComponentPropertyType;
 
 @ComponentPropertyType
-public @interface StickyWarnings {
+public @interface Sticky {
 
     public static final String PREFIX_ = "hc.";
 
-    long warningsStickForMinutes();
+    long keepNonOkResultsStickyForSec();
 
 }
