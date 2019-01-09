@@ -21,6 +21,8 @@ import static org.junit.Assert.assertEquals;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+import java.util.HashMap;
+
 import org.apache.felix.hc.api.Result;
 import org.apache.felix.hc.generalchecks.JmxAttributeCheck;
 import org.junit.Test;
@@ -35,7 +37,7 @@ public class JmxAttributeHealthCheckTest {
         when(configuration.attribute_name()).thenReturn(attributeName);
         when(configuration.attribute_value_constraint()).thenReturn(constraint);
 
-        hc.activate(configuration);
+        hc.activate(configuration, new HashMap<String,Object>());
 
         final Result r = hc.execute();
         assertEquals("Expected result " + expected, expected, r.isOk());
@@ -50,4 +52,5 @@ public class JmxAttributeHealthCheckTest {
     public void testJmxAttributeNoMatch() {
         assertJmxValue("java.lang:type=ClassLoading", "LoadedClassCount", "< 10", false);
     }
+    
 }

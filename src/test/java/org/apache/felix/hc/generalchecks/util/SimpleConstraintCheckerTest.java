@@ -20,6 +20,9 @@ package org.apache.felix.hc.generalchecks.util;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
+import java.util.Calendar;
+import java.util.Date;
+
 import org.junit.Before;
 import org.junit.Test;
 
@@ -69,6 +72,12 @@ public class SimpleConstraintCheckerTest {
         assertFalse(checker.check(null, "foo"));
     }
 
+
+    @Test
+    public void testNumberEquals() {
+        assertTrue(checker.check("7", "= 7"));
+    }
+
     @Test
     public void testNullNotGreater() {
         assertFalse(checker.check(null, "> 2"));
@@ -94,6 +103,12 @@ public class SimpleConstraintCheckerTest {
         assertFalse(checker.check("5", "< 2"));
     }
 
+    @Test
+    public void testNot() {
+        assertTrue(checker.check("5", "not < 2"));
+        assertFalse(checker.check("5", "not < 6"));
+    }
+    
     @Test
     public void testBetweenA() {
         assertTrue(checker.check("5", "between 2 and 6"));
@@ -157,6 +172,30 @@ public class SimpleConstraintCheckerTest {
     @Test
     public void testEndsWithB() {
         assertFalse(checker.check("This is a NICE TOUCH ok?", "ENDS_WITH is"));
-    }    
+    }
+
+    @Test
+    public void testMatches() {
+        assertTrue(checker.check("testABCtest", "matches .*ABC.*"));
+        assertFalse(checker.check("testABCtest", "matches .*XYZ.*"));
+        assertTrue(checker.check("testABCtest", "not matches .*XYZ.*"));
+        assertTrue(checker.check("2.1.0", "matches ^2\\.[1-9]\\.[0-9]+"));
+    }
+
+    @Test
+    public void testOlderThan() {
+        long timestampNow = new Date().getTime();
+        assertFalse(checker.check(new Long(timestampNow), "OLDER_THAN 5 sec"));
+        
+        Calendar cal = Calendar.getInstance();
+        cal.add(Calendar.MINUTE, -55);
+
+        assertTrue(checker.check(cal.getTime().getTime()+"", "OLDER_THAN 53 min"));
+        assertFalse(checker.check(cal.getTime().getTime()+"", "OLDER_THAN 57 min"));
+        assertTrue(checker.check(cal.getTime().getTime()+"", "NOT OLDER_THAN 57 min"));
+        assertFalse(checker.check(cal.getTime().getTime()+"", "OLDER_THAN 1 hour"));
+        assertFalse(checker.check(cal.getTime().getTime()+"", "OLDER_THAN 1 days"));
+        assertTrue(checker.check(cal.getTime().getTime()+"", "OLDER_THAN 100 ms"));
+    }
     
 }
