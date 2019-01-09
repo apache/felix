@@ -48,9 +48,15 @@ public class HealthCheckMetadata {
     private final ServiceReference serviceReference;
 
     private final Long resultCacheTtlInMs;
+    
+    private final Long keepNonOkResultsStickyForSec;
 
+    @Deprecated
     private final Long warningsStickForMinutes;
+    @Deprecated
+    private final String WARNINGS_STICK_FOR_MINUTES = "hc.warningsStickForMinutes";
 
+    
     public HealthCheckMetadata(final ServiceReference ref) {
         this.serviceId = (Long) ref.getProperty(Constants.SERVICE_ID);
         this.name = (String) ref.getProperty(HealthCheck.NAME);
@@ -62,7 +68,10 @@ public class HealthCheckMetadata {
         this.asyncIntervalInSec = toLong(ref.getProperty(HealthCheck.ASYNC_INTERVAL_IN_SEC));
 
         this.resultCacheTtlInMs = (Long) ref.getProperty(HealthCheck.RESULT_CACHE_TTL_IN_MS);
-        this.warningsStickForMinutes = toLong(ref.getProperty(HealthCheck.WARNINGS_STICK_FOR_MINUTES));
+        
+        this.keepNonOkResultsStickyForSec = toLong(ref.getProperty(HealthCheck.KEEP_NON_OK_RESULTS_STICKY_FOR_SEC));
+        this.warningsStickForMinutes = toLong(ref.getProperty(WARNINGS_STICK_FOR_MINUTES));
+        
         this.serviceReference = ref;
     }
 
@@ -130,11 +139,14 @@ public class HealthCheckMetadata {
         return resultCacheTtlInMs;
     }
 
-    /** Make warnings stick for the given amount of time.
-     *
-     * @return Time to make warn results sticky in minutes. */
-    public Long getWarningsStickForMinutes() {
-        return warningsStickForMinutes;
+    /** Makes non-ok results stick for the given amount of time.
+    *
+    * @return Time to make non-ok results sticky in seconds. */
+    public Long getKeepNonOkResultsStickyForSec() {
+        if(keepNonOkResultsStickyForSec==null && warningsStickForMinutes!=null) {
+            return warningsStickForMinutes * 60;
+        }
+        return keepNonOkResultsStickyForSec;
     }
 
     @Override

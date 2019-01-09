@@ -65,7 +65,7 @@ public class AsyncHealthCheckIT {
         }
     }
 
-    private ServiceRegistration registerAsyncHc(HealthCheck hc, String id, Object async, int stickyMinutes) {
+    private ServiceRegistration registerAsyncHc(HealthCheck hc, String id, Object async, int stickySec) {
         final Dictionary<String, Object> props = new Hashtable<String, Object>();
         props.put(HealthCheck.NAME, "async_HC_" + id);
         props.put(HealthCheck.TAGS, id);
@@ -75,8 +75,8 @@ public class AsyncHealthCheckIT {
             props.put(HealthCheck.ASYNC_INTERVAL_IN_SEC, async);
         }
 
-        if (stickyMinutes > 0) {
-            props.put(HealthCheck.WARNINGS_STICK_FOR_MINUTES, stickyMinutes);
+        if (stickySec > 0) {
+            props.put(HealthCheck.KEEP_NON_OK_RESULTS_STICKY_FOR_SEC, stickySec);
         }
 
         final ServiceRegistration result = bundleContext.registerService(HealthCheck.class.getName(), hc, props);
@@ -185,8 +185,8 @@ public class AsyncHealthCheckIT {
         final String id = UUID.randomUUID().toString();
         final HealthCheck hc = new TestHC();
         final long maxMsec = 5000L;
-        final int stickyMinutes = 1;
-        final ServiceRegistration reg = registerAsyncHc(hc, id, "*/1 * * * * ?", stickyMinutes);
+        final int stickySeconds = 60;
+        final ServiceRegistration reg = registerAsyncHc(hc, id, "*/1 * * * * ?", stickySeconds);
 
         try {
             assertStatus(id, Result.Status.OK, maxMsec, "before WARN");

@@ -38,16 +38,24 @@ public class ExecutionResult implements Comparable<ExecutionResult>, HealthCheck
 
     private final boolean timedOut;
 
-    /** Full constructor */
     public ExecutionResult(final HealthCheckMetadata metadata,
             final Result simpleResult,
             final long elapsedTimeInMs,
             final boolean timedout) {
+        this(metadata, simpleResult, new Date(), elapsedTimeInMs, timedout);
+    }
+    
+    /** Full constructor */
+    public ExecutionResult(final HealthCheckMetadata metadata,
+            final Result simpleResult,
+            final Date finishedAt,
+            final long elapsedTimeInMs,
+            final boolean timedout) {
         this.metaData = metadata;
         this.resultFromHC = simpleResult;
-        this.finishedAt = new Date();
-        this.timedOut = timedout;
+        this.finishedAt = finishedAt;
         this.elapsedTimeInMs = elapsedTimeInMs;
+        this.timedOut = timedout;
     }
 
     /** Shortcut constructor for a result */

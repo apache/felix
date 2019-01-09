@@ -108,7 +108,7 @@ hc.mbean.name | String | Makes the HC result available via given MBean name. If 
 hc.async.cronExpression | String | Used to schedule the execution of a `HealthCheck` at regular intervals, using a cron expression as supported by the [Quartz Cron Trigger](http://www.quartz-scheduler.org/api/previous_versions/1.8.5/org/quartz/CronTrigger.html) module. 
 hc.async.intervalInSec | Long | Used to schedule the execution of a `HealthCheck` at regular intervals, specifying a period in seconds
 hc.resultCacheTtlInMs | Long | Overrides the global default TTL as configured in health check executor for health check responses (since v1.2.6 of core)
-hc.warningsStickForMinutes | Long | This property will make WARN/CRITICAL results stay visible for future executions, even if the current state has returned to status OK. It is useful to keep attention on issues that might still require action after the state went back to OK, e.g. if an event pool has overflown and some events might have been lost (since v1.2.10 of core)
+hc.keepNonOkResultsStickyForSec | Long | If given, non-ok results from past executions will be taken into account as well for the given seconds (use Long.MAX_VALUE for indefinitely). Useful for unhealthy system states that disappear but might leave the system at an inconsistent state (e.g. an event queue overflow where somebody needs to intervene manually) or for checks that should only go back to OK with a delay (can be useful for load balancers).
 
 All service properties are optional.
 
