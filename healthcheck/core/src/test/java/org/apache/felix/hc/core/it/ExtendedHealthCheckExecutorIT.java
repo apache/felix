@@ -98,7 +98,7 @@ public class ExtendedHealthCheckExecutorIT {
 
     @Test
     public void testSingleExecution() throws Exception {
-        ServiceReference<HealthCheck>[] refs = U.callSelectHealthCheckReferences(executor, HealthCheckSelector.tags(testTag), false);
+        ServiceReference<HealthCheck>[] refs = U.callSelectHealthCheckReferences(executor, HealthCheckSelector.tags(testTag));
         assertNotNull(refs);
         assertEquals(1, refs.length);
 

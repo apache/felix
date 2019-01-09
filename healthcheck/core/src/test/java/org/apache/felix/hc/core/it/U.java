@@ -113,12 +113,11 @@ public class U {
     }
     
     
-    static ServiceReference<HealthCheck>[] callSelectHealthCheckReferences(HealthCheckExecutor executor, HealthCheckSelector selector, boolean isCombineTagsWithOr) {
+    static ServiceReference<HealthCheck>[] callSelectHealthCheckReferences(HealthCheckExecutor executor, HealthCheckSelector selector) {
         String methodName = "selectHealthCheckReferences";
         try {
-            Method method = executor.getClass().getDeclaredMethod(methodName, HealthCheckSelector.class, boolean.class);
-            method.setAccessible(true);
-            Object result = method.invoke(executor, selector, isCombineTagsWithOr);
+            Method method = executor.getClass().getDeclaredMethod(methodName, HealthCheckSelector.class, HealthCheckExecutionOptions.class);
+            Object result = method.invoke(executor, selector, new HealthCheckExecutionOptions().setCombineTagsWithOr(false));
             return (ServiceReference<HealthCheck>[]) result;
         } catch(Exception e) {
             throw new IllegalStateException("Could not call method "+methodName+ " of class "+executor.getClass(), e);

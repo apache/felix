@@ -17,13 +17,25 @@
  */
 package org.apache.felix.hc.core.impl.executor;
 
+import java.util.List;
+
 import org.apache.felix.hc.api.HealthCheck;
+import org.apache.felix.hc.api.execution.HealthCheckExecutionOptions;
 import org.apache.felix.hc.api.execution.HealthCheckExecutionResult;
 import org.apache.felix.hc.api.execution.HealthCheckExecutor;
+import org.apache.felix.hc.api.execution.HealthCheckSelector;
 import org.osgi.framework.ServiceReference;
 
-/** Internal service used by the JMX stuff */
+/** Internal service used by the JMX and ServiceUnavailableFilter */
 public interface ExtendedHealthCheckExecutor extends HealthCheckExecutor {
 
+    /** execute single health check using cache, used by JMX */
     HealthCheckExecutionResult execute(ServiceReference<HealthCheck> ref);
+
+    /** internal interface to retrieve service references */
+    ServiceReference<HealthCheck>[] selectHealthCheckReferences(HealthCheckSelector selector, HealthCheckExecutionOptions options);
+    
+    /** internal interface to execute checks for service references */
+    List<HealthCheckExecutionResult> execute(final ServiceReference<HealthCheck>[] healthCheckReferences, HealthCheckExecutionOptions options);
+
 }

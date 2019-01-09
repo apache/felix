@@ -39,6 +39,7 @@ import org.apache.felix.hc.api.execution.HealthCheckExecutionOptions;
 import org.apache.felix.hc.api.execution.HealthCheckExecutionResult;
 import org.apache.felix.hc.api.execution.HealthCheckExecutor;
 import org.apache.felix.hc.api.execution.HealthCheckSelector;
+import org.apache.felix.hc.core.impl.executor.CombinedExecutionResult;
 import org.osgi.service.component.ComponentContext;
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
@@ -280,14 +281,8 @@ public class HealthCheckExecutorServlet extends HttpServlet {
 
         List<HealthCheckExecutionResult> executionResults = this.healthCheckExecutor.execute(selector, executionOptions);
 
-        Result.Status mostSevereStatus = Result.Status.OK;
-        for (HealthCheckExecutionResult executionResult : executionResults) {
-            Status status = executionResult.getHealthCheckResult().getStatus();
-            if (status.ordinal() > mostSevereStatus.ordinal()) {
-                mostSevereStatus = status;
-            }
-        }
-        Result overallResult = new Result(mostSevereStatus, "Overall status " + mostSevereStatus);
+        CombinedExecutionResult combinedExecutionResult = new CombinedExecutionResult(executionResults);
+        Result overallResult = combinedExecutionResult.getHealthCheckResult();
 
         sendNoCacheHeaders(response);
         sendCorsHeaders(response);
@@ -295,6 +290,7 @@ public class HealthCheckExecutorServlet extends HttpServlet {
         Integer httpStatus = statusMapping.get(overallResult.getStatus());
         response.setStatus(httpStatus);
 
+        response.setHeader(STATUS_HEADER_NAME, overallResult.getStatus().toString());
         if (FORMAT_HTML.equals(format)) {
             sendHtmlResponse(overallResult, executionResults, request, response, includeDebug);
         } else if (FORMAT_JSON.equals(format)) {
@@ -363,7 +359,6 @@ public class HealthCheckExecutorServlet extends HttpServlet {
             throws IOException {
         response.setContentType(CONTENT_TYPE_HTML);
         response.setCharacterEncoding("UTF-8");
-        response.setHeader(STATUS_HEADER_NAME, overallResult.getStatus().toString());
         response.getWriter().append(this.htmlSerializer.serialize(overallResult, executionResults, getHtmlHelpText(), includeDebug));
     }
 
