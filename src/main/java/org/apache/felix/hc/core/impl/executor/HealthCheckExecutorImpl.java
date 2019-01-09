@@ -236,7 +236,7 @@ public class HealthCheckExecutorImpl implements ExtendedHealthCheckExecutor, Ser
         waitForFuturesRespectingTimeout(futures, options);
         collectResultsFromFutures(futures, results);
 
-        // respect sticky results if configured via HealthCheck.WARNINGS_STICK_FOR_MINUTES
+        // respect sticky results if configured via HealthCheck.KEEP_NON_OK_RESULTS_STICKY_FOR_SEC
         appendStickyResultLogIfConfigured(results);
 
     }
@@ -245,7 +245,7 @@ public class HealthCheckExecutorImpl implements ExtendedHealthCheckExecutor, Ser
         ListIterator<HealthCheckExecutionResult> resultsIt = results.listIterator();
         while (resultsIt.hasNext()) {
             HealthCheckExecutionResult result = resultsIt.next();
-            Long warningsStickForMinutes = result.getHealthCheckMetadata().getWarningsStickForMinutes();
+            Long warningsStickForMinutes = result.getHealthCheckMetadata().getKeepNonOkResultsStickyForSec();
             if (warningsStickForMinutes != null && warningsStickForMinutes > 0) {
                 result = healthCheckResultCache.createExecutionResultWithStickyResults(result);
                 resultsIt.set(result);

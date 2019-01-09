@@ -145,12 +145,12 @@ public class HealthCheckResultCache {
         HealthCheckExecutionResult result = origResult;
 
         HealthCheckMetadata healthCheckMetadata = origResult.getHealthCheckMetadata();
-        Long warningsStickForMinutes = healthCheckMetadata.getWarningsStickForMinutes();
-        if (warningsStickForMinutes != null && warningsStickForMinutes > 0) {
-            logger.debug("Taking into account sticky results (up to {} min old) for health check {}", warningsStickForMinutes,
+        Long keepNonOkResultsStickyForSec = healthCheckMetadata.getKeepNonOkResultsStickyForSec();
+        if (keepNonOkResultsStickyForSec != null && keepNonOkResultsStickyForSec > 0) {
+            logger.debug("Taking into account sticky results (up to {} sec old) for health check {}", keepNonOkResultsStickyForSec,
                     healthCheckMetadata.getName());
             List<HealthCheckExecutionResult> nonOkResultsFromPast = new ArrayList<HealthCheckExecutionResult>();
-            long cutOffTime = System.currentTimeMillis() - (warningsStickForMinutes * 60 * 1000);
+            long cutOffTime = System.currentTimeMillis() - (keepNonOkResultsStickyForSec * 1000);
             for (Status status : cacheOfNotOkResults.keySet()) {
                 long hcServiceId = ((ExecutionResult) origResult).getServiceId();
                 HealthCheckExecutionResult nonOkResultFromPast = cacheOfNotOkResults.get(status).get(hcServiceId);
@@ -187,7 +187,7 @@ public class HealthCheckResultCache {
                         resultLog.add(entry);
                     }
                 }
-                result = new ExecutionResult(healthCheckMetadata, new Result(resultLog), origResult.getElapsedTimeInMs());
+                result = new ExecutionResult(healthCheckMetadata, new Result(resultLog), origResult.getFinishedAt(), origResult.getElapsedTimeInMs(), false);
             }
         }
 

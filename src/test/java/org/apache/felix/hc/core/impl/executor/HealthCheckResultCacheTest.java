@@ -140,10 +140,10 @@ public class HealthCheckResultCacheTest {
 
     }
 
-    private HealthCheckMetadata setupHealthCheckMetadataWithStickyResults(long id, long warningsStickForMinutes) {
+    private HealthCheckMetadata setupHealthCheckMetadataWithStickyResults(long id, long nonOkStickyForSec) {
         reset(serviceRef);
         doReturn(id).when(serviceRef).getProperty(Constants.SERVICE_ID);
-        doReturn(warningsStickForMinutes).when(serviceRef).getProperty(HealthCheck.WARNINGS_STICK_FOR_MINUTES);
+        doReturn(nonOkStickyForSec).when(serviceRef).getProperty(HealthCheck.KEEP_NON_OK_RESULTS_STICKY_FOR_SEC);
         doReturn("HC id=" + id).when(serviceRef).getProperty(HealthCheck.NAME);
         return new HealthCheckMetadata(serviceRef);
     }
@@ -151,7 +151,7 @@ public class HealthCheckResultCacheTest {
     @Test
     public void testCreateExecutionResultWithStickyResults() {
 
-        HealthCheckMetadata hcWithStickyResultsSet = setupHealthCheckMetadataWithStickyResults(1, 2 /* 2 minutes */);
+        HealthCheckMetadata hcWithStickyResultsSet = setupHealthCheckMetadataWithStickyResults(1, 120 /* 2 minutes */);
         ExecutionResult currentResult = spy(new ExecutionResult(hcWithStickyResultsSet, new Result(Result.Status.OK, "result for hc"), 1));
         HealthCheckExecutionResult overallResultWithStickyResults = healthCheckResultCache
                 .createExecutionResultWithStickyResults(currentResult);
