@@ -7,3 +7,5 @@ Bundle-DocURL: https://felix.apache.org
 Bundle-License: Apache License, Version 2.0
 
 Bundle-Vendor: The Apache Software Foundation
+
+Conditional-Package: org.apache.commons.cli.*,org.apache.felix.utils.*

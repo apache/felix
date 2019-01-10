@@ -70,9 +70,12 @@ public class SimpleConstraintChecker {
             matches = value < Long.valueOf(parts[1]);
 
         } else if (parts[0].equals(EQUALS) && parts.length == 2) {
-            long value = Long.valueOf(stringValue).longValue();
-            matches = value == Long.valueOf(parts[1]).longValue();
-
+            if(StringUtils.isNumeric(stringValue)) {
+                long value = Long.valueOf(stringValue).longValue();
+                matches = value == Long.valueOf(parts[1]).longValue();
+            } else {
+                matches = stringValue.equals(parts[1]);
+            }
         } else if (parts.length == 4 && BETWEEN.equalsIgnoreCase(parts[0]) && AND.equalsIgnoreCase(parts[2])) {
             long value = Long.valueOf(stringValue).longValue();
             long lowerBound = Long.valueOf(parts[1]).longValue();
