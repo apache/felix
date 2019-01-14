@@ -22,26 +22,21 @@ import java.util.Dictionary;
 import java.util.Hashtable;
 
 import org.apache.logging.log4j.spi.Provider;
-import org.apache.logging.slf4j.MDCContextMap;
-import org.apache.logging.slf4j.SLF4JLoggerContextFactory;
+import org.apache.logging.slf4j.SLF4JProvider;
+import org.osgi.annotation.bundle.Header;
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
+import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceRegistration;
 
+@Header(name = Constants.BUNDLE_ACTIVATOR, value = "${@class}")
 public class Activator implements BundleActivator {
 
     @Override
     public void start(BundleContext bundleContext) throws Exception {
-        Provider slf4jProvider = new Provider(
-            15, "2.6.0", SLF4JLoggerContextFactory.class, MDCContextMap.class);
-
+        Provider slf4jProvider = new SLF4JProvider();
         Dictionary<String, Object> properties = new Hashtable<>();
-
-        // The following value is pulled from here [1] but I think it's a typo [2]
-        // [1] https://git-wip-us.apache.org/repos/asf?p=logging-log4j2.git;a=blob;f=log4j-api/src/main/java/org/apache/logging/log4j/util/Activator.java;h=c7910e505e18b9de339c7671641d04aceb2d9b37;hb=HEAD#l103
-        // [2] https://issues.apache.org/jira/browse/LOG4J2-2343
-        properties.put("APIVersion", "2.60");
-
+        properties.put("APIVersion", slf4jProvider.getVersions());
         serviceRegistration = bundleContext.registerService(Provider.class, slf4jProvider, properties);
     }
 

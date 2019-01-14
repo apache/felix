@@ -37,15 +37,6 @@
         <url>http://svn.apache.org/viewvc/felix/trunk/logback/itests/</url>
     </scm>
 
-    <properties>
-        <animal.sniffer.skip>true</animal.sniffer.skip>
-        <maven.deploy.skip>true</maven.deploy.skip>
-        <maven.install.skip>true</maven.install.skip>
-        <maven.javadoc.skip>true</maven.javadoc.skip>
-        <maven.site.skip>true</maven.site.skip>
-        <maven.source.skip>true</maven.source.skip>
-    </properties>
-
     <modules>
         <module>test-helper</module>
         <module>immediate-equinox-logservice</module>
@@ -53,6 +44,7 @@
         <module>immediate-jbl</module>
         <module>immediate-jcl</module>
         <module>immediate-jul</module>
+        <module>immediate-jul-felix</module>
         <module>immediate-log4j1</module>
         <module>immediate-log4j2</module>
         <module>immediate-slf4j</module>
@@ -65,159 +57,4 @@
         <module>standard-log4j2</module>
         <module>standard-slf4j</module>
     </modules>
-
-    <dependencies>
-        <dependency>
-            <groupId>org.osgi</groupId>
-            <artifactId>osgi.core</artifactId>
-            <version>6.0.0</version>
-            <scope>provided</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.osgi</groupId>
-            <artifactId>org.osgi.service.log</artifactId>
-            <version>1.4.0</version>
-        </dependency>
-        <dependency>
-            <groupId>org.osgi</groupId>
-            <artifactId>org.osgi.util.function</artifactId>
-            <version>1.1.0</version>
-        </dependency>
-        <dependency>
-            <groupId>org.osgi</groupId>
-            <artifactId>org.osgi.util.promise</artifactId>
-            <version>1.1.0</version>
-        </dependency>
-        <dependency>
-            <groupId>org.osgi</groupId>
-            <artifactId>org.osgi.util.pushstream</artifactId>
-            <version>1.0.0</version>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.felix</groupId>
-            <artifactId>org.apache.felix.framework</artifactId>
-            <version>5.6.10</version>
-            <scope>runtime</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.felix</groupId>
-            <artifactId>org.apache.felix.logback</artifactId>
-            <version>1.0.0</version>
-            <scope>runtime</scope>
-        </dependency>
-        <dependency>
-            <groupId>ch.qos.logback</groupId>
-            <artifactId>logback-classic</artifactId>
-            <version>1.2.3</version>
-        </dependency>
-        <dependency>
-            <groupId>org.eclipse.platform</groupId>
-            <artifactId>org.eclipse.osgi</artifactId>
-            <version>3.13.0</version>
-            <scope>runtime</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.osgi</groupId>
-            <artifactId>osgi.enroute.junit.wrapper</artifactId>
-            <version>4.12.0</version>
-        </dependency>
-        <dependency>
-            <groupId>org.osgi</groupId>
-            <artifactId>osgi.enroute.hamcrest.wrapper</artifactId>
-            <version>1.3.0</version>
-        </dependency>
-        <dependency>
-            <groupId>org.slf4j</groupId>
-            <artifactId>jul-to-slf4j</artifactId>
-            <version>1.7.25</version>
-        </dependency>
-        <dependency>
-            <groupId>org.jboss.logging</groupId>
-            <artifactId>jboss-logging</artifactId>
-            <version>3.3.2.Final</version>
-        </dependency>
-        <dependency>
-            <groupId>commons-logging</groupId>
-            <artifactId>commons-logging</artifactId>
-            <version>1.2</version>
-        </dependency>
-        <dependency>
-            <groupId>org.slf4j</groupId>
-            <artifactId>log4j-over-slf4j</artifactId>
-            <version>1.7.25</version>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.logging.log4j</groupId>
-            <artifactId>log4j-api</artifactId>
-            <version>2.11.0</version>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.logging.log4j</groupId>
-            <artifactId>log4j-to-slf4j</artifactId>
-            <version>2.11.0</version>
-        </dependency>
-    </dependencies>
-
-    <build>
-        <plugins>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-compiler-plugin</artifactId>
-                <configuration>
-                    <source>1.8</source>
-                    <target>1.8</target>
-                </configuration>
-            </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-jar-plugin</artifactId>
-                <configuration>
-                    <includes>
-                        <include>META-INF/*</include>
-                        <include>OSGI-OPT/*</include>
-                        <include>org/apache/felix/logback/test/*</include>
-                        <include>org/apache/felix/logback/test/helper/*</include>
-                        <include>*.jar</include>
-                    </includes>
-                </configuration>
-            </plugin>
-            <plugin>
-                <groupId>biz.aQute.bnd</groupId>
-                <artifactId>bnd-maven-plugin</artifactId>
-            </plugin>
-            <plugin>
-                <groupId>biz.aQute.bnd</groupId>
-                <artifactId>bnd-indexer-maven-plugin</artifactId>
-                <configuration>
-                    <includeJar>true</includeJar>
-                    <localURLs>REQUIRED</localURLs>
-                </configuration>
-            </plugin>
-        </plugins>
-        <pluginManagement>
-            <plugins>
-                <plugin>
-                    <groupId>biz.aQute.bnd</groupId>
-                    <artifactId>bnd-resolver-maven-plugin</artifactId>
-                    <configuration>
-                        <failOnChanges>false</failOnChanges>
-                        <bndruns>
-                            <bndrun>itest.bndrun</bndrun>
-                        </bndruns>
-                    </configuration>
-                </plugin>
-                <plugin>
-                    <groupId>biz.aQute.bnd</groupId>
-                    <artifactId>bnd-testing-maven-plugin</artifactId>
-                    <configuration>
-                        <failOnChanges>false</failOnChanges>
-                        <resolve>false</resolve>
-                        <bndruns>
-                            <bndrun>itest.bndrun</bndrun>
-                        </bndruns>
-                    </configuration>
-                </plugin>
-            </plugins>
-        </pluginManagement>
-    </build>
 </project>

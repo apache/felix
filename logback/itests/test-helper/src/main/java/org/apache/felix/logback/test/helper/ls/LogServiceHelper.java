@@ -16,24 +16,20 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.felix.logback.test;
+package org.apache.felix.logback.test.helper.ls;
 
-import java.util.logging.Level;
-import java.util.logging.Logger;
+import org.osgi.framework.BundleContext;
+import org.osgi.framework.FrameworkUtil;
+import org.osgi.framework.ServiceReference;
 
-import org.apache.felix.logback.test.helper.LogTestHelper;
-import org.junit.Test;
+public class LogServiceHelper {
 
-public class JULTest extends LogTestHelper {
-
-    @Test
-    public void test() {
-        long time = System.nanoTime();
-        Logger logger = Logger.getLogger(getClass().getName());
-        if (logger.isLoggable(Level.INFO)) {
-            logger.info(time + "");
-        }
-        assertLog("INFO", getClass().getName(), time);
+    public static org.osgi.service.log.Logger getLogger(Class<?> clazz) {
+        BundleContext bundleContext = FrameworkUtil.getBundle(clazz).getBundleContext();
+        ServiceReference<org.osgi.service.log.LoggerFactory> serviceReference =
+            bundleContext.getServiceReference(org.osgi.service.log.LoggerFactory.class);
+        org.osgi.service.log.LoggerFactory loggerFactory = bundleContext.getService(serviceReference);
+        return loggerFactory.getLogger(clazz);
     }
 
 }

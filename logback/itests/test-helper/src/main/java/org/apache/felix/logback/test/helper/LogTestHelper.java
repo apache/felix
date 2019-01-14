@@ -18,27 +18,21 @@
  */
 package org.apache.felix.logback.test.helper;
 
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.IOException;
 import java.util.Iterator;
-import java.util.Scanner;
 
 import org.junit.BeforeClass;
-import org.osgi.framework.BundleContext;
-import org.osgi.framework.FrameworkUtil;
-import org.osgi.framework.ServiceReference;
 
 import ch.qos.logback.classic.LoggerContext;
+import ch.qos.logback.classic.encoder.PatternLayoutEncoder;
 import ch.qos.logback.classic.spi.ILoggingEvent;
 import ch.qos.logback.core.Appender;
-import ch.qos.logback.core.FileAppender;
-import ch.qos.logback.core.recovery.ResilientFileOutputStream;
+import ch.qos.logback.core.read.ListAppender;
 import junit.framework.AssertionFailedError;
 
 public class LogTestHelper {
 
-    protected static FileAppender<ILoggingEvent> fileAppender;
+    protected static ListAppender<ILoggingEvent> listAppender;
+    protected static PatternLayoutEncoder encoder;
 
     @BeforeClass
     public static void before() throws Exception {
@@ -48,11 +42,16 @@ public class LogTestHelper {
             for (Iterator<Appender<ILoggingEvent>> index = logger.iteratorForAppenders(); index.hasNext();) {
                 Appender<ILoggingEvent> appender = index.next();
 
-                if (appender instanceof FileAppender) {
-                    fileAppender = (FileAppender<ILoggingEvent>)appender;
+                if (appender instanceof ListAppender) {
+                    listAppender = (ListAppender<ILoggingEvent>)appender;
                 }
             }
         }
+
+        encoder = new PatternLayoutEncoder();
+        encoder.setPattern("%level|%logger{1000}|%msg");
+        encoder.setContext(context);
+        encoder.start();
     }
 
     protected void assertLog(String level, String name, long time) {
@@ -60,41 +59,21 @@ public class LogTestHelper {
     }
 
     protected void assertLog(String record) {
-        boolean found = false;
-
-        ResilientFileOutputStream rfos = (ResilientFileOutputStream)fileAppender.getOutputStream();
-        rfos.flush();
         try {
-            rfos.getChannel().force(true);
-        } catch (IOException e1) {
-            e1.printStackTrace();
+            // we need to make sure we wait for async logging internals to cool down
+            Thread.sleep(10);
         }
-        File logFile = rfos.getFile();
-
-        try (Scanner sc = new Scanner(logFile)) {
-            while (sc.hasNextLine()) {
-                String nextLine = sc.nextLine();
-
-                if (nextLine.equals(record)) {
-                    found = true;
-                }
-            }
-        }
-        catch (FileNotFoundException e) {
-            e.printStackTrace();
+        catch (InterruptedException e) {
         }
 
-        if (!found) {
+        if ((listAppender.list == null) || listAppender.list.isEmpty() ||
+            !listAppender.list.stream().anyMatch(r -> {
+                String lr = new String(encoder.encode(r));
+                return lr.equals(record);
+            })) {
+
             throw new AssertionFailedError("Log record not found: " + record);
         }
-    }
-
-    protected static org.osgi.service.log.Logger getLogger(Class<?> clazz) {
-        BundleContext bundleContext = FrameworkUtil.getBundle(clazz).getBundleContext();
-        ServiceReference<org.osgi.service.log.LoggerFactory> serviceReference =
-            bundleContext.getServiceReference(org.osgi.service.log.LoggerFactory.class);
-        org.osgi.service.log.LoggerFactory loggerFactory = bundleContext.getService(serviceReference);
-        return loggerFactory.getLogger(clazz);
     }
 
 }

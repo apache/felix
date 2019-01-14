@@ -19,6 +19,7 @@
 package org.apache.felix.logback.test;
 
 import org.apache.felix.logback.test.helper.LogTestHelper;
+import org.apache.felix.logback.test.helper.ls.LogServiceHelper;
 import org.junit.Test;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.FrameworkUtil;
@@ -31,7 +32,7 @@ public class LogServiceTest extends LogTestHelper {
     @Test
     public void test() {
         long time = System.nanoTime();
-        Logger logger = getLogger(getClass());
+        Logger logger = LogServiceHelper.getLogger(getClass());
         if (logger.isInfoEnabled()) {
             logger.info(time + "");
         }

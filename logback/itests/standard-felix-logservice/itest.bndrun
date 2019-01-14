@@ -1,6 +1,6 @@
--standalone: target/index.xml
+-standalone: true
 -runee: JavaSE-1.8
--resolve.effective: resolve, active
+-resolve.effective: resolve
 
 -runfw: org.apache.felix.framework
 
@@ -16,11 +16,10 @@
     logback.configurationFile=file:${.}/logback.xml
 
 -runbundles: \
-    slf4j.api;version='[1.7.25,1.7.26)',\
+    biz.aQute.junit;version='[4.1.0,4.1.1)',\
     ch.qos.logback.classic;version='[1.2.3,1.2.4)',\
     ch.qos.logback.core;version='[1.2.3,1.2.4)',\
-    org.apache.felix.log;version='[1.1.0,1.1.1)',\
-    org.apache.felix.logback;version='[1.0.0,1.0.1)',\
-    osgi.enroute.hamcrest.wrapper;version='[1.3.0,1.3.1)',\
-    osgi.enroute.junit.wrapper;version='[4.12.0,4.12.1)',\
-    org.apache.felix.logback.itests.standard.felix.logservice;version='[1.0.0,1.0.1)'
+    org.apache.felix.log;version='[1.2.0,1.2.1)',\
+    org.apache.felix.logback.itests.standard.felix.logservice;version='[1.0.0,1.0.1)',\
+    org.apache.felix.logback;version='[1.0.1,1.0.2)',\
+    slf4j.api;version='[1.7.25,1.7.26)'

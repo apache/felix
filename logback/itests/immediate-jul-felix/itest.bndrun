@@ -6,7 +6,7 @@
 
 -runrequires:\
     osgi.identity;filter:='(osgi.identity=org.apache.felix.log.extension)',\
-    osgi.identity;filter:='(osgi.identity=org.apache.felix.logback.itests.immediate.felix.logservice)'
+    osgi.identity;filter:='(osgi.identity=org.apache.felix.logback.itests.immediate.jul.felix)'
 
 -runpath: \
     ch.qos.logback.classic;version=latest,\
@@ -21,4 +21,4 @@
 -runbundles: \
     biz.aQute.junit;version='[4.1.0,4.1.1)',\
     org.apache.felix.log.extension;version='[1.0.0,1.0.1)',\
-    org.apache.felix.logback.itests.immediate.felix.logservice;version='[1.0.0,1.0.1)'
+    org.apache.felix.logback.itests.immediate.jul.felix;version='[1.0.0,1.0.1)'

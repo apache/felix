@@ -26,12 +26,7 @@
             <pattern>%-5level %logger{1000}:%line - %msg%n</pattern>
         </encoder>
     </appender>
-    <appender name="FILE" class="ch.qos.logback.core.FileAppender">
-        <file>target/test.log</file>
-        <encoder>
-            <pattern>%level|%logger{1000}|%msg%n</pattern>
-        </encoder>
-    </appender>
+    <appender name="FILE" class="ch.qos.logback.core.read.ListAppender" />
 
     <logger name="Events.Service.org.apache.felix.logback.itests" level="DEBUG"/>
     <logger name="LogService.org.apache.felix.logback.itests" level="DEBUG"/>
