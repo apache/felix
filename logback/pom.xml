@@ -38,7 +38,7 @@
     </scm>
 
     <properties>
-        <bnd.version>4.0.0</bnd.version>
+        <bnd.version>4.1.0</bnd.version>
     </properties>
 
     <modules>
