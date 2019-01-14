@@ -116,6 +116,7 @@
             <plugin>
                 <groupId>org.codehaus.mojo</groupId>
                 <artifactId>rat-maven-plugin</artifactId>
+                <version>0.12</version>
                 <configuration>
                     <excludeSubProjects>false</excludeSubProjects>
                     <useEclipseDefaultExcludes>true</useEclipseDefaultExcludes>
