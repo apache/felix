@@ -24,7 +24,7 @@ import org.osgi.service.log.LogLevel;
 import org.osgi.service.log.LogListener;
 import org.osgi.service.log.admin.LoggerAdmin;
 import org.slf4j.ILoggerFactory;
-import org.slf4j.impl.StaticLoggerBinder;
+import org.slf4j.LoggerFactory;
 
 import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.Logger;
@@ -52,7 +52,7 @@ public class LogbackLogListener implements LogListener, LoggerContextListener {
         osgiLoggerContext = loggerAdmin.getLoggerContext(null);
         initialLogLevels = osgiLoggerContext.getLogLevels();
 
-        ILoggerFactory loggerFactory = StaticLoggerBinder.getSingleton().getLoggerFactory();
+        ILoggerFactory loggerFactory = LoggerFactory.getILoggerFactory();
 
         if (!(loggerFactory instanceof LoggerContext)) {
             throw new IllegalStateException("This bundle only works with logback-classic");
