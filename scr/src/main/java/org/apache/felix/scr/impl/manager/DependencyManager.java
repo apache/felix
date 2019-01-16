@@ -2242,9 +2242,9 @@ public class DependencyManager<S, T> implements ReferenceManager<S, T>
         }
         if (m_componentManager.getComponentMetadata().getServiceScope() == Scope.singleton)
         {
-            return new SinglePrototypeRefPair<>(serviceReference);
+            return new SinglePrototypeRefPair<S, T>(serviceReference);
         }
-        return new MultiplePrototypeRefPair<>(serviceReference);
+        return new MultiplePrototypeRefPair<S, T>(serviceReference);
     }
 
     private void deactivateComponentManager()

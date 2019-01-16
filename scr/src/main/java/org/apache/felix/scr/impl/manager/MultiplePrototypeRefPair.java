@@ -35,7 +35,7 @@ import org.osgi.service.log.LogService;
  */
 public class MultiplePrototypeRefPair<S, T> extends RefPair<S, T>
 {
-    private final ConcurrentMap<ComponentContextImpl<S>, T> instances = new ConcurrentHashMap<>();
+    private final ConcurrentMap<ComponentContextImpl<S>, T> instances = new ConcurrentHashMap<ComponentContextImpl<S>, T>();
 
     public MultiplePrototypeRefPair( ServiceReference<T> ref )
     {
