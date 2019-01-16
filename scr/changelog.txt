@@ -1,3 +1,72 @@
+Changes in 2.1.14
+-----------------
+** Bug
+    * [FELIX-5950] - NPE in MultiplePrototypeRefPair.unsetServiceObject
+
+
+Changes in 2.1.12
+-----------------
+** Bug
+    * [FELIX-5959] - Exception on changecount timer timeout
+
+
+Changes in 2.1.10
+-----------------
+** Bug
+    * [FELIX-4260] - IllegalStateException: The service has been unregistered
+    * [FELIX-5947] - ClassLoader memory leak
+** Improvement
+    * [FELIX-5948] - Collection of performance and memory optimizations
+
+Changes in 2.1.8
+----------------
+** Bug
+    * [FELIX-5927] - Single element Annotation type does not incorporate PREFIX_
+    * [FELIX-5926] - Logger instance is not set for constructor and reference injection
+    * [FELIX-5929] - Failed activation state not reported in DTOs
+    * [FELIX-5930] - Service reference is missing in DTO
+    * [FELIX-5905] - SCR cannot access method getLogger from LogService R7
+    * [FELIX-5910] - Set correct AccessControlContext when receiving configuration events
+
+
+Changes in 2.1.6
+----------------
+** Bug
+    * [FELIX-5902] - java.lang.IllegalArgumentException: Bundle org.apache.felix.scr is not resolved with R7 LogService
+    * [FELIX-5904] - SCR is creating a logger instance using name "null"
+
+
+Changes in 2.1.2
+----------------
+** Bug
+    * [FELIX-5866] - SCR does not respect the log level set in LoggerAdmin
+    * [FELIX-5865] - SCR R7 logging support doesn't work on equinox framework
+    * [FELIX-5867] - Reference field of type Logger for service LoggerFactory is always null
+    * [FELIX-5885] - SCR uses an overly restrictive import range for promises
+
+
+Changes in 2.1.0
+----------------
+** Improvement
+    * [FELIX-5354] - Implement Declarative Service Updates for OSGi R7
+    * [FELIX-5454] - Service properties for ComponentFactory (OSGi R7)
+    * [FELIX-5455] - Constructor Injection (OSGi R7)
+    * [FELIX-5456] - Field injection of component activation objects (OSGi R7)
+    * [FELIX-5457] - Logger support (OSGi R7)
+    * [FELIX-5458] - Improved ConfigurationPlugin Support (OSGi R7)
+    * [FELIX-5460] - DTO Updates (OSGi R7)
+    * [FELIX-5557] - Updates to section 112.8.2.2 Coercing Component Property Values (OSGi R7)
+    * [FELIX-5559] - Add change count property to runtime service (OSGi R7)
+    * [FELIX-5590] - Add support for single value annotations and new key mapping (OSGi R7)
+    * [FELIX-5695] - Use Java 7 as base version
+    * [FELIX-5696] - Separate metatype provider from managed service
+** Bug
+    * [FELIX-5769] - SCR should not bind prototype_required reference to bundle scope service
+    * [FELIX-5775] - Service properties not updated for lazy service when configuration changes
+    * [FELIX-5507] - ConfigurationAdmin might not be visible to SCR implementation
+    * [FELIX-5543] - Component property types must implement java.lang.annotation.Annotation methods properly
+
+
 Changes from 2.0.12 to 2.0.14
 -----------------------------
 ** Bug
