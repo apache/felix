@@ -45,11 +45,6 @@ public abstract class RefPair<S, T>
         return ref;
     }
 
-    public ServiceObjects<T> getServiceObjects()
-    {
-        return null;
-    }
-
     public abstract boolean getServiceObject( ComponentContextImpl<S> key, BundleContext context, SimpleLogger logger );
 
     public abstract T getServiceObject(ComponentContextImpl<S> key);
