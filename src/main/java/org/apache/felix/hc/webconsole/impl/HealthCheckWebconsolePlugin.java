@@ -147,7 +147,7 @@ public class HealthCheckWebconsolePlugin extends HttpServlet {
             final WebConsoleHelper c = new WebConsoleHelper(resp.getWriter());
             c.titleHtml("Summary", total + " HealthCheck executed, " + failed + " failures");
             pw.println("</table>");
-            pw.println("<a href='configMgr/org.apache.sling.hc.core.impl.executor.HealthCheckExecutorImpl'>Configure executor</a><br/><br/>");
+            pw.println("<a href='configMgr/org.apache.felix.hc.core.impl.executor.HealthCheckExecutorImpl'>Configure executor</a><br/><br/>");
 
         }
     }
