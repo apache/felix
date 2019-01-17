@@ -21,8 +21,8 @@
 -runee: JavaSE-1.8
 -runfw: org.apache.felix.framework
 -runbundles: \
-    org.apache.felix.gogo.command;version='[1.1.0,1.1.1)',\
-    org.apache.felix.gogo.itest-jline;version='[0.0.1,0.0.2)',\
-    org.apache.felix.gogo.jline;version='[1.1.1,1.1.2)',\
-    org.apache.felix.gogo.runtime;version='[1.1.1,1.1.2)',\
-    org.jline;version='[3.7.0,3.7.1)'
+	org.apache.felix.gogo.command;version='[1.1.0,1.1.1)',\
+	org.apache.felix.gogo.itest-jline;version='[0.0.1,0.0.2)',\
+	org.apache.felix.gogo.jline;version='[1.1.2,1.1.3)',\
+	org.apache.felix.gogo.runtime;version='[1.1.2,1.1.3)',\
+	org.jline;version='[3.7.0,3.7.1)'

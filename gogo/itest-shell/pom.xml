@@ -24,7 +24,7 @@
     <parent>
         <groupId>org.apache.felix</groupId>
         <artifactId>gogo-parent</artifactId>
-        <version>5-SNAPSHOT</version>
+        <version>6-SNAPSHOT</version>
         <relativePath>../gogo-parent/pom.xml</relativePath>
     </parent>
 
@@ -74,7 +74,7 @@
             <dependency>
                 <groupId>org.apache.felix</groupId>
                 <artifactId>org.apache.felix.gogo.bom</artifactId>
-                <version>0.0.1-SNAPSHOT</version>
+                <version>1.0.3-SNAPSHOT</version>
                 <scope>import</scope>
                 <type>pom</type>
             </dependency>
