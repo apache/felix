@@ -16,6 +16,11 @@
  */
 package org.osgi.util.converter;
 
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Ignore;
+import org.junit.Test;
+
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 import java.math.BigInteger;
@@ -28,11 +33,6 @@ import java.util.HashMap;
 import java.util.Hashtable;
 import java.util.LinkedHashMap;
 import java.util.Map;
-
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Ignore;
-import org.junit.Test;
 
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
@@ -150,6 +150,38 @@ public class ConverterMapTest {
     @Test
     public void testInterfaceToMap() {
         TestInterface impl = new TestInterface() {
+            @Override
+            public String foo() {
+                return "Chocolate!";
+            }
+
+            @Override
+            public int bar() {
+                return 76543;
+            }
+
+            @Override
+            public int bar(String def) {
+                return 0;
+            }
+
+            @Override
+            public Boolean za_za() {
+                return true;
+            }
+        };
+
+        @SuppressWarnings("rawtypes")
+        Map m = converter.convert(impl).to(Map.class);
+        assertEquals(3, m.size());
+        assertEquals("Chocolate!", m.get("foo"));
+        assertEquals(76543, (int) m.get("bar"));
+        assertEquals(true, (boolean) m.get("za.za"));
+    }
+
+    @Test
+    public void testInterfaceToMapEmptySub() {
+        TestInterfaceSub impl = new TestInterfaceSub() {
             @Override
             public String foo() {
                 return "Chocolate!";
@@ -557,7 +589,7 @@ public class ConverterMapTest {
         final TestValue testValue = converter.convert(Collections.singletonMap("my.prefix.test.value", true)).to(TestValue.class);
         assertTrue(testValue.value());
     }
-    
+
     private <K,V> Map.Entry<K,V> getMapEntry(Map<K,V> map) {
         assertEquals("This method assumes a map of size 1", 1, map.size());
         return map.entrySet().iterator().next();
@@ -569,6 +601,8 @@ public class ConverterMapTest {
         int bar(String def);
         Boolean za_za();
     }
+
+    interface TestInterfaceSub extends TestInterface {}
 
     interface TestInterfaceWithGetProperties {
         int blah();
@@ -591,7 +625,7 @@ public class ConverterMapTest {
 
         boolean value();
     }
-    
+
     private static class Foo {
         private final int value;
 

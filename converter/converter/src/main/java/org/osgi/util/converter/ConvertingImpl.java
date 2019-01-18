@@ -1119,8 +1119,9 @@ class ConvertingImpl extends AbstractSpecifying<Converting>
 		Set<Class< ? >> classes = new LinkedHashSet<>();
 		if (cls.isInterface()) {
 			classes.add(cls);
-		} else {
-			classes.addAll(Arrays.asList(cls.getInterfaces()));
+		}
+		for (Class< ? > intf : cls.getInterfaces()) {
+			classes.addAll(getInterfaces(intf));
 		}
 
 		classes.addAll(getInterfaces(cls.getSuperclass()));
