@@ -71,12 +71,12 @@ public class HealthCheckFuture extends FutureTask<ExecutionResult> {
                             resultFromHealthCheck = executeLegacyHc(healthCheck);
                         }
                     } else {
-                        throw new IllegalStateException("Service for " + metadata + " is gone");
+                        throw new IllegalStateException("Service cannot be retrieved via - activate() probably failed");
                     }
 
                 } catch (final Exception e) {
-                    resultFromHealthCheck = new Result(Result.Status.CRITICAL,
-                            "Exception during execution of '" + metadata.getName() + "': " + e, e);
+                    resultFromHealthCheck = new Result(Result.Status.HEALTH_CHECK_ERROR,
+                            "Exception during execution of '" + metadata.getName() + "'", e);
                 } finally {
                     // unget service ref
                     bundleContext.ungetService(metadata.getServiceReference());
