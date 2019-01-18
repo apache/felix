@@ -87,17 +87,20 @@ public class AdhocResultDuringRequestProcessingFilter implements Filter {
         @AttributeDefinition(name = "Status during request processing", description = "Status to be sent during request processing")
         Result.Status statusDuringRequestProcessing() default Result.Status.TEMPORARILY_UNAVAILABLE;
 
-        @AttributeDefinition(name = "Delay before request processing", description = "Time to delay processing of request in sec (the default 0 turns the delay off). Use together with 'tagsDuringDelayedProcessing' advertise request processing before actual action (e.g. to signal a deployment request to a regularly querying load balancer before deployment starts)")
+        @AttributeDefinition(name = "Delay before request processing", description = "Time to delay processing of request in sec (the default 0 turns the delay off). Use together with 'tagsDuringDelayedProcessing' advertise request processing before actual action (e.g. to signal a deployment request to a periodically querying load balancer before deployment starts)")
         long delayProcessingInSec() default 0;
 
         @AttributeDefinition(name = "Tags to register during delay before processing", description = "List of tags the adhoc result is be registered also during waiting for the configured delay")
         String[] tagsDuringDelayedProcessing() default {};
 
         @AttributeDefinition(name = "Tags to wait for after processing", description = "List of tags to be waited for after processing (leave empty to not wait). While waiting the tags from property 'tags' remain in configured state.")
-        String[] tagsToWaitForAfterProcessing() default {};
+        String[] waitAfterProcessing_forTags() default {};
 
-        @AttributeDefinition(name = "Maximum waiting time", description = "Maximum waiting time for 'tagsToWaitForAfterProcessing' after actual request has been processed")
-        long maxWaitForTagsAfterProcessingInSec() default 120;
+        @AttributeDefinition(name = "Initial waiting time", description = "Initial waiting time until 'waitAfterProcessing.forTags' are checked for the first time.")
+        long waitAfterProcessing_initialWait() default 3;
+
+        @AttributeDefinition(name = "Maximum delay after processing", description = "Maximum delay that can be caused when 'waitAfterProcessing.forTags' is configured (waiting is aborted after that time)")
+        long waitAfterProcessing_maxDelay() default 120;
 
         @AttributeDefinition
         String webconsole_configurationFactory_nameHint() default "{hc.name} ({osgi.http.whiteboard.filter.regex} {method} {userAgentRegEx}) -> {statusDuringRequestProcessing} for tags {tags} {tagsDuringDelayedProcessing}";
@@ -112,8 +115,9 @@ public class AdhocResultDuringRequestProcessingFilter implements Filter {
     private Long delayProcessingInSec;
     private String[] tagsDuringDelayedProcessing;
 
-    private String[] tagsToWaitForAfterProcessing;
-    private long maxWaitForTagsAfterProcessingInSec;
+    private String[] waitAfterProcessingForTags;
+    private long waitAfterProcessingInitialWait;
+    private long waitAfterProcessingMaxDelay;
     
     private String requiredMethod;
     private Pattern userAgentRegEx;
@@ -135,8 +139,9 @@ public class AdhocResultDuringRequestProcessingFilter implements Filter {
         this.delayProcessingInSec = config.delayProcessingInSec() > 0 ? config.delayProcessingInSec(): null;
         this.tagsDuringDelayedProcessing = config.tagsDuringDelayedProcessing();
         
-        this.tagsToWaitForAfterProcessing = config.tagsToWaitForAfterProcessing();
-        this.maxWaitForTagsAfterProcessingInSec = config.maxWaitForTagsAfterProcessingInSec();
+        this.waitAfterProcessingForTags = config.waitAfterProcessing_forTags();
+        this.waitAfterProcessingInitialWait = config.waitAfterProcessing_initialWait();
+        this.waitAfterProcessingMaxDelay = config.waitAfterProcessing_maxDelay();
         
         this.requiredMethod = StringUtils.defaultIfBlank(config.method(), null);
         this.userAgentRegEx = StringUtils.isNotBlank(config.userAgentRegEx()) ? Pattern.compile(config.userAgentRegEx()) : null;
@@ -173,7 +178,7 @@ public class AdhocResultDuringRequestProcessingFilter implements Filter {
                 String hcNameDuringDelay = hcNameDuringRequestProcessing +" (waiting)";
                 AdhocStatusHealthCheck adhocStatusHealthCheckDelayedProcessing = null;
                 try {
-                    adhocStatusHealthCheckDelayedProcessing = registerDynamicHealthCheck(statusDuringRequestProcessing,tagsDuringDelayedProcessing, hcNameDuringDelay, "Waiting "+delayProcessingInSec+"sec until continuing request "+requestPath);
+                    adhocStatusHealthCheckDelayedProcessing = registerDynamicHealthCheck(statusDuringRequestProcessing, tagsDuringDelayedProcessing, hcNameDuringDelay, "Waiting "+delayProcessingInSec+"sec until continuing request "+requestPath);
                     
                     LOG.info("Delaying processing of request {} for {}sec", requestPath, delayProcessingInSec);
                     try {
@@ -193,16 +198,20 @@ public class AdhocResultDuringRequestProcessingFilter implements Filter {
             filterChain.doFilter(request, response);
             LOG.info("Request {} is processed", requestPath);
             
-            if(tagsToWaitForAfterProcessing.length > 0) {
+            if(waitAfterProcessingForTags.length > 0) {
+                
+                String initialWaitMsg = "Request "+requestPath +": Waiting for tags "+Arrays.asList(waitAfterProcessingForTags)+": initial wait " + waitAfterProcessingInitialWait+ "sec";
+                adhocStatusHealthCheck.updateMessage(initialWaitMsg);
+                wait(requestPath, waitAfterProcessingInitialWait * 1000);
                 
                 long startTime = System.currentTimeMillis();
                 for(;;) {
-                    List<HealthCheckExecutionResult> executionResults = executor.execute(HealthCheckSelector.tags(tagsToWaitForAfterProcessing).withNames("-"+hcNameDuringRequestProcessing), new HealthCheckExecutionOptions().setCombineTagsWithOr(true).setForceInstantExecution(true));
+                    List<HealthCheckExecutionResult> executionResults = executor.execute(HealthCheckSelector.tags(waitAfterProcessingForTags).withNames("-"+hcNameDuringRequestProcessing), new HealthCheckExecutionOptions().setCombineTagsWithOr(true).setForceInstantExecution(true));
                     CombinedExecutionResult combinedExecutionResult = new CombinedExecutionResult(executionResults);
                     Result overallResult = combinedExecutionResult.getHealthCheckResult();
                     String verboseTxtResult = verboseTxtSerializer.serialize(overallResult, executionResults, false);
 
-                    String msg = "Waiting for tags "+Arrays.asList(tagsToWaitForAfterProcessing)+": "+ overallResult.getStatus();
+                    String msg = "Request "+requestPath +": Waiting for tags "+Arrays.asList(waitAfterProcessingForTags)+": "+ overallResult.getStatus();
                     LOG.info(msg);
                     if(LOG.isDebugEnabled()) {
                         LOG.debug("\n"+verboseTxtResult);
@@ -211,22 +220,26 @@ public class AdhocResultDuringRequestProcessingFilter implements Filter {
                     if(overallResult.isOk()) {
                         break;
                     }
-                    if((System.currentTimeMillis() - startTime) > (maxWaitForTagsAfterProcessingInSec*1000)) {
-                        LOG.warn("Maximum wait time {}sec for tags {} exceeded - continuing anyway", maxWaitForTagsAfterProcessingInSec, Arrays.asList(tagsToWaitForAfterProcessing));
-                        throw new ServletException("Maximum wait time "+maxWaitForTagsAfterProcessingInSec+"sec for tags "+Arrays.asList(tagsToWaitForAfterProcessing)+" exceeded:\n"+verboseTxtResult);
+                    if((System.currentTimeMillis() - startTime) > (waitAfterProcessingMaxDelay*1000)) {
+                        LOG.warn("Maximum delay time {}sec for tags {} exceeded - continuing anyway", waitAfterProcessingMaxDelay, Arrays.asList(waitAfterProcessingForTags));
+                        throw new ServletException("Maximum wait time "+waitAfterProcessingMaxDelay+"sec for tags "+Arrays.asList(waitAfterProcessingForTags)+" exceeded:\n"+verboseTxtResult);
                     }
                     
-                    LOG.info("Waiting for tags {} before returning from {}", tagsToWaitForAfterProcessing, requestPath);
-                    try {
-                        Thread.sleep(500);
-                    } catch (InterruptedException e) {
-                        LOG.warn("Exception during delaying processing of request {} for {}sec", requestPath, delayProcessingInSec, e);
-                    }
+                    LOG.info("Waiting for tags {} before returning from {}", waitAfterProcessingForTags, requestPath);
+                    wait(requestPath, 500);
                 }
             }
             
         } finally {
             unregisterDynamicHealthCheck(adhocStatusHealthCheck);
+        }
+    }
+
+    private void wait(String requestPath, long waitTime) {
+        try {
+            Thread.sleep(waitTime);
+        } catch (InterruptedException e) {
+            LOG.warn("Exception during delaying processing of request {} for {}sec", requestPath, delayProcessingInSec, e);
         }
     }
 
