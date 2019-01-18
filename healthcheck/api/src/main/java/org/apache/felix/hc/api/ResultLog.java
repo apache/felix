@@ -62,7 +62,7 @@ public class ResultLog implements Iterable<ResultLog.Entry> {
 
         @Override
         public String toString() {
-            StringBuilder builder = new StringBuilder(status.toString()).append(" ").append(message);
+            StringBuilder builder = new StringBuilder(isDebug ?"DEBUG":status.toString()).append(" ").append(message);
             if (exception != null) {
                 builder.append(" Exception: " + exception.getMessage());
             }
