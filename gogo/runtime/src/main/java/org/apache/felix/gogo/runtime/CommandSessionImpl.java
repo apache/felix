@@ -104,7 +104,7 @@ public class CommandSessionImpl implements CommandSession, Converter
     protected CommandSessionImpl(CommandProcessorImpl shell, InputStream in, OutputStream out, OutputStream err)
     {
         this.currentDir = Paths.get(System.getProperty("user.dir")).toAbsolutePath().normalize();
-        this.executor = Executors.newCachedThreadPool();
+        this.executor = Executors.newCachedThreadPool(ThreadUtils.namedThreadFactory("session"));
         this.processor = shell;
         ReadableByteChannel inCh = Channels.newChannel(in);
         WritableByteChannel outCh = Channels.newChannel(out);
