@@ -18,14 +18,14 @@
  */
 package org.apache.felix.gogo.jline;
 
-import org.junit.Test;
+import static org.junit.Assert.*;
 
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.Reader;
 import java.io.StringWriter;
 
-import static org.junit.Assert.assertEquals;
+import org.junit.Test;
 
 public class PosixTest extends AbstractParserTest {
 
@@ -38,6 +38,24 @@ public class PosixTest extends AbstractParserTest {
 
         Object res = context.execute("echo \"  \\u001b[1mbold\\u001b[0m  la\" | grep la | tac");
         assertEquals("  \u001b[1mbold\u001b[0m  la", res);
+    }
+
+    @Test
+    public void testLsDotDot() throws Exception {
+        Context context = new Context();
+        context.addCommand("ls",  new Posix(context));
+        context.addCommand("tac", this);
+        
+        String current = (String) context.execute("ls -1 --color=never . | tac");
+        assertTrue(current.indexOf("..") >=0);        		
+        assertTrue(current.indexOf(".") >=0);        		
+        		
+        String parent = (String) context.execute("ls -1 --color=never .. | tac");
+        assertTrue(parent.indexOf("..") >=0);        		
+        assertTrue(parent.indexOf(".") >=0);
+        
+        assertNotEquals(current, parent);
+
     }
 
     public String tac() throws IOException {
