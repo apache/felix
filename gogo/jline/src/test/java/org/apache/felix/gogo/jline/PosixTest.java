@@ -43,19 +43,62 @@ public class PosixTest extends AbstractParserTest {
     @Test
     public void testLsDotDot() throws Exception {
         Context context = new Context();
-        context.addCommand("ls",  new Posix(context));
+        context.addCommand("ls", new Posix(context));
         context.addCommand("tac", this);
-        
-        String current = (String) context.execute("ls -1 --color=never . | tac");
-        assertTrue(current.indexOf("..") >=0);        		
-        assertTrue(current.indexOf(".") >=0);        		
-        		
-        String parent = (String) context.execute("ls -1 --color=never .. | tac");
-        assertTrue(parent.indexOf("..") >=0);        		
-        assertTrue(parent.indexOf(".") >=0);
-        
-        assertNotEquals(current, parent);
 
+        String current = (String) context.execute("ls -1 --color=never . | tac");
+        assertTrue(current.indexOf("..") >= 0);
+        assertTrue(current.indexOf(".") >= 0);
+
+        String parent = (String) context.execute("ls -1 --color=never .. | tac");
+        assertTrue(parent.indexOf("..") >= 0);
+        assertTrue(parent.indexOf(".") >= 0);
+
+        assertNotEquals(current, parent);
+    }
+
+    @Test
+    public void testWcLines() throws Exception {
+        Context context = new Context();
+        context.addCommand("echo", new Posix(context));
+        context.addCommand("wc", new Posix(context));
+        context.addCommand("tac", this);
+
+        Object res = context.execute("echo \"test\" | wc -l | tac");
+        assertEquals("1", res);
+    }
+
+    @Test
+    public void testWcBytes() throws Exception {
+        Context context = new Context();
+        context.addCommand("echo", new Posix(context));
+        context.addCommand("wc", new Posix(context));
+        context.addCommand("tac", this);
+
+        Object res = context.execute("echo \"test\" | wc -c | tac");
+        assertEquals("5", res);
+    }
+
+    @Test
+    public void testWcLinesBytes() throws Exception {
+        Context context = new Context();
+        context.addCommand("echo", new Posix(context));
+        context.addCommand("wc", new Posix(context));
+        context.addCommand("tac", this);
+
+        Object res = context.execute("echo \"test\" | wc -l -c | tac");
+        assertEquals("       1       5", res);
+    }
+
+    @Test
+    public void testWcLinesBytesChar() throws Exception {
+        Context context = new Context();
+        context.addCommand("echo", new Posix(context));
+        context.addCommand("wc", new Posix(context));
+        context.addCommand("tac", this);
+
+        Object res = context.execute("echo \"test\" | wc -l -c -m | tac");
+        assertEquals("       1       5       5", res);
     }
 
     public String tac() throws IOException {

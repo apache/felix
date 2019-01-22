@@ -390,9 +390,6 @@ public class Posix {
         boolean displayWords = opt.isSet("words");
         boolean displayChars = opt.isSet("chars");
         boolean displayBytes = opt.isSet("bytes");
-        if (displayChars) {
-            displayBytes = false;
-        }
         if (!displayLines && !displayWords && !displayChars && !displayBytes) {
             displayLines = true;
             displayWords = true;
@@ -400,18 +397,36 @@ public class Posix {
         }
         String format = "";
         if (displayLines) {
-            format += "%1$8d";
+            if (!displayBytes && !displayChars && !displayWords) {
+                format = "%1$d";
+            } else {
+                format += "%1$8d";
+            }
         }
         if (displayWords) {
-            format += "%2$8d";
+            if (!displayLines && !displayBytes && !displayChars) {
+                format = "%2$d";
+            } else {
+                format += "%2$8d";
+            }
         }
         if (displayChars) {
-            format += "%3$8d";
+            if (!displayLines && !displayBytes && !displayWords) {
+                format = "%3$d";
+            } else {
+                format += "%3$8d";
+            }
         }
         if (displayBytes) {
-            format += "%4$8d";
+            if (!displayLines && !displayChars && !displayWords) {
+                format = "%4$d";
+            } else {
+                format += "%4$8d";
+            }
         }
-        format += "  %5s";
+        if (sources.size() > 1 || (sources.size() == 1 && sources.get(0).getName() != null)) {
+            format += "  %5$8s";
+        }
         int totalLines = 0;
         int totalBytes = 0;
         int totalChars = 0;
