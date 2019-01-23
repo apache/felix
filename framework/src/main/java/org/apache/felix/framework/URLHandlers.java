@@ -18,6 +18,7 @@
  */
 package org.apache.felix.framework;
 
+import java.lang.reflect.Method;
 import java.net.ContentHandler;
 import java.net.ContentHandlerFactory;
 import java.net.URL;
@@ -171,6 +172,30 @@ class URLHandlers implements URLStreamHandlerFactory, ContentHandlerFactory
             catch (Throwable ex)
             {
                 // Ignore, this is a best effort (maybe log it or something)
+            }
+
+            // Try to preload the jrt handler as we need it from the jvm on java > 8
+            if (getFromCache(m_builtIn, "jrt") == null)
+            {
+                try
+                {
+                    // Try to get it directly from the URL class to if possible
+                    Method getURLStreamHandler = m_secureAction.getDeclaredMethod(URL.class,"getURLStreamHandler", new Class[]{String.class});
+                    URLStreamHandler handler = (URLStreamHandler) m_secureAction.invoke(getURLStreamHandler, null, new Object[]{"jrt"});
+                    addToCache(m_builtIn, "jrt", handler);
+                }
+                catch (Throwable ex)
+                {
+                    // Ignore, this is a best effort and try to load the normal way
+                    try
+                    {
+                        getBuiltInStreamHandler("jrt", currentFactory);
+                    }
+                    catch (Throwable ex2)
+                    {
+                        // Ignore, this is a best efforts
+                    }
+                }
             }
 
             if (currentFactory != null)

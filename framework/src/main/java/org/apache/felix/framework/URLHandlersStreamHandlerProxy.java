@@ -264,7 +264,7 @@ public class URLHandlersStreamHandlerProxy extends URLStreamHandler
         Object svc = getStreamHandlerService();
         if (svc == null)
         {
-            throw new MalformedURLException("Unknown protocol: " + url.toString());
+            throw new MalformedURLException("Unknown protocol: " + url.getProtocol());
         }
         if (svc instanceof URLStreamHandlerService)
         {
@@ -317,7 +317,7 @@ public class URLHandlersStreamHandlerProxy extends URLStreamHandler
         Object svc = getStreamHandlerService();
         if (svc == null)
         {
-            throw new MalformedURLException("Unknown protocol: " + url.toString());
+            throw new MalformedURLException("Unknown protocol: " + url.getProtocol());
         }
         if (svc instanceof URLStreamHandlerService)
         {
