@@ -1,5 +1,5 @@
-Changes from 1.9.0 to 1.10.0
-----------------------------
+Changes from 1.9.0 to 1.9.2
+---------------------------
 ** Bug
     * [FELIX-6023] - bnd scrplugin preserve sequence of classpath entries
     
