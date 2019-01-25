@@ -1540,7 +1540,7 @@ public class DependencyManager<S, T> implements ReferenceManager<S, T>
 
     public ReferenceMetadata getReferenceMetadata()
     {
-    	return m_dependencyMetadata;
+        return m_dependencyMetadata;
     }
 
     /**
@@ -1577,8 +1577,13 @@ public class DependencyManager<S, T> implements ReferenceManager<S, T>
     }
 
     public static final class OpenStatus<S, T> {
-        public final AtomicInteger trackingCount = new AtomicInteger();
-        public Collection<RefPair<S, T>> refs;
+        private final DependencyManager<S, T> dm;
+        OpenStatus(DependencyManager<S, T> dm) {
+            this.dm = dm;
+        }
+        public Collection<RefPair<S, T>> getRefs(AtomicInteger trackingCount) {
+            return dm.m_customizer.getRefs(trackingCount);
+        }
     }
 
     /**
@@ -1592,17 +1597,19 @@ public class DependencyManager<S, T> implements ReferenceManager<S, T>
     OpenStatus<S, T> open(ComponentContextImpl<S> componentContext, EdgeInfo edgeInfo)
     {
         int serviceCount = 0;
-        final OpenStatus<S, T> status = new OpenStatus<>();
+        final OpenStatus<S, T> status = new OpenStatus<>(this);
+        Collection<RefPair<S, T>> refs;
+        AtomicInteger trackingCount = new AtomicInteger();
         CountDownLatch openLatch;
         synchronized (m_tracker.tracked())
         {
-        	status.refs = m_customizer.getRefs(status.trackingCount);
-            edgeInfo.setOpen(status.trackingCount.get());
+            refs = m_customizer.getRefs(trackingCount);
+            edgeInfo.setOpen(trackingCount.get());
             openLatch = edgeInfo.getOpenLatch();
         }
         m_componentManager.getLogger().log(LogService.LOG_DEBUG, "For dependency {0}, optional: {1}; to bind: {2}",
-                null, getName(), isOptional(), status.refs);
-        for (RefPair<S, T> refPair : status.refs)
+                null, getName(), isOptional(), refs);
+        for (RefPair<S, T> refPair : refs)
         {
             if (!refPair.isDeleted() && !refPair.isFailed())
             {
@@ -1630,11 +1637,12 @@ public class DependencyManager<S, T> implements ReferenceManager<S, T>
             final OpenStatus<S, T> status)
     {
         int serviceCount = 0;
-        for (final RefPair<S, T> refPair : status.refs)
+        AtomicInteger trackingCount = new AtomicInteger();
+        for (final RefPair<S, T> refPair : status.getRefs(trackingCount))
         {
             if (!refPair.isDeleted() && !refPair.isFailed())
             {
-                if (!doInvokeBindMethod(componentContext, bindMethod, refPair, status.trackingCount.get()))
+                if (!doInvokeBindMethod(componentContext, bindMethod, refPair, trackingCount.get()))
                 {
                     m_componentManager.getLogger().log(LogService.LOG_DEBUG,
                         "For dependency {0}, failed to invoke bind method on object {1}",
