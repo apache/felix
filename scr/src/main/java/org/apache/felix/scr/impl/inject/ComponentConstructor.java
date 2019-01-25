@@ -24,6 +24,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.felix.scr.impl.inject.ValueUtils.ValueType;
 import org.apache.felix.scr.impl.inject.field.FieldUtils;
@@ -267,7 +268,7 @@ public class ComponentConstructor<S>
                 {
                     final List<Object> refs = refMetadata.isMultiple() ? new ArrayList<>() : null;
                     Object ref = null;
-                    for(final RefPair<S, ?> refPair : status.refs)
+                    for(final RefPair<S, ?> refPair : status.getRefs(new AtomicInteger()))
                     {
                         if ( !refPair.isDeleted() && !refPair.isFailed() )
                         {
