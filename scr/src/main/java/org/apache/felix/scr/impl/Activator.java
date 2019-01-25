@@ -174,6 +174,7 @@ public class Activator extends AbstractExtender
         m_componentCommands = new ComponentCommands(m_context, runtime, m_configuration);
         m_componentCommands.register();
         m_componentCommands.updateProvideScrInfoService(m_configuration.infoAsService());
+        m_configuration.setScrCommand(m_componentCommands);
     }
 
     @Override

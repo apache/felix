@@ -142,7 +142,14 @@ public class ComponentCommands {
 
     @Descriptor("List all components")
     public ComponentDescriptionDTO[] list() {
-        return scr.getComponentDescriptionDTOs().toArray(new ComponentDescriptionDTO[0]);
+        ComponentDescriptionDTO[] result = scr.getComponentDescriptionDTOs().toArray(new ComponentDescriptionDTO[0]);
+        Arrays.sort(result, new Comparator<ComponentDescriptionDTO>() {
+            @Override
+            public int compare(ComponentDescriptionDTO c1, ComponentDescriptionDTO c2) {
+                return Long.compare(c1.bundle.id, c2.bundle.id);
+            }
+        });
+        return result;
     }
 
     @Descriptor("List components of a specific bundle")
