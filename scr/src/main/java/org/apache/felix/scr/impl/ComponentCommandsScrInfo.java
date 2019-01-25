@@ -38,24 +38,13 @@ public class ComponentCommandsScrInfo implements ScrInfo {
 
     @Override
     public void list(String bundleIdentifier, PrintWriter out) {
-        long bundleId;
-
-        try {
-            bundleId = Long.parseLong(bundleIdentifier);
-        } catch (NumberFormatException e) {
-            // might be a BSN
-            Bundle bundle = findBundle(bundleIdentifier);
-            if (bundle == null) throw new IllegalArgumentException("Cannot find bundle with ID: " + bundleIdentifier);
-            bundleId = bundle.getBundleId();
-        }
-
         final CharSequence formatted;
         try {
-            ComponentDescriptionDTO[] dtos = commands.list(bundleId);
+            ComponentDescriptionDTO[] dtos = bundleIdentifier == null ? commands.list() : commands.list(getBundleID(bundleIdentifier));
             if (dtos != null) {
                 formatted = commands.format(dtos, 1);
             } else {
-                formatted = "No components found for bundle  " + bundleId;
+                formatted = "No components found for bundle  " + bundleIdentifier;
             }
         } catch (Exception e) {
             throw new RuntimeException("Error listing or formatting SCR runtime information", e);
@@ -63,27 +52,55 @@ public class ComponentCommandsScrInfo implements ScrInfo {
         out.println(formatted);
     }
 
+    private long getBundleID(String bundleIdentifier) {
+        try {
+            return Long.parseLong(bundleIdentifier);
+        } catch (NumberFormatException e) {
+            // might be a BSN
+            Bundle bundle = findBundle(bundleIdentifier);
+            if (bundle == null) throw new IllegalArgumentException("Cannot find bundle with ID: " + bundleIdentifier);
+            return bundle.getBundleId();
+        }
+    }
+
     @Override
     public void info(String componentId, PrintWriter out) {
-        Object infoObj;
-        try {
-            long configId = Long.parseLong(componentId);
-            infoObj = commands.info(configId);
-        } catch (NumberFormatException e) {
-            infoObj = commands.info(componentId);
+        if (componentId != null) {
+            Object infoObj;
+            try {
+                long configId = Long.parseLong(componentId);
+                infoObj = commands.info(configId);
+            } catch (NumberFormatException e) {
+                infoObj = commands.info(componentId);
+            }
+            CharSequence formatted = format(infoObj, out, Converter.INSPECT);
+            if (formatted == null) {
+                out.println("No component found with ID " + componentId);
+            } else {
+                out.println(formatted);
+            }
+            return;
         }
 
-        CharSequence formatted;
-        if (infoObj != null) {
+        ComponentDescriptionDTO[] components = commands.list();
+        if (components.length > 0) {
+            for (ComponentDescriptionDTO componentDescriptionDTO : components) {
+                out.println(format(componentDescriptionDTO, out, Converter.INSPECT));
+            }
+        } else {
+            out.println("No component found.");
+        }
+    }
+
+    private CharSequence format(Object info, PrintWriter out, int level) {
+        if (info != null) {
             try {
-                formatted = commands.format(infoObj, Converter.INSPECT);
+                return commands.format(info, level);
             } catch (Exception e) {
                 throw new RuntimeException("Error formatting SCR runtime information", e);
             }
-        } else {
-            formatted = "No component found with ID " + componentId;
         }
-        out.println(formatted);
+        return null;
     }
 
     @Override
