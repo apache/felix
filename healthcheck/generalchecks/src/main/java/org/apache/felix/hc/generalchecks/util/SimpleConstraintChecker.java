@@ -38,7 +38,10 @@ public class SimpleConstraintChecker {
     public static final String OLDER_THAN = "older_than"; // for unix timestamps 
 
     /** Check value against expression and report to result 
-     * @param statusForFailedContraint */
+     * @param inputValue the value to check
+     * @param constraint the constraint to check the value against
+     * @return true if constraint is met
+     *  */
     public boolean check(Object inputValue, String constraint) throws NumberFormatException {
 
         if(inputValue == null) {
