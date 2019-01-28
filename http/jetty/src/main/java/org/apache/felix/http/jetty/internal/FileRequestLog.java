@@ -58,6 +58,12 @@ class FileRequestLog {
         delegate.setLogCookies(config.isRequestLogFileLogCookies());
         delegate.setLogServer(config.isRequestLogFileLogServer());
         delegate.setLogLatency(config.isRequestLogFileLogLatency());
+        if (config.getRequestLogDateFormat() != null) {
+            delegate.setLogDateFormat(config.getRequestLogDateFormat());
+        }
+        if (config.getRequestLogTimeZone() != null) {
+            delegate.setLogTimeZone(config.getRequestLogTimeZone());
+        }
     }
 
     synchronized void start(BundleContext context) throws IOException, IllegalStateException {

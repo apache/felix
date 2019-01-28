@@ -216,6 +216,12 @@ public final class JettyConfig
     /** Felix specific property to enable request logging request processing time in the request log file*/
     public static final String FELIX_HTTP_REQUEST_LOG_FILE_LOG_LATENCY = "org.apache.felix.http.requestlog.file.loglatency";
 
+    /** Felix specific property to specify the date format used for the logging timestamps*/
+    public static final String FELIX_HTTP_REQUEST_LOG_FILE_DATE_FORMAT = "org.apache.felix.http.requestlog.file.logdateformat";
+
+    /** Felix specific property to specify the timezone used for the logging timestamps*/
+    public static final String FELIX_HTTP_REQUEST_LOG_FILE_TIMEZONE = "org.apache.felix.http.requestlog.file.timezone";
+
     /** Felix specific property to define custom properties for the http runtime service. */
     public static final String FELIX_CUSTOM_HTTP_RUNTIME_PROPERTY_PREFIX = "org.apache.felix.http.runtime.init.";
 
@@ -580,6 +586,14 @@ public final class JettyConfig
 
     public boolean isRequestLogFileLogLatency() {
         return getBooleanProperty(FELIX_HTTP_REQUEST_LOG_FILE_LOG_LATENCY, false);
+    }
+
+    public String getRequestLogDateFormat() {
+        return getProperty(FELIX_HTTP_REQUEST_LOG_FILE_DATE_FORMAT, null);
+    }
+
+    public String getRequestLogTimeZone() {
+        return getProperty(FELIX_HTTP_REQUEST_LOG_FILE_TIMEZONE, null);
     }
 
 
