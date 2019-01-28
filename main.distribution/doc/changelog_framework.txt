@@ -1,3 +1,16 @@
+Changes from 6.0.1 to 6.0.1
+---------------------------
+
+** Bug
+    * [FELIX-5917] - [Fwk security] Fix BundlePermission check for fragments
+    * [FELIX-5942] - Felix Framework freezes when resolving classes in parallel with Java 10
+    * [FELIX-5978] - Felix framework unable to retrieve custom URL handlers when security is on
+
+** Improvement
+    * [FELIX-5912] - Handle empty package definitions in system package definitions more gracefully
+    * [FELIX-5914] - Workaround SecurityManager.getClassContext returning null on Android
+    * [FELIX-6035] - Allow urlhandlers to create urls for jrt protocol without an add-opens
+
 Changes from 6.0.0 to 6.0.1
 ---------------------------
 

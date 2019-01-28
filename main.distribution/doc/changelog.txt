@@ -1,3 +1,9 @@
+Changes from 6.0.1 to 6.0.2
+---------------------------
+
+** Improvement
+   * Update to latest framework and main version 6.0.2
+
 Changes from 6.0.0 to 6.0.1
 ---------------------------
 
