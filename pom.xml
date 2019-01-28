@@ -50,7 +50,6 @@
 
     <build>
         <plugins>
-
             <plugin>
                 <groupId>biz.aQute.bnd</groupId>
                 <artifactId>bnd-maven-plugin</artifactId>
@@ -78,8 +77,26 @@
                 <artifactId>bnd-baseline-maven-plugin</artifactId>
                 <version>4.1.0</version>
             </plugin>
-
         </plugins>
+
+        <pluginManagement>
+            <plugins>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-javadoc-plugin</artifactId>
+                    <configuration>
+                        <additionalDependencies>
+                            <!-- explicitly require cmpn v7 for javadoc -->
+                            <additionalDependency>
+                                <groupId>org.osgi</groupId>
+                                <artifactId>osgi.cmpn</artifactId>
+                                <version>7.0.0</version>
+                            </additionalDependency>
+                        </additionalDependencies>
+                    </configuration>
+                </plugin>
+            </plugins>
+        </pluginManagement>
     </build>
 
     <dependencies>

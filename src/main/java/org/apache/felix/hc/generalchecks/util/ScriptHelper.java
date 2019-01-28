@@ -47,7 +47,7 @@ import org.osgi.framework.BundleContext;
 import org.osgi.framework.InvalidSyntaxException;
 import org.osgi.framework.ServiceReference;
 
-/** Script Helper to interact with . */
+/** Script Helper to simplify interaction with scripting engines in OSGi context. Used by ScriptedHealthCheck and can be used by other custom checks that want to allow to evaluate expressions via a scripting engine. */
 public class ScriptHelper {
 
     public String getFileContents(String url) {
