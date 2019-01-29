@@ -18,6 +18,9 @@
  */
 package org.apache.felix.scr.impl;
 
+import java.lang.reflect.InvocationHandler;
+import java.lang.reflect.Method;
+import java.lang.reflect.Proxy;
 import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -46,6 +49,8 @@ import org.osgi.framework.InvalidSyntaxException;
 import org.osgi.framework.ServiceReference;
 import org.osgi.framework.ServiceRegistration;
 import org.osgi.framework.dto.ServiceReferenceDTO;
+import org.osgi.framework.wiring.BundleRevision;
+import org.osgi.framework.wiring.BundleWiring;
 import org.osgi.service.component.ComponentConstants;
 import org.osgi.service.component.ComponentFactory;
 import org.osgi.service.component.runtime.ServiceComponentRuntime;
@@ -54,16 +59,18 @@ import org.osgi.service.component.runtime.dto.ComponentDescriptionDTO;
 import org.osgi.service.component.runtime.dto.ReferenceDTO;
 import org.osgi.service.component.runtime.dto.SatisfiedReferenceDTO;
 import org.osgi.service.component.runtime.dto.UnsatisfiedReferenceDTO;
+import org.osgi.util.tracker.ServiceTracker;
+import org.osgi.util.tracker.ServiceTrackerCustomizer;
 
-public class ComponentCommands {
+public class ComponentCommands implements ServiceTrackerCustomizer<Object, ServiceRegistration<?>> {
 
     private static final String INDENT_1 = "  ";
     private static final String INDENT_2 = INDENT_1 + INDENT_1;
-    private static final String INDENT_3 = INDENT_2 + INDENT_1;
 
     private final BundleContext context;
     private final ServiceComponentRuntime scr;
     private final ScrConfiguration scrConfig;
+    private final ServiceTracker<Object, ServiceRegistration<?>> gogoRuntimeTracker;
 
     private final Comparator<ComponentConfigurationDTO> configDtoComparator = new Comparator<ComponentConfigurationDTO>() {
         @Override
@@ -81,7 +88,6 @@ public class ComponentCommands {
     };
 
     private ServiceRegistration<ComponentCommands> commandsReg = null;
-    private ServiceRegistration<?> converterReg = null;
     private ServiceRegistration<ScrInfo> scrInfoReg = null;
 
     synchronized void register() {
@@ -104,18 +110,11 @@ public class ComponentCommands {
         svcProps.put(Constants.SERVICE_VENDOR, "The Apache Software Foundation");
         commandsReg = context.registerService(ComponentCommands.class, this, svcProps);
 
-        svcProps = new Hashtable<>();
-        svcProps.put("osgi.converter.classes", new String[] {
-                ComponentDescriptionDTO.class.getName(),
-                ComponentConfigurationDTO.class.getName()
-        });
-        svcProps.put(Constants.SERVICE_DESCRIPTION, "SCR Runtime DTO Converter");
-        svcProps.put(Constants.SERVICE_VENDOR, "The Apache Software Foundation");
-        converterReg = context.registerService("org.apache.felix.service.command.Converter", new ComponentConverterFactory(this), svcProps);
+        gogoRuntimeTracker.open(true);
     }
 
     synchronized void unregister() {
-        safeUnregister(converterReg);
+        gogoRuntimeTracker.close();
         safeUnregister(commandsReg);
         safeUnregister(scrInfoReg);
     }
@@ -138,6 +137,7 @@ public class ComponentCommands {
         this.context = context;
         this.scr = scr;
         this.scrConfig = scrConfig;
+        this.gogoRuntimeTracker = new ServiceTracker<>(context, "org.apache.felix.service.command.CommandProcessor", this);
     }
 
     @Descriptor("List all components")
@@ -223,6 +223,7 @@ public class ComponentCommands {
         return changed;
     }
 
+    @SuppressWarnings("deprecation")
     @Descriptor("Show the current SCR configuration")
     public String config() {
         Map<String,String> out = new LinkedHashMap<>();
@@ -240,7 +241,7 @@ public class ComponentCommands {
     }
 
     public Object convert(Class<?> desiredType, Object in) throws Exception {
-        throw new UnsupportedOperationException("Not implemented");
+        return null;
     }
 
     public CharSequence format(Object target, int level) throws Exception {
@@ -585,6 +586,66 @@ public class ComponentCommands {
         } catch (Exception e) {
             // ignore
         }
+    }
+
+    @Override
+    public ServiceRegistration<?> addingService(ServiceReference<Object> reference) {
+        Bundle b = reference.getBundle();
+        BundleRevision rev = b == null ? null : b.adapt(BundleRevision.class);
+        if (rev != null) {
+            Object converter = createConverter(b);
+            if (converter != null) {
+                Dictionary<String, Object> svcProps = new Hashtable<>();
+                svcProps.put("osgi.converter.classes", new String[] {
+                        ComponentDescriptionDTO.class.getName(),
+                        ComponentConfigurationDTO.class.getName()
+                });
+                svcProps.put(Constants.SERVICE_DESCRIPTION, "SCR Runtime DTO Converter");
+                svcProps.put(Constants.SERVICE_VENDOR, "The Apache Software Foundation");
+
+                return b.getBundleContext().registerService("org.apache.felix.service.command.Converter", converter, svcProps);
+            }
+        }
+        return null;
+    }
+
+    private Object createConverter(Bundle bundle) {
+        BundleWiring wiring = bundle.adapt(BundleWiring.class);
+        if (wiring != null) {
+            ClassLoader cl = wiring.getClassLoader();
+            if (cl != null) {
+                try {
+                    Class<?>[] types = new Class[] {cl.loadClass("org.apache.felix.service.command.Converter")};
+                    return Proxy.newProxyInstance(cl, types, new InvocationHandler() {
+                        
+                        @Override
+                        public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
+                            if ("convert".equals(method.getName())) {
+                                return convert((Class<?>) args[0], args[1]);
+                            }
+                            if ("format".equals(method.getName())) {
+                                return format(args[0], (int) args[1]);
+                            }
+                            return method.invoke(this, args);
+                        }
+                    });
+                } catch (ClassNotFoundException e) {
+                    
+                }
+
+            }
+        }
+        return null;
+    }
+
+    @Override
+    public void modifiedService(ServiceReference<Object> reference, ServiceRegistration<?> reg) {
+        // nothing
+    }
+
+    @Override
+    public void removedService(ServiceReference<Object> reference, ServiceRegistration<?> reg) {
+        safeUnregister(reg);
     }
 
 }
