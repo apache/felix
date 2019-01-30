@@ -19,6 +19,9 @@
 
 package org.apache.felix.http.itest;
 
+import static javax.servlet.http.HttpServletResponse.SC_NOT_FOUND;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 import java.io.IOException;
@@ -29,6 +32,7 @@ import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
+import javax.naming.directory.SearchControls;
 import javax.servlet.Filter;
 import javax.servlet.FilterChain;
 import javax.servlet.FilterConfig;
@@ -44,7 +48,11 @@ import org.junit.runner.RunWith;
 import org.ops4j.pax.exam.junit.PaxExam;
 import org.ops4j.pax.exam.spi.reactors.ExamReactorStrategy;
 import org.ops4j.pax.exam.spi.reactors.PerMethod;
+import org.osgi.framework.Bundle;
+import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceRegistration;
+import org.osgi.framework.wiring.BundleCapability;
+import org.osgi.framework.wiring.BundleWiring;
 import org.osgi.service.http.HttpService;
 import org.osgi.service.http.runtime.HttpServiceRuntime;
 
@@ -142,4 +150,43 @@ public class HttpServiceTest extends BaseIntegrationTest
         }
     }
 
+    /**
+     * Tests the starting of Jetty.
+     */
+    @Test
+    public void testHttpServiceCapabiltiy() throws Exception
+    {
+    	setupLatches(0);
+    	
+        Bundle httpJettyBundle = getHttpJettyBundle();
+        
+        BundleWiring wiring = httpJettyBundle.adapt(BundleWiring.class);
+        
+		List<BundleCapability> capabilities = wiring.getCapabilities("osgi.service");
+		
+		assertFalse(capabilities.isEmpty());
+		
+		boolean found = false;
+		
+		for (BundleCapability capability : capabilities) {
+			@SuppressWarnings("unchecked")
+			List<String> objectClass = (List<String>) capability.getAttributes().get(Constants.OBJECTCLASS);
+			
+			assertNotNull(objectClass);
+			
+			if(objectClass.contains(HttpService.class.getName())) {
+				String uses = capability.getDirectives().get("uses");
+				
+				assertNotNull(uses);
+				
+				assertTrue(uses.contains(HttpService.class.getPackage().getName()));
+				
+				found = true;
+				break;
+			}
+		}
+		
+		assertTrue("Missing HttpService capability", found);
+    }
+    
 }
