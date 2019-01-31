@@ -38,6 +38,7 @@ import java.util.Map;
  */
 public class TypedPropertiesTest extends TestCase {
 
+    private final static String LINE_SEPARATOR = System.getProperty("line.separator");
     private final static String TEST_PROPERTIES_FILE = "test.properties";
     private final static String TEST_TYPED_PROPERTIES_FILE = "typed.properties";
 
@@ -94,14 +95,14 @@ public class TypedPropertiesTest extends TestCase {
     public void testWriteTypedPropsFloat() throws IOException
     {
         TypedProperties properties = new TypedProperties();
-        properties.load(new StringReader("key = F\"1137191584\"\n"));
+        properties.load(new StringReader("key = F\"1137191584\"" + LINE_SEPARATOR));
         assertEquals(400.333f, properties.get("key"));
     }
 
     public void testReadStringWithEqual() throws IOException
     {
         TypedProperties properties = new TypedProperties();
-        properties.load(new StringReader("key = \"foo=bar\"\n"));
+        properties.load(new StringReader("key = \"foo=bar\"" + LINE_SEPARATOR));
         assertEquals("foo=bar", properties.get("key"));
     }
 
@@ -111,17 +112,48 @@ public class TypedPropertiesTest extends TestCase {
         properties.put("key", 400.333f);
         StringWriter sw = new StringWriter();
         properties.save(sw);
-        assertEquals("key = F\"400.333\"\n", sw.toString());
+        assertEquals("key = F\"400.333\"" + LINE_SEPARATOR, sw.toString());
         properties = new TypedProperties();
         properties.load(new StringReader(sw.toString()));
         assertEquals(400.333f, properties.get("key"));
     }
 
+    public void testWriteTypedPropsIntegerList() throws IOException
+    {
+        List<Integer> list = new ArrayList<Integer>();
+        list.add(1);
+        list.add(2);
+        list.add(3);
+        TypedProperties properties = new TypedProperties();
+        properties.put("key", list);
+        StringWriter sw = new StringWriter();
+        properties.save(sw);
+        String str = "key = I( \\\r\n  \"1\", \\\r\n  \"2\", \\\r\n  \"3\", \\\r\n)" + LINE_SEPARATOR;
+        assertEquals(str, sw.toString());
+        properties = new TypedProperties();
+        properties.load(new StringReader(sw.toString()));
+        assertEquals(list, properties.get("key"));
+    }
+
+    public void testWriteTypedPropsFloatArray() throws IOException
+    {
+        Float[] array = new Float[] { 1.0f, 2.0f, 3.0f };
+        TypedProperties properties = new TypedProperties();
+        properties.put("key", array);
+        StringWriter sw = new StringWriter();
+        properties.save(sw);
+        String str = "key = F[ \\\r\n  \"1.0\", \\\r\n  \"2.0\", \\\r\n  \"3.0\", \\\r\n  ]" + LINE_SEPARATOR;
+        assertEquals(str, sw.toString());
+        properties = new TypedProperties();
+        properties.load(new StringReader(sw.toString()));
+        assertTrue(Arrays.equals(array, (Object[]) properties.get("key")));
+    }
+
     public void testSubstitution() throws IOException
     {
-        String str = "port = 4141\n" +
-                     "host = localhost\n" +
-                     "url = https://${host}:${port}/service\n";
+        String str = "port = 4141" + LINE_SEPARATOR +
+                     "host = localhost" + LINE_SEPARATOR +
+                     "url = https://${host}:${port}/service" + LINE_SEPARATOR;
         TypedProperties properties = new TypedProperties();
         properties.load(new StringReader(str));
         properties.put("url", "https://localhost:4141/service");
@@ -137,7 +169,7 @@ public class TypedPropertiesTest extends TestCase {
         properties.put("key", "s 1");
         StringWriter sw = new StringWriter();
         properties.save(sw);
-        assertEquals("key = \"s 1\"\n", sw.toString());
+        assertEquals("key = \"s 1\"" + LINE_SEPARATOR, sw.toString());
     }
 
 }

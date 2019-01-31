@@ -22,7 +22,6 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.StringReader;
 import java.io.StringWriter;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
@@ -343,9 +342,9 @@ public class PropertiesTest extends TestCase {
 
     public void testSubstitution() throws IOException
     {
-        String str = "port = 4141\n" +
-                "host = localhost\n" +
-                "url = https://${host}:${port}/service\n";
+        String str = "port = 4141" + LINE_SEPARATOR +
+                "host = localhost" + LINE_SEPARATOR +
+                "url = https://${host}:${port}/service" + LINE_SEPARATOR;
         Properties properties = new Properties();
         properties.load(new StringReader(str));
         properties.put("url", "https://localhost:4141/service");
