@@ -955,7 +955,7 @@ public class Properties extends AbstractMap<String, String> {
             String[] property = parseProperty(line);
             boolean typed = false;
             if (maybeTyped && property[1].length() >= 2) {
-                typed = property[1].matches("\\s*[TILFDXSCBilfdxscb]?(\\[[\\S\\s]*\\]|\\{[\\S\\s]*\\}|\"[\\S\\s]*\")\\s*");
+                typed = property[1].matches("\\s*[TILFDXSCBilfdxscb]?(\\[[\\S\\s]*\\]|\\([\\S\\s]*\\)|\\{[\\S\\s]*\\}|\"[\\S\\s]*\")\\s*");
             }
             if (this.typed == null) {
                 this.typed = typed;
