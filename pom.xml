@@ -28,7 +28,7 @@
     </parent>
 
     <artifactId>org.apache.felix.healthcheck.webconsoleplugin</artifactId>
-    <version>0.1.0</version>
+    <version>0.1.1</version>
 
     <name>Apache Felix Health Check Webconsole Plugin</name>
     <inceptionYear>2013</inceptionYear>
@@ -38,9 +38,9 @@
     </description>
 
     <scm>
-        <connection>scm:svn:http://svn.apache.org/repos/asf/felix/releases/org.apache.felix.healthcheck.webconsoleplugin-0.1.0</connection>
-        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/felix/releases/org.apache.felix.healthcheck.webconsoleplugin-0.1.0</developerConnection>
-        <url>scm:svn:https://svn.apache.org/repos/asf/felix/releases/org.apache.felix.healthcheck.webconsoleplugin-0.1.0</url>
+        <connection>scm:svn:http://svn.apache.org/repos/asf/felix/releases/org.apache.felix.healthcheck.webconsoleplugin-0.1.1</connection>
+        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/felix/releases/org.apache.felix.healthcheck.webconsoleplugin-0.1.1</developerConnection>
+        <url>scm:svn:https://svn.apache.org/repos/asf/felix/releases/org.apache.felix.healthcheck.webconsoleplugin-0.1.1</url>
     </scm>
 
 
@@ -75,7 +75,7 @@
         <dependency>
             <groupId>org.apache.felix</groupId>
             <artifactId>org.apache.felix.healthcheck.api</artifactId>
-            <version>0.1.0</version>
+            <version>0.1.1</version>
         </dependency>
 
         <dependency>
@@ -130,7 +130,7 @@
         <dependency>
             <groupId>org.apache.felix</groupId>
             <artifactId>org.apache.felix.healthcheck.core</artifactId>
-            <version>0.1.0</version>
+            <version>0.1.1</version>
             <scope>test</scope>
         </dependency>
         <!-- END test scope dependencies -->
