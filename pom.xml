@@ -28,7 +28,7 @@
     </parent>
 
     <artifactId>org.apache.felix.healthcheck.api</artifactId>
-    <version>2.0.0</version>
+    <version>0.1.0</version>
 
     <name>Apache Felix Health Check API</name>
     <inceptionYear>2013</inceptionYear>
@@ -38,9 +38,9 @@
     </description>
 
     <scm>
-        <connection>scm:svn:http://svn.apache.org/repos/asf/felix/releases/org.apache.felix.healthcheck.api-2.0.0</connection>
-        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/felix/releases/org.apache.felix.healthcheck.api-2.0.0</developerConnection>
-        <url>scm:svn:https://svn.apache.org/repos/asf/felix/releases/org.apache.felix.healthcheck.api-2.0.0</url>
+        <connection>scm:svn:http://svn.apache.org/repos/asf/felix/releases/org.apache.felix.healthcheck.api-0.1.0</connection>
+        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/felix/releases/org.apache.felix.healthcheck.api-0.1.0</developerConnection>
+        <url>scm:svn:https://svn.apache.org/repos/asf/felix/releases/org.apache.felix.healthcheck.api-0.1.0</url>
     </scm>
 
 
