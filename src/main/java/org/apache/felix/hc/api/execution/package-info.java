@@ -17,7 +17,7 @@
  * under the License.
  */
 
-@Version("2.0.0")
+@Version("0.1.0")
 package org.apache.felix.hc.api.execution;
 
 import org.osgi.annotation.versioning.Version;
