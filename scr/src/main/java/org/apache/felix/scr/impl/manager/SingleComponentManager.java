@@ -161,7 +161,6 @@ public class SingleComponentManager<S> extends AbstractComponentManager<S> imple
         {
             m_useCount.set( 0 );
             disposeImplementationObject( m_componentContext, reason );
-            m_componentContext.cleanup();
             m_componentContext = null;
             getLogger().log( LogService.LOG_DEBUG, "Unset and deconfigured implementation object for component in deleteComponent for reason {0}", null, REASONS[ reason ] );
             clearServiceProperties();
@@ -417,7 +416,7 @@ public class SingleComponentManager<S> extends AbstractComponentManager<S> imple
                 md.close( componentContext, componentContext.getEdgeInfo( md ) );
             }
         }
-
+        componentContext.cleanup();
     }
 
     @Override

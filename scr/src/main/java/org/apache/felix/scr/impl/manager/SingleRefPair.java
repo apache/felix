@@ -31,7 +31,7 @@ import org.osgi.service.log.LogService;
  */
 public class SingleRefPair<S, T> extends RefPair<S, T>
 {
-    private AtomicReference<T> serviceObjectRef = new AtomicReference<>();
+    protected AtomicReference<T> serviceObjectRef = new AtomicReference<>();
 
     public SingleRefPair( ServiceReference<T> ref )
     {
@@ -56,9 +56,22 @@ public class SingleRefPair<S, T> extends RefPair<S, T>
     }
 
     @Override
-    public T unsetServiceObject(ComponentContextImpl<S> key)
+    public T ungetServiceObject(ComponentContextImpl<S> key) {
+        // null operation for singleRefPair
+        return null;
+    }
+
+    @Override
+    public void ungetServiceObjects(BundleContext bundleContext)
     {
-        return serviceObjectRef.getAndSet( null );
+        T service = serviceObjectRef.getAndSet( null );
+        if (service != null)
+        {
+            if (bundleContext != null)
+            {
+                bundleContext.ungetService(getRef());
+            }
+        }
     }
 
     @Override
