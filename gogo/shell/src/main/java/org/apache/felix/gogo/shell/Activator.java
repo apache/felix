@@ -185,6 +185,8 @@ public class Activator implements BundleActivator
         private final BundleContext context;
         private final CommandProcessor processor;
         private volatile CommandSession session;
+        private volatile Thread shellThread;
+
 
         public StartShellJob(BundleContext context, CommandProcessor processor)
         {
@@ -195,6 +197,7 @@ public class Activator implements BundleActivator
         public void run()
         {
 
+            shellThread = Thread.currentThread();
             session = processor.createSession(new FileInputStream(FileDescriptor.in),
                                               new FileOutputStream(FileDescriptor.out),
                                               new FileOutputStream(FileDescriptor.err));
@@ -239,7 +242,9 @@ public class Activator implements BundleActivator
                 session.close();
                 session = null;
             }
-            Thread.currentThread().interrupt();
+            if (shellThread != null) {
+                shellThread.interrupt();
+            }
         }
     }
 }
