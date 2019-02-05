@@ -54,7 +54,7 @@ public class MultiplePrototypeRefPair<S, T> extends RefPair<S, T>
     }
 
     @Override
-    public T unsetServiceObject(ComponentContextImpl<S> key)
+    public T ungetServiceObject(ComponentContextImpl<S> key)
     {
     	if ( key == null )
     	{
@@ -75,6 +75,11 @@ public class MultiplePrototypeRefPair<S, T> extends RefPair<S, T>
     }
 
     @Override
+    public void ungetServiceObjects(BundleContext bundleContext) {
+        ungetServiceObject(null);
+    }
+
+    @Override
     public String toString()
     {
         return "[MultiplePrototypeRefPair: ref: [" + getRef() + "] has service: [" + !instances.isEmpty() + "]]";
@@ -83,7 +88,7 @@ public class MultiplePrototypeRefPair<S, T> extends RefPair<S, T>
     @Override
     public boolean getServiceObject(ComponentContextImpl<S> key, BundleContext context)
     {
-    	final T service = key.getComponentServiceObjectsHelper().getPrototypeRefInstance(this.getRef());
+        final T service = key.getComponentServiceObjectsHelper().getPrototypeRefInstance(this.getRef());
         if ( service == null )
         {
             setFailed();

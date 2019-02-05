@@ -223,15 +223,7 @@ public class DependencyManager<S, T> implements ReferenceManager<S, T>
 
         protected void ungetService(RefPair<S, T> ref)
         {
-            Object service = ref.unsetServiceObject(null);
-            if (service != null)
-            {
-                BundleContext bundleContext = m_componentManager.getBundleContext();
-                if (bundleContext != null)
-                {
-                    bundleContext.ungetService(ref.getRef());
-                }
-            }
+            ref.ungetServiceObjects(m_componentManager.getBundleContext());
         }
 
         protected void tracked(int trackingCount)
@@ -1690,7 +1682,7 @@ public class DependencyManager<S, T> implements ReferenceManager<S, T>
                 invokeUnbindMethod(componentContext, boundRef, trackingCount.get(), edgeInfo);
             }
             
-            boundRef.unsetServiceObject(componentContext);
+            boundRef.ungetServiceObject(componentContext);
             
         }
         latch.countDown();

@@ -41,6 +41,8 @@ public class ComponentServiceObjectsHelper
 
     private final List<ComponentServiceObjectsImpl> closedServices = new ArrayList<ComponentServiceObjectsImpl>();
 
+    private final ConcurrentMap<ServiceReference<?>, Object> prototypeInstances = new ConcurrentHashMap<ServiceReference<?>, Object>();
+
     public ComponentServiceObjectsHelper(final BundleContext bundleContext)
     {
         this.bundleContext = bundleContext;
@@ -63,6 +65,7 @@ public class ComponentServiceObjectsHelper
         {
         	cso.deactivate();
         }
+        prototypeInstances.clear();
     }
 
     public ComponentServiceObjects getServiceObjects(final ServiceReference<?> ref)
@@ -98,7 +101,19 @@ public class ComponentServiceObjectsHelper
 
     public <T> T getPrototypeRefInstance(final ServiceReference<T> ref)
     {
-    	return (T) getServiceObjects(ref).getService();
+    	T service = (T) prototypeInstances.get(ref);
+    	if ( service == null )
+    	{
+    		service = (T) getServiceObjects(ref).getService();
+    		T oldService = (T)prototypeInstances.putIfAbsent(ref, service);
+    		if ( oldService != null )
+    		{
+    			// another thread created the instance already
+    			getServiceObjects(ref).ungetService(service);
+    			service = oldService;
+    		}
+    	}
+    	return service;
     }
 
     private static final class ComponentServiceObjectsImpl implements ComponentServiceObjects

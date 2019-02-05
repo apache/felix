@@ -20,6 +20,8 @@
 
 package org.apache.felix.scr.impl.manager;
 
+import java.util.concurrent.atomic.AtomicReference;
+
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceReference;
 import org.osgi.service.log.LogService;
@@ -27,11 +29,53 @@ import org.osgi.service.log.LogService;
 /**
  * @version $Rev$ $Date$
  */
-public class SinglePrototypeRefPair<S, T> extends SingleRefPair<S, T>
+public class SinglePrototypeRefPair<S, T> extends RefPair<S, T>
 {
+    class SingleKeyService {
+        final ComponentContextImpl<S> key;
+        final T serviceObject;
+        SingleKeyService(ComponentContextImpl<S> key, T serviceObject) {
+            this.key = key;
+            this.serviceObject = serviceObject;
+        }
+    }
+    protected AtomicReference<SingleKeyService> serviceObjectRef = new AtomicReference<>();
+
     public SinglePrototypeRefPair( ServiceReference<T> ref )
     {
         super(ref);
+    }
+
+    @Override
+    public T getServiceObject(ComponentContextImpl<S> key)
+    {
+        SingleKeyService service = serviceObjectRef.get();
+        return service == null ? null : service.serviceObject;
+    }
+
+    @Override
+    public boolean setServiceObject(ComponentContextImpl<S> key, T serviceObject)
+    {
+        return serviceObjectRef.compareAndSet(null, new SingleKeyService(key, serviceObject ));
+    }
+
+    @Override
+    public T ungetServiceObject(ComponentContextImpl<S> key)
+    {
+        SingleKeyService service = serviceObjectRef.getAndSet(null);
+        if (service != null) {
+            if (key == null) {
+                key = service.key;
+            }
+            doUngetService(key, service.serviceObject);
+            return service.serviceObject;
+        }
+		return null;
+    }
+
+    @Override
+    public void ungetServiceObjects(BundleContext bundleContext) {
+        ungetServiceObject(null);
     }
 
     @Override
@@ -49,37 +93,25 @@ public class SinglePrototypeRefPair<S, T> extends SingleRefPair<S, T>
             setFailed();
             key.getLogger().log(
                  LogService.LOG_WARNING,
-                 "Could not get service from serviceobjects for ref {0}",null, getRef() );
+                 "Could not get service from serviceobjects for ref {0}", null, getRef() );
             return false;
         }
         if (!setServiceObject(key, service))
         {
             // Another thread got the service before, so unget our
-        	doUngetService(key, service);
+        	doUngetService( key, service );
         }
         return true;
-    }
-
-    @Override
-    public T unsetServiceObject(ComponentContextImpl<S> key)
-    {
-    	final T service = super.unsetServiceObject(key);
-    	if ( service != null )
-    	{
-			doUngetService(key, service);
-    	}
-    	return null ;
     }
 
 	private void doUngetService(ComponentContextImpl<S> key, final T service) {
 		try 
 		{
-			key.getComponentServiceObjectsHelper().getServiceObjects(getRef()).ungetService(service);
+			key.getComponentServiceObjectsHelper().getServiceObjects(getRef()).ungetService( service );
 		}
-		catch (final IllegalStateException ise)
+		catch ( final IllegalStateException ise )
 		{
 			// ignore
 		}
 	}
-    
 }
