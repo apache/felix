@@ -50,7 +50,8 @@ public abstract class RefPair<S, T>
 
     public abstract boolean setServiceObject( ComponentContextImpl<S> key, T serviceObject );
 
-    public abstract T unsetServiceObject(ComponentContextImpl<S> key);
+    public abstract void ungetServiceObjects(BundleContext context);
+    public abstract T ungetServiceObject(ComponentContextImpl<S> key);
 
     public void setFailed( )
     {
