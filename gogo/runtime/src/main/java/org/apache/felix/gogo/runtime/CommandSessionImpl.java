@@ -527,7 +527,7 @@ public class CommandSessionImpl implements CommandSession, Converter
     {
         synchronized (jobs)
         {
-            return Collections.unmodifiableList(jobs);
+            return Collections.<Job>unmodifiableList(jobs);
         }
     }
 
@@ -806,7 +806,7 @@ public class CommandSessionImpl implements CommandSession, Converter
 
         public List<Process> processes()
         {
-            return Collections.unmodifiableList(pipes);
+            return Collections.unmodifiableList((List<? extends Process>)pipes);
         }
 
         @Override
@@ -823,7 +823,7 @@ public class CommandSessionImpl implements CommandSession, Converter
             {
                 thread.setName("job controller " + id);
 
-                List<Callable<Result>> wrapped = new ArrayList<>(pipes);
+                List<Callable<Result>> wrapped = new ArrayList<Callable<Result>>(pipes);
                 List<Future<Result>> results = executor.invokeAll(wrapped);
 
                 // Get pipe exceptions

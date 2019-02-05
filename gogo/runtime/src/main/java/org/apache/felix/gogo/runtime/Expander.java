@@ -36,11 +36,12 @@ import java.util.EnumSet;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.function.BiFunction;
-import java.util.function.Function;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
+
+import org.apache.felix.gogo.runtime.util.function.BiFunction;
+import org.apache.felix.gogo.runtime.util.function.Function;
 
 public class Expander extends BaseTokenizer
 {
@@ -465,7 +466,7 @@ public class Expander extends BaseTokenizer
                 // If there's no splitting comma, expand with the braces
                 if (generators.size() < 2)
                 {
-                    generators = Collections.singletonList(part.toString());
+                    generators = Collections.<CharSequence>singletonList(part.toString());
                 }
             }
             else
@@ -1226,31 +1227,38 @@ public class Expander extends BaseTokenizer
             // Map to List conversion
             final boolean _flagk = flagk;
             final boolean _flagv = flagv;
-            final Function<Object, Object> toCollection = v -> v instanceof Map
-                    ? toList(asMap(v), _flagk, _flagv)
-                    : v != null && v.getClass().isArray()
-                    ? Arrays.asList((Object[]) v)
-                    : v;
-
+            final Function<Object, Object> toCollection = new Function<Object, Object>() {
+                @Override
+                public Object apply(Object v) {
+                    return v instanceof Map
+                            ? toList(asMap(v), _flagk, _flagv)
+                                    : v != null && v.getClass().isArray()
+                                    ? Arrays.asList((Object[]) v)
+                                            : v;
+                }
+            };
             //
             // String transformations
             //
-            final BiFunction<Function<String, String>, Object, Object> stringApplyer = (func, v) -> {
-                v = toCollection.apply(v);
-                if (v instanceof Collection)
-                {
-                    List<String> l = new ArrayList<>();
-                    for (Object i : asCollection(v)) {
-                        l.add(func.apply(String.valueOf(i)));
+            final BiFunction<Function<String, String>, Object, Object> stringApplyer = new BiFunction<Function<String, String>, Object, Object>() {
+                @Override
+                public Object apply(Function<String, String> func, Object v) {
+                    v = toCollection.apply(v);
+                    if (v instanceof Collection)
+                    {
+                        List<String> l = new ArrayList<>();
+                        for (Object i : asCollection(v)) {
+                            l.add(func.apply(String.valueOf(i)));
+                        }
+                        return l;
                     }
-                    return l;
-                }
-                else if (v != null)
-                {
-                    return func.apply(v.toString());
-                }
-                else {
-                    return null;
+                    else if (v != null)
+                    {
+                        return func.apply(v.toString());
+                    }
+                    else {
+                        return null;
+                    }
                 }
             };
 
@@ -1489,7 +1497,7 @@ public class Expander extends BaseTokenizer
                     {
                         if (sLeft.equals("@") || sLeft.equals("*"))
                         {
-                            Object array = val;
+                            final Object array = val;
                             List<Object> l = new AbstractList<Object>()
                             {
                                 @Override
@@ -1588,7 +1596,9 @@ public class Expander extends BaseTokenizer
             // Character evaluation
             if (flagSharp)
             {
-                val = stringApplyer.apply(this::sharp, val);
+                val = stringApplyer.apply(new Function<String, String>() {
+                    public String apply(String s) { return Expander.this.sharp(s); };
+                }, val);
             }
 
             // Length
@@ -1645,35 +1655,66 @@ public class Expander extends BaseTokenizer
                 val = l;
             }
 
+            Function<String, String> toLowerCase = new Function<String, String>() {
+                @Override
+                public String apply(String t) {
+                    return t.toLowerCase();
+                }            	
+            };
+
+            Function<String, String> toUpperCase = new Function<String, String>() {
+                @Override
+                public String apply(String t) {
+                    return t.toUpperCase();
+                }            	
+            };
+
             // Case modification
             if (flagC)
             {
-                val = stringApplyer.apply(this::toCamelCase, val);
+                val = stringApplyer.apply(new Function<String, String>(){
+                    @Override
+                    public String apply(String t) {
+                        return Expander.this.toCamelCase(t);
+                    }}, val);
             }
             else if (flagL)
             {
-                val = stringApplyer.apply(String::toLowerCase, val);
+                val = stringApplyer.apply(toLowerCase, val);
             }
             else if (flagU)
             {
-                val = stringApplyer.apply(String::toUpperCase, val);
+                val = stringApplyer.apply(toUpperCase, val);
             }
 
             // Visibility enhancement
             if (flagV)
             {
-                val = stringApplyer.apply(this::visible, val);
+                val = stringApplyer.apply(new Function<String, String>() {
+                    @Override
+                    public String apply(String t) {
+                        return visible(t);
+                    }}, val);
             }
 
             // Quote
             if (flagq != 0)
             {
                 final int _flagq = flagq;
-                val = stringApplyer.apply(s -> quote(s, _flagq), val);
+                val = stringApplyer.apply(new Function<String, String>() {
+                    @Override
+                    public String apply(String s) {
+                        return quote(s, _flagq);
+                    }
+                }, val);
                 inQuote = true;
             }
             else if (flagQ) {
-                val = stringApplyer.apply(this::unquote, val);
+                val = stringApplyer.apply(new Function<String,String>(){
+                    @Override
+                    public String apply(String t) {
+                        return unquote(t);
+                    }}, val);
             }
 
             // Uniqueness
@@ -1700,21 +1741,39 @@ public class Expander extends BaseTokenizer
                         for (Object i : asCollection(val)) {
                             l.add(String.valueOf(i));
                         }
-                        l.sort((s1, s2) -> numericCompare(s1, s2, _flagi));
+                        Collections.sort(l, new Comparator<String>() {
+                            @Override
+                            public int compare(String s1, String s2) {
+                                return numericCompare(s1, s2, _flagi);
+                            }
+                        });
                         list = l;
                     }
                     else if (flaga)
                     {
-                        list = new ArrayList<>(asCollection(val));
+                        list =  new ArrayList<String>((Collection<? extends String>)val);
                     }
                     else
                     {
-                        Comparator<String> comparator = flagi ? String.CASE_INSENSITIVE_ORDER : String::compareTo;
+                        //Comparator<String> comparator = flagi ? String.CASE_INSENSITIVE_ORDER : String::compareTo;
+                    	Comparator<String> comparator;
+                        if (flagi) {
+                        	comparator = String.CASE_INSENSITIVE_ORDER;
+                        }
+                        else {
+                            comparator = new Comparator<String>() {
+                                @Override
+                                public int compare(String s1, String s2) {
+                                    return s1.compareTo(s2);
+                                }};
+                        }
+                        
                         List<String> l = new ArrayList<>();
                         for (Object i : asCollection(val)) {
                             l.add(String.valueOf(i));
                         }
-                        l.sort(comparator);
+                        //l.sort(comparator);
+                        Collections.sort(l, comparator);
                         list = l;
                     }
                     if (flagO)

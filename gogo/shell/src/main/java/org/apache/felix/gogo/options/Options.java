@@ -469,7 +469,7 @@ public class Options implements Option
     public Option parse(List<?> argv, boolean skipArg0)
     {
         reset();
-        List<Object> args = new ArrayList<>(Arrays.asList(defArgs));
+        List<Object> args = new ArrayList<Object>(Arrays.asList(defArgs));
         for (Object arg : argv)
         {
             if (skipArg0)

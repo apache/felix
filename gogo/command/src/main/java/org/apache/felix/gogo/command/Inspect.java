@@ -21,10 +21,13 @@ package org.apache.felix.gogo.command;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.Formatter;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.stream.Collectors;
 
 import org.apache.felix.service.command.Descriptor;
@@ -147,16 +150,24 @@ public class Inspect
                 if ("osgi.native".equals(cap.getNamespace()))
                 {
                     f.format("%s with properties:%n", cap.getNamespace());
-                    cap.getAttributes().entrySet().stream().sorted(
-                        (e1,e2) -> e1.getKey().compareTo(e2.getKey())
-                    ).forEach(
-                        e -> f.format("   %s = %s%n", e.getKey(), e.getValue())
-                    );
-
+                    List<Entry<String, Object>> sortedEntries = 
+                            new ArrayList<Entry<String, Object>>(cap.getAttributes().entrySet());
+                    Collections.sort(sortedEntries, new Comparator<Entry<String, Object>>() {
+                        @Override
+                        public int compare(Entry<String, Object> o1, Entry<String, Object> o2) {
+                            return o1.getKey().compareTo(o2.getKey());
+                        }});
+                    
+                    for (Entry<String, Object> e : sortedEntries) {
+                        f.format("   %s = %s%n", e.getKey(), e.getValue());
+                    }
+                    
                     if (dependents != null)
                     {
                         f.format("   required by:%n");
-                        dependents.forEach(wire -> f.format("      %s%n", wire.getRequirerWiring().getBundle()));
+                        for (BundleWire wire : dependents) {
+                            f.format("      %s%n", wire.getRequirerWiring().getBundle());
+                        }
                     }
                     else
                     {
@@ -199,15 +210,25 @@ public class Inspect
     }
 
     private static String format(Object object) {
-        if (object.getClass().isArray()) {
-            return Arrays.stream((Object[])object).map(Object::toString).collect(Collectors.joining(","));
+        String retVal;
+        if (object.getClass().isArray() || object instanceof Collection) {        	
+            StringBuffer buffer = new StringBuffer();
+            @SuppressWarnings("rawtypes")
+            Iterable formatTarget = object.getClass().isArray() ? Arrays.asList(object) : (Iterable) object;
+            for (Object elem : formatTarget) {
+                if (buffer.length()>0) {
+                    buffer.append(',');
+                }
+                buffer.append(elem.toString());
+            }
+            retVal = buffer.toString();
         }
-        else if (object instanceof Collection) {
-            return ((Collection<?>)object).stream().map(Object::toString).collect(Collectors.joining(","));
+        else {
+            retVal = String.valueOf(object);
         }
-        return String.valueOf(object);
+        return retVal;
     }
-
+    
     private static Map<BundleCapability, List<BundleWire>> aggregateCapabilities(
         List<String> namespace, List<BundleWire> wires)
     {

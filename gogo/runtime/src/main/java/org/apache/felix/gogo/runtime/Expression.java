@@ -1163,7 +1163,7 @@ public class Expression {
      * @return The result of the expression.
      */
     public Object eval() {
-        return eval(new HashMap<>());
+        return eval(new HashMap<String, Object>());
     }
 
     /**

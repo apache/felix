@@ -548,8 +548,9 @@ public class Basic
                         }
                     }
 
-                    select.forEach(e -> display(e, f));
-
+                    for (LogEntry e : select) {
+                        display(e,f);
+                    }
                     Util.ungetServices(m_bc, refs);
                     return f.toString();
                 }

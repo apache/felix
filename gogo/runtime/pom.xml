@@ -24,7 +24,7 @@
     <parent>
         <groupId>org.apache.felix</groupId>
         <artifactId>gogo-parent</artifactId>
-        <version>5</version>
+        <version>6-SNAPSHOT</version>
         <relativePath>../gogo-parent/pom.xml</relativePath>
     </parent>
 
@@ -79,6 +79,7 @@
                 <configuration>
                     <instructions>
                         <Export-Package>
+                            !org.apache.felix.gogo.runtime.util.function,
                             org.apache.felix.gogo.runtime.*; version=${project.version},
                             org.apache.felix.service.command,
                             org.apache.felix.service.command.annotations,

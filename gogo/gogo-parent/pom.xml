@@ -38,10 +38,9 @@
     </scm>
 
     <properties>
-        <animal.sniffer.skip>true</animal.sniffer.skip>
-        <felix.java.version>8</felix.java.version>
-        <maven.compiler.source>1.8</maven.compiler.source>
-        <maven.compiler.target>1.8</maven.compiler.target>
+        <felix.java.version>7</felix.java.version>
+        <maven.compiler.source>1.7</maven.compiler.source>
+        <maven.compiler.target>1.7</maven.compiler.target>
         <bnd.version>4.1.0</bnd.version>
     </properties>
 

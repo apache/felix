@@ -182,7 +182,13 @@ public class Parser
     }
 
     public List<Statement> statements() {
-        statements.sort(Comparator.comparingInt(o -> o.start));
+        Collections.sort(statements, new Comparator<Statement>() {
+            @Override
+            public int compare(Statement o1, Statement o2) {
+                return Integer.compare(o1.start(), o2.start());
+            }
+
+        });
         return Collections.unmodifiableList(statements);
     }
 

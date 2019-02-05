@@ -429,7 +429,7 @@ public final class Reflective
      * to allow the "best" conversion to be determined.
      * @return converted arg or NO_MATCH if no conversion possible.
      */
-    public static Object coerce(CommandSession session, Class<?> type, Object arg,
+    public static Object coerce(CommandSession session, Class<?> type, final Object arg,
         int[] convert)
     {
         if (arg == null)

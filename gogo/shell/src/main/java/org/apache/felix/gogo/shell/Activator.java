@@ -29,6 +29,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.felix.service.command.CommandProcessor;
@@ -137,7 +138,12 @@ public class Activator implements BundleActivator
         }
 
         // start shell on a separate thread...
-        executor = Executors.newSingleThreadExecutor(runnable -> new Thread(runnable, "Gogo shell"));
+        executor = Executors.newSingleThreadExecutor(new ThreadFactory() {
+            @Override
+            public Thread newThread(Runnable runnable) {
+                return new Thread(runnable, "Gogo shell");
+            }
+        });
         shellJob = new StartShellJob(context, processor);
         executor.submit(shellJob);
     }
