@@ -18,8 +18,8 @@ Export-Package: org.apache.felix.scr.component;version=1.1.0;provide:=true, \
  org.osgi.service.component;version=1.4;provide:=true, \
  org.osgi.service.component.runtime;version=1.4;provide:=true, \
  org.osgi.service.component.runtime.dto;version=1.4;provide:=true, \
- org.osgi.util.function;version=1.0, \
- org.osgi.util.promise;version=1.0
+ org.osgi.util.function;version=1.1, \
+ org.osgi.util.promise;version=1.1.1
 
 Private-Package: org.apache.felix.scr.impl.*
 
