@@ -757,9 +757,11 @@ public class BundleComponentActivator implements ComponentActivator
     public RegionConfigurationSupport setRegionConfigurationSupport(ServiceReference<ConfigurationAdmin> reference)
     {
         RegionConfigurationSupport rcs = m_componentRegistry.registerRegionConfigurationSupport( reference );
-        for ( ComponentHolder<?> holder : m_holders )
-        {
-            rcs.configureComponentHolder( holder );
+        if (rcs != null) {
+            for ( ComponentHolder<?> holder : m_holders )
+            {
+                rcs.configureComponentHolder( holder );
+            }
         }
         return rcs;
     }

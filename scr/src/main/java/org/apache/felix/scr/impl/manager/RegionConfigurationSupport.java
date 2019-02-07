@@ -69,11 +69,10 @@ public abstract class RegionConfigurationSupport
      * @param bundleContext of the ConfigurationAdmin we are tracking
      * @param registry
      */
-    public RegionConfigurationSupport(final ScrLogger logger, final ServiceReference<ConfigurationAdmin> reference)
+    public RegionConfigurationSupport(final ScrLogger logger, final ServiceReference<ConfigurationAdmin> reference, Bundle bundle)
     {
         this.logger = logger;
         this.caReference = reference;
-        final Bundle bundle = reference.getBundle();
         this.bundleId = bundle.getBundleId();
         this.caBundleContext = bundle.getBundleContext();
     }
