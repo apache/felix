@@ -92,7 +92,7 @@ public class ResultTxtVerboseSerializer {
     private void appendVerboseTxtForResult(StringBuilder resultStr, HealthCheckExecutionResult healthCheckResult, boolean includeDebug,
             DateFormat dfShort) {
 
-        String wrappedName = WordUtils.wrap(healthCheckResult.getHealthCheckMetadata().getName(), colWidthName);
+        String wrappedName = WordUtils.wrap(healthCheckResult.getHealthCheckMetadata().getTitle(), colWidthName);
 
         String relevantNameStringForPadding = StringUtils.contains(wrappedName, "\n") ? StringUtils.substringAfterLast(wrappedName, "\n")
                 : wrappedName;

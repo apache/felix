@@ -57,7 +57,7 @@ public class ResultJsonSerializer {
                 writeResult(healthCheckResult, includeDebug, jsonWriter);
             }
             jsonWriter.endArray();
-            jsonWriter.endObject();            
+            jsonWriter.endObject();
         } catch(IOException e) {
             LOG.error("Could not serialise health check result: e="+e, e);
             writer.write("{error:'"+e.getMessage()+"'}");
@@ -75,7 +75,7 @@ public class ResultJsonSerializer {
     private void writeResult(final HealthCheckExecutionResult healthCheckResult, boolean includeDebug, JSONWriter jsonWriter) throws IOException {
 
         jsonWriter.object()
-            .key("name").value(healthCheckResult.getHealthCheckMetadata().getName())
+            .key("name").value(healthCheckResult.getHealthCheckMetadata().getTitle())
             .key("status").value(healthCheckResult.getHealthCheckResult().getStatus().toString()) 
             .key("timeInMs").value(healthCheckResult.getElapsedTimeInMs())
             .key("finishedAt").value(new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS").format(healthCheckResult.getFinishedAt())) ;
