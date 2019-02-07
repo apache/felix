@@ -31,7 +31,7 @@ import org.osgi.service.log.LogService;
  */
 public class SingleRefPair<S, T> extends RefPair<S, T>
 {
-    protected AtomicReference<T> serviceObjectRef = new AtomicReference<>();
+    private final AtomicReference<T> serviceObjectRef = new AtomicReference<>();
 
     public SingleRefPair( ServiceReference<T> ref )
     {

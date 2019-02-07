@@ -20,62 +20,25 @@
 
 package org.apache.felix.scr.impl.manager;
 
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Map;
+import java.util.AbstractMap.SimpleImmutableEntry;
+import java.util.Map.Entry;
 import java.util.concurrent.atomic.AtomicReference;
 
-import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceReference;
-import org.osgi.service.log.LogService;
 
 /**
  * @version $Rev$ $Date$
  */
-public class SinglePrototypeRefPair<S, T> extends RefPair<S, T>
+public class SinglePrototypeRefPair<S, T> extends AbstractPrototypeRefPair<S, T>
 {
-    class SingleKeyService {
-        final ComponentContextImpl<S> key;
-        final T serviceObject;
-        SingleKeyService(ComponentContextImpl<S> key, T serviceObject) {
-            this.key = key;
-            this.serviceObject = serviceObject;
-        }
-    }
-    protected AtomicReference<SingleKeyService> serviceObjectRef = new AtomicReference<>();
+    private final AtomicReference<SimpleImmutableEntry<ComponentContextImpl<S>, T>> instance = new AtomicReference<>();
 
     public SinglePrototypeRefPair( ServiceReference<T> ref )
     {
         super(ref);
-    }
-
-    @Override
-    public T getServiceObject(ComponentContextImpl<S> key)
-    {
-        SingleKeyService service = serviceObjectRef.get();
-        return service == null ? null : service.serviceObject;
-    }
-
-    @Override
-    public boolean setServiceObject(ComponentContextImpl<S> key, T serviceObject)
-    {
-        return serviceObjectRef.compareAndSet(null, new SingleKeyService(key, serviceObject ));
-    }
-
-    @Override
-    public T ungetServiceObject(ComponentContextImpl<S> key)
-    {
-        SingleKeyService service = serviceObjectRef.getAndSet(null);
-        if (service != null) {
-            if (key == null) {
-                key = service.key;
-            }
-            doUngetService(key, service.serviceObject);
-            return service.serviceObject;
-        }
-		return null;
-    }
-
-    @Override
-    public void ungetServiceObjects(BundleContext bundleContext) {
-        ungetServiceObject(null);
     }
 
     @Override
@@ -85,33 +48,36 @@ public class SinglePrototypeRefPair<S, T> extends RefPair<S, T>
     }
 
     @Override
-    public boolean getServiceObject(ComponentContextImpl<S> key, BundleContext context)
-    {
-    	final T service = key.getComponentServiceObjectsHelper().getPrototypeRefInstance(this.getRef());
-        if ( service == null )
-        {
-            setFailed();
-            key.getLogger().log(
-                 LogService.LOG_WARNING,
-                 "Could not get service from serviceobjects for ref {0}", null, getRef() );
-            return false;
-        }
-        if (!setServiceObject(key, service))
-        {
-            // Another thread got the service before, so unget our
-        	doUngetService( key, service );
-        }
-        return true;
+    public T getServiceObject(ComponentContextImpl<S> key) {
+        return internalGetServiceObject(key, false);
     }
 
-	private void doUngetService(ComponentContextImpl<S> key, final T service) {
-		try 
-		{
-			key.getComponentServiceObjectsHelper().getServiceObjects(getRef()).ungetService( service );
-		}
-		catch ( final IllegalStateException ise )
-		{
-			// ignore
-		}
-	}
+    @Override
+    public boolean setServiceObject(ComponentContextImpl<S> key, T serviceObject) {
+        return instance.compareAndSet(null, new SimpleImmutableEntry<>(key, serviceObject));
+    }
+
+    @Override
+    protected T remove(ComponentContextImpl<S> key) {
+        return internalGetServiceObject(key, true);
+    }
+
+    private T internalGetServiceObject(ComponentContextImpl<S> key, boolean remove) {
+        SimpleImmutableEntry<ComponentContextImpl<S>, T> entry = instance.get();
+        if (entry == null) {
+            return null;
+        }
+        T result = key == null || entry.getKey().equals(key) ? entry.getValue() : null;
+        if (remove && result != null) {
+            instance.compareAndSet(entry, null);
+        }
+        return result;
+    }
+
+    @Override
+    protected Collection<Entry<ComponentContextImpl<S>, T>> clearEntries() {
+        Map.Entry<ComponentContextImpl<S>, T> entry = instance.getAndSet(null);
+        return entry == null ? Collections.<Entry<ComponentContextImpl<S>, T>>emptyList() : Collections.singleton(entry);
+    }
+
 }
