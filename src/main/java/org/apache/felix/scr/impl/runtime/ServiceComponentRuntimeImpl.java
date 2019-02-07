@@ -288,7 +288,11 @@ public class ServiceComponentRuntimeImpl implements ServiceComponentRuntime, Ser
     {
         if (serviceRef == null)
             return null;
-        final long bundleId = serviceRef.getBundle().getBundleId();
+        final Bundle bundle = serviceRef.getBundle();
+        if (bundle == null) {
+            return null;
+        }
+        final long bundleId = bundle.getBundleId();
         ConcurrentHashMap<Long, ServiceReferenceDTO[]> cache = dtoCache.get();
         if (cache == null) {
             cache = new ConcurrentHashMap<>();
@@ -296,7 +300,7 @@ public class ServiceComponentRuntimeImpl implements ServiceComponentRuntime, Ser
         }
         ServiceReferenceDTO[] dtos = cache.get(bundleId);
         if (dtos == null) {
-            dtos = serviceRef.getBundle().adapt(ServiceReferenceDTO[].class);
+            dtos = bundle.adapt(ServiceReferenceDTO[].class);
             if (dtos == null) {
                 dtos = new ServiceReferenceDTO[0];
             }
@@ -488,7 +492,9 @@ public class ServiceComponentRuntimeImpl implements ServiceComponentRuntime, Ser
             ConcurrentHashMap<Long, ServiceReferenceDTO[]> cache = dtoCache.get();
             if (cache != null)
             {
-                cache.remove(event.getServiceReference().getBundle().getBundleId());
+                // using bundle id property incase the service has gotten unregistered
+                // before we could get the bundle object
+                cache.remove(event.getServiceReference().getProperty(Constants.SERVICE_BUNDLEID));
             }
         }
     }

@@ -640,7 +640,11 @@ public class ComponentRegistry
 
     public RegionConfigurationSupport registerRegionConfigurationSupport(
             ServiceReference<ConfigurationAdmin> reference) {
-        RegionConfigurationSupport trialRcs = new RegionConfigurationSupport(m_logger, reference) {
+        Bundle bundle = reference.getBundle();
+        if (bundle == null) {
+            return null;
+        }
+        RegionConfigurationSupport trialRcs = new RegionConfigurationSupport(m_logger, reference, bundle) {
             @Override
             protected Collection<ComponentHolder<?>> getComponentHolders(TargetedPID pid)
             {
