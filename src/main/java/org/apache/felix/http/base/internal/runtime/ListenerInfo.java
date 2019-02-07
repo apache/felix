@@ -22,7 +22,6 @@ import java.util.EventListener;
 import java.util.HashSet;
 import java.util.Set;
 
-import org.jetbrains.annotations.NotNull;
 import javax.servlet.ServletContextAttributeListener;
 import javax.servlet.ServletContextListener;
 import javax.servlet.ServletRequestAttributeListener;
@@ -31,6 +30,7 @@ import javax.servlet.http.HttpSessionAttributeListener;
 import javax.servlet.http.HttpSessionIdListener;
 import javax.servlet.http.HttpSessionListener;
 
+import org.jetbrains.annotations.NotNull;
 import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceReference;
 import org.osgi.service.http.whiteboard.HttpWhiteboardConstants;
@@ -63,7 +63,7 @@ public class ListenerInfo extends WhiteboardServiceInfo<EventListener>
     public ListenerInfo(final ServiceReference<EventListener> ref)
     {
         super(ref);
-        this.enabled = "true".equalsIgnoreCase(this.getStringProperty(ref, HttpWhiteboardConstants.HTTP_WHITEBOARD_LISTENER));
+        this.enabled = this.getBooleanProperty(ref, HttpWhiteboardConstants.HTTP_WHITEBOARD_LISTENER);
         final String[] objectClass = (String[])ref.getProperty(Constants.OBJECTCLASS);
         final Set<String> names = new HashSet<String>();
         for(final String name : objectClass)
