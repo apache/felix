@@ -83,7 +83,7 @@ public class ResultLogTest {
         log.add(new ResultLog.Entry(Result.Status.CRITICAL, "critical 4"));
 
         final Iterator<ResultLog.Entry> it = log.iterator();
-        assertEquals("OK ok 1", it.next().toString());
+        assertEquals("INFO ok 1", it.next().toString());
         assertEquals("WARN warn 3", it.next().toString());
         assertEquals("CRITICAL critical 4", it.next().toString());
         assertFalse(it.hasNext());

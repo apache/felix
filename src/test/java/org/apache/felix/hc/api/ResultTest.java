@@ -34,7 +34,7 @@ public class ResultTest {
         assertEquals(expected, r.getStatus());
         assertEquals(expectOk, r.isOk());
         assertTrue(r.iterator().hasNext());
-        assertEquals(toSet.toString() + " " + msg, r.iterator().next().toString());
+        assertEquals(new ResultLog.Entry(expected, msg).toString(), r.iterator().next().toString());
     }
 
     @Test
@@ -58,6 +58,6 @@ public class ResultTest {
         for (ResultLog.Entry e : result) {
             sb.append(e.toString()).append("#");
         }
-        assertEquals("OK some msg#WARN problematic condition#", sb.toString());
+        assertEquals("INFO some msg#WARN problematic condition#", sb.toString());
     }
 }
