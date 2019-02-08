@@ -30,7 +30,10 @@ import javax.management.DynamicMBean;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.felix.hc.api.HealthCheck;
 import org.apache.felix.hc.core.impl.executor.ExtendedHealthCheckExecutor;
+import org.apache.felix.hc.core.impl.util.HealthCheckFilter;
 import org.osgi.framework.BundleContext;
+import org.osgi.framework.Filter;
+import org.osgi.framework.InvalidSyntaxException;
 import org.osgi.framework.ServiceReference;
 import org.osgi.framework.ServiceRegistration;
 import org.osgi.service.component.annotations.Activate;
@@ -61,27 +64,14 @@ public class HealthCheckMBeanCreator {
 
     @Activate
     protected void activate(final BundleContext btx) {
-        this.hcTracker = new ServiceTracker<HealthCheck, Object>(btx, HealthCheck.class, null) {
-
-            @Override
-            public Object addingService(final ServiceReference<HealthCheck> reference) {
-                return registerHCMBean(btx, reference);
-            }
-
-            @Override
-            public void modifiedService(final ServiceReference<HealthCheck> reference,
-                    final Object service) {
-                unregisterHCMBean(btx, reference);
-                registerHCMBean(btx, reference);
-            }
-
-            @Override
-            public void removedService(final ServiceReference<HealthCheck> reference,
-                    final Object service) {
-                unregisterHCMBean(btx, reference);
-            }
-        };
-        this.hcTracker.open();
+        try {
+            Filter filter = btx.createFilter("(&"+HealthCheckFilter.HC_FILTER_OBJECT_CLASS+"("+HealthCheck.MBEAN_NAME+"=*))");
+            this.hcTracker = new HealthCheckServiceTracker(btx, filter);
+            this.hcTracker.open();
+        } catch (InvalidSyntaxException e) {
+            logger.warn("Could not create service tracker for filter "+HealthCheckFilter.HC_FILTER_OBJECT_CLASS, e);
+        }
+        
     }
 
     @Deactivate
@@ -142,6 +132,33 @@ public class HealthCheckMBeanCreator {
         }
     }
 
+    private final class HealthCheckServiceTracker extends ServiceTracker<HealthCheck, Object> {
+        private final BundleContext bundleContext;
+
+        private HealthCheckServiceTracker(BundleContext bundleContext, Filter filter) {
+            super(bundleContext, filter, null);
+            this.bundleContext = bundleContext;
+        }
+
+        @Override
+        public Object addingService(final ServiceReference<HealthCheck> reference) {
+            return registerHCMBean(bundleContext, reference);
+        }
+
+        @Override
+        public void modifiedService(final ServiceReference<HealthCheck> reference,
+                final Object service) {
+            unregisterHCMBean(bundleContext, reference);
+            registerHCMBean(bundleContext, reference);
+        }
+
+        @Override
+        public void removedService(final ServiceReference<HealthCheck> reference,
+                final Object service) {
+            unregisterHCMBean(bundleContext, reference);
+        }
+    }
+
     private final class Registration {
         private final String name;
         private final HealthCheckMBean mbean;
@@ -179,8 +196,10 @@ public class HealthCheckMBeanCreator {
         if (StringUtils.isNotBlank(hcMBeanName)) {
             final HealthCheckMBean mbean = new HealthCheckMBean(ref, executor);
             return new Registration(hcMBeanName.replace(',', '.'), mbean);
+        } else {
+            logger.warn("Service reference {} unexpectedly has property {} not set", ref, HealthCheck.MBEAN_NAME);
+            return null;
         }
-        return null;
     }
 
 }

@@ -32,11 +32,14 @@ import org.slf4j.LoggerFactory;
  *
  * This class is not thread safe and instances shouldn't be used concurrently from different threads. */
 public class HealthCheckFilter {
+
     private final Logger log = LoggerFactory.getLogger(getClass());
 
-    private final BundleContext bundleContext;
-
+    // object class (supporting current interface and legacy)
+    public static final String HC_FILTER_OBJECT_CLASS = "(|(objectClass="+HealthCheck.class.getName()+")(objectClass=org.apache.sling.hc.api.HealthCheck))";
     public static final String OMIT_PREFIX = "-";
+
+    private final BundleContext bundleContext;
 
     /** Create a new filter object */
     public HealthCheckFilter(final BundleContext bc) {
@@ -75,11 +78,8 @@ public class HealthCheckFilter {
     CharSequence getServiceFilter(HealthCheckSelector selector, boolean combineTagsWithOr) {
         // Build service filter
         final StringBuilder filterBuilder = new StringBuilder();
-        filterBuilder.append("(&"); // overall and
-
-        // object class (supporting current interface and legacy)
-        filterBuilder.append("(|(objectClass=").append(HealthCheck.class.getName())
-                .append(")(objectClass=org.apache.sling.hc.api.HealthCheck))");
+        filterBuilder.append("(&"); 
+        filterBuilder.append(HC_FILTER_OBJECT_CLASS);
 
         final int prefixLen = HealthCheckFilter.OMIT_PREFIX.length();
         final StringBuilder filterBuilderForOrOperator = new StringBuilder(); // or filters
