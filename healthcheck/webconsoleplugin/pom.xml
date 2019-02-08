@@ -28,7 +28,7 @@
     </parent>
 
     <artifactId>org.apache.felix.healthcheck.webconsoleplugin</artifactId>
-    <version>2.0.1-SNAPSHOT</version>
+    <version>2.0.0-SNAPSHOT</version>
 
     <name>Apache Felix Health Check Webconsole Plugin</name>
     <inceptionYear>2013</inceptionYear>
@@ -130,7 +130,7 @@
         <dependency>
             <groupId>org.apache.felix</groupId>
             <artifactId>org.apache.felix.healthcheck.core</artifactId>
-            <version>2.0.0</version>
+            <version>2.0.0-SNAPSHOT</version>
             <scope>test</scope>
         </dependency>
         <!-- END test scope dependencies -->
