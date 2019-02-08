@@ -40,7 +40,7 @@ public class ResultLog implements Iterable<ResultLog.Entry> {
         public Entry(Status s, String message) {
             this(s, message, false, null);
         }
-
+        
         public Entry(String message, boolean isDebug) {
             this(Status.OK, message, isDebug, null);
         }
@@ -62,7 +62,7 @@ public class ResultLog implements Iterable<ResultLog.Entry> {
 
         @Override
         public String toString() {
-            StringBuilder builder = new StringBuilder(isDebug ?"DEBUG":status.toString()).append(" ").append(message);
+            StringBuilder builder = new StringBuilder(getLogLevel()).append(" ").append(message);
             if (exception != null) {
                 builder.append(" Exception: " + exception.getMessage());
             }
@@ -71,6 +71,15 @@ public class ResultLog implements Iterable<ResultLog.Entry> {
 
         public Status getStatus() {
             return status;
+        }
+
+        public String getLogLevel() {
+            switch (status) {
+            case OK:
+                return isDebug ? "DEBUG" : "INFO";
+            default:
+                return status.toString();
+            }
         }
 
         public String getMessage() {
