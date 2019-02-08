@@ -121,7 +121,7 @@ public class HealthCheckMBean implements DynamicMBean {
         for (final ResultLog.Entry e : er) {
             final Map<String, Object> data = new HashMap<String, Object>();
             data.put(INDEX_COLUMN, i++);
-            data.put(LEVEL_COLUMN, e.getStatus().toString());
+            data.put(LEVEL_COLUMN, e.getLogLevel());
             data.put(MESSAGE_COLUMN, e.getMessage());
 
             result.put(new CompositeDataSupport(LOG_ROW_TYPE, data));
