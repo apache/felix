@@ -179,6 +179,8 @@ public abstract class ComponentTestBase
                 provision( CoreOptions.bundle( bundleFile.toURI().toString() ),
                         mavenBundle( "org.ops4j.pax.tinybundles", "tinybundles", "1.0.0" ),
                         mavenBundle( "org.apache.felix", "org.apache.felix.configadmin", felixCaVersion ) ),
+                        mavenBundle( "org.osgi", "org.osgi.util.promise"),
+                        mavenBundle( "org.osgi", "org.osgi.util.function"),
                 junitBundles(), frameworkProperty( "org.osgi.framework.bsnversion" ).value( bsnVersionUniqueness ),
                 systemProperty( "ds.factory.enabled" ).value( Boolean.toString( NONSTANDARD_COMPONENT_FACTORY_BEHAVIOR ) ),
                 systemProperty( "ds.loglevel" ).value( DS_LOGLEVEL )
