@@ -20,8 +20,11 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
+import org.osgi.util.converter.ConverterMapTest.TestValue;
 
 import java.lang.annotation.Annotation;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
 import java.lang.reflect.Method;
 import java.math.BigInteger;
 import java.net.URL;
@@ -590,6 +593,27 @@ public class ConverterMapTest {
         assertTrue(testValue.value());
     }
 
+    @Test
+    @TestValue(true)
+    public void testSingleElementAnnotationPrefixToMap() throws Exception {
+        final Converter converter = Converters.standardConverter();
+        Method method = getClass().getMethod("testSingleElementAnnotationPrefixToMap");
+        TestValue annotation = method.getDeclaredAnnotation(TestValue.class);
+        Map<String, Object> map = converter.convert(annotation).to(new TypeReference<Map<String, Object>>() {});
+        assertTrue((Boolean)map.get("my.prefix.test.value"));
+    }
+
+    @Test
+    @PrefixMarkerAnnotation
+    public void testMarkerAnnotationPrefixToMap() throws Exception {
+        final Converter converter = Converters.standardConverter();
+        Method method = getClass().getMethod("testMarkerAnnotationPrefixToMap");
+        PrefixMarkerAnnotation annotation = method.getDeclaredAnnotation(PrefixMarkerAnnotation.class);
+        Map<String, Object> map = converter.convert(annotation).to(new TypeReference<Map<String, Object>>() {});
+        assertTrue(map.containsKey("org.foo.bar.prefix.marker.annotation"));
+        assertTrue((Boolean)map.get("org.foo.bar.prefix.marker.annotation"));
+    }
+
     private <K,V> Map.Entry<K,V> getMapEntry(Map<K,V> map) {
         assertEquals("This method assumes a map of size 1", 1, map.size());
         return map.entrySet().iterator().next();
@@ -620,6 +644,7 @@ public class ConverterMapTest {
     	long somethingElse() default -87;
     }
 
+    @Retention(RetentionPolicy.RUNTIME)
     @interface TestValue {
         static final String PREFIX_ = "my.prefix.";
 

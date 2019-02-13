@@ -191,6 +191,11 @@ class Util {
 		return keys;
 	}
 
+	static String getMarkerAnnotationKey(Class< ? > intf, Object obj) {
+		Class< ? > ann = getAnnotationType(intf, obj);
+		return getPrefix(intf) + toSingleElementAnnotationKey(ann.getSimpleName());
+	}
+
 	static String getSingleElementAnnotationKey(Class< ? > intf, Object obj) {
 		Class< ? > ann = getAnnotationType(intf, obj);
 		if (ann == null)
