@@ -906,8 +906,7 @@ class ConvertingImpl extends AbstractSpecifying<Converting>
 		} else if (Annotation.class.isAssignableFrom(sourceClass)
 				&& isMarkerAnnotation(sourceClass)) {
 			// Special treatment for marker annotations
-			Class< ? > ann = Util.getAnnotationType(sourceClass, object);
-			String key = Util.toSingleElementAnnotationKey(ann.getSimpleName());
+			String key = Util.getMarkerAnnotationKey(sourceClass, object);
 			return converter
 					.convert(Collections.singletonMap(key, Boolean.TRUE))
 					.targetAs(targetAsClass)
