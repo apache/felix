@@ -28,13 +28,13 @@
 
     <name>Apache Felix Converter</name>
     <artifactId>org.apache.felix.converter</artifactId>
-    <version>1.0.4</version>
+    <version>1.0.5-SNAPSHOT</version>
     <packaging>jar</packaging>
 
     <scm>
-        <connection>scm:svn:http://svn.apache.org/repos/asf/felix/releases/org.apache.felix.converter-1.0.4</connection>
-        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/felix/releases/org.apache.felix.converter-1.0.4</developerConnection>
-        <url>http://svn.apache.org/viewvc/felix/releases/org.apache.felix.converter-1.0.4</url>
+        <connection>scm:svn:http://svn.apache.org/repos/asf/felix/trunk/converter/converter</connection>
+        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/felix/trunk/converter/converter</developerConnection>
+        <url>http://svn.apache.org/viewvc/felix/trunk/converter/converter/</url>
     </scm>
 
     <properties>
