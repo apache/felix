@@ -25,5 +25,8 @@ public interface PojoServiceRegistryFactory
     public static final String BUNDLE_DESCRIPTORS =
             PojoServiceRegistry.class.getName().toLowerCase() + ".bundles";
 
+    public static final String BUNDLES_AUTOSTART =
+            PojoServiceRegistry.class.getName().toLowerCase() + ".bundles.autostart";
+
     public PojoServiceRegistry newPojoServiceRegistry(Map<String, Object> configuration) throws Exception;
 }

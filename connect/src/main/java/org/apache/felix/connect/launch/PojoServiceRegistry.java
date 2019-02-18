@@ -20,7 +20,9 @@ package org.apache.felix.connect.launch;
 
 import java.util.Collection;
 import java.util.Dictionary;
+import java.util.List;
 
+import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.InvalidSyntaxException;
 import org.osgi.framework.ServiceListener;
@@ -32,6 +34,8 @@ public interface PojoServiceRegistry
     public BundleContext getBundleContext();
 
     public void startBundles(Collection<BundleDescriptor> bundles) throws Exception;
+
+    public Bundle registerBundle(BundleDescriptor bundle) throws Exception;
 
     public void addServiceListener(ServiceListener listener, String filter) throws InvalidSyntaxException;
 

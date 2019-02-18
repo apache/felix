@@ -31,6 +31,7 @@ import java.util.Dictionary;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -255,59 +256,30 @@ public class PojoSR implements PojoServiceRegistry
 
         if (scan != null)
         {
-            startBundles(scan);
+            Object autoStart = config.get(PojoServiceRegistryFactory.BUNDLES_AUTOSTART);
+            if(autoStart == null || Boolean.TRUE.equals(autoStart))
+            {
+                startBundles(scan);
+            }
+            else
+            {
+                for (BundleDescriptor desc : scan) {
+                    registerBundle(desc);
+                }
+            }
         }
     }
 
-    public void startBundles(Collection<BundleDescriptor> scan) throws Exception
-    {
+    public void startBundles(Collection<BundleDescriptor> scan) throws Exception {
+        List<Bundle> bundles = new LinkedList<Bundle>();
+
         for (BundleDescriptor desc : scan)
         {
-            Revision revision = desc.getRevision();
-            if (revision == null)
-            {
-                revision = buildRevision(desc);
-            }
-            Map<String, String> bundleHeaders = desc.getHeaders();
-            Version osgiVersion;
-            try
-            {
-                osgiVersion = Version.parseVersion(bundleHeaders.get(Constants.BUNDLE_VERSION));
-            }
-            catch (Exception ex)
-            {
-                ex.printStackTrace();
-                osgiVersion = Version.emptyVersion;
-            }
-            String sym = bundleHeaders.get(Constants.BUNDLE_SYMBOLICNAME);
-            if (sym != null)
-            {
-                int idx = sym.indexOf(';');
-                if (idx > 0)
-                {
-                    sym = sym.substring(0, idx);
-                }
-                sym = sym.trim();
-            }
-
-            Bundle bundle = new PojoSRBundle(
-                    m_registry,
-                    m_dispatcher,
-                    m_bundles,
-                    desc.getUrl(),
-                    m_bundles.size(),
-                    sym,
-                    osgiVersion,
-                    revision,
-                    desc.getClassLoader(),
-                    bundleHeaders,
-                    desc.getServices(),
-                    bundleConfig);
-            m_bundles.put(bundle.getBundleId(), bundle);
+            Bundle bundle = registerBundle(desc);
+            bundles.add(bundle);
         }
 
-
-        for (Bundle bundle : m_bundles.values())
+        for (Bundle bundle : bundles)
         {
             try
             {
@@ -319,7 +291,54 @@ public class PojoSR implements PojoServiceRegistry
                 e.printStackTrace();
             }
         }
+    }
 
+    public Bundle registerBundle(BundleDescriptor desc) throws Exception
+    {
+        Revision revision = desc.getRevision();
+        if (revision == null)
+        {
+            revision = buildRevision(desc);
+        }
+        Map<String, String> bundleHeaders = desc.getHeaders();
+        Version osgiVersion;
+        try
+        {
+            osgiVersion = Version.parseVersion(bundleHeaders.get(Constants.BUNDLE_VERSION));
+        }
+        catch (Exception ex)
+        {
+            ex.printStackTrace();
+            osgiVersion = Version.emptyVersion;
+        }
+        String sym = bundleHeaders.get(Constants.BUNDLE_SYMBOLICNAME);
+        if (sym != null)
+        {
+            int idx = sym.indexOf(';');
+            if (idx > 0)
+            {
+                sym = sym.substring(0, idx);
+            }
+            sym = sym.trim();
+        }
+
+        Bundle bundle = new PojoSRBundle(
+                m_registry,
+                m_dispatcher,
+                m_bundles,
+                desc.getUrl(),
+                m_bundles.size(),
+                sym,
+                osgiVersion,
+                revision,
+                desc.getClassLoader(),
+                bundleHeaders,
+                desc.getServices(),
+                bundleConfig);
+
+        m_bundles.put(bundle.getBundleId(), bundle);
+
+        return bundle;
     }
 
     private Revision buildRevision(BundleDescriptor desc) throws IOException
