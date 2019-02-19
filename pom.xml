@@ -49,11 +49,8 @@
         in the test phase and integration tests based on PAX Exam running
         in the integration-test phase.
         
-        Basically the complete project is build using Java 1.3 source and target
-        compatibility (as inherited from the parent pom). The exception are the
-        unit tests in the "integration" packages. These have to be compiled with
-        Java 5 source and target compatibility because the employ annotations
-        and generics.
+        Basically the complete project is build using Java 7 source and target
+	compatibility as inherited by the parent pom.
         
         For running the integration tests from the console using Maven nothing
         special has to be done as the tests run automatically. To run the tests
@@ -62,7 +59,7 @@
         
              $ mvn -Pide clean package
              
-        This creates the scr.jar file in the target folder, which is used by
+        This creates the configadmin.jar file in the target folder, which is used by
         the integration tests when run from the IDE. Alternatively the
         "project.bundle.file" system property may be set to the bundle JAR
         in the IDE launcher. 
