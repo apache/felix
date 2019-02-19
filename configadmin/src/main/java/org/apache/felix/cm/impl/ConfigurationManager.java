@@ -187,7 +187,7 @@ public class ConfigurationManager implements BundleListener
         props.put( Constants.SERVICE_VENDOR, "The Apache Software Foundation" );
         props.put( "osgi.command.scope", "cm" );
         Set<String> functions = new HashSet<>();
-        for ( Method method : ConfigurationAdmin.class.getDeclaredMethods() )
+        for ( Method method : ConfigurationAdmin.class.getMethods() )
         {
             functions.add(method.getName());
         }
