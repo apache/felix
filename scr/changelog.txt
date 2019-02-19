@@ -12,7 +12,7 @@ Changes in 2.1.16
     * [FELIX-5989] - java.lang.IllegalArgumentException from AbstractLogger.format when logging debug message
 
 ** Improvement
-    * FELIX-5987 - Slow ServiceComponentRuntime with delivering ServiceReferenceDTOs
+    * [FELIX-5987] - Slow ServiceComponentRuntime with delivering ServiceReferenceDTOs
 
 Changes in 2.1.14
 -----------------
