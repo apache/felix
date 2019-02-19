@@ -73,7 +73,7 @@ public class CoordinatorUtil
     {
         final Coordinator coordinator = (Coordinator) srv;
         Coordination c = coordinator.peek();
-        if ( c != null )
+        if ( c != null && !c.isTerminated() )
         {
             Notifier n = null;
             for(final Participant p : c.getParticipants())
