@@ -1,3 +1,8 @@
+Changes in 1.9.12
+-----------------
+** Bug
+    * [FELIX-6062] - Coordination is not checked if its terminated
+
 Changes in 1.9.10
 -----------------
 ** Bug
