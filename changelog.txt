@@ -1,9 +1,25 @@
+Changes in 2.1.16
+-----------------
+** Bug
+    * [FELIX-6056] - SCR exports promises
+    * [FELIX-6055] - NullPointerException possible because ServiceReference.getBundle() can return null
+    * [FELIX-6050] - Use abstract class for PrototypeRefPair implementations for Single vs. Multiple case
+    * [FELIX-6044] - Component deactivation does not cause reference services to be ungotten
+    * [FELIX-6043] - ClassNotFoundException org.osgi.util.function.Function
+    * [FELIX-6041] - scr gogo commands require gogo runtime to be present when scr resolves
+    * [FELIX-6036] - Race condition prevents optional/greedy ref setter method from being called
+    * [FELIX-6026] - SCR command problems
+    * [FELIX-5989] - java.lang.IllegalArgumentException from AbstractLogger.format when logging debug message
+
+** Improvement
+    * FELIX-5987 - Slow ServiceComponentRuntime with delivering ServiceReferenceDTOs
+
 Changes in 2.1.14
 -----------------
 ** Bug
     * [FELIX-5950] - NPE in MultiplePrototypeRefPair.unsetServiceObject
     * [FELIX-5974] - Prototype scope references are not released on deactivation
-
+    
 Changes in 2.1.12
 -----------------
 ** Bug
