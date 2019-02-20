@@ -49,15 +49,13 @@ import org.osgi.framework.Constants;
  * <p>
  * The configuration directory is set by either the
  * {@link #FilePersistenceManager(String)} constructor or the
- * {@link #FilePersistenceManager(BundleContext, String)} constructor. Refer
- * to the respective JavaDocs for more information.
+ * {@link #FilePersistenceManager(BundleContext, String)} constructor. Refer to
+ * the respective JavaDocs for more information.
  * <p>
- * When this persistence manager is used by the Configuration Admin Service,
- * the location may be configured using the
- * {@link org.apache.felix.cm.impl.ConfigurationManager#CM_CONFIG_DIR} bundle
- * context property. That is the Configuration Admin Service creates an instance
- * of this class calling
- * <code>new FilePersistenceManager(bundleContext, bundleContext.getProperty(CM_CONFIG_DIR))</code>.
+ * When this persistence manager is used by the Configuration Admin Service, the
+ * location may be configured using the
+ * {@link org.apache.felix.cm.impl.ConfigurationManager} bundle context
+ * property.
  * <p>
  * If the location is not set, the <code>config</code> directory in the current
  * working directory (as set in the <code>user.dir</code> system property) is
@@ -70,36 +68,52 @@ import org.osgi.framework.Constants;
  * is converted into a relative path name by replacing enclosed dots to slashes.
  * Non-<code>symbolic-name</code> characters in the PID are encoded with their
  * Unicode character code in hexadecimal.
- * <p>
- * <table border="0" cellspacing="3" cellpadding="0">
- * <tr><td colspan="2"><b>Examples of PID to name conversion:</td></tr>
- * <tr><th>PID</th><th>Configuration File Name</th></tr>
- * <tr><td><code>sample</code><td><code>sample.config</code></tr>
- * <tr><td><code>org.apache.felix.log.LogService</code><td><code>org/apache/felix/log/LogService.config</code></tr>
- * <tr><td><code>sample.fl&auml;che</code><td><code>sample/fl%00e8che.config</code></tr>
+ *
+ * <table border="0" cellspacing="3" cellpadding="0" summary="Examples">
+ * <tr>
+ * <td colspan="2"><b>Examples of PID to name conversion:</b></td>
+ * </tr>
+ * <tr>
+ * <th>PID</th>
+ * <th>Configuration File Name</th>
+ * </tr>
+ * <tr>
+ * <td><code>sample</code>
+ * <td><code>sample.config</code>
+ * </tr>
+ * <tr>
+ * <td><code>org.apache.felix.log.LogService</code>
+ * <td><code>org/apache/felix/log/LogService.config</code>
+ * </tr>
+ * <tr>
+ * <td><code>sample.fl&auml;che</code>
+ * <td><code>sample/fl%00e8che.config</code>
+ * </tr>
  * </table>
  * <p>
  * <b>Mulithreading Issues</b>
  * <p>
  * In a multithreaded environment the {@link #store(String, Dictionary)} and
- * {@link #load(String)} methods may be called at the the quasi-same time for the
- * same configuration PID. It may no happen, that the store method starts
+ * {@link #load(String)} methods may be called at the the quasi-same time for
+ * the same configuration PID. It may no happen, that the store method starts
  * writing the file and the load method might at the same time read from the
  * file currently being written and thus loading corrupt data (if data is
  * available at all).
  * <p>
- * To prevent this situation from happening, the methods use synchronization
- * and temporary files as follows:
+ * To prevent this situation from happening, the methods use synchronization and
+ * temporary files as follows:
  * <ul>
  * <li>The {@link #store(String, Dictionary)} method writes a temporary file
  * with file extension <code>.tmp</code>. When done, the file is renamed to
  * actual configuration file name as implied by the PID. This last step of
- * renaming the file is synchronized on the FilePersistenceManager instance.</li>
+ * renaming the file is synchronized on the FilePersistenceManager
+ * instance.</li>
  * <li>The {@link #load(String)} method is completeley synchronized on the
  * FilePersistenceManager instance such that the {@link #store} method might
  * inadvertantly try to replace the file while it is being read.</li>
  * <li>Finally the <code>Iterator</code> returned by {@link #getDictionaries()}
- * is implemented such that any temporary configuration file is just ignored.</li>
+ * is implemented such that any temporary configuration file is just
+ * ignored.</li>
  * </ul>
  */
 public class FilePersistenceManager implements PersistenceManager
