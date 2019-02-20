@@ -671,6 +671,17 @@ public class ConverterTest {
         assertEquals(Alpha.A, e2.alpha);
     }
 
+    @Test
+    public void testDTO2Map4() {
+    	MyDefaultCtorDTOAlike dto = new MyDefaultCtorDTOAlike();
+    	dto.myProp = "myValue";
+    	
+    	@SuppressWarnings("rawtypes")
+    	Map m = converter.convert(dto).to(Map.class);
+    	assertEquals(1, m.size());
+    	assertEquals("myValue", m.get("myProp"));
+    }
+
     @Test @SuppressWarnings({ "rawtypes", "unchecked" })
     public void testDTOFieldShadowing() {
         MySubDTO dto = new MySubDTO();
