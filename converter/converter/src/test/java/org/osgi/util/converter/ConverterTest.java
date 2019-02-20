@@ -682,6 +682,27 @@ public class ConverterTest {
     	assertEquals("myValue", m.get("myProp"));
     }
 
+    @Test
+    public void testDTO2Map5() {
+    	MyDTO3 dto = new MyDTO3();
+    	dto.charSet = new HashSet<>(Arrays.asList('f', 'o', 'o'));
+    	
+    	@SuppressWarnings("rawtypes")
+    	Map m = converter.convert(dto).to(new TypeReference<Map<String, ?>>() {});
+    	assertEquals(1, m.size());
+    	assertEquals(dto.charSet, m.get("charSet"));
+
+    	m = converter.convert(dto).to(new TypeReference<Map<String, ? extends List<String>>>() {});
+    	assertEquals(1, m.size());
+    	
+    	List<String> list = new ArrayList<>();
+    	for (Character character : dto.charSet) {
+			list.add(String.valueOf(character));
+		}
+    	
+    	assertEquals(list, m.get("charSet"));
+    }
+
     @Test @SuppressWarnings({ "rawtypes", "unchecked" })
     public void testDTOFieldShadowing() {
         MySubDTO dto = new MySubDTO();

@@ -28,6 +28,7 @@ import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Proxy;
 import java.lang.reflect.Type;
 import java.lang.reflect.TypeVariable;
+import java.lang.reflect.WildcardType;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -133,6 +134,20 @@ class ConvertingImpl extends AbstractSpecifying<Converting>
 	@SuppressWarnings("unchecked")
 	@Override
 	public Object to(Type type) {
+		// Wildcard types are strange - we immediately resolve them to something
+		// that we can actually use.
+		if (type instanceof WildcardType) {
+			WildcardType wt = (WildcardType) type;
+			Type[] lowerBounds = wt.getLowerBounds();
+			if(lowerBounds.length != 0) {
+				// This is a ? super X generic, why on earth would you do this?
+				throw new ConversionException("The authors of this implementation have no idea what to do with the type variable " + 
+				wt.getTypeName() + ". The use of <? super ...> is highly ambiguous for the converter");
+			} else {
+				type = wt.getUpperBounds()[0];
+			}
+		}
+		
 		Class< ? > cls = null;
 		if (type instanceof Class) {
 			cls = (Class< ? >) type;
