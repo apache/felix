@@ -81,7 +81,8 @@ class Util {
 
 	static Map<String,Method> getBeanKeys(Class< ? > beanClass) {
 		Map<String,Method> keys = new LinkedHashMap<>();
-		for (Method md : beanClass.getDeclaredMethods()) {
+		// Bean methods must be public and can be on parent classes
+		for (Method md : beanClass.getMethods()) {
 			String key = getBeanKey(md);
 			if (key != null && !keys.containsKey(key)) {
 				keys.put(key, md);
@@ -202,7 +203,13 @@ class Util {
 			return null;
 
 		boolean valueFound = false;
-		for (Method md : ann.getDeclaredMethods()) {
+		// All annotation methods must be public
+		for (Method md : ann.getMethods()) {
+			if(md.getDeclaringClass() != ann) {
+				// Ignore Object methods and Annotation methods
+				continue;
+			}
+			
 			if ("value".equals(md.getName())) {
 				valueFound = true;
 				continue;
@@ -317,10 +324,20 @@ class Util {
 
 	static String getPrefix(Class< ? > cls) {
 		try {
-			Field prefixField = cls.getDeclaredField("PREFIX_");
-			if (prefixField.getType().equals(String.class)) {
-				if ((prefixField.getModifiers() & (Modifier.PUBLIC
-						| Modifier.FINAL | Modifier.STATIC)) > 0) {
+			// We can use getField as the PREFIX must be public (see spec erratum)
+			Field prefixField = cls.getField("PREFIX_");
+			if (prefixField.getDeclaringClass() == cls &&
+					prefixField.getType().equals(String.class)) {
+				int modifiers = prefixField.getModifiers();
+				// We need to be final *and* static
+				if (Modifier.isFinal(modifiers) &&
+					Modifier.isStatic(modifiers)) {
+					
+					if(!prefixField.isAccessible()) {
+						// Should we log that we have to do this?
+						prefixField.setAccessible(true);
+					}
+					
 					return (String) prefixField.get(null);
 				}
 			}

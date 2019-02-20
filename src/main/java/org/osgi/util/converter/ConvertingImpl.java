@@ -385,28 +385,24 @@ class ConvertingImpl extends AbstractSpecifying<Converting>
 
 				Field f = null;
 				try {
-					f = targetAsCls.getDeclaredField(fieldName);
+					f = targetAsCls.getField(fieldName);
 				} catch (NoSuchFieldException e) {
-					try {
-						f = targetAsCls.getField(fieldName);
-					} catch (NoSuchFieldException | NullPointerException e1) {
-						// There is no field with this name
-						if (keysIgnoreCase) {
-							// If enabled, try again but now ignore case
-							for (Field fs : targetAsCls.getDeclaredFields()) {
-								if (fs.getName().equalsIgnoreCase(fieldName)) {
+					// There is no field with this name
+					if (keysIgnoreCase) {
+						// If enabled, try again but now ignore case
+						for (Field fs : targetAsCls.getFields()) {
+							if (fs.getName().equalsIgnoreCase(fieldName)) {
+								f = fs;
+								break;
+							}
+						}
+
+						if (f == null) {
+							for (Field fs : targetAsCls.getFields()) {
+								if (fs.getName()
+										.equalsIgnoreCase(fieldName)) {
 									f = fs;
 									break;
-								}
-							}
-
-							if (f == null) {
-								for (Field fs : targetAsCls.getFields()) {
-									if (fs.getName()
-											.equalsIgnoreCase(fieldName)) {
-										f = fs;
-										break;
-									}
 								}
 							}
 						}
@@ -523,11 +519,9 @@ class ConvertingImpl extends AbstractSpecifying<Converting>
 
 	private List<String> getNames(Class< ? > cls) {
 		List<String> names = new ArrayList<>();
-		for (Field field : cls.getDeclaredFields()) {
+		for (Field field : cls.getFields()) {
 			int modifiers = field.getModifiers();
 			if (Modifier.isStatic(modifiers))
-				continue;
-			if (!Modifier.isPublic(modifiers))
 				continue;
 
 			String name = field.getName();
@@ -930,17 +924,11 @@ class ConvertingImpl extends AbstractSpecifying<Converting>
 		return null;
 	}
 
-	private boolean isMarkerAnnotation(Class< ? > annClass) {
-		for (Method m : annClass.getDeclaredMethods()) {
-			try {
-				if (Annotation.class
-						.getMethod(m.getName(), m.getParameterTypes())
-						.getReturnType()
-						.equals(m.getReturnType()))
-					// this is a base annotation method
-					continue;
-			} catch (Exception ex) {
-				// Method not found, not a marker annotation
+	private static boolean isMarkerAnnotation(Class< ? > annClass) {
+		for (Method m : annClass.getMethods()) {
+			if (m.getDeclaringClass() != annClass) {
+				// this is a base annotation or object method
+				continue;
 			}
 			return false;
 		}
@@ -950,8 +938,9 @@ class ConvertingImpl extends AbstractSpecifying<Converting>
 	@SuppressWarnings("unchecked")
 	private <T> T tryStandardMethods() {
 		try {
-			Method m = targetAsClass.getDeclaredMethod("valueOf", String.class);
-			if (m != null) {
+			// Section 707.4.2.3 and 707.4.2.5 require valueOf to be public and static
+			Method m = targetAsClass.getMethod("valueOf", String.class);
+			if (m != null && Modifier.isStatic(m.getModifiers())) {
 				return (T) m.invoke(null, object.toString());
 			}
 		} catch (Exception e) {
@@ -1009,7 +998,8 @@ class ConvertingImpl extends AbstractSpecifying<Converting>
 		Set<String> invokedMethods = new HashSet<>();
 
 		Map result = new HashMap();
-		for (Method md : sourceCls.getDeclaredMethods()) {
+		// Bean accessors must be public
+		for (Method md : sourceCls.getMethods()) {
 			handleBeanMethod(obj, md, invokedMethods, result);
 		}
 
@@ -1021,28 +1011,31 @@ class ConvertingImpl extends AbstractSpecifying<Converting>
 		Set<String> handledFields = new HashSet<>();
 
 		Map result = new HashMap();
-		// Do we need 'declaredfields'? We only need to look at the public
-		// ones...
-		for (Field f : obj.getClass().getDeclaredFields()) {
-			handleDTOField(obj, f, handledFields, result, ic);
-		}
+		// We only use public fields for mapping a DTO
 		for (Field f : obj.getClass().getFields()) {
 			handleDTOField(obj, f, handledFields, result, ic);
 		}
 		return result;
 	}
 
-	@SuppressWarnings("rawtypes")
+	@SuppressWarnings({"unchecked","rawtypes"})
 	private static Map createMapFromInterface(Object obj, Class< ? > srcCls) {
 		Map result = new HashMap();
 
-		for (Class i : getInterfaces(srcCls)) {
-			for (Method md : i.getMethods()) {
-				handleInterfaceMethod(obj, i, md, new HashSet<String>(),
-						result);
+		if(Annotation.class.isAssignableFrom(srcCls) && isMarkerAnnotation(((Annotation)obj).annotationType())) {
+			// We special case this if the source is a marker annotation because we will end up with no
+			// interface methods otherwise
+			result.put(Util.getMarkerAnnotationKey(((Annotation)obj).annotationType(), obj), Boolean.TRUE);
+			return result;
+		} else {
+			for (Class i : getInterfaces(srcCls)) {
+				for (Method md : i.getMethods()) {
+					handleInterfaceMethod(obj, i, md, new HashSet<String>(),
+							result);
+				}
+				if (result.size() > 0)
+					return result;
 			}
-			if (result.size() > 0)
-				return result;
 		}
 		throw new ConversionException("Cannot be converted to map: " + obj);
 	}
@@ -1099,10 +1092,14 @@ class ConvertingImpl extends AbstractSpecifying<Converting>
 			return Collections.emptySet();
 
 		Set<Class< ? >> interfaces = getInterfaces0(cls);
-		for (Iterator<Class< ? >> it = interfaces.iterator(); it.hasNext();) {
+		outer: for (Iterator<Class< ? >> it = interfaces.iterator(); it.hasNext();) {
 			Class< ? > intf = it.next();
-			if (intf.getDeclaredMethods().length == 0)
-				it.remove();
+			for (Method method : intf.getMethods()) {
+				if(method.getDeclaringClass() == intf) {
+					continue outer;
+				}
+			}
+			it.remove();
 		}
 
 		interfaces.removeAll(NO_MAP_VIEW_TYPES);
@@ -1217,9 +1214,8 @@ class ConvertingImpl extends AbstractSpecifying<Converting>
 
 	private boolean hasGetProperties(Class< ? > cls) {
 		try {
-			Method m = cls.getDeclaredMethod("getProperties");
-			if (m == null)
-				m = cls.getMethod("getProperties");
+			// Section 707.4.4.4.8 says getProperties must be public
+			Method m = cls.getMethod("getProperties");
 			return m != null;
 		} catch (Exception e) {
 			return false;
@@ -1228,9 +1224,8 @@ class ConvertingImpl extends AbstractSpecifying<Converting>
 
 	private Map< ? , ? > getPropertiesDelegate(Object obj, Class< ? > cls) {
 		try {
-			Method m = cls.getDeclaredMethod("getProperties");
-			if (m == null)
-				m = cls.getMethod("getProperties");
+			// Section 707.4.4.4.8 says getProperties must be public
+			Method m = cls.getMethod("getProperties");
 
 			return converter.convert(m.invoke(obj)).to(Map.class);
 		} catch (Exception e) {
@@ -1262,7 +1257,7 @@ class ConvertingImpl extends AbstractSpecifying<Converting>
 		Set<Method> setters = new HashSet<>();
 		while (!Object.class.equals(cls)) {
 			Set<Method> methods = new HashSet<>();
-			methods.addAll(Arrays.asList(cls.getDeclaredMethods()));
+			// Only public methods can be Java Bean setters
 			methods.addAll(Arrays.asList(cls.getMethods()));
 			for (Method md : methods) {
 				if (md.getParameterTypes().length != 1)
