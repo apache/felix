@@ -411,7 +411,7 @@ class ConvertingImpl extends AbstractSpecifying<Converting>
 
 				if (f != null) {
 					Object val = entry.getValue();
-					if (sourceAsDTO && DTOUtil.isDTOType(f.getType()))
+					if (sourceAsDTO && DTOUtil.isDTOType(f.getType(), false))
 						val = converter.convert(val).sourceAsDTO().to(
 								f.getType());
 					else {
@@ -573,8 +573,8 @@ class ConvertingImpl extends AbstractSpecifying<Converting>
 				if (isCopyRequiredType(cls)) {
 					cls = getConstructableType(cls);
 				}
-
-				if (sourceAsDTO || DTOUtil.isDTOType(cls))
+				// Either force source as DTO, or lenient DTO type
+				if (sourceAsDTO || DTOUtil.isDTOType(cls, true))
 					element = converter.convert(element).sourceAsDTO().to(cls);
 				else
 					element = converter.convert(element).to(cls);
@@ -605,8 +605,8 @@ class ConvertingImpl extends AbstractSpecifying<Converting>
 				if (isCopyRequiredType(cls)) {
 					cls = getConstructableType(cls);
 				}
-
-				if (sourceAsDTO || DTOUtil.isDTOType(cls))
+				// Either force source as DTO, or DTO type
+				if (sourceAsDTO || DTOUtil.isDTOType(cls, false))
 					element = converter.convert(element).sourceAsDTO().to(cls);
 				else
 					element = converter.convert(element).to(cls);
@@ -623,7 +623,7 @@ class ConvertingImpl extends AbstractSpecifying<Converting>
 			return MapDelegate.forMap((Map) object, this);
 		} else if (Dictionary.class.isAssignableFrom(sourceClass)) {
 			return MapDelegate.forDictionary((Dictionary) object, this);
-		} else if (DTOUtil.isDTOType(sourceClass) || sourceAsDTO) {
+		} else if (DTOUtil.isDTOType(sourceClass, true) || sourceAsDTO) {
 			return MapDelegate.forDTO(object, sourceClass, this);
 		} else if (sourceAsJavaBean) {
 			return MapDelegate.forBean(object, sourceClass, this);
@@ -657,7 +657,7 @@ class ConvertingImpl extends AbstractSpecifying<Converting>
 			return convertToMap();
 		else if (Dictionary.class.isAssignableFrom(targetAsClass))
 			return convertToDictionary();
-		else if (targetAsDTO || DTOUtil.isDTOType(targetAsClass))
+		else if (targetAsDTO || DTOUtil.isDTOType(targetAsClass, false))
 			return convertToDTO(sourceClass, targetAsClass);
 		else if (targetAsClass.isInterface())
 			return convertToInterface(sourceClass, targetAsClass);
@@ -836,7 +836,7 @@ class ConvertingImpl extends AbstractSpecifying<Converting>
 			return true;
 		else if (getInterfaces(cls).size() > 0)
 			return true;
-		else if (DTOUtil.isDTOType(cls))
+		else if (DTOUtil.isDTOType(cls, true))
 			return true;
 		else if (asJavaBean && isWriteableJavaBean(cls))
 			return true;
@@ -1195,12 +1195,12 @@ class ConvertingImpl extends AbstractSpecifying<Converting>
 	private Map< ? , ? > mapView(Object obj, Class< ? > sourceCls,
 			InternalConverter ic) {
 		if (Map.class.isAssignableFrom(sourceCls)
-				|| (DTOUtil.isDTOType(sourceCls) && obj instanceof Map))
+				|| (DTOUtil.isDTOType(sourceCls, true) && obj instanceof Map))
 			return (Map< ? , ? >) obj;
 		else if (Dictionary.class.isAssignableFrom(sourceCls))
 			return MapDelegate.forDictionary((Dictionary< ? , ? >) object,
 					this);
-		else if (DTOUtil.isDTOType(sourceCls) || sourceAsDTO)
+		else if (DTOUtil.isDTOType(sourceCls, true) || sourceAsDTO)
 			return createMapFromDTO(obj, ic);
 		else if (sourceAsJavaBean) {
 			Map< ? , ? > m = createMapFromBeanAccessors(obj, sourceCls);
@@ -1238,7 +1238,7 @@ class ConvertingImpl extends AbstractSpecifying<Converting>
 			return false;
 		return Map.class.isAssignableFrom(cls)
 				|| Collection.class.isAssignableFrom(cls)
-				|| DTOUtil.isDTOType(cls) || cls.isArray();
+				|| DTOUtil.isDTOType(cls, true) || cls.isArray();
 	}
 
 	private static boolean isWriteableJavaBean(Class< ? > cls) {
