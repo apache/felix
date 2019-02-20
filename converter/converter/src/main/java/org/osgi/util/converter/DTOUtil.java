@@ -30,14 +30,9 @@ class DTOUtil {
 
 	static boolean isDTOType(Class< ? > cls) {
 		try {
-			cls.getDeclaredConstructor();
+			cls.getConstructor();
 		} catch (NoSuchMethodException | SecurityException e) {
-			// No zero-arg constructor, not a DTO
-			return false;
-		}
-
-		if (cls.getDeclaredMethods().length > 0) {
-			// should not have any methods
+			// No public zero-arg constructor, not a DTO
 			return false;
 		}
 
