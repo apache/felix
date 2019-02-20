@@ -60,10 +60,11 @@ public interface PersistenceManager
     String PROPERTY_NAME = "name";
 
     /**
-     * Returns <code>true</code> if a persisted <code>Dictionary</code> exists
-     * for the given <code>pid</code>.
+     * Returns <code>true</code> if a persisted <code>Dictionary</code> exists for
+     * the given <code>pid</code>.
      *
      * @param pid The identifier for the dictionary to test.
+     * @return {@code true} if a persisted dictionary exists for the pid.
      */
     boolean exists( String pid );
 
