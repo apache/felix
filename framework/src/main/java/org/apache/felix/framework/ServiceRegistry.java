@@ -358,16 +358,27 @@ public class ServiceRegistry
                             holder = usage.m_svcHolderRef.get();
                             if (holder != null)
                             {
-                                try
+                                boolean interrupted = false;
+                                do
                                 {
-                                    // Need to ensure that the other thread has obtained
-                                    // the service.
-                                    holder.m_latch.await();
+                                    try
+                                    {
+                                        // Need to ensure that the other thread has obtained
+                                        // the service.
+                                        holder.m_latch.await();
+                                        if (interrupted)
+                                        {
+                                            Thread.currentThread().interrupt();
+                                        }
+                                        interrupted = false;
+                                    }
+                                    catch (InterruptedException e)
+                                    {
+                                        interrupted = true;
+                                        Thread.interrupted();
+                                    }
                                 }
-                                catch (InterruptedException e)
-                                {
-                                    throw new RuntimeException(e);
-                                }
+                                while (interrupted);
                                 svcObj = holder.m_service;
                             }
                         }
