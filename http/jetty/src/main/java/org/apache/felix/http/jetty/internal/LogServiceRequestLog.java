@@ -23,6 +23,7 @@ import java.util.Hashtable;
 import org.apache.felix.http.base.internal.logger.SystemLogger;
 import org.eclipse.jetty.server.AbstractNCSARequestLog;
 import org.eclipse.jetty.server.RequestLog;
+import org.eclipse.jetty.server.RequestLogWriter;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceRegistration;
 
@@ -40,6 +41,7 @@ class LogServiceRequestLog extends AbstractNCSARequestLog {
     private ServiceRegistration<RequestLog> registration;
 
     LogServiceRequestLog(JettyConfig config) {
+        super(new RequestLogWriter());
         this.serviceName = config.getRequestLogOSGiServiceName();
     }
 
@@ -55,7 +57,7 @@ class LogServiceRequestLog extends AbstractNCSARequestLog {
     public synchronized void unregister() {
         try {
             if (registration != null) {
-                registration.unregister();;
+                registration.unregister();
             }
         } finally {
             registration = null;
