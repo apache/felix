@@ -45,7 +45,7 @@ class FileRequestLog {
         logFilePath = config.getRequestLogFilePath();
         serviceName = config.getRequestLogFileServiceName() != null ? config.getRequestLogFileServiceName() : DEFAULT_NAME;
         if (config.isRequestLogFileAsync()) {
-            delegate = new AsyncNCSARequestLog(logFilePath);
+            delegate = new AsyncNCSARequestLog(logFilePath, null);
         } else {
             delegate = new NCSARequestLog(logFilePath);
         }
@@ -87,7 +87,7 @@ class FileRequestLog {
             if (registration != null) {
                 registration.unregister();
             }
-            delegate.stop();;
+            delegate.stop();
         } catch (Exception e) {
             SystemLogger.error("Error shutting down File Request Log", e);
         } finally {
