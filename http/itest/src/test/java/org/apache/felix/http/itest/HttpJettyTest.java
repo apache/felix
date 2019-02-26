@@ -21,6 +21,7 @@ package org.apache.felix.http.itest;
 import static javax.servlet.http.HttpServletResponse.SC_NOT_FOUND;
 import static javax.servlet.http.HttpServletResponse.SC_OK;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
@@ -93,7 +94,7 @@ public class HttpJettyTest extends BaseIntegrationTest
 
         bundle.stop();
 
-        assertTrue(destroyLatch.await(5, TimeUnit.SECONDS));
+        assertFalse(destroyLatch.await(5, TimeUnit.SECONDS));
 
         try
         {
