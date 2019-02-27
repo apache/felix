@@ -110,13 +110,14 @@ public class ScriptEnginesTracker implements BundleListener {
 
     private void unregisterFactories(Bundle bundle) {
         List<String> languagesForBundle = languagesByBundle.get(bundle);
-        for (String lang : languagesForBundle) {
-            ScriptEngineFactory removed = enginesByLanguage.remove(lang);
-            LOG.info("Removing ScriptEngine {} for language {}", removed, lang);
+        if(languagesForBundle != null) {
+            for (String lang : languagesForBundle) {
+                ScriptEngineFactory removed = enginesByLanguage.remove(lang);
+                LOG.info("Removing ScriptEngine {} for language {}", removed, lang);
+            }
         }
     }
 
-    
     @SuppressWarnings("unchecked")
     private List<ScriptEngineFactory> getScriptEngineFactoriesForBundle(final Bundle bundle) {
         URL url = bundle.getEntry(ENGINE_FACTORY_SERVICE);
