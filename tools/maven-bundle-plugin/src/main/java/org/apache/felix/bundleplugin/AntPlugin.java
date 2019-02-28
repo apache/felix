@@ -50,7 +50,7 @@ public class AntPlugin extends BundlePlugin
 
     @Override
     protected void execute( Map<String, String> originalInstructions,
-        Jar[] classpath ) throws MojoExecutionException
+        ClassPathItem[] classpath ) throws MojoExecutionException
     {
         final String artifactId = getProject().getArtifactId();
         final String baseDir = getProject().getBasedir().getPath();
