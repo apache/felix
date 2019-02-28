@@ -40,9 +40,9 @@ public final class DependencyExcluder extends AbstractDependencyFilter
     private final Collection<Artifact> m_excludedArtifacts;
 
 
-    public DependencyExcluder( DependencyNode dependencyGraph, Collection<Artifact> dependencyArtifacts )
+    public DependencyExcluder( Collection<Artifact> dependencyArtifacts )
     {
-        super( dependencyGraph, dependencyArtifacts );
+        super( dependencyArtifacts );
 
         m_excludedArtifacts = new HashSet<Artifact>();
     }

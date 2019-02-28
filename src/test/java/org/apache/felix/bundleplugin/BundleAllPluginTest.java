@@ -61,7 +61,6 @@ public class BundleAllPluginTest extends AbstractBundlePluginTest
         plugin.setBuildDirectory( buildDirectory.getPath() );
         File outputDirectory = new File( buildDirectory, "test-classes" );
         plugin.setOutputDirectory( outputDirectory );
-        setVariableValueToObject(plugin, "m_dependencyGraphBuilder", lookup(DependencyGraphBuilder.class.getName(), "default"));
     }
 
 

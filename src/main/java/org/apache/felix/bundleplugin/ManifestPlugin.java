@@ -31,10 +31,6 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.nio.file.attribute.FileTime;
-import java.util.Arrays;
-import java.util.Comparator;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -42,7 +38,6 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Properties;
 import java.util.Set;
-import java.util.TreeSet;
 import java.util.jar.Manifest;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -65,7 +60,6 @@ import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.plugins.annotations.ResolutionScope;
 import org.apache.maven.project.MavenProject;
-import org.apache.maven.shared.dependency.graph.DependencyNode;
 import org.codehaus.plexus.util.Scanner;
 import org.osgi.service.metatype.MetaTypeService;
 import org.sonatype.plexus.build.incremental.BuildContext;
@@ -97,7 +91,7 @@ public class ManifestPlugin extends BundlePlugin
     private BuildContext buildContext;
 
     @Override
-    protected void execute( MavenProject project, DependencyNode dependencyGraph, Map<String, String> instructions, Properties properties, Jar[] classpath )
+    protected void execute( Map<String, String> instructions, Jar[] classpath )
         throws MojoExecutionException
     {
 
@@ -114,7 +108,7 @@ public class ManifestPlugin extends BundlePlugin
         Analyzer analyzer;
         try
         {
-            analyzer = getAnalyzer(project, dependencyGraph, instructions, properties, classpath);
+            analyzer = getAnalyzer(project, instructions, classpath);
 
             if (supportIncrementalBuild) {
                 writeIncrementalInfo(project);
@@ -186,17 +180,17 @@ public class ManifestPlugin extends BundlePlugin
         return scanner.getIncludedFiles().length > 0;
     }
 
-    public Manifest getManifest( MavenProject project, DependencyNode dependencyGraph, Jar[] classpath ) throws IOException, MojoFailureException,
+    public Manifest getManifest( MavenProject project, Jar[] classpath ) throws IOException, MojoFailureException,
         MojoExecutionException, Exception
     {
-        return getManifest( project, dependencyGraph, new LinkedHashMap<String, String>(), new Properties(), classpath, buildContext );
+        return getManifest( project, new LinkedHashMap<String, String>(), classpath, buildContext );
     }
 
 
-    public Manifest getManifest( MavenProject project, DependencyNode dependencyGraph, Map<String, String> instructions, Properties properties, Jar[] classpath,
-            BuildContext buildContext) throws IOException, MojoFailureException, MojoExecutionException, Exception
+    public Manifest getManifest( MavenProject project, Map<String, String> instructions, Jar[] classpath,
+            BuildContext buildContext ) throws IOException, MojoFailureException, MojoExecutionException, Exception
     {
-        Analyzer analyzer = getAnalyzer(project, dependencyGraph, instructions, properties, classpath);
+        Analyzer analyzer = getAnalyzer(project, instructions, classpath);
 
         Jar jar = analyzer.getJar();
         Manifest manifest = jar.getManifest();
@@ -255,19 +249,19 @@ public class ManifestPlugin extends BundlePlugin
         }
     }
 
-    protected Analyzer getAnalyzer( MavenProject project, DependencyNode dependencyGraph, Jar[] classpath ) throws IOException, MojoExecutionException,
+    protected Analyzer getAnalyzer( MavenProject project, Jar[] classpath ) throws IOException, MojoExecutionException,
         Exception
     {
-        return getAnalyzer( project, dependencyGraph, new LinkedHashMap<String, String>(), new Properties(), classpath );
+        return getAnalyzer( project, new LinkedHashMap<>(), classpath );
     }
 
 
-    protected Analyzer getAnalyzer( MavenProject project, DependencyNode dependencyGraph, Map<String, String> instructions, Properties properties, Jar[] classpath )
+    protected Analyzer getAnalyzer( MavenProject project, Map<String, String> instructions, Jar[] classpath )
         throws IOException, MojoExecutionException, Exception
     {
         if ( rebuildBundle && supportedProjectTypes.contains( project.getArtifact().getType() ) )
         {
-            return buildOSGiBundle( project, dependencyGraph, instructions, properties, classpath );
+            return buildOSGiBundle( project, instructions, classpath );
         }
 
         File file = getOutputDirectory();
@@ -288,7 +282,7 @@ public class ManifestPlugin extends BundlePlugin
             }
         }
 
-        Builder analyzer = getOSGiBuilder( project, instructions, properties, classpath );
+        Builder analyzer = getOSGiBuilder( project, instructions, classpath );
 
         analyzer.setJar( file );
 
@@ -306,7 +300,7 @@ public class ManifestPlugin extends BundlePlugin
             analyzer.setProperty( Analyzer.EXPORT_PACKAGE, export );
         }
 
-        addMavenInstructions( project, dependencyGraph, analyzer );
+        addMavenInstructions( project, analyzer );
 
         // if we spot Embed-Dependency and the bundle is "target/classes", assume we need to rebuild
         if ( analyzer.getProperty( DependencyEmbedder.EMBED_DEPENDENCY ) != null && isOutputDirectory )
@@ -319,7 +313,7 @@ public class ManifestPlugin extends BundlePlugin
             analyzer.getJar().setManifest( analyzer.calcManifest() );
         }
 
-        mergeMavenManifest( project, dependencyGraph, analyzer );
+        mergeMavenManifest( project, analyzer );
 
         boolean hasErrors = reportErrors( "Manifest " + project.getArtifact(), analyzer );
         if ( hasErrors )
