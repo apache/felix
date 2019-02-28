@@ -22,17 +22,40 @@ package org.apache.felix.bundleplugin;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.io.IOError;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.io.Writer;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.attribute.FileTime;
+import java.util.Arrays;
+import java.util.Comparator;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Properties;
+import java.util.Set;
+import java.util.TreeSet;
 import java.util.jar.Manifest;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipFile;
 
+import aQute.bnd.osgi.Analyzer;
+import aQute.bnd.osgi.Builder;
+import aQute.bnd.osgi.Instructions;
+import aQute.bnd.osgi.Jar;
+import aQute.bnd.osgi.Resource;
+import aQute.lib.collections.ExtList;
+import org.apache.maven.artifact.Artifact;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
 import org.apache.maven.plugin.logging.Log;
@@ -46,13 +69,6 @@ import org.apache.maven.shared.dependency.graph.DependencyNode;
 import org.codehaus.plexus.util.Scanner;
 import org.osgi.service.metatype.MetaTypeService;
 import org.sonatype.plexus.build.incremental.BuildContext;
-
-import aQute.bnd.osgi.Analyzer;
-import aQute.bnd.osgi.Builder;
-import aQute.bnd.osgi.Instructions;
-import aQute.bnd.osgi.Jar;
-import aQute.bnd.osgi.Resource;
-import aQute.lib.collections.ExtList;
 
 
 /**
@@ -85,6 +101,9 @@ public class ManifestPlugin extends BundlePlugin
         throws MojoExecutionException
     {
 
+        if (supportIncrementalBuild && isUpToDate(project)) {
+            return;
+        }
         // in incremental build execute manifest generation only when explicitly activated
         // and when any java file was touched since last build
         if (buildContext.isIncremental() && !(supportIncrementalBuild && anyJavaSourceFileTouchedSinceLastBuild())) {
@@ -96,6 +115,10 @@ public class ManifestPlugin extends BundlePlugin
         try
         {
             analyzer = getAnalyzer(project, dependencyGraph, instructions, properties, classpath);
+
+            if (supportIncrementalBuild) {
+                writeIncrementalInfo(project);
+            }
         }
         catch ( FileNotFoundException e )
         {
@@ -327,6 +350,106 @@ public class ManifestPlugin extends BundlePlugin
         }
 
         return analyzer;
+    }
+
+    private void writeIncrementalInfo(MavenProject project) throws MojoExecutionException {
+        try {
+            Path cacheData = getIncrementalDataPath(project);
+            String curdata = getIncrementalData();
+            Files.createDirectories(cacheData.getParent());
+            try (Writer w = Files.newBufferedWriter(cacheData)) {
+                w.append(curdata);
+            }
+        } catch (IOException e) {
+            throw new MojoExecutionException("Error checking manifest uptodate status", e);
+        }
+    }
+
+    private boolean isUpToDate(MavenProject project) throws MojoExecutionException {
+        try {
+            Path cacheData = getIncrementalDataPath(project);
+            String prvdata;
+            if (Files.isRegularFile(cacheData)) {
+                prvdata = new String(Files.readAllBytes(cacheData), StandardCharsets.UTF_8);
+            } else {
+                prvdata = null;
+            }
+            String curdata = getIncrementalData();
+            if (curdata.equals(prvdata)) {
+                long lastmod = Files.getLastModifiedTime(cacheData).toMillis();
+                Set<String> stale = Stream.concat(Stream.of(new File(project.getBuild().getOutputDirectory())),
+                                                            project.getArtifacts().stream().map(Artifact::getFile))
+                        .flatMap(f -> newer(lastmod, f))
+                        .collect(Collectors.toSet());
+                if (!stale.isEmpty()) {
+                    getLog().info("Stale files: " + stale.stream()
+                            .collect(Collectors.joining(", ")));
+                } else {
+                    // everything is in order, skip
+                    getLog().info("Skipping manifest generation, everything is up to date.");
+                    return true;
+                }
+            } else {
+                if (prvdata == null) {
+                    getLog().info("No previous run data found, generating manifest.");
+                } else {
+                    getLog().info("Configuration changed, re-generating manifest.");
+                }
+            }
+        } catch (IOException e) {
+            throw new MojoExecutionException("Error checking manifest uptodate status", e);
+        }
+        return false;
+    }
+
+    private String getIncrementalData() {
+        return getInstructions().entrySet().stream().map(e -> e.getKey() + "=" + e.getValue())
+                .collect(Collectors.joining("\n", "", "\n"));
+    }
+
+    private Path getIncrementalDataPath(MavenProject project) {
+        return Paths.get(project.getBuild().getDirectory(), "maven-bundle-plugin",
+                "org.apache.felix_maven-bundle-plugin_manifest_xx");
+    }
+
+    private long lastmod(Path p) {
+        try {
+            return Files.getLastModifiedTime(p).toMillis();
+        } catch (IOException e) {
+            return 0;
+        }
+    }
+
+    private Stream<String> newer(long lastmod, File file) {
+        try {
+            if (file.isDirectory()) {
+                return Files.walk(file.toPath())
+                        .filter(Files::isRegularFile)
+                        .filter(p -> lastmod(p) > lastmod)
+                        .map(Path::toString);
+            } else if (file.isFile()) {
+                if (lastmod(file.toPath()) > lastmod) {
+                    if (file.getName().endsWith(".jar")) {
+                        try (ZipFile zf = new ZipFile(file)) {
+                            return zf.stream()
+                                    .filter(ze -> !ze.isDirectory())
+                                    .filter(ze -> ze.getLastModifiedTime().toMillis() > lastmod)
+                                    .map(ze -> file.toString() + "!" + ze.getName())
+                                    .collect(Collectors.toList())
+                                    .stream();
+                        }
+                    } else {
+                        return Stream.of(file.toString());
+                    }
+                } else {
+                    return Stream.empty();
+                }
+            } else {
+                return Stream.empty();
+            }
+        } catch (IOException e) {
+            throw new IOError(e);
+        }
     }
 
 

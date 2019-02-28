@@ -56,7 +56,7 @@
   </distributionManagement>
 
  <properties>
-   <felix.java.version>7</felix.java.version>
+   <felix.java.version>8</felix.java.version>
    <maven.site.path>bundle-plugin-archives/bundle-plugin-LATEST</maven.site.path>
  </properties>
 
@@ -129,6 +129,14 @@
      </excludes>
     </configuration>
    </plugin>
+      <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-compiler-plugin</artifactId>
+          <configuration>
+              <source>8</source>
+              <target>8</target>
+          </configuration>
+      </plugin>
       <!--
     <plugin>
         <artifactId>maven-invoker-plugin</artifactId>
@@ -159,13 +167,18 @@
   <dependency>
     <groupId>org.osgi</groupId>
     <artifactId>org.osgi.core</artifactId>
-    <version>4.3.1</version>
+    <version>6.0.0</version>
   </dependency>
   <dependency>
     <groupId>biz.aQute.bnd</groupId>
     <artifactId>biz.aQute.bndlib</artifactId>
     <version>4.1.0</version>
   </dependency>
+     <dependency>
+         <groupId>org.slf4j</groupId>
+         <artifactId>slf4j-api</artifactId>
+         <version>1.7.25</version>
+     </dependency>
   <dependency>
     <groupId>org.apache.felix</groupId>
     <artifactId>org.apache.felix.bundlerepository</artifactId>
