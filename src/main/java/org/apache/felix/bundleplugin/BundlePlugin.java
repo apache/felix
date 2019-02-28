@@ -426,7 +426,7 @@ public class BundlePlugin extends AbstractMojo
 
 
     protected void execute(Map<String, String> originalInstructions,
-                           Jar[] classpath) throws MojoExecutionException
+                           ClassPathItem[] classpath) throws MojoExecutionException
     {
         try
         {
@@ -512,7 +512,7 @@ public class BundlePlugin extends AbstractMojo
 
 
     protected Builder getOSGiBuilder( MavenProject currentProject, Map<String, String> originalInstructions,
-        Jar[] classpath ) throws Exception
+        ClassPathItem[] classpath ) throws Exception
     {
         Properties properties = new Properties();
         properties.putAll( getDefaultProperties( currentProject ) );
@@ -589,7 +589,11 @@ public class BundlePlugin extends AbstractMojo
         builder.setProperties( sanitize( properties ) );
         if ( classpath != null )
         {
-            builder.setClasspath( classpath );
+            Jar[] jars = new Jar[ classpath.length ];
+            for ( int i = 0; i < classpath.length; i++ ) {
+                jars[i] = new Jar( classpath[i].id, classpath[i].file );
+            }
+            builder.setClasspath( jars );
         }
 
         return builder;
@@ -916,7 +920,7 @@ public class BundlePlugin extends AbstractMojo
 
 
     protected Builder buildOSGiBundle(MavenProject currentProject, Map<String, String> originalInstructions,
-                                      Jar[] classpath) throws Exception
+                                      ClassPathItem[] classpath) throws Exception
     {
         Builder builder = getOSGiBuilder( currentProject, originalInstructions, classpath );
 
@@ -1574,14 +1578,14 @@ public class BundlePlugin extends AbstractMojo
     }
 
 
-    protected Jar[] getClasspath(MavenProject currentProject) throws IOException, MojoExecutionException
+    protected ClassPathItem[] getClasspath(MavenProject currentProject) throws IOException, MojoExecutionException
     {
-        List<Jar> list = new ArrayList<Jar>( currentProject.getArtifacts().size() + 1 );
+        List<ClassPathItem> list = new ArrayList<ClassPathItem>( currentProject.getArtifacts().size() + 1 );
 
         String d = currentProject.getBuild() != null ? currentProject.getBuild().getOutputDirectory() : null;
         if ( d != null )
         {
-            list.add( new Jar( ".", d ) );
+            list.add( new ClassPathItem( ".", new File( d ) ) );
         }
 
         final Collection<Artifact> artifacts = getSelectedDependencies(currentProject.getArtifacts() );
@@ -1597,11 +1601,11 @@ public class BundlePlugin extends AbstractMojo
                                     + currentProject.getArtifact() );
                     continue;
                 }
-                Jar jar = new Jar( artifact.getArtifactId(), file );
+                ClassPathItem jar = new ClassPathItem( artifact.getArtifactId(), file );
                 list.add( jar );
             }
         }
-        Jar[] cp = new Jar[list.size()];
+        ClassPathItem[] cp = new ClassPathItem[list.size()];
         list.toArray( cp );
 
         return cp;
@@ -2139,4 +2143,13 @@ public class BundlePlugin extends AbstractMojo
         analyzer.setProperty(Analyzer.FIXUPMESSAGES, fixups);
     }
 
+    static class ClassPathItem {
+        final String id;
+        final File file;
+
+        public ClassPathItem(String id, File file) {
+            this.id = id;
+            this.file = file;
+        }
+    }
 }

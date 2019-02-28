@@ -31,6 +31,7 @@ import java.util.Set;
 import java.util.TreeMap;
 import java.util.jar.Manifest;
 
+import org.apache.felix.bundleplugin.BundlePlugin.ClassPathItem;
 import org.apache.maven.model.Organization;
 import org.apache.maven.plugin.testing.stubs.MavenProjectStub;
 import org.apache.maven.project.MavenProject;
@@ -346,7 +347,7 @@ public class BundlePluginTest extends AbstractBundlePluginTest
         MavenProject project = getMavenProjectStub();
         project.setDependencyArtifacts(artifacts);
         Properties props = new Properties();
-        Jar[] classpath = plugin.getClasspath(project);
+        ClassPathItem[] classpath = plugin.getClasspath(project);
 
         Map instructions1 = new HashMap();
         instructions1.put( DependencyEmbedder.EMBED_DEPENDENCY, "!scope=compile" );

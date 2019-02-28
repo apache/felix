@@ -91,7 +91,7 @@ public class ManifestPlugin extends BundlePlugin
     private BuildContext buildContext;
 
     @Override
-    protected void execute( Map<String, String> instructions, Jar[] classpath )
+    protected void execute( Map<String, String> instructions, ClassPathItem[] classpath )
         throws MojoExecutionException
     {
 
@@ -180,14 +180,14 @@ public class ManifestPlugin extends BundlePlugin
         return scanner.getIncludedFiles().length > 0;
     }
 
-    public Manifest getManifest( MavenProject project, Jar[] classpath ) throws IOException, MojoFailureException,
+    public Manifest getManifest( MavenProject project, ClassPathItem[] classpath ) throws IOException, MojoFailureException,
         MojoExecutionException, Exception
     {
         return getManifest( project, new LinkedHashMap<String, String>(), classpath, buildContext );
     }
 
 
-    public Manifest getManifest( MavenProject project, Map<String, String> instructions, Jar[] classpath,
+    public Manifest getManifest( MavenProject project, Map<String, String> instructions, ClassPathItem[] classpath,
             BuildContext buildContext ) throws IOException, MojoFailureException, MojoExecutionException, Exception
     {
         Analyzer analyzer = getAnalyzer(project, instructions, classpath);
@@ -249,14 +249,14 @@ public class ManifestPlugin extends BundlePlugin
         }
     }
 
-    protected Analyzer getAnalyzer( MavenProject project, Jar[] classpath ) throws IOException, MojoExecutionException,
+    protected Analyzer getAnalyzer( MavenProject project, ClassPathItem[] classpath ) throws IOException, MojoExecutionException,
         Exception
     {
         return getAnalyzer( project, new LinkedHashMap<>(), classpath );
     }
 
 
-    protected Analyzer getAnalyzer( MavenProject project, Map<String, String> instructions, Jar[] classpath )
+    protected Analyzer getAnalyzer( MavenProject project, Map<String, String> instructions, ClassPathItem[] classpath )
         throws IOException, MojoExecutionException, Exception
     {
         if ( rebuildBundle && supportedProjectTypes.contains( project.getArtifact().getType() ) )

@@ -40,7 +40,7 @@ import org.apache.maven.shared.dependency.graph.DependencyNode;
 public class InstructionsPlugin extends BundlePlugin
 {
     @Override
-    protected void execute( Map<String, String> instructions, Jar[] classpath )
+    protected void execute( Map<String, String> instructions, ClassPathItem[] classpath )
         throws MojoExecutionException
     {
         if ( dumpInstructions == null )
