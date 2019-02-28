@@ -21,7 +21,6 @@ package org.apache.felix.bundleplugin;
 
 import java.io.File;
 import java.util.Collection;
-import java.util.Iterator;
 import java.util.LinkedHashSet;
 
 import org.apache.maven.artifact.Artifact;
@@ -91,13 +90,13 @@ public final class DependencyEmbedder extends AbstractDependencyFilter
 
             processInstructions( embedDependencyHeader );
 
-            for ( Iterator<String> i = m_inlinedPaths.iterator(); i.hasNext(); )
+            for ( String path : m_inlinedPaths )
             {
-                inlineDependency( i.next(), includeResource );
+                inlineDependency( path, includeResource );
             }
-            for ( Iterator<Artifact> i = m_embeddedArtifacts.iterator(); i.hasNext(); )
+            for ( Artifact artifact : m_embeddedArtifacts )
             {
-                embedDependency( i.next(), includeResource, bundleClassPath, embeddedArtifacts );
+                embedDependency( artifact, includeResource, bundleClassPath, embeddedArtifacts );
             }
         }
 
@@ -125,9 +124,9 @@ public final class DependencyEmbedder extends AbstractDependencyFilter
         }
         else
         {
-            for ( Iterator<Artifact> i = dependencies.iterator(); i.hasNext(); )
+            for ( Artifact dependency : dependencies )
             {
-                addInlinedPaths( i.next(), inline, m_inlinedPaths );
+                addInlinedPaths( dependency, inline, m_inlinedPaths );
             }
         }
     }
@@ -145,11 +144,11 @@ public final class DependencyEmbedder extends AbstractDependencyFilter
             else
             {
                 String[] filters = inline.split( "\\|" );
-                for ( int i = 0; i < filters.length; i++ )
+                for ( String filter : filters )
                 {
-                    if ( filters[i].length() > 0 )
+                    if ( filter.length() > 0 )
                     {
-                        inlinedPaths.add( path + "!/" + filters[i] );
+                        inlinedPaths.add( path + "!/" + filter );
                     }
                 }
             }
@@ -169,14 +168,14 @@ public final class DependencyEmbedder extends AbstractDependencyFilter
                 embedDirectory = null;
             }
 
-            if ( false == Boolean.valueOf( m_embedStripGroup ).booleanValue() )
+            if ( !Boolean.valueOf( m_embedStripGroup ) )
             {
                 embedDirectory = new File( embedDirectory, dependency.getGroupId() ).getPath();
             }
 
-            StringBuffer targetFileName = new StringBuffer();
+            StringBuilder targetFileName = new StringBuilder();
             targetFileName.append( dependency.getArtifactId() );
-            if ( false == Boolean.valueOf( m_embedStripVersion ).booleanValue() )
+            if ( !Boolean.valueOf( m_embedStripVersion ) )
             {
                 targetFileName.append( '-' ).append( dependency.getVersion() );
                 if ( StringUtils.isNotEmpty( dependency.getClassifier() ) )
@@ -265,7 +264,7 @@ public final class DependencyEmbedder extends AbstractDependencyFilter
         final String instruction = analyzer.getProperty( directiveName );
         if ( StringUtils.isNotEmpty( instruction ) )
         {
-            if ( instruction.indexOf( MAVEN_DEPENDENCIES ) >= 0 )
+            if ( instruction.contains( MAVEN_DEPENDENCIES ) )
             {
                 // if there are no embeddded dependencies, we do a special treatment and replace
                 // every occurance of MAVEN_DEPENDENCIES and a following comma with an empty string
