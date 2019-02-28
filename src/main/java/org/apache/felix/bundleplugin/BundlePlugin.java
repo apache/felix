@@ -342,6 +342,10 @@ public class BundlePlugin extends AbstractMojo
         return project;
     }
 
+    protected Map<String, String> getInstructions() {
+        return instructions;
+    }
+
     protected DependencyNode buildDependencyGraph( MavenProject mavenProject ) throws MojoExecutionException
     {
         DependencyNode dependencyGraph;
