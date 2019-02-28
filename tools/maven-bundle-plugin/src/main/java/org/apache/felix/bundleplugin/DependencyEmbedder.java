@@ -64,9 +64,9 @@ public final class DependencyEmbedder extends AbstractDependencyFilter
     private final Collection<Artifact> m_embeddedArtifacts;
 
 
-    public DependencyEmbedder( Log log, DependencyNode dependencyGraph, Collection<Artifact> dependencyArtifacts )
+    public DependencyEmbedder( Log log, Collection<Artifact> dependencyArtifacts )
     {
-        super( dependencyGraph, dependencyArtifacts );
+        super( dependencyArtifacts );
 
         m_inlinedPaths = new LinkedHashSet<String>();
         m_embeddedArtifacts = new LinkedHashSet<Artifact>();

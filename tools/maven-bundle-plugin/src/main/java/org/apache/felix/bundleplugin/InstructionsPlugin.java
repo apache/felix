@@ -23,13 +23,11 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.Map;
-import java.util.Properties;
 
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.ResolutionScope;
-import org.apache.maven.project.MavenProject;
 
 import aQute.bnd.osgi.Jar;
 import org.apache.maven.shared.dependency.graph.DependencyNode;
@@ -42,7 +40,7 @@ import org.apache.maven.shared.dependency.graph.DependencyNode;
 public class InstructionsPlugin extends BundlePlugin
 {
     @Override
-    protected void execute( MavenProject project, DependencyNode dependencyGraph, Map<String, String> instructions, Properties properties, Jar[] classpath )
+    protected void execute( Map<String, String> instructions, Jar[] classpath )
         throws MojoExecutionException
     {
         if ( dumpInstructions == null )
@@ -52,7 +50,7 @@ public class InstructionsPlugin extends BundlePlugin
 
         try
         {
-            addMavenInstructions( project, dependencyGraph, getOSGiBuilder(project, instructions, properties, classpath) );
+            addMavenInstructions( project, getOSGiBuilder(project, instructions, classpath) );
         }
         catch ( FileNotFoundException e )
         {

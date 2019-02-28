@@ -24,7 +24,6 @@ import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.regex.Pattern;
 
 import org.apache.maven.artifact.Artifact;
@@ -35,13 +34,6 @@ import org.apache.maven.plugin.MojoExecutionException;
 import aQute.bnd.header.Attrs;
 import aQute.bnd.header.OSGiHeader;
 import aQute.bnd.osgi.Instruction;
-import org.apache.maven.shared.dependency.graph.DependencyNode;
-import org.apache.maven.shared.dependency.graph.filter.ArtifactDependencyNodeFilter;
-import org.apache.maven.shared.dependency.graph.filter.DependencyNodeFilter;
-import org.apache.maven.shared.dependency.graph.traversal.BuildingDependencyNodeVisitor;
-import org.apache.maven.shared.dependency.graph.traversal.CollectingDependencyNodeVisitor;
-import org.apache.maven.shared.dependency.graph.traversal.DependencyNodeVisitor;
-import org.apache.maven.shared.dependency.graph.traversal.FilteringDependencyNodeVisitor;
 
 
 /**
@@ -55,18 +47,13 @@ public abstract class AbstractDependencyFilter
     private static final String PLACEHOLDER = "$$PLACEHOLDER$$";
 
     /**
-     * Dependency Graph.
-     */
-    private final DependencyNode m_dependencyGraph;
-    /**
      * Dependency artifacts.
      */
     private final Collection<Artifact> m_dependencyArtifacts;
 
 
-    public AbstractDependencyFilter( DependencyNode dependencyGraph, Collection<Artifact> dependencyArtifacts )
+    public AbstractDependencyFilter( Collection<Artifact> dependencyArtifacts )
     {
-        m_dependencyGraph = dependencyGraph;
         m_dependencyArtifacts = dependencyArtifacts;
     }
 
@@ -104,27 +91,6 @@ public abstract class AbstractDependencyFilter
             }
 
             return m_instruction.isNegated() ? !result : result;
-        }
-    }
-
-    private static class TrimmingDependencyNodeFilter implements DependencyNodeFilter
-    {
-        private DependencyNodeFilter dependencyNodeFilter;
-
-        public TrimmingDependencyNodeFilter( DependencyNodeFilter dependencyNodeFilter ) 
-        {
-            this.dependencyNodeFilter = dependencyNodeFilter;
-        }
-        
-        public boolean accept( DependencyNode node )
-        {
-            boolean accepted = dependencyNodeFilter.accept( node );
-            if( !accepted )
-            {
-                List<DependencyNode> children = node.getChildren();
-                children.clear();
-            }
-            return accepted;
         }
     }
 
@@ -297,40 +263,6 @@ public abstract class AbstractDependencyFilter
 
     private void filteredDependencies( final ArtifactFilter artifactFilter, Collection<Artifact> filteredDependencies )
     {
-        CollectingDependencyNodeVisitor collectingDependencyNodeVisitor = new CollectingDependencyNodeVisitor();
-        final Artifact rootArtifact = m_dependencyGraph.getArtifact();
-        ArtifactFilter filter = new ArtifactFilter()
-        {
-
-
-            public boolean include( Artifact artifact )
-            {
-                return artifact.equals( rootArtifact ) || artifactFilter.include( artifact );
-            }
-
-
-        };
-        DependencyNodeFilter dependencyNodeFilter = new ArtifactDependencyNodeFilter( filter );
-        dependencyNodeFilter = new TrimmingDependencyNodeFilter( dependencyNodeFilter );
-        DependencyNodeVisitor dependencyNodeVisitor =
-                new FilteringDependencyNodeVisitor( collectingDependencyNodeVisitor, dependencyNodeFilter );
-        dependencyNodeVisitor = new BuildingDependencyNodeVisitor( dependencyNodeVisitor );
-        m_dependencyGraph.accept( dependencyNodeVisitor );
-        List<DependencyNode> dependencyNodes = collectingDependencyNodeVisitor.getNodes();
-        Set<String> ids = new LinkedHashSet<String>( dependencyNodes.size() );
-        for( DependencyNode dependencyNode : dependencyNodes ) {
-            Artifact artifact = dependencyNode.getArtifact();
-            String id = artifact.getId();
-            ids.add(id);
-        }
-        for (Iterator<Artifact> iterator = filteredDependencies.iterator(); iterator.hasNext();)
-        {
-            Artifact artifact = iterator.next();
-            String id = artifact.getId();
-            if (!ids.contains(id))
-            {
-                iterator.remove();
-            }
-        }
+        filteredDependencies.removeIf( artifact -> !artifactFilter.include( artifact ) );
     }
 }

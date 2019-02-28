@@ -28,7 +28,6 @@ import java.util.Properties;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.ResolutionScope;
-import org.apache.maven.project.MavenProject;
 import org.apache.maven.shared.dependency.graph.DependencyNode;
 import org.codehaus.plexus.util.FileUtils;
 import org.codehaus.plexus.util.IOUtil;
@@ -50,7 +49,7 @@ public class AntPlugin extends BundlePlugin
 
 
     @Override
-    protected void execute( MavenProject currentProject, DependencyNode dependencyGraph, Map<String, String> originalInstructions, Properties properties,
+    protected void execute( Map<String, String> originalInstructions,
         Jar[] classpath ) throws MojoExecutionException
     {
         final String artifactId = getProject().getArtifactId();
@@ -59,8 +58,8 @@ public class AntPlugin extends BundlePlugin
         try
         {
             // assemble bundle as usual, but don't save it - this way we have all the instructions we need
-            Builder builder = buildOSGiBundle( currentProject,
-                    dependencyGraph, originalInstructions, properties, classpath );
+            Builder builder = buildOSGiBundle(project,
+                    originalInstructions, classpath );
             Properties bndProperties = builder.getProperties();
 
             // cleanup and remove all non-strings from the builder properties

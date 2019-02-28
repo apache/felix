@@ -38,8 +38,8 @@ import org.apache.maven.artifact.versioning.VersionRange;
 import org.apache.maven.model.Resource;
 import org.apache.maven.plugin.testing.AbstractMojoTestCase;
 import org.apache.maven.plugin.testing.stubs.MavenProjectStub;
-import org.apache.maven.project.DefaultProjectBuilderConfiguration;
-import org.apache.maven.project.ProjectBuilderConfiguration;
+import org.apache.maven.project.DefaultProjectBuildingRequest;
+import org.apache.maven.project.ProjectBuildingRequest;
 import org.apache.maven.shared.dependency.graph.DependencyGraphBuilder;
 import org.apache.maven.shared.dependency.graph.DependencyNode;
 import org.osgi.framework.Constants;
@@ -99,9 +99,9 @@ public class BlueprintComponentTest extends AbstractMojoTestCase
         Artifact artifact = new DefaultArtifact(project.getGroupId(),project.getArtifactId(),versionRange, null, "jar", null, artifactHandler);
         project.setArtifact(artifact);
 
-        ProjectBuilderConfiguration projectBuilderConfiguration = new DefaultProjectBuilderConfiguration();
+        ProjectBuildingRequest projectBuilderConfiguration = new DefaultProjectBuildingRequest();
         projectBuilderConfiguration.setLocalRepository(null);
-        project.setProjectBuilderConfiguration(projectBuilderConfiguration);
+        project.setProjectBuildingRequest(projectBuilderConfiguration);
 
         Resource r = new Resource();
         r.setDirectory( new File( "src/test/resources" ).getAbsoluteFile().getCanonicalPath() );
@@ -112,7 +112,6 @@ public class BlueprintComponentTest extends AbstractMojoTestCase
         ManifestPlugin plugin = new ManifestPlugin();
         plugin.setBuildDirectory( "target/tmp/basedir/target" );
         plugin.setOutputDirectory(new File("target/tmp/basedir/target/classes"));
-        setVariableValueToObject(plugin, "m_dependencyGraphBuilder", lookup(DependencyGraphBuilder.class.getName(), "default"));
 
         Map instructions = new HashMap();
         instructions.put( "service_mode", mode );
@@ -125,8 +124,7 @@ public class BlueprintComponentTest extends AbstractMojoTestCase
         instructions.put( "Import-Service", "org.osgi.service.cm.ConfigurationAdmin;availability:=optional" );
 
         Properties props = new Properties();
-        DependencyNode dependencyGraph = plugin.buildDependencyGraph(project);
-        Builder builder = plugin.buildOSGiBundle( project, dependencyGraph, instructions, props, plugin.getClasspath( project, dependencyGraph ) );
+        Builder builder = plugin.buildOSGiBundle( project, instructions, plugin.getClasspath( project) );
 
         Manifest manifest = builder.getJar().getManifest();
         String impSvc = manifest.getMainAttributes().getValue( Constants.IMPORT_SERVICE );
