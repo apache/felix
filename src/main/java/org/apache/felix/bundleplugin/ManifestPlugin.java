@@ -376,8 +376,11 @@ public class ManifestPlugin extends BundlePlugin
                         .flatMap(f -> newer(lastmod, f))
                         .collect(Collectors.toSet());
                 if (!stale.isEmpty()) {
-                    getLog().info("Stale files: " + stale.stream()
-                            .collect(Collectors.joining(", ")));
+                    getLog().info("Stale files detected, re-generating manifest.");
+                    if (getLog().isDebugEnabled()) {
+                        getLog().debug("Stale files: " + stale.stream()
+                                .collect(Collectors.joining(", ")));
+                    }
                 } else {
                     // everything is in order, skip
                     getLog().info("Skipping manifest generation, everything is up to date.");
