@@ -260,6 +260,12 @@ public class BundlePlugin extends AbstractMojo
     protected List<String> supportedProjectTypes = Arrays.asList("jar", "bundle");
 
     /**
+     * Project types which are not supported, but silently ignored.
+     */
+    @Parameter
+    protected List<String> noWarningProjectTypes = Collections.emptyList();
+
+    /**
      * The directory for the generated bundles.
      */
     @Parameter( defaultValue = "${project.build.outputDirectory}" )
@@ -345,8 +351,11 @@ public class BundlePlugin extends AbstractMojo
         // ignore unsupported project types, useful when bundleplugin is configured in parent pom
         if ( !supportedProjectTypes.contains( projectType ) )
         {
-            getLog().warn(
-                "Ignoring project type " + projectType + " - supportedProjectTypes = " + supportedProjectTypes );
+            if (!noWarningProjectTypes.contains( projectType ) )
+            {
+                getLog().warn(
+                        "Ignoring project type " + projectType + " - supportedProjectTypes = " + supportedProjectTypes);
+            }
             return;
         }
 
