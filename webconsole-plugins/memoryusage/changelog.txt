@@ -1,3 +1,9 @@
+Changes from 1.0.8 to 1.0.10
+----------------------------
+
+** Bug
+    * [FELIX-6079] - Web Console memory usage page does not display information on Java 11
+
 Changes from 1.0.6 to 1.0.8
 ---------------------------
 ** Bug
