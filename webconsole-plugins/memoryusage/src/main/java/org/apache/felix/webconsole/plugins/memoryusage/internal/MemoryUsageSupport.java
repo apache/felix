@@ -363,7 +363,7 @@ final class MemoryUsageSupport implements NotificationListener, ServiceListener
         {
             buf.append("{");
 
-            buf.append("'name':'").append(pool.getName()).append('\'');
+            buf.append("'name':'").append(pool.getName().replace("'", "\\'")).append('\'');
             buf.append(",'type':'").append(pool.getType()).append('\'');
 
             MemoryUsage usage = pool.getUsage();
