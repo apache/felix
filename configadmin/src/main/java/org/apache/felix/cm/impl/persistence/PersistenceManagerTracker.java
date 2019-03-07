@@ -175,7 +175,10 @@ public class PersistenceManagerTracker
                             {
                                 deactivate();
                             }
-                            activate(holder.getPersistenceManager());
+                            if (!holder.isActivated()) {
+                                activate(holder.getPersistenceManager());
+                                holder.activate();
+                            }
                         }
                     });
                 }
@@ -197,7 +200,7 @@ public class PersistenceManagerTracker
             this.holders.remove(holder);
             this.holders.add(new Holder(reference, holder.getPersistenceManager()));
             Collections.sort(this.holders);
-            if ( holders.get(0) == holder && oldHolder.compareTo(holder) != 0 )
+            if ( holders.get(0) == holder && oldHolder != null && oldHolder.compareTo(holder) != 0 )
             {
                 this.workerQueue.enqueue(new Runnable()
                 {
@@ -206,7 +209,10 @@ public class PersistenceManagerTracker
                     public void run()
                     {
                         deactivate();
-                        activate(holder.getPersistenceManager());
+                        if (!holder.isActivated()) {
+                            activate(holder.getPersistenceManager());
+                            holder.activate();
+                        }
                     }
                 });
             }
@@ -234,7 +240,11 @@ public class PersistenceManagerTracker
                         deactivate();
                         if ( !holders.isEmpty() )
                         {
-                            activate(holders.get(0).getPersistenceManager());
+                            Holder h = holders.get(0);
+                            if (!h.isActivated()) {
+                                activate(h.getPersistenceManager());
+                                h.activate();
+                            }
                         }
                     }
                 });
@@ -247,6 +257,9 @@ public class PersistenceManagerTracker
         private final ServiceReference<PersistenceManager> reference;
 
         private final ExtPersistenceManager manager;
+
+        // no need to synchronize, as it's changed only in WorkQueue tasks
+        private boolean activated;
 
         public Holder(final ServiceReference<PersistenceManager> ref, final ExtPersistenceManager epm)
         {
@@ -264,6 +277,14 @@ public class PersistenceManagerTracker
         {
             // sort, highest first
             return -reference.compareTo(o.reference);
+        }
+
+        public boolean isActivated() {
+            return activated;
+        }
+
+        public void activate() {
+            this.activated = true;
         }
 
         @Override
