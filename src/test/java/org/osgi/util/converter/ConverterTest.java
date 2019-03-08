@@ -404,6 +404,24 @@ public class ConverterTest {
     }
 
     @Test
+    public void testCustomConverterChaining() {
+        ConverterBuilder cb = converter.newConverterBuilder();
+        cb.rule(Date.class,
+                (f,t) -> f instanceof String ? new Date(0) : ConverterFunction.CANNOT_HANDLE);
+        Converter c1 = cb.build();
+        assertEquals(new Date(0), c1.convert("something").to(Date.class));
+        assertEquals(new Date(0), c1.convert("foo").to(Date.class));
+
+        ConverterBuilder cb2 = c1.newConverterBuilder();
+        cb2.rule(Date.class,
+                (f,t) -> f.equals("foo") ? new Date(100000) : ConverterFunction.CANNOT_HANDLE);
+        Converter c2 = cb2.build();
+        assertEquals(new Date(0), c2.convert("something").to(Date.class));
+        assertEquals(new Date(100000), c2.convert("foo").to(Date.class));
+    }
+
+
+    @Test
     public void testCustomErrorHandling() {
         ConverterFunction func = new ConverterFunction() {
             @Override
@@ -675,7 +693,7 @@ public class ConverterTest {
     public void testDTO2Map4() {
     	MyDefaultCtorDTOAlike dto = new MyDefaultCtorDTOAlike();
     	dto.myProp = "myValue";
-    	
+
     	@SuppressWarnings("rawtypes")
     	Map m = converter.convert(dto).to(Map.class);
     	assertEquals(1, m.size());
@@ -686,7 +704,7 @@ public class ConverterTest {
     public void testDTO2Map5() {
     	MyDTO3 dto = new MyDTO3();
     	dto.charSet = new HashSet<>(Arrays.asList('f', 'o', 'o'));
-    	
+
     	@SuppressWarnings("rawtypes")
     	Map m = converter.convert(dto).to(new TypeReference<Map<String, ?>>() {});
     	assertEquals(1, m.size());
@@ -694,12 +712,12 @@ public class ConverterTest {
 
     	m = converter.convert(dto).to(new TypeReference<Map<String, ? extends List<String>>>() {});
     	assertEquals(1, m.size());
-    	
+
     	List<String> list = new ArrayList<>();
     	for (Character character : dto.charSet) {
 			list.add(String.valueOf(character));
 		}
-    	
+
     	assertEquals(list, m.get("charSet"));
     }
 
