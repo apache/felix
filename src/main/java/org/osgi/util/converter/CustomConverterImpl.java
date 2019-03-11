@@ -181,13 +181,13 @@ class CustomConverterImpl implements InternalConverter {
 				}
 
 				Object result = del.to(type, c);
-				if (result != null && Proxy.isProxyClass(result.getClass()) && errorHandlers.size() > 0) {
-				    return wrapErrorHandling(result);
+				if (result != null && Proxy.isProxyClass(result.getClass()) && getErrorHandlers(c).size() > 0) {
+				    return wrapErrorHandling(result, c);
 				} else {
 				    return result;
 				}
 			} catch (Exception ex) {
-				for (ConverterFunction eh : errorHandlers) {
+				for (ConverterFunction eh : getErrorHandlers(c)) {
 					try {
 						Object handled = eh.apply(object, type);
 						if (handled != ConverterFunction.CANNOT_HANDLE)
@@ -204,7 +204,23 @@ class CustomConverterImpl implements InternalConverter {
 			}
 		}
 
-		private Object wrapErrorHandling(final Object wrapped) {
+        private List<ConverterFunction> getErrorHandlers(Converter converter) {
+            List<ConverterFunction> handlers = new ArrayList<>();
+
+            if (converter instanceof CustomConverterImpl) {
+                CustomConverterImpl cconverter = (CustomConverterImpl) converter;
+                handlers.addAll(cconverter.errorHandlers);
+
+                Converter nextDel = cconverter.delegate;
+                handlers.addAll(getErrorHandlers(nextDel));
+            }
+
+            handlers.addAll(errorHandlers);
+
+            return handlers;
+        }
+
+		private Object wrapErrorHandling(final Object wrapped, final InternalConverter c) {
 		    final Class<?> cls = wrapped.getClass();
 		    return Proxy.newProxyInstance(cls.getClassLoader(), cls.getInterfaces(), new InvocationHandler() {
                 @Override
@@ -228,7 +244,7 @@ class CustomConverterImpl implements InternalConverter {
                     try {
                         return method.invoke(wrapped, args);
                     } catch (Exception ex) {
-                        for (ConverterFunction eh : errorHandlers) {
+                        for (ConverterFunction eh : getErrorHandlers(c)) {
                             try {
                                 Object handled = eh.apply(wrapped, method.getGenericReturnType());
                                 if (handled != ConverterFunction.CANNOT_HANDLE)
