@@ -96,7 +96,7 @@ class ConvertingImpl extends AbstractSpecifying<Converting>
 		NO_MAP_VIEW_TYPES = Collections.unmodifiableSet(nmv);
 	}
 
-	volatile InternalConverter	converter;
+	private final InternalConverter converter;
 	private volatile Object		object;
 	private volatile Class< ? >	sourceClass;
 	private volatile Class< ? >	targetClass;
@@ -106,16 +106,6 @@ class ConvertingImpl extends AbstractSpecifying<Converting>
 	ConvertingImpl(InternalConverter c, Object obj) {
 		converter = c;
 		object = obj;
-	}
-
-	@Override
-	public void setConverter(Converter c) {
-		if (c instanceof InternalConverter)
-			converter = (InternalConverter) c;
-		else
-			throw new IllegalStateException(
-					"Incorrect converter used. Should implement "
-							+ InternalConverter.class + " but was " + c);
 	}
 
 	@SuppressWarnings("unchecked")
@@ -134,6 +124,12 @@ class ConvertingImpl extends AbstractSpecifying<Converting>
 	@SuppressWarnings("unchecked")
 	@Override
 	public Object to(Type type) {
+	    return to(type, converter);
+	}
+
+	@SuppressWarnings("unchecked")
+    @Override
+    public Object to(Type type, InternalConverter c) {
 		// Wildcard types are strange - we immediately resolve them to something
 		// that we can actually use.
 		if (type instanceof WildcardType) {
@@ -141,13 +137,13 @@ class ConvertingImpl extends AbstractSpecifying<Converting>
 			Type[] lowerBounds = wt.getLowerBounds();
 			if(lowerBounds.length != 0) {
 				// This is a ? super X generic, why on earth would you do this?
-				throw new ConversionException("The authors of this implementation have no idea what to do with the type variable " + 
+				throw new ConversionException("The authors of this implementation have no idea what to do with the type variable " +
 				wt.getTypeName() + ". The use of <? super ...> is highly ambiguous for the converter");
 			} else {
 				type = wt.getUpperBounds()[0];
 			}
 		}
-		
+
 		Class< ? > cls = null;
 		if (type instanceof Class) {
 			cls = (Class< ? >) type;
@@ -175,7 +171,7 @@ class ConvertingImpl extends AbstractSpecifying<Converting>
 			return null;
 
 		if (object == null)
-			return handleNull(cls);
+			return handleNull(cls, c);
 
 		targetClass = Util.primitiveToBoxed(cls);
 		if (targetAsClass == null)
@@ -188,32 +184,32 @@ class ConvertingImpl extends AbstractSpecifying<Converting>
 			return object;
 		}
 
-		Object res = trySpecialCases();
+		Object res = trySpecialCases(c);
 		if (res != null)
 			return res;
 
 		if (targetAsClass.isArray()) {
 			return convertToArray(targetAsClass.getComponentType(),
-					targetAsClass.getComponentType());
+					targetAsClass.getComponentType(), c);
 		} else if (type instanceof GenericArrayType) {
 			return convertToArray(targetAsClass,
-					((GenericArrayType) type).getGenericComponentType());
+					((GenericArrayType) type).getGenericComponentType(), c);
 		} else if (Collection.class.isAssignableFrom(targetAsClass)) {
-			return convertToCollectionType();
+			return convertToCollectionType(c);
 		} else if (isMapType(targetAsClass, targetAsJavaBean, targetAsDTO)) {
-			return convertToMapType();
+			return convertToMapType(c);
 		}
 
 		// At this point we know that the target is a 'singular' type: not a
 		// map, collection or array
 		if (Collection.class.isAssignableFrom(sourceClass)) {
-			return convertCollectionToSingleValue(targetAsClass);
+			return convertCollectionToSingleValue(targetAsClass, c);
 		} else if (isMapType(sourceClass, sourceAsJavaBean, sourceAsDTO)) {
-			return convertMapToSingleValue(targetAsClass);
+			return convertMapToSingleValue(targetAsClass, c);
 		} else if (object instanceof Map.Entry) {
-			return convertMapEntryToSingleValue(targetAsClass);
+			return convertMapEntryToSingleValue(targetAsClass, c);
 		} else if ((object = asBoxedArray(object)) instanceof Object[]) {
-			return convertArrayToSingleValue(targetAsClass);
+			return convertArrayToSingleValue(targetAsClass, c);
 		}
 
 		Object res2 = tryStandardMethods();
@@ -221,7 +217,7 @@ class ConvertingImpl extends AbstractSpecifying<Converting>
 			return res2;
 		} else {
 			if (hasDefault)
-				return converter.convert(defaultValue)
+				return c.convert(defaultValue)
 						.sourceAs(sourceAsClass)
 						.targetAs(targetAsClass)
 						.to(targetClass);
@@ -231,33 +227,33 @@ class ConvertingImpl extends AbstractSpecifying<Converting>
 		}
 	}
 
-	private Object convertArrayToSingleValue(Class< ? > cls) {
+	private Object convertArrayToSingleValue(Class< ? > cls, InternalConverter c) {
 		Object[] arr = (Object[]) object;
 		if (arr.length == 0)
 			return null;
 		else
-			return converter.convert(arr[0]).to(cls);
+			return c.convert(arr[0]).to(cls);
 	}
 
-	private Object convertCollectionToSingleValue(Class< ? > cls) {
+	private Object convertCollectionToSingleValue(Class< ? > cls, InternalConverter c) {
 		Collection< ? > coll = (Collection< ? >) object;
 		if (coll.size() == 0)
 			return null;
 		else
-			return converter.convert(coll.iterator().next()).to(cls);
+			return c.convert(coll.iterator().next()).to(cls);
 	}
 
-	private Object convertMapToSingleValue(Class< ? > cls) {
-		Map< ? , ? > m = mapView(object, sourceClass, converter);
+	private Object convertMapToSingleValue(Class< ? > cls, InternalConverter c) {
+		Map< ? , ? > m = mapView(object, sourceClass, c);
 		if (m.size() > 0) {
-			return converter.convert(m.entrySet().iterator().next()).to(cls);
+			return c.convert(m.entrySet().iterator().next()).to(cls);
 		} else {
 			return null;
 		}
 	}
 
 	@SuppressWarnings("rawtypes")
-	private Object convertMapEntryToSingleValue(Class< ? > cls) {
+	private Object convertMapEntryToSingleValue(Class< ? > cls, InternalConverter c) {
 		Map.Entry entry = (Map.Entry) object;
 
 		Class keyCls = entry.getKey() != null ? entry.getKey().getClass()
@@ -266,27 +262,26 @@ class ConvertingImpl extends AbstractSpecifying<Converting>
 				: null;
 
 		if (cls.equals(keyCls)) {
-			return converter.convert(entry.getKey()).to(cls);
+			return c.convert(entry.getKey()).to(cls);
 		} else if (cls.equals(valueCls)) {
-			return converter.convert(entry.getValue()).to(cls);
+			return c.convert(entry.getValue()).to(cls);
 		} else if (cls.isAssignableFrom(keyCls)) {
-			return converter.convert(entry.getKey()).to(cls);
+			return c.convert(entry.getKey()).to(cls);
 		} else if (cls.isAssignableFrom(valueCls)) {
-			return converter.convert(entry.getValue()).to(cls);
+			return c.convert(entry.getValue()).to(cls);
 		} else if (entry.getKey() instanceof String) {
-			return converter.convert(entry.getKey()).to(cls);
+			return c.convert(entry.getKey()).to(cls);
 		} else if (entry.getValue() instanceof String) {
-			return converter.convert(entry.getValue()).to(cls);
+			return c.convert(entry.getValue()).to(cls);
 		}
 
-		return converter
-				.convert(converter.convert(entry.getKey()).to(String.class))
+		return c.convert(c.convert(entry.getKey()).to(String.class))
 				.to(cls);
 	}
 
 	@SuppressWarnings("unchecked")
-	private <T> T convertToArray(Class< ? > componentClz, Type componentType) {
-		Collection< ? > collectionView = collectionView();
+	private <T> T convertToArray(Class< ? > componentClz, Type componentType, InternalConverter c) {
+		Collection< ? > collectionView = collectionView(c);
 		Iterator< ? > itertor = collectionView.iterator();
 		try {
 			Object array = Array.newInstance(componentClz,
@@ -294,7 +289,7 @@ class ConvertingImpl extends AbstractSpecifying<Converting>
 			for (int i = 0; i < collectionView.size()
 					&& itertor.hasNext(); i++) {
 				Object next = itertor.next();
-				Object converted = converter.convert(next)
+				Object converted = c.convert(next)
 						.to(componentType);
 				Array.set(array, i, converted);
 			}
@@ -305,33 +300,33 @@ class ConvertingImpl extends AbstractSpecifying<Converting>
 	}
 
 	@SuppressWarnings("unchecked")
-	private <T> T convertToCollectionType() {
-		Collection< ? > res = convertToCollectionDelegate();
+	private <T> T convertToCollectionType(InternalConverter c) {
+		Collection< ? > res = convertToCollectionDelegate(c);
 		if (res != null)
 			return (T) res;
 
-		return convertToCollection();
+		return convertToCollection(c);
 	}
 
-	private Collection< ? > convertToCollectionDelegate() {
+	private Collection< ? > convertToCollectionDelegate(InternalConverter c) {
 		if (!liveView)
 			return null;
 
 		if (List.class.equals(targetClass)
 				|| Collection.class.equals(targetClass)) {
 			if (sourceClass.isArray()) {
-				return ListDelegate.forArray(object, this);
+				return ListDelegate.forArray(object, this, c);
 			} else if (Collection.class.isAssignableFrom(sourceClass)) {
 				return ListDelegate.forCollection((Collection< ? >) object,
-						this);
+						this, c);
 			}
 		} else if (Set.class.equals(targetClass)) {
 			if (sourceClass.isArray()) {
 				return SetDelegate.forCollection(
-						ListDelegate.forArray(object, this), this);
+						ListDelegate.forArray(object, this, c), this, c);
 			} else if (Collection.class.isAssignableFrom(sourceClass)) {
 				return SetDelegate.forCollection((Collection< ? >) object,
-						this);
+						this, c);
 			}
 		}
 		return null;
@@ -340,8 +335,8 @@ class ConvertingImpl extends AbstractSpecifying<Converting>
 	@SuppressWarnings({
 			"rawtypes", "unchecked"
 	})
-	private <T> T convertToCollection() {
-		Collection< ? > cv = collectionView();
+	private <T> T convertToCollection(InternalConverter c) {
+		Collection< ? > cv = collectionView(c);
 		Class< ? > targetElementType = null;
 		if (typeArguments != null && typeArguments.length > 0
 				&& typeArguments[0] instanceof Class) {
@@ -363,7 +358,7 @@ class ConvertingImpl extends AbstractSpecifying<Converting>
 		for (Object o : cv) {
 			if (targetElementType != null) {
 				try {
-					o = converter.convert(o).to(targetElementType);
+					o = c.convert(o).to(targetElementType);
 				} catch (ConversionException ce) {
 					if (hasDefault) {
 						return (T) defaultValue;
@@ -380,8 +375,8 @@ class ConvertingImpl extends AbstractSpecifying<Converting>
 	@SuppressWarnings({
 			"rawtypes", "unchecked"
 	})
-	private <T> T convertToDTO(Class< ? > sourceCls, Class< ? > targetAsCls) {
-		Map m = mapView(object, sourceCls, converter);
+	private <T> T convertToDTO(Class< ? > sourceCls, Class< ? > targetAsCls, InternalConverter c) {
+		Map m = mapView(object, sourceCls, c);
 
 		try {
 			String prefix = Util.getPrefix(targetAsCls);
@@ -427,12 +422,12 @@ class ConvertingImpl extends AbstractSpecifying<Converting>
 				if (f != null) {
 					Object val = entry.getValue();
 					if (sourceAsDTO && DTOUtil.isDTOType(f.getType(), false))
-						val = converter.convert(val).sourceAsDTO().to(
+						val = c.convert(val).sourceAsDTO().to(
 								f.getType());
 					else {
 						Type genericType = reifyType(f.getGenericType(),
 								targetAsClass, typeArguments);
-						val = converter.convert(val).to(genericType);
+						val = c.convert(val).to(genericType);
 					}
 					f.set(dto, val);
 				}
@@ -550,8 +545,8 @@ class ConvertingImpl extends AbstractSpecifying<Converting>
 	@SuppressWarnings({
 			"rawtypes", "unchecked"
 	})
-	private Map convertToMap() {
-		Map m = mapView(object, sourceClass, converter);
+	private Map convertToMap(InternalConverter c) {
+		Map m = mapView(object, sourceClass, c);
 		if (m == null)
 			return null;
 
@@ -566,15 +561,15 @@ class ConvertingImpl extends AbstractSpecifying<Converting>
 		for (Map.Entry entry : (Set<Entry>) m.entrySet()) {
 			Object key = entry.getKey();
 			Object value = entry.getValue();
-			key = convertMapKey(key);
-			value = convertMapValue(value);
+			key = convertMapKey(key, c);
+			value = convertMapValue(value, c);
 			instance.put(key, value);
 		}
 
 		return instance;
 	}
 
-	Object convertCollectionValue(Object element) {
+	Object convertCollectionValue(Object element, InternalConverter c) {
 		Type type = null;
 		if (typeArguments != null && typeArguments.length > 0) {
 			type = typeArguments[0];
@@ -582,7 +577,7 @@ class ConvertingImpl extends AbstractSpecifying<Converting>
 
 		if (element != null) {
 			if (type != null) {
-				element = converter.convert(element).to(type);
+				element = c.convert(element).to(type);
 			} else {
 				Class< ? > cls = element.getClass();
 				if (isCopyRequiredType(cls)) {
@@ -590,23 +585,23 @@ class ConvertingImpl extends AbstractSpecifying<Converting>
 				}
 				// Either force source as DTO, or lenient DTO type
 				if (sourceAsDTO || DTOUtil.isDTOType(cls, true))
-					element = converter.convert(element).sourceAsDTO().to(cls);
+					element = c.convert(element).sourceAsDTO().to(cls);
 				else
-					element = converter.convert(element).to(cls);
+					element = c.convert(element).to(cls);
 			}
 		}
 		return element;
 	}
 
-	Object convertMapKey(Object key) {
-		return convertMapElement(key, 0);
+	Object convertMapKey(Object key, InternalConverter c) {
+		return convertMapElement(key, 0, c);
 	}
 
-	Object convertMapValue(Object value) {
-		return convertMapElement(value, 1);
+	Object convertMapValue(Object value, InternalConverter c) {
+		return convertMapElement(value, 1, c);
 	}
 
-	private Object convertMapElement(Object element, int typeIdx) {
+	private Object convertMapElement(Object element, int typeIdx, InternalConverter c) {
 		Type type = null;
 		if (typeArguments != null && typeArguments.length > typeIdx) {
 			type = typeArguments[typeIdx];
@@ -614,7 +609,7 @@ class ConvertingImpl extends AbstractSpecifying<Converting>
 
 		if (element != null) {
 			if (type != null) {
-				element = converter.convert(element).to(type);
+				element = c.convert(element).to(type);
 			} else {
 				Class< ? > cls = element.getClass();
 				if (isCopyRequiredType(cls)) {
@@ -622,9 +617,9 @@ class ConvertingImpl extends AbstractSpecifying<Converting>
 				}
 				// Either force source as DTO, or DTO type
 				if (sourceAsDTO || DTOUtil.isDTOType(cls, false))
-					element = converter.convert(element).sourceAsDTO().to(cls);
+					element = c.convert(element).sourceAsDTO().to(cls);
 				else
-					element = converter.convert(element).to(cls);
+					element = c.convert(element).to(cls);
 			}
 		}
 		return element;
@@ -633,15 +628,15 @@ class ConvertingImpl extends AbstractSpecifying<Converting>
 	@SuppressWarnings({
 			"unchecked", "rawtypes"
 	})
-	private Map convertToMapDelegate() {
+	private Map convertToMapDelegate(InternalConverter c) {
 		if (Map.class.isAssignableFrom(sourceClass)) {
-			return MapDelegate.forMap((Map) object, this);
+			return MapDelegate.forMap((Map) object, this, c);
 		} else if (Dictionary.class.isAssignableFrom(sourceClass)) {
-			return MapDelegate.forDictionary((Dictionary) object, this);
+			return MapDelegate.forDictionary((Dictionary) object, this, c);
 		} else if (DTOUtil.isDTOType(sourceClass, true) || sourceAsDTO) {
-			return MapDelegate.forDTO(object, sourceClass, this);
+			return MapDelegate.forDTO(object, sourceClass, this, c);
 		} else if (sourceAsJavaBean) {
-			return MapDelegate.forBean(object, sourceClass, this);
+			return MapDelegate.forBean(object, sourceClass, this, c);
 		} else if (hasGetProperties(sourceClass)) {
 			return null; // Handled in convertToMap()
 		}
@@ -650,34 +645,34 @@ class ConvertingImpl extends AbstractSpecifying<Converting>
 		Set<Class< ? >> interfaces = getInterfaces(sourceClass);
 		if (interfaces.size() > 0) {
 			return MapDelegate.forInterface(object,
-					interfaces.iterator().next(), this);
+					interfaces.iterator().next(), this, c);
 		}
 		return null;
 	}
 
 	@SuppressWarnings("rawtypes")
-	private Object convertToMapType() {
+	private Object convertToMapType(InternalConverter c) {
 		if (!isMapType(sourceClass, sourceAsJavaBean, sourceAsDTO)) {
 			throw new ConversionException(
 					"Cannot convert " + object + " to " + targetAsClass);
 		}
 
 		if (Map.class.equals(targetClass) && liveView) {
-			Map res = convertToMapDelegate();
+			Map res = convertToMapDelegate(c);
 			if (res != null)
 				return res;
 		}
 
 		if (Map.class.isAssignableFrom(targetAsClass))
-			return convertToMap();
+			return convertToMap(c);
 		else if (Dictionary.class.isAssignableFrom(targetAsClass))
-			return convertToDictionary();
+			return convertToDictionary(c);
 		else if (targetAsDTO || DTOUtil.isDTOType(targetAsClass, false))
-			return convertToDTO(sourceClass, targetAsClass);
+			return convertToDTO(sourceClass, targetAsClass, c);
 		else if (targetAsClass.isInterface())
-			return convertToInterface(sourceClass, targetAsClass);
+			return convertToInterface(sourceClass, targetAsClass, c);
 		else if (targetAsJavaBean)
-			return convertToJavaBean(sourceClass, targetAsClass);
+			return convertToJavaBean(sourceClass, targetAsClass, c);
 		throw new ConversionException(
 				"Cannot convert " + object + " to " + targetAsClass);
 	}
@@ -685,9 +680,9 @@ class ConvertingImpl extends AbstractSpecifying<Converting>
 	@SuppressWarnings({
 			"unchecked", "rawtypes"
 	})
-	private Object convertToDictionary() {
+	private Object convertToDictionary(InternalConverter c) {
 		return new Hashtable(
-				(Map) converter.convert(object).to(new ParameterizedType() {
+				(Map) c.convert(object).to(new ParameterizedType() {
 					@Override
 					public Type getRawType() {
 						return HashMap.class;
@@ -707,11 +702,11 @@ class ConvertingImpl extends AbstractSpecifying<Converting>
 	}
 
 	private Object convertToJavaBean(Class< ? > sourceCls,
-			Class< ? > targetCls) {
+			Class< ? > targetCls, InternalConverter c) {
 		String prefix = Util.getPrefix(targetCls);
 
 		@SuppressWarnings("rawtypes")
-		Map m = mapView(object, sourceCls, converter);
+		Map m = mapView(object, sourceCls, c);
 		try {
 			Object res = targetClass.newInstance();
 			for (Method setter : getSetters(targetCls)) {
@@ -725,7 +720,7 @@ class ConvertingImpl extends AbstractSpecifying<Converting>
 				Class< ? > setterType = setter.getParameterTypes()[0];
 				String key = propName.toString();
 				Object val = m.get(Util.unMangleName(prefix, key));
-				setter.invoke(res, converter.convert(val).to(setterType));
+				setter.invoke(res, c.convert(val).to(setterType));
 			}
 			return res;
 		} catch (Exception e) {
@@ -738,8 +733,8 @@ class ConvertingImpl extends AbstractSpecifying<Converting>
 
 	@SuppressWarnings("rawtypes")
 	private Object convertToInterface(Class< ? > sourceCls,
-			final Class< ? > targetCls) {
-		InternalConverting ic = converter.convert(object);
+			final Class< ? > targetCls, InternalConverter c) {
+		InternalConverting ic = c.convert(object);
 		ic.sourceAs(sourceAsClass).view();
 		if (sourceAsDTO)
 			ic.sourceAsDTO();
@@ -747,10 +742,10 @@ class ConvertingImpl extends AbstractSpecifying<Converting>
 			ic.sourceAsBean();
 		final Map m = ic.to(Map.class);
 
-		return createProxy(targetCls, m);
+		return createProxy(targetCls, m, c);
 	}
 
-	private Object createProxy(final Class< ? > cls, final Map< ? , ? > data) {
+	private Object createProxy(final Class< ? > cls, final Map< ? , ? > data, final InternalConverter c) {
 		return Proxy.newProxyInstance(cls.getClassLoader(), new Class[] {
 				cls
 		}, new InvocationHandler() {
@@ -817,28 +812,28 @@ class ConvertingImpl extends AbstractSpecifying<Converting>
 				@SuppressWarnings("synthetic-access")
 				Type genericType = reifyType(method.getGenericReturnType(),
 						targetAsClass, typeArguments);
-				return converter.convert(val).to(genericType);
+				return c.convert(val).to(genericType);
 			}
 		});
 	}
 
 	@SuppressWarnings("boxing")
-	private Object handleNull(Class< ? > cls) {
+	private Object handleNull(Class< ? > cls, InternalConverter c) {
 		if (hasDefault)
-			return converter.convert(defaultValue).to(cls);
+			return c.convert(defaultValue).to(cls);
 
 		Class< ? > boxed = Util.primitiveToBoxed(cls);
 		if (boxed.equals(cls)) {
 			if (cls.isArray()) {
 				return new Object[] {};
 			} else if (Collection.class.isAssignableFrom(cls)) {
-				return converter.convert(Collections.emptyList()).to(cls);
+				return c.convert(Collections.emptyList()).to(cls);
 			}
 			// This is not a primitive, just return null
 			return null;
 		}
 
-		return converter.convert(0).to(cls);
+		return c.convert(0).to(cls);
 	}
 
 	private static boolean isMapType(Class< ? > cls, boolean asJavaBean,
@@ -860,7 +855,7 @@ class ConvertingImpl extends AbstractSpecifying<Converting>
 	}
 
 	@SuppressWarnings("boxing")
-	private Object trySpecialCases() {
+	private Object trySpecialCases(InternalConverter c) {
 		if (Boolean.class.equals(targetAsClass)) {
 			if (object instanceof Collection
 					&& ((Collection< ? >) object).size() == 0) {
@@ -916,8 +911,7 @@ class ConvertingImpl extends AbstractSpecifying<Converting>
 				&& isMarkerAnnotation(sourceClass)) {
 			// Special treatment for marker annotations
 			String key = Util.getMarkerAnnotationKey(sourceClass, object);
-			return converter
-					.convert(Collections.singletonMap(key, Boolean.TRUE))
+			return c.convert(Collections.singletonMap(key, Boolean.TRUE))
 					.targetAs(targetAsClass)
 					.to(targetType);
 		} else if (Annotation.class.isAssignableFrom(targetAsClass)
@@ -930,7 +924,7 @@ class ConvertingImpl extends AbstractSpecifying<Converting>
 			if (Boolean.TRUE.equals(
 					representation.get(Util.toSingleElementAnnotationKey(
 							targetAsClass.getSimpleName())))) {
-				return createProxy(targetClass, Collections.emptyMap());
+				return createProxy(targetClass, Collections.emptyMap(), c);
 			} else {
 				throw new ConversionException("Cannot convert " + object
 						+ " to marker annotation " + targetAsClass);
@@ -970,24 +964,24 @@ class ConvertingImpl extends AbstractSpecifying<Converting>
 		return null;
 	}
 
-	private Collection< ? > collectionView() {
+	private Collection< ? > collectionView(InternalConverter conv) {
 		if (object == null)
 			return null;
 
-		Collection< ? > c = asCollection();
+		Collection< ? > c = asCollection(conv);
 		if (c == null)
 			return Collections.singleton(object);
 		else
 			return c;
 	}
 
-	private Collection< ? > asCollection() {
+	private Collection< ? > asCollection(InternalConverter c) {
 		if (object instanceof Collection)
 			return (Collection< ? >) object;
 		else if ((object = asBoxedArray(object)) instanceof Object[])
 			return Arrays.asList((Object[]) object);
 		else if (isMapType(sourceClass, sourceAsJavaBean, sourceAsDTO))
-			return mapView(object, sourceClass, converter).entrySet();
+			return mapView(object, sourceClass, c).entrySet();
 		else
 			return null;
 	}
@@ -1214,7 +1208,7 @@ class ConvertingImpl extends AbstractSpecifying<Converting>
 			return (Map< ? , ? >) obj;
 		else if (Dictionary.class.isAssignableFrom(sourceCls))
 			return MapDelegate.forDictionary((Dictionary< ? , ? >) object,
-					this);
+					this, ic);
 		else if (DTOUtil.isDTOType(sourceCls, true) || sourceAsDTO)
 			return createMapFromDTO(obj, ic);
 		else if (sourceAsJavaBean) {
@@ -1222,7 +1216,7 @@ class ConvertingImpl extends AbstractSpecifying<Converting>
 			if (m.size() > 0)
 				return m;
 		} else if (hasGetProperties(sourceCls)) {
-			return getPropertiesDelegate(obj, sourceCls);
+			return getPropertiesDelegate(obj, sourceCls, ic);
 		}
 		return createMapFromInterface(obj, sourceClass);
 	}
@@ -1237,12 +1231,12 @@ class ConvertingImpl extends AbstractSpecifying<Converting>
 		}
 	}
 
-	private Map< ? , ? > getPropertiesDelegate(Object obj, Class< ? > cls) {
+	private Map< ? , ? > getPropertiesDelegate(Object obj, Class< ? > cls, InternalConverter c) {
 		try {
 			// Section 707.4.4.4.8 says getProperties must be public
 			Method m = cls.getMethod("getProperties");
 
-			return converter.convert(m.invoke(obj)).to(Map.class);
+			return c.convert(m.invoke(obj)).to(Map.class);
 		} catch (Exception e) {
 			return Collections.emptyMap();
 		}

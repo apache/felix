@@ -33,39 +33,41 @@ class MapDelegate<K, V> implements Map<K,V> {
 	// once, which is harmless.
 	private volatile boolean		cloned	= false;
 	private final ConvertingImpl	convertingImpl;
+	private final InternalConverter converter;
 	Map<K,V>						delegate;
 
-	private MapDelegate(ConvertingImpl converting, Map<K,V> del) {
+	private MapDelegate(ConvertingImpl converting, InternalConverter c, Map<K,V> del) {
 		convertingImpl = converting;
+		converter = c;
 		delegate = del;
 	}
 
 	static MapDelegate<String,Object> forBean(Object b, Class< ? > beanClass,
-			ConvertingImpl converting) {
-		return new MapDelegate<>(converting,
+			ConvertingImpl converting, InternalConverter c) {
+		return new MapDelegate<>(converting, c,
 				new DynamicBeanFacade(b, beanClass, converting));
 	}
 
-	static <K, V> Map<K,V> forMap(Map<K,V> m, ConvertingImpl converting) {
-		return new MapDelegate<>(converting,
+	static <K, V> Map<K,V> forMap(Map<K,V> m, ConvertingImpl converting, InternalConverter c) {
+		return new MapDelegate<>(converting, c,
 				new DynamicMapFacade<>(m, converting));
 	}
 
 	static <K, V> MapDelegate<K,V> forDictionary(Dictionary<K,V> d,
-			ConvertingImpl converting) {
-		return new MapDelegate<>(converting,
+			ConvertingImpl converting, InternalConverter c) {
+		return new MapDelegate<>(converting, c,
 				new DynamicDictionaryFacade<>(d, converting));
 	}
 
 	static MapDelegate<String,Object> forDTO(Object obj, Class< ? > dtoClass,
-			ConvertingImpl converting) {
-		return new MapDelegate<>(converting,
+			ConvertingImpl converting, InternalConverter c) {
+		return new MapDelegate<>(converting, c,
 				new DynamicDTOFacade(obj, dtoClass, converting));
 	}
 
 	static MapDelegate<String,Object> forInterface(Object obj, Class< ? > intf,
-			ConvertingImpl converting) {
-		return new MapDelegate<>(converting,
+			ConvertingImpl converting, InternalConverter c) {
+		return new MapDelegate<>(converting, c,
 				new DynamicInterfaceFacade(obj, intf, converting));
 	}
 
@@ -117,11 +119,11 @@ class MapDelegate<K, V> implements Map<K,V> {
 	}
 
 	private Object getConvertedKey(Object key) {
-		return convertingImpl.convertMapKey(key);
+		return convertingImpl.convertMapKey(key, converter);
 	}
 
 	private Object getConvertedValue(Object val) {
-		return convertingImpl.convertMapValue(val);
+		return convertingImpl.convertMapValue(val, converter);
 	}
 
 	private Object findConvertedKey(Set< ? > keySet, Object key) {
@@ -131,7 +133,7 @@ class MapDelegate<K, V> implements Map<K,V> {
 		}
 
 		for (Object k : keySet) {
-			Object c = convertingImpl.converter.convert(k).to(key.getClass());
+			Object c = converter.convert(k).to(key.getClass());
 			if (c != null && c.equals(key))
 				return k;
 		}

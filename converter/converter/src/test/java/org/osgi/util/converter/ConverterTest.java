@@ -18,6 +18,7 @@ package org.osgi.util.converter;
 
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.osgi.framework.Version;
 import org.osgi.util.converter.MyDTO.Count;
@@ -474,6 +475,45 @@ public class ConverterTest {
 
         MyIntf i = c.convert(m).to(MyIntf.class);
         assertEquals(123, i.value());
+    }
+
+    @Test @Ignore("Not yet implemented")
+    public void testMultipleCustomErrorHandling() {
+        ConverterBuilder cb1 = converter.newConverterBuilder();
+        ConverterFunction func1 = new ConverterFunction() {
+            @Override
+            public Object apply(Object obj, Type targetType) {
+                return -1;
+            }
+        };
+        cb1.errorHandler(func1);
+        Converter c1 = cb1.build();
+
+        ConverterBuilder cb2 = c1.newConverterBuilder();
+        ConverterFunction func2 = new ConverterFunction() {
+            @Override
+            public Object apply(Object obj, Type targetType) {
+                if ("hello".equals(obj)) {
+                    return 0;
+                }
+                return ConverterFunction.CANNOT_HANDLE;
+            }
+        };
+        cb2.errorHandler(func2);
+        Converter adapted = cb2.build();
+
+        assertEquals(Integer.valueOf(0), adapted.convert("hello").to(Integer.class));
+        assertEquals(Integer.valueOf(-1), adapted.convert("bye").to(Integer.class));
+    }
+
+    static class MyConverterFunction implements ConverterFunction {
+        @Override
+        public Object apply(Object obj, Type targetType) throws Exception {
+            if ("hello".equals(obj)) {
+                return 0;
+            }
+            return ConverterFunction.CANNOT_HANDLE;
+        }
     }
 
     @Test

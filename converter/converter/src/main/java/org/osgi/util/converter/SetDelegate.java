@@ -32,19 +32,21 @@ class SetDelegate<T> implements Set<T> {
 	private volatile Set<T>			delegate;
 	private volatile boolean		cloned;
 	private final ConvertingImpl	convertingImpl;
+	private final InternalConverter converter;
 
 	static <T> Set<T> forCollection(Collection<T> collection,
-			ConvertingImpl converting) {
+			ConvertingImpl converting, InternalConverter c) {
 		if (collection instanceof Set) {
-			return new SetDelegate<T>((Set<T>) collection, converting);
+			return new SetDelegate<T>((Set<T>) collection, converting, c);
 		}
 		return new SetDelegate<T>(new CollectionSetDelegate<>(collection),
-				converting);
+				converting, c);
 	}
 
-	SetDelegate(Set<T> collection, ConvertingImpl converting) {
+	SetDelegate(Set<T> collection, ConvertingImpl converting, InternalConverter c) {
 		delegate = collection;
 		convertingImpl = converting;
+		converter = c;
 	}
 
 	// Whenever a modification is made, the delegate is cloned and detached.
@@ -196,7 +198,7 @@ class SetDelegate<T> implements Set<T> {
 		@Override
 		public T next() {
 			Object obj = delegateIterator.next();
-			return (T) convertingImpl.convertCollectionValue(obj);
+			return (T) convertingImpl.convertCollectionValue(obj, converter);
 		}
 
 		@Override
