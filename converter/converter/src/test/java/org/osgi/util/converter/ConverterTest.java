@@ -18,7 +18,6 @@ package org.osgi.util.converter;
 
 import org.junit.After;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.osgi.framework.Version;
 import org.osgi.util.converter.MyDTO.Count;
@@ -477,7 +476,7 @@ public class ConverterTest {
         assertEquals(123, i.value());
     }
 
-    @Test @Ignore("Not yet implemented")
+    @Test
     public void testMultipleCustomErrorHandling() {
         ConverterBuilder cb1 = converter.newConverterBuilder();
         ConverterFunction func1 = new ConverterFunction() {
