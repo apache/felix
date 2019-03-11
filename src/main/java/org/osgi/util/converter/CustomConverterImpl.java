@@ -50,8 +50,7 @@ class CustomConverterImpl implements InternalConverter {
 	@Override
 	public InternalConverting convert(Object obj) {
 		InternalConverting converting = delegate.convert(obj);
-		converting.setConverter(this);
-		return new ConvertingWrapper(obj, converting);
+		return new ConvertingWrapper(obj, converting, this);
 	}
 
 	@Override
@@ -65,12 +64,14 @@ class CustomConverterImpl implements InternalConverter {
 	}
 
 	private class ConvertingWrapper implements InternalConverting {
+	    private final InternalConverter     converter;
 		private final InternalConverting	del;
 		private final Object				object;
 		private volatile Object				defaultValue;
 		private volatile boolean			hasDefault;
 
-		ConvertingWrapper(Object obj, InternalConverting c) {
+		ConvertingWrapper(Object obj, InternalConverting c, InternalConverter conv) {
+		    converter = conv;
 			object = obj;
 			del = c;
 		}
@@ -93,11 +94,6 @@ class CustomConverterImpl implements InternalConverter {
 		public Converting keysIgnoreCase() {
 			del.keysIgnoreCase();
 			return this;
-		}
-
-		@Override
-		public void setConverter(Converter c) {
-			del.setConverter(c);
 		}
 
 		@Override
@@ -152,6 +148,12 @@ class CustomConverterImpl implements InternalConverter {
 		@SuppressWarnings("unchecked")
 		@Override
 		public Object to(Type type) {
+		    return to(type, converter);
+		}
+
+        @SuppressWarnings("unchecked")
+        @Override
+        public Object to(Type type, InternalConverter c) {
 			List<ConverterFunction> tr = typeRules.get(Util.baseType(type));
 			if (tr == null)
 				tr = Collections.emptyList();
@@ -178,7 +180,7 @@ class CustomConverterImpl implements InternalConverter {
 					}
 				}
 
-				Object result = del.to(type);
+				Object result = del.to(type, c);
 				if (result != null && Proxy.isProxyClass(result.getClass()) && errorHandlers.size() > 0) {
 				    return wrapErrorHandling(result);
 				} else {
