@@ -18,7 +18,7 @@
  */
 package org.apache.felix.framework;
 
-import java.lang.reflect.Method;
+import java.util.logging.Level;
 
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleException;
@@ -37,36 +37,19 @@ import org.osgi.framework.ServiceReference;
  * 2 = warning, 3 = information, and 4 = debug). The default value is 1.
  * </p>
 **/
+@SuppressWarnings("rawtypes")
 public class Logger extends org.apache.felix.resolver.Logger
 {
-    private Object[] m_logger;
+    private java.util.logging.Logger juLogger;
 
-    public Logger()
-    {
-        super(LOG_ERROR);
+    public Logger() {
+        this(LoggerType.stdout);
     }
 
-    public void setLogger(Object logger)
+    public Logger(LoggerType loggerType)
     {
-        if (logger == null)
-        {
-            m_logger = null;
-        }
-        else
-        {
-            try
-            {
-                Method mth = logger.getClass().getMethod("log",
-                        Integer.TYPE, String.class, Throwable.class);
-                mth.setAccessible(true);
-                m_logger = new Object[] { logger, mth };
-            }
-            catch (NoSuchMethodException ex)
-            {
-                System.err.println("Logger: " + ex);
-                m_logger = null;
-            }
-        }
+        super(LOG_ERROR);
+        juLogger = loggerType == LoggerType.jul ? java.util.logging.Logger.getLogger("org.apache.felix") : null;
     }
 
     public final void log(ServiceReference sr, int level, String msg)
@@ -126,13 +109,29 @@ public class Logger extends org.apache.felix.resolver.Logger
 
     protected void doLog(int level, String msg, Throwable throwable)
     {
-        if (m_logger != null)
+        if (juLogger != null)
         {
-            doLogReflectively(level, msg, throwable);
+            juLogger.log(getLevel(level), msg, throwable);
         }
         else
         {
             doLogOut(level, msg, throwable);
+        }
+    }
+
+    private Level getLevel(int level)
+    {
+        switch (level) {
+            case LOG_ERROR:
+                return Level.SEVERE;
+            case LOG_WARNING:
+                return Level.WARNING;
+            case LOG_INFO:
+                return Level.INFO;
+            case LOG_DEBUG:
+                return Level.FINE;
+            default:
+                return Level.FINEST;
         }
     }
 
@@ -163,23 +162,6 @@ public class Logger extends org.apache.felix.resolver.Logger
                 break;
             default:
                 System.out.println("UNKNOWN[" + level + "]: " + s);
-        }
-    }
-
-    protected void doLogReflectively(int level, String msg, Throwable throwable)
-    {
-        try
-        {
-            ((Method) m_logger[1]).invoke(
-                    m_logger[0],
-                    level,
-                    msg,
-                    throwable
-            );
-        }
-        catch (Exception ex)
-        {
-            System.err.println("Logger: " + ex);
         }
     }
 }

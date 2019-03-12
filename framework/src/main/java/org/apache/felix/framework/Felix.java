@@ -382,7 +382,9 @@ public class Felix extends BundleImpl implements Framework
         }
         else
         {
-            m_logger = new Logger();
+            String type = (String) m_configMutableMap.get(FelixConstants.LOG_TYPE_PROP);
+            LoggerType loggerType = type == null ? LoggerType.stdout : LoggerType.valueOf(type);
+            m_logger = new Logger(loggerType);
         }
         try
         {

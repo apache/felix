@@ -45,6 +45,7 @@ public interface FelixConstants extends org.osgi.framework.Constants
     String FRAMEWORK_BUNDLECACHE_IMPL = "felix.bundlecache.impl";
     String LOG_LEVEL_PROP = "felix.log.level";
     String LOG_LOGGER_PROP = "felix.log.logger";
+    String LOG_TYPE_PROP = "felix.log.type"; // "jul" for java.util.logging defaults to stdout logging
     String SYSTEMBUNDLE_ACTIVATORS_PROP = "felix.systembundle.activators";
     String BUNDLE_STARTLEVEL_PROP = "felix.startlevel.bundle";
     String SERVICE_URLHANDLERS_PROP = "felix.service.urlhandlers";
