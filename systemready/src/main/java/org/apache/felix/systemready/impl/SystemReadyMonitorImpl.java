@@ -111,17 +111,21 @@ public class SystemReadyMonitorImpl implements SystemReadyMonitor {
     }
 
     private void check() {
-        CheckStatus.State prevState = getStatus(StateType.READY).getState();
-        List<SystemReadyCheck> currentChecks = new ArrayList<>(checks);
-        List<String> checkNames = currentChecks.stream().map(check -> check.getName()).collect(Collectors.toList());
-        log.debug("Running system checks {}", checkNames);
-        List<CheckStatus> statuses = evaluateAllChecks(currentChecks);
-		this.curStates.set(statuses);
-		State currState = getStatus(StateType.READY).getState();
-        if (currState != prevState) {
-            manageMarkerService(currState);
+        try {
+            CheckStatus.State prevState = getStatus(StateType.READY).getState();
+            List<SystemReadyCheck> currentChecks = new ArrayList<>(checks);
+            List<String> checkNames = currentChecks.stream().map(check -> check.getName()).collect(Collectors.toList());
+            log.debug("Running system checks {}", checkNames);
+            List<CheckStatus> statuses = evaluateAllChecks(currentChecks);
+            this.curStates.set(statuses);
+            State currState = getStatus(StateType.READY).getState();
+            if (currState != prevState) {
+                manageMarkerService(currState);
+            }
+            log.debug("Checks finished");
+        } catch (Exception e) {
+            log.warn("Exception when running checks", e);
         }
-        log.debug("Checks finished");
     }
 
     private List<CheckStatus> evaluateAllChecks(List<SystemReadyCheck> currentChecks) {
@@ -136,7 +140,7 @@ public class SystemReadyMonitorImpl implements SystemReadyMonitor {
             SystemReady readyService = new SystemReady() {
             };
             sreg = context.registerService(SystemReady.class, readyService, null);
-        } else {
+        } else if (sreg != null) {
             sreg.unregister();
         }
     }
