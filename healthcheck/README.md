@@ -1,13 +1,12 @@
 
 # Felix Health Checks
 
-Based on simple `HealthCheck` OSGi services, the Felix Health Check Tools ("hc" in short form) are used to 
-check the health of live Felix systems, based on inputs like  OSGi framework status, JMX MBean attribute values, or any context information retrieved via any API.
+Based on simple `HealthCheck` OSGi services, the Felix Health Check Tools ("hc" in short form) are used to check the health of live Felix systems, based on inputs like  OSGi framework status, JMX MBean attribute values, or any context information retrieved via any API.
 
 Health checks are easily extensible either by configuring the supplied default `HealthCheck` services, or 
 by implementing your own `HealthCheck` services to cater for project specific requirements.
 
-However for simple setups, the out of the box health checks are often sufficient. [Executing Health Checks](#executing-health-checks)
+However for simple setups, the out of the box health checks (bundle general checks) are often sufficient. [Executing Health Checks](#executing-health-checks)
 is a good starting point to run existing checks and to get familiar with how health checks work.
 
 See also:
@@ -116,13 +115,16 @@ All service properties are optional.
 
 The following checks are contained in bundle `org.apache.felix.healthcheck.generalchecks` and can be activated by simple configuration:
 
-Default Name | PID | Factory | Description  
+Check | PID | Factory | Description  
 --- | --- | --- | ---
+Framework Startlevel | org.apache.felix.hc.generalchecks.FrameworkStartCheck | no | Checks the OSGi framework startlevel - `targetStartLevel` allows to configure a target start level, `targetStartLevel.propName` can be used to read it from the framework/system properties. 
+Services Ready | org.apache.felix.hc.generalchecks.ServicesCheck | yes | Checks for the existance of the given services. `services.list` can contain simple service names or filter expressions 
+Components Ready | org.apache.felix.hc.generalchecks.DsComponentsCheck | yes | Checks for the existance of the given components. Use `components.list` to list required active components (use component names) 
+Bundles Started | org.apache.felix.hc.generalchecks.BundlesStartedCheck | yes | Checks for started bundles - `includesRegex` and `excludesRegex` control what bundles are checked. 
 Disk Space | org.apache.felix.hc.generalchecks.DiskSpaceCheck | yes | Checks for disk space usage at the given paths `diskPaths` and checks them against thresholds `diskUsedThresholdWarn` (default 90%) and diskUsedThresholdCritical (default 97%)
 Memory | org.apache.felix.hc.generalchecks.MemoryCheck | no | Checks for Memory usage - `heapUsedPercentageThresholdWarn` (default 90%) and `heapUsedPercentageThresholdCritical` (default 99%) can be set to control what memory usage produces status `WARN` and `CRITICAL`
 CPU | org.apache.felix.hc.generalchecks.CpuCheck | no | Checks for CPU usage - `cpuPercentageThresholdWarn` (default 95%) can be set to control what CPU usage produces status `WARN` (check never results in `CRITICAL`)
 Thread Usage | org.apache.felix.hc.generalchecks.ThreadUsageCheck | no | Checks via `ThreadMXBean.findDeadlockedThreads()` for deadlocks and analyses the CPU usage of each thread via a configurable time period (`samplePeriodInMs` defaults to 200ms). Uses `cpuPercentageThresholdWarn` (default 95%) to `WARN` about high thread utilisation.   
-Bundles Started | org.apache.felix.hc.generalchecks.BundlesStartedCheck | yes | Checks for started bundles - `includesRegex` and `excludesRegex` control what bundles are checked. 
 JMX Attribute Check | org.apache.felix.hc.generalchecks.JmxAttributeCheck | yes | Allows to check an arbitrary JMX attribute (using the configured mbean `mbean.name`'s attribute `attribute.name`) against a given constraint `attribute.value.constraint`. Can check multiple attributes by providing additional config properties with numbers:  `mbean2.name`' `attribute2.name` and `attribute2.value.constraint`.
 HttpRequestsCheck | org.apache.felix.hc.generalchecks.HttpRequestsCheck | yes | Allows to check a list of URLs against response code, response headers, timing, response content (plain content via RegEx or JSON via path expression).
 
