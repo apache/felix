@@ -71,7 +71,7 @@ public class HealthCheckFuture extends FutureTask<ExecutionResult> {
                             resultFromHealthCheck = executeLegacyHc(healthCheck);
                         }
                     } else {
-                        throw new IllegalStateException("Service cannot be retrieved via - activate() probably failed");
+                        throw new IllegalStateException("Service cannot be retrieved - probably activate() failed or there are unsatisfied references");
                     }
 
                 } catch (final Exception e) {
