@@ -11,3 +11,5 @@ Bundle-Vendor: The Apache Software Foundation
 Conditional-Package: org.apache.commons.cli.*,org.apache.felix.utils.*
 
 Export-Package: org.apache.felix.hc.generalchecks.util
+
+Import-Package: org.apache.felix.rootcause*;resolution:="optional", *
