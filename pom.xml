@@ -30,9 +30,9 @@
     </properties>
 
     <scm>
-        <connection>scm:svn:http://svn.apache.org/repos/asf/felix/trunk/root-cause</connection>
-        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/felix/trunk/root-cause</developerConnection>
-        <url>http://svn.apache.org/viewvc/felix/trunk/root-cause</url>
+        <connection>scm:svn:http://svn.apache.org/repos/asf/felix/trunk/rootcause</connection>
+        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/felix/trunk/rootcause</developerConnection>
+        <url>http://svn.apache.org/viewvc/felix/trunk/rootcause</url>
     </scm>
 
     <build>
