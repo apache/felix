@@ -20,7 +20,7 @@
     </parent>
 
     <artifactId>org.apache.felix.rootcause</artifactId>
-    <version>0.1.0</version>
+    <version>0.1.1-SNAPSHOT</version>
     <name>Apache Felix - Root Cause Analysis</name>
 
     <properties>
@@ -30,9 +30,9 @@
     </properties>
 
     <scm>
-        <connection>scm:svn:http://svn.apache.org/repos/asf/felix/releases/org.apache.felix.rootcause-0.1.0</connection>
-        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/felix/releases/org.apache.felix.rootcause-0.1.0</developerConnection>
-        <url>http://svn.apache.org/viewvc/felix/releases/org.apache.felix.rootcause-0.1.0</url>
+        <connection>scm:svn:http://svn.apache.org/repos/asf/felix/trunk/rootcause</connection>
+        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/felix/trunk/rootcause</developerConnection>
+        <url>http://svn.apache.org/viewvc/felix/trunk/rootcause</url>
     </scm>
 
     <build>
