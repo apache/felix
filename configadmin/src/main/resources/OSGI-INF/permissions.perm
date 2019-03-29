@@ -54,3 +54,6 @@
 (org.osgi.framework.PackagePermission "org.osgi.service.coordinator" "import")
 (org.osgi.framework.ServicePermission "org.osgi.service.coordinator.*" "get")
 (org.osgi.service.coordinator.CoordinationPermission "*" "initiate,participate")
+
+# Capability Support
+(org.osgi.framework.CapabilityPermission "osgi.implementation" "provide")
