@@ -25,9 +25,11 @@ import org.osgi.service.metatype.annotations.ObjectClassDefinition;
 
     long TIMEOUT_DEFAULT_MS = 2000L;
 
-    long LONGRUNNING_FUTURE_THRESHOLD_CRITICAL_DEFAULT_MS = 1000L * 60 * 5;
+    long LONGRUNNING_FUTURE_THRESHOLD_CRITICAL_DEFAULT_MS = 1000L * 60 * 5; // 5 min default
 
     long RESULT_CACHE_TTL_DEFAULT_MS = 1000L * 2;
+
+    long TEMPORARILY_UNAVAILABLE_GRACE_PERIOD_DEFAULT_MS = 1000L * 60 * 10; // 10 min default
 
     @AttributeDefinition(name = "Timeout", description = "Timeout in ms until a check is marked as timed out")
     long timeoutInMs() default TIMEOUT_DEFAULT_MS;
@@ -37,6 +39,9 @@ import org.osgi.service.metatype.annotations.ObjectClassDefinition;
 
     @AttributeDefinition(name = "Results Cache TTL in Ms", description = "Result Cache time to live - results will be cached for the given time")
     long resultCacheTtlInMs() default RESULT_CACHE_TTL_DEFAULT_MS;
+
+    @AttributeDefinition(name = "TEMPORARILY_UNAVAILABLE Grace Period", description = "Grace period in ms until a continuously reported TEMPORARILY_UNAVAILABLE check becomes CRITICAL")
+    long temporarilyAvailableGracePeriodInMs() default TEMPORARILY_UNAVAILABLE_GRACE_PERIOD_DEFAULT_MS;
 
     @AttributeDefinition(name = "Default Tags", description = "Default tags to be executed if no tags are explicitly supplied")
     String[] defaultTags() default {"default"};
