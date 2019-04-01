@@ -88,10 +88,11 @@ Status | System is functional | Meaning | Actions possible for machine clients |
 --- | --- | --- | --- | ---  
 OK | yes | Everything is ok. | <ul><li>If system is not actively used yet, a load balancer might decide to take the system to production after receiving this status for the first time.</li><li>Otherwise no action needed</li></ul> | Response logs might still provide information to a human on why the system currently is healthy. E.g. it might show 30% disk used which indicates that no action will be required for a long time  
 WARN | yes | **Tendency to CRITICAL** <br>System is fully functional but actions are needed to avoid a CRITICAL status in the future | <ul><li>Certain actions can be configured for known, actionable warnings, e.g. if disk space is low, it could be dynamically extended using infrastructure APIs if on virtual infrastructure)</li><li>Pass on information to monitoring system to be available to humans (in other aggregator UIs)</li></ul> | Any manual steps that a human can perform based on their knowledge to avoid the system to get to CRITICAL state
-TEMPORARILY_UNAVAILABLE | no | **Tendency to OK** <br>System is not functional at the moment but is expected to become OK (or at least WARN) without action. An health check using this status is expected to turn CRITICAL after a certain period returning TEMPORARILY_UNAVAILABLE | <ul><li>Take out system from load balancing</li><li>Wait until TEMPORARILY_UNAVAILABLE status turns into either OK or CRITICAL</li></ul> | Wait and monitor result logs of health check returning TEMPORARILY_UNAVAILABLE
+TEMPORARILY_UNAVAILABLE *) | no | **Tendency to OK** <br>System is not functional at the moment but is expected to become OK (or at least WARN) without action. An health check using this status is expected to turn CRITICAL after a certain period returning TEMPORARILY_UNAVAILABLE | <ul><li>Take out system from load balancing</li><li>Wait until TEMPORARILY_UNAVAILABLE status turns into either OK or CRITICAL</li></ul> | Wait and monitor result logs of health check returning TEMPORARILY_UNAVAILABLE
 CRITICAL | no | System is not functional and must not be used | <ul><li>Take out system from load balancing</li><li>Decommission system entirely and re-provision from scratch</li></ul>  | Any manual steps that a human can perform based on their knowledge to bring the system back to state OK
 HEALTH\_CHECK\_ERROR | no | **Actual status unknown** <br>There was an error in correctly calculating one of the status values above. Like CRITICAL but with the hint that the health check probe itself might be the problem (and the system could well be in state OK) | <ul><li>Treat exactly the same as CRITICAL</li></ul>  | Fix health check implementation or configuration to ensure a correct status can be calculated
 
+*) The health check executor automatically turns checks that coninuosly return `TEMPORARILY_UNAVAILABLE` into `CRITICAL` after a certain grace period, see [Configuring the Health Check Executor](#configuring-the-health-check-executor)
 
 ### Configuring Health Checks
 
@@ -106,10 +107,37 @@ hc.tags     | String[] | List of tags: Both Felix Console Plugin and Health Chec
 hc.mbean.name | String | Makes the HC result available via given MBean name. If not provided no MBean is created for that `HealthCheck`
 hc.async.cronExpression | String | Used to schedule the execution of a `HealthCheck` at regular intervals, using a cron expression as supported by the [Quartz Cron Trigger](http://www.quartz-scheduler.org/api/previous_versions/1.8.5/org/quartz/CronTrigger.html) module. 
 hc.async.intervalInSec | Long | Used to schedule the execution of a `HealthCheck` at regular intervals, specifying a period in seconds
-hc.resultCacheTtlInMs | Long | Overrides the global default TTL as configured in health check executor for health check responses (since v1.2.6 of core)
+hc.resultCacheTtlInMs | Long | Overrides the global default TTL as configured in health check executor for health check responses
 hc.keepNonOkResultsStickyForSec | Long | If given, non-ok results from past executions will be taken into account as well for the given seconds (use Long.MAX_VALUE for indefinitely). Useful for unhealthy system states that disappear but might leave the system at an inconsistent state (e.g. an event queue overflow where somebody needs to intervene manually) or for checks that should only go back to OK with a delay (can be useful for load balancers).
 
 All service properties are optional.
+
+### Annotations to simplify configuration of custom Health Checks
+
+To configure the defaults for the service properties [above](#configuring-health-checks), the following annotations can be used:
+
+    @Component // SCR component (standard OSGi)
+
+    // optional, if the check is to be made configurable (standard OSGi)
+    @Designate(ocd = MyCustomCheckConfig.class, factory = true)  
+    
+    // set name and tags
+    @HealthCheckService(name = "Custom Check Name", tags= {"tag1", "tag2"})
+    
+    // make the check asynchronous, either cronExpression or intervalInSec has to be provided
+    @Async(cronExpression="0 0 12 1 * ?" /*, intervalInSec = 60 */)
+    
+    // to set `hc.async.cronExpression`:
+    @ResultTTL(resultCacheTtlInMs = 10000)
+    
+    // to set `hc.mbean.name`:
+    @HealthCheckMBean(name = "MyCustomCheck")
+
+    // to set `hc.keepNonOkResultsStickyForSec`:
+    @Sticky(keepNonOkResultsStickyForSec = 10)
+    public class SampleHealthCheck implements HealthCheck {
+    ...
+
 
 ## General purpose health checks available out-of-the-box 
 
@@ -143,9 +171,10 @@ The health check executor can **optionally** be configured via service PID `org.
 
 Property    | Type     | Default | Description  
 ----------- | -------- | ------ | ------------
-timeoutInMs     | Long   | 2000ms | Timeout in ms until a check is marked as timed out
-longRunningFutureThresholdForCriticalMs | Long | 300000ms = 5min | Threshold in ms until a check is marked as 'exceedingly' timed out and will marked CRITICAL instead of WARN only
-resultCacheTtlInMs | Long | 2000ms | Result Cache time to live - results will be cached for the given time
+`timeoutInMs`    | Long   | 2000ms | Timeout in ms until a check is marked as timed out
+`longRunningFutureThresholdForCriticalMs` | Long | 300000ms (5min) | Threshold in ms until a check is marked as 'exceedingly' timed out and will marked CRITICAL instead of WARN only
+`resultCacheTtlInMs` | Long | 2000ms | Result Cache time to live - results will be cached for the given time
+`temporarilyAvailableGracePeriodInMs` | Long | 60000ms (10min) | After this configured period, health checks continously reporting `TEMPORARILY_UNAVAILABLE` are automatically turned into status `CRITICAL`
 
 
 ### JMX access to health checks
