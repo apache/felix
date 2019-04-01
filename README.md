@@ -44,12 +44,12 @@ Several projects provide extra features to an OSGi runtime.
   register, acquire, and manage dynamic OSGi services.
 - **fileinstall** `/fileinstall*` - A utility to automatically install bundles from a directory.
 - **gogo** `/gogo` - A command line shell, runtime and set of base commands for interacting with and introspecting an OSGi framework.
+- **health checks** `/healthcheck/*` - An extensible framework to monitor the status of the OSGi container at runtime. (contains **systemready**)
 - **inventory** `/inventory` - Provides some mechanisms to get the current state of the system and therefore provides an inventory of the system.
 - **ipojo** `/ipojo` - A *service component runtime* aiming to simplify OSGi application development.
 - **jaas support** `/jaas` - Bundle to simplify JAAS usage within OSGi environment.
 - **logback** `/logback` - A simple integration of the OSGi R7 Log (1.4) service to Logback backend.
 - **rootcause** `/rootcause` - Finding the root cause of problems with OSGi declarative services components.
-- **systemready** `/systemready` - Provides a framework to configure and create so called system checks, and signal the ready state of an OSGi based system.
 - **utils** `/utils` - Utility classes for OSGi (intended for embedding within other bundles.)
 - **webconsole** `/webconsole*` - Web Based Management Console for OSGi Frameworks.
 - and many other **OSGi** things
