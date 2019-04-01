@@ -20,7 +20,6 @@ package org.apache.felix.hc.core.impl.executor;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Date;
 import java.util.Iterator;
@@ -44,9 +43,10 @@ public class HealthCheckResultCache {
 
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
 
-    /** The map holding the cached results. */
+    /** General cache. */
     private final Map<Long, HealthCheckExecutionResult> cache = new ConcurrentHashMap<Long, HealthCheckExecutionResult>();
 
+    /** Cache for sticky results */
     private final Map<Result.Status, Map<Long, HealthCheckExecutionResult>> cacheOfNotOkResults = new ConcurrentHashMap<Result.Status, Map<Long, HealthCheckExecutionResult>>();
 
     /** Update the cache with the result */
@@ -54,6 +54,7 @@ public class HealthCheckResultCache {
         final ExecutionResult executionResult = (ExecutionResult) result;
         cache.put(executionResult.getServiceId(), result);
 
+        // update cache for sticky handling
         Status status = executionResult.getHealthCheckResult().getStatus();
         if (status != Result.Status.OK) {
             logger.debug("Caching {} result for HC {}", status, executionResult.getServiceId());

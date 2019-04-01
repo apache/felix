@@ -20,6 +20,7 @@ package org.apache.felix.hc.core.impl.executor;
 import static org.apache.felix.hc.api.FormattingResultLog.msHumanReadable;
 import static org.apache.felix.hc.core.impl.executor.HealthCheckExecutorImplConfiguration.LONGRUNNING_FUTURE_THRESHOLD_CRITICAL_DEFAULT_MS;
 import static org.apache.felix.hc.core.impl.executor.HealthCheckExecutorImplConfiguration.RESULT_CACHE_TTL_DEFAULT_MS;
+import static org.apache.felix.hc.core.impl.executor.HealthCheckExecutorImplConfiguration.TEMPORARILY_UNAVAILABLE_GRACE_PERIOD_DEFAULT_MS;
 import static org.apache.felix.hc.core.impl.executor.HealthCheckExecutorImplConfiguration.TIMEOUT_DEFAULT_MS;
 
 import java.text.DateFormat;
@@ -85,6 +86,8 @@ public class HealthCheckExecutorImpl implements ExtendedHealthCheckExecutor, Ser
 
     private HealthCheckResultCache healthCheckResultCache = new HealthCheckResultCache();
 
+    private TempUnavailableGracePeriodEvaluator tempUnavailableGracePeriodEvaluator;
+    
     private final Map<HealthCheckMetadata, HealthCheckFuture> stillRunningFutures = new HashMap<HealthCheckMetadata, HealthCheckFuture>();
 
     @Reference
@@ -106,7 +109,7 @@ public class HealthCheckExecutorImpl implements ExtendedHealthCheckExecutor, Ser
                     + Constants.OBJECTCLASS + "=" + HealthCheck.class.getName() + ")");
         } catch (final InvalidSyntaxException ise) {
             // this should really never happen as the expression above is constant
-            throw new RuntimeException("Unexpected exception occured.", ise);
+            throw new RuntimeException("Unexpected problem with filter syntax", ise);
         }
     }
 
@@ -137,9 +140,10 @@ public class HealthCheckExecutorImpl implements ExtendedHealthCheckExecutor, Ser
         if (this.resultCacheTtlInMs <= 0L) {
             this.resultCacheTtlInMs = RESULT_CACHE_TTL_DEFAULT_MS;
         }
-        
+
         this.defaultTags = configuration.defaultTags();
 
+        tempUnavailableGracePeriodEvaluator = new TempUnavailableGracePeriodEvaluator(configuration.temporarilyAvailableGracePeriodInMs());
     }
 
     @Override
@@ -159,18 +163,19 @@ public class HealthCheckExecutorImpl implements ExtendedHealthCheckExecutor, Ser
     public List<HealthCheckExecutionResult> execute(HealthCheckSelector selector, HealthCheckExecutionOptions options) {
         logger.debug("Starting executing checks for filter selector {} and execution options {}", selector, options);
 
-        if(ArrayUtils.isEmpty(selector.tags())) {
+        if (ArrayUtils.isEmpty(selector.tags())) {
             logger.debug("Using default tags");
             selector.withTags(defaultTags);
         }
-        
+
         final ServiceReference<HealthCheck>[] healthCheckReferences = selectHealthCheckReferences(selector, options);
         List<HealthCheckExecutionResult> results = this.execute(healthCheckReferences, options);
         return results;
-        
+
     }
 
-    /** @see org.apache.felix.hc.core.impl.executor.ExtendedHealthCheckExecutor#selectHealthCheckReferences(HealthCheckSelector, HealthCheckExecutionOptions) */
+    /** @see org.apache.felix.hc.core.impl.executor.ExtendedHealthCheckExecutor#selectHealthCheckReferences(HealthCheckSelector,
+     *      HealthCheckExecutionOptions) */
     @Override
     public ServiceReference<HealthCheck>[] selectHealthCheckReferences(HealthCheckSelector selector, HealthCheckExecutionOptions options) {
         final HealthCheckFilter filter = new HealthCheckFilter(this.bundleContext);
@@ -199,7 +204,7 @@ public class HealthCheckExecutorImpl implements ExtendedHealthCheckExecutor, Ser
         if (logger.isDebugEnabled()) {
             logger.debug("Time consumed for all checks: {}", msHumanReadable(System.currentTimeMillis() - startTime));
         }
-        
+
         // sort result
         Collections.sort(results, new Comparator<HealthCheckExecutionResult>() {
 
@@ -213,6 +218,22 @@ public class HealthCheckExecutorImpl implements ExtendedHealthCheckExecutor, Ser
         return results;
     }
 
+    // method to get the result for one HC (using the generic method to get multiple under the hood
+    private HealthCheckExecutionResult createResultsForDescriptor(final HealthCheckMetadata metadata) {
+
+        final List<HealthCheckExecutionResult> results = new ArrayList<HealthCheckExecutionResult>();
+        final List<HealthCheckMetadata> healthCheckDescriptors = new ArrayList<HealthCheckMetadata>();
+        healthCheckDescriptors.add(metadata);
+
+        createResultsForDescriptors(healthCheckDescriptors, results, new HealthCheckExecutionOptions());
+        
+        if (results.size() != 1) {
+            throw new IllegalStateException("Execute method for a single service reference unexpectedly resulted in "+results.size()+ " results: "+results);
+        }
+        return results.get(0);
+        
+    }
+    
     private void createResultsForDescriptors(final List<HealthCheckMetadata> healthCheckDescriptors,
             final List<HealthCheckExecutionResult> results, HealthCheckExecutionOptions options) {
         // -- All methods below check if they can transform a healthCheckDescriptor into a result
@@ -240,6 +261,8 @@ public class HealthCheckExecutorImpl implements ExtendedHealthCheckExecutor, Ser
         // respect sticky results if configured via HealthCheck.KEEP_NON_OK_RESULTS_STICKY_FOR_SEC
         appendStickyResultLogIfConfigured(results);
 
+        // ensure long standing TEMPORARILY_UNAVAILABLE results are marked as CRITICAL
+        tempUnavailableGracePeriodEvaluator.evaluateGracePeriodForTemporarilyUnavailableResults(results);
     }
 
     private void appendStickyResultLogIfConfigured(List<HealthCheckExecutionResult> results) {
@@ -254,27 +277,6 @@ public class HealthCheckExecutorImpl implements ExtendedHealthCheckExecutor, Ser
         }
     }
 
-    private HealthCheckExecutionResult createResultsForDescriptor(final HealthCheckMetadata metadata) {
-        // create result for a single descriptor
-
-        // reuse cached results where possible
-        HealthCheckExecutionResult result;
-
-        result = healthCheckResultCache.getValidCacheResult(metadata, resultCacheTtlInMs);
-
-        if (result == null) {
-            final HealthCheckFuture future;
-            synchronized (this.stillRunningFutures) {
-                future = createOrReuseFuture(metadata);
-            }
-
-            // wait for futures at most until timeout (but will return earlier if all futures are finished)
-            waitForFuturesRespectingTimeout(Collections.singletonList(future), null);
-            result = collectResultFromFuture(future);
-        }
-
-        return result;
-    }
 
     /** Create the health check meta data */
     private List<HealthCheckMetadata> getHealthCheckMetadata(final ServiceReference... healthCheckReferences) {
@@ -321,6 +323,7 @@ public class HealthCheckExecutorImpl implements ExtendedHealthCheckExecutor, Ser
                 public void finished(final HealthCheckExecutionResult result) {
                     healthCheckResultCache.updateWith(result);
                     asyncHealthCheckExecutor.updateWith(result);
+                    tempUnavailableGracePeriodEvaluator.updateTemporarilyUnavailableTimestampWith(result);
                     synchronized (stillRunningFutures) {
                         stillRunningFutures.remove(metadata);
                     }
@@ -467,4 +470,5 @@ public class HealthCheckExecutorImpl implements ExtendedHealthCheckExecutor, Ser
             final long longRunningFutureThresholdForRedMs) {
         this.longRunningFutureThresholdForRedMs = longRunningFutureThresholdForRedMs;
     }
+
 }
