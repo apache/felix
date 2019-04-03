@@ -1,13 +1,19 @@
 
 # Felix Health Checks
 
-Based on simple `HealthCheck` OSGi services, the Felix Health Check Tools ("hc" in short form) are used to check the health of live Felix systems, based on inputs like  OSGi framework status, JMX MBean attribute values, or any context information retrieved via any API.
+Based on a simple `HealthCheck` SPI interface, Felix Health Checks are used to check the health/availability of Apache Felix instances at runtime based on inputs like
 
-Health checks are easily extensible either by configuring the supplied default `HealthCheck` services, or 
-by implementing your own `HealthCheck` services to cater for project specific requirements.
+* OSGi framework status
+* JMX MBean attribute values
+* OSGi service(s) / SCR component(s) availablility
+* ... or any context information retrievable via any API
 
-However for simple setups, the out of the box health checks (bundle general checks) are often sufficient. [Executing Health Checks](#executing-health-checks)
-is a good starting point to run existing checks and to get familiar with how health checks work.
+Health checks are easily extensible either by
+
+* configuring the default HealthCheck services in bundle general checks (can be configuration or scripts, see [out-of-the-box checks](#general-purpose-health-checks-available-out-of-the-box)). **For simple setups, the out-of-the-box health checks are often sufficient**
+* or by implementing your own HealthCheck to cater special requirements (this is done by just registering a service for this interface)
+
+There are various ways to [execute health checks](#executing-health-checks) - this is a good starting point to get familiar with how health checks work.
 
 See also:
 
@@ -116,18 +122,17 @@ All service properties are optional.
 
 To configure the defaults for the service properties [above](#configuring-health-checks), the following annotations can be used:
 
-    @Component // SCR component (standard OSGi)
-
-    // optional, if the check is to be made configurable (standard OSGi)
+    // standard OSGi
+    @Component 
     @Designate(ocd = MyCustomCheckConfig.class, factory = true)  
     
-    // set name and tags
+    // to set `hc.name` and `hc.tags`
     @HealthCheckService(name = "Custom Check Name", tags= {"tag1", "tag2"})
     
-    // make the check asynchronous, either cronExpression or intervalInSec has to be provided
+    // to set `hc.async.cronExpression` or  `hc.async.intervalInSec`
     @Async(cronExpression="0 0 12 1 * ?" /*, intervalInSec = 60 */)
     
-    // to set `hc.async.cronExpression`:
+    // to set `hc.resultCacheTtlInMs`:
     @ResultTTL(resultCacheTtlInMs = 10000)
     
     // to set `hc.mbean.name`:
@@ -135,7 +140,7 @@ To configure the defaults for the service properties [above](#configuring-health
 
     // to set `hc.keepNonOkResultsStickyForSec`:
     @Sticky(keepNonOkResultsStickyForSec = 10)
-    public class SampleHealthCheck implements HealthCheck {
+    public class MyCustomHealthCheck implements HealthCheck {
     ...
 
 
