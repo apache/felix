@@ -161,6 +161,9 @@ Thread Usage | org.apache.felix.hc.generalchecks.ThreadUsageCheck | no | Checks 
 JMX Attribute Check | org.apache.felix.hc.generalchecks.JmxAttributeCheck | yes | Allows to check an arbitrary JMX attribute (using the configured mbean `mbean.name`'s attribute `attribute.name`) against a given constraint `attribute.value.constraint`. Can check multiple attributes by providing additional config properties with numbers:  `mbean2.name`' `attribute2.name` and `attribute2.value.constraint`.
 HttpRequestsCheck | org.apache.felix.hc.generalchecks.HttpRequestsCheck | yes | Allows to check a list of URLs against response code, response headers, timing, response content (plain content via RegEx or JSON via path expression).
 
+### Adjustable Status Health Check
+
+This is a health check that can be dynamically controlled via JMX bean `org.apache.felix.healthcheck:type=AdjustableStatusHealthCheck`. It allows to dynamically add a health check that returns `WARN` (operation `addWarnResultForTags(String)`), `CRITICAL` (operation `addCriticalResultForTags(String)`) or `TEMPORARILY_UNAVAILABLE` (operation `addTemporarilyUnavailableResultForTags(String)`) for certain tags. This is useful for testing purposes or go-live sequences. The operation `reset()` removes the dynamic result again.
 
 ## Executing Health Checks
 
