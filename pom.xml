@@ -57,13 +57,17 @@
                 org.osgi.resource.dto;-split-package:=first,                
                 org.osgi.service.packageadmin;-split-package:=first,
                 org.osgi.service.startlevel;-split-package:=first,
-	        org.osgi.service.url;-split-package:=first,
+                org.osgi.service.url;-split-package:=first,
                 org.osgi.service.resolver,
                 org.osgi.util.tracker;-split-package:=first,
                 org.osgi.dto;-split-package:=first
             </Export-Package>
             <Private-Package>org.apache.felix.framework.*, org.apache.felix.resolver.*</Private-Package>
             <Import-Package>!*</Import-Package>
+            <Provide-Capability>
+                osgi.service;objectClass:List&lt;String&gt;="org.osgi.service.packageadmin.PackageAdmin",
+                osgi.service;objectClass:List&lt;String&gt;="org.osgi.service.startlevel.StartLevel"
+            </Provide-Capability>
           </instructions>
         </configuration>
       </plugin>
