@@ -84,6 +84,9 @@
 						<Private-Package>
 							${project.artifactId}.*
 						</Private-Package>
+                                                <Provide-Capability>
+					                osgi.service;objectClass:List&lt;String&gt;="org.osgi.service.useradmin.UserAdmin"
+						</Provide-Capability>
 					</instructions>
 				</configuration>
 			</plugin>
