@@ -42,7 +42,7 @@ public final class WhiteboardActivator
         addTracker(new ServletTracker(getBundleContext(), manager));
         addTracker(new ListenersTracker(getBundleContext(), manager));
 
-        SystemLogger.info("Apachde Felix Http Whiteboard Service started");
+        SystemLogger.info("Apache Felix Http Whiteboard Service started");
     }
 
     private void addTracker(ServiceTracker<?,?> tracker)
@@ -61,6 +61,6 @@ public final class WhiteboardActivator
 
         this.trackers.clear();
 
-        SystemLogger.info("Apachde Felix Http Whiteboard Service stopped");
+        SystemLogger.info("Apache Felix Http Whiteboard Service stopped");
     }
 }
