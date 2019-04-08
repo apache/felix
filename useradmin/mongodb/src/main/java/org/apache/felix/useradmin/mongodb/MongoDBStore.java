@@ -1,30 +1,26 @@
 /**
- *  Licensed to the Apache Software Foundation (ASF) under one or more
- *  contributor license agreements.  See the NOTICE file distributed with
- *  this work for additional information regarding copyright ownership.
- *  The ASF licenses this file to You under the Apache License, Version 2.0
- *  (the "License"); you may not use this file except in compliance with
- *  the License.  You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- *  Unless required by applicable law or agreed to in writing, software
- *  distributed under the License is distributed on an "AS IS" BASIS,
- *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *  See the License for the specific language governing permissions and
- *  limitations under the License.
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ * <p/>
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * <p/>
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 package org.apache.felix.useradmin.mongodb;
 
-import static org.apache.felix.useradmin.mongodb.MongoSerializerHelper.NAME;
-import static org.apache.felix.useradmin.mongodb.MongoSerializerHelper.TYPE;
-
-import java.util.ArrayList;
-import java.util.Dictionary;
-import java.util.List;
-import java.util.concurrent.atomic.AtomicReference;
-
+import com.mongodb.MongoException;
+import com.mongodb.client.MongoCollection;
+import com.mongodb.client.MongoCursor;
 import org.apache.felix.useradmin.RoleRepositoryStore;
+import org.bson.Document;
 import org.osgi.framework.Filter;
 import org.osgi.framework.FrameworkUtil;
 import org.osgi.framework.InvalidSyntaxException;
@@ -35,12 +31,13 @@ import org.osgi.service.useradmin.Role;
 import org.osgi.service.useradmin.UserAdminEvent;
 import org.osgi.service.useradmin.UserAdminListener;
 
-import com.mongodb.BasicDBObject;
-import com.mongodb.DBCollection;
-import com.mongodb.DBCursor;
-import com.mongodb.DBObject;
-import com.mongodb.MongoException;
-import com.mongodb.WriteResult;
+import java.util.ArrayList;
+import java.util.Dictionary;
+import java.util.List;
+import java.util.concurrent.atomic.AtomicReference;
+
+import static org.apache.felix.useradmin.mongodb.MongoSerializerHelper.NAME;
+import static org.apache.felix.useradmin.mongodb.MongoSerializerHelper.TYPE;
 
 /**
  * Provides a repository store that uses MongoDB for storing the role information.
@@ -61,9 +58,9 @@ import com.mongodb.WriteResult;
  * <dd>A string value representing the password to authenticate against MongoDB. This value is optional.</dd>
  * </dl>
  * <p>
- * Alternatively, one can also supply the above mentioned configuration keys prefixed with 
- * "<tt>org.apache.felix.useradmin.mongodb.</tt>" as system properties (e.g.: 
- * <tt>-Dorg.apache.felix.useradmin.mongodb.server=my.mongo.server:27017</tt>). However, this 
+ * Alternatively, one can also supply the above mentioned configuration keys prefixed with
+ * "<tt>org.apache.felix.useradmin.mongodb.</tt>" as system properties (e.g.:
+ * <tt>-Dorg.apache.felix.useradmin.mongodb.server=my.mongo.server:27017</tt>). However, this
  * implies that only a single store can be configured on a system (which could be a sensible
  * default for some situations)!
  * </p>
@@ -82,39 +79,59 @@ import com.mongodb.WriteResult;
  * </p>
  */
 public class MongoDBStore implements RoleProvider, RoleRepositoryStore, UserAdminListener, ManagedService {
-    
-    /** The PID for the managed service reference. */
-    public static final String PID = "org.apache.felix.useradmin.mongodb"; 
-                    
-    /** 
-     * A space-separated array with server definitions to access MongoDB. 
-     * Format = "&lt;host1:port1&gt; &lt;host2:port2&gt;". 
-     * */
+
+    /**
+     * The PID for the managed service reference.
+     */
+    public static final String PID = "org.apache.felix.useradmin.mongodb";
+
+    /**
+     * A space-separated array with server definitions to access MongoDB.
+     * Format = "&lt;host1:port1&gt; &lt;host2:port2&gt;".
+     */
     private static final String KEY_MONGODB_SERVER = "server";
-    /** The name of the MongoDB database instance. */
+    /**
+     * The name of the MongoDB database instance.
+     */
     private static final String KEY_MONGODB_DBNAME = "dbname";
-    /** The username of the MongoDB database instance. */
+    /**
+     * The username of the MongoDB database instance.
+     */
     private static final String KEY_MONGODB_USERNAME = "username";
-    /** The password of the MongoDB database instance. */
+    /**
+     * The password of the MongoDB database instance.
+     */
     private static final String KEY_MONGODB_PASSWORD = "password";
-    /** The name of the MongoDB collection to use. */
+    /**
+     * The name of the MongoDB collection to use.
+     */
     private static final String KEY_MONGODB_COLLECTION_NAME = "collection";
 
     private static final String PREFIX = PID.concat(".");
-    /** Default MongoDB server; first checks a system property */
+    /**
+     * Default MongoDB server; first checks a system property
+     */
     private static final String DEFAULT_MONGODB_SERVER = System.getProperty(PREFIX.concat(KEY_MONGODB_SERVER), "localhost:27017");
-    /** Default MongoDB name */
+    /**
+     * Default MongoDB name
+     */
     private static final String DEFAULT_MONGODB_DBNAME = System.getProperty(PREFIX.concat(KEY_MONGODB_DBNAME), "ua_repo");
-    /** Default MongoDB collection */
+    /**
+     * Default MongoDB collection
+     */
     private static final String DEFAULT_MONGODB_COLLECTION = System.getProperty(PREFIX.concat(KEY_MONGODB_COLLECTION_NAME), "useradmin");
-    /** Default MongoDB username */
+    /**
+     * Default MongoDB username
+     */
     private static final String DEFAULT_MONGODB_USERNAME = System.getProperty(PREFIX.concat(KEY_MONGODB_USERNAME));
-    /** Default MongoDB password */
+    /**
+     * Default MongoDB password
+     */
     private static final String DEFAULT_MONGODB_PASSWORD = System.getProperty(PREFIX.concat(KEY_MONGODB_PASSWORD));
 
     private final AtomicReference<MongoDB> m_mongoDbRef;
     private final MongoSerializerHelper m_helper;
-    
+
     private volatile LogService m_log;
 
     /**
@@ -130,8 +147,8 @@ public class MongoDBStore implements RoleProvider, RoleRepositoryStore, UserAdmi
         if (roleName == null) {
             throw new IllegalArgumentException("Role cannot be null!");
         }
-        
-        DBCollection coll = getCollection();
+
+        MongoCollection<Document> coll = getCollection();
 
         Role role = getRole(roleName);
         if (role != null) {
@@ -139,13 +156,9 @@ public class MongoDBStore implements RoleProvider, RoleRepositoryStore, UserAdmi
         }
 
         // Role does not exist; insert it...
-        DBObject data = m_helper.serialize(roleName, type);
+        Document data = m_helper.serialize(roleName, type);
 
-        WriteResult result = coll.insert(data);
-        
-        if (result.getLastError() != null) {
-            result.getLastError().throwOnError();
-        }
+        coll.insertOne(data);
 
         // FELIX-4400: ensure we return the correct role...
         return getRole(roleName);
@@ -171,9 +184,9 @@ public class MongoDBStore implements RoleProvider, RoleRepositoryStore, UserAdmi
             filter = FrameworkUtil.createFilter(filterValue);
         }
 
-        DBCollection coll = getCollection();
+        MongoCollection<Document> coll = getCollection();
 
-        DBCursor cursor = coll.find();
+        MongoCursor<Document> cursor = coll.find().iterator();
         try {
             while (cursor.hasNext()) {
                 // Hmm, there might be a more clever way of doing this...
@@ -191,9 +204,9 @@ public class MongoDBStore implements RoleProvider, RoleRepositoryStore, UserAdmi
 
     @Override
     public Role getRole(String name) {
-        DBCollection coll = getCollection();
+        MongoCollection<Document> coll = getCollection();
 
-        DBCursor cursor = coll.find(getTemplateObject(name));
+        MongoCursor<Document> cursor = coll.find(getTemplateObject(name)).iterator();
         try {
             if (cursor.hasNext()) {
                 return m_helper.deserialize(cursor.next());
@@ -212,22 +225,18 @@ public class MongoDBStore implements RoleProvider, RoleRepositoryStore, UserAdmi
 
     @Override
     public Role removeRole(String roleName) throws MongoException {
-        DBCollection coll = getCollection();
-        
+        MongoCollection<Document> coll = getCollection();
+
         Role role = getRole(roleName);
         if (role == null) {
             return null;
         }
 
-        WriteResult result = coll.remove(getTemplateObject(role));
-
-        if (result.getLastError() != null) {
-            result.getLastError().throwOnError();
-        }
+        coll.deleteOne(getTemplateObject(role));
 
         return role;
     }
-    
+
     @Override
     public void roleChanged(UserAdminEvent event) {
         if (UserAdminEvent.ROLE_CHANGED == event.getType()) {
@@ -236,30 +245,26 @@ public class MongoDBStore implements RoleProvider, RoleRepositoryStore, UserAdmi
             Role changedRole = event.getRole();
 
             try {
-                DBCollection coll = getCollection();
+                MongoCollection<Document> coll = getCollection();
 
-                DBObject query = getTemplateObject(changedRole);
-                DBObject update = m_helper.serializeUpdate(changedRole);
+                Document query = getTemplateObject(changedRole);
+                Document update = m_helper.serializeUpdate(changedRole);
 
-                WriteResult result = coll.update(query, update, false /* upsert */, false /* multi */);
+                coll.updateOne(query, update);
 
-                if (result.getLastError() != null) {
-                    result.getLastError().throwOnError();
-                }
-            }
-            catch (MongoException e) {
+            } catch (MongoException e) {
                 m_log.log(LogService.LOG_WARNING, "Failed to update changed role: " + changedRole.getName(), e);
             }
         }
     }
-    
+
     /**
      * @param log the log-service to set, cannot be <code>null</code>.
      */
     public void setLogService(LogService log) {
         m_log = log;
     }
-    
+
     @Override
     public void updated(Dictionary properties) throws ConfigurationException {
         // Defaults to "ua_repo"
@@ -271,7 +276,7 @@ public class MongoDBStore implements RoleProvider, RoleRepositoryStore, UserAdmi
         // Defaults to null
         String newUsername = getProperty(properties, KEY_MONGODB_USERNAME, DEFAULT_MONGODB_USERNAME);
         // Defaults to null. FELIX-3774; use correct property name...
-        String newPassword = getProperty(properties, KEY_MONGODB_PASSWORD, DEFAULT_MONGODB_PASSWORD); 
+        String newPassword = getProperty(properties, KEY_MONGODB_PASSWORD, DEFAULT_MONGODB_PASSWORD);
 
         MongoDB newMongoDb = new MongoDB(newServers, newDbName, newCollectionName);
 
@@ -286,15 +291,13 @@ public class MongoDBStore implements RoleProvider, RoleRepositoryStore, UserAdmi
             if (oldMongoDb != null) {
                 oldMongoDb.disconnect();
             }
-        }
-        catch (MongoException e) {
+        } catch (MongoException e) {
             m_log.log(LogService.LOG_WARNING, "Failed to disconnect from (old) MongoDB!", e);
         }
 
         try {
             connectToDB(newMongoDb, newUsername, newPassword);
-        }
-        catch (MongoException e) {
+        } catch (MongoException e) {
             m_log.log(LogService.LOG_WARNING, "Failed to connect to (new) MongoDB!", e);
             throw new ConfigurationException(DEFAULT_MONGODB_USERNAME, "Failed to connect!", e);
         }
@@ -302,44 +305,42 @@ public class MongoDBStore implements RoleProvider, RoleRepositoryStore, UserAdmi
 
     /**
      * Creates a connection to MongoDB using the given credentials.
-     * 
-     * @param mongoDB the {@link MongoDB} facade to connect to;
+     *
+     * @param mongoDB  the {@link MongoDB} facade to connect to;
      * @param userName the (optional) user name to use;
      * @param password the (optional) password to use.
      * @throws MongoException in case the connection or authentication failed.
      */
     private void connectToDB(MongoDB mongoDB, String userName, String password) throws MongoException {
-        if (!mongoDB.connect(userName, password)) {
-            throw new MongoException("Failed to connect to MongoDB! Authentication failed!");
-        }
+        mongoDB.connect(userName, password);
 
-        DBCollection collection = mongoDB.getCollection();
+        MongoCollection<Document> collection = mongoDB.getCollection();
         if (collection == null) {
             throw new MongoException("Failed to connect to MongoDB! No collection returned!");
         }
 
-        collection.ensureIndex(new BasicDBObject(NAME, 1).append("unique", true));
+        collection.createIndex(new Document(NAME, 1).append("unique", true));
     }
-    
+
     /**
      * Returns the current database collection.
-     * 
+     *
      * @return the database collection to work with, cannot be <code>null</code>.
      * @throws MongoException in case no connection to MongoDB exists.
      */
-    private DBCollection getCollection() {
+    private MongoCollection<Document> getCollection() {
         MongoDB mongoDB = m_mongoDbRef.get();
         if (mongoDB == null) {
             throw new MongoException("No connection to MongoDB?!");
         }
         return mongoDB.getCollection();
     }
-    
+
     /**
      * Returns the value for the given key from the given properties.
-     * 
-     * @param properties the properties to get the value from, may be <code>null</code>;
-     * @param key the key to retrieve the value for, cannot be <code>null</code>;
+     *
+     * @param properties   the properties to get the value from, may be <code>null</code>;
+     * @param key          the key to retrieve the value for, cannot be <code>null</code>;
      * @param defaultValue the default value to use in case no value is present in the given dictionary, the value is not a string, or the dictionary itself was <code>null</code>.
      * @return the value, can be <code>null</code> in case the given key lead to a null value, or a null value was supplied as default value.
      */
@@ -353,28 +354,28 @@ public class MongoDBStore implements RoleProvider, RoleRepositoryStore, UserAdmi
         }
         return result;
     }
-    
+
     /**
      * Creates a template object for the given role.
-     * 
+     *
      * @param role the role to create a template object for, cannot be <code>null</code>.
      * @return a template object for MongoDB, never <code>null</code>.
      */
-    private DBObject getTemplateObject(Role role) {
-        BasicDBObject query = new BasicDBObject();
+    private Document getTemplateObject(Role role) {
+        Document query = new Document();
         query.put(NAME, role.getName());
         query.put(TYPE, role.getType());
         return query;
     }
-    
+
     /**
      * Creates a template object for the given (role)name.
-     * 
+     *
      * @param name the name of the role to create a template object for, cannot be <code>null</code>.
      * @return a template object for MongoDB, never <code>null</code>.
      */
-    private DBObject getTemplateObject(String name) {
-        BasicDBObject query = new BasicDBObject();
+    private Document getTemplateObject(String name) {
+        Document query = new Document();
         query.put(NAME, name);
         return query;
     }

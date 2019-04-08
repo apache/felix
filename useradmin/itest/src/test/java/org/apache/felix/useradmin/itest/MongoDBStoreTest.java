@@ -22,6 +22,10 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 
+import com.mongodb.*;
+import com.mongodb.client.MongoCollection;
+import com.mongodb.client.MongoDatabase;
+import org.bson.Document;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.ops4j.pax.exam.junit.JUnit4TestRunner;
@@ -33,13 +37,6 @@ import org.osgi.service.cm.ManagedService;
 import org.osgi.service.useradmin.Role;
 import org.osgi.service.useradmin.User;
 import org.osgi.service.useradmin.UserAdmin;
-
-import com.mongodb.BasicDBObject;
-import com.mongodb.CommandResult;
-import com.mongodb.DB;
-import com.mongodb.DBCollection;
-import com.mongodb.Mongo;
-import com.mongodb.WriteConcern;
 
 /**
  * Main integration test for the user admin service.
@@ -180,16 +177,14 @@ public class MongoDBStoreTest extends BaseIntegrationTest
         {
             service.updated(null);
 
-            Mongo mongo = new Mongo();
-            DB db = mongo.getDB("ua_repo");
-            DBCollection collection = db.getCollection("useradmin");
+            MongoClient client = new MongoClient("localhost");
+            MongoDatabase db = client.getDatabase("ua_repo");
+            MongoCollection<Document> collection = db.getCollection("useradmin");
             // we always get a collection back, regardless if there is an actual MongoDB listening, hence we should do
             // some actual calls that cause a connection to MongoDB to be created...
-            collection.remove(new BasicDBObject(), WriteConcern.SAFE);
+            collection.deleteMany(new Document());
 
-            CommandResult lastError = db.getLastError();
-
-            return (lastError.getException() == null && collection.getCount() == 0L);
+            return (collection.count() == 0L);
         }
         catch (Exception e)
         {
