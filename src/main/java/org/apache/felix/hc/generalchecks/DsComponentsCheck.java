@@ -37,17 +37,22 @@ import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.ConfigurationPolicy;
 import org.osgi.service.component.annotations.Reference;
 import org.osgi.service.component.annotations.ReferenceCardinality;
+import org.osgi.service.component.annotations.ReferencePolicyOption;
 import org.osgi.service.component.runtime.ServiceComponentRuntime;
 import org.osgi.service.component.runtime.dto.ComponentConfigurationDTO;
 import org.osgi.service.component.runtime.dto.ComponentDescriptionDTO;
 import org.osgi.service.metatype.annotations.AttributeDefinition;
 import org.osgi.service.metatype.annotations.Designate;
 import org.osgi.service.metatype.annotations.ObjectClassDefinition;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @Component(configurationPolicy = ConfigurationPolicy.REQUIRE)
 @HealthCheckService(name = DsComponentsCheck.HC_NAME, tags = { DsComponentsCheck.HC_DEFAULT_TAG })
 @Designate(ocd = DsComponentsCheck.Config.class, factory = true)
 public class DsComponentsCheck implements HealthCheck {
+
+    private static final Logger LOG = LoggerFactory.getLogger(DsComponentsCheck.class);
 
     public static final String HC_NAME = "DS Components Ready Check";
     public static final String HC_DEFAULT_TAG = "systemalive";
@@ -75,16 +80,17 @@ public class DsComponentsCheck implements HealthCheck {
     private List<String> componentsList;
     private Result.Status statusForMissing;
 
-    @Reference(cardinality = ReferenceCardinality.OPTIONAL)
+    @Reference(policyOption = ReferencePolicyOption.GREEDY)
     private DsRootCauseAnalyzer analyzer;
 
-    @Reference
+    @Reference(policyOption = ReferencePolicyOption.GREEDY)
     ServiceComponentRuntime scr;
 
     @Activate
     public void activate(final BundleContext ctx, final Config config) throws InterruptedException {
         componentsList = Arrays.asList(config.components_list());
         statusForMissing = config.statusForMissing();
+        LOG.debug("Activated DS Components HC for componentsList={}", componentsList);
     }
 
     @Override
