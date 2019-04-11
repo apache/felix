@@ -49,6 +49,21 @@
 
     <build>
         <plugins>
+            <!-- see https://github.com/apache/felix/tree/trunk/tools/osgicheck-maven-plugin -->
+            <plugin>
+                <groupId>org.apache.felix</groupId>
+                <artifactId>osgicheck-maven-plugin</artifactId>
+                <version>0.1.0</version>
+                <executions>
+                    <execution>
+                        <id>check-bundle</id>
+                        <goals>
+                            <goal>check</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+            
             <plugin>
                 <groupId>biz.aQute.bnd</groupId>
                 <artifactId>bnd-maven-plugin</artifactId>

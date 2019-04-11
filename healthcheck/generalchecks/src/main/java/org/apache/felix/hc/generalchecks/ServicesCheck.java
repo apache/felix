@@ -27,7 +27,6 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.commons.lang3.StringUtils;
 import org.apache.felix.hc.annotation.HealthCheckService;
 import org.apache.felix.hc.api.FormattingResultLog;
 import org.apache.felix.hc.api.HealthCheck;
@@ -43,19 +42,21 @@ import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.ConfigurationPolicy;
 import org.osgi.service.component.annotations.Deactivate;
 import org.osgi.service.component.annotations.Reference;
-import org.osgi.service.component.annotations.ReferenceCardinality;
-import org.osgi.service.component.annotations.ReferencePolicy;
 import org.osgi.service.component.annotations.ReferencePolicyOption;
 import org.osgi.service.component.runtime.ServiceComponentRuntime;
 import org.osgi.service.metatype.annotations.AttributeDefinition;
 import org.osgi.service.metatype.annotations.Designate;
 import org.osgi.service.metatype.annotations.ObjectClassDefinition;
 import org.osgi.util.tracker.ServiceTracker;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @Component(configurationPolicy = ConfigurationPolicy.REQUIRE)
 @HealthCheckService(name = ServicesCheck.HC_NAME, tags = { ServicesCheck.HC_DEFAULT_TAG })
 @Designate(ocd = ServicesCheck.Config.class, factory = true)
 public class ServicesCheck implements HealthCheck {
+
+    private static final Logger LOG = LoggerFactory.getLogger(ServicesCheck.class);
 
     public static final String HC_NAME = "Services Ready Check";
     public static final String HC_DEFAULT_TAG = "systemalive";
@@ -86,10 +87,10 @@ public class ServicesCheck implements HealthCheck {
 
     private Map<String, Tracker> trackers;
 
-    @Reference(cardinality = ReferenceCardinality.OPTIONAL)
+    @Reference(policyOption = ReferencePolicyOption.GREEDY)
     private DsRootCauseAnalyzer analyzer;
 
-    @Reference
+    @Reference(policyOption = ReferencePolicyOption.GREEDY)
     private ServiceComponentRuntime scr;
 
     @Activate
@@ -97,6 +98,8 @@ public class ServicesCheck implements HealthCheck {
         this.servicesList = Arrays.asList(config.services_list());
         this.trackers = this.servicesList.stream().collect(toMap(identity(), serviceName -> new Tracker(ctx, serviceName)));
         statusForMissing = config.statusForMissing();
+        LOG.debug("Activated Services HC for servicesList={}", servicesList);
+
     }
 
     @Deactivate
@@ -112,7 +115,7 @@ public class ServicesCheck implements HealthCheck {
 
 
         for (String missingServiceName : missingServiceNames) {
-            if (analyzer != null && !missingServiceName.startsWith("(")) {
+            if (!missingServiceName.startsWith("(")) {
                 analyzer.logMissingService(log, missingServiceName, statusForMissing);
             } else {
                 log.info("Service '{}' is missing", missingServiceName);

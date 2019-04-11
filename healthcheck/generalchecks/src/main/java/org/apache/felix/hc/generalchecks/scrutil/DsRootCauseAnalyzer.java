@@ -18,58 +18,50 @@
  */
 package org.apache.felix.hc.generalchecks.scrutil;
 
-import java.util.Optional;
-import java.util.function.Consumer;
-
 import org.apache.felix.hc.api.FormattingResultLog;
 import org.apache.felix.hc.api.Result.Status;
-import org.apache.felix.hc.api.ResultLog.Entry;
-import org.apache.felix.rootcause.DSComp;
-import org.apache.felix.rootcause.DSRootCause;
-import org.apache.felix.rootcause.RootCausePrinter;
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
+import org.osgi.service.component.annotations.ReferencePolicyOption;
 import org.osgi.service.component.runtime.ServiceComponentRuntime;
 import org.osgi.service.component.runtime.dto.ComponentDescriptionDTO;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /** Minimal bridge to root cause in order to allow making that dependency optional. */
-@Component(service = DsRootCauseAnalyzer.class)
+@Component(service = DsRootCauseAnalyzer.class, immediate = true)
 public class DsRootCauseAnalyzer {
+    private static final Logger LOG = LoggerFactory.getLogger(DsRootCauseAnalyzer.class);
 
-    private DSRootCause analyzer;
+    private DsRootCauseAdapter dsRootCauseAdapter;
 
-    @Reference
+    @Reference(policyOption = ReferencePolicyOption.GREEDY)
     private ServiceComponentRuntime scr;
 
-    
     @Activate
     public void activate() throws InterruptedException {
-        this.analyzer = new DSRootCause(scr);
+
+        String rootCauseClassName = "org.apache.felix.rootcause.DSRootCause";
+        try {
+            Class<?> rootCauseClass = Class.forName(rootCauseClassName);
+            LOG.debug("Class {} could be loaded", rootCauseClass);
+            dsRootCauseAdapter = new DsRootCauseAdapter(scr);
+        } catch (ClassNotFoundException e) {
+            LOG.debug("Class {} could NOT be loaded", rootCauseClassName, e);
+            dsRootCauseAdapter = null;
+        }
     }
 
     public void logMissingService(FormattingResultLog log, String missingServiceName, Status status) {
-        Optional<DSComp> rootCauseOptional = analyzer.getRootCause(missingServiceName);
-        if (rootCauseOptional.isPresent()) {
-            logRootCause(log,rootCauseOptional.get(), status);
-        } else {
-            log.add(new Entry(status, "Missing service without matching DS component: " + missingServiceName));
+        if (dsRootCauseAdapter != null) {
+            dsRootCauseAdapter.logMissingService(log, missingServiceName, status);
         }
     }
 
     public void logNotEnabledComponent(FormattingResultLog log, ComponentDescriptionDTO desc, Status status) {
-        DSComp component = analyzer.getRootCause(desc);
-        logRootCause(log, component, status);
-    }
-
-    private void logRootCause(FormattingResultLog log, DSComp component, Status status) {
-        new RootCausePrinter(new Consumer<String>() {
-            private boolean firstLineLogged = false;
-            @Override
-            public void accept(String str) {
-                log.add(new Entry(!firstLineLogged ? status : Status.OK, str.replaceFirst("    ", "-- ").replaceFirst("  ", "- ")));
-                firstLineLogged = true;
-            }
-        }).print(component);
+        if (dsRootCauseAdapter != null) {
+            dsRootCauseAdapter.logNotEnabledComponent(log, desc, status);
+        }
     }
 }
