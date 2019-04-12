@@ -825,7 +825,18 @@ class ConvertingImpl extends AbstractSpecifying<Converting>
 		Class< ? > boxed = Util.primitiveToBoxed(cls);
 		if (boxed.equals(cls)) {
 			if (cls.isArray()) {
-				return new Object[] {};
+				int i = 1;
+				Class<?> componentType = cls.getComponentType();
+				while(componentType.isArray()) {
+					i++;
+					componentType = cls.getComponentType();
+				}
+				
+				if(i == 1) {
+					return Array.newInstance(componentType, 0);
+				} else {
+					return Array.newInstance(componentType, new int[i]);
+				}
 			} else if (Collection.class.isAssignableFrom(cls)) {
 				return c.convert(Collections.emptyList()).to(cls);
 			}
