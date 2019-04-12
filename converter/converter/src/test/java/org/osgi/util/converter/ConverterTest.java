@@ -23,6 +23,7 @@ import org.osgi.framework.Version;
 import org.osgi.util.converter.MyDTO.Count;
 import org.osgi.util.converter.MyEmbeddedDTO.Alpha;
 
+import java.lang.reflect.Array;
 import java.lang.reflect.Type;
 import java.math.BigDecimal;
 import java.math.BigInteger;
@@ -342,6 +343,31 @@ public class ConverterTest {
         assertArrayEquals(new char [] {'x', 'y'}, ca4b);
         assertNotSame("Should have created a new instance", ca4a, ca4b);
     }
+    
+    /**
+     * 707.4.3.1 - null becomes an empty array
+     */
+    @Test
+    public void testNullToArrayConversion() {
+    	
+    	checkArray(String[].class);
+    	checkArray(boolean[].class);
+    	checkArray(byte[].class);
+    	checkArray(short[].class);
+    	checkArray(char[].class);
+    	checkArray(int[].class);
+    	checkArray(float[].class);
+    	checkArray(long[].class);
+    	checkArray(double[].class);
+    }
+
+	private void checkArray(Class<?> arrayType) {
+		assertTrue(arrayType.isArray());
+		
+		Object array = converter.convert(null).to(arrayType);
+    	assertEquals(0, Array.getLength(array));
+    	assertTrue(arrayType.isInstance(array));
+	}
 
     @Test
     public void testLongCollectionConversion() {
