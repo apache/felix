@@ -829,7 +829,7 @@ class ConvertingImpl extends AbstractSpecifying<Converting>
 				Class<?> componentType = cls.getComponentType();
 				while(componentType.isArray()) {
 					i++;
-					componentType = cls.getComponentType();
+					componentType = componentType.getComponentType();
 				}
 				
 				if(i == 1) {

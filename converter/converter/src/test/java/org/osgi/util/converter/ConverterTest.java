@@ -359,6 +359,27 @@ public class ConverterTest {
     	checkArray(float[].class);
     	checkArray(long[].class);
     	checkArray(double[].class);
+
+    	checkArray(String[][].class);
+    	checkArray(boolean[][].class);
+    	checkArray(byte[][].class);
+    	checkArray(short[][].class);
+    	checkArray(char[][].class);
+    	checkArray(int[][].class);
+    	checkArray(float[][].class);
+    	checkArray(long[][].class);
+    	checkArray(double[][].class);
+
+    	
+    	checkArray(String[][][].class);
+    	checkArray(boolean[][][].class);
+    	checkArray(byte[][][].class);
+    	checkArray(short[][][].class);
+    	checkArray(char[][][].class);
+    	checkArray(int[][][].class);
+    	checkArray(float[][][].class);
+    	checkArray(long[][][].class);
+    	checkArray(double[][][].class);
     }
 
 	private void checkArray(Class<?> arrayType) {
