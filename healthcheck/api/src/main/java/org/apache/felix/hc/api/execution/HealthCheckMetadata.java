@@ -168,7 +168,7 @@ public class HealthCheckMetadata {
 
     @Override
     public String toString() {
-        return "HealthCheck '" + name + "'";
+        return "HealthCheck '" + title + "'";
     }
 
     private String getHealthCheckTitle(final ServiceReference ref) {
