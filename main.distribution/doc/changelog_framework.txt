@@ -1,4 +1,11 @@
-Changes from 6.0.1 to 6.0.1
+Changes from 6.0.2 to 6.0.3
+---------------------------
+
+** Bug
+    * [FELIX-6067] - ClassLoading and getService can fail unpredictably due to interrupts
+    * [FELIX-6092] - Missing Framework Capabilities
+
+Changes from 6.0.1 to 6.0.2
 ---------------------------
 
 ** Bug
