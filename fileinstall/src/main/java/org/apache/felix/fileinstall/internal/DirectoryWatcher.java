@@ -312,7 +312,7 @@ public class DirectoryWatcher extends Thread implements BundleListener
                     // Check that there is a result.  If not, this means that the directory can not be listed,
                     // so it's presumably not a valid directory (it may have been deleted by someone).
                     // In such case, just sleep
-                    if (files != null) {
+                    if (files != null && !files.isEmpty()) {
                         process(files);
                     }
                 }
