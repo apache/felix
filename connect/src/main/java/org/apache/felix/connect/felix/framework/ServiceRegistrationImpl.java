@@ -18,12 +18,7 @@
  */
 package org.apache.felix.connect.felix.framework;
 
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Dictionary;
-import java.util.Enumeration;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 import org.osgi.framework.Bundle;
 import org.osgi.framework.Constants;
@@ -348,6 +343,15 @@ class ServiceRegistrationImpl<T> implements ServiceRegistration<T>
         }
 
         @Override
+        public Dictionary<String, Object> getProperties() {
+            Dictionary<String, Object> dictionary = new Hashtable<String, Object>();
+            for (String key : getPropertyKeys()) {
+                dictionary.put(key, getProperty(key));
+            }
+            return dictionary;
+        }
+
+        @Override
         public Bundle getBundle()
         {
             // The spec says that this should return null if
@@ -506,6 +510,7 @@ class ServiceRegistrationImpl<T> implements ServiceRegistration<T>
             // If ranks are equal, then sort by service id in descending order.
             return (id.compareTo(otherId) < 0) ? 1 : -1;
         }
+
     }
 
     private class ServiceReferenceMap implements Map<String, Object>
