@@ -173,6 +173,7 @@
                             org.osgi.framework.*,
                             org.osgi.resource,
                             org.osgi.dto,
+                            org.osgi.resource.dto,
                             org.osgi.service.url,
                             org.osgi.service.packageadmin,
                             org.osgi.service.startlevel,
