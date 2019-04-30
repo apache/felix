@@ -77,7 +77,13 @@ class JarRevision implements Revision
                 final JarEntry entry = m_jar.getJarEntry(((m_prefix == null) ? "" : m_prefix) + target);
                 if (entry != null)
                 {
-                    URL result = new URL(null, "jar:" + m_urlString + "!/" + ((m_prefix == null) ? "" : m_prefix) + target, new URLStreamHandler()
+                    final String newUrl;
+                    if ( m_urlString.startsWith("jar:") ) {
+                        newUrl =  m_urlString + "!/" + ((m_prefix == null) ? "" : m_prefix) + target;
+                    } else {
+                        newUrl = "jar:" + m_urlString + "!/" + ((m_prefix == null) ? "" : m_prefix) + target;
+                    }
+                    URL result = new URL(null, newUrl, new URLStreamHandler()
                     {
                         protected URLConnection openConnection(final URL u) throws IOException
                         {
