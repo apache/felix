@@ -25,6 +25,9 @@ import java.util.Enumeration;
 import java.util.Map;
 import java.util.Set;
 
+import org.apache.felix.connect.felix.framework.util.MapToDictionary;
+import org.apache.felix.connect.felix.framework.util.StringMap;
+import org.apache.felix.connect.felix.framework.util.Util;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceException;
@@ -33,10 +36,6 @@ import org.osgi.framework.ServiceReference;
 import org.osgi.framework.ServiceRegistration;
 import org.osgi.framework.wiring.BundleCapability;
 import org.osgi.framework.wiring.BundleRevision;
-
-import org.apache.felix.connect.felix.framework.util.MapToDictionary;
-import org.apache.felix.connect.felix.framework.util.StringMap;
-import org.apache.felix.connect.felix.framework.util.Util;
 
 class ServiceRegistrationImpl<T> implements ServiceRegistration<T>
 {
@@ -229,6 +228,7 @@ class ServiceRegistrationImpl<T> implements ServiceRegistration<T>
         // Add the framework assigned properties.
         props.put(Constants.OBJECTCLASS, m_classes);
         props.put(Constants.SERVICE_ID, m_serviceId);
+        props.put(Constants.SERVICE_BUNDLEID, m_bundle.getBundleId());
 
         // Update the service property map.
         m_propMap = props;
