@@ -24,7 +24,10 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.URL;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 
@@ -515,4 +518,116 @@ public class Util
         return val;
     }
 
+    public static List<String> parseDelimitedString(String value, String delim)
+    {
+        return parseDelimitedString(value, delim, true);
+    }
+
+    /**
+     * Parses delimited string and returns an array containing the tokens. This
+     * parser obeys quotes, so the delimiter character will be ignored if it is
+     * inside of a quote. This method assumes that the quote character is not
+     * included in the set of delimiter characters.
+     * @param value the delimited string to parse.
+     * @param delim the characters delimiting the tokens.
+     * @return a list of string or an empty list if there are none.
+     **/
+    public static List<String> parseDelimitedString(String value, String delim, boolean trim)
+    {
+        if (value == null)
+        {
+            value = "";
+        }
+
+        List<String> list = new ArrayList<String>();
+
+        int CHAR = 1;
+        int DELIMITER = 2;
+        int STARTQUOTE = 4;
+        int ENDQUOTE = 8;
+
+        StringBuilder sb = new StringBuilder();
+
+        int expecting = (CHAR | DELIMITER | STARTQUOTE);
+
+        boolean isEscaped = false;
+        for (int i = 0; i < value.length(); i++)
+        {
+            char c = value.charAt(i);
+
+            boolean isDelimiter = (delim.indexOf(c) >= 0);
+
+            if (!isEscaped && (c == '\\'))
+            {
+                isEscaped = true;
+                continue;
+            }
+
+            if (isEscaped)
+            {
+                sb.append(c);
+            }
+            else if (isDelimiter && ((expecting & DELIMITER) > 0))
+            {
+                if (trim)
+                {
+                    list.add(sb.toString().trim());
+                }
+                else
+                {
+                    list.add(sb.toString());
+                }
+                sb.delete(0, sb.length());
+                expecting = (CHAR | DELIMITER | STARTQUOTE);
+            }
+            else if ((c == '"') && ((expecting & STARTQUOTE) > 0))
+            {
+                sb.append(c);
+                expecting = CHAR | ENDQUOTE;
+            }
+            else if ((c == '"') && ((expecting & ENDQUOTE) > 0))
+            {
+                sb.append(c);
+                expecting = (CHAR | STARTQUOTE | DELIMITER);
+            }
+            else if ((expecting & CHAR) > 0)
+            {
+                sb.append(c);
+            }
+            else
+            {
+                throw new IllegalArgumentException("Invalid delimited string: " + value);
+            }
+
+            isEscaped = false;
+        }
+
+        if (sb.length() > 0)
+        {
+            if (trim)
+            {
+                list.add(sb.toString().trim());
+            }
+            else
+            {
+                list.add(sb.toString());
+            }
+        }
+
+        return list;
+    }
+
+
+    private static final List EMPTY_LIST = Collections.unmodifiableList(Collections.EMPTY_LIST);
+    private static final Map EMPTY_MAP = Collections.unmodifiableMap(Collections.EMPTY_MAP);
+
+    public static <T> List<T> newImmutableList(List<T> list)
+    {
+        return list == null || list.isEmpty() ? EMPTY_LIST : Collections.unmodifiableList(list);
+    }
+
+    public static <K,V> Map<K,V> newImmutableMap(Map<K,V> map)
+    {
+        return map == null || map.isEmpty() ? EMPTY_MAP : Collections.unmodifiableMap(map);
+    }
 }

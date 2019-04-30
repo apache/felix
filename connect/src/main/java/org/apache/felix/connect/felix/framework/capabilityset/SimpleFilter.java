@@ -7,7 +7,7 @@
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *  http://www.apache.org/licenses/LICENSE-2.0
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
@@ -18,8 +18,12 @@
  */
 package org.apache.felix.connect.felix.framework.capabilityset;
 
+import org.osgi.framework.VersionRange;
+
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
 
 public class SimpleFilter
 {
@@ -60,49 +64,51 @@ public class SimpleFilter
         return m_op;
     }
 
-    @SuppressWarnings("unchecked")
     public String toString()
     {
         String s = null;
         switch (m_op)
         {
-        case AND:
-            s = "(&" + toString((List) m_value) + ")";
-            break;
-        case OR:
-            s = "(|" + toString((List) m_value) + ")";
-            break;
-        case NOT:
-            s = "(!" + toString((List) m_value) + ")";
-            break;
-        case EQ:
-            s = "(" + m_name + "=" + toEncodedString(m_value) + ")";
-            break;
-        case LTE:
-            s = "(" + m_name + "<=" + toEncodedString(m_value) + ")";
-            break;
-        case GTE:
-            s = "(" + m_name + ">=" + toEncodedString(m_value) + ")";
-            break;
-        case SUBSTRING:
-            s = "(" + m_name + "=" + unparseSubstring((List<String>) m_value) + ")";
-            break;
-        case PRESENT:
-            s = "(" + m_name + "=*)";
-            break;
-        case APPROX:
-            s = "(" + m_name + "~=" + toEncodedString(m_value) + ")";
-            break;
+            case AND:
+                s = "(&" + toString((List) m_value) + ")";
+                break;
+            case OR:
+                s = "(|" + toString((List) m_value) + ")";
+                break;
+            case NOT:
+                s = "(!" + toString((List) m_value) + ")";
+                break;
+            case EQ:
+                s = "(" + m_name + "=" + toEncodedString(m_value) + ")";
+                break;
+            case LTE:
+                s = "(" + m_name + "<=" + toEncodedString(m_value) + ")";
+                break;
+            case GTE:
+                s = "(" + m_name + ">=" + toEncodedString(m_value) + ")";
+                break;
+            case SUBSTRING:
+                s = "(" + m_name + "=" + unparseSubstring((List<String>) m_value) + ")";
+                break;
+            case PRESENT:
+                s = "(" + m_name + "=*)";
+                break;
+            case APPROX:
+                s = "(" + m_name + "~=" + toEncodedString(m_value) + ")";
+                break;
+            case MATCH_ALL:
+                s = "(*)";
+                break;
         }
         return s;
     }
 
-    private static String toString(List<?> list)
+    private static String toString(List list)
     {
         StringBuilder sb = new StringBuilder();
-        for (Object aList : list)
+        for (int i = 0; i < list.size(); i++)
         {
-            sb.append(aList.toString());
+            sb.append(list.get(i).toString());
         }
         return sb.toString();
     }
@@ -150,31 +156,28 @@ public class SimpleFilter
         return o.toString();
     }
 
-    @SuppressWarnings("unchecked")
     public static SimpleFilter parse(String filter)
     {
         int idx = skipWhitespace(filter, 0);
 
-        if ((filter == null) || (filter.length() == 0)
-                || (idx >= filter.length()))
+        if ((filter == null) || (filter.length() == 0) || (idx >= filter.length()))
         {
             throw new IllegalArgumentException("Null or empty filter.");
         }
         else if (filter.charAt(idx) != '(')
         {
-            throw new IllegalArgumentException("Missing opening parenthesis: "
-                    + filter);
+            throw new IllegalArgumentException("Missing opening parenthesis: " + filter);
         }
 
         SimpleFilter sf = null;
-        List<Object> stack = new ArrayList<Object>();
+        List stack = new ArrayList();
         boolean isEscaped = false;
         while (idx < filter.length())
         {
             if (sf != null)
             {
                 throw new IllegalArgumentException(
-                        "Only one top-level operation allowed: " + filter);
+                    "Only one top-level operation allowed: " + filter);
             }
 
             if (!isEscaped && (filter.charAt(idx) == '('))
@@ -188,12 +191,11 @@ public class SimpleFilter
                     if (filter.charAt(peek) == '(')
                     {
                         idx = peek - 1;
-                        stack.add(0, new SimpleFilter(null, new ArrayList(),
-                                SimpleFilter.AND));
+                        stack.add(0, new SimpleFilter(null, new ArrayList(), SimpleFilter.AND));
                     }
                     else
                     {
-                        stack.add(0, idx);
+                        stack.add(0, new Integer(idx));
                     }
                 }
                 else if (filter.charAt(idx) == '|')
@@ -202,12 +204,11 @@ public class SimpleFilter
                     if (filter.charAt(peek) == '(')
                     {
                         idx = peek - 1;
-                        stack.add(0, new SimpleFilter(null, new ArrayList(),
-                                SimpleFilter.OR));
+                        stack.add(0, new SimpleFilter(null, new ArrayList(), SimpleFilter.OR));
                     }
                     else
                     {
-                        stack.add(0, idx);
+                        stack.add(0, new Integer(idx));
                     }
                 }
                 else if (filter.charAt(idx) == '!')
@@ -216,17 +217,16 @@ public class SimpleFilter
                     if (filter.charAt(peek) == '(')
                     {
                         idx = peek - 1;
-                        stack.add(0, new SimpleFilter(null, new ArrayList(),
-                                SimpleFilter.NOT));
+                        stack.add(0, new SimpleFilter(null, new ArrayList(), SimpleFilter.NOT));
                     }
                     else
                     {
-                        stack.add(0, idx);
+                        stack.add(0, new Integer(idx));
                     }
                 }
                 else
                 {
-                    stack.add(0, idx);
+                    stack.add(0, new Integer(idx));
                 }
             }
             else if (!isEscaped && (filter.charAt(idx) == ')'))
@@ -236,7 +236,7 @@ public class SimpleFilter
                 {
                     if (!stack.isEmpty() && (stack.get(0) instanceof SimpleFilter))
                     {
-                        ((List<Object>) ((SimpleFilter) stack.get(0)).m_value).add(top);
+                        ((List) ((SimpleFilter) stack.get(0)).m_value).add(top);
                     }
                     else
                     {
@@ -245,17 +245,21 @@ public class SimpleFilter
                 }
                 else if (!stack.isEmpty() && (stack.get(0) instanceof SimpleFilter))
                 {
-                    ((List<Object>) ((SimpleFilter) stack.get(0)).m_value)
-                            .add(SimpleFilter.subfilter(filter, (Integer) top, idx));
+                    ((List) ((SimpleFilter) stack.get(0)).m_value).add(
+                        SimpleFilter.subfilter(filter, ((Integer) top).intValue(), idx));
                 }
                 else
                 {
-                    sf = SimpleFilter.subfilter(filter, (Integer) top, idx);
+                    sf = SimpleFilter.subfilter(filter, ((Integer) top).intValue(), idx);
                 }
+            }
+            else if (!isEscaped && (filter.charAt(idx) == '\\'))
+            {
+                isEscaped = true;
             }
             else
             {
-                isEscaped = !isEscaped && (filter.charAt(idx) == '\\');
+                isEscaped = false;
             }
 
             idx = skipWhitespace(filter, idx + 1);
@@ -269,8 +273,7 @@ public class SimpleFilter
         return sf;
     }
 
-    private static SimpleFilter subfilter(String filter, int startIdx,
-                                          int endIdx)
+    private static SimpleFilter subfilter(String filter, int startIdx, int endIdx)
     {
         final String opChars = "=<>~";
 
@@ -290,8 +293,8 @@ public class SimpleFilter
         }
         if (attrEndIdx == startIdx)
         {
-            throw new IllegalArgumentException("Missing attribute name: "
-                    + filter.substring(startIdx, endIdx));
+            throw new IllegalArgumentException(
+                "Missing attribute name: " + filter.substring(startIdx, endIdx));
         }
         String attr = filter.substring(startIdx, attrEndIdx);
 
@@ -299,43 +302,43 @@ public class SimpleFilter
         startIdx = skipWhitespace(filter, attrEndIdx);
 
         // Determine the operator type.
-        int op;
+        int op = -1;
         switch (filter.charAt(startIdx))
         {
-        case '=':
-            op = EQ;
-            startIdx++;
-            break;
-        case '<':
-            if (filter.charAt(startIdx + 1) != '=')
-            {
-                throw new IllegalArgumentException("Unknown operator: "
-                        + filter.substring(startIdx, endIdx));
-            }
-            op = LTE;
-            startIdx += 2;
-            break;
-        case '>':
-            if (filter.charAt(startIdx + 1) != '=')
-            {
-                throw new IllegalArgumentException("Unknown operator: "
-                        + filter.substring(startIdx, endIdx));
-            }
-            op = GTE;
-            startIdx += 2;
-            break;
-        case '~':
-            if (filter.charAt(startIdx + 1) != '=')
-            {
-                throw new IllegalArgumentException("Unknown operator: "
-                        + filter.substring(startIdx, endIdx));
-            }
-            op = APPROX;
-            startIdx += 2;
-            break;
-        default:
-            throw new IllegalArgumentException("Unknown operator: "
-                    + filter.substring(startIdx, endIdx));
+            case '=':
+                op = EQ;
+                startIdx++;
+                break;
+            case '<':
+                if (filter.charAt(startIdx + 1) != '=')
+                {
+                    throw new IllegalArgumentException(
+                        "Unknown operator: " + filter.substring(startIdx, endIdx));
+                }
+                op = LTE;
+                startIdx += 2;
+                break;
+            case '>':
+                if (filter.charAt(startIdx + 1) != '=')
+                {
+                    throw new IllegalArgumentException(
+                        "Unknown operator: " + filter.substring(startIdx, endIdx));
+                }
+                op = GTE;
+                startIdx += 2;
+                break;
+            case '~':
+                if (filter.charAt(startIdx + 1) != '=')
+                {
+                    throw new IllegalArgumentException(
+                        "Unknown operator: " + filter.substring(startIdx, endIdx));
+                }
+                op = APPROX;
+                startIdx += 2;
+                break;
+            default:
+                throw new IllegalArgumentException(
+                    "Unknown operator: " + filter.substring(startIdx, endIdx));
         }
 
         // Parse value.
@@ -347,8 +350,9 @@ public class SimpleFilter
         {
             String valueStr = filter.substring(startIdx, endIdx);
             List<String> values = parseSubstring(valueStr);
-            if ((values.size() == 2) && (values.get(0).length() == 0)
-                    && (values.get(1).length() == 0))
+            if ((values.size() == 2)
+                && (values.get(0).length() == 0)
+                && (values.get(1).length() == 0))
             {
                 op = PRESENT;
             }
@@ -364,7 +368,7 @@ public class SimpleFilter
 
     public static List<String> parseSubstring(String value)
     {
-        List<String> pieces = new ArrayList<String>();
+        List<String> pieces = new ArrayList();
         StringBuilder ss = new StringBuilder();
         // int kind = SIMPLE; // assume until proven otherwise
         boolean wasStar = false; // indicates last piece was a star
@@ -375,7 +379,7 @@ public class SimpleFilter
 
         // We assume (sub)strings can contain leading and trailing blanks
         boolean escaped = false;
-        for (; ; )
+loop:   for (;;)
         {
             if (idx >= value.length())
             {
@@ -393,36 +397,30 @@ public class SimpleFilter
                     // the string "" (!=null)
                 }
                 ss.setLength(0);
-                break;
+                break loop;
             }
 
             // Read the next character and account for escapes.
             char c = value.charAt(idx++);
-            if (!escaped && ((c == '(') || (c == ')')))
+            if (!escaped && (c == '*'))
             {
-                throw new IllegalArgumentException("Illegal value: " + value);
-            }
-            else if (!escaped && (c == '*'))
-            {
-                if (wasStar)
+                // If we have successive '*' characters, then we can
+                // effectively collapse them by ignoring succeeding ones.
+                if (!wasStar)
                 {
-                    // encountered two successive stars;
-                    // I assume this is illegal
-                    throw new IllegalArgumentException(
-                            "Invalid filter string: " + value);
+                    if (ss.length() > 0)
+                    {
+                        pieces.add(ss.toString()); // accumulate the pieces
+                        // between '*' occurrences
+                    }
+                    ss.setLength(0);
+                    // if this is a leading star, then track it
+                    if (pieces.isEmpty())
+                    {
+                        leftstar = true;
+                    }
+                    wasStar = true;
                 }
-                if (ss.length() > 0)
-                {
-                    pieces.add(ss.toString()); // accumulate the pieces
-                    // between '*' occurrences
-                }
-                ss.setLength(0);
-                // if this is a leading star, then track it
-                if (pieces.size() == 0)
-                {
-                    leftstar = true;
-                }
-                wasStar = true;
             }
             else if (!escaped && (c == '\\'))
             {
@@ -487,7 +485,7 @@ public class SimpleFilter
 
         int index = 0;
 
-        for (int i = 0; i < len; i++)
+loop:   for (int i = 0; i < len; i++)
         {
             String piece = pieces.get(i);
 
@@ -498,16 +496,23 @@ public class SimpleFilter
                 if (!s.startsWith(piece))
                 {
                     result = false;
-                    break;
+                    break loop;
                 }
             }
 
             // If this is the last piece, then make sure the
             // string ends with it.
-            if (i == len - 1)
+            if (i == (len - 1))
             {
-                result = s.endsWith(piece);
-                break;
+                if (s.endsWith(piece) && (s.length() >= (index + piece.length())))
+                {
+                    result = true;
+                }
+                else
+                {
+                    result = false;
+                }
+                break loop;
             }
 
             // If this is neither the first or last piece, then
@@ -518,7 +523,7 @@ public class SimpleFilter
                 if (index < 0)
                 {
                     result = false;
-                    break;
+                    break loop;
                 }
             }
 
@@ -537,5 +542,110 @@ public class SimpleFilter
             startIdx++;
         }
         return startIdx;
+    }
+
+    /**
+     * Converts a attribute map to a filter. The filter is created by iterating
+     * over the map's entry set. If ordering of attributes is important (e.g.,
+     * for hitting attribute indices), then the map's entry set should iterate
+     * in the desired order. Equality testing is assumed for all attribute types
+     * other than version ranges, which are handled appropriated. If the attribute
+     * map is empty, then a filter that matches anything is returned.
+     * @param attrs Map of attributes to convert to a filter.
+     * @return A filter corresponding to the attributes.
+     */
+    public static SimpleFilter convert(Map<String, Object> attrs)
+    {
+        // Rather than building a filter string to be parsed into a SimpleFilter,
+        // we will just create the parsed SimpleFilter directly.
+
+        List<SimpleFilter> filters = new ArrayList<SimpleFilter>();
+
+        for (Entry<String, Object> entry : attrs.entrySet())
+        {
+            if (entry.getValue() instanceof VersionRange)
+            {
+                VersionRange vr = (VersionRange) entry.getValue();
+                if (vr.getLeftType() == VersionRange.LEFT_CLOSED)
+                {
+                    filters.add(
+                        new SimpleFilter(
+                            entry.getKey(),
+                            vr.getLeft().toString(),
+                            SimpleFilter.GTE));
+                }
+                else
+                {
+                    SimpleFilter not =
+                        new SimpleFilter(null, new ArrayList(), SimpleFilter.NOT);
+                    ((List) not.getValue()).add(
+                        new SimpleFilter(
+                            entry.getKey(),
+                            vr.getLeft().toString(),
+                            SimpleFilter.LTE));
+                    filters.add(not);
+                }
+
+                if (vr.getRight() != null)
+                {
+                    if (vr.getRightType() == VersionRange.RIGHT_CLOSED)
+                    {
+                        filters.add(
+                            new SimpleFilter(
+                                entry.getKey(),
+                                vr.getRight().toString(),
+                                SimpleFilter.LTE));
+                    }
+                    else
+                    {
+                        SimpleFilter not =
+                            new SimpleFilter(null, new ArrayList(), SimpleFilter.NOT);
+                        ((List) not.getValue()).add(
+                            new SimpleFilter(
+                                entry.getKey(),
+                                vr.getRight().toString(),
+                                SimpleFilter.GTE));
+                        filters.add(not);
+                    }
+                }
+            }
+            else
+            {
+                List<String> values = SimpleFilter.parseSubstring(entry.getValue().toString());
+                if (values.size() > 1)
+                {
+                    filters.add(
+                        new SimpleFilter(
+                            entry.getKey(),
+                            values,
+                            SimpleFilter.SUBSTRING));
+                }
+                else
+                {
+                    filters.add(
+                        new SimpleFilter(
+                            entry.getKey(),
+                            values.get(0),
+                            SimpleFilter.EQ));
+                }
+            }
+        }
+
+        SimpleFilter sf = null;
+
+        if (filters.size() == 1)
+        {
+            sf = filters.get(0);
+        }
+        else if (attrs.size() > 1)
+        {
+            sf = new SimpleFilter(null, filters, SimpleFilter.AND);
+        }
+        else if (filters.isEmpty())
+        {
+            sf = new SimpleFilter(null, null, SimpleFilter.MATCH_ALL);
+        }
+
+        return sf;
     }
 }

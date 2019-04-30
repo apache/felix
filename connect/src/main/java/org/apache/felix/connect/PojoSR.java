@@ -74,9 +74,9 @@ public class PojoSR implements PojoServiceRegistry
     private final ServiceRegistry m_registry = new ServiceRegistry(
             new ServiceRegistry.ServiceRegistryCallbacks()
             {
-                public void serviceChanged(ServiceEvent event, Dictionary<String, ?> oldProps)
+                public void serviceChanged(ServiceEvent event, Dictionary<?, ?> oldProps)
                 {
-                    m_dispatcher.fireServiceEvent(event, oldProps, m_bundles.get(0l));
+                    m_dispatcher.fireServiceEvent(event, (Dictionary<String, ?>) oldProps, m_bundles.get(0l));
                 }
             });
 

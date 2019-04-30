@@ -7,7 +7,7 @@
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *  http://www.apache.org/licenses/LICENSE-2.0
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
@@ -22,28 +22,52 @@ import java.util.Comparator;
 
 public class StringComparator implements Comparator<String>
 {
-    private final boolean m_isCaseSensitive;
 
-    public StringComparator(boolean b)
+    public static final StringComparator COMPARATOR = new StringComparator();
+
+    public int compare(String s1, String s2)
     {
-        m_isCaseSensitive = b;
+        int n1 = s1.length();
+        int n2 = s2.length();
+        int min = n1 < n2 ? n1 : n2;
+        for ( int i = 0; i < min; i++ )
+        {
+            char c1 = s1.charAt( i );
+            char c2 = s2.charAt( i );
+            if ( c1 != c2 )
+            {
+                // Fast check for simple ascii codes
+                if ( c1 <= 128 && c2 <= 128 )
+                {
+                    c1 = toLowerCaseFast(c1);
+                    c2 = toLowerCaseFast(c2);
+                    if ( c1 != c2 )
+                    {
+                        return c1 - c2;
+                    }
+                }
+                else
+                {
+                    c1 = Character.toUpperCase( c1 );
+                    c2 = Character.toUpperCase( c2 );
+                    if ( c1 != c2 )
+                    {
+                        c1 = Character.toLowerCase( c1 );
+                        c2 = Character.toLowerCase( c2 );
+                        if ( c1 != c2 )
+                        {
+                            // No overflow because of numeric promotion
+                            return c1 - c2;
+                        }
+                    }
+                }
+            }
+        }
+        return n1 - n2;
     }
 
-    @Override
-    public int compare(String o1, String o2)
+    private static char toLowerCaseFast( char ch )
     {
-        if (m_isCaseSensitive)
-        {
-            return o1.compareTo(o2);
-        }
-        else
-        {
-            return o1.compareToIgnoreCase(o2);
-        }
-    }
-
-    public boolean isCaseSensitive()
-    {
-        return m_isCaseSensitive;
+        return ( ch >= 'A' && ch <= 'Z' ) ? ( char ) ( ch + 'a' - 'A' ) : ch;
     }
 }

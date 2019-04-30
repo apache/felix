@@ -29,6 +29,7 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
 
+import org.apache.felix.connect.felix.framework.HookRegistry;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.BundleException;
@@ -37,6 +38,7 @@ import org.osgi.framework.Filter;
 import org.osgi.framework.FrameworkListener;
 import org.osgi.framework.FrameworkUtil;
 import org.osgi.framework.InvalidSyntaxException;
+import org.osgi.framework.ServiceEvent;
 import org.osgi.framework.ServiceFactory;
 import org.osgi.framework.ServiceListener;
 import org.osgi.framework.ServiceObjects;
@@ -71,7 +73,7 @@ class PojoSRBundleContext implements BundleContext
 
     public boolean ungetService(ServiceReference reference)
     {
-        return m_reg.ungetService(m_bundle, reference);
+        return m_reg.ungetService(m_bundle, reference, null);
     }
 
     public void removeServiceListener(ServiceListener listener)
@@ -94,14 +96,45 @@ class PojoSRBundleContext implements BundleContext
     public ServiceRegistration registerService(String clazz, Object service,
                                                Dictionary properties)
     {
-        return m_reg.registerService(m_bundle, new String[]{clazz}, service,
-                properties);
+        return registerService(new String[]{clazz}, service, properties);
     }
 
     public ServiceRegistration registerService(String[] clazzes,
                                                Object service, Dictionary properties)
     {
-        return m_reg.registerService(m_bundle, clazzes, service, properties);
+        ServiceRegistration reg = m_reg.registerService(m_bundle, clazzes, service,
+            properties);
+
+        // Check to see if this a listener hook; if so, then we need
+        // to invoke the callback with all existing service listeners.
+        if (HookRegistry.isHook(
+            clazzes, org.osgi.framework.hooks.service.ListenerHook.class, service))
+        {
+            org.osgi.framework.hooks.service.ListenerHook lh =
+                (org.osgi.framework.hooks.service.ListenerHook)
+                    m_reg.getService(m_bundle, reg.getReference(), false);
+
+            if (lh != null)
+            {
+                try
+                {
+                    lh.added(m_dispatcher.getAllServiceListeners());
+                }
+                catch (Throwable th)
+                {
+                    System.out.println("Problem invoking service registry hook");
+                    th.printStackTrace();
+                }
+                finally
+                {
+                    m_reg.ungetService(m_bundle, reg.getReference(), null);
+                }
+            }
+        }
+
+        m_dispatcher.fireServiceEvent(new ServiceEvent(ServiceEvent.REGISTERED, reg.getReference()), null, m_bundles.get(0L));
+
+        return reg;
     }
 
     public Bundle installBundle(String location) throws BundleException
@@ -162,7 +195,7 @@ class PojoSRBundleContext implements BundleContext
 
     public <S> S getService(ServiceReference<S> reference)
     {
-        return m_reg.getService(m_bundle, reference);
+        return m_reg.getService(m_bundle, reference, false);
     }
 
     @Override
@@ -197,12 +230,14 @@ class PojoSRBundleContext implements BundleContext
                 ((SecurityManager) sm).checkPermission(new ServicePermission(m_ref, ServicePermission.GET));
             }
 
-            return PojoSRBundleContext.this.getService(m_ref);
+            return m_reg.getService(m_bundle, m_ref, true);
         }
 
-        public void ungetService(final S srvObj)
-        {
-            PojoSRBundleContext.this.ungetService(m_ref);
+        public void ungetService(final S srvObj) {// Unget the specified service.
+            if ( !m_reg.ungetService(m_bundle, m_ref, srvObj))
+            {
+                throw new IllegalArgumentException();
+            }
         }
 
         public ServiceReference<S> getServiceReference()
@@ -289,15 +324,15 @@ class PojoSRBundleContext implements BundleContext
         }
 
         // Ask the service registry for all matching service references.
-        final Collection<ServiceReference<?>> refList = m_reg.getServiceReferences(className, filter);
+        final Collection<ServiceReference<?>> refList = (Collection) m_reg.getServiceReferences(className, filter);
 
         // Filter on assignable references
         if (checkAssignable)
         {
-            for (Iterator<ServiceReference<?>> it = refList.iterator(); it.hasNext();)
+            for (Iterator it = refList.iterator(); it.hasNext();)
             {
                 // Get the current service reference.
-                ServiceReference ref = it.next();
+                ServiceReference ref = (ServiceReference) it.next();
                 // Now check for castability.
                 if (!Util.isServiceAssignable(m_bundle, ref))
                 {
@@ -307,10 +342,10 @@ class PojoSRBundleContext implements BundleContext
         }
 
         // activate findhooks
-        Set<ServiceReference<FindHook>> findHooks = m_reg.getHooks(org.osgi.framework.hooks.service.FindHook.class);
+        Set<ServiceReference<FindHook>> findHooks = m_reg.getHookRegistry().getHooks(org.osgi.framework.hooks.service.FindHook.class);
         for (ServiceReference<org.osgi.framework.hooks.service.FindHook> sr : findHooks)
         {
-            org.osgi.framework.hooks.service.FindHook fh = m_reg.getService(getBundle(0), sr);
+            org.osgi.framework.hooks.service.FindHook fh = m_reg.getService(getBundle(0), sr, false);
             if (fh != null)
             {
                 try
@@ -328,7 +363,7 @@ class PojoSRBundleContext implements BundleContext
                 }
                 finally
                 {
-                    m_reg.ungetService(getBundle(0), sr);
+                    m_reg.ungetService(getBundle(0), sr, null);
                 }
             }
         }

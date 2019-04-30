@@ -532,7 +532,7 @@ public class EventDispatcher
         }
         // Create a whitelist of bundle context, if we have hooks.
         Set<BundleContext> whitelist = null;
-        Set<ServiceReference<EventHook>> hooks = m_registry.getHooks(EventHook.class);
+        Set<ServiceReference<EventHook>> hooks = m_registry.getHookRegistry().getHooks(EventHook.class);
         if ((hooks != null) && !hooks.isEmpty())
         {
             whitelist = new HashSet<BundleContext>();
@@ -545,7 +545,7 @@ public class EventDispatcher
             {
                 try
                 {
-                    EventHook eh = m_registry.getService(bundle, sr);
+                    EventHook eh = m_registry.getService(bundle, sr, false);
                     if (eh != null)
                     {
                         try
@@ -559,7 +559,7 @@ public class EventDispatcher
                         }
                         finally
                         {
-                            m_registry.ungetService(bundle, sr);
+                            m_registry.ungetService(bundle, sr, null);
                         }
                     }
                 }
@@ -603,9 +603,9 @@ public class EventDispatcher
         }
 
         Set<ServiceReference<org.osgi.framework.hooks.service.EventHook>> ehs =
-                m_registry.getHooks(org.osgi.framework.hooks.service.EventHook.class);
+                m_registry.getHookRegistry().getHooks(org.osgi.framework.hooks.service.EventHook.class);
         Set<ServiceReference<EventListenerHook>> elhs =
-                m_registry.getHooks(EventListenerHook.class);
+                m_registry.getHookRegistry().getHooks(EventListenerHook.class);
 
         if ((ehs == null || ehs.isEmpty()) && (elhs == null || elhs.isEmpty()))
         {
@@ -631,7 +631,7 @@ public class EventDispatcher
             {
                 try
                 {
-                    org.osgi.framework.hooks.service.EventHook eh = m_registry.getService(framework, sr);
+                    org.osgi.framework.hooks.service.EventHook eh = m_registry.getService(framework, sr, false);
                     if (eh != null)
                     {
                         try
@@ -645,7 +645,7 @@ public class EventDispatcher
                         }
                         finally
                         {
-                            m_registry.ungetService(framework, sr);
+                            m_registry.ungetService(framework, sr, null);
                         }
                     }
                 }
@@ -666,7 +666,7 @@ public class EventDispatcher
             {
                 try
                 {
-                    EventListenerHook elh = m_registry.getService(framework, sr);
+                    EventListenerHook elh = m_registry.getService(framework, sr, false);
                     if (elh != null)
                     {
                         try
@@ -680,7 +680,7 @@ public class EventDispatcher
                         }
                         finally
                         {
-                            m_registry.ungetService(framework, sr);
+                            m_registry.ungetService(framework, sr, null);
                         }
                     }
                 }
