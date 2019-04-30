@@ -36,6 +36,10 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.StringTokenizer;
 
+import org.apache.felix.connect.felix.framework.ServiceRegistry;
+import org.apache.felix.connect.felix.framework.util.EventDispatcher;
+import org.apache.felix.connect.felix.framework.util.MapToDictionary;
+import org.apache.felix.connect.felix.framework.util.StringMap;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
@@ -44,6 +48,7 @@ import org.osgi.framework.BundleException;
 import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceReference;
 import org.osgi.framework.Version;
+import org.osgi.framework.dto.ServiceReferenceDTO;
 import org.osgi.framework.startlevel.BundleStartLevel;
 import org.osgi.framework.wiring.BundleCapability;
 import org.osgi.framework.wiring.BundleRequirement;
@@ -54,11 +59,6 @@ import org.osgi.framework.wiring.BundleWiring;
 import org.osgi.resource.Capability;
 import org.osgi.resource.Requirement;
 import org.osgi.resource.Wire;
-
-import org.apache.felix.connect.felix.framework.ServiceRegistry;
-import org.apache.felix.connect.felix.framework.util.EventDispatcher;
-import org.apache.felix.connect.felix.framework.util.MapToDictionary;
-import org.apache.felix.connect.felix.framework.util.StringMap;
 
 class PojoSRBundle implements Bundle, BundleRevisions
 {
@@ -545,9 +545,54 @@ class PojoSRBundle implements Bundle, BundleRevisions
         {
             return (A) new BundleStartLevelImpl(this);
         }
+        if ( type == ServiceReferenceDTO[].class ) {
+            return (A) createServiceReferenceDTOArray();
+        }
         return null;
     }
 
+    private ServiceReferenceDTO[] createServiceReferenceDTOArray()
+    {
+        ServiceReference<?>[] svcs = getRegisteredServices();
+        if (svcs == null)
+            return new ServiceReferenceDTO[0];
+
+        ServiceReferenceDTO[] dtos = new ServiceReferenceDTO[svcs.length];
+        for (int i=0; i < svcs.length; i++)
+        {
+            dtos[i] = createServiceReferenceDTO(svcs[i]);
+        }
+        return dtos;
+    }
+    
+    private static ServiceReferenceDTO createServiceReferenceDTO(ServiceReference<?> svc)
+    {
+        ServiceReferenceDTO dto = new ServiceReferenceDTO();
+        dto.bundle = svc.getBundle().getBundleId();
+        dto.id = (Long) svc.getProperty(Constants.SERVICE_ID);
+        Map<String, Object> props = new HashMap<String, Object>();
+        for (String key : svc.getPropertyKeys())
+        {
+            props.put(key, svc.getProperty(key));
+        }
+        dto.properties = new HashMap<String, Object>(props);
+
+        Bundle[] ubs = svc.getUsingBundles();
+        if (ubs == null)
+        {
+            dto.usingBundles = new long[0];
+        }
+        else
+        {
+            dto.usingBundles = new long[ubs.length];
+            for (int j=0; j < ubs.length; j++)
+            {
+                dto.usingBundles[j] = ubs[j].getBundleId();
+            }
+        }
+        return dto;
+    }
+    
     public File getDataFile(String filename)
     {
         return m_context.getDataFile(filename);
