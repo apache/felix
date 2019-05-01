@@ -20,14 +20,17 @@ package org.apache.felix.hc.core.impl.filter;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.Dictionary;
+import java.util.Hashtable;
 import java.util.List;
 
 import javax.servlet.Filter;
 import javax.servlet.FilterChain;
 import javax.servlet.FilterConfig;
+import javax.servlet.Servlet;
 import javax.servlet.ServletException;
 import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
+import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
@@ -40,6 +43,7 @@ import org.apache.felix.hc.core.impl.executor.CombinedExecutionResult;
 import org.apache.felix.hc.core.impl.executor.ExtendedHealthCheckExecutor;
 import org.apache.felix.hc.core.impl.servlet.ResultTxtVerboseSerializer;
 import org.osgi.framework.BundleContext;
+import org.osgi.framework.Constants;
 import org.osgi.framework.FrameworkEvent;
 import org.osgi.framework.FrameworkListener;
 import org.osgi.framework.InvalidSyntaxException;
@@ -47,12 +51,14 @@ import org.osgi.framework.ServiceEvent;
 import org.osgi.framework.ServiceListener;
 import org.osgi.framework.ServiceReference;
 import org.osgi.framework.ServiceRegistration;
+import org.osgi.framework.startlevel.FrameworkStartLevel;
 import org.osgi.service.component.ComponentContext;
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.ConfigurationPolicy;
 import org.osgi.service.component.annotations.Deactivate;
 import org.osgi.service.component.annotations.Reference;
+import org.osgi.service.http.context.ServletContextHelper;
 import org.osgi.service.http.whiteboard.HttpWhiteboardConstants;
 import org.osgi.service.metatype.annotations.AttributeDefinition;
 import org.osgi.service.metatype.annotations.Designate;
@@ -61,8 +67,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /** Returns a 503 Service Unavailable Page if certain tags are in non-ok result. */
-@Component(service= {} /* Filter registers itself for better control */, immediate = true,
-        configurationPolicy = ConfigurationPolicy.REQUIRE)
+@Component(service = {} /* Filter registers itself for better control */, immediate = true, configurationPolicy = ConfigurationPolicy.REQUIRE)
 @Designate(ocd = ServiceUnavailableFilter.Config.class, factory = true)
 public class ServiceUnavailableFilter implements Filter {
     private static final Logger LOG = LoggerFactory.getLogger(ServiceUnavailableFilter.class);
@@ -71,14 +76,16 @@ public class ServiceUnavailableFilter implements Filter {
     private static final String CACHE_CONTROL_KEY = "Cache-control";
     private static final String CACHE_CONTROL_VALUE = "no-cache";
 
+    private static final String CONTEXT_NAME = "internal.http.serviceunavailablefilter";
+
     @ObjectClassDefinition(name = "Health Check Service Unavailable Filter", description = "Returns a 503 Service Unavailable Page if configured tags are in non-ok result")
     public @interface Config {
 
         String HTML_RESPONSE_DEFAULT = "<html><head><title>Service Unavailable</title><meta http-equiv=\"refresh\" content=\"5\"></head><body><strong>Service Unavailable</strong></body></html>";
-        
-        @AttributeDefinition(name = "Filter Request Path RegEx", description = "Regex to be matched against request path")
+
+        @AttributeDefinition(name = "Filter Request Path RegEx", description = "Regex to be matched against request path. Either use regex or pattern.")
         String osgi_http_whiteboard_filter_regex();
-        
+
         @AttributeDefinition(name = "Filter Context", description = "Needs to be set to correct whiteboard context filter (e.g. '(osgi.http.whiteboard.context.name=default)'")
         String osgi_http_whiteboard_context_select() default "(" + HttpWhiteboardConstants.HTTP_WHITEBOARD_CONTEXT_NAME + "=*)";
 
@@ -91,134 +98,178 @@ public class ServiceUnavailableFilter implements Filter {
         @AttributeDefinition(name = "Include execution result as html comment", description = "Will include the execution result in html comment.")
         boolean includeExecutionResultInHtmlComment() default true;
 
-        @AttributeDefinition(name = "503 Html Content", description = "Html content for 503 responses")
+        @AttributeDefinition(name = "503 Html Content", description = "Html content for 503 responses.")
         String htmlFor503() default HTML_RESPONSE_DEFAULT;
 
         @AttributeDefinition(name = "Auto-disable filter", description = "If true, will automatically disable the filter once the filter continued the filter chain without 503 for the first time. Useful for server startup scenarios.")
         boolean autoDisableFilter() default false;
 
+        @AttributeDefinition(name = "Avoid 404", description = "If true, will automatically register a dummy servlet to ensure this filter becomes effective. Useful for server startup scenarios.")
+        boolean avoid404DuringStartup() default false;
+
+        @AttributeDefinition(name = "Filter Service Ranking", description = "The service.ranking for the filter as respected by http whiteboard.")
+        int service_ranking() default Integer.MAX_VALUE;
+
         @AttributeDefinition
         String webconsole_configurationFactory_nameHint() default "Send 503 for tags {tags} at status {statusFor503} (and worse) for path(s) {osgi.http.whiteboard.filter.regex}";
     }
-    
+
     private String[] tags;
     private Result.Status statusFor503;
     private String htmlFor503;
     private boolean includeExecutionResultInHtmlComment;
     private boolean autoDisableFilter;
-    
+    private boolean avoid404DuringStartup;
+
     @Reference
     private ExtendedHealthCheckExecutor executor;
-    
+
     @Reference
     ResultTxtVerboseSerializer verboseTxtSerializer;
-    
+
     private BundleContext bundleContext;
     private Dictionary<String, Object> compProperties;
     private ServiceListener healthCheckServiceListener;
     private FrameworkListener frameworkListener;
+
     private volatile ServiceRegistration<Filter> filterServiceRegistration;
-    
+    //
+    private volatile ServiceRegistration<ServletContextHelper> httpContextRegistration;
+    private volatile ServiceRegistration<Servlet> defaultServletRegistration;
+
     private HealthCheckExecutionOptions healthCheckExecutionOptions;
     private ServiceReference<HealthCheck>[] relevantHealthCheckServiceReferences;
-    
+
     @Activate
-    protected final void activate(BundleContext bundleContext, ComponentContext componentContext, Config config) throws InvalidSyntaxException {
+    protected final void activate(BundleContext bundleContext, ComponentContext componentContext, Config config)
+            throws InvalidSyntaxException {
         this.bundleContext = bundleContext;
         this.compProperties = componentContext.getProperties();
-        
+
         this.tags = config.tags();
         this.statusFor503 = config.statusFor503();
         this.htmlFor503 = config.htmlFor503();
         this.includeExecutionResultInHtmlComment = config.includeExecutionResultInHtmlComment();
         this.autoDisableFilter = config.autoDisableFilter();
-        
+        this.avoid404DuringStartup = config.avoid404DuringStartup();
+
         healthCheckExecutionOptions = new HealthCheckExecutionOptions().setCombineTagsWithOr(true);
         healthCheckServiceListener = new HealthCheckServiceListener();
-        bundleContext.addServiceListener(healthCheckServiceListener, "(objectclass="+HealthCheck.class.getName()+")");
-        
-        if(autoDisableFilter) {
-            frameworkListener = new ReregisteringFilterFramworkListener();
+        bundleContext.addServiceListener(healthCheckServiceListener, "(objectclass=" + HealthCheck.class.getName() + ")");
+
+        if (autoDisableFilter) {
+            frameworkListener = new ReregisteringFilterFrameworkListener();
             bundleContext.addFrameworkListener(frameworkListener);
         }
 
         selectHcServiceReferences();
         registerFilter();
+
+        LOG.info("ServiceUnavailableFilter active (start level {})",  getCurrentStartLevel());
     }
-    
-    
+
+    private int getCurrentStartLevel() {
+        return bundleContext.getBundle(Constants.SYSTEM_BUNDLE_ID).adapt(FrameworkStartLevel.class).getStartLevel();
+    }
+
     @Deactivate
     protected final void deactivate() {
-        if(healthCheckServiceListener!=null) {
+        if (healthCheckServiceListener != null) {
             bundleContext.removeServiceListener(healthCheckServiceListener);
         }
-        if(frameworkListener!=null) {
+        if (frameworkListener != null) {
             bundleContext.removeFrameworkListener(frameworkListener);
         }
-        
+
         // unregisterFilter() last because above listeners potentially register the filter if they are still active
         unregisterFilter();
+
+        LOG.info("ServiceUnavailableFilter deactivated");
     }
 
-
     private synchronized void registerFilter() {
-        if(filterServiceRegistration == null) {
+        if (filterServiceRegistration == null) {
+
+            if (avoid404DuringStartup) {
+                registerHttpContext();
+            }
+
             filterServiceRegistration = bundleContext.registerService(Filter.class, this, compProperties);
             LOG.debug("Registered ServiceUnavailableFilter for tags {}", Arrays.asList(tags));
         }
     }
 
     private synchronized void unregisterFilter() {
-        if(filterServiceRegistration!=null) {
+        if (filterServiceRegistration != null) {
+
             filterServiceRegistration.unregister();
             filterServiceRegistration = null;
             LOG.debug("Filter ServiceUnavailableFilter for tags {} unregistered", Arrays.asList(tags));
+
+            if (avoid404DuringStartup) {
+                unregisterHttpContext();
+            }
+
         }
     }
 
     // using ServiceListener and ExtendedHealthCheckExecutor to avoid overhead of searching the service references on every request
     private final void selectHcServiceReferences() {
         LOG.debug("Reloading HC references for tags {}", Arrays.asList(tags));
-        relevantHealthCheckServiceReferences = executor.selectHealthCheckReferences(HealthCheckSelector.tags(tags), healthCheckExecutionOptions);
+        relevantHealthCheckServiceReferences = executor.selectHealthCheckReferences(HealthCheckSelector.tags(tags),
+                healthCheckExecutionOptions);
         LOG.debug("Found {} health check service references for tags {}", relevantHealthCheckServiceReferences.length, tags);
     }
-    
+
     @Override
     public void doFilter(ServletRequest request, ServletResponse response, FilterChain filterChain) throws IOException, ServletException {
 
         final long startTimeNs = System.nanoTime();
 
-        List<HealthCheckExecutionResult> executionResults = executor.execute(relevantHealthCheckServiceReferences, healthCheckExecutionOptions);
+        List<HealthCheckExecutionResult> executionResults = executor.execute(relevantHealthCheckServiceReferences,
+                healthCheckExecutionOptions);
         CombinedExecutionResult combinedExecutionResult = new CombinedExecutionResult(executionResults);
         Result overallResult = combinedExecutionResult.getHealthCheckResult();
 
         if (LOG.isDebugEnabled()) {
             LOG.debug("Time consumed for executing checks: {}ns", System.nanoTime() - startTimeNs);
         }
-        
-        if(overallResult.getStatus().ordinal() >= statusFor503.ordinal()) {
-            LOG.debug("Result for tags {} is {}, sending 503 for {}", tags, overallResult.getStatus(), ((HttpServletRequest)request).getRequestURI());
-            String verboseTxtResult = includeExecutionResultInHtmlComment ? verboseTxtSerializer.serialize(overallResult, executionResults, false) : null;
+
+        if (overallResult.getStatus().ordinal() >= statusFor503.ordinal()) {
+            LOG.debug("Result for tags {} is {}, sending 503 for {}", tags, overallResult.getStatus(),
+                    ((HttpServletRequest) request).getRequestURI());
+            String verboseTxtResult = includeExecutionResultInHtmlComment
+                    ? verboseTxtSerializer.serialize(overallResult, executionResults, false)
+                    : null;
             send503((HttpServletResponse) response, verboseTxtResult);
-            
+
         } else {
-            if(autoDisableFilter && filterServiceRegistration!=null) {
+            if (autoDisableFilter && filterServiceRegistration != null) {
                 LOG.info("Unregistering filter ServiceUnavailableFilter for tags {} since result was ok ", Arrays.asList(tags));
                 unregisterFilter();
             }
-            
+
             // regular request processing
             filterChain.doFilter(request, response);
         }
     }
 
     private void send503(HttpServletResponse response, String verboseTxtResult) throws IOException {
+
+        if(avoid404DuringStartup && LOG.isDebugEnabled()) {
+            LOG.debug("Sending 503 at start level {}", getCurrentStartLevel());
+        }
+
+        String htmlContent = htmlFor503;
+        String bodyClosingTag = "</body>";
+        htmlContent = verboseTxtResult != null
+                ? htmlContent.replace(bodyClosingTag, "<!--\n\n" + verboseTxtResult + "\n\n-->" + bodyClosingTag)
+                : htmlContent;
+
         response.setStatus(HttpServletResponse.SC_SERVICE_UNAVAILABLE);
         response.setContentType(CONTENT_TYPE_HTML);
         response.setHeader(CACHE_CONTROL_KEY, CACHE_CONTROL_VALUE);
         response.setCharacterEncoding("UTF-8");
-        String bodyClosingTag = "</body>";
-        String htmlContent = verboseTxtResult!=null ? htmlFor503.replace(bodyClosingTag, "<!--\n\n" + verboseTxtResult + "\n\n-->" + bodyClosingTag) : htmlFor503;
         response.getWriter().append(htmlContent);
     }
 
@@ -237,21 +288,48 @@ public class ServiceUnavailableFilter implements Filter {
         public void serviceChanged(ServiceEvent event) {
             LOG.debug("Service Event for Health Check: {}", event.getType());
             selectHcServiceReferences();
-            if(filterServiceRegistration==null) {
-                registerFilter();
-            }
         }
     }
 
-    private final class ReregisteringFilterFramworkListener implements FrameworkListener {
+    private final class ReregisteringFilterFrameworkListener implements FrameworkListener {
         @Override
         public void frameworkEvent(FrameworkEvent event) {
-            if(event.getType() == FrameworkEvent.STARTLEVEL_CHANGED) {
-                if(filterServiceRegistration==null) {
+            if (event.getType() == FrameworkEvent.STARTLEVEL_CHANGED) {
+                if (filterServiceRegistration == null) {
                     registerFilter();
                 }
             }
         }
     }
-    
+
+    private void registerHttpContext() {
+        final Dictionary<String, Object> properties = new Hashtable<>();
+        properties.put(HttpWhiteboardConstants.HTTP_WHITEBOARD_CONTEXT_NAME, CONTEXT_NAME);
+        properties.put(HttpWhiteboardConstants.HTTP_WHITEBOARD_CONTEXT_PATH, "/");
+        properties.put(Constants.SERVICE_RANKING, Integer.MIN_VALUE);
+
+        this.httpContextRegistration = bundleContext.registerService(ServletContextHelper.class, new ServletContextHelper() {
+        }, properties);
+
+        final Dictionary<String, Object> servletProps = new Hashtable<>();
+        servletProps.put(HttpWhiteboardConstants.HTTP_WHITEBOARD_CONTEXT_SELECT,
+                "(" + HttpWhiteboardConstants.HTTP_WHITEBOARD_CONTEXT_NAME + "=" + CONTEXT_NAME + ")");
+        servletProps.put(HttpWhiteboardConstants.HTTP_WHITEBOARD_SERVLET_PATTERN, "/");
+
+        this.defaultServletRegistration = bundleContext.registerService(Servlet.class, new HttpServlet() {
+            private static final long serialVersionUID = 1L;
+        }, servletProps);
+    }
+
+    private void unregisterHttpContext() {
+        if (this.defaultServletRegistration != null) {
+            this.defaultServletRegistration.unregister();
+            this.defaultServletRegistration = null;
+        }
+        if (this.httpContextRegistration != null) {
+            this.httpContextRegistration.unregister();
+            this.httpContextRegistration = null;
+        }
+    }
+
 }
