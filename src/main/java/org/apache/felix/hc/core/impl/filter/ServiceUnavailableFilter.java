@@ -228,7 +228,7 @@ public class ServiceUnavailableFilter implements Filter {
 
         List<HealthCheckExecutionResult> executionResults = executor.execute(relevantHealthCheckServiceReferences,
                 healthCheckExecutionOptions);
-        CombinedExecutionResult combinedExecutionResult = new CombinedExecutionResult(executionResults);
+        CombinedExecutionResult combinedExecutionResult = new CombinedExecutionResult(executionResults, Result.Status.TEMPORARILY_UNAVAILABLE);
         Result overallResult = combinedExecutionResult.getHealthCheckResult();
 
         if (LOG.isDebugEnabled()) {
