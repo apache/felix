@@ -18,6 +18,7 @@
  */
 package org.apache.felix.hc.generalchecks;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.felix.hc.annotation.HealthCheckService;
 import org.apache.felix.hc.api.HealthCheck;
 import org.apache.felix.hc.api.Result;
@@ -44,9 +45,10 @@ public class FrameworkStartCheck implements HealthCheck {
     public static final String HC_NAME = "OSGi Framework Ready Check";
     public static final String HC_DEFAULT_TAG = "systemalive";
 
-    public static final String FRAMEWORK_STARTED = "Framework started. ";
-    public static final String FRAMEWORK_NOT_STARTED = "Framework NOT started. ";
 
+
+    public static final String PROP_START_LEVEL_BEGINNING = "org.osgi.framework.startlevel.beginning";
+    
     @ObjectClassDefinition(name = "Health Check: " + HC_NAME, description = "System ready that waits for the system bundle to be active")
     public @interface Config {
 
@@ -70,13 +72,16 @@ public class FrameworkStartCheck implements HealthCheck {
 
     private BundleContext bundleContext;
     private long targetStartLevel;
+    private String beginningStartLevel;
 
     @Activate
     protected void activate(final BundleContext ctx, final Config config) throws InterruptedException {
         this.bundleContext = ctx;
         this.targetStartLevel = getTargetStartLevel(config);
-        LOG.info("Activated");
+        this.beginningStartLevel = getBeginningStartLevel();
+        LOG.debug("Activated targetStartLevel={}, beginningStartLevel={}, ", targetStartLevel, beginningStartLevel);
     }
+
 
     private long getTargetStartLevel(final Config config) {
         final FrameworkStartLevel fsl = bundleContext.getBundle(Constants.SYSTEM_BUNDLE_ID).adapt(FrameworkStartLevel.class);
@@ -95,19 +100,38 @@ public class FrameworkStartCheck implements HealthCheck {
         }
         return tStartLevel;
     }
+    
+
+    private String getBeginningStartLevel() {
+        String beginningStartLevel = StringUtils.defaultIfBlank(bundleContext.getProperty(PROP_START_LEVEL_BEGINNING), "<unknown>");
+        return beginningStartLevel;
+    }
 
     @Override
     public Result execute() {
         Bundle systemBundle = bundleContext.getBundle(Constants.SYSTEM_BUNDLE_ID);
         FrameworkStartLevel fsl = systemBundle.adapt(FrameworkStartLevel.class);
-        String message = String.format("Start level: %d; Target start level: %d; Framework state: %d",
-                fsl.getStartLevel(), targetStartLevel, fsl.getBundle().getState());
+        String message = String.format(" (state: %s) Current Start Level: %d (Target: %d; Beginning: %s)",
+                stateToStr(fsl.getBundle().getState()), fsl.getStartLevel(), targetStartLevel, beginningStartLevel);
         boolean started = (systemBundle.getState() == Bundle.ACTIVE) && (fsl.getStartLevel() >= targetStartLevel);
         if (started) {
-            return new Result(Result.Status.OK, FRAMEWORK_STARTED + message);
+            return new Result(Result.Status.OK, "Framework started" + message);
         } else {
-            return new Result(Result.Status.TEMPORARILY_UNAVAILABLE, FRAMEWORK_NOT_STARTED + message);
+            return new Result(Result.Status.TEMPORARILY_UNAVAILABLE, "Framework NOT started" + message);
         }
+    }
+
+    private String stateToStr(int state) {
+        switch(state) {
+        case Bundle.ACTIVE: return "ACTIVE";
+        case Bundle.INSTALLED: return "INSTALLED";
+        case Bundle.RESOLVED: return "RESOLVED";
+        case Bundle.STARTING: return "STARTING";
+        case Bundle.STOPPING: return "STOPPING";
+        case Bundle.UNINSTALLED: return "UNINSTALLED";
+        default: return "unknown";
+        }
+
     }
 
 }
