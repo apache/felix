@@ -32,8 +32,11 @@ public class CombinedExecutionResult implements HealthCheckExecutionResult {
     final Result overallResult;
     
     public CombinedExecutionResult(List<HealthCheckExecutionResult> executionResults) {
+        this(executionResults,  Result.Status.OK);
+    }
+    public CombinedExecutionResult(List<HealthCheckExecutionResult> executionResults, Result.Status statusForZeroResult) {
         this.executionResults = executionResults;
-        Result.Status mostSevereStatus = Result.Status.OK;
+        Result.Status mostSevereStatus = executionResults.isEmpty() ? statusForZeroResult : Result.Status.OK;
         for (HealthCheckExecutionResult executionResult : executionResults) {
             Status status = executionResult.getHealthCheckResult().getStatus();
             if (status.ordinal() > mostSevereStatus.ordinal()) {
