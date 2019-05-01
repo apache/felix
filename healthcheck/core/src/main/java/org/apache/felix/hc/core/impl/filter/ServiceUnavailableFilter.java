@@ -17,11 +17,17 @@
  */
 package org.apache.felix.hc.core.impl.filter;
 
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
+import java.net.URL;
+import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.Dictionary;
 import java.util.Hashtable;
 import java.util.List;
+import java.util.Optional;
+import java.util.stream.Collectors;
 
 import javax.servlet.Filter;
 import javax.servlet.FilterChain;
@@ -34,6 +40,7 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.felix.hc.api.HealthCheck;
 import org.apache.felix.hc.api.Result;
 import org.apache.felix.hc.api.execution.HealthCheckExecutionOptions;
@@ -42,6 +49,7 @@ import org.apache.felix.hc.api.execution.HealthCheckSelector;
 import org.apache.felix.hc.core.impl.executor.CombinedExecutionResult;
 import org.apache.felix.hc.core.impl.executor.ExtendedHealthCheckExecutor;
 import org.apache.felix.hc.core.impl.servlet.ResultTxtVerboseSerializer;
+import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
 import org.osgi.framework.FrameworkEvent;
@@ -73,15 +81,19 @@ public class ServiceUnavailableFilter implements Filter {
     private static final Logger LOG = LoggerFactory.getLogger(ServiceUnavailableFilter.class);
 
     private static final String CONTENT_TYPE_HTML = "text/html";
+    private static final String CONTENT_TYPE_PLAIN = "text/plain";
+    
     private static final String CACHE_CONTROL_KEY = "Cache-control";
     private static final String CACHE_CONTROL_VALUE = "no-cache";
 
+    private static final String CLASSPATH_PREFIX = "classpath:";
+    
     private static final String CONTEXT_NAME = "internal.http.serviceunavailablefilter";
 
     @ObjectClassDefinition(name = "Health Check Service Unavailable Filter", description = "Returns a 503 Service Unavailable Page if configured tags are in non-ok result")
     public @interface Config {
 
-        String HTML_RESPONSE_DEFAULT = "<html><head><title>Service Unavailable</title><meta http-equiv=\"refresh\" content=\"5\"></head><body><strong>Service Unavailable</strong></body></html>";
+        String RESPONSE_TEXT_DEFAULT = "<html><head><title>Service Unavailable</title><meta http-equiv=\"refresh\" content=\"5\"></head><body><strong>Service Unavailable</strong></body></html>";
 
         @AttributeDefinition(name = "Filter Request Path RegEx", description = "Regex to be matched against request path. Either use regex or pattern.")
         String osgi_http_whiteboard_filter_regex();
@@ -98,8 +110,8 @@ public class ServiceUnavailableFilter implements Filter {
         @AttributeDefinition(name = "Include execution result as html comment", description = "Will include the execution result in html comment.")
         boolean includeExecutionResultInHtmlComment() default true;
 
-        @AttributeDefinition(name = "503 Html Content", description = "Html content for 503 responses.")
-        String htmlFor503() default HTML_RESPONSE_DEFAULT;
+        @AttributeDefinition(name = "503 Response Text", description = "Response text for 503 responses. Value can be either the content directly or in the format '"+CLASSPATH_PREFIX+"<symbolic-bundle-id>:/path/to/file.html'. The response content type is auto-detected to either text/html or text/plain.")
+        String responseTextFor503() default RESPONSE_TEXT_DEFAULT;
 
         @AttributeDefinition(name = "Auto-disable filter", description = "If true, will automatically disable the filter once the filter continued the filter chain without 503 for the first time. Useful for server startup scenarios.")
         boolean autoDisableFilter() default false;
@@ -116,7 +128,7 @@ public class ServiceUnavailableFilter implements Filter {
 
     private String[] tags;
     private Result.Status statusFor503;
-    private String htmlFor503;
+    private String responseTextFor503;
     private boolean includeExecutionResultInHtmlComment;
     private boolean autoDisableFilter;
     private boolean avoid404DuringStartup;
@@ -148,7 +160,8 @@ public class ServiceUnavailableFilter implements Filter {
 
         this.tags = config.tags();
         this.statusFor503 = config.statusFor503();
-        this.htmlFor503 = config.htmlFor503();
+        this.responseTextFor503 = getResponseText(bundleContext, config.responseTextFor503());
+        
         this.includeExecutionResultInHtmlComment = config.includeExecutionResultInHtmlComment();
         this.autoDisableFilter = config.autoDisableFilter();
         this.avoid404DuringStartup = config.avoid404DuringStartup();
@@ -166,6 +179,33 @@ public class ServiceUnavailableFilter implements Filter {
         registerFilter();
 
         LOG.info("ServiceUnavailableFilter active (start level {})",  getCurrentStartLevel());
+    }
+
+    String getResponseText(BundleContext bundleContext, String responseFor503) {
+        if(StringUtils.isBlank(responseFor503)) {
+            responseFor503 = (String) compProperties.get("htmlFor503"); // backwards-compatibility
+        }
+        if(StringUtils.startsWith(responseFor503, CLASSPATH_PREFIX)) {
+            String[] bits = responseFor503.split(":");
+            String symbolicName = bits[1];
+            String pathInBundle = bits[2];
+            Optional<Bundle> bundleOptional = Arrays.stream(bundleContext.getBundles()).filter(b -> b.getSymbolicName().equals(symbolicName)).findFirst();
+            if(bundleOptional.isPresent()) {
+                URL entryUrl = bundleOptional.get().getEntry(pathInBundle);
+                if(entryUrl!=null) {
+                    try (BufferedReader reader = new BufferedReader(new InputStreamReader(entryUrl.openStream(), StandardCharsets.UTF_8))) {
+                        responseFor503 = reader.lines().collect(Collectors.joining("\n"));
+                    } catch (Exception e) {
+                        responseFor503 = "503 Service Unavailable\n(Could not read '"+pathInBundle+"' from bundle '"+symbolicName+"': "+e+")";
+                    }
+                } else {
+                    responseFor503 = "503 Service Unavailable\n(Could not read '"+pathInBundle+"' from bundle '"+symbolicName+"': file not found)";
+                }
+            } else { 
+                responseFor503 = "503 Service Unavailable\n(Could not read '"+pathInBundle+"' from bundle '"+symbolicName+"': bundle not found)";
+            }
+        }
+        return responseFor503;
     }
 
     private int getCurrentStartLevel() {
@@ -260,17 +300,23 @@ public class ServiceUnavailableFilter implements Filter {
             LOG.debug("Sending 503 at start level {}", getCurrentStartLevel());
         }
 
-        String htmlContent = htmlFor503;
+        String responseContent = responseTextFor503;
+        boolean isHtml = responseContent.contains("<html");
         String bodyClosingTag = "</body>";
-        htmlContent = verboseTxtResult != null
-                ? htmlContent.replace(bodyClosingTag, "<!--\n\n" + verboseTxtResult + "\n\n-->" + bodyClosingTag)
-                : htmlContent;
+        
+        if(verboseTxtResult != null) {
+            if(isHtml) {
+                responseContent = responseContent.replace(bodyClosingTag, "<!--\n\n" + verboseTxtResult + "\n\n-->" + bodyClosingTag);
+            } else {
+                responseContent += "\n" + verboseTxtResult;
+            }
+        }
 
         response.setStatus(HttpServletResponse.SC_SERVICE_UNAVAILABLE);
-        response.setContentType(CONTENT_TYPE_HTML);
+        response.setContentType(isHtml ? CONTENT_TYPE_HTML : CONTENT_TYPE_PLAIN);
         response.setHeader(CACHE_CONTROL_KEY, CACHE_CONTROL_VALUE);
         response.setCharacterEncoding("UTF-8");
-        response.getWriter().append(htmlContent);
+        response.getWriter().append(responseContent);
     }
 
     @Override
