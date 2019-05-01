@@ -65,7 +65,7 @@ public class MemoryCheck implements HealthCheck {
     protected void activate(final Config config) {
         heapUsedPercentageThresholdWarn = config.heapUsedPercentageThresholdWarn();
         heapUsedPercentageThresholdCritical = config.heapUsedPercentageThresholdCritical();
-        LOG.info("Activated Memory HC: heapUsedPercentageThresholdWarn={}% heapUsedPercentageThresholdCritical={}%", heapUsedPercentageThresholdWarn, heapUsedPercentageThresholdCritical);
+        LOG.debug("Activated Memory HC: heapUsedPercentageThresholdWarn={}% heapUsedPercentageThresholdCritical={}%", heapUsedPercentageThresholdWarn, heapUsedPercentageThresholdCritical);
     }
 
     @Override
@@ -86,7 +86,7 @@ public class MemoryCheck implements HealthCheck {
 
         Result.Status status =
                 memoryUsedPercentage < this.heapUsedPercentageThresholdWarn ? Result.Status.OK :
-                        memoryUsedPercentage < this.heapUsedPercentageThresholdCritical ? Result.Status.WARN
+                        (memoryUsedPercentage < this.heapUsedPercentageThresholdCritical ) ? Result.Status.WARN
                                 : Result.Status.CRITICAL;
 
         String message = String.format("Memory Usage: %.1f%% of %s maximal heap used", memoryUsedPercentage, bytesHumanReadable(maxMemoryAvailableToJVM));

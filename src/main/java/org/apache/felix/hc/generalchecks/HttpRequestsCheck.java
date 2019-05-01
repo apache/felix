@@ -141,8 +141,8 @@ public class HttpRequestsCheck implements HealthCheck {
 
         setupDefaultBaseUrl(bundleContext);
         
-        LOG.info("Default BaseURL: {}", defaultBaseUrl);
-        LOG.info("Activated Requests HC: {}", requestSpecs);
+        LOG.debug("Default BaseURL: {}", defaultBaseUrl);
+        LOG.debug("Activated Requests HC: {}", requestSpecs);
     }
 
     private void setupDefaultBaseUrl(BundleContext bundleContext) {

@@ -30,6 +30,7 @@ import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.ConfigurationPolicy;
 import org.osgi.service.component.annotations.Reference;
+import org.osgi.service.component.annotations.ReferencePolicyOption;
 import org.osgi.service.metatype.annotations.AttributeDefinition;
 import org.osgi.service.metatype.annotations.Designate;
 import org.osgi.service.metatype.annotations.ObjectClassDefinition;
@@ -80,7 +81,7 @@ public class ScriptedHealthCheck implements HealthCheck {
     
     private BundleContext bundleContext;
     
-    @Reference
+    @Reference(policyOption = ReferencePolicyOption.GREEDY)
     private ScriptEnginesTracker scriptEnginesTracker;
 
     private ScriptHelper scriptHelper = new ScriptHelper();
@@ -97,7 +98,7 @@ public class ScriptedHealthCheck implements HealthCheck {
             scriptUrl = null;
         }
 
-        LOG.info("Activated Scripted HC "+config.hc_name()+" with "+ (StringUtils.isNotBlank(script)?"script "+script: "script url "+scriptUrl));
+        LOG.debug("Activated Scripted HC "+config.hc_name()+" with "+ (StringUtils.isNotBlank(script)?"script "+script: "script url "+scriptUrl));
 
     }
 
