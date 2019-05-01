@@ -58,6 +58,7 @@ import org.osgi.framework.InvalidSyntaxException;
 import org.osgi.framework.ServiceEvent;
 import org.osgi.framework.ServiceListener;
 import org.osgi.framework.ServiceReference;
+import org.osgi.framework.startlevel.FrameworkStartLevel;
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Deactivate;
@@ -111,6 +112,8 @@ public class HealthCheckExecutorImpl implements ExtendedHealthCheckExecutor, Ser
             // this should really never happen as the expression above is constant
             throw new RuntimeException("Unexpected problem with filter syntax", ise);
         }
+
+        logger.info("HealthCheckExecutor active at start level {}", getCurrentStartLevel());
     }
 
     @Modified
@@ -121,8 +124,12 @@ public class HealthCheckExecutorImpl implements ExtendedHealthCheckExecutor, Ser
     @Deactivate
     protected final void deactivate() {
         this.bundleContext.removeServiceListener(this);
-        this.bundleContext = null;
         this.healthCheckResultCache.clear();
+        logger.info("HealthCheckExecutor shutdown at start level {}", getCurrentStartLevel());
+    }
+    
+    private int getCurrentStartLevel() {
+        return bundleContext.getBundle(Constants.SYSTEM_BUNDLE_ID).adapt(FrameworkStartLevel.class).getStartLevel();
     }
 
     protected final void configure(final HealthCheckExecutorImplConfiguration configuration) {

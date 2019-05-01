@@ -38,6 +38,7 @@ import org.apache.felix.hc.core.impl.executor.HealthCheckExecutorThreadPool;
 import org.apache.felix.hc.core.impl.executor.HealthCheckResultCache;
 import org.apache.felix.hc.core.impl.util.HealthCheckFilter;
 import org.osgi.framework.BundleContext;
+import org.osgi.framework.InvalidSyntaxException;
 import org.osgi.framework.ServiceEvent;
 import org.osgi.framework.ServiceListener;
 import org.osgi.framework.ServiceReference;
@@ -67,9 +68,9 @@ public class AsyncHealthCheckExecutor implements ServiceListener {
     private QuartzCronScheduler quartzCronScheduler = null;
 
     @Activate
-    protected final void activate(final ComponentContext componentContext) {
+    protected final void activate(final ComponentContext componentContext) throws InvalidSyntaxException {
         this.bundleContext = componentContext.getBundleContext();
-        this.bundleContext.addServiceListener(this);
+        this.bundleContext.addServiceListener(this, "(objectclass=" + HealthCheck.class.getName() + ")");
 
         int count = 0;
         HealthCheckFilter healthCheckFilter = new HealthCheckFilter(bundleContext);
@@ -175,7 +176,7 @@ public class AsyncHealthCheckExecutor implements ServiceListener {
         if (job != null) {
             return job.unschedule();
         } else {
-            LOG.warn("No job was registered for descriptor {}", descriptor);
+            LOG.debug("No job was unregistered for descriptor {}", descriptor);
             return false;
         }
     }
