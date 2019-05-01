@@ -84,9 +84,11 @@ public class JmxAttributeCheck implements HealthCheck {
         statusForFailedContraint = config.statusForFailedContraint();
         attributeConstraintConfigs = AttributeConstraintConfig.load(config, rawConfig);
         
-        LOG.info("Activated JMX Attribute HC with statusForFailedContraint={} and attribute constraint config(s):", statusForFailedContraint);
-        for (AttributeConstraintConfig attributeConstraintConfig : attributeConstraintConfigs) {
-            LOG.info(attributeConstraintConfig.toString());
+        if(LOG.isDebugEnabled()) {
+            LOG.debug("Activated JMX Attribute HC with statusForFailedContraint={} and attribute constraint config(s):", statusForFailedContraint);
+            for (AttributeConstraintConfig attributeConstraintConfig : attributeConstraintConfigs) {
+                LOG.debug(attributeConstraintConfig.toString());
+            }
         }
     }
 

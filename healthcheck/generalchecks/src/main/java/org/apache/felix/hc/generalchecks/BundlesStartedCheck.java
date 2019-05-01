@@ -78,7 +78,7 @@ public class BundlesStartedCheck implements HealthCheck {
         this.includesRegex = Pattern.compile(config.includesRegex());
         this.excludesRegex = StringUtils.isNotBlank(config.excludesRegex()) ? Pattern.compile(config.excludesRegex()) : null;
         this.useCriticalForInactive = config.useCriticalForInactive();
-        LOG.info("Activated bundles started HC for includesRegex={} excludesRegex={}% useCriticalForInactive={}", includesRegex, excludesRegex, useCriticalForInactive);
+        LOG.debug("Activated bundles started HC for includesRegex={} excludesRegex={}% useCriticalForInactive={}", includesRegex, excludesRegex, useCriticalForInactive);
     }
 
     

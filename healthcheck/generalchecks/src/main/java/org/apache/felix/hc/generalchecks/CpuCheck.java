@@ -69,7 +69,7 @@ public class CpuCheck implements HealthCheck {
     @Activate
     protected void activate(final Config config) {
         cpuPercentageThresholdWarn = config.cpuPercentageThresholdWarn();
-        LOG.info("Activated CPU HC: cpuPercentageThresholdWarn={}%", cpuPercentageThresholdWarn);
+        LOG.debug("Activated CPU HC: cpuPercentageThresholdWarn={}%", cpuPercentageThresholdWarn);
     }
 
     @Override

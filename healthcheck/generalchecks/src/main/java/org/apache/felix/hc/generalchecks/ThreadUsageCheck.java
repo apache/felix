@@ -74,7 +74,7 @@ public class ThreadUsageCheck implements HealthCheck {
     protected final void activate(Config config) {
         this.samplePeriodInMs = config.samplePeriodInMs();
         this.cpuPercentageThresholdWarn = config.cpuPercentageThresholdWarn();
-        LOG.info("Activated thread usage HC samplePeriodInMs={}ms cpuPercentageThresholdWarn={}%", samplePeriodInMs, cpuPercentageThresholdWarn);
+        LOG.debug("Activated thread usage HC samplePeriodInMs={}ms cpuPercentageThresholdWarn={}%", samplePeriodInMs, cpuPercentageThresholdWarn);
     }
 
     @Override

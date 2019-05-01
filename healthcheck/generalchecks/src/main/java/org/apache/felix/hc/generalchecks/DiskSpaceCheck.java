@@ -77,7 +77,7 @@ public class DiskSpaceCheck implements HealthCheck {
         diskUsedThresholdCritical = config.diskUsedThresholdCritical();
         diskPaths = config.diskPaths();
 
-        LOG.info("Activated disk usage HC for path(s) {} diskUsedThresholdWarn={}% diskUsedThresholdCritical={}%", Arrays.asList(diskPaths),
+        LOG.debug("Activated disk usage HC for path(s) {} diskUsedThresholdWarn={}% diskUsedThresholdCritical={}%", Arrays.asList(diskPaths),
                 diskUsedThresholdWarn, diskUsedThresholdCritical);
     }
 
