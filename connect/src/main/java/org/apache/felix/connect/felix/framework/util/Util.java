@@ -202,7 +202,7 @@ public class Util
      * interfaces it implements and the class loaders of all super classes.
      * </p>
      *
-     * @param svcObj the class that is the root of the search.
+     * @param clazz the class that is the root of the search.
      * @param name   the name of the class to load.
      * @return the loaded class or <tt>null</tt> if it could not be loaded.
      */
