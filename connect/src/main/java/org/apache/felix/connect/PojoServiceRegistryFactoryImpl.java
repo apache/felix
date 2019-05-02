@@ -55,7 +55,7 @@ public class PojoServiceRegistryFactoryImpl implements PojoServiceRegistryFactor
 
     public Framework newFramework(Map<String, String> configuration)
     {
-        return new FrameworkImpl(configuration.get("pojosr.filter"));
+        return new FrameworkImpl(configuration.get("pojosr.filter"), configuration);
     }
 
     private static final class FrameworkImpl implements Framework
@@ -63,10 +63,12 @@ public class PojoServiceRegistryFactoryImpl implements PojoServiceRegistryFactor
         private final String m_filter;
         private volatile Bundle m_bundle = null;
         private volatile PojoServiceRegistry m_reg = null;
+        private volatile Map<String, Object> m_configuration;
 
-        public FrameworkImpl(String filter)
+        public FrameworkImpl(String filter, Map configuration)
         {
             m_filter = filter;
+            m_configuration = configuration;
         }
 
         public void init() throws BundleException
@@ -74,7 +76,7 @@ public class PojoServiceRegistryFactoryImpl implements PojoServiceRegistryFactor
             try
             {
                 m_reg = new PojoServiceRegistryFactoryImpl()
-                        .newPojoServiceRegistry(new HashMap<String, Object>());
+                        .newPojoServiceRegistry(m_configuration);
                 m_bundle = m_reg.getBundleContext().getBundle();
             }
             catch (Exception ex)
