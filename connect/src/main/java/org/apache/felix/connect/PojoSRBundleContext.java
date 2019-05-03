@@ -30,15 +30,22 @@ import java.util.Map;
 import java.util.Set;
 
 import org.apache.felix.connect.felix.framework.HookRegistry;
+import org.apache.felix.connect.felix.framework.ServiceRegistry;
+import org.apache.felix.connect.felix.framework.capabilityset.SimpleFilter;
+import org.apache.felix.connect.felix.framework.util.EventDispatcher;
+import org.apache.felix.connect.felix.framework.util.ShrinkableCollection;
+import org.apache.felix.connect.felix.framework.util.Util;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.BundleException;
 import org.osgi.framework.BundleListener;
 import org.osgi.framework.Filter;
+import org.osgi.framework.FrameworkEvent;
 import org.osgi.framework.FrameworkListener;
 import org.osgi.framework.FrameworkUtil;
 import org.osgi.framework.InvalidSyntaxException;
 import org.osgi.framework.ServiceEvent;
+import org.osgi.framework.ServiceException;
 import org.osgi.framework.ServiceFactory;
 import org.osgi.framework.ServiceListener;
 import org.osgi.framework.ServiceObjects;
@@ -46,12 +53,6 @@ import org.osgi.framework.ServicePermission;
 import org.osgi.framework.ServiceReference;
 import org.osgi.framework.ServiceRegistration;
 import org.osgi.framework.hooks.service.FindHook;
-
-import org.apache.felix.connect.felix.framework.ServiceRegistry;
-import org.apache.felix.connect.felix.framework.capabilityset.SimpleFilter;
-import org.apache.felix.connect.felix.framework.util.EventDispatcher;
-import org.apache.felix.connect.felix.framework.util.ShrinkableCollection;
-import org.apache.felix.connect.felix.framework.util.Util;
 
 class PojoSRBundleContext implements BundleContext
 {
@@ -195,7 +196,15 @@ class PojoSRBundleContext implements BundleContext
 
     public <S> S getService(ServiceReference<S> reference)
     {
-        return m_reg.getService(m_bundle, reference, false);
+        try 
+        {
+            return m_reg.getService(m_bundle, reference, false);
+        } 
+        catch ( ServiceException ex ) 
+        {
+            m_dispatcher.fireFrameworkEvent(new FrameworkEvent(FrameworkEvent.ERROR, m_bundle, ex));
+        }
+        return null;
     }
 
     @Override
