@@ -636,8 +636,15 @@ public abstract class RegionConfigurationSupport
         else if ( configBundleLocation.startsWith( "?" ) )
         {
             //multilocation
-            result = bundle.hasPermission(
-                new ConfigurationPermission( configBundleLocation, ConfigurationPermission.TARGET ) );
+            if ( System.getSecurityManager() != null )
+            {
+                result = bundle.hasPermission(
+                        new ConfigurationPermission(configBundleLocation, ConfigurationPermission.TARGET));
+            }
+            else
+            {
+                result = true;
+            }
         }
         else
         {

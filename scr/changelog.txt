@@ -1,5 +1,7 @@
 Changes in 2.1.18
 -----------------
+** Bug
+    * [FELIX-6096] - SCR fails if the Java Runtime Environment does not support permissions
 ** Improvement
     * [FELIX-6107] - Loggging Passwords when invoking activate Method
 
