@@ -178,8 +178,8 @@ public abstract class RegionConfigurationSupport
                         for ( Configuration config : factory )
                         {
                             logger.log( LogService.LOG_DEBUG,
-                                "Configuring holder {0} with factory configuration {1}, change count {2}", null,
-                                holder, config, config.getChangeCount() );
+                                    "Configuring holder {0} with change count {1}", null, holder,
+                                    config.getChangeCount());
                             if ( checkBundleLocation( config, bundleContext.getBundle() ) )
                             {
                                 long changeCount = config.getChangeCount();
@@ -200,8 +200,8 @@ public abstract class RegionConfigurationSupport
                         if ( singleton != null )
                         {
                             logger.log( LogService.LOG_DEBUG,
-                                "Configuring holder {0} with configuration {1}, change count {2}", null,
-                                holder, singleton, singleton.getChangeCount() );
+                                    "Configuring holder {0} with change count {1}", null, holder,
+                                    singleton.getChangeCount());
                             if ( singleton != null && checkBundleLocation( singleton, bundleContext.getBundle() ) )
                             {
                                 long changeCount = singleton.getChangeCount();

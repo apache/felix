@@ -215,18 +215,32 @@ public abstract class BaseMethod<P extends BaseParameter, T>
         ComponentLogger logger ) throws SuitableMethodNotAccessibleException, InvocationTargetException;
 
 
+    private String[] getParametersForLogging(final Object[] params) {
+        if (params == null) {
+            return null;
+        }
+        final String[] result = new String[params.length];
+        for (int i = 0; i < params.length; i++) {
+            result[i] = (params[i] == null ? null : params[i].getClass().getName());
+        }
+        return result;
+    }
+
     private MethodResult invokeMethod(final Object componentInstance, final P rawParameter )
             throws InvocationTargetException
     {
+        final ComponentLogger logger = rawParameter.getComponentContext().getLogger();
         try
         {
             if ( componentInstance != null )
             {
                 final Object[] params = getParameters(m_method, rawParameter);
-                rawParameter.getComponentContext().getLogger().log( LogService.LOG_DEBUG, "invoking {0}: {1}: parameters {2}", null,
-                        getMethodNamePrefix(), getMethodName(), Arrays.asList( params ) );
-                Object result = m_method.invoke(componentInstance, params);
-                rawParameter.getComponentContext().getLogger().log( LogService.LOG_DEBUG, "invoked {0}: {1}", null,
+                if (logger.isLogEnabled(LogService.LOG_DEBUG)) {
+                    logger.log(LogService.LOG_DEBUG, "invoking {0}: {1}: parameters {2}", null, getMethodNamePrefix(),
+                            getMethodName(), Arrays.asList(getParametersForLogging(params)));
+                }
+                final Object result = m_method.invoke(componentInstance, params);
+                logger.log(LogService.LOG_DEBUG, "invoked {0}: {1}", null,
                         getMethodNamePrefix(), getMethodName() );
                 return new MethodResult((m_method.getReturnType() != Void.TYPE), (Map<String, Object>) result);
             }

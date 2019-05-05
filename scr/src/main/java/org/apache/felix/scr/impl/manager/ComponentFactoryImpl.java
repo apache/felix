@@ -121,8 +121,7 @@ public class ComponentFactoryImpl<S> extends AbstractComponentManager<S> impleme
     public ComponentInstance<S> newInstance( Dictionary<String, ?> dictionary )
     {
         final SingleComponentManager<S> cm = createComponentManager();
-        getLogger().log( LogService.LOG_DEBUG, "Creating new instance from component factory with configuration {0}",
-                null, dictionary );
+        getLogger().log(LogService.LOG_DEBUG, "Creating new instance from component factory", null);
 
         cm.setFactoryProperties( dictionary );
         //configure the properties

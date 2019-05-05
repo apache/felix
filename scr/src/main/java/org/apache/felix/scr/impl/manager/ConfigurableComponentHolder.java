@@ -353,8 +353,9 @@ public abstract class ConfigurableComponentHolder<S> implements ComponentHolder<
     @Override
     public boolean configurationUpdated( TargetedPID pid, TargetedPID factoryPid, final Dictionary<String, Object> props, long changeCount )
     {
-        logger.log( LogService.LOG_DEBUG, "ConfigurableComponentHolder configuration updated for pid {0} with properties {1} and change count {2}", null,
-            pid, props, changeCount);
+        logger.log(LogService.LOG_DEBUG,
+                "ConfigurableComponentHolder configuration updated for pid {0} with change count {1}", null, pid,
+                changeCount);
 
         // component to update or create
         final Map<AbstractComponentManager<S>, Map<String, Object>> scms = new HashMap<>();

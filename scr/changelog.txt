@@ -1,3 +1,8 @@
+Changes in 2.1.18
+-----------------
+** Improvement
+    * [FELIX-6107] - Loggging Passwords when invoking activate Method
+
 Changes in 2.1.16
 -----------------
 ** Bug
