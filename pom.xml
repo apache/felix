@@ -22,7 +22,7 @@
     <parent>
         <groupId>org.apache.felix</groupId>
         <artifactId>felix-parent</artifactId>
-        <version>4</version>
+        <version>6</version>
         <relativePath>../../pom/pom.xml</relativePath>
     </parent>
 
@@ -52,8 +52,8 @@
         <!-- bind/unbind method generation -->
         <dependency>
             <groupId>org.ow2.asm</groupId>
-            <artifactId>asm-all</artifactId>
-            <version>5.1</version>
+            <artifactId>asm-analysis</artifactId>
+            <version>7.1</version>
             <scope>compile</scope>
         </dependency>
         <dependency>
@@ -104,4 +104,20 @@
         </dependency>
 
     </dependencies>
+
+    <build>
+        <pluginManagement>
+            <plugins>
+
+                <!-- Update to version 1.16 to be compatible with latest ASM version -->
+                <plugin>
+                    <groupId>org.codehaus.mojo</groupId>
+                    <artifactId>animal-sniffer-maven-plugin</artifactId>
+                    <version>1.16</version>
+                </plugin>
+
+            </plugins>
+        </pluginManagement>
+    </build>
+
 </project>
