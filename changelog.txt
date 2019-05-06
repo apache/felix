@@ -1,3 +1,9 @@
+Changes from 1.9.2 to 1.9.4
+---------------------------
+** Improvement
+    * [FELIX-6122] - SCR Tooling: Update to ASM 7.1 for Java 11 compatibility
+
+
 Changes from 1.9.0 to 1.9.2
 ---------------------------
 ** Bug
