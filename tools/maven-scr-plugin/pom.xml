@@ -107,6 +107,16 @@
                     <version>1.16</version>
                 </plugin>
 
+                <!-- Skip JavaDoc validation -->
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-javadoc-plugin</artifactId>
+                    <version>3.1.0</version>
+                    <configuration>
+                        <doclint>none</doclint>
+                    </configuration>
+                </plugin>
+
             </plugins>
         </pluginManagement>
     </build>
