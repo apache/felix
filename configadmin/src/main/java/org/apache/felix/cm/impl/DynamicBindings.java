@@ -112,7 +112,11 @@ class DynamicBindings
                 this.bindings.put( pid, location );
             }
 
-            this.persistenceManager.store( BINDINGS_FILE_NAME, bindings );
+            if (this.bindings.isEmpty()) {
+                this.persistenceManager.delete(BINDINGS_FILE_NAME);
+            } else {
+                this.persistenceManager.store(BINDINGS_FILE_NAME, bindings);
+            }
         }
     }
 }
