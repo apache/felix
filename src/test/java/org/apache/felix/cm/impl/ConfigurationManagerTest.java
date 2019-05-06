@@ -49,6 +49,8 @@ import org.osgi.framework.Bundle;
 import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceReference;
 import org.osgi.framework.ServiceRegistration;
+import org.osgi.service.cm.Configuration;
+import org.osgi.service.cm.ConfigurationAdmin;
 import org.osgi.service.cm.ConfigurationEvent;
 import org.osgi.service.cm.SynchronousConfigurationListener;
 import org.osgi.service.log.LogService;
@@ -398,6 +400,7 @@ public class ConfigurationManagerTest
                 2, result.size());
     }
 
+    @Test
     public void test_factoryConfigurationCleanup() throws Exception
     {
         MockNotCachablePersistenceManager pm = new MockNotCachablePersistenceManager();
@@ -406,8 +409,6 @@ public class ConfigurationManagerTest
         final Field bcField = configMgr.getClass().getDeclaredField("bundleContext");
         bcField.setAccessible(true);
         bcField.set(configMgr, new MockBundleContext());
-        setServiceTrackerField( configMgr, "persistenceManagerTracker" );
-        setServiceTrackerField( configMgr, "logTracker" );
         setServiceTrackerField( configMgr, "configurationListenerTracker" );
         setServiceTrackerField( configMgr, "syncConfigurationListenerTracker" );
 
@@ -440,13 +441,73 @@ public class ConfigurationManagerTest
         final ConfigurationImpl c3 = configMgr.createFactoryConfiguration(factoryPid, null);
         c3.update(props);
 
-        assertEquals(4, pm.getStored().size());
-
-        c1.delete();
         assertEquals(3, pm.getStored().size());
 
-        c2.delete();
+        c1.delete();
         assertEquals(2, pm.getStored().size());
+
+        c2.delete();
+        assertEquals(1, pm.getStored().size());
+
+        c3.delete();
+        assertEquals(0, pm.getStored().size());
+    }
+
+    @Test
+    public void test_namedFactoryConfigurationCleanup() throws Exception {
+        MockNotCachablePersistenceManager pm = new MockNotCachablePersistenceManager();
+        ConfigurationManager configMgr = new ConfigurationManager(new CachingPersistenceManagerProxy(pm), null);
+        final ConfigurationAdmin admin = new ConfigurationAdminImpl(configMgr, null);
+
+        final Field activeField = configMgr.getClass().getDeclaredField("isActive");
+        activeField.setAccessible(true);
+        activeField.set(configMgr, Boolean.TRUE);
+
+        setServiceTrackerField(configMgr, "configurationListenerTracker");
+        setServiceTrackerField(configMgr, "syncConfigurationListenerTracker");
+
+        final Field bcField = configMgr.getClass().getDeclaredField("bundleContext");
+        bcField.setAccessible(true);
+        bcField.set(configMgr, new MockBundleContext());
+        setServiceTrackerField(configMgr, "configurationListenerTracker");
+        setServiceTrackerField(configMgr, "syncConfigurationListenerTracker");
+
+        final Field mstField = configMgr.getClass().getDeclaredField("managedServiceFactoryTracker");
+        mstField.setAccessible(true);
+        mstField.set(configMgr, new ManagedServiceFactoryTracker(configMgr) {
+
+            @Override
+            public void open() {
+            }
+        });
+        final Field utField = configMgr.getClass().getDeclaredField("updateThread");
+        utField.setAccessible(true);
+        utField.set(configMgr, new UpdateThread(null, "Test updater") {
+
+            @Override
+            void schedule(Runnable update) {
+                update.run();
+            }
+        });
+
+        final String factoryPid = "my.factory";
+        final Dictionary<String, Object> props = new Hashtable<>();
+        props.put("hello", "world");
+
+        final Configuration c1 = admin.getFactoryConfiguration(factoryPid, "1", null);
+        c1.update(props);
+        final Configuration c2 = admin.getFactoryConfiguration(factoryPid, "2", null);
+        c2.update(props);
+        final Configuration c3 = admin.getFactoryConfiguration(factoryPid, "3", null);
+        c3.update(props);
+
+        assertEquals(3, pm.getStored().size());
+
+        c1.delete();
+        assertEquals(2, pm.getStored().size());
+
+        c2.delete();
+        assertEquals(1, pm.getStored().size());
 
         c3.delete();
         assertEquals(0, pm.getStored().size());
