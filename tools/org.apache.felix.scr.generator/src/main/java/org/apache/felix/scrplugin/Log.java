@@ -42,7 +42,7 @@ public interface Log {
 
     /**
      * Send a message (and accompanying exception) to the user in the <b>debug</b> error level.
-     * <br/>
+     * <br>
      * The error's stacktrace will be output when this error level is enabled.
      *
      * @param content
@@ -53,7 +53,7 @@ public interface Log {
 
     /**
      * Send an exception to the user in the <b>debug</b> error level.
-     * <br/>
+     * <br>
      * The stack trace for this exception will be output when this error level is enabled.
      *
      * @param error
@@ -77,7 +77,7 @@ public interface Log {
 
     /**
      * Send a message (and accompanying exception) to the user in the <b>info</b> error level.
-     * <br/>
+     * <br>
      * The error's stacktrace will be output when this error level is enabled.
      *
      * @param content
@@ -88,7 +88,7 @@ public interface Log {
 
     /**
      * Send an exception to the user in the <b>info</b> error level.
-     * <br/>
+     * <br>
      * The stack trace for this exception will be output when this error level is enabled.
      *
      * @param error
@@ -111,7 +111,7 @@ public interface Log {
 
     /**
      * Send a message (and accompanying exception) to the user in the <b>warn</b> error level.
-     * <br/>
+     * <br>
      * The error's stacktrace will be output when this error level is enabled.
      *
      * @param content
@@ -122,7 +122,7 @@ public interface Log {
 
     /**
      * Send a message (and accompanying exception) to the user in the <b>warn</b> error level.
-     * <br/>
+     * <br>
      * The error's stacktrace will be output when this error level is enabled.
      *
      * @param content
@@ -135,7 +135,7 @@ public interface Log {
 
     /**
      * Send a message (and accompanying exception) to the user in the <b>warn</b> error level.
-     * <br/>
+     * <br>
      * The error's stacktrace will be output when this error level is enabled.
      *
      * @param content
@@ -146,7 +146,7 @@ public interface Log {
 
     /**
      * Send an exception to the user in the <b>warn</b> error level.
-     * <br/>
+     * <br>
      * The stack trace for this exception will be output when this error level is enabled.
      *
      * @param error
@@ -170,7 +170,7 @@ public interface Log {
 
     /**
      * Send a message (and accompanying exception) to the user in the <b>error</b> error level.
-     * <br/>
+     * <br>
      * The error's stacktrace will be output when this error level is enabled.
      *
      * @param content
@@ -181,7 +181,7 @@ public interface Log {
 
     /**
      * Send a message (and accompanying exception) to the user in the <b>error</b> error level.
-     * <br/>
+     * <br>
      * The error's stacktrace will be output when this error level is enabled.
      *
      * @param content
@@ -194,7 +194,7 @@ public interface Log {
 
     /**
      * Send a message (and accompanying exception) to the user in the <b>error</b> error level.
-     * <br/>
+     * <br>
      * The error's stacktrace will be output when this error level is enabled.
      *
      * @param content
@@ -205,7 +205,7 @@ public interface Log {
 
     /**
      * Send an exception to the user in the <b>error</b> error level.
-     * <br/>
+     * <br>
      * The stack trace for this exception will be output when this error level is enabled.
      *
      * @param error

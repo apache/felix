@@ -53,7 +53,7 @@ public class Result {
     /**
      * Adds a source file to the list of processed source files
      * 
-	 * @param source the processed source file
+	 * @param processedSourceFile the processed source file
 	 */
 	public void addProcessedSourceFile(String processedSourceFile) {
 		
