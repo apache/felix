@@ -19,17 +19,11 @@
 package org.apache.felix.http.proxy.impl;
 
 import javax.servlet.ServletContext;
-import javax.servlet.ServletContextAttributeEvent;
-import javax.servlet.ServletContextAttributeListener;
 import javax.servlet.ServletContextEvent;
 import javax.servlet.ServletContextListener;
 import javax.servlet.annotation.WebListener;
-import javax.servlet.http.HttpSessionAttributeListener;
-import javax.servlet.http.HttpSessionBindingEvent;
-import javax.servlet.http.HttpSessionEvent;
-import javax.servlet.http.HttpSessionIdListener;
-import javax.servlet.http.HttpSessionListener;
 
+import org.apache.felix.http.proxy.AbstractProxyListener;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.InvalidSyntaxException;
 
@@ -56,143 +50,42 @@ public class ProxyServletContextListener
         this.servletContext = sce.getServletContext();
 
         // add all required listeners
-        this.servletContext.addListener(new HttpSessionListener()
-        {
-            private HttpSessionListener getHttpSessionListener()
-            {
-                final EventDispatcherTracker tracker = eventDispatcherTracker;
-                if ( tracker != null )
-                {
-                    return tracker.getHttpSessionListener();
-                }
-                return null;
-            }
 
+        this.servletContext.addListener(new AbstractProxyListener() {
+            
             @Override
-            public void sessionCreated(final HttpSessionEvent se)
-            {
-                final HttpSessionListener sessionDispatcher = getHttpSessionListener();
-                if (sessionDispatcher != null)
-                {
-                    sessionDispatcher.sessionCreated(se);
-                }
+            protected void stopTracking() {
+                ProxyServletContextListener.this.stopTracking();
             }
-
+            
             @Override
-            public void sessionDestroyed(final HttpSessionEvent se)
-            {
-                final HttpSessionListener sessionDispatcher = getHttpSessionListener();
-                if (sessionDispatcher != null)
-                {
-                    sessionDispatcher.sessionDestroyed(se);
-                }
+            protected void startTracking(final Object bundleContextAttr) {
+                ProxyServletContextListener.this.startTracking(bundleContextAttr);
             }
-        });
-        this.servletContext.addListener(new HttpSessionIdListener()
-        {
-            private HttpSessionIdListener getHttpSessionIdListener()
-            {
-                final EventDispatcherTracker tracker = eventDispatcherTracker;
-                if ( tracker != null )
-                {
-                    return tracker.getHttpSessionIdListener();
-                }
-                return null;
-            }
-
+            
             @Override
-            public void sessionIdChanged(final HttpSessionEvent event, final String oldSessionId)
-            {
-                final HttpSessionIdListener sessionIdDispatcher = getHttpSessionIdListener();
-                if (sessionIdDispatcher != null)
-                {
-                    sessionIdDispatcher.sessionIdChanged(event, oldSessionId);
-                }
-            }
-        });
-        this.servletContext.addListener(new HttpSessionAttributeListener()
-        {
-            private HttpSessionAttributeListener getHttpSessionAttributeListener()
-            {
-                final EventDispatcherTracker tracker = eventDispatcherTracker;
-                if ( tracker != null )
-                {
-                    return tracker.getHttpSessionAttributeListener();
-                }
-                return null;
-            }
-
-            @Override
-            public void attributeAdded(final HttpSessionBindingEvent se)
-            {
-                final HttpSessionAttributeListener attributeDispatcher = getHttpSessionAttributeListener();
-                if (attributeDispatcher != null)
-                {
-                    attributeDispatcher.attributeAdded(se);
-                }
-            }
-
-            @Override
-            public void attributeRemoved(final HttpSessionBindingEvent se)
-            {
-                final HttpSessionAttributeListener attributeDispatcher = getHttpSessionAttributeListener();
-                if (attributeDispatcher != null)
-                {
-                    attributeDispatcher.attributeRemoved(se);
-                }
-            }
-
-            @Override
-            public void attributeReplaced(final HttpSessionBindingEvent se)
-            {
-                final HttpSessionAttributeListener attributeDispatcher = getHttpSessionAttributeListener();
-                if (attributeDispatcher != null)
-                {
-                    attributeDispatcher.attributeReplaced(se);
-                }
-            }
-        });
-        this.servletContext.addListener(new ServletContextAttributeListener()
-        {
-            @Override
-            public void attributeAdded(final ServletContextAttributeEvent event)
-            {
-                if ( event.getName().equals(BundleContext.class.getName()) )
-                {
-                    startTracker(event.getValue());
-                }
-            }
-
-            @Override
-            public void attributeRemoved(final ServletContextAttributeEvent event)
-            {
-                if ( event.getName().equals(BundleContext.class.getName()) )
-                {
-                    stopTracker();
-                }
-            }
-
-            @Override
-            public void attributeReplaced(final ServletContextAttributeEvent event)
-            {
-                if ( event.getName().equals(BundleContext.class.getName()) )
-                {
-                    stopTracker();
-                    startTracker(event.getServletContext().getAttribute(event.getName()));
-                }
+            protected EventDispatcherTracker getEventDispatcherTracker() {
+                return eventDispatcherTracker;
             }
         });
     }
 
-    private void startTracker(final Object bundleContextAttr)
-    {
+    private void stopTracking() {
+        if (eventDispatcherTracker != null)
+        {
+            eventDispatcherTracker.close();
+            eventDispatcherTracker = null;
+        }
+    }
+
+    protected void startTracking(final Object bundleContextAttr) {
         if (bundleContextAttr instanceof BundleContext)
         {
             try
             {
                 final BundleContext bundleContext = (BundleContext) bundleContextAttr;
-                this.eventDispatcherTracker = new EventDispatcherTracker(bundleContext);
-                this.eventDispatcherTracker.open();
+                eventDispatcherTracker = new EventDispatcherTracker(bundleContext);
+                eventDispatcherTracker.open();
             }
             catch (final InvalidSyntaxException e)
             {
@@ -201,19 +94,10 @@ public class ProxyServletContextListener
         }
     }
 
-    private void stopTracker()
-    {
-        if (this.eventDispatcherTracker != null)
-        {
-            this.eventDispatcherTracker.close();
-            this.eventDispatcherTracker = null;
-        }
-    }
-
     @Override
     public void contextDestroyed(final ServletContextEvent sce)
     {
-        this.stopTracker();
+        this.stopTracking();
         this.servletContext = null;
     }
 }
