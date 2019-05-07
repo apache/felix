@@ -45,6 +45,7 @@ public class ConfigurationAdminConfigurationPrinter extends AbstractConfiguratio
     /**
      * @see org.apache.felix.webconsole.ConfigurationPrinter#getTitle()
      */
+    @Override
     public String getTitle()
     {
         return TITLE;
@@ -53,6 +54,7 @@ public class ConfigurationAdminConfigurationPrinter extends AbstractConfiguratio
     /**
      * @see org.apache.felix.webconsole.ConfigurationPrinter#printConfiguration(java.io.PrintWriter)
      */
+    @Override
     public void printConfiguration(PrintWriter pw)
     {
         ServiceReference sr = getBundleContext().getServiceReference( ConfigManager.CONFIGURATION_ADMIN_NAME );
@@ -88,8 +90,8 @@ public class ConfigurationAdminConfigurationPrinter extends AbstractConfiguratio
                     }
                     else
                     {
-                        pw.println("Status: " + configs.length + " configurations and "
-                            + factories.size() + " factories available");
+                        pw.println("Status: " + configs.length + " configurations with " + factories.size()
+                                + " different factories available");
                     }
                     pw.println();
 
