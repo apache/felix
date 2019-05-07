@@ -261,7 +261,7 @@ public class PojoServiceRegistryFactoryImpl implements PojoServiceRegistryFactor
                     }
                     else
                     {
-                        lock.wait();
+                        lock.wait(1000);
                     }
                 }
             }
