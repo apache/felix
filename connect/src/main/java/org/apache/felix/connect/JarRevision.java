@@ -18,6 +18,7 @@
  */
 package org.apache.felix.connect;
 
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
@@ -101,8 +102,11 @@ class JarRevision implements Revision
 
                                 public InputStream getInputStream() throws IOException
                                 {
-
-                                    return getJarFile().getInputStream(getJarEntry());
+                                    JarEntry entry = getJarEntry();
+                                    if (entry == null) {
+                                        throw new FileNotFoundException(u.toExternalForm());
+                                    }
+                                    return getJarFile().getInputStream(entry);
                                 }
                             };
                         }
