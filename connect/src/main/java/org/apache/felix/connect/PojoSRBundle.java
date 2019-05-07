@@ -267,9 +267,8 @@ class PojoSRBundle implements Bundle, BundleRevisions
     @Override
     public URL getResource(String name)
     {
-        // TODO: module - implement this based on the revision
-        URL result = m_classLoader.getResource(name);
-        return result;
+        URL result = getEntry(name);
+        return result != null ? result : m_classLoader.getResource(name != null ? name.trim().startsWith("/") ? name.substring(1) : name : null);
     }
 
     @Override
@@ -462,8 +461,9 @@ class PojoSRBundle implements Bundle, BundleRevisions
     @Override
     public Enumeration<String> getEntryPaths(String path)
     {
-        return new EntryFilterEnumeration<String>(m_revision, false, path, null, false,
+        Enumeration<String> result = new EntryFilterEnumeration<String>(m_revision, false, path, null, false,
                 false);
+        return result.hasMoreElements() ? result : null;
     }
 
     @Override
@@ -483,7 +483,8 @@ class PojoSRBundle implements Bundle, BundleRevisions
     public Enumeration<URL> findEntries(String path, String filePattern, boolean recurse)
     {
         // TODO: module - implement this based on the revision
-        return new EntryFilterEnumeration<URL>(m_revision, true, path, filePattern, recurse, true);
+        Enumeration<URL> result = new EntryFilterEnumeration<URL>(m_revision, true, path, filePattern, recurse, true);
+        return result.hasMoreElements() ? result : null;
     }
 
     @Override
