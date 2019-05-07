@@ -63,7 +63,7 @@ class JarRevision implements Revision
     }
 
     @Override
-    public URL getEntry(String entryName)
+    public URL getEntry(final String entryName)
     {
         try
         {
@@ -83,13 +83,13 @@ class JarRevision implements Revision
                     } else {
                         newUrl = "jar:" + m_urlString + "!/" + ((m_prefix == null) ? "" : m_prefix) + target;
                     }
+
                     URL result = new URL(null, newUrl, new URLStreamHandler()
                     {
                         protected URLConnection openConnection(final URL u) throws IOException
                         {
-                            return new java.net.JarURLConnection(u)
+                            return new java.net.JarURLConnection(new URL(u.toExternalForm()))
                             {
-
                                 public JarFile getJarFile()
                                 {
                                     return m_jar;
@@ -101,23 +101,22 @@ class JarRevision implements Revision
 
                                 public InputStream getInputStream() throws IOException
                                 {
-                                    String extF = u.toExternalForm();
-                                    JarEntry targetEntry = entry;
-                                    if (!extF.endsWith(target))
-                                    {
-                                        extF = extF.substring(extF.indexOf('!') + 2);
-                                        if (m_prefix != null)
-                                        {
-                                            if (!extF.startsWith(m_prefix))
-                                            {
-                                                extF = m_prefix + extF;
-                                            }
-                                        }
-                                        targetEntry = m_jar.getJarEntry(extF);
-                                    }
-                                    return m_jar.getInputStream(targetEntry);
+
+                                    return getJarFile().getInputStream(getJarEntry());
                                 }
                             };
+                        }
+
+                        @Override
+                        protected void setURL(URL u, String protocol, String host, int port, String authority, String userInfo, String path, String query, String ref)
+                        {
+                            super.setURL(u, protocol, path.contains("!/") ? path.substring(0, path.lastIndexOf("!/") + 1) : host, port, authority, userInfo, path.contains("!/") ? path.substring(path.lastIndexOf("!/") + 1) : path, query, ref);
+                        }
+
+                        @Override
+                        protected String toExternalForm(URL u)
+                        {
+                            return u.getHost() != null && u.getHost().contains("!") ? "jar:" + u.getHost() + u.getPath() : super.toExternalForm(u);
                         }
                     });
                     return result;
