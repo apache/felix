@@ -102,7 +102,8 @@ class JarRevision implements Revision
 
                                 public InputStream getInputStream() throws IOException
                                 {
-                                    JarEntry entry = m_jar.getJarEntry(u.getPath());
+                                    String path = u.getPath();
+                                    JarEntry entry = m_jar.getJarEntry(path.startsWith("/") ? path.substring(1) : path);
                                     if (entry == null) {
                                         throw new FileNotFoundException(u.toExternalForm());
                                     }
