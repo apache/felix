@@ -49,7 +49,6 @@ import org.osgi.framework.ServiceException;
 import org.osgi.framework.ServiceFactory;
 import org.osgi.framework.ServiceListener;
 import org.osgi.framework.ServiceObjects;
-import org.osgi.framework.ServicePermission;
 import org.osgi.framework.ServiceReference;
 import org.osgi.framework.ServiceRegistration;
 import org.osgi.framework.hooks.service.FindHook;
@@ -226,19 +225,6 @@ class PojoSRBundleContext implements BundleContext
         }
 
         public S getService() {
-
-            // CONCURRENCY NOTE: This is a check-then-act situation,
-            // but we ignore it since the time window is small and
-            // the result is the same as if the calling thread had
-            // won the race condition.
-
-            final Object sm = System.getSecurityManager();
-
-            if (sm != null)
-            {
-                ((SecurityManager) sm).checkPermission(new ServicePermission(m_ref, ServicePermission.GET));
-            }
-
             return m_reg.getService(m_bundle, m_ref, true);
         }
 
