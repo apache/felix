@@ -90,6 +90,10 @@ public class ServiceUnavailableFilter implements Filter {
     
     private static final String CONTEXT_NAME = "internal.http.serviceunavailablefilter";
 
+    private static final String PROP_STARTUP_CONTEXT_SERVICE_RANKING = "avoid404DuringStartup.contextServiceRanking";
+    private static final String PROP_STARTUP_SERVLET_SERVICE_RANKING = "avoid404DuringStartup.servletServiceRanking";
+
+    
     @ObjectClassDefinition(name = "Health Check Service Unavailable Filter", description = "Returns a 503 Service Unavailable Page if configured tags are in non-ok result")
     public @interface Config {
 
@@ -132,7 +136,7 @@ public class ServiceUnavailableFilter implements Filter {
     private boolean includeExecutionResultInHtmlComment;
     private boolean autoDisableFilter;
     private boolean avoid404DuringStartup;
-
+    
     @Reference
     private ExtendedHealthCheckExecutor executor;
 
@@ -284,13 +288,13 @@ public class ServiceUnavailableFilter implements Filter {
             send503((HttpServletResponse) response, verboseTxtResult);
 
         } else {
+            // regular request processing
+            filterChain.doFilter(request, response);
+
             if (autoDisableFilter && filterServiceRegistration != null) {
                 LOG.info("Unregistering filter ServiceUnavailableFilter for tags {} since result was ok ", Arrays.asList(tags));
                 unregisterFilter();
             }
-
-            // regular request processing
-            filterChain.doFilter(request, response);
         }
     }
 
@@ -349,10 +353,12 @@ public class ServiceUnavailableFilter implements Filter {
     }
 
     private void registerHttpContext() {
+        
         final Dictionary<String, Object> properties = new Hashtable<>();
         properties.put(HttpWhiteboardConstants.HTTP_WHITEBOARD_CONTEXT_NAME, CONTEXT_NAME);
         properties.put(HttpWhiteboardConstants.HTTP_WHITEBOARD_CONTEXT_PATH, "/");
-        properties.put(Constants.SERVICE_RANKING, Integer.MIN_VALUE);
+        Object contextServiceRanking = compProperties.get(PROP_STARTUP_CONTEXT_SERVICE_RANKING);
+        properties.put(Constants.SERVICE_RANKING, contextServiceRanking!=null ? contextServiceRanking : Integer.MIN_VALUE);
 
         this.httpContextRegistration = bundleContext.registerService(ServletContextHelper.class, new ServletContextHelper() {
         }, properties);
@@ -361,9 +367,17 @@ public class ServiceUnavailableFilter implements Filter {
         servletProps.put(HttpWhiteboardConstants.HTTP_WHITEBOARD_CONTEXT_SELECT,
                 "(" + HttpWhiteboardConstants.HTTP_WHITEBOARD_CONTEXT_NAME + "=" + CONTEXT_NAME + ")");
         servletProps.put(HttpWhiteboardConstants.HTTP_WHITEBOARD_SERVLET_PATTERN, "/");
+        Object aservletServiceRanking = compProperties.get(PROP_STARTUP_SERVLET_SERVICE_RANKING);
+        servletProps.put(Constants.SERVICE_RANKING, aservletServiceRanking!=null ? aservletServiceRanking : 0L);
 
         this.defaultServletRegistration = bundleContext.registerService(Servlet.class, new HttpServlet() {
             private static final long serialVersionUID = 1L;
+
+            @Override
+            protected void service(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+                send503((HttpServletResponse) resp, "Response from dynamic startup servlet");
+            }
+            
         }, servletProps);
     }
 
