@@ -78,9 +78,18 @@ public class U {
                         bundle(bundleFile.toURI().toString()),
                         mavenBundle("org.apache.felix", "org.apache.felix.scr", "2.0.14"),
                         mavenBundle("org.apache.felix", "org.apache.felix.configadmin", "1.8.16"),
+                        mavenBundle("org.apache.felix", "org.apache.felix.metatype", "1.1.6"),
+                        mavenBundle("org.apache.felix", "org.apache.felix.eventadmin", "1.4.10"),
+
                         mavenBundle("org.apache.felix", "org.apache.felix.healthcheck.api").versionAsInProject(),
                         mavenBundle().groupId("org.apache.commons").artifactId("commons-lang3").versionAsInProject(),
-                        mavenBundle().groupId("javax.servlet").artifactId("javax.servlet-api").versionAsInProject(),
+
+                        mavenBundle("org.apache.felix", "org.apache.felix.http.servlet-api", "1.1.2"),
+                        mavenBundle("org.apache.felix", "org.apache.felix.http.jetty", "4.0.2"),
+                        mavenBundle("org.apache.felix", "org.apache.felix.http.whiteboard", "4.0.0"),
+                        mavenBundle("org.apache.felix", "org.apache.felix.http.sslfilter", "1.2.4"),
+                        
+                        
                         mavenBundle().groupId("org.apache.servicemix.bundles").artifactId("org.apache.servicemix.bundles.quartz")
                                 .versionAsInProject()));
     }
