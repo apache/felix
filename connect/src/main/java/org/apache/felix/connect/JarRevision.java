@@ -107,6 +107,12 @@ class JarRevision implements Revision
                                     return path.startsWith("/") ? path.substring(1) : path;
                                 }
 
+                                @Override
+                                public JarEntry getJarEntry() throws IOException
+                                {
+                                    return getJarFile().getJarEntry(getEntryName());
+                                }
+
                                 public InputStream getInputStream() throws IOException
                                 {
                                     JarEntry entry = getJarEntry();
