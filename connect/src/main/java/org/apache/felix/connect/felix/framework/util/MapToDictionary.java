@@ -24,8 +24,8 @@ import java.util.Enumeration;
 import java.util.Map;
 
 /**
- * This is a simple class that implements a <tt>Dictionary</tt> from a
- * <tt>Map</tt>. The resulting dictionary is immutable.
+ * This is a simple class that implements a {@code Dictionary} from a
+ * {@code Map}. The resulting dictionary is immutable.
  */
 public class MapToDictionary<K, V> extends Dictionary<K, V>
 {
@@ -43,41 +43,49 @@ public class MapToDictionary<K, V> extends Dictionary<K, V>
         m_map = map;
     }
 
+    @Override
     public Enumeration<V> elements()
     {
         return Collections.enumeration(m_map.values());
     }
 
+    @Override
     public V get(Object key)
     {
         return m_map.get(key);
     }
 
+    @Override
     public boolean isEmpty()
     {
         return m_map.isEmpty();
     }
 
+    @Override
     public Enumeration<K> keys()
     {
         return Collections.enumeration(m_map.keySet());
     }
 
+    @Override
     public V put(K key, V value)
     {
         throw new UnsupportedOperationException();
     }
 
+    @Override
     public V remove(Object key)
     {
         throw new UnsupportedOperationException();
     }
 
+    @Override
     public int size()
     {
         return m_map.size();
     }
 
+    @Override
     public String toString()
     {
         return m_map.toString();

@@ -97,6 +97,7 @@ class ServiceRegistrationImpl implements ServiceRegistration
         m_svcObj = null;
     }
 
+    @Override
     public synchronized ServiceReference getReference()
     {
         // Make sure registration is valid.
@@ -108,6 +109,7 @@ class ServiceRegistrationImpl implements ServiceRegistration
         return m_ref;
     }
 
+    @Override
     public void setProperties(Dictionary dict)
     {
         Map oldProps;
@@ -128,6 +130,7 @@ class ServiceRegistrationImpl implements ServiceRegistration
         m_registry.servicePropertiesModified(this, new MapToDictionary(oldProps));
     }
 
+    @Override
     public void unregister()
     {
         synchronized (this)
@@ -151,12 +154,13 @@ class ServiceRegistrationImpl implements ServiceRegistration
     //
 
     /**
-     * This method determines if the class loader of the service object
-     * has access to the specified class.
+     * This method determines if the class loader of the service object has access
+     * to the specified class.
+     * 
      * @param clazz the class to test for reachability.
-     * @return <tt>true</tt> if the specified class is reachable from the
-     *         service object's class loader, <tt>false</tt> otherwise.
-    **/
+     * @return {@code true} if the specified class is reachable from the service
+     *         object's class loader, {@code false} otherwise.
+     **/
     private boolean isClassAccessible(Class clazz)
     {
         return true;
@@ -339,6 +343,7 @@ class ServiceRegistrationImpl implements ServiceRegistration
             m_svcObj = svcObj;
         }
 
+        @Override
         public Object run() throws Exception
         {
             if (m_svcObj == null)
@@ -410,16 +415,19 @@ class ServiceRegistrationImpl implements ServiceRegistration
         // ServiceReference methods.
         //
 
+        @Override
         public Object getProperty(String s)
         {
             return ServiceRegistrationImpl.this.getProperty(s);
         }
 
+        @Override
         public String[] getPropertyKeys()
         {
             return ServiceRegistrationImpl.this.getPropertyKeys();
         }
 
+        @Override
         public Bundle getBundle()
         {
             // The spec says that this should return null if
@@ -427,6 +435,7 @@ class ServiceRegistrationImpl implements ServiceRegistration
             return (isValid()) ? m_bundle : null;
         }
 
+        @Override
         public Bundle[] getUsingBundles()
         {
             return ServiceRegistrationImpl.this.getUsingBundles();
@@ -447,11 +456,13 @@ class ServiceRegistrationImpl implements ServiceRegistration
             return oc;
         }
 
+        @Override
         public boolean isAssignableTo(Bundle requester, String className)
         {
             return true;
         }
 
+        @Override
         public int compareTo(Object reference)
         {
             ServiceReference other = (ServiceReference) reference;
@@ -498,61 +509,73 @@ class ServiceRegistrationImpl implements ServiceRegistration
 
     private class ServiceReferenceMap implements Map
     {
+        @Override
         public int size()
         {
             throw new UnsupportedOperationException("Not supported yet.");
         }
 
+        @Override
         public boolean isEmpty()
         {
             throw new UnsupportedOperationException("Not supported yet.");
         }
 
+        @Override
         public boolean containsKey(Object o)
         {
             throw new UnsupportedOperationException("Not supported yet.");
         }
 
+        @Override
         public boolean containsValue(Object o)
         {
             throw new UnsupportedOperationException("Not supported yet.");
         }
 
+        @Override
         public Object get(Object o)
         {
             return ServiceRegistrationImpl.this.getProperty((String) o);
         }
 
+        @Override
         public Object put(Object k, Object v)
         {
             throw new UnsupportedOperationException("Not supported yet.");
         }
 
+        @Override
         public Object remove(Object o)
         {
             throw new UnsupportedOperationException("Not supported yet.");
         }
 
+        @Override
         public void putAll(Map map)
         {
             throw new UnsupportedOperationException("Not supported yet.");
         }
 
+        @Override
         public void clear()
         {
             throw new UnsupportedOperationException("Not supported yet.");
         }
 
+        @Override
         public Set<Object> keySet()
         {
             throw new UnsupportedOperationException("Not supported yet.");
         }
 
+        @Override
         public Collection<Object> values()
         {
             throw new UnsupportedOperationException("Not supported yet.");
         }
 
+        @Override
         public Set<Entry<Object, Object>> entrySet()
         {
             return Collections.EMPTY_SET;

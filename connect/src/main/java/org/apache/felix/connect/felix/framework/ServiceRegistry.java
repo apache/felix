@@ -203,10 +203,10 @@ public class ServiceRegistry
     }
 
     /**
-     * This method retrieves all services registrations for the specified
-     * bundle and invokes <tt>ServiceRegistration.unregister()</tt> on each
-     * one. This method is only called be the framework to clean up after
-     * a stopped bundle.
+     * This method retrieves all services registrations for the specified bundle and
+     * invokes {@code ServiceRegistration.unregister()} on each one. This method is
+     * only called be the framework to clean up after a stopped bundle.
+     * 
      * @param bundle the bundle whose services should be unregistered.
      **/
     public void unregisterServices(final Bundle bundle)
@@ -493,7 +493,7 @@ public class ServiceRegistry
                         {
                             if (usage.m_svcHolderRef.compareAndSet(holder, null))
                             {
-                                // Temporarily increase the usage again so that the 
+                                // Temporarily increase the usage again so that the
                                 // service factory still sees the usage in the unget
                                 usage.m_count.incrementAndGet();
                                 try
@@ -501,7 +501,7 @@ public class ServiceRegistry
                                     // Remove reference from usages array.
                                     reg.ungetService(bundle, svc);
                                 }
-                                finally 
+                                finally
                                 {
                                     // now we can decrease the usage again
                                     usage.m_count.decrementAndGet();

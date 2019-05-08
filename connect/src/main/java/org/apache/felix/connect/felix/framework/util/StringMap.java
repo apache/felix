@@ -22,12 +22,11 @@ import java.util.Map;
 import java.util.TreeMap;
 
 /**
- * Simple utility class that creates a map for string-based keys.
- * This map can be set to use case-sensitive or case-insensitive
- * comparison when searching for the key.  Any keys put into this
- * map will be converted to a <tt>String</tt> using the
- * <tt>toString()</tt> method, since it is only intended to
- * compare strings.
+ * Simple utility class that creates a map for string-based keys. This map can
+ * be set to use case-sensitive or case-insensitive comparison when searching
+ * for the key. Any keys put into this map will be converted to a {@code String}
+ * using the {@code toString()} method, since it is only intended to compare
+ * strings.
  **/
 public class StringMap extends TreeMap<String, Object>
 {

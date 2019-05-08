@@ -85,9 +85,9 @@ public class Util
     }
 
     /**
-     * Converts a module identifier to a bundle identifier. Module IDs are
-     * typically <tt>&lt;bundle-id&gt;.&lt;revision&gt;</tt>; this method
-     * returns only the portion corresponding to the bundle ID.
+     * Converts a module identifier to a bundle identifier. Module IDs are typically
+     * {@code &lt;bundle-id&gt;.&lt;revision&gt;}; this method returns only the
+     * portion corresponding to the bundle ID.
      */
     public static long getBundleIdFromModuleId(String id)
     {
@@ -104,9 +104,9 @@ public class Util
     }
 
     /**
-     * Converts a module identifier to a bundle identifier. Module IDs are
-     * typically <tt>&lt;bundle-id&gt;.&lt;revision&gt;</tt>; this method
-     * returns only the portion corresponding to the revision.
+     * Converts a module identifier to a bundle identifier. Module IDs are typically
+     * {@code &lt;bundle-id&gt;.&lt;revision&gt;}; this method returns only the
+     * portion corresponding to the revision.
      */
     public static int getModuleRevisionFromModuleId(String id)
     {
@@ -171,30 +171,29 @@ public class Util
 
     /**
      * <p>
-     * This is a simple utility class that attempts to load the named class
-     * using the class loader of the supplied class or the class loader of one
-     * of its super classes or their implemented interfaces. This is necessary
-     * during service registration to test whether a given service object
-     * implements its declared service interfaces.
+     * This is a simple utility class that attempts to load the named class using
+     * the class loader of the supplied class or the class loader of one of its
+     * super classes or their implemented interfaces. This is necessary during
+     * service registration to test whether a given service object implements its
+     * declared service interfaces.
      * </p>
      * <p>
-     * To perform this test, the framework must try to load the classes
-     * associated with the declared service interfaces, so it must choose a
-     * class loader. The class loader of the registering bundle cannot be used,
-     * since this disallows third parties to register service on behalf of
-     * another bundle. Consequently, the class loader of the service object must
-     * be used. However, this is also not sufficient since the class loader of
-     * the service object may not have direct access to the class in question.
+     * To perform this test, the framework must try to load the classes associated
+     * with the declared service interfaces, so it must choose a class loader. The
+     * class loader of the registering bundle cannot be used, since this disallows
+     * third parties to register service on behalf of another bundle. Consequently,
+     * the class loader of the service object must be used. However, this is also
+     * not sufficient since the class loader of the service object may not have
+     * direct access to the class in question.
      * </p>
      * <p>
-     * The service object's class loader may not have direct access to its
-     * service interface if it extends a super class from another bundle which
-     * implements the service interface from an imported bundle or if it
-     * implements an extension of the service interface from another bundle
-     * which imports the base interface from another bundle. In these cases, the
-     * service object's class loader only has access to the super class's class
-     * or the extended service interface, respectively, but not to the actual
-     * service interface.
+     * The service object's class loader may not have direct access to its service
+     * interface if it extends a super class from another bundle which implements
+     * the service interface from an imported bundle or if it implements an
+     * extension of the service interface from another bundle which imports the base
+     * interface from another bundle. In these cases, the service object's class
+     * loader only has access to the super class's class or the extended service
+     * interface, respectively, but not to the actual service interface.
      * </p>
      * <p>
      * Thus, it is necessary to not only try to load the service interface class
@@ -203,8 +202,8 @@ public class Util
      * </p>
      *
      * @param clazz the class that is the root of the search.
-     * @param name   the name of the class to load.
-     * @return the loaded class or <tt>null</tt> if it could not be loaded.
+     * @param name  the name of the class to load.
+     * @return the loaded class or {@code null} if it could not be loaded.
      */
     public static Class loadClassUsingClass(Class clazz, String name)
     {
@@ -248,14 +247,13 @@ public class Util
     }
 
     /**
-     * This method determines if the requesting bundle is able to cast the
-     * specified service reference based on class visibility rules of the
-     * underlying modules.
+     * This method determines if the requesting bundle is able to cast the specified
+     * service reference based on class visibility rules of the underlying modules.
      *
      * @param requester The bundle requesting the service.
      * @param ref       The service in question.
-     * @return <tt>true</tt> if the requesting bundle is able to case the
-     * service object to a known type.
+     * @return {@code true} if the requesting bundle is able to case the service
+     *         object to a known type.
      */
     public static boolean isServiceAssignable(Bundle requester,
                                               ServiceReference ref)
@@ -399,24 +397,25 @@ public class Util
 
     /**
      * <p>
-     * This method performs property variable substitution on the specified
-     * value. If the specified value contains the syntax
-     * <tt>${&lt;prop-name&gt;}</tt>, where <tt>&lt;prop-name&gt;</tt> refers to
-     * either a configuration property or a system property, then the
-     * corresponding property value is substituted for the variable placeholder.
-     * Multiple variable placeholders may exist in the specified value as well
-     * as nested variable placeholders, which are substituted from inner most to
-     * outer most. Configuration properties override system properties.
+     * This method performs property variable substitution on the specified value.
+     * If the specified value contains the syntax {@code ${&lt;prop-name&gt;}},
+     * where {@code &lt;prop-name&gt;} refers to either a configuration property or
+     * a system property, then the corresponding property value is substituted for
+     * the variable placeholder. Multiple variable placeholders may exist in the
+     * specified value as well as nested variable placeholders, which are
+     * substituted from inner most to outer most. Configuration properties override
+     * system properties.
      * </p>
      *
      * @param val         The string on which to perform property substitution.
-     * @param currentKey  The key of the property being evaluated used to detect cycles.
+     * @param currentKey  The key of the property being evaluated used to detect
+     *                    cycles.
      * @param cycleMap    Map of variable references used to detect nested cycles.
      * @param configProps Set of configuration properties.
-     * @return The value of the specified string after system property
-     * substitution.
-     * @throws IllegalArgumentException If there was a syntax error in the property placeholder
-     *                                  syntax or a recursive variable reference.
+     * @return The value of the specified string after system property substitution.
+     * @throws IllegalArgumentException If there was a syntax error in the property
+     *                                  placeholder syntax or a recursive variable
+     *                                  reference.
      */
     public static String substVars(String val, String currentKey, Map cycleMap,
                                    Properties configProps) throws IllegalArgumentException
