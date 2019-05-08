@@ -34,7 +34,6 @@ import javax.servlet.http.HttpServletResponse;
 import org.apache.commons.lang3.StringEscapeUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.felix.hc.api.Result;
-import org.apache.felix.hc.api.Result.Status;
 import org.apache.felix.hc.api.execution.HealthCheckExecutionOptions;
 import org.apache.felix.hc.api.execution.HealthCheckExecutionResult;
 import org.apache.felix.hc.api.execution.HealthCheckExecutor;

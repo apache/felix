@@ -35,6 +35,7 @@ import org.ops4j.pax.exam.Configuration;
 import org.ops4j.pax.exam.Option;
 import org.ops4j.pax.exam.junit.PaxExam;
 import org.osgi.framework.BundleContext;
+import org.osgi.framework.Constants;
 import org.osgi.framework.InvalidSyntaxException;
 import org.osgi.framework.ServiceRegistration;
 import org.osgi.service.cm.ConfigurationAdmin;
@@ -75,7 +76,9 @@ public class HealthCheckServletIT {
     @Before
     public void setup() {
         httpService = new MockHttpService();
-        reg = bundleContext.registerService(HttpService.class.getName(), httpService, null);
+        Dictionary<String,Object> httpServiceProps = new Hashtable<String,Object> ();
+        httpServiceProps.put(Constants.SERVICE_RANKING, Integer.MAX_VALUE);
+        reg = bundleContext.registerService(HttpService.class.getName(), httpService, httpServiceProps);
     }
 
     @After
