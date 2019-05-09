@@ -1,3 +1,32 @@
+Changes from 4.1.0 to 4.2.0
+---------------------------
+
+* Improvement
+
+    * [FELIX-6073] - Upgrade to Maven 3
+    * [FELIX-6074] - Check for stale input and avoid recomputing the manifest if no changes
+    * [FELIX-6075] - Upgrade to JDK 8
+    * [FELIX-6078] - Add an option to silently ignore some project types instead of displaying a warning
+    * [FELIX-6081] - Upgrade bndlib to 4.2.0 in order to properly calculate osgi.ee for embedded dependencies
+
+
+Changes from 4.0.0 to 4.1.0
+---------------------------
+
+** Improvement
+    * Prep for bndlib 4.1.0
+
+
+Changes from 3.5.0 to 4.0.0
+---------------------------
+
+** Bug
+    * [FELIX-5794] - maven-bundle-plugin fails to parse meta-persistence
+
+** Improvement
+    * [FELIX-5920] - Prepare maven-bundle-plugin for release with bndlib 4.0.0
+
+
 Changes from 3.4.0 to 3.5.0
 ---------------------------
 
