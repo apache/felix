@@ -598,9 +598,11 @@ public class BundlePlugin extends AbstractMojo
         builder.setProperties( sanitize( properties ) );
         if ( classpath != null )
         {
-            Jar[] jars = new Jar[ classpath.length ];
+            List<Jar> jars = new ArrayList<>();
             for ( int i = 0; i < classpath.length; i++ ) {
-                jars[i] = new Jar( classpath[i].id, classpath[i].file );
+                if ( classpath[i].file.exists() ) {
+                    jars.add( new Jar( classpath[i].id, classpath[i].file ) );
+                }
             }
             builder.setClasspath( jars );
         }
