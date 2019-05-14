@@ -20,7 +20,7 @@ See also:
 * [Source code for the HealthCheck modules](http://svn.apache.org/repos/asf/felix/trunk/healthcheck)
 * adaptTo() slides about Health Checks (from the time when they were part of Apache Sling):
     * [adaptTo() 2013 - Automated self-testing and health check of live Sling instances](https://adapt.to/2013/en/schedule/18_healthcheck.html)
-    * [adaptTo() 2014 - New features of the sling health check](https://adapt.to/2014/en/schedule/new-features-of-the-sling-health-check.html)
+    * [adaptTo() 2014 - New features of the Sling Health Check](https://adapt.to/2014/en/schedule/new-features-of-the-sling-health-check.html)
 
 ## Use cases
 Generally health checks have two high level use cases:
@@ -216,3 +216,22 @@ at `/system/console/healthcheck` allows for executing health checks, optionally 
 based on their tags (positive and negative selection, see the `HealthCheckFilter` mention above).
 
 The DEBUG logs of health checks can optionally be displayed, and an option allows for showing only health checks that have a non-OK status.
+
+## Servlet Filters
+
+### Service Unavailable Filter
+
+For health states of the system that mean that requests can only fail it is possible to configure a Service Unavailable Filter that will cut off all requests if certain tags are in a `CRITICAL` or `TEMPORARILY_UNAVAILABLE` status. Typical usecases are startup/shutdown and deployments. Other scenarios include maintenance processes that require request processing of certain servlets to be stalled (the filter can be configured to be active on arbitrary paths). It is possible to configure a custom response text/html. 
+
+Configure the factory configuration with PID 
+`org.apache.felix.hc.core.impl.filter.ServiceUnavailableFilter` with specific parameters to activate the Service Unavailable Filter, see metatype annotations for documentation of specific configuration properties.
+
+### Adding ad hoc results during request processing
+
+For certain scenarios it is useful to add a health check dynamically for a specific tag durign request processing, e.g. it can be useful during deployment requests (the tag(s) being added can be queried by e.g. load balancer or Service Unavailable Filter.
+
+To achieve this configure the factory configuration with PID 
+`org.apache.felix.hc.core.impl.filter.AdhocResultDuringRequestProcessingFilter` with specific parameters, see metatype annotations for documentation of specific configuration properties.
+
+
+
