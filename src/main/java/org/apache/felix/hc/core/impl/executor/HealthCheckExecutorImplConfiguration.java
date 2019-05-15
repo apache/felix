@@ -45,4 +45,7 @@ import org.osgi.service.metatype.annotations.ObjectClassDefinition;
 
     @AttributeDefinition(name = "Default Tags", description = "Default tags to be executed if no tags are explicitly supplied")
     String[] defaultTags() default {"default"};
+
+    @AttributeDefinition(name = "Auto Logging", description = "If enabled, will automatically log entries of ResultLog (or FormattingResultLog resp.) using Log4j. The logging category used is the class instantiating ResultLog prefixed with 'healthchecks.', for instance 'healthchecks.com.mycorp.myplatform.mymodule.ModuleCheck'.")
+    boolean autoLogging() default false;
 }
