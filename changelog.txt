@@ -2,6 +2,9 @@ Changes in 4.3.10
 -----------------
 ** Improvement
     * [FELIX-5934] - The web console stores unsalted hashed password
+** Bug
+    * [FELIX-6128] - Escape bundle name and manifest headers
+    * [FELIX-6127] - Escape name hint in configuration listing
 
 
 Changes in 4.3.8
