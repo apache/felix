@@ -17,6 +17,7 @@
  */
 package org.apache.felix.hc.core.impl.executor;
 
+import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 
@@ -35,7 +36,7 @@ public class CombinedExecutionResult implements HealthCheckExecutionResult {
         this(executionResults,  Result.Status.OK);
     }
     public CombinedExecutionResult(List<HealthCheckExecutionResult> executionResults, Result.Status statusForZeroResult) {
-        this.executionResults = executionResults;
+        this.executionResults = Collections.unmodifiableList(executionResults);
         Result.Status mostSevereStatus = executionResults.isEmpty() ? statusForZeroResult : Result.Status.OK;
         for (HealthCheckExecutionResult executionResult : executionResults) {
             Status status = executionResult.getHealthCheckResult().getStatus();
@@ -51,6 +52,9 @@ public class CombinedExecutionResult implements HealthCheckExecutionResult {
         return overallResult;
     }
 
+    public List<HealthCheckExecutionResult> getExecutionResults() {
+        return executionResults;
+    }
     @Override
     public long getElapsedTimeInMs() {
         long maxElapsed = 0;
