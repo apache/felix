@@ -143,6 +143,11 @@ function displayConfigForm(obj) {
 	// Resize all the textareas based on their content
     autosize.update($('textarea'));
 }
+function escapeHtml(str) {
+    var div = document.createElement('div');
+    div.appendChild(document.createTextNode(str));
+    return div.innerHTML;
+}
 
 /* Element */ function addDefaultValue( /* Element */ element ) {
 	if (element) {
@@ -537,7 +542,7 @@ function addConfig(conf) {
 	var nms = tr.find('td:eq(1) div');
 	if (conf.fpid) { 
         if (conf.nameHint) {
-		    nms.after("<span title='" + conf.id + "'>" + conf.nameHint + "</span>");
+		    nms.after("<span title='" + conf.id + "'>" + escapeHtml(conf.nameHint) + "</span>");
 		} else {
 			nms.after(conf.id);
         }
