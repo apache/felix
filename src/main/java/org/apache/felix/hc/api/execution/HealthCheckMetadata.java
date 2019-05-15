@@ -18,6 +18,7 @@
 package org.apache.felix.hc.api.execution;
 
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -201,6 +202,11 @@ public class HealthCheckMetadata {
             res.add((String) arrayProp);
         } else if (arrayProp instanceof String[]) {
             res.addAll(Arrays.asList((String[]) arrayProp));
+        } else if (arrayProp instanceof Collection) { 
+            Collection<?> collectionProp = (Collection<?>) arrayProp;
+            for(Object tagObj: collectionProp) {
+                res.add(tagObj.toString());
+            }
         }
         return res;
     }
