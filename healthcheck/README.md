@@ -87,6 +87,8 @@ A simple health check implementation might look like follows:
 The `Result` is a simple immutable class that provides a `Status` via `getStatus()` (OK, WARN, CRITICAL etc.) and one or more log-like messages that
 can provide more info about what, if anything, went wrong.
 
+Instead of using Log4j side by side with ResultLog/FormattingResultLog it is recommended to turn on `autoLogging` in the [health check executor config](#configuring-the-health-check-executor) in order to keep the implementation classes DRY. **NOTE:** This feature does not work with checks implemented against the legacy Sling interface.
+
 ### Semantic meaning of health check results
 In order to make health check results aggregatable in a reasonable way, it is important that result status values are used in a consistent way across different checks. When implementing custom health checks, comply to the following table:
 
@@ -184,6 +186,7 @@ Property    | Type     | Default | Description
 `longRunningFutureThresholdForCriticalMs` | Long | 300000ms (5min) | Threshold in ms until a check is marked as 'exceedingly' timed out and will marked CRITICAL instead of WARN only
 `resultCacheTtlInMs` | Long | 2000ms | Result Cache time to live - results will be cached for the given time
 `temporarilyAvailableGracePeriodInMs` | Long | 60000ms (10min) | After this configured period, health checks continously reporting `TEMPORARILY_UNAVAILABLE` are automatically turned into status `CRITICAL`
+`autoLogging` | Boolean | false | If enabled, will automatically log entries of ResultLog (or FormattingResultLog resp.) using Log4j. The logging category used is the class instantiating ResultLog prefixed with 'healthchecks.', for instance 'healthchecks.com.mycorp.myplatform.mymodule.ModuleCheck'. The prefix allows for easy configuration of a log file containing all health check results.
 
 
 ### JMX access to health checks

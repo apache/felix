@@ -23,12 +23,18 @@ import java.util.LinkedList;
 import java.util.List;
 
 import org.apache.felix.hc.api.Result.Status;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /** The log of a Result, allows for providing multiple lines of information which are aggregated as a single Result. */
 public class ResultLog implements Iterable<ResultLog.Entry> {
-
+    private static final String HC_LOGGING_SYS_PROP = "org.apache.felix.hc.autoLogging";
+    private static final String HC_LOGGING_PREFIX = "healthchecks.";
+    
     private List<Entry> entries = new LinkedList<Entry>();
     private Status aggregateStatus;
+    
+    private Logger hcLogger = null;
 
     /** An entry in this log */
     public static class Entry {
@@ -99,27 +105,82 @@ public class ResultLog implements Iterable<ResultLog.Entry> {
      * first log entry, and then the status aggregation rules take over. */
     public ResultLog() {
         aggregateStatus = Result.Status.WARN;
+        setupLogger();
     }
 
     /** Create a copy of the result log */
     public ResultLog(final ResultLog log) {
         this.aggregateStatus = log.aggregateStatus;
         this.entries = new ArrayList<ResultLog.Entry>(log.entries);
+        setupLogger();
     }
 
+    private void setupLogger() {
+        if(Boolean.valueOf(System.getProperty(HC_LOGGING_SYS_PROP))) {
+            StackTraceElement[] stackTraceElements = Thread.currentThread().getStackTrace();
+            for (int i = 2; i < stackTraceElements.length; i++) {
+                StackTraceElement stackTraceElement = stackTraceElements[i];
+                String className = stackTraceElement.getClassName();
+                if(className.startsWith(getClass().getPackage().getName())) {
+                    continue; // same package we ignore
+                }
+                if(className.startsWith("org.apache.felix.hc.core.impl.executor")) {
+                    break; // internal helper results
+                }
+                hcLogger = LoggerFactory.getLogger(HC_LOGGING_PREFIX + className);
+                break; // stop searching
+            }
+       }
+    }
+
+    
     /** Add an entry to this log. The aggregate status of this is set to the highest of the current aggregate status and the new Entry's
      * status */
-    public ResultLog add(Entry e) {
+    public ResultLog add(Entry entry) {
         if (entries.isEmpty()) {
             aggregateStatus = Result.Status.OK;
         }
-        entries.add(e);
-        if (e.getStatus().ordinal() > aggregateStatus.ordinal()) {
-            aggregateStatus = e.getStatus();
+
+        entries.add(entry);
+
+        logEntry(entry);
+
+        if (entry.getStatus().ordinal() > aggregateStatus.ordinal()) {
+            aggregateStatus = entry.getStatus();
         }
         return this;
     }
 
+    private void logEntry(Entry entry) {
+        if(hcLogger != null) {
+            if(entry.isDebug()) {
+                if(hcLogger.isDebugEnabled()) {
+                    hcLogger.debug(getAutoLogMessage(entry), entry.exception);
+                }
+            } else {
+                switch(entry.getStatus()) {
+                case OK: 
+                case TEMPORARILY_UNAVAILABLE: 
+                    if(hcLogger.isInfoEnabled()) {
+                        hcLogger.info(getAutoLogMessage(entry), entry.exception);
+                    }
+                    break;
+                case WARN: 
+                    hcLogger.warn(getAutoLogMessage(entry), entry.exception);
+                    break;
+                case CRITICAL: 
+                case HEALTH_CHECK_ERROR: 
+                    hcLogger.error(getAutoLogMessage(entry), entry.exception);
+                    break;
+                }
+            }
+        }
+    }
+
+    private String getAutoLogMessage(Entry e) {
+        return e.status.name() + " " + e.getMessage();
+    }
+    
     /** Return an Iterator on our entries */
     @Override
     public Iterator<ResultLog.Entry> iterator() {

@@ -20,7 +20,6 @@ package org.apache.felix.hc.core.impl.executor;
 import static org.apache.felix.hc.api.FormattingResultLog.msHumanReadable;
 import static org.apache.felix.hc.core.impl.executor.HealthCheckExecutorImplConfiguration.LONGRUNNING_FUTURE_THRESHOLD_CRITICAL_DEFAULT_MS;
 import static org.apache.felix.hc.core.impl.executor.HealthCheckExecutorImplConfiguration.RESULT_CACHE_TTL_DEFAULT_MS;
-import static org.apache.felix.hc.core.impl.executor.HealthCheckExecutorImplConfiguration.TEMPORARILY_UNAVAILABLE_GRACE_PERIOD_DEFAULT_MS;
 import static org.apache.felix.hc.core.impl.executor.HealthCheckExecutorImplConfiguration.TIMEOUT_DEFAULT_MS;
 
 import java.text.DateFormat;
@@ -77,6 +76,8 @@ public class HealthCheckExecutorImpl implements ExtendedHealthCheckExecutor, Ser
 
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
 
+    private static final String HC_LOGGING_SYS_PROP = "org.apache.felix.hc.autoLogging";
+    
     private long timeoutInMs;
 
     private long longRunningFutureThresholdForRedMs;
@@ -151,6 +152,9 @@ public class HealthCheckExecutorImpl implements ExtendedHealthCheckExecutor, Ser
         this.defaultTags = configuration.defaultTags();
 
         tempUnavailableGracePeriodEvaluator = new TempUnavailableGracePeriodEvaluator(configuration.temporarilyAvailableGracePeriodInMs());
+        
+        System.setProperty(HC_LOGGING_SYS_PROP, String.valueOf(configuration.autoLogging()));
+
     }
 
     @Override
