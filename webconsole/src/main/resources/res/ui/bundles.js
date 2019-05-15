@@ -71,7 +71,11 @@ function renderData( eventData, filter )  {
 	// show dialog on error
 	if (eventData.error) bundleOpError.dialog('open').find('pre').text(eventData.error)
 }
-
+function escapeHtml(str) {
+    var div = document.createElement('div');
+    div.appendChild(document.createTextNode(str));
+    return div.innerHTML;
+}
 function entry( /* Object */ bundle, filter ) {
 	var matches = !(filter && typeof filter.test == 'function') ? true :
 		filter.test(bundle.id) || filter.test(bundle.name) || filter.test(bundle.symbolicName) || filter.test(bundle.version) || filter.test(bundle.category);
@@ -92,8 +96,7 @@ function stateString(b) {
 function entryInternal( /* Object */ bundle ) {
 	var tr = bundlesTemplate.clone();
     var id = bundle.id;
-    var name = bundle.name + '<span class="symName">' + bundle.symbolicName + '</span>';
-
+    var name = escapeHtml(bundle.name) + '<span class="symName">' + bundle.symbolicName + '</span>';
 	tr.attr('id', 'entry'+id);
 	tr.children('td:eq(0)').text(id);
 	tr.find('.bIcon').attr('id', 'img'+id).click(function() {showDetails(id)});
@@ -205,7 +208,7 @@ function renderDetails( data ) {
         			if (ie.type == 'link' || ie.type == 'resource') {
         				txt += '<a href="' + ie.value + '">' + ie.name + '</a>';
         			} else {
-        				txt += ie.name + " = " + ie.value;
+        				txt += ie.name + " = " + escapeHtml(ie.value);
         			}
         			txt += '</div>';
         		});
@@ -241,7 +244,7 @@ function renderDetailsEntry(key, value) {
 	                } else if (xv.substring(0, 7) == "ERROR: ") {
 	                	txt += "<span class='ui-state-error-text'>" + xv.substring(6) + "</span>";
 	                } else {
-	                	txt +=  xv;
+	                	txt +=  key=='Manifest Headers'? escapeHtml(xv) : xv ;
 	                }
                     i++;
                 }
