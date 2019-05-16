@@ -25,6 +25,7 @@ import java.util.Hashtable;
 
 import org.apache.felix.cm.PersistenceManager;
 import org.apache.felix.cm.file.FilePersistenceManager;
+import org.apache.felix.cm.impl.persistence.MemoryPersistenceManager;
 import org.apache.felix.cm.impl.persistence.PersistenceManagerTracker;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleActivator;
@@ -78,6 +79,9 @@ public class Activator implements BundleActivator
     // the service registration of the default file persistence manager
     private volatile ServiceRegistration<PersistenceManager> filepmRegistration;
 
+    // the service registration of the memory persistence manager
+    private volatile ServiceRegistration<PersistenceManager> memorypmRegistration;
+
     @Override
     public void start( final BundleContext bundleContext ) throws BundleException
     {
@@ -90,6 +94,8 @@ public class Activator implements BundleActivator
         {
             throw new BundleException("Unable to register default persistence manager.");
         }
+        // register memory persistence manager
+        registerMemoryPersistenceManager(bundleContext);
 
         String configuredPM = bundleContext.getProperty(CM_CONFIG_PM);
         if ( configuredPM != null && configuredPM.isEmpty() )
@@ -121,8 +127,9 @@ public class Activator implements BundleActivator
             this.tracker = null;
         }
 
-        // shutdown the file persistence manager and unregister
+        // shutdown the file and memory persistence manager and unregister
         this.unregisterFilePersistenceManager();
+        this.unregisterMemoryPersistenceManager();
     }
 
     private PersistenceManager registerFilePersistenceManager(final BundleContext bundleContext)
@@ -148,12 +155,33 @@ public class Activator implements BundleActivator
         return null;
     }
 
+    private void registerMemoryPersistenceManager(final BundleContext bundleContext) {
+        try {
+            final MemoryPersistenceManager mpm = new MemoryPersistenceManager();
+            final Dictionary<String, Object> props = new Hashtable<>();
+            props.put(Constants.SERVICE_DESCRIPTION, "Platform Memory Persistence Manager");
+            props.put(Constants.SERVICE_VENDOR, "The Apache Software Foundation");
+            props.put(PersistenceManager.PROPERTY_NAME, "memory");
+            memorypmRegistration = bundleContext.registerService(PersistenceManager.class, mpm, props);
+
+        } catch (final IllegalArgumentException iae) {
+            Log.logger.log(LogService.LOG_ERROR, "Cannot create the MemoryPersistenceManager", iae);
+        }
+    }
+
     private void unregisterFilePersistenceManager()
     {
         if ( this.filepmRegistration != null )
         {
             this.filepmRegistration.unregister();
             this.filepmRegistration = null;
+        }
+    }
+
+    private void unregisterMemoryPersistenceManager() {
+        if (this.memorypmRegistration != null) {
+            this.memorypmRegistration.unregister();
+            this.memorypmRegistration = null;
         }
     }
 

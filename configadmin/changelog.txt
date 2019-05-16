@@ -1,3 +1,17 @@
+Changes in 1.9.16
+-----------------
+** New Feature
+    * [FELIX-6131] : Add in-memory persistence manager
+** Bug
+    * [FELIX-6091] : Permissions do not declare a CapabilityPermission for `osgi.implementation`
+
+
+Changes in 1.9.14
+-----------------
+** Bug
+    * [FELIX-6066] : Duplicate registration of ConfigurationAdmin from PersistenceManagerTracker
+
+
 Changes in 1.9.12
 -----------------
 ** Bug
