@@ -31,8 +31,10 @@ import org.apache.felix.cm.PersistenceManager;
 import org.apache.felix.cm.impl.ConfigurationManager;
 import org.apache.felix.cm.impl.Log;
 import org.osgi.framework.BundleContext;
+import org.osgi.framework.BundleException;
 import org.osgi.framework.Constants;
 import org.osgi.framework.InvalidSyntaxException;
+import org.osgi.framework.ServiceFactory;
 import org.osgi.framework.ServiceReference;
 import org.osgi.service.cm.ConfigurationAdmin;
 import org.osgi.service.log.LogService;
@@ -64,9 +66,9 @@ public class PersistenceManagerTracker
     private volatile ServiceTracker<Object, Object> coordinatorTracker;
 
     public PersistenceManagerTracker(final BundleContext bundleContext,
-            final PersistenceManager defaultPM,
+            final ServiceFactory<PersistenceManager> defaultFactory,
             final String pmName )
-    throws InvalidSyntaxException
+            throws BundleException, InvalidSyntaxException
     {
         this.bundleContext = bundleContext;
         if ( pmName != null )
@@ -81,6 +83,15 @@ public class PersistenceManagerTracker
         else
         {
             Log.logger.log(LogService.LOG_DEBUG, "Using default persistence manager", (Object[])null);
+            PersistenceManager defaultPM = null;
+            try {
+                defaultPM = defaultFactory.getService(null, null);
+            } catch (final IllegalArgumentException iae) {
+                Log.logger.log(LogService.LOG_ERROR, "Cannot create the FilePersistenceManager", iae);
+            }
+            if (defaultPM == null) {
+                throw new BundleException("Unable to register default persistence manager.");
+            }
             this.workerQueue = null;
             this.persistenceManagerTracker = null;
             this.activate(this.createPersistenceManagerProxy(defaultPM));

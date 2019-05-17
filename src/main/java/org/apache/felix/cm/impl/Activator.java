@@ -33,6 +33,7 @@ import org.osgi.framework.BundleContext;
 import org.osgi.framework.BundleException;
 import org.osgi.framework.Constants;
 import org.osgi.framework.InvalidSyntaxException;
+import org.osgi.framework.ServiceFactory;
 import org.osgi.framework.ServiceRegistration;
 import org.osgi.service.log.LogService;
 
@@ -89,22 +90,20 @@ public class Activator implements BundleActivator
         Log.logger.start(bundleContext);
 
         // register default file persistence manager
-        final PersistenceManager defaultPM = this.registerFilePersistenceManager(bundleContext);
-        if ( defaultPM == null )
-        {
-            throw new BundleException("Unable to register default persistence manager.");
-        }
+        final ServiceFactory<PersistenceManager> defaultFactory = this.registerFilePersistenceManager(bundleContext);
+
         // register memory persistence manager
         registerMemoryPersistenceManager(bundleContext);
 
         String configuredPM = bundleContext.getProperty(CM_CONFIG_PM);
-        if ( configuredPM != null && configuredPM.isEmpty() )
+        if (configuredPM != null && (configuredPM.isEmpty()
+                || FilePersistenceManager.DEFAULT_PERSISTENCE_MANAGER_NAME.equals(configuredPM)))
         {
             configuredPM = null;
         }
         try
         {
-            this.tracker = new PersistenceManagerTracker(bundleContext, defaultPM, configuredPM);
+            this.tracker = new PersistenceManagerTracker(bundleContext, defaultFactory, configuredPM);
         }
         catch ( InvalidSyntaxException iae )
         {
@@ -132,41 +131,47 @@ public class Activator implements BundleActivator
         this.unregisterMemoryPersistenceManager();
     }
 
-    private PersistenceManager registerFilePersistenceManager(final BundleContext bundleContext)
+    private ServiceFactory<PersistenceManager> registerFilePersistenceManager(final BundleContext bundleContext)
     {
-        try
-        {
-            final FilePersistenceManager fpm = new FilePersistenceManager( bundleContext,
-                    bundleContext.getProperty( CM_CONFIG_DIR ) );
-            final Dictionary<String, Object> props = new Hashtable<>();
-            props.put( Constants.SERVICE_DESCRIPTION, "Platform Filesystem Persistence Manager" );
-            props.put( Constants.SERVICE_VENDOR, "The Apache Software Foundation" );
-            props.put( Constants.SERVICE_RANKING, new Integer( Integer.MIN_VALUE ) );
-            props.put( PersistenceManager.PROPERTY_NAME, FilePersistenceManager.DEFAULT_PERSISTENCE_MANAGER_NAME);
-            filepmRegistration = bundleContext.registerService( PersistenceManager.class, fpm, props );
+        final Dictionary<String, Object> props = new Hashtable<>();
+        props.put(Constants.SERVICE_DESCRIPTION, "Platform Filesystem Persistence Manager");
+        props.put(Constants.SERVICE_VENDOR, "The Apache Software Foundation");
+        props.put(Constants.SERVICE_RANKING, new Integer(Integer.MIN_VALUE));
+        props.put(PersistenceManager.PROPERTY_NAME, FilePersistenceManager.DEFAULT_PERSISTENCE_MANAGER_NAME);
 
-            return fpm;
-
-        }
-        catch ( final IllegalArgumentException iae )
+        final ServiceFactory<PersistenceManager> factory = new ServiceFactory<PersistenceManager>()
         {
-            Log.logger.log( LogService.LOG_ERROR, "Cannot create the FilePersistenceManager", iae );
-        }
-        return null;
+
+            private volatile FilePersistenceManager fpm;
+
+            @Override
+            public PersistenceManager getService(Bundle bundle, ServiceRegistration<PersistenceManager> registration) {
+                if (fpm == null) {
+                    fpm = new FilePersistenceManager(bundleContext, bundleContext.getProperty(CM_CONFIG_DIR));
+                }
+
+                return fpm;
+            }
+
+            @Override
+            public void ungetService(Bundle bundle, ServiceRegistration<PersistenceManager> registration,
+                    PersistenceManager service) {
+                // nothing to do
+            }
+
+        };
+        filepmRegistration = bundleContext.registerService(PersistenceManager.class, factory, props);
+
+        return factory;
     }
 
     private void registerMemoryPersistenceManager(final BundleContext bundleContext) {
-        try {
-            final MemoryPersistenceManager mpm = new MemoryPersistenceManager();
-            final Dictionary<String, Object> props = new Hashtable<>();
-            props.put(Constants.SERVICE_DESCRIPTION, "Platform Memory Persistence Manager");
-            props.put(Constants.SERVICE_VENDOR, "The Apache Software Foundation");
-            props.put(PersistenceManager.PROPERTY_NAME, "memory");
-            memorypmRegistration = bundleContext.registerService(PersistenceManager.class, mpm, props);
-
-        } catch (final IllegalArgumentException iae) {
-            Log.logger.log(LogService.LOG_ERROR, "Cannot create the MemoryPersistenceManager", iae);
-        }
+        final MemoryPersistenceManager mpm = new MemoryPersistenceManager();
+        final Dictionary<String, Object> props = new Hashtable<>();
+        props.put(Constants.SERVICE_DESCRIPTION, "Platform Memory Persistence Manager");
+        props.put(Constants.SERVICE_VENDOR, "The Apache Software Foundation");
+        props.put(PersistenceManager.PROPERTY_NAME, "memory");
+        memorypmRegistration = bundleContext.registerService(PersistenceManager.class, mpm, props);
     }
 
     private void unregisterFilePersistenceManager()
