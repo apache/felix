@@ -17,6 +17,12 @@
 var tableEntryTemplate = false;
 var tableBody = false;
 
+function unescapeXML(str){
+return str.replace(/&amp;/g,"&").replace(/&gt;/g,">").replace( /&lt;/g,"<").replace(/&quot;/g,"\"").replace(/&apos;/g,"'");
+}
+function renderFilter(filterString) {
+$('.servicesFilter').val(unescapeXML(filterString));
+}
 function renderData(eventData) {
 	$('.statline').empty().append(i18n.statline.msgFormat(eventData.serviceCount));
 	$('#plugin_table > tbody > tr').remove();
@@ -58,7 +64,6 @@ function hideDetails(id) {
 			unbind('click').click(function() {showDetails(id)});
 	});
 }
-
 function renderDetails(data) {
 	data = data.data[0];
 	$('#entry' + data.id + ' > td').eq(1).append('<div id="pluginInlineDetails' + data.id + '"/>');
@@ -153,6 +158,7 @@ $(document).ready(function() {
 	tableEntryTemplate = tableBody.find('tr').clone();
 	tableBody.empty();
 
+    renderFilter(filter);
 	renderData(data);
 
 	$('#plugin_table').tablesorter( {
