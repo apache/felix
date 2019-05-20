@@ -277,6 +277,12 @@ public final class WebConsoleUtil
                 case ' ':
                     sb.append("&nbsp;"); //$NON-NLS-1$
                     break;
+                case '\'':
+                    sb.append("&apos;"); //$NON-NLS-1$
+                    break;
+                case '"':
+                    sb.append("&quot;"); //$NON-NLS-1$
+                    break;
                 case '\r':
                 case '\n':
                     if (oldch != '\r' && oldch != '\n') // don't add twice <br>
