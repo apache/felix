@@ -1,3 +1,8 @@
+Changes in 4.3.12
+-----------------
+** Bug
+    * [FELIX-6132] - XSS possible in service console
+
 Changes in 4.3.10
 -----------------
 ** Improvement
