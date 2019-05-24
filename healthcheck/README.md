@@ -227,14 +227,43 @@ The DEBUG logs of health checks can optionally be displayed, and an option allow
 For health states of the system that mean that requests can only fail it is possible to configure a Service Unavailable Filter that will cut off all requests if certain tags are in a `CRITICAL` or `TEMPORARILY_UNAVAILABLE` status. Typical usecases are startup/shutdown and deployments. Other scenarios include maintenance processes that require request processing of certain servlets to be stalled (the filter can be configured to be active on arbitrary paths). It is possible to configure a custom response text/html. 
 
 Configure the factory configuration with PID 
-`org.apache.felix.hc.core.impl.filter.ServiceUnavailableFilter` with specific parameters to activate the Service Unavailable Filter, see metatype annotations for documentation of specific configuration properties.
+`org.apache.felix.hc.core.impl.filter.ServiceUnavailableFilter` with specific parameters to activate the Service Unavailable Filter:
+
+| Name | Default/Required | Description |
+| --- | --- | --- |
+| `osgi.http.whiteboard.filter.regex` | required | Regex path on where the filter is active, e.g. `(?!/system/).*` or `.*`. See Http Whiteboard documentation [1] and hint [2] |
+| `osgi.http.whiteboard.context.select` | required | OSGi service filter for selecting relevant contexts, e.g. `(osgi.http.whiteboard.context.name=*)` selects all contexts. See Http Whiteboard documentation [1] and hint [2] |
+| `tags` | required | List of tags to query the status in order to decide if it is 503 or not  |
+| `statusFor503 ` | default `TEMPORARILY_UNAVAILABLE` | First status that causes a 503 response. The default `TEMPORARILY_UNAVAILABLE` will not send 503 for `OK` and `WARN` but for `TEMPORARILY_UNAVAILABLE`, `CRITICAL` and `HEALTH_CHECK_ERROR` |
+| `responseTextFor503 ` | required | Response text for 503 responses. Value can be either the content directly (e.g. just the string `Service Unavailable`) or in the format `classpath:<symbolic-bundle-id>:/path/to/file.html` (it uses `Bundle.getEntry()` to retrieve the file). The response content type is auto-detected to either `text/html` or `text/plain`.  |
+| `autoDisableFilter ` | default `false` | If true, will automatically disable the filter once the filter continued the filter chain without 503 for the first time. The filter will be automatically enabled again if the start level of the framework changes (hence on shutdown it will be active again). Useful for server startup scenarios.|
+| `avoid404DuringStartup` | default `false` | If true, will automatically register a dummy servlet to ensure this filter becomes effective (complex applications might have the http whiteboard active but no servlets be active during early phases of startup, a filter only ever becomes active if there is a servlet registered). Useful for server startup scenarios. |
+| `service.ranking` | default `Integer.MAX_VALUE` (first in filter chain) | The `service.ranking` for the filter as respected by http whiteboard [1]. |
+
+[1] [https://felix.apache.org/documentation/subprojects/apache-felix-http-service.html#filter-service-properties](https://felix.apache.org/documentation/subprojects/apache-felix-http-service.html#filter-service-properties)
+
+[2] Choose a combination of `osgi.http.whiteboard.filter.regex`/ `osgi.http.whiteboard.context.select` wisely, e.g. `osgi.http.whiteboard.context.select=(osgi.http.whiteboard.context.name=*)` and `osgi.http.whiteboard.filter.regex=.*` would also cut off all admin paths.
 
 ### Adding ad hoc results during request processing
 
 For certain scenarios it is useful to add a health check dynamically for a specific tag durign request processing, e.g. it can be useful during deployment requests (the tag(s) being added can be queried by e.g. load balancer or Service Unavailable Filter.
 
 To achieve this configure the factory configuration with PID 
-`org.apache.felix.hc.core.impl.filter.AdhocResultDuringRequestProcessingFilter` with specific parameters, see metatype annotations for documentation of specific configuration properties.
+`org.apache.felix.hc.core.impl.filter.AdhocResultDuringRequestProcessingFilter` with specific parameters:
 
-
+| Name | Default/Required | Description |
+| --- | --- | --- |
+| `osgi.http.whiteboard.filter.regex` | required | Regex path on where the filter is active, e.g. `(?!/system/).*` or `.*`. See Http Whiteboard documentation |
+| `osgi.http.whiteboard.context.select` | required | OSGi service filter for selecting relevant contexts, e.g. `(osgi.http.whiteboard.context.name=*)` selects all contexts. See Http Whiteboard |
+| `service.ranking` | default `0` | The `service.ranking` for the filter as respected by http whiteboard [1]. |
+| `method` | default restriction not active | Relevant request method (leave empty to not restrict to a method) |
+| `userAgentRegEx` | default restriction not active | Relevant user agent header (leave emtpy to not restrict to a user agent) |
+| `hcName` | required | Name of health check during request processing  |
+| `tags` | required | List of tags the adhoc result shall be registered for (tags are not active during configured delay in case 'delayProcessingInSec' is configured) |
+| `statusDuringRequestProcessing` | default `TEMPORARILY_UNAVAILABLE` | Status to be sent during request processing |
+| `delayProcessingInSec` | default `0` (not active) | Time to delay processing of request in sec (the default 0 turns the delay off). Use together with 'tagsDuringDelayedProcessing' advertise request processing before actual action (e.g. to signal a deployment request to a periodically querying load balancer before deployment starts) |
+| `tagsDuringDelayedProcessing` | default `0` (not active) | List of tags the adhoc result is be registered also during waiting for the configured delay |
+| `waitAfterProcessing.forTags` | default empty (not active) | List of tags to be waited for after processing (leave empty to not wait). While waiting the tags from property `tags` remain in configured state. |
+| `waitAfterProcessing.initialWait` | 3 sec  | Initial waiting time in sec until 'waitAfterProcessing.forTags' are checked for the first time. |
+| `waitAfterProcessing.maxDelay` | 120 sec | Maximum delay in sec that can be caused when 'waitAfterProcessing.forTags' is configured (waiting is aborted after that time) |
 
