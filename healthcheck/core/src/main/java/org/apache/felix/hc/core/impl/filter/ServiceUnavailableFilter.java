@@ -112,7 +112,7 @@ public class ServiceUnavailableFilter implements Filter {
         Result.Status statusFor503() default Result.Status.TEMPORARILY_UNAVAILABLE;
 
         @AttributeDefinition(name = "Include execution result in response", description = "Will include the execution result in the response (as html comment for html case, otherwise as text).")
-        boolean includeExecutionResult() default true;
+        boolean includeExecutionResult() default false;
 
         @AttributeDefinition(name = "503 Response Text", description = "Response text for 503 responses. Value can be either the content directly or in the format '"+CLASSPATH_PREFIX+"<symbolic-bundle-id>:/path/to/file.html'. The response content type is auto-detected to either text/html or text/plain.")
         String responseTextFor503() default RESPONSE_TEXT_DEFAULT;
