@@ -286,6 +286,11 @@ class ConverterImpl implements InternalConverter {
 		reflectiveAddJavaTimeRule(cb, "java.time.OffsetDateTime");
 		reflectiveAddJavaTimeRule(cb, "java.time.OffsetTime");
 		reflectiveAddJavaTimeRule(cb, "java.time.ZonedDateTime");
+		reflectiveAddJavaTimeRule(cb, "java.time.Instant");
+		reflectiveAddJavaTimeRule(cb, "java.time.Duration");
+		reflectiveAddJavaTimeRule(cb, "java.time.Year");
+		reflectiveAddJavaTimeRule(cb, "java.time.YearMonth");
+		reflectiveAddJavaTimeRule(cb, "java.time.MonthDay");
 	}
 
 	private void reflectiveAddJavaTimeRule(ConverterBuilder cb,
