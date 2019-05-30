@@ -16,12 +16,15 @@
  */
 package org.osgi.util.converter;
 
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
-import org.osgi.framework.Version;
-import org.osgi.util.converter.MyDTO.Count;
-import org.osgi.util.converter.MyEmbeddedDTO.Alpha;
+import static org.junit.Assert.assertArrayEquals;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNotSame;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertSame;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 import java.lang.reflect.Array;
 import java.lang.reflect.Type;
@@ -30,11 +33,17 @@ import java.math.BigInteger;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
+import java.time.Duration;
+import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.time.Month;
+import java.time.MonthDay;
 import java.time.OffsetDateTime;
 import java.time.OffsetTime;
+import java.time.Year;
+import java.time.YearMonth;
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -68,15 +77,12 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import static org.junit.Assert.assertArrayEquals;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNotSame;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertSame;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
+import org.osgi.framework.Version;
+import org.osgi.util.converter.MyDTO.Count;
+import org.osgi.util.converter.MyEmbeddedDTO.Alpha;
 
 public class ConverterTest {
     private Converter converter;
@@ -633,6 +639,51 @@ public class ConverterTest {
         assertTrue(s.length() > 0);
         ZonedDateTime zdt2 = converter.convert(s).to(ZonedDateTime.class);
         assertEquals(zdt, zdt2);
+    }
+
+    @Test
+    public void testInstant() {
+    	Instant i = Instant.now();
+    	String s = converter.convert(i).to(String.class);
+    	assertTrue(s.length() > 0);
+    	Instant i2 = converter.convert(s).to(Instant.class);
+    	assertEquals(i, i2);
+    }
+
+    @Test
+    public void testMonthDay() {
+    	MonthDay md = MonthDay.of(Month.APRIL, 1);
+    	String s = converter.convert(md).to(String.class);
+    	assertTrue(s.length() > 0);
+    	MonthDay md2 = converter.convert(s).to(MonthDay.class);
+    	assertEquals(md, md2);
+    }
+
+    @Test
+    public void testYearMonth() {
+    	YearMonth ym = YearMonth.of(1999, Month.APRIL);
+    	String s = converter.convert(ym).to(String.class);
+    	assertTrue(s.length() > 0);
+    	YearMonth ym2 = converter.convert(s).to(YearMonth.class);
+    	assertEquals(ym, ym2);
+    }
+
+    @Test
+    public void testYear() {
+    	Year y = Year.of(1999);
+    	String s = converter.convert(y).to(String.class);
+    	assertTrue(s.length() > 0);
+    	Year y2 = converter.convert(s).to(Year.class);
+    	assertEquals(y, y2);
+    }
+
+    @Test
+    public void testDuration() {
+    	Duration d = Duration.ofSeconds(42);
+    	String s = converter.convert(d).to(String.class);
+    	assertTrue(s.length() > 0);
+    	Duration d2 = converter.convert(s).to(Duration.class);
+    	assertEquals(d, d2);
     }
 
     @Test
