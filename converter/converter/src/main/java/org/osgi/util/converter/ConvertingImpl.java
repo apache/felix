@@ -265,9 +265,9 @@ class ConvertingImpl extends AbstractSpecifying<Converting>
 			return c.convert(entry.getKey()).to(cls);
 		} else if (cls.equals(valueCls)) {
 			return c.convert(entry.getValue()).to(cls);
-		} else if (cls.isAssignableFrom(keyCls)) {
+		} else if (keyCls != null && cls.isAssignableFrom(keyCls)) {
 			return c.convert(entry.getKey()).to(cls);
-		} else if (cls.isAssignableFrom(valueCls)) {
+		} else if (valueCls != null && cls.isAssignableFrom(valueCls)) {
 			return c.convert(entry.getValue()).to(cls);
 		} else if (entry.getKey() instanceof String) {
 			return c.convert(entry.getKey()).to(cls);

@@ -506,6 +506,78 @@ public class ConverterMapTest {
     }
 
     @Test
+    public void testMapEntry5() {
+    	// Key is null, value is the right type
+    	Map<Short, Integer> m1 = Collections.singletonMap(null, 5);
+    	Map.Entry<Short, Integer> e1 = getMapEntry(m1);
+    	
+    	assertEquals((Integer) 5, converter.convert(e1).to(Integer.class));
+    }
+
+    @Test
+    public void testMapEntry6() {
+    	// Value is null, key is the right type
+    	Map<Short, Integer> m1 = Collections.singletonMap((short) 4, null);
+    	Map.Entry<Short, Integer> e1 = getMapEntry(m1);
+    	
+    	assertEquals(4, converter.convert(e1).to(Short.class).intValue());
+    }
+
+    @Test
+    public void testMapEntry7() {
+    	// Key is null, value is assignable to the right type
+    	Map<Short, Integer> m1 = Collections.singletonMap(null, 5);
+    	Map.Entry<Short, Integer> e1 = getMapEntry(m1);
+    	
+    	assertEquals((Integer) 5, converter.convert(e1).to(Number.class));
+    }
+    
+    @Test
+    public void testMapEntry8() {
+    	// Value is null, key is assignable to the right type
+    	Map<Short, Integer> m1 = Collections.singletonMap((short) 4, null);
+    	Map.Entry<Short, Integer> e1 = getMapEntry(m1);
+    	
+    	assertEquals(4, converter.convert(e1).to(Number.class).intValue());
+    }
+
+    @Test
+    public void testMapEntry9() {
+    	// Key is null, value is a String 
+    	Map<Short, String> m1 = Collections.singletonMap(null, "5");
+    	Map.Entry<Short, String> e1 = getMapEntry(m1);
+    	
+    	assertEquals((Integer) 5, converter.convert(e1).to(Integer.class));
+    }
+    
+    @Test
+    public void testMapEntry10() {
+    	// Value is null, key is a String
+    	Map<String, Integer> m1 = Collections.singletonMap("4", null);
+    	Map.Entry<String, Integer> e1 = getMapEntry(m1);
+    	
+    	assertEquals((Integer) 4, converter.convert(e1).to(Integer.class));
+    }
+
+    @Test
+    public void testMapEntry11() {
+    	// Key is null, value is "wrong" type 
+    	Map<Short, Integer> m1 = Collections.singletonMap(null, 5);
+    	Map.Entry<Short, Integer> e1 = getMapEntry(m1);
+    	
+    	assertNull(converter.convert(e1).to(Long.class));
+    }
+    
+    @Test
+    public void testMapEntry12() {
+    	// Key is null, value is null
+    	Map<String, Integer> m1 = Collections.singletonMap(null, null);
+    	Map.Entry<String, Integer> e1 = getMapEntry(m1);
+    	
+    	assertNull(converter.convert(e1).to(Integer.class));
+    }
+
+    @Test
     public void testDictionaryToAnnotation() {
         Dictionary<String, Object> dict = new TestDictionary<>();
         dict.put("foo", "hello");
