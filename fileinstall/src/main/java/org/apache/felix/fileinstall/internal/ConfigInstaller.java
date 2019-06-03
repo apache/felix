@@ -365,9 +365,11 @@ public class ConfigInstaller implements ArtifactInstaller, ConfigurationListener
         throws Exception
     {
         Configuration oldConfiguration = findExistingConfiguration(fileName);
-        if (oldConfiguration != null)
+        Configuration cachedConfiguration = oldConfiguration != null ?
+                getConfigurationAdmin().getConfiguration(oldConfiguration.getPid()) : null;
+        if (cachedConfiguration != null)
         {
-            return oldConfiguration;
+            return cachedConfiguration;
         }
         else
         {

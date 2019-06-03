@@ -21,6 +21,8 @@ package org.apache.felix.fileinstall.internal;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.OutputStream;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.Dictionary;
 import java.util.Hashtable;
 import java.util.concurrent.atomic.AtomicReference;
@@ -316,6 +318,86 @@ public class ConfigInstallerTest extends TestCase {
         ci.doConfigurationEvent( new ConfigurationEvent(sr , ConfigurationEvent.CM_DELETED, null, pid ) );
 
         assertFalse("Configuration file should be deleted", file.isFile());
+    }
+
+    public void testDoConfigurationEventSavesUpdatedConfigurationWhenUsingCachingPersistence() throws Exception
+    {
+        final File file = File.createTempFile("test", ".config");
+        try (OutputStream os = new FileOutputStream(file)) {
+            os.write("networkInterface = \"wlp3s1\"\n".getBytes("UTF-8"));
+        }
+
+        String pid = file.getName().substring(0, file.getName().indexOf(".config"));
+
+        ServiceReference<ConfigurationAdmin> sr = EasyMock.createMock(ServiceReference.class);
+
+        EasyMock.expect(mockBundleContext.getProperty((String) EasyMock.anyObject()))
+                .andReturn(null)
+                .anyTimes();
+
+        final Configuration cachingPersistenceConfiguration = EasyMock.createMock(Configuration.class);
+
+        final Dictionary<String, Object> cachedProps = new Hashtable<String, Object>() {
+            {
+                put("networkInterface", "wlp3s0");
+                put(DirectoryWatcher.FILENAME, file.toURI().toString());
+            }
+        };
+
+        EasyMock.expect(cachingPersistenceConfiguration.getProperties())
+                .andReturn(cachedProps)
+                .anyTimes();
+
+        EasyMock.expect(cachingPersistenceConfiguration.getPid())
+                .andReturn(pid);
+
+        EasyMock.expect(mockConfigurationAdmin.getConfiguration(pid, "?"))
+                .andReturn(cachingPersistenceConfiguration)
+                .anyTimes();
+
+        EasyMock.expect(mockConfigurationAdmin.getConfiguration(pid))
+                .andReturn(cachingPersistenceConfiguration)
+                .anyTimes();
+
+        final Configuration newConfiguration = EasyMock.createMock(Configuration.class);
+
+        EasyMock.expect(mockConfigurationAdmin.listConfigurations((String) EasyMock.anyObject()))
+                .andReturn(new Configuration[] { newConfiguration });
+
+        EasyMock.expect(newConfiguration.getProperties())
+                .andReturn(null);
+
+        EasyMock.expect(newConfiguration.getPid())
+                .andReturn(pid);
+
+        final Capture<Dictionary<String, Object>> props = new Capture<>();
+        newConfiguration.update(EasyMock.capture(props));
+
+        cachingPersistenceConfiguration.update(EasyMock.capture(props));
+        EasyMock.expectLastCall()
+                .andAnswer(new IAnswer<Object>() {
+                    @Override
+                    public Object answer() throws Throwable {
+
+                        cachedProps.put("networkInterface", props.getValue().get("networkInterface"));
+
+                        return null;
+                   }
+               }).anyTimes();
+
+        EasyMock.replay(mockBundleContext, mockConfigurationAdmin, cachingPersistenceConfiguration, newConfiguration, sr);
+
+        ConfigInstaller ci = new ConfigInstaller( mockBundleContext, mockConfigurationAdmin, new FileInstall() );
+
+        ci.install(file);
+
+        Dictionary<String, Object> loaded = props.getValue();
+        assertNotNull(loaded);
+        assertEquals("wlp3s1", loaded.get("networkInterface"));
+
+        ci.doConfigurationEvent( new ConfigurationEvent(sr , ConfigurationEvent.CM_UPDATED, null, pid ) );
+
+        assertEquals("networkInterface = \"wlp3s1\"", Files.readAllLines( Paths.get(file.toURI()) ).get(0));
     }
 
     public void testSetConfiguration() throws Exception
