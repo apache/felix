@@ -24,10 +24,12 @@ import static org.ops4j.pax.exam.Constants.START_LEVEL_TEST_BUNDLE;
 import static org.ops4j.pax.exam.CoreOptions.bootDelegationPackage;
 import static org.ops4j.pax.exam.CoreOptions.cleanCaches;
 import static org.ops4j.pax.exam.CoreOptions.felix;
+import static org.ops4j.pax.exam.CoreOptions.frameworkProperty;
 import static org.ops4j.pax.exam.CoreOptions.frameworkStartLevel;
 import static org.ops4j.pax.exam.CoreOptions.junitBundles;
 import static org.ops4j.pax.exam.CoreOptions.mavenBundle;
 import static org.ops4j.pax.exam.CoreOptions.options;
+import static org.ops4j.pax.exam.CoreOptions.systemPackages;
 import static org.ops4j.pax.exam.CoreOptions.url;
 
 import javax.inject.Inject;
@@ -43,7 +45,7 @@ import org.osgi.util.tracker.ServiceTracker;
 
 /**
  * Base class for integration tests.
- *  
+ *
  * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
 public abstract class BaseIntegrationTest
@@ -64,13 +66,16 @@ public abstract class BaseIntegrationTest
     {
         return options(
             bootDelegationPackage("sun.*"),
+            systemPackages("javax.naming", "javax.net.ssl", "javax.xml.parsers", "org.w3c.dom", "org.xml.sax", "org.xml.sax.helpers"),
+            frameworkProperty("org.osgi.framework.system.capabilities.extra").value(
+                "osgi.ee;osgi.ee=JavaSE;version=1.6,osgi.ee;osgi.ee=JavaSE;version=1.5,osgi.ee;osgi.ee=JavaSE;version=1.4,osgi.ee;osgi.ee=JavaSE;version=1.3"),
             cleanCaches(),
             CoreOptions.systemProperty("logback.configurationFile").value("file:src/test/resources/logback.xml"), //
 //            CoreOptions.vmOption("-Xrunjdwp:transport=dt_socket,server=y,suspend=y,address=8787"),
 
-            mavenBundle("org.slf4j", "slf4j-api").version("1.6.5").startLevel(START_LEVEL_SYSTEM_BUNDLES),
-            mavenBundle("ch.qos.logback", "logback-core").version("1.0.6").startLevel(START_LEVEL_SYSTEM_BUNDLES),
-            mavenBundle("ch.qos.logback", "logback-classic").version("1.0.6").startLevel(START_LEVEL_SYSTEM_BUNDLES),
+            mavenBundle("org.slf4j", "slf4j-api").version("1.7.25").startLevel(START_LEVEL_SYSTEM_BUNDLES),
+            mavenBundle("ch.qos.logback", "logback-core").version("1.2.3").startLevel(START_LEVEL_SYSTEM_BUNDLES),
+            mavenBundle("ch.qos.logback", "logback-classic").version("1.2.3").startLevel(START_LEVEL_SYSTEM_BUNDLES),
 
             url("link:classpath:META-INF/links/org.ops4j.pax.exam.link").startLevel(START_LEVEL_SYSTEM_BUNDLES),
             url("link:classpath:META-INF/links/org.ops4j.pax.exam.inject.link").startLevel(START_LEVEL_SYSTEM_BUNDLES),
@@ -86,7 +91,7 @@ public abstract class BaseIntegrationTest
             mavenBundle("org.apache.felix", ORG_APACHE_FELIX_USERADMIN_FILESTORE).versionAsInProject().noStart(),
             mavenBundle("org.apache.felix", ORG_APACHE_FELIX_USERADMIN_MONGODBSTORE).versionAsInProject().noStart(), mavenBundle("org.mongodb", "mongo-java-driver").versionAsInProject().noStart(),
 
-            junitBundles(), frameworkStartLevel(START_LEVEL_TEST_BUNDLE), felix());
+            junitBundles(), frameworkStartLevel(START_LEVEL_TEST_BUNDLE), felix().version("6.0.3"));
     }
 
     @Before
