@@ -36,6 +36,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import javax.json.Json;
 import javax.json.JsonArray;
 import javax.json.JsonArrayBuilder;
 import javax.json.JsonNumber;
@@ -51,7 +52,6 @@ import org.apache.felix.configurator.impl.model.BundleState;
 import org.apache.felix.configurator.impl.model.Config;
 import org.apache.felix.configurator.impl.model.ConfigPolicy;
 import org.apache.felix.configurator.impl.model.ConfigurationFile;
-import org.apache.johnzon.core.JsonProviderImpl;
 import org.osgi.service.configurator.ConfiguratorConstants;
 
 public class JSONUtil {
@@ -261,43 +261,43 @@ public class JSONUtil {
     }
 
     public static JsonStructure build(final Object value) {
-        if ( value instanceof List ) {
+        if (value instanceof List) {
             @SuppressWarnings("unchecked")
-            final List<Object> list = (List<Object>)value;
-            final JsonArrayBuilder builder = new JsonProviderImpl().createArrayBuilder();
-            for(final Object obj : list) {
-                if ( obj instanceof String ) {
+            final List<Object> list = (List<Object>) value;
+            final JsonArrayBuilder builder = Json.createArrayBuilder();
+            for (final Object obj : list) {
+                if (obj instanceof String) {
                     builder.add(obj.toString());
-                } else if ( obj instanceof Long ) {
-                    builder.add((Long)obj);
-                } else if ( obj instanceof Double ) {
-                    builder.add((Double)obj);
-                } else if (obj instanceof Boolean ) {
-                    builder.add((Boolean)obj);
-                } else if ( obj instanceof Map ) {
+                } else if (obj instanceof Long) {
+                    builder.add((Long) obj);
+                } else if (obj instanceof Double) {
+                    builder.add((Double) obj);
+                } else if (obj instanceof Boolean) {
+                    builder.add((Boolean) obj);
+                } else if (obj instanceof Map) {
                     builder.add(build(obj));
-                } else if ( obj instanceof List ) {
+                } else if (obj instanceof List) {
                     builder.add(build(obj));
                 }
 
             }
             return builder.build();
-        } else if ( value instanceof Map ) {
+        } else if (value instanceof Map) {
             @SuppressWarnings("unchecked")
-            final Map<String, Object> map = (Map<String, Object>)value;
-            final JsonObjectBuilder builder = new JsonProviderImpl().createObjectBuilder();
-            for(final Map.Entry<String, Object> entry : map.entrySet()) {
-                if ( entry.getValue() instanceof String ) {
+            final Map<String, Object> map = (Map<String, Object>) value;
+            final JsonObjectBuilder builder = Json.createObjectBuilder();
+            for (final Map.Entry<String, Object> entry : map.entrySet()) {
+                if (entry.getValue() instanceof String) {
                     builder.add(entry.getKey(), entry.getValue().toString());
-                } else if ( entry.getValue() instanceof Long ) {
-                    builder.add(entry.getKey(), (Long)entry.getValue());
-                } else if ( entry.getValue() instanceof Double ) {
-                    builder.add(entry.getKey(), (Double)entry.getValue());
-                } else if ( entry.getValue() instanceof Boolean ) {
-                    builder.add(entry.getKey(), (Boolean)entry.getValue());
-                } else if ( entry.getValue() instanceof Map ) {
+                } else if (entry.getValue() instanceof Long) {
+                    builder.add(entry.getKey(), (Long) entry.getValue());
+                } else if (entry.getValue() instanceof Double) {
+                    builder.add(entry.getKey(), (Double) entry.getValue());
+                } else if (entry.getValue() instanceof Boolean) {
+                    builder.add(entry.getKey(), (Boolean) entry.getValue());
+                } else if (entry.getValue() instanceof Map) {
                     builder.add(entry.getKey(), build(entry.getValue()));
-                } else if ( entry.getValue() instanceof List ) {
+                } else if (entry.getValue() instanceof List) {
                     builder.add(entry.getKey(), build(entry.getValue()));
                 }
             }
@@ -326,11 +326,11 @@ public class JSONUtil {
             report.errors.add("Invalid JSON from " + name);
             return null;
         }
-        // Jonhzon is packaged in, so we can just use the impl type to avoid ClassLoader mess
-        try (final JsonReader reader = new JsonProviderImpl().createReader(new StringReader(contents)) ) {
+        try (final JsonReader reader = Json.createReader(new StringReader(contents))) {
+
             final JsonStructure obj = reader.read();
-            if ( obj != null && obj.getValueType() == ValueType.OBJECT ) {
-                return (JsonObject)obj;
+            if (obj != null && obj.getValueType() == ValueType.OBJECT) {
+                return (JsonObject) obj;
             }
             report.errors.add("Invalid JSON from " + name);
         }
