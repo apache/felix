@@ -2440,7 +2440,8 @@ public class ResolverImpl implements Resolver
         }
 
         @Override
-        public ResolutionException toException() {
+        public ResolutionException toException()
+        {
             return new ReasonException(ReasonException.Reason.UseConstraint, getMessage(), null, getUnresolvedRequirements());
         }
     }
@@ -2448,8 +2449,8 @@ public class ResolverImpl implements Resolver
     private static class EnhancedExecutor
     {
         private final Executor executor;
-        private final AtomicInteger count = new AtomicInteger();
-        private Throwable throwable;
+        private final Queue<Future<Void>> awaiting = new ConcurrentLinkedQueue<Future<Void>>();
+        private final AtomicReference<Throwable> throwable = new AtomicReference<Throwable>();
 
         public EnhancedExecutor(Executor executor)
         {
@@ -2458,8 +2459,7 @@ public class ResolverImpl implements Resolver
 
         public void execute(final Runnable runnable)
         {
-            count.incrementAndGet();
-            executor.execute(new Runnable()
+            FutureTask<Void> task = new FutureTask<Void>(new Runnable()
             {
                 public void run()
                 {
@@ -2469,58 +2469,62 @@ public class ResolverImpl implements Resolver
                     }
                     catch (Throwable t)
                     {
-                        synchronized (count)
-                        {
-                            if (throwable == null)
-                            {
-                                throwable = t;
-                            }
-                        }
-                    }
-                    finally
-                    {
-                        if (count.decrementAndGet() == 0)
-                        {
-                            synchronized (count)
-                            {
-                                count.notifyAll();
-                            }
-                        }
+                        throwable.compareAndSet(null, t);
                     }
                 }
-            });
+            }, (Void) null);
+            // must have a happens-first to add the task to awaiting
+            awaiting.add(task);
+            try
+            {
+                executor.execute(task);
+            }
+            catch (Throwable t)
+            {
+                // if the task did not get added successfully to the executor we must cancel
+                // the task so we don't await on it
+                task.cancel(false);
+                throwable.compareAndSet(null, t);
+            }
         }
 
         public void await()
         {
-            synchronized (count)
+            Future<Void> awaitTask;
+            while (throwable.get() == null && (awaitTask = awaiting.poll()) != null)
             {
-                if (count.get() > 0)
+                if (!awaitTask.isDone() && !awaitTask.isCancelled())
                 {
                     try
                     {
-                        count.wait();
+                        awaitTask.get();
+                    }
+                    catch (CancellationException e)
+                    {
+                        // ignore; will have throwable set
                     }
                     catch (InterruptedException e)
                     {
                         throw new IllegalStateException(e);
                     }
-                    if (throwable != null)
+                    catch (ExecutionException e)
                     {
-                        if (throwable instanceof RuntimeException)
-                        {
-                            throw (RuntimeException) throwable;
-                        }
-                        else if (throwable instanceof Error)
-                        {
-                            throw (Error) throwable;
-                        }
-                        else
-                        {
-                            throw new RuntimeException(throwable);
-                        }
+                        throw new RuntimeException(e.getCause());
                     }
                 }
+            }
+            Throwable t = throwable.get();
+            if (t != null)
+            {
+                if (t instanceof Runnable)
+                {
+                    throw (RuntimeException) t;
+                }
+                else if (t instanceof Error)
+                {
+                    throw (Error) t;
+                }
+                throw new RuntimeException(t);
             }
         }
     }
