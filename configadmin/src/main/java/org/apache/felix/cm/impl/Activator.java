@@ -20,13 +20,14 @@ package org.apache.felix.cm.impl;
 
 import java.security.AccessController;
 import java.security.PrivilegedAction;
+import java.util.ArrayList;
 import java.util.Dictionary;
 import java.util.Hashtable;
+import java.util.List;
 
 import org.apache.felix.cm.PersistenceManager;
 import org.apache.felix.cm.file.FilePersistenceManager;
 import org.apache.felix.cm.impl.persistence.MemoryPersistenceManager;
-import org.apache.felix.cm.impl.persistence.PersistenceManagerTracker;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
@@ -75,7 +76,18 @@ public class Activator implements BundleActivator
      */
     private static final String CM_CONFIG_PM = "felix.cm.pm";
 
-    private volatile PersistenceManagerTracker tracker;
+    /**
+     * The name of the framework context property defining the required
+     * configuration plugins. If this property is specified it refers to the
+     * {@link RequiredConfigurationPluginTracker#PROPERTY_NAME} property of a
+     * configuration plugin and that configuration plugin must be registered and
+     * available.
+     *
+     * @see #start(BundleContext)
+     */
+    private static final String CM_CONFIG_PLUGINS = "felix.cm.config.plugins";
+
+    private volatile DependencyTracker tracker;
 
     // the service registration of the default file persistence manager
     private volatile ServiceRegistration<PersistenceManager> filepmRegistration;
@@ -95,15 +107,11 @@ public class Activator implements BundleActivator
         // register memory persistence manager
         registerMemoryPersistenceManager(bundleContext);
 
-        String configuredPM = bundleContext.getProperty(CM_CONFIG_PM);
-        if (configuredPM != null && (configuredPM.isEmpty()
-                || FilePersistenceManager.DEFAULT_PERSISTENCE_MANAGER_NAME.equals(configuredPM)))
-        {
-            configuredPM = null;
-        }
         try
         {
-            this.tracker = new PersistenceManagerTracker(bundleContext, defaultFactory, configuredPM);
+            this.tracker = new DependencyTracker(bundleContext, defaultFactory,
+                    getConfiguredPersistenceManager(bundleContext),
+                    getConfiguredConfigurationPlugins(bundleContext));
         }
         catch ( InvalidSyntaxException iae )
         {
@@ -112,6 +120,33 @@ public class Activator implements BundleActivator
         }
     }
 
+    private String getConfiguredPersistenceManager(final BundleContext bundleContext) {
+        String configuredPM = bundleContext.getProperty(CM_CONFIG_PM);
+        if (configuredPM != null && (configuredPM.isEmpty()
+                || FilePersistenceManager.DEFAULT_PERSISTENCE_MANAGER_NAME.equals(configuredPM))) {
+            configuredPM = null;
+        }
+        return configuredPM;
+    }
+
+    private String[] getConfiguredConfigurationPlugins(final BundleContext bundleContext) {
+        String[] configuredPlugins = null;
+        String configuredPls = bundleContext.getProperty(CM_CONFIG_PLUGINS);
+        if (configuredPls != null) {
+            final List<String> values = new ArrayList<>();
+            configuredPlugins = configuredPls.split(",");
+            for (int i = 0; i < configuredPlugins.length; i++) {
+                final String v = configuredPlugins[i].trim();
+                if (!v.isEmpty()) {
+                    values.add(v);
+                }
+            }
+            if (!values.isEmpty()) {
+                configuredPlugins = values.toArray(new String[values.size()]);
+            }
+        }
+        return configuredPlugins;
+    }
 
     @Override
     public void stop( final BundleContext bundleContext )
