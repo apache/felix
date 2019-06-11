@@ -18,8 +18,10 @@
  */
 package org.apache.felix.cm.impl;
 
-import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
+import java.util.TreeSet;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -49,18 +51,22 @@ public class RequiredConfigurationPluginTracker
 
     private final BundleContext bundleContext;
 
-    private final Map<String, AtomicInteger> serviceMap = new HashMap<>();
+    private final ConcurrentHashMap<String, AtomicInteger> serviceMap = new ConcurrentHashMap<>();
 
     private final Map<Long, String> idToNameMap = new ConcurrentHashMap<>();
 
     private final ConfigurationAdminStarter starter;
 
-    public RequiredConfigurationPluginTracker(final BundleContext bundleContext, final ActivatorWorkerQueue workerQueue,
+    private final Set<String> requiredNames = new HashSet<>();
+
+    private final Set<String> registeredPluginNames = new TreeSet<>();
+
+    public RequiredConfigurationPluginTracker(final BundleContext bundleContext,
             final ConfigurationAdminStarter starter,
             final String[] pluginNames) throws BundleException, InvalidSyntaxException {
         this.starter = starter;
         for (final String name : pluginNames) {
-            serviceMap.put(name, new AtomicInteger(0));
+            requiredNames.add(name);
         }
         this.bundleContext = bundleContext;
         pluginTracker = new ServiceTracker<>(bundleContext, ConfigurationPlugin.class, this);
@@ -77,34 +83,39 @@ public class RequiredConfigurationPluginTracker
     }
 
     private boolean hasRequiredPlugins() {
-        int pluginCount = 0;
-        for (final AtomicInteger entry : this.serviceMap.values()) {
-            if (entry.get() > 0) {
-                pluginCount++;
+        for (final String name : this.requiredNames) {
+            final AtomicInteger v = this.serviceMap.get(name);
+            if (v == null || v.get() == 0) {
+                return false;
             }
         }
-        return pluginCount == this.serviceMap.size();
+        return true;
     }
 
     @Override
     public ConfigurationPlugin addingService(final ServiceReference<ConfigurationPlugin> reference) {
+        ConfigurationPlugin plugin = null;
         final Object nameObj = reference.getProperty(PROPERTY_NAME);
         if (nameObj != null) {
             final String name = nameObj.toString();
+            idToNameMap.put((Long) reference.getProperty(Constants.SERVICE_ID), name);
+            this.serviceMap.putIfAbsent(name, new AtomicInteger());
             final AtomicInteger counter = this.serviceMap.get(name);
-            if (counter != null) {
-                final ConfigurationPlugin plugin = bundleContext.getService(reference);
+            final boolean checkActivate = counter.getAndIncrement() == 0;
+            if (this.requiredNames.contains(name)) {
+                plugin = bundleContext.getService(reference);
                 if (plugin != null) {
-                    final boolean checkActivate = counter.getAndIncrement() == 0;
-                    idToNameMap.put((Long) reference.getProperty(Constants.SERVICE_ID), name);
                     if (checkActivate && hasRequiredPlugins()) {
                         starter.updatePluginsSet(true);
                     }
-                    return plugin;
                 }
             }
+            synchronized (this.registeredPluginNames) {
+                this.registeredPluginNames.add(name);
+                updateRegisteredConfigurationPlugins();
+            }
         }
-        return null;
+        return plugin;
     }
 
     @Override
@@ -120,13 +131,40 @@ public class RequiredConfigurationPluginTracker
         final String name = idToNameMap.remove(reference.getProperty(Constants.SERVICE_ID));
         if (name != null) {
             final AtomicInteger counter = this.serviceMap.get(name);
-            if (counter != null) {
+            final boolean deactivate = counter.decrementAndGet() == 0;
+            if (this.requiredNames.contains(name)) {
                 bundleContext.ungetService(reference);
-                final boolean deactivate = counter.decrementAndGet() == 0;
                 if (deactivate) {
                     starter.updatePluginsSet(false);
                 }
             }
+            if (deactivate) {
+                synchronized (this.registeredPluginNames) {
+                    this.registeredPluginNames.remove(name);
+                    updateRegisteredConfigurationPlugins();
+                }
+            }
         }
     }
+
+    private void updateRegisteredConfigurationPlugins() {
+        final String propValue;
+        if (this.registeredPluginNames.isEmpty()) {
+            propValue = "";
+        } else {
+            final StringBuilder sb = new StringBuilder();
+            boolean first = true;
+            for (final String name : this.registeredPluginNames) {
+                if (first) {
+                    first = false;
+                } else {
+                    sb.append(",");
+                }
+                sb.append(name);
+            }
+            propValue = sb.toString();
+        }
+        starter.updateRegisteredConfigurationPlugins(propValue);
+    }
+
 }
