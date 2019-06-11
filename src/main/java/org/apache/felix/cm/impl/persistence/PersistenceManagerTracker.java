@@ -19,25 +19,19 @@
 package org.apache.felix.cm.impl.persistence;
 
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.SortedMap;
-import java.util.TreeMap;
 
 import org.apache.felix.cm.NotCachablePersistenceManager;
 import org.apache.felix.cm.PersistenceManager;
-import org.apache.felix.cm.impl.ConfigurationManager;
-import org.apache.felix.cm.impl.Log;
+import org.apache.felix.cm.impl.ActivatorWorkerQueue;
+import org.apache.felix.cm.impl.ConfigurationAdminStarter;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.BundleException;
 import org.osgi.framework.Constants;
 import org.osgi.framework.InvalidSyntaxException;
-import org.osgi.framework.ServiceFactory;
 import org.osgi.framework.ServiceReference;
-import org.osgi.service.cm.ConfigurationAdmin;
-import org.osgi.service.log.LogService;
 import org.osgi.util.tracker.ServiceTracker;
 import org.osgi.util.tracker.ServiceTrackerCustomizer;
 
@@ -51,102 +45,40 @@ import org.osgi.util.tracker.ServiceTrackerCustomizer;
 public class PersistenceManagerTracker
     implements ServiceTrackerCustomizer<PersistenceManager, PersistenceManagerTracker.Holder>
 {
-    /** Tracker for the persistence manager. */
-    private final ServiceTracker<PersistenceManager, Holder> persistenceManagerTracker;
-
     private final List<Holder> holders = new ArrayList<>();
 
-    private final WorkerQueue workerQueue;
+    private final ServiceTracker<PersistenceManager, Holder> persistenceManagerTracker;
 
     private final BundleContext bundleContext;
 
-    private volatile ConfigurationManager configurationManager;
+    private final ActivatorWorkerQueue workerQueue;
 
-    // service tracker for optional coordinator
-    private volatile ServiceTracker<Object, Object> coordinatorTracker;
+    private final ConfigurationAdminStarter starter;
 
     public PersistenceManagerTracker(final BundleContext bundleContext,
-            final ServiceFactory<PersistenceManager> defaultFactory,
-            final String pmName )
+            final ActivatorWorkerQueue workerQueue,
+            final ConfigurationAdminStarter starter,
+            final String pmName)
             throws BundleException, InvalidSyntaxException
     {
+        this.workerQueue = workerQueue;
+        this.starter = starter;
         this.bundleContext = bundleContext;
-        if ( pmName != null )
-        {
-            Log.logger.log(LogService.LOG_DEBUG, "Using persistence manager {0}", new Object[] {pmName});
-            this.workerQueue = new WorkerQueue();
-            this.persistenceManagerTracker = new ServiceTracker<>( bundleContext,
+        this.persistenceManagerTracker = new ServiceTracker<>(bundleContext,
                     bundleContext.createFilter("(&(" + Constants.OBJECTCLASS + "=" + PersistenceManager.class.getName() + ")(name=" + pmName + "))"),
                      this );
-            this.persistenceManagerTracker.open();
-        }
-        else
-        {
-            Log.logger.log(LogService.LOG_DEBUG, "Using default persistence manager", (Object[])null);
-            PersistenceManager defaultPM = null;
-            try {
-                defaultPM = defaultFactory.getService(null, null);
-            } catch (final IllegalArgumentException iae) {
-                Log.logger.log(LogService.LOG_ERROR, "Cannot create the FilePersistenceManager", iae);
-            }
-            if (defaultPM == null) {
-                throw new BundleException("Unable to register default persistence manager.");
-            }
-            this.workerQueue = null;
-            this.persistenceManagerTracker = null;
-            this.activate(this.createPersistenceManagerProxy(defaultPM));
-        }
+        this.persistenceManagerTracker.open();
     }
 
     /**
-     * Stop the tracker, stop configuration admin
+     * Stop the tracker
      */
     public void stop( )
     {
-        if ( this.persistenceManagerTracker != null )
-        {
-            this.workerQueue.stop();
-            this.deactivate();
-            this.persistenceManagerTracker.close();
-        }
-        else
-        {
-            this.deactivate();
-        }
+        this.persistenceManagerTracker.close();
     }
 
-    private void activate(final ExtPersistenceManager pm)
-    {
-        try
-        {
-            configurationManager = new ConfigurationManager(pm, bundleContext);
-            // start coordinator tracker
-            this.startCoordinatorTracker();
-
-            final ServiceReference<ConfigurationAdmin> ref = configurationManager.start();
-            // update log
-            Log.logger.set(ref);
-
-        }
-        catch (final IOException ioe )
-        {
-            Log.logger.log( LogService.LOG_ERROR, "Failure setting up dynamic configuration bindings", ioe );
-        }
-    }
-
-    private void deactivate()
-    {
-        this.stopCoordinatorTracker();
-        if ( this.configurationManager != null )
-        {
-            this.configurationManager.stop();
-            this.configurationManager = null;
-        }
-        // update log
-        Log.logger.set(null);
-    }
-
-    private ExtPersistenceManager createPersistenceManagerProxy(final PersistenceManager pm)
+    public static ExtPersistenceManager createPersistenceManagerProxy(final PersistenceManager pm)
     {
         final ExtPersistenceManager extPM;
         if ( pm instanceof NotCachablePersistenceManager )
@@ -184,10 +116,10 @@ public class PersistenceManagerTracker
                         {
                             if ( oldHolder != null )
                             {
-                                deactivate();
+                                starter.unsetPersistenceManager();
                             }
                             if (!holder.isActivated()) {
-                                activate(holder.getPersistenceManager());
+                                starter.setPersistenceManager(holder.getPersistenceManager());
                                 holder.activate();
                             }
                         }
@@ -219,9 +151,9 @@ public class PersistenceManagerTracker
                     @Override
                     public void run()
                     {
-                        deactivate();
+                        starter.unsetPersistenceManager();
                         if (!holder.isActivated()) {
-                            activate(holder.getPersistenceManager());
+                            starter.setPersistenceManager(holder.getPersistenceManager());
                             holder.activate();
                         }
                     }
@@ -248,12 +180,12 @@ public class PersistenceManagerTracker
                     @Override
                     public void run()
                     {
-                        deactivate();
+                        starter.unsetPersistenceManager();
                         if ( !holders.isEmpty() )
                         {
                             Holder h = holders.get(0);
                             if (!h.isActivated()) {
-                                activate(h.getPersistenceManager());
+                                starter.setPersistenceManager(h.getPersistenceManager());
                                 h.activate();
                             }
                         }
@@ -317,68 +249,6 @@ public class PersistenceManagerTracker
             }
             final Holder other = (Holder) obj;
             return this.reference.equals(other.reference);
-        }
-    }
-
-    private void startCoordinatorTracker()
-    {
-        this.coordinatorTracker = new ServiceTracker<>(bundleContext, "org.osgi.service.coordinator.Coordinator",
-                new ServiceTrackerCustomizer<Object, Object>()
-        {
-            private final SortedMap<ServiceReference<Object>, Object> sortedServices = new TreeMap<>();
-
-            @Override
-            public Object addingService(final ServiceReference<Object> reference)
-            {
-                final Object srv = bundleContext.getService(reference);
-                if ( srv != null )
-                {
-                    synchronized ( this.sortedServices )
-                    {
-                        sortedServices.put(reference, srv);
-                        configurationManager.setCoordinator(sortedServices.get(sortedServices.lastKey()));
-                    }
-                }
-                return srv;
-            }
-
-            @Override
-            public void modifiedService(final ServiceReference<Object> reference, final Object srv) {
-                synchronized ( this.sortedServices )
-                {
-                    // update the map, service ranking might have changed
-                    sortedServices.remove(reference);
-                    sortedServices.put(reference, srv);
-                    configurationManager.setCoordinator(sortedServices.get(sortedServices.lastKey()));
-                }
-            }
-
-            @Override
-            public void removedService(final ServiceReference<Object> reference, final Object service) {
-                synchronized ( this.sortedServices )
-                {
-                    sortedServices.remove(reference);
-                    if ( sortedServices.isEmpty() )
-                    {
-                        configurationManager.setCoordinator(null);
-                    }
-                    else
-                    {
-                        configurationManager.setCoordinator(sortedServices.get(sortedServices.lastKey()));
-                    }
-                }
-                bundleContext.ungetService(reference);
-            }
-        });
-        coordinatorTracker.open();
-    }
-
-    private void stopCoordinatorTracker()
-    {
-        if ( this.coordinatorTracker != null )
-        {
-            this.coordinatorTracker.close();
-            this.coordinatorTracker = null;
         }
     }
 }
