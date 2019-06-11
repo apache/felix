@@ -97,6 +97,9 @@ public class ConfigurationManager implements BundleListener
     // the service registration of the configuration admin
     private volatile ServiceRegistration<ConfigurationAdmin> configurationAdminRegistration;
 
+    // the service registration properties
+    private volatile Dictionary<String, Object> serviceProperties;
+
     // the ConfigurationEvent listeners
     private ServiceTracker<ConfigurationListener, ConfigurationListener> configurationListenerTracker;
 
@@ -181,18 +184,20 @@ public class ConfigurationManager implements BundleListener
 
         // create and register configuration admin - start after PM tracker ...
         ConfigurationAdminFactory caf = new ConfigurationAdminFactory( this );
-        Dictionary<String, Object> props = new Hashtable<>();
-        props.put( Constants.SERVICE_PID, "org.apache.felix.cm.ConfigurationAdmin" );
-        props.put( Constants.SERVICE_DESCRIPTION, "Configuration Admin Service Specification 1.6 Implementation" );
-        props.put( Constants.SERVICE_VENDOR, "The Apache Software Foundation" );
-        props.put( "osgi.command.scope", "cm" );
+        serviceProperties = new Hashtable<>();
+        serviceProperties.put(Constants.SERVICE_PID, "org.apache.felix.cm.ConfigurationAdmin");
+        serviceProperties.put(Constants.SERVICE_DESCRIPTION,
+                "Configuration Admin Service Specification 1.6 Implementation");
+        serviceProperties.put(Constants.SERVICE_VENDOR, "The Apache Software Foundation");
+        serviceProperties.put("osgi.command.scope", "cm");
         Set<String> functions = new HashSet<>();
         for ( Method method : ConfigurationAdmin.class.getMethods() )
         {
             functions.add(method.getName());
         }
-        props.put( "osgi.command.function", functions.toArray(new String[0]) );
-        configurationAdminRegistration = bundleContext.registerService( ConfigurationAdmin.class, caf, props );
+        serviceProperties.put("osgi.command.function", functions.toArray(new String[0]));
+        configurationAdminRegistration = bundleContext.registerService(ConfigurationAdmin.class, caf,
+                serviceProperties);
 
         // start handling ManagedService[Factory] services
         managedServiceTracker = new ManagedServiceTracker(this);
@@ -1720,6 +1725,14 @@ public class ConfigurationManager implements BundleListener
     public void setCoordinator(final Object service)
     {
         this.coordinator = service;
+    }
+
+    public void updateRegisteredConfigurationPlugins(final String propValue) {
+        final ServiceRegistration<ConfigurationAdmin> localReg = this.configurationAdminRegistration;
+        if (localReg != null) {
+            serviceProperties.put("config.plugins", propValue);
+            localReg.setProperties(serviceProperties);
+        }
     }
 }
 

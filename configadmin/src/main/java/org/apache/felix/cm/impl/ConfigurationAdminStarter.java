@@ -48,6 +48,8 @@ public class ConfigurationAdminStarter {
 
     private final AtomicBoolean pluginsAvailable = new AtomicBoolean(false);
 
+    private volatile String registeredConfigurationPlugins = "";
+
     // service tracker for optional coordinator
     private volatile ServiceTracker<Object, Object> coordinatorTracker;
 
@@ -74,6 +76,7 @@ public class ConfigurationAdminStarter {
             this.startCoordinatorTracker();
 
             final ServiceReference<ConfigurationAdmin> ref = configurationManager.start();
+            configurationManager.updateRegisteredConfigurationPlugins(this.registeredConfigurationPlugins);
             // update log
             Log.logger.set(ref);
 
@@ -181,6 +184,14 @@ public class ConfigurationAdminStarter {
     public void checkStart() {
         if (this.pluginsAvailable.get() && this.persistenceManager != null) {
             this.activate(this.persistenceManager);
+        }
+    }
+
+    public void updateRegisteredConfigurationPlugins(final String propValue) {
+        this.registeredConfigurationPlugins = propValue;
+        final ConfigurationManager localCM = this.configurationManager;
+        if (localCM != null) {
+            localCM.updateRegisteredConfigurationPlugins(propValue);
         }
     }
 }
