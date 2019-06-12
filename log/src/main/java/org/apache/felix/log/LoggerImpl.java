@@ -321,6 +321,9 @@ public class LoggerImpl implements Logger {
     }
 
     String format(String format, LogParameters logParameters) {
+        if (logParameters.args == null || logParameters.args.length == 0) {
+            return format;
+        }
         StringBuilder sb = new StringBuilder();
         int offset = 0;
         int length = format.length();
