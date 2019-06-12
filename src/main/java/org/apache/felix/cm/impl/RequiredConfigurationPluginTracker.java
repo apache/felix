@@ -61,9 +61,13 @@ public class RequiredConfigurationPluginTracker
 
     private final Set<String> registeredPluginNames = new TreeSet<>();
 
+    private final ActivatorWorkerQueue workerQueue;
+
     public RequiredConfigurationPluginTracker(final BundleContext bundleContext,
+            final ActivatorWorkerQueue workerQueue,
             final ConfigurationAdminStarter starter,
             final String[] pluginNames) throws BundleException, InvalidSyntaxException {
+        this.workerQueue = workerQueue;
         this.starter = starter;
         for (final String name : pluginNames) {
             requiredNames.add(name);
@@ -102,18 +106,25 @@ public class RequiredConfigurationPluginTracker
             this.serviceMap.putIfAbsent(name, new AtomicInteger());
             final AtomicInteger counter = this.serviceMap.get(name);
             final boolean checkActivate = counter.getAndIncrement() == 0;
+            boolean activate = false;
             if (this.requiredNames.contains(name)) {
                 plugin = bundleContext.getService(reference);
                 if (plugin != null) {
-                    if (checkActivate && hasRequiredPlugins()) {
-                        starter.updatePluginsSet(true);
-                    }
+                    activate = checkActivate && hasRequiredPlugins();
                 }
             }
-            synchronized (this.registeredPluginNames) {
-                this.registeredPluginNames.add(name);
-                updateRegisteredConfigurationPlugins();
-            }
+            final boolean activateCA = activate;
+            this.workerQueue.enqueue(new Runnable() {
+
+                @Override
+                public void run() {
+                    if (activateCA) {
+                        starter.updatePluginsSet(true);
+                    }
+                    registeredPluginNames.add(name);
+                    updateRegisteredConfigurationPlugins();
+                }
+            });
         }
         return plugin;
     }
@@ -134,15 +145,19 @@ public class RequiredConfigurationPluginTracker
             final boolean deactivate = counter.decrementAndGet() == 0;
             if (this.requiredNames.contains(name)) {
                 bundleContext.ungetService(reference);
-                if (deactivate) {
-                    starter.updatePluginsSet(false);
-                }
             }
             if (deactivate) {
-                synchronized (this.registeredPluginNames) {
-                    this.registeredPluginNames.remove(name);
-                    updateRegisteredConfigurationPlugins();
-                }
+                this.workerQueue.enqueue(new Runnable() {
+
+                    @Override
+                    public void run() {
+                        if (!hasRequiredPlugins()) {
+                            starter.updatePluginsSet(false);
+                        }
+                        registeredPluginNames.remove(name);
+                        updateRegisteredConfigurationPlugins();
+                    }
+                });
             }
         }
     }

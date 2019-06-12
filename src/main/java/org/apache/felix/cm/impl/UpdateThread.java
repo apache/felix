@@ -41,7 +41,7 @@ public class UpdateThread implements Runnable
     private final String workerBaseName;
 
     // the queue of Runnable instances  to be run
-    private final LinkedList updateTasks;
+    private final LinkedList<Runnable> updateTasks;
 
     // the actual thread
     private Thread worker;
@@ -55,7 +55,7 @@ public class UpdateThread implements Runnable
         this.workerBaseName = name;
         this.acc = AccessController.getContext();
 
-        this.updateTasks = new LinkedList();
+        this.updateTasks = new LinkedList<>();
     }
 
 
@@ -84,7 +84,7 @@ public class UpdateThread implements Runnable
                     }
                 }
 
-                task = ( Runnable ) updateTasks.removeFirst();
+                task = updateTasks.removeFirst();
             }
 
             // return if the task is this thread itself

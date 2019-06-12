@@ -2,6 +2,7 @@ Changes in 1.9.16
 -----------------
 ** New Feature
     * [FELIX-6131] : Add in-memory persistence manager
+    * [FELIX-6059] : Improve usability for ConfigurationPlugins
 ** Bug
     * [FELIX-6091] : Permissions do not declare a CapabilityPermission for `osgi.implementation`
 
