@@ -39,6 +39,7 @@ import org.osgi.service.cm.ConfigurationPlugin;
 
 public class RequiredConfigurationPluginTrackerTest {
 
+    @SuppressWarnings({ "unchecked", "rawtypes" })
     @Test
     public void test() throws Exception {
         final BundleContext bundleContext = Mockito.mock(BundleContext.class);
@@ -79,8 +80,15 @@ public class RequiredConfigurationPluginTrackerTest {
         };
         starter.setPersistenceManager(epm);
 
+        final ActivatorWorkerQueue queue = new ActivatorWorkerQueue() {
+
+            @Override
+            public void enqueue(Runnable r) {
+                r.run();
+            }
+        };
         final RequiredConfigurationPluginTracker tracker = new RequiredConfigurationPluginTracker(bundleContext,
-                starter, pluginNames);
+                queue, starter, pluginNames);
 
         final ServiceReference<ConfigurationPlugin> r1 = Mockito.mock(ServiceReference.class);
         Mockito.when(r1.getProperty(RequiredConfigurationPluginTracker.PROPERTY_NAME)).thenReturn("p1");

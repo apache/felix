@@ -54,16 +54,20 @@ public class DependencyTracker
     {
         this.starter = new ConfigurationAdminStarter(bundleContext);
 
-        final boolean useTracker = pmName != null || pluginNames != null;
-
+        final boolean useQueue = pmName != null || pluginNames != null;
+        if (useQueue) {
+            this.workerQueue = new ActivatorWorkerQueue();
+        } else {
+            this.workerQueue = null;
+        }
         if (pluginNames != null) {
             Log.logger.log(LogService.LOG_DEBUG, "Requiring configuration plugins {0}",
                     new Object[] { Arrays.toString(pluginNames) });
-            this.configurationPluginTracker = new RequiredConfigurationPluginTracker(bundleContext,
+            this.configurationPluginTracker = new RequiredConfigurationPluginTracker(bundleContext, workerQueue,
                     starter, pluginNames);
         } else {
             this.configurationPluginTracker = null;
-            if (useTracker) {
+            if (useQueue) {
                 starter.updatePluginsSet(true);
             }
         }
@@ -71,13 +75,11 @@ public class DependencyTracker
         if ( pmName != null )
         {
             Log.logger.log(LogService.LOG_DEBUG, "Using persistence manager {0}", new Object[] {pmName});
-            this.workerQueue = new ActivatorWorkerQueue();
             this.persistenceManagerTracker = new PersistenceManagerTracker(bundleContext, workerQueue, starter, pmName);
         }
         else
         {
             this.persistenceManagerTracker = null;
-            this.workerQueue = null;
 
             Log.logger.log(LogService.LOG_DEBUG, "Using default persistence manager", (Object[])null);
             PersistenceManager defaultPM = null;
@@ -91,7 +93,7 @@ public class DependencyTracker
             }
 
             final ExtPersistenceManager epm = PersistenceManagerTracker.createPersistenceManagerProxy(defaultPM);
-            if (useTracker) {
+            if (useQueue) {
                 starter.setPersistenceManager(epm);
             } else {
                 this.starter.activate(epm);

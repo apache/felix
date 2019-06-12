@@ -85,7 +85,7 @@ public class Activator implements BundleActivator
      *
      * @see #start(BundleContext)
      */
-    private static final String CM_CONFIG_PLUGINS = "felix.cm.config.plugins";
+    public static final String CM_CONFIG_PLUGINS = "felix.cm.config.plugins";
 
     private volatile DependencyTracker tracker;
 

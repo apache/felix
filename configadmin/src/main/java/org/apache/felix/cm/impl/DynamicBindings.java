@@ -26,6 +26,8 @@ import java.util.Enumeration;
 import java.util.HashSet;
 import java.util.Hashtable;
 import java.util.Iterator;
+import java.util.List;
+import java.util.Set;
 
 import org.apache.felix.cm.PersistenceManager;
 import org.osgi.framework.Bundle;
@@ -41,6 +43,7 @@ class DynamicBindings
 
     private final Dictionary<String, String> bindings;
 
+    @SuppressWarnings("unchecked")
     DynamicBindings( BundleContext bundleContext, PersistenceManager persistenceManager ) throws IOException
     {
         this.persistenceManager = persistenceManager;
@@ -50,7 +53,7 @@ class DynamicBindings
             this.bindings = persistenceManager.load( BINDINGS_FILE_NAME );
 
             // get locations of installed bundles to validate the bindings
-            final HashSet locations = new HashSet();
+            final Set<String> locations = new HashSet<>();
             final Bundle[] bundles = bundleContext.getBundles();
             for ( int i = 0; i < bundles.length; i++ )
             {
@@ -58,10 +61,10 @@ class DynamicBindings
             }
 
             // collect pids whose location is not installed any more
-            ArrayList removedKeys = new ArrayList();
-            for ( Enumeration ke = bindings.keys(); ke.hasMoreElements(); )
+            List<String> removedKeys = new ArrayList<>();
+            for (Enumeration<String> ke = bindings.keys(); ke.hasMoreElements();)
             {
-                final String pid = ( String ) ke.nextElement();
+                final String pid = ke.nextElement();
                 final String location = bindings.get( pid );
                 if ( !locations.contains( location ) )
                 {
@@ -73,7 +76,7 @@ class DynamicBindings
             if ( removedKeys.size() > 0 )
             {
                 // remove invalid mappings
-                for ( Iterator rki = removedKeys.iterator(); rki.hasNext(); )
+                for (Iterator<String> rki = removedKeys.iterator(); rki.hasNext();)
                 {
                     bindings.remove( rki.next() );
                 }

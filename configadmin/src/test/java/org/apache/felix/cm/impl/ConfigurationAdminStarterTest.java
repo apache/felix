@@ -38,6 +38,7 @@ import org.osgi.service.cm.ConfigurationAdmin;
 
 public class ConfigurationAdminStarterTest {
 
+    @SuppressWarnings({ "unchecked", "rawtypes" })
     @Test
     public void testWaitingForPlugins() throws Exception {
         final BundleContext bundleContext = Mockito.mock(BundleContext.class);
@@ -89,6 +90,7 @@ public class ConfigurationAdminStarterTest {
         assertEquals(epm, activateList.get(0));
     }
 
+    @SuppressWarnings({ "unchecked", "rawtypes" })
     @Test
     public void testWaitingForPM() throws Exception {
         final BundleContext bundleContext = Mockito.mock(BundleContext.class);
