@@ -42,6 +42,8 @@ public class ConfigurationListenerImpl {
     private static final String CONFIGURATION_ADMIN_CLASS = "org.osgi.service.cm.ConfigurationAdmin";
     private static final String CONFIGURATION_EVENT_CLASS = "org.osgi.service.cm.ConfigurationEvent";
     private static final String CONFIGURATION_LISTENER_CLASS = "org.osgi.service.cm.ConfigurationListener";
+    private static final String LOGGER_ADMIN_PID = "org.osgi.service.log.admin";
+    private static final String LOGGER_ADMIN_PID_PREFIX = LOGGER_ADMIN_PID + '|';
 
     /** ConfigurationAdmin tracker */
     final ServiceTracker<?, ?> m_cmtracker;
@@ -128,10 +130,13 @@ public class ConfigurationListenerImpl {
                     public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
                         if (method.equals(m_clConfigurationEvent)) {
                             String pid = (String)m_ceGetPid.invoke(args[0]);
+                            if(!pid.startsWith(LOGGER_ADMIN_PID)) {
+                            	return null;
+                            }
                             String configName = null;
                             String location = "?";
-                            if (pid.startsWith("org.osgi.service.log.admin|")) {
-                                configName = pid.substring("org.osgi.service.log.admin|".length());
+                            if (pid.startsWith(LOGGER_ADMIN_PID_PREFIX)) {
+                                configName = pid.substring(LOGGER_ADMIN_PID_PREFIX.length());
                                 if (configName.contains("|") && (configName.split("|").length == 3)) {
                                     String[] parts = configName.split("|");
                                     location = parts[2];
