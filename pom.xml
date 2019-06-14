@@ -74,8 +74,30 @@
                             osgi.service;objectClass:List&lt;String&gt;="org.osgi.service.http.runtime.HttpServiceRuntime";
                             uses:="org.osgi.service.http.runtime,org.osgi.service.http.runtime.dto"
                         </Provide-Capability>
+                        <_removeheaders>
+                            Private-Package,Conditional-Package 
+                        </_removeheaders>
                     </instructions>
                 </configuration>
+                <executions>
+                    <execution>
+                        <id>light-bundle</id>
+                        <goals>
+                            <goal>bundle</goal>
+                        </goals>
+                        <configuration>
+                            <classifier>light</classifier>
+                            <instructions>
+                                <Bundle-Name>${project.name} Light</Bundle-Name>
+                                <Bundle-SymbolicName>${project.artifactId}.light</Bundle-SymbolicName>
+                                <!-- We need to override this from the base configuration -->
+                                <Conditional-Package>
+                                    foo
+                                </Conditional-Package>
+                            </instructions>
+                        </configuration>
+                    </execution>
+                </executions>
             </plugin>
         </plugins>
     </build>
