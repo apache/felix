@@ -18,7 +18,7 @@ package org.apache.felix.http.jetty.internal;
 
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.fail;
-import static org.mockito.Matchers.anyString;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -43,7 +43,8 @@ import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
 
 import org.apache.felix.http.base.internal.HttpServiceController;
-import org.apache.felix.http.jetty.internal.JettyService.Deployment;
+import org.apache.felix.http.jetty.internal.webapp.WebAppBundleContext;
+import org.apache.felix.http.jetty.internal.webapp.WebAppBundleTracker.Deployment;
 import org.eclipse.jetty.servlet.FilterHolder;
 import org.eclipse.jetty.servlet.ServletHolder;
 import org.junit.After;
@@ -214,7 +215,7 @@ public class JettyServiceTest
             }
         }), "/test2", dispatcherSet);
 
-        jettyService.deploy(mockDeployment, webAppBundleContext);
+        jettyService.webAppTracker.deploy(mockDeployment, webAppBundleContext);
 
         //Pause since service is multi-threaded.
         //Fail if takes too long.

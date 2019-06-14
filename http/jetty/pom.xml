@@ -160,6 +160,7 @@
                                     org.osgi.service.http.context;version="[1.1,1.2)",
                                     org.osgi.service.http.runtime;version="[1.1,1.2)",
                                     org.osgi.service.http.runtime.dto;version="[1.1,1.2)",
+                                    org.eclipse.jetty.webapp;resolution:=optional,
                                     *
                                 </Import-Package>
                                 <_removeheaders>
