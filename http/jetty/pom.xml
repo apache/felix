@@ -54,9 +54,9 @@
                 <extensions>true</extensions>
                 <configuration>
                     <instructions>
-                    	<X-Jetty-Version>
-                    		${jetty.version}
-                    	</X-Jetty-Version>
+                        <X-Jetty-Version>
+                            ${jetty.version}
+                        </X-Jetty-Version>
                         <Bundle-Activator>
                             org.apache.felix.http.jetty.internal.JettyActivator
                         </Bundle-Activator>
@@ -116,10 +116,59 @@
                         <Require-Capability>
                             osgi.contract;filter:="(&amp;(osgi.contract=JavaServlet)(version=3.1))"
                         </Require-Capability>
+                        <_removeheaders>
+                            Private-Package,Conditional-Package
+                        </_removeheaders>
                     </instructions>
                 <!-- Skip Baselining due to Jetty API -->
-	                <skip>true</skip>
+	            <skip>true</skip>
                 </configuration>
+                <executions>
+                    <execution>
+                        <id>light-bundle</id>
+                        <goals>
+                            <goal>bundle</goal>
+                        </goals>
+                        <configuration>
+                            <classifier>light</classifier>
+                            <instructions>
+                               <Bundle-Name>${project.name} Light</Bundle-Name>
+                               <Bundle-SymbolicName>${project.artifactId}.light</Bundle-SymbolicName>
+                               <!-- We need to override this from the base configuration -->
+                               <Conditional-Package>
+                                   foo
+                               </Conditional-Package>
+                               <Export-Package>
+                                    org.osgi.service.http,
+                                    org.osgi.service.http.context,
+                                    org.osgi.service.http.runtime,
+                                    org.osgi.service.http.runtime.dto,
+                                    org.osgi.service.http.whiteboard,
+                                    org.apache.felix.http.jetty
+                                </Export-Package>
+                                <Private-Package>
+                                    org.apache.felix.http.base.*,
+                                    org.apache.felix.http.jetty.*
+                                </Private-Package>
+                                <Import-Package>
+                                    org.osgi.service.cm;resolution:=optional;version="[1.3,2)",
+                                    org.osgi.service.event;resolution:=optional;version="[1.2,2)",
+                                    org.osgi.service.log;resolution:=optional;version="[1.3,2)",
+                                    org.osgi.service.metatype;resolution:=optional;version="[1.1,2)",
+                                    org.osgi.service.useradmin;resolution:=optional;version="[1.1,2)",
+                                    org.osgi.service.http;version="[1.2.1,1.3)",
+                                    org.osgi.service.http.context;version="[1.1,1.2)",
+                                    org.osgi.service.http.runtime;version="[1.1,1.2)",
+                                    org.osgi.service.http.runtime.dto;version="[1.1,1.2)",
+                                    *
+                                </Import-Package>
+                                <_removeheaders>
+                                    X-Jetty-Version,Private-Package,Conditional-Package 
+                                </_removeheaders>
+                            </instructions>
+                        </configuration>
+                    </execution>
+                </executions>
             </plugin>
         </plugins>
     </build>
