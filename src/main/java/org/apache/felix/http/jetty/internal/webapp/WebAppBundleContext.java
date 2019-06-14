@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.felix.http.jetty.internal;
+package org.apache.felix.http.jetty.internal.webapp;
 
 import java.io.File;
 import java.io.IOException;
@@ -28,7 +28,7 @@ import org.eclipse.jetty.util.resource.URLResource;
 import org.eclipse.jetty.webapp.WebAppContext;
 import org.osgi.framework.Bundle;
 
-class WebAppBundleContext extends WebAppContext
+public class WebAppBundleContext extends WebAppContext
 {
     public WebAppBundleContext(String contextPath, final Bundle bundle, final ClassLoader parent)
     {
