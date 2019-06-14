@@ -319,7 +319,7 @@ class ConfigMetaTypeProvider implements MetaTypeProvider
                 -1,
                 bundle.getBundleContext().getProperty(JettyConfig.FELIX_JETTY_SERVLET_SESSION_MAX_AGE)));
 
-        adList.add(new AttributeDefinitionImpl(JettyConfig.FELIX_JETTY_SERVLET_SESSION_MAX_AGE,
+        adList.add(new AttributeDefinitionImpl(JettyConfig.FELIX_JETTY_SESSION_SCAVENGING_INTERVAL,
                 "Session Scavenging Interval",
                 "Interval of session scavenging in seconds. Default is " + String.valueOf(HouseKeeper.DEFAULT_PERIOD_MS / 1000),
                 HouseKeeper.DEFAULT_PERIOD_MS / 1000,
