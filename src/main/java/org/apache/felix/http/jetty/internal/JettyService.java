@@ -288,10 +288,21 @@ public final class JettyService extends AbstractLifeCycle.AbstractLifeCycleListe
             {
                 this.mbeanServerTracker = new MBeanServerTracker(this.context, this.server);
                 this.mbeanServerTracker.open();
-                context.addBean(new StatisticsHandler());
+                if (!this.config.isStatisticsHandlerEnabled()) {
+                  context.addBean(new StatisticsHandler());
+                }
             }
 
             this.server.setHandler(this.parent);
+
+            if (this.config.isStatisticsHandlerEnabled()) {
+              StatisticsHandler statisticsHandler = new StatisticsHandler();
+              this.server.insertHandler(statisticsHandler);
+              if (this.config.isRegisterMBeans())
+              {
+                context.addBean(statisticsHandler);
+              }
+            }
 
             if (this.config.isGzipHandlerEnabled())
             {
