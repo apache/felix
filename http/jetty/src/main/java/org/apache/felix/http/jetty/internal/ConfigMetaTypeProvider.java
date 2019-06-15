@@ -149,9 +149,15 @@ class ConfigMetaTypeProvider implements MetaTypeProvider
         adList.add(new AttributeDefinitionImpl(JettyConfig.FELIX_HTTP_MBEANS,
                 "Register MBeans",
                 "Whether or not to use register JMX MBeans from the servlet container (Jetty). If this is " +
-                    "enabled Jetty Request and Connector statistics are also enabled. The default is to not enable JMX.",
+                    "enabled Jetty Request and Connector statistics are also added. The default is to not enable JMX.",
                 false,
                 bundle.getBundleContext().getProperty(JettyConfig.FELIX_HTTP_MBEANS)));
+
+        adList.add(new AttributeDefinitionImpl(JettyConfig.FELIX_JETTY_STATISTICS_HANDLER_ENABLE,
+                "Enable Statistics",
+                "Whether or not to use enable Statistics in the servlet container (Jetty).",
+                false,
+                bundle.getBundleContext().getProperty(JettyConfig.FELIX_JETTY_STATISTICS_HANDLER_ENABLE)));
 
         adList.add(new AttributeDefinitionImpl(JettyConfig.FELIX_SESSION_TIMEOUT,
                 "Session Timeout",

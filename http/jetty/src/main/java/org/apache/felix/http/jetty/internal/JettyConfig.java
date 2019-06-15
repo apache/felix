@@ -225,6 +225,9 @@ public final class JettyConfig
     /** Felix specific property to define custom properties for the http runtime service. */
     public static final String FELIX_CUSTOM_HTTP_RUNTIME_PROPERTY_PREFIX = "org.apache.felix.http.runtime.init.";
 
+    /** Felix specific property to specify whether the server should collect statistics information (defaults to false) */
+    public static final String FELIX_JETTY_STATISTICS_HANDLER_ENABLE = "org.apache.felix.jetty.statisticshandler.enable";
+
     /** Felix specific property to specify whether the server should use a server-wide gzip handler (defaults to true) */
     public static final String FELIX_JETTY_GZIP_HANDLER_ENABLE = "org.apache.felix.jetty.gziphandler.enable";
 
@@ -596,6 +599,9 @@ public final class JettyConfig
         return getProperty(FELIX_HTTP_REQUEST_LOG_FILE_TIMEZONE, null);
     }
 
+    public boolean isStatisticsHandlerEnabled() {
+        return getBooleanProperty(FELIX_JETTY_STATISTICS_HANDLER_ENABLE, false);
+    }
 
     public boolean isGzipHandlerEnabled() {
         return getBooleanProperty(FELIX_JETTY_GZIP_HANDLER_ENABLE, false);
