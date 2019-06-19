@@ -31,7 +31,7 @@
         compendium service.
     </description>
 	<artifactId>org.apache.felix.useradmin</artifactId>
-    <version>1.0.4</version>
+    <version>1.0.5-SNAPSHOT</version>
     <scm>
         <connection>scm:svn:https://svn.apache.org/repos/asf/felix/releases/org.apache.felix.useradmin-1.0.4</connection>
         <developerConnection>scm:svn:https://svn.apache.org/repos/asf/felix/releases/org.apache.felix.useradmin-1.0.4</developerConnection>
