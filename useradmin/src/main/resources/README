@@ -1,0 +1,25 @@
+Apache Felix User Admin Service
+Copyright 2012 The Apache Software Foundation
+
+This project provides the main implementation of the OSGi UserAdmin compendium
+service, version 1.1 as specified in the OSGi Compendium v4. 
+
+The resulting bundle needs a repository store in order to function properly. 
+There are two implementations for such stores available: a file-based one, and
+a MongoDB-based on. This service currently expects only a single repository 
+store to be available.
+
+It is possible to create your own repository store for this user admin 
+service. To do this, you need to implement "org.apache.felix.useradmin.
+RoleRepositoryStore" and register your implementation under this service name.
+
+Repository stores can implement their own variants of "Role", "User" and 
+"Group" and return it to the user admin service. Alternatively, stores can 
+also use the "org.apache.felix.useradmin.RoleFactory" to use the default 
+implementations instead.
+
+The user admin service this bundle provides does not need additional 
+configuration to function properly.
+
+When present, this bundle will emit events to the EventAdmin service about all
+changes made to the repository of this service.
