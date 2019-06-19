@@ -31,11 +31,11 @@
         compendium service.
     </description>
 	<artifactId>org.apache.felix.useradmin</artifactId>
-    <version>1.0.5-SNAPSHOT</version>
+    <version>1.0.5</version>
     <scm>
-        <connection>scm:svn:https://svn.apache.org/repos/asf/felix/releases/org.apache.felix.useradmin-1.0.4</connection>
-        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/felix/releases/org.apache.felix.useradmin-1.0.4</developerConnection>
-        <url>scm:svn:https://svn.apache.org/repos/asf/felix/releases/org.apache.felix.useradmin-1.0.4</url>
+        <connection>scm:svn:https://svn.apache.org/repos/asf/felix/releases/org.apache.felix.useradmin-1.0.5</connection>
+        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/felix/releases/org.apache.felix.useradmin-1.0.5</developerConnection>
+        <url>scm:svn:https://svn.apache.org/repos/asf/felix/releases/org.apache.felix.useradmin-1.0.5</url>
     </scm>
 	<dependencies>
 		<dependency>
