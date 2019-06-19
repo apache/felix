@@ -17,7 +17,7 @@
 package org.apache.felix.useradmin;
 
 /**
- * Represents a runtime exception for {@link RoleRepositoryBackend}s.
+ * Represents a runtime exception for {@link RoleRepositoryStore}s.
  */
 public class BackendException extends RuntimeException {
 

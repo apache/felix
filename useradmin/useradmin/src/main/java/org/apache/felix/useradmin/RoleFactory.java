@@ -63,7 +63,6 @@ public final class RoleFactory {
     /**
      * Creates a new role instance.
      * 
-     * @param type the type of the role to create;
      * @param name the name of the role to create.
      * @return a new {@link Role} instance denoting the requested role, never <code>null</code>.
      */
