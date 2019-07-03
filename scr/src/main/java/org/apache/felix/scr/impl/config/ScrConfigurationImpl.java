@@ -81,6 +81,8 @@ public class ScrConfigurationImpl implements ScrConfiguration
 
     private boolean infoAsService;
 
+    private boolean cacheMetadata;
+
     private long lockTimeout = DEFAULT_LOCK_TIMEOUT_MILLISECONDS;
 
     private long stopTimeout = DEFAULT_STOP_TIMEOUT_MILLISECONDS;
@@ -175,6 +177,7 @@ public class ScrConfigurationImpl implements ScrConfiguration
                         stopTimeout = DEFAULT_STOP_TIMEOUT_MILLISECONDS;
                         serviceChangecountTimeout = DEFAULT_SERVICE_CHANGECOUNT_TIMEOUT_MILLISECONDS;
                         newGlobalExtender = false;
+                        cacheMetadata = false;
                     }
                     else
                     {
@@ -186,6 +189,7 @@ public class ScrConfigurationImpl implements ScrConfiguration
                         stopTimeout = getDefaultStopTimeout();
                         serviceChangecountTimeout = getServiceChangecountTimeout();
                         newGlobalExtender = getDefaultGlobalExtender();
+                        cacheMetadata = getDefaultCacheMetadata();
                     }
                 }
                 else
@@ -204,6 +208,8 @@ public class ScrConfigurationImpl implements ScrConfiguration
                 timeout = ( Long ) config.get( PROP_STOP_TIMEOUT );
                 stopTimeout = timeout == null? DEFAULT_STOP_TIMEOUT_MILLISECONDS: timeout;
                 newGlobalExtender = VALUE_TRUE.equalsIgnoreCase( String.valueOf( config.get( PROP_GLOBAL_EXTENDER) ) );
+                cacheMetadata = VALUE_TRUE.equalsIgnoreCase(
+                    String.valueOf(config.get(PROP_CACHE_METADATA)));
             }
             if ( scrCommand != null )
             {
@@ -268,6 +274,12 @@ public class ScrConfigurationImpl implements ScrConfiguration
     }
 
     @Override
+    public boolean cacheMetadata()
+    {
+        return cacheMetadata;
+    }
+
+    @Override
     public long serviceChangecountTimeout()
     {
         return serviceChangecountTimeout;
@@ -328,6 +340,12 @@ public class ScrConfigurationImpl implements ScrConfiguration
     private boolean getDefaultGlobalExtender()
     {
         return VALUE_TRUE.equalsIgnoreCase( bundleContext.getProperty( PROP_GLOBAL_EXTENDER) );
+    }
+
+    private boolean getDefaultCacheMetadata()
+    {
+        return VALUE_TRUE.equalsIgnoreCase(
+            bundleContext.getProperty(PROP_CACHE_METADATA));
     }
 
     private int getLogLevel( final Object levelObject )

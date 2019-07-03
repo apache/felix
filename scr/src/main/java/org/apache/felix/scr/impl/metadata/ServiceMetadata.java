@@ -18,8 +18,17 @@
  */
 package org.apache.felix.scr.impl.metadata;
 
+import static org.apache.felix.scr.impl.metadata.MetadataStoreHelper.addString;
+
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
+
+import org.apache.felix.scr.impl.metadata.MetadataStoreHelper.MetaDataReader;
+import org.apache.felix.scr.impl.metadata.MetadataStoreHelper.MetaDataWriter;
 
 /**
  * This class contains the metadata associated to a service that is provided
@@ -133,5 +142,51 @@ public class ServiceMetadata {
             }
         }
         m_validated = true;
+    }
+
+    void collectStrings(Set<String> strings)
+    {
+        for (String s : m_provides)
+        {
+            addString(s, strings);
+        }
+        addString(m_scopeName, strings);
+        addString(m_scope.toString(), strings);
+    }
+
+    void store(DataOutputStream out, MetaDataWriter metaDataWriter) throws IOException
+    {
+        out.writeInt(m_provides.size());
+        for (String s : m_provides)
+        {
+            metaDataWriter.writeString(s, out);
+        }
+        metaDataWriter.writeString(m_scopeName, out);
+        metaDataWriter.writeString(m_scope.toString(), out);
+        out.writeBoolean(m_serviceFactory != null);
+        if (m_serviceFactory != null)
+        {
+            out.writeBoolean(m_serviceFactory.booleanValue());
+        }
+    }
+
+    static ServiceMetadata load(DataInputStream in, MetaDataReader metaDataReader)
+        throws IOException
+    {
+        ServiceMetadata result = new ServiceMetadata();
+        int providerSize = in.readInt();
+        for (int i = 0; i < providerSize; i++)
+        {
+            result.addProvide(metaDataReader.readString(in));
+        }
+        result.m_scopeName = metaDataReader.readString(in);
+        result.m_scope = Scope.valueOf(metaDataReader.readString(in));
+        if (in.readBoolean())
+        {
+            result.m_serviceFactory = in.readBoolean();
+        }
+        // only stored valid metadata
+        result.m_validated = true;
+        return result;
     }
 }

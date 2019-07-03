@@ -18,9 +18,24 @@
  */
 package org.apache.felix.scr.impl;
 
+import java.io.BufferedInputStream;
+import java.io.BufferedOutputStream;
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
@@ -28,9 +43,14 @@ import java.util.concurrent.locks.ReentrantLock;
 import org.apache.felix.scr.impl.config.ScrConfigurationImpl;
 import org.apache.felix.scr.impl.inject.ClassUtils;
 import org.apache.felix.scr.impl.logger.ScrLogger;
+import org.apache.felix.scr.impl.manager.ComponentHolder;
+import org.apache.felix.scr.impl.metadata.ComponentMetadata;
+import org.apache.felix.scr.impl.metadata.MetadataStoreHelper.MetaDataReader;
+import org.apache.felix.scr.impl.metadata.MetadataStoreHelper.MetaDataWriter;
 import org.apache.felix.scr.impl.runtime.ServiceComponentRuntimeImpl;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
+import org.osgi.framework.BundleEvent;
 import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceRegistration;
 import org.osgi.framework.wiring.BundleRevision;
@@ -75,6 +95,8 @@ public class Activator extends AbstractExtender
 
     private ComponentCommands m_componentCommands;
 
+    private ConcurrentMap<Long, List<ComponentMetadata>> m_componentMetadataStore;
+
     public Activator()
     {
         m_configuration = new ScrConfigurationImpl( this );
@@ -102,6 +124,8 @@ public class Activator extends AbstractExtender
 
     public void restart(boolean globalExtender)
     {
+        m_componentMetadataStore = load(m_context, logger,
+            m_configuration.cacheMetadata());
         BundleContext context = m_globalContext;
         if ( globalExtender )
         {
@@ -182,6 +206,136 @@ public class Activator extends AbstractExtender
     {
         super.stop( context );
         m_configuration.stop();
+        store(m_componentMetadataStore, context, logger, m_configuration.cacheMetadata());
+    }
+
+    @Override
+    public void bundleChanged(BundleEvent event)
+    {
+        super.bundleChanged(event);
+        if (event.getType() == BundleEvent.UPDATED
+            || event.getType() == BundleEvent.UNINSTALLED)
+        {
+            m_componentMetadataStore.remove(event.getBundle().getBundleId());
+        }
+    }
+
+    private static ConcurrentMap<Long, List<ComponentMetadata>> load(
+        BundleContext context,
+        ScrLogger logger, boolean loadFromCache)
+    {
+        try
+        {
+            ConcurrentMap<Long, List<ComponentMetadata>> result = new ConcurrentHashMap<>();
+            if (!loadFromCache)
+            {
+                return result;
+            }
+            BundleContext systemContext = context.getBundle(
+                Constants.SYSTEM_BUNDLE_LOCATION).getBundleContext();
+
+            File store = context.getDataFile("componentMetadataStore");
+            if (store.isFile())
+            {
+                try (DataInputStream in = new DataInputStream(
+                    new BufferedInputStream(new FileInputStream(store))))
+                {
+                    MetaDataReader metaDataReader = new MetaDataReader();
+                    int numStrings = in.readInt();
+                    for (int i = 0; i < numStrings; i++)
+                    {
+                        metaDataReader.readIndexedString(in);
+                    }
+                    int numBundles = in.readInt();
+                    for (int i = 0; i < numBundles; i++)
+                    {
+                        // Read all the components for the ID even if the bundle does not exist;
+                        long bundleId = in.readLong();
+                        int numComponents = in.readInt();
+                        long lastModified = in.readLong();
+                        List<ComponentMetadata> components = new ArrayList<>(
+                            numComponents);
+                        for (int j = 0; j < numComponents; j++)
+                        {
+                            components.add(ComponentMetadata.load(in, metaDataReader));
+                        }
+                        // Check with system context by ID to avoid hooks hiding;
+                        Bundle b = systemContext.getBundle(bundleId);
+                        if (b != null)
+                        {
+                            if (lastModified == b.getLastModified())
+                            {
+                                result.put(bundleId, components);
+                            }
+                        }
+                    }
+                }
+                catch (IOException e)
+                {
+                    logger.log(LogService.LOG_WARNING,
+                        "Error loading component metadata cache.", e);
+                }
+            }
+            return result;
+        }
+        catch (RuntimeException re)
+        {
+            // avoid failing all of SCR start on cache load bug
+            logger.log(LogService.LOG_ERROR,
+                "Error loading component metadata cache.", re);
+            return new ConcurrentHashMap<>();
+        }
+
+    }
+
+    private static void store(Map<Long, List<ComponentMetadata>> componentsMap,
+        BundleContext context, ScrLogger logger, boolean storeCache)
+    {
+        if (!storeCache)
+        {
+            return;
+        }
+        BundleContext systemContext = context.getBundle(
+            Constants.SYSTEM_BUNDLE_LOCATION).getBundleContext();
+        File store = context.getDataFile("componentMetadataStore");
+        try (DataOutputStream out = new DataOutputStream(
+            new BufferedOutputStream(new FileOutputStream(store))))
+        {
+            MetaDataWriter metaDataWriter = new MetaDataWriter();
+
+            Set<String> allStrings = new HashSet<>();
+            for (List<ComponentMetadata> components : componentsMap.values())
+            {
+                for (ComponentMetadata component : components)
+                {
+                    component.collectStrings(allStrings);
+                }
+            }
+            // remove possible null
+            allStrings.remove(null);
+            out.writeInt(allStrings.size());
+            for (String s : allStrings)
+            {
+                metaDataWriter.writeIndexedString(s, out);
+            }
+            out.writeInt(componentsMap.size());
+            for (Entry<Long, List<ComponentMetadata>> entry : componentsMap.entrySet())
+            {
+                out.writeLong(entry.getKey());
+                out.writeInt(entry.getValue().size());
+                Bundle b = systemContext.getBundle(entry.getKey());
+                out.writeLong(b == null ? -1 : b.getLastModified());
+                for (ComponentMetadata component : entry.getValue())
+                {
+                    component.store(out, metaDataWriter);
+                }
+            }
+        }
+        catch (IOException e)
+        {
+            logger.log(LogService.LOG_WARNING, "Error storing component metadata cache.",
+                e);
+        }
     }
 
     /**
@@ -312,8 +466,20 @@ public class Activator extends AbstractExtender
      */
     private void loadComponents(Bundle bundle)
     {
-        if (bundle.getHeaders("").get(ComponentConstants.SERVICE_COMPONENT) == null)
+        final Long bundleId = bundle.getBundleId();
+        List<ComponentMetadata> cached = m_componentMetadataStore.get(bundleId);
+        if (cached != null && cached.isEmpty())
         {
+            // Cached that there are no components for this bundle.
+            return;
+        }
+
+        if (cached == null
+            && bundle.getHeaders("").get(ComponentConstants.SERVICE_COMPONENT) == null)
+        {
+            // Cache that there are no components
+            m_componentMetadataStore.put(bundleId,
+                Collections.<ComponentMetadata> emptyList());
             // no components in the bundle, abandon
             return;
         }
@@ -352,7 +518,6 @@ public class Activator extends AbstractExtender
         // FELIX-2231 Mark bundle loaded early to prevent concurrent loading
         // if LAZY_ACTIVATION and STARTED event are fired at the same time
         final boolean loaded;
-        final Long bundleId = bundle.getBundleId();
         synchronized ( m_componentBundles )
         {
             if ( m_componentBundles.containsKey( bundleId ) )
@@ -378,9 +543,18 @@ public class Activator extends AbstractExtender
         try
         {
             BundleComponentActivator ga = new BundleComponentActivator( this.logger, m_componentRegistry, m_componentActor,
-                context, m_configuration );
+                context, m_configuration, cached);
             ga.initialEnable();
-
+            if (cached == null)
+            {
+                List<ComponentHolder<?>> components = ga.getSelectedComponents(null);
+                List<ComponentMetadata> metadatas = new ArrayList<>(components.size());
+                for (ComponentHolder<?> holder : ga.getSelectedComponents(null))
+                {
+                    metadatas.add(holder.getComponentMetadata());
+                }
+                m_componentMetadataStore.put(bundleId, metadatas);
+            }
             // replace bundle activator in the map
             synchronized ( m_componentBundles )
             {

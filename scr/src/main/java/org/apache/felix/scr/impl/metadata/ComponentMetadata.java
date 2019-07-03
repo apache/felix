@@ -18,6 +18,11 @@
  */
 package org.apache.felix.scr.impl.metadata;
 
+import static org.apache.felix.scr.impl.metadata.MetadataStoreHelper.addString;
+
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -25,9 +30,12 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 import java.util.TreeSet;
 
+import org.apache.felix.scr.impl.metadata.MetadataStoreHelper.MetaDataReader;
+import org.apache.felix.scr.impl.metadata.MetadataStoreHelper.MetaDataWriter;
 import org.apache.felix.scr.impl.metadata.ServiceMetadata.Scope;
 import org.osgi.service.component.ComponentException;
 
@@ -1084,4 +1092,548 @@ public class ComponentMetadata
     {
         return new ComponentException( "Component " + getName() + " validation failed: " + reason );
     }
+
+    public void collectStrings(Set<String> strings)
+    {
+        addString(m_dsVersion.toString(), strings);
+        addString(m_activate, strings);
+        if (m_activationFields != null)
+        {
+            for (String s : m_activationFields)
+            {
+                addString(s, strings);
+            }
+        }
+        if (m_configurationPid != null)
+        {
+            for (String s : m_configurationPid)
+            {
+                addString(s, strings);
+            }
+        }
+        addString(m_configurationPolicy, strings);
+        addString(m_deactivate, strings);
+        addString(m_factory, strings);
+        addString(m_implementationClassName, strings);
+        addString(m_init, strings);
+        addString(m_modified, strings);
+        addString(m_name, strings);
+        for (Entry<String, Object> entry : m_factoryProperties.entrySet())
+        {
+            collectStrings(entry, strings);
+        }
+        for (Entry<String, Object> entry : m_properties.entrySet())
+        {
+            collectStrings(entry, strings);
+        }
+        for (ReferenceMetadata rMeta : m_references)
+        {
+            rMeta.collectStrings(strings);
+        }
+        if (m_service != null)
+        {
+            m_service.collectStrings(strings);
+        }
+    }
+
+    private void collectStrings(Entry<String, Object> entry, Set<String> strings)
+    {
+        addString(entry.getKey(), strings);
+        Object v = entry.getValue();
+        if (v instanceof String)
+        {
+            addString((String) v, strings);
+        }
+        else if (v instanceof String[])
+        {
+            for (String s : (String[]) v)
+            {
+                addString(s, strings);
+            }
+        }
+    }
+
+    public void store(DataOutputStream out, MetaDataWriter metaDataWriter)
+        throws IOException
+    {
+        metaDataWriter.writeString(m_dsVersion.toString(), out);
+        metaDataWriter.writeString(m_activate, out);
+        out.writeBoolean(m_activationFields != null);
+        if (m_activationFields != null)
+        {
+            out.writeInt(m_activationFields.size());
+            for (String s : m_activationFields)
+            {
+                metaDataWriter.writeString(s, out);
+            }
+        }
+        out.writeBoolean(m_configurationPid != null);
+        if (m_configurationPid != null)
+        {
+            out.writeInt(m_configurationPid.size());
+            for (String s : m_configurationPid)
+            {
+                metaDataWriter.writeString(s, out);
+            }
+        }
+        metaDataWriter.writeString(m_configurationPolicy, out);
+        metaDataWriter.writeString(m_deactivate, out);
+        metaDataWriter.writeString(m_factory, out);
+        metaDataWriter.writeString(m_implementationClassName, out);
+        metaDataWriter.writeString(m_init, out);
+        metaDataWriter.writeString(m_modified, out);
+        metaDataWriter.writeString(m_name, out);
+        out.writeInt(m_factoryProperties.size());
+        for (Entry<String, Object> prop : m_factoryProperties.entrySet())
+        {
+            metaDataWriter.writeString(prop.getKey(), out);
+            storePropertyValue(prop.getValue(), out, metaDataWriter);
+        }
+        out.writeInt(m_properties.size());
+        for (Entry<String, Object> prop : m_properties.entrySet())
+        {
+            metaDataWriter.writeString(prop.getKey(), out);
+            storePropertyValue(prop.getValue(), out, metaDataWriter);
+        }
+        out.writeInt(m_references.size());
+        for (ReferenceMetadata rMeta : m_references)
+        {
+            rMeta.store(out, metaDataWriter);
+        }
+        out.writeBoolean(m_service != null);
+        if (m_service != null)
+        {
+            m_service.store(out, metaDataWriter);
+        }
+        out.writeBoolean(m_activateDeclared);
+        out.writeBoolean(m_configurableServiceProperties);
+        out.writeBoolean(m_configureWithInterfaces);
+        out.writeBoolean(m_deactivateDeclared);
+        out.writeBoolean(m_delayedKeepInstances);
+        out.writeBoolean(m_deleteCallsModify);
+        out.writeBoolean(m_enabled);
+        out.writeBoolean(m_immediate != null);
+        if (m_immediate != null)
+        {
+            out.writeBoolean(m_immediate.booleanValue());
+        }
+    }
+
+    public static ComponentMetadata load(DataInputStream in,
+        MetaDataReader metaDataReader)
+        throws IOException
+    {
+        ComponentMetadata result = new ComponentMetadata(
+            DSVersion.valueOf(metaDataReader.readString(in)));
+        result.m_activate = metaDataReader.readString(in);
+        if (in.readBoolean())
+        {
+            int size = in.readInt();
+            String[] activationFields = new String[size];
+            for (int i = 0; i < size; i++)
+            {
+                activationFields[i] = metaDataReader.readString(in);
+            }
+            result.setActivationFields(activationFields);
+        }
+        if (in.readBoolean())
+        {
+            int size = in.readInt();
+            String[] configPids = new String[size];
+            for (int i = 0; i < size; i++)
+            {
+                configPids[i] = metaDataReader.readString(in);
+            }
+            result.setConfigurationPid(configPids);
+        }
+        result.m_configurationPolicy = metaDataReader.readString(in);
+        result.m_deactivate = metaDataReader.readString(in);
+        result.m_factory = metaDataReader.readString(in);
+        result.m_implementationClassName = metaDataReader.readString(in);
+        result.m_init = metaDataReader.readString(in);
+        result.m_modified = metaDataReader.readString(in);
+        result.m_name = metaDataReader.readString(in);
+        int numFProps = in.readInt();
+        for (int i = 0; i < numFProps; i++)
+        {
+            result.m_factoryProperties.put(metaDataReader.readString(in),
+                loadPropertyValue(in, metaDataReader));
+        }
+        int numProps = in.readInt();
+        for (int i = 0; i < numProps; i++)
+        {
+            result.m_properties.put(metaDataReader.readString(in),
+                loadPropertyValue(in, metaDataReader));
+        }
+        int numRefs = in.readInt();
+        for (int i = 0; i < numRefs; i++)
+        {
+            result.addDependency(ReferenceMetadata.load(in, metaDataReader));
+        }
+        if (in.readBoolean())
+        {
+            result.m_service = ServiceMetadata.load(in, metaDataReader);
+        }
+        result.m_activateDeclared = in.readBoolean();
+        result.m_configurableServiceProperties = in.readBoolean();
+        result.m_configureWithInterfaces = in.readBoolean();
+        result.m_deactivateDeclared = in.readBoolean();
+        result.m_delayedKeepInstances = in.readBoolean();
+        result.m_deleteCallsModify = in.readBoolean();
+        result.m_enabled = in.readBoolean();
+        if (in.readBoolean())
+        {
+            result.m_immediate = in.readBoolean();
+        }
+        // we only store valid metadata
+        result.m_validated = true;
+        return result;
+    }
+
+    private static final byte TypeString = 1;
+    private static final byte TypeLong = 2;
+    private static final byte TypeDouble = 3;
+    private static final byte TypeFloat = 4;
+    private static final byte TypeInteger = 5;
+    private static final byte TypeByte = 6;
+    private static final byte TypeChar = 7;
+    private static final byte TypeBoolean = 8;
+    private static final byte TypeShort = 9;
+
+    static Object loadPropertyValue(DataInputStream in, MetaDataReader metaDataReader)
+        throws IOException
+    {
+        boolean isArray = in.readBoolean();
+        byte valueType = in.readByte();
+        switch (valueType)
+        {
+            case TypeBoolean:
+                if (isArray)
+                {
+                    boolean[] vArray = new boolean[in.readInt()];
+                    for (int i = 0; i < vArray.length; i++)
+                    {
+                        vArray[i] = in.readBoolean();
+                    }
+                    return vArray;
+                }
+                else
+                {
+                    return Boolean.valueOf(in.readBoolean());
+                }
+            case TypeByte:
+                if (isArray)
+                {
+                    byte[] vArray = new byte[in.readInt()];
+                    for (int i = 0; i < vArray.length; i++)
+                    {
+                        vArray[i] = in.readByte();
+                    }
+                    return vArray;
+                }
+                else
+                {
+                    return Byte.valueOf(in.readByte());
+                }
+            case TypeChar:
+                if (isArray)
+                {
+                    char[] vArray = new char[in.readInt()];
+                    for (int i = 0; i < vArray.length; i++)
+                    {
+                        vArray[i] = in.readChar();
+                    }
+                    return vArray;
+                }
+                else
+                {
+                    return Character.valueOf(in.readChar());
+                }
+            case TypeDouble:
+                if (isArray)
+                {
+                    double[] vArray = new double[in.readInt()];
+                    for (int i = 0; i < vArray.length; i++)
+                    {
+                        vArray[i] = in.readDouble();
+                    }
+                    return vArray;
+                }
+                else
+                {
+                    return Double.valueOf(in.readDouble());
+                }
+            case TypeFloat:
+                if (isArray)
+                {
+                    float[] vArray = new float[in.readInt()];
+                    for (int i = 0; i < vArray.length; i++)
+                    {
+                        vArray[i] = in.readFloat();
+                    }
+                    return vArray;
+                }
+                else
+                {
+                    return Float.valueOf(in.readFloat());
+                }
+            case TypeInteger:
+                if (isArray)
+                {
+                    int[] vArray = new int[in.readInt()];
+                    for (int i = 0; i < vArray.length; i++)
+                    {
+                        vArray[i] = in.readInt();
+                    }
+                    return vArray;
+                }
+                else
+                {
+                    return Integer.valueOf(in.readInt());
+                }
+            case TypeLong:
+                if (isArray)
+                {
+                    long[] vArray = new long[in.readInt()];
+                    for (int i = 0; i < vArray.length; i++)
+                    {
+                        vArray[i] = in.readLong();
+                    }
+                    return vArray;
+                }
+                else
+                {
+                    return Long.valueOf(in.readLong());
+                }
+            case TypeShort:
+                if (isArray)
+                {
+                    short[] vArray = new short[in.readInt()];
+                    for (int i = 0; i < vArray.length; i++)
+                    {
+                        vArray[i] = in.readShort();
+                    }
+                    return vArray;
+                }
+                else
+                {
+                    return Short.valueOf(in.readShort());
+                }
+            case TypeString:
+                if (isArray)
+                {
+                    String[] vArray = new String[in.readInt()];
+                    for (int i = 0; i < vArray.length; i++)
+                    {
+                        vArray[i] = metaDataReader.readString(in);
+                    }
+                    return vArray;
+                }
+                else
+                {
+                    return metaDataReader.readString(in);
+                }
+        }
+        return null;
+    }
+
+    void storePropertyValue(Object value, DataOutputStream out,
+        MetaDataWriter metaDataWriter) throws IOException
+    {
+        if (value == null)
+        {
+            // handle null value as a string
+            out.writeBoolean(false);
+            out.writeByte(TypeString);
+            metaDataWriter.writeString(null, out);
+            return;
+        }
+        Class<?> arrayType = value.getClass().getComponentType();
+        boolean isArray = arrayType != null;
+        out.writeBoolean(isArray);
+        byte valueType = getType(arrayType == null ? value.getClass() : arrayType);
+        out.writeByte(valueType);
+        switch (valueType)
+        {
+            case TypeBoolean:
+                if (isArray)
+                {
+                    boolean[] vArray = (boolean[]) value;
+                    out.writeInt(vArray.length);
+                    for (boolean v : vArray)
+                    {
+                        out.writeBoolean(v);
+                    }
+                }
+                else
+                {
+                    out.writeBoolean((boolean) value);
+                }
+                break;
+            case TypeByte:
+                if (isArray)
+                {
+                    byte[] vArray = (byte[]) value;
+                    out.writeInt(vArray.length);
+                    for (byte v : vArray)
+                    {
+                        out.writeByte(v);
+                    }
+                }
+                else
+                {
+                    out.writeByte((byte) value);
+                }
+                break;
+            case TypeChar:
+                if (isArray)
+                {
+                    char[] vArray = (char[]) value;
+                    out.writeInt(vArray.length);
+                    for (char v : vArray)
+                    {
+                        out.writeChar(v);
+                    }
+                }
+                else
+                {
+                    out.writeChar((char) value);
+                }
+                break;
+            case TypeDouble:
+                if (isArray)
+                {
+                    double[] vArray = (double[]) value;
+                    out.writeInt(vArray.length);
+                    for (double v : vArray)
+                    {
+                        out.writeDouble(v);
+                    }
+                }
+                else
+                {
+                    out.writeDouble((double) value);
+                }
+                break;
+            case TypeFloat:
+                if (isArray)
+                {
+                    float[] vArray = (float[]) value;
+                    out.writeInt(vArray.length);
+                    for (float v : vArray)
+                    {
+                        out.writeFloat(v);
+                    }
+                }
+                else
+                {
+                    out.writeFloat((float) value);
+                }
+                break;
+            case TypeInteger:
+                if (isArray)
+                {
+                    int[] vArray = (int[]) value;
+                    out.writeInt(vArray.length);
+                    for (int v : vArray)
+                    {
+                        out.writeInt(v);
+                    }
+                }
+                else
+                {
+                    out.writeInt((int) value);
+                }
+                break;
+            case TypeLong:
+                if (isArray)
+                {
+                    long[] vArray = (long[]) value;
+                    out.writeInt(vArray.length);
+                    for (long v : vArray)
+                    {
+                        out.writeLong(v);
+                    }
+                }
+                else
+                {
+                    out.writeLong((long) value);
+                }
+                break;
+            case TypeShort:
+                if (isArray)
+                {
+                    short[] vArray = (short[]) value;
+                    out.writeInt(vArray.length);
+                    for (short v : vArray)
+                    {
+                        out.writeShort(v);
+                    }
+                }
+                else
+                {
+                    out.writeShort((short) value);
+                }
+                break;
+            case TypeString:
+                if (isArray)
+                {
+                    String[] vArray = (String[]) value;
+                    out.writeInt(vArray.length);
+                    for (String v : vArray)
+                    {
+                        metaDataWriter.writeString(v, out);
+                    }
+
+                }
+                else
+                {
+                    metaDataWriter.writeString((String) value, out);
+                }
+                break;
+        }
+    }
+
+    private byte getType(Class<?> typeClass)
+    {
+        if (Boolean.class.equals(typeClass) || boolean.class.equals(typeClass))
+        {
+            return TypeBoolean;
+        }
+        if (Byte.class.equals(typeClass) || byte.class.equals(typeClass))
+        {
+            return TypeByte;
+        }
+        if (Character.class.equals(typeClass) || char.class.equals(typeClass))
+        {
+            return TypeChar;
+        }
+        if (Double.class.equals(typeClass) || double.class.equals(typeClass))
+        {
+            return TypeDouble;
+        }
+        if (Float.class.equals(typeClass) || float.class.equals(typeClass))
+        {
+            return TypeFloat;
+        }
+        if (Integer.class.equals(typeClass) || int.class.equals(typeClass))
+        {
+            return TypeInteger;
+        }
+        if (Long.class.equals(typeClass) || long.class.equals(typeClass))
+        {
+            return TypeLong;
+        }
+        if (Short.class.equals(typeClass) || short.class.equals(typeClass))
+        {
+            return TypeShort;
+        }
+        if (String.class.equals(typeClass))
+        {
+            return TypeString;
+        }
+        throw new IllegalArgumentException("Unsupported type: " + typeClass);
+
+    }
+
 }

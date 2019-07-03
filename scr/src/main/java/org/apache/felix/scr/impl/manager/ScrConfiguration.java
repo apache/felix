@@ -68,6 +68,8 @@ public interface ScrConfiguration
 
     String PROP_SERVICE_CHANGECOUNT_TIMEOUT = "ds.service.changecount.timeout";
 
+    String PROP_CACHE_METADATA = "ds.cache.metadata";
+
     /**
      * Returns the current log level.
      * @return
@@ -96,5 +98,7 @@ public interface ScrConfiguration
      * @since 2.2
      */
     long serviceChangecountTimeout();
+
+    boolean cacheMetadata();
 
 }

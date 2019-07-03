@@ -18,8 +18,16 @@
  */
 package org.apache.felix.scr.impl.metadata;
 
+import static org.apache.felix.scr.impl.metadata.MetadataStoreHelper.addString;
+
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
+import java.io.IOException;
 import java.util.Set;
 import java.util.TreeSet;
+
+import org.apache.felix.scr.impl.metadata.MetadataStoreHelper.MetaDataReader;
+import org.apache.felix.scr.impl.metadata.MetadataStoreHelper.MetaDataWriter;
 
 /**
  * Information associated to a dependency
@@ -823,5 +831,87 @@ public class ReferenceMetadata
                 ", field-option=" + this.getFieldOption() +
                 ", collection-type=" + this.getFieldCollectionType() +
                 ", parameter=" + this.getParameterIndex();
+    }
+
+    void collectStrings(Set<String> strings)
+    {
+        addString(m_bind, strings);
+        addString(m_cardinality, strings);
+        addString(m_collection_type, strings);
+        addString(m_field, strings);
+        addString(m_field_option, strings);
+        addString(m_interface, strings);
+        addString(m_name, strings);
+        addString(m_parameter, strings);
+        addString(m_policy, strings);
+        addString(m_policy_option, strings);
+        addString(m_scopeName, strings);
+        addString(m_scope.toString(), strings);
+        addString(m_target, strings);
+        addString(m_unbind, strings);
+        addString(m_updated, strings);
+    }
+
+    void store(DataOutputStream out, MetaDataWriter metaDataWriter) throws IOException
+    {
+        metaDataWriter.writeString(m_bind, out);
+        metaDataWriter.writeString(m_cardinality, out);
+        metaDataWriter.writeString(m_collection_type, out);
+        metaDataWriter.writeString(m_field, out);
+        metaDataWriter.writeString(m_field_option, out);
+        metaDataWriter.writeString(m_interface, out);
+        out.writeBoolean(m_isMultiple);
+        out.writeBoolean(m_isOptional);
+        out.writeBoolean(m_isReluctant);
+        out.writeBoolean(m_isReplace);
+        out.writeBoolean(m_isStatic);
+        metaDataWriter.writeString(m_name, out);
+        metaDataWriter.writeString(m_parameter, out);
+        out.writeBoolean(m_parameterIndex != null);
+        if (m_parameterIndex != null)
+        {
+            out.writeInt(m_parameterIndex.intValue());
+        }
+        metaDataWriter.writeString(m_policy, out);
+        metaDataWriter.writeString(m_policy_option, out);
+        metaDataWriter.writeString(m_scopeName, out);
+        metaDataWriter.writeString(m_scope.toString(), out);
+        metaDataWriter.writeString(m_target, out);
+        metaDataWriter.writeString(m_unbind, out);
+        metaDataWriter.writeString(m_updated, out);
+    }
+
+    static ReferenceMetadata load(DataInputStream in, MetaDataReader metaDataReader)
+        throws IOException
+    {
+        ReferenceMetadata result = new ReferenceMetadata();
+        result.m_bind = metaDataReader.readString(in);
+        result.m_cardinality = metaDataReader.readString(in);
+        result.m_collection_type = metaDataReader.readString(in);
+        result.m_field = metaDataReader.readString(in);
+        result.m_field_option = metaDataReader.readString(in);
+        result.m_interface = metaDataReader.readString(in);
+        result.m_isMultiple = in.readBoolean();
+        result.m_isOptional = in.readBoolean();
+        result.m_isReluctant = in.readBoolean();
+        result.m_isReplace = in.readBoolean();
+        result.m_isStatic = in.readBoolean();
+        result.m_name = metaDataReader.readString(in);
+        result.m_parameter = metaDataReader.readString(in);
+        if (in.readBoolean())
+        {
+            result.m_parameterIndex = Integer.valueOf(in.readInt());
+        }
+        result.m_policy = metaDataReader.readString(in);
+        result.m_policy_option = metaDataReader.readString(in);
+        result.m_scopeName = metaDataReader.readString(in);
+        result.m_scope = ReferenceScope.valueOf(metaDataReader.readString(in));
+        result.m_target = metaDataReader.readString(in);
+        result.m_unbind = metaDataReader.readString(in);
+        result.m_updated = metaDataReader.readString(in);
+
+        // only stored valid metadata
+        result.m_validated = true;
+        return result;
     }
 }

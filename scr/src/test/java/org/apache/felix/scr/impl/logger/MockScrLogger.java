@@ -78,6 +78,12 @@ public class MockScrLogger extends ScrLogger
             public boolean globalExtender() {
                 return false;
             }
+
+            @Override
+            public boolean cacheMetadata()
+            {
+                return false;
+            }
         }, new MockBundleContext(new MockBundle()));
     }
 }

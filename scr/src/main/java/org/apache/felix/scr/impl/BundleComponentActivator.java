@@ -244,7 +244,8 @@ public class BundleComponentActivator implements ComponentActivator
             final ComponentRegistry componentRegistry,
             final ComponentActorThread componentActor,
             final BundleContext context,
-            final ScrConfiguration configuration)
+            final ScrConfiguration configuration,
+            final List<ComponentMetadata> cachedComponentMetadata)
     throws ComponentException
     {
         // create a logger on behalf of the bundle
@@ -259,14 +260,7 @@ public class BundleComponentActivator implements ComponentActivator
 
         logger.log( LogService.LOG_DEBUG, "BundleComponentActivator : Bundle active", null);
 
-        // Get the Metadata-Location value from the manifest
-        String descriptorLocations = m_bundle.getHeaders("").get("Service-Component");
-        if ( descriptorLocations == null )
-        {
-            throw new ComponentException( "Service-Component entry not found in the manifest" );
-        }
-
-        initialize( descriptorLocations );
+        initialize(cachedComponentMetadata);
         ConfigAdminTracker tracker = null;
         for ( ComponentHolder<?> holder : m_holders )
         {
@@ -282,36 +276,56 @@ public class BundleComponentActivator implements ComponentActivator
     /**
      * Gets the MetaData location, parses the meta data and requests the processing
      * of binder instances
-     *
-     * @param descriptorLocations A comma separated list of locations of
-     *      component descriptors. This must not be <code>null</code>.
+     * @param cachedComponentMetadata 
      *
      * @throws IllegalStateException If the bundle has already been uninstalled.
      */
-    protected void initialize(String descriptorLocations)
+    protected void initialize(List<ComponentMetadata> cachedComponentMetadata)
     {
-        logger.log( LogService.LOG_DEBUG, "BundleComponentActivator : Descriptor locations {0}", null, descriptorLocations );
-
-        // 112.4.1: The value of the the header is a comma separated list of XML entries within the Bundle
-        StringTokenizer st = new StringTokenizer( descriptorLocations, ", " );
-
-        while ( st.hasMoreTokens() )
+        if (cachedComponentMetadata != null)
         {
-            String descriptorLocation = st.nextToken();
-
-            URL[] descriptorURLs = findDescriptors( m_bundle, descriptorLocation );
-            if ( descriptorURLs.length == 0 )
+            for (ComponentMetadata metadata : cachedComponentMetadata)
             {
-                // 112.4.1 If an XML document specified by the header cannot be located in the bundle and its attached
-                // fragments, SCR must log an error message with the Log Service, if present, and continue.
-                logger.log( LogService.LOG_ERROR, "Component descriptor entry ''{0}'' not found", null, descriptorLocation);
-                continue;
+                validateAndRegister(metadata);
+            }
+        }
+        else
+        {
+            // Get the Metadata-Location value from the manifest
+            String descriptorLocations = m_bundle.getHeaders("").get("Service-Component");
+            if (descriptorLocations == null)
+            {
+                throw new ComponentException(
+                    "Service-Component entry not found in the manifest");
             }
 
-            // load from the descriptors
-            for ( URL descriptorURL : descriptorURLs )
+            logger.log(LogService.LOG_DEBUG,
+                "BundleComponentActivator : Descriptor locations {0}", null,
+                descriptorLocations);
+
+            // 112.4.1: The value of the the header is a comma separated list of XML entries within the Bundle
+            StringTokenizer st = new StringTokenizer(descriptorLocations, ", ");
+
+            while (st.hasMoreTokens())
             {
-                loadDescriptor( descriptorURL );
+                String descriptorLocation = st.nextToken();
+
+                URL[] descriptorURLs = findDescriptors(m_bundle, descriptorLocation);
+                if (descriptorURLs.length == 0)
+                {
+                    // 112.4.1 If an XML document specified by the header cannot be located in the bundle and its attached
+                    // fragments, SCR must log an error message with the Log Service, if present, and continue.
+                    logger.log(LogService.LOG_ERROR,
+                        "Component descriptor entry ''{0}'' not found", null,
+                        descriptorLocation);
+                    continue;
+                }
+
+                // load from the descriptors
+                for (URL descriptorURL : descriptorURLs)
+                {
+                    loadDescriptor(descriptorURL);
+                }
             }
         }
     }
@@ -431,39 +445,7 @@ public class BundleComponentActivator implements ComponentActivator
             // or one or more component elements embedded in a larger document
             for ( ComponentMetadata metadata : handler.getComponentMetadataList() )
             {
-                final ComponentLogger componentLogger = new ComponentLogger(metadata, logger);
-                ComponentRegistryKey key = null;
-                try
-                {
-                    // validate the component metadata
-                    metadata.validate( );
-
-                    // check and reserve the component name (validate ensures it's never null)
-                    key = m_componentRegistry.checkComponentName( m_bundle, metadata.getName() );
-
-                    // Request creation of the component manager
-                    ComponentHolder<?> holder = m_componentRegistry.createComponentHolder( this, metadata, componentLogger );
-
-                    // register the component after validation
-                    m_componentRegistry.registerComponentHolder( key, holder );
-                    m_holders.add( holder );
-
-                    componentLogger.log( LogService.LOG_DEBUG,
-                        "BundleComponentActivator : ComponentHolder created.", null );
-
-                }
-                catch ( Throwable t )
-                {
-                    // There is a problem with this particular component, we'll log the error
-                    // and proceed to the next one
-                    componentLogger.log( LogService.LOG_ERROR, "Cannot register component", t );
-
-                    // make sure the name is not reserved any more
-                    if ( key != null )
-                    {
-                        m_componentRegistry.unregisterComponentHolder( key );
-                    }
-                }
+                validateAndRegister(metadata);
             }
         }
         catch ( IOException ex )
@@ -488,6 +470,44 @@ public class BundleComponentActivator implements ComponentActivator
                 catch ( IOException ignore )
                 {
                 }
+            }
+        }
+    }
+
+    void validateAndRegister(ComponentMetadata metadata)
+    {
+        final ComponentLogger componentLogger = new ComponentLogger(metadata, logger);
+        ComponentRegistryKey key = null;
+        try
+        {
+            // validate the component metadata
+            metadata.validate();
+
+            // check and reserve the component name (validate ensures it's never null)
+            key = m_componentRegistry.checkComponentName(m_bundle, metadata.getName());
+
+            // Request creation of the component manager
+            ComponentHolder<?> holder = m_componentRegistry.createComponentHolder(this,
+                metadata, componentLogger);
+
+            // register the component after validation
+            m_componentRegistry.registerComponentHolder(key, holder);
+            m_holders.add(holder);
+
+            componentLogger.log(LogService.LOG_DEBUG,
+                "BundleComponentActivator : ComponentHolder created.", null);
+
+        }
+        catch (Throwable t)
+        {
+            // There is a problem with this particular component, we'll log the error
+            // and proceed to the next one
+            componentLogger.log(LogService.LOG_ERROR, "Cannot register component", t);
+
+            // make sure the name is not reserved any more
+            if (key != null)
+            {
+                m_componentRegistry.unregisterComponentHolder(key);
             }
         }
     }
@@ -649,7 +669,7 @@ public class BundleComponentActivator implements ComponentActivator
      *      to the <code>name</code> parameter or <code>null</code> if no
      *      component manager with the given name is currently registered.
      */
-    private List<ComponentHolder<?>> getSelectedComponents(String name)
+    List<ComponentHolder<?>> getSelectedComponents(String name)
     {
         // if all components are selected
         if ( name == null )
