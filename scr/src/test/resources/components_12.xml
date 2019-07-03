@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Licensed to the Apache Software Foundation (ASF) under one or more contributor 
+	license agreements. See the NOTICE file distributed with this work for additional 
+	information regarding copyright ownership. The ASF licenses this file to 
+	you under the Apache License, Version 2.0 (the "License"); you may not use 
+	this file except in compliance with the License. You may obtain a copy of 
+	the License at http://www.apache.org/licenses/LICENSE-2.0 Unless required 
+	by applicable law or agreed to in writing, software distributed under the 
+	License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS 
+	OF ANY KIND, either express or implied. See the License for the specific 
+	language governing permissions and limitations under the License. -->
+
+<components>
+
+	<scr:component
+		xmlns:scr="http://www.osgi.org/xmlns/scr/v1.2.0" enabled="true"
+		name="components.name.12" activate="myactivate"
+		deactivate="mydeactivate" modified="mymodified"
+		configuration-policy="optional" configuration-pid="pid.12">
+
+		<implementation class="components.impl.12" />
+
+		<property name="prop" value="1234" type="Integer" />
+
+		<property name="char_array_property" type="Character">
+			65
+			66
+		</property>
+
+		<property name="string_array_property" type="String">
+			prop1
+			prop2
+		</property>
+
+		<property name="int_array_property" type="Integer">
+			1
+			2
+		</property>
+
+		<property name="long_array_property" type="Long">
+			1
+			2
+		</property>
+
+		<property name="double_array_property" type="Double">
+			1.0
+			2.0
+		</property>
+
+		<property name="float_array_property" type="Float">
+			1.0
+			2.0
+		</property>
+
+		<property name="short_array_property" type="Short">
+			1
+			2
+		</property>
+		<property name="byte_array_property" type="Byte">
+			126
+			127
+		</property>
+
+		<property name="boolean_array_property" type="Boolean">
+			true
+			false
+		</property>
+
+		<service servicefactory="true">
+			<provide interface="components.service.12" />
+		</service>
+
+		<!-- Basic reference testing reading -->
+		<reference name="ref.name.1" interface="ref.service.1"
+			cardinality="0..1" policy="static" policy-option="greedy"
+			target="ref.target.1" bind="ref_bind_1" unbind="ref_unbind_1"
+			updated="updated_1" />
+
+		<reference name="ref.name.2" interface="ref.service.2"
+			cardinality="1..1" policy="static" policy-option="reluctant"
+			target="ref.target.2" bind="ref_bind_2" unbind="ref_unbind_2"
+			updated="updated_2" />
+
+		<reference name="ref.name.3" interface="ref.service.3"
+			cardinality="0..n" policy="dynamic" policy-option="greedy"
+			target="ref.target.3" bind="ref_bind_3" unbind="ref_unbind_3"
+			updated="updated_3" />
+
+		<reference name="ref.name.4" interface="ref.service.4"
+			cardinality="1..n" policy="dynamic" policy-option="reluctant"
+			target="ref.target.4" bind="ref_bind_4" unbind="ref_unbind_4"
+			updated="updated_4" />
+	</scr:component>
+</components>
