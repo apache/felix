@@ -126,6 +126,9 @@ public abstract class ComponentTestBase
     protected static String COMPONENT_PACKAGE = "org.apache.felix.scr.integration.components";
 
     protected static boolean NONSTANDARD_COMPONENT_FACTORY_BEHAVIOR = false;
+    
+    protected static boolean CACHE_META_DATA = false;
+    
     protected volatile Log log;
 
     protected static String[] ignoredWarnings; //null unless you need it.
@@ -158,7 +161,8 @@ public abstract class ComponentTestBase
                         + "org.apache.felix.scr.integration.components.felix3680_2,"
                         + "org.apache.felix.scr.integration.components.felix4984,"
                         + "org.apache.felix.scr.integration.components.felix5248,"
-                        + "org.apache.felix.scr.integration.components.felix5276" );
+                        + "org.apache.felix.scr.integration.components.felix5276,"
+                        + "org.apache.felix.scr.integration.components.metadata.cache" );
         builder.setHeader( "Import-Package", "org.apache.felix.scr.component" );
         builder.setHeader( "Bundle-ManifestVersion", "2" );
         return builder;
@@ -183,7 +187,8 @@ public abstract class ComponentTestBase
                         mavenBundle( "org.osgi", "org.osgi.util.function"),
                 junitBundles(), frameworkProperty( "org.osgi.framework.bsnversion" ).value( bsnVersionUniqueness ),
                 systemProperty( "ds.factory.enabled" ).value( Boolean.toString( NONSTANDARD_COMPONENT_FACTORY_BEHAVIOR ) ),
-                systemProperty( "ds.loglevel" ).value( DS_LOGLEVEL )
+                systemProperty( "ds.loglevel" ).value( DS_LOGLEVEL ),
+                systemProperty( "ds.cache.metadata" ).value( Boolean.toString(CACHE_META_DATA) )
 
                 );
         final Option vmOption = ( paxRunnerVmOption != null )? CoreOptions.vmOption( paxRunnerVmOption ): null;
@@ -232,14 +237,14 @@ public abstract class ComponentTestBase
         }
     }
 
-    protected Collection<ComponentDescriptionDTO> getComponentDescriptions()
+    protected Collection<ComponentDescriptionDTO> getComponentDescriptions(Bundle... bundles)
     {
         ServiceComponentRuntime scr = scrTracker.getService();
         if ( scr == null )
         {
             TestCase.fail( "no ServiceComponentRuntime" );
         }
-        return scr.getComponentDescriptionDTOs();
+        return scr.getComponentDescriptionDTOs(bundles);
     }
 
     protected ComponentDescriptionDTO findComponentDescriptorByName(String name)
@@ -695,15 +700,8 @@ public abstract class ComponentTestBase
     protected Bundle installBundle(final String descriptorFile, String componentPackage, String symbolicName,
             String version, String location) throws BundleException
     {
-        final InputStream bundleStream = bundle().add( "OSGI-INF/components.xml",
-                getClass().getResource( descriptorFile ) )
-
-                .set( Constants.BUNDLE_SYMBOLICNAME, symbolicName ).set( Constants.BUNDLE_VERSION, version ).set(
-                        Constants.IMPORT_PACKAGE, componentPackage ).set( "Service-Component", "OSGI-INF/components.xml" ).set(
-                                Constants.REQUIRE_CAPABILITY,
-                                ExtenderNamespace.EXTENDER_NAMESPACE
-                                + ";filter:=\"(&(osgi.extender=osgi.component)(version>=1.3)(!(version>=2.0)))\"" ).build(
-                                        withBnd() );
+        final InputStream bundleStream = createBundleInputStream(descriptorFile, componentPackage, symbolicName,
+            version);
 
         try
         {
@@ -723,6 +721,21 @@ public abstract class ComponentTestBase
             {
             }
         }
+    }
+
+    protected InputStream createBundleInputStream(final String descriptorFile,
+        String componentPackage, String symbolicName, String version)
+    {
+        final InputStream bundleStream = bundle().add("OSGI-INF/components.xml",
+                getClass().getResource( descriptorFile ) )
+
+                .set( Constants.BUNDLE_SYMBOLICNAME, symbolicName ).set( Constants.BUNDLE_VERSION, version ).set(
+                        Constants.IMPORT_PACKAGE, componentPackage ).set( "Service-Component", "OSGI-INF/components.xml" ).set(
+                                Constants.REQUIRE_CAPABILITY,
+                                ExtenderNamespace.EXTENDER_NAMESPACE
+                                + ";filter:=\"(&(osgi.extender=osgi.component)(version>=1.3)(!(version>=2.0)))\"" ).build(
+                                        withBnd() );
+        return bundleStream;
     }
 
     //Code copied from ScrCommand to make it easier to find out what your test components are actually doing.
