@@ -241,6 +241,11 @@ public class Activator extends AbstractExtender
                     new BufferedInputStream(new FileInputStream(store))))
                 {
                     MetaDataReader metaDataReader = new MetaDataReader();
+                    if (!metaDataReader.isVersionSupported(in))
+                    {
+                        // the stored version is not compatible
+                        return result;
+                    }
                     int numStrings = in.readInt();
                     for (int i = 0; i < numStrings; i++)
                     {
@@ -302,6 +307,7 @@ public class Activator extends AbstractExtender
             new BufferedOutputStream(new FileOutputStream(store))))
         {
             MetaDataWriter metaDataWriter = new MetaDataWriter();
+            metaDataWriter.writeVersion(out);
 
             Set<String> allStrings = new HashSet<>();
             for (List<ComponentMetadata> components : componentsMap.values())

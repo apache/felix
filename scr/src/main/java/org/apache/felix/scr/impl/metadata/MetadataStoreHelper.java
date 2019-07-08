@@ -29,6 +29,10 @@ import java.util.Set;
 
 public class MetadataStoreHelper
 {
+    // The version of the component metadata store.  If the
+    // stored metadata is not this version then the cache is ignored
+    static final int STORE_VERSION = 1;
+
     static final byte STRING_NULL = 0;
     static final byte STRING_OBJECT = 1;
     static final byte STRING_INDEX = 2;
@@ -37,6 +41,11 @@ public class MetadataStoreHelper
     public static class MetaDataReader
     {
         private final List<String> stringTable = new ArrayList<String>();
+
+        public boolean isVersionSupported(DataInputStream in) throws IOException
+        {
+            return STORE_VERSION == in.readInt();
+        }
 
         public String readIndexedString(DataInputStream in) throws IOException
         {
@@ -96,6 +105,11 @@ public class MetadataStoreHelper
     public static class MetaDataWriter
     {
         private final Map<String, Integer> stringTable = new HashMap<>();
+
+        public void writeVersion(DataOutputStream out) throws IOException
+        {
+            out.writeInt(STORE_VERSION);
+        }
 
         public void writeIndexedString(String s, DataOutputStream out) throws IOException
         {
