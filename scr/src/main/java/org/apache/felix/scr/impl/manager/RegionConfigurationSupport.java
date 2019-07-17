@@ -20,10 +20,7 @@ package org.apache.felix.scr.impl.manager;
 
 import java.io.IOException;
 import java.security.AccessController;
-import java.security.DomainCombiner;
-import java.security.Permission;
 import java.security.PrivilegedAction;
-import java.security.ProtectionDomain;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Dictionary;
@@ -175,18 +172,30 @@ public abstract class RegionConfigurationSupport
                     if ( !factory.isEmpty() )
                     {
                         boolean created = false;
-                        for ( Configuration config : factory )
+                        for (Configuration config : factory)
                         {
-                            logger.log( LogService.LOG_DEBUG,
-                                    "Configuring holder {0} with change count {1}", null, holder,
-                                    config.getChangeCount());
-                            if ( checkBundleLocation( config, bundleContext.getBundle() ) )
+                            try
                             {
-                                long changeCount = config.getChangeCount();
-                                ServiceReference<ManagedService> ref = getManagedServiceReference(bundleContext);
-                                created |= holder.configurationUpdated( new TargetedPID( config.getPid() ),
-                                    new TargetedPID( config.getFactoryPid() ), config.getProcessedProperties(ref), changeCount );
+                                logger.log(LogService.LOG_DEBUG,
+                                    "Configuring holder {0} with change count {1}", null,
+                                    holder, config.getChangeCount());
+                                if (checkBundleLocation(config,
+                                    bundleContext.getBundle()))
+                                {
+                                    long changeCount = config.getChangeCount();
+                                    ServiceReference<ManagedService> ref = getManagedServiceReference(
+                                        bundleContext);
+                                    created |= holder.configurationUpdated(
+                                        new TargetedPID(config.getPid()),
+                                        new TargetedPID(config.getFactoryPid()),
+                                        config.getProcessedProperties(ref), changeCount);
+                                }
                             }
+                            catch (IllegalStateException e)
+                            {
+                                continue;
+                            }
+
                         }
                         if ( !created )
                         {
@@ -197,19 +206,30 @@ public abstract class RegionConfigurationSupport
                     {
                         // check for configuration and configure the holder
                         Configuration singleton = findSingletonConfiguration( ca, confPid, bundleContext.getBundle() );
-                        if ( singleton != null )
+                        if (singleton != null)
                         {
-                            logger.log( LogService.LOG_DEBUG,
-                                    "Configuring holder {0} with change count {1}", null, holder,
-                                    singleton.getChangeCount());
-                            if ( singleton != null && checkBundleLocation( singleton, bundleContext.getBundle() ) )
+                            try
                             {
-                                long changeCount = singleton.getChangeCount();
-                                ServiceReference<ManagedService> ref = getManagedServiceReference(bundleContext);
-                                holder.configurationUpdated( new TargetedPID( singleton.getPid() ), null,
-                                    singleton.getProcessedProperties(ref), changeCount );
+                                logger.log(LogService.LOG_DEBUG,
+                                    "Configuring holder {0} with change count {1}", null,
+                                    holder, singleton.getChangeCount());
+                                if (singleton != null && checkBundleLocation(singleton,
+                                    bundleContext.getBundle()))
+                                {
+                                    long changeCount = singleton.getChangeCount();
+                                    ServiceReference<ManagedService> ref = getManagedServiceReference(
+                                        bundleContext);
+                                    holder.configurationUpdated(
+                                        new TargetedPID(singleton.getPid()), null,
+                                        singleton.getProcessedProperties(ref),
+                                        changeCount);
+                                }
+                                else
+                                {
+                                    return false;
+                                }
                             }
-                            else
+                            catch (IllegalStateException e)
                             {
                                 return false;
                             }
@@ -486,10 +506,21 @@ public abstract class RegionConfigurationSupport
                 Configuration[] configs = ca.listConfigurations( filter( pid.getRawPid() ) );
                 if ( configs != null && configs.length > 0 )
                 {
-                    Configuration config = configs[0];
-                    ServiceReference<ManagedService> ref = getManagedServiceReference(bundleContext);
-                    return new ConfigurationInfo( config.getProcessedProperties(ref), config.getBundleLocation(),
-                        config.getChangeCount() );
+                    for (Configuration config : configs)
+                    {
+                        try
+                        {
+                            ServiceReference<ManagedService> ref = getManagedServiceReference(
+                                bundleContext);
+                            return new ConfigurationInfo(
+                                config.getProcessedProperties(ref),
+                                config.getBundleLocation(), config.getChangeCount());
+                        }
+                        catch (IllegalStateException e)
+                        {
+                            continue;
+                        }
+                    }
                 }
             }
             catch ( IOException e )
@@ -560,13 +591,20 @@ public abstract class RegionConfigurationSupport
         Configuration best = null;
         for ( Configuration config : cfg )
         {
-            if ( checkBundleLocation( config, bundle ) )
+            if (checkBundleLocation(config, bundle))
             {
-                String testPid = config.getPid();
-                if ( longest == null || testPid.length() > longest.length() )
+                try
                 {
-                    longest = testPid;
-                    best = config;
+                    String testPid = config.getPid();
+                    if (longest == null || testPid.length() > longest.length())
+                    {
+                        longest = testPid;
+                        best = config;
+                    }
+                }
+                catch (IllegalStateException e)
+                {
+                    continue;
                 }
             }
 
@@ -595,22 +633,30 @@ public abstract class RegionConfigurationSupport
         Map<String, Configuration> configsByPid = new HashMap<>();
         for ( Configuration config : configs )
         {
-            if ( checkBundleLocation( config, bundle ) )
+            if (checkBundleLocation(config, bundle))
             {
-                Configuration oldConfig = configsByPid.get( config.getPid() );
-                if ( oldConfig == null )
+                try
                 {
-                    configsByPid.put( config.getPid(), config );
-                }
-                else
-                {
-                    String newPid = config.getFactoryPid();
-                    String oldPid = oldConfig.getFactoryPid();
-                    if ( newPid.length() > oldPid.length() )
+                    Configuration oldConfig = configsByPid.get(config.getPid());
+                    if (oldConfig == null)
                     {
-                        configsByPid.put( config.getPid(), config );
+                        configsByPid.put(config.getPid(), config);
+                    }
+                    else
+                    {
+                        String newPid = config.getFactoryPid();
+                        String oldPid = oldConfig.getFactoryPid();
+                        if (newPid.length() > oldPid.length())
+                        {
+                            configsByPid.put(config.getPid(), config);
+                        }
                     }
                 }
+                catch (IllegalStateException e)
+                {
+                    continue;
+                }
+
             }
         }
         return configsByPid.values();
@@ -622,7 +668,17 @@ public abstract class RegionConfigurationSupport
         {
             return false;
         }
-        String configBundleLocation = config.getBundleLocation();
+
+        String configBundleLocation = null;
+        try
+        {
+            configBundleLocation = config.getBundleLocation();
+        }
+        catch (IllegalStateException e)
+        {
+            return false;
+        }
+
         return checkBundleLocation( configBundleLocation, bundle );
     }
 
@@ -771,42 +827,5 @@ public abstract class RegionConfigurationSupport
     private ConfigurationAdmin getConfigAdmin(BundleContext bundleContext)
     {
         return bundleContext.getService( caReference );
-    }
-
-    private static class CMDomainCombiner implements DomainCombiner
-    {
-
-        private final CMProtectionDomain domain;
-
-        CMDomainCombiner(final Bundle bundle)
-        {
-            this.domain = new CMProtectionDomain(bundle);
-        }
-
-        @Override
-        public ProtectionDomain[] combine(final ProtectionDomain[] arg0,
-                final ProtectionDomain[] arg1) {
-            return new ProtectionDomain[] { domain };
-        }
-
-    }
-
-    private static class CMProtectionDomain extends ProtectionDomain {
-
-        private final Bundle bundle;
-
-        CMProtectionDomain(final Bundle bundle) {
-            super(null, null);
-            this.bundle = bundle;
-        }
-
-        @Override
-        public boolean implies(final Permission permission) {
-            try {
-                return bundle.hasPermission(permission);
-            } catch (IllegalStateException e) {
-                return false;
-            }
-        }
     }
 }
