@@ -219,8 +219,12 @@ public class ConfigurationManager implements BundleListener
         handleBundleEvents = false;
 
         // stop handling ManagedService[Factory] services
-        managedServiceFactoryTracker.close();
-        managedServiceTracker.close();
+        if (managedServiceFactoryTracker != null) {
+            managedServiceFactoryTracker.close();
+        }
+        if (managedServiceTracker != null) {
+            managedServiceTracker.close();
+        }
 
         // stop queue processing before unregistering the service
         // see FELIX-2813 for details
