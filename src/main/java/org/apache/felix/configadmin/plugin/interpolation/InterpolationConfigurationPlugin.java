@@ -43,7 +43,7 @@ class InterpolationConfigurationPlugin implements ConfigurationPlugin {
     private static final Pattern SECRET_PATTERN = createPattern(SECRET_PREFIX);
 
     private static Pattern createPattern(String prefix) {
-        return Pattern.compile("\\Q" + prefix + "\\E.+\\Q" + SUFFIX + "\\E");
+        return Pattern.compile("\\Q" + prefix + "\\E.+?\\Q" + SUFFIX + "\\E");
     }
 
     private final BundleContext context;

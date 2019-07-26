@@ -78,12 +78,12 @@ public class InterpolationConfigurationPluginTest {
         }
 
         Dictionary<String, Object> dict = new Hashtable<>();
-        dict.put("cur.user", "$[env:" + userVar + "]");
+        dict.put("cur.user", "YY$[env:" + userVar + "]X$[env:" + userVar + "]YY");
         dict.put("someprop", "$[prop:foo.bar]");
         dict.put("nope", "$[blah:blah]");
 
         plugin.modifyConfiguration(null, dict);
-        assertEquals(envUser, dict.get("cur.user"));
+        assertEquals("YY" + envUser + "X" + envUser + "YY", dict.get("cur.user"));
         assertEquals("hello there", dict.get("someprop"));
         assertEquals("$[blah:blah]", dict.get("nope"));
     }
