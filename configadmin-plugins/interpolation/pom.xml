@@ -61,7 +61,7 @@
                 </executions>
                 <configuration>
                     <bnd><![CDATA[
-                        Bundle-Activator: org.apache.felix.configadminplugin.interpolation.Activator
+                        Bundle-Activator: org.apache.felix.configadmin.plugin.interpolation.Activator
                         -snapshot: SNAPSHOT
                     ]]></bnd>
                 </configuration>
