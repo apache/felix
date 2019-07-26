@@ -297,6 +297,10 @@ public final class JettyConfig
      */
     private volatile Dictionary<String, ?> config;
 
+    private volatile Integer httpPort;
+
+    private volatile Integer httpsPort;
+
     public JettyConfig(final BundleContext context)
     {
         this.context = context;
@@ -356,12 +360,18 @@ public final class JettyConfig
 
     public int getHttpPort()
     {
-        return determinePort(String.valueOf(getProperty(HTTP_PORT)), 8080);
+        if (httpPort == null) {
+            httpPort = determinePort(String.valueOf(getProperty(HTTP_PORT)), 8080);
+        }
+        return httpPort;
     }
 
     public int getHttpsPort()
     {
-        return determinePort(String.valueOf(getProperty(HTTPS_PORT)), 8443);
+        if (httpsPort == null) {
+            httpsPort = determinePort(String.valueOf(getProperty(HTTPS_PORT)), 8443);
+        }
+        return httpsPort;
     }
 
     public int getHttpTimeout()
@@ -700,6 +710,10 @@ public final class JettyConfig
         {
             props = new Hashtable<>();
         }
+
+        // clear cached ports
+        this.httpPort = null;
+        this.httpsPort = null;
 
         // FELIX-4312 Check whether there's something changed in our configuration...
         Dictionary<String, ?> currentConfig = this.config;
