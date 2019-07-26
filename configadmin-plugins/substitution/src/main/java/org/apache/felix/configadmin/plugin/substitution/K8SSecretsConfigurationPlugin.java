@@ -26,14 +26,22 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.util.Dictionary;
 import java.util.Enumeration;
+import java.util.function.Function;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 class K8SSecretsConfigurationPlugin implements ConfigurationPlugin {
-    private static final String PREFIX = "$[secret:";
+    private static final String PREFIX = "$[";
     private static final String SUFFIX = "]";
-    private static final Pattern SECRET_PATTERN =
-            Pattern.compile("\\Q" + PREFIX + "\\E.+\\Q" + SUFFIX + "\\E");
+
+    private static final String SECRET_PREFIX = PREFIX + "secret:";
+    private static final Pattern SECRET_PATTERN = createPattern(SECRET_PREFIX);
+    private static final String ENV_PREFIX = PREFIX + "env:";
+    private static final Pattern ENV_PATTERN = createPattern(ENV_PREFIX);
+
+    private static Pattern createPattern(String prefix) {
+        return Pattern.compile("\\Q" + prefix + "\\E.+\\Q" + SUFFIX + "\\E");
+    }
 
     private final File directory;
 
@@ -53,47 +61,68 @@ class K8SSecretsConfigurationPlugin implements ConfigurationPlugin {
             Object val = properties.get(key);
             if (val instanceof String) {
                 String sv = (String) val;
-                if (sv.contains(PREFIX)) {
-                    try {
-                        Object newVal = replaceVariables(sv);
-                        properties.put(key, newVal);
-                        getLog().info("Replaced value of configuration property '{}' for PID {}",
-                                key, properties.get(Constants.SERVICE_PID));
-                    } catch (IOException e) {
-                        getLog().error("Problem replacing configuration property '{}' for PID {}",
-                                key, properties.get(Constants.SERVICE_PID), e);
+                int idx = sv.indexOf(PREFIX);
+                if (idx != -1) {
+                    String varStart = sv.substring(idx);
+                    Object pid = properties.get(Constants.SERVICE_PID);
+                    Object newVal = null;
+                    if (varStart.startsWith(SECRET_PREFIX)) {
+                        newVal = replaceVariablesFromFile(key, sv, pid);
+                    } else if (varStart.startsWith(ENV_PREFIX)) {
+                        newVal = replaceVariablesFromEnvironment(key, sv, pid);
                     }
+
+                    if (newVal != null)
+                        properties.put(key, newVal);
+
+                    getLog().info("Replaced value of configuration property '{}' for PID {}", key, pid);
                 }
             }
         }
     }
 
-    Object replaceVariables(final Object value) throws IOException {
-        if (!(value instanceof String)) {
-            return value;
-        }
+    Object replaceVariablesFromEnvironment(final String key, final String value, final Object pid) {
+        return replaceVariables(ENV_PREFIX, ENV_PATTERN, key, value, pid, n -> System.getenv(n));
+    }
 
-        final String textWithVars = (String) value;
+    Object replaceVariablesFromFile(final String key, final String value, final Object pid) {
+        return replaceVariables(SECRET_PREFIX, SECRET_PATTERN, key, value, pid, n -> {
+            if (n.contains("..")) {
+                getLog().error("Illegal secret location: " + n + " Going up in the directory structure is not allowed");
+                return null;
+            }
 
-        final Matcher m = SECRET_PATTERN.matcher(textWithVars.toString());
+            File file = new File(directory, n);
+            if (!file.isFile()) {
+                getLog().warn("Cannot replace variable. Configured path is not a regular file: " + file);
+                return null;
+            }
+            byte[] bytes;
+            try {
+                bytes = Files.readAllBytes(file.toPath());
+            } catch (IOException e) {
+                getLog().error("Problem replacing configuration property '{}' for PID {} from file {}",
+                        key, pid, file, e);
+
+                return null;
+            }
+            return new String(bytes).trim();
+        });
+    }
+
+    Object replaceVariables(final String prefix, final Pattern pattern,
+            final String key, final String value, final Object pid,
+            final Function<String, String> valueSource) {
+        final Matcher m = pattern.matcher(value);
         final StringBuffer sb = new StringBuffer();
         while (m.find()) {
             final String var = m.group();
 
             final int len = var.length();
-            final String fname = var.substring(PREFIX.length(), len - SUFFIX.length());
-            if (fname.contains("..")) {
-                getLog().error("Illegal secret location: " + fname + " Going up in the directory structure is not allowed");
-                continue;
-            }
-
-            File file = new File(directory, fname);
-            if (!file.isFile()) {
-                getLog().warn("Cannot replace variable. Configured path is not a regular file: " + file);
-                continue;
-            }
-            String replacement = new String(Files.readAllBytes(file.toPath())).trim();
-            m.appendReplacement(sb, Matcher.quoteReplacement(replacement));
+            final String varName = var.substring(prefix.length(), len - SUFFIX.length());
+            String replacement = valueSource.apply(varName);
+            if (replacement != null)
+                m.appendReplacement(sb, Matcher.quoteReplacement(replacement));
         }
         m.appendTail(sb);
 
