@@ -46,8 +46,12 @@ class InterpolationConfigurationPlugin implements ConfigurationPlugin {
     private final File directory;
 
     InterpolationConfigurationPlugin(String dir) {
-        directory = new File(dir);
-        getLog().info("Configured directory for secrets: {}", dir);
+        if (dir != null) {
+            directory = new File(dir);
+            getLog().info("Configured directory for secrets: {}", dir);
+        } else {
+            directory = null;
+        }
     }
 
     private Logger getLog() {
@@ -86,6 +90,12 @@ class InterpolationConfigurationPlugin implements ConfigurationPlugin {
     }
 
     Object replaceVariablesFromFile(final String key, final String value, final Object pid) {
+        if (directory == null) {
+            getLog().warn("Cannot replace property value {} for PID {}. No directory configured via framework property " +
+                    Activator.DIR_PROPERTY, key, pid);
+            return null;
+        }
+
         return replaceVariables(SECRET_PREFIX, SECRET_PATTERN, key, value, pid, n -> {
             if (n.contains("..")) {
                 getLog().error("Illegal secret location: " + n + " Going up in the directory structure is not allowed");
