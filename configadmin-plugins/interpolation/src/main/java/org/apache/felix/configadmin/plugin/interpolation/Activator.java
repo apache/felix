@@ -41,6 +41,8 @@ public class Activator implements BundleActivator {
         ConfigurationPlugin plugin = new InterpolationConfigurationPlugin(directory);
         Dictionary<String, Object> props = new Hashtable<>();
         props.put(ConfigurationPlugin.CM_RANKING, PLUGIN_RANKING);
+        props.put("config.plugin.id", "org.apache.felix.configadmin.plugin.interpolation");
+
         if (directory != null)
             props.put(DIR_PROPERTY, directory);
         else
