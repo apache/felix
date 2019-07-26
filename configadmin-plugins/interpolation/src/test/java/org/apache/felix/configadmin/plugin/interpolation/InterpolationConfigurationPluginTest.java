@@ -16,7 +16,6 @@
  */
 package org.apache.felix.configadmin.plugin.interpolation;
 
-import org.apache.felix.configadmin.plugin.interpolation.InterpolationConfigurationPlugin;
 import org.junit.Test;
 import org.osgi.framework.Constants;
 
@@ -58,6 +57,26 @@ public class InterpolationConfigurationPluginTest {
         assertEquals(envUser, dict.get("cur.user"));
         assertEquals("my.service", dict.get(Constants.SERVICE_PID));
         assertEquals(999, dict.get("intval"));
+    }
+
+    @Test
+    public void testModifyConfigurationNoDirConfig() throws Exception {
+        InterpolationConfigurationPlugin plugin = new InterpolationConfigurationPlugin(null);
+
+        String envUser = System.getenv("USER");
+        String userVar;
+        if (envUser == null) {
+            envUser = System.getenv("USERNAME"); // maybe we're on Windows
+            userVar = "USERNAME";
+        } else {
+            userVar = "USER";
+        }
+
+        Dictionary<String, Object> dict = new Hashtable<>();
+        dict.put("cur.user", "$[env:" + userVar + "]");
+
+        plugin.modifyConfiguration(null, dict);
+        assertEquals(envUser, dict.get("cur.user"));
     }
 
     @Test
