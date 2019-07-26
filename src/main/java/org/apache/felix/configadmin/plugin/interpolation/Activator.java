@@ -34,9 +34,6 @@ public class Activator implements BundleActivator {
     @Override
     public void start(BundleContext context) throws Exception {
         String directory = context.getProperty(DIR_PROPERTY);
-        if (directory == null) {
-            LOG.warn("Framework property '" + DIR_PROPERTY + "' not specified. File-based substitution is disabled.");
-        }
 
         ConfigurationPlugin plugin = new InterpolationConfigurationPlugin(context, directory);
         Dictionary<String, Object> props = new Hashtable<>();
