@@ -38,7 +38,7 @@ public class Activator implements BundleActivator {
             LOG.warn("Framework property '" + DIR_PROPERTY + "' not specified. File-based substitution is disabled.");
         }
 
-        ConfigurationPlugin plugin = new InterpolationConfigurationPlugin(directory);
+        ConfigurationPlugin plugin = new InterpolationConfigurationPlugin(context, directory);
         Dictionary<String, Object> props = new Hashtable<>();
         props.put(ConfigurationPlugin.CM_RANKING, PLUGIN_RANKING);
         props.put("config.plugin.id", "org.apache.felix.configadmin.plugin.interpolation");

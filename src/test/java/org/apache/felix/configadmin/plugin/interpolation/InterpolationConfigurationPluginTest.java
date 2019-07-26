@@ -17,6 +17,8 @@
 package org.apache.felix.configadmin.plugin.interpolation;
 
 import org.junit.Test;
+import org.mockito.Mockito;
+import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
 
 import java.io.File;
@@ -40,7 +42,7 @@ public class InterpolationConfigurationPluginTest {
 
         String rf = getClass().getResource("/testfile").getFile();
 
-        InterpolationConfigurationPlugin plugin = new InterpolationConfigurationPlugin(
+        InterpolationConfigurationPlugin plugin = new InterpolationConfigurationPlugin(null,
                 new File(rf).getParent());
 
         Dictionary<String, Object> dict = new Hashtable<>();
@@ -61,7 +63,10 @@ public class InterpolationConfigurationPluginTest {
 
     @Test
     public void testModifyConfigurationNoDirConfig() throws Exception {
-        InterpolationConfigurationPlugin plugin = new InterpolationConfigurationPlugin(null);
+        BundleContext bc = Mockito.mock(BundleContext.class);
+        Mockito.when(bc.getProperty("foo.bar")).thenReturn("hello there");
+
+        InterpolationConfigurationPlugin plugin = new InterpolationConfigurationPlugin(bc, null);
 
         String envUser = System.getenv("USER");
         String userVar;
@@ -74,16 +79,20 @@ public class InterpolationConfigurationPluginTest {
 
         Dictionary<String, Object> dict = new Hashtable<>();
         dict.put("cur.user", "$[env:" + userVar + "]");
+        dict.put("someprop", "$[prop:foo.bar]");
+        dict.put("nope", "$[blah:blah]");
 
         plugin.modifyConfiguration(null, dict);
         assertEquals(envUser, dict.get("cur.user"));
+        assertEquals("hello there", dict.get("someprop"));
+        assertEquals("$[blah:blah]", dict.get("nope"));
     }
 
     @Test
     public void testSubdirReplacement() throws Exception {
         String rf = getClass().getResource("/sub/sub2/testfile2").getFile();
 
-        InterpolationConfigurationPlugin plugin = new InterpolationConfigurationPlugin(
+        InterpolationConfigurationPlugin plugin = new InterpolationConfigurationPlugin(null,
                 new File(rf).getParentFile().getParent());
 
         Dictionary<String, Object> dict = new Hashtable<>();
@@ -101,7 +110,7 @@ public class InterpolationConfigurationPluginTest {
     @Test
     public void testReplacement() throws Exception {
         String rf = getClass().getResource("/testfile.txt").getFile();
-        InterpolationConfigurationPlugin plugin = new InterpolationConfigurationPlugin(
+        InterpolationConfigurationPlugin plugin = new InterpolationConfigurationPlugin(null,
                 new File(rf).getParent());
 
         assertEquals("xxla la layy", plugin.replaceVariablesFromFile("akey", "xx$[secret:testfile.txt]yy", "apid"));
@@ -112,7 +121,7 @@ public class InterpolationConfigurationPluginTest {
     @Test
     public void testNoReplacement() throws IOException {
         String rf = getClass().getResource("/testfile.txt").getFile();
-        InterpolationConfigurationPlugin plugin = new InterpolationConfigurationPlugin(
+        InterpolationConfigurationPlugin plugin = new InterpolationConfigurationPlugin(null,
                 new File(rf).getParent());
 
         assertEquals("foo", plugin.replaceVariablesFromFile("akey", "foo", "apid"));

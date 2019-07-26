@@ -16,6 +16,7 @@
  */
 package org.apache.felix.configadmin.plugin.interpolation;
 
+import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceReference;
 import org.osgi.service.cm.ConfigurationPlugin;
@@ -34,18 +35,22 @@ class InterpolationConfigurationPlugin implements ConfigurationPlugin {
     private static final String PREFIX = "$[";
     private static final String SUFFIX = "]";
 
-    private static final String SECRET_PREFIX = PREFIX + "secret:";
-    private static final Pattern SECRET_PATTERN = createPattern(SECRET_PREFIX);
     private static final String ENV_PREFIX = PREFIX + "env:";
     private static final Pattern ENV_PATTERN = createPattern(ENV_PREFIX);
+    private static final String PROP_PREFIX = PREFIX + "prop:";
+    private static final Pattern PROP_PATTERN = createPattern(PROP_PREFIX);
+    private static final String SECRET_PREFIX = PREFIX + "secret:";
+    private static final Pattern SECRET_PATTERN = createPattern(SECRET_PREFIX);
 
     private static Pattern createPattern(String prefix) {
         return Pattern.compile("\\Q" + prefix + "\\E.+\\Q" + SUFFIX + "\\E");
     }
 
+    private final BundleContext context;
     private final File directory;
 
-    InterpolationConfigurationPlugin(String dir) {
+    InterpolationConfigurationPlugin(BundleContext bc, String dir) {
+        context = bc;
         if (dir != null) {
             directory = new File(dir);
             getLog().info("Configured directory for secrets: {}", dir);
@@ -74,6 +79,8 @@ class InterpolationConfigurationPlugin implements ConfigurationPlugin {
                         newVal = replaceVariablesFromFile(key, sv, pid);
                     } else if (varStart.startsWith(ENV_PREFIX)) {
                         newVal = replaceVariablesFromEnvironment(key, sv, pid);
+                    } else if (varStart.startsWith(PROP_PREFIX)) {
+                        newVal = replaceVariablesFromProperties(key, sv, pid);
                     }
 
                     if (newVal != null)
@@ -87,6 +94,10 @@ class InterpolationConfigurationPlugin implements ConfigurationPlugin {
 
     Object replaceVariablesFromEnvironment(final String key, final String value, final Object pid) {
         return replaceVariables(ENV_PREFIX, ENV_PATTERN, key, value, pid, n -> System.getenv(n));
+    }
+
+    Object replaceVariablesFromProperties(final String key, final String value, final Object pid) {
+        return replaceVariables(PROP_PREFIX, PROP_PATTERN, key, value, pid, n -> context.getProperty(n));
     }
 
     Object replaceVariablesFromFile(final String key, final String value, final Object pid) {
