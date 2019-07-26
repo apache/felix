@@ -16,7 +16,6 @@
  */
 package org.apache.felix.configadmin.plugin.interpolation;
 
-import org.apache.felix.configadmin.plugin.interpolation.Activator;
 import org.junit.Test;
 import org.mockito.Mockito;
 import org.mockito.invocation.InvocationOnMock;
@@ -63,6 +62,7 @@ public class ActivatorTest {
         assertEquals(expected, regProps);
     }
 
+    @SuppressWarnings("unchecked")
     @Test
     public void testMissingConfiguration() throws Exception {
         BundleContext bc = Mockito.mock(BundleContext.class);
@@ -72,6 +72,10 @@ public class ActivatorTest {
         a.stop(bc);
 
         Mockito.verify(bc).getProperty(Activator.DIR_PROPERTY);
-        Mockito.verifyNoMoreInteractions(bc);
+
+        // Should still register the service
+        Mockito.verify(bc).registerService(Mockito.eq(ConfigurationPlugin.class),
+            Mockito.isA(ConfigurationPlugin.class),
+            Mockito.isA(Dictionary.class));
     }
 }

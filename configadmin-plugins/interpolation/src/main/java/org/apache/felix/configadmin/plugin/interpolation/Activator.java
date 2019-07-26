@@ -35,14 +35,16 @@ public class Activator implements BundleActivator {
     public void start(BundleContext context) throws Exception {
         String directory = context.getProperty(DIR_PROPERTY);
         if (directory == null) {
-            LOG.warn("Framework property '" + DIR_PROPERTY + "' not specified. Plugin disabled.");
-            return;
+            LOG.warn("Framework property '" + DIR_PROPERTY + "' not specified. File-based substitution is disabled.");
         }
 
         ConfigurationPlugin plugin = new InterpolationConfigurationPlugin(directory);
         Dictionary<String, Object> props = new Hashtable<>();
         props.put(ConfigurationPlugin.CM_RANKING, PLUGIN_RANKING);
-        props.put(DIR_PROPERTY, directory);
+        if (directory != null)
+            props.put(DIR_PROPERTY, directory);
+        else
+            props.put(DIR_PROPERTY, "<not configured>");
         context.registerService(ConfigurationPlugin.class, plugin, props);
     }
 
