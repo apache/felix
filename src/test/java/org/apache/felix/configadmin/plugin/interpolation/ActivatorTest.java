@@ -59,6 +59,7 @@ public class ActivatorTest {
         Dictionary<String, Object> expected = new Hashtable<>();
         expected.put(Activator.DIR_PROPERTY, "/tmp/somewhere");
         expected.put(ConfigurationPlugin.CM_RANKING, Activator.PLUGIN_RANKING);
+        expected.put("config.plugin.id", "org.apache.felix.configadmin.plugin.interpolation");
         assertEquals(expected, regProps);
     }
 
