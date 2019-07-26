@@ -16,8 +16,10 @@
  */
 package org.apache.felix.configadmin.plugin.interpolation;
 
+import org.osgi.annotation.bundle.Header;
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
+import org.osgi.framework.Constants;
 import org.osgi.service.cm.ConfigurationPlugin;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -25,6 +27,7 @@ import org.slf4j.LoggerFactory;
 import java.util.Dictionary;
 import java.util.Hashtable;
 
+@Header(name=Constants.BUNDLE_ACTIVATOR, value="${@class}")
 public class Activator implements BundleActivator {
     static final String DIR_PROPERTY = "org.apache.felix.configadmin.plugin.interpolation.dir";
     static final int PLUGIN_RANKING = 500;
