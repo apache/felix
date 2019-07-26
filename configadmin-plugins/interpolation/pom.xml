@@ -26,11 +26,11 @@
         <relativePath>../../../pom/pom.xml</relativePath>
     </parent>
 
-    <artifactId>org.apache.felix.configadmin.plugin.substitution</artifactId>
+    <artifactId>org.apache.felix.configadmin.plugin.interpolation</artifactId>
     <packaging>jar</packaging>
     <version>0.0.1-SNAPSHOT</version>
 
-    <name>Apache Felix Configuration Admin Values Substitution Plugin</name>
+    <name>Apache Felix Configuration Admin Values Interpolation Plugin</name>
     <description>
             This plugin makes it possible to substitute placeholder values in ConfigAdmin configuration with values from the 
             file system, environment variables or system properties.
@@ -41,9 +41,9 @@
     </properties>
 
     <scm>
-        <connection>scm:svn:http://svn.apache.org/repos/asf/felix/trunk/configadmin-plugins/substitution</connection>
-        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/felix/trunk/configadmin-plugins/substitution</developerConnection>
-        <url>http://svn.apache.org/viewvc/felix/trunk/configadmin-plugins/substitution</url>
+        <connection>scm:svn:http://svn.apache.org/repos/asf/felix/trunk/configadmin-plugins/interpolation</connection>
+        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/felix/trunk/configadmin-plugins/interpolation</developerConnection>
+        <url>http://svn.apache.org/viewvc/felix/trunk/configadmin-plugins/interpolation</url>
     </scm>
 
     <build>
@@ -61,7 +61,7 @@
                 </executions>
                 <configuration>
                     <bnd><![CDATA[
-                        Bundle-Activator: org.apache.felix.configadminplugin.substitution.Activator
+                        Bundle-Activator: org.apache.felix.configadminplugin.interpolation.Activator
                         -snapshot: SNAPSHOT
                     ]]></bnd>
                 </configuration>

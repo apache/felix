@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.felix.configadmin.plugin.substitution;
+package org.apache.felix.configadmin.plugin.interpolation;
 
 import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceReference;
