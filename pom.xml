@@ -61,7 +61,6 @@
                 </executions>
                 <configuration>
                     <bnd><![CDATA[
-                        Bundle-Activator: org.apache.felix.configadmin.plugin.interpolation.Activator
                         -snapshot: SNAPSHOT
                     ]]></bnd>
                 </configuration>
@@ -88,6 +87,12 @@
     </build>
 
     <dependencies>
+        <dependency>
+            <groupId>org.osgi</groupId>
+            <artifactId>osgi.annotation</artifactId>
+            <version>7.0.0</version>
+            <scope>provided</scope>
+        </dependency>
         <dependency>
             <groupId>org.osgi</groupId>
             <artifactId>osgi.core</artifactId>
