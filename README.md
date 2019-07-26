@@ -1,6 +1,6 @@
-# org.apache.felix.configadmin.plugin.substitution
+# org.apache.felix.configadmin.plugin.interpolation
 
-An OSGi Configuration Admin Plugin that can substitute values in configuration with values obtained elsewhere. Supported sources:
+An OSGi Configuration Admin Plugin that can interpolate values in configuration with values obtained elsewhere. Supported sources:
 
 * Files on disk, for example to be used with Kubernetes secrets
 
@@ -38,7 +38,7 @@ found on the local filesystem.
 
 This is done through the following property:
 
-* `org.apache.felix.configadmin.plugin.substitution.dir`: specify the directory where the Kubernetes secrets are mounted.
+* `org.apache.felix.configadmin.plugin.interpolation.dir`: specify the directory where the Kubernetes secrets are mounted.
 
 The property can be provided as an OSGi Framework property or alternatively as a Java System Property. 
 

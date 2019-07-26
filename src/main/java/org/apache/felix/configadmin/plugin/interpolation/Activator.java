@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.felix.configadmin.plugin.substitution;
+package org.apache.felix.configadmin.plugin.interpolation;
 
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
@@ -26,7 +26,7 @@ import java.util.Dictionary;
 import java.util.Hashtable;
 
 public class Activator implements BundleActivator {
-    static final String DIR_PROPERTY = "org.apache.felix.configadmin.plugin.substitution.dir";
+    static final String DIR_PROPERTY = "org.apache.felix.configadmin.plugin.interpolation.dir";
     static final int PLUGIN_RANKING = 500;
 
     static final Logger LOG = LoggerFactory.getLogger(K8SSecretsConfigurationPlugin.class);

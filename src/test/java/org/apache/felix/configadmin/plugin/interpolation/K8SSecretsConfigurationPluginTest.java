@@ -14,8 +14,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.felix.configadmin.plugin.substitution;
+package org.apache.felix.configadmin.plugin.interpolation;
 
+import org.apache.felix.configadmin.plugin.interpolation.K8SSecretsConfigurationPlugin;
 import org.junit.Test;
 import org.osgi.framework.Constants;
 
