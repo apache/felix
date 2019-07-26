@@ -35,6 +35,10 @@
             This plugin makes it possible to substitute placeholder values in ConfigAdmin configuration with values from the 
             file system, environment variables or system properties.
     </description>
+    
+    <properties>
+        <felix.java.version>8</felix.java.version>
+    </properties>
 
     <scm>
         <connection>scm:svn:http://svn.apache.org/repos/asf/felix/trunk/configadmin-plugins/substitution</connection>

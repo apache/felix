@@ -25,11 +25,19 @@ import java.util.Dictionary;
 import java.util.Hashtable;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
 
 public class K8SSecretsConfigurationPluginTest {
     @Test
     public void testModifyConfiguration() throws Exception {
+        String envUser = System.getenv("USER");
+        String userVar;
+        if (envUser == null) {
+            envUser = System.getenv("USERNAME"); // maybe we're on Windows
+            userVar = "USERNAME";
+        } else {
+            userVar = "USER";
+        }
+
         String rf = getClass().getResource("/testfile").getFile();
 
         K8SSecretsConfigurationPlugin plugin = new K8SSecretsConfigurationPlugin(
@@ -38,13 +46,15 @@ public class K8SSecretsConfigurationPluginTest {
         Dictionary<String, Object> dict = new Hashtable<>();
         dict.put("foo", "bar");
         dict.put("replaced", "$[secret:testfile]");
+        dict.put("cur.user", "$[env:" + userVar + "]");
         dict.put("intval", 999);
         dict.put(Constants.SERVICE_PID, "my.service");
         plugin.modifyConfiguration(null, dict);
 
-        assertEquals(4, dict.size());
+        assertEquals(5, dict.size());
         assertEquals("bar", dict.get("foo"));
         assertEquals("line1\nline2", dict.get("replaced"));
+        assertEquals(envUser, dict.get("cur.user"));
         assertEquals("my.service", dict.get(Constants.SERVICE_PID));
         assertEquals(999, dict.get("intval"));
     }
@@ -74,9 +84,9 @@ public class K8SSecretsConfigurationPluginTest {
         K8SSecretsConfigurationPlugin plugin = new K8SSecretsConfigurationPlugin(
                 new File(rf).getParent());
 
-        assertEquals("xxla la layy", plugin.replaceVariables("xx$[secret:testfile.txt]yy"));
+        assertEquals("xxla la layy", plugin.replaceVariablesFromFile("akey", "xx$[secret:testfile.txt]yy", "apid"));
         String doesNotReplace = "xx$[" + rf + "]yy";
-        assertEquals(doesNotReplace, plugin.replaceVariables(doesNotReplace));
+        assertEquals(doesNotReplace, plugin.replaceVariablesFromFile("akey", doesNotReplace, "apid"));
     }
 
     @Test
@@ -85,8 +95,6 @@ public class K8SSecretsConfigurationPluginTest {
         K8SSecretsConfigurationPlugin plugin = new K8SSecretsConfigurationPlugin(
                 new File(rf).getParent());
 
-        assertEquals("foo", plugin.replaceVariables("foo"));
-        assertNull(plugin.replaceVariables(null));
-        assertEquals(123L, plugin.replaceVariables(123L));
+        assertEquals("foo", plugin.replaceVariablesFromFile("akey", "foo", "apid"));
     }
 }
