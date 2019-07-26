@@ -30,7 +30,7 @@ import java.util.function.Function;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-class K8SSecretsConfigurationPlugin implements ConfigurationPlugin {
+class InterpolationConfigurationPlugin implements ConfigurationPlugin {
     private static final String PREFIX = "$[";
     private static final String SUFFIX = "]";
 
@@ -45,7 +45,7 @@ class K8SSecretsConfigurationPlugin implements ConfigurationPlugin {
 
     private final File directory;
 
-    K8SSecretsConfigurationPlugin(String dir) {
+    InterpolationConfigurationPlugin(String dir) {
         directory = new File(dir);
         getLog().info("Configured directory for secrets: {}", dir);
     }

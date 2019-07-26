@@ -29,7 +29,7 @@ public class Activator implements BundleActivator {
     static final String DIR_PROPERTY = "org.apache.felix.configadmin.plugin.interpolation.dir";
     static final int PLUGIN_RANKING = 500;
 
-    static final Logger LOG = LoggerFactory.getLogger(K8SSecretsConfigurationPlugin.class);
+    static final Logger LOG = LoggerFactory.getLogger(InterpolationConfigurationPlugin.class);
 
     @Override
     public void start(BundleContext context) throws Exception {
@@ -39,7 +39,7 @@ public class Activator implements BundleActivator {
             return;
         }
 
-        ConfigurationPlugin plugin = new K8SSecretsConfigurationPlugin(directory);
+        ConfigurationPlugin plugin = new InterpolationConfigurationPlugin(directory);
         Dictionary<String, Object> props = new Hashtable<>();
         props.put(ConfigurationPlugin.CM_RANKING, PLUGIN_RANKING);
         props.put(DIR_PROPERTY, directory);

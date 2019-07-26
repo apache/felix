@@ -16,7 +16,7 @@
  */
 package org.apache.felix.configadmin.plugin.interpolation;
 
-import org.apache.felix.configadmin.plugin.interpolation.K8SSecretsConfigurationPlugin;
+import org.apache.felix.configadmin.plugin.interpolation.InterpolationConfigurationPlugin;
 import org.junit.Test;
 import org.osgi.framework.Constants;
 
@@ -27,7 +27,7 @@ import java.util.Hashtable;
 
 import static org.junit.Assert.assertEquals;
 
-public class K8SSecretsConfigurationPluginTest {
+public class InterpolationConfigurationPluginTest {
     @Test
     public void testModifyConfiguration() throws Exception {
         String envUser = System.getenv("USER");
@@ -41,7 +41,7 @@ public class K8SSecretsConfigurationPluginTest {
 
         String rf = getClass().getResource("/testfile").getFile();
 
-        K8SSecretsConfigurationPlugin plugin = new K8SSecretsConfigurationPlugin(
+        InterpolationConfigurationPlugin plugin = new InterpolationConfigurationPlugin(
                 new File(rf).getParent());
 
         Dictionary<String, Object> dict = new Hashtable<>();
@@ -64,7 +64,7 @@ public class K8SSecretsConfigurationPluginTest {
     public void testSubdirReplacement() throws Exception {
         String rf = getClass().getResource("/sub/sub2/testfile2").getFile();
 
-        K8SSecretsConfigurationPlugin plugin = new K8SSecretsConfigurationPlugin(
+        InterpolationConfigurationPlugin plugin = new InterpolationConfigurationPlugin(
                 new File(rf).getParentFile().getParent());
 
         Dictionary<String, Object> dict = new Hashtable<>();
@@ -82,7 +82,7 @@ public class K8SSecretsConfigurationPluginTest {
     @Test
     public void testReplacement() throws Exception {
         String rf = getClass().getResource("/testfile.txt").getFile();
-        K8SSecretsConfigurationPlugin plugin = new K8SSecretsConfigurationPlugin(
+        InterpolationConfigurationPlugin plugin = new InterpolationConfigurationPlugin(
                 new File(rf).getParent());
 
         assertEquals("xxla la layy", plugin.replaceVariablesFromFile("akey", "xx$[secret:testfile.txt]yy", "apid"));
@@ -93,7 +93,7 @@ public class K8SSecretsConfigurationPluginTest {
     @Test
     public void testNoReplacement() throws IOException {
         String rf = getClass().getResource("/testfile.txt").getFile();
-        K8SSecretsConfigurationPlugin plugin = new K8SSecretsConfigurationPlugin(
+        InterpolationConfigurationPlugin plugin = new InterpolationConfigurationPlugin(
                 new File(rf).getParent());
 
         assertEquals("foo", plugin.replaceVariablesFromFile("akey", "foo", "apid"));
