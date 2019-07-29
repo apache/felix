@@ -28,7 +28,7 @@
 
     <artifactId>org.apache.felix.configadmin.plugin.interpolation</artifactId>
     <packaging>jar</packaging>
-    <version>0.0.1-SNAPSHOT</version>
+    <version>0.0.2</version>
 
     <name>Apache Felix Configuration Admin Values Interpolation Plugin</name>
     <description>
@@ -41,9 +41,9 @@
     </properties>
 
     <scm>
-        <connection>scm:svn:http://svn.apache.org/repos/asf/felix/trunk/configadmin-plugins/interpolation</connection>
-        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/felix/trunk/configadmin-plugins/interpolation</developerConnection>
-        <url>http://svn.apache.org/viewvc/felix/trunk/configadmin-plugins/interpolation</url>
+        <connection>scm:svn:http://svn.apache.org/repos/asf/felix/releases/org.apache.felix.configadmin.plugin.interpolation-0.0.2</connection>
+        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/felix/releases/org.apache.felix.configadmin.plugin.interpolation-0.0.2</developerConnection>
+        <url>http://svn.apache.org/viewvc/felix/releases/org.apache.felix.configadmin.plugin.interpolation-0.0.2</url>
     </scm>
 
     <build>
