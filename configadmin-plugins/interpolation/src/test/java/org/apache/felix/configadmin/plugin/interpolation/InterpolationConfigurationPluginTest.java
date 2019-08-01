@@ -81,11 +81,13 @@ public class InterpolationConfigurationPluginTest {
         dict.put("cur.user", "YY$[env:" + userVar + "]X$[env:" + userVar + "]YY");
         dict.put("someprop", "$[prop:foo.bar]");
         dict.put("nope", "$[blah:blah]");
+        dict.put("left.as.is", "$[env:boo]");
 
         plugin.modifyConfiguration(null, dict);
         assertEquals("YY" + envUser + "X" + envUser + "YY", dict.get("cur.user"));
         assertEquals("hello there", dict.get("someprop"));
         assertEquals("$[blah:blah]", dict.get("nope"));
+        assertEquals("$[env:boo]", dict.get("left.as.is"));
     }
 
     @Test
