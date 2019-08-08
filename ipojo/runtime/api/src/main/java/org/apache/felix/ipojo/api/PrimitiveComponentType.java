@@ -123,6 +123,11 @@ public class PrimitiveComponentType extends ComponentType {
      * The Managed Service PID.
      */
     private String m_msPID;
+    
+    /**
+     * buffer size used for reading and writing
+     */
+    private static final int BUFFER_SIZE = 8192;
 
     /**
      * The temporal dependencies.
@@ -492,9 +497,17 @@ public class PrimitiveComponentType extends ComponentType {
         if (is == null) {
             throw new IllegalStateException("An exception occurs during implementation class manipulation : cannot read the class file " + url);
         }
-        byte[] b = new byte[is.available()];
-        is.read(b);
-        return b;
+        ByteArrayOutputStream output = new ByteArrayOutputStream();
+        try {
+        	int n;
+            byte[] buf = new byte[BUFFER_SIZE];
+            while((n = is.read(buf)) > 0){
+            	output.write(buf,0,n);
+            }
+            return output.toByteArray();
+        }finally {
+        	output.close();
+        }
     }
 
     /**
