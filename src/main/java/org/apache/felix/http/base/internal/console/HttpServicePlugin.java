@@ -428,7 +428,7 @@ public class HttpServicePlugin extends HttpServlet
         pw.println("<th class=\"header\">${Name}</th>");
         pw.println("<th class=\"header\">${Value)}</th>");
         pw.println("</tr></thead>");
-        odd = printRow(pw, odd, "${Path}", escapeXml(getContextPath(dto.contextPath)));
+        odd = printRow(pw, odd, "${Path}", getContextPath(dto.contextPath));
         odd = printRow(pw, odd, "${service.id}", String.valueOf(dto.serviceId));
         odd = printServiceRankingRow(pw, dto.serviceId, odd);
         pw.println("</table>");
@@ -456,7 +456,7 @@ public class HttpServicePlugin extends HttpServlet
         pw.println("<th class=\"header\">${Value)}</th>");
         pw.println("</tr></thead>");
         odd = printRow(pw, odd, "${Path}",
-                dto.contextPath == null ? dto.contextPath : escapeXml(getContextPath(dto.contextPath)));
+                dto.contextPath == null ? dto.contextPath : getContextPath(dto.contextPath));
         odd = printRow(pw, odd, "${reason}", escapeXml(getErrorText(dto.failureReason)));
         odd = printRow(pw, odd, "${service.id}", String.valueOf(dto.serviceId));
         pw.println("</table>");
