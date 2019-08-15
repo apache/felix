@@ -24,6 +24,7 @@ import java.security.PrivilegedExceptionAction;
 import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Dictionary;
 import java.util.Enumeration;
 import java.util.HashMap;
@@ -36,6 +37,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.ResourceBundle;
 import java.util.Set;
+import java.util.concurrent.ConcurrentSkipListSet;
 
 import javax.servlet.GenericServlet;
 import javax.servlet.ServletConfig;
@@ -73,6 +75,7 @@ import org.osgi.service.http.HttpContext;
 import org.osgi.service.http.HttpService;
 import org.osgi.service.log.LogService;
 import org.osgi.util.tracker.ServiceTracker;
+import org.osgi.util.tracker.ServiceTrackerCustomizer;
 
 /**
  * The <code>OSGi Manager</code> is the actual Web Console Servlet which
@@ -135,6 +138,10 @@ public class OsgiManager extends GenericServlet
     private static final String FRAMEWORK_PROP_LOG_LEVEL = "felix.webconsole.loglevel"; //$NON-NLS-1$
 
     private static final String FRAMEWORK_PROP_LOCALE = "felix.webconsole.locale"; //$NON-NLS-1$
+
+    static final String FRAMEWORK_PROP_SECURITY_PROVIDERS = "felix.webconsole.security.providers"; //$NON-NLS-1$
+
+    static final String SECURITY_PROVIDER_PROPERTY_NAME = "webconsole.security.provider.id"; //$NON-NLS-1$
 
     static final String PROP_MANAGER_ROOT = "manager.root"; //$NON-NLS-1$
 
@@ -206,7 +213,7 @@ public class OsgiManager extends GenericServlet
 
     private HttpServiceTracker httpServiceTracker;
 
-    private HttpService httpService;
+    private volatile HttpService httpService;
 
     private PluginHolder holder;
 
@@ -238,6 +245,10 @@ public class OsgiManager extends GenericServlet
     private Locale configuredLocale;
 
     private Set enabledPlugins;
+
+    final ConcurrentSkipListSet<String> registeredSecurityProviders = new ConcurrentSkipListSet<String>();
+
+    final Set<String> requiredSecurityProviders;
 
     ResourceBundleManager resourceBundleManager;
 
@@ -318,9 +329,12 @@ public class OsgiManager extends GenericServlet
         brandingTracker = new BrandingServiceTracker(this);
         brandingTracker.open();
 
+        this.requiredSecurityProviders = splitCommaSeparatedString(bundleContext.getProperty(FRAMEWORK_PROP_SECURITY_PROVIDERS));
+
         // add support for pluggable security
         securityProviderTracker = new ServiceTracker(bundleContext,
-            WebConsoleSecurityProvider.class.getName(), null);
+            WebConsoleSecurityProvider.class.getName(),
+            new UpdateDependenciesStateCustomizer());
         securityProviderTracker.open();
 
         // load the default configuration from the framework
@@ -380,6 +394,21 @@ public class OsgiManager extends GenericServlet
                     put( Constants.SERVICE_PID, getConfigurationPid() );
                 }
             } );
+    }
+
+    void updateRegistrationState() {
+        if (this.httpService != null) {
+            if (this.registeredSecurityProviders.containsAll(this.requiredSecurityProviders)) {
+                // register HTTP service
+                registerHttpService();
+                return;
+            } else {
+                log(LogService.LOG_INFO, "Not all requirements met for the Web Console. Required security providers: "
+                        + this.registeredSecurityProviders + " Registered security providers: " + this.registeredSecurityProviders);
+            }
+        }
+        // Not all requirements met, unregister service.
+        unregisterHttpService();
     }
 
     public void dispose()
@@ -917,7 +946,7 @@ public class OsgiManager extends GenericServlet
 
     }
 
-    protected synchronized void bindHttpService(HttpService httpService)
+    protected void bindHttpService(HttpService httpService)
     {
         // do not bind service, when we are already bound
         if (this.httpService != null)
@@ -927,6 +956,11 @@ public class OsgiManager extends GenericServlet
             return;
         }
 
+        this.httpService = httpService;
+        updateRegistrationState();
+    }
+
+    synchronized void registerHttpService() {
         Map config = getConfiguration();
 
         // get authentication details
@@ -937,7 +971,7 @@ public class OsgiManager extends GenericServlet
         // register the servlet and resources
         try
         {
-            HttpContext httpContext = new OsgiManagerHttpContext(httpService,
+            HttpContext httpContext = new OsgiManagerHttpContext(bundleContext, httpService,
                 securityProviderTracker, userId, password, realm);
 
             Dictionary servletConfig = toStringConfig(config);
@@ -957,11 +991,9 @@ public class OsgiManager extends GenericServlet
         {
             log(LogService.LOG_ERROR, "bindHttpService: Problem setting up", e);
         }
-
-        this.httpService = httpService;
     }
 
-    protected synchronized void unbindHttpService(HttpService httpService)
+    protected void unbindHttpService(HttpService httpService)
     {
         if (this.httpService != httpService)
         {
@@ -972,7 +1004,10 @@ public class OsgiManager extends GenericServlet
 
         // drop the service reference
         this.httpService = null;
+        updateRegistrationState();
+    }
 
+    synchronized void unregisterHttpService() {
         if (httpResourcesRegistered)
         {
             try
@@ -1149,6 +1184,20 @@ public class OsgiManager extends GenericServlet
         return stringConfig;
     }
 
+    static Set<String> splitCommaSeparatedString(final String str) {
+        if (str == null)
+            return Collections.emptySet();
+
+        final Set<String> values = new HashSet<String>();
+        for (final String s : str.split(",")) {
+            String trimmed = s.trim();
+            if (trimmed.length() > 0) {
+                values.add(trimmed);
+            }
+        }
+        return Collections.unmodifiableSet(values);
+    }
+
     private Map langMap;
 
 
@@ -1177,4 +1226,33 @@ public class OsgiManager extends GenericServlet
         return langMap = map;
     }
 
+    class UpdateDependenciesStateCustomizer implements ServiceTrackerCustomizer {
+        @Override
+        public Object addingService(ServiceReference reference) {
+            Object nameObj = reference.getProperty(SECURITY_PROVIDER_PROPERTY_NAME);
+            if (nameObj instanceof String) {
+                String name = (String) nameObj;
+                registeredSecurityProviders.add(name);
+                updateRegistrationState();
+            }
+            return bundleContext.getService(reference);
+        }
+
+        @Override
+        public void modifiedService(ServiceReference reference, Object service) {
+            removedService(reference, service);
+            addingService(reference);
+        }
+
+        @Override
+        public void removedService(ServiceReference reference, Object service) {
+            Object nameObj = reference.getProperty(SECURITY_PROVIDER_PROPERTY_NAME);
+            if (nameObj instanceof String) {
+                String name = (String) nameObj;
+                registeredSecurityProviders.remove(name);
+                updateRegistrationState();
+            }
+        }
+
+    }
 }
