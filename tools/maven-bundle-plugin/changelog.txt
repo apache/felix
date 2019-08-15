@@ -1,8 +1,14 @@
+Changes from 4.2.0 to 4.2.1
+---------------------------
+
+* Bug
+    * [FELIX-6106] - Regression after a change in maven-bundle-plugin:4.2.0 related to non-existing files
+
+
 Changes from 4.1.0 to 4.2.0
 ---------------------------
 
 * Improvement
-
     * [FELIX-6073] - Upgrade to Maven 3
     * [FELIX-6074] - Check for stale input and avoid recomputing the manifest if no changes
     * [FELIX-6075] - Upgrade to JDK 8
