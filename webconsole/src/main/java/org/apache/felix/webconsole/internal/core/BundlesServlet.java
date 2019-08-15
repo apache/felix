@@ -1550,6 +1550,7 @@ public class BundlesServlet extends SimpleWebConsolePlugin implements OsgiManage
             {
                 // copy the data to a file for better processing
                 tmpFile = File.createTempFile( "install", ".tmp" );
+                tmpFile.delete(); // FIX for FILEUPLOAD-293
                 bundleItem.write( tmpFile );
             }
             catch ( Exception e )
