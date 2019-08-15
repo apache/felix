@@ -25,6 +25,7 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.apache.felix.webconsole.WebConsoleSecurityProvider;
 import org.apache.felix.webconsole.WebConsoleSecurityProvider2;
+import org.osgi.framework.BundleContext;
 import org.osgi.service.http.HttpContext;
 import org.osgi.service.http.HttpService;
 import org.osgi.util.tracker.ServiceTracker;
@@ -39,6 +40,8 @@ final class OsgiManagerHttpContext implements HttpContext
 
     private static final String AUTHENTICATION_SCHEME_BASIC = "Basic";
 
+    private final BundleContext bundleContext;
+
     private final HttpContext base;
 
     private final ServiceTracker tracker;
@@ -50,9 +53,11 @@ final class OsgiManagerHttpContext implements HttpContext
     private final String realm;
 
 
-    OsgiManagerHttpContext( HttpService httpService, final ServiceTracker tracker, final String username,
+    OsgiManagerHttpContext(final BundleContext bundleContext,
+        final HttpService httpService, final ServiceTracker tracker, final String username,
         final String password, final String realm )
     {
+        this.bundleContext = bundleContext;
         this.tracker = tracker;
         this.username = username;
         this.password = new Password(password);
@@ -228,7 +233,10 @@ final class OsgiManagerHttpContext implements HttpContext
         }
         if ( this.username.equals( username ) && this.password.matches( password ) )
         {
-            return true;
+            if (bundleContext.getProperty(OsgiManager.FRAMEWORK_PROP_SECURITY_PROVIDERS) == null) {
+                // Only allow username and password authentication if no mandatory security providers are registered
+                return true;
+            }
         }
         return false;
     }
