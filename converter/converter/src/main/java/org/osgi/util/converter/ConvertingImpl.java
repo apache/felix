@@ -91,9 +91,21 @@ class ConvertingImpl extends AbstractSpecifying<Converting>
 		Set<Class< ? >> nmv = new HashSet<>(cim.keySet());
 		nmv.addAll(Arrays.<Class< ? >> asList(String.class, Class.class,
 				Comparable.class, CharSequence.class, Map.Entry.class));
+		// The following classes are only available from Java 12 onwards
+		addClassIfAvailable("java.lang.constant.Constable", nmv);
+		addClassIfAvailable("java.lang.constant.ConstantDesc", nmv);
 
 		INTERFACE_IMPLS = Collections.unmodifiableMap(iim);
 		NO_MAP_VIEW_TYPES = Collections.unmodifiableSet(nmv);
+	}
+
+	private static void addClassIfAvailable(String cls, Collection<Class<?>> collection) {
+	    try {
+	        Class<?> clazz = ConvertingImpl.class.getClassLoader().loadClass(cls);
+	        collection.add(clazz);
+	    } catch (Exception ex) {
+	        // Class not available, to nothing
+	    }
 	}
 
 	private final InternalConverter converter;
@@ -831,7 +843,7 @@ class ConvertingImpl extends AbstractSpecifying<Converting>
 					i++;
 					componentType = componentType.getComponentType();
 				}
-				
+
 				if(i == 1) {
 					return Array.newInstance(componentType, 0);
 				} else {
