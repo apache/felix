@@ -976,16 +976,19 @@ public class OsgiManager extends GenericServlet
 
             Dictionary servletConfig = toStringConfig(config);
 
-            // register this servlet and take note of this
-            httpService.registerServlet(this.webManagerRoot, this, servletConfig,
-                httpContext);
-            httpServletRegistered = true;
+            if (!httpServletRegistered) {
+                // register this servlet and take note of this
+                httpService.registerServlet(this.webManagerRoot, this, servletConfig,
+                    httpContext);
+                httpServletRegistered = true;
+            }
 
-            // register resources and take of this
-            httpService.registerResources(this.webManagerRoot + "/res", "/res",
-                httpContext);
-            httpResourcesRegistered = true;
-
+            if (!httpResourcesRegistered) {
+                // register resources and take of this
+                httpService.registerResources(this.webManagerRoot + "/res", "/res",
+                    httpContext);
+                httpResourcesRegistered = true;
+            }
         }
         catch (Exception e)
         {
@@ -1002,12 +1005,16 @@ public class OsgiManager extends GenericServlet
             return;
         }
 
+        unregisterHttpService();
+
         // drop the service reference
         this.httpService = null;
-        updateRegistrationState();
     }
 
     synchronized void unregisterHttpService() {
+        if (httpService == null)
+            return;
+
         if (httpResourcesRegistered)
         {
             try
