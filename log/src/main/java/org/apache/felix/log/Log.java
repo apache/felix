@@ -28,6 +28,7 @@ import org.osgi.framework.FrameworkListener;
 import org.osgi.framework.ServiceEvent;
 import org.osgi.framework.ServiceListener;
 import org.osgi.framework.ServiceReference;
+import org.osgi.framework.startlevel.FrameworkStartLevel;
 import org.osgi.service.log.LogEntry;
 import org.osgi.service.log.LogLevel;
 import org.osgi.service.log.LogListener;
@@ -53,14 +54,17 @@ final class Log implements BundleListener, FrameworkListener, ServiceListener
     private final int m_maxSize;
     /** Whether or not to store debug messages. */
     private final boolean m_storeDebug;
+    /** Framework start level. */
+    private final FrameworkStartLevel m_startLevel;
 
     /**
      * Create a new instance.
      * @param maxSize the maximum size for the log
      * @param storeDebug whether or not to store debug messages
      */
-    Log(final int maxSize, final boolean storeDebug)
+    Log(final FrameworkStartLevel startLevel, final int maxSize, final boolean storeDebug)
     {
+        this.m_startLevel = startLevel;
         this.m_maxSize = maxSize;
         this.m_storeDebug = storeDebug;
     }
@@ -190,13 +194,22 @@ final class Log implements BundleListener, FrameworkListener, ServiceListener
         return new LogNodeEnumeration(m_head, m_tail);
     }
 
+    private String getLoggerNameForEvent(final Bundle bundle, final String defaultName) {
+        if (bundle != null) {
+            if (bundle.getSymbolicName() != null) {
+                return bundle.getSymbolicName().concat(":").concat(bundle.getVersion().toString());
+            }
+        }
+        return defaultName;
+    }
+
     /** The messages returned for the framework events. */
     private static final String[] FRAMEWORK_EVENT_MESSAGES =
     {
         "FrameworkEvent STARTED",
         "FrameworkEvent ERROR",
         "FrameworkEvent PACKAGES REFRESHED",
-        "FrameworkEvent STARTLEVEL CHANGED",
+        "FrameworkEvent STARTLEVEL CHANGED to ",
         "FrameworkEvent WARNING",
         "FrameworkEvent INFO"
     };
@@ -205,6 +218,7 @@ final class Log implements BundleListener, FrameworkListener, ServiceListener
      * Called when a framework event occurs.
      * @param event the event that occured
      */
+    @Override
     public void frameworkEvent(final FrameworkEvent event)
     {
         int eventType = event.getType();
@@ -218,8 +232,12 @@ final class Log implements BundleListener, FrameworkListener, ServiceListener
             }
         }
 
+        if ( event.getType() == FrameworkEvent.STARTLEVEL_CHANGED) {
+            message = message.concat(String.valueOf(m_startLevel.getStartLevel()));
+        }
+
         log(
-            "Events.Framework",
+            getLoggerNameForEvent(event.getBundle(), "Events.Framework"),
             event.getBundle(),
             null,
             (eventType == FrameworkEvent.ERROR) ? LogLevel.ERROR : LogLevel.INFO,
@@ -236,13 +254,17 @@ final class Log implements BundleListener, FrameworkListener, ServiceListener
         "BundleEvent UPDATED",
         "BundleEvent UNINSTALLED",
         "BundleEvent RESOLVED",
-        "BundleEvent UNRESOLVED"
+        "BundleEvent UNRESOLVED",
+        "BundleEvent STARTING",
+        "BundleEvent STOPPING",
+        "BundleEvent LAZY ACTIVATION",
     };
 
     /**
      * Called when a bundle event occurs.
      * @param event the event that occured
      */
+    @Override
     public void bundleChanged(final BundleEvent event)
     {
         int eventType = event.getType();
@@ -259,7 +281,7 @@ final class Log implements BundleListener, FrameworkListener, ServiceListener
         if (message != null)
         {
             log(
-                "Events.Bundle",
+                getLoggerNameForEvent(event.getBundle(), "Events.Bundle"),
                 event.getBundle(),
                 null,
                 LogLevel.INFO,
@@ -293,6 +315,7 @@ final class Log implements BundleListener, FrameworkListener, ServiceListener
      * Called when a service event occurs.
      * @param event the event that occured
      */
+    @Override
     public void serviceChanged(final ServiceEvent event)
     {
         int eventType = event.getType();
@@ -307,7 +330,7 @@ final class Log implements BundleListener, FrameworkListener, ServiceListener
         }
 
         log(
-            "Events.Service",
+            getLoggerNameForEvent(event.getServiceReference().getBundle(), "Events.Service"),
             event.getServiceReference().getBundle(),
             event.getServiceReference(),
             (eventType == ServiceEvent.MODIFIED) ? LogLevel.DEBUG : LogLevel.INFO,
