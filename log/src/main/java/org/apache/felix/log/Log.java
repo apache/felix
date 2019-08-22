@@ -194,22 +194,13 @@ final class Log implements BundleListener, FrameworkListener, ServiceListener
         return new LogNodeEnumeration(m_head, m_tail);
     }
 
-    private String getLoggerNameForEvent(final Bundle bundle, final String defaultName) {
-        if (bundle != null) {
-            if (bundle.getSymbolicName() != null) {
-                return bundle.getSymbolicName().concat(":").concat(bundle.getVersion().toString());
-            }
-        }
-        return defaultName;
-    }
-
     /** The messages returned for the framework events. */
     private static final String[] FRAMEWORK_EVENT_MESSAGES =
     {
         "FrameworkEvent STARTED",
         "FrameworkEvent ERROR",
         "FrameworkEvent PACKAGES REFRESHED",
-        "FrameworkEvent STARTLEVEL CHANGED to ",
+                    "FrameworkEvent STARTLEVEL CHANGED",
         "FrameworkEvent WARNING",
         "FrameworkEvent INFO"
     };
@@ -232,12 +223,8 @@ final class Log implements BundleListener, FrameworkListener, ServiceListener
             }
         }
 
-        if ( event.getType() == FrameworkEvent.STARTLEVEL_CHANGED) {
-            message = message.concat(String.valueOf(m_startLevel.getStartLevel()));
-        }
-
         log(
-            getLoggerNameForEvent(event.getBundle(), "Events.Framework"),
+                "Events.Framework",
             event.getBundle(),
             null,
             (eventType == FrameworkEvent.ERROR) ? LogLevel.ERROR : LogLevel.INFO,
@@ -281,7 +268,7 @@ final class Log implements BundleListener, FrameworkListener, ServiceListener
         if (message != null)
         {
             log(
-                getLoggerNameForEvent(event.getBundle(), "Events.Bundle"),
+                    "Events.Bundle",
                 event.getBundle(),
                 null,
                 LogLevel.INFO,
@@ -330,7 +317,7 @@ final class Log implements BundleListener, FrameworkListener, ServiceListener
         }
 
         log(
-            getLoggerNameForEvent(event.getServiceReference().getBundle(), "Events.Service"),
+                "Events.Service",
             event.getServiceReference().getBundle(),
             event.getServiceReference(),
             (eventType == ServiceEvent.MODIFIED) ? LogLevel.DEBUG : LogLevel.INFO,
