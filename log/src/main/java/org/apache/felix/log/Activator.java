@@ -21,12 +21,10 @@ package org.apache.felix.log;
 import java.util.Dictionary;
 import java.util.Hashtable;
 
-import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceRegistration;
-import org.osgi.framework.startlevel.FrameworkStartLevel;
 import org.osgi.service.log.LogLevel;
 import org.osgi.service.log.LogReaderService;
 import org.osgi.service.log.LogService;
@@ -134,11 +132,8 @@ public final class Activator implements BundleActivator
     @Override
     public void start(final BundleContext context) throws Exception
     {
-        // get framework start level
-        final Bundle systemBundle = context.getBundle(Constants.SYSTEM_BUNDLE_ID);
-
         // create the log instance
-        m_log = new Log(systemBundle.adapt(FrameworkStartLevel.class), getMaxSize(context), getStoreDebug(context));
+        m_log = new Log(getMaxSize(context), getStoreDebug(context));
         // create the LoggerAdmin instance
         m_loggerAdmin = new LoggerAdminImpl(getDefaultLogLevel(context), m_log);
 

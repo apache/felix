@@ -28,7 +28,6 @@ import org.osgi.framework.FrameworkListener;
 import org.osgi.framework.ServiceEvent;
 import org.osgi.framework.ServiceListener;
 import org.osgi.framework.ServiceReference;
-import org.osgi.framework.startlevel.FrameworkStartLevel;
 import org.osgi.service.log.LogEntry;
 import org.osgi.service.log.LogLevel;
 import org.osgi.service.log.LogListener;
@@ -54,17 +53,14 @@ final class Log implements BundleListener, FrameworkListener, ServiceListener
     private final int m_maxSize;
     /** Whether or not to store debug messages. */
     private final boolean m_storeDebug;
-    /** Framework start level. */
-    private final FrameworkStartLevel m_startLevel;
 
     /**
      * Create a new instance.
      * @param maxSize the maximum size for the log
      * @param storeDebug whether or not to store debug messages
      */
-    Log(final FrameworkStartLevel startLevel, final int maxSize, final boolean storeDebug)
+    Log(final int maxSize, final boolean storeDebug)
     {
-        this.m_startLevel = startLevel;
         this.m_maxSize = maxSize;
         this.m_storeDebug = storeDebug;
     }
