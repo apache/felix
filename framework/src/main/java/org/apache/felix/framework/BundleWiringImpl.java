@@ -41,6 +41,7 @@ import org.osgi.framework.hooks.weaving.WeavingException;
 import org.osgi.framework.hooks.weaving.WeavingHook;
 import org.osgi.framework.hooks.weaving.WovenClass;
 import org.osgi.framework.hooks.weaving.WovenClassListener;
+import org.osgi.framework.namespace.BundleNamespace;
 import org.osgi.framework.namespace.IdentityNamespace;
 import org.osgi.framework.wiring.BundleCapability;
 import org.osgi.framework.wiring.BundleRequirement;
@@ -52,8 +53,13 @@ import org.osgi.resource.Requirement;
 import org.osgi.resource.Wire;
 import org.osgi.service.resolver.ResolutionException;
 
+import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.lang.reflect.Constructor;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.security.AccessController;
@@ -114,6 +120,8 @@ public class BundleWiringImpl implements BundleWiring
     private volatile List<BundleRequirement> m_wovenReqs = null;
 
     private volatile BundleClassLoader m_classLoader;
+    private volatile BundleClassLoader m_dexclassLoader;
+    private boolean m_requireDex;
 
     // Bundle-specific class loader for boot delegation.
     private final ClassLoader m_bootClassLoader;
@@ -186,6 +194,7 @@ public class BundleWiringImpl implements BundleWiring
         m_importedPkgs = importedPkgs;
         m_requiredPkgs = requiredPkgs;
         m_wires =  Util.newImmutableList(wires);
+        m_requireDex = m_configMap.get(FelixConstants.FELIX_REQUIRE_DEX_PROPERTY).equals("true");
 
         // We need to sort the fragments and add ourself as a dependent of each one.
         // We also need to create an array of fragment contents to attach to our
@@ -704,20 +713,26 @@ public class BundleWiringImpl implements BundleWiring
         {
             return null;
         }
-
         return getClassLoaderInternal();
     }
 
     private ClassLoader getClassLoaderInternal()
     {
-        ClassLoader classLoader = m_classLoader;
-        if (m_classLoader != null)
+        ClassLoader classLoader;
+        if (m_requireDex)
+            classLoader = m_dexclassLoader;
+        else
+            classLoader = m_classLoader;
+        if (classLoader != null)
         {
             return classLoader;
         }
         else
         {
-            return _getClassLoaderInternal();
+            if (m_requireDex)
+                return _getDexClassLoaderInternal();
+            else
+                return _getClassLoaderInternal();
         }
     }
 
@@ -741,6 +756,25 @@ public class BundleWiringImpl implements BundleWiring
         return m_classLoader;
     }
 
+    private synchronized ClassLoader _getDexClassLoaderInternal()
+    {
+        // Only try to create the class loader if the bundle
+        // is not disposed.
+        if (!m_isDisposed && (m_dexclassLoader == null))
+        {
+            m_dexclassLoader = BundleRevisionImpl.getSecureAction().run(
+                    new PrivilegedAction<BundleClassLoader>()
+                    {
+                        @Override
+                        public BundleClassLoader run()
+                        {
+                            return new DexBundleClassLoader(BundleWiringImpl.this, determineParentClassLoader(), m_logger);
+                        }
+                    }
+            );
+        }
+        return m_dexclassLoader;
+    }
     @Override
     public List<URL> findEntries(String path, String filePattern, int options)
     {
@@ -1948,8 +1982,8 @@ public class BundleWiringImpl implements BundleWiring
         private static final int LIBNAME_IDX = 0;
         private static final int LIBPATH_IDX = 1;
         private final ConcurrentHashMap<String, Thread> m_classLocks = new ConcurrentHashMap<String, Thread>();
-        private final BundleWiringImpl m_wiring;
-        private final Logger m_logger;
+        protected final BundleWiringImpl m_wiring;
+        protected final Logger m_logger;
 
         public BundleClassLoader(BundleWiringImpl wiring, ClassLoader parent, Logger logger)
         {
@@ -2035,6 +2069,9 @@ public class BundleWiringImpl implements BundleWiring
                             + m_wiring.m_revision.getSymbolicName()
                             + " is no longer valid.");
                 }
+
+                // the rest of code doesn't work for dex; so don't bother and exit early
+                if (m_wiring.m_requireDex) return null;
 
                 String actual = name.replace('.', '/') + ".class";
 
@@ -2573,6 +2610,123 @@ public class BundleWiringImpl implements BundleWiring
         }
     }
 
+    public static class DexBundleClassLoader extends BundleClassLoader {
+
+        private ClassLoader m_pathClassLoader = null;
+
+        public DexBundleClassLoader(BundleWiringImpl wiring, ClassLoader parent, Logger logger) {
+            super(wiring, parent, logger);
+            m_pathClassLoader = getPathClassLoader();
+        }
+
+        @Override
+        protected Class loadClass(String name, boolean resolve)
+                throws ClassNotFoundException {
+            return Class.forName(name,resolve,m_pathClassLoader);
+        }
+
+        @Override
+        protected Class findClass(String name)
+                throws ClassNotFoundException {
+            throw new ClassNotFoundException("Unable to load class '" + name + "'");
+        }
+
+
+        private ClassLoader getPathClassLoader() {
+            // only valid for andoid bundles
+            if (m_pathClassLoader == null) {
+                Class clazz;
+                Object classLoader = null;
+                try {
+                    clazz = Class.forName("dalvik.system.PathClassLoader");
+                    Constructor ctor = clazz.getConstructor(String.class, String.class, ClassLoader.class);
+                    classLoader = ctor.newInstance(getBundleRevisionJarPath(),
+                            createBundleRevisionNativeLibrary(),
+                            m_wiring._getClassLoaderInternal());
+                } catch (Exception e) {
+                    m_logger.log(m_wiring.getBundle(), org.apache.felix.resolver.Logger.LOG_ERROR,
+                            e.toString());
+                }
+                m_pathClassLoader = (ClassLoader) classLoader;
+            }
+            return m_pathClassLoader;
+        }
+
+        private String getBundleRevisionJarPath() {
+            return getBundleRevisionRootDir() + "/bundle.jar";
+        }
+
+        private String getBundleRevisionRootDir() {
+            return getBundle().getArchive().getCurrentRevision().getRevisionRootDir().getAbsolutePath();
+        }
+
+        // creates a folder to store native libraries contained in the bundle revision, populates it
+        // with the native library code for this os architecture and return a path string to them.
+        private String createBundleRevisionNativeLibrary() {
+            String path = "";
+            Bundle bundle = getBundle();
+            List<NativeLibrary> nativeLibs = m_wiring.getNativeLibraries();
+            // note: nativeLibs is the osgi resolved set of libraries we need
+            Set<String> libDirPathSet = new HashSet<String>();
+            if (nativeLibs != null) {
+                String bundleRevisonJarPath = getBundleRevisionJarPath();
+                File targetDir = new File(getBundleRevisionRootDir());
+                for (NativeLibrary nativeLib : nativeLibs) {
+                    addNativeLibrary(libDirPathSet, nativeLib.getEntryName(), bundleRevisonJarPath,
+                            targetDir);
+                }
+                for (String libDir : libDirPathSet) {
+                    path += libDir + ";";
+                }
+                if (path.endsWith(";")) path = path.substring(0, path.length() - 1);
+            }
+            return (path.equals("")) ? null : path;
+        }
+
+        private boolean DoesArrayContain(String[] strArr, String element) {
+            for (String member : strArr) {
+                if (member.equalsIgnoreCase(element)) return true;
+            }
+            return false;
+        }
+
+        private void addNativeLibrary(Set<String> dirPathSet, String libName,
+                                      String bundleJarPath, File targetDir) {
+
+            File lib = new File(targetDir, libName);
+            if (lib.exists()) return;
+            lib.getParentFile().mkdirs();
+            dirPathSet.add(lib.getParentFile().getAbsolutePath());
+            copyNativeLibrary(bundleJarPath, lib);
+        }
+
+        private void copyNativeLibrary(String bundleJarPath, File targetLibrary) {
+            try {
+                targetLibrary.createNewFile();
+                URL bundleJarUrl = new URL("file://" + bundleJarPath);
+                InputStream inStream = new java.io.BufferedInputStream(bundleJarUrl.openStream());
+                FileOutputStream out = new FileOutputStream(targetLibrary);
+                int nbytes = 0;
+                byte[] buffer = new byte[100000];
+                try {
+                    while ((nbytes = inStream.read(buffer)) != -1) {
+                        out.write(buffer, 0, nbytes);
+                    }
+                } finally {
+                    if (inStream != null) {
+                        inStream.close();
+                    }
+                    if (out != null) {
+                        out.close();
+                    }
+                }
+            } catch (IOException e) {
+                m_logger.log(getBundle(), org.apache.felix.resolver.Logger.LOG_ERROR,
+                        "error loading native code library" + " - " + e.toString());
+            }
+        }
+    }
+
     static URL convertToLocalUrl(URL url)
     {
         if (url.getProtocol().equals("bundle"))
@@ -2659,7 +2813,7 @@ public class BundleWiringImpl implements BundleWiring
             {
                 String exporter = wires.get(i).getProviderWiring().getBundle().toString();
 
-                StringBuilder sb = new StringBuilder("*** Package '");
+                StringBuffer sb = new StringBuffer("*** Package '");
                 sb.append(pkgName);
                 sb.append("' is imported by bundle ");
                 sb.append(importer);
@@ -2709,7 +2863,7 @@ public class BundleWiringImpl implements BundleWiring
                 long expId = (exporters.length == 0)
                     ? -1 : Util.getBundleIdFromModuleId(exporters[0].getId());
 
-                StringBuilder sb = new StringBuilder("*** Class '");
+                StringBuffer sb = new StringBuffer("*** Class '");
                 sb.append(name);
                 sb.append("' was not found, but this is likely normal since package '");
                 sb.append(pkgName);
@@ -2764,7 +2918,7 @@ public class BundleWiringImpl implements BundleWiring
             String exporter = (exporters.isEmpty())
                     ? null : exporters.iterator().next().toString();
 
-            StringBuilder sb = new StringBuilder("*** Class '");
+            StringBuffer sb = new StringBuffer("*** Class '");
             sb.append(name);
             sb.append("' was not found, but this is likely normal since package '");
             sb.append(pkgName);
@@ -2809,7 +2963,7 @@ public class BundleWiringImpl implements BundleWiring
 
             String exporter = exports.iterator().next().toString();
 
-            StringBuilder sb = new StringBuilder("*** Class '");
+            StringBuffer sb = new StringBuffer("*** Class '");
             sb.append(name);
             sb.append("' was not found because bundle ");
             sb.append(importer);
@@ -2851,7 +3005,7 @@ public class BundleWiringImpl implements BundleWiring
             BundleRevisionImpl.getSecureAction()
             .getClassLoader(BundleClassLoader.class).loadClass(name);
 
-            StringBuilder sb = new StringBuilder("*** Package '");
+            StringBuffer sb = new StringBuffer("*** Package '");
             sb.append(pkgName);
             sb.append("' is not imported by bundle ");
             sb.append(importer);
@@ -2881,7 +3035,7 @@ public class BundleWiringImpl implements BundleWiring
         // Finally, if there are no imports or exports for the package
         // and it is not available on the system class path, simply
         // log a message saying so.
-        StringBuilder sb = new StringBuilder("*** Class '");
+        StringBuffer sb = new StringBuffer("*** Class '");
         sb.append(name);
         sb.append("' was not found. Bundle ");
         sb.append(importer);

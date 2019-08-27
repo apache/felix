@@ -641,7 +641,7 @@ public class Felix extends BundleImpl implements Framework
         init((FrameworkListener[]) null);
     }
     /**
-     * @see org.osgi.framework.launch.Framework#init(org.osgi.framework.FrameworkListener[])
+     * @see Framework#init(FrameworkListener[])
      */
     @Override
     public void init(final FrameworkListener... listeners) throws BundleException
@@ -1067,7 +1067,7 @@ public class Felix extends BundleImpl implements Framework
      * not explicitly invoked before calling this method, then it will be
      * implicitly invoked before starting the framework.
      *
-     * @throws org.osgi.framework.BundleException if any error occurs.
+     * @throws BundleException if any error occurs.
     **/
     @Override
     public void start() throws BundleException
@@ -1175,7 +1175,7 @@ public class Felix extends BundleImpl implements Framework
      * This method will cause the calling thread to block until the framework
      * shuts down.
      * @param timeout A timeout value.
-     * @throws java.lang.InterruptedException If the thread was interrupted.
+     * @throws InterruptedException If the thread was interrupted.
     **/
     @Override
     public FrameworkEvent waitForStop(long timeout) throws InterruptedException
@@ -1637,7 +1637,7 @@ public class Felix extends BundleImpl implements Framework
      * Level service.
      * @param startLevel The new default start level for newly installed
      *        bundles.
-     * @throws java.lang.IllegalArgumentException If the specified start
+     * @throws IllegalArgumentException If the specified start
      *         level is not greater than zero.
     **/
     void setInitialBundleStartLevel(int startLevel)
@@ -1657,7 +1657,7 @@ public class Felix extends BundleImpl implements Framework
      * implements functionality for the Start Level service.
      * @param bundle The bundle to examine.
      * @return The start level of the specified bundle.
-     * @throws java.lang.IllegalArgumentException If the specified
+     * @throws IllegalArgumentException If the specified
      *          bundle has been uninstalled.
     **/
     int getBundleStartLevel(Bundle bundle)
@@ -1675,7 +1675,7 @@ public class Felix extends BundleImpl implements Framework
      * implements functionality for the Start Level service.
      * @param bundle The bundle whose start level is to be modified.
      * @param startLevel The new start level of the specified bundle.
-     * @throws java.lang.IllegalArgumentException If the specified
+     * @throws IllegalArgumentException If the specified
      *          bundle is the system bundle or if the bundle has been
      *          uninstalled.
     **/
@@ -1771,7 +1771,7 @@ public class Felix extends BundleImpl implements Framework
      * @param bundle The bundle to examine.
      * @return <tt>true</tt> if the bundle is marked as persistently
      *          started, <tt>false</tt> otherwise.
-     * @throws java.lang.IllegalArgumentException If the specified
+     * @throws IllegalArgumentException If the specified
      *          bundle has been uninstalled.
     **/
     boolean isBundlePersistentlyStarted(Bundle bundle)
@@ -1791,7 +1791,7 @@ public class Felix extends BundleImpl implements Framework
      * @param bundle The bundle to examine.
      * @return <tt>true</tt> if the bundle is using its declared activation
      *         policy, <tt>false</tt> otherwise.
-     * @throws java.lang.IllegalArgumentException If the specified
+     * @throws IllegalArgumentException If the specified
      *          bundle has been uninstalled.
     **/
     boolean isBundleActivationPolicyUsed(Bundle bundle)
@@ -2027,11 +2027,11 @@ public class Felix extends BundleImpl implements Framework
         {
             try
             {
-                return (obj instanceof java.security.Permission)
+                return (obj instanceof Permission)
                     ? impliesBundlePermission(
                     (BundleProtectionDomain)
                     bundle.getProtectionDomain(),
-                    (java.security.Permission) obj, true)
+                    (Permission) obj, true)
                     : false;
             }
             catch (Exception ex)
@@ -4740,8 +4740,8 @@ public class Felix extends BundleImpl implements Framework
             Class clazz;
             try
             {
-                clazz = ((BundleWiringImpl)
-                    impl.adapt(BundleRevision.class).getWiring()).getClassByDelegation(className);
+                clazz = ((BundleWiringImpl) impl.adapt(BundleRevision.class).getWiring()).
+                        getClassByDelegation(className);
             }
             catch (ClassNotFoundException ex)
             {
@@ -4884,6 +4884,14 @@ public class Felix extends BundleImpl implements Framework
         }
         m_configMutableMap.put(
             FelixConstants.FELIX_VERSION_PROPERTY, getFrameworkVersion());
+        if (!m_configMutableMap.containsKey(FelixConstants.FELIX_REQUIRE_DEX_PROPERTY)) {
+            boolean requireDex = false;
+            try {
+                requireDex = (Class.forName("dalvik.system.PathClassLoader") != null);
+            } catch (ClassNotFoundException e){}
+            m_configMutableMap.put(FelixConstants.FELIX_REQUIRE_DEX_PROPERTY,
+                    requireDex ? "true" : "false");
+        }
 
         Properties defaultProperties = Util.loadDefaultProperties(m_logger);
 
@@ -5513,7 +5521,7 @@ public class Felix extends BundleImpl implements Framework
      * is thrown. Bundle state changes will be monitored to avoid deadlocks.
      * @param bundle The bundle to lock.
      * @param desiredStates Logically OR'ed desired bundle states.
-     * @throws java.lang.IllegalStateException If the bundle is not in one of the
+     * @throws IllegalStateException If the bundle is not in one of the
      *         specified desired states.
     **/
     void acquireBundleLock(BundleImpl bundle, int desiredStates)
@@ -5576,7 +5584,7 @@ public class Felix extends BundleImpl implements Framework
     /**
      * Releases the bundle's lock.
      * @param bundle The bundle whose lock is to be released.
-     * @throws java.lang.IllegalStateException If the calling thread does not
+     * @throws IllegalStateException If the calling thread does not
      *         own the bundle lock.
     **/
     void releaseBundleLock(BundleImpl bundle)
@@ -5667,7 +5675,7 @@ public class Felix extends BundleImpl implements Framework
 
     /**
      * Releases the global lock.
-     * @throws java.lang.IllegalStateException If the calling thread does not
+     * @throws IllegalStateException If the calling thread does not
      *         own the global lock.
     **/
     void releaseGlobalLock()
