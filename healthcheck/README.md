@@ -19,13 +19,14 @@ See also:
 
 * [Source code for the HealthCheck modules](http://svn.apache.org/repos/asf/felix/trunk/healthcheck)
 * adaptTo() slides about Health Checks (from the time when they were part of Apache Sling):
-    * [adaptTo() 2013 - Automated self-testing and health check of live Sling instances](https://adapt.to/2013/en/schedule/18_healthcheck.html)
+    * [adaptTo() 2019 - Felix Health Checks](https://adapt.to/2019/en/schedule/felix-health-checks.html)
     * [adaptTo() 2014 - New features of the Sling Health Check](https://adapt.to/2014/en/schedule/new-features-of-the-sling-health-check.html)
+    * [adaptTo() 2013 - Automated self-testing and health check of live Sling instances](https://adapt.to/2013/en/schedule/18_healthcheck.html)
 
 ## Use cases
 Generally health checks have two high level use cases:
 
-* **Load balancers can query the health of an instance** and decide to take it outor back into the list of used backends automatically
+* **Load balancers/orchestration engines can query the health of an instance** and decide when to route requests to it
 * **Operations teams checking instances** for their internal state **manually**
 
 The strength of Health Checks are to surface internal state for external use:
@@ -45,7 +46,7 @@ attribute values as input and make the results accessible via JMX MBeans.
 
 ## Implementing `HealthCheck`s
 
-Health checks checks can be contributed by any bundle via the provided SPI interface. It is best practice to implement a health check as part of the bundle that contains the functionality being checked.
+Health checks can be contributed by any bundle via the provided SPI interface. It is best practice to implement a health check as part of the bundle that contains the functionality being checked.
 
 ## The `HealthCheck` SPI interface
 
@@ -160,9 +161,45 @@ Disk Space | org.apache.felix.hc.generalchecks.DiskSpaceCheck | yes | Checks for
 Memory | org.apache.felix.hc.generalchecks.MemoryCheck | no | Checks for Memory usage - `heapUsedPercentageThresholdWarn` (default 90%) and `heapUsedPercentageThresholdCritical` (default 99%) can be set to control what memory usage produces status `WARN` and `CRITICAL`
 CPU | org.apache.felix.hc.generalchecks.CpuCheck | no | Checks for CPU usage - `cpuPercentageThresholdWarn` (default 95%) can be set to control what CPU usage produces status `WARN` (check never results in `CRITICAL`)
 Thread Usage | org.apache.felix.hc.generalchecks.ThreadUsageCheck | no | Checks via `ThreadMXBean.findDeadlockedThreads()` for deadlocks and analyses the CPU usage of each thread via a configurable time period (`samplePeriodInMs` defaults to 200ms). Uses `cpuPercentageThresholdWarn` (default 95%) to `WARN` about high thread utilisation.   
-JMX Attribute Check | org.apache.felix.hc.generalchecks.JmxAttributeCheck | yes | Allows to check an arbitrary JMX attribute (using the configured mbean `mbean.name`'s attribute `attribute.name`) against a given constraint `attribute.value.constraint`. Can check multiple attributes by providing additional config properties with numbers:  `mbean2.name`' `attribute2.name` and `attribute2.value.constraint`.
-HttpRequestsCheck | org.apache.felix.hc.generalchecks.HttpRequestsCheck | yes | Allows to check a list of URLs against response code, response headers, timing, response content (plain content via RegEx or JSON via path expression).
+JMX Attribute Check | org.apache.felix.hc.generalchecks.JmxAttributeCheck | yes | Allows to check an arbitrary JMX attribute (using the configured mbean `mbean.name`'s attribute `attribute.name`) against a given constraint `attribute.value.constraint` (see [Constraints](#constraints)). Can check multiple attributes by providing additional config properties with numbers: `mbean2.name` (defaults to `mbean.name` if ommitted), `attribute2.name` and `attribute2.value.constraint` and `mbean3.name`, `attribute3.name` and `attribute3.value.constraint`
+Http Requests Check | org.apache.felix.hc.generalchecks.HttpRequestsCheck | yes | Allows to check a list of URLs against response code, response headers, timing, response content (plain content via RegEx or JSON via path expression). See [Request Spec Syntax](#request-spec-syntax)
 Scripted Check | org.apache.felix.hc.generalchecks.ScriptedHealthCheck | yes | Allows to run an arbitrary script. To configure use either `script` (to provide a script directly) or `scriptUrl` (to link to an external script, usually a file URL). Use `language` property to refer to a registered script engine (e.g. install bundle `groovy-all` to be able to use language `groovy`)
+
+### Constraints
+
+The `JMX Attribute Check` and `Http Requests Check` allow to check values against contraints. See the following examples:
+
+* value `string value` (checks for equality)
+* value ` = 0` 
+* value ` > 0`
+* value ` < 100`
+* value ` BETWEEN 3 AND 7`
+* value ` CONTAINS a string to find in value` (searches for `a string to find in value` in value)
+* value ` STARTS_WITH prefix string` (checks for prefix `prefix string`)
+* value ` ENDS_WITH suffixStr` (checks for suffix `suffixStr `)
+* value ` MATCHES ^.*SomeRegEx[0-9]$` (checks for the given RegEx)
+* value ` OLDER_THAN 100 ms` (checks a time value to be older than given value, other units `s`, `min`, `h`, `days` are supported as well, e.g. ` OLDER_THAN 10 days`)
+* `NOT` prefix works for all expressions, e.g. `NOT 20`, `NOT > 20`, `NOT BETWEEN 3 AND 7`, `NOT MATCHES ^.*SomeRegEx[0-9]$`
+
+Also see class `org.apache.felix.hc.generalchecks.util.SimpleConstraintsChecker` and its JUnit test.
+
+### Request Spec Syntax
+
+The `Http Requests Check` allows to configure a list of request specs. Requests specs have two parts: Before `=>` can be a simple URL/path with curl-syntax advanced options (e.g. setting a header with `-H "Test: Test val"`), after the `=>` it is a simple response code that can be followed ` && MATCHES <RegEx>` to match the response entity against or other matchers like HEADER, TIME or JSON. 
+
+Examples:
+
+* `/path/example.html`: assumes 200 for the request to localhost:<defaultPort>
+* `http://www.example.com/path/example.html => 200`: explicitly checking 200 response code for full URL
+* `/protected/example.html => 401`: protected page
+* `-u admin:admin /protected/example.html => 200`: protected page with password (only use for non-sensitive credentials)
+* `/path/example.html => 200 && MATCHES <title>html title.*</title>`: ensure 200 response and matching content
+* `/path/example.html => 200 && HEADER Content-Type MATCHES text/html.*`: Checks for content type
+* `/path/example.json => 200 && JSON [3].prop = myval`: checks JSON response's third element for property `prop` to equal to `myval`
+* `-H "Test: Test val" /path/example.json => 200 && JSON .city STARTS_WITH New`: checks JSON response's `city` property to start with `New`
+* `/path/example-timing-important.html => 200 && TIME < 5 ms`: Checks if the response time is smaller than specified
+
+All constraints from [Constraints](#constraints) can be used.
 
 ### Adjustable Status Health Check
 
