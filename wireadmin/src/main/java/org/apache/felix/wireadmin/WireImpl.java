@@ -287,7 +287,7 @@ public class WireImpl implements Wire, java.io.Serializable
             else // not a composite (Note: p. 341 "Filtering for composite producer services is not supported")
             {
                 //long time = m_date.getTime();
-                long time = new Date().getTime();
+                long time = System.currentTimeMillis();
                 
                 // We ignore filtering the first time...
                 if(m_isFirstUpdate == false && m_filter != null)
