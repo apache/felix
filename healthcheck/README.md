@@ -214,7 +214,7 @@ By default the HC servlet sends the CORS header `Access-Control-Allow-Origin: *`
 
 ### Webconsole plugin
 
-If the `org.apache.felix.hc.webconsole` bundle is active, a webconsole plugin 
+If the `org.apache.felix.healthcheck.webconsoleplugin` bundle is active, a webconsole plugin
 at `/system/console/healthcheck` allows for executing health checks, optionally selected
 based on their tags (positive and negative selection, see the `HealthCheckFilter` mention above).
 
