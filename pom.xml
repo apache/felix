@@ -27,7 +27,7 @@
     </parent>
 
     <name>Apache Felix Http Jetty</name>
-    <description>This is an implementation of the OSGi Http Service and the OSGi Http Whiteboard Specification</description>
+    <description>This is an implementation of the R7 OSGi Http Service and the R7 OSGi Http Whiteboard Specification</description>
 
     <artifactId>org.apache.felix.http.jetty</artifactId>
     <version>4.0.13-SNAPSHOT</version>
