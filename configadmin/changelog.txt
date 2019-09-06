@@ -1,7 +1,7 @@
 Changes in 1.9.18
 -----------------
 ** Improvement
-    * [FELIX-6177] : Use BlockingQueue instead of synchronized in UpdateThread
+    * [FELIX-6177] : Use BlockingQueue instead of synchronized blocks in UpdateThread
 ** Bug
     * [FELIX-6162] : ConfigurationManager crashes on shutdown if PersistenceManager not yet available
 
