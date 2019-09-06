@@ -1237,10 +1237,7 @@ public class ServiceRegistryTest extends TestCase
         ServiceRegistry sr = new ServiceRegistry(null, null);
         Bundle regBundle = Mockito.mock(Bundle.class);
 
-        ServiceRegistration reg = sr.registerService(
-                regBundle, new String [] {String.class.getName()}, "hi", null);
-        @SuppressWarnings("unchecked")
-        ServiceReference<String> ref = reg.getReference();
+        ServiceReference<String> ref = registerService(sr, regBundle, "hi");
 
         final Bundle clientBundle = Mockito.mock(Bundle.class);
         Mockito.when(clientBundle.getBundleId()).thenReturn(42L);
@@ -1250,9 +1247,41 @@ public class ServiceRegistryTest extends TestCase
         Mockito.when(clientBundle.getBundleId()).thenReturn(327L);
         assertThat(sr.getService(clientBundle2, ref, false), is("hi"));
 
-        assertThat(sr.ungetService(clientBundle, reg.getReference(), null), is(true));
+        assertThat(sr.ungetService(clientBundle, ref, null), is(true));
 
-        assertThat(sr.getUsingBundles(reg.getReference()), is(new Bundle[]{clientBundle2}));
+        assertThat(sr.getUsingBundles(ref), is(new Bundle[]{clientBundle2}));
+    }
+
+    public void testServicesInUseWithoutZeroCounts() throws Exception
+    {
+        ServiceRegistry sr = new ServiceRegistry(null, null);
+        Bundle regBundle = Mockito.mock(Bundle.class);
+
+        ServiceReference<String> refHi = registerService(sr, regBundle, "hi");
+        ServiceReference<String> refBye = registerService(sr, regBundle, "bye");
+
+        final Bundle clientBundle = Mockito.mock(Bundle.class);
+        Mockito.when(clientBundle.getBundleId()).thenReturn(42L);
+
+        sr.getService(clientBundle, refHi, false);
+        sr.getService(clientBundle, refBye, false);
+        assertThat(sr.getServicesInUse(clientBundle).length, is(2));
+
+        sr.ungetService(clientBundle, refBye, null);
+        assertThat(sr.getServicesInUse(clientBundle), is(new ServiceReference[]{refHi}));
+
+        sr.ungetService(clientBundle, refHi, null);
+        assertThat(sr.getServicesInUse(clientBundle), nullValue());
+    }
+
+    private ServiceReference<String> registerService(ServiceRegistry sr, Bundle regBundle, String svcObj) {
+        ServiceRegistration reg = sr.registerService(
+                regBundle, new String [] {String.class.getName()}, svcObj, null);
+
+        @SuppressWarnings("unchecked")
+        ServiceReference<String> ref =  reg.getReference();
+
+        return ref;
     }
 
     private Object getPrivateField(Object obj, String fieldName) throws NoSuchFieldException,

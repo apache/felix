@@ -280,11 +280,23 @@ public class ServiceRegistry
         if (usages != null)
         {
             final ServiceReference<?>[] refs = new ServiceReference[usages.length];
-            for (int i = 0; i < refs.length; i++)
+            int count = 0;
+            for (int i = 0; i < usages.length; i++)
             {
-                refs[i] = usages[i].m_ref;
+                if (usages[i].m_count.get() > 0) {
+                    refs[count++] = usages[i].m_ref;
+                }
             }
-            return refs;
+
+            if (count == usages.length) {
+                return refs;
+            } else if (count == 0) {
+                return null;
+            }
+
+            ServiceReference<?>[] nrefs = new ServiceReference[count];
+            System.arraycopy(refs, 0, nrefs, 0, count);
+            return nrefs;
         }
         return null;
     }
