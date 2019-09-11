@@ -100,7 +100,7 @@ public class ComponentImpl implements Component, ComponentContext, ComponentDecl
      * 
      * @see @link {@link ComponentExecutorFactory}
      */
-	private volatile Executor m_executor = new SerialExecutor(new Logger(null));
+	private volatile Executor m_executor;
 	
 	/**
 	 * The current state of the component state machine.
@@ -418,6 +418,7 @@ public class ComponentImpl implements Component, ComponentContext, ComponentDecl
         m_bundle = context != null ? context.getBundle() : null;
         m_manager = manager;
         m_logger = logger;
+        m_executor = new SerialExecutor(m_logger);
         m_autoConfig.put(BundleContext.class, Boolean.TRUE);
         m_autoConfig.put(ServiceRegistration.class, Boolean.TRUE);
         m_autoConfig.put(DependencyManager.class, Boolean.TRUE);
