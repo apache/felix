@@ -1,4 +1,4 @@
-Release Notes - Felix - Version org.apache.felix.dependencymanager-r15
+Release Notes - Felix - Version org.apache.felix.dependencymanager-r16
 ======================================================================
 
 ** List of bundles being part of the release:
