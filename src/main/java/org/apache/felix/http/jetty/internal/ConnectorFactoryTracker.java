@@ -50,20 +50,20 @@ public class ConnectorFactoryTracker extends ServiceTracker<ConnectorFactory, Co
     @Override
     public Connector addingService(ServiceReference<ConnectorFactory> reference)
     {
-        ConnectorFactory factory = (ConnectorFactory) super.addingService(reference);
-        Connector connector = factory.createConnector(server);
-        try
-        {
-            this.server.addConnector(connector);
-            connector.start();
-            return connector;
+        ConnectorFactory factory = context.getService(reference);
+        if (factory != null) {
+            Connector connector = null;
+            try {
+                connector = factory.createConnector(server);
+                this.server.addConnector(connector);
+                connector.start();
+                return connector;
+            } catch (Exception e) {
+                SystemLogger.error("Failed starting connector '" + connector + "' provided by " + reference, e);
+            }
+            // connector failed to start, don't continue tracking
+            context.ungetService(reference);
         }
-        catch (Exception e)
-        {
-            SystemLogger.error("Failed starting connector '" + connector + "' provided by " + reference, e);
-        }
-
-        // connector failed to start, don't continue tracking
         return null;
     }
 
@@ -83,5 +83,6 @@ public class ConnectorFactoryTracker extends ServiceTracker<ConnectorFactory, Co
             }
         }
         this.server.removeConnector(connector);
+        context.ungetService(reference);
     }
 }
