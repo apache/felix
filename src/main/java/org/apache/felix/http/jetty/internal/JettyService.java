@@ -447,7 +447,7 @@ public final class JettyService extends AbstractLifeCycle.AbstractLifeCycleListe
         HttpConnectionFactory connFactory = new HttpConnectionFactory();
         configureHttpConnectionFactory(connFactory);
 
-        SslContextFactory sslContextFactory = new SslContextFactory();
+        SslContextFactory sslContextFactory = new SslContextFactory.Server();
         configureSslContextFactory(sslContextFactory);
 
         ServerConnector connector = new ServerConnector(
