@@ -195,6 +195,8 @@ public class ObrCleanRepo extends AbstractMojo
         DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
         try
         {
+            factory.setFeature(javax.xml.XMLConstants.FEATURE_SECURE_PROCESSING, true);
+            factory.setFeature("http://apache.org/xml/features/disallow-doctype-decl", true);
             constructor = factory.newDocumentBuilder();
         }
         catch ( ParserConfigurationException e )
