@@ -28,10 +28,8 @@ import org.mockito.Mockito;
 import org.osgi.resource.Requirement;
 import org.osgi.resource.Resource;
 
-public class OSGiRequirementAdapterTest extends TestCase
-{
-    public void testDirectives()
-    {
+public class OSGiRequirementAdapterTest extends TestCase {
+    public void testDirectives() {
         Map<String, Object> attrs = new HashMap<String, Object>();
         Map<String, String> dirs = new HashMap<String, String>();
         dirs.put("cardinality", "multiple");
@@ -40,7 +38,8 @@ public class OSGiRequirementAdapterTest extends TestCase
         dirs.put("resolution", "optional");
         dirs.put("test", "test");
 
-        Requirement req = new RequirementImpl(Mockito.mock(Resource.class), "osgi.wiring.package", dirs, attrs);
+        Requirement req = new RequirementImpl(Mockito.mock(Resource.class),
+                "osgi.wiring.package", dirs, attrs);
         OSGiRequirementAdapter adapter = new OSGiRequirementAdapter(req);
 
         assertEquals("(package=y)", adapter.getFilter());

@@ -78,4 +78,24 @@
             <p n="someKey" v="someOtherVal"/>
         </capability>
     </resource>
+    <resource id="test_file_3/1.0.0"
+        symbolicname="test_file_3"
+        uri="repo_files/test_file_3.jar"
+        version="1.0.0">
+        <size>2</size>
+
+        <capability name="foo">
+            <p n="someKey3" v="someOtherVal3"/>
+        </capability>
+    </resource>
+    <resource id="test_file_4/1.0.0"
+        symbolicname="test_file_4"
+        uri="repo_files/test_file_4.jar"
+        version="1.0.0">
+        <size>2</size>
+
+        <capability name="foo">
+            <p n="someKey4" v="someOtherVal4"/>
+        </capability>
+    </resource>
 </repository>

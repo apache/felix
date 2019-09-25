@@ -76,7 +76,7 @@ public class Activator implements BundleActivator
         // Register the OSGi Repository-spec compliant facade
         context.registerService(
             Repository.class.getName(),
-            new OSGiRepositoryImpl(m_repoAdmin), null);
+            new OSGiRepositoryImpl(m_repoAdmin, logger), null);
 
         try
         {

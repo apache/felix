@@ -50,7 +50,8 @@ public class OSGiRepositoryXMLTest extends TestCase {
         URL url = getClass().getResource("/spec_repository.xml");
         repoAdmin.addRepository(url);
 
-        Repository repo = new OSGiRepositoryImpl(repoAdmin);
+        Repository repo = new OSGiRepositoryImpl(repoAdmin,
+                Mockito.mock(Logger.class));
         Requirement req = new RequirementImpl(Mockito.mock(Resource.class),
                 "osgi.identity",
                 "(osgi.identity=cdi-subsystem)");
@@ -126,7 +127,8 @@ public class OSGiRepositoryXMLTest extends TestCase {
         URL url = getClass().getResource("/spec_repository.xml");
         repoAdmin.addRepository(url);
 
-        Repository repo = new OSGiRepositoryImpl(repoAdmin);
+        Repository repo = new OSGiRepositoryImpl(repoAdmin,
+                Mockito.mock(Logger.class));
         Requirement req = new RequirementImpl(Mockito.mock(Resource.class),
                 "osgi.identity",
                 "(license=http://www.opensource.org/licenses/mytestlicense)");
@@ -146,8 +148,10 @@ public class OSGiRepositoryXMLTest extends TestCase {
         URL url = getClass().getResource("/spec_repository.xml");
         repoAdmin.addRepository(url);
 
-        Repository repo = new OSGiRepositoryImpl(repoAdmin);
-        Requirement req = new RequirementImpl(Mockito.mock(Resource.class),"foo", "(bar=toast)");
+        Repository repo = new OSGiRepositoryImpl(repoAdmin,
+                Mockito.mock(Logger.class));
+        Requirement req = new RequirementImpl(Mockito.mock(Resource.class),
+                "foo", "(bar=toast)");
 
         Map<Requirement, Collection<Capability>> result = repo
                 .findProviders(Collections.singleton(req));
