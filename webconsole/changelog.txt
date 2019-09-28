@@ -1,3 +1,23 @@
+Changes in 4.3.18
+-----------------
+** Bug
+    * [FELIX-6185] - jQuery <3.4.0 is vulnerable to prototype pollution attacks
+
+
+Changes in 4.3.16
+-----------------
+** Bug
+    * [FELIX-6171] - Webconsole OsgiManager throws NPE
+    * [FELIX-6172] - Already Registered Servlet Exception with WebConsole
+
+
+Changes in 4.3.14
+-----------------
+** Improvement
+    * [FELIX-6037] - Commons FileUpload 1.4 breaks bundle uploads
+    * [FELIX-6168] - Enable WebConsole login only after specified Security Providers are present
+
+
 Changes in 4.3.12
 -----------------
 ** Bug
