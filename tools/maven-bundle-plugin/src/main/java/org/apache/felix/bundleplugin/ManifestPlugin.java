@@ -19,6 +19,7 @@
 package org.apache.felix.bundleplugin;
 
 
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -31,6 +32,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Arrays;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -41,7 +43,6 @@ import java.util.Set;
 import java.util.jar.Manifest;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
-import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
 import aQute.bnd.osgi.Analyzer;
@@ -63,6 +64,8 @@ import org.apache.maven.project.MavenProject;
 import org.codehaus.plexus.util.Scanner;
 import org.osgi.service.metatype.MetaTypeService;
 import org.sonatype.plexus.build.incremental.BuildContext;
+
+import static aQute.lib.strings.Strings.join;
 
 
 /**
@@ -86,6 +89,12 @@ public class ManifestPlugin extends BundlePlugin
      */
     @Parameter( property = "supportIncrementalBuild" )
     private boolean supportIncrementalBuild;
+
+    /**
+     * When true, show stale files in the log at info level else at debug level.
+     */
+    @Parameter( property = "showStaleFiles" )
+    private boolean showStaleFiles;
 
     @Component
     private BuildContext buildContext;
@@ -377,9 +386,10 @@ public class ManifestPlugin extends BundlePlugin
                         .collect(Collectors.toSet());
                 if (!stale.isEmpty()) {
                     getLog().info("Stale files detected, re-generating manifest.");
-                    if (getLog().isDebugEnabled()) {
-                        getLog().debug("Stale files: " + stale.stream()
-                                .collect(Collectors.joining(", ")));
+                    if (showStaleFiles) {
+                        getLog().info("Stale files: " + join(", ", stale));
+                    } else if (getLog().isDebugEnabled()) {
+                        getLog().debug("Stale files: " + join(", ", stale));
                     }
                 } else {
                     // everything is in order, skip
@@ -460,14 +470,9 @@ public class ManifestPlugin extends BundlePlugin
         {
             Manifest analyzerManifest = manifest;
             manifest = new Manifest();
-            InputStream inputStream = new FileInputStream( outputFile );
-            try
+            try( InputStream inputStream = new FileInputStream( outputFile ) )
             {
                 manifest.read( inputStream );
-            }
-            finally
-            {
-                inputStream.close();
             }
             Instructions instructions = new Instructions( ExtList.from( analyzer.getProperty("Merge-Headers") ) );
             mergeManifest( instructions, manifest, analyzerManifest );
@@ -492,20 +497,22 @@ public class ManifestPlugin extends BundlePlugin
         log.debug("Write manifest to " + outputFile.getPath());
         outputFile.getParentFile().mkdirs();
 
-        OutputStream os = buildContext.newFileOutputStream( outputFile );
-        try
+        try ( ByteArrayOutputStream baos = new ByteArrayOutputStream() )
         {
-            ManifestWriter.outputManifest( manifest, os, niceManifest );
-        }
-        finally
-        {
-            try
+            ManifestWriter.outputManifest( manifest, baos, niceManifest );
+            baos.flush();
+            byte[] newdata = baos.toByteArray();
+            byte[] curdata = new byte[0];
+            if (outputFile.exists())
             {
-                os.close();
+                curdata = Files.readAllBytes( outputFile.toPath() );
             }
-            catch ( IOException e )
+            if ( !Arrays.equals( newdata, curdata ) )
             {
-                // nothing we can do here
+                try ( OutputStream os = buildContext.newFileOutputStream( outputFile ) )
+                {
+                    os.write( curdata );
+                }
             }
         }
     }
